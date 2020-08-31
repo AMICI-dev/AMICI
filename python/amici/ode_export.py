@@ -833,11 +833,11 @@ class ODEModel:
         self._expressions: List[Expression] = []
         self._conservationlaws: List[ConservationLaw] = []
         self._symboldim_funs: Dict[str, Callable[[], int]] = {
-            'sx': self.nx_solver,
-            'v': self.nx_solver,
-            'vB': self.nx_solver,
-            'xB': self.nx_solver,
-            'sigmay': self.ny,
+            'sx': self.num_states_solver,
+            'v': self.num_states_solver,
+            'vB': self.num_states_solver,
+            'xB': self.num_states_solver,
+            'sigmay': self.num_obs,
         }
         self._eqs: Dict[str, sp.Matrix] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
@@ -1124,7 +1124,7 @@ class ODEModel:
 
         self._states[ix].set_conservation_law(state_expr)
 
-    def nx_rdata(self) -> int:
+    def num_states_rdata(self) -> int:
         """
         Number of states.
 
@@ -1133,7 +1133,7 @@ class ODEModel:
         """
         return len(self.sym('x_rdata'))
 
-    def nx_solver(self) -> int:
+    def num_states_solver(self) -> int:
         """
         Number of states after applying conservation laws.
 
@@ -1142,16 +1142,16 @@ class ODEModel:
         """
         return len(self.sym('x'))
 
-    def ncl(self) -> int:
+    def num_cons_law(self) -> int:
         """
         Number of conservation laws.
 
         :return:
             number of conservation laws
         """
-        return self.nx_rdata()-self.nx_solver()
+        return self.num_states_rdata() - self.num_states_solver()
 
-    def nx_solver_reinit(self) -> int:
+    def num_state_reinits(self) -> int:
         """
         Number of solver states which would be reinitialized after
         preequilibraiton
@@ -1163,7 +1163,7 @@ class ODEModel:
         solver_states = self.eq('x_solver')
         return sum([1 for ix in reinit_states if ix in solver_states])
 
-    def ny(self) -> int:
+    def num_obs(self) -> int:
         """
         Number of Observables.
 
@@ -1172,7 +1172,7 @@ class ODEModel:
         """
         return len(self.sym('y'))
 
-    def nk(self) -> int:
+    def num_const(self) -> int:
         """
         Number of Constants.
 
@@ -1181,7 +1181,7 @@ class ODEModel:
         """
         return len(self.sym('k'))
 
-    def np(self) -> int:
+    def num_par(self) -> int:
         """
         Number of Parameters.
 
@@ -1190,7 +1190,7 @@ class ODEModel:
         """
         return len(self.sym('p'))
 
-    def nw(self) -> int:
+    def num_expr(self) -> int:
         """
         Number of Expressions.
 
@@ -1412,7 +1412,7 @@ class ODEModel:
                            f'{strip_pysb(par.get_id())}', real=True)
                     for par in self._parameters]
                 if self.conservation_law_has_multispecies(tcl)
-                else [0] * self.np()
+                else [0] * self.num_par()
                 for tcl in self._conservationlaws
             ])
             return
@@ -1501,7 +1501,7 @@ class ODEModel:
             self._sparseeqs[name] = []
             self._sparsesyms[name] = []
             self._syms[name] = []
-            for iy in range(self.ny()):
+            for iy in range(self.num_obs()):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                     sparse_matrix = csc_matrix(matrix[iy, :],
                                                rownames=rownames,
@@ -1630,7 +1630,7 @@ class ODEModel:
 
         elif name == 'dtcldx':
             # this is always zero
-            self._eqs[name] = sp.zeros(self.ncl(), self.nx_solver())
+            self._eqs[name] = sp.zeros(self.num_cons_law(), self.num_states_solver())
 
         elif name == 'dtcldp':
             # force symbols
@@ -1745,7 +1745,7 @@ class ODEModel:
             # certain models, I here assuming this is due to sizes of w and
             # p, which was not empircally tested. If things seem overly
             # slow, either variant here should be tested.
-            if self.nw() < self.np():
+            if self.num_expr() < self.num_par():
                 # h(k) = dwdw^k (k=1)
                 h = dwdw
                 while not smart_is_zero_matrix(h):
@@ -2319,8 +2319,8 @@ class ODEExporter:
         # Second order code is not yet implemented. Once this is done,
         # those variables will have to be replaced by
         # "self.model.<var>true()", or the corresponding "model.self.o2flag"
-        nxtrue_rdata = self.model.nx_rdata()
-        nytrue = self.model.ny()
+        nxtrue_rdata = self.model.num_states_rdata()
+        nytrue = self.model.num_obs()
         o2flag = 0
 
         # a preliminary comment
@@ -2337,7 +2337,7 @@ class ODEExporter:
         lines.append("amimodel.compileAndLinkModel"
                      "(modelName, '', [], [], [], []);")
         lines.append(f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
-                     f"{nytrue}, {self.model.np()}, {self.model.nk()}, "
+                     f"{nytrue}, {self.model.num_par()}, {self.model.num_const()}, "
                      f"{nz}, {o2flag}, ...\n    [], "
                      "['simulate_' modelName '.m'], modelName, ...\n"
                      "    'lin', 1, 1);")
@@ -2577,7 +2577,7 @@ class ODEExporter:
             # here we only want to overwrite values where x0_fixedParameters
             # was applied
             cases = dict()
-            for ipar in range(self.model.np()):
+            for ipar in range(self.model.num_par()):
                 expressions = []
                 for index, formula in zip(
                         self.model._x0_fixedParameters_idx,
@@ -2599,7 +2599,7 @@ class ODEExporter:
         elif function in sensi_functions:
             cases = {ipar: _get_sym_lines_array(equations[:, ipar], function,
                                                 0)
-                     for ipar in range(self.model.np())
+                     for ipar in range(self.model.num_par())
                      if not smart_is_zero_matrix(equations[:, ipar])}
             lines.extend(get_switch_statement('ip', cases, 1))
 
@@ -2607,12 +2607,12 @@ class ODEExporter:
             if function == 'dJydy':
                 cases = {iobs: _get_sym_lines_array(equations[iobs], function,
                                                     0)
-                         for iobs in range(self.model.ny())
+                         for iobs in range(self.model.num_obs())
                          if not smart_is_zero_matrix(equations[iobs])}
             else:
                 cases = {iobs: _get_sym_lines_array(equations[:, iobs], function,
                                                     0)
-                         for iobs in range(self.model.ny())
+                         for iobs in range(self.model.num_obs())
                          if not smart_is_zero_matrix(equations[:, iobs])}
             lines.extend(get_switch_statement('iy', cases, 1))
 
@@ -2658,13 +2658,13 @@ class ODEExporter:
 
         tpl_data = {
             'MODELNAME': str(self.model_name),
-            'NX_RDATA': str(self.model.nx_rdata()),
-            'NXTRUE_RDATA': str(self.model.nx_rdata()),
-            'NX_SOLVER': str(self.model.nx_solver()),
-            'NXTRUE_SOLVER': str(self.model.nx_solver()),
-            'NX_SOLVER_REINIT': str(self.model.nx_solver_reinit()),
-            'NY': str(self.model.ny()),
-            'NYTRUE': str(self.model.ny()),
+            'NX_RDATA': str(self.model.num_states_rdata()),
+            'NXTRUE_RDATA': str(self.model.num_states_rdata()),
+            'NX_SOLVER': str(self.model.num_states_solver()),
+            'NXTRUE_SOLVER': str(self.model.num_states_solver()),
+            'NX_SOLVER_REINIT': str(self.model.num_state_reinits()),
+            'NY': str(self.model.num_obs()),
+            'NYTRUE': str(self.model.num_obs()),
             'NZ': '0',
             'NZTRUE': '0',
             'NEVENT': '0',
@@ -2681,10 +2681,10 @@ class ODEExporter:
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
             'NNZ': str(len(self.model.sparsesym('JSparse'))),
-            'UBW': str(self.model.nx_solver()),
-            'LBW': str(self.model.nx_solver()),
-            'NP': str(self.model.np()),
-            'NK': str(self.model.nk()),
+            'UBW': str(self.model.num_states_solver()),
+            'LBW': str(self.model.num_states_solver()),
+            'NP': str(self.model.num_par()),
+            'NK': str(self.model.num_const()),
             'O2MODE': 'amici::SecondOrderMode::none',
             'PARAMETERS': str(self.model.val('p'))[1:-1],
             'FIXED_PARAMETERS': str(self.model.val('k'))[1:-1],
@@ -2734,7 +2734,7 @@ class ODEExporter:
                     get_sunindex_override_implementation(fun, self.model_name,
                                                          'rowvals')
 
-        if self.model.nx_solver() == self.model.nx_rdata():
+        if self.model.num_states_solver() == self.model.num_states_rdata():
             tpl_data['X_RDATA_DEF'] = ''
             tpl_data['X_RDATA_IMPL'] = ''
 

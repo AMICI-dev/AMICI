@@ -88,7 +88,7 @@ def check_finite_difference(x0: Sequence[float],
     pf = copy.deepcopy(x0)
     pb = copy.deepcopy(x0)
     pscale = model.getParameterScale()[ip]
-    if x0[ip] == 0 or pscale is not int(ParameterScaling.none):
+    if x0[ip] == 0 or pscale != int(ParameterScaling.none):
         pf[ip] += epsilon / 2
         pb[ip] -= epsilon / 2
     else:
