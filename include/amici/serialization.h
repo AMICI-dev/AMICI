@@ -44,6 +44,7 @@ void archiveVector(Archive &ar, T **p, int size) {
     ar &make_array<T>(*p, size);
 }
 
+#ifndef EXHALE_DOXYGEN_SHOULD_SKIP_THIS
 /**
  * @brief Serialize amici::Solver to boost archive
  * @param ar Archive
@@ -214,7 +215,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
     ar &r.status;
 }
 
-
+#endif
 } // namespace serialization
 } // namespace boost
 

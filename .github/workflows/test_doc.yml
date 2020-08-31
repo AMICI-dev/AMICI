@@ -48,6 +48,10 @@ jobs:
       - run: echo "::set-env name=AMICI_DIR::$(pwd)"
       - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
 
+      - name: Build doxygen
+        run: |
+          sudo scripts/downloadAndBuildDoxygen.sh
+
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
