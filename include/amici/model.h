@@ -1200,7 +1200,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get only those initial states sensitivities that are affected
-     * from amici::Model::fx0_fixedParameters .
+     * from `amici::Model::fx0_fixedParameters`.
      * @param sx Output buffer for state sensitivities
      * @param x State variables
      */
@@ -1217,7 +1217,7 @@ class Model : public AbstractModel {
     /**
      * @brief Expand conservation law for states.
      * @param x_rdata Output buffer for state variables with conservation laws
-     * expanded (stored in amici::ReturnData).
+     * expanded (stored in `amici::ReturnData`).
      * @param x_solver State variables with conservation laws applied
      * (solver returns this)
      */
@@ -1226,7 +1226,7 @@ class Model : public AbstractModel {
     /**
      * @brief Expand conservation law for state sensitivities.
      * @param sx_rdata Output buffer for state variables sensitivities with
-     * conservation laws expanded (stored in amici::ReturnData).
+     * conservation laws expanded (stored in `amici::ReturnData`).
      * @param sx_solver State variables sensitivities with conservation laws
      * applied (solver returns this)
      */
@@ -1295,10 +1295,10 @@ class Model : public AbstractModel {
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;
 
-    /** Number of nonzero entries in amici::Model::ndxdotdp_explicit */
+    /** Number of nonzero entries in `amici::Model::ndxdotdp_explicit` */
     int ndxdotdp_explicit{0};
 
-    /** Number of nonzero entries in amici::Model::ndxdotdp_implicit */
+    /** Number of nonzero entries in `amici::Model::ndxdotdp_implicit` */
     int ndxdotdp_implicit{0};
 
     /**
@@ -1313,20 +1313,22 @@ class Model : public AbstractModel {
 
     /**
      * Temporary storage of `dxdotdp` data across functions (Python only)
-     * (dimension: `nplist x nx_solver`, nnz: ndxdotdp_explicit, type CSC_MAT)
+     * (dimension: `nplist` x `nx_solver`, nnz: `ndxdotdp_explicit`,
+     *  type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_explicit;
 
     /**
      * Temporary storage of `dxdotdp_implicit` data across functions,
      * Python-only
-     * (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT)
+     * (dimension: `nplist` x `nx_solver`, nnz: `ndxdotdp_implicit`,
+     * type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_implicit;
 
     /**
      * Temporary storage of `dxdotdp` data across functions, Matlab only
-     * (dimension: `nplist x nx_solver`, row-major)
+     * (dimension: `nplist` x `nx_solver`, row-major)
      */
     AmiVectorArray dxdotdp {0, 0};
 
@@ -1412,7 +1414,7 @@ class Model : public AbstractModel {
      * @brief Compute partial derivative of standard deviation of measurements
      * w.r.t. model parameters.
      * @param it Timepoint index
-     * @param edata pointer to amici::ExpData data instance holding sigma values
+     * @param edata pointer to `amici::ExpData` data instance holding sigma values
      */
     void fdsigmaydp(int it, const ExpData *edata);
 
@@ -1757,7 +1759,7 @@ class Model : public AbstractModel {
     /** All variables necessary for function evaluation */
     ModelState state_;
 
-    /** Sparse Jacobian (dimension: amici::Model::nnz) */
+    /** Sparse Jacobian (dimension: `amici::Model::nnz`) */
     mutable SUNMatrixWrapper J_;
 
     /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
