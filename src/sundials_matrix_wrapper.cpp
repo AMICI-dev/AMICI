@@ -16,7 +16,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT");
 
-    if (NNZ && columns() * rows() && !matrix_)
+    if (NNZ && M && N && !matrix_)
         throw std::bad_alloc();
 
     update_ptrs();
