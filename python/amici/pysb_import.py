@@ -961,7 +961,7 @@ def _add_conservation_for_constant_species(
 
     """
 
-    for ix in range(ode_model.nx_rdata()):
+    for ix in range(ode_model.num_states_rdata()):
         if ode_model.state_is_constant(ix):
             target_state = sp.Symbol(f'__s{ix}')
             total_abundance = sp.Symbol(f'tcl__s{ix}')
