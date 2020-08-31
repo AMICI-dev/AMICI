@@ -24,7 +24,7 @@ if [ ! -d "mtocpp-master" ]; then
         fi
         # build ragel?
         tar -xzf ragel-6.10.tar.gz
-        (cd ragel-6.10 && ./configure && make && make install)
+        (cd ragel-6.10 && ./configure && make -j2 && sudo make install)
       fi
     fi
 
