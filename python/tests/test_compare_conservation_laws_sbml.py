@@ -167,6 +167,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
         rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
         assert rdata['status'] == amici.AMICI_ERROR
 
+
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
     # get both models
     model_module = amici.import_model_module('model_constant_species', 
