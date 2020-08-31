@@ -204,6 +204,9 @@ sunindextype *SUNMatrixWrapper::indexptrs() const {
 }
 
 int SUNMatrixWrapper::sparsetype() const {
+    if (!matrix_)
+        throw std::runtime_error("Cannot determine type of uninitialized "
+                                 "matrices");
     if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(matrix_);
     throw std::domain_error("Function only available for sparse matrices");
@@ -419,7 +422,8 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
         }
         for (p = Bp[j]; p < Bp[j+1]; p++)
         {
-            nnz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nnz);
+            nnz = scatter(Bi[p], Bx[p], w.data(), gsl::make_span(x), j+1, C,
+                          nnz);
             assert(nnz - Cp[j] <= m);
         }
         for (p = Cp[j]; p < nnz; p++)
@@ -463,6 +467,7 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     sunindextype nz = 0; // this keeps track of the nonzero index in C
     
     sunindextype j, p;
+    reallocate(A->num_nonzeros() + B->num_nonzeros());
     auto Cx = data();
     auto Ci = indexvals();
     auto Cp = indexptrs();
@@ -476,8 +481,8 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     for (j = 0; j < n; j++)
     {
         Cp[j] = nz;                          /* column j of C starts here */
-        nz = A->scatter(j, alpha, w.data(), x.data(), j+1, this, nz);
-        nz = B->scatter(j, beta, w.data(), x.data(), j+1, this, nz);
+        nz = A->scatter(j, alpha, w.data(), gsl::make_span(x), j+1, this, nz);
+        nz = B->scatter(j, beta, w.data(), gsl::make_span(x), j+1, this, nz);
         // no reallocation should happen here
         for (p = Cp[j]; p < nz; p++)
             Cx[p] = x.at(Ci[p]); // copy data to C
@@ -488,15 +493,17 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
                                        const realtype beta,
-                                       sunindextype *w, realtype *x,
+                                       sunindextype *w,
+                                       gsl::span<realtype> x,
                                        const sunindextype mark,
                                        SUNMatrixWrapper *C,
                                        sunindextype nnz) const {
-    if (sparsetype() != CSC_MAT)
-        throw std::invalid_argument("Matrix A not of type CSC_MAT");
-    
-    if (C->sparsetype() != CSC_MAT)
-        throw std::invalid_argument("Matrix C not of type CSC_MAT");
+    if (!matrix_)
+        return nnz;
+        
+    check_csc(this, "scatter", "A");
+    if (C && C->matrix_)
+        check_csc(C, "scatter", "C");
     
     if (!num_nonzeros())
         return nnz;
@@ -505,20 +512,21 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     
     sunindextype *Ci;
     if (C)
-        Ci = C->indexvals();
+        Ci = C->indexptrs_ptr_;
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
+    assert(x.size() >= Ai[Ap[j+1]]);
     for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
-        assert((C && w) ^ (!C && !w));
-        if (C && w && w[i] < mark) {
+        if (w && w[i] < mark) {
             w[i] = mark;                  /* i is new entry in column j */
-            Ci[nnz++] = i;                 /* add i to pattern of C(:,j) */
+            if (C)
+                Ci[nnz++] = i;            /* add i to pattern of C(:,j) */
             x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */
-        }
-        else x[i] += beta * Ax[p];        /* i exists in C(:,j) already */
+        } else
+            x[i] += beta * Ax[p];         /* i exists in C(:,j) already */
     }
     return nnz;
 }

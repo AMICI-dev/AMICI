@@ -435,7 +435,9 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 
-        dxdotdp_full.scatter(plist(ip), 1.0, nullptr, sxdot_tmp, 0, nullptr, 0);
+        dxdotdp_full.scatter(plist(ip), 1.0, nullptr,
+                             gsl::make_span(sxdot_tmp, nx_solver),
+                             0, nullptr, 0);
 
     } else {
         /* copy dxdotdp over */

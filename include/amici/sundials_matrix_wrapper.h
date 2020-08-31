@@ -235,15 +235,16 @@ class SUNMatrixWrapper {
      * @param j column index
      * @param beta scaling factor
      * @param w temporary index workspace, this keeps track of the sparsity pattern in C
-     * @param x temporary data workspace, this keeps track of the data in C
+     * @param x dense output vector
      * @param mark marker for w to indicate nonzero pattern
-     * @param C output matrix
+     * @param C sparse output matrix
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
      * @note this function can be used to copy sparse columns of A to dense vectors x by not passing w and C
      */
     sunindextype scatter(const sunindextype j, const realtype beta,
-                         sunindextype *w, realtype *x, const sunindextype mark,
+                         sunindextype *w, gsl::span<realtype> x,
+                         const sunindextype mark,
                          SUNMatrixWrapper *C, sunindextype nnz) const;
 
     /**
