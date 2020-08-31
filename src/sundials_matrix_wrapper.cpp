@@ -339,7 +339,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     sunindextype ncols = columns();
 
     if (transpose) {
-        check_dim(ncols, c.size(), "columns", "elements", "A", "c");
+        check_dim(cols.size() , c.size(), "selected columns",
+                  "elements", "A", "c");
         check_dim(nrows, b.size(), "rows", "elements", "A", "b");
     } else {
         check_dim(nrows, c.size(), "rows", "elements", "A", "c");
