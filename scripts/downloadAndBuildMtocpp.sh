@@ -24,8 +24,9 @@ if [ ! -d "mtocpp-master" ]; then
         fi
         # build ragel?
         tar -xzf ragel-6.10.tar.gz
-        (cd ragel-6.10 && ./configure && make -j2 && sudo make install)
+        (cd ragel-6.10 && ./configure --prefix="$(pwd)/install" && make -j2 && make install)
       fi
+      export PATH=$PATH:$(pwd)/ragel-6.10/install/bin
     fi
 
     if [ ! -e "mtocpp-master.zip" ]; then
