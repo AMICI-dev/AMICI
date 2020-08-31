@@ -99,21 +99,10 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
 
-            // copy explicit version
-            if (model_->dxdotdp_explicit.num_nonzeros() > 0) {
-                auto col = model_->dxdotdp_explicit.indexptrs();
-                auto row = model_->dxdotdp_explicit.indexvals();
-                auto data_ptr = model_->dxdotdp_explicit.data();
-                for (sunindextype iCol = col[model_->plist(ip)];
-                     iCol < col[model_->plist(ip) + 1]; ++iCol)
-                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
-            }
-
-            // copy implicit version
-            if (model_->dxdotdp_implicit.num_nonzeros() > 0) {
-                auto col = model_->dxdotdp_implicit.indexptrs();
-                auto row = model_->dxdotdp_implicit.indexvals();
-                auto data_ptr = model_->dxdotdp_implicit.data();
+            if (model_->dxdotdp_full.num_nonzeros() > 0) {
+                auto col = model_->dxdotdp_full.indexptrs();
+                auto row = model_->dxdotdp_full.indexvals();
+                auto data_ptr = model_->dxdotdp_full.data();
                 for (sunindextype iCol = col[model_->plist(ip)];
                      iCol < col[model_->plist(ip) + 1]; ++iCol)
                     sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];

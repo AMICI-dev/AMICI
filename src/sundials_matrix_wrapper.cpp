@@ -336,6 +336,9 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     }
 
     check_csc(this, "Reordered multiply", "A");
+    
+    if (!num_nonzeros())
+        return;
 
     /* Carry out actual multiplication */
     if (transpose) {
@@ -446,7 +449,8 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     check_dim(ncols, A->columns(), "columns", "columns", "C", "A");
     check_dim(ncols, B->columns(), "columns", "columns", "C", "B");
     
-    if (ncols == 0 || nrows == 0 || (A->nonzeros() == 0 && B->nonzeros() == 0))
+    if (ncols == 0 || nrows == 0 ||
+        (A->num_nonzeros() == 0 && B->num_nonzeros() == 0))
         return; // nothing to do
     
 
@@ -494,19 +498,22 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     if (C->sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix C not of type CSC_MAT");
     
-    if (nonzeros() == 0)
-        return nz;
+    if (!num_nonzeros())
+        return nnz;
     
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
     
-    auto Ci = C->indexvals();
+    sunindextype *Ci;
+    if (C)
+        Ci = C->indexvals();
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
     for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
-        if (w[i] < mark) {
+        assert((C && w) ^ (!C && !w));
+        if (C && w && w[i] < mark) {
             w[i] = mark;                  /* i is new entry in column j */
             Ci[nnz++] = i;                 /* add i to pattern of C(:,j) */
             x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */

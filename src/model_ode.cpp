@@ -124,6 +124,7 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
             dxdotdp_implicit.reset();
             dxdotdw_.sparse_multiply(&dxdotdp_implicit, &dwdp_);
         }
+        dxdotdp_full.sparse_add(&dxdotdp_explicit, 1.0, &dxdotdp_implicit, 1.0);
     } else {
         // matlab generated
         for (int ip = 0; ip < nplist(); ip++) {
@@ -372,10 +373,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
 
     if (pythonGenerated) {
         /* call multiplication */
-        if (dxdotdp_explicit.num_nonzeros() > 0)
-            dxdotdp_explicit.multiply(qBdot, xB, state_.plist, true);
-        if (dxdotdp_implicit.num_nonzeros() > 0)
-            dxdotdp_implicit.multiply(qBdot, xB, state_.plist, true);
+        dxdotdp_full.multiply(qBdot, xB, state_.plist, true);
         N_VScale(-1.0, qBdot, qBdot);
     } else {
         /* was matlab generated */
@@ -449,22 +447,14 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 
-        // copy explicit version
-        if (dxdotdp_explicit.num_nonzeros() > 0) {
-            auto col_exp = dxdotdp_explicit.indexptrs();
-            auto row_exp = dxdotdp_explicit.indexvals();
-            auto data_exp_ptr = dxdotdp_explicit.data();
+        // dxdotdp_full.scatter(plist(ip), 1.0, nullptr, sxdot_tmp, 0, nullptr, 0);
+        
+        if (dxdotdp_full.num_nonzeros() > 0) {
+            auto col_exp = dxdotdp_full.indexptrs();
+            auto row_exp = dxdotdp_full.indexvals();
+            auto data_exp_ptr = dxdotdp_full.data();
             for (sunindextype i = col_exp[plist(ip)]; i < col_exp[plist(ip) + 1]; ++i)
                 sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
-        }
-
-        // copy implicit version
-        if (dxdotdp_implicit.num_nonzeros() > 0) {
-            auto col_imp = dxdotdp_implicit.indexptrs();
-            auto row_imp = dxdotdp_implicit.indexvals();
-            auto data_imp_ptr = dxdotdp_implicit.data();
-            for (sunindextype i = col_imp[plist(ip)]; i < col_imp[plist(ip) + 1]; ++i)
-                sxdot_tmp[row_imp[i]] += data_imp_ptr[i];
         }
 
     } else {

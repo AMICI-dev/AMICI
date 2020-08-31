@@ -136,6 +136,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         dxdotdp_implicit =
             SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
                              ndwdp + ndxdotdw, CSC_MAT);
+        dxdotdp_full =
+            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
+                             ndwdp + ndxdotdw + ndxdotdp_explicit, CSC_MAT);
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
