@@ -14,7 +14,10 @@ import numpy as np
 import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
+from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
+
+from amici.gradient_check import check_derivatives
 
 
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
@@ -150,7 +153,8 @@ def test_compare_to_pysb_simulation(example):
                 pysb_model,
                 outdir,
                 verbose=logging.INFO,
-                compute_conservation_laws=compute_conservation_laws
+                compute_conservation_laws=compute_conservation_laws,
+                observables=list(pysb_model.observables.keys())
             )
             sys.path.insert(0, outdir)
 
@@ -170,6 +174,30 @@ def test_compare_to_pysb_simulation(example):
 
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
+
+            if example not in ['fricker_2010_apoptosis', 'fixed_initial',
+                               'bngwiki_egfr_simple_deletemolecules']:
+                if example in ['tyson_oscillator', 'bax_pore_sequential',
+                               'bax_pore', 'kinase_cascade',
+                               'bngwiki_egfr_simple',
+                               'bngwiki_enzymatic_cycle_mm',
+                               'bngwiki_simple']:
+                    solver.setAbsoluteTolerance(1e-14)
+                    solver.setRelativeTolerance(1e-14)
+                    epsilon = 1e-4
+                else:
+                    solver.setAbsoluteTolerance(1e-10)
+                    solver.setRelativeTolerance(1e-10)
+                    epsilon = 1e-3
+                model_pysb.setParameterScale(parameterScalingFromIntVector([
+                    ParameterScaling.log10 if p > 0 else ParameterScaling.none
+                    for p in model_pysb.getParameters()
+                ]))
+                check_derivatives(model_pysb, solver,
+                                  epsilon=epsilon,
+                                  rtol=1e-2,
+                                  atol=1e-2,
+                                  skip_zero_pars=True)
 
             shutil.rmtree(outdir, ignore_errors=True)
 
