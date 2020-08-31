@@ -10,3 +10,10 @@ sphinx_rtd_theme>=0.4.3
 petab>=0.1.5
 sphinx-autodoc-typehints>=1.10.3
 git+https://github.com/readthedocs/sphinx-hoverxref@master
+breathe>=4.20.0
+#exhale>=0.2.3
+git+https://github.com/dweindl/exhale@b50c6fe8e80e76edb60bb01afb134a272cdfa1d3#egg=exhale
+# Newer versions cause trouble with including notebooks:
+# sphinx.errors.SphinxParallelError: ImportError: cannot import name 'Application' from partially initialized module 'prompt_toolkit.application.application' (most likely due to a circular import)
+prompt-toolkit<=3.0.0
+ipython>=7.17.0

@@ -119,10 +119,14 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
     'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting',
     'recommonmark',
     'sphinx_autodoc_typehints',
     'hoverxref.extension',
+    'breathe',
+    'exhale',
 ]
 
 intersphinx_mapping = {
@@ -174,6 +178,42 @@ set_type_checking_flag = True
 hoverxref_auto_ref = True
 hoverxref_roles = ['term']
 hoverxref_domains = ['py']
+hoverxref_role_types = {
+    'hoverxref': 'tooltip',
+    'ref': 'tooltip',
+    'func': 'tooltip',
+    'mod': 'tooltip',
+    'class': 'tooltip',
+}
+
+# breathe settings
+breathe_projects = {
+    "AMICI": "./_doxyoutput/xml",
+}
+
+breathe_default_project = "AMICI"
+
+# exhale settings
+
+exhale_args = {
+    # These arguments are required
+    "containmentFolder": "./_exhale_cpp_api",
+    "rootFileName": "library_root.rst",
+    "rootFileTitle": "AMICI C++ API",
+    "doxygenStripFromPath": "..",
+    # Suggested optional arguments
+    "createTreeView": True,
+    # TIP: if using the sphinx-bootstrap-theme, you need
+    # "treeViewIsBootstrap": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleDoxygenStdin": "\n".join([
+        "INPUT = ../include",
+        "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+    ]),
+    "afterTitleDescription":
+        "AMICI C++ library functions",
+    "verboseBuild": False,
+}
 
 # -- Options for HTML output -------------------------------------------------
 

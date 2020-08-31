@@ -5,11 +5,28 @@ Glossary
 .. glossary::
     :sorted:
 
+    CVODES
+        `CVODES <https://computing.llnl.gov/projects/sundials/cvodes>`_ is a
+        solver for stiff and non-stiff :term:`ODE` systems with sensitivity
+        analysis capabilities and is used by AMICI. It is part of the
+        :term:`SUNDIALS` solver suite.
+
+    DAE
+        Differential-Algebraic Equation
+
     fixed parameters
         In AMICI, *fixed parameters* are parameters with respect to which no
         sensitivities are computed. They usually correspond to experimental
         conditions. For fixed parameters, different values can be set for
         :term:`preequilibration`, :term:`presimulation` and simulation.
+
+    IDAS
+        `IDAS <https://computing.llnl.gov/projects/sundials/idas>`_ is a
+        solver :term:`DAE` systems with sensitivity analysis capabilities
+        and is used by AMICI. It is part of the :term:`SUNDIALS` solver suite.
+
+    ODE
+        Ordinary Differential Equation
 
     preequilibration
         Simulating or solving the dynamical system for the steadystate.
@@ -31,3 +48,8 @@ Glossary
     SBML
         `SBML <http://sbml.org/>`_ is a commonly used format for specifying
         systems biology models.
+
+    SUNDIALS
+        `SUNDIALS <https://computing.llnl.gov/projects/sundials/>`_:
+        SUite of Nonlinear and DIfferential/ALgebraic equation Solvers.
+        Provides the :term:`CVODES` and :term:`IDAS` solvers used by AMICI.

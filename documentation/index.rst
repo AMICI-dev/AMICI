@@ -23,20 +23,22 @@ Welcome to AMICI's documentation!
    :maxdepth: 2
    :caption: User's guide
 
+   about
    INSTALL
    PYTHON
    CPP
+   matlab.rst
    FAQ
    glossary
 
-
 .. toctree::
    :maxdepth: 2
-   :caption: Developer's guide
+   :caption: AMICI internals
 
    CONTRIBUTING
-   README
+   Code of conduct <CODE_OF_CONDUCT>
    development
+   Documentation organization <README>
    code_review_guide
    CI
 
@@ -45,7 +47,8 @@ Welcome to AMICI's documentation!
    :maxdepth: 2
    :caption: API reference
 
-   modules
+   python_modules
+   _exhale_cpp_api/library_root
 
 
 .. toctree::
