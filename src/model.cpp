@@ -103,15 +103,14 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
              std::vector<int> z2event, const bool pythonGenerated,
-             const int ndxdotdp_explicit, const int ndxdotdp_implicit)
+             const int ndxdotdp_explicit)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
       nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx),
       ndwdp(ndwdp), ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz),
       nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
-      ndxdotdp_explicit(ndxdotdp_explicit),
-      ndxdotdp_implicit(ndxdotdp_implicit), o2mode(o2mode),
-      idlist(std::move(idlist)), J_(nx_solver, nx_solver, nnz, CSC_MAT),
+      o2mode(o2mode), idlist(std::move(idlist)),
+      J_(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw_(nx_solver, nw, ndxdotdw, CSC_MAT),
       dwdp_(nw, static_cast<int>(p.size()), ndwdp, CSC_MAT),
       dwdx_(nw, nx_solver, ndwdx, CSC_MAT),
@@ -136,7 +135,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
                              ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit =
             SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndxdotdp_implicit, CSC_MAT);
+                             ndwdp + ndxdotdw, CSC_MAT);
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
@@ -156,13 +155,6 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
 bool operator==(const Model &a, const Model &b) {
     if (typeid(a) != typeid(b))
         return false;
-
-    bool bool_dxdotdp = true;
-    if (a.pythonGenerated && b.pythonGenerated)
-        bool_dxdotdp = (a.ndxdotdp_explicit == b.ndxdotdp_explicit) &&
-            (a.ndxdotdp_implicit == b.ndxdotdp_implicit);
-    if (a.pythonGenerated != b.pythonGenerated)
-        bool_dxdotdp = false;
 
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&
@@ -184,7 +176,7 @@ bool operator==(const Model &a, const Model &b) {
            (a.state_is_non_negative_ == b.state_is_non_negative_) &&
            (a.reinitialize_fixed_parameter_initial_states_ ==
             b.reinitialize_fixed_parameter_initial_states_) &&
-           (a.tstart_ == b.tstart_) && bool_dxdotdp;
+           (a.tstart_ == b.tstart_);
 }
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,

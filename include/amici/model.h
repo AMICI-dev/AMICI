@@ -114,7 +114,6 @@ class Model : public AbstractModel {
      * @param z2event Mapping of event outputs to events
      * @param pythonGenerated Flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
-     * @param ndxdotdp_implicit Number of nonzero elements in `dxdotdp_implicit`
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
@@ -124,7 +123,7 @@ class Model : public AbstractModel {
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
-          int ndxdotdp_explicit = 0, int ndxdotdp_implicit = 0);
+          int ndxdotdp_explicit = 0);
 
     /** Destructor. */
     ~Model() override = default;
@@ -1296,12 +1295,6 @@ class Model : public AbstractModel {
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;
 
-    /** Number of nonzero entries in `amici::Model::ndxdotdp_explicit` */
-    int ndxdotdp_explicit{0};
-
-    /** Number of nonzero entries in `amici::Model::ndxdotdp_implicit` */
-    int ndxdotdp_implicit{0};
-
     /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
@@ -1314,7 +1307,7 @@ class Model : public AbstractModel {
 
     /**
      * Temporary storage of `dxdotdp` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: `ndxdotdp_explicit`,
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
      *  type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_explicit;

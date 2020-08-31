@@ -1405,7 +1405,6 @@ class SbmlImporter:
 
         return volume_updates_solver
 
-
     def _replace_compartments_with_volumes(self):
         """
         Replaces compartment symbols in expressions with their respective
@@ -1416,7 +1415,6 @@ class SbmlImporter:
             self._replace_in_all_expressions(
                 comp, vol
             )
-
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
