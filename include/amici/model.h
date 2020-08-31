@@ -1200,7 +1200,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get only those initial states sensitivities that are affected
-     * from amici::fx0_fixedParameters .
+     * from amici::Model::fx0_fixedParameters .
      * @param sx Output buffer for state sensitivities
      * @param x State variables
      */
