@@ -246,8 +246,8 @@ def test_likelihoods(model_test_likelihoods):
         solver = model.getSolver()
         solver.setSensitivityMethod(sensi_method)
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
-        solver.setRelativeTolerance(1e-10)
-        solver.setAbsoluteTolerance(1e-10)
+        solver.setRelativeTolerance(1e-12)
+        solver.setAbsoluteTolerance(1e-12)
         check_derivatives(
             model, solver, edata, assert_fun, atol=1e-2, rtol=1e-2,
             epsilon=1e-5, check_least_squares=False
