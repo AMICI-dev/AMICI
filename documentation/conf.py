@@ -256,6 +256,7 @@ exhale_projects_args = {
             "EXCLUDE += ../matlab/tests",
             "EXCLUDE += ../matlab/@amimodel",
             "EXCLUDE += ../matlab/@amifun",
+            "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
         ]),
         "containmentFolder":    "_exhale_matlab_api",
         "rootFileTitle":        "AMICI Matlab API",
