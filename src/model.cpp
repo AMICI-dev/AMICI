@@ -1857,9 +1857,9 @@ void Model::fsspl(const realtype t) {
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++) {
             if (splines_[ispl].get_logarithmic_paraterization()) {
-                sspl_data[ispl * nplist() + ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
+                sspl_data[ispl + nspl * ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
             } else {
-                sspl_data[ispl * nplist() + ip] = splines_[ispl].getSensitivity(t, ip);
+                sspl_data[ispl + nspl * ip] = splines_[ispl].getSensitivity(t, ip);
             }
         }
     }
