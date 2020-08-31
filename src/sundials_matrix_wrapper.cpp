@@ -22,8 +22,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
         
     assert(num_nonzeros() == 0);
     assert(NNZ == capacity());
-    assert(M == rows());
-    assert(N == columns());
+    assert(M == rows() || !matrix_);
+    assert(N == columns() || !matrix_);
 
     update_ptrs();
 }
