@@ -185,13 +185,11 @@ sunindextype SUNMatrixWrapper::num_nonzeros() const {
     if (!matrix_)
         return 0;
     
-    switch (SUNMatGetID(matrix_)) {
-    case SUNMATRIX_SPARSE:
+    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE)
         return SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)];
-    default:
+    else
         throw std::domain_error("Non-zeros property only available for "
                                 "sparse matrices");
-    }
 }
 
 sunindextype *SUNMatrixWrapper::indexvals() const {
@@ -422,7 +420,8 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     auto Bi = B->indexvals();
     auto Bp = B->indexptrs();
     
-    sunindextype j, p;
+    sunindextype j;
+    sunindextype p;
     auto Cx = C->data();
     auto Ci = C->indexvals();
     auto Cp = C->indexptrs();
