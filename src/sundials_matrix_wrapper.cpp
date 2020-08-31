@@ -360,7 +360,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 
 void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
                                        SUNMatrixWrapper *B) const {
-    if (!matrix_)
+    if (!matrix_ || !B->matrix_ || !C->matrix_)
         return;
 
     sunindextype nrows = rows();
@@ -438,7 +438,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
 
 void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
                                   SUNMatrixWrapper *B, realtype beta) {
-    if (!matrix_)
+    if (!matrix_ || !A->matrix_ || !B->matrix_)
         return;
 
     sunindextype nrows = rows();
@@ -516,7 +516,6 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
-    assert(static_cast<sunindextype>(x.size()) >= Ai[Ap[j+1]]);
     for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
