@@ -15,7 +15,7 @@ import warnings
 import logging
 from typing import Dict, Union, List, Callable, Any, Iterable
 
-from .ode_export import ODEExporter, ODEModel
+from .ode_export import ODEExporter, ODEModel, get_measurement_symbol
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
@@ -1261,7 +1261,7 @@ class SbmlImporter:
                 sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
 
         measurement_y_syms = sp.Matrix(
-            [sp.symbols(f'm{symbol}', real=True) for symbol in observable_syms]
+            [get_measurement_symbol(obs_id) for obs_id in observable_ids]
         )
         measurement_y_values = sp.Matrix(
             [0.0] * len(observable_syms)
@@ -1326,7 +1326,7 @@ class SbmlImporter:
         # cannot handle ODEs without species, CLs must switched in this case
         if len(species_solver) == 0:
             conservation_laws = []
-            species_solver = list(range(ode_model.nx_rdata()))
+            species_solver = list(range(ode_model.num_states_rdata()))
 
         # prune out species from stoichiometry and
         volume_updates_solver = self._reduce_stoichiometry(species_solver,
@@ -1357,10 +1357,10 @@ class SbmlImporter:
         """
 
         # decide which species to keep in stoichiometry
-        species_solver = list(range(ode_model.nx_rdata()))
+        species_solver = list(range(ode_model.num_states_rdata()))
 
         # iterate over species, find constant ones
-        for ix in reversed(range(ode_model.nx_rdata())):
+        for ix in reversed(range(ode_model.num_states_rdata())):
             if ode_model.state_is_constant(ix):
                 # dont use sym('x') here since conservation laws need to be
                 # added before symbols are generated
