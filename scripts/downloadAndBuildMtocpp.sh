@@ -35,6 +35,10 @@ if [ ! -d "mtocpp-master" ]; then
     fi
     # build mtocpp?
     unzip mtocpp-master.zip
+
+    # patch for xml support for postprocessor
+    sed -i.bak 's/== "tex"$/== "tex" || file.substr(file.find_last_of(".") + 1) == "xml"/' mtocpp-master/src/postprocess.rl
+
     mkdir -p mtocpp-master/build
 
     if command -v cmake &> /dev/null; then
