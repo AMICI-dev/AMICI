@@ -37,6 +37,25 @@ def my_exhale_generate_doxygen(doxygen_input):
 
 exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
 
+
+from breathe.renderer.sphinxrenderer import DomainDirectiveFactory as breathe_DomainDirectiveFactory
+
+old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+
+def my_breathe_DomainDirectiveFactory_create(domain: str, args):
+    if domain != 'mat':
+        return old_breathe_DomainDirectiveFactory_create(domain, args)
+
+    from sphinxcontrib.matlab import MATLABDomain, MatClassmember
+
+    matlab_classes = {k: (v, k) for k, v in MATLABDomain.directives.items()}
+    matlab_classes['variable'] = (MatClassmember, 'attribute')
+    cls, name = matlab_classes[args[0]]
+    return cls(domain + ':' + name, *args[1:])
+
+breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+
+
 def install_mtocpp():
     """Install mtocpp (Matlab doxygen filter)"""
     cmd = os.path.join(amici_dir, 'scripts', 'downloadAndBuildMtocpp.sh')
@@ -154,6 +173,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinxcontrib.matlab',
     'nbsphinx',
     'IPython.sphinxext.ipython_console_highlighting',
     'recommonmark',
@@ -230,6 +250,11 @@ breathe_projects = {
 }
 
 breathe_default_project = "AMICI_CPP"
+breathe_domain_by_extension = {
+    "m": "mat",
+    "h": "cpp",
+    "cpp": "cpp",
+}
 
 #breathe_projects_source = {
 #    "AMICI_CPP": "../",
@@ -278,11 +303,11 @@ exhale_projects_args = {
             "EXCLUDE += ../matlab/SBMLimporter",
             "EXCLUDE += ../matlab/auxiliary",
             "EXCLUDE += ../matlab/tests",
-            "EXCLUDE += ../matlab/@amimodel",
-            "EXCLUDE += ../matlab/@amifun",
-            "EXCLUDE += ../matlab/@amidata",
-            "EXCLUDE += ../matlab/@amised",
-            "EXCLUDE += ../matlab/@amioption",
+            #"EXCLUDE += ../matlab/@amimodel",
+            #"EXCLUDE += ../matlab/@amifun",
+            #"EXCLUDE += ../matlab/@amidata",
+            #"EXCLUDE += ../matlab/@amised",
+            #"EXCLUDE += ../matlab/@amioption",
             "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
         ]),
         "containmentFolder":    "_exhale_matlab_api",

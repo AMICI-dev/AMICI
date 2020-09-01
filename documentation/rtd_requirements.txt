@@ -19,3 +19,4 @@ git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#e
 # sphinx.errors.SphinxParallelError: ImportError: cannot import name 'Application' from partially initialized module 'prompt_toolkit.application.application' (most likely due to a circular import)
 # https://github.com/svenevs/exhale/issues/27 https://github.com/mithro/sphinx-contrib-mithro/tree/master/sphinx-contrib-exhale-multiproject
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
+sphinxcontrib-matlabdomain
