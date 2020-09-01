@@ -114,6 +114,7 @@ class Model : public AbstractModel {
      * @param z2event Mapping of event outputs to events
      * @param pythonGenerated Flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
+     * @param w_recursion_depth Recursion depth of fw
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
@@ -123,7 +124,7 @@ class Model : public AbstractModel {
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
-          int ndxdotdp_explicit = 0);
+          int ndxdotdp_explicit = 0, int recursion_depth = 0);
 
     /** Destructor. */
     ~Model() override = default;
@@ -1767,11 +1768,20 @@ class Model : public AbstractModel {
     /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
     mutable SUNMatrixWrapper dxdotdw_;
 
+    /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
+    mutable SUNMatrixWrapper dwdw_;
+    
     /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
     mutable SUNMatrixWrapper dwdp_;
+    
+    /** Sparse dwdp implicit temporary storage (dimension: `ndwdp`) */
+    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
 
     /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
     mutable SUNMatrixWrapper dwdx_;
+    
+    /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
+    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
 
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     mutable SUNMatrixWrapper M_;
@@ -1972,6 +1982,9 @@ class Model : public AbstractModel {
     /** Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness */
     bool always_check_finite_ {false};
+    
+    /** Recursion */
+    int w_recursion_depth_ {0};
 };
 
 bool operator==(const Model &a, const Model &b);

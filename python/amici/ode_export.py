@@ -9,6 +9,7 @@ directly call any function from this module as this will be done by
 :func:`amici.petab_import.import_model`
 """
 import sympy as sp
+import numpy as np
 import re
 import shutil
 import subprocess
@@ -129,6 +130,13 @@ functions = {
     'dwdx': {
         'signature':
             '(realtype *dwdx, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *tcl)',
+        'flags': ['assume_pow_positivity', 'sparse']
+    },
+    'dwdw': {
+        'signature':
+            '(realtype *dwdw, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *tcl)',
         'flags': ['assume_pow_positivity', 'sparse']
@@ -808,6 +816,9 @@ class ODEModel:
     :ivar _x0_fixedParameters_idx:
         Index list of subset of states for which x0_fixedParameters was
         computed
+
+    :ivar _w_recursion_depth:
+        recursion depth in w, quantified as nilpotency of dwdw
     """
 
     def __init__(self, simplify: Optional[Callable] = sp.powsimp):
@@ -902,6 +913,7 @@ class ODEModel:
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
+        self._w_recursion_depth: int = 0
 
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter',
@@ -1717,37 +1729,17 @@ class ODEModel:
         #  branch
         sym_var = self.sym(var, needs_stripped_symbols)
 
-        derivative = smart_jacobian(sym_eq, sym_var)
+        self._eqs[name] = smart_jacobian(sym_eq, sym_var)
 
-        self._eqs[name] = derivative
-
-        # w can be self-dependent and we need to perform all chain
-        # derivatives of dwdw. This can be implemented as infinite sum
-        # sum{k=0} dwdw^k * dwd{var}.
-        # As long as w has no cyclic dependencies (guaranteed by bngl and
-        # sbml (?)), dwdw must be nilpotent, so we can just compute powers
-        # of dwdw until we obtain a zero matrix.
-        if eq == 'w' and var != 'w':  # avoid infinite loops
-            dwdw = self.eq('dwdw')
-
-            # splitting this in two smart_multiply is empirically faster for
-            # certain models, I here assuming this is due to sizes of w and
-            # p, which was not empircally tested. If things seem overly
-            # slow, either variant here should be tested.
-            if self.num_expr() < self.num_par():
-                # h(k) = dwdw^k (k=1)
-                h = dwdw
-                while not smart_is_zero_matrix(h):
-                    self._eqs[name] += smart_multiply(h, derivative)
-                    # h(k+1) = dwdw^(k+1) = dwdw*dwdw^(k)
-                    h = smart_multiply(dwdw, h)
-            else:
-                # h(k) = dwdw^k*dwd{var} (k=1)
-                h = smart_multiply(dwdw, derivative)
-                while not smart_is_zero_matrix(h):
-                    self._eqs[name] += h
-                    # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
-                    h = smart_multiply(dwdw, h)
+        # compute recursion depth based on nilpotency of jacobian. computing
+        # nilpotency can be done more efficiently on numerical sparsity pattern
+        if name == 'dwdw':
+            nonzeros = np.asarray(
+                self._eqs[name].applyfunc(lambda x: int(not x.is_zero))
+            ).astype(np.int64)
+            while nonzeros.max():
+                nonzeros = nonzeros.dot(nonzeros)
+                self._w_recursion_depth += 1
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
@@ -2699,8 +2691,8 @@ class ODEExporter:
         }
 
         for fun in [
-            'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp_explicit', 'JSparse', 'JSparseB',
+            'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
+            'dxdotdw', 'dxdotdp_explicit', 'JSparse', 'JSparseB',
             'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \

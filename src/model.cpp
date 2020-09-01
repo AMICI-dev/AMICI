@@ -103,7 +103,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
              std::vector<int> z2event, const bool pythonGenerated,
-             const int ndxdotdp_explicit)
+             const int ndxdotdp_explicit, const int w_recursion_depth)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
       nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx),
@@ -117,8 +117,8 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       w_(nw), x_rdata_(nx_rdata, 0.0), sx_rdata_(nx_rdata, 0.0),
       x_pos_tmp_(nx_solver), original_parameters_(p), z2event_(std::move(z2event)),
       state_is_non_negative_(nx_solver, false),
-      pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
-
+      pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)),
+      w_recursion_depth_(w_recursion_depth) {
     state_.h.resize(ne, 0.0);
     state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
     state_.stotal_cl.resize((nx_rdata - nx_solver) * p.size(), 0.0);
@@ -1811,11 +1811,23 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         if (!nw)
             return;
 
-        fdwdp_colptrs(dwdp_.indexptrs());
-        fdwdp_rowvals(dwdp_.indexvals());
-        fdwdp(dwdp_.data(), t, x, state_.unscaledParameters.data(),
+        fdwdp_colptrs(dwdp_hierarchical_.at(0).indexptrs());
+        fdwdp_rowvals(dwdp_hierarchical_.at(0).indexvals());
+        fdwdp(dwdp_hierarchical_.at(0).data(), t, x,
+              state_.unscaledParameters.data(),
               state_.fixedParameters.data(), state_.h.data(), w_.data(),
               state_.total_cl.data(), state_.stotal_cl.data());
+        
+        fdwdw_colptrs(dwdw_.indexptrs());
+        fdwdw_rowvals(dwdw_.indexvals());
+        fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
+              state_.fixedParameters.data(), state_.h.data(), w_.data(),
+              state_.total_cl.data());
+        
+        for (int irecursion=1; irecursion <= w_recursion_depth_;  irecursion++){
+            dwdp_hierarchical_.at(irecursion).sparse_multiply(dwdw_,dwdp_hierarchical_.at(irecursion-1))
+        }
+        dwdp_.sum_sparse(dwdp_hierarchical_);
 
     } else {
         // matlab generated
@@ -1833,11 +1845,32 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t, x);
     dwdx_.reset();
 
-    fdwdx_colptrs(dwdx_.indexptrs());
-    fdwdx_rowvals(dwdx_.indexvals());
-    fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
-          state_.fixedParameters.data(), state_.h.data(), w_.data(),
-          state_.total_cl.data());
+    if (pythonGenerated) {
+        fdwdx_colptrs(dwdx_hierarchical_.at(0).indexptrs());
+        fdwdx_rowvals(dwdx_hierarchical_.at(0).indexvals());
+        fdwdx(dwdx_hierarchical_.at(0).data(), t, x,
+              state_.unscaledParameters.data(),
+              state_.fixedParameters.data(), state_.h.data(), w_.data(),
+              state_.total_cl.data(), state_.stotal_cl.data());
+        
+        fdwdw_colptrs(dwdw_.indexptrs());
+        fdwdw_rowvals(dwdw_.indexvals());
+        fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
+              state_.fixedParameters.data(), state_.h.data(), w_.data(),
+              state_.total_cl.data());
+        
+        for (int irecursion=1; irecursion <= w_recursion_depth_;  irecursion++){
+            dwdx_hierarchical_.at(irecursion).sparse_multiply(dwdw_,dwdx_hierarchical_.at(irecursion-1))
+        }
+        dwdx_.sum_sparse(dwdx_hierarchical_);
+        
+    } else {
+        fdwdx_colptrs(dwdx_.indexptrs());
+        fdwdx_rowvals(dwdx_.indexvals());
+        fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
+              state_.fixedParameters.data(), state_.h.data(), w_.data(),
+              state_.total_cl.data());
+    }
 
     if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdx_.get()), "dwdx");

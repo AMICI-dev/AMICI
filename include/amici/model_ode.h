@@ -62,6 +62,7 @@ class Model_ODE : public Model {
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param 
      */
     Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
               const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
