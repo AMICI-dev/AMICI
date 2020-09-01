@@ -113,8 +113,6 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       o2mode(o2mode), idlist(std::move(idlist)),
       J_(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw_(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dwdp_(nw, static_cast<int>(p.size()), ndwdp, CSC_MAT),
-      dwdx_(nw, nx_solver, ndwdx, CSC_MAT),
       w_(nw), x_rdata_(nx_rdata, 0.0), sx_rdata_(nx_rdata, 0.0),
       x_pos_tmp_(nx_solver), original_parameters_(p), z2event_(std::move(z2event)),
       state_is_non_negative_(nx_solver, false),
@@ -133,12 +131,10 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
     if (pythonGenerated) {
 
         dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
+        // size dynamically adapted for dwdx_ and dwdp_
+        dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
+        dwdp_ = SUNMatrixWrapper(nw, static_cast<int>(p.size()), 0, CSC_MAT);
 
-        // base size of mats is guessed
-        assert(static_cast<int>(dwdp_hierarchical_.size()) ==
-               w_recursion_depth_ + 1);
-        assert(static_cast<int>(dwdx_hierarchical_.size()) ==
-               w_recursion_depth_ + 1);
         for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
             dwdp_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, static_cast<int>(p.size()), ndwdw + ndwdp,
@@ -146,6 +142,10 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
             dwdx_hierarchical_.emplace_back(SUNMatrixWrapper(
                 nw, nx_solver, ndwdw + ndwdx, CSC_MAT)); // guessed size
         }
+        assert(static_cast<int>(dwdp_hierarchical_.size()) ==
+               w_recursion_depth_ + 1);
+        assert(static_cast<int>(dwdx_hierarchical_.size()) ==
+               w_recursion_depth_ + 1);
 
         dxdotdp_explicit = SUNMatrixWrapper(
             nx_solver, static_cast<int>(p.size()), ndxdotdp_explicit, CSC_MAT);
@@ -162,6 +162,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
             dJydy_.emplace_back(
                 SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
+        dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
+        dwdp_ = SUNMatrixWrapper(nw, static_cast<int>(p.size()), ndwdp,
+                                 CSC_MAT);
         dJydy_matlab_ = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
     requireSensitivitiesForAllParameters();
@@ -1858,8 +1861,8 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
-            dwdp_hierarchical_.at(irecursion)
-                .sparse_multiply(dwdw_, dwdp_hierarchical_.at(irecursion - 1));
+            dwdw_.sparse_multiply(dwdp_hierarchical_.at(irecursion),
+                                  dwdp_hierarchical_.at(irecursion - 1));
         }
         dwdp_.sparse_sum(dwdp_hierarchical_);
 
@@ -1894,8 +1897,8 @@ void Model::fdwdx(const realtype t, const realtype *x) {
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
-            dwdx_hierarchical_.at(irecursion)
-                .sparse_multiply(dwdw_, dwdx_hierarchical_.at(irecursion - 1));
+            dwdw_.sparse_multiply(dwdx_hierarchical_.at(irecursion),
+                                  dwdx_hierarchical_.at(irecursion - 1));
         }
         dwdx_.sparse_sum(dwdx_hierarchical_);
 
