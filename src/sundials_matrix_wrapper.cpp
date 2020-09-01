@@ -506,7 +506,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
 
 void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> mats) {
     // matrix_ == nullptr is allowed on the first call
-    if (std::all_of(mats.begin(), mats.end(), [](SUNMatrixWrapper &m){return !m.matrix_;}))
+    if (std::all_of(mats.begin(), mats.end(), [](const SUNMatrixWrapper &m){return !m.matrix_;}))
         return;
 
     sunindextype nrows = rows();

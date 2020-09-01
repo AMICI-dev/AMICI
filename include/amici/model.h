@@ -216,21 +216,21 @@ class Model : public AbstractModel {
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
      */
-    void fdwdw(realtype *dwdw, realtype t, const realtype *x, const realtype *p,
-               const realtype *k, const realtype *h, const realtype *w,
-               const realtype *tcl);
+    virtual void fdwdw(realtype *dwdw, realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h,
+                       const realtype *w, const realtype *tcl);
 
     /**
      * @brief Model specific implementation of fdwdw, colptrs part
      * @param indexptrs column pointers
      */
-    void fdwdw_colptrs(sunindextype *indexptrs);
+    virtual void fdwdw_colptrs(sunindextype *indexptrs);
 
     /**
      * @brief Model specific implementation of fdwdw, rowvals part
      * @param indexvals row values
      */
-    void fdwdw_rowvals(sunindextype *indexvals);
+    virtual void fdwdw_rowvals(sunindextype *indexvals);
 
     /**
      * @brief Initialize model properties.

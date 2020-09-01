@@ -58,6 +58,9 @@ TPL_DWDP_ROWVALS_DEF
 TPL_DWDX_DEF
 TPL_DWDX_COLPTRS_DEF
 TPL_DWDX_ROWVALS_DEF
+TPL_DWDW_DEF
+TPL_DWDW_COLPTRS_DEF
+TPL_DWDW_ROWVALS_DEF
 TPL_DXDOTDW_DEF
 TPL_DXDOTDW_COLPTRS_DEF
 TPL_DXDOTDW_ROWVALS_DEF
@@ -140,7 +143,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
               std::vector<int>{},                          // z2event
               true,                                        // pythonGenerated
-              TPL_NDXDOTDP_EXPLICIT                        // ndxdotdp_explicit
+              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
+              TPL_W_RECURSION_DEPTH                        // w_recursion_depth
           ) {}
 
     /**
