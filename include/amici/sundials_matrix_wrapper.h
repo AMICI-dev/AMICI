@@ -252,6 +252,36 @@ class SUNMatrixWrapper {
                          sunindextype *w, gsl::span<realtype> x,
                          const sunindextype mark,
                          SUNMatrixWrapper *C, sunindextype nnz) const;
+    
+    /**
+     * @brief Computes transpose A' of sparse matrix A and writes is to the sparse matrix C = alpha * A'
+     *
+     * @param C sparse output matrix
+     * @param alpha scalar multiplier
+     */
+    void transpose_sparse(SUNMatrix C, const realtype alpha) const;
+    
+    /**
+     * @brief Computes transpose A' of sparse matrix A and writes is to the dense matrix D = alpha * A'
+     *
+     * @param D dense output matrix
+     * @param alpha scalar multiplier
+     */
+    void transpose_dense(SUNMatrix D, const realtype alpha) const;
+    
+    /**
+     * @brief Writes a sparse matrix A to a dense matrix D.
+     *
+     * @param D dense output matrix
+     */
+    void to_dense(SUNMatrix D) const;
+    
+    /**
+     * @brief Writes the diagonal of sparse matrix A to a dense vector v.
+     *
+     * @param v dense outut vector
+     */
+    void to_diag(N_Vector v) const;
 
     /**
      * @brief Set to 0.0

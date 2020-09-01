@@ -13,10 +13,8 @@ void Model_ODE::fJ(const realtype t, const realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJ(realtype t, N_Vector x, N_Vector /*xdot*/, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
-    SUNMatZero(J);
-    fJ(SM_DATA_D(J), t, N_VGetArrayPointer(x_pos),
-       state_.unscaledParameters.data(), state_.fixedParameters.data(),
-       state_.h.data(), w_.data(), dwdx_.data());
+    fJSparse(t, x, J_.get());
+    J_.to_dense(J);
 }
 
 void Model_ODE::fJSparse(const realtype t, const realtype /*cj*/,
@@ -146,16 +144,6 @@ std::unique_ptr<Solver> Model_ODE::getSolver() {
     return std::unique_ptr<Solver>(new amici::CVodeSolver());
 }
 
-void Model_ODE::fJB(realtype * /*JB*/, const realtype /*t*/,
-                    const realtype * /*x*/, const realtype * /*p*/,
-                    const realtype * /*k*/, const realtype * /*h*/,
-                    const realtype * /*xB*/, const realtype * /*w*/,
-                    const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s is not "
-                       "implemented for this model!",
-                       __func__);
-}
-
 void Model_ODE::fJSparse(SUNMatrixContent_Sparse /*JSparse*/,
                          const realtype /*t*/, const realtype * /*x*/,
                          const realtype * /*p*/, const realtype * /*k*/,
@@ -185,47 +173,6 @@ void Model_ODE::fJSparse_rowvals(sunindextype * /*indexvals*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
-}
-
-void Model_ODE::fJSparseB(SUNMatrixContent_Sparse /*JSparseB*/,
-                          const realtype /*t*/, const realtype * /*x*/,
-                          const realtype * /*p*/, const realtype * /*k*/,
-                          const realtype * /*h*/, const realtype * /*xB*/,
-                          const realtype * /*w*/, const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model_ODE::fJSparseB(realtype * /*JSparseB*/, const realtype /*t*/,
-                          const realtype * /*x*/, const realtype * /*p*/,
-                          const realtype * /*k*/, const realtype * /*h*/,
-                          const realtype * /*xB*/, const realtype * /*w*/,
-                          const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model_ODE::fJSparseB_colptrs(sunindextype * /*indexptrs*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model_ODE::fJSparseB_rowvals(sunindextype * /*indexvals*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model_ODE::fJDiag(realtype * /*JDiag*/, const realtype /*t*/,
-                       const realtype * /*x*/, const realtype * /*p*/,
-                       const realtype * /*k*/, const realtype * /*h*/,
-                       const realtype * /*w*/, const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s is not "
-                       "implemented for this model!",
-                       __func__);
 }
 
 void Model_ODE::froot(realtype * /*root*/, const realtype /*t*/,
@@ -297,12 +244,8 @@ void Model_ODE::fJB(const realtype t, realtype /*cj*/, const AmiVector &x,
 
 void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector /*xBdot*/,
                     SUNMatrix JB) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    SUNMatZero(JB);
-    fJB(SM_DATA_D(JB), t, N_VGetArrayPointer(x_pos),
-        state_.unscaledParameters.data(), state_.fixedParameters.data(),
-        state_.h.data(), N_VGetArrayPointer(xB), w_.data(), dwdx_.data());
+    fJSparse(t, x, J_.get());
+    J_.transpose_dense(JB, -1.0);
 }
 
 void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
@@ -314,31 +257,13 @@ void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
 
 void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
                           N_Vector /*xBdot*/, SUNMatrix JB) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    SUNMatZero(JB);
-    if (pythonGenerated) {
-        fJSparseB(SM_DATA_S(JB), t, N_VGetArrayPointer(x_pos),
-                  state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                  state_.h.data(), N_VGetArrayPointer(xB), w_.data(),
-                  dwdx_.data());
-        fJSparseB_colptrs(SM_INDEXPTRS_S(JB));
-        fJSparseB_rowvals(SM_INDEXVALS_S(JB));
-    } else {
-        fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
-                  N_VGetArrayPointer(x_pos), state_.unscaledParameters.data(),
-                  state_.fixedParameters.data(), state_.h.data(),
-                  N_VGetArrayPointer(xB), w_.data(), dwdx_.data());
-    }
+    fJSparse(t, x, J_.get());
+    J_.transpose_sparse(JB, -1.0);
 }
 
 void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    N_VConst(0.0, JDiag);
-    fJDiag(N_VGetArrayPointer(JDiag), t, N_VGetArrayPointer(x_pos),
-           state_.unscaledParameters.data(), state_.fixedParameters.data(),
-           state_.h.data(), w_.data(), dwdx_.data());
+    fJSparse(t, x, J_.get());
+    J_.to_diag(JDiag);
 }
 
 void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,

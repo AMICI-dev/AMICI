@@ -548,6 +548,140 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     return nnz;
 }
 
+// https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_cumsum.c
+/* p [0..n] = cumulative sum of c [0..n-1], and then copy p [0..n-1] into c */
+static realtype cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c,
+                       sunindextype n) {
+    sunindextype i;
+    sunindextype nz = 0;
+    realtype nz2 = 0;
+    assert(static_cast<sunindextype>(c.size()) == n);
+    assert(static_cast<sunindextype>(p.size()) == n);
+    for (i = 0 ; i < n ; i++)
+    {
+        p[i] = nz ;
+        nz += c[i] ;
+        nz2 += c[i] ;             /* also in double to avoid csi overflow */
+        c[i] = p[i] ;             /* also copy p[0..n-1] back into c[0..n-1]*/
+    }
+    p[n] = nz;
+    return (nz2);
+}
+
+void SUNMatrixWrapper::transpose_sparse(SUNMatrix C,
+                                 const realtype alpha) const{
+    if (!matrix_ || !C)
+        return;
+    check_csc(this, "transpose", "A");
+    check_csc(this, "transpose", "B");
+    check_dim(rows(), SM_COLUMNS_S(C), "rows", "columns", "A", "C");
+    check_dim(columns(), SM_ROWS_S(C), "columns", "rows", "A", "C");
+    if (num_nonzeros() > SM_NNZ_S(C))
+        std::invalid_argument("C must be allocated such that it can hold all "
+                              "nonzero values from A. Requires "
+                              + std::to_string(num_nonzeros()) + " was "
+                              + std::to_string(SM_NNZ_S(C)) + ".");
+    
+    if (!num_nonzeros())
+        return;
+    
+    // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
+    
+    auto m = columns();
+    auto n = rows();
+    
+    sunindextype p;
+    sunindextype q;
+    sunindextype j;
+    
+    auto Ax = data();
+    auto Ai = indexvals();
+    auto Ap = indexptrs();
+    
+    auto Cx = SM_DATA_S(C);
+    auto Ci = SM_INDEXVALS_S(C);
+    auto Cp = SM_INDEXPTRS_S(C);
+    
+    auto w = std::vector<sunindextype>(m);
+    for (p = 0 ; p < Ap[n]; p++)
+        w[Ai[p]]++ ;                       /* row counts */
+    cumsum(gsl::make_span(Cp,m), w, m) ;   /* row pointers */
+    for (j = 0 ; j < n; j++)
+    {
+        for (p = Ap[j]; p < Ap[j+1]; p++)
+        {
+            Ci[q = w[Ai [p]]++] = j;       /* place A(i,j) as entry C(j,i) */
+            Cx[q] = alpha * Ax [p];
+        }
+    }
+}
+
+void SUNMatrixWrapper::transpose_dense(SUNMatrix D,
+                                       const realtype alpha) const{
+    if (!matrix_ || !D)
+        return;
+    check_csc(this, "transpose", "A");
+    check_csc(this, "transpose", "B");
+    check_dim(rows(), SM_COLUMNS_D(D), "rows", "columns", "A", "D");
+    check_dim(columns(), SM_ROWS_D(D), "columns", "rows", "A", "D");
+    
+    if (!num_nonzeros())
+        return;
+    
+    // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
+    
+    auto n = rows();
+    
+    sunindextype p;
+    sunindextype j;
+    
+    auto Ax = data();
+    auto Ai = indexvals();
+    auto Ap = indexptrs();
+    
+    for (j = 0 ; j < n; j++)
+    {
+        for (p = Ap[j]; p < Ap[j+1]; p++)
+        {
+            SM_ELEMENT_D(D, j, Ai[p]) = alpha * Ax[p];
+        }
+    }
+}
+
+void SUNMatrixWrapper::to_dense(SUNMatrix D) const {
+    if (!matrix_ || !D)
+        return;
+    check_csc(this, "to_dense", "A");
+    check_dim(rows(), SM_ROWS_D(D), "rows", "rows", "A", "D");
+    check_dim(columns(), SM_COLUMNS_D(D), "columns", "columns", "A", "D");
+    
+    SUNMatZero(D);
+    if (!num_nonzeros())
+        return;
+        
+    for (sunindextype icol = 0; icol < columns(); ++icol)
+        for (sunindextype p = indexptrs()[icol]; p < indexptrs()[p+1]; ++p)
+            SM_ELEMENT_D(D, indexvals()[p], icol) = data()[p];
+}
+
+void SUNMatrixWrapper::to_diag(N_Vector v) const {
+    if (!matrix_ || !v)
+        return;
+    check_csc(this, "to_dense", "S");
+    check_dim(rows(), columns(), "rows", "columns", "A", "A");
+    check_dim(rows(), NV_LENGTH_S(v), "rows", "elements", "S", "v");
+    
+    N_VConst(0.0, v);
+    if (!num_nonzeros())
+        return;
+        
+    for (sunindextype icol = 0; icol < columns(); ++icol)
+        for (sunindextype p = indexptrs()[icol]; p < indexptrs()[p+1]; ++p)
+            if (indexvals()[p] == icol)
+                NV_Ith_S(v, icol) = data()[p];
+}
+
+
 void SUNMatrixWrapper::zero()
 {
     if(int res = SUNMatZero(matrix_))
