@@ -284,7 +284,6 @@ exhale_projects_args = {
             "EXCLUDE += ../matlab/@amised",
             "EXCLUDE += ../matlab/@amioption",
             "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
-            "BUILTIN_STL_SUPPORT    = YES",
         ]),
         "containmentFolder":    "_exhale_matlab_api",
         "rootFileTitle":        "AMICI Matlab API",
