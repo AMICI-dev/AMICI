@@ -254,20 +254,12 @@ class SUNMatrixWrapper {
                          SUNMatrixWrapper *C, sunindextype nnz) const;
     
     /**
-     * @brief Computes transpose A' of sparse matrix A and writes is to the sparse matrix C = alpha * A'
+     * @brief Computes transpose A' of sparse matrix A and writes is to the matrix C = alpha * A'
      *
-     * @param C sparse output matrix
+     * @param C output matrix (sparse or dense)
      * @param alpha scalar multiplier
      */
-    void transpose_sparse(SUNMatrix C, const realtype alpha) const;
-    
-    /**
-     * @brief Computes transpose A' of sparse matrix A and writes is to the dense matrix D = alpha * A'
-     *
-     * @param D dense output matrix
-     * @param alpha scalar multiplier
-     */
-    void transpose_dense(SUNMatrix D, const realtype alpha) const;
+    void transpose(SUNMatrix C, const realtype alpha) const;
     
     /**
      * @brief Writes a sparse matrix A to a dense matrix D.

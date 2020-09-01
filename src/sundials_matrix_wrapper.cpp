@@ -568,10 +568,14 @@ static realtype cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c,
     return (nz2);
 }
 
-void SUNMatrixWrapper::transpose_sparse(SUNMatrix C,
-                                 const realtype alpha) const{
+void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
     if (!matrix_ || !C)
         return;
+
+    if (SUNMatGetID(C) != SUNMATRIX_SPARSE && SUNMatGetID(C) != SUNMATRIX_DENSE)
+        throw std::domain_error("Not Implemented.");
+        
+    
     check_csc(this, "transpose", "A");
     check_csc(this, "transpose", "B");
     check_dim(rows(), SM_COLUMNS_S(C), "rows", "columns", "A", "C");
@@ -594,56 +598,36 @@ void SUNMatrixWrapper::transpose_sparse(SUNMatrix C,
     sunindextype q;
     sunindextype j;
     
+    realtype *Cx;
+    sunindextype *Ci;
+    sunindextype *Cp;
+    std::vector<sunindextype> w;
+    
     auto Ax = data();
     auto Ai = indexvals();
     auto Ap = indexptrs();
     
-    auto Cx = SM_DATA_S(C);
-    auto Ci = SM_INDEXVALS_S(C);
-    auto Cp = SM_INDEXPTRS_S(C);
-    
-    auto w = std::vector<sunindextype>(m);
-    for (p = 0 ; p < Ap[n]; p++)
-        w[Ai[p]]++ ;                       /* row counts */
-    cumsum(gsl::make_span(Cp,m), w, m) ;   /* row pointers */
-    for (j = 0 ; j < n; j++)
-    {
-        for (p = Ap[j]; p < Ap[j+1]; p++)
-        {
-            Ci[q = w[Ai [p]]++] = j;       /* place A(i,j) as entry C(j,i) */
-            Cx[q] = alpha * Ax [p];
-        }
+    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+        Cx = SM_DATA_S(C);
+        Ci = SM_INDEXVALS_S(C);
+        Cp = SM_INDEXPTRS_S(C);
+        w = std::vector<sunindextype>(m);
+        for (p = 0 ; p < Ap[n]; p++)
+            w[Ai[p]]++ ;                     /* row counts */
+        cumsum(gsl::make_span(Cp,m), w, m);  /* row pointers */
     }
-}
-
-void SUNMatrixWrapper::transpose_dense(SUNMatrix D,
-                                       const realtype alpha) const{
-    if (!matrix_ || !D)
-        return;
-    check_csc(this, "transpose", "A");
-    check_csc(this, "transpose", "B");
-    check_dim(rows(), SM_COLUMNS_D(D), "rows", "columns", "A", "D");
-    check_dim(columns(), SM_ROWS_D(D), "columns", "rows", "A", "D");
     
-    if (!num_nonzeros())
-        return;
-    
-    // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
-    
-    auto n = rows();
-    
-    sunindextype p;
-    sunindextype j;
-    
-    auto Ax = data();
-    auto Ai = indexvals();
-    auto Ap = indexptrs();
     
     for (j = 0 ; j < n; j++)
     {
         for (p = Ap[j]; p < Ap[j+1]; p++)
         {
-            SM_ELEMENT_D(D, j, Ai[p]) = alpha * Ax[p];
+            if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+                Ci[q = w[Ai [p]]++] = j;     /* place A(i,j) as entry C(j,i) */
+                Cx[q] = alpha * Ax [p];
+            } else {
+                SM_ELEMENT_D(C, j, Ai[p]) = alpha * Ax[p];
+            }
         }
     }
 }
