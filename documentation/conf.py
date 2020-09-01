@@ -290,6 +290,7 @@ exhale_projects_args = {
         "rootFileTitle":        "AMICI Matlab API",
         "afterTitleDescription":
             "AMICI Matlab library functions",
+        "lexerMapping": {'.*\.m$': 'matlab'}
     },
 }
 # -- Options for HTML output -------------------------------------------------
