@@ -2619,26 +2619,37 @@ class ODEExporter:
             if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
                 nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
             body.append(nodes)
+
             # create the vector with the node values
             vals = f'\tstd::vector<realtype> values{ispl} {{' + str(spline.yy[0])
             for iyy in spline.yy[1:]:
                 vals += ', ' + str(iyy)
             vals += '};'
             body.append(vals)
+
             # create the vector with the slopes
             body.append(f'\tstd::vector<realtype> slopes{ispl};')
             constr = f'\tHermiteSpline spline{ispl} = HermiteSpline('
             constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
-            if spline.bc == (None, None) and (spline.extrapolate == ('linear', 'linear') or spline.extrapolate == (None, None)):
+
+            # write boundary and extrapolation conditions
+            if spline.bc[0] is None and (spline.extrapolate[0] == 'linear' or spline.extrapolate[0] is None):
                 constr += 'SplineBoundaryCondition::linearFinDiff, '
-                constr += 'SplineBoundaryCondition::linearFinDiff, '
-            elif spline.bc == ('zeroderivative', 'zeroderivative') and (spline.extrapolate == ('constant', 'constant') or spline.extrapolate == (None, None)):
-                constr += 'SplineBoundaryCondition::constant, '
+            elif spline.bc[0] == 'zeroderivative' and (spline.extrapolate[0] == 'constant' or spline.extrapolate[0] is None):
                 constr += 'SplineBoundaryCondition::constant, '
             else:
                 raise NotImplementedError(
-                    'CubicHermiteSpline with bc = {spline.bc} and extrapolate = {spline.extrapolate} not supported yet in ODEExporter.'
+                    f'CubicHermiteSpline with bc = {spline.bc} and extrapolate = {spline.extrapolate} not supported yet in ODEExporter.'
                 )
+            if spline.bc[1] is None and (spline.extrapolate[1] == 'linear' or spline.extrapolate[1] is None):
+                constr += 'SplineBoundaryCondition::linearFinDiff, '
+            elif spline.bc[1] == 'zeroderivative' and (spline.extrapolate[1] == 'constant' or spline.extrapolate[1] is None):
+                constr += 'SplineBoundaryCondition::constant, '
+            else:
+                raise NotImplementedError(
+                    f'CubicHermiteSpline with bc = {spline.bc} and extrapolate = {spline.extrapolate} not supported yet in ODEExporter.'
+                )
+
             if spline.derivatives_by_fd:
                 constr += 'true, '
             else:
@@ -2651,6 +2662,7 @@ class ODEExporter:
                 constr += 'true);'
             else:
                 constr += 'false);'
+
             body.append(constr)
             body.append(f'\tsplines.push_back(spline{ispl});')
             body.append('')

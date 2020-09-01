@@ -298,7 +298,9 @@ class AbstractSpline(ABC):
         if not isinstance(bc, tuple):
             bc = (bc, bc)
         elif len(bc) != 2:
-            raise TypeError(f'bc should be a 2-tuple, gor {bc} instead')
+            raise TypeError(f'bc should be a 2-tuple, got {bc} instead')
+
+        bc = list(bc)
 
         valid_bc = (
             'periodic',
@@ -326,7 +328,7 @@ class AbstractSpline(ABC):
                 'then the bc on the other side must be periodic too.'
             )
 
-        return bc
+        return tuple(bc)
 
     def _normalize_extrapolate(self, bc, extrapolate):
         """
@@ -335,10 +337,16 @@ class AbstractSpline(ABC):
         """
         if not isinstance(extrapolate, tuple):
             extrapolate = (extrapolate, extrapolate)
-        if len(extrapolate) != 2:
+        elif len(extrapolate) != 2:
             raise TypeError(
-                f'extrapolate should be a 2-tuple, gor {extrapolate} instead'
+                f'extrapolate should be a 2-tuple, got {extrapolate} instead'
             )
+        extrapolate = list(extrapolate)
+
+        if not isinstance(bc, tuple) or len(bc) != 2:
+            raise TypeError(f'bc should be a 2-tuple, got {bc} instead')
+        bc = list(bc)
+
         valid_extrapolate = (
             'no_extrapolation',
             'constant',
@@ -347,6 +355,7 @@ class AbstractSpline(ABC):
             'periodic',
             None
         )
+
         for i in (0, 1):
             if extrapolate[i] not in valid_extrapolate:
                 raise ValueError(
@@ -414,7 +423,7 @@ class AbstractSpline(ABC):
                 '(in which case it will be periodic anyway).'
             )
 
-        return bc, extrapolate
+        return tuple(bc), tuple(extrapolate)
 
     @property
     def sbmlImporter(self) -> sp.Symbol:
@@ -565,13 +574,16 @@ class AbstractSpline(ABC):
         """
         return self._extrapolation_formulas(self.x)
 
-    def _extrapolation_formulas(self, x):
-        extrLeft, extrRight = self.extrapolate
+    def _extrapolation_formulas(self, x, extrapolate=None):
+        if extrapolate is None:
+            extrLeft, extrRight = self.extrapolate
+        else:
+            extrLeft, extrRight = extrapolate
 
         if extrLeft == 'constant':
             extrLeft = self.yy[0]
         elif extrLeft == 'linear':
-            extrLeft = self.yy[0] + self.derivative(self.xx[0]) * (x - self.xx[0])
+            extrLeft = self.yy[0] + self.derivative(self.xx[0], extrapolate=None) * (x - self.xx[0])
         elif extrLeft == 'polynomial':
             extrLeft = None
         else:
@@ -580,7 +592,7 @@ class AbstractSpline(ABC):
         if extrRight == 'constant':
             extrRight = self.yy[-1]
         elif extrRight == 'linear':
-            extrRight = self.yy[-1] + self.derivative(self.xx[-1]) * (x - self.xx[-1])
+            extrRight = self.yy[-1] + self.derivative(self.xx[-1], extrapolate=None) * (x - self.xx[-1])
         elif extrRight == 'polynomial':
             extrRight = None
         else:
@@ -626,9 +638,10 @@ class AbstractSpline(ABC):
         if x is None:
             x = self.x
         if 'extrapolate' in kwargs.keys():
-            extrapolate = self._normalize_extrapolate(
-                kwargs['extrapolate'], self.bc
+            _bc, extrapolate = self._normalize_extrapolate(
+                self.bc, kwargs['extrapolate']
             )
+            assert self.bc == _bc
         else:
             extrapolate = self.extrapolate
 
@@ -646,7 +659,7 @@ class AbstractSpline(ABC):
                 x = self._to_base_interval(x)
             extrLeft, extrRight = None, None
         else:
-            extrLeft, extrRight = self._extrapolation_formulas(x)
+            extrLeft, extrRight = self._extrapolation_formulas(x, extrapolate)
 
         if extrLeft is not None:
             pieces.append((extrLeft, x < self.xx[0]))
@@ -690,9 +703,11 @@ class AbstractSpline(ABC):
         _x = sp.Dummy('x')
         return self._formula(x=_x, cache=False).subs(_x, x)
 
-    def derivative(self, x):
+    def derivative(self, x, **kwargs):
+        # NB kwargs are used to pass on extrapolate=None
+        #    when called from .extrapolation_formulas()
         _x = sp.Dummy('x')
-        return self._formula(x=_x, cache=False).diff(_x).subs(_x, x)
+        return self._formula(x=_x, cache=False, **kwargs).diff(_x).subs(_x, x)
 
     def second_derivative(self, x):
         _x = sp.Dummy('x')
