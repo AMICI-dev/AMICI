@@ -4,7 +4,6 @@
 #include "amici/amici.h"
 #include "amici/exception.h"
 #include <vector>
-#include <iostream>
 
 
 namespace amici {
@@ -58,31 +57,10 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
     lastNodeDerivative(lastNodeDerivative),
     node_derivative_by_FD_(node_derivative_by_FD) {
 
-    std::cout << "n_nodes() " << n_nodes() << std::endl;
-    std::cout << "node_derivative_by_FD_ " << node_derivative_by_FD_ << std::endl;
-
-    std::cout << " " << std::endl;
-    std::cout << "Data in nodes_:";
-    for (int i = 0; i < nodes_.size(); i++)
-        std::cout << " :: " << nodes_[i];
-    std::cout << " |" << std::endl;
-    std::cout << " " << std::endl;
-    std::cout << "Data in node_values_:";
-    for (int i = 0; i < node_values_.size(); i++)
-        std::cout << " :: " << node_values_[i];
-    std::cout << " |" << std::endl;
-    std::cout << " " << std::endl;
-    std::cout << "Data in node_values_derivative_:";
-    for (int i = 0; i < node_values_derivative_.size(); i++)
-        std::cout << " :: " << node_values_derivative_[i];
-    std::cout << " |" << std::endl;
-    std::cout << " " << std::endl;
-
     /* If values of the derivative at the nodes are to be computed by finite
      * differences, we have to fill up node_values_derivative_ */
     if (node_derivative_by_FD_) {
         node_values_derivative_.resize(n_nodes(), 0.0);
-        std::cout << "node_values_derivative size " << node_values_derivative_.size() << std::endl;
         for (int i_node = 1; i_node < n_nodes() - 1; i_node++)
             node_values_derivative_[i_node] =
                 (node_values_[i_node + 1] - node_values_[i_node - 1]) /
@@ -120,13 +98,6 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                                    "is not yet implemented.");
         }
     }
-
-    std::cout << "Data in node_values_derivative_:";
-    for (int i = 0; i < node_values_derivative_.size(); i++)
-        std::cout << " :: " << node_values_derivative_[i];
-    std::cout << " |" << std::endl;
-    std::cout << " " << std::endl;
-
 }
 
 void HermiteSpline::computeCoefficients() {
@@ -144,11 +115,6 @@ void HermiteSpline::computeCoefficients() {
      *           = d + t * (c + t * (b + t * a))
      * with coefficients[4 * i_node + (0, 1, 2, 3)] = (d, c, b, a)
      * */
-    std::cout << "just before assignments" << std::endl;
-    std::cout << "len nodes values" << node_values_.size() << std::endl;
-    std::cout << "len slopes values" << node_values_derivative_.size() << std::endl;
-    std::cout << "len coefficients values" << coefficients.size() << std::endl;
-    std::cout << "len coefficients_extrapolate values" << coefficients_extrapolate.size() << std::endl;
 
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. Yes, we could save computation time
@@ -168,7 +134,7 @@ void HermiteSpline::computeCoefficients() {
             - 2 * node_values_[i_node + 1]
             + len * node_values_derivative_[i_node + 1];
     }
-    std::cout << "just before extrapolate assignments" << std::endl;
+
     /* Coefficients for affine functions for extrapolation */
     coefficients_extrapolate[0] = node_values_[0]
         - nodes_[0] * node_values_derivative_[0];
@@ -176,13 +142,6 @@ void HermiteSpline::computeCoefficients() {
     coefficients_extrapolate[2] = node_values_[n_nodes() - 1]
         - nodes_[n_nodes() - 1] * node_values_derivative_[n_nodes() - 1];
     coefficients_extrapolate[3] = node_values_derivative_[n_nodes() - 1];
-    std::cout << "just after extrapolate assignments" << std::endl;
-
-
-    std::cout << "Computed coefficients";
-    for (int i = 0; i < coefficients.size(); i++)
-        std::cout << " :: " << coefficients[i];
-    std::cout << " |" << std::endl;
 }
 
 void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
@@ -276,20 +235,6 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
         coefficients_extrapolate_sensi[4 * ip + 1] = sm0;
         coefficients_extrapolate_sensi[4 * ip + 2] = sp_end - sm_end * nodes_[n_nodes() - 1];
         coefficients_extrapolate_sensi[4 * ip + 3] = sm_end;
-    }
-
-    for (int ip = 0; ip < nplist; ip++) {
-        std::cout << "ip = " << ip << " :: ";
-        for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
-            int offset = ip * n_spline_coefficients + 4 * i_node;
-            std::cout << "(";
-            std::cout << coefficients_sensi[offset] << ", ";
-            std::cout << coefficients_sensi[offset + 1] << ", ";
-            std::cout << coefficients_sensi[offset + 2] << ", ";
-            std::cout << coefficients_sensi[offset + 3] << ")";
-            std::cout << " :: ";
-        }
-        std::cout << std::endl;
     }
 }
 

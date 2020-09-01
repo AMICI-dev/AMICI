@@ -11,7 +11,6 @@
 #include <regex>
 #include <typeinfo>
 #include <utility>
-#include <iostream>
 
 namespace amici {
 
@@ -1288,7 +1287,6 @@ void Model::fy(const realtype t, const AmiVector &x) {
     y_.assign(ny, 0.0);
 
     fw(t, x.data());
-    std::cout << "Spl is " << spl_[0] << std::endl;
     fy(y_.data(), t, x.data(), state_.unscaledParameters.data(),
        state_.fixedParameters.data(),
        state_.h.data(), w_.data());
@@ -1306,10 +1304,6 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     dydp_.assign(ny * nplist(), 0.0);
     fw(t, x.data());
     fdwdp(t, x.data());
-    std::cout << "Sspl is " << sspl_data[0];
-    for (int i = 1; i < nplist(); i++)
-        std::cout << ", " << sspl_data[i];
-    std::cout << "|" << std::endl;
 
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
