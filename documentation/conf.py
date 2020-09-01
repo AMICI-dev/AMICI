@@ -14,9 +14,28 @@ import mock
 
 from sphinx.transforms.post_transforms import ReferencesResolver
 import exhale_multiproject_monkeypatch
+from exhale import configs as exhale_configs
+import exhale.deploy
+import subprocess
 
 exhale_multiproject_monkeypatch  # to avoid removal of unused import
+from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
 
+def my_exhale_generate_doxygen(doxygen_input):
+    """Monkey-patch exhale for post-processing doxygen output"""
+
+    # run mtocpp_post
+    doxy_xml_dir = exhale_configs._doxygen_xml_output_directory
+    if 'matlab' in doxy_xml_dir:
+        print('Running mtocpp_post on ', doxy_xml_dir)
+        mtocpp_post = os.path.join(amici_dir, 'ThirdParty', 'mtocpp-master',
+                                   'build', 'mtocpp_post')
+        subprocess.run([mtocpp_post, doxy_xml_dir])
+
+    # let exhale do it's job
+    exhale_generate_doxygen(doxygen_input)
+
+exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
 
 def install_mtocpp():
     """Install mtocpp (Matlab doxygen filter)"""
