@@ -122,9 +122,9 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
             /* Sparse matrix multiplication
              dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
-            dxdotdw_.sparse_multiply(&dxdotdp_implicit, &dwdp_);
+            dxdotdw_.sparse_multiply(dxdotdp_implicit, dwdp_);
         }
-        dxdotdp_full.sparse_add(&dxdotdp_explicit, 1.0, &dxdotdp_implicit, 1.0);
+        dxdotdp_full.sparse_add(dxdotdp_explicit, 1.0, dxdotdp_implicit, 1.0);
     } else {
         // matlab generated
         for (int ip = 0; ip < nplist(); ip++) {
