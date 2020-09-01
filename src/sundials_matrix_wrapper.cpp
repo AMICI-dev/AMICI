@@ -110,7 +110,7 @@ operator=(SUNMatrixWrapper &&other) {
     return *this;
 }
 
-void SUNMatrixWrapper::reallocate(int NNZ) {
+void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT.");
@@ -238,8 +238,9 @@ void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
              gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));
 }
 
-static void check_dim(int n, int m, std::string name_n, std::string name_m,
-                      std::string name_mat_n, std::string name_mat_m) {
+static void check_dim(sunindextype n, sunindextype m, const std::string &name_n,
+                      const std::string &name_m, const std::string &name_mat_n,
+                      const std::string &name_mat_m) {
     if (n != m)
         throw std::invalid_argument("Dimension mismatch between number of "
                                     + name_n + " in " + name_mat_n + " ("
@@ -249,8 +250,9 @@ static void check_dim(int n, int m, std::string name_n, std::string name_m,
                                     + std::to_string(m) + ")");
 }
 
-static void check_csc(const SUNMatrixWrapper *mat, std::string fun,
-                      std::string name_mat) {
+static void check_csc(const SUNMatrixWrapper *mat,
+                      const std::string &fun,
+                      const std::string &name_mat) {
     if (mat->matrix_id() != SUNMATRIX_SPARSE)
         throw std::invalid_argument(fun + " only implemented for "
                                     "sparse matrices, but "

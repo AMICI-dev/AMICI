@@ -96,7 +96,7 @@ class SUNMatrixWrapper {
      * @brief Reallocate space for sparse matrix according to specified nnz
      * @param nnz new number of nonzero entries
      */
-    void reallocate(int nnz);
+    void reallocate(sunindextype nnz);
     
     /**
      * @brief Reallocate space for sparse matrix to used space according to last entry in indexptrs
