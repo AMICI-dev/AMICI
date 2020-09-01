@@ -174,6 +174,7 @@ fprintf(fid,['                    ' num2str(this.nw) ',\n']);
 fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
 fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
 fprintf(fid,['                    0,\n']);
+fprintf(fid,['                    0,\n']);
 fprintf(fid,['                    {},\n']);
 fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
 fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
