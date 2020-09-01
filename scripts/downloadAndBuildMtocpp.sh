@@ -35,12 +35,31 @@ if [ ! -d "mtocpp-master" ]; then
     fi
     # build mtocpp?
     unzip mtocpp-master.zip
-    mkdir ./mtocpp-master/build
+    mkdir -p mtocpp-master/build
 
-    echo "Building mtocpp ..."
-    cd ./mtocpp-master/build && cmake .. && make mtocpp mtocpp_post
-    if [ $? -ne 0 ] ; then
-        exit 1
+    if command -v cmake &> /dev/null; then
+      echo "Building mtocpp using CMake..."
+      cd mtocpp-master/build && cmake .. && make mtocpp mtocpp_post
+      if [ $? -ne 0 ] ; then
+          exit 1
+      fi
+    else
+      # No CMake on ReadTheDocs :(
+      echo "Building mtocpp without CMake..."
+      cd mtocpp-master/src
+      sed 's/@MTOC++_VERSION_MAJOR@/1/;s/@MTOC++_VERSION_MINOR@/5/' < config.h.in > config.h
+      ragel -C -T0 -o confscanner.cc confscanner.rl
+      ragel -C -T0 -o mfilescanner_parser.cc mfilescanner_parser.rl
+      c++   -I"$(pwd)" -o mtocpp.cc.o -c mtocpp.cc
+      c++   -I"$(pwd)" -o mfilescanner_parser.cc.o -c mfilescanner_parser.cc
+      c++   -I"$(pwd)" -o mfilescanner.cc.o -c mfilescanner.cc
+      c++   -I"$(pwd)" -o confscanner.cc.o -c confscanner.cc
+      c++   -rdynamic mtocpp.cc.o mfilescanner_parser.cc.o mfilescanner.cc.o confscanner.cc.o -o mtocpp
+      ragel -C -T0 -o postprocess.cc postprocess.rl
+      c++   -I"$(pwd)" -o postprocess.cc.o -c postprocess.cc
+      c++   -rdynamic postprocess.cc.o  -o mtocpp_post
+      ln -s mtocpp ../build
+      ln -s mtocpp_post ../build
     fi
 fi
 
