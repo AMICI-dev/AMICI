@@ -127,6 +127,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NW,                                      // nw
               TPL_NDWDX,                                   // ndwdx
               TPL_NDWDP,                                   // ndwdp
+              TPL_NDWDW,                                   // ndwdw
               TPL_NDXDOTDW,                                // ndxdotdw
               TPL_NDJYDY,                                  // ndjydy
               TPL_NNZ,                                     // nnz
@@ -459,16 +460,16 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_ROWVALS_IMPL
 
     TPL_DWDP_IMPL
-
     TPL_DWDP_COLPTRS_IMPL
-
     TPL_DWDP_ROWVALS_IMPL
 
     TPL_DWDX_IMPL
-
     TPL_DWDX_COLPTRS_IMPL
-
     TPL_DWDX_ROWVALS_IMPL
+
+    TPL_DWDW_IMPL
+    TPL_DWDW_COLPTRS_IMPL
+    TPL_DWDW_ROWVALS_IMPL
 
     TPL_DXDOTDW_IMPL
     TPL_DXDOTDW_COLPTRS_IMPL

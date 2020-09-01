@@ -1688,7 +1688,8 @@ class ODEModel:
         # automatically detect chainrule
         chainvars = []
         ignore_chainrule = {
-            ('xdot', 'p'): 'w'  # has generic implementation in c++ code
+            ('xdot', 'p'): 'w',  # has generic implementation in c++ code
+            ('w', 'w'): 'tcl'  # dtcldw = 0
         }
         for cv in ['w', 'tcl']:
             if var_in_function_signature(eq, cv) \
@@ -2653,6 +2654,7 @@ class ODEExporter:
             'NW': str(len(self.model.sym('w'))),
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
+            'NDWDW': str(len(self.model.sparsesym('dwdw'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
                 'dxdotdp_explicit'))),
