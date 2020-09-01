@@ -98,7 +98,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-            model_->dxdotdp_full.scatter(model_->plist(ip), 1.0, nullptr,
+            model_->dxdotdp_full.scatter(model_->plist(ip), -1.0, nullptr,
                                          gsl::make_span(sx.getNVector(ip)),
                                          0, nullptr, 0);
 

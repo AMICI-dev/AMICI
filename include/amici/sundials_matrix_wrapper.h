@@ -96,7 +96,7 @@ class SUNMatrixWrapper {
      * @brief Reallocate space for sparse matrix according to specified nnz
      * @param nnz new number of nonzero entries
      */
-    void reallocate(int nnz);
+    void reallocate(sunindextype nnz);
     
     /**
      * @brief Reallocate space for sparse matrix to used space according to last entry in indexptrs
@@ -247,10 +247,11 @@ class SUNMatrixWrapper {
      *
      * @param j column index
      * @param beta scaling factor
-     * @param w index workspace, (w[i]<mark) indicates non-zeroness of C(i,j)
-     * @param x dense output vector
+     * @param w index workspace, (w[i]<mark) indicates non-zeroness of C(i,j) (dimension: m),
+     * if this is a nullptr, sparsity pattern of C will not be updated (if applicable).
+     * @param x dense output vector (dimension: m)
      * @param mark marker for w to indicate nonzero pattern
-     * @param C sparse output matrix
+     * @param C sparse output matrix, if this is a nullptr, sparsity pattern of C will not be updated
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
      */
