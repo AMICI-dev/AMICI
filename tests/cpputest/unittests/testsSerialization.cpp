@@ -131,26 +131,29 @@ TEST(dataSerialization, testFile)
     int np = 1;
     int nk = 2;
     int nx = 3;
-    int nz = 4;
+    int ny = 4;
+    int nz = 5;
+    int ne = 6;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx,
-                                            nx,
-                                            nx,
-                                            nx,
-                                            0,
-                                            4,
-                                            4,
-                                            nz,
-                                            nz,
-                                            8,
-                                            9,
-                                            10,
-                                            11,
-                                            12,
-                                            13,
-                                            14,
-                                            15,
-                                            16,
+    amici::Model_Test m = amici::Model_Test(nx,        // nx_rdata
+                                            nx,        // nxtrue_rdata
+                                            nx,        // nx_solver
+                                            nx,        // nxtrue_solver
+                                            0,         // nx_solver_reinit
+                                            ny,        // ny
+                                            ny,        // nytrue
+                                            nz,        // nz
+                                            nz,        // nztrue
+                                            ne,        // ne
+                                            9,         // nw
+                                            10,         // ndwdx
+                                            11,         // ndwdp
+                                            12,         // dwdw
+                                            13,         // ndxdotdw
+                                            14,         // ndJydy
+                                            15,         // nnz
+                                            16,         // ubw
+                                            17,         // lbw
                                             amici::SecondOrderMode::none,
                                             std::vector<realtype>(np, 0.0),
                                             std::vector<realtype>(nk, 0.0),
@@ -181,26 +184,29 @@ TEST(dataSerialization, testString)
     int np = 1;
     int nk = 2;
     int nx = 3;
-    int nz = 4;
+    int ny = 4;
+    int nz = 5;
+    int ne = 6;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx,
-                                            nx,
-                                            nx,
-                                            nx,
-                                            0,
-                                            4,
-                                            4,
-                                            nz,
-                                            nz,
-                                            8,
-                                            9,
-                                            10,
-                                            11,
-                                            12,
-                                            13,
-                                            14,
-                                            15,
-                                            16,
+    amici::Model_Test m = amici::Model_Test(nx,        // nx_rdata
+                                            nx,        // nxtrue_rdata
+                                            nx,        // nx_solver
+                                            nx,        // nxtrue_solver
+                                            0,         // nx_solver_reinit
+                                            ny,        // ny
+                                            ny,        // nytrue
+                                            nz,        // nz
+                                            nz,        // nztrue
+                                            ne,        // ne
+                                            9,         // nw
+                                            10,         // ndwdx
+                                            11,         // ndwdp
+                                            12,         // dwdw
+                                            13,         // ndxdotdw
+                                            14,         // ndJydy
+                                            15,         // nnz
+                                            16,         // ubw
+                                            17,         // lbw
                                             amici::SecondOrderMode::none,
                                             std::vector<realtype>(np, 0.0),
                                             std::vector<realtype>(nk, 0.0),
