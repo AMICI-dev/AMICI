@@ -229,6 +229,13 @@ class SUNMatrixWrapper {
                     const SUNMatrixWrapper &B, realtype beta);
     
     /**
+     * @brief Perform matrix-matrix addition A = sum(mats(0)...mats(len(mats)))
+     * @param mats vector of sparse matrices
+     * @note will overwrite existing data, indexptrs, indexvals for A, but will use preallocated space for these vars
+     */
+    void sparse_sum(const std::vector<SUNMatrixWrapper> mats);
+    
+    /**
      * @brief Compute x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and update
      * the sparsity pattern for C(:,j) if applicable
      *

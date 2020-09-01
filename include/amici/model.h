@@ -99,6 +99,8 @@ class Model : public AbstractModel {
      * repeating elements
      * @param ndwdp Number of nonzero elements in the `p` derivative of the
      * repeating elements
+     * @param ndwdw Number of nonzero elements in the `w` derivative of the
+     * repeating elements
      * @param ndxdotdw Number of nonzero elements in the \f$w\f$ derivative of
      * \f$xdot\f$
      * @param ndJydy Number of nonzero elements in the \f$y\f$ derivative of
@@ -118,7 +120,7 @@ class Model : public AbstractModel {
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
-          int nJ, int nw, int ndwdx, int ndwdp, int ndxdotdw,
+          int nJ, int nw, int ndwdx, int ndwdp, int ndwdw, int ndxdotdw,
           std::vector<int> ndJydy, int nnz, int ubw, int lbw,
           amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
@@ -201,6 +203,34 @@ class Model : public AbstractModel {
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
     using AbstractModel::fz;
+    
+    /**
+     * @brief Model specific implementation of fdwdw_explicit, no w chainrule (Py)
+     * @param dxdotdp_explicit partial derivative xdot wrt p
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h heavyside vector
+     * @param w vector with helper variables
+     * @param w vector with helper variables
+     * @param tcl Total abundances for conservation laws
+     */
+    void fdwdw(realtype *dwdw, realtype t, const realtype *x, const realtype *p,
+               const realtype *k, const realtype *h, const realtype *w,
+               const realtype *tcl);
+
+    /**
+     * @brief Model specific implementation of fdwdw, colptrs part
+     * @param indexptrs column pointers
+     */
+    void fdwdw_colptrs(sunindextype *indexptrs);
+
+    /**
+     * @brief Model specific implementation of fdwdw, rowvals part
+     * @param indexvals row values
+     */
+    void fdwdw_rowvals(sunindextype *indexvals);
 
     /**
      * @brief Initialize model properties.

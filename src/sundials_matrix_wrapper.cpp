@@ -504,6 +504,62 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
         realloc(); // resize if necessary, will have correct size in future calls
 }
 
+void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> mats) {
+    // matrix_ == nullptr is allowed on the first call
+    if (std::all_of(mats.begin(), mats.end(), [](SUNMatrixWrapper &m){return !m.matrix_;}))
+        return;
+
+    sunindextype nrows = rows();
+    sunindextype ncols = columns();
+
+    int max_total_nonzero = 0;
+    for (auto & mat : mats) {
+        check_csc(&mat, "sparse_multiply", "mat");
+        check_dim(nrows, mat.rows(), "rows", "rows", "A", "mat");
+        check_dim(ncols, mat.columns(), "columns", "columns", "A", "mat");
+        max_total_nonzero += mat.num_nonzeros();
+    }
+    
+    if (ncols == 0 || nrows == 0 || max_total_nonzero == 0)
+        return; // nothing to do
+
+    /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_add.c
+     * modified such that we don't need to use CSparse memory structure and can
+     * work with preallocated C. This should minimize number of necessary
+     * reallocations as we can assume that C doesn't change size.
+     */
+    
+    sunindextype nnz = 0; // this keeps track of the nonzero index in C
+    
+    sunindextype j;
+    sunindextype p;
+    // first call, make sure that matrix is initialized with no capacity
+    if(!capacity())
+        reallocate(max_total_nonzero);
+    auto Ax = data();
+    auto Ai = indexvals();
+    auto Ap = indexptrs();
+    
+    auto w = std::vector<sunindextype>(nrows);
+    auto x = std::vector<realtype>(nrows);
+    
+    for (j = 0; j < ncols; j++)
+    {
+        Ap[j] = nnz;                          /* column j of A starts here */
+        for (auto & mat : mats)
+            nnz = mat.scatter(j, 1.0, w.data(), gsl::make_span(x), j+1, this,
+                              nnz);
+        // no reallocation should happen here
+        for (p = Ap[j]; p < nnz; p++)
+            Ax[p] = x[Ai[p]]; // copy data to C
+    }
+    Ap[ncols] = nnz;
+    assert(nnz <= capacity());
+    if (capacity() == max_total_nonzero)
+        realloc(); // resize if necessary, will have correct size in future calls
+}
+
+
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
                                        const realtype beta,
                                        sunindextype *w,
