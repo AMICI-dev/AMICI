@@ -51,24 +51,25 @@ TEST_GROUP(model)
     std::vector<int> plist{ 1 };
     std::vector<realtype> idlist{ 0 };
     std::vector<int> z2event{ 0, 0, 0 };
-    Model_Test model = Model_Test(nx,
-                                  nx,
-                                  nx,
-                                  nx,
-                                  0,
-                                  ny,
-                                  ny,
-                                  nz,
-                                  nz,
-                                  nmaxevent,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
-                                  0,
+    Model_Test model = Model_Test(nx,        // nx_rdata
+                                  nx,        // nxtrue_rdata
+                                  nx,        // nx_solver
+                                  nx,        // nxtrue_solver
+                                  0,         // nx_solver_reinit
+                                  ny,        // ny
+                                  ny,        // nytrue
+                                  nz,        // nz
+                                  nz,        // nztrue
+                                  nmaxevent, // ne
+                                  0,         // nw
+                                  0,         // ndwdx
+                                  0,         // ndwdp
+                                  0,         // dwdw
+                                  0,         // ndxdotdw
+                                  0,         // ndJydy
+                                  0,         // nnz
+                                  0,         // ubw
+                                  0,         // lbw
                                   SecondOrderMode::none,
                                   p,
                                   k,
@@ -285,24 +286,25 @@ TEST_GROUP(edata)
 
     std::unique_ptr<amici::Model> model = amici::generic_model::getModel();
 
-    Model_Test testModel = Model_Test(nx,
-                                      nx,
-                                      nx,
-                                      nx,
-                                      0,
-                                      ny,
-                                      ny,
-                                      nz,
-                                      nz,
-                                      nmaxevent,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
+    Model_Test testModel = Model_Test(nx,        // nx_rdata
+                                      nx,        // nxtrue_rdata
+                                      nx,        // nx_solver
+                                      nx,        // nxtrue_solver
+                                      0,         // nx_solver_reinit
+                                      ny,        // ny
+                                      ny,        // nytrue
+                                      nz,        // nz
+                                      nz,        // nztrue
+                                      nmaxevent, // ne
+                                      0,         // nw
+                                      0,         // ndwdx
+                                      0,         // ndwdp
+                                      0,         // dwdw
+                                      0,         // ndxdotdw
+                                      0,         // ndJydy
+                                      0,         // nnz
+                                      0,         // ubw
+                                      0,         // lbw
                                       SecondOrderMode::none,
                                       std::vector<realtype>(1, 0.0),
                                       std::vector<realtype>(3, 0),
@@ -591,24 +593,25 @@ TEST_GROUP(solver)
     InternalSensitivityMethod ism;
     InterpolationType interp;
 
-    Model_Test testModel = Model_Test(nx,
-                                      nx,
-                                      nx,
-                                      nx,
-                                      0,
-                                      ny,
-                                      ny,
-                                      nz,
-                                      nz,
-                                      ne,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      1,
-                                      0,
-                                      0,
+    Model_Test testModel = Model_Test(nx,        // nx_rdata
+                                      nx,        // nxtrue_rdata
+                                      nx,        // nx_solver
+                                      nx,        // nxtrue_solver
+                                      0,         // nx_solver_reinit
+                                      ny,        // ny
+                                      ny,        // nytrue
+                                      nz,        // nz
+                                      nz,        // nztrue
+                                      ne, // ne
+                                      0,         // nw
+                                      0,         // ndwdx
+                                      0,         // ndwdp
+                                      0,         // dwdw
+                                      0,         // ndxdotdw
+                                      0,         // ndJydy
+                                      1,         // nnz
+                                      0,         // ubw
+                                      0,         // lbw
                                       SecondOrderMode::none,
                                       std::vector<realtype>(1, 0.0),
                                       std::vector<realtype>(3, 0),

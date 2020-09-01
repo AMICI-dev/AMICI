@@ -49,6 +49,8 @@ class Model_ODE : public Model {
      * repeating elements
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
+     * @param ndwdw number of nonzero elements in the w derivative of the
+     * repeating elements
      * @param ndxdotdw number of nonzero elements dxdotdw
      * @param ndJydy number of nonzero elements dJydy
      * @param nnz number of nonzero elements in Jacobian
