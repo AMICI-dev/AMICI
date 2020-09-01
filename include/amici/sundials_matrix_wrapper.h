@@ -91,6 +91,18 @@ class SUNMatrixWrapper {
      * @return
      */
     SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other);
+    
+    /**
+     * @brief Reallocate space for sparse matrix according to specified nnz
+     * @param nnz new number of nonzero entries
+     */
+    void reallocate(int nnz);
+    
+    /**
+     * @brief Reallocate space for sparse matrix to used space according to last entry in indexptrs
+     */
+    void realloc();
+    
 
     /**
      * @brief Access raw data
@@ -117,10 +129,17 @@ class SUNMatrixWrapper {
     sunindextype columns() const;
 
     /**
-     * @brief Get the number of non-zero elements (sparse matrices only)
+     * @brief Get the number of specified non-zero elements (sparse matrices only)
+     * @note values will be unininitialized before indexptrs are set.
      * @return number
      */
-    sunindextype nonzeros() const;
+    sunindextype num_nonzeros() const;
+    
+    /**
+     * @brief Get the number of allocated non-zero elements (sparse matrices only)
+     * @return number
+     */
+    sunindextype capacity() const;
 
     /**
      * @brief Get the index values of a sparse matrix
@@ -190,14 +209,30 @@ class SUNMatrixWrapper {
                   bool transpose) const;
 
     /**
-     * @brief Perform matrix matrix multiplication
-              C[:, :] += A * B
+     * @brief Perform matrix matrix multiplication A * B
               for sparse A, B, C
-     * @param C output matrix, may already contain values
+     * @param C output matrix,
      * @param B multiplication matrix
+     * @note will overwrite existing data, indexptrs, indexvals, but will use preallocated space for these vars
      */
     void sparse_multiply(SUNMatrixWrapper *C,
                          SUNMatrixWrapper *B) const;
+    
+    /**
+     * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and construct the pattern
+     * for C(:,j)
+     * @param j column index
+     * @param beta scaling factor
+     * @param w temporary index workspace, this keeps track of the sparsity pattern in C
+     * @param x temporary data workspace, this keeps track of the data in C
+     * @param mark marker for w to indicate nonzero pattern
+     * @param C output matrix
+     * @param nnz number of nonzeros that were already written to C
+     * @return updated number of nonzeros in C
+     */
+    sunindextype scatter(const sunindextype j, const realtype beta,
+                         sunindextype *w, realtype *x, const sunindextype mark,
+                         SUNMatrixWrapper *C, sunindextype nnz) const;
 
     /**
      * @brief Set to 0.0
