@@ -269,7 +269,7 @@ class AbstractSpline(ABC):
                     'yy should be stricly positive'
                 )
 
-        bc, extrapolate = AbstractSpline._normalize_bc_and_extrapolate(bc, extrapolate)
+        bc, extrapolate = self._normalize_bc_and_extrapolate(bc, extrapolate)
         if bc == ('periodic', 'periodic') and yy[0] != yy[-1]:
             raise ValueError(
                 'if the spline is to be periodic, '
@@ -286,10 +286,9 @@ class AbstractSpline(ABC):
 
         self._formula_cache = {}
 
-    @staticmethod
-    def _normalize_bc_and_extrapolate(bc, extrapolate):
+    def _normalize_bc_and_extrapolate(self, bc, extrapolate):
         bc = AbstractSpline._normalize_bc(bc)
-        return AbstractSpline._normalize_extrapolate(bc, extrapolate)
+        return self._normalize_extrapolate(bc, extrapolate)
 
     @staticmethod
     def _normalize_bc(bc):
@@ -329,8 +328,7 @@ class AbstractSpline(ABC):
 
         return bc
 
-    @staticmethod
-    def _normalize_extrapolate(bc, extrapolate):
+    def _normalize_extrapolate(self, bc, extrapolate):
         """
         Preprocess `extrapolate` to a standard form
         and perform consistency checks
@@ -619,16 +617,16 @@ class AbstractSpline(ABC):
         # Cache formulas in the case they are reused
         if cache:
             if 'extrapolate' in kwargs.keys():
-                key = (x, sbml, kwargs['extrapolate'])
+                key = (x, sbml_syms, sbml_ops, kwargs['extrapolate'])
             else:
-                key = (x, sbml)
+                key = (x, sbml_syms, sbml_ops)
             if key in self._formula_cache.keys():
                 return self._formula_cache[key]
 
         if x is None:
             x = self.x
         if 'extrapolate' in kwargs.keys():
-            extrapolate = AbstractSpline._normalize_extrapolate(
+            extrapolate = self._normalize_extrapolate(
                 kwargs['extrapolate'], self.bc
             )
         else:
@@ -819,7 +817,7 @@ class AbstractSpline(ABC):
             self,
             model: libsbml.Model,
             *,
-            auto_add: bool = False,
+            auto_add: Union[bool, str] = False,
             x_nominal: Sequence[float] = None,
             y_nominal: Optional[Union[Sequence[float], float]] = None,
             y_units: Optional[str] = None,
@@ -839,6 +837,8 @@ class AbstractSpline(ABC):
             :param auto_add:
             Automatically missing parameters to the SBML model.
             Only used for expressions consisting in a single symbol.
+            If equal to `'spline'`, only the parameter representing the spline
+            will be added.
 
             :param x_nominal:
             Values used when auto-adding parameters from `xx`.
@@ -870,33 +870,37 @@ class AbstractSpline(ABC):
                     break
 
         # Autoadd parameters
-        if auto_add:
+        if auto_add is True or auto_add == 'spline':
             if not hasParameter(model, self.sbmlId):
                 addParameter(model, self.sbmlId, constant=False, units=y_units)
 
-            if isinstance(x_nominal, collections.abc.Sequence):
-                if len(x_nominal) != len(self.xx):
-                    raise ValueError(
-                        'if x_nominal is a list, then it must have '
-                        'the same length as the spline grid'
-                    )
-            else:
-                x_nominal = len(self.xx) * [x_nominal]
-            for (_x, _val) in zip(self.xx, x_nominal):
-                if _x.is_Symbol and not hasParameter(model, _x.name):
-                    addParameter(model, _x.name, value=_val, units=x_units)
+            if auto_add is True:
+                if isinstance(x_nominal, collections.abc.Sequence):
+                    if len(x_nominal) != len(self.xx):
+                        raise ValueError(
+                            'if x_nominal is a list, then it must have '
+                            'the same length as the spline grid'
+                        )
+                else:
+                    x_nominal = len(self.xx) * [x_nominal]
+                for (_x, _val) in zip(self.xx, x_nominal):
+                    if _x.is_Symbol and not hasParameter(model, _x.name):
+                        addParameter(model, _x.name, value=_val, units=x_units)
 
-            if isinstance(y_nominal, collections.abc.Sequence):
-                if len(y_nominal) != len(self.yy):
-                    raise ValueError(
-                        'if y_nominal is a list, then it must have '
-                        'the same length as the spline values'
-                    )
-            else:
-                y_nominal = len(self.yy) * [y_nominal]
-            for (_y, _val) in zip(self.yy, y_nominal):
-                if _y.is_Symbol and not hasParameter(model, _y.name):
-                    addParameter(model, _y.name, value=_val, units=y_units)
+                if isinstance(y_nominal, collections.abc.Sequence):
+                    if len(y_nominal) != len(self.yy):
+                        raise ValueError(
+                            'if y_nominal is a list, then it must have '
+                            'the same length as the spline values'
+                        )
+                else:
+                    y_nominal = len(self.yy) * [y_nominal]
+                for (_y, _val) in zip(self.yy, y_nominal):
+                    if _y.is_Symbol and not hasParameter(model, _y.name):
+                        addParameter(model, _y.name, value=_val, units=y_units)
+
+        elif auto_add is not False:
+            raise ValueError(f'invalid value {auto_add} for auto_add!')
 
         # Create assignment rule for spline
         rule = addAssignmentRule(model, self.sbmlId, self.mathmlFormula)
@@ -1243,7 +1247,7 @@ class CubicHermiteSpline(AbstractSpline):
                 f'(instead len(xx) = {len(xx)} and len(yy) = {len(yy)})'
             )
 
-        bc, extrapolate = AbstractSpline._normalize_bc_and_extrapolate(bc, extrapolate)
+        bc, extrapolate = self._normalize_bc_and_extrapolate(bc, extrapolate)
         if bc[0] == 'zeroderivative+natural' or bc[1] == 'zeroderivative+natural':
             raise ValueError(
                 'zeroderivative+natural bc not supported by CubicHermiteSplines'
