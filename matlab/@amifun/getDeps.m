@@ -25,9 +25,6 @@ function [ this ] = getDeps(this, model)
                 this.deps = {'xdot','x','dwdx'};
             end
             
-        case 'JB'
-            this.deps = {'J'};
-            
         case 'dxdotdp'
             this.deps = {'xdot','p','dwdp'};
             
@@ -162,12 +159,6 @@ function [ this ] = getDeps(this, model)
             this.deps = {'JB'};
             
         case 'JSparse'
-            this.deps = {'J'};
-            
-        case 'JSparseB'
-            this.deps = {'JB'};
-            
-        case 'JDiag'
             this.deps = {'J'};
             
         case 'y'
