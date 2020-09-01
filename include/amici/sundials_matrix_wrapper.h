@@ -209,14 +209,13 @@ class SUNMatrixWrapper {
                   bool transpose) const;
 
     /**
-     * @brief Perform matrix matrix multiplication C = A * B
-              for sparse A, B, C
+     * @brief Perform matrix matrix multiplication C = A * B for sparse A, B, C
      * @param C output matrix,
      * @param B multiplication matrix
      * @note will overwrite existing data, indexptrs, indexvals for C, but will use preallocated space for these vars
      */
-    void sparse_multiply(SUNMatrixWrapper *C,
-                         SUNMatrixWrapper *B) const;
+    void sparse_multiply(SUNMatrixWrapper &C,
+                         const SUNMatrixWrapper &B) const;
     
     /**
      * @brief Perform matrix matrix addition C = alpha * A +  beta * B
@@ -226,12 +225,12 @@ class SUNMatrixWrapper {
      * @param beta scalar B
      * @note will overwrite existing data, indexptrs, indexvals for C, but will use preallocated space for these vars
      */
-    void sparse_add(SUNMatrixWrapper *A, realtype alpha,
-                    SUNMatrixWrapper *B, realtype beta);
+    void sparse_add(const SUNMatrixWrapper &A, realtype alpha,
+                    const SUNMatrixWrapper &B, realtype beta);
     
     /**
-     * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and constructs the
-     * sparsity pattern for C(:,j)
+     * @brief Compute x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and update
+     * the sparsity pattern for C(:,j) if applicable
      *
      * This function currently has two purposes:
      *   - perform parts of sparse matrix-matrix multiplication C(:,j)=A(:,j)*B(j,k)
