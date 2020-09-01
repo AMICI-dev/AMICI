@@ -367,26 +367,26 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 }
 
 
-void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
-                                       SUNMatrixWrapper *B) const {
-    if (!matrix_ || !B->matrix_ || !C->matrix_)
+void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
+                                       const SUNMatrixWrapper &B) const {
+    if (!matrix_ || !B.matrix_ || !C.matrix_)
         return;
 
     sunindextype nrows = rows();
     sunindextype ncols = columns();
 
     check_csc(this, "sparse_multiply", "A");
-    check_csc(B, "sparse_multiply", "B");
-    check_csc(C, "sparse_multiply", "C");
+    check_csc(&B, "sparse_multiply", "B");
+    check_csc(&C, "sparse_multiply", "C");
 
-    check_dim(nrows, C->rows(), "rows", "rows", "A", "C");
-    check_dim(C->columns(), B->columns(), "columns", "columns", "C", "B");
-    check_dim(B->rows(), ncols, "rows", "columns", "B", "A");
+    check_dim(nrows, C.rows(), "rows", "rows", "A", "C");
+    check_dim(C.columns(), B.columns(), "columns", "columns", "C", "B");
+    check_dim(B.rows(), ncols, "rows", "columns", "B", "A");
     
-    if (ncols == 0 || nrows == 0 || B->columns() == 0)
+    if (ncols == 0 || nrows == 0 || B.columns() == 0)
         return; // matrix will also have zero size
     
-    if (num_nonzeros() == 0 || B->num_nonzeros() == 0)
+    if (num_nonzeros() == 0 || B.num_nonzeros() == 0)
         return; // nothing to multiply
     
 
@@ -397,18 +397,18 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
      */
     
     sunindextype nnz = 0; // this keeps track of the nonzero index in C
-    auto Bx = B->data();
-    auto Bi = B->indexvals();
-    auto Bp = B->indexptrs();
+    auto Bx = B.data();
+    auto Bi = B.indexvals();
+    auto Bp = B.indexptrs();
     
     sunindextype j;
     sunindextype p;
-    auto Cx = C->data();
-    auto Ci = C->indexvals();
-    auto Cp = C->indexptrs();
+    auto Cx = C.data();
+    auto Ci = C.indexvals();
+    auto Cp = C.indexptrs();
     
     sunindextype m = nrows;
-    sunindextype n = B->columns();
+    sunindextype n = B.columns();
     
     auto w = std::vector<sunindextype>(m); // sparsity of C(:,j)
     auto x = std::vector<realtype>(m); // entries in C(:,j)
@@ -416,22 +416,22 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     for (j = 0; j < n; j++)
     {
         Cp[j] = nnz;                          /* column j of C starts here */
-        if ((Bp[j+1] > Bp[j]) && (nnz + m > C->capacity()))
+        if ((Bp[j+1] > Bp[j]) && (nnz + m > C.capacity()))
         {
             /*
              * if memory usage becomes a concern, remove the factor two here,
              * as it effectively trades memory efficiency against less
              * reallocations
              */
-            C->reallocate(2*C->capacity() + m);
+            C.reallocate(2*C.capacity() + m);
             // all pointers will change after reallocation
-            Cx = C->data();
-            Ci = C->indexvals();
-            Cp = C->indexptrs();
+            Cx = C.data();
+            Ci = C.indexvals();
+            Cp = C.indexptrs();
         }
         for (p = Bp[j]; p < Bp[j+1]; p++)
         {
-            nnz = scatter(Bi[p], Bx[p], w.data(), gsl::make_span(x), j+1, C,
+            nnz = scatter(Bi[p], Bx[p], w.data(), gsl::make_span(x), j+1, &C,
                           nnz);
             assert(nnz - Cp[j] <= m);
         }
@@ -439,33 +439,33 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
             Cx[p] = x[Ci[p]]; // copy data to C
     }
     Cp[n] = nnz;
-    assert(nnz <= C->capacity());
+    assert(nnz <= C.capacity());
     /*
      * do not reallocate here since we rather keep a matrix that is a bit
      * bigger than repeatedly resizing this matrix.
      */
 }
 
-void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
-                                  SUNMatrixWrapper *B, realtype beta) {
+void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
+                                  const SUNMatrixWrapper &B, realtype beta) {
     // matrix_ == nullptr is allowed on the first call
-    if (!A->matrix_ || !B->matrix_)
+    if (!A.matrix_ || !B.matrix_)
         return;
 
     sunindextype nrows = rows();
     sunindextype ncols = columns();
 
     check_csc(this, "sparse_multiply", "C");
-    check_csc(A, "sparse_multiply", "A");
-    check_csc(B, "sparse_multiply", "B");
+    check_csc(&A, "sparse_multiply", "A");
+    check_csc(&B, "sparse_multiply", "B");
 
-    check_dim(nrows, A->rows(), "rows", "rows", "C", "A");
-    check_dim(nrows, B->rows(), "rows", "rows", "C", "B");
-    check_dim(ncols, A->columns(), "columns", "columns", "C", "A");
-    check_dim(ncols, B->columns(), "columns", "columns", "C", "B");
+    check_dim(nrows, A.rows(), "rows", "rows", "C", "A");
+    check_dim(nrows, B.rows(), "rows", "rows", "C", "B");
+    check_dim(ncols, A.columns(), "columns", "columns", "C", "A");
+    check_dim(ncols, B.columns(), "columns", "columns", "C", "B");
     
     if (ncols == 0 || nrows == 0 ||
-        (A->num_nonzeros() + B->num_nonzeros() == 0))
+        (A.num_nonzeros() + B.num_nonzeros() == 0))
         return; // nothing to do
     
 
@@ -481,7 +481,7 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     sunindextype p;
     // first call, make sure that matrix is initialized with no capacity
     if(!capacity())
-        reallocate(A->num_nonzeros() + B->num_nonzeros());
+        reallocate(A.num_nonzeros() + B.num_nonzeros());
     auto Cx = data();
     auto Ci = indexvals();
     auto Cp = indexptrs();
@@ -492,15 +492,15 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     for (j = 0; j < ncols; j++)
     {
         Cp[j] = nnz;                          /* column j of C starts here */
-        nnz = A->scatter(j, alpha, w.data(), gsl::make_span(x), j+1, this, nnz);
-        nnz = B->scatter(j, beta, w.data(), gsl::make_span(x), j+1, this, nnz);
+        nnz = A.scatter(j, alpha, w.data(), gsl::make_span(x), j+1, this, nnz);
+        nnz = B.scatter(j, beta, w.data(), gsl::make_span(x), j+1, this, nnz);
         // no reallocation should happen here
         for (p = Cp[j]; p < nnz; p++)
             Cx[p] = x[Ci[p]]; // copy data to C
     }
     Cp[ncols] = nnz;
     assert(nnz <= capacity());
-    if (capacity() == A->num_nonzeros() + B->num_nonzeros())
+    if (capacity() == A.num_nonzeros() + B.num_nonzeros())
         realloc(); // resize if necessary, will have correct size in future calls
 }
 
