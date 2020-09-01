@@ -66,12 +66,13 @@ class UniformGrid(collections.abc.Sequence):
     (conversion to float can be specified with `dtype=float`).
     """
 
-    def __init__(self, start, stop, step=None, length: Optional[int] = None):
+    def __init__(self, start, stop, step=None, *, length: Optional[int] = None, include_stop: bool = True):
         """
         Create a new `UniformGrid`.
-        The `stop` attribute of the resulting object will be larger
-        than the given `stop` argument in the case `stop - start` is not
-        an integer multiple of `step`.
+        If `include_stop` is `True`, then the `stop` attribute
+        of the resulting object will be larger than the given `stop` argument
+        in the case `stop - start` is not an integer multiple of `step`.
+        If `include_stop` is `False`, the it will be smaller.
         """
         start = sp.nsimplify(sp.sympify(start))
         stop = sp.nsimplify(sp.sympify(stop))
@@ -99,9 +100,13 @@ class UniformGrid(collections.abc.Sequence):
         xx = []
         for i in count():
             x = start + i * step
+            if not include_stop:
+                if x > stop:
+                    break
             xx.append(x)
-            if x >= stop:
-                break
+            if include_stop:
+                if x >= stop:
+                    break
 
         self._xx = np.asarray(xx)
 
@@ -590,25 +595,35 @@ class AbstractSpline(ABC):
         """
         Compute a symbolic piecewise formula for the spline.
         """
-        return self._formula(sbml=False)
+        return self._formula(sbml_syms=False, sbml_ops=False)
 
     @property
     def sbmlFormula(self) -> sp.Piecewise:
         """
-        Compute a symbolic piecewise formula for the spline for use inside
-        a SBML assignment rule (e.g., the AMICI time symbol will be replaced
-        with its SBML counterpart).
+        Compute a symbolic piecewise formula for the spline,
+        using SBML symbol naming
+        (the AMICI time symbol will be replaced with its SBML counterpart).
         """
-        return self._formula(sbml=True)
+        return self._formula(sbml_syms=True, sbml_ops=False)
 
-    def _formula(self, *, x=None, sbml=False, **kwargs) -> sp.Piecewise:
+    @property
+    def mathmlFormula(self) -> sp.Piecewise:
+        """
+        Compute a symbolic piecewise formula for the spline for use inside
+        a SBML assignment rule: SBML symbol naming will be used
+        and operations not supported by SBML MathML will be avoided.
+        """
+        return self._formula(sbml_syms=True, sbml_ops=True)
+
+    def _formula(self, *, x=None, sbml_syms=False, sbml_ops=False, cache=True, **kwargs) -> sp.Piecewise:
         # Cache formulas in the case they are reused
-        if 'extrapolate' in kwargs.keys():
-            key = (x, sbml, kwargs['extrapolate'])
-        else:
-            key = (x, sbml)
-        if key in self._formula_cache.keys():
-            return self._formula_cache[key]
+        if cache:
+            if 'extrapolate' in kwargs.keys():
+                key = (x, sbml, kwargs['extrapolate'])
+            else:
+                key = (x, sbml)
+            if key in self._formula_cache.keys():
+                return self._formula_cache[key]
 
         if x is None:
             x = self.x
@@ -622,7 +637,7 @@ class AbstractSpline(ABC):
         pieces = []
 
         if extrapolate[0] == 'periodic' or extrapolate[1] == 'periodic':
-            if sbml:
+            if sbml_ops:
                 # NB mod is not supported in SBML
                 x = sympy.Symbol(self.sbmlId + '_x_in_fundamental_period')
                 # NB we will do the parameter substitution in SBML
@@ -648,7 +663,7 @@ class AbstractSpline(ABC):
             pieces.append((self.segment_formula(-1, x=x), sp.sympify(True)))
 
         with evaluate(False):
-            if sbml:
+            if sbml_syms:
                 pieces = [
                     (
                         p.subs(amici_time_symbol, sbml_time_symbol),
@@ -658,7 +673,8 @@ class AbstractSpline(ABC):
                 ]
             formula = sp.Piecewise(*pieces)
 
-        self._formula_cache[key] = formula
+        if cache:
+            self._formula_cache[key] = formula
         return formula
 
     @property
@@ -674,25 +690,25 @@ class AbstractSpline(ABC):
 
     def evaluate(self, x):
         _x = sp.Dummy('x')
-        return self._formula(x=_x).subs(_x, x)
+        return self._formula(x=_x, cache=False).subs(_x, x)
 
     def derivative(self, x):
         _x = sp.Dummy('x')
-        return self._formula(x=_x).diff(_x).subs(_x, x)
+        return self._formula(x=_x, cache=False).diff(_x).subs(_x, x)
 
     def second_derivative(self, x):
         _x = sp.Dummy('x')
-        return self._formula(x=_x).diff(_x).diff(_x).subs(_x, x)
+        return self._formula(x=_x, cache=False).diff(_x).diff(_x).subs(_x, x)
 
     def integrate(self, x0, x1):
         x = sp.Dummy('x')
         x0, x1 = sp.sympify((x0, x1))
 
         if self.extrapolate != ('periodic', 'periodic'):
-            return self._formula(x=x).integrate((x, x0, x1))
+            return self._formula(x=x, cache=False).integrate((x, x0, x1))
 
         else:
-            formula = self._formula(x=x, extrapolate=None)
+            formula = self._formula(x=x, cache=False, extrapolate=None)
 
             x00 = _to_base_interval(x0)
             x11 = _to_base_interval(x1)
@@ -883,7 +899,7 @@ class AbstractSpline(ABC):
                     addParameter(model, _y.name, value=_val, units=y_units)
 
         # Create assignment rule for spline
-        rule = addAssignmentRule(model, self.sbmlId, self.sbmlFormula)
+        rule = addAssignmentRule(model, self.sbmlId, self.mathmlFormula)
 
         # Add annotation specifying spline method
         rule.setAnnotation(self.amiciAnnotation)
