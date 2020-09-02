@@ -481,7 +481,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     sunindextype nnz = 0; // this keeps track of the nonzero index in C
     
     sunindextype cCol;
-    sunindexty ccolptr;
+    sunindextype ccolptr;
 
     // first call, make sure that matrix is initialized with no capacity
     if(!capacity())
