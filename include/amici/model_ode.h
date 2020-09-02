@@ -512,18 +512,6 @@ class Model_ODE : public Model {
     virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
 
     /**
-     * @brief Model specific implementation of fdxdotdp_implicit, colptrs part
-     * @param indexptrs column pointers
-     */
-    virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
-
-    /**
-     * @brief Model specific implementation of fdxdotdp_implicit, rowvals part
-     * @param indexvals row values
-     */
-    virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
-
-    /**
      * @brief Model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w
      * @param t timepoint
