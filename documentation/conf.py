@@ -41,7 +41,7 @@ exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
 # END Monkeypatch exhale
 
 
-# BEGIN Monkeypatch breahe
+# BEGIN Monkeypatch breathe
 from breathe.renderer.sphinxrenderer import \
     DomainDirectiveFactory as breathe_DomainDirectiveFactory
 
@@ -63,7 +63,7 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
 breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
 
 
-# END Monkeypatch breahe
+# END Monkeypatch breathe
 
 
 def install_mtocpp():
