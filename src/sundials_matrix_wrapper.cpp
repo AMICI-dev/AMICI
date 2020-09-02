@@ -596,12 +596,12 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
     
     // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
     
-    auto m = columns();
-    auto n = rows();
+    auto ncols = columns();
+    auto nrows = rows();
     
-    sunindextype p;
-    sunindextype q;
-    sunindextype j;
+    sunindextype aidx;
+    sunindextype cidx;
+    sunindextype icol;
     
     realtype *Cx;
     sunindextype *Ci;
@@ -616,22 +616,22 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
         Cx = SM_DATA_S(C);
         Ci = SM_INDEXVALS_S(C);
         Cp = SM_INDEXPTRS_S(C);
-        w = std::vector<sunindextype>(m);
-        for (p = 0 ; p < Ap[n]; p++)
-            w[Ai[p]]++ ;                     /* row counts */
-        cumsum(gsl::make_span(Cp,m), w, m);  /* row pointers */
+        w = std::vector<sunindextype>(ncols);
+        for (aidx = 0 ; aidx < Ap[nrows]; aidx++)
+            w[Ai[aidx]]++ ;                          /* row counts */
+        cumsum(gsl::make_span(Cp,ncols), w, ncols);  /* row pointers */
     }
     
     
-    for (j = 0 ; j < n; j++)
+    for (icol = 0 ; icol < nrows; icol++)
     {
-        for (p = Ap[j]; p < Ap[j+1]; p++)
+        for (aidx = Ap[icol]; aidx < Ap[icol+1]; aidx++)
         {
             if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
-                Ci[q = w[Ai [p]]++] = j;     /* place A(i,j) as entry C(j,i) */
-                Cx[q] = alpha * Ax [p];
+                Ci[cidx = w[Ai[aidx]]++] = icol;     /* place A(i,j) as entry C(j,i) */
+                Cx[cidx] = alpha * Ax[aidx];
             } else {
-                SM_ELEMENT_D(C, j, Ai[p]) = alpha * Ax[p];
+                SM_ELEMENT_D(C, icol, Ai[aidx]) = alpha * Ax[aidx];
             }
         }
     }
@@ -648,9 +648,11 @@ void SUNMatrixWrapper::to_dense(SUNMatrix D) const {
     if (!num_nonzeros())
         return;
         
-    for (sunindextype icol = 0; icol < columns(); ++icol)
-        for (sunindextype p = indexptrs()[icol]; p < indexptrs()[p+1]; ++p)
-            SM_ELEMENT_D(D, indexvals()[p], icol) = data()[p];
+    sunindextype icol;
+    sunindextype idx;
+    for (icol = 0; icol < columns(); ++icol)
+        for (idx = indexptrs()[icol]; idx < indexptrs()[icol+1]; ++idx)
+            SM_ELEMENT_D(D, indexvals()[idx], icol) = data()[idx];
 }
 
 void SUNMatrixWrapper::to_diag(N_Vector v) const {
@@ -664,10 +666,12 @@ void SUNMatrixWrapper::to_diag(N_Vector v) const {
     if (!num_nonzeros())
         return;
         
-    for (sunindextype icol = 0; icol < columns(); ++icol)
-        for (sunindextype p = indexptrs()[icol]; p < indexptrs()[p+1]; ++p)
-            if (indexvals()[p] == icol)
-                NV_Ith_S(v, icol) = data()[p];
+    sunindextype icol;
+    sunindextype idx;
+    for (icol = 0; icol < columns(); ++icol)
+        for (idx = indexptrs()[icol]; idx < indexptrs()[icol+1]; ++idx)
+            if (indexvals()[idx] == icol)
+                NV_Ith_S(v, icol) = data()[idx];
 }
 
 
