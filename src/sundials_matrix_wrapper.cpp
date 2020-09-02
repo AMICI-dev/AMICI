@@ -110,7 +110,7 @@ operator=(SUNMatrixWrapper &&other) {
     return *this;
 }
 
-void SUNMatrixWrapper::reallocate(int NNZ) {
+void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT.");
@@ -238,8 +238,9 @@ void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
              gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));
 }
 
-static void check_dim(int n, int m, std::string name_n, std::string name_m,
-                      std::string name_mat_n, std::string name_mat_m) {
+static void check_dim(sunindextype n, sunindextype m, const std::string &name_n,
+                      const std::string &name_m, const std::string &name_mat_n,
+                      const std::string &name_mat_m) {
     if (n != m)
         throw std::invalid_argument("Dimension mismatch between number of "
                                     + name_n + " in " + name_mat_n + " ("
@@ -249,8 +250,9 @@ static void check_dim(int n, int m, std::string name_n, std::string name_m,
                                     + std::to_string(m) + ")");
 }
 
-static void check_csc(const SUNMatrixWrapper *mat, std::string fun,
-                      std::string name_mat) {
+static void check_csc(const SUNMatrixWrapper *mat,
+                      const std::string &fun,
+                      const std::string &name_mat) {
     if (mat->matrix_id() != SUNMATRIX_SPARSE)
         throw std::invalid_argument(fun + " only implemented for "
                                     "sparse matrices, but "
@@ -401,8 +403,9 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
     auto Bi = B.indexvals();
     auto Bp = B.indexptrs();
     
-    sunindextype j;
-    sunindextype p;
+    sunindextype bCol;
+    sunindextype bcolptr;
+    sunindextype ccolptr;
     auto Cx = C.data();
     auto Ci = C.indexvals();
     auto Cp = C.indexptrs();
@@ -413,10 +416,10 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
     auto w = std::vector<sunindextype>(m); // sparsity of C(:,j)
     auto x = std::vector<realtype>(m); // entries in C(:,j)
     
-    for (j = 0; j < n; j++)
+    for (bCol = 0; bCol < n; bCol++) // k in C(i,j) = sum_k A(i,k)*B(k,j)
     {
-        Cp[j] = nnz;                          /* column j of C starts here */
-        if ((Bp[j+1] > Bp[j]) && (nnz + m > C.capacity()))
+        Cp[bCol] = nnz;              /* column j of C starts here */
+        if ((Bp[bCol+1] > Bp[bCol]) && (nnz + m > C.capacity()))
         {
             /*
              * if memory usage becomes a concern, remove the factor two here,
@@ -429,14 +432,14 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
             Ci = C.indexvals();
             Cp = C.indexptrs();
         }
-        for (p = Bp[j]; p < Bp[j+1]; p++)
+        for (bcolptr = Bp[bCol]; bcolptr < Bp[bCol+1]; bcolptr++)
         {
-            nnz = scatter(Bi[p], Bx[p], w.data(), gsl::make_span(x), j+1, &C,
-                          nnz);
-            assert(nnz - Cp[j] <= m);
+            nnz = scatter(Bi[bcolptr], Bx[bcolptr], w.data(), gsl::make_span(x),
+                          bCol+1, &C, nnz);
+            assert(nnz - Cp[bCol] <= m);
         }
-        for (p = Cp[j]; p < nnz; p++)
-            Cx[p] = x[Ci[p]]; // copy data to C
+        for (ccolptr = Cp[bCol]; ccolptr < nnz; ccolptr++)
+            Cx[ccolptr] = x[Ci[ccolptr]]; // copy data to C
     }
     Cp[n] = nnz;
     assert(nnz <= C.capacity());
@@ -477,8 +480,9 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     
     sunindextype nnz = 0; // this keeps track of the nonzero index in C
     
-    sunindextype j;
-    sunindextype p;
+    sunindextype cCol;
+    sunindexty ccolptr;
+
     // first call, make sure that matrix is initialized with no capacity
     if(!capacity())
         reallocate(A.num_nonzeros() + B.num_nonzeros());
@@ -489,14 +493,14 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     auto w = std::vector<sunindextype>(nrows);
     auto x = std::vector<realtype>(nrows);
     
-    for (j = 0; j < ncols; j++)
+    for (cCol = 0; cCol < ncols; cCol++)
     {
-        Cp[j] = nnz;                          /* column j of C starts here */
-        nnz = A.scatter(j, alpha, w.data(), gsl::make_span(x), j+1, this, nnz);
-        nnz = B.scatter(j, beta, w.data(), gsl::make_span(x), j+1, this, nnz);
+        Cp[cCol] = nnz;                          /* column j of C starts here */
+        nnz = A.scatter(cCol, alpha, w.data(), gsl::make_span(x), cCol+1, this, nnz);
+        nnz = B.scatter(cCol, beta, w.data(), gsl::make_span(x), cCol+1, this, nnz);
         // no reallocation should happen here
-        for (p = Cp[j]; p < nnz; p++)
-            Cx[p] = x[Ci[p]]; // copy data to C
+        for (ccolptr = Cp[cCol]; ccolptr < nnz; ccolptr++)
+            Cx[ccolptr] = x[Ci[ccolptr]]; // copy data to C
     }
     Cp[ncols] = nnz;
     assert(nnz <= capacity());
@@ -504,7 +508,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
         realloc(); // resize if necessary, will have correct size in future calls
 }
 
-sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
+sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
                                        const realtype beta,
                                        sunindextype *w,
                                        gsl::span<realtype> x,
@@ -523,6 +527,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
     
+    sunindextype acolptr;
     sunindextype *Ci;
     if (C)
         Ci = C->indexvals();
@@ -532,17 +537,17 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
-    for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
+    for (acolptr = Ap[acol]; acolptr < Ap[acol+1]; acolptr++)
     {
-        auto i = Ai[p];                   /* A(i,j) is nonzero */
-        assert(i < static_cast<sunindextype>(x.size()));
-        if (w && w[i] < mark) {
-            w[i] = mark;                  /* i is new entry in column j */
+        auto arow = Ai[acolptr];          /* A(arow,acol) is nonzero */
+        assert(arow < static_cast<sunindextype>(x.size()));
+        if (w && w[arow] < mark) {
+            w[arow] = mark;               /* arow is new entry in C(:,*) */
             if (Ci)
-                Ci[nnz++] = i;            /* add i to pattern of C(:,j) */
-            x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */
+                Ci[nnz++] = arow;         /* add arow to pattern of C(:,*) */
+            x[arow] = beta * Ax[acolptr]; /* x(arow) = beta*A(arow,acol) */
         } else
-            x[i] += beta * Ax[p];         /* i exists in C(:,j) already */
+            x[arow] += beta * Ax[acolptr];/* arow exists in C(:,*) already */
     }
     assert(!C || nnz <= C->capacity());
     return nnz;
