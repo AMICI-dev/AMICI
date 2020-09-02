@@ -205,8 +205,8 @@ class Model : public AbstractModel {
     using AbstractModel::fz;
     
     /**
-     * @brief Model specific implementation of fdwdw_explicit, no w chainrule (Py)
-     * @param dxdotdp_explicit partial derivative xdot wrt p
+     * @brief Model specific implementation of fdwdw, no w chainrule (Py)
+     * @param dwdw partial derivative w wrt w
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
