@@ -9,17 +9,18 @@
 import os
 import sys
 import re
-import subprocess
 import mock
+import subprocess
 
 from sphinx.transforms.post_transforms import ReferencesResolver
 import exhale_multiproject_monkeypatch
 from exhale import configs as exhale_configs
 import exhale.deploy
-import subprocess
 
+# BEGIN Monkeypatch exhale
 exhale_multiproject_monkeypatch  # to avoid removal of unused import
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
+
 
 def my_exhale_generate_doxygen(doxygen_input):
     """Monkey-patch exhale for post-processing doxygen output"""
@@ -35,12 +36,17 @@ def my_exhale_generate_doxygen(doxygen_input):
     # let exhale do it's job
     exhale_generate_doxygen(doxygen_input)
 
+
 exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
+# END Monkeypatch exhale
 
 
-from breathe.renderer.sphinxrenderer import DomainDirectiveFactory as breathe_DomainDirectiveFactory
+# BEGIN Monkeypatch breahe
+from breathe.renderer.sphinxrenderer import \
+    DomainDirectiveFactory as breathe_DomainDirectiveFactory
 
 old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+
 
 def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     if domain != 'mat':
@@ -53,7 +59,11 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     cls, name = matlab_classes[args[0]]
     return cls(domain + ':' + name, *args[1:])
 
+
 breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+
+
+# END Monkeypatch breahe
 
 
 def install_mtocpp():
@@ -130,6 +140,7 @@ except ModuleNotFoundError:
     ], check=True)
 
     from importlib import invalidate_caches
+
     invalidate_caches()
 
     sys.path.insert(0, amici_dir)
@@ -256,20 +267,10 @@ breathe_domain_by_extension = {
     "cpp": "cpp",
 }
 
-#breathe_projects_source = {
-#    "AMICI_CPP": "../",
-#    "AMICI_Matlab": "../",
-#}
-
 # exhale settings
-
 exhale_args = {
-    # These arguments are required
-    #"containmentFolder": "./_exhale_cpp_api",
     "rootFileName": "library_root.rst",
-    #"rootFileTitle": "AMICI C++ API",
     "doxygenStripFromPath": "..",
-    # Suggested optional arguments
     "createTreeView": True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
@@ -286,16 +287,16 @@ exhale_projects_args = {
             "BUILTIN_STL_SUPPORT    = YES",
             "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
         ]),
-        "containmentFolder":    "_exhale_cpp_api",
-        "rootFileTitle":        "AMICI C++ API",
+        "containmentFolder": "_exhale_cpp_api",
+        "rootFileTitle": "AMICI C++ API",
         "afterTitleDescription":
             "AMICI C++ library functions",
     },
     # Third Party Project Includes
     "AMICI_Matlab": {
-        "exhaleDoxygenStdin":   "\n".join([
+        "exhaleDoxygenStdin": "\n".join([
             "INPUT = ../matlab",
-            "EXTENSION_MAPPING      = .m=C++",
+            "EXTENSION_MAPPING = .m=C++",
             "FILTER_PATTERNS = "
             f"*.m={mtocpp_filter}",
             "EXCLUDE += ../matlab/examples",
@@ -303,18 +304,13 @@ exhale_projects_args = {
             "EXCLUDE += ../matlab/SBMLimporter",
             "EXCLUDE += ../matlab/auxiliary",
             "EXCLUDE += ../matlab/tests",
-            #"EXCLUDE += ../matlab/@amimodel",
-            #"EXCLUDE += ../matlab/@amifun",
-            #"EXCLUDE += ../matlab/@amidata",
-            #"EXCLUDE += ../matlab/@amised",
-            #"EXCLUDE += ../matlab/@amioption",
             "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
         ]),
-        "containmentFolder":    "_exhale_matlab_api",
-        "rootFileTitle":        "AMICI Matlab API",
+        "containmentFolder": "_exhale_matlab_api",
+        "rootFileTitle": "AMICI Matlab API",
         "afterTitleDescription":
             "AMICI Matlab library functions",
-        "lexerMapping": {'.*\.m$': 'matlab'}
+        "lexerMapping": {r'.*\.m$': 'matlab'}
     },
 }
 # -- Options for HTML output -------------------------------------------------
@@ -352,7 +348,6 @@ html_favicon = "gfx/logo.png"
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'AMICIdoc'
 
-
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
@@ -381,7 +376,6 @@ latex_documents = [
      author, 'manual'),
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
@@ -390,7 +384,6 @@ man_pages = [
     (master_doc, 'amici', title,
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -487,7 +480,7 @@ def process_docstring(app, what, name, obj, options, lines):
         cname = name.split('.')[2]
         lines.append(
             f'Swig-Generated class that implements smart pointers to '
-            f'{cname.replace("Ptr","")} as objects.'
+            f'{cname.replace("Ptr", "")} as objects.'
         )
         return
 
@@ -556,7 +549,6 @@ def fix_typehints(sig: str) -> str:
 
 def process_signature(app, what: str, name: str, obj, options, signature,
                       return_annotation):
-
     if signature is None:
         return
 
