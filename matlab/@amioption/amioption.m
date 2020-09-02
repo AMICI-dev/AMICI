@@ -227,9 +227,9 @@ classdef amioption < matlab.mixin.CustomDisplay
                     arrayfun(@(x) assert(x == 0 || x == 1 || x == 2, ...
                         'No valid parametrisation chosen! Valid integer options are 0 (lin), 1 (log), 2 (log10).'), value);
                 elseif(ischar(value))
-                    value = getIntegerPScale(value);
+                    value = amioption.getIntegerPScale(value);
                 else
-                    value = arrayfun(@(x) getIntegerPScale(x), value);
+                    value = arrayfun(@(x) amioption.getIntegerPScale(x), value);
                 end
             end
             this.pscale = value;
