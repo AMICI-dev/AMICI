@@ -229,16 +229,16 @@ class SUNMatrixWrapper {
                     const SUNMatrixWrapper &B, realtype beta);
     
     /**
-     * @brief Compute x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and update
+     * @brief Compute x = x + beta * A(:,k), where x is a dense vector and A(:,k) is sparse, and update
      * the sparsity pattern for C(:,j) if applicable
      *
      * This function currently has two purposes:
-     *   - perform parts of sparse matrix-matrix multiplication C(:,j)=A(:,j)*B(j,k)
-     *    enabled by passing beta=B(j,k), x=C(:,j), C=C, w=sparsity of C(:,j) from B(j,0...k-1), nnz=nnz(C(:,0...j-1)
-     *   - add the jth column of the sparse matrix A to the dense vector x.
-     *    enabled by passing beta=1.0, x=x, C=nullptr, w=nullptr, nnz=0
+     *   - perform parts of sparse matrix-matrix multiplication C(:,j)=A(:,k)*B(k,j)
+     *    enabled by passing beta=B(k,j), x=C(:,j), C=C, w=sparsity of C(:,j) from B(k,0...j-1), nnz=nnz(C(:,0...j-1)
+     *   - add the k-th column of the sparse matrix A multiplied by beta to the dense vector x.
+     *    enabled by passing beta=*, x=x, C=nullptr, w=nullptr, nnz=*
      *
-     * @param j column index
+     * @param k column index
      * @param beta scaling factor
      * @param w index workspace, (w[i]<mark) indicates non-zeroness of C(i,j) (dimension: m),
      * if this is a nullptr, sparsity pattern of C will not be updated (if applicable).
@@ -248,7 +248,7 @@ class SUNMatrixWrapper {
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
      */
-    sunindextype scatter(const sunindextype j, const realtype beta,
+    sunindextype scatter(const sunindextype k, const realtype beta,
                          sunindextype *w, gsl::span<realtype> x,
                          const sunindextype mark,
                          SUNMatrixWrapper *C, sunindextype nnz) const;
