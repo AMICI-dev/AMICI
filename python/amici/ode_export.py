@@ -1730,17 +1730,33 @@ class ODEModel:
         #  branch
         sym_var = self.sym(var, needs_stripped_symbols)
 
-        self._eqs[name] = smart_jacobian(sym_eq, sym_var)
+        derivative = smart_jacobian(sym_eq, sym_var)
+
+        self._eqs[name] = derivative
 
         # compute recursion depth based on nilpotency of jacobian. computing
         # nilpotency can be done more efficiently on numerical sparsity pattern
         if name == 'dwdw':
             nonzeros = np.asarray(
-                self._eqs[name].applyfunc(lambda x: int(not x.is_zero))
+                derivative.applyfunc(lambda x: int(not x.is_zero))
             ).astype(np.int64)
             while nonzeros.max():
                 nonzeros = nonzeros.dot(nonzeros)
                 self._w_recursion_depth += 1
+
+        if eq == 'w' and var == 'tcl':
+            dwdw = self.eq('dwdw')
+
+            # splitting this in two smart_multiply is empirically faster for
+            # certain models, I here assuming this is due to sizes of w and
+            # p, which was not empircally tested. If things seem overly
+            # slow, either variant here should be tested.
+            # h(k) = dwdw^k*dwd{var} (k=1)
+            h = smart_multiply(dwdw, derivative)
+            while not smart_is_zero_matrix(h):
+                self._eqs[name] += h
+                # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
+                h = smart_multiply(dwdw, h)
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
