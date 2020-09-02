@@ -98,26 +98,9 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-
-            // copy explicit version
-            if (model_->dxdotdp_explicit.num_nonzeros() > 0) {
-                auto col = model_->dxdotdp_explicit.indexptrs();
-                auto row = model_->dxdotdp_explicit.indexvals();
-                auto data_ptr = model_->dxdotdp_explicit.data();
-                for (sunindextype iCol = col[model_->plist(ip)];
-                     iCol < col[model_->plist(ip) + 1]; ++iCol)
-                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
-            }
-
-            // copy implicit version
-            if (model_->dxdotdp_implicit.num_nonzeros() > 0) {
-                auto col = model_->dxdotdp_implicit.indexptrs();
-                auto row = model_->dxdotdp_implicit.indexvals();
-                auto data_ptr = model_->dxdotdp_implicit.data();
-                for (sunindextype iCol = col[model_->plist(ip)];
-                     iCol < col[model_->plist(ip) + 1]; ++iCol)
-                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
-            }
+            model_->dxdotdp_full.scatter(model_->plist(ip), -1.0, nullptr,
+                                         gsl::make_span(sx.getNVector(ip)),
+                                         0, nullptr, 0);
 
             solveLinearSystem(sx[ip]);
         }

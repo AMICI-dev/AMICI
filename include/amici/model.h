@@ -1305,8 +1305,16 @@ class Model : public AbstractModel {
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
 
+    
     /**
-     * Temporary storage of `dxdotdp` data across functions (Python only)
+     * Temporary storage of `dxdotdp_full` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_full;
+    
+    /**
+     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
      * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
      *  type `CSC_MAT`)
      */

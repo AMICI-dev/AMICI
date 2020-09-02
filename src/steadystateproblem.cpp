@@ -686,13 +686,8 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
         /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
         model->fdxdotdp(t_, x_, x_);
-
-        if (model->dxdotdp_explicit.num_nonzeros() > 0)
-            model->dxdotdp_explicit.multiply(yQB.getNVector(),
-                                             yQ.getNVector(), plist, true);
-        if (model->dxdotdp_implicit.num_nonzeros() > 0)
-            model->dxdotdp_implicit.multiply(yQB.getNVector(),
-                                             yQ.getNVector(), plist, true);
+        model->dxdotdp_full.multiply(yQB.getNVector(), yQ.getNVector(),
+                                     plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
             yQB[ip] = N_VDotProd(yQ.getNVector(),

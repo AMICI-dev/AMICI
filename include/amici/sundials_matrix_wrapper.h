@@ -96,7 +96,7 @@ class SUNMatrixWrapper {
      * @brief Reallocate space for sparse matrix according to specified nnz
      * @param nnz new number of nonzero entries
      */
-    void reallocate(int nnz);
+    void reallocate(sunindextype nnz);
     
     /**
      * @brief Reallocate space for sparse matrix to used space according to last entry in indexptrs
@@ -130,7 +130,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the number of specified non-zero elements (sparse matrices only)
-     * @note values will be unininitialized before indexptrs are set.
+     * @note value will be 0 before indexptrs are set.
      * @return number
      */
     sunindextype num_nonzeros() const;
@@ -209,35 +209,60 @@ class SUNMatrixWrapper {
                   bool transpose) const;
 
     /**
-     * @brief Perform matrix matrix multiplication A * B
-              for sparse A, B, C
+     * @brief Perform matrix matrix multiplication C = A * B for sparse A, B, C
      * @param C output matrix,
      * @param B multiplication matrix
-     * @note will overwrite existing data, indexptrs, indexvals, but will use preallocated space for these vars
+     * @note will overwrite existing data, indexptrs, indexvals for C, but will use preallocated space for these vars
      */
-    void sparse_multiply(SUNMatrixWrapper *C,
-                         SUNMatrixWrapper *B) const;
+    void sparse_multiply(SUNMatrixWrapper &C,
+                         const SUNMatrixWrapper &B) const;
     
     /**
-     * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and construct the pattern
-     * for C(:,j)
-     * @param j column index
+     * @brief Perform matrix matrix addition C = alpha * A +  beta * B
+     * @param A addition matrix
+     * @param alpha scalar A
+     * @param B addition matrix
+     * @param beta scalar B
+     * @note will overwrite existing data, indexptrs, indexvals for C, but will use preallocated space for these vars
+     */
+    void sparse_add(const SUNMatrixWrapper &A, realtype alpha,
+                    const SUNMatrixWrapper &B, realtype beta);
+    
+    /**
+     * @brief Compute x = x + beta * A(:,k), where x is a dense vector and A(:,k) is sparse, and update
+     * the sparsity pattern for C(:,j) if applicable
+     *
+     * This function currently has two purposes:
+     *   - perform parts of sparse matrix-matrix multiplication C(:,j)=A(:,k)*B(k,j)
+     *    enabled by passing beta=B(k,j), x=C(:,j), C=C, w=sparsity of C(:,j) from B(k,0...j-1), nnz=nnz(C(:,0...j-1)
+     *   - add the k-th column of the sparse matrix A multiplied by beta to the dense vector x.
+     *    enabled by passing beta=*, x=x, C=nullptr, w=nullptr, nnz=*
+     *
+     * @param k column index
      * @param beta scaling factor
-     * @param w temporary index workspace, this keeps track of the sparsity pattern in C
-     * @param x temporary data workspace, this keeps track of the data in C
+     * @param w index workspace, (w[i]<mark) indicates non-zeroness of C(i,j) (dimension: m),
+     * if this is a nullptr, sparsity pattern of C will not be updated (if applicable).
+     * @param x dense output vector (dimension: m)
      * @param mark marker for w to indicate nonzero pattern
-     * @param C output matrix
+     * @param C sparse output matrix, if this is a nullptr, sparsity pattern of C will not be updated
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
      */
-    sunindextype scatter(const sunindextype j, const realtype beta,
-                         sunindextype *w, realtype *x, const sunindextype mark,
+    sunindextype scatter(const sunindextype k, const realtype beta,
+                         sunindextype *w, gsl::span<realtype> x,
+                         const sunindextype mark,
                          SUNMatrixWrapper *C, sunindextype nnz) const;
 
     /**
      * @brief Set to 0.0
      */
     void zero();
+    
+    /**
+     * @brief Get matrix id
+     * @return SUNMatrix_ID
+     */
+    SUNMatrix_ID matrix_id() const {return SUNMatGetID(matrix_);};
 
   private:
     void update_ptrs();

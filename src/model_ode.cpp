@@ -122,8 +122,9 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
             /* Sparse matrix multiplication
              dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
-            dxdotdw_.sparse_multiply(&dxdotdp_implicit, &dwdp_);
+            dxdotdw_.sparse_multiply(dxdotdp_implicit, dwdp_);
         }
+        dxdotdp_full.sparse_add(dxdotdp_explicit, 1.0, dxdotdp_implicit, 1.0);
     } else {
         // matlab generated
         for (int ip = 0; ip < nplist(); ip++) {
@@ -266,18 +267,6 @@ void Model_ODE::fdxdotdp_explicit_rowvals(sunindextype * /*indexvals*/) {
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdp_implicit_colptrs(sunindextype * /*indexptrs*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model_ODE::fdxdotdp_implicit_rowvals(sunindextype * /*indexvals*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
 void Model_ODE::fdxdotdw(realtype * /*dxdotdw*/, const realtype /*t*/,
                          const realtype * /*x*/, const realtype * /*p*/,
                          const realtype * /*k*/, const realtype * /*h*/,
@@ -372,10 +361,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
 
     if (pythonGenerated) {
         /* call multiplication */
-        if (dxdotdp_explicit.num_nonzeros() > 0)
-            dxdotdp_explicit.multiply(qBdot, xB, state_.plist, true);
-        if (dxdotdp_implicit.num_nonzeros() > 0)
-            dxdotdp_implicit.multiply(qBdot, xB, state_.plist, true);
+        dxdotdp_full.multiply(qBdot, xB, state_.plist, true);
         N_VScale(-1.0, qBdot, qBdot);
     } else {
         /* was matlab generated */
@@ -449,23 +435,9 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 
-        // copy explicit version
-        if (dxdotdp_explicit.num_nonzeros() > 0) {
-            auto col_exp = dxdotdp_explicit.indexptrs();
-            auto row_exp = dxdotdp_explicit.indexvals();
-            auto data_exp_ptr = dxdotdp_explicit.data();
-            for (sunindextype i = col_exp[plist(ip)]; i < col_exp[plist(ip) + 1]; ++i)
-                sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
-        }
-
-        // copy implicit version
-        if (dxdotdp_implicit.num_nonzeros() > 0) {
-            auto col_imp = dxdotdp_implicit.indexptrs();
-            auto row_imp = dxdotdp_implicit.indexvals();
-            auto data_imp_ptr = dxdotdp_implicit.data();
-            for (sunindextype i = col_imp[plist(ip)]; i < col_imp[plist(ip) + 1]; ++i)
-                sxdot_tmp[row_imp[i]] += data_imp_ptr[i];
-        }
+        dxdotdp_full.scatter(plist(ip), 1.0, nullptr,
+                             gsl::make_span(sxdot_tmp, nx_solver),
+                             0, nullptr, 0);
 
     } else {
         /* copy dxdotdp over */
