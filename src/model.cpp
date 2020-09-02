@@ -134,11 +134,11 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
         // size dynamically adapted for dwdx_ and dwdp_
         dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
-        dwdp_ = SUNMatrixWrapper(nw, static_cast<int>(p.size()), 0, CSC_MAT);
+        dwdp_ = SUNMatrixWrapper(nw, p.size(), 0, CSC_MAT);
 
         for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
             dwdp_hierarchical_.emplace_back(
-                SUNMatrixWrapper(nw, static_cast<int>(p.size()), ndwdw + ndwdp,
+                SUNMatrixWrapper(nw, p.size(), ndwdw + ndwdp,
                                  CSC_MAT)); // guessed size
             dwdx_hierarchical_.emplace_back(SUNMatrixWrapper(
                 nw, nx_solver, ndwdw + ndwdx, CSC_MAT)); // guessed size
@@ -148,14 +148,13 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         assert(static_cast<int>(dwdx_hierarchical_.size()) ==
                w_recursion_depth_ + 1);
 
-        dxdotdp_explicit = SUNMatrixWrapper(
-            nx_solver, static_cast<int>(p.size()), ndxdotdp_explicit, CSC_MAT);
-        dxdotdp_implicit =
-            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndwdp + ndxdotdw, CSC_MAT); // guess size
-        dxdotdp_full =
-            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             0, CSC_MAT); // dynamically allocate on first call
+        dxdotdp_explicit = SUNMatrixWrapper(nx_solver, p.size(),
+                                            ndxdotdp_explicit, CSC_MAT);
+        // guess size, will be dynamically reallocated
+        dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(),
+                                            ndwdp + ndxdotdw, CSC_MAT);
+        // dynamically allocate on first call
+        dxdotdp_full = SUNMatrixWrapper(nx_solver, p.size(), 0, CSC_MAT);
 
         // also dJydy depends on the way of wrapping
         assert(static_cast<unsigned>(nytrue) == this->ndJydy.size());
@@ -164,8 +163,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
                 SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
         dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
-        dwdp_ = SUNMatrixWrapper(nw, static_cast<int>(p.size()), ndwdp,
-                                 CSC_MAT);
+        dwdp_ = SUNMatrixWrapper(nw, p.size(), ndwdp, CSC_MAT);
         dJydy_matlab_ = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
     requireSensitivitiesForAllParameters();

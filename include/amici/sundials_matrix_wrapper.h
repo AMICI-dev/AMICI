@@ -30,14 +30,15 @@ class SUNMatrixWrapper {
      * @param NNZ Number of nonzeros
      * @param sparsetype Sparse type
      */
-    SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype);
+    SUNMatrixWrapper(sunindextype M, sunindextype N, sunindextype NNZ,
+                     int sparsetype);
 
     /**
      * @brief Create dense matrix. See SUNDenseMatrix in sunmatrix_dense.h
      * @param M Number of rows
      * @param N Number of columns
      */
-    SUNMatrixWrapper(int M, int N);
+    SUNMatrixWrapper(sunindextype M, sunindextype N);
 
     /**
      * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
@@ -45,7 +46,7 @@ class SUNMatrixWrapper {
      * @param ubw Upper bandwidth
      * @param lbw Lower bandwidth
      */
-    SUNMatrixWrapper(int M, int ubw, int lbw);
+    SUNMatrixWrapper(sunindextype M, sunindextype ubw, sunindextype lbw);
 
     /**
      * @brief Create sparse matrix from dense or banded matrix. See
@@ -233,7 +234,7 @@ class SUNMatrixWrapper {
      * @param mats vector of sparse matrices
      * @note will overwrite existing data, indexptrs, indexvals for A, but will use preallocated space for these vars
      */
-    void sparse_sum(const std::vector<SUNMatrixWrapper> mats);
+    void sparse_sum(const std::vector<SUNMatrixWrapper> &mats);
     
     /**
      * @brief Compute x = x + beta * A(:,k), where x is a dense vector and A(:,k) is sparse, and update
