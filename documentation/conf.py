@@ -128,6 +128,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
 
+# Required for matlab doxygen processing
 install_mtocpp()
 
 # Install AMICI if not already present
