@@ -126,7 +126,7 @@ class Model : public AbstractModel {
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
-          int ndxdotdp_explicit = 0, int recursion_depth = 0);
+          int ndxdotdp_explicit = 0, int w_recursion_depth = 0);
 
     /** Destructor. */
     ~Model() override = default;
@@ -212,7 +212,6 @@ class Model : public AbstractModel {
      * @param p parameter vector
      * @param k constants vector
      * @param h heavyside vector
-     * @param w vector with helper variables
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
      */
