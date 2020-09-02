@@ -1689,7 +1689,8 @@ class ODEModel:
         chainvars = []
         ignore_chainrule = {
             ('xdot', 'p'): 'w',  # has generic implementation in c++ code
-            ('w', 'w'): 'tcl'  # dtcldw = 0
+            ('w', 'w'): 'tcl',   # dtcldw = 0
+            ('w', 'x'): 'tcl',   # dtcldx = 0
         }
         for cv in ['w', 'tcl']:
             if var_in_function_signature(eq, cv) \
@@ -1743,20 +1744,6 @@ class ODEModel:
             while nonzeros.max():
                 nonzeros = nonzeros.dot(nonzeros)
                 self._w_recursion_depth += 1
-
-        if eq == 'w' and var == 'tcl':
-            dwdw = self.eq('dwdw')
-
-            # splitting this in two smart_multiply is empirically faster for
-            # certain models, I here assuming this is due to sizes of w and
-            # p, which was not empircally tested. If things seem overly
-            # slow, either variant here should be tested.
-            # h(k) = dwdw^k*dwd{var} (k=1)
-            h = smart_multiply(dwdw, derivative)
-            while not smart_is_zero_matrix(h):
-                self._eqs[name] += h
-                # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
-                h = smart_multiply(dwdw, h)
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
