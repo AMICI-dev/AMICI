@@ -32,11 +32,7 @@ message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_events_J.cpp
-${MODEL_DIR}/model_events_JB.cpp
-${MODEL_DIR}/model_events_JDiag.cpp
-${MODEL_DIR}/model_events_JSparse.cpp
-${MODEL_DIR}/model_events_JSparseB.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/model_events_JSparse.cpp
 ${MODEL_DIR}/model_events_Jrz.cpp
 ${MODEL_DIR}/model_events_Jy.cpp
 ${MODEL_DIR}/model_events_Jz.cpp

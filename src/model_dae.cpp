@@ -10,12 +10,8 @@ void Model_DAE::fJ(const realtype t, const realtype cj, const AmiVector &x,
 
 void Model_DAE::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector /*xdot*/, SUNMatrix J) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    SUNMatZero(J);
-    fJ(SM_DATA_D(J), t, N_VGetArrayPointer(x_pos),
-       state_.unscaledParameters.data(), state_.fixedParameters.data(),
-       state_.h.data(), cj, N_VGetArrayPointer(dx), w_.data(), dwdx_.data());
+    fJSparse(t, cj, x, dx, J_.get());
+    J_.to_dense(J);
 }
 
 void Model_DAE::fJSparse(const realtype t, const realtype cj,
@@ -33,18 +29,6 @@ void Model_DAE::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
              N_VGetArrayPointer(x_pos), state_.unscaledParameters.data(),
              state_.fixedParameters.data(), state_.h.data(), cj,
              N_VGetArrayPointer(dx), w_.data(), dwdx_.data());
-}
-
-void Model_DAE::fJSparseB(SUNMatrixContent_Sparse   /*JSparseB*/,
-                          const realtype  /*t*/, const realtype * /*x*/,
-                          const double * /*p*/, const double * /*k*/,
-                          const realtype * /*h*/, const realtype   /*cj*/,
-                          const realtype * /*xB*/, const realtype * /*dx*/,
-                          const realtype * /*dxB*/, const realtype * /*w*/,
-                          const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__);
 }
 
 void Model_DAE::fJv(const realtype t, const AmiVector &x, const AmiVector &dx,
@@ -92,12 +76,8 @@ void Model_DAE::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot) {
 void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
                        const realtype /*cj*/, const AmiVector &x,
                        const AmiVector &dx) {
-    auto x_pos = computeX_pos(x.getNVector());
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    JDiag.set(0.0);
-    fJDiag(JDiag.data(), t, N_VGetArrayPointer(x_pos),
-           state_.unscaledParameters.data(), state_.fixedParameters.data(),
-           state_.h.data(), 0.0, dx.data(), w_.data(), dwdx_.data());
+    fJSparse(t, 0.0, x.getNVector(), dx.getNVector(), J_.get());
+    J_.to_diag(JDiag.getNVector());
     if (!checkFinite(JDiag.getVector(), "Jacobian"))
         throw AmiException("Evaluation of fJDiag failed!");
 }
@@ -134,38 +114,6 @@ std::unique_ptr<Solver> Model_DAE::getSolver() {
     return std::unique_ptr<Solver>(new amici::IDASolver());
 }
 
-void Model_DAE::fJB(realtype * /*JB*/, const realtype /*t*/,
-                    const realtype * /*x*/, const double * /*p*/,
-                    const double * /*k*/, const realtype * /*h*/,
-                    const realtype /*cj*/, const realtype * /*xB*/,
-                    const realtype * /*dx*/, const realtype * /*dxB*/,
-                    const realtype * /*w*/, const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s is not "
-                       "implemented for this model!",
-                       __func__);
-}
-
-void Model_DAE::fJDiag(realtype * /*JDiag*/, const realtype /*t*/,
-                       const realtype * /*x*/, const realtype * /*p*/,
-                       const realtype * /*k*/, const realtype * /*h*/,
-                       const realtype /*cj*/, const realtype * /*dx*/,
-                       const realtype * /*w*/, const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s is not "
-                       "implemented for this model!",
-                       __func__);
-}
-
-void Model_DAE::fJvB(realtype * /*JvB*/, const realtype  /*t*/, const realtype * /*x*/,
-                     const double * /*p*/, const double * /*k*/,
-                     const realtype * /*h*/, const realtype /*cj*/,
-                     const realtype * /*xB*/, const realtype * /*dx*/,
-                     const realtype * /*dxB*/, const realtype * /*vB*/,
-                     const realtype * /*w*/, const realtype * /*dwdx*/) {
-    throw AmiException("Requested functionality is not supported as %s is not "
-                       "implemented for this model!",
-                       __func__); // not implemented
-}
-
 void Model_DAE::froot(realtype * /*root*/, const realtype /*t*/,
                       const realtype * /*x*/, const double * /*p*/, const double * /*k*/,
                       const realtype * /*h*/, const realtype * /*dx*/) {
@@ -196,14 +144,9 @@ void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
 
 
 void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                    N_Vector xB, N_Vector dxB, SUNMatrix JB) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    SUNMatZero(JB);
-    fJB(SM_DATA_D(JB), t, N_VGetArrayPointer(x_pos),
-        state_.unscaledParameters.data(), state_.fixedParameters.data(),
-        state_.h.data(), cj, N_VGetArrayPointer(xB), N_VGetArrayPointer(dx),
-        N_VGetArrayPointer(dxB), w_.data(), dwdx_.data());
+                    N_Vector /*xB*/, N_Vector /*dxB*/, SUNMatrix JB) {
+    fJSparse(t, cj, x, dx, J_.get());
+    J_.transpose(JB, -1.0, nxtrue_solver);
 }
 
 void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
@@ -214,30 +157,24 @@ void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
 }
 
 void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                          N_Vector xB, N_Vector dxB, SUNMatrix JB) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(x_pos));
-    SUNMatZero(JB);
-    fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
-              N_VGetArrayPointer(x_pos), state_.unscaledParameters.data(),
-              state_.fixedParameters.data(), state_.h.data(), cj,
-              N_VGetArrayPointer(xB), N_VGetArrayPointer(dx),
-              N_VGetArrayPointer(dxB), w_.data(), dwdx_.data());
+                          N_Vector /*xB*/, N_Vector /*dxB*/, SUNMatrix JB) {
+    fJSparse(t, cj, x, dx, J_.get());
+    J_.transpose(JB, -1.0, nxtrue_solver);
 }
 
 void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                      N_Vector dxB, N_Vector vB, N_Vector JvB, realtype cj) {
     N_VConst(0.0, JvB);
-    fJSparseB(t, cj, x, dx, xB, dxB, J_.get());
-    J_.multiply(JvB, vB);
+    fJSparseB(t, cj, x, dx, xB, dxB, JB_.get());
+    JB_.multiply(JvB, vB);
 }
 
 void Model_DAE::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                        N_Vector dxB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
-    fJSparseB(t, 1.0, x, dx, xB, dxB, J_.get());
+    fJSparseB(t, 1.0, x, dx, xB, dxB, JB_.get());
     fM(t, x);
-    J_.multiply(xBdot, xB);
+    JB_.multiply(xBdot, xB);
 }
 
 void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
@@ -266,7 +203,7 @@ void Model_DAE::fxBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
     /* Right hande side of the adjoint state for steady state computations.
      J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
-    J_.multiply(xBdot, xB);
+    JB_.multiply(xBdot, xB);
     /* Mind the minus sign... */
     N_VScale(-1.0, xBdot, xBdot);
 }
@@ -280,7 +217,7 @@ void Model_DAE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
 
 void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
     /* Just pass the model Jacobian on to JB */
-    SUNMatCopy(J_.get(), JB);
+    SUNMatCopy(JB_.get(), JB);
 }
 
 void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
@@ -289,9 +226,9 @@ void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
                                    const AmiVector &xBdot) {
     /* Get backward Jacobian */
     fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(),
-              dxB.getNVector(), J_.get());
+              dxB.getNVector(), JB_.get());
     /* Switch sign, as we integrate forward in time, not backward */
-    J_.scale(-1);
+    JB_.scale(-1);
 }
 
 void Model_DAE::fsxdot(const realtype t, const AmiVector &x,

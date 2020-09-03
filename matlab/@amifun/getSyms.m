@@ -322,18 +322,6 @@ function [this,model] = getSyms(this,model)
             this.sym = diag(model.fun.J.sym);
             this = makeStrSyms(this);
             
-        case 'JB'
-            this.sym = sym(zeros(model.nx, model.nx));
-            % Augmentation needs a transposition in the submatrices
-            if(model.nx>0)
-                for ix = 1 : model.ng
-                    for jx = 1 : model.ng
-                        this.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue) = ...
-                            -transpose(model.fun.J.sym((ix-1)*model.nxtrue+1:ix*model.nxtrue, (jx-1)*model.nxtrue+1:jx*model.nxtrue));
-                    end
-                end
-            end
-            
         case 'dxdotdp'
             if(~isempty(w))
                 this.sym=jacobian(model.fun.xdot.sym,p)  + jacobian(model.fun.xdot.sym,w)*model.fun.dwdp.strsym;
@@ -382,30 +370,6 @@ function [this,model] = getSyms(this,model)
             this.sym=jacobian(model.fun.y.sym,p);
             % create cell array of same size
             this = makeStrSyms(this);
-            
-        case 'Jv'
-            % create cell array of same size
-            vs = cell(nx,1);
-            % fill cells
-            for j=1:nx
-                vs{j} = sprintf('var_v_%i',j-1);
-            end
-            % transform to symbolic variable
-            vs = sym(vs);
-            % multiply
-            this.sym = model.fun.J.sym*vs;
-            
-        case 'JvB'
-            % create cell array of same size
-            vs = cell(nx,1);
-            % fill cells
-            for j=1:nx
-                vs{j} = sprintf('var_vB_%i',j-1);
-            end
-            % transform to symbolic variable
-            vs = sym(vs);
-            % multiply
-            this.sym = model.fun.JB.sym*vs;
             
         case 'xBdot'
             if(strcmp(model.wtype,'iw'))
@@ -740,8 +704,6 @@ function [this,model] = getSyms(this,model)
         case 'JBandB'
             %do nothing
         case 'JSparse'
-            %do nothing
-        case 'JSparseB'
             %do nothing
             
         case 'Jy'

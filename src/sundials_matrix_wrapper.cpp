@@ -482,6 +482,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     
     sunindextype cCol;
     sunindextype ccolptr;
+
     // first call, make sure that matrix is initialized with no capacity
     if(!capacity())
         reallocate(A.num_nonzeros() + B.num_nonzeros());
@@ -551,6 +552,136 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
     assert(!C || nnz <= C->capacity());
     return nnz;
 }
+
+// https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_cumsum.c
+/* p [0..n] = cumulative sum of c[0..n-1], and then copy p [0..n-1] into c */
+static void cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c) {
+    sunindextype i;
+    sunindextype nz = 0;
+    assert(p.size() == c.size() + 1);
+    for (i = 0; i < static_cast<sunindextype>(c.size()); i++)
+    {
+        p[i] = nz;
+        nz += c[i];
+        c[i] = p[i];             /* also copy p[0..n-1] back into c[0..n-1]*/
+    }
+    p[c.size()] = nz;
+}
+
+void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha,
+                                 sunindextype blocksize) const{
+    if (!matrix_ || !C)
+        return;
+
+    if (!((SUNMatGetID(C) == SUNMATRIX_SPARSE && SM_SPARSETYPE_S(C) == CSC_MAT)
+          || SUNMatGetID(C) == SUNMATRIX_DENSE))
+        throw std::domain_error("Not Implemented.");
+    
+    check_csc(this, "transpose", "A");
+    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+        check_dim(rows(), SM_COLUMNS_S(C), "rows", "columns", "A", "C");
+        check_dim(columns(), SM_ROWS_S(C), "columns", "rows", "A", "C");
+        if (num_nonzeros() > SM_NNZ_S(C))
+            std::invalid_argument("C must be allocated such that it can hold "
+                                  "all nonzero values from A. Requires "
+                                  + std::to_string(num_nonzeros()) + " was "
+                                  + std::to_string(SM_NNZ_S(C)) + ".");
+    } else {
+        check_dim(rows(), SM_COLUMNS_D(C), "rows", "columns", "A", "C");
+        check_dim(columns(), SM_ROWS_D(C), "columns", "rows", "A", "C");
+    }
+    
+    auto ncols = columns();
+    auto nrows = rows();
+    
+    assert(ncols % blocksize == 0);
+    assert(nrows % blocksize == 0);
+    
+    if (!num_nonzeros() || !ncols || !nrows)
+        return;
+    
+    // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
+    
+    sunindextype aidx;
+    sunindextype cidx;
+    sunindextype acol;
+    
+    realtype *Cx;
+    sunindextype *Ci;
+    sunindextype *Cp;
+    std::vector<sunindextype> w;
+    
+    sunindextype ccol;
+    sunindextype crow;
+    
+    auto Ax = data();
+    auto Ai = indexvals();
+    auto Ap = indexptrs();
+    
+    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+        Cx = SM_DATA_S(C);
+        Ci = SM_INDEXVALS_S(C);
+        Cp = SM_INDEXPTRS_S(C);
+        w = std::vector<sunindextype>(ncols);
+        for (acol = 0; acol < nrows; acol++)                /* row counts */
+            for (aidx = Ap[acol]; aidx < Ap[acol+1]; aidx++)
+                w[(acol/blocksize)*blocksize + Ai[aidx] % blocksize]++;
+        cumsum(gsl::make_span(Cp, ncols+1), w);             /* row pointers */
+    }
+    
+    for (acol = 0; acol < nrows; acol++)
+    {
+        for (aidx = Ap[acol]; aidx < Ap[acol+1]; aidx++)
+        {
+            ccol = (acol/blocksize)*blocksize + Ai[aidx] % blocksize;
+            crow = (Ai[aidx]/blocksize)*blocksize + acol % blocksize;
+            if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+                Ci[cidx = w[ccol]++] = crow;  /* place A(i,j) as entry C(j,i) */
+                Cx[cidx] = alpha * Ax[aidx];
+            } else {
+                SM_ELEMENT_D(C, crow, ccol) = alpha * Ax[aidx];
+            }
+        }
+    }
+}
+
+void SUNMatrixWrapper::to_dense(SUNMatrix D) const {
+    if (!matrix_ || !D)
+        return;
+    check_csc(this, "to_dense", "A");
+    check_dim(rows(), SM_ROWS_D(D), "rows", "rows", "A", "D");
+    check_dim(columns(), SM_COLUMNS_D(D), "columns", "columns", "A", "D");
+    
+    SUNMatZero(D);
+    if (!num_nonzeros())
+        return;
+        
+    sunindextype icol;
+    sunindextype idx;
+    for (icol = 0; icol < columns(); ++icol)
+        for (idx = indexptrs()[icol]; idx < indexptrs()[icol+1]; ++idx)
+            SM_ELEMENT_D(D, indexvals()[idx], icol) = data()[idx];
+}
+
+void SUNMatrixWrapper::to_diag(N_Vector v) const {
+    if (!matrix_ || !v)
+        return;
+    check_csc(this, "to_dense", "S");
+    check_dim(rows(), columns(), "rows", "columns", "A", "A");
+    check_dim(rows(), NV_LENGTH_S(v), "rows", "elements", "S", "v");
+    
+    N_VConst(0.0, v);
+    if (!num_nonzeros())
+        return;
+        
+    sunindextype icol;
+    sunindextype idx;
+    for (icol = 0; icol < columns(); ++icol)
+        for (idx = indexptrs()[icol]; idx < indexptrs()[icol+1]; ++idx)
+            if (indexvals()[idx] == icol)
+                NV_Ith_S(v, icol) = data()[idx];
+}
+
 
 void SUNMatrixWrapper::zero()
 {
