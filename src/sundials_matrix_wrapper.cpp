@@ -568,7 +568,8 @@ static void cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c) {
     p[c.size()] = nz;
 }
 
-void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
+void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha,
+                                 sunindextype blocksize) const{
     if (!matrix_ || !C)
         return;
 
@@ -593,6 +594,9 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
     auto ncols = columns();
     auto nrows = rows();
     
+    assert(ncols % blocksize == 0);
+    assert(nrows % blocksize == 0);
+    
     if (!num_nonzeros() || !ncols || !nrows)
         return;
     
@@ -600,12 +604,15 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
     
     sunindextype aidx;
     sunindextype cidx;
-    sunindextype icol;
+    sunindextype acol;
     
     realtype *Cx;
     sunindextype *Ci;
     sunindextype *Cp;
     std::vector<sunindextype> w;
+    
+    sunindextype ccol;
+    sunindextype crow;
     
     auto Ax = data();
     auto Ai = indexvals();
@@ -616,21 +623,23 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
         Ci = SM_INDEXVALS_S(C);
         Cp = SM_INDEXPTRS_S(C);
         w = std::vector<sunindextype>(ncols);
-        for (aidx = 0 ; aidx < Ap[nrows]; aidx++)
-            w[Ai[aidx]]++;                             /* row counts */
-        cumsum(gsl::make_span(Cp, ncols+1), w);         /* row pointers */
+        for (acol = 0; acol < nrows; acol++)                /* row counts */
+            for (aidx = Ap[acol]; aidx < Ap[acol+1]; aidx++)
+                w[(acol/blocksize)*blocksize + Ai[aidx] % blocksize]++;
+        cumsum(gsl::make_span(Cp, ncols+1), w);             /* row pointers */
     }
     
-    
-    for (icol = 0; icol < nrows; icol++)
+    for (acol = 0; acol < nrows; acol++)
     {
-        for (aidx = Ap[icol]; aidx < Ap[icol+1]; aidx++)
+        for (aidx = Ap[acol]; aidx < Ap[acol+1]; aidx++)
         {
+            ccol = (acol/blocksize)*blocksize + Ai[aidx] % blocksize;
+            crow = (Ai[aidx]/blocksize)*blocksize + acol % blocksize;
             if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
-                Ci[cidx = w[Ai[aidx]]++] = icol;     /* place A(i,j) as entry C(j,i) */
+                Ci[cidx = w[ccol]++] = crow;  /* place A(i,j) as entry C(j,i) */
                 Cx[cidx] = alpha * Ax[aidx];
             } else {
-                SM_ELEMENT_D(C, icol, Ai[aidx]) = alpha * Ax[aidx];
+                SM_ELEMENT_D(C, crow, ccol) = alpha * Ax[aidx];
             }
         }
     }

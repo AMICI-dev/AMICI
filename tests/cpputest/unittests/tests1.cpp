@@ -809,6 +809,7 @@ TEST_GROUP(sunmatrixwrapper)
     std::vector<double> a{0.82, 0.91, 0.13};
     std::vector<double> b{0.77, 0.80};
     SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
+    SUNMatrixWrapper B = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
     // result
     std::vector<double> d{1.3753, 1.5084, 1.1655};
 
@@ -819,6 +820,27 @@ TEST_GROUP(sunmatrixwrapper)
         SM_ELEMENT_D(A.get(), 0, 1) = 0.03;
         SM_ELEMENT_D(A.get(), 1, 1) = 0.44;
         SM_ELEMENT_D(A.get(), 2, 1) = 0.38;
+        
+        SM_INDEXPTRS_S(B.get())[0] = 0;
+        SM_INDEXPTRS_S(B.get())[1] = 2;
+        SM_INDEXPTRS_S(B.get())[2] = 4;
+        SM_INDEXPTRS_S(B.get())[3] = 5;
+        SM_INDEXPTRS_S(B.get())[4] = 7;
+        SM_DATA_S(B.get())[0] = 3;
+        SM_DATA_S(B.get())[1] = 1;
+        SM_DATA_S(B.get())[2] = 3;
+        SM_DATA_S(B.get())[3] = 7;
+        SM_DATA_S(B.get())[4] = 1;
+        SM_DATA_S(B.get())[5] = 2;
+        SM_DATA_S(B.get())[6] = 9;
+        SM_INDEXVALS_S(B.get())[0] = 1;
+        SM_INDEXVALS_S(B.get())[1] = 3;
+        SM_INDEXVALS_S(B.get())[2] = 0;
+        SM_INDEXVALS_S(B.get())[3] = 2;
+        SM_INDEXVALS_S(B.get())[4] = 0;
+        SM_INDEXVALS_S(B.get())[5] = 1;
+        SM_INDEXVALS_S(B.get())[6] = 3;
+
     }
 
     void teardown() {}
@@ -878,4 +900,29 @@ TEST(sunmatrixwrapper, transform_throws)
     CHECK_THROWS(std::invalid_argument, SUNMatrixWrapper(A, 0.0, 13));
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
     CHECK_THROWS(std::invalid_argument, SUNMatrixWrapper(A_sparse, 0.0, CSR_MAT));
+}
+
+TEST(sunmatrixwrapper, block_transpose)
+{
+    auto B_sparse = SUNMatrixWrapper(4, 4, 7, CSR_MAT);
+    CHECK_THROWS(std::domain_error, B.transpose(B_sparse.get(), 1.0, 4));
+    
+    B_sparse = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
+    B.transpose(B_sparse.get(), -1.0, 2);
+    for (int idx = 0; idx < 7; idx++) {
+        CHECK_TRUE(SM_INDEXVALS_S(B.get())[idx]
+                   == SM_INDEXVALS_S(B_sparse.get())[idx]);
+        if (idx == 1)
+            CHECK_TRUE(SM_DATA_S(B.get())[idx]
+                       == -SM_DATA_S(B_sparse.get())[3]);
+        else if (idx == 3)
+            CHECK_TRUE(SM_DATA_S(B.get())[idx]
+                       == -SM_DATA_S(B_sparse.get())[1]);
+        else
+            CHECK_TRUE(SM_DATA_S(B.get())[idx]
+                       == -SM_DATA_S(B_sparse.get())[idx]);
+    }
+    for (int icol = 0; icol <= 4; icol++)
+        CHECK_TRUE(SM_INDEXPTRS_S(B.get())[icol]
+                   == SM_INDEXPTRS_S(B_sparse.get())[icol]);
 }

@@ -146,7 +146,7 @@ void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
 void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                     N_Vector xB, N_Vector dxB, SUNMatrix JB) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.transpose(JB, -1.0);
+    J_.transpose(JB, -1.0, nxtrue_solver);
 }
 
 void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
@@ -159,7 +159,7 @@ void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
 void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                           N_Vector xB, N_Vector dxB, SUNMatrix JB) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.transpose(JB, -1.0);
+    J_.transpose(JB, -1.0, nxtrue_solver);
 }
 
 void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,

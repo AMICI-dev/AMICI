@@ -218,7 +218,7 @@ class SUNMatrixWrapper {
                          const SUNMatrixWrapper &B) const;
     
     /**
-     * @brief Perform matrix matrix addition C = alpha * A +  beta * B
+     * @brief Perform sparse matrix matrix addition C = alpha * A +  beta * B
      * @param A addition matrix
      * @param alpha scalar A
      * @param B addition matrix
@@ -254,12 +254,13 @@ class SUNMatrixWrapper {
                          SUNMatrixWrapper *C, sunindextype nnz) const;
     
     /**
-     * @brief Computes transpose A' of sparse matrix A and writes is to the matrix C = alpha * A'
+     * @brief Compute transpose A' of sparse matrix A and writes it to the matrix C = alpha * A'
      *
      * @param C output matrix (sparse or dense)
      * @param alpha scalar multiplier
      */
-    void transpose(SUNMatrix C, const realtype alpha) const;
+    void transpose(SUNMatrix C, const realtype alpha,
+                   sunindextype blocksize) const;
     
     /**
      * @brief Writes a sparse matrix A to a dense matrix D.

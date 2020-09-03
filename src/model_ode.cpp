@@ -245,7 +245,7 @@ void Model_ODE::fJB(const realtype t, realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector /*xBdot*/,
                     SUNMatrix JB) {
     fJSparse(t, x, J_.get());
-    J_.transpose(JB, -1.0);
+    J_.transpose(JB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
@@ -258,7 +258,7 @@ void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
                           N_Vector /*xBdot*/, SUNMatrix JB) {
     fJSparse(t, x, J_.get());
-    J_.transpose(JB, -1.0);
+    J_.transpose(JB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
