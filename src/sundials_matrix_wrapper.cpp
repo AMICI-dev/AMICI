@@ -558,7 +558,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
 static void cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c) {
     sunindextype i;
     sunindextype nz = 0;
-    assert(c.size() == p.size() + 1);
+    assert(p.size() == c.size() + 1);
     for (i = 0; i < static_cast<sunindextype>(c.size()); i++)
     {
         p[i] = nz;
@@ -590,13 +590,13 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
         check_dim(columns(), SM_ROWS_D(C), "columns", "rows", "A", "C");
     }
     
-    if (!num_nonzeros())
+    auto ncols = columns();
+    auto nrows = rows();
+    
+    if (!num_nonzeros() || !ncols || !nrows)
         return;
     
     // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
-    
-    auto ncols = columns();
-    auto nrows = rows();
     
     sunindextype aidx;
     sunindextype cidx;
