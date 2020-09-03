@@ -236,7 +236,7 @@ def random_suffix(n):
     return ''.join(chars)
 
 
-def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, use_adjoint=False, skip_sensitivity=False, **kwargs):
+def _simulate_splines(folder, splines, params_true, initial_values=None, *, benchmark=False, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, use_adjoint=False, skip_sensitivity=False, **kwargs):
     # Default initial values
     if initial_values is None:
         initial_values = _default_initial_values(len(splines))
@@ -273,18 +273,39 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol
     tt = np.linspace(0, float(T), n)
     model.setTimepoints(tt)
 
-    # Simulate PEtab problem
+    # Create dictionary for parameter values
     params_str = {p.name : v for p, v in params_true.items()}
-    res = simulate_petab(problem, model, solver, params_str)
-    llh, sllh, rdatas = res[LLH], res[SLLH], res[RDATAS]
-    assert len(rdatas) == 1
-    rdata = rdatas[0]
 
-    # Return state/parameter ordering
-    state_ids = model.getStateIds()
-    param_ids = model.getParameterIds()
+    if benchmark is False:
+        # Simulate PEtab problem
+        res = simulate_petab(problem, model, solver, params_str)
+        llh, sllh, rdatas = res[LLH], res[SLLH], res[RDATAS]
+        assert len(rdatas) == 1
+        rdata = rdatas[0]
 
-    return llh, sllh, rdata, state_ids, param_ids
+        # Return state/parameter ordering
+        state_ids = model.getStateIds()
+        param_ids = model.getParameterIds()
+
+        return llh, sllh, rdata, state_ids, param_ids
+
+    else:
+        if benchmark is True:
+            benchmark = 50
+        import time
+        runtimes = []
+        for _ in range(int(benchmark)):
+            t0 = time.perf_counter()
+            simulate_petab(problem, model, solver, params_str)
+            t_elapsed = time.perf_counter() - t0
+            runtimes.append(t_elapsed)
+        return dict(
+            runtimes=runtimes,
+            mean=np.mean(runtimes),
+            median=np.median(runtimes),
+            min=min(runtimes),
+            max=max(runtimes),
+        )
 
 
 def check_splines(splines,
