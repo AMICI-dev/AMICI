@@ -1763,6 +1763,9 @@ class Model : public AbstractModel {
 
     /** Sparse Jacobian (dimension: `amici::Model::nnz`) */
     mutable SUNMatrixWrapper J_;
+    
+    /** Sparse Backwards Jacobian (dimension: `amici::Model::nnz`) */
+    mutable SUNMatrixWrapper JB_;
 
     /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
     mutable SUNMatrixWrapper dxdotdw_;

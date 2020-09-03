@@ -320,45 +320,6 @@ class Model_DAE : public Model {
 
   protected:
     /**
-     * @brief Model specific implementation for fJ
-     * @param J Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param dx Vector with the derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJ(realtype *J, realtype t, const realtype *x, const double *p,
-                    const double *k, const realtype *h, realtype cj,
-                    const realtype *dx, const realtype *w,
-                    const realtype *dwdx) = 0;
-
-    /**
-     * @brief Model specific implementation for fJB
-     * @param JB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param xB Vector with the adjoint states
-     * @param dx Vector with the derivative states
-     * @param dxB Vector with the adjoint derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJB(realtype *JB, realtype t, const realtype *x,
-                     const double *p, const double *k, const realtype *h,
-                     realtype cj, const realtype *xB, const realtype *dx,
-                     const realtype *dxB, const realtype *w,
-                     const realtype *dwdx);
-
-    /**
      * @brief Model specific implementation for fJSparse
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
@@ -375,68 +336,6 @@ class Model_DAE : public Model {
                           const realtype *x, const double *p, const double *k,
                           const realtype *h, realtype cj, const realtype *dx,
                           const realtype *w, const realtype *dwdx) = 0;
-
-    /**
-     * @brief Model specific implementation for fJSparseB
-     * @param JSparseB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param xB Vector with the adjoint states
-     * @param dx Vector with the derivative states
-     * @param dxB Vector with the adjoint derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, const realtype t,
-                           const realtype *x, const double *p, const double *k,
-                           const realtype *h, const realtype cj,
-                           const realtype *xB, const realtype *dx,
-                           const realtype *dxB, const realtype *w,
-                           const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJDiag
-     * @param JDiag array to which the Jacobian diagonal will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param dx Vector with the derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJDiag(realtype *JDiag, realtype t, const realtype *x,
-                        const realtype *p, const realtype *k, const realtype *h,
-                        realtype cj, const realtype *dx, const realtype *w,
-                        const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJvB
-     * @param JvB Matrix vector product of JB with a vector v
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param xB Vector with the adjoint states
-     * @param dx Vector with the derivative states
-     * @param dxB Vector with the adjoint derivative states
-     * @param vB Vector with which the Jacobian is multiplied
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJvB(realtype *JvB, realtype t, const realtype *x,
-                      const double *p, const double *k, const realtype *h,
-                      realtype cj, const realtype *xB, const realtype *dx,
-                      const realtype *dxB, const realtype *vB,
-                      const realtype *w, const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for froot
