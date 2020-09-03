@@ -561,13 +561,13 @@ static realtype cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c,
     sunindextype nz = 0;
     realtype nz2 = 0;
     assert(static_cast<sunindextype>(c.size()) == n);
-    assert(static_cast<sunindextype>(p.size()) == n);
-    for (i = 0 ; i < n ; i++)
+    assert(static_cast<sunindextype>(p.size()) == n + 1);
+    for (i = 0; i < n; i++)
     {
-        p[i] = nz ;
-        nz += c[i] ;
-        nz2 += c[i] ;             /* also in double to avoid csi overflow */
-        c[i] = p[i] ;             /* also copy p[0..n-1] back into c[0..n-1]*/
+        p[i] = nz;
+        nz += c[i];
+        nz2 += c[i];             /* also in double to avoid csi overflow */
+        c[i] = p[i];             /* also copy p[0..n-1] back into c[0..n-1]*/
     }
     p[n] = nz;
     return (nz2);
@@ -577,19 +577,23 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
     if (!matrix_ || !C)
         return;
 
-    if (SUNMatGetID(C) != SUNMATRIX_SPARSE && SUNMatGetID(C) != SUNMATRIX_DENSE)
+    if (!((SUNMatGetID(C) == SUNMATRIX_SPARSE && SM_SPARSETYPE_S(C) == CSC_MAT)
+          || SUNMatGetID(C) == SUNMATRIX_DENSE))
         throw std::domain_error("Not Implemented.");
-        
     
     check_csc(this, "transpose", "A");
-    check_csc(this, "transpose", "B");
-    check_dim(rows(), SM_COLUMNS_S(C), "rows", "columns", "A", "C");
-    check_dim(columns(), SM_ROWS_S(C), "columns", "rows", "A", "C");
-    if (num_nonzeros() > SM_NNZ_S(C))
-        std::invalid_argument("C must be allocated such that it can hold all "
-                              "nonzero values from A. Requires "
-                              + std::to_string(num_nonzeros()) + " was "
-                              + std::to_string(SM_NNZ_S(C)) + ".");
+    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+        check_dim(rows(), SM_COLUMNS_S(C), "rows", "columns", "A", "C");
+        check_dim(columns(), SM_ROWS_S(C), "columns", "rows", "A", "C");
+        if (num_nonzeros() > SM_NNZ_S(C))
+            std::invalid_argument("C must be allocated such that it can hold "
+                                  "all nonzero values from A. Requires "
+                                  + std::to_string(num_nonzeros()) + " was "
+                                  + std::to_string(SM_NNZ_S(C)) + ".");
+    } else {
+        check_dim(rows(), SM_COLUMNS_D(C), "rows", "columns", "A", "C");
+        check_dim(columns(), SM_ROWS_D(C), "columns", "rows", "A", "C");
+    }
     
     if (!num_nonzeros())
         return;
@@ -619,7 +623,7 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
         w = std::vector<sunindextype>(ncols);
         for (aidx = 0 ; aidx < Ap[nrows]; aidx++)
             w[Ai[aidx]]++ ;                          /* row counts */
-        cumsum(gsl::make_span(Cp,ncols), w, ncols);  /* row pointers */
+        cumsum(gsl::make_span(Cp,ncols+1), w, ncols);  /* row pointers */
     }
     
     
