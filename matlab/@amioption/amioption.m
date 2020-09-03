@@ -3,9 +3,9 @@
 % @brief definition of amioption class
 %
 classdef amioption < matlab.mixin.CustomDisplay
-    %AMIOPTION provides an option container to pass simulation parameters to the
-    %simulation routine.
-    
+    % AMIOPTION provides an option container to pass simulation parameters to the
+    % simulation routine.
+
     properties
         % absolute integration tolerace
         atol = 1e-16;
@@ -72,10 +72,10 @@ classdef amioption < matlab.mixin.CustomDisplay
         % Mode for for computing sensitivities ({0: Newton}, 1: Simulation)
         steadyStateSensitivityMode = 0;
     end
-    
+
     methods
         function obj = amioption(varargin)
-            %amioptions Construct a new amioptions object
+            % amioptions Construct a new amioptions object
             %   OPTS = amioption() creates a set of options with each option set to its
             %   default value.
             %
@@ -95,11 +95,11 @@ classdef amioption < matlab.mixin.CustomDisplay
             % Return values:
             %  obj: amioption object constructed from inputs
             %
-            
+
             % adapted from SolverOptions
-            
-            if nargin > 0 
-                
+
+            if nargin > 0
+
                 % Deal with the case where the first input to the
                 % constructor is a amioptions/struct object.
                 if isa(varargin{1},'amioption')
@@ -135,7 +135,7 @@ classdef amioption < matlab.mixin.CustomDisplay
                 else
                     firstInputObj = false;
                 end
-                
+
                 % Extract the options that the caller of the constructor
                 % wants to set.
                 if firstInputObj
@@ -143,7 +143,7 @@ classdef amioption < matlab.mixin.CustomDisplay
                 else
                     pvPairs = varargin;
                 end
-                
+
                 % Loop through each param-value pair and just try to set
                 % the option. When the option has been fully specified with
                 % the correct case, this is fast. The catch clause deals
@@ -153,7 +153,7 @@ classdef amioption < matlab.mixin.CustomDisplay
                     try
                         obj.(pvPairs{i}) = pvPairs{i+1};
                     catch ME %#ok
-                        
+
                         % Create the input parser if we haven't already. We
                         % do it here to avoid creating it if possible, as
                         % it is slow to set up.
@@ -175,11 +175,11 @@ classdef amioption < matlab.mixin.CustomDisplay
                             end
                             haveCreatedInputParser = true;
                         end
-                        
+
                         % Get the p-v pair to parse.
                         thisPair = pvPairs(i:min(i+1, length(pvPairs)));
                         ip.parse(thisPair{:});
-                        
+
                         % Determine the option that was specified in p-v pairs.
                         % These options will now be matched even if only partially
                         % specified (by 13a). Now set the specified value in the
@@ -189,16 +189,16 @@ classdef amioption < matlab.mixin.CustomDisplay
                     end
                 end
             end
-            
-            
+
+
         end
-        
+
         function this = set.sensi_meth(this,value)
             if(ischar(value))
                 switch(value)
                     case 'forward'
                         this.sensi_meth = 1;
-                    case 'adjoint' 
+                    case 'adjoint'
                         this.sensi_meth = 2;
                     case 'ss'
                         this.sensi_meth = 3;
@@ -213,34 +213,34 @@ classdef amioption < matlab.mixin.CustomDisplay
                 this.sensi_meth = value;
             end
         end
-        
+
         function this = set.sensi(this,value)
             assert(isnumeric(value),'The option sensi must have a numeric value!')
             assert(floor(value)==value,'The option sensi must be an integer!')
             assert(value<=4,'Only 0, 1, 2 are valid options for sensi!')
             this.sensi = value;
         end
-        
+
         function this = set.pscale(this,value)
             if(~isempty(value))
                 if(isnumeric(value))
                     arrayfun(@(x) assert(x == 0 || x == 1 || x == 2, ...
                         'No valid parametrisation chosen! Valid integer options are 0 (lin), 1 (log), 2 (log10).'), value);
                 elseif(ischar(value))
-                    value = getIntegerPScale(value);
+                    value = amioption.getIntegerPScale(value);
                 else
-                    value = arrayfun(@(x) getIntegerPScale(x), value);
+                    value = arrayfun(@(x) amioption.getIntegerPScale(x), value);
                 end
             end
             this.pscale = value;
         end
-                
+
         function this = set.newton_maxsteps(this,value)
             assert(isnumeric(value),'The option newtons_maxsteps must have a numeric value!')
             assert(floor(value)==value,'The option newton_maxsteps must be an integer!')
             this.newton_maxsteps = value;
         end
-        
+
         function this = set.newton_maxlinsteps(this,value)
             assert(isnumeric(value),'The option newton_maxlinsteps must have a numeric value!')
             assert(floor(value)==value,'The option newton_maxlinsteps must be an integer!')
@@ -258,18 +258,29 @@ classdef amioption < matlab.mixin.CustomDisplay
             this.newton_preeq = value;
         end
     end
-end
 
-function pscaleInt = getIntegerPScale(pscaleString)
-    switch (pscaleString)
-        case 'lin'
-            pscaleInt = 0;
-        case 'log'
-            pscaleInt = 1;
-        case 'log10'
-            pscaleInt = 2;
-        otherwise
-            assert(0, ...
-                'No valid parametrisation chosen! Valid string options are "log", "log10" and "lin".')
+    methods(Static)
+        function pscaleInt = getIntegerPScale(pscaleString)
+            % pscaleInt converts a parameter scaling string into the
+            % corresponding integer representation
+            %
+            % Parameters:
+            %  pscaleString: parameter scaling string
+            %
+            % Return values:
+            %  int
+            switch (pscaleString)
+                case 'lin'
+                    pscaleInt = 0;
+                case 'log'
+                    pscaleInt = 1;
+                case 'log10'
+                    pscaleInt = 2;
+                otherwise
+                    assert(0, ...
+                        'No valid parametrisation chosen! Valid string options are "log", "log10" and "lin".')
+            end
+        end
     end
+
 end
