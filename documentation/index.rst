@@ -55,8 +55,9 @@ Welcome to AMICI's documentation!
    :maxdepth: 2
    :caption: About
 
-   LICENSE
+   how_to_cite
    references
+   LICENSE
 
 
 
