@@ -307,40 +307,9 @@ class Model_ODE : public Model {
     std::unique_ptr<Solver> getSolver() override;
 
   protected:
-    /**
-     * @brief Model specific implementation for fJ
-     * @param J Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJ(realtype *J, realtype t, const realtype *x,
-                    const realtype *p, const realtype *k, const realtype *h,
-                    const realtype *w, const realtype *dwdx) = 0;
 
     /**
-     * @brief Model specific implementation for fJB
-     * @param JB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJB(realtype *JB, realtype t, const realtype *x,
-                     const realtype *p, const realtype *k, const realtype *h,
-                     const realtype *xB, const realtype *w,
-                     const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJSparse
+     * @brief Model specific implementation for fJSparse (Matlab)
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -356,7 +325,7 @@ class Model_ODE : public Model {
                           const realtype *w, const realtype *dwdx);
 
     /**
-     * @brief Model specific implementation for fJSparse, data only
+     * @brief Model specific implementation for fJSparse, data only (Py)
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -382,68 +351,6 @@ class Model_ODE : public Model {
      * @param indexvals row values
      **/
     virtual void fJSparse_rowvals(sunindextype *indexvals);
-
-    /**
-     * @brief Model specific implementation for fJSparseB
-     * @param JSparseB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, realtype t,
-                           const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h,
-                           const realtype *xB, const realtype *w,
-                           const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJSparseB
-     * @param JSparseB data array
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparseB(realtype *JSparseB, realtype t, const realtype *x,
-                           const realtype *p, const realtype *k,
-                           const realtype *h, const realtype *xB,
-                           const realtype *w, const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJSparse, column pointers
-     * @param indexptrs column pointers
-     **/
-    virtual void fJSparseB_colptrs(sunindextype *indexptrs);
-
-    /**
-     * @brief Model specific implementation for fJSparse, row values
-     * @param indexvals row values
-     **/
-    virtual void fJSparseB_rowvals(sunindextype *indexvals);
-
-    /**
-     * @brief Model specific implementation for fJDiag
-     * @param JDiag Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJDiag(realtype *JDiag, realtype t, const realtype *x,
-                        const realtype *p, const realtype *k, const realtype *h,
-                        const realtype *w, const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for froot
