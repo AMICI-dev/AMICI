@@ -61,9 +61,10 @@ if [ ! -d "mtocpp-master" ]; then
       c++   -rdynamic mtocpp.cc.o mfilescanner_parser.cc.o mfilescanner.cc.o confscanner.cc.o -o mtocpp
       ragel -C -T0 -o postprocess.cc postprocess.rl
       c++   -I"$(pwd)" -o postprocess.cc.o -c postprocess.cc
-      c++   -rdynamic postprocess.cc.o  -o mtocpp_post
-      ln -s mtocpp ../build
-      ln -s mtocpp_post ../build
+      c++   -rdynamic postprocess.cc.o -o mtocpp_post
+      cd ../build/
+      ln -s ../src/mtocpp mtocpp
+      ln -s ../src/mtocpp_post mtocpp_post
     fi
 fi
 
