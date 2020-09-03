@@ -144,7 +144,7 @@ functions = {
         'signature':
             '(realtype *dydp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ip, const realtype *w, const realtype *dwdp)',
+            'const int ip, const realtype *w, const realtype *dtcldp)',
     },
     'dsigmaydp': {
         'signature':
@@ -1688,6 +1688,15 @@ class ODEModel:
                 nonzeros = nonzeros.dot(nonzeros)
                 self._w_recursion_depth += 1
 
+        if name == 'dydw':
+            dwdw = self.eq('dwdw')
+            # h(k) = d{eq}dw*dwdw^k* (k=1)
+            h = smart_multiply(derivative, dwdw)
+            while not smart_is_zero_matrix(h):
+                self._eqs[name] += h
+                # h(k+1) = d{eq}dw*dwdw^(k+1) = h(k)*dwdw
+                h = smart_multiply(h, dwdw)
+
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
                           dxdz_name: str = None) -> None:
@@ -1766,7 +1775,12 @@ class ODEModel:
             the variable equations otherwise.
 
         """
-        if var_in_function_signature(name, varname):
+        # dwdx and dwdp will be dynamically computed and their ordering
+        # within a column may differ from the initialization of symbols here,
+        # so those are not safe to use. Not removing them from signature as
+        # this would break backwards compatibility.
+        if var_in_function_signature(name, varname) \
+                and varname not in ['dwdx', 'dwdp']:
             return self.sym(varname)
         else:
             return self.eq(varname)

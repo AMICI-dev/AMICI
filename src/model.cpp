@@ -1283,10 +1283,21 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     fdwdp(t, x.data());
 
     /* get dydp slice (ny) for current time and parameter */
+    realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++)
-        fdydp(&dydp_.at(ip * ny), t, x.data(), state_.unscaledParameters.data(),
-              state_.fixedParameters.data(), state_.h.data(), plist(ip), w_.data(),
-              dwdp_.data());
+        if (pythonGenerated) {
+            if (ncl())
+                stcl = &state_.stotal_cl.at(plist(ip) * ncl());
+            fdydp(&dydp_.at(ip * ny), t, x.data(),
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data(), state_.h.data(), plist(ip),
+                  w_.data(), stcl);
+        } else {
+            fdydp(&dydp_.at(ip * ny), t, x.data(),
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data(), state_.h.data(), plist(ip),
+                  w_.data(), dwdp_.data());
+        }
 
     if (always_check_finite_) {
         app->checkFinite(dydp_, "dydp");
