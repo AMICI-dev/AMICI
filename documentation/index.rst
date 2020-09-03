@@ -25,13 +25,9 @@ Welcome to AMICI's documentation!
 
    about
    availability
-   INSTALL
    PYTHON
-   cpp_installation
-   cpp_interface
-   matlab_installation
-   matlab_interface
-   matlab.rst
+   CPP
+   MATLAB
    FAQ
    glossary
    background
@@ -46,15 +42,6 @@ Welcome to AMICI's documentation!
    Documentation organization <README>
    code_review_guide
    CI
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API reference
-
-   python_modules
-   _exhale_cpp_api/library_root
-   _exhale_matlab_api/library_root
 
 
 .. toctree::

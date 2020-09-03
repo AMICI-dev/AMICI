@@ -62,7 +62,7 @@ with something like
     error: command 'x86_64-linux-gnu-gcc' failed with exit status 1
 
 __A__: You will have to install a CBLAS-compatible BLAS library and/or set
-`BLAS_CFLAGS` as described in the [installation guide](INSTALL.md).
+`BLAS_CFLAGS` as described in the installation guides.
 
 ---
 
@@ -71,4 +71,4 @@ __Q__: Importing my model fails with something like
 
 __A__: You probably installed the AMICI package with OpenMP support, but did not
 have the relevant compiler/linker flags set when importing/building the model.
-See [Python-AMICI guide](PYTHON.rst#model-compilation).
+See [Python-AMICI guide](python_interface.rst#model-compilation).

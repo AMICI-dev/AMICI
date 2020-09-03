@@ -1,7 +1,7 @@
 .. _matlab_interface:
 
-AMICI MATLAB Interface
-======================
+Using AMICI's MATLAB interface
+==============================
 
 In the following we will give a detailed overview how to specify models in
 MATLAB and how to call the generated simulation files.
