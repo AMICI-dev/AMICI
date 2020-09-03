@@ -258,6 +258,7 @@ class SUNMatrixWrapper {
      *
      * @param C output matrix (sparse or dense)
      * @param alpha scalar multiplier
+     * @param blocksize blocksize for transposition. For full matrix transpose set to ncols/nrows
      */
     void transpose(SUNMatrix C, const realtype alpha,
                    sunindextype blocksize) const;
