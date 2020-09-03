@@ -65,39 +65,11 @@ MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
 # sparse format. sparse format means that the function will only return an
 # array of nonzero values and not a full matrix.
 functions = {
-    'J': {
-        'signature':
-            '(realtype *J, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *dwdx)',
-        'flags': ['assume_pow_positivity']
-    },
-    'JB': {
-        'signature':
-            '(realtype *JB, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *xB, const realtype *w, const realtype *dwdx)',
-        'flags': ['assume_pow_positivity']
-    },
-    'JDiag': {
-        'signature':
-            '(realtype *JDiag, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *dwdx)',
-        'flags': ['assume_pow_positivity']
-    },
     'JSparse': {
         'signature':
             '(realtype *JSparse, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'flags': ['assume_pow_positivity', 'sparse']
-    },
-    'JSparseB': {
-        'signature':
-            '(realtype *JSparseB, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
     'Jy': {
@@ -790,11 +762,6 @@ class ODEModel:
         key defines the name and values should be arguments for
         ODEModel.totalDerivative()
 
-    :ivar _multiplication_prototypes:
-        defines how a multiplication equation is computed for an equation,
-        key defines the name and values should be
-        arguments for ODEModel.multiplication()
-
     :ivar _lock_total_derivative:
         add chainvariables to this set when computing total derivative from
         a partial derivative call to enforce a partial derivative in the
@@ -865,17 +832,10 @@ class ODEModel:
         }
         self._total_derivative_prototypes: \
             Dict[str, Dict[str, Union[str, List[str]]]] = {
-                'J': {
+                'JSparse': {
                     'eq': 'xdot',
                     'chainvars': ['w'],
                     'var': 'x',
-                },
-                'sxdot': {
-                    'eq': 'xdot',
-                    'chainvars': ['x'],
-                    'var': 'p',
-                    'dydx_name': 'JSparse',
-                    'dxdz_name': 'sx',
                 },
                 'sx_rdata': {
                     'eq': 'x_rdata',
@@ -884,20 +844,6 @@ class ODEModel:
                     'dxdz_name': 'sx',
                 },
             }
-        self._multiplication_prototypes: Dict[str, Dict[str, str]] = {
-            'Jv': {
-                'x': 'J',
-                'y': 'v',
-            },
-            'JvB': {
-                'x': 'JB',
-                'y': 'vB',
-            },
-            'xBdot': {
-                'x': 'JB',
-                'y': 'xB',
-            },
-        }
 
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
@@ -1479,7 +1425,7 @@ class ODEModel:
         if match_deriv:
             rownames = self.sym(match_deriv.group(1))
             colnames = self.sym(match_deriv.group(2))
-        elif name in ['JSparse', 'JSparseB']:
+        elif name == 'JSparse':
             rownames = self.sym('xdot')
             colnames = self.sym('x')
 
@@ -1535,11 +1481,6 @@ class ODEModel:
             for cv in args['chainvars']:
                 self._lock_total_derivative.remove(cv)
 
-        elif name in self._multiplication_prototypes:
-            args = self._multiplication_prototypes[name]
-            args['name'] = name
-            self._multiplication(**args)
-
         elif name == 'xdot':
             self._eqs[name] = sp.Matrix([
                 s.get_dt() for s in self._states
@@ -1593,12 +1534,6 @@ class ODEModel:
                         dx0_fixed_parametersdx, self.sym('sx0')
                     )
 
-        elif name == 'JB':
-            self._eqs[name] = -self.eq('J').transpose()
-
-        elif name == 'JDiag':
-            self._eqs[name] = get_symbolic_diagonal(self.eq('J'))
-
         elif name == 'x0_fixedParameters':
             k = self.sym('k')
             self._x0_fixedParameters_idx = [
@@ -1609,9 +1544,6 @@ class ODEModel:
             eq = self.eq('x0')
             self._eqs[name] = sp.Matrix([eq[ix] for ix in
                                          self._x0_fixedParameters_idx])
-
-        elif name in ['JSparse', 'JSparseB']:
-            self._eqs[name] = self.eq(name.replace('Sparse', ''))
 
         elif name == 'dtotal_cldx_rdata':
             # not correctly parsed in regex
@@ -2700,8 +2632,7 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp_explicit', 'JSparse', 'JSparseB',
-            'dJydy'
+            'dxdotdp_explicit', 'JSparse', 'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
@@ -2870,24 +2801,6 @@ class ODEExporter:
                 "digits and underscores, and must not start with a digit.")
 
         self.model_name = model_name
-
-
-def get_symbolic_diagonal(matrix: sp.Matrix) -> sp.Matrix:
-    """
-    Get symbolic matrix with diagonal of matrix `matrix`.
-
-    :param matrix:
-        Matrix from which to return the diagonal
-
-    :return:
-        A Symbolic matrix with the diagonal of `matrix`.
-    """
-    if not matrix.cols == matrix.rows:
-        raise ValueError('Provided matrix is not square!')
-
-    diagonal = [matrix[index, index] for index in range(matrix.cols)]
-
-    return sp.Matrix(diagonal)
 
 
 class TemplateAmici(Template):
