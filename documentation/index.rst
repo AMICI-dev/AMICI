@@ -21,38 +21,35 @@ Welcome to AMICI's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: User's guide
+   :caption: About
 
    about
    availability
+   LICENSE
+   how_to_cite
+   references
+   background
+   Code of conduct <CODE_OF_CONDUCT>
+   CONTRIBUTING
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User's guide
+
    PYTHON
    CPP
    MATLAB
    FAQ
    glossary
-   background
 
 .. toctree::
    :maxdepth: 2
-   :caption: AMICI internals
+   :caption: Developer's guide
 
-   CONTRIBUTING
-   Code of conduct <CODE_OF_CONDUCT>
    development
    Documentation organization <README>
    code_review_guide
    CI
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: About
-
-   how_to_cite
-   references
-   LICENSE
-
-
 
 Indices and tables
 ==================
