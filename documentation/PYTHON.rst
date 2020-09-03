@@ -1,3 +1,9 @@
+.. toctree::
+   :maxdepth: 2
+   :caption: User's guide
+
+   python_installation
+
 .. _python_interface:
 
 ****************

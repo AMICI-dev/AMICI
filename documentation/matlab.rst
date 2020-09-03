@@ -1,4 +1,4 @@
-.. _matlab_interface:
+.. _matlab_interface_old:
 
 ****************
 Matlab Interface

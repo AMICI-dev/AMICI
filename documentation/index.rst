@@ -24,12 +24,17 @@ Welcome to AMICI's documentation!
    :caption: User's guide
 
    about
+   availability
    INSTALL
    PYTHON
+   cpp_installation
    cpp_interface
+   matlab_installation
+   matlab_interface
    matlab.rst
    FAQ
    glossary
+   background
 
 .. toctree::
    :maxdepth: 2
