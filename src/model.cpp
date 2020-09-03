@@ -105,7 +105,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              std::vector<realtype> k, const std::vector<int> &plist,
              std::vector<realtype> idlist, std::vector<int> z2event,
              const bool pythonGenerated, const int ndxdotdp_explicit,
-             const int w_recursion_depth)
+             const int ndxdotdx_explicit, const int w_recursion_depth)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
       nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx),
@@ -154,6 +154,11 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         // guess size, will be dynamically reallocated
         dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(),
                                             ndwdp + ndxdotdw, CSC_MAT);
+        dxdotdx_explicit = SUNMatrixWrapper(nx_solver, nx_solver,
+                                            ndxdotdx_explicit, CSC_MAT);
+        // guess size, will be dynamically reallocated
+        dxdotdx_implicit = SUNMatrixWrapper(nx_solver, nx_solver,
+                                            ndwdx + ndxdotdw, CSC_MAT);
         // dynamically allocate on first call
         dxdotdp_full = SUNMatrixWrapper(nx_solver, p.size(), 0, CSC_MAT);
 

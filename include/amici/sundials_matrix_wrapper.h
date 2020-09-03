@@ -268,7 +268,7 @@ class SUNMatrixWrapper {
      * @param alpha scalar multiplier
      * @param blocksize blocksize for transposition. For full matrix transpose set to ncols/nrows
      */
-    void transpose(SUNMatrix C, const realtype alpha,
+    void transpose(SUNMatrixWrapper &C, const realtype alpha,
                    sunindextype blocksize) const;
     
     /**
@@ -276,7 +276,7 @@ class SUNMatrixWrapper {
      *
      * @param D dense output matrix
      */
-    void to_dense(SUNMatrix D) const;
+    void to_dense(SUNMatrixWrapper &D) const;
     
     /**
      * @brief Writes the diagonal of sparse matrix A to a dense vector v.
@@ -295,9 +295,13 @@ class SUNMatrixWrapper {
      * @return SUNMatrix_ID
      */
     SUNMatrix_ID matrix_id() const {return SUNMatGetID(matrix_);};
+    
+    /**
+     * @brief Update internal pointers, may be necessary if matrix_ is reallocated internally.
+     */
+    void update_ptrs();
 
   private:
-    void update_ptrs();
 
     /**
      * @brief CSC matrix to which all methods are applied
@@ -306,6 +310,7 @@ class SUNMatrixWrapper {
     realtype *data_ptr_ {nullptr};
     sunindextype *indexptrs_ptr_ {nullptr};
     sunindextype *indexvals_ptr_ {nullptr};
+    bool ownmat = true;
 };
 
 } // namespace amici

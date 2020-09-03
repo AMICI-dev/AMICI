@@ -116,6 +116,7 @@ class Model : public AbstractModel {
      * @param z2event Mapping of event outputs to events
      * @param pythonGenerated Flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
+     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
      * @param w_recursion_depth Recursion depth of fw
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
@@ -126,7 +127,8 @@ class Model : public AbstractModel {
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
-          int ndxdotdp_explicit = 0, int w_recursion_depth = 0);
+          int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
+          int w_recursion_depth = 0);
 
     /** Destructor. */
     ~Model() override = default;
@@ -1334,7 +1336,6 @@ class Model : public AbstractModel {
 
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
-
     
     /**
      * Temporary storage of `dxdotdp_full` data across functions (Python only)
@@ -1345,7 +1346,7 @@ class Model : public AbstractModel {
     
     /**
      * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
      *  type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_explicit;
@@ -1353,10 +1354,25 @@ class Model : public AbstractModel {
     /**
      * Temporary storage of `dxdotdp_implicit` data across functions,
      * Python-only
-     * (dimension: `nplist` x `nx_solver`, nnz: `ndxdotdp_implicit`,
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
      * type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_implicit;
+    
+    /**
+     * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdx_explicit;
+
+    /**
+     * Temporary storage of `dxdotdx_implicit` data across functions,
+     * Python-only
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     * type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdx_implicit;
 
     /**
      * Temporary storage of `dxdotdp` data across functions, Matlab only

@@ -120,12 +120,18 @@ functions = {
             'const realtype *w)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
+    'dxdotdx_explicit': {
+        'signature':
+            '(realtype *dxdotdx_explicit, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *w)',
+        'flags': ['assume_pow_positivity', 'sparse']
+    },
     'dxdotdp_explicit': {
         'signature':
             '(realtype *dxdotdp_explicit, const realtype t, '
-            'const realtype *x, const realtype *p, '
-            'const realtype *k, const realtype *h, '
-            'const realtype *w)',
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *w)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
     'dydx': {
@@ -1569,6 +1575,10 @@ class ODEModel:
             # force symbols
             self._eqs[name] = self.sym(name)
 
+        elif name == 'dxdotdx_explicit':
+            # force symbols
+            self._derivative('xdot', 'x', name=name)
+
         elif name == 'dxdotdp_explicit':
             # force symbols
             self._derivative('xdot', 'p', name=name)
@@ -1621,6 +1631,7 @@ class ODEModel:
         chainvars = []
         ignore_chainrule = {
             ('xdot', 'p'): 'w',  # has generic implementation in c++ code
+            ('xdot', 'x'): 'w',  # has generic implementation in c++ code
             ('w', 'w'): 'tcl',   # dtcldw = 0
             ('w', 'x'): 'tcl',   # dtcldx = 0
         }
@@ -2593,10 +2604,11 @@ class ODEExporter:
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
                 'dxdotdp_explicit'))),
+            'NDXDOTDX_EXPLICIT': str(len(self.model.sparsesym(
+                'dxdotdx_explicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
-            'NNZ': str(len(self.model.sparsesym('JSparse'))),
             'UBW': str(self.model.num_states_solver()),
             'LBW': str(self.model.num_states_solver()),
             'NP': str(self.model.num_par()),
@@ -2629,8 +2641,9 @@ class ODEExporter:
         }
 
         for fun in [
-            'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp_explicit', 'JSparse', 'dJydy'
+            'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
+            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit', 'JSparse',
+            'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
