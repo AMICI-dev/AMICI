@@ -26,7 +26,7 @@ Welcome to AMICI's documentation!
    about
    INSTALL
    PYTHON
-   CPP
+   cpp_interface
    matlab.rst
    FAQ
    glossary
