@@ -165,16 +165,16 @@ void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
 void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                      N_Vector dxB, N_Vector vB, N_Vector JvB, realtype cj) {
     N_VConst(0.0, JvB);
-    fJSparseB(t, cj, x, dx, xB, dxB, J_.get());
-    J_.multiply(JvB, vB);
+    fJSparseB(t, cj, x, dx, xB, dxB, JB_.get());
+    JB_.multiply(JvB, vB);
 }
 
 void Model_DAE::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                        N_Vector dxB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
-    fJSparseB(t, 1.0, x, dx, xB, dxB, J_.get());
+    fJSparseB(t, 1.0, x, dx, xB, dxB, JB_.get());
     fM(t, x);
-    J_.multiply(xBdot, xB);
+    JB_.multiply(xBdot, xB);
 }
 
 void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
@@ -203,7 +203,7 @@ void Model_DAE::fxBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
     /* Right hande side of the adjoint state for steady state computations.
      J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
-    J_.multiply(xBdot, xB);
+    JB_.multiply(xBdot, xB);
     /* Mind the minus sign... */
     N_VScale(-1.0, xBdot, xBdot);
 }
@@ -217,7 +217,7 @@ void Model_DAE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
 
 void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
     /* Just pass the model Jacobian on to JB */
-    SUNMatCopy(J_.get(), JB);
+    SUNMatCopy(JB_.get(), JB);
 }
 
 void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
@@ -226,9 +226,9 @@ void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
                                    const AmiVector &xBdot) {
     /* Get backward Jacobian */
     fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(),
-              dxB.getNVector(), J_.get());
+              dxB.getNVector(), JB_.get());
     /* Switch sign, as we integrate forward in time, not backward */
-    J_.scale(-1);
+    JB_.scale(-1);
 }
 
 void Model_DAE::fsxdot(const realtype t, const AmiVector &x,

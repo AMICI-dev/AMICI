@@ -269,14 +269,14 @@ void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
 void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                      N_Vector xB) {
     N_VConst(0.0, JvB);
-    fJSparseB(t, x, xB, nullptr, J_.get());
-    J_.multiply(JvB, vB);
+    fJSparseB(t, x, xB, nullptr, JB_.get());
+    JB_.multiply(JvB, vB);
 }
 
 void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
-    fJSparseB(t, x, xB, nullptr, J_.get());
-    J_.multiply(xBdot, xB);
+    fJSparseB(t, x, xB, nullptr, JB_.get());
+    JB_.multiply(xBdot, xB);
 }
 
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
@@ -312,7 +312,7 @@ void Model_ODE::fxBdot_ss(realtype /*t*/, N_Vector xB, N_Vector xBdot) const {
     /* Right hande side of the adjoint state for steady state computations.
        J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
-    J_.multiply(xBdot, xB);
+    JB_.multiply(xBdot, xB);
 }
 
 void Model_ODE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector qBdot) const {
@@ -323,7 +323,7 @@ void Model_ODE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector qBdot) const {
 
 void Model_ODE::fJSparseB_ss(SUNMatrix JB) {
     /* Just copy the model Jacobian */
-    SUNMatCopy(J_.get(), JB);
+    SUNMatCopy(JB_.get(), JB);
 }
 
 void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
@@ -331,9 +331,9 @@ void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
                                    const AmiVector &xB, const AmiVector & /*dxB*/,
                                    const AmiVector &xBdot) {
     /* Get backward Jacobian */
-    fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), J_.get());
+    fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), JB_.get());
     /* Switch sign, as we integrate forward in time, not backward */
-    J_.scale(-1);
+    JB_.scale(-1);
 }
 
 void Model_ODE::fsxdot(const realtype t, const AmiVector &x,

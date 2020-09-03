@@ -554,23 +554,18 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
 }
 
 // https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_cumsum.c
-/* p [0..n] = cumulative sum of c [0..n-1], and then copy p [0..n-1] into c */
-static realtype cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c,
-                       sunindextype n) {
+/* p [0..n] = cumulative sum of c[0..n-1], and then copy p [0..n-1] into c */
+static void cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c) {
     sunindextype i;
     sunindextype nz = 0;
-    realtype nz2 = 0;
-    assert(static_cast<sunindextype>(c.size()) == n);
-    assert(static_cast<sunindextype>(p.size()) == n + 1);
-    for (i = 0; i < n; i++)
+    assert(c.size() == p.size() + 1);
+    for (i = 0; i < static_cast<sunindextype>(c.size()); i++)
     {
         p[i] = nz;
         nz += c[i];
-        nz2 += c[i];             /* also in double to avoid csi overflow */
         c[i] = p[i];             /* also copy p[0..n-1] back into c[0..n-1]*/
     }
-    p[n] = nz;
-    return (nz2);
+    p[c.size()] = nz;
 }
 
 void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
@@ -622,12 +617,12 @@ void SUNMatrixWrapper::transpose(SUNMatrix C, const realtype alpha) const{
         Cp = SM_INDEXPTRS_S(C);
         w = std::vector<sunindextype>(ncols);
         for (aidx = 0 ; aidx < Ap[nrows]; aidx++)
-            w[Ai[aidx]]++ ;                          /* row counts */
-        cumsum(gsl::make_span(Cp,ncols+1), w, ncols);  /* row pointers */
+            w[Ai[aidx]]++;                             /* row counts */
+        cumsum(gsl::make_span(Cp, ncols+1), w);         /* row pointers */
     }
     
     
-    for (icol = 0 ; icol < nrows; icol++)
+    for (icol = 0; icol < nrows; icol++)
     {
         for (aidx = Ap[icol]; aidx < Ap[icol+1]; aidx++)
         {
