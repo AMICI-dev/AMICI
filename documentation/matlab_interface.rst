@@ -19,12 +19,16 @@ Header
 The model definition needs to be defined as a function which returns a struct
 with all symbolic definitions and options.
 
+.. code-block:: matlab
+
     function [model] = example_model_syms()
 
 Options
 -------
 
 Set the options by specifying the respective field of the modelstruct
+
+.. code-block:: matlab
 
     model.(fieldname) = value
 
@@ -52,20 +56,29 @@ States
 Create the respective symbolic variables. The name of the symbolic variable
 can be chosen arbitrarily.
 
+.. code-block:: matlab
+
     syms state1 state2 state3
 
 Create the state vector containing all states:
 
+.. code-block:: matlab
+
     model.sym.x = [ state1 state2 state3 ];
 
-### Parameters
+Parameters
+----------
 
 Create the respective symbolic variables. The name of the symbolic variable can
 be chosen arbitrarily. Sensitivities will be derived for all *parameters*.
 
+.. code-block:: matlab
+
     syms param1 param2 param3 param4 param5 param6
 
 Create the parameters vector
+
+.. code-block:: matlab
 
     model.sym.p = [ param1 param2 param3 param4 param5 param6 ];
 
@@ -76,9 +89,13 @@ Create the respective symbolic variables. The name of the symbolic variable
 can be chosen arbitrarily. Sensitivities with respect to *constants* will not
 be derived.
 
+.. code-block:: matlab
+
     syms const1 const2
 
 Create the constants vector
+
+.. code-block:: matlab
 
     model.sym.k = [ const1 const2 ];
 
@@ -87,6 +104,8 @@ Differential equations
 
 For time-dependent differential equations you can specify a symbolic variable
 for time. This **needs** to be denoted by ``t``.
+
+.. code-block:: matlab
 
     syms t
 
@@ -114,8 +133,8 @@ For DAEs also specify the mass matrix.
 .. code-block:: matlab
 
     model.sym.M = [1, 0, 0;...
-                    0, 1, 0;...
-                    0, 0, 0];
+                   0, 1, 0;...
+                   0, 0, 0];
 
 The specification of ``M`` may depend on parameters and constants.
 
@@ -139,12 +158,16 @@ Initial Conditions
 Specify the initial conditions. These may depend on parameters on constants
 and must have the same size as ``x``.
 
+.. code-block:: matlab
+
     model.sym.x0 = [ param4, 0, 0 ];
 
 Observables
 -----------
 
 Specify the observables. These may depend on parameters and constants.
+
+.. code-block:: matlab
 
     model.sym.y(1) = state1 + state2;
     model.sym.y(2) = state3 - state2;
@@ -162,7 +185,9 @@ function defines the occurrences of the event. The bolus function defines the
 change in the state on event occurrences. The output function defines the
 expression which is evaluated and reported by the simulation routine on every
 event occurrence. The user can create events by constructing a vector of
-objects of the class :mat:class`amievent`.
+objects of the class :mat:class:`amievent`.
+
+.. code-block:: matlab
 
     model.sym.event(1) = amievent(state1 - state2,0,[]);
 
@@ -185,9 +210,13 @@ deviations of experimental data for observables and events.
 
 Standard deviation for observable data is denoted by ``sigma_y``
 
+.. code-block:: matlab
+
     model.sym.sigma_y(1) = param5;
 
 Standard deviation for event data is denoted by ``sigma_t``
+
+.. code-block:: matlab
 
     model.sym.sigma_t(1) = param6;
 
@@ -204,9 +233,13 @@ Objective Function
 By default, AMICI assumes a normal noise model and uses the corresponding
 negative log-likelihood
 
+.. math::
+
     J = 1/2*sum(((y_i(t)-my_ti)/sigma_y_i)^2 + log(2*pi*sigma_y^2)
 
 as objective function. A user provided objective function can be specified in
+
+.. code-block:: matlab
 
     model.sym.Jy
 
@@ -224,6 +257,8 @@ Model Compilation
 
 The model can then be compiled by calling ``amiwrap.m``:
 
+.. code-block:: matlab
+
     amiwrap(modelname,'example_model_syms',dir,o2flag)
 
 Here ``modelname`` should be a string defining the name of the model, ``dir``
@@ -234,10 +269,14 @@ The user should make sure that the previously defined function
 ``example_model_syms`` is in the user path. Alternatively, the user can also
 call the function ``example_model_syms``
 
+.. code-block:: matlab
+
     [model] = example_model_syms()
 
 and subsequently provide the generated struct to ``amiwrap(...)``, instead of
 providing the symbolic function:
+
+.. code-block:: matlab
 
     amiwrap(modelname,model,dir,o2flag)
 
@@ -302,32 +341,39 @@ Integration
 -----------
 Define a time vector:
 
-    t = linspace(0,10,100)
+.. code-block:: matlab
 
+    t = linspace(0,10,100)
 
 Generate a parameter vector:
 
-    theta = ones(6,1);
+.. code-block:: matlab
 
+    theta = ones(6,1);
 
 Generate a constants vector:
 
+.. code-block:: matlab
+
     kappa = ones(2,1);
 
-
 Integrate:
+
+.. code-block:: matlab
 
     sol = simulate_modelname(t,theta,kappa,[],options)
 
 
 The integration status will be indicated by the ``sol.status`` flag. Negative
 values indicated failed integration. The states will then be available as ``sol.x``.
-The observables will then be available as ``sol.y`. The event outputs will then
+The observables will then be available as ``sol.y``. The event outputs will then
 be available as ``sol.z``. If no event occurred there will be an event at the end
 of the considered interval with the final value of the root function is stored
 in ``sol.rz``.
 
 Alternatively the integration can also be called via
+
+.. code-block:: matlab
 
     [status,t,x,y] = simulate_modelname(t,theta,kappa,[],options)
 
@@ -340,9 +386,11 @@ Forward Sensitivities
 
 Set the sensitivity computation to forward sensitivities and integrate:
 
-    options.sensi = 1;
-    options.sensi_meth = 'forward;
-    sol = simulate_modelname(t,theta,kappa,[],options)
+.. code-block:: matlab
+
+   options.sensi = 1;
+   options.sensi_meth = 'forward';
+   sol = simulate_modelname(t,theta,kappa,[],options)
 
 The integration status will be indicated by the ``sol.status`` flag. Negative
 values indicate failed integration. The states will be available as ``sol.x``,
@@ -355,6 +403,8 @@ final value of the root function stored in ``sol.rz``, with the derivative with
 respect to the parameters in ``sol.srz``.
 
 Alternatively the integration can also be called via
+
+.. code-block:: matlab
 
     [status,t,x,y,sx,sy] = simulate_modelname(t,theta,kappa,[],options)
 
@@ -369,10 +419,14 @@ Adjoint sensitivities
 
 Set the sensitivity computation to adjoint sensitivities:
 
+.. code-block:: matlab
+
     options.sensi = 1;
     options.sensi_meth = 'adjoint';
 
 Define Experimental Data:
+
+.. code-block:: matlab
 
     D.Y = [NaN(1,2)],ones(length(t)-1,2)];
     D.Sigma_Y = [0.1*ones(length(t)-1,2),NaN(1,2)];
@@ -384,6 +438,8 @@ specification in ``model.sym.sigma_y`` and ``model.sym.sigma_t``. Data points
 with ``NaN`` value will be completely ignored.
 
 Integrate:
+
+.. code-block:: matlab
 
     sol = simulate_modelname(t,theta,kappa,D,options)
 
@@ -409,13 +465,19 @@ laws as this would result in a singular Jacobian.
 Set the final timepoint as infinity, this will indicate the solver to compute
 the steadystate:
 
+.. code-block:: matlab
+
     t = Inf;
 
 Set the sensitivity computation to steady state sensitivities:
 
+.. code-block:: matlab
+
     options.sensi = 1;
 
 Integrate:
+
+.. code-block:: matlab
 
     sol = simulate_modelname(t,theta,kappa,D,options)
 
