@@ -96,7 +96,7 @@ Any [contributions](http://amici-dev.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
-### Getting help
+## Getting help
 
 In case of questions or problems with using AMICI, feel free to post an
 [issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
@@ -145,29 +145,3 @@ license:
 <p align="center">
   <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75">
 </p>
-
-## Status of SBML support in Python-AMICI
-
-Python-AMICI currently passes 696 out of the 1780 (~39%) test cases from
-the semantic
-[SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
-([current status](https://github.com/AMICI-dev/AMICI/actions)).
-
-In addition, we currently plan to add support for the following features
-(see corresponding issues for details and progress):
-
-- Events (currently Matlab-only)
-- Algebraic rules
-- Models without species
-
-contributions are welcome.
-
-However, the following features are unlikely to be supported:
-
-- SBML extensions
-- `factorial()`, `ceil()`, `floor()`, due to incompatibility with
-  symbolic sensitivity computations
-- initial assignments for parameters
-- `delay()` due to missing SUNDIALS solver support
-
-In addition to SBML, we also plan to implement support for the [Simulation Experiment Description Markup Language (SED-ML)](https://sed-ml.org/).

@@ -19,6 +19,38 @@ directory.
 SBML import
 -----------
 
+AMICI can import :term:`SBML` models via the
+:py:func:`amici.sbml_import.SbmlImporter` class.
+
+Status of SBML support in Python-AMICI
+++++++++++++++++++++++++++++++++++++++
+
+Python-AMICI currently **passes 696 out of the 1780 (~39%) test cases** from
+the semantic
+`SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
+(`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
+
+In addition, we currently plan to add support for the following features
+(see corresponding issues for details and progress):
+
+- Events (currently Matlab-only)
+- Algebraic rules
+- Models without species
+
+contributions are welcome.
+
+However, the following features are unlikely to be supported:
+
+- SBML extensions
+- `factorial()`, `ceil()`, `floor()`, due to incompatibility with
+  symbolic sensitivity computations
+- initial assignments for parameters
+- `delay()` due to missing SUNDIALS solver support
+
+
+How to import an SBML model into AMICI
+++++++++++++++++++++++++++++++++++++++
+
 To import an :term:`SBML` model into AMICI, first, load an SBML file
 using the :py:func:`amici.sbml_import.SbmlImporter` class::
 
@@ -114,6 +146,11 @@ The `yaml2sbml <https://github.com/martamatos/yaml2sbml>`_ package may come in
 handy, as it facilitates generating SBML models from a YAML-based specification
 of an ODE model. Besides the SBML model it can also create
 `PEtab <https://github.com/PEtab-dev/PEtab>`_ files.
+
+SED-ML import
+-------------
+
+We also plan to implement support for the `Simulation Experiment Description Markup Language (SED-ML) <https://sed-ml.org/>`_.
 
 Model simulation
 ================
