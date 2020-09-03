@@ -1,12 +1,12 @@
 function this = setHflag(this,hflag)
-    % gethflag sets the hflag property.
+    % setHflag sets the hflag property.
     %
     % Parameters:
-    %  hflag: value for the hflag property @type double
+    %  hflag: value for the hflag property, type double
     %
     % Return values:
     %  this: updated event definition object @type amievent
-    
+
     try
         if(all(size(this.bolus) == size(hflag)))
             if(isa(hflag,'double'))
