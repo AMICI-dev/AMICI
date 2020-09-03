@@ -876,8 +876,8 @@ WARN_LOGFILE           =
 INPUT                  = "_SourceDir_/README.md" \
                          "_SourceDir_/LICENSE.md" \
                          "_SourceDir_/INSTALL.md" \
-                         "_SourceDir_/documentation/MATLAB.md" \
-                         "_SourceDir_/documentation/CPP.md" \
+                         "_SourceDir_/documentation/MATLAB_.md" \
+                         "_SourceDir_/documentation/CPP_.md" \
                          "_SourceDir_/documentation/FAQ.md" \
                          "_SourceDir_/include" \
                          "_SourceDir_/matlab"
