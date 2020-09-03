@@ -908,10 +908,10 @@ TEST(sunmatrixwrapper, transform_throws)
 TEST(sunmatrixwrapper, block_transpose)
 {
     auto B_sparse = SUNMatrixWrapper(4, 4, 7, CSR_MAT);
-    CHECK_THROWS(std::domain_error, B.transpose(B_sparse.get(), 1.0, 4));
+    CHECK_THROWS(std::domain_error, B.transpose(B_sparse, 1.0, 4));
     
     B_sparse = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
-    B.transpose(B_sparse.get(), -1.0, 2);
+    B.transpose(B_sparse, -1.0, 2);
     for (int idx = 0; idx < 7; idx++) {
         CHECK_TRUE(SM_INDEXVALS_S(B.get())[idx]
                    == SM_INDEXVALS_S(B_sparse.get())[idx]);
