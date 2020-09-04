@@ -1981,12 +1981,14 @@ def noise_distribution_to_cost_function(
                 f'- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
     elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
         def nllh_y_string(str_symbol):
-            """Negative binomial noise model with mean = y, parameterized via
-            success probability p."""
+            """Negative binomial noise model of the number of successes m
+            (data) before r=(1-sigma)/sigma * y failures occur,
+            with mean number of successes y (simulation),
+            parameterized via success probability p = sigma."""
             y, m, sigma = _get_str_symbol_identifiers(str_symbol)
             r = f'{y} * (1-{sigma}) / {sigma}'
             return f'- loggamma({m}+{r}) + loggamma({m}+1) + loggamma({r}) ' \
-                f'- {m} * log(1-{sigma}) - {r} * log({sigma})'
+                f'- {r} * log(1-{sigma}) - {m} * log({sigma})'
     elif isinstance(noise_distribution, Callable):
         return noise_distribution
     else:
