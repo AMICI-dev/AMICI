@@ -211,11 +211,22 @@ enum class RDataReporting {
     likelihood,
 };
 
-/** extrapolation methods for splines */
+/** boundary conditions for splines */
 enum class SplineBoundaryCondition {
-    constant      = 0,
-    linearFinDiff = 1,
-    linearNatural = 2,
+    given                 = -1,
+    zeroDerivative        =  0,
+    natural               =  1,
+    naturalZeroDerivative =  2,
+    periodic              =  3,
+};
+
+/** extrapolation methods for splines */
+enum class SplineExtrapolation {
+    noExtrapol = -1
+    constant   =  0,
+    linear     =  1,
+    polynomial =  2,
+    periodic   =  3,
 };
 
 /**
