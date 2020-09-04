@@ -29,8 +29,8 @@ Welcome to AMICI's documentation!
    how_to_cite
    references
    background
-   Code of conduct <CODE_OF_CONDUCT>
-   CONTRIBUTING
+   glossary
+   contributing
 
 .. toctree::
    :maxdepth: 2
@@ -39,17 +39,12 @@ Welcome to AMICI's documentation!
    PYTHON
    CPP
    MATLAB
-   FAQ
-   glossary
 
 .. toctree::
    :maxdepth: 2
    :caption: Developer's guide
 
    development
-   Documentation organization <README>
-   code_review_guide
-   CI
 
 Indices and tables
 ==================

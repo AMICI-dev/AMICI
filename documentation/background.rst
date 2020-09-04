@@ -3,6 +3,9 @@ Background
 
 *This section is to be extended.*
 
+Publications on various features of AMICI
+-----------------------------------------
+
 Some mathematical background for AMICI is provided in the following
 publications:
 
@@ -20,12 +23,12 @@ publications:
   Paul Stapor, and Jan Hasenauer. 2019. "Efficient Computation of Steady States
   in Large-Scale Ode Models of Biochemical Reaction Networks.
   *IFAC-PapersOnLine* 52 (26): 32–37.
-  DOI: `10.1016/j.ifacol.2019.12.232 <https://doi.org/10.1016/j.ifacol.2019.12.232>`_
+  DOI: `10.1016/j.ifacol.2019.12.232 <https://doi.org/10.1016/j.ifacol.2019.12.232>`_.
 
 * Stapor, Paul, Fabian Fröhlich, and Jan Hasenauer. 2018.
   "Optimization and Profile Calculation of ODE Models Using Second Order
   Adjoint Sensitivity Analysis." *Bioinformatics* 34 (13): i151–i159.
-  DOI: `10.1093/bioinformatics/bty230 <https://doi.org/10.1093/bioinformatics/bty230>`_
+  DOI: `10.1093/bioinformatics/bty230 <https://doi.org/10.1093/bioinformatics/bty230>`_.
 
 
 .. note::

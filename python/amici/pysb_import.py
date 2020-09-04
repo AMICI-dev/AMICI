@@ -614,7 +614,7 @@ def _compute_target_index(cl_prototypes: CL_Prototype,
         dict that contains possible indices for every monomer
 
     :param ode_model:
-        ODEModel instance @type ODEModel
+        ODEModel instance
     """
     possible_indices = list(set(list(itertools.chain(*[
         cl_prototypes[monomer]['possible_indices']

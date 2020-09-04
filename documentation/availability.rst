@@ -1,17 +1,17 @@
 Availability
 ============
 
+Source code
++++++++++++
+
 The AMICI source code is available as
 
 - `tar archive <https://github.com/AMICI-dev/AMICI/tarball/master>`_
 - `zip archive <https://github.com/AMICI-dev/AMICI/zipball/master>`_
 - Git repository on `GitHub <https://github.com/AMICI-dev/AMICI>`_
 
-A Python package is available on `PyPI <https://pypi.org/project/amici/>`_,
-see below.
-
-If AMICI was downloaded as an, it needs to be unpacked. If AMICI was obtained
-via cloning of the Git repository, no further unpacking is necessary.
+If AMICI was downloaded as an archive, it needs to be unpacked. If AMICI was
+obtained via cloning the Git repository, no further unpacking is necessary.
 
 Obtaining AMICI via the Git version control system
 --------------------------------------------------
@@ -28,3 +28,9 @@ and clone is done via:
 .. code-block:: bash
 
     git clone https://github.com/AMICI-dev/AMICI.git AMICI
+
+Python package
+++++++++++++++
+
+A Python package is available on `PyPI <https://pypi.org/project/amici/>`_,
+see below.
