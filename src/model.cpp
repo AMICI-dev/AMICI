@@ -218,10 +218,10 @@ void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
 
 void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
                         bool posteq) const {
-    xB.reset();
-    dxB.reset();
+    xB.zero();
+    dxB.zero();
     if (!posteq)
-        xQB.reset();
+        xQB.zero();
 }
 
 void Model::initializeStates(AmiVector &x) {
@@ -1855,25 +1855,16 @@ void Model::fdwdw_rowvals(sunindextype *indexvals) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
+    dwdp_.zero();
     if (pythonGenerated) {
-        dwdp_.reset();
-
-        // avoid bad memory access when slicing
-        if (!nw)
-            return;
-
+        fdwdw(t,x);
+        dwdp_hierarchical_.at(0).zero();
         fdwdp_colptrs(dwdp_hierarchical_.at(0).indexptrs());
         fdwdp_rowvals(dwdp_hierarchical_.at(0).indexvals());
         fdwdp(dwdp_hierarchical_.at(0).data(), t, x,
               state_.unscaledParameters.data(), state_.fixedParameters.data(),
               state_.h.data(), w_.data(), state_.total_cl.data(),
               state_.stotal_cl.data());
-
-        fdwdw_colptrs(dwdw_.indexptrs());
-        fdwdw_rowvals(dwdw_.indexvals());
-        fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
-              state_.fixedParameters.data(), state_.h.data(), w_.data(),
-              state_.total_cl.data());
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
@@ -1896,20 +1887,15 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t, x);
-    dwdx_.reset();
 
     if (pythonGenerated) {
+        fdwdw(t,x);
+        dwdx_hierarchical_.at(0).zero();
         fdwdx_colptrs(dwdx_hierarchical_.at(0).indexptrs());
         fdwdx_rowvals(dwdx_hierarchical_.at(0).indexvals());
         fdwdx(dwdx_hierarchical_.at(0).data(), t, x,
               state_.unscaledParameters.data(), state_.fixedParameters.data(),
               state_.h.data(), w_.data(), state_.total_cl.data());
-
-        fdwdw_colptrs(dwdw_.indexptrs());
-        fdwdw_rowvals(dwdw_.indexvals());
-        fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
-              state_.fixedParameters.data(), state_.h.data(), w_.data(),
-              state_.total_cl.data());
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
@@ -1919,6 +1905,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
         dwdx_.sparse_sum(dwdx_hierarchical_);
 
     } else {
+        dwdx_.zero();
         fdwdx_colptrs(dwdx_.indexptrs());
         fdwdx_rowvals(dwdx_.indexvals());
         fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
@@ -1929,6 +1916,15 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdx_.get()), "dwdx");
     }
+}
+
+void Model::fdwdw(const realtype t, const realtype *x) {
+    dwdw_.zero();
+    fdwdw_colptrs(dwdw_.indexptrs());
+    fdwdw_rowvals(dwdw_.indexvals());
+    fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
+          state_.fixedParameters.data(), state_.h.data(), w_.data(),
+          state_.total_cl.data());
 }
 
 void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,

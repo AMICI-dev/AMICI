@@ -22,7 +22,7 @@ std::vector<realtype> const &AmiVector::getVector() const { return vec_; }
 
 int AmiVector::getLength() const { return static_cast<int>(vec_.size()); }
 
-void AmiVector::reset() { set(0.0); }
+void AmiVector::zero() { set(0.0); }
 
 void AmiVector::minus() {
     std::transform(vec_.begin(), vec_.end(),
@@ -116,9 +116,9 @@ int AmiVectorArray::getLength() const {
     return static_cast<int>(vec_array_.size());
 }
 
-void AmiVectorArray::reset() {
+void AmiVectorArray::zero() {
     for (auto &v : vec_array_)
-        v.reset();
+        v.zero();
 }
 
 void AmiVectorArray::flatten_to_vector(std::vector<realtype> &vec) const {

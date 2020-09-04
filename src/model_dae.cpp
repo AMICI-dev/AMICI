@@ -108,7 +108,7 @@ void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
 }
 
 void Model_DAE::fM(realtype t, const N_Vector x) {
-    SUNMatZero(M_.get());
+    M_.zero();
     auto x_pos = computeX_pos(x);
     fM(M_.data(), t, N_VGetArrayPointer(x_pos), state_.unscaledParameters.data(),
        state_.fixedParameters.data());

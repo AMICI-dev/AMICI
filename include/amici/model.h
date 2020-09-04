@@ -1715,6 +1715,13 @@ class Model : public AbstractModel {
      * @param x Array with the states
      */
     void fdwdx(realtype t, const realtype *x);
+    
+    /**
+     * @brief Compute self derivative for recurring terms in xdot.
+     * @param t Timepoint
+     * @param x Array with the states
+     */
+    void fdwdw(realtype t, const realtype *x);
 
     /**
      * @brief Compute fx_rdata.

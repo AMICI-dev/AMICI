@@ -161,11 +161,6 @@ class SUNMatrixWrapper {
     int sparsetype() const;
 
     /**
-     * @brief reset data to zeroes
-     */
-    void reset();
-
-    /**
      * @brief multiply with a scalar (in-place)
      * @param a scalar value to multiply matrix
      */

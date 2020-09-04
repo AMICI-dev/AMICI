@@ -223,11 +223,6 @@ int SUNMatrixWrapper::sparsetype() const {
     throw std::domain_error("Function only available for sparse matrices");
 }
 
-void SUNMatrixWrapper::reset() {
-    if (matrix_)
-        SUNMatZero(matrix_);
-}
-
 void SUNMatrixWrapper::scale(realtype a) {
     if (matrix_) {
         int nonzeros_ = static_cast<int>(num_nonzeros());

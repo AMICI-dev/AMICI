@@ -47,7 +47,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                                  fwd.model->nx_solver * fwd.model->nJ));
 
                 /* If adjoint sensis were computed, copy also quadratures */
-                xQB_.reset();
+                xQB_.zero();
                 xQB_ = posteq->getEquilibrationQuadratures();
             }
         }
