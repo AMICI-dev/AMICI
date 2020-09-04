@@ -641,7 +641,9 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     check_csc(this, "transpose", "A");
     check_dim(rows(), C.rows(), "rows", "columns", "A", "C");
     check_dim(columns(), C.columns(), "columns", "rows", "A", "C");
-    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE)
+    if (C.matrix_id() == SUNMATRIX_SPARSE)
+        if (C.capacity() == 0 && num_nonzeros())
+            C.reallocate(num_nonzeros());
         if (num_nonzeros() > C.capacity())
             std::invalid_argument("C must be allocated such that it can hold "
                                   "all nonzero values from A. Requires "
@@ -675,7 +677,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     auto Ai = indexvals();
     auto Ap = indexptrs();
     
-    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+    if (C.matrix_id()== SUNMATRIX_SPARSE) {
         Cx = C.data();
         Ci = C.indexvals();
         Cp = C.indexptrs();
@@ -692,7 +694,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
         {
             ccol = (acol/blocksize)*blocksize + Ai[aidx] % blocksize;
             crow = (Ai[aidx]/blocksize)*blocksize + acol % blocksize;
-            if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE) {
+            if (C.matrix_id() == SUNMATRIX_SPARSE) {
                 Ci[cidx = w[ccol]++] = crow;  /* place A(i,j) as entry C(j,i) */
                 Cx[cidx] = alpha * Ax[aidx];
             } else {
