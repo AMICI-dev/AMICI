@@ -137,4 +137,4 @@ def binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
 def negative_binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
     r = y * (1-p) / p
     return sum(- loggamma(m+r) + loggamma(m+1) + loggamma(r)
-               - m * np.log(1-p) - r * np.log(p))
+               - r * np.log(1-p) - m * np.log(p))
