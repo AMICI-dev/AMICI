@@ -91,7 +91,10 @@ class PysbPetabProblem(petab.Problem):
                         "Observable transformation currently unsupported "
                         "for PySB models")
             obs_symbol = sp.sympify(observable_formula, locals=local_syms)
-            obs_expr = pysb.Expression(observable_id, obs_symbol)
+            if observable_id in self.pysb_model.expressions.keys():
+                obs_expr = self.pysb_model.expressions[observable_id]
+            else:
+                obs_expr = pysb.Expression(observable_id, obs_symbol)
             local_syms[observable_id] = obs_expr
 
             sigma_id = f"{observable_id}_sigma"
