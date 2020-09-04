@@ -103,60 +103,118 @@ class SUNMatrixWrapper {
      * @brief Reallocate space for sparse matrix to used space according to last entry in indexptrs
      */
     void realloc();
-    
-
-    /**
-     * @brief Access raw data
-     * @return raw data pointer
-     */
-    realtype *data() const;
 
     /**
      * @brief Get the wrapped SUNMatrix
-     * @return SlsMat
+     * @return raw SunMatrix object
      */
-    SUNMatrix get() const;
+    const SUNMatrix get() const;
 
     /**
      * @brief Get the number of rows
-     * @return number
+     * @return number of rows
      */
     sunindextype rows() const;
 
     /**
      * @brief Get the number of columns
-     * @return number
+     * @return number of columns
      */
     sunindextype columns() const;
 
     /**
      * @brief Get the number of specified non-zero elements (sparse matrices only)
      * @note value will be 0 before indexptrs are set.
-     * @return number
+     * @return number of nonzero entries
      */
     sunindextype num_nonzeros() const;
     
     /**
      * @brief Get the number of allocated non-zero elements (sparse matrices only)
-     * @return number
+     * @return number of allocated entries
      */
     sunindextype capacity() const;
+    
+    /**
+     * @brief Get raw data of a sparse matrix
+     * @return pointer to first data entry
+     */
+    realtype *data();
+    
+    /**
+     * @brief Get data of a sparse matrix
+     * @param idx data index
+     * @return idx-th data entry
+     */
+    realtype get_data(sunindextype idx) const;
+    
+    /**
+     * @brief Get data entry for a dense matrix
+     * @param irow row
+     * @param icol col
+     * @return A(irow,icol)
+     */
+    realtype get_data(sunindextype irow, sunindextype icol) const;
+    
+    /**
+     * @brief Set data entry for a sparse matrix
+     * @param idx data index
+     * @param data data for idx-th entry
+     */
+    void set_data(sunindextype idx, realtype data);
+    
+    /**
+     * @brief Set data entry for a dense matrix
+     * @param irow row
+     * @param icol col
+     * @param data data for idx-th entry
+     */
+    void set_data(sunindextype irow, sunindextype icol, realtype data);
 
     /**
-     * @brief Get the index values of a sparse matrix
-     * @return index array
+     * @brief Get the index value of a sparse matrix
+     * @param idx data index
+     * @return row (CSC) or column (CSR) for idx-th data entry
      */
-    sunindextype *indexvals() const;
-
+    sunindextype get_indexval(sunindextype idx) const;
+    
     /**
-     * @brief Get the index pointers of a sparse matrix
-     * @return index array
+     * @brief Set the index value of a sparse matrix
+     * @param idx data index
+     * @param val row (CSC) or column (CSR) for idx-th data entry
      */
-    sunindextype *indexptrs() const;
+    void set_indexval(sunindextype idx, sunindextype val);
+    
+    /**
+     * @brief Set the index values of a sparse matrix
+     * @param vals rows (CSC) or columns (CSR) for data entrys
+     */
+    void set_indexvals(const gsl::span<sunindextype> vals);
+    
+    /**
+     * @brief Get the index pointer of a sparse matrix
+     * @param ptr_idx pointer index
+     * @return index where the ptr_idx-th column (CSC) or row (CSR) starts
+     */
+    sunindextype get_indexptr(sunindextype ptr_idx) const;
+    
+    /**
+     * @brief Set the index pointer of a sparse matrix
+     * @param ptr_idx pointer index
+     * @return data-index where the ptr_idx-th column (CSC) or row (CSR) starts
+     */
+    void set_indexptr(sunindextype ptr_idx, sunindextype ptr);
+    
+    /**
+     * @brief Set the index pointers of a sparse matrix
+     * @param ptrs pointer index
+     * @return starting data-indices where the columns (CSC) or rows (CSR) start
+     */
+    void set_indexptrs(const gsl::span<sunindextype> ptrs);
 
     /**
      * @brief Get the type of sparse matrix
-     * @return index array
+     * @return matrix type
      */
     int sparsetype() const;
 
@@ -290,21 +348,12 @@ class SUNMatrixWrapper {
      * @return SUNMatrix_ID
      */
     SUNMatrix_ID matrix_id() const {return SUNMatGetID(matrix_);};
-    
-    /**
-     * @brief Update internal pointers, may be necessary if matrix_ is reallocated internally.
-     */
-    void update_ptrs();
-
   private:
 
     /**
      * @brief CSC matrix to which all methods are applied
      */
     SUNMatrix matrix_ {nullptr};
-    realtype *data_ptr_ {nullptr};
-    sunindextype *indexptrs_ptr_ {nullptr};
-    sunindextype *indexvals_ptr_ {nullptr};
     bool ownmat = true;
 };
 
