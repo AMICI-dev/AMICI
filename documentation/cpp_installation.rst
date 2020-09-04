@@ -45,6 +45,14 @@ For further usage, consult the AMICI
 :ref:`C++ interface documentation <cpp_interface>`.
 
 
+Supported CBLAS libraries
+-------------------------
+
+The C++ interfaces require a system installation of a CBLAS-compatible
+*Basic Linear Algebra Subprograms* (BLAS) library.
+AMICI has been tested with various implementations such as Accelerate,
+Intel MKL, cblas, openblas and atlas.
+
 Optional SuperLU_MT support
 ---------------------------
 

@@ -68,3 +68,12 @@ AMICI uses the following packages from SuiteSparse:
   algorithm, Timothy A. Davis, John R. Gilbert, Stefan I. Larimore,
   Esmond G. Ng *ACM Transactions on Mathematical Software*, Vol 30,
   Issue 3, 2004, pp 377-380. `PDF <http://dl.acm.org/authorize?734450>`__
+
+Others:
+
+* SuperLU_MT
+
+  "A general purpose library for the direct solution of large,
+  sparse, nonsymmetric systems of linear equations"
+  (https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu_mt).
+  SuperLU_MT is optional and is so far only available from the C++ interface.

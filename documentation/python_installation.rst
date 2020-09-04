@@ -9,8 +9,9 @@ Installation of the AMICI Python package has the following prerequisites:
 * Python>=3.7
 * :term:`SWIG`>=3.0
 * CBLAS compatible BLAS library
-* a C++14 compatible compiler
-* a C compiler
+  (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
+* a C++14 compatible C++ compiler and a C compiler
+  (e.g., g++, clang, Intel C++ compiler, mingw)
 
 If these requirements are fulfilled and all relevant paths are setup properly,
 AMICI can be installed using:
@@ -316,6 +317,9 @@ environment variables:
 +----------------------------+----------------------------------+---------------------------------+
 | Variable                   | Purpose                          | Example                         |
 +============================+==================================+=================================+
+| ``SWIG``                   | Path to the :term:`SWIG`         | ``SWIG=$HOME/bin/swig4.0``      |
+|                            | executable                       |                                 |
++----------------------------+----------------------------------+---------------------------------+
 | ``CC``                     | Setting the C(++) compiler       | ``CC=/usr/bin/g++``             |
 +----------------------------+----------------------------------+---------------------------------+
 | ``CFLAGS``                 | Extra compiler flags used in     |                                 |
@@ -404,3 +408,26 @@ Now, you are ready to use AMICI in the virtual environment.
       os.environ['CFLAGS'] = '-stdlib=libc++'
 
    (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
+
+
+Optional Boost support
+----------------------
+
+`Boost <https://www.boost.org/>`_ is an optional C++ dependency only required
+for special functions (including e.g. gamma derivatives) in the Python
+interface. Boost can be installed via package managers via
+
+.. code-block:: bash
+
+    apt-get install libboost-math-dev
+
+or
+
+.. code-block:: bash
+
+    brew install boost
+
+As only headers are required, also a
+`source code <https://www.boost.org/doc/libs/1_66_0/more/getting_started/unix-variants.html>`_
+download suffices. The compiler must be able to find the module in the search
+path.

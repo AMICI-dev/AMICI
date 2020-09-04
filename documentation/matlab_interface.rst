@@ -6,8 +6,25 @@ Using AMICI's MATLAB interface
 In the following we will give a detailed overview how to specify models in
 MATLAB and how to call the generated simulation files.
 
-Model definition
-++++++++++++++++
+.. note::
+
+  The MATLAB interface requires the MathWorks
+  `Symbolic Math Toolbox <https://www.mathworks.com/products/symbolic.html>`_
+  for model import (but not for model simulation).
+
+  The Symbolic Math Toolbox requirement can be circumvented by performing model
+  import using the Python interface. The resulting code can then be used from
+  Matlab (see :ref:`matlab_compile_python_imported_model`).
+
+.. warning::
+
+  Due to changes in the Symbolic Math Toolbox, the last MATLAB release
+  with working AMICI model import is R2017b
+  (see `https://github.com/AMICI-dev/AMICI/issues/307 <https://github.com/AMICI-dev/AMICI/issues/307>`__).
+
+
+Specifying models in Matlab
++++++++++++++++++++++++++++
 
 This guide will guide the user on how to specify models in MATLAB.
 For example implementations see the examples in the ``matlab/examples``
@@ -16,8 +33,8 @@ directory.
 Header
 ------
 
-The model definition needs to be defined as a function which returns a struct
-with all symbolic definitions and options.
+The model definition needs to be defined as a function which returns a
+``struct`` with all symbolic definitions and options.
 
 .. code-block:: matlab
 
@@ -26,13 +43,14 @@ with all symbolic definitions and options.
 Options
 -------
 
-Set the options by specifying the respective field of the modelstruct
+Set the options by specifying the respective field of the model struct
 
 .. code-block:: matlab
 
     model.(fieldname) = value
 
-The options specify default options for simulation, parametrisation and compilation. All of these options are optional.
+The options specify default options for simulation, parametrisation and
+compilation. All of these options are optional.
 
 +--------------+-----------------------------------------------+---------+
 | field        | description                                   | default |
@@ -46,8 +64,8 @@ The options specify default options for simulation, parametrisation and compilat
 | .adjoint     | flag to activate adjoint sensitivities        | true    |
 +--------------+-----------------------------------------------+---------+
 
-When set to false, the fields 'forward' and 'adjoint' will speed up the time
-required to compile the model but also disable the respective sensitivity
+When set to ``false``, the fields ``forward`` and ``adjoint`` will speed up the
+time required to compile the model but also disable the respective sensitivity
 computation.
 
 States
@@ -284,6 +302,8 @@ In a similar fashion, the user could also generate multiple models and pass
 them directly to ``amiwrap(...)`` without generating respective model
 definition scripts.
 
+
+.. _matlab_compile_python_imported_model:
 
 Compiling a Python-generated model
 ----------------------------------
