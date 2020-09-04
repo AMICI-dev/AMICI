@@ -388,6 +388,8 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
     check_dim(C.columns(), B.columns(), "columns", "columns", "C", "B");
     check_dim(B.rows(), ncols, "rows", "columns", "B", "A");
     
+    C.zero();
+    
     if (ncols == 0 || nrows == 0 || B.columns() == 0)
         return; // matrix will also have zero size
     
@@ -470,6 +472,8 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     check_dim(ncols, A.columns(), "columns", "columns", "C", "A");
     check_dim(ncols, B.columns(), "columns", "columns", "C", "B");
     
+    C.zero();
+    
     if (ncols == 0 || nrows == 0 ||
         (A.num_nonzeros() + B.num_nonzeros() == 0))
         return; // nothing to do
@@ -528,6 +532,8 @@ void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
         check_dim(ncols, mat.columns(), "columns", "columns", "A", "mat");
         max_total_nonzero += mat.num_nonzeros();
     }
+    
+    C.zero();
     
     if (ncols == 0 || nrows == 0 || max_total_nonzero == 0)
         return; // nothing to do
@@ -655,6 +661,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     
     assert(ncols % blocksize == 0);
     assert(nrows % blocksize == 0);
+    C.zero();
     
     if (!num_nonzeros() || !ncols || !nrows)
         return;
