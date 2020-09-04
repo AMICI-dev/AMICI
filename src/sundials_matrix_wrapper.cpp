@@ -472,7 +472,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     check_dim(ncols, A.columns(), "columns", "columns", "C", "A");
     check_dim(ncols, B.columns(), "columns", "columns", "C", "B");
     
-    C.zero();
+    zero();
     
     if (ncols == 0 || nrows == 0 ||
         (A.num_nonzeros() + B.num_nonzeros() == 0))
@@ -533,7 +533,7 @@ void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
         max_total_nonzero += mat.num_nonzeros();
     }
     
-    C.zero();
+    zero();
     
     if (ncols == 0 || nrows == 0 || max_total_nonzero == 0)
         return; // nothing to do
@@ -647,7 +647,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     check_csc(this, "transpose", "A");
     check_dim(rows(), C.rows(), "rows", "columns", "A", "C");
     check_dim(columns(), C.columns(), "columns", "rows", "A", "C");
-    if (C.matrix_id() == SUNMATRIX_SPARSE)
+    if (C.matrix_id() == SUNMATRIX_SPARSE) {
         if (C.capacity() == 0 && num_nonzeros())
             C.reallocate(num_nonzeros());
         if (num_nonzeros() > C.capacity())
@@ -655,6 +655,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
                                   "all nonzero values from A. Requires "
                                   + std::to_string(num_nonzeros()) + " was "
                                   + std::to_string(C.capacity()) + ".");
+    }
 
     auto ncols = columns();
     auto nrows = rows();
