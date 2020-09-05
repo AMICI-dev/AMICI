@@ -308,7 +308,7 @@ definition scripts.
 Compiling a Python-generated model
 ----------------------------------
 
-Due to better performance or to avoid the Symbolic Toolbox requirement,
+For better performance or to avoid the Symbolic Math Toolbox requirement,
 it might be desirable to import a model in Python and compile the
 resulting code into a mex file. For Python model import, consult the
 respective section of the Python documentation. Once the imported
