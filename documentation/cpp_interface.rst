@@ -1,8 +1,8 @@
 .. _cpp_interface:
 
-=============
-C++ Interface
-=============
+===========================
+Using AMICI's C++ interface
+===========================
 
 The various import functions in of the
 :ref:`Python interface <python_interface>` and

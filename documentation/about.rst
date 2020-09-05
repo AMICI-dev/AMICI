@@ -33,10 +33,12 @@ Features
 * Access to and high customizability of :term:`CVODES` and :term:`IDAS` solver
 * Python, C++, Matlab interface
 * Sensitivity analysis
+
   * forward
   * steady state
   * adjoint
-  * first- and second-order
+  * first- and second-order (second-order Matlab-only)
+
 * Pre-equilibration and pre-simulation conditions
 * Support for
   `discrete events and logical operations <https://academic.oup.com/bioinformatics/article/33/7/1049/2769435>`_

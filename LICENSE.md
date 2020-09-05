@@ -1,4 +1,4 @@
-# License Conditions
+# License conditions
 
 ## AMICI
 
