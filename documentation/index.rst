@@ -21,46 +21,30 @@ Welcome to AMICI's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: User's guide
-
-   about
-   INSTALL
-   PYTHON
-   cpp_interface
-   matlab.rst
-   FAQ
-   glossary
-
-.. toctree::
-   :maxdepth: 2
-   :caption: AMICI internals
-
-   CONTRIBUTING
-   Code of conduct <CODE_OF_CONDUCT>
-   development
-   Documentation organization <README>
-   code_review_guide
-   CI
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API reference
-
-   python_modules
-   _exhale_cpp_api/library_root
-   _exhale_matlab_api/library_root
-
-
-.. toctree::
-   :maxdepth: 2
    :caption: About
 
+   about
+   availability
+   LICENSE
    how_to_cite
    references
-   LICENSE
+   background
+   glossary
+   contributing
 
+.. toctree::
+   :maxdepth: 2
+   :caption: User's guide
 
+   PYTHON
+   CPP
+   MATLAB
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer's guide
+
+   development
 
 Indices and tables
 ==================

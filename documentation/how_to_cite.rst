@@ -16,7 +16,7 @@ When using AMICI in your project, please cite
 
 * Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017).
   Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.
-  Plos Computational Biology, 13(1), e1005331.
+  PLOS Computational Biology, 13(1), e1005331.
   doi:`10.1371/journal.pcbi.1005331 <https://doi.org/10.1371/journal.pcbi.1005331>`_.
 
 and/or

@@ -232,8 +232,9 @@ exclude_patterns = [
     '.DS_Store',
     '**.ipynb_checkpoints',
     'numpy.py',
-    'MATLAB.md',
-    'CPP.md',
+    'INSTALL.md',
+    'MATLAB_.md',
+    'CPP_.md',
     'gfx'
 ]
 
