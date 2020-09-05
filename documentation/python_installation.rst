@@ -1,3 +1,5 @@
+.. _amici_python_installation:
+
 Installing the AMICI Python package
 ===================================
 
