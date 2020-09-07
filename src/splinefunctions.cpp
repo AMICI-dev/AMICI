@@ -37,26 +37,41 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
         realtype node_start = nodes[0];
         realtype node_step = (nodes[1] - nodes[0]) / (n_nodes_ - 1);
         nodes_.resize(n_nodes_);
-        for (int i_node = 0; i_node < n_nodes(); i_node++)
+        nodes_[n_nodes_ - 1] = nodes[1];
+        for (int i_node = 0; i_node < n_nodes_ - 1; i_node++)
             nodes_[i_node] = node_start + i_node * node_step;
     }
+
+    if (logarithmic_paraterization_)
+        for (int iNode = 0; iNode < n_nodes_; iNode++)
+            node_values_[iNode] = std::log(node_values_);
 }
 
 HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              std::vector<realtype> node_values,
                              std::vector<realtype> node_values_derivative,
-                             SplineBoundaryCondition firstNodeDerivative,
-                             SplineBoundaryCondition lastNodeDerivative,
+                             SplineBoundaryCondition firstNodeBC,
+                             SplineBoundaryCondition lastNodeBC,
+                             SplineExtrapolation firstNodeExtrapol,
+                             SplineExtrapolation lastNodeExtrapol,
                              bool node_derivative_by_FD,
                              bool equidistant_spacing,
                              bool logarithmic_paraterization)
     : AbstractSpline(nodes, node_values, equidistant_spacing,
                      logarithmic_paraterization),
     node_values_derivative_(node_values_derivative),
-    firstNodeDerivative(firstNodeDerivative),
-    lastNodeDerivative(lastNodeDerivative),
+    firstNodeBC_(firstNodeBC), lastNodeBC_(lastNodeBC),
+    firstNodeEP_(firstNodeDerivative),
+    lastNodeEP_(lastNodeDerivative),
     node_derivative_by_FD_(node_derivative_by_FD) {
 
+    /* We may have to compute the derivatives at the nodes */
+    handleInnerDerviatives();
+    /* First and last node need to be handeled separately */
+    handleBoundaryConditions();
+}
+
+void HermiteSpline::handleInnerDerviatives() {
     /* If values of the derivative at the nodes are to be computed by finite
      * differences, we have to fill up node_values_derivative_ */
     if (node_derivative_by_FD_) {
@@ -65,38 +80,75 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
             node_values_derivative_[i_node] =
                 (node_values_[i_node + 1] - node_values_[i_node - 1]) /
                 (nodes_[i_node + 1] - nodes_[i_node - 1]);
+    }
+}
 
-        /* We have to take care of the first node (1-sided FD)... */
-        switch (firstNodeDerivative) {
-            case SplineBoundaryCondition::constant:
-                node_values_derivative_[0] = 0;
-                break;
+void HermiteSpline::handleBoundaryConditions() {
+    int last = n_nodes() - 1;
 
-            case SplineBoundaryCondition::linearFinDiff:
+    /* We have to take special care of the first node */
+    switch (firstNodeBC_) {
+        case SplineBoundaryCondition::given:
+            if (node_derivative_by_FD_)
+                /* 1-sided FD */
                 node_values_derivative_[0] =
-                    (node_values_[1] - node_values_[0]) / (nodes_[1] - nodes_[0]);
-                break;
+                    (node_values_[1] - node_values_[0]) /
+                    (nodes_[1] - nodes_[0]);
+            break;
 
-            case SplineBoundaryCondition::linearNatural:
-                throw AmiException("Natural boundary condition for Hermite splines "
-                                   "is not yet implemented.");
-        }
-        /* ...and the last node (1-sided FD). */
-        switch (lastNodeDerivative) {
-            case SplineBoundaryCondition::constant:
-                node_values_derivative_[n_nodes() - 1] = 0;
-                break;
+        case SplineBoundaryCondition::zeroDerivative:
+            node_values_derivative_[0] = 0;
+            break;
 
-            case SplineBoundaryCondition::linearFinDiff:
-                node_values_derivative_[n_nodes() - 1] =
-                    (node_values_[n_nodes() - 1] - node_values_[n_nodes() - 2]) /
-                    (nodes_[n_nodes() - 1] - nodes_[n_nodes() - 2]);
-                break;
+        case SplineBoundaryCondition::natural:
+            node_values_derivative_[0] = -0.5 * node_values_derivative_[1] +
+                1.5 * (node_values_[1] - node_values_[0]) /
+                (nodes_[1] - nodes_[0]);
+            break;
 
-            case SplineBoundaryCondition::linearNatural:
-                throw AmiException("Natural boundary condition for Hermite splines "
-                                   "is not yet implemented.");
-        }
+        case SplineBoundaryCondition::naturalZeroDerivative:
+            throw AmiException("Natural boundary condition with zero
+                "derivative is not allowed for Hermite splines.");
+
+        case SplineBoundaryCondition::periodic:
+            if (node_derivative_by_FD_)
+                node_values_derivative_[0] =
+                    (node_values_[1] - node_values_[last - 1]) /
+                    (nodes_[1] - nodes_[0] + nodes_[last] - nodes_[last - 1]);
+            break;
+    }
+
+    /* ...and the last node (1-sided FD). */
+    switch (lastNodeBC_) {
+        case SplineBoundaryCondition::given:
+            if (node_derivative_by_FD_)
+                /* 1-sided FD */
+                node_values_derivative_[last] =
+                    (node_values_[last] - node_values_[last - 1]) /
+                    (nodes_[last] - nodes_[last - 1]);
+            break;
+
+        case SplineBoundaryCondition::zeroDerivative:
+            node_values_derivative_[0] = 0;
+            break;
+
+        case SplineBoundaryCondition::natural:
+            node_values_derivative_[last] =
+                -0.5 * node_values_derivative_[last - 1] +
+                1.5 * (node_values_[last] - node_values_[last - 1]) /
+                (nodes_[last] - nodes_[last - 1]);
+            break;
+
+        case SplineBoundaryCondition::naturalZeroDerivative:
+            throw AmiException("Natural boundary condition with zero
+                "derivative is not allowed for Hermite splines.");
+
+        case SplineBoundaryCondition::periodic:
+            if (node_derivative_by_FD_)
+                node_values_derivative_[last] =
+                    (node_values_[1] - node_values_[last - 1]) /
+                    (nodes_[1] - nodes_[0] + nodes_[last] - nodes_[last - 1]);
+            break;
     }
 }
 
@@ -105,9 +157,6 @@ void HermiteSpline::computeCoefficients() {
      * They are stored in the vector as
      * [d_0, c_0, b_0, a_0, d_1, c_1, ... , b_{n_nodes-1}, a_{n_nodes-1}] */
     coefficients.resize(4 * (n_nodes() - 1), 0.0);
-    /* Beyond the spline nodes, we need to extrapolate using a * t + b.
-     * Those coefficients are stored as [b_first, a_first, b_last, a_last] */
-    coefficients_extrapolate.resize(4, 0.0);
     realtype len;
 
     /* Compute the coefficients of the spline polynomials:
@@ -135,14 +184,61 @@ void HermiteSpline::computeCoefficients() {
             + len * node_values_derivative_[i_node + 1];
     }
 
-    /* Coefficients for affine functions for extrapolation */
-    coefficients_extrapolate[0] = node_values_[0]
-        - nodes_[0] * node_values_derivative_[0];
-    coefficients_extrapolate[1] = node_values_derivative_[0];
-    coefficients_extrapolate[2] = node_values_[n_nodes() - 1]
-        - nodes_[n_nodes() - 1] * node_values_derivative_[n_nodes() - 1];
-    coefficients_extrapolate[3] = node_values_derivative_[n_nodes() - 1];
+    /* Take care of coefficients for extrapolation */
+    computeCoefficientsExtrapolation();
 }
+
+void HermiteSpline::computeCoefficientsExtrapolation() {
+    /* Do we want to extrapolate at all? */
+    bool needExtrapolationCoefficients =
+        (firstNodeEP_> SplineExtrapolation::constant ||
+         firstNodeEP_> SplineExtrapolation::linear) &&
+        (lastNodeEP_> SplineExtrapolation::constant ||
+         lastNodeEP_> SplineExtrapolation::linear);
+    if (!needExtrapolationCoefficients)
+        return;
+
+    coefficients_extrapolate.resize(4, 0.0);
+
+    int last = n_nodes() - 1;
+
+    /* Beyond the spline nodes, we need to extrapolate using a * t + b.
+     * Those coefficients are stored as [b_first, a_first, b_last, a_last] */
+    switch (firstNodeEP_) {
+        case SplineExtrapolation::constant:
+            coefficients_extrapolate[0] = node_values_[0];
+            coefficients_extrapolate[1] = 0;
+            break;
+
+        case SplineExtrapolation::linear:
+            coefficients_extrapolate[0] = node_values_[0]
+                - nodes_[0] * node_values_derivative_[0];
+            coefficients_extrapolate[1] = node_values_derivative_[0];
+            break;
+
+        default:
+            /* We don't need specific coefficients in the cases of:
+             * noExtrapolation, polynomial, periodic*/
+            break;
+    }
+    switch (lastNodeEP_) {
+        case SplineExtrapolation::constant:
+            coefficients_extrapolate[2] = node_values_[last];
+            coefficients_extrapolate[3] = 0;
+            break;
+
+        case SplineExtrapolation::linear:
+            coefficients_extrapolate[2] = node_values_[last]
+                - nodes_[last] * node_values_derivative_[last];
+            coefficients_extrapolate[3] = node_values_derivative_[last];
+            break;
+
+        default:
+            /* We don't need specific coefficients in the cases of:
+             * noExtrapolation, polynomial, periodic*/
+            break;
+    }
+)
 
 void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
                                              realtype *dspline_valuesdp,
@@ -158,13 +254,6 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
     int n_spline_coefficients = 4 * (n_nodes() - 1);
     coefficients_sensi.resize(n_spline_coefficients * nplist, 0.0);
 
-    /* Beyond the spline nodes, we need to extrapolate using a * t + b.
-     * Those coefficients are stored as
-     * [ D[b_first, p0], D[a_first, p0], D[b_last, p0], D[a_last, p0],
-     *   D[b_first, p1], ... D[a_last, p{nplist-1}]
-     * ] */
-    coefficients_extrapolate_sensi.resize(4 * nplist, 0.0);
-
     /**
       * We're using short hand notation for some node values or slopes, based on
       * the notation used on https://en.wikipedia.org/wiki/Cubic_Hermite_spline
@@ -177,7 +266,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
 
     /* Parametric derivatives of splines are splines again.
      * We compute the coefficients for those polynomials now. */
-    for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
+    for (int i_node = 0; i_node < n_nodes() - 2; i_node++) {
         /* Get the length of the interval. */
         len = nodes_[i_node + 1] - nodes_[i_node];
         len_m = (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1]
@@ -195,14 +284,53 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
     }
 
     /* We need the coefficients for extrapolating beyond the spline domain */
+}
+
+void HermiteSpline::computeCoefficientsExtrapolationSensi(int nplist,
+    int spline_offset, realtype *dspline_valuesdp, realtype *dspline_slopesdp) {
+
+    /* Do we want to extrapolate at all? */
+    bool needExtrapolationCoefficients =
+        (firstNodeEP_> SplineExtrapolation::constant ||
+         firstNodeEP_> SplineExtrapolation::linear) &&
+        (lastNodeEP_> SplineExtrapolation::constant ||
+         lastNodeEP_> SplineExtrapolation::linear);
+    if (!needExtrapolationCoefficients)
+        return;
+
+    /* Beyond the spline nodes, we need to extrapolate using a * t + b.
+     * Those coefficients are stored as
+     * [ D[b_first, p0], D[a_first, p0], D[b_last, p0], D[a_last, p0],
+     *   D[b_first, p1], ... D[a_last, p{nplist-1}]
+     * ] */
+    coefficients_extrapolate_sensi.resize(4 * nplist, 0.0);
+
+    switch (firstNodeEP_) {
+        case SplineExtrapolation::constant:
+            coefficients_extrapolate[0] = node_values_[0];
+            coefficients_extrapolate[1] = 0;
+            break;
+
+        case SplineExtrapolation::linear:
+            coefficients_extrapolate[0] = node_values_[0]
+                - nodes_[0] * node_values_derivative_[0];
+            coefficients_extrapolate[1] = node_values_derivative_[0];
+            break;
+
+        default:
+            /* We don't need specific coefficients in the cases of:
+             * noExtrapolation, polynomial, periodic*/
+            break;
+    }
+
     for (int ip = 0; ip < nplist; ip++) {
         /* Before node[0] */
         realtype sp0 = dspline_valuesdp[spline_offset + ip];
         realtype sm0;
         if (get_node_derivative_by_FD()) {
-            if (firstNodeDerivative == SplineBoundaryCondition::constant) {
+            if (firstNodeDerivative == SplineExtrapolation::constant) {
                 sm0 = 0;
-            } else if (firstNodeDerivative == SplineBoundaryCondition::linearFinDiff) {
+            } else if (firstNodeDerivative == SplineExtrapolation::linearFinDiff) {
                 sm0 = (dspline_valuesdp[spline_offset + ip + nplist] - sp0)
                     / (nodes_[1] - nodes_[0]);
             } else {
@@ -310,12 +438,62 @@ realtype HermiteSpline::getValue(const double t) {
     realtype len = nodes_[1] - nodes_[0];
 
     /* Are we past the last node? Extrapolate! */
-    if (t > nodes_[n_nodes() - 1])
-        return coefficients_extrapolate[2] + t * coefficients_extrapolate[3];
+    if (t > nodes_[n_nodes() - 1]) {
+        switch (flatNodeEP_) {
+            case SplineExtrapolation:noExtrapolation:
+                throw AmiException("Trying to evaluate spline after last "
+                    "spline node, but spline has been specified to not allow "
+                    "extrapolation.");
+
+            case SplineExtrapolation::constant:
+                return coefficients_extrapolate[2];
+
+            case SplineExtrapolation::linear:
+                return coefficients_extrapolate[2] +
+                    t * coefficients_extrapolate[3];
+
+            case SplineExtrapolation::polynomial:
+                /* Evaluate last interpolation polynomial */
+                i_node = n_nodes() - 2;
+                len = nodes_[i_node + 1] - nodes_[i_node];
+                return evaluatePolynomial((t - nodes_[i_node]) / len,
+                                          &(coefficients[i_node * 4]));
+
+            case SplineExtrapolation::periodic:
+                len = nodes_[n_nodes() - 1] - nodes_[0];
+                return getValue(t - len * std::floor((t - nodes_[0]) /
+                    len));
+        }
+    }
+
 
     /* Are we before the first node? Extrapolate! */
-    if (t < nodes_[0])
-        return coefficients_extrapolate[0] + t * coefficients_extrapolate[1];
+    if (t < nodes_[0]) {
+        switch (firstNodeEP_) {
+            case SplineExtrapolation:noExtrapolation:
+                throw AmiException("Trying to evaluate spline before first "
+                    "spline node, but spline has been specified to not allow "
+                    "extrapolation.");
+
+            case SplineExtrapolation::constant:
+                return coefficients_extrapolate[0];
+
+            case SplineExtrapolation::linear:
+                return coefficients_extrapolate[0] +
+                    t * coefficients_extrapolate[1];
+
+            case SplineExtrapolation::polynomial:
+                /* Evaluate last interpolation polynomial */
+                len = nodes_[1] - nodes_[0];
+                return evaluatePolynomial((t - nodes_[0]) / len,
+                                          &(coefficients[0]));
+
+            case SplineExtrapolation::periodic:
+                return getValue(t + len + len * std::floor((t - nodes_[0]) /
+                    len));
+        }
+
+    }
 
     /* Get the spline interval which we need */
     if (get_equidistant_spacing()) {
