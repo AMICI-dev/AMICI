@@ -159,9 +159,9 @@ class HermiteSpline : public AbstractSpline {
 
     SplineBoundaryCondition lastNodeBC_ = SplineBoundaryCondition::given;
 
-    SplineExtrapolation firstNodeBC_ = SplineExtrapolation::linear;
+    SplineExtrapolation firstNodeEP_ = SplineExtrapolation::linear;
 
-    SplineExtrapolation lastNodeBC_ = SplineExtrapolation::linear;
+    SplineExtrapolation lastNodeEP_ = SplineExtrapolation::linear;
 
     bool node_derivative_by_FD_ = false;
 
