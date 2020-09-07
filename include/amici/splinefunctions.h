@@ -35,10 +35,18 @@ class AbstractSpline {
     virtual void computeCoefficientsSensi(int nplist, int spline_offset, 
                                           realtype *dnodesdp, 
                                           realtype *dslopesdp) = 0;
+
+    virtual void computeFinalValue() = 0;
+
+    virtual void computeFinalSensitivity() = 0;
+                                          
+    virtual realtype getValue(const realtype t) = 0;
     
-    virtual double getValue(const double t) = 0;
+    virtual realtype getSensitivity(const realtype t, const int ip) = 0;
     
-    virtual double getSensitivity(const double t, const int ip) = 0;
+    virtual realtype getFinalValue() = 0;
+    
+    virtual realtype getFinalSensitivity(const int ip) = 0;
 
     virtual bool get_node_derivative_by_FD() = 0;
 
@@ -59,14 +67,6 @@ class AbstractSpline {
     }
 
     const int n_nodes() { return n_nodes_; }
-
-    std::vector<realtype> coefficients;
-    
-    std::vector<realtype> coefficients_extrapolate;
-
-    std::vector<realtype> coefficients_sensi;
-    
-    std::vector<realtype> coefficients_extrapolate_sensi;
 
   protected: 
   /*
@@ -90,10 +90,23 @@ class AbstractSpline {
     void set_logarithmic_paraterization(bool logarithmic_paraterization) {
         logarithmic_paraterization_ = logarithmic_paraterization;
     }
-
+    
     std::vector<realtype> nodes_;
 
     std::vector<realtype> node_values_;
+
+    realtype finalValue;
+
+    std::vector<realtype> finalSensitivity();  
+    
+    std::vector<realtype> coefficients;
+    
+    std::vector<realtype> coefficients_extrapolate;
+
+    std::vector<realtype> coefficients_sensi;
+    
+    std::vector<realtype> coefficients_extrapolate_sensi;
+
     
   private:
     bool equidistant_spacing_ = false;
