@@ -143,7 +143,7 @@ or
     model.sym.f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
     model.sym.f(3) = [ param4*state2 ];
 
-The specification of ```f` or ``xdot`` may depend on states, parameters and
+The specification of ``f`` or ``xdot`` may depend on states, parameters and
 constants.
 
 For DAEs also specify the mass matrix.
