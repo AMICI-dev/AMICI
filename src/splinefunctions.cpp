@@ -506,7 +506,7 @@ realtype HermiteSpline::getValue(const double t) {
 
     /* Are we past the last node? Extrapolate! */
     if (t > nodes_[n_nodes() - 1]) {
-        switch (flatNodeEP_) {
+        switch (lastNodeEP_) {
             case SplineExtrapolation:noExtrapolation:
                 throw AmiException("Trying to evaluate spline after last "
                     "spline node, but spline has been specified to not allow "
@@ -532,7 +532,6 @@ realtype HermiteSpline::getValue(const double t) {
                     len));
         }
     }
-
 
     /* Are we before the first node? Extrapolate! */
     if (t < nodes_[0]) {
@@ -583,13 +582,58 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
     /* Compute the parametric derivative of the spline value */
     if (t > nodes_[n_nodes() - 1]) {
         /* Are we past the last node? Extrapolate! */
-        return coefficients_extrapolate_sensi[4 * ip + 2]
-            + t * coefficients_extrapolate_sensi[4 * ip + 3];
+        switch (lastNodeEP_) {
+            case SplineExtrapolation:noExtrapolation:
+                throw AmiException("Trying to evaluate spline sensitivity "
+                    "after last spline node, but spline has been specified "
+                    "to not allow extrapolation.");
+
+            case SplineExtrapolation::constant:
+                return coefficients_extrapolate_sensi[4 * ip + 2];
+
+            case SplineExtrapolation::linear:
+                return coefficients_extrapolate_sensi[4 * ip + 2]
+                    + t * coefficients_extrapolate_sensi[4 * ip + 3];
+
+            case SplineExtrapolation::polynomial:
+                /* Evaluate last interpolation polynomial */
+                i_node = n_nodes() - 2;
+                len = nodes_[i_node + 1] - nodes_[i_node];
+                return evaluatePolynomial((t - nodes_[i_node]) / len,
+                                  &(coefficients_sensi[ip * (n_nodes() - 1) * 4
+                                                       + i_node * 4]));
+
+            case SplineExtrapolation::periodic:
+                len = nodes_[n_nodes() - 1] - nodes_[0];
+                return getSensitivity(t - len * std::floor((t - nodes_[0]) /
+                    len), ip);
+        }
 
     } else if (t < nodes_[0]) {
         /* Are we before the first node? Extrapolate! */
-        return coefficients_extrapolate_sensi[4 * ip + 0]
-            + t * coefficients_extrapolate_sensi[4 * ip + 1];
+        switch (firstNodeEP_) {
+            case SplineExtrapolation:noExtrapolation:
+                throw AmiException("Trying to evaluate spline before first "
+                    "spline node, but spline has been specified to not allow "
+                    "extrapolation.");
+
+            case SplineExtrapolation::constant:
+                return coefficients_extrapolate_sensi[4 * ip + 0];
+
+            case SplineExtrapolation::linear:
+                return coefficients_extrapolate_sensi[4 * ip + 0]
+                    + t * coefficients_extrapolate_sensi[4 * ip + 1];
+
+            case SplineExtrapolation::polynomial:
+                /* Evaluate last interpolation polynomial */
+                len = nodes_[1] - nodes_[0];
+                return evaluatePolynomial((t - nodes_[0]) / len,
+                    &(coefficients_sensi[ip * (n_nodes() - 1) * 4]));
+
+            case SplineExtrapolation::periodic:
+                return getSensitivity(t + len * (1 + std::floor((t - nodes_[0])
+                    / len)), ip);
+        }
 
     } else {
         /* Get the spline interval which we need */
@@ -608,7 +652,7 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
         }
 
         return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                  &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4]));
+            &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4]));
     }
 
 }
