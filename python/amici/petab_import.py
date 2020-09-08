@@ -367,15 +367,16 @@ def _can_import_model(model_name: str) -> bool:
 
 
 @log_execution_time('Importing PEtab model', logger)
-def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
-                 condition_table: Optional[Union[str, pd.DataFrame]] = None,
-                 observable_table: Optional[Union[str, pd.DataFrame]] = None,
-                 measurement_table: Optional[Union[str, pd.DataFrame]] = None,
-                 model_name: Optional[str] = None,
-                 model_output_dir: Optional[str] = None,
-                 verbose: Optional[Union[bool, int]] = True,
-                 allow_reinit_fixpar_initcond: bool = True,
-                 **kwargs) -> None:
+def import_model_sbml(
+        sbml_model: Union[str, 'libsbml.Model'],
+        condition_table: Optional[Union[str, pd.DataFrame]] = None,
+        observable_table: Optional[Union[str, pd.DataFrame]] = None,
+        measurement_table: Optional[Union[str, pd.DataFrame]] = None,
+        model_name: Optional[str] = None,
+        model_output_dir: Optional[str] = None,
+        verbose: Optional[Union[bool, int]] = True,
+        allow_reinit_fixpar_initcond: bool = True,
+        **kwargs) -> None:
     """
     Create AMICI model from PEtab problem
 

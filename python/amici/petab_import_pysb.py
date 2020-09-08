@@ -43,8 +43,8 @@ class PysbPetabProblem(petab.Problem):
         Constructor
 
         :param pysb_model: PySB model instance for this PEtab problem
-        :param args: See petab.Problem.__init__
-        :param kwargs: See petab.Problem.__init__
+        :param args: See :meth:`petab.Problem.__init__`
+        :param kwargs: See :meth:`petab.Problem.__init__`
         """
 
         super().__init__(*args, **kwargs)
@@ -289,7 +289,7 @@ def import_model_pysb(
     # For pysb, we only allow parameters in the condition table
     # those must be pysb model parameters (either natively, or output
     # parameters from measurement or condition table that have been added in
-    # PysbPetabProblem
+    # PysbPetabProblem)
     model_parameters = [p.name for p in pysb_model.parameters]
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:

@@ -68,7 +68,6 @@ def check_finite_difference(x0: Sequence[float],
     og_parameters = model.getParameters()
     og_plist = model.getParameterList()
 
-
     # sensitivity
     p = copy.deepcopy(x0)
     plist = [ip]
@@ -163,7 +162,7 @@ def check_derivatives(model: Model,
         whether to check least squares related values.
 
     :param skip_zero_pars:
-        whether to perform FD checks for paramameters that are zero
+        whether to perform FD checks for parameters that are zero
 
     """
     p = np.array(model.getParameters())

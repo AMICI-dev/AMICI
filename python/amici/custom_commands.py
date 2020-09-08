@@ -164,11 +164,12 @@ class AmiciInstallLib(install_lib):
         if 'ENABLE_AMICI_DEBUGGING' in os.environ \
                 and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
                 and sys.platform == 'darwin':
-            search_dir = os.path.join(os.getcwd(),self.build_dir,'amici')
+            search_dir = os.path.join(os.getcwd(), self.build_dir, 'amici')
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
-                    subprocess.run(['dsymutil',os.path.join(search_dir,file),
-                                    '-o',os.path.join(search_dir,file + '.dSYM')])
+                    subprocess.run(['dsymutil', os.path.join(search_dir, file),
+                                    '-o',
+                                    os.path.join(search_dir, file + '.dSYM')])
 
         # Continue with the actual installation
         install_lib.run(self)
@@ -319,7 +320,7 @@ def set_compiler_specific_extension_options(
     for attr in ['extra_compile_args', 'extra_link_args']:
         try:
             new_value = getattr(ext, attr) + \
-                getattr(ext, f'{attr}_{compiler_type}')
+                        getattr(ext, f'{attr}_{compiler_type}')
             setattr(ext, attr, new_value)
             log.info(f"Changed {attr} for {compiler_type} to {new_value}")
         except AttributeError:
