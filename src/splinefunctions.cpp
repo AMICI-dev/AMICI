@@ -586,16 +586,10 @@ void HermiteSpline::computeFinalSensitivity(int nplist, int spline_offset,
         (lastNodeBC_ == SplineBoundaryCondition::zeroDerivative &&
          lastNodeEP_ == SplineExtrapolation::linear)) {
         for (int ip = 0; ip < nplist; ip++)
-            // TODO:
-        finalValue = coefficients_extrapolate[2];
+            finalSensitivity[ip] = coefficients_extrapolate_sensi[4 * ip + 2];
+        finalValue = coefficients_extrapolate_sensi[2];
     } else if (lastNodeEP_ == SplineExtrapolation::linear) {
-        if (coefficients_extrapolate[2] < 0) {
-            finalValue = -INFINITY;
-        } else if (coefficients_extrapolate[2] > 0) {
-            finalValue = INFINITY;
-        } else {
-            finalValue = coefficients_extrapolate[2];
-        }
+        /* If steady state is infinity, sensitivity must be 0 */
     } else if (lastNodeEP_ == SplineExtrapolation::polynomial) {
         /* Yes, that's not correct. But I don't see any good reason for
          * implementing a case, which anybody with more than a dead fish
