@@ -613,15 +613,15 @@ realtype HermiteSpline::getValue(const double t) {
         return finalValue;
 
     /* Compute the spline value */
-    int i_node = 0;
-    realtype len = nodes_[1] - nodes_[0];
+    int i_node;
+    realtype len;
 
     /* Are we past the last node? Extrapolate! */
     if (t > nodes_[n_nodes() - 1]) {
         switch (lastNodeEP_) {
             case SplineExtrapolation:noExtrapolation:
                 throw AmiException("Trying to evaluate spline after last "
-                    "spline node, but spline has been specified to not allow "
+                    "spline node, but spline has been specified not to allow "
                     "extrapolation.");
 
             case SplineExtrapolation::constant:
@@ -640,8 +640,7 @@ realtype HermiteSpline::getValue(const double t) {
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
-                return getValue(t - len * std::floor((t - nodes_[0]) /
-                    len));
+                return getValue(nodes_[0] + std::fmod(t - nodes_[0], len));
         }
     }
 
@@ -650,7 +649,7 @@ realtype HermiteSpline::getValue(const double t) {
         switch (firstNodeEP_) {
             case SplineExtrapolation:noExtrapolation:
                 throw AmiException("Trying to evaluate spline before first "
-                    "spline node, but spline has been specified to not allow "
+                    "spline node, but spline has been specified not to allow "
                     "extrapolation.");
 
             case SplineExtrapolation::constant:
@@ -667,8 +666,8 @@ realtype HermiteSpline::getValue(const double t) {
                                           &(coefficients[0]));
 
             case SplineExtrapolation::periodic:
-                return getValue(t + len + len * std::floor((t - nodes_[0]) /
-                    len));
+                len = nodes_[n_nodes() - 1] - nodes_[0];
+                return getValue(nodes_[n_nodes() - 1] + std::fmod(t - nodes_[0], len));
         }
 
     }
@@ -676,9 +675,11 @@ realtype HermiteSpline::getValue(const double t) {
     /* Get the spline interval which we need */
     if (get_equidistant_spacing()) {
         /* equidistant spacing: just compute the interval */
-        i_node = std::floor((t - nodes_[0]) / len);
+        len = nodes_[1] - nodes_[0];
+        i_node = trunc((t - nodes_[0]) / len);
     } else {
         /* no equidistant spacing: we need to iterate */
+        i_node = 0;
         while (nodes_[i_node + 1] < t) {
             i_node++;
         }
@@ -700,6 +701,9 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
     realtype len;
 
     /* Compute the parametric derivative of the spline value */
+    int i_node;
+    realtype len;
+
     if (t > nodes_[n_nodes() - 1]) {
         /* Are we past the last node? Extrapolate! */
         switch (lastNodeEP_) {
@@ -766,13 +770,45 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
             while (nodes_[i_node + 1] < t)
                 i_node++;
 
-            len = nodes_[i_node + 1] - nodes_[i_node];
+            case SplineExtrapolation::polynomial:
+                /* Evaluate last interpolation polynomial */
+                len = nodes_[1] - nodes_[0];
+                return evaluatePolynomial(
+                    (t - nodes_[0]) / len,
+                    &(coefficients_sensi[ip * (n_nodes() - 1) * 4])
+                );
+
+            case SplineExtrapolation::periodic:
+                len = nodes_[n_nodes() - 1] - nodes_[0];
+                return getSensitivity(
+                    nodes_[n_nodes() - 1] + std::fmod(t - nodes_[0], len),
+                    ip
+                );
         }
 
         return evaluatePolynomial((t - nodes_[i_node]) / len,
             &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4]));
     }
 
+    /* Get the spline interval which we need */
+    if (get_equidistant_spacing()) {
+        /* equidistant spacing: just compute the interval */
+        len = nodes_[1] - nodes_[0];
+        i_node = trunc((t - nodes_[0]) / len);
+    } else {
+        /* no equidistant spacing: we need to iterate */
+        i_node = 0;
+        while (nodes_[i_node + 1] < t) {
+            i_node++;
+        }
+        len = nodes_[i_node + 1] - nodes_[i_node];
+    }
+
+    /* Evaluate the interpolation polynomial */
+    return evaluatePolynomial(
+        (t - nodes_[i_node]) / len,
+        &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4])
+    );
 }
 
 } // namespace amici
