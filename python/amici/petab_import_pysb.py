@@ -1,6 +1,6 @@
 """
 PySB-PEtab Import
-------------
+-----------------
 Import a model in the PySB-adapted :mod:`petab`
 (https://github.com/PEtab-dev/PEtab) format into AMICI.
 """
@@ -11,14 +11,15 @@ from typing import List, Dict, Union, Optional, Tuple, Iterable
 
 import libsbml
 import petab
+import pysb
 import sympy as sp
 from petab.C import (CONDITION_NAME, OBSERVABLE_TRANSFORMATION, LIN,
                      OBSERVABLE_FORMULA, NOISE_FORMULA, FORMAT_VERSION,
                      PARAMETER_FILE, SBML_FILES, CONDITION_FILES,
                      MEASUREMENT_FILES, VISUALIZATION_FILES, OBSERVABLE_FILES)
 
-from .logging import get_logger, log_execution_time, set_log_level
 from . import petab_import
+from .logging import get_logger, log_execution_time, set_log_level
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -62,8 +63,6 @@ class PysbPetabProblem(petab.Problem):
     def _add_observation_model(self):
         """Extend PySB model by observation model as defined in the PEtab
         observables table"""
-
-        import pysb
 
         # add any required output parameters
         local_syms = {sp.Symbol.__str__(comp): comp for comp in
