@@ -39,14 +39,10 @@ class AbstractSpline {
     virtual void computeFinalValue() = 0;
 
     virtual void computeFinalSensitivity() = 0;
-                                          
+
     virtual realtype getValue(const realtype t) = 0;
-    
+
     virtual realtype getSensitivity(const realtype t, const int ip) = 0;
-    
-    virtual realtype getFinalValue() = 0;
-    
-    virtual realtype getFinalSensitivity(const int ip) = 0;
 
     virtual bool get_node_derivative_by_FD() = 0;
 
@@ -54,21 +50,21 @@ class AbstractSpline {
      * @brief Accessor to equidistant_spacing_ member
      * @return equidistant_spacing flag
      */
-    bool get_equidistant_spacing() {
-        return equidistant_spacing_;
-    }
+    bool get_equidistant_spacing();
 
     /**
      * @brief Accessor to logarithmic_paraterization_ member
      * @return logarithmic_paraterization flag
      */
-    bool get_logarithmic_paraterization() {
-        return logarithmic_paraterization_;
-    }
+    bool get_logarithmic_paraterization();
 
     const int n_nodes() { return n_nodes_; }
 
-  protected: 
+  protected:
+    std::vector<realtype> nodes_;
+
+    std::vector<realtype> node_values_;
+
     std::vector<realtype> coefficients;
 
     std::vector<realtype> coefficients_extrapolate;
@@ -76,6 +72,10 @@ class AbstractSpline {
     std::vector<realtype> coefficients_sensi;
 
     std::vector<realtype> coefficients_extrapolate_sensi;
+
+    void setFinalValue(realtype finalValue);
+
+    void setFinalSensitivity(std::vector<realtype> const finalSensitivity);
 
   /*
    * In order to have the main data members private, we need protected
@@ -86,36 +86,20 @@ class AbstractSpline {
      * @brief Switch equisitant spacing of spline nodes on or off
      * @param equidistant_spacing flag for equidistancy of spline nodes
      */
-    void set_equidistant_spacing(bool equidistant_spacing) {
-        equidistant_spacing_ = equidistant_spacing;
-    }
+    void set_equidistant_spacing(bool equidistant_spacing);
 
     /**
      * @brief Switch enforced positivity by logarithmic parametrization
      * on or off
      * @param logarithmic_paraterization flag for logarithmic parametrization
      */
-    void set_logarithmic_paraterization(bool logarithmic_paraterization) {
-        logarithmic_paraterization_ = logarithmic_paraterization;
-    }
-    
-    std::vector<realtype> nodes_;
-
-    std::vector<realtype> node_values_;
-
-    realtype finalValue;
-
-    std::vector<realtype> finalSensitivity();  
-    
-    std::vector<realtype> coefficients;
-    
-    std::vector<realtype> coefficients_extrapolate;
-
-    std::vector<realtype> coefficients_sensi;
-    
-    std::vector<realtype> coefficients_extrapolate_sensi;
+    void set_logarithmic_paraterization(bool logarithmic_paraterization);
 
   private:
+    realtype finalValue_;
+
+    std::vector<realtype> finalSensitivity_;
+
     bool equidistant_spacing_ = false;
 
     bool logarithmic_paraterization_ = false;
@@ -147,9 +131,13 @@ class HermiteSpline : public AbstractSpline {
                                   realtype *dnodesdp,
                                   realtype *dslopesdp) override;
 
-    double getValue(const double t) override;
+    void computeFinalValue() override;
 
-    double getSensitivity(const double t, const int ip) override;
+    void computeFinalSensitivity() override;
+
+    realtype getValue(const double t) override;
+
+    realtype getSensitivity(const double t, const int ip) override;
 
     /**
      * @brief Accessor to node_derivative_by_FD_ member

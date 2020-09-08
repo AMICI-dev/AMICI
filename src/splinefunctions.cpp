@@ -47,6 +47,39 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
             node_values_[iNode] = std::log(node_values_);
 }
 
+realtype AbstractSpline::getFinalValue(){
+    return finalValue_;
+}
+
+void AbstractSpline::setFinalValue(realtype finalValue){
+    finalValue_ = finalValue;
+}
+
+realtype AbstractSpline::getFinalSensitivity(const int ip){
+    return finalSensitivity_[ip];
+}
+
+void AbstractSpline::setFinalSensitivity(std::vector<realtype> const finalSensitivity){
+    finalSensitivity_ = finalSensitivity;
+}
+
+bool AbstractSpline::get_equidistant_spacing() {
+    return equidistant_spacing_;
+}
+
+void AbstractSpline::set_equidistant_spacing(bool equidistant_spacing) {
+    equidistant_spacing_ = equidistant_spacing;
+}
+
+bool get_logarithmic_paraterization() {
+    return logarithmic_paraterization_;
+}
+
+void AbstractSpline::set_logarithmic_paraterization(bool logarithmic_paraterization) {
+    logarithmic_paraterization_ = logarithmic_paraterization;
+}
+
+
 HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              std::vector<realtype> node_values,
                              std::vector<realtype> node_values_derivative,
@@ -499,7 +532,86 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n
     coeffs[ip * n_spline_coefficients + 4 * i_node + 3] = 2 * (spk - spk1) + len * (smk + smk1);
 }
 
+void HermiteSpline::computeFinalValue() {
+    /* We need to compute the final value of the spline, depending on its
+     * boundary condition and the extrapolation option. */
+    realtype finalValue;
+    if ((lastNodeEP_ == SplineExtrapolation::constant) ||
+        (lastNodeBC_ == SplineBoundaryCondition::zeroDerivative &&
+         lastNodeEP_ == SplineExtrapolation::linear)) {
+        finalValue = coefficients_extrapolate[2];
+    } else if (lastNodeEP_ == SplineExtrapolation::linear) {
+        if (coefficients_extrapolate[2] < 0) {
+            finalValue = -INFINITY;
+        } else if (coefficients_extrapolate[2] > 0) {
+            finalValue = INFINITY;
+        } else {
+            finalValue = coefficients_extrapolate[2];
+        }
+    } else if (lastNodeEP_ == SplineExtrapolation::polynomial) {
+        int last = 4 * (n_nodes() - 1) - 1;
+        if (coefficients[last] < 0) {
+            finalValue = -INFINITY;
+        } else if (coefficients[last] > 0) {
+            finalValue = INFINITY;
+        } else {
+            if (coefficients[last - 1] < 0) {
+                finalValue = -INFINITY;
+            } else if (coefficients[last - 1] > 0) {
+                finalValue = INFINITY;
+            } else {
+                if (coefficients[last - 2] < 0) {
+                    finalValue = -INFINITY;
+                } else if (coefficients[last - 2] > 0) {
+                    finalValue = INFINITY;
+                } else {
+                    finalValue = coefficients[last - 3];
+                }
+            }
+        }
+    } else {
+        /* Periodic: will not yield a steady state */
+        finalValue = NAN;
+    }
+    setFinalValue(finalValue)
+}
+
+void HermiteSpline::computeFinalSensitivity(int nplist, int spline_offset,
+                                            realtype *dspline_valuesdp,
+                                            realtype *dspline_slopesdp) {
+    /* We need to compute the final value of the spline, depending on its
+     * boundary condition and the extrapolation option. */
+    std::vector<realtype> finalSensitivity(nplist, 0);
+    if ((lastNodeEP_ == SplineExtrapolation::constant) ||
+        (lastNodeBC_ == SplineBoundaryCondition::zeroDerivative &&
+         lastNodeEP_ == SplineExtrapolation::linear)) {
+        for (int ip = 0; ip < nplist; ip++)
+            // TODO:
+        finalValue = coefficients_extrapolate[2];
+    } else if (lastNodeEP_ == SplineExtrapolation::linear) {
+        if (coefficients_extrapolate[2] < 0) {
+            finalValue = -INFINITY;
+        } else if (coefficients_extrapolate[2] > 0) {
+            finalValue = INFINITY;
+        } else {
+            finalValue = coefficients_extrapolate[2];
+        }
+    } else if (lastNodeEP_ == SplineExtrapolation::polynomial) {
+        /* Yes, that's not correct. But I don't see any good reason for
+         * implementing a case, which anybody with more than a dead fish
+         * between the ears will never use. */
+         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+    } else {
+        /* Periodic: will not yield a steady state */
+        std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
+    }
+}
+
 realtype HermiteSpline::getValue(const double t) {
+    /* Is this a steady state computation? */
+    if std::isinf(t)
+        return finalValue;
+
     /* Compute the spline value */
     int i_node = 0;
     realtype len = nodes_[1] - nodes_[0];
@@ -579,6 +691,14 @@ realtype HermiteSpline::getValue(const double t) {
 }
 
 realtype HermiteSpline::getSensitivity(const double t, const int ip) {
+    /* Is this a steady state computation? */
+    if std::isinf(t)
+        return finalSensitivity[ip];
+
+    /* Compute the spline value */
+    int i_node = 0;
+    realtype len;
+
     /* Compute the parametric derivative of the spline value */
     if (t > nodes_[n_nodes() - 1]) {
         /* Are we past the last node? Extrapolate! */
@@ -637,8 +757,6 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
 
     } else {
         /* Get the spline interval which we need */
-        realtype len;
-        int i_node = 0;
         if (get_equidistant_spacing()) {
             /* equidistant spacing: just compute the interval */
             len = nodes_[1] - nodes_[0];
