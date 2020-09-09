@@ -36,10 +36,6 @@ class AbstractSpline {
                                           realtype *dnodesdp,
                                           realtype *dslopesdp) = 0;
 
-    virtual void computeFinalValue() = 0;
-
-    virtual void computeFinalSensitivity() = 0;
-
     virtual realtype getValue(const realtype t) = 0;
 
     virtual realtype getSensitivity(const realtype t, const int ip) = 0;
@@ -73,7 +69,17 @@ class AbstractSpline {
 
     std::vector<realtype> coefficients_extrapolate_sensi;
 
+    virtual void computeFinalValue() = 0;
+
+    virtual void computeFinalSensitivity(int nplist, int spline_offset,
+                                         realtype *dspline_valuesdp,
+                                         realtype *dspline_slopesdp) = 0;
+
+    realtype getFinalValue();
+
     void setFinalValue(realtype finalValue);
+
+    realtype getFinalSensitivity(const int ip);
 
     void setFinalSensitivity(std::vector<realtype> const finalSensitivity);
 
@@ -117,8 +123,10 @@ class HermiteSpline : public AbstractSpline {
     HermiteSpline(std::vector<realtype> nodes,
                   std::vector<realtype> node_values,
                   std::vector<realtype> node_values_derivative,
-                  SplineBoundaryCondition firstNodeDerivative,
-                  SplineBoundaryCondition lastNodeDerivative,
+                  SplineBoundaryCondition firstNodeBC,
+                  SplineBoundaryCondition lastNodeBC,
+                  SplineExtrapolation firstNodeExtrapol,
+                  SplineExtrapolation lastNodeExtrapol,
                   bool node_derivative_by_FD,
                   bool equidistant_spacing,
                   bool logarithmic_paraterization);
@@ -130,10 +138,6 @@ class HermiteSpline : public AbstractSpline {
     void computeCoefficientsSensi(int nplist, int spline_offset,
                                   realtype *dnodesdp,
                                   realtype *dslopesdp) override;
-
-    void computeFinalValue() override;
-
-    void computeFinalSensitivity() override;
 
     realtype getValue(const double t) override;
 
@@ -159,7 +163,15 @@ class HermiteSpline : public AbstractSpline {
 
     void computeCoefficientsExtrapolation();
 
-    void computeCoefficientsExtrapolationSensi();
+    void computeCoefficientsExtrapolationSensi(int nplist, int spline_offset,
+                                               realtype *dspline_valuesdp,
+                                               realtype *dspline_slopesdp);
+
+    void computeFinalValue() override;
+
+    void computeFinalSensitivity(int nplist, int spline_offset,
+                                 realtype *dspline_valuesdp,
+                                 realtype *dspline_slopesdp) override;
 
     std::vector<realtype> node_values_derivative_;
 

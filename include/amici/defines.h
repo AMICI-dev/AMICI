@@ -222,7 +222,7 @@ enum class SplineBoundaryCondition {
 
 /** extrapolation methods for splines */
 enum class SplineExtrapolation {
-    noExtrapolation = -1
+    noExtrapolation = -1,
     constant        =  0,
     linear          =  1,
     polynomial      =  2,
