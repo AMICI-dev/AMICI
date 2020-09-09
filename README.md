@@ -13,7 +13,7 @@ AMICI provides a multi-language (Python, C++, Matlab) interface for the
 differential equation models specified as [SBML](http://sbml.org/)
 or [PySB](http://pysb.org/)
 and automatically compiles such models into Python modules, C++ libraries or
-`.mex` simulation files (Matlab).
+Matlab `.mex` simulation files.
 
 In contrast to the (no longer maintained)
 [sundialsTB](https://computing.llnl.gov/projects/sundials/sundials-software)
