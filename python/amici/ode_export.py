@@ -535,7 +535,7 @@ class Expression(ModelQuantity):
 class Parameter(ModelQuantity):
     """
     A Parameter is a free variable in the model with respect to which
-    sensitivites may be computed, abbreviated by `p`
+    sensitivities may be computed, abbreviated by `p`
     """
 
     def __init__(self,
@@ -561,7 +561,7 @@ class Parameter(ModelQuantity):
 class Constant(ModelQuantity):
     """
     A Constant is a fixed variable in the model with respect to which
-    sensitivites cannot be computed, abbreviated by `k`
+    sensitivities cannot be computed, abbreviated by `k`
     """
 
     def __init__(self,
@@ -879,8 +879,9 @@ class ODEModel:
         # correct time derivatives for compartment changes
 
         dxdotdw_updates = []
+
         def dx_dt(x_index, x_Sw):
-            '''
+            """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
             compartments with a constant volume, or a volume that is defined by
@@ -894,7 +895,7 @@ class ODEModel:
                 The element-wise product of the row in the stoichiometric
                 matrix that corresponds to the species (row x_index) and the
                 flux (kinetic laws) vector. Ignored in the case of rate rules.
-            '''
+            """
             x_id = symbols['species']['identifier'][x_index]
 
             # Rate rules specify dx_dt.
@@ -1089,7 +1090,7 @@ class ODEModel:
     def num_state_reinits(self) -> int:
         """
         Number of solver states which would be reinitialized after
-        preequilibraiton
+        preequilibration
 
         :return:
             number of state variable symbols with reinitialization

@@ -178,6 +178,9 @@ for mod_name in autodoc_mock_imports:
 # ones.
 extensions = [
     'readthedocs_ext.readthedocs',
+    # Required, e.g. for PEtab-derived classes where the base class has non-rst
+    #  docstrings
+    'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',

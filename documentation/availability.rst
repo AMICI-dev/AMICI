@@ -32,5 +32,4 @@ and clone is done via:
 Python package
 ++++++++++++++
 
-A Python package is available on `PyPI <https://pypi.org/project/amici/>`_,
-see below.
+A Python package is available on `PyPI <https://pypi.org/project/amici/>`_.

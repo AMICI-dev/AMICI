@@ -9,8 +9,8 @@ conditions. This can be handled using the `ParameterMapping`.
 Note
 ~~~~
 
-While the parameter mapping can be used direcly with AMICI, it was developed
-for usage together with PEtab, for which the whole worklow of generating
+While the parameter mapping can be used directly with AMICI, it was developed
+for usage together with PEtab, for which the whole workflow of generating
 the mapping is automatized.
 """
 
@@ -95,7 +95,7 @@ class ParameterMappingForCondition:
 class ParameterMapping(Sequence):
     """Parameter mapping for multiple conditions.
 
-    This can be used like a list of `ParameterMappingForCondition`s.
+    This can be used like a list of :class:`ParameterMappingForCondition`\\ s.
 
     :param parameter_mappings:
         List of parameter mappings for specific conditions.
