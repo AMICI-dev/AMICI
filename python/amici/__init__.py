@@ -6,7 +6,7 @@ The AMICI Python module provides functionality for importing SBML or PySB
 models and turning them into C++ Python extensions.
 
 :var amici_path:
-    absolute root path of the amici repository
+    absolute root path of the amici repository or Python package
 :var amiciSwigPath:
     absolute path of the amici swig directory
 :var amiciSrcPath:

@@ -143,7 +143,7 @@ or
     model.sym.f(2) = [ +param2*state1 + dirac(t-param3) - const2*state2 ];
     model.sym.f(3) = [ param4*state2 ];
 
-The specification of ```f` or ``xdot`` may depend on states, parameters and
+The specification of ``f`` or ``xdot`` may depend on states, parameters and
 constants.
 
 For DAEs also specify the mass matrix.
@@ -308,7 +308,7 @@ definition scripts.
 Compiling a Python-generated model
 ----------------------------------
 
-Due to better performance or to avoid the Symbolic Toolbox requirement,
+For better performance or to avoid the Symbolic Math Toolbox requirement,
 it might be desirable to import a model in Python and compile the
 resulting code into a mex file. For Python model import, consult the
 respective section of the Python documentation. Once the imported

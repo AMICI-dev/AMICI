@@ -204,6 +204,8 @@ Examples
 Miscellaneous
 =============
 
+.. _amici_python_openmp:
+
 OpenMP support for parallelized simulation for multiple experimental conditions
 -------------------------------------------------------------------------------
 

@@ -50,7 +50,8 @@ def _setup_logger(level: Optional[int] = logging.WARNING,
         Capture warnings from Python's warnings module if True (default)
 
     :return:
-        A logging.Logger object for AMICI logging. Note that other AMICI modules
+        A :class:`logging.Logger` object for AMICI logging. Note that other
+        AMICI modules
         should use a logger specific to their namespace instead by calling
         :func:`get_logger`.
     """
