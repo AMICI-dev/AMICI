@@ -125,7 +125,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver,
 
 /**
  * @brief Same as runAmiciSimulation, but for multiple ExpData instances. When
- * compiled with openMP support, this function runs multi-threaded.
+ * compiled with OpenMP support, this function runs multi-threaded.
  *
  * @param solver Solver instance
  * @param edatas experimental data objects
