@@ -1179,7 +1179,7 @@ class Solver {
      * @brief specifies the scaling and indexes for sensitivity
      * computation
      *
-     * @param p paramaters
+     * @param p parameters
      * @param pbar parameter scaling constants
      * @param plist parameter index list
      */
