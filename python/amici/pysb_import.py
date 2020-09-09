@@ -1116,7 +1116,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
         ODE model
 
     :return:
-        ``false`` if the species does not have an initial condition at all.
+        ``False`` if the species does not have an initial condition at all.
         Otherwise the return value of
         :meth:`ode_export.ODEModel.state_has_fixed_parameter_initial_condition`
     """
