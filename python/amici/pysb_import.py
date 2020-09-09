@@ -264,7 +264,7 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
 
     :param observables:
         list of names of :class`pysb.Expression`\\ s or
-        :class:`pysb.Observable` \\s that are to be mapped to ODEModel
+        :class:`pysb.Observable`\\ s that are to be mapped to ODEModel
         observables
 
     :param sigmas:
