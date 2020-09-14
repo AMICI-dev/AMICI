@@ -40,16 +40,24 @@ void Solver::apply_max_num_steps() const {
     // set remaining steps, setMaxNumSteps only applies to a single call of solve
     long int cursteps;
     getNumSteps(solver_memory_.get(), &cursteps);
+    if (maxsteps_ <= cursteps)
+        throw AmiException("Reached maximum number of steps %i before reaching "
+                           "tout at t=%d.", maxsteps_, t_);
     setMaxNumSteps(maxsteps_ - cursteps);
 }
 
 void Solver::apply_max_num_steps_B() const {
     // set remaining steps, setMaxNumSteps only applies to a single call of solve
     long int curstepsB;
+    auto maxstepsB = (maxstepsB_ == 0) ? maxsteps_ * 100 : maxstepsB_;
     for (int i_mem_b = 0; i_mem_b < (int)solver_memory_B_.size(); ++i_mem_b) {
         if (solver_memory_B_.at(i_mem_b)) {
             getNumSteps(solver_memory_B_.at(i_mem_b).get(), &curstepsB);
-            setMaxNumStepsB(i_mem_b, maxsteps_ - curstepsB);
+            if (maxstepsB <= curstepsB)
+                throw AmiException("Reached maximum number of steps %i before "
+                                   "reaching tout at t=%d     in backward "
+                                   "problem %i.", maxstepsB_, t_, i_mem_b);
+            setMaxNumStepsB(i_mem_b, maxstepsB - curstepsB);
         }
     }
 }
@@ -167,9 +175,6 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
 
     /* Attach user data */
     setUserDataB(*which, model);
-
-    /* Number of maximal internal steps */
-    setMaxNumStepsB(*which, (maxstepsB_ == 0) ? maxsteps_ * 100 : maxstepsB_);
 
     initializeLinearSolverB(model, *which);
     initializeNonLinearSolverB(*which);
@@ -820,8 +825,8 @@ void Solver::setAbsoluteToleranceSteadyStateSensi(const double atol) {
 long int Solver::getMaxSteps() const { return maxsteps_; }
 
 void Solver::setMaxSteps(const long int maxsteps) {
-    if (maxsteps < 0)
-        throw AmiException("maxsteps must be a non-negative number");
+    if (maxsteps <= 0)
+        throw AmiException("maxsteps must be a positive number");
 
     maxsteps_ = maxsteps;
     if (getAdjInitDone())
@@ -835,9 +840,6 @@ void Solver::setMaxStepsBackwardProblem(const long int maxsteps) {
         throw AmiException("maxsteps must be a non-negative number");
 
     maxstepsB_ = maxsteps;
-    for (int iMem = 0; iMem < (int)solver_memory_B_.size(); ++iMem)
-        if (solver_memory_B_.at(iMem))
-            setMaxNumStepsB(iMem, maxstepsB_);
 }
 
 LinearMultistepMethod Solver::getLinearMultistepMethod() const { return lmm_; }
