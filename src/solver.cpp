@@ -40,7 +40,18 @@ void Solver::apply_max_num_steps() const {
     // set remaining steps, setMaxNumSteps only applies to a single call of solve
     long int cursteps;
     getNumSteps(solver_memory_.get(), &cursteps);
-    setMaxNumSteps(maxsteps_-cursteps);
+    setMaxNumSteps(maxsteps_ - cursteps);
+}
+
+void Solver::apply_max_num_steps_B() const {
+    // set remaining steps, setMaxNumSteps only applies to a single call of solve
+    long int curstepsB;
+    for (int i_mem_b = 0; i_mem_b < (int)solver_memory_B_.size(); ++i_mem_b) {
+        if (solver_memory_B_.at(i_mem_b)) {
+            getNumSteps(solver_memory_B_.at(i_mem_b).get(), &curstepsB);
+            setMaxNumStepsB(i_mem_b, maxsteps_ - curstepsB);
+        }
+    }
 }
 
 int Solver::run(const realtype tout) const {
@@ -74,6 +85,9 @@ int Solver::step(const realtype tout) const {
 
 void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
+    
+    apply_max_num_steps_B();
+    
     solveB(tout, AMICI_NORMAL);
     cpu_timeB_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     t_ = tout;

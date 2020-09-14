@@ -1130,7 +1130,7 @@ class Solver {
      * problem
      *
      * @param mxsteps number of steps
-     * @note in contrast to the SUNDIALS method, this sets the overall maximu, not the maximum between output times.
+     * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
      */
     virtual void setMaxNumSteps(long int mxsteps) const = 0;
 
@@ -1140,6 +1140,7 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      * @param mxstepsB number of steps
+     * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
      */
     virtual void setMaxNumStepsB(int which, long int mxstepsB) const = 0;
 
@@ -1644,6 +1645,11 @@ class Solver {
      * @brief applies total number of steps for next solver call
      */
     void apply_max_num_steps() const;
+    
+    /**
+     * @brief applies total number of steps for next backwards solver call
+     */
+    void apply_max_num_steps_B() const;
   
   
     /** method for sensitivity computation */
