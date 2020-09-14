@@ -477,9 +477,11 @@ class Solver {
 
     /**
      * @brief sets the maximum number of solver steps for the backward problem
+     *
      * @param maxsteps maximum number of solver steps (non-negative number)
-     * @note default behaviour (100 times the value for the
-     * forward problem) can be restored by passing maxsteps=0
+     *
+     * @note default behaviour (100 times the value for the forward problem) can
+     * be restored by passing maxsteps=0
      */
     void setMaxStepsBackwardProblem(long int maxsteps);
 
