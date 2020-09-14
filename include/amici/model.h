@@ -173,6 +173,8 @@ class Model : public AbstractModel {
     using AbstractModel::fdJrzdz;
     using AbstractModel::fdJydsigma;
     using AbstractModel::fdJydy;
+    using AbstractModel::fdJydy_colptrs;
+    using AbstractModel::fdJydy_rowvals;
     using AbstractModel::fdJzdsigma;
     using AbstractModel::fdJzdz;
     using AbstractModel::fdrzdp;
@@ -185,6 +187,9 @@ class Model : public AbstractModel {
     using AbstractModel::fdwdx;
     using AbstractModel::fdwdx_colptrs;
     using AbstractModel::fdwdx_rowvals;
+    using AbstractModel::fdwdw;
+    using AbstractModel::fdwdw_colptrs;
+    using AbstractModel::fdwdw_rowvals;
     using AbstractModel::fdydp;
     using AbstractModel::fdydx;
     using AbstractModel::fdzdp;
@@ -206,33 +211,6 @@ class Model : public AbstractModel {
     using AbstractModel::fy;
     using AbstractModel::fz;
     
-    /**
-     * @brief Model specific implementation of fdwdw, no w chainrule (Py)
-     * @param dwdw partial derivative w wrt w
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param w vector with helper variables
-     * @param tcl Total abundances for conservation laws
-     */
-    virtual void fdwdw(realtype *dwdw, realtype t, const realtype *x,
-                       const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w, const realtype *tcl);
-
-    /**
-     * @brief Model specific implementation of fdwdw, colptrs part
-     * @param indexptrs column pointers
-     */
-    virtual void fdwdw_colptrs(sunindextype *indexptrs);
-
-    /**
-     * @brief Model specific implementation of fdwdw, rowvals part
-     * @param indexvals row values
-     */
-    virtual void fdwdw_rowvals(sunindextype *indexvals);
-
     /**
      * @brief Initialize model properties.
      * @param x Reference to state variables
@@ -1300,18 +1278,6 @@ class Model : public AbstractModel {
     /** Number of common expressions */
     int nw{0};
 
-    /** Number of derivatives of common expressions wrt `x` */
-    int ndwdx{0};
-
-    /** Number of derivatives of common expressions wrt `p` */
-    int ndwdp{0};
-
-    /** Number of nonzero entries in `amici::Model::dxdotdw_` */
-    int ndxdotdw{0};
-
-    /** Number of nonzero entries in `amici::Model::dJydy_` */
-    std::vector<int> ndJydy;
-
     /** Number of nonzero entries in Jacobian */
     int nnz{0};
 
@@ -1475,20 +1441,6 @@ class Model : public AbstractModel {
      * @param edata Pointer to experimental data instance
      */
     void fJy(realtype &Jy, int it, const AmiVector &y, const ExpData &edata);
-
-    /**
-     * @brief Model-specific implementation of fdJydy colptrs
-     * @param indexptrs column pointers
-     * @param index ytrue index
-     */
-    virtual void fdJydy_colptrs(sunindextype *indexptrs, int index);
-
-    /**
-     * @brief Fill model-specific row vals for sparse `fdJydy`.
-     * @param indexptrs Row val pointers
-     * @param index `ytrue` index
-     */
-    virtual void fdJydy_rowvals(sunindextype *indexptrs, int index);
 
     /**
      * @brief Compute partial derivative of time-resolved measurement negative

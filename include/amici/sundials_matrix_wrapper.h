@@ -136,10 +136,10 @@ class SUNMatrixWrapper {
     sunindextype capacity() const;
     
     /**
-     * @brief Get raw data of a sparse matrix
+     * @brief Get  raw data of a sparse matrix
      * @return pointer to first data entry
      */
-    realtype *data();
+     realtype *data() const;
     
     /**
      * @brief Get data of a sparse matrix
@@ -189,7 +189,7 @@ class SUNMatrixWrapper {
      * @brief Set the index values of a sparse matrix
      * @param vals rows (CSC) or columns (CSR) for data entrys
      */
-    void set_indexvals(const gsl::span<sunindextype> vals);
+    void set_indexvals(const gsl::span<const sunindextype> vals);
     
     /**
      * @brief Get the index pointer of a sparse matrix
@@ -210,7 +210,7 @@ class SUNMatrixWrapper {
      * @param ptrs pointer index
      * @return starting data-indices where the columns (CSC) or rows (CSR) start
      */
-    void set_indexptrs(const gsl::span<sunindextype> ptrs);
+    void set_indexptrs(const gsl::span<const sunindextype> ptrs);
 
     /**
      * @brief Get the type of sparse matrix

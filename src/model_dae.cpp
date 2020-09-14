@@ -11,7 +11,6 @@ void Model_DAE::fJ(const realtype t, const realtype cj, const AmiVector &x,
 void Model_DAE::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector /*xdot*/, SUNMatrix J) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     auto JDense = SUNMatrixWrapper(J);
     J_.to_dense(JDense);
 }
@@ -44,7 +43,6 @@ void Model_DAE::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v,
                     N_Vector Jv, realtype cj) {
     N_VConst(0.0, Jv);
     fJSparse(t, cj, x, dx, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     J_.multiply(Jv, v);
 }
 
@@ -80,7 +78,6 @@ void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
                        const realtype /*cj*/, const AmiVector &x,
                        const AmiVector &dx) {
     fJSparse(t, 0.0, x.getNVector(), dx.getNVector(), J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     J_.to_diag(JDiag.getNVector());
     if (!checkFinite(JDiag.getVector(), "Jacobian"))
         throw AmiException("Evaluation of fJDiag failed!");
@@ -150,7 +147,6 @@ void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
 void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                     N_Vector /*xB*/, N_Vector /*dxB*/, SUNMatrix JB) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     auto JBDense = SUNMatrixWrapper(JB);
     J_.transpose(JBDense, -1.0, nxtrue_solver);
 }
@@ -165,7 +161,6 @@ void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
 void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                           N_Vector /*xB*/, N_Vector /*dxB*/, SUNMatrix JB) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     auto JSparseB = SUNMatrixWrapper(JB);
     J_.transpose(JSparseB, -1.0, nxtrue_solver);
 }
@@ -174,7 +169,6 @@ void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                      N_Vector dxB, N_Vector vB, N_Vector JvB, realtype cj) {
     N_VConst(0.0, JvB);
     fJSparseB(t, cj, x, dx, xB, dxB, JB_.get());
-    JB_.update_ptrs(); // JB_ may get reallocated but we only pass the SUNMatrix
     JB_.multiply(JvB, vB);
 }
 
@@ -182,7 +176,6 @@ void Model_DAE::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                        N_Vector dxB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
     fJSparseB(t, 1.0, x, dx, xB, dxB, JB_.get());
-    JB_.update_ptrs(); // JB_ may get reallocated but we only pass the SUNMatrix
     fM(t, x);
     JB_.multiply(xBdot, xB);
 }
@@ -237,7 +230,6 @@ void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
     /* Get backward Jacobian */
     fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(),
               dxB.getNVector(), JB_.get());
-    JB_.update_ptrs(); // JB_ may get reallocated but we only pass the SUNMatrix
     /* Switch sign, as we integrate forward in time, not backward */
     JB_.scale(-1);
 }
@@ -257,7 +249,6 @@ void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx,
         fM(t, x);
         fdxdotdp(t, x, dx);
         fJSparse(t, 0.0, x, dx, J_.get());
-        J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     }
 
     if (pythonGenerated) {

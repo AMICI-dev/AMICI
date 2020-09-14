@@ -231,9 +231,16 @@ void SUNMatrixWrapper::set_data(sunindextype irow, sunindextype icol,
     SM_ELEMENT_D(matrix_, irow, icol) = data;
 }
 
-realtype *SUNMatrixWrapper::data() {
+realtype *SUNMatrixWrapper::data() const {
     assert(matrix_);
-    return SM_DATA_S(matrix_);
+    switch (SUNMatGetID(matrix_)) {
+    case SUNMATRIX_DENSE:
+        return SM_DATA_D(matrix_);
+    case SUNMATRIX_SPARSE:
+        return SM_DATA_S(matrix_);
+    default:
+        throw std::domain_error("Not Implemented.");
+    }
 }
 
 sunindextype SUNMatrixWrapper::get_indexval(sunindextype idx) const {
@@ -250,7 +257,7 @@ void SUNMatrixWrapper::set_indexval(sunindextype idx, sunindextype val) {
     SM_INDEXVALS_S(matrix_)[idx] = val;
 }
 
-void SUNMatrixWrapper::set_indexvals(const gsl::span<sunindextype> vals) {
+void SUNMatrixWrapper::set_indexvals(const gsl::span<const sunindextype> vals) {
     assert(matrix_);
     check_sparse(matrix_id());
     assert(static_cast<sunindextype>(vals.size()) == SM_NNZ_S(matrix_));
@@ -271,7 +278,7 @@ void SUNMatrixWrapper::set_indexptr(sunindextype ptr_idx, sunindextype ptr) {
     SM_INDEXPTRS_S(matrix_)[ptr_idx] = ptr;
 }
 
-void SUNMatrixWrapper::set_indexptrs(const gsl::span<sunindextype> ptrs) {
+void SUNMatrixWrapper::set_indexptrs(const gsl::span<const sunindextype> ptrs) {
     assert(matrix_);
     check_sparse(matrix_id());
     assert(static_cast<sunindextype>(ptrs.size()) == SM_NP_S(matrix_) + 1);

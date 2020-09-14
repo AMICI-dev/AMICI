@@ -14,7 +14,6 @@ void Model_ODE::fJ(realtype t, N_Vector x, N_Vector /*xdot*/, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
     fJSparse(t, x, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     auto JDense = SUNMatrixWrapper(J);
     J_.to_dense(JDense);
 }
@@ -32,10 +31,11 @@ void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
         auto JSparse = SUNMatrixWrapper(J);
         fdxdotdw(t, x_pos);
         // python generated
+        dxdotdx_explicit.zero();
+        dxdotdx_implicit.zero();
         if (dxdotdx_explicit.capacity()) {
-            dxdotdx_explicit.zero();
-            fdxdotdx_explicit_colptrs(dxdotdx_explicit.indexptrs());
-            fdxdotdx_explicit_rowvals(dxdotdx_explicit.indexvals());
+            fdxdotdx_explicit_colptrs(dxdotdx_explicit);
+            fdxdotdx_explicit_rowvals(dxdotdx_explicit);
             fdxdotdx_explicit(
                 dxdotdx_explicit.data(), t, N_VGetArrayPointer(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
@@ -64,7 +64,6 @@ void Model_ODE::fJv(const realtype t, const AmiVector &x,
 void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
     N_VConst(0.0, Jv);
     fJSparse(t, x, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     J_.multiply(Jv, v);
 }
 
@@ -104,11 +103,12 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
 }
 
 void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
-    if (nw > 0 && ndxdotdw > 0) {
+    dxdotdw_.zero();
+    if (nw > 0 && dxdotdw_.capacity()) {
         auto x_pos = computeX_pos(x);
-        dxdotdw_.zero();
-        fdxdotdw_colptrs(dxdotdw_.indexptrs());
-        fdxdotdw_rowvals(dxdotdw_.indexvals());
+
+        fdxdotdw_colptrs(dxdotdw_);
+        fdxdotdw_rowvals(dxdotdw_);
         fdxdotdw(dxdotdw_.data(), t, N_VGetArrayPointer(x_pos),
                  state_.unscaledParameters.data(), state_.fixedParameters.data(),
                  state_.h.data(), w_.data());
@@ -118,20 +118,21 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     auto x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointer(x_pos));
-    fdxdotdw(t, x_pos);
 
     if (pythonGenerated) {
         // python generated
+        dxdotdp_explicit.zero();
+        dxdotdp_implicit.zero();
         if (dxdotdp_explicit.capacity()) {
-            dxdotdp_explicit.zero();
-            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
-            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+            fdxdotdp_explicit_colptrs(dxdotdp_explicit);
+            fdxdotdp_explicit_rowvals(dxdotdp_explicit);
             fdxdotdp_explicit(
                 dxdotdp_explicit.data(), t, N_VGetArrayPointer(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), w_.data());
         }
         if (nw > 0) {
+            fdxdotdw(t, x_pos);
             /* Sparse matrix multiplication
              dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdw_.sparse_multiply(dxdotdp_implicit, dwdp_);
@@ -177,13 +178,13 @@ void Model_ODE::fJSparse(realtype * /*JSparse*/, const realtype /*t*/,
                        __func__); // not implemented
 }
 
-void Model_ODE::fJSparse_colptrs(sunindextype * /*indexptrs*/) {
+void Model_ODE::fJSparse_colptrs(SUNMatrixWrapper &/*JSparse*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
 
-void Model_ODE::fJSparse_rowvals(sunindextype * /*indexvals*/) {
+void Model_ODE::fJSparse_rowvals(SUNMatrixWrapper &/*JSparse*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
@@ -216,13 +217,13 @@ void Model_ODE::fdxdotdp_explicit(realtype * /*dxdotdp_explicit*/, const realtyp
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdp_explicit_colptrs(sunindextype * /*indexptrs*/) {
+void Model_ODE::fdxdotdp_explicit_colptrs(SUNMatrixWrapper &/*dxdotdp*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdp_explicit_rowvals(sunindextype * /*indexvals*/) {
+void Model_ODE::fdxdotdp_explicit_rowvals(SUNMatrixWrapper &/*dxdotdp*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
@@ -237,13 +238,13 @@ void Model_ODE::fdxdotdx_explicit(realtype * /*dxdotdx_explicit*/, const realtyp
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdx_explicit_colptrs(sunindextype * /*indexptrs*/) {
+void Model_ODE::fdxdotdx_explicit_colptrs(SUNMatrixWrapper &/*dxdotdx*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdx_explicit_rowvals(sunindextype * /*indexvals*/) {
+void Model_ODE::fdxdotdx_explicit_rowvals(SUNMatrixWrapper &/*dxdotdx*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
@@ -258,13 +259,13 @@ void Model_ODE::fdxdotdw(realtype * /*dxdotdw*/, const realtype /*t*/,
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdw_colptrs(sunindextype * /*indexptrs*/) {
+void Model_ODE::fdxdotdw_colptrs(SUNMatrixWrapper &/*dxdotdw*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdw_rowvals(sunindextype * /*indexvals*/) {
+void Model_ODE::fdxdotdw_rowvals(SUNMatrixWrapper &/*dxdotdw*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
@@ -280,7 +281,6 @@ void Model_ODE::fJB(const realtype t, realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJB(realtype t, N_Vector x, N_Vector /*xB*/, N_Vector /*xBdot*/,
                     SUNMatrix JB) {
     fJSparse(t, x, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     auto JDenseB = SUNMatrixWrapper(JB);
     J_.transpose(JDenseB, -1.0, nxtrue_solver);
 }
@@ -295,14 +295,12 @@ void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector /*xB*/,
                           N_Vector /*xBdot*/, SUNMatrix JB) {
     fJSparse(t, x, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     auto JSparseB = SUNMatrixWrapper(JB);
     J_.transpose(JSparseB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
     fJSparse(t, x, J_.get());
-    J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     J_.to_diag(JDiag);
 }
 
@@ -310,14 +308,12 @@ void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                      N_Vector xB) {
     N_VConst(0.0, JvB);
     fJSparseB(t, x, xB, nullptr, JB_.get());
-    JB_.update_ptrs(); // JB_ may get reallocated but we only pass the SUNMatrix
     JB_.multiply(JvB, vB);
 }
 
 void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
     fJSparseB(t, x, xB, nullptr, JB_.get());
-    JB_.update_ptrs(); // JB_ may get reallocated but we only pass the SUNMatrix
     JB_.multiply(xBdot, xB);
 }
 
@@ -375,7 +371,6 @@ void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
     /* Get backward Jacobian */
     fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(),
               JB_.get());
-    JB_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     /* Switch sign, as we integrate forward in time, not backward */
     JB_.scale(-1);
 }
@@ -397,7 +392,6 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         // the same for all remaining
         fdxdotdp(t, x);
         fJSparse(t, x, J_.get());
-        J_.update_ptrs(); // J_ may get reallocated but we only pass the SUNMatrix
     }
     if (pythonGenerated) {
         /* copy dxdotdp and the implicit version over */

@@ -344,15 +344,15 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation for fJSparse, column pointers
-     * @param indexptrs column pointers
+     * @param Jsparse sparse matrix to which colptrs will be written
      **/
-    virtual void fJSparse_colptrs(sunindextype *indexptrs);
+    virtual void fJSparse_colptrs(SUNMatrixWrapper &JSparse);
 
     /**
      * @brief Model specific implementation for fJSparse, row values
-     * @param indexvals row values
+     * @param JSparse sparse matrix to which rowvals will be written
      **/
-    virtual void fJSparse_rowvals(sunindextype *indexvals);
+    virtual void fJSparse_rowvals(SUNMatrixWrapper &JSparse);
 
     /**
      * @brief Model specific implementation for froot
@@ -414,15 +414,15 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, colptrs part
-     * @param indexptrs column pointers
+     * @param dxdotdp sparse matrix to which colptrs will be written
      */
-    virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
+    virtual void fdxdotdp_explicit_colptrs(SUNMatrixWrapper &dxdotdp);
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, rowvals part
-     * @param indexvals row values
+     * @param dxdotdp sparse matrix to which rowvals will be written
      */
-    virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
+    virtual void fdxdotdp_explicit_rowvals(SUNMatrixWrapper &dxdotdp);
     
     /**
      * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule (Py)
@@ -441,15 +441,15 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdx_explicit, colptrs part
-     * @param indexptrs column pointers
+     * @param dxdotdx sparse matrix to which colptrs will be written
      */
-    virtual void fdxdotdx_explicit_colptrs(sunindextype *indexptrs);
+    virtual void fdxdotdx_explicit_colptrs(SUNMatrixWrapper &dxdotdx);
 
     /**
      * @brief Model specific implementation of fdxdotdx_explicit, rowvals part
-     * @param indexvals row values
+     * @param dxdotdx sparse matrix to which rowvals will be written
      */
-    virtual void fdxdotdx_explicit_rowvals(sunindextype *indexvals);
+    virtual void fdxdotdx_explicit_rowvals(SUNMatrixWrapper &dxdotdx);
 
     /**
      * @brief Model specific implementation of fdxdotdw, data part
@@ -467,15 +467,15 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdw, colptrs part
-     * @param indexptrs column pointers
+     * @param dxdotdw sparse matrix to which colptrs will be written
      */
-    virtual void fdxdotdw_colptrs(sunindextype *indexptrs);
+    virtual void fdxdotdw_colptrs(SUNMatrixWrapper &dxdotdw);
 
     /**
      * @brief Model specific implementation of fdxdotdw, rowvals part
-     * @param indexvals row values
+     * @param dxdotdw sparse matrix to which rowvals will be written
      */
-    virtual void fdxdotdw_rowvals(sunindextype *indexvals);
+    virtual void fdxdotdw_rowvals(SUNMatrixWrapper &dxdotdw);
 };
 } // namespace amici
 

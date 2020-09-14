@@ -2418,19 +2418,22 @@ class ODEExporter:
 
         if indextype == 'colptrs':
             values = self.model.colptrs(function)
+            setter = 'indexptrs'
         elif indextype == 'rowvals':
             values = self.model.rowvals(function)
+            setter = 'indexvals'
         else:
             raise ValueError('Invalid value for indextype, must be colptrs or '
                              f'rowvals: {indextype}')
 
         # function signature
         if function in multiobs_functions:
-            signature = f'(sunindextype *{indextype}, int index)'
+            signature = f'(SUNMatrixWrapper &{function}, int index)'
         else:
-            signature = f'(sunindextype *{indextype})'
+            signature = f'(SUNMatrixWrapper &{function})'
 
         lines = [
+            '#include "amici/sundials_matrix_wrapper.h"',
             '#include "sundials/sundials_types.h"',
             '',
             '#include <array>',
@@ -2446,7 +2449,7 @@ class ODEExporter:
             static_array_name = f"{function}_{indextype}_{self.model_name}_"
             if function in multiobs_functions:
                 # list of index vectors
-                lines.append("static constexpr std::array<std::array<int, "
+                lines.append("static constexpr std::array<std::array<sunindextype, "
                              f"{len(values[0])}>, {len(values)}> "
                              f"{static_array_name} = {{{{")
                 lines.extend(['    {'
@@ -2455,7 +2458,7 @@ class ODEExporter:
                 lines.append("}};")
             else:
                 # single index vector
-                lines.append("static constexpr std::array<int, "
+                lines.append("static constexpr std::array<sunindextype, "
                              f"{len(values)}> {static_array_name} = {{")
                 lines.append('    ' + ', '.join(map(str, values)))
                 lines.append("};")
@@ -2467,12 +2470,9 @@ class ODEExporter:
 
         if len(values):
             if function in multiobs_functions:
-                lines.append(f"    std::copy({static_array_name}[index]"
-                             f".begin(), {static_array_name}[index].end(), "
-                             f"{indextype});")
+                lines.append(f"    {function}.set_{setter}(gsl::make_span({static_array_name}[index]));")
             else:
-                lines.append(f"    std::copy({static_array_name}.begin(), "
-                             f"{static_array_name}.end(), {indextype});")
+                lines.append(f"    {function}.set_{setter}(gsl::make_span({static_array_name}));")
 
         lines.extend([
             '}'
@@ -2925,7 +2925,7 @@ def get_sunindex_extern_declaration(fun: str, name: str,
     index_arg = ', int index' if fun in multiobs_functions else ''
     return \
         f'extern void {fun}_{indextype}_{name}' \
-        f'(sunindextype *{indextype}{index_arg});'
+        f'(SUNMatrixWrapper &{indextype}{index_arg});'
 
 
 def get_model_override_implementation(fun: str, name: str) -> str:
@@ -2986,7 +2986,7 @@ def get_sunindex_override_implementation(fun: str, name: str,
             fun=fun,
             indextype=indextype,
             name=name,
-            signature=f'(sunindextype *{indextype}{index_arg})',
+            signature=f'(SUNMatrixWrapper &{indextype}{index_arg})',
             eval_signature=f'({indextype}{index_arg_eval})',
         )
 
