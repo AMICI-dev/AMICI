@@ -1130,6 +1130,7 @@ class Solver {
      * problem
      *
      * @param mxsteps number of steps
+     * @note in contrast to the SUNDIALS method, this sets the overall maximu, not the maximum between output times.
      */
     virtual void setMaxNumSteps(long int mxsteps) const = 0;
 
@@ -1638,6 +1639,13 @@ class Solver {
     mutable bool force_reinit_postprocess_B_ {false};
 
   private:
+  
+    /**
+     * @brief applies total number of steps for next solver call
+     */
+    void apply_max_num_steps() const;
+  
+  
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth_ {SensitivityMethod::forward};
 

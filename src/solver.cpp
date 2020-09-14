@@ -36,10 +36,20 @@ Solver::Solver(const Solver &other)
       maxstepsB_(other.maxstepsB_), sensi_(other.sensi_)
 {}
 
+void Solver::apply_max_num_steps() const {
+    // set remaining steps, setMaxNumSteps only applies to a single call of solve
+    long int cursteps;
+    getNumSteps(solver_memory_.get(), &cursteps);
+    setMaxNumSteps(maxsteps_-cursteps);
+}
+
 int Solver::run(const realtype tout) const {
     setStopTime(tout);
     clock_t starttime = clock();
     int status;
+    
+    apply_max_num_steps();
+    
     if (getAdjInitDone()) {
         status = solveF(tout, AMICI_NORMAL, &ncheckPtr_);
     } else {
@@ -51,6 +61,9 @@ int Solver::run(const realtype tout) const {
 
 int Solver::step(const realtype tout) const {
     int status;
+    
+    apply_max_num_steps();
+    
     if (getAdjInitDone()) {
         status = solveF(tout, AMICI_ONE_STEP, &ncheckPtr_);
     } else {
@@ -92,8 +105,6 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     setErrHandlerFn();
     /* Attaches userdata */
     setUserData(model);
-    /* specify maximal number of steps */
-    setMaxNumSteps(maxsteps_);
     /* activates stability limit detection */
     setStabLimDet(stldet_);
 
