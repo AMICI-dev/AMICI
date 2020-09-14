@@ -165,7 +165,7 @@ def test_compare_to_pysb_simulation(example):
             model_pysb.setTimepoints(tspan)
 
             solver = model_pysb.getSolver()
-            solver.setMaxSteps(int(1e5))
+            solver.setMaxSteps(int(1e6))
             solver.setAbsoluteTolerance(atol)
             solver.setRelativeTolerance(rtol)
             rdata = amici.runAmiciSimulation(model_pysb, solver)
