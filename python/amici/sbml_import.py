@@ -1418,7 +1418,8 @@ class SbmlImporter:
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
-                                    new: sp.Symbol) -> None:
+                                    new: sp.Symbol,
+                                    include_rate_rule_targets=False) -> None:
         """
         Replace 'old' by 'new' in all symbolic expressions.
 
@@ -1427,10 +1428,20 @@ class SbmlImporter:
 
         :param new:
             replacement symbolic variables
+
+        :param include_rate_rule_targets:
+            perform replacement in case ``old`` is a target of a rate rule
         """
         # Avoid replacing variables with rates
-        if old not in set((*self.compartment_rate_rules.keys(),
+        if include_rate_rule_targets \
+                or old not in set((*self.compartment_rate_rules.keys(),
                            *self.species_rate_rules.keys())):
+            for rule_dict in (self.compartment_rate_rules,
+                              self.species_rate_rules):
+                if old in rule_dict.keys():
+                    rule_dict[new] = rule_dict[old].subs(old, new)
+                    del rule_dict[old]
+
             fields = [
                 'stoichiometric_matrix', 'flux_vector',
             ]
@@ -1488,11 +1499,12 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['k', 'p', 'y', 'w']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w']
         for sym in reserved_symbols:
             old_symbol = sp.Symbol(sym, real=True)
             new_symbol = sp.Symbol('amici_' + sym, real=True)
-            self._replace_in_all_expressions(old_symbol, new_symbol)
+            self._replace_in_all_expressions(old_symbol, new_symbol,
+                                             include_rate_rule_targets=True)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
                     self.symbols[symbol]['identifier'] = \
