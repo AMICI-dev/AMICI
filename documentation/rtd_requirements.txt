@@ -21,3 +21,4 @@ git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#e
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
 sphinxcontrib-matlabdomain
 sphinxcontrib-napoleon
+pygments==2.4.1
