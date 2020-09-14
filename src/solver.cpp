@@ -41,8 +41,8 @@ void Solver::apply_max_num_steps() const {
     long int cursteps;
     getNumSteps(solver_memory_.get(), &cursteps);
     if (maxsteps_ <= cursteps)
-        throw AmiException("Reached maximum number of steps %i before reaching "
-                           "tout at t=%d.", maxsteps_, t_);
+        throw AmiException("Reached maximum number of steps %ld before reaching "
+                           "tout at t=%g.", maxsteps_, t_);
     setMaxNumSteps(maxsteps_ - cursteps);
 }
 
@@ -54,8 +54,8 @@ void Solver::apply_max_num_steps_B() const {
         if (solver_memory_B_.at(i_mem_b)) {
             getNumSteps(solver_memory_B_.at(i_mem_b).get(), &curstepsB);
             if (maxstepsB <= curstepsB)
-                throw AmiException("Reached maximum number of steps %i before "
-                                   "reaching tout at t=%d     in backward "
+                throw AmiException("Reached maximum number of steps %ld before "
+                                   "reaching tout at t=%g in backward "
                                    "problem %i.", maxstepsB_, t_, i_mem_b);
             setMaxNumStepsB(i_mem_b, maxstepsB - curstepsB);
         }
