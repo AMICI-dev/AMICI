@@ -14,5 +14,9 @@ cd "${amici_path}"/python/tests
 source "${amici_path}"/build/venv/bin/activate
 pip install scipy h5py pytest
 
+if [[ ! -e "valgrind-python.supp" ]]; then
+    wget -O valgrind-python.supp http://svn.python.org/projects/python/trunk/Misc/valgrind-python.supp
+fi
+
 # PEtab tests are run separately
-PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --error-exitcode=1 --leak-check=full python -m pytest -vv --ignore-glob=*petab*
+PYTHONMALLOC=malloc valgrind --suppressions=valgrind-python.supp --show-leak-kinds=definite --error-exitcode=1 --leak-check=full python -m pytest -vv --ignore-glob=*petab*
