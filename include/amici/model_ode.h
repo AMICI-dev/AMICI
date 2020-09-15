@@ -344,7 +344,7 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation for fJSparse, column pointers
-     * @param Jsparse sparse matrix to which colptrs will be written
+     * @param JSparse sparse matrix to which colptrs will be written
      **/
     virtual void fJSparse_colptrs(SUNMatrixWrapper &JSparse);
 

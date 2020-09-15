@@ -201,7 +201,7 @@ class SUNMatrixWrapper {
     /**
      * @brief Set the index pointer of a sparse matrix
      * @param ptr_idx pointer index
-     * @return data-index where the ptr_idx-th column (CSC) or row (CSR) starts
+     * @param ptr data-index where the ptr_idx-th column (CSC) or row (CSR) starts
      */
     void set_indexptr(sunindextype ptr_idx, sunindextype ptr);
     

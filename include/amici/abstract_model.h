@@ -748,7 +748,7 @@ class AbstractModel {
      * @brief Model specific implementation for dwdp, column pointers
      * @param dwdp sparse matrix to which colptrs will be written
      */
-    virtual void fdwdp_colptrs(SUNMatrixWrapper &dwdw);
+    virtual void fdwdp_colptrs(SUNMatrixWrapper &dwdp);
 
     /**
      * @brief Model specific implementation for dwdp, row values
