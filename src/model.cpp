@@ -1377,12 +1377,16 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
 }
 
 void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
+    if (!ny)
+        return;
 
     fy(edata.getTimepoint(it), x);
     fsigmay(it, &edata);
 
     if (pythonGenerated) {
         for (int iyt = 0; iyt < nytrue; iyt++) {
+            if (!dJydy_.at(iyt).capacity())
+                continue;
             dJydy_.at(iyt).zero();
             fdJydy_colptrs(dJydy_.at(iyt), iyt);
             fdJydy_rowvals(dJydy_.at(iyt), iyt);
@@ -1417,6 +1421,8 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
 }
 
 void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData &edata) {
+    if (!ny)
+        return;
 
     dJydsigma_.assign(nytrue * ny * nJ, 0.0);
 
@@ -1442,6 +1448,8 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
     // dydp          nplist * ny
     // dJydp         nplist x nJ
     // dJydsigma
+    if (!ny)
+        return;
 
     dJydp_.assign(nJ * nplist(), 0.0);
 
@@ -1477,6 +1485,8 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
 }
 
 void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
+    if (!ny)
+        return;
 
     dJydx_.assign(nJ * nx_solver, 0.0);
 
@@ -1522,6 +1532,8 @@ void Model::fz(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     dzdp_.assign(nz * nplist(), 0.0);
 
@@ -1536,6 +1548,8 @@ void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     dzdx_.assign(nz * nx_solver, 0.0);
 
@@ -1556,6 +1570,8 @@ void Model::frz(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     drzdp_.assign(nz * nplist(), 0.0);
 
@@ -1570,6 +1586,8 @@ void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     drzdx_.assign(nz * nx_solver, 0.0);
 
@@ -1614,6 +1632,8 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
 
 void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
                        const ExpData *edata) {
+    if (!nz)
+        return;
 
     dsigmazdp_.assign(nz * nplist(), 0.0);
 
@@ -1642,6 +1662,8 @@ void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
 
 void Model::fdJzdz(const int ie, const int nroots, const realtype t,
                    const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJzdz_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1664,6 +1686,8 @@ void Model::fdJzdz(const int ie, const int nroots, const realtype t,
 
 void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
                        const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJzdsigma_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1686,6 +1710,8 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
 
 void Model::fdJzdp(const int ie, const int nroots, realtype t,
                    const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
     // dJzdz         nJ x nz x nztrue
     // dJzdsigma     nJ x nz x nztrue
     // dzdp          nz x nplist()
@@ -1738,6 +1764,8 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
     // dJzdz         nJ x nz        x nztrue
     // dzdx          nz x nx_solver
     // dJzdx         nJ x nx_solver x nmaxevent
+    if(!nz)
+        return;
 
     dJzdx_.assign(nJ * nx_solver, 0.0);
 
@@ -1768,6 +1796,8 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
 
 void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
                     const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJrzdz_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1789,6 +1819,8 @@ void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
 
 void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
                         const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJrzdsigma_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1819,9 +1851,14 @@ void Model::fw(const realtype t, const realtype *x) {
 }
 
 void Model::fdwdp(const realtype t, const realtype *x) {
+    if (!nw)
+        return;
+        
     fw(t, x);
     dwdp_.zero();
     if (pythonGenerated) {
+        if (!dwdp_hierarchical_.at(0).capacity())
+            return;
         fdwdw(t,x);
         dwdp_hierarchical_.at(0).zero();
         fdwdp_colptrs(dwdp_hierarchical_.at(0));
@@ -1839,6 +1876,8 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         dwdp_.sparse_sum(dwdp_hierarchical_);
 
     } else {
+        if (!dwdp_.capacity())
+            return;
         // matlab generated
         fdwdp(dwdp_.data(), t, x, state_.unscaledParameters.data(),
               state_.fixedParameters.data(), state_.h.data(), w_.data(),
@@ -1851,9 +1890,15 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {
-    fw(t, x);
+    if (!nw)
+        return;
 
+    fw(t, x);
+    
+    dwdx_.zero();
     if (pythonGenerated) {
+        if (!dwdx_hierarchical_.at(0).capacity())
+                return;
         fdwdw(t,x);
         dwdx_hierarchical_.at(0).zero();
         fdwdx_colptrs(dwdx_hierarchical_.at(0));
@@ -1870,6 +1915,8 @@ void Model::fdwdx(const realtype t, const realtype *x) {
         dwdx_.sparse_sum(dwdx_hierarchical_);
 
     } else {
+        if (!dwdx_.capacity())
+            return;
         dwdx_.zero();
         fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
               state_.fixedParameters.data(), state_.h.data(), w_.data(),
@@ -1882,6 +1929,8 @@ void Model::fdwdx(const realtype t, const realtype *x) {
 }
 
 void Model::fdwdw(const realtype t, const realtype *x) {
+    if (!nw || !dwdw_.capacity())
+        return;
     dwdw_.zero();
     fdwdw_colptrs(dwdw_);
     fdwdw_rowvals(dwdw_);

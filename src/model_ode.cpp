@@ -29,7 +29,6 @@ void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
     fdwdx(t, N_VGetArrayPointer(x_pos));
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);
-        fdxdotdw(t, x_pos);
         // python generated
         dxdotdx_explicit.zero();
         dxdotdx_implicit.zero();
@@ -41,11 +40,11 @@ void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), w_.data());
         }
-        if (nw > 0) {
-            /* Sparse matrix multiplication
-             dxdotdx_implicit += dxdotdw * dwdx */
-            dxdotdw_.sparse_multiply(dxdotdx_implicit, dwdx_);
-        }
+        fdxdotdw(t, x_pos);
+        /* Sparse matrix multiplication
+         dxdotdx_implicit += dxdotdw * dwdx */
+        dxdotdw_.sparse_multiply(dxdotdx_implicit, dwdx_);
+        
         JSparse.sparse_add(dxdotdx_explicit, 1.0, dxdotdx_implicit, 1.0);
     } else {
         fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
@@ -131,12 +130,12 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), w_.data());
         }
-        if (nw > 0) {
-            fdxdotdw(t, x_pos);
-            /* Sparse matrix multiplication
-             dxdotdp_implicit += dxdotdw * dwdp */
-            dxdotdw_.sparse_multiply(dxdotdp_implicit, dwdp_);
-        }
+        
+        fdxdotdw(t, x_pos);
+        /* Sparse matrix multiplication
+         dxdotdp_implicit += dxdotdw * dwdp */
+        dxdotdw_.sparse_multiply(dxdotdp_implicit, dwdp_);
+        
         dxdotdp_full.sparse_add(dxdotdp_explicit, 1.0, dxdotdp_implicit, 1.0);
     } else {
         // matlab generated
