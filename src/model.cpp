@@ -137,7 +137,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         dwdp_ = SUNMatrixWrapper(nw, p.size(), 0, CSC_MAT);
 
         for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
-            /* for the first element we know the exact size, while for all we
+            /* for the first element we know the exact size, while for all others we
                guess the size*/
             dwdp_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, p.size(), irec * ndwdw + ndwdp, CSC_MAT));
