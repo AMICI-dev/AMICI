@@ -232,7 +232,9 @@ void SUNMatrixWrapper::set_data(sunindextype irow, sunindextype icol,
 }
 
 realtype *SUNMatrixWrapper::data() const {
-    assert(matrix_);
+    if (!matrix_)
+        return nullptr;
+        
     switch (SUNMatGetID(matrix_)) {
     case SUNMATRIX_DENSE:
         return SM_DATA_D(matrix_);
