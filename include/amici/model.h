@@ -1775,21 +1775,12 @@ class Model : public AbstractModel {
     /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
     mutable SUNMatrixWrapper dxdotdw_;
 
-    /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
-    mutable SUNMatrixWrapper dwdw_;
+    /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
+    mutable SUNMatrixWrapper dwdx_;
     
     /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
     mutable SUNMatrixWrapper dwdp_;
     
-    /** Sparse dwdp implicit temporary storage (dimension: `ndwdp`) */
-    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
-
-    /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
-    mutable SUNMatrixWrapper dwdx_;
-    
-    /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
-    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
-
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     mutable SUNMatrixWrapper M_;
 
@@ -1989,6 +1980,16 @@ class Model : public AbstractModel {
     /** Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness */
     bool always_check_finite_ {false};
+
+  private:
+    /** Sparse dwdp implicit temporary storage (dimension: `ndwdp`) */
+    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
+
+    /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
+    mutable SUNMatrixWrapper dwdw_;
+    
+    /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
+    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
     
     /** Recursion */
     int w_recursion_depth_ {0};

@@ -1280,7 +1280,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     fdwdp(t, x.data());
 
     /* get dydp slice (ny) for current time and parameter */
-    realtype *stcl = nullptr;
+    const realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++)
         if (pythonGenerated) {
             if (ncl())

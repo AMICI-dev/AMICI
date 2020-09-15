@@ -356,29 +356,11 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
         break;
     case SUNMATRIX_SPARSE:
         if(!SM_NNZ_S(matrix_)) {
-            /* empty matrix, nothing to multiply, return to avoid out-of-bounds
-             * access of pointer access below
-             */
             return;
         }
-        switch (sparsetype()) {
-        sunindextype idx;
-        case CSC_MAT:
-            for (sunindextype icol = 0; icol < ncols; ++icol) {
-                for (idx = get_indexptr(icol);
-                     idx < get_indexptr(icol+1); ++idx) {
-                    c.at(get_indexval(idx)) += get_data(idx) * b.at(icol);
-                }
-            }
-            break;
-        case CSR_MAT:
-            for (sunindextype irow = 0; irow < nrows; ++irow) {
-                for (idx = get_indexptr(irow);
-                     idx < get_indexptr(irow+1); ++idx) {
-                    c.at(irow) += get_data(idx) * b.at(get_indexval(idx));
-                }
-            }
-            break;
+        check_csc(this, "multiply", "A");
+        for (sunindextype icol = 0; icol < ncols; ++icol) {
+            scatter(icol, b.at(icol), nullptr, c, icol+1, nullptr, 0);
         }
         break;
     case SUNMATRIX_BAND:
@@ -690,7 +672,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     check_dim(rows(), C.rows(), "rows", "columns", "A", "C");
     check_dim(columns(), C.columns(), "columns", "rows", "A", "C");
     if (C.matrix_id() == SUNMATRIX_SPARSE) {
-        if (C.capacity() == 0 && num_nonzeros())
+        if (!C.capacity() && num_nonzeros())
             C.reallocate(num_nonzeros());
         if (num_nonzeros() > C.capacity())
             std::invalid_argument("C must be allocated such that it can hold "
