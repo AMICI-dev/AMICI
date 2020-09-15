@@ -263,7 +263,7 @@ void SUNMatrixWrapper::set_indexvals(const gsl::span<const sunindextype> vals) {
     assert(matrix_);
     check_sparse(matrix_id());
     assert(static_cast<sunindextype>(vals.size()) == SM_NNZ_S(matrix_));
-    std::copy_n(vals.begin(), SM_NP_S(matrix_), SM_INDEXVALS_S(matrix_));
+    std::copy_n(vals.begin(), SM_NNZ_S(matrix_), SM_INDEXVALS_S(matrix_));
 }
 
 sunindextype SUNMatrixWrapper::get_indexptr(sunindextype ptr_idx) const {
@@ -285,7 +285,7 @@ void SUNMatrixWrapper::set_indexptrs(const gsl::span<const sunindextype> ptrs) {
     assert(matrix_);
     check_sparse(matrix_id());
     assert(static_cast<sunindextype>(ptrs.size()) == SM_NP_S(matrix_) + 1);
-    std::copy_n(ptrs.begin(), SM_NP_S(matrix_), SM_INDEXPTRS_S(matrix_));
+    std::copy_n(ptrs.begin(), SM_NP_S(matrix_) + 1, SM_INDEXPTRS_S(matrix_));
 }
 
 int SUNMatrixWrapper::sparsetype() const {
