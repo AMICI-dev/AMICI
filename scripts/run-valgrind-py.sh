@@ -12,7 +12,7 @@ fi
 
 cd "${amici_path}"/python/tests
 source "${amici_path}"/build/venv/bin/activate
-pip install scipy h5py pytest pytest-cov pytest-valgrind
+pip install scipy h5py pytest
 
 # PEtab tests are run separately
-PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --error-exitcode=1 --leak-check=full --log-file=/tmp/valgrind-output python -m pytest -vv --valgrind --valgrind-log=/tmp/valgrind-output --ignore-glob=*petab*
+PYTHONMALLOC=malloc valgrind --show-leak-kinds=definite --error-exitcode=1 --leak-check=full python -m pytest -vv --ignore-glob=*petab*
