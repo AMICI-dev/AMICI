@@ -485,7 +485,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
     for (bcol = 0; bcol < B.columns(); bcol++) // k in C(i,j) = sum_k A(i,k)*B(k,j)
     {
         C.set_indexptr(bcol, nnz);              /* column j of C starts here */
-        if ((B.get_indexptr(bcol+1) > B.get_indexptr(bcol+1))
+        if ((B.get_indexptr(bcol+1) > B.get_indexptr(bcol))
             && (nnz + nrows > C.capacity()))
         {
             /*
@@ -647,7 +647,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
     
     sunindextype aidx;
-    for (aidx = get_indexptr(acol); aidx < get_indexptr(acol); aidx++)
+    for (aidx = get_indexptr(acol); aidx < get_indexptr(acol+1); aidx++)
     {
         auto arow = get_indexval(aidx);          /* A(arow,acol) is nonzero */
         if (w && w[arow] < mark) {
