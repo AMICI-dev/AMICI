@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - feature_cpp_hierarchical_derivatives
   pull_request:
     branches:
       - master
