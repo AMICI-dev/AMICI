@@ -1309,12 +1309,12 @@ class SbmlImporter:
             ODEModel object with basic definitions
 
         :param volume_updates:
-            List with updates for the stoichiometrix matrix accounting for
+            List with updates for the stoichiometric matrix accounting for
             compartment volumes
 
         :returns volume_updates_solver:
             List (according to reduced stoichiometry) with updates for the
-            stoichiometrix matrix accounting for compartment volumes
+            stoichiometric matrix accounting for compartment volumes
         """
         conservation_laws = []
 
@@ -1372,7 +1372,7 @@ class SbmlImporter:
                     'state_expr': total_abundance,
                     'abundance_expr': target_state,
                 })
-                # mark species to delete from stoichiometrix matrix
+                # mark species to delete from stoichiometric matrix
                 species_solver.pop(ix)
 
         return species_solver
@@ -1385,12 +1385,12 @@ class SbmlImporter:
             List of species indices which remain later in the ODE solver
 
         :param volume_updates:
-            List with updates for the stoichiometrix matrix accounting for
+            List with updates for the stoichiometric matrix accounting for
             compartment volumes
 
         :returns volume_updates_solver:
             List (according to reduced stoichiometry) with updates for the
-            stoichiometrix matrix accounting for compartment volumes
+            stoichiometric matrix accounting for compartment volumes
         """
 
         # prune out constant species from stoichiometric matrix
@@ -1418,7 +1418,8 @@ class SbmlImporter:
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
-                                    new: sp.Symbol) -> None:
+                                    new: sp.Symbol,
+                                    include_rate_rule_targets=False) -> None:
         """
         Replace 'old' by 'new' in all symbolic expressions.
 
@@ -1427,10 +1428,20 @@ class SbmlImporter:
 
         :param new:
             replacement symbolic variables
+
+        :param include_rate_rule_targets:
+            perform replacement in case ``old`` is a target of a rate rule
         """
         # Avoid replacing variables with rates
-        if old not in set((*self.compartment_rate_rules.keys(),
+        if include_rate_rule_targets \
+                or old not in set((*self.compartment_rate_rules.keys(),
                            *self.species_rate_rules.keys())):
+            for rule_dict in (self.compartment_rate_rules,
+                              self.species_rate_rules):
+                if old in rule_dict.keys():
+                    rule_dict[new] = rule_dict[old].subs(old, new)
+                    del rule_dict[old]
+
             fields = [
                 'stoichiometric_matrix', 'flux_vector',
             ]
@@ -1488,11 +1499,12 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['k', 'p', 'y', 'w']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w']
         for sym in reserved_symbols:
             old_symbol = sp.Symbol(sym, real=True)
             new_symbol = sp.Symbol('amici_' + sym, real=True)
-            self._replace_in_all_expressions(old_symbol, new_symbol)
+            self._replace_in_all_expressions(old_symbol, new_symbol,
+                                             include_rate_rule_targets=True)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
                     self.symbols[symbol]['identifier'] = \
@@ -1904,7 +1916,7 @@ def noise_distribution_to_cost_function(
       parameterized via success probability `p`:
 
       .. math::
-         
+
          \\pi(m|y,\\sigma) = \\frac{\\Gamma(m+r)}{\\Gamma(m+1) \\Gamma(r)}
             (1-\\sigma)^m \\sigma^r
 
@@ -2006,7 +2018,9 @@ def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
-    Differences from `sympy.MathMLContentPrinter`:
+
+    Differences from :class:`sympy.MathMLContentPrinter`:
+
     1. underscores in symbol names are not converted to subscripts
     2. symbols with name 'time' are converted to the SBML time symbol
     """
@@ -2014,12 +2028,14 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
+
     # _print_Float can be removed if sympy PR #19958 is merged
     def _print_Float(self, expr):
         x = self.dom.createElement(self.mathml_tag(expr))
         repr_expr = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
         x.appendChild(self.dom.createTextNode(repr_expr))
         return x
+
     def doprint(self, expr):
         mathml = super().doprint(expr)
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + mathml + '</math>'

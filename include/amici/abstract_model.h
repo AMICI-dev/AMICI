@@ -219,7 +219,7 @@ class AbstractModel {
     /**
      * @brief Function indicating whether reinitialization of states depending
      * on fixed parameters is permissible
-     * @return flag inidication whether reinitialization of states depending on
+     * @return flag indicating whether reinitialization of states depending on
      * fixed parameters is permissible
      */
     virtual bool isFixedParameterStateReinitializationAllowed() const;
@@ -275,7 +275,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param sx current state sensitivity
      * @param ip sensitivity index
      * @param ie event index
@@ -291,7 +291,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w repeating elements vector
      */
     virtual void fy(realtype *y, const realtype t, const realtype *x,
@@ -305,7 +305,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      * @param w repeating elements vector
      * @param dwdp Recurring terms in xdot, parameter derivative
@@ -321,7 +321,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w repeating elements vector
      * @param dwdx Recurring terms in xdot, state derivative
      */
@@ -337,7 +337,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      */
     virtual void fz(realtype *z, int ie, const realtype t, const realtype *x,
                     const realtype *p, const realtype *k, const realtype *h);
@@ -350,7 +350,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param sx current state sensitivity
      * @param ip sensitivity index
      */
@@ -367,7 +367,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      */
     virtual void frz(realtype *rz, int ie, const realtype t, const realtype *x,
                      const realtype *p, const realtype *k, const realtype *h);
@@ -381,7 +381,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param sx current state sensitivity
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip sensitivity index
      */
     virtual void fsrz(realtype *srz, int ie, const realtype t,
@@ -397,7 +397,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      */
     virtual void fdzdp(realtype *dzdp, int ie, const realtype t,
@@ -413,7 +413,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      */
     virtual void fdzdx(realtype *dzdx, int ie, const realtype t,
                        const realtype *x, const realtype *p, const realtype *k,
@@ -428,7 +428,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      */
     virtual void fdrzdp(realtype *drzdp, int ie, const realtype t,
@@ -443,7 +443,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      */
     virtual void fdrzdx(realtype *drzdx, int ie, const realtype t,
                         const realtype *x, const realtype *p, const realtype *k,
@@ -456,7 +456,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
@@ -473,7 +473,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w repeating elements vector
      * @param ip sensitivity index
      * @param ie event index
@@ -496,7 +496,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
@@ -515,7 +515,7 @@ class AbstractModel {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip sensitivity index
      * @param ie event index
      * @param xdot new model right hand side
@@ -720,8 +720,8 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
-     * @param tcl total abundances for conservations laws
+     * @param h Heaviside vector
+     * @param tcl total abundances for conservation laws
      */
     virtual void fw(realtype *w, const realtype t, const realtype *x,
                     const realtype *p, const realtype *k, const realtype *h,
@@ -734,10 +734,10 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
-     * @param tcl total abundances for conservations laws
-     * @param stcl sensitivities of total abundances for conservations laws
+     * @param tcl total abundances for conservation laws
+     * @param stcl sensitivities of total abundances for conservation laws
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
@@ -763,10 +763,10 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
-     * @param tcl total abundances for conservations laws
-     * @param stcl sensitivities of total abundances for conservations laws
+     * @param tcl total abundances for conservation laws
+     * @param stcl sensitivities of total abundances for conservation laws
      * @param ip sensitivity parameter index
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
@@ -781,9 +781,9 @@ class AbstractModel {
      * @param x vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
-     * @param tcl total abundances for conservations laws
+     * @param tcl total abundances for conservation laws
      */
     virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,

@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
+<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left" alt="AMICI logo">
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
@@ -12,8 +12,8 @@ AMICI provides a multi-language (Python, C++, Matlab) interface for the
 (for algebraic differential equations). AMICI allows the user to read
 differential equation models specified as [SBML](http://sbml.org/)
 or [PySB](http://pysb.org/)
-and automatically compiles such models into `.mex` simulation files
-(Matlab), C++ executables or Python modules.
+and automatically compiles such models into Python modules, C++ libraries or
+Matlab `.mex` simulation files.
 
 In contrast to the (no longer maintained)
 [sundialsTB](https://computing.llnl.gov/projects/sundials/sundials-software)
@@ -31,20 +31,20 @@ constrained optimization problems.
 
 ## Current build status
 
-<a href="https://badge.fury.io/py/amici" alt="PyPI version">
-  <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/AMICI-dev/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/AMICI-dev/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg"></a>
-<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master" alt="SonarCloud">
-  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index"></a>
-<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
-  <img src="https://zenodo.org/badge/43677177.svg"></a>
-<a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
- <img src="https://readthedocs.org/projects/amici/badge/?version=latest"></a>
+<a href="https://badge.fury.io/py/amici">
+  <img src="https://badge.fury.io/py/amici.svg" alt="PyPI version"></a>
+<a href="https://travis-ci.com/AMICI-dev/AMICI">
+  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master" alt="Build Status"></a>
+<a href="https://codecov.io/gh/AMICI-dev/AMICI">
+  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg" alt="Code coverage"></a>
+<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master">
+  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index" alt="SonarCloud technical debt"></a>
+<a href="https://zenodo.org/badge/latestdoi/43677177">
+  <img src="https://zenodo.org/badge/43677177.svg" alt="Zenodo DOI"></a>
+<a href="https://amici.readthedocs.io/en/latest/?badge=latest">
+ <img src="https://readthedocs.org/projects/amici/badge/?version=latest" alt="ReadTheDocs status"></a>
 <a href="https://bestpractices.coreinfrastructure.org/projects/3780">
-  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge"></a>
+  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge" alt="coreinfrastructure bestpractices badge"></a>
 
 ## Features
 
@@ -143,5 +143,5 @@ which are available under a
 license:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75">
+  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75" alt="AMICI Logo">
 </p>

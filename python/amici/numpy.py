@@ -1,3 +1,9 @@
+"""
+C++ object views
+----------------
+This module provides views on C++ objects for efficient access.
+"""
+
 import numpy as np
 import copy
 import collections
@@ -144,8 +150,8 @@ class ReturnDataView(SwigPtrView):
         'ssigmaz', 'sllh', 's2llh', 'J', 'xdot', 'status', 'llh',
         'chi2', 'res', 'sres', 'FIM', 'w',
         'preeq_wrms', 'preeq_t', 'preeq_numlinsteps', 'preeq_numsteps',
-        'preeq_numstepsB', 'preeq_status', 'preeq_cpu_time', 
-        'preeq_cpu_timeB', 'posteq_wrms', 'posteq_t', 'posteq_numlinsteps', 
+        'preeq_numstepsB', 'preeq_status', 'preeq_cpu_time',
+        'preeq_cpu_timeB', 'posteq_wrms', 'posteq_t', 'posteq_numlinsteps',
         'posteq_numsteps', 'posteq_numstepsB', 'posteq_status',
         'posteq_cpu_time', 'posteq_cpu_timeB', 'numsteps', 'numrhsevals',
         'numerrtestfails', 'numnonlinsolvconvfails', 'order', 'cpu_time',

@@ -1,7 +1,6 @@
 How to cite AMICI
 =================
 
-
 **Citable DOI for the latest AMICI release:**
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3992844.svg

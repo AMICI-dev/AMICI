@@ -2,7 +2,7 @@
 PySB Import
 ------------
 This module provides all necessary functionality to import a model specified
-in the :class:`pysb.core.Model` format
+in the :class:`pysb.core.Model` format.
 """
 
 from .ode_export import (
@@ -47,7 +47,7 @@ def pysb2amici(model: pysb.Model,
     Generate AMICI C++ files for the model provided to the constructor.
 
     :param model:
-        pysb model, model.name will determine the name of the
+        pysb model, :attr:`pysb.Model.name` will determine the name of the
         generated module
 
     :param output_dir:
@@ -69,7 +69,7 @@ def pysb2amici(model: pysb.Model,
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :param assume_pow_positivity:
-        if set to true, a special pow function is used to avoid problems
+        if set to ``true``, a special pow function is used to avoid problems
         with state variables that may become negative due to numerical
         errors
 
@@ -78,17 +78,17 @@ def pysb2amici(model: pysb.Model,
         extension
 
     :param compute_conservation_laws:
-        if set to true, conservation laws are automatically computed and
+        if set to ``true``, conservation laws are automatically computed and
         applied such that the state-jacobian of the ODE right-hand-side has
-        full rank. This option should be set to True when using the newton
+        full rank. This option should be set to ``true`` when using the Newton
         algorithm to compute steadystates
 
     :param compile:
-        If true, build the python module for the generated model. If false,
+        If ``true``, build the python module for the generated model. If false,
         just generate the source code.
 
     :param simplify:
-        see :attr:`ODEModel._simplify`
+        see :attr:`amici.ODEModel._simplify`
     """
     if observables is None:
         observables = []
@@ -132,7 +132,8 @@ def ode_model_from_pysb_importer(
         verbose: Union[int, bool] = False,
 ) -> ODEModel:
     """
-    Creates an ODEModel instance from a pysb.Model instance.
+    Creates an :class:`amici.ODEModel` instance from a :class:`pysb.Model`
+    instance.
 
     :param model:
         see :func:`amici.pysb_import.pysb2amici`
@@ -151,7 +152,7 @@ def ode_model_from_pysb_importer(
         see :func:`amici.pysb_import.pysb2amici`
 
     :param simplify:
-            see :attr:`ODEModel._simplify`
+            see :attr:`amici.ODEModel._simplify`
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -262,8 +263,9 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
         pysb model
 
     :param observables:
-        list of names of pysb.Expressions or pysb.Observables that are to be
-        mapped to ODEModel observables
+        list of names of :class`pysb.Expression`\\ s or
+        :class:`pysb.Observable`\\ s that are to be mapped to ODEModel
+        observables
 
     :param sigmas:
         dict with names of observable pysb.Expressions/pysb.Observables
@@ -954,7 +956,7 @@ def _add_conservation_for_constant_species(
     monomer
 
     :param ode_model:
-        ODEModel isntance to which the conservation laws will be added
+        ODEModel instance to which the conservation laws will be added
 
     :param conservation_laws:
         see return of :func:`_construct_conservation_from_prototypes`
@@ -1101,7 +1103,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            ode_model: ODEModel) -> bool:
     """
     Wrapper to interface
-    :meth:`ODEModel.state_has_fixed_parameter_initial_condition`
+    :meth:`ode_export.ODEModel.state_has_fixed_parameter_initial_condition`
     from a pysb specie/model arguments
 
     :param specie:
@@ -1114,9 +1116,9 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
         ODE model
 
     :return:
-        False if the species does not have an initial condition at all.
+        ``False`` if the species does not have an initial condition at all.
         Otherwise the return value of
-        :meth:`ODEModel.state_has_fixed_parameter_initial_condition`
+        :meth:`ode_export.ODEModel.state_has_fixed_parameter_initial_condition`
     """
     # ComplexPatterns are not hashable, so we have to compare by string
     ic_index = next(

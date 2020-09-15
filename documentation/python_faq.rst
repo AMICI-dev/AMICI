@@ -1,3 +1,5 @@
+.. _amici_python_faq:
+
 FAQ
 ===
 
@@ -13,7 +15,8 @@ fails with something like
    error: command 'x86_64-linux-gnu-gcc' failed with exit status 1
 
 **A**: You will have to install a CBLAS-compatible BLAS library and/or
-set ``BLAS_CFLAGS`` as described in the installation guides.
+set ``BLAS_CFLAGS`` as described in the
+:ref:`installation guide <amici_python_installation>`.
 
 --------------
 
@@ -22,5 +25,4 @@ set ``BLAS_CFLAGS`` as described in the installation guides.
 
 **A**: You probably installed the AMICI package with OpenMP support, but
 did not have the relevant compiler/linker flags set when
-importing/building the model. See `Python-AMICI
-guide <python_interface.rst#model-compilation>`__.
+importing/building the model. See :ref:`here <amici_python_openmp>`.
