@@ -43,18 +43,18 @@ using namespace amici;
 %ignore ModelState;
 %ignore getModelState;
 %ignore setModelState;
-%ignore fdwdw
-%ignore fdwdw_rowvals
-%ignore fdwdw_colptrs
-%ignore fdwdp
-%ignore fdwdp_rowvals
-%ignore fdwdp_colptrs
-%ignore fdwdx
-%ignore fdwdx_rowvals
-%ignore fdwdx_colptrs
-%ignore fdJydy
-%ignore fdJydy_colptrs
-%ignore fdJydy_rowvals
+%ignore fdwdw;
+%ignore fdwdw_rowvals;
+%ignore fdwdw_colptrs;
+%ignore fdwdp;
+%ignore fdwdp_rowvals;
+%ignore fdwdp_colptrs;
+%ignore fdwdx;
+%ignore fdwdx_rowvals;
+%ignore fdwdx_colptrs;
+%ignore fdJydy;
+%ignore fdJydy_colptrs;
+%ignore fdJydy_rowvals;
 
 // Process symbols in header
 %include "amici/model.h"
