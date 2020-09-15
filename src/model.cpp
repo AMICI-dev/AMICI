@@ -162,11 +162,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         // dynamically allocate on first call
         dxdotdp_full = SUNMatrixWrapper(nx_solver, p.size(), 0, CSC_MAT);
 
-        // also dJydy depends on the way of wrapping
-        assert(static_cast<unsigned>(nytrue) == ndJydy.size());
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
             dJydy_.emplace_back(
-                SUNMatrixWrapper(nJ, ny, ndJydy[iytrue], CSC_MAT));
+                SUNMatrixWrapper(nJ, ny, ndJydy.at(iytrue), CSC_MAT));
     } else {
         dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
         dwdp_ = SUNMatrixWrapper(nw, p.size(), ndwdp, CSC_MAT);
@@ -873,7 +871,7 @@ void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
     checkBufferSize(sz, nz * nplist());
 
     for (int iz = 0; iz < nz; ++iz)
-        if (z2event_[iz] - 1 == ie)
+        if (z2event_.at(iz) - 1 == ie)
             for (int ip = 0; ip < nplist(); ++ip)
                 sz.at(ip * nz + iz) = 0.0;
 }
@@ -1343,7 +1341,7 @@ void Model::fsigmay(const int it, const ExpData *edata) {
                 sigmay_.at(iytrue + iJ*nytrue) = 0;
 
             if (edata->isSetObservedData(it, iytrue))
-                checkSigmaPositivity(sigmay_[iytrue], "sigmay");
+                checkSigmaPositivity(sigmay_.at(iytrue), "sigmay");
         }
     }
 }
@@ -1368,7 +1366,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
             if (!edata->isSetObservedDataStdDev(it, iy))
                 continue;
             for (int ip = 0; ip < nplist(); ip++) {
-                dsigmaydp_[ip * ny + iy] = 0.0;
+                dsigmaydp_.at(ip * ny + iy) = 0.0;
             }
         }
     }
@@ -1398,7 +1396,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    edata.getObservedDataPtr(it));
 
             if (always_check_finite_) {
-                app->checkFinite(gsl::make_span(dJydy_[iyt].get()), "dJydy");
+                app->checkFinite(gsl::make_span(dJydy_.at(iyt).get()), "dJydy");
             }
         }
     } else {
@@ -1460,7 +1458,7 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
         if (pythonGenerated) {
             // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
             for (int iplist = 0; iplist < nplist(); ++iplist) {
-                dJydy_[iyt].multiply(
+                dJydy_.at(iyt).multiply(
                     gsl::span<realtype>(&dJydp_.at(iplist * nJ), nJ),
                     gsl::span<const realtype>(&dydp_.at(iplist * ny), ny));
             }
@@ -1498,7 +1496,7 @@ void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
 
         if (pythonGenerated) {
             for (int ix = 0; ix < nx_solver; ++ix) {
-                dJydy_[iyt].multiply(
+                dJydy_.at(iyt).multiply(
                     gsl::span<realtype>(&dJydx_.at(ix * nJ), nJ),
                     gsl::span<const realtype>(&dydx_.at(ix * ny), ny));
             }
@@ -1608,7 +1606,7 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
                     sigmaz_.at(iztrue + iJ*nztrue) = 0;
 
                 if (edata->isSetObservedEvents(nroots, iztrue))
-                    checkSigmaPositivity(sigmaz_[iztrue], "sigmaz");
+                    checkSigmaPositivity(sigmaz_.at(iztrue), "sigmaz");
             }
         }
     }

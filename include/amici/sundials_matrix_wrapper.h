@@ -139,7 +139,7 @@ class SUNMatrixWrapper {
      * @brief Get  raw data of a sparse matrix
      * @return pointer to first data entry
      */
-     realtype *data() const;
+    realtype *data() const;
     
     /**
      * @brief Get data of a sparse matrix
