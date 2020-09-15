@@ -187,7 +187,7 @@ class SUNMatrixWrapper {
     
     /**
      * @brief Set the index values of a sparse matrix
-     * @param vals rows (CSC) or columns (CSR) for data entrys
+     * @param vals rows (CSC) or columns (CSR) for data entries
      */
     void set_indexvals(const gsl::span<const sunindextype> vals);
     
@@ -207,8 +207,7 @@ class SUNMatrixWrapper {
     
     /**
      * @brief Set the index pointers of a sparse matrix
-     * @param ptrs pointer index
-     * @return starting data-indices where the columns (CSC) or rows (CSR) start
+     * @param ptrs starting data-indices where the columns (CSC) or rows (CSR) start
      */
     void set_indexptrs(const gsl::span<const sunindextype> ptrs);
 
