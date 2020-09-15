@@ -231,7 +231,7 @@ void SUNMatrixWrapper::set_data(sunindextype irow, sunindextype icol,
     SM_ELEMENT_D(matrix_, irow, icol) = data;
 }
 
-realtype *SUNMatrixWrapper::data() const {
+const realtype *SUNMatrixWrapper::data() const {
     if (!matrix_)
         return nullptr;
         
@@ -243,6 +243,11 @@ realtype *SUNMatrixWrapper::data() const {
     default:
         throw std::domain_error("Not Implemented.");
     }
+}
+
+realtype *SUNMatrixWrapper::data() {
+    return const_cast<realtype *>(
+        const_cast<const SUNMatrixWrapper *> (this)->data());
 }
 
 sunindextype SUNMatrixWrapper::get_indexval(sunindextype idx) const {
@@ -432,6 +437,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
 
     sunindextype nrows = rows();
     sunindextype ncols = columns();
+    sunindextype bcols = B.columns();
 
     check_csc(this, "sparse_multiply", "A");
     check_csc(&B, "sparse_multiply", "B");
@@ -464,7 +470,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
     auto w = std::vector<sunindextype>(nrows); // sparsity of C(:,j)
     auto x = std::vector<realtype>(nrows); // entries in C(:,j)
     
-    for (bcol = 0; bcol < B.columns(); bcol++) // k in C(i,j) = sum_k A(i,k)*B(k,j)
+    for (bcol = 0; bcol < bcols; bcol++) // k in C(i,j) = sum_k A(i,k)*B(k,j)
     {
         C.set_indexptr(bcol, nnz);              /* column j of C starts here */
         if ((B.get_indexptr(bcol+1) > B.get_indexptr(bcol))

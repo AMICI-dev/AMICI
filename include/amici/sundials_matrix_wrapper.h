@@ -139,7 +139,13 @@ class SUNMatrixWrapper {
      * @brief Get  raw data of a sparse matrix
      * @return pointer to first data entry
      */
-    realtype *data() const;
+    realtype *data();
+    
+    /**
+     * @brief Get const raw data of a sparse matrix
+     * @return pointer to first data entry
+     */
+    const realtype *data() const;
     
     /**
      * @brief Get data of a sparse matrix
@@ -350,9 +356,12 @@ class SUNMatrixWrapper {
   private:
 
     /**
-     * @brief CSC matrix to which all methods are applied
+     * @brief SUNMatrix to which all methods are applied
      */
     SUNMatrix matrix_ {nullptr};
+    /**
+     * @brief indicator whether this wrapper allocated matrix_ and is responsible for deallocation
+     */
     bool ownmat = true;
 };
 
