@@ -728,7 +728,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
                  aidx < get_indexptr(acol+1); aidx++) {
                 widx = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
                 w.at(widx)++;
-                assert(w[widx] < nrows);
+                assert(w[widx] <= nrows);
             }
         /* row pointers */
         cumsum(gsl::make_span(SM_INDEXPTRS_S(C.matrix_), C.columns()+1), w);
