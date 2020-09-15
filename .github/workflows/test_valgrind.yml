@@ -37,4 +37,12 @@ jobs:
 
     - name: C++ tests / Valgrind
       run: |
-        scripts/run-valgrind.sh
+        scripts/run-valgrind-cpp.sh
+        
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
+    
+    - name: Python tests / Valgrind
+      run: |
+        scripts/run-valgrind-py.sh
