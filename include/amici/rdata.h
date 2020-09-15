@@ -89,8 +89,7 @@ class ReturnData {
      * appropriately initialize fields
      * @param preeq simulated preequilibration problem, pass nullptr to ignore
      * @param fwd simulated forward problem, pass nullptr to ignore
-     * @param bwd simulat
-     * ed backward problem, pass nullptr to ignore
+     * @param bwd simulated backward problem, pass nullptr to ignore
      * @param posteq simulated postequilibration problem, pass nullptr to ignore
      * @param model matching model instance
      * @param solver matching solver instance
@@ -204,13 +203,13 @@ class ReturnData {
     /** number of right hand side evaluations forward problem (dimension: nt) */
     std::vector<int> numrhsevals;
 
-    /** number of right hand side evaluations backwad problem (dimension: nt) */
+    /** number of right hand side evaluations backward problem (dimension: nt) */
     std::vector<int> numrhsevalsB;
 
     /** number of error test failures forward problem (dimension: nt) */
     std::vector<int> numerrtestfails;
 
-    /** number of error test failures backwad problem (dimension: nt) */
+    /** number of error test failures backward problem (dimension: nt) */
     std::vector<int> numerrtestfailsB;
 
     /**
@@ -219,7 +218,7 @@ class ReturnData {
     std::vector<int> numnonlinsolvconvfails;
 
     /**
-     * number of linear solver convergence failures backwad problem (dimension:
+     * number of linear solver convergence failures backward problem (dimension:
      * nt) */
     std::vector<int> numnonlinsolvconvfailsB;
 
@@ -360,7 +359,7 @@ class ReturnData {
     /** number of states in the unaugmented system */
     int nxtrue{0};
 
-    /** number of solver states to be reinitilized after preequilibration */
+    /** number of solver states to be reinitialized after preequilibration */
     int nx_solver_reinit{0};
 
     /** number of observables */
@@ -384,7 +383,7 @@ class ReturnData {
     /** number of parameter for which sensitivities were requested */
     int nplist{0};
 
-    /** maximal number of occuring events (for every event type) */
+    /** maximal number of occurring events (for every event type) */
     int nmaxevent{0};
 
     /** number of considered timepoints */
@@ -668,7 +667,7 @@ class ReturnData {
                            AmiVector &xQB) const;
 
     /**
-     * @brief Updates contribution to likelihood for inital state sensitivities
+     * @brief Updates contribution to likelihood for initial state sensitivities
      * (llhS0), if no preequilibration was run or if forward sensitivities were used
      * @param model model that was used for forward/backward simulation
      * @param llhS0 contribution to likelihood for initial state sensitivities

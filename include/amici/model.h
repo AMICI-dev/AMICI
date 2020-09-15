@@ -40,7 +40,7 @@ namespace amici {
  */
 struct ModelState {
     /**
-     * Flag indicating whether a certain heaviside function should be active or
+     * Flag indicating whether a certain Heaviside function should be active or
      * not (dimension: `ne`)
      */
     std::vector<realtype> h;
@@ -215,7 +215,7 @@ class Model : public AbstractModel {
      * @brief Initialize model properties.
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
-     * @param sx Reference to state variable sensititivies
+     * @param sx Reference to state variable sensitivities
      * @param sdx Reference to time derivative of state sensitivities (DAE only)
      * @param computeSensitivities Flag indicating whether sensitivities are to
      * be computed
@@ -241,15 +241,15 @@ class Model : public AbstractModel {
 
     /**
      * @brief Initialize initial state sensitivities.
-     * @param sx Reference to state variable sensititivies
+     * @param sx Reference to state variable sensitivities
      * @param x Reference to state variables
      */
     void initializeStateSensitivities(AmiVectorArray &sx, const AmiVector &x);
 
     /**
-     * @brief Initialize the Heaviside variables `h` at the intial time `t0`.
+     * @brief Initialize the Heaviside variables `h` at the initial time `t0`.
      *
-     * Heaviside variables activate/deactivate on event occurences.
+     * Heaviside variables activate/deactivate on event occurrences.
      *
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
@@ -667,7 +667,7 @@ class Model : public AbstractModel {
         if (static_cast<int>(state.fixedParameters.size()) != nk())
             throw AmiException("Mismatch in fixed parameter size");
         if (static_cast<int>(state.h.size()) != ne)
-            throw AmiException("Mismatch in heaviside size");
+            throw AmiException("Mismatch in Heaviside size");
         if (static_cast<int>(state.total_cl.size()) != ncl())
             throw AmiException("Mismatch in conservation law size");
         if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
@@ -758,14 +758,14 @@ class Model : public AbstractModel {
     SteadyStateSensitivityMode getSteadyStateSensitivityMode() const;
 
     /**
-     * @brief Set whether initial states depending on fixed parmeters are to be
+     * @brief Set whether initial states depending on fixed parameters are to be
      * reinitialized after preequilibration and presimulation.
-     * @param flag Fixed parmeters reinitialized?
+     * @param flag Fixed parameters reinitialized?
      */
     void setReinitializeFixedParameterInitialStates(bool flag);
 
     /**
-     * @brief Get whether initial states depending on fixedParmeters are to be
+     * @brief Get whether initial states depending on fixedParameters are to be
      * reinitialized after preequilibration and presimulation.
      * @return flag `true` / `false`
      */
@@ -863,7 +863,7 @@ class Model : public AbstractModel {
      * @brief Add sensitivity of time-resolved measurement negative
      * log-likelihood \f$Jy\f$.
      *
-     * Partial derivative (to be used with adjoint senstivities).
+     * Partial derivative (to be used with adjoint sensitivities).
      *
      * @param sllh First order output buffer (dimension: `nplist`)
      * @param s2llh Second order output buffer
@@ -880,7 +880,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get state sensitivity of the negative loglikelihood \f$Jy\f$,
-     * partial derivative (to be used with adjoint senstivities).
+     * partial derivative (to be used with adjoint sensitivities).
      *
      * @param dJydx Output buffer (dimension: `nJ` x `nx_solver`, row-major)
      * @param it Timepoint index
@@ -955,7 +955,7 @@ class Model : public AbstractModel {
      * @brief Get event-resolved observable standard deviations.
      * @param sigmaz Output buffer (dimension: `nz`)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param edata Pointer to experimental data (optional, pass
      * `nullptr` to ignore)
@@ -972,7 +972,7 @@ class Model : public AbstractModel {
      *
      * @param ssigmaz Output buffer (dimension: `nz x nplist`, row-major)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param edata Pointer to experimental data (optional, pass
      * `nullptr` to ignore)
@@ -985,7 +985,7 @@ class Model : public AbstractModel {
      * @brief Add event-resolved observable negative log-likelihood.
      * @param Jz Output buffer (dimension: 1)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param x State variables
      * @param edata Experimental data
@@ -998,7 +998,7 @@ class Model : public AbstractModel {
      * @brief Add event-resolved observable negative log-likelihood.
      * @param Jrz Output buffer (dimension: 1)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param x State variables
      * @param edata Experimental data
@@ -1012,13 +1012,13 @@ class Model : public AbstractModel {
      * @brief Add sensitivity of time-resolved measurement negative
      * log-likelihood \f$Jy\f$.
      *
-     * Total derivative (to be used with forward senstivities).
+     * Total derivative (to be used with forward sensitivities).
      *
      * @param sllh First order buffer (dimension: `nplist`)
      * @param s2llh Second order buffer
      * (dimension: `(nJ-1) x nplist`, row-major)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param x State variables
      * @param sx State sensitivities
@@ -1035,13 +1035,13 @@ class Model : public AbstractModel {
      * @brief Add sensitivity of time-resolved measurement negative
      * log-likelihood \f$Jy\f$.
      *
-     * Partial derivative (to be used with adjoint senstivities).
+     * Partial derivative (to be used with adjoint sensitivities).
      *
      * @param sllh First order buffer (dimension: `nplist`)
      * @param s2llh Second order buffer
      * (dimension: `(nJ-1) x nplist`, row-major)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param x State variables
      * @param edata Experimental data
@@ -1056,11 +1056,11 @@ class Model : public AbstractModel {
     /**
      * @brief State sensitivity of the negative loglikelihood \f$Jz\f$.
      *
-     * Partial derivative (to be used with adjoint senstivities).
+     * Partial derivative (to be used with adjoint sensitivities).
      *
      * @param dJzdx Output buffer (dimension: `nJ x nx_solver`, row-major)
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Timepoint
      * @param x State variables
      * @param edata Experimental data
@@ -1144,19 +1144,19 @@ class Model : public AbstractModel {
                                          const AmiVector &xdot_old);
 
     /**
-     * @brief Update the Heaviside variables `h` on event occurences.
+     * @brief Update the Heaviside variables `h` on event occurrences.
      *
      * @param rootsfound Provides the direction of the zero-crossing, so adding
-     * it will give the right update to the heaviside variables (zero if no root
+     * it will give the right update to the Heaviside variables (zero if no root
      * was found)
      */
     void updateHeaviside(const std::vector<int> &rootsfound);
 
     /**
-     * @brief Updates the Heaviside variables `h` on event occurences in the
+     * @brief Updates the Heaviside variables `h` on event occurrences in the
      * backward problem.
      * @param rootsfound Provides the direction of the zero-crossing, so adding
-     * it will give the right update to the heaviside variables (zero if no root
+     * it will give the right update to the Heaviside variables (zero if no root
      * was found)
      */
     void updateHeavisideB(const int *rootsfound);
@@ -1302,14 +1302,14 @@ class Model : public AbstractModel {
 
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
-    
+
     /**
      * Temporary storage of `dxdotdp_full` data across functions (Python only)
      * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
      *  type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_full;
-    
+
     /**
      * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
      * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
@@ -1547,7 +1547,7 @@ class Model : public AbstractModel {
      * @brief Compute sensitivity of standard deviation of events measurements
      * w.r.t. model parameters `p`.
      * @param ie Event index
-     * @param nroots Event occurence
+     * @param nroots Event occurrence
      * @param t Current timepoint
      * @param edata Pointer to experimental data instance
      */
@@ -1739,7 +1739,7 @@ class Model : public AbstractModel {
      *
      * To be implemented by derived class if applicable.
      *
-     * @param stotal_cl Sensitivites for the total abundances of conservation
+     * @param stotal_cl Sensitivities for the total abundances of conservation
      * laws
      * @param sx_rdata State sensitivity variables with conservation laws
      * expanded
@@ -1768,7 +1768,7 @@ class Model : public AbstractModel {
 
     /** Sparse Jacobian (dimension: `amici::Model::nnz`) */
     mutable SUNMatrixWrapper J_;
-    
+
     /** Sparse Backwards Jacobian (dimension: `amici::Model::nnz`) */
     mutable SUNMatrixWrapper JB_;
 
@@ -1885,18 +1885,18 @@ class Model : public AbstractModel {
      */
     mutable std::vector<realtype> dydx_;
 
-    /** tempory storage of w data across functions (dimension: nw) */
+    /** temporary storage of w data across functions (dimension: nw) */
     mutable std::vector<realtype> w_;
 
-    /** tempory storage for flattened sx,
+    /** temporary storage for flattened sx,
      * (dimension: nx_solver x nplist, row-major)
      */
     mutable std::vector<realtype> sx_;
 
-    /** tempory storage for x_rdata (dimension: nx_rdata) */
+    /** temporary storage for x_rdata (dimension: nx_rdata) */
     mutable std::vector<realtype> x_rdata_;
 
-    /** tempory storage for sx_rdata slice (dimension: nx_rdata) */
+    /** temporary storage for sx_rdata slice (dimension: nx_rdata) */
     mutable std::vector<realtype> sx_rdata_;
 
     /** temporary storage for time-resolved observable (dimension: ny) */
@@ -1944,17 +1944,17 @@ class Model : public AbstractModel {
      * stateIsNonNegative (dimension: nx_solver) */
     mutable AmiVector x_pos_tmp_ {0};
 
-    /** orignal user-provided, possibly scaled parameter array (dimension: np)
+    /** original user-provided, possibly scaled parameter array (dimension: np)
      */
     std::vector<realtype> original_parameters_;
 
     /** index indicating to which event an event output belongs */
     std::vector<int> z2event_;
 
-    /** state initialisation (size nx_solver) */
+    /** state initialization (size nx_solver) */
     std::vector<realtype> x0data_;
 
-    /** sensitivity initialisation (size nx_rdata x nplist, row-major) */
+    /** sensitivity initialization (size nx_rdata x nplist, row-major) */
     std::vector<realtype> sx0data_;
 
     /** timepoints (size nt) */

@@ -22,7 +22,7 @@ class CVodeSolver;
  *
  * The model does not contain any data, but represents the state
  * of the model at a specific time t. The states must not always be
- * in sync, but may be updated asynchroneously.
+ * in sync, but may be updated asynchronously.
  */
 class Model_ODE : public Model {
   public:
@@ -198,7 +198,7 @@ class Model_ODE : public Model {
     /**
      * @brief Implementation of froot at the N_Vector level
      * This function provides an interface to the model specific routines for
-     * the solver implementation aswell as the AmiVector level implementation
+     * the solver implementation as well as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param root array with root function values
@@ -211,7 +211,7 @@ class Model_ODE : public Model {
     /**
      * @brief Implementation of fxdot at the N_Vector level, this function
      * provides an interface to the model specific routines for the solver
-     * implementation aswell as the AmiVector level implementation
+     * implementation as well as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
@@ -317,7 +317,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
@@ -333,7 +333,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
@@ -361,7 +361,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      **/
     virtual void froot(realtype *root, realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h);
@@ -373,7 +373,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      **/
     virtual void fxdot(realtype *xdot, realtype t, const realtype *x,
@@ -387,7 +387,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip parameter index
      * @param w vector with helper variables
      * @param dwdp derivative of w wrt p
@@ -404,7 +404,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      */
     virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
@@ -458,7 +458,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      */
     virtual void fdxdotdw(realtype *dxdotdw, realtype t, const realtype *x,

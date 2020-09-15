@@ -1,3 +1,5 @@
+.. _amici_cpp_installation:
+
 Building the C++ library
 ========================
 
@@ -20,6 +22,8 @@ Prerequisites:
 
 To use AMICI from C++, run the
 
+.. code-block:: bash
+
     ./scripts/buildSundials.sh
     ./scripts/buildSuitesparse.sh
     ./scripts/buildAmici.sh
@@ -35,9 +39,13 @@ script to build the AMICI library.
 
 The static library can then be linked from
 
+.. code-block:: bash
+
     ./build/libamici.a
 
 In CMake-based packages, amici can be linked via
+
+.. code-block:: cmake
 
     find_package(Amici)
 

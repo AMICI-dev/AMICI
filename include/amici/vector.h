@@ -164,7 +164,7 @@ class AmiVector {
     /** main data storage */
     std::vector<realtype> vec_;
 
-    /** N_Vector, will be synchronised such that it points to data in vec */
+    /** N_Vector, will be synchronized such that it points to data in vec */
     N_Vector nvec_ {nullptr};
 
     /**
@@ -305,7 +305,7 @@ class AmiVectorArray {
     std::vector<AmiVector> vec_array_;
 
     /**
-     * N_Vector array, will be synchronised such that it points to
+     * N_Vector array, will be synchronized such that it points to
      * respective elements in the vec_array
      */
     std::vector<N_Vector> nvec_array_;

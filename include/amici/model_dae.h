@@ -22,7 +22,7 @@ class IDASolver;
  *
  * The model does not contain any data, but represents the state
  * of the model at a specific time t. The states must not always be
- * in sync, but may be updated asynchroneously.
+ * in sync, but may be updated asynchronously.
  */
 class Model_DAE : public Model {
   public:
@@ -330,7 +330,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param cj scaling factor, inverse of the step size
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
@@ -348,7 +348,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param dx Vector with the derivative states
      **/
     virtual void froot(realtype *root, realtype t, const realtype *x,
@@ -362,7 +362,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
@@ -377,7 +377,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip parameter index
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
