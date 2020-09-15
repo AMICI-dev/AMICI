@@ -464,7 +464,7 @@ class Solver {
 
     /**
      * @brief sets the maximum number of solver steps for the forward problem
-     * @param maxsteps maximum number of solver steps (non-negative number)
+     * @param maxsteps maximum number of solver steps (positive number)
      */
     void setMaxSteps(long int maxsteps);
 
@@ -477,7 +477,11 @@ class Solver {
 
     /**
      * @brief sets the maximum number of solver steps for the backward problem
+     *
      * @param maxsteps maximum number of solver steps (non-negative number)
+     *
+     * @note default behaviour (100 times the value for the forward problem) can
+     * be restored by passing maxsteps=0
      */
     void setMaxStepsBackwardProblem(long int maxsteps);
 
@@ -1130,6 +1134,7 @@ class Solver {
      * problem
      *
      * @param mxsteps number of steps
+     * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
      */
     virtual void setMaxNumSteps(long int mxsteps) const = 0;
 
@@ -1139,6 +1144,7 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      * @param mxstepsB number of steps
+     * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
      */
     virtual void setMaxNumStepsB(int which, long int mxstepsB) const = 0;
 
@@ -1638,6 +1644,18 @@ class Solver {
     mutable bool force_reinit_postprocess_B_ {false};
 
   private:
+  
+    /**
+     * @brief applies total number of steps for next solver call
+     */
+    void apply_max_num_steps() const;
+    
+    /**
+     * @brief applies total number of steps for next backwards solver call
+     */
+    void apply_max_num_steps_B() const;
+  
+  
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth_ {SensitivityMethod::forward};
 
