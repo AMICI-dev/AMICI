@@ -853,8 +853,7 @@ TEST(sunmatrixwrapper, sparse_multiply)
 {
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
     auto c(a); //copy c
-    A_sparse.multiply(c, b);
-    checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
+    CHECK_THROWS(std::invalid_argument, A_sparse.multiply(c, b));
 
     A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
     c = a; //copy c
