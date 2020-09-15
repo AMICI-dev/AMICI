@@ -793,6 +793,8 @@ void SUNMatrixWrapper::to_diag(N_Vector v) const {
 
 void SUNMatrixWrapper::zero()
 {
+    if (!matrix_)
+        return;
     if(int res = SUNMatZero(matrix_))
         throw std::runtime_error("SUNMatrixWrapper::zero() failed with "
                                  + std::to_string(res) + ".");

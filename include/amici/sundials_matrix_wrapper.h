@@ -339,7 +339,7 @@ class SUNMatrixWrapper {
     void to_diag(N_Vector v) const;
 
     /**
-     * @brief Set to 0.0
+     * @brief Set to 0.0, for sparse matrices also resets indexptr/indexvals
      */
     void zero();
     
