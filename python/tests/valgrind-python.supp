@@ -395,7 +395,7 @@
 {
     lisbml
     Memcheck:Leak
-    fun:operator new
+    fun:_Znwm
     ...
     obj:_libsbml.cpython-3*m-x86_64-linux-gnu.so
 }
@@ -509,7 +509,7 @@
 {
     scipy-pypocketfft
     Memcheck:Leak
-    fun:operator new
+    fun:_nwm
     ...
     obj:pypocketfft.cpython-3*m-x86_64-linux-gnu.so
 }
@@ -529,7 +529,7 @@
 {
     LoadDynamicModuleWithSpec-new
     Memcheck:Leak
-    fun:operator-new
+    fun:_Znwm
     ...
     fun:_PyImport_LoadDynamicModuleWithSpec
 }
@@ -1053,4 +1053,31 @@
    fun:do_call_core
    fun:_PyEval_EvalFrameDefault
    fun:function_code_fastcall
+}
+
+#
+# other
+#
+
+{
+   <insert_a_suppression_name_here>   
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:PyTuple_New
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyMem_RawWcsdup
+   fun:_PyCoreConfig_Copy
+   fun:_Py_InitializeCore
+   fun:pymain_init
+   fun:pymain_main
+   fun:_Py_UnixMain
+   fun:(below main)
 }
