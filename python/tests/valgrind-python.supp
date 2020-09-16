@@ -1052,21 +1052,6 @@
    Memcheck:Param
    epoll_ctl(event)
    fun:epoll_ctl
-   fun:pyepoll_internal_ctl
-   fun:pyepoll_register
-   fun:_PyMethodDef_RawFastCallKeywords
-   fun:_PyMethodDescr_FastCallKeywords
-   fun:call_function
-   fun:_PyEval_EvalFrameDefault
-   fun:_PyEval_EvalCodeWithName
-   fun:_PyFunction_FastCallKeywords
-   fun:call_function
-   fun:_PyEval_EvalFrameDefault
-   fun:_PyEval_EvalCodeWithName
-   fun:_PyFunction_FastCallDict
-   fun:do_call_core
-   fun:_PyEval_EvalFrameDefault
-   fun:function_code_fastcall
 }
 
 #
@@ -1094,4 +1079,38 @@
    fun:pymain_main
    fun:_Py_UnixMain
    fun:(below main)
+}
+
+{
+   other
+   Memcheck:Cond
+   fun:PyUnicode_Decode
+   fun:PyUnicode_FromEncodedObject
+   obj:/usr/bin/python3.8
+   fun:_PyObject_MakeTpCall
+   fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.8
+   fun:_PyObject_MakeTpCall
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+}
+
+{
+   other
+   Memcheck:Cond
+   obj:/usr/bin/python3.8
+   obj:/usr/bin/python3.8
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+   fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.8
+   fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.8
 }
