@@ -397,7 +397,7 @@
     Memcheck:Leak
     fun:operator new
     ...
-    obj:_libsbml.cpython-36m-x86_64-linux-gnu.so
+    obj:_libsbml.cpython-3*m-x86_64-linux-gnu.so
 }
 
 #
@@ -409,7 +409,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_multiarray_umath.cpython-36m-x86_64-linux-gnu.so
+    obj:_multiarray_umath.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -417,7 +417,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_generator.cpython-36m-x86_64-linux-gnu.so
+    obj:_generator.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -425,7 +425,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:mtrand.cpython-36m-x86_64-linux-gnu.so
+    obj:mtrand.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -433,7 +433,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:bit_generator.cpython-36m-x86_64-linux-gnu.so
+    obj:bit_generator.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -441,7 +441,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_sfc64.cpython-36m-x86_64-linux-gnu.so
+    obj:_sfc64.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -449,7 +449,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_pcg64.cpython-36m-x86_64-linux-gnu.so
+    obj:_pcg64.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -457,7 +457,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_philox.cpython-36m-x86_64-linux-gnu.so
+    obj:_philox.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -465,7 +465,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_mt19937.cpython-36m-x86_64-linux-gnu.so
+    obj:_mt19937.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -473,7 +473,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_bounded_integers.cpython-36m-x86_64-linux-gnu.so
+    obj:_bounded_integers.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
@@ -481,7 +481,7 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_common.cpython-36m-x86_64-linux-gnu.so
+    obj:_common.cpython-3*m-x86_64-linux-gnu.so
 }
 
 #
@@ -493,14 +493,14 @@
     Memcheck:Leak
     fun:malloc
     ...
-    obj:_csparsetools.cpython-36m-x86_64-linux-gnu.so
+    obj:_csparsetools.cpython-3*m-x86_64-linux-gnu.so
 }
 
 {
     scipy-pypocketfft
     Memcheck:Leak
     fun:operator new
-    obj:pypocketfft.cpython-36m-x86_64-linux-gnu.so
+    obj:pypocketfft.cpython-3*m-x86_64-linux-gnu.so
 }
 
 #
