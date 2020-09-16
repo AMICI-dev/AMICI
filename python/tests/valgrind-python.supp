@@ -429,6 +429,16 @@
 }
 
 {
+   mtrand
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__Pyx_InitCachedConstants
+   fun:__pyx_pymod_exec_mtrand
+}
+
+
+{
     numpy-bit_generator
     Memcheck:Leak
     fun:malloc
@@ -508,11 +518,17 @@
 #
 
 {
-    LoadDynamicModuleWithSpec
+    LoadDynamicModuleWithSpec-malloc
     Memcheck:Leak
     fun:malloc
-    fun:_PyObject_New
     ...
+    fun:_PyImport_LoadDynamicModuleWithSpec
+}
+
+{
+    LoadDynamicModuleWithSpec-new
+    Memcheck:Leak
+    fun:operator-new
     ...
     fun:_PyImport_LoadDynamicModuleWithSpec
 }
@@ -526,7 +542,6 @@
     Memcheck:Leak
     fun:malloc
     fun:SwigPyClientData_New
-    fun:SwigPyIterator_swigregister
 }
 
 #
@@ -534,8 +549,17 @@
 #
 
 {
-    Solver_clone
+    wcstombs-__wcsnlen_avx2
     Memcheck:Cond
+    fun:__wcsnlen_avx2
+    ...
+    src:wcstombs.c
+}
+
+{
+    wcstombs-internal_utf8_loop
+    Memcheck:Cond
+    fun:internal_utf8_loop
     ...
     src:wcstombs.c
 }
