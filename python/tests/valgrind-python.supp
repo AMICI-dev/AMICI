@@ -1086,10 +1086,10 @@
    Memcheck:Cond
    fun:PyUnicode_Decode
    fun:PyUnicode_FromEncodedObject
-   obj:/usr/bin/python3.8
+   obj:/usr/bin/python3.*
    fun:_PyObject_MakeTpCall
    fun:_PyEval_EvalFrameDefault
-   obj:/usr/bin/python3.8
+   obj:/usr/bin/python3.*
    fun:_PyObject_MakeTpCall
    fun:_PyEval_EvalFrameDefault
    fun:_PyEval_EvalCodeWithName
@@ -1101,8 +1101,8 @@
 {
    other
    Memcheck:Cond
-   obj:/usr/bin/python3.8
-   obj:/usr/bin/python3.8
+   obj:/usr/bin/python3.*
+   obj:/usr/bin/python3.*
    fun:_PyEval_EvalFrameDefault
    fun:_PyEval_EvalCodeWithName
    fun:_PyFunction_Vectorcall
@@ -1110,7 +1110,7 @@
    fun:_PyEval_EvalCodeWithName
    fun:_PyFunction_Vectorcall
    fun:_PyEval_EvalFrameDefault
-   obj:/usr/bin/python3.8
+   obj:/usr/bin/python3.*
    fun:_PyEval_EvalFrameDefault
-   obj:/usr/bin/python3.8
+   obj:/usr/bin/python3.*
 }
