@@ -27,5 +27,7 @@ using namespace amici;
 %ignore writeSolution;
 %ignore writeSolutionB;
 
+%newobject amici::Solver::clone;
+
 // Process symbols in header
 %include "amici/solver.h"
