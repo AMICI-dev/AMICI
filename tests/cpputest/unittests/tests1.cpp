@@ -823,7 +823,7 @@ TEST_GROUP(sunmatrixwrapper)
         SM_ELEMENT_D(A.get(), 0, 1) = 0.03;
         SM_ELEMENT_D(A.get(), 1, 1) = 0.44;
         SM_ELEMENT_D(A.get(), 2, 1) = 0.38;
-        
+
         SM_INDEXPTRS_S(B.get())[0] = 0;
         SM_INDEXPTRS_S(B.get())[1] = 2;
         SM_INDEXPTRS_S(B.get())[2] = 4;
@@ -908,21 +908,22 @@ TEST(sunmatrixwrapper, block_transpose)
 {
     auto B_sparse = SUNMatrixWrapper(4, 4, 7, CSR_MAT);
     CHECK_THROWS(std::domain_error, B.transpose(B_sparse, 1.0, 4));
-    
+
     B_sparse = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
     B.transpose(B_sparse, -1.0, 2);
     for (int idx = 0; idx < 7; idx++) {
         CHECK_TRUE(SM_INDEXVALS_S(B.get())[idx]
                    == SM_INDEXVALS_S(B_sparse.get())[idx]);
-        if (idx == 1)
+        if (idx == 1) {
             CHECK_TRUE(SM_DATA_S(B.get())[idx]
                        == -SM_DATA_S(B_sparse.get())[3]);
-        else if (idx == 3)
+        } else if (idx == 3) {
             CHECK_TRUE(SM_DATA_S(B.get())[idx]
                        == -SM_DATA_S(B_sparse.get())[1]);
-        else
+        } else {
             CHECK_TRUE(SM_DATA_S(B.get())[idx]
                        == -SM_DATA_S(B_sparse.get())[idx]);
+        }
     }
     for (int icol = 0; icol <= 4; icol++)
         CHECK_TRUE(SM_INDEXPTRS_S(B.get())[icol]
