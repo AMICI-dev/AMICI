@@ -47,5 +47,7 @@ using namespace amici;
 %ignore get_dxdotdp;
 %ignore get_dxdotdp_full;
 
+%newobject amici::Model::clone;
+
 // Process symbols in header
 %include "amici/model.h"
