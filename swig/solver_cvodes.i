@@ -7,6 +7,7 @@ using namespace amici;
 %}
 
 %newobject amici::CVodeSolver::clone;
+%feature("notabstract") amici::CVodeSolver;
 
 // Process symbols in header
 %include "amici/solver_cvodes.h"
