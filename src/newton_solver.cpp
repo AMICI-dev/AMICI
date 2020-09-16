@@ -98,16 +98,16 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-            model_->dxdotdp_full.scatter(model_->plist(ip), -1.0, nullptr,
-                                         gsl::make_span(sx.getNVector(ip)),
-                                         0, nullptr, 0);
+            model_->get_dxdotdp_full().scatter(model_->plist(ip), -1.0, nullptr,
+                                               gsl::make_span(sx.getNVector(ip)),
+                                               0, nullptr, 0);
 
             solveLinearSystem(sx[ip]);
         }
     } else {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             for (int ix = 0; ix < model_->nx_solver; ix++)
-                sx.at(ix,ip) = -model_->dxdotdp.at(ix, ip);
+                sx.at(ix,ip) = -model_->get_dxdotdp().at(ix, ip);
 
             solveLinearSystem(sx[ip]);
         }

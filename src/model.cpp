@@ -1994,4 +1994,14 @@ N_Vector Model::computeX_pos(const_N_Vector x) {
     return x;
 }
 
+const AmiVectorArray &Model::get_dxdotdp() const{
+    assert(!pythonGenerated);
+    return dxdotdp;
+}
+
+const SUNMatrixWrapper &Model::get_dxdotdp_full() const{
+    assert(pythonGenerated);
+    return dxdotdp_full;
+}
+
 } // namespace amici

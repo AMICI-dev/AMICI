@@ -277,21 +277,6 @@ class Model_ODE : public Model {
                             const AmiVector &xB, const AmiVector &dxB,
                             const AmiVector &xBdot) override;
 
-    /**
-     * @brief Sensitivity of dx/dt wrt model parameters w
-     * @param t timepoint
-     * @param x Vector with the states
-     */
-    void fdxdotdw(realtype t, const N_Vector x);
-
-    /** Explicit sensitivity of dx/dt wrt model parameters p
-     * @param t timepoint
-     * @param x Vector with the states
-     */
-    void fdxdotdp(realtype t, const N_Vector x);
-
-    void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
-
     void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
                 const AmiVector &sx, const AmiVector &sdx,
                 AmiVector &sxdot) override;
@@ -476,6 +461,21 @@ class Model_ODE : public Model {
      * @param dxdotdw sparse matrix to which rowvals will be written
      */
     virtual void fdxdotdw_rowvals(SUNMatrixWrapper &dxdotdw);
+    
+    /**
+     * @brief Sensitivity of dx/dt wrt model parameters w
+     * @param t timepoint
+     * @param x Vector with the states
+     */
+    void fdxdotdw(realtype t, const N_Vector x);
+
+    /** Explicit sensitivity of dx/dt wrt model parameters p
+     * @param t timepoint
+     * @param x Vector with the states
+     */
+    void fdxdotdp(realtype t, const N_Vector x);
+
+    void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
 };
 } // namespace amici
 

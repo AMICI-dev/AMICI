@@ -1292,6 +1292,18 @@ class Model : public AbstractModel {
 
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;
+    
+    /**
+     * @brief getter for dxdotdp (matlab generated)
+     * @return dxdotdp
+     */
+    const AmiVectorArray &get_dxdotdp() const;
+    
+    /**
+     * @brief getter for dxdotdp (python generated)
+     * @return dxdotdp
+     */
+    const SUNMatrixWrapper &get_dxdotdp_full() const;
 
     /**
      * Flag indicating whether for
@@ -1302,49 +1314,6 @@ class Model : public AbstractModel {
 
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
-
-    /**
-     * Temporary storage of `dxdotdp_full` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_full;
-
-    /**
-     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_explicit;
-
-    /**
-     * Temporary storage of `dxdotdp_implicit` data across functions,
-     * Python-only
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     * type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_implicit;
-    
-    /**
-     * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdx_explicit;
-
-    /**
-     * Temporary storage of `dxdotdx_implicit` data across functions,
-     * Python-only
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     * type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdx_implicit;
-
-    /**
-     * Temporary storage of `dxdotdp` data across functions, Matlab only
-     * (dimension: `nplist` x `nx_solver`, row-major)
-     */
-    AmiVectorArray dxdotdp {0, 0};
 
     /** AMICI application context */
     AmiciApplication *app = &defaultContext;
@@ -1783,6 +1752,49 @@ class Model : public AbstractModel {
     
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     mutable SUNMatrixWrapper M_;
+    
+    /**
+     * Temporary storage of `dxdotdp_full` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_full;
+
+    /**
+     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_explicit;
+
+    /**
+     * Temporary storage of `dxdotdp_implicit` data across functions,
+     * Python-only
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     * type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_implicit;
+    
+    /**
+     * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdx_explicit;
+
+    /**
+     * Temporary storage of `dxdotdx_implicit` data across functions,
+     * Python-only
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     * type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdx_implicit;
+
+    /**
+     * Temporary storage of `dxdotdp` data across functions, Matlab only
+     * (dimension: `nplist` x `nx_solver`, row-major)
+     */
+    AmiVectorArray dxdotdp {0, 0};
 
     /** Current observable (dimension: `nytrue`) */
     mutable std::vector<realtype> my_;
