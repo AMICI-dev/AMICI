@@ -22,6 +22,7 @@ def test_copy_constructors(pysb_example_presimulation_module):
         for attr in dir(obj):
             if attr.startswith('__') \
                     or attr == 'this' \
+                    or attr == 'thisown' \
                     or is_callable_but_not_getter(obj, attr):
                 continue
 
