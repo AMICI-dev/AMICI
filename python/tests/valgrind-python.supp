@@ -400,12 +400,19 @@
     obj:_libsbml.cpython-3*m-x86_64-linux-gnu.so
 }
 
+{
+    lisbml
+    Memcheck:Leak
+    fun:_Znwm
+    fun:_wrap_SBase_getListOfAllElementsFromPlugins
+}
+
 #
 # numpy
 #
 
 {
-    numpy-multiarray_umath
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -413,7 +420,7 @@
 }
 
 {
-    numpy-generator
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -421,7 +428,7 @@
 }
 
 {
-    numpy-mtrand
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -439,7 +446,7 @@
 
 
 {
-    numpy-bit_generator
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -447,7 +454,7 @@
 }
 
 {
-    numpy-sfc64
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -455,7 +462,7 @@
 }
 
 {
-    numpy-pcg64
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -463,7 +470,7 @@
 }
 
 {
-    numpy-philox
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -471,7 +478,7 @@
 }
 
 {
-    numpy-mt19937
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -479,7 +486,7 @@
 }
 
 {
-    numpy-bounded_integers
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -487,7 +494,7 @@
 }
 
 {
-    numpy-common
+    numpy
     Memcheck:Leak
     fun:malloc
     ...
@@ -499,7 +506,7 @@
 #
 
 {
-    scipy-csparsetools
+    scipy
     Memcheck:Leak
     fun:malloc
     ...
@@ -507,7 +514,7 @@
 }
 
 {
-    scipy-pypocketfft
+    scipy
     Memcheck:Leak
     fun:_nwm
     ...
@@ -519,7 +526,7 @@
 #
 
 {
-    LoadDynamicModuleWithSpec-malloc
+    LoadDynamicModuleWithSpec
     Memcheck:Leak
     fun:malloc
     ...
@@ -527,7 +534,7 @@
 }
 
 {
-    LoadDynamicModuleWithSpec-new
+    LoadDynamicModuleWithSpec
     Memcheck:Leak
     fun:_Znwm
     ...
@@ -539,14 +546,14 @@
 #
 
 {
-    SwigPyClientData_New
+    swig
     Memcheck:Leak
     fun:malloc
     fun:SwigPyClientData_New
 }
 
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:_Z21SWIG_AsCharPtrAndSizeP7_objectPPcPmPi
@@ -562,7 +569,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:var_pchar_set
@@ -577,7 +584,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:_wrap_Test_var_pcharc_set
@@ -593,7 +600,7 @@
    fun:PyObject_SetAttr
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:_wrap_TestDirector_var_pcharc_set
@@ -609,7 +616,7 @@
    fun:call_method
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:_Z21SWIG_AsCharPtrAndSizeP7_objectPPcPmPi
@@ -625,7 +632,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:_wrap_Test_var_pchar_set
@@ -641,7 +648,7 @@
    fun:PyObject_SetAttr
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znam
    fun:_wrap_TestDirector_var_pchar_set
@@ -657,7 +664,7 @@
    fun:call_method
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:SWIG_Python_newvarlink
@@ -673,7 +680,7 @@
    fun:PyObject_Call
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:SWIG_Python_addvarlink
@@ -689,7 +696,7 @@
    fun:PyEval_CallObjectWithKeywords
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:PyFloat_FromDouble
@@ -705,7 +712,7 @@
    fun:PyEval_CallObjectWithKeywords
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:SWIG_Python_addvarlink
@@ -721,7 +728,7 @@
    fun:PyEval_CallObjectWithKeywords
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:realloc
    fun:_PyString_Resize
@@ -737,7 +744,7 @@
    fun:jcompile
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:_PyObject_GC_New
@@ -751,7 +758,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z21createref_signed_chara
@@ -765,7 +772,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z23createref_unsigned_charh
@@ -779,7 +786,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z14createref_charc
@@ -793,7 +800,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z24createref_unsigned_shortt
@@ -807,7 +814,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z15createref_shorts
@@ -821,7 +828,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z14createref_boolb
@@ -835,7 +842,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z19createref_TestClass9TestClass
@@ -849,7 +856,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z15createref_floatf
@@ -863,7 +870,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z22createref_unsigned_intj
@@ -877,7 +884,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z13createref_inti
@@ -891,7 +898,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z16createref_doubled
@@ -905,7 +912,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z28createref_unsigned_long_longy
@@ -919,7 +926,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z19createref_long_longx
@@ -933,7 +940,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z23createref_unsigned_longm
@@ -947,7 +954,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:_Znwm
    fun:_Z14createref_longl
@@ -961,7 +968,7 @@
    fun:__libc_start_main
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:SWIG_Python_newvarlink
@@ -977,7 +984,7 @@
    fun:PyObject_Call
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:SWIG_Python_addvarlink
@@ -993,7 +1000,7 @@
    fun:PyEval_CallObjectWithKeywords
 }
 {
-   <insert a suppression name here>
+   swig
    Memcheck:Leak
    fun:malloc
    fun:SWIG_Python_addvarlink
@@ -1060,7 +1067,7 @@
 #
 
 {
-   <insert_a_suppression_name_here>   
+   other   
    Memcheck:Leak
    fun:malloc
    fun:_PyObject_GC_Alloc
@@ -1070,7 +1077,7 @@
 }
 
 {
-   <insert_a_suppression_name_here>
+   other
    Memcheck:Leak
    fun:malloc
    fun:_PyMem_RawWcsdup
