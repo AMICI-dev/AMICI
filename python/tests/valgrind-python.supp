@@ -407,6 +407,13 @@
     fun:_wrap_SBase_getListOfAllElementsFromPlugins
 }
 
+{
+    lisbml
+    Memcheck:Leak
+    fun:_Znwm
+    fun:_wrap_SBMLReader_readSBML
+}
+
 #
 # numpy
 #
