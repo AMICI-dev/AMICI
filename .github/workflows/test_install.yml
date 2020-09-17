@@ -5,7 +5,7 @@ jobs:
   archive:
     name: Archive Install
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
@@ -28,7 +28,7 @@ jobs:
     - name: Build suitesparse
       run: |
         scripts/buildSuiteSparse.sh
-     
+
     - name: Build sundials
       run: |
         scripts/buildSundials.sh
@@ -52,7 +52,7 @@ jobs:
   sdist:
     name: sdist Install
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
@@ -74,9 +74,9 @@ jobs:
     - name: Create AMICI sdist
       run: |
         scripts/buildSdist.sh
-    
+
     - name: Install python sdist
       run: |
         pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
-                
-        
+
+

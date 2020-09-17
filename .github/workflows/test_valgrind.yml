@@ -13,7 +13,7 @@ jobs:
     name: Tests Valgrind
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master

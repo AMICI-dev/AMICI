@@ -1,11 +1,11 @@
 name: Deploy Branch
 on: [push, pull_request]
-        
+
 jobs:
   sdist:
     name: Deploy Python Source Distribution
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v1

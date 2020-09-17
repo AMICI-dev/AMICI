@@ -13,7 +13,7 @@ jobs:
     # https://github.com/marketplace/actions/publish-docker
     name: Deploy Dockerhub
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
