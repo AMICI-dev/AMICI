@@ -100,7 +100,7 @@ jobs:
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python --version | sed -E 's/.*([0-9]+\.[0-9]+)\..*/\1/')/amici/src \
+        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python3 --version | sed -E 's/.*([0-9]+\.[0-9]+)\..*/\1/')/amici/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
