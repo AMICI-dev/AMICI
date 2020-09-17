@@ -42,8 +42,8 @@
 
 #
 # Leaks (including possible leaks)
-#    Hmmm, I wonder if this masks some real leaks.  I think it does.
-#    Will need to fix that.
+#   Hmmm, I wonder if this masks some real leaks.  I think it does.
+#   Will need to fix that.
 #
 
 {
@@ -393,25 +393,27 @@
 #
 
 {
-    lisbml
-    Memcheck:Leak
-    fun:_Znwm
-    ...
-    obj:_libsbml.cpython-3*m-x86_64-linux-gnu.so
+   lisbml
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   obj:*/_libsbml.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    lisbml
-    Memcheck:Leak
-    fun:_Znwm
-    fun:_wrap_SBase_getListOfAllElementsFromPlugins
+   lisbml
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_wrap_SBase_getListOfAllElementsFromPlugins
 }
 
 {
-    lisbml
-    Memcheck:Leak
-    fun:_Znwm
-    fun:_wrap_SBMLReader_readSBML
+   lisbml
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_wrap_SBMLReader_readSBML
 }
 
 #
@@ -419,93 +421,91 @@
 #
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_multiarray_umath.cpython-3*m-x86_64-linux-gnu.so
-}
-
-{
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_generator.cpython-3*m-x86_64-linux-gnu.so
-}
-
-{
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:mtrand.cpython-3*m-x86_64-linux-gnu.so
-}
-
-{
-   mtrand
+   numpy
    Memcheck:Leak
    fun:malloc
    ...
-   fun:__Pyx_InitCachedConstants
-   fun:__pyx_pymod_exec_mtrand
-}
-
-
-{
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:bit_generator.cpython-3*m-x86_64-linux-gnu.so
+   obj:*/_multiarray_umath.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_sfc64.cpython-3*m-x86_64-linux-gnu.so
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_generator.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_pcg64.cpython-3*m-x86_64-linux-gnu.so
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/mtrand.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_philox.cpython-3*m-x86_64-linux-gnu.so
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/bit_generator.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_mt19937.cpython-3*m-x86_64-linux-gnu.so
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_sfc64.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_bounded_integers.cpython-3*m-x86_64-linux-gnu.so
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_pcg64.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    numpy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_common.cpython-3*m-x86_64-linux-gnu.so
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_philox.cpython-3?m-x86_64-linux-gnu.so
+}
+
+{
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_mt19937.cpython-3?m-x86_64-linux-gnu.so
+}
+
+{
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_bounded_integers.cpython-3?m-x86_64-linux-gnu.so
+}
+
+{
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_common.cpython-3?m-x86_64-linux-gnu.so
+}
+
+{
+   pyx_pymod
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__pyx_pymod_exec_*
 }
 
 #
@@ -513,19 +513,19 @@
 #
 
 {
-    scipy
-    Memcheck:Leak
-    fun:malloc
-    ...
-    obj:_csparsetools.cpython-3*m-x86_64-linux-gnu.so
+   _csparsetools
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_csparsetools.cpython-3?m-x86_64-linux-gnu.so
 }
 
 {
-    scipy
-    Memcheck:Leak
-    fun:_nwm
-    ...
-    obj:pypocketfft.cpython-3*m-x86_64-linux-gnu.so
+   pypocketfft
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   obj:*/pypocketfft.cpython-3?m-x86_64-linux-gnu.so
 }
 
 #
@@ -533,19 +533,19 @@
 #
 
 {
-    LoadDynamicModuleWithSpec
-    Memcheck:Leak
-    fun:malloc
-    ...
-    fun:_PyImport_LoadDynamicModuleWithSpec
+   LoadDynamicModuleWithSpec
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_PyImport_LoadDynamicModuleWithSpec
 }
 
 {
-    LoadDynamicModuleWithSpec
-    Memcheck:Leak
-    fun:_Znwm
-    ...
-    fun:_PyImport_LoadDynamicModuleWithSpec
+   LoadDynamicModuleWithSpec
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_PyImport_LoadDynamicModuleWithSpec
 }
 
 #
@@ -553,10 +553,10 @@
 #
 
 {
-    swig
-    Memcheck:Leak
-    fun:malloc
-    fun:SwigPyClientData_New
+   swig
+   Memcheck:Leak
+   fun:malloc
+   fun:SwigPyClientData_New
 }
 
 {
@@ -1028,19 +1028,19 @@
 #
 
 {
-    wcstombs-__wcsnlen_avx2
-    Memcheck:Cond
-    fun:__wcsnlen_avx2
-    ...
-    fun:wcstombs
+   wcstombs-__wcsnlen_avx2
+   Memcheck:Cond
+   fun:__wcsnlen_avx2
+   ...
+   fun:wcstombs
 }
 
 {
-    wcstombs-internal_utf8_loop
-    Memcheck:Cond
-    fun:internal_utf8_loop
-    ...
-    fun:wcstombs
+   wcstombs-internal_utf8_loop
+   Memcheck:Cond
+   fun:internal_utf8_loop
+   ...
+   fun:wcstombs
 }
 
 #
@@ -1086,10 +1086,10 @@
    Memcheck:Cond
    fun:PyUnicode_Decode
    fun:PyUnicode_FromEncodedObject
-   obj:/usr/bin/python3.*
+   obj:/usr/bin/python3.?
    fun:_PyObject_MakeTpCall
    fun:_PyEval_EvalFrameDefault
-   obj:/usr/bin/python3.*
+   obj:/usr/bin/python3.?
    fun:_PyObject_MakeTpCall
    fun:_PyEval_EvalFrameDefault
    fun:_PyEval_EvalCodeWithName
@@ -1101,8 +1101,8 @@
 {
    other
    Memcheck:Cond
-   obj:/usr/bin/python3.*
-   obj:/usr/bin/python3.*
+   obj:/usr/bin/python3.?
+   obj:/usr/bin/python3.?
    fun:_PyEval_EvalFrameDefault
    fun:_PyEval_EvalCodeWithName
    fun:_PyFunction_Vectorcall
@@ -1110,7 +1110,16 @@
    fun:_PyEval_EvalCodeWithName
    fun:_PyFunction_Vectorcall
    fun:_PyEval_EvalFrameDefault
-   obj:/usr/bin/python3.*
+   obj:/usr/bin/python3.?
    fun:_PyEval_EvalFrameDefault
-   obj:/usr/bin/python3.*
+   obj:/usr/bin/python3.?
 }
+
+{
+   other
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__pyx_pw_5numpy_6random_13bit_generator_12BitGenerator_1__init__
+}
+
