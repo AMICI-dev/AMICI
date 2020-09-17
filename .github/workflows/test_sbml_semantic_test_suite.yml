@@ -18,7 +18,7 @@ jobs:
   build:
     name: SBML Semantic Test Suite
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v1
@@ -36,7 +36,7 @@ jobs:
       with:
         name: amici-semantic-results
         path: tests/amici-semantic-results
-        
+
     - name: Codecov SBMLSuite
       uses: codecov/codecov-action@v1
       with:
