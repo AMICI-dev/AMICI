@@ -13,7 +13,7 @@ jobs:
   doxygen:
     name: Test Doxygen
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
@@ -39,7 +39,7 @@ jobs:
   sphinx:
     name: Test Sphinx
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@master

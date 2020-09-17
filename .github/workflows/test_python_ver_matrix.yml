@@ -13,11 +13,11 @@ jobs:
   build:
     name: Python Version Matrix
 
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-20.04
+
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
-    
+
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
@@ -25,12 +25,12 @@ jobs:
     steps:
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
     - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - uses: actions/checkout@v1
       with:
         fetch-depth: 20
@@ -48,7 +48,7 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-          
+
 
     # install AMICI
     - name: Build BNGL
@@ -57,7 +57,7 @@ jobs:
     - name: Install python package
       run: |
         scripts/installAmiciSource.sh
-        
+
     - name: Python tests
       run: |
         source build/venv/bin/activate \
