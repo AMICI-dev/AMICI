@@ -654,7 +654,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
 
 @log_execution_time('running smart_multiply', logger)
-def smart_multiply(x: Union[sp.MutableDenseMatrix,sp.MutableSparseMatrix],
+def smart_multiply(x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
                    y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
     """
     Wrapper around symbolic multiplication with some additional checks that
