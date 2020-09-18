@@ -30,6 +30,8 @@ namespace amici {
 
 class CVodeSolver : public Solver {
   public:
+    using Solver::Solver;
+
     ~CVodeSolver() override = default;
 
     /**

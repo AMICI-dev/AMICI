@@ -54,6 +54,8 @@ public:
    * repeating elements
    * @param ndwdp number of nonzero elements in the p derivative of the
    * repeating elements
+   * @param ndwdw number of nonzero elements in the w derivative of the
+   * repeating elements
    * @param nnz number of nonzero elements in Jacobian
    * @param ubw upper matrix bandwidth in the Jacobian
    * @param lbw lower matrix bandwidth in the Jacobian
@@ -67,18 +69,20 @@ public:
   Model_Test(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int nxtrue_solver, const int nx_solver_reinit, const int ny, 
              const int nytrue, const int nz, const int nztrue, const int ne, 
-             const int nJ, const int nw, const int ndwdx, const int ndwdp, 
-             const int ndxdotdw, const int nnz, const int ubw, const int lbw,
-             const SecondOrderMode o2mode, const std::vector<realtype> p,
-             const std::vector<realtype> k, const std::vector<int> plist,
-             const std::vector<realtype> idlist, const std::vector<int> z2event)
-      : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue, nz,
-              nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, {}, nnz, ubw, lbw, o2mode,
-              p, k, plist, idlist, z2event) {}
+             const int nJ, const int nw, const int ndwdx, const int ndwdp,
+             const int ndwdw, const int ndxdotdw, const int nnz, const int ubw,
+             const int lbw, const SecondOrderMode o2mode,
+             const std::vector<realtype> p, const std::vector<realtype> k,
+             const std::vector<int> plist, const std::vector<realtype> idlist,
+             const std::vector<int> z2event)
+      : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver,
+              nx_solver_reinit, ny, nytrue, nz, nztrue, ne, nJ, nw, ndwdx,
+              ndwdp, ndwdw, ndxdotdw, {}, nnz, ubw, lbw, o2mode, p, k, plist,
+              idlist, z2event) {}
 
   /** default constructor */
   Model_Test()
-      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
+      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
               SecondOrderMode::none, std::vector<realtype>(),
               std::vector<realtype>(), std::vector<int>(),
               std::vector<realtype>(), std::vector<int>()) {}

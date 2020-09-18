@@ -1119,7 +1119,7 @@ const AmiVector &Solver::getAdjointState(const int which,
             getDkyB(t, 0, which);
         }
     } else {
-        dky_.reset();
+        dky_.zero();
     }
     return dky_;
 }
@@ -1135,7 +1135,7 @@ const AmiVector &Solver::getAdjointDerivativeState(const int which,
             getDkyB(t, 1, which);
         }
     } else {
-        dky_.reset();
+        dky_.zero();
     }
     return dky_;
 }
@@ -1151,7 +1151,7 @@ const AmiVector &Solver::getAdjointQuadrature(const int which,
             getQuadDkyB(t, 0, which);
         }
     } else {
-        xQB_.reset();
+        xQB_.zero();
     }
     return xQB_;
 }
@@ -1166,7 +1166,7 @@ const AmiVector &Solver::getQuadrature(realtype t) const {
             getQuadDky(t, 0);
         }
     } else {
-        xQ_.reset();
+        xQ_.zero();
     }
     return xQ_;
 }

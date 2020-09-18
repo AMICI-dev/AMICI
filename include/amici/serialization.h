@@ -113,9 +113,6 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
     ar &m.nztrue;
     ar &m.ne;
     ar &m.nw;
-    ar &m.ndwdx;
-    ar &m.ndwdp;
-    ar &m.ndxdotdw;
     ar &m.nnz;
     ar &m.nJ;
     ar &m.ubw;

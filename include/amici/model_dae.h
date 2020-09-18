@@ -49,6 +49,8 @@ class Model_DAE : public Model {
      * repeating elements
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
+     * @param ndwdw number of nonzero elements in the w derivative of the
+     * repeating elements
      * @param ndxdotdw number of nonzero elements dxdotdw
      * @param ndJydy number of nonzero elements dJydy
      * @param nnz number of nonzero elements in Jacobian
@@ -66,17 +68,19 @@ class Model_DAE : public Model {
     Model_DAE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
               const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
-              const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
-              std::vector<int> ndJydy, const int nnz, const int ubw,
-              const int lbw, const SecondOrderMode o2mode,
+              const int nw, const int ndwdx, const int ndwdp, const int ndwdw,
+              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
+              const int ubw, const int lbw, const SecondOrderMode o2mode,
               std::vector<realtype> const &p, std::vector<realtype> const &k,
-              std::vector<int> const &plist, std::vector<realtype> const &idlist,
+              std::vector<int> const &plist,
+              std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
-                nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
-                pythonGenerated, ndxdotdp_explicit) {
+        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver,
+                nx_solver_reinit, ny, nytrue, nz, nztrue, ne, nJ, nw, ndwdx,
+                ndwdp, ndwdw, ndxdotdw, std::move(ndJydy), nnz, ubw, lbw,
+                o2mode, p, k, plist, idlist, z2event, pythonGenerated,
+                ndxdotdp_explicit) {
             M_ = SUNMatrixWrapper(nx_solver, nx_solver);
         }
 

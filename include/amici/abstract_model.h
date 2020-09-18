@@ -626,6 +626,20 @@ class AbstractModel {
     virtual void fdJydy(realtype *dJydy, int iy, const realtype *p,
                         const realtype *k, const realtype *y,
                         const realtype *sigmay, const realtype *my);
+                        
+    /**
+     * @brief Model-specific implementation of fdJydy colptrs
+     * @param dJydy sparse matrix to which colptrs will be written
+     * @param index ytrue index
+     */
+    virtual void fdJydy_colptrs(SUNMatrixWrapper &dJydy, int index);
+
+    /**
+     * @brief Model-specific implementation of fdJydy rowvals
+     * @param dJydy sparse matrix to which rowvals will be written
+     * @param index `ytrue` index
+     */
+    virtual void fdJydy_rowvals(SUNMatrixWrapper &dJydy, int index);
 
     /**
      * @brief Model specific implementation of fdJydsigma
@@ -732,15 +746,15 @@ class AbstractModel {
 
     /**
      * @brief Model specific implementation for dwdp, column pointers
-     * @param indexptrs column pointers
+     * @param dwdp sparse matrix to which colptrs will be written
      */
-    virtual void fdwdp_colptrs(sunindextype *indexptrs);
+    virtual void fdwdp_colptrs(SUNMatrixWrapper &dwdp);
 
     /**
      * @brief Model specific implementation for dwdp, row values
-     * @param indexvals row values
+     * @param dwdp sparse matrix to which rowvals will be written
      */
-    virtual void fdwdp_rowvals(sunindextype *indexvals);
+    virtual void fdwdp_rowvals(SUNMatrixWrapper &dwdp);
 
     /**
      * @brief Model specific sensitivity implementation of dwdp
@@ -777,15 +791,42 @@ class AbstractModel {
 
     /**
      * @brief Model specific implementation for dwdx, column pointers
-     * @param indexptrs column pointers
+     * @param dwdx sparse matrix to which colptrs will be written
      */
-    virtual void fdwdx_colptrs(sunindextype *indexptrs);
+    virtual void fdwdx_colptrs(SUNMatrixWrapper &dwdx);
 
     /**
      * @brief Model specific implementation for dwdx, row values
-     * @param indexvals row values
+     * @param dwdx sparse matrix to which rowvals will be written
      */
-    virtual void fdwdx_rowvals(sunindextype *indexvals);
+    virtual void fdwdx_rowvals(SUNMatrixWrapper &dwdx);
+    
+    /**
+     * @brief Model specific implementation of fdwdw, no w chainrule (Py)
+     * @param dwdw partial derivative w wrt w
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h heavyside vector
+     * @param w vector with helper variables
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdwdw(realtype *dwdw, realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h,
+                       const realtype *w, const realtype *tcl);
+
+    /**
+     * @brief Model specific implementation of fdwdw, colptrs part
+     * @param dwdw sparse matrix to which colptrs will be written
+     */
+    virtual void fdwdw_colptrs(SUNMatrixWrapper &dwdw);
+
+    /**
+     * @brief Model specific implementation of fdwdw, rowvals part
+     * @param dwdw sparse matrix to which rowvals will be written
+     */
+    virtual void fdwdw_rowvals(SUNMatrixWrapper &dwdw);
 };
 
 } // namespace amici

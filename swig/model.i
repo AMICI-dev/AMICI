@@ -37,12 +37,17 @@ using namespace amici;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
 %ignore initializeStates;
-%ignore dxdotdp;
-%ignore dxdotdp_implicit;
-%ignore dxdotdp_explicit;
 %ignore ModelState;
 %ignore getModelState;
 %ignore setModelState;
+%ignore fx0;
+%ignore fx0_fixedParameters;
+%ignore fsx0;
+%ignore fsx0_fixedParameters;
+%ignore get_dxdotdp;
+%ignore get_dxdotdp_full;
+
+%newobject amici::Model::clone;
 
 // Process symbols in header
 %include "amici/model.h"

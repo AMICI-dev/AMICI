@@ -119,9 +119,9 @@ class AmiVector {
     int getLength() const;
 
     /**
-     * @brief resets the Vector by filling with zero values
+     * @brief fills vector with zero values
      */
-    void reset();
+    void zero();
 
     /**
      * @brief changes the sign of data elements
@@ -260,7 +260,7 @@ class AmiVectorArray {
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    const_N_Vector getNVector(int pos) const;
+    const N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements
@@ -283,9 +283,9 @@ class AmiVectorArray {
     int getLength() const;
 
     /**
-     * @brief resets every AmiVector in AmiVectorArray
+     * @brief set every AmiVector in AmiVectorArray to zero
      */
-    void reset();
+    void zero();
 
     /**
      * @brief flattens the AmiVectorArray to a vector in row-major format

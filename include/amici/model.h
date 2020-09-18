@@ -99,6 +99,8 @@ class Model : public AbstractModel {
      * repeating elements
      * @param ndwdp Number of nonzero elements in the `p` derivative of the
      * repeating elements
+     * @param ndwdw Number of nonzero elements in the `w` derivative of the
+     * repeating elements
      * @param ndxdotdw Number of nonzero elements in the \f$w\f$ derivative of
      * \f$xdot\f$
      * @param ndJydy Number of nonzero elements in the \f$y\f$ derivative of
@@ -114,16 +116,19 @@ class Model : public AbstractModel {
      * @param z2event Mapping of event outputs to events
      * @param pythonGenerated Flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
+     * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
+     * @param w_recursion_depth Recursion depth of fw
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
-          int nJ, int nw, int ndwdx, int ndwdp, int ndxdotdw,
+          int nJ, int nw, int ndwdx, int ndwdp, int ndwdw, int ndxdotdw,
           std::vector<int> ndJydy, int nnz, int ubw, int lbw,
           amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
-          int ndxdotdp_explicit = 0);
+          int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
+          int w_recursion_depth = 0);
 
     /** Destructor. */
     ~Model() override = default;
@@ -168,6 +173,8 @@ class Model : public AbstractModel {
     using AbstractModel::fdJrzdz;
     using AbstractModel::fdJydsigma;
     using AbstractModel::fdJydy;
+    using AbstractModel::fdJydy_colptrs;
+    using AbstractModel::fdJydy_rowvals;
     using AbstractModel::fdJzdsigma;
     using AbstractModel::fdJzdz;
     using AbstractModel::fdrzdp;
@@ -180,6 +187,9 @@ class Model : public AbstractModel {
     using AbstractModel::fdwdx;
     using AbstractModel::fdwdx_colptrs;
     using AbstractModel::fdwdx_rowvals;
+    using AbstractModel::fdwdw;
+    using AbstractModel::fdwdw_colptrs;
+    using AbstractModel::fdwdw_rowvals;
     using AbstractModel::fdydp;
     using AbstractModel::fdydx;
     using AbstractModel::fdzdp;
@@ -200,7 +210,7 @@ class Model : public AbstractModel {
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
     using AbstractModel::fz;
-
+    
     /**
      * @brief Initialize model properties.
      * @param x Reference to state variables
@@ -1268,18 +1278,6 @@ class Model : public AbstractModel {
     /** Number of common expressions */
     int nw{0};
 
-    /** Number of derivatives of common expressions wrt `x` */
-    int ndwdx{0};
-
-    /** Number of derivatives of common expressions wrt `p` */
-    int ndwdp{0};
-
-    /** Number of nonzero entries in `amici::Model::dxdotdw_` */
-    int ndxdotdw{0};
-
-    /** Number of nonzero entries in `amici::Model::dJydy_` */
-    std::vector<int> ndJydy;
-
     /** Number of nonzero entries in Jacobian */
     int nnz{0};
 
@@ -1294,6 +1292,18 @@ class Model : public AbstractModel {
 
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;
+    
+    /**
+     * @brief getter for dxdotdp (matlab generated)
+     * @return dxdotdp
+     */
+    const AmiVectorArray &get_dxdotdp() const;
+    
+    /**
+     * @brief getter for dxdotdp (python generated)
+     * @return dxdotdp
+     */
+    const SUNMatrixWrapper &get_dxdotdp_full() const;
 
     /**
      * Flag indicating whether for
@@ -1304,35 +1314,6 @@ class Model : public AbstractModel {
 
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
-
-
-    /**
-     * Temporary storage of `dxdotdp_full` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_full;
-
-    /**
-     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_explicit;
-
-    /**
-     * Temporary storage of `dxdotdp_implicit` data across functions,
-     * Python-only
-     * (dimension: `nplist` x `nx_solver`, nnz: `ndxdotdp_implicit`,
-     * type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_implicit;
-
-    /**
-     * Temporary storage of `dxdotdp` data across functions, Matlab only
-     * (dimension: `nplist` x `nx_solver`, row-major)
-     */
-    AmiVectorArray dxdotdp {0, 0};
 
     /** AMICI application context */
     AmiciApplication *app = &defaultContext;
@@ -1429,20 +1410,6 @@ class Model : public AbstractModel {
      * @param edata Pointer to experimental data instance
      */
     void fJy(realtype &Jy, int it, const AmiVector &y, const ExpData &edata);
-
-    /**
-     * @brief Model-specific implementation of fdJydy colptrs
-     * @param indexptrs column pointers
-     * @param index ytrue index
-     */
-    virtual void fdJydy_colptrs(sunindextype *indexptrs, int index);
-
-    /**
-     * @brief Fill model-specific row vals for sparse `fdJydy`.
-     * @param indexptrs Row val pointers
-     * @param index `ytrue` index
-     */
-    virtual void fdJydy_rowvals(sunindextype *indexptrs, int index);
 
     /**
      * @brief Compute partial derivative of time-resolved measurement negative
@@ -1669,6 +1636,13 @@ class Model : public AbstractModel {
      * @param x Array with the states
      */
     void fdwdx(realtype t, const realtype *x);
+    
+    /**
+     * @brief Compute self derivative for recurring terms in xdot.
+     * @param t Timepoint
+     * @param x Array with the states
+     */
+    void fdwdw(realtype t, const realtype *x);
 
     /**
      * @brief Compute fx_rdata.
@@ -1770,14 +1744,57 @@ class Model : public AbstractModel {
     /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
     mutable SUNMatrixWrapper dxdotdw_;
 
-    /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
-    mutable SUNMatrixWrapper dwdp_;
-
     /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
     mutable SUNMatrixWrapper dwdx_;
-
+    
+    /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
+    mutable SUNMatrixWrapper dwdp_;
+    
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     mutable SUNMatrixWrapper M_;
+    
+    /**
+     * Temporary storage of `dxdotdp_full` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_full;
+
+    /**
+     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_explicit;
+
+    /**
+     * Temporary storage of `dxdotdp_implicit` data across functions,
+     * Python-only
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     * type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdp_implicit;
+    
+    /**
+     * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
+     * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
+     *  type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdx_explicit;
+
+    /**
+     * Temporary storage of `dxdotdx_implicit` data across functions,
+     * Python-only
+     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
+     * type `CSC_MAT`)
+     */
+    mutable SUNMatrixWrapper dxdotdx_implicit;
+
+    /**
+     * Temporary storage of `dxdotdp` data across functions, Matlab only
+     * (dimension: `nplist` x `nx_solver`, row-major)
+     */
+    AmiVectorArray dxdotdp {0, 0};
 
     /** Current observable (dimension: `nytrue`) */
     mutable std::vector<realtype> my_;
@@ -1975,6 +1992,19 @@ class Model : public AbstractModel {
     /** Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness */
     bool always_check_finite_ {false};
+
+  private:
+    /** Sparse dwdp implicit temporary storage (dimension: `ndwdp`) */
+    mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
+
+    /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
+    mutable SUNMatrixWrapper dwdw_;
+    
+    /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
+    mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
+    
+    /** Recursion */
+    int w_recursion_depth_ {0};
 };
 
 bool operator==(const Model &a, const Model &b);

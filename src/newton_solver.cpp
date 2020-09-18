@@ -98,16 +98,16 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-            model_->dxdotdp_full.scatter(model_->plist(ip), -1.0, nullptr,
-                                         gsl::make_span(sx.getNVector(ip)),
-                                         0, nullptr, 0);
+            model_->get_dxdotdp_full().scatter(model_->plist(ip), -1.0, nullptr,
+                                               gsl::make_span(sx.getNVector(ip)),
+                                               0, nullptr, 0);
 
             solveLinearSystem(sx[ip]);
         }
     } else {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             for (int ix = 0; ix < model_->nx_solver; ix++)
-                sx.at(ix,ip) = -model_->dxdotdp.at(ix, ip);
+                sx.at(ix,ip) = -model_->get_dxdotdp().at(ix, ip);
 
             solveLinearSystem(sx[ip]);
         }
@@ -296,10 +296,10 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
     xdot_.minus();
 
     // Initialize for linear solve
-    ns_p_.reset();
-    ns_v_.reset();
-    ns_delta.reset();
-    ns_tmp_.reset();
+    ns_p_.zero();
+    ns_v_.zero();
+    ns_delta.zero();
+    ns_tmp_.zero();
     double rho = 1.0;
     double omega = 1.0;
     double alpha = 1.0;
@@ -323,7 +323,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         N_VLinearSum(1.0, ns_r_.getNVector(), beta, ns_p_.getNVector(), ns_p_.getNVector());
 
         // ns_v = J * ns_p
-        ns_v_.reset();
+        ns_v_.zero();
         ns_J_.multiply(ns_v_.getNVector(), ns_p_.getNVector());
         N_VDiv(ns_v_.getNVector(), ns_Jdiag_.getNVector(), ns_v_.getNVector());
 
@@ -337,7 +337,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         N_VLinearSum(1.0, ns_r_.getNVector(), -alpha, ns_v_.getNVector(), ns_s_.getNVector());
 
         // ns_t = J * ns_s
-        ns_t_.reset();
+        ns_t_.zero();
         ns_J_.multiply(ns_t_.getNVector(), ns_s_.getNVector());
         N_VDiv(ns_t_.getNVector(), ns_Jdiag_.getNVector(), ns_t_.getNVector());
 

@@ -11,6 +11,7 @@
 #include <regex>
 #include <typeinfo>
 #include <utility>
+#include <assert.h>
 
 namespace amici {
 
@@ -98,28 +99,26 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int nxtrue_solver, const int nx_solver_reinit, const int ny,
              const int nytrue, const int nz, const int nztrue, const int ne,
              const int nJ, const int nw, const int ndwdx, const int ndwdp,
-             const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
-             const int ubw, const int lbw, SecondOrderMode o2mode,
-             const std::vector<realtype> &p, std::vector<realtype> k,
-             const std::vector<int> &plist, std::vector<realtype> idlist,
-             std::vector<int> z2event, const bool pythonGenerated,
-             const int ndxdotdp_explicit)
+             const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
+             const int nnz, const int ubw, const int lbw,
+             SecondOrderMode o2mode, const std::vector<realtype> &p,
+             std::vector<realtype> k, const std::vector<int> &plist,
+             std::vector<realtype> idlist, std::vector<int> z2event,
+             const bool pythonGenerated, const int ndxdotdp_explicit,
+             const int ndxdotdx_explicit, const int w_recursion_depth)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
-      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx),
-      ndwdp(ndwdp), ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz),
+      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), nnz(nnz),
       nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
       o2mode(o2mode), idlist(std::move(idlist)),
       J_(nx_solver, nx_solver, nnz, CSC_MAT),
       JB_(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw_(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dwdp_(nw, static_cast<int>(p.size()), ndwdp, CSC_MAT),
-      dwdx_(nw, nx_solver, ndwdx, CSC_MAT),
       w_(nw), x_rdata_(nx_rdata, 0.0), sx_rdata_(nx_rdata, 0.0),
       x_pos_tmp_(nx_solver), original_parameters_(p), z2event_(std::move(z2event)),
       state_is_non_negative_(nx_solver, false),
-      pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
-
+      pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)),
+      w_recursion_depth_(w_recursion_depth) {
     state_.h.resize(ne, 0.0);
     state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
     state_.stotal_cl.resize((nx_rdata - nx_solver) * p.size(), 0.0);
@@ -131,26 +130,44 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
        if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices
      */
     if (pythonGenerated) {
-        dxdotdp_explicit =
-            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndxdotdp_explicit, CSC_MAT);
-        dxdotdp_implicit =
-            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndwdp + ndxdotdw, CSC_MAT); // guess size
-        dxdotdp_full =
-            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             0, CSC_MAT); // dynamically allocate on first call
 
-        // also dJydy depends on the way of wrapping
-        if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
-            throw std::runtime_error(
-                "Number of elements in ndJydy is not equal "
-                " nytrue.");
+        dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
+        // size dynamically adapted for dwdx_ and dwdp_
+        dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
+        dwdp_ = SUNMatrixWrapper(nw, p.size(), 0, CSC_MAT);
+
+        for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
+            /* for the first element we know the exact size, while for all others we
+               guess the size*/
+            dwdp_hierarchical_.emplace_back(
+                SUNMatrixWrapper(nw, p.size(), irec * ndwdw + ndwdp, CSC_MAT));
+            dwdx_hierarchical_.emplace_back(
+                SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT));
+        }
+        assert(static_cast<int>(dwdp_hierarchical_.size()) ==
+               w_recursion_depth_ + 1);
+        assert(static_cast<int>(dwdx_hierarchical_.size()) ==
+               w_recursion_depth_ + 1);
+
+        dxdotdp_explicit = SUNMatrixWrapper(nx_solver, p.size(),
+                                            ndxdotdp_explicit, CSC_MAT);
+        // guess size, will be dynamically reallocated
+        dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(),
+                                            ndwdp + ndxdotdw, CSC_MAT);
+        dxdotdx_explicit = SUNMatrixWrapper(nx_solver, nx_solver,
+                                            ndxdotdx_explicit, CSC_MAT);
+        // guess size, will be dynamically reallocated
+        dxdotdx_implicit = SUNMatrixWrapper(nx_solver, nx_solver,
+                                            ndwdx + ndxdotdw, CSC_MAT);
+        // dynamically allocate on first call
+        dxdotdp_full = SUNMatrixWrapper(nx_solver, p.size(), 0, CSC_MAT);
 
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
             dJydy_.emplace_back(
-                SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
+                SUNMatrixWrapper(nJ, ny, ndJydy.at(iytrue), CSC_MAT));
     } else {
+        dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
+        dwdp_ = SUNMatrixWrapper(nw, p.size(), ndwdp, CSC_MAT);
         dJydy_matlab_ = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
     requireSensitivitiesForAllParameters();
@@ -165,8 +182,7 @@ bool operator==(const Model &a, const Model &b) {
            (a.nxtrue_solver == b.nxtrue_solver) &&
            (a.nx_solver_reinit == b.nx_solver_reinit) && (a.ny == b.ny) &&
            (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
-           (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
-           (a.ndwdp == b.ndwdp) && (a.ndxdotdw == b.ndxdotdw) &&
+           (a.ne == b.ne) && (a.nw == b.nw) &&
            (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
            (a.lbw == b.lbw) && (a.o2mode == b.o2mode) &&
            (a.z2event_ == b.z2event_) && (a.idlist == b.idlist) &&
@@ -199,10 +215,10 @@ void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
 
 void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
                         bool posteq) const {
-    xB.reset();
-    dxB.reset();
+    xB.zero();
+    dxB.zero();
     if (!posteq)
-        xQB.reset();
+        xQB.zero();
 }
 
 void Model::initializeStates(AmiVector &x) {
@@ -855,7 +871,7 @@ void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
     checkBufferSize(sz, nz * nplist());
 
     for (int iz = 0; iz < nz; ++iz)
-        if (z2event_[iz] - 1 == ie)
+        if (z2event_.at(iz) - 1 == ie)
             for (int ip = 0; ip < nplist(); ++ip)
                 sz.at(ip * nz + iz) = 0.0;
 }
@@ -1265,9 +1281,17 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
 
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
-        fdydp(&dydp_.at(ip * ny), t, x.data(), state_.unscaledParameters.data(),
-              state_.fixedParameters.data(), state_.h.data(), plist(ip), w_.data(),
-              dwdp_.data());
+        if (pythonGenerated) {
+            fdydp(&dydp_.at(ip * ny), t, x.data(),
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data(), state_.h.data(), plist(ip),
+                  w_.data(), state_.stotal_cl.data());
+        } else {
+            fdydp(&dydp_.at(ip * ny), t, x.data(),
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data(), state_.h.data(), plist(ip),
+                  w_.data(), dwdp_.data());
+        }
 
     if (always_check_finite_) {
         app->checkFinite(dydp_, "dydp");
@@ -1314,7 +1338,7 @@ void Model::fsigmay(const int it, const ExpData *edata) {
                 sigmay_.at(iytrue + iJ*nytrue) = 0;
 
             if (edata->isSetObservedData(it, iytrue))
-                checkSigmaPositivity(sigmay_[iytrue], "sigmay");
+                checkSigmaPositivity(sigmay_.at(iytrue), "sigmay");
         }
     }
 }
@@ -1339,7 +1363,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
             if (!edata->isSetObservedDataStdDev(it, iy))
                 continue;
             for (int ip = 0; ip < nplist(); ip++) {
-                dsigmaydp_[ip * ny + iy] = 0.0;
+                dsigmaydp_.at(ip * ny + iy) = 0.0;
             }
         }
     }
@@ -1349,39 +1373,31 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
     }
 }
 
-void Model::fdJydy_colptrs(sunindextype * /*indexptrs*/, int /*index*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__);
-}
-
-void Model::fdJydy_rowvals(sunindextype * /*indexptrs*/, int /*index*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__);
-}
-
 void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
+    if (!ny)
+        return;
 
     fy(edata.getTimepoint(it), x);
     fsigmay(it, &edata);
 
     if (pythonGenerated) {
         for (int iyt = 0; iyt < nytrue; iyt++) {
-            dJydy_[iyt].zero();
-            fdJydy_colptrs(dJydy_[iyt].indexptrs(), iyt);
-            fdJydy_rowvals(dJydy_[iyt].indexvals(), iyt);
+            if (!dJydy_.at(iyt).capacity())
+                continue;
+            dJydy_.at(iyt).zero();
+            fdJydy_colptrs(dJydy_.at(iyt), iyt);
+            fdJydy_rowvals(dJydy_.at(iyt), iyt);
 
             if (!edata.isSetObservedData(it, iyt))
                 continue;
 
             // get dJydy slice (ny) for current timepoint and observable
-            fdJydy(dJydy_[iyt].data(), iyt, state_.unscaledParameters.data(),
+            fdJydy(dJydy_.at(iyt).data(), iyt, state_.unscaledParameters.data(),
                    state_.fixedParameters.data(), y_.data(), sigmay_.data(),
                    edata.getObservedDataPtr(it));
 
             if (always_check_finite_) {
-                app->checkFinite(gsl::make_span(dJydy_[iyt].get()), "dJydy");
+                app->checkFinite(gsl::make_span(dJydy_.at(iyt).get()), "dJydy");
             }
         }
     } else {
@@ -1402,6 +1418,8 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
 }
 
 void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData &edata) {
+    if (!ny)
+        return;
 
     dJydsigma_.assign(nytrue * ny * nJ, 0.0);
 
@@ -1427,6 +1445,8 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
     // dydp          nplist * ny
     // dJydp         nplist x nJ
     // dJydsigma
+    if (!ny)
+        return;
 
     dJydp_.assign(nJ * nplist(), 0.0);
 
@@ -1443,7 +1463,7 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
         if (pythonGenerated) {
             // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
             for (int iplist = 0; iplist < nplist(); ++iplist) {
-                dJydy_[iyt].multiply(
+                dJydy_.at(iyt).multiply(
                     gsl::span<realtype>(&dJydp_.at(iplist * nJ), nJ),
                     gsl::span<const realtype>(&dydp_.at(iplist * ny), ny));
             }
@@ -1462,6 +1482,8 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
 }
 
 void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
+    if (!ny)
+        return;
 
     dJydx_.assign(nJ * nx_solver, 0.0);
 
@@ -1481,7 +1503,7 @@ void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
 
         if (pythonGenerated) {
             for (int ix = 0; ix < nx_solver; ++ix) {
-                dJydy_[iyt].multiply(
+                dJydy_.at(iyt).multiply(
                     gsl::span<realtype>(&dJydx_.at(ix * nJ), nJ),
                     gsl::span<const realtype>(&dydx_.at(ix * ny), ny));
             }
@@ -1507,6 +1529,8 @@ void Model::fz(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     dzdp_.assign(nz * nplist(), 0.0);
 
@@ -1521,6 +1545,8 @@ void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     dzdx_.assign(nz * nx_solver, 0.0);
 
@@ -1541,6 +1567,8 @@ void Model::frz(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     drzdp_.assign(nz * nplist(), 0.0);
 
@@ -1555,6 +1583,8 @@ void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
 }
 
 void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
+    if (!nz)
+        return;
 
     drzdx_.assign(nz * nx_solver, 0.0);
 
@@ -1591,7 +1621,7 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
                     sigmaz_.at(iztrue + iJ*nztrue) = 0;
 
                 if (edata->isSetObservedEvents(nroots, iztrue))
-                    checkSigmaPositivity(sigmaz_[iztrue], "sigmaz");
+                    checkSigmaPositivity(sigmaz_.at(iztrue), "sigmaz");
             }
         }
     }
@@ -1599,6 +1629,8 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
 
 void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
                        const ExpData *edata) {
+    if (!nz)
+        return;
 
     dsigmazdp_.assign(nz * nplist(), 0.0);
 
@@ -1627,6 +1659,8 @@ void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
 
 void Model::fdJzdz(const int ie, const int nroots, const realtype t,
                    const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJzdz_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1649,6 +1683,8 @@ void Model::fdJzdz(const int ie, const int nroots, const realtype t,
 
 void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
                        const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJzdsigma_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1671,6 +1707,8 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
 
 void Model::fdJzdp(const int ie, const int nroots, realtype t,
                    const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
     // dJzdz         nJ x nz x nztrue
     // dJzdsigma     nJ x nz x nztrue
     // dzdp          nz x nplist()
@@ -1723,6 +1761,8 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
     // dJzdz         nJ x nz        x nztrue
     // dzdx          nz x nx_solver
     // dJzdx         nJ x nx_solver x nmaxevent
+    if(!nz)
+        return;
 
     dJzdx_.assign(nJ * nx_solver, 0.0);
 
@@ -1753,6 +1793,8 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
 
 void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
                     const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJrzdz_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1774,6 +1816,8 @@ void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
 
 void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
                         const AmiVector &x, const ExpData &edata) {
+    if (!nz)
+        return;
 
     dJrzdsigma_.assign(nztrue * nz * nJ, 0.0);
 
@@ -1804,21 +1848,33 @@ void Model::fw(const realtype t, const realtype *x) {
 }
 
 void Model::fdwdp(const realtype t, const realtype *x) {
+    if (!nw)
+        return;
+        
     fw(t, x);
+    dwdp_.zero();
     if (pythonGenerated) {
-        dwdp_.reset();
-
-        // avoid bad memory access when slicing
-        if (!nw)
+        if (!dwdp_hierarchical_.at(0).capacity())
             return;
+        fdwdw(t,x);
+        dwdp_hierarchical_.at(0).zero();
+        fdwdp_colptrs(dwdp_hierarchical_.at(0));
+        fdwdp_rowvals(dwdp_hierarchical_.at(0));
+        fdwdp(dwdp_hierarchical_.at(0).data(), t, x,
+              state_.unscaledParameters.data(), state_.fixedParameters.data(),
+              state_.h.data(), w_.data(), state_.total_cl.data(),
+              state_.stotal_cl.data());
 
-        fdwdp_colptrs(dwdp_.indexptrs());
-        fdwdp_rowvals(dwdp_.indexvals());
-        fdwdp(dwdp_.data(), t, x, state_.unscaledParameters.data(),
-              state_.fixedParameters.data(), state_.h.data(), w_.data(),
-              state_.total_cl.data(), state_.stotal_cl.data());
+        for (int irecursion = 1; irecursion <= w_recursion_depth_;
+             irecursion++) {
+            dwdw_.sparse_multiply(dwdp_hierarchical_.at(irecursion),
+                                  dwdp_hierarchical_.at(irecursion - 1));
+        }
+        dwdp_.sparse_sum(dwdp_hierarchical_);
 
     } else {
+        if (!dwdp_.capacity())
+            return;
         // matlab generated
         fdwdp(dwdp_.data(), t, x, state_.unscaledParameters.data(),
               state_.fixedParameters.data(), state_.h.data(), w_.data(),
@@ -1831,18 +1887,53 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {
-    fw(t, x);
-    dwdx_.reset();
+    if (!nw)
+        return;
 
-    fdwdx_colptrs(dwdx_.indexptrs());
-    fdwdx_rowvals(dwdx_.indexvals());
-    fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
-          state_.fixedParameters.data(), state_.h.data(), w_.data(),
-          state_.total_cl.data());
+    fw(t, x);
+    
+    dwdx_.zero();
+    if (pythonGenerated) {
+        if (!dwdx_hierarchical_.at(0).capacity())
+                return;
+        fdwdw(t,x);
+        dwdx_hierarchical_.at(0).zero();
+        fdwdx_colptrs(dwdx_hierarchical_.at(0));
+        fdwdx_rowvals(dwdx_hierarchical_.at(0));
+        fdwdx(dwdx_hierarchical_.at(0).data(), t, x,
+              state_.unscaledParameters.data(), state_.fixedParameters.data(),
+              state_.h.data(), w_.data(), state_.total_cl.data());
+
+        for (int irecursion = 1; irecursion <= w_recursion_depth_;
+             irecursion++) {
+            dwdw_.sparse_multiply(dwdx_hierarchical_.at(irecursion),
+                                  dwdx_hierarchical_.at(irecursion - 1));
+        }
+        dwdx_.sparse_sum(dwdx_hierarchical_);
+
+    } else {
+        if (!dwdx_.capacity())
+            return;
+        dwdx_.zero();
+        fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
+              state_.fixedParameters.data(), state_.h.data(), w_.data(),
+              state_.total_cl.data());
+    }
 
     if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdx_.get()), "dwdx");
     }
+}
+
+void Model::fdwdw(const realtype t, const realtype *x) {
+    if (!nw || !dwdw_.capacity())
+        return;
+    dwdw_.zero();
+    fdwdw_colptrs(dwdw_);
+    fdwdw_rowvals(dwdw_);
+    fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
+          state_.fixedParameters.data(), state_.h.data(), w_.data(),
+          state_.total_cl.data());
 }
 
 void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
@@ -1901,6 +1992,16 @@ N_Vector Model::computeX_pos(const_N_Vector x) {
     }
 
     return x;
+}
+
+const AmiVectorArray &Model::get_dxdotdp() const{
+    assert(!pythonGenerated);
+    return dxdotdp;
+}
+
+const SUNMatrixWrapper &Model::get_dxdotdp_full() const{
+    assert(pythonGenerated);
+    return dxdotdp_full;
 }
 
 } // namespace amici

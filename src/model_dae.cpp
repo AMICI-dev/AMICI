@@ -11,7 +11,8 @@ void Model_DAE::fJ(const realtype t, const realtype cj, const AmiVector &x,
 void Model_DAE::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector /*xdot*/, SUNMatrix J) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.to_dense(J);
+    auto JDense = SUNMatrixWrapper(J);
+    J_.to_dense(JDense);
 }
 
 void Model_DAE::fJSparse(const realtype t, const realtype cj,
@@ -104,7 +105,7 @@ void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
 }
 
 void Model_DAE::fM(realtype t, const N_Vector x) {
-    SUNMatZero(M_.get());
+    M_.zero();
     auto x_pos = computeX_pos(x);
     fM(M_.data(), t, N_VGetArrayPointer(x_pos), state_.unscaledParameters.data(),
        state_.fixedParameters.data());
@@ -146,7 +147,8 @@ void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
 void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                     N_Vector /*xB*/, N_Vector /*dxB*/, SUNMatrix JB) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.transpose(JB, -1.0, nxtrue_solver);
+    auto JBDense = SUNMatrixWrapper(JB);
+    J_.transpose(JBDense, -1.0, nxtrue_solver);
 }
 
 void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
@@ -159,7 +161,8 @@ void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
 void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                           N_Vector /*xB*/, N_Vector /*dxB*/, SUNMatrix JB) {
     fJSparse(t, cj, x, dx, J_.get());
-    J_.transpose(JB, -1.0, nxtrue_solver);
+    auto JSparseB = SUNMatrixWrapper(JB);
+    J_.transpose(JSparseB, -1.0, nxtrue_solver);
 }
 
 void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,

@@ -232,6 +232,7 @@ def generate_swig_interface_files(swig_outdir: str = None,
         '-python',
         '-py3',
         '-threads',
+        '-Wall',
         f'-Iamici{os.sep}swig',
         f'-Iamici{os.sep}include',
     ]

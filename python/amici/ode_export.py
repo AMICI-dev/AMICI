@@ -9,6 +9,7 @@ directly call any function from this module as this will be done by
 :func:`amici.petab_import.import_model`
 """
 import sympy as sp
+import numpy as np
 import re
 import shutil
 import subprocess
@@ -105,6 +106,13 @@ functions = {
             'const realtype *w, const realtype *tcl)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
+    'dwdw': {
+        'signature':
+            '(realtype *dwdw, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *tcl)',
+        'flags': ['assume_pow_positivity', 'sparse']
+    },
     'dxdotdw': {
         'signature':
             '(realtype *dxdotdw, const realtype t, const realtype *x, '
@@ -112,12 +120,18 @@ functions = {
             'const realtype *w)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
+    'dxdotdx_explicit': {
+        'signature':
+            '(realtype *dxdotdx_explicit, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *w)',
+        'flags': ['assume_pow_positivity', 'sparse']
+    },
     'dxdotdp_explicit': {
         'signature':
             '(realtype *dxdotdp_explicit, const realtype t, '
-            'const realtype *x, const realtype *p, '
-            'const realtype *k, const realtype *h, '
-            'const realtype *w)',
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *w)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
     'dydx': {
@@ -130,7 +144,7 @@ functions = {
         'signature':
             '(realtype *dydp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ip, const realtype *w, const realtype *dwdp)',
+            'const int ip, const realtype *w, const realtype *dtcldp)',
     },
     'dsigmaydp': {
         'signature':
@@ -775,6 +789,9 @@ class ODEModel:
     :ivar _x0_fixedParameters_idx:
         Index list of subset of states for which x0_fixedParameters was
         computed
+
+    :ivar _w_recursion_depth:
+        recursion depth in w, quantified as nilpotency of dwdw
     """
 
     def __init__(self, simplify: Optional[Callable] = sp.powsimp):
@@ -848,6 +865,7 @@ class ODEModel:
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
+        self._w_recursion_depth: int = 0
 
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter',
@@ -1558,6 +1576,10 @@ class ODEModel:
             # force symbols
             self._eqs[name] = self.sym(name)
 
+        elif name == 'dxdotdx_explicit':
+            # force symbols
+            self._derivative('xdot', 'x', name=name)
+
         elif name == 'dxdotdp_explicit':
             # force symbols
             self._derivative('xdot', 'p', name=name)
@@ -1609,7 +1631,10 @@ class ODEModel:
         # automatically detect chainrule
         chainvars = []
         ignore_chainrule = {
-            ('xdot', 'p'): 'w'  # has generic implementation in c++ code
+            ('xdot', 'p'): 'w',  # has generic implementation in c++ code
+            ('xdot', 'x'): 'w',  # has generic implementation in c++ code
+            ('w', 'w'): 'tcl',   # dtcldw = 0
+            ('w', 'x'): 'tcl',   # dtcldx = 0
         }
         for cv in ['w', 'tcl']:
             if var_in_function_signature(eq, cv) \
@@ -1654,33 +1679,25 @@ class ODEModel:
 
         self._eqs[name] = derivative
 
-        # w can be self-dependent and we need to perform all chain
-        # derivatives of dwdw. This can be implemented as infinite sum
-        # sum{k=0} dwdw^k * dwd{var}.
-        # As long as w has no cyclic dependencies (guaranteed by bngl and
-        # sbml (?)), dwdw must be nilpotent, so we can just compute powers
-        # of dwdw until we obtain a zero matrix.
-        if eq == 'w' and var != 'w':  # avoid infinite loops
-            dwdw = self.eq('dwdw')
+        # compute recursion depth based on nilpotency of jacobian. computing
+        # nilpotency can be done more efficiently on numerical sparsity pattern
+        if name == 'dwdw':
+            nonzeros = np.asarray(
+                derivative.applyfunc(lambda x: int(not x.is_zero))
+            ).astype(np.int64)
+            if max(nonzeros.shape):
+                while nonzeros.max():
+                    nonzeros = nonzeros.dot(nonzeros)
+                    self._w_recursion_depth += 1
 
-            # splitting this in two smart_multiply is empirically faster for
-            # certain models, I here assuming this is due to sizes of w and
-            # p, which was not empircally tested. If things seem overly
-            # slow, either variant here should be tested.
-            if self.num_expr() < self.num_par():
-                # h(k) = dwdw^k (k=1)
-                h = dwdw
-                while not smart_is_zero_matrix(h):
-                    self._eqs[name] += smart_multiply(h, derivative)
-                    # h(k+1) = dwdw^(k+1) = dwdw*dwdw^(k)
-                    h = smart_multiply(dwdw, h)
-            else:
-                # h(k) = dwdw^k*dwd{var} (k=1)
-                h = smart_multiply(dwdw, derivative)
-                while not smart_is_zero_matrix(h):
-                    self._eqs[name] += h
-                    # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
-                    h = smart_multiply(dwdw, h)
+        if name == 'dydw':
+            dwdw = self.eq('dwdw')
+            # h(k) = d{eq}dw*dwdw^k* (k=1)
+            h = smart_multiply(derivative, dwdw)
+            while not smart_is_zero_matrix(h):
+                self._eqs[name] += h
+                # h(k+1) = d{eq}dw*dwdw^(k+1) = h(k)*dwdw
+                h = smart_multiply(h, dwdw)
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
@@ -1760,7 +1777,12 @@ class ODEModel:
             the variable equations otherwise.
 
         """
-        if var_in_function_signature(name, varname):
+        # dwdx and dwdp will be dynamically computed and their ordering
+        # within a column may differ from the initialization of symbols here,
+        # so those are not safe to use. Not removing them from signature as
+        # this would break backwards compatibility.
+        if var_in_function_signature(name, varname) \
+                and varname not in ['dwdx', 'dwdp']:
             return self.sym(varname)
         else:
             return self.eq(varname)
@@ -2397,19 +2419,22 @@ class ODEExporter:
 
         if indextype == 'colptrs':
             values = self.model.colptrs(function)
+            setter = 'indexptrs'
         elif indextype == 'rowvals':
             values = self.model.rowvals(function)
+            setter = 'indexvals'
         else:
             raise ValueError('Invalid value for indextype, must be colptrs or '
                              f'rowvals: {indextype}')
 
         # function signature
         if function in multiobs_functions:
-            signature = f'(sunindextype *{indextype}, int index)'
+            signature = f'(SUNMatrixWrapper &{function}, int index)'
         else:
-            signature = f'(sunindextype *{indextype})'
+            signature = f'(SUNMatrixWrapper &{function})'
 
         lines = [
+            '#include "amici/sundials_matrix_wrapper.h"',
             '#include "sundials/sundials_types.h"',
             '',
             '#include <array>',
@@ -2425,7 +2450,7 @@ class ODEExporter:
             static_array_name = f"{function}_{indextype}_{self.model_name}_"
             if function in multiobs_functions:
                 # list of index vectors
-                lines.append("static constexpr std::array<std::array<int, "
+                lines.append("static constexpr std::array<std::array<sunindextype, "
                              f"{len(values[0])}>, {len(values)}> "
                              f"{static_array_name} = {{{{")
                 lines.extend(['    {'
@@ -2434,7 +2459,7 @@ class ODEExporter:
                 lines.append("}};")
             else:
                 # single index vector
-                lines.append("static constexpr std::array<int, "
+                lines.append("static constexpr std::array<sunindextype, "
                              f"{len(values)}> {static_array_name} = {{")
                 lines.append('    ' + ', '.join(map(str, values)))
                 lines.append("};")
@@ -2446,12 +2471,9 @@ class ODEExporter:
 
         if len(values):
             if function in multiobs_functions:
-                lines.append(f"    std::copy({static_array_name}[index]"
-                             f".begin(), {static_array_name}[index].end(), "
-                             f"{indextype});")
+                lines.append(f"    {function}.set_{setter}(gsl::make_span({static_array_name}[index]));")
             else:
-                lines.append(f"    std::copy({static_array_name}.begin(), "
-                             f"{static_array_name}.end(), {indextype});")
+                lines.append(f"    {function}.set_{setter}(gsl::make_span({static_array_name}));")
 
         lines.extend([
             '}'
@@ -2594,13 +2616,15 @@ class ODEExporter:
             'NW': str(len(self.model.sym('w'))),
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
+            'NDWDW': str(len(self.model.sparsesym('dwdw'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
                 'dxdotdp_explicit'))),
+            'NDXDOTDX_EXPLICIT': str(len(self.model.sparsesym(
+                'dxdotdx_explicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
-            'NNZ': str(len(self.model.sparsesym('JSparse'))),
             'UBW': str(self.model.num_states_solver()),
             'LBW': str(self.model.num_states_solver()),
             'NP': str(self.model.num_par()),
@@ -2629,11 +2653,13 @@ class ODEExporter:
                 'false',
             'AMICI_VERSION_STRING':  __version__,
             'AMICI_COMMIT_STRING': __commit__,
+            'W_RECURSION_DEPTH': self.model._w_recursion_depth,
         }
 
         for fun in [
-            'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp_explicit', 'JSparse', 'dJydy'
+            'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
+            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit', 'JSparse',
+            'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
@@ -2900,7 +2926,7 @@ def get_sunindex_extern_declaration(fun: str, name: str,
     index_arg = ', int index' if fun in multiobs_functions else ''
     return \
         f'extern void {fun}_{indextype}_{name}' \
-        f'(sunindextype *{indextype}{index_arg});'
+        f'(SUNMatrixWrapper &{indextype}{index_arg});'
 
 
 def get_model_override_implementation(fun: str, name: str) -> str:
@@ -2961,7 +2987,7 @@ def get_sunindex_override_implementation(fun: str, name: str,
             fun=fun,
             indextype=indextype,
             name=name,
-            signature=f'(sunindextype *{indextype}{index_arg})',
+            signature=f'(SUNMatrixWrapper &{indextype}{index_arg})',
             eval_signature=f'({indextype}{index_arg_eval})',
         )
 

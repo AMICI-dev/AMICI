@@ -49,6 +49,8 @@ class Model_ODE : public Model {
      * repeating elements
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
+     * @param ndwdw number of nonzero elements in the w derivative of the
+     * repeating elements
      * @param ndxdotdw number of nonzero elements dxdotdw
      * @param ndJydy number of nonzero elements dJydy
      * @param nnz number of nonzero elements in Jacobian
@@ -62,22 +64,26 @@ class Model_ODE : public Model {
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
+     * @param w_recursion_depth Recursion depth of fw
      */
     Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
               const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
-              const int nw, const int ndwdx, const int ndwdp,
-              const int ndxdotdw, std::vector<int> ndJydy,
-              const int nnz, const int ubw, const int lbw,
-              const SecondOrderMode o2mode, std::vector<realtype> const &p,
-              std::vector<realtype> const &k, std::vector<int> const &plist,
+              const int nw, const int ndwdx, const int ndwdp, const int ndwdw,
+              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
+              const int ubw, const int lbw, const SecondOrderMode o2mode,
+              std::vector<realtype> const &p, std::vector<realtype> const &k,
+              std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
-              const int ndxdotdp_explicit=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
-                nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
-                pythonGenerated, ndxdotdp_explicit) {}
+              const int ndxdotdp_explicit=0, const int ndxdotdx_explicit=0,
+              const int w_recursion_depth=0)
+        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver,
+                nx_solver_reinit, ny, nytrue, nz, nztrue, ne, nJ, nw, ndwdx,
+                ndwdp, ndwdw, ndxdotdw, std::move(ndJydy), nnz, ubw, lbw,
+                o2mode, p, k, plist, idlist, z2event, pythonGenerated,
+                ndxdotdp_explicit, ndxdotdx_explicit, w_recursion_depth) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
@@ -271,21 +277,6 @@ class Model_ODE : public Model {
                             const AmiVector &xB, const AmiVector &dxB,
                             const AmiVector &xBdot) override;
 
-    /**
-     * @brief Sensitivity of dx/dt wrt model parameters w
-     * @param t timepoint
-     * @param x Vector with the states
-     */
-    void fdxdotdw(realtype t, const N_Vector x);
-
-    /** Explicit sensitivity of dx/dt wrt model parameters p
-     * @param t timepoint
-     * @param x Vector with the states
-     */
-    void fdxdotdp(realtype t, const N_Vector x);
-
-    void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
-
     void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
                 const AmiVector &sx, const AmiVector &sdx,
                 AmiVector &sxdot) override;
@@ -338,15 +329,15 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation for fJSparse, column pointers
-     * @param indexptrs column pointers
+     * @param JSparse sparse matrix to which colptrs will be written
      **/
-    virtual void fJSparse_colptrs(sunindextype *indexptrs);
+    virtual void fJSparse_colptrs(SUNMatrixWrapper &JSparse);
 
     /**
      * @brief Model specific implementation for fJSparse, row values
-     * @param indexvals row values
+     * @param JSparse sparse matrix to which rowvals will be written
      **/
-    virtual void fJSparse_rowvals(sunindextype *indexvals);
+    virtual void fJSparse_rowvals(SUNMatrixWrapper &JSparse);
 
     /**
      * @brief Model specific implementation for froot
@@ -408,15 +399,42 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, colptrs part
-     * @param indexptrs column pointers
+     * @param dxdotdp sparse matrix to which colptrs will be written
      */
-    virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
+    virtual void fdxdotdp_explicit_colptrs(SUNMatrixWrapper &dxdotdp);
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, rowvals part
-     * @param indexvals row values
+     * @param dxdotdp sparse matrix to which rowvals will be written
      */
-    virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
+    virtual void fdxdotdp_explicit_rowvals(SUNMatrixWrapper &dxdotdp);
+    
+    /**
+     * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule (Py)
+     * @param dxdotdx_explicit partial derivative xdot wrt x
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h heavyside vector
+     * @param w vector with helper variables
+     */
+    virtual void fdxdotdx_explicit(realtype *dxdotdx_explicit, realtype t,
+                                   const realtype *x, const realtype *p,
+                                   const realtype *k, const realtype *h,
+                                   const realtype *w);
+
+    /**
+     * @brief Model specific implementation of fdxdotdx_explicit, colptrs part
+     * @param dxdotdx sparse matrix to which colptrs will be written
+     */
+    virtual void fdxdotdx_explicit_colptrs(SUNMatrixWrapper &dxdotdx);
+
+    /**
+     * @brief Model specific implementation of fdxdotdx_explicit, rowvals part
+     * @param dxdotdx sparse matrix to which rowvals will be written
+     */
+    virtual void fdxdotdx_explicit_rowvals(SUNMatrixWrapper &dxdotdx);
 
     /**
      * @brief Model specific implementation of fdxdotdw, data part
@@ -434,15 +452,30 @@ class Model_ODE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdw, colptrs part
-     * @param indexptrs column pointers
+     * @param dxdotdw sparse matrix to which colptrs will be written
      */
-    virtual void fdxdotdw_colptrs(sunindextype *indexptrs);
+    virtual void fdxdotdw_colptrs(SUNMatrixWrapper &dxdotdw);
 
     /**
      * @brief Model specific implementation of fdxdotdw, rowvals part
-     * @param indexvals row values
+     * @param dxdotdw sparse matrix to which rowvals will be written
      */
-    virtual void fdxdotdw_rowvals(sunindextype *indexvals);
+    virtual void fdxdotdw_rowvals(SUNMatrixWrapper &dxdotdw);
+    
+    /**
+     * @brief Sensitivity of dx/dt wrt model parameters w
+     * @param t timepoint
+     * @param x Vector with the states
+     */
+    void fdxdotdw(realtype t, const N_Vector x);
+
+    /** Explicit sensitivity of dx/dt wrt model parameters p
+     * @param t timepoint
+     * @param x Vector with the states
+     */
+    void fdxdotdp(realtype t, const N_Vector x);
+
+    void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
 };
 } // namespace amici
 
