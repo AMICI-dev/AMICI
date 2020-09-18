@@ -670,11 +670,8 @@ def smart_multiply(x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
     if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) or \
             smart_is_zero_matrix(y):
         return sp.zeros(x.shape[0], y.shape[1])
-
-    result = x.dot(y)
-    if isinstance(result, list):  # for sparse matrix
-        result = sp.MutableDenseMatrix(result)
-    return result
+    
+    return x.multiply(y)
 
 
 def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
