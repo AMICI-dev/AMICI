@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - master
+      - speedup
 
   pull_request:
     branches:

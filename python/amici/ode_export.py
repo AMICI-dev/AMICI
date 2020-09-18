@@ -19,6 +19,7 @@ import copy
 import numbers
 import logging
 import itertools
+from sympy.core.parameters import evaluate
 
 try:
     import pysb
@@ -66,13 +67,6 @@ MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
 # sparse format. sparse format means that the function will only return an
 # array of nonzero values and not a full matrix.
 functions = {
-    'JSparse': {
-        'signature':
-            '(realtype *JSparse, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *dwdx)',
-        'flags': ['assume_pow_positivity', 'sparse']
-    },
     'Jy': {
         'signature':
             '(realtype *Jy, const int iy, const realtype *p, '
@@ -660,7 +654,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
 
 @log_execution_time('running smart_multiply', logger)
-def smart_multiply(x: sp.MutableDenseMatrix,
+def smart_multiply(x: Union[sp.MutableDenseMatrix,sp.MutableSparseMatrix],
                    y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
     """
     Wrapper around symbolic multiplication with some additional checks that
@@ -676,10 +670,15 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) or \
             smart_is_zero_matrix(y):
         return sp.zeros(x.shape[0], y.shape[1])
-    return x * y
+
+    result = x.dot(y)
+    if isinstance(result, list):  # for sparse matrix
+        result = sp.MutableDenseMatrix(result)
+    return result
 
 
-def smart_is_zero_matrix(x: sp.MutableDenseMatrix) -> bool:
+def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
+                                  sp.MutableSparseMatrix]) -> bool:
     """A faster implementation of sympy's is_zero_matrix
 
     Avoids repeated indexer type checks and double iteration to distinguish
@@ -688,7 +687,12 @@ def smart_is_zero_matrix(x: sp.MutableDenseMatrix) -> bool:
     :param x: Matrix to check
     """
 
-    return not any(xx.is_zero is not True for xx in x._mat)
+    if isinstance(x, sp.MutableDenseMatrix):
+        nonzero = any(xx.is_zero is not True for xx in x._mat)
+    else:
+        nonzero = x.nnz() > 0
+
+    return not nonzero
 
 
 class ODEModel:
@@ -849,11 +853,6 @@ class ODEModel:
         }
         self._total_derivative_prototypes: \
             Dict[str, Dict[str, Union[str, List[str]]]] = {
-                'JSparse': {
-                    'eq': 'xdot',
-                    'chainvars': ['w'],
-                    'var': 'x',
-                },
                 'sx_rdata': {
                     'eq': 'x_rdata',
                     'chainvars': ['x'],
@@ -867,6 +866,7 @@ class ODEModel:
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
 
+    @log_execution_time('importing SbmlImporter', logger)
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter',
                                   compute_cls: Optional[bool] = True) -> None:
@@ -951,6 +951,10 @@ class ODEModel:
             else:
                 v = si.compartment_volume[list(si.compartment_symbols).index(
                     si.species_compartment[x_index])]
+
+                if v == 1.0:
+                    return x_Sw
+
                 for w_index, flux in enumerate(fluxes):
                     if si.stoichiometric_matrix[x_index, w_index] != 0:
                         dxdotdw_updates.append((x_index, w_index,
@@ -958,8 +962,9 @@ class ODEModel:
                 return x_Sw/v
 
         # create dynamics without respecting conservation laws first
-        Sw = smart_multiply(MutableDenseMatrix(si.stoichiometric_matrix),
-                            MutableDenseMatrix(fluxes))
+        with evaluate(False):
+            Sw = smart_multiply(si.stoichiometric_matrix,
+                                MutableDenseMatrix(fluxes))
         symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
             lambda x_Sw: dx_dt(x_index, x_Sw))
             for x_index in range(Sw.rows)])
@@ -1444,9 +1449,6 @@ class ODEModel:
         if match_deriv:
             rownames = self.sym(match_deriv.group(1))
             colnames = self.sym(match_deriv.group(2))
-        elif name == 'JSparse':
-            rownames = self.sym('xdot')
-            colnames = self.sym('x')
 
         if name == 'dJydy':
             # One entry per y-slice
@@ -1690,7 +1692,7 @@ class ODEModel:
                     nonzeros = nonzeros.dot(nonzeros)
                     self._w_recursion_depth += 1
 
-        if name == 'dydw':
+        if name == 'dydw' and not smart_is_zero_matrix(derivative):
             dwdw = self.eq('dwdw')
             # h(k) = d{eq}dw*dwdw^k* (k=1)
             h = smart_multiply(derivative, dwdw)
@@ -2658,7 +2660,7 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
-            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit', 'JSparse',
+            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit',
             'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \

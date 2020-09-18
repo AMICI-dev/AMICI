@@ -909,6 +909,17 @@ class SbmlImporter:
             return specie in self.constant_species or \
                    specie in self.boundary_condition_species
 
+        math_subs = []
+        for r in reactions:
+            elements = list(r.getListOfReactants()) \
+                       + list(r.getListOfProducts())
+            for element in elements:
+                if element.isSetId() & element.isSetStoichiometry():
+                    math_subs.append((
+                        sp.sympify(element.getId(), locals=self.local_symbols),
+                        sp.sympify(element.getStoichiometry())
+                    ))
+
         for reaction_index, reaction in enumerate(reactions):
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                       (reaction.getListOfProducts(), 1.0)]:
@@ -948,16 +959,8 @@ class SbmlImporter:
                                     'unsupported expression!')
             sym_math = _parse_special_functions(sym_math)
             _check_unsupported_functions(sym_math, 'KineticLaw')
-            for r in reactions:
-                elements = list(r.getListOfReactants()) \
-                           + list(r.getListOfProducts())
-                for element in elements:
-                    if element.isSetId() & element.isSetStoichiometry():
-                        sym_math = sym_math.subs(
-                            sp.sympify(element.getId(),
-                                       locals=self.local_symbols),
-                            sp.sympify(element.getStoichiometry())
-                        )
+
+            sym_math.subs(math_subs)
 
             self.flux_vector[reaction_index] = sym_math
             if any([
