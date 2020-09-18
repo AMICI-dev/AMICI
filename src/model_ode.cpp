@@ -295,7 +295,7 @@ void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector /*xB*/,
                           N_Vector /*xBdot*/, SUNMatrix JB) {
     fJSparse(t, x, J_.get());
     auto JSparseB = SUNMatrixWrapper(JB);
-    J_.transpose(JSparseB, 1.0, nxtrue_solver);
+    J_.transpose(JSparseB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
