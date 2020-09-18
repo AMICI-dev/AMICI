@@ -1398,6 +1398,8 @@ class ODEModel:
             if var not in self._syms:
                 self._generate_symbol(var, from_sbml=from_sbml)
 
+        self._generate_symbol('x', from_sbml=from_sbml)
+
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
         """
         Counts how often a state appears in the time derivative of
