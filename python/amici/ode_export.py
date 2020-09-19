@@ -19,7 +19,6 @@ import copy
 import numbers
 import logging
 import itertools
-from sympy.core.parameters import evaluate
 
 try:
     import pysb
@@ -959,9 +958,8 @@ class ODEModel:
                 return dxdt / v
 
         # create dynamics without respecting conservation laws first
-        with evaluate(False):
-            dxdt = smart_multiply(si.stoichiometric_matrix,
-                                  MutableDenseMatrix(fluxes))
+        dxdt = smart_multiply(si.stoichiometric_matrix,
+                              MutableDenseMatrix(fluxes))
         symbols['species']['dt'] = sp.Matrix([
             dx_dt(x_index, dxdt[x_index])
             for x_index in range(dxdt.rows)
