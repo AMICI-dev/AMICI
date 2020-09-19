@@ -352,13 +352,15 @@ class SUNMatrixWrapper {
      * @brief Get matrix id
      * @return SUNMatrix_ID
      */
-    SUNMatrix_ID matrix_id() const {return SUNMatGetID(matrix_);};
+    SUNMatrix_ID matrix_id() const {return id_;};
   private:
 
     /**
      * @brief SUNMatrix to which all methods are applied
      */
     SUNMatrix matrix_ {nullptr};
+    
+    SUNMatrix_ID id_ {SUNMATRIX_CUSTOM};
     /**
      * @brief indicator whether this wrapper allocated matrix_ and is responsible for deallocation
      */

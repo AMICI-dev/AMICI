@@ -23,13 +23,18 @@ def main():
 
         pp = petab.Problem.from_yaml('FroehlichKes2018/PEtab/FroehlichKes2018.yaml')
         petab.lint_problem(pp)
+        os.chdir(os.path.dirname(os.path.abspath(os.curdir)))
         import_model(model_name='CS_Signalling_ERBB_RAS_AKT_petab',
                      sbml_model=pp.sbml_model,
                      condition_table=pp.condition_df,
                      observable_table=pp.observable_df,
                      measurement_table=pp.measurement_df,
-                     compile=True,
+                     compile=False,
                      verbose=True)
+        os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT_petab'))
+
+        subprocess.run(['python', 'setup.py', 'install'])
+
         return
     else:
         import CS_Signalling_ERBB_RAS_AKT_petab as model_module
@@ -76,11 +81,15 @@ def main():
     else:
         print("Unknown argument:", arg)
         sys.exit(1)
-    rdata = amici.runAmiciSimulation(model, solver, edata)
+    while True:
+        rdata = amici.runAmiciSimulation(model, solver, edata)
 
     diagnostics = ['numsteps', 'numstepsB', 'numrhsevals', 'numrhsevalsB',
                    'numerrtestfails', 'numerrtestfailsB',
-                   'numnonlinsolvconvfails', 'numnonlinsolvconvfailsB']
+                   'numnonlinsolvconvfails', 'numnonlinsolvconvfailsB',
+                   'preeq_cpu_time', 'preeq_cpu_timeB',
+                   'cpu_time', 'cpu_timeB',
+                   'posteq_cpu_time', 'posteq_cpu_timeB']
     for d in diagnostics:
         print(d, rdata[d])
     assert rdata['status'] == amici.AMICI_SUCCESS
