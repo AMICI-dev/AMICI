@@ -20,8 +20,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N,
 
     if (NNZ && M && N && !matrix_)
         throw std::bad_alloc();
-        
-    id_ = SUNMatGetID(matrix_);
+    
+    
+    id_ = SUNMATRIX_SPARSE;
         
     assert(num_nonzeros() == 0);
     assert(NNZ == capacity());
@@ -34,7 +35,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
     if (M && N && !matrix_)
         throw std::bad_alloc();
         
-    id_ = SUNMatGetID(matrix_);
+    id_ = SUNMATRIX_DENSE;
         
     assert(M == rows());
     assert(N == columns());
@@ -46,7 +47,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype ubw,
     if (M && !matrix_)
         throw std::bad_alloc();
     
-    id_ = SUNMatGetID(matrix_);
+    id_ = SUNMATRIX_BAND;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
@@ -69,11 +70,14 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
     if (!matrix_)
         throw std::bad_alloc();
     
-    id_ = A.id_;
+    id_ = SUNMATRIX_SPARSE;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix_(mat),
-    id_(SUNMatGetID(mat)), ownmat(false) {}
+    ownmat(false) {
+    if (matrix_)
+        id_ = SUNMatGetID(matrix_);
+    }
 
 SUNMatrixWrapper::~SUNMatrixWrapper() {
     if (matrix_ && ownmat)
@@ -92,8 +96,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
     SUNMatCopy(other.matrix_, matrix_);
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) : id_(other.id_) {
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) {
     std::swap(matrix_, other.matrix_);
+    id_ = other.id_;
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {

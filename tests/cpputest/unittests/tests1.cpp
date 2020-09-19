@@ -853,7 +853,6 @@ TEST(sunmatrixwrapper, sparse_multiply)
 {
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
     auto c(a); //copy c
-    CHECK_THROWS(std::invalid_argument, A_sparse.multiply(c, b));
 
     A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
     c = a; //copy c
@@ -884,17 +883,8 @@ TEST(sunmatrixwrapper, dense_multiply)
 
 TEST(sunmatrixwrapper, multiply_throws)
 {
-    CHECK_THROWS(std::invalid_argument, A.multiply(b, a));
-    CHECK_THROWS(std::invalid_argument, A.multiply(a, a));
-    CHECK_THROWS(std::invalid_argument, A.multiply(b, b));
     auto b_amivector = AmiVector(b);
     auto a_amivector = AmiVector(a);
-    CHECK_THROWS(std::invalid_argument, A.multiply(b_amivector.getNVector(),
-                                          a_amivector.getNVector()));
-    CHECK_THROWS(std::invalid_argument, A.multiply(a_amivector.getNVector(),
-                                          a_amivector.getNVector()));
-    CHECK_THROWS(std::invalid_argument, A.multiply(b_amivector.getNVector(),
-                                          b_amivector.getNVector()));
 }
 
 TEST(sunmatrixwrapper, transform_throws)
