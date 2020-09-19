@@ -139,24 +139,41 @@ void SUNMatrixWrapper::realloc() {
 }
 
 sunindextype SUNMatrixWrapper::rows() const {
+    assert(!matrix_ ||
+           (matrix_id() == SUNMATRIX_SPARSE ?
+            num_rows_ == SM_ROWS_S(matrix_) :
+            num_rows_ == SM_ROWS_D(matrix_)));
     return num_rows_;
 }
 
 sunindextype SUNMatrixWrapper::columns() const {
+    assert(!matrix_ ||
+           (matrix_id() == SUNMATRIX_SPARSE ?
+            num_columns_ == SM_COLUMNS_S(matrix_) :
+            num_columns_ == SM_COLUMNS_D(matrix_)));
     return num_columns_;
 }
 
 sunindextype SUNMatrixWrapper::num_indexptrs() const {
+    assert(matrix_id() == SUNMATRIX_SPARSE);
+    assert(!matrix_ ||
+           (sparsetype() == CSC_MAT ?
+            num_indexptrs_ == num_columns_ :
+            num_indexptrs_ == num_rows_));
+    assert(!matrix_ || num_indexptrs_ == SM_NP_S(matrix_));
     return num_indexptrs_;
 }
 
 sunindextype SUNMatrixWrapper::capacity() const {
     assert(matrix_id() == SUNMATRIX_SPARSE);
+    assert(!matrix_ || capacity_ == SM_NNZ_S(matrix_));
     return capacity_;
 }
 
 sunindextype SUNMatrixWrapper::num_nonzeros() const {
     assert(matrix_id() == SUNMATRIX_SPARSE);
+    assert(!matrix_ ||
+           num_nonzeros_ == SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)]);
     return num_nonzeros_;
 }
 
@@ -164,6 +181,7 @@ realtype SUNMatrixWrapper::get_data(sunindextype idx) const{
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(idx < capacity());
+    assert(SM_DATA_S(matrix_) == data_);
     return data_[idx];
 };
 
@@ -180,7 +198,8 @@ void SUNMatrixWrapper::set_data(sunindextype idx, realtype data) {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(idx < capacity());
-    SM_DATA_S(matrix_)[idx] = data;
+    assert(SM_DATA_S(matrix_) == data_);
+    data_[idx] = data;
 }
 
 void SUNMatrixWrapper::set_data(sunindextype irow, sunindextype icol,
@@ -204,6 +223,7 @@ sunindextype SUNMatrixWrapper::get_indexval(sunindextype idx) const {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(idx < capacity());
+    assert(indexvals_ == SM_INDEXVALS_S(matrix_));
     return indexvals_[idx];
 }
 
@@ -211,6 +231,7 @@ void SUNMatrixWrapper::set_indexval(sunindextype idx, sunindextype val) {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(idx < capacity());
+    assert(indexvals_ == SM_INDEXVALS_S(matrix_));
     indexvals_[idx] = val;
 }
 
@@ -218,6 +239,7 @@ void SUNMatrixWrapper::set_indexvals(const gsl::span<const sunindextype> vals) {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(static_cast<sunindextype>(vals.size()) == capacity());
+    assert(indexvals_ == SM_INDEXVALS_S(matrix_));
     std::copy_n(vals.begin(), capacity(), indexvals_);
 }
 
@@ -225,6 +247,7 @@ sunindextype SUNMatrixWrapper::get_indexptr(sunindextype ptr_idx) const {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(ptr_idx <= num_indexptrs());
+    assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
     return indexptrs_[ptr_idx];
 }
 
@@ -233,6 +256,7 @@ void SUNMatrixWrapper::set_indexptr(sunindextype ptr_idx, sunindextype ptr) {
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(ptr_idx <= num_indexptrs());
     assert(ptr <= capacity());
+    assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
     indexptrs_[ptr_idx] = ptr;
     if (ptr_idx == num_indexptrs())
         num_nonzeros_ = ptr;
@@ -242,6 +266,7 @@ void SUNMatrixWrapper::set_indexptrs(const gsl::span<const sunindextype> ptrs) {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
     assert(static_cast<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
+    assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
     std::copy_n(ptrs.begin(), num_indexptrs() + 1, indexptrs_);
     num_nonzeros_ = indexptrs_[num_indexptrs()];
 }
@@ -403,6 +428,8 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
             C.set_data(cidx, x.at(C.get_indexval(cidx))); // copy data to C
     }
     C.set_indexptr(C.columns(), nnz);
+    C.num_nonzeros_ = nnz;
+    
     /*
      * do not reallocate here since we rather keep a matrix that is a bit
      * bigger than repeatedly resizing this matrix.
@@ -462,6 +489,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
         }
     }
     set_indexptr(columns(), nnz);
+    num_nonzeros_ = nnz;
     if (capacity() == A.num_nonzeros() + B.num_nonzeros())
         realloc(); // resize if necessary, will have correct size in future calls
 }
@@ -514,6 +542,7 @@ void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
         }
     }
     set_indexptr(columns(), nnz);
+    num_nonzeros_ = nnz;
     if (capacity() == max_total_nonzero)
         realloc(); // resize if necessary
 }
@@ -585,11 +614,7 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     if (C.matrix_id() == SUNMATRIX_SPARSE) {
         if (!C.capacity() && num_nonzeros())
             C.reallocate(num_nonzeros());
-        if (num_nonzeros() > C.capacity())
-            std::invalid_argument("C must be allocated such that it can hold "
-                                  "all nonzero values from A. Requires "
-                                  + std::to_string(num_nonzeros()) + " was "
-                                  + std::to_string(C.capacity()) + ".");
+        assert(C.capacity() >= num_nonzeros());
     }
     
     assert(columns() % blocksize == 0);
