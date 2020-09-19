@@ -655,7 +655,8 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
 @log_execution_time('running smart_multiply', logger)
 def smart_multiply(x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
-                   y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+                   y: sp.MutableDenseMatrix
+                   ) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
     """
     Wrapper around symbolic multiplication with some additional checks that
     reduce computation time for large matrices
@@ -670,7 +671,6 @@ def smart_multiply(x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
     if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) or \
             smart_is_zero_matrix(y):
         return sp.zeros(x.shape[0], y.shape[1])
-    
     return x.multiply(y)
 
 
@@ -895,7 +895,7 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def dx_dt(x_index, x_Sw):
+        def dx_dt(x_index, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
@@ -906,7 +906,7 @@ class ODEModel:
                 The index (not identifier) of the species in the variables
                 (generated in "sbml_import.py") that describe the model.
 
-            :param x_Sw:
+            :param dxdt:
                 The element-wise product of the row in the stoichiometric
                 matrix that corresponds to the species (row x_index) and the
                 flux (kinetic laws) vector. Ignored in the case of rate rules.
@@ -933,7 +933,7 @@ class ODEModel:
             v_name = si.species_compartment[x_index]
             if v_name in si.compartment_rate_rules:
                 dv_dt = si.compartment_rate_rules[v_name]
-                xdot = (x_Sw - dv_dt*x_id)/v_name
+                xdot = (dxdt - dv_dt * x_id) / v_name
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
@@ -941,7 +941,7 @@ class ODEModel:
                 v = si.compartment_assignment_rules[v_name]
                 dv_dt = v.diff(si.amici_time_symbol)
                 dv_dx = v.diff(x_id)
-                xdot = (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+                xdot = (dxdt - dv_dt * x_id) / (dv_dx * x_id + v)
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
@@ -950,21 +950,22 @@ class ODEModel:
                     si.species_compartment[x_index])]
 
                 if v == 1.0:
-                    return x_Sw
+                    return dxdt
 
                 for w_index, flux in enumerate(fluxes):
                     if si.stoichiometric_matrix[x_index, w_index] != 0:
                         dxdotdw_updates.append((x_index, w_index,
                             si.stoichiometric_matrix[x_index, w_index] / v))
-                return x_Sw/v
+                return dxdt / v
 
         # create dynamics without respecting conservation laws first
         with evaluate(False):
-            Sw = smart_multiply(si.stoichiometric_matrix,
-                                MutableDenseMatrix(fluxes))
-        symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
-            lambda x_Sw: dx_dt(x_index, x_Sw))
-            for x_index in range(Sw.rows)])
+            dxdt = smart_multiply(si.stoichiometric_matrix,
+                                  MutableDenseMatrix(fluxes))
+        symbols['species']['dt'] = sp.Matrix([
+            dx_dt(x_index, dxdt[x_index])
+            for x_index in range(dxdt.rows)
+        ])
 
         # create all basic components of the ODE model and add them.
         for symbol in [s for s in symbols if s != 'my']:
