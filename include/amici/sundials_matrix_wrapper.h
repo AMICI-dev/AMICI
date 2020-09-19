@@ -107,6 +107,9 @@ class SUNMatrixWrapper {
     /**
      * @brief Get the wrapped SUNMatrix
      * @return raw SunMatrix object
+     * @note Even though the returned SUNMatrix is const qualified, the values member pointers point to
+     * will not be const-qualified. This is a shortcoming in the underlying C library, which we cannot address
+     * and it is not intended that any of those values are modified externally.
      */
     const SUNMatrix get() const;
 
@@ -130,7 +133,13 @@ class SUNMatrixWrapper {
     sunindextype num_nonzeros() const;
     
     /**
-     * @brief Get the number of allocated non-zero elements (sparse matrices only)
+     * @brief Get the number of indexptrs that can be specified (sparse matrices only)
+     * @return number of indexptrs
+     */
+    sunindextype num_indexptrs() const;
+    
+    /**
+     * @brief Get the number of allocated data elements
      * @return number of allocated entries
      */
     sunindextype capacity() const;
@@ -361,6 +370,21 @@ class SUNMatrixWrapper {
     SUNMatrix matrix_ {nullptr};
     
     SUNMatrix_ID id_ {SUNMATRIX_CUSTOM};
+    
+    sunindextype num_nonzeros_ {0};
+    sunindextype capacity_ {0};
+    
+    realtype *data_ {nullptr};
+    sunindextype *indexptrs_ {nullptr};
+    sunindextype *indexvals_ {nullptr};
+    
+    sunindextype num_rows_ {0};
+    sunindextype num_columns_ {0};
+    sunindextype num_indexptrs_ {0};
+    
+    void finish_init();
+    void update_ptrs();
+    void update_size();
     /**
      * @brief indicator whether this wrapper allocated matrix_ and is responsible for deallocation
      */
