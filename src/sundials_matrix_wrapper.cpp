@@ -339,8 +339,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 
     sunindextype nrows = rows();
     sunindextype ncols = columns();
-    assert(nrows == c.size());
-    assert(ncols == b.size());
+    assert(nrows == static_cast<sunindextype>(c.size()));
+    assert(ncols == static_cast<sunindextype>(b.size()));
 
     switch (SUNMatGetID(matrix_)) {
     case SUNMATRIX_DENSE:
@@ -392,10 +392,10 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 
     if (transpose) {
         assert(cols.size() == c.size());
-        assert(nrows == b.size());
+        assert(nrows == static_cast<sunindextype>(b.size()));
     } else {
-        assert(nrows == c.size());
-        assert(ncols == b.size());
+        assert(nrows == static_cast<sunindextype>(c.size()));
+        assert(ncols == static_cast<sunindextype>(b.size()));
     }
 
     check_csc(this);
@@ -432,9 +432,9 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
     check_csc(&B);
     check_csc(&C);
 
-    assert(nrows == C.rows());
+    assert(nrows == static_cast<sunindextype>(C.rows()));
     assert(C.columns() == B.columns());
-    assert(B.rows() == ncols);
+    assert(static_cast<sunindextype>(B.rows()) == ncols);
     
     C.zero();
     
@@ -501,10 +501,10 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
     check_csc(&A);
     check_csc(&B);
 
-    assert(nrows == A.rows());
-    assert(nrows == B.rows());
-    assert(ncols == A.columns());
-    assert(ncols == B.columns());
+    assert(nrows == static_cast<sunindextype>(A.rows()));
+    assert(nrows == static_cast<sunindextype>(B.rows()));
+    assert(ncols == static_cast<sunindextype>(A.columns()));
+    assert(ncols == static_cast<sunindextype>(B.columns()));
     
     zero();
     
