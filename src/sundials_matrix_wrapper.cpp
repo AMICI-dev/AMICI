@@ -346,14 +346,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
             scatter(icol, b.at(icol), nullptr, c, icol+1, nullptr, 0);
         }
         break;
-    case SUNMATRIX_BAND:
-        throw std::domain_error("Not Implemented.");
-    case SUNMATRIX_CUSTOM:
-        throw std::domain_error("Amici currently does not support custom"
-                                " matrix types.");
-    case SUNMATRIX_SLUNRLOC:
-        throw std::domain_error("Not Implemented.");
-    case SUNMATRIX_CUSPARSE:
+    default:
         throw std::domain_error("Not Implemented.");
     }
 
