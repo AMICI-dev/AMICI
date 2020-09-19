@@ -16,6 +16,7 @@ import logging
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel, get_measurement_symbol
+from .ode_export import logger as oe_logger
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
@@ -322,7 +323,7 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._replace_special_constants()
 
-        ode_model = ODEModel(simplify=simplify)
+        ode_model = ODEModel(verbose=verbose, simplify=simplify)
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(

@@ -794,9 +794,14 @@ class ODEModel:
         recursion depth in w, quantified as nilpotency of dwdw
     """
 
-    def __init__(self, simplify: Optional[Callable] = sp.powsimp):
+    def __init__(self, verbose: Optional[Union[bool, int]] = False,
+                 simplify: Optional[Callable] = sp.powsimp):
         """
         Create a new ODEModel instance.
+
+        :param verbose:
+            verbosity level for logging, True/False default to
+            logging.Error/logging.DEBUG
 
         :param simplify:
             see :meth:`ODEModel._simplify`
@@ -861,6 +866,7 @@ class ODEModel:
         self._simplify: Callable = simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
+        set_log_level(logger, verbose)
 
     @log_execution_time('importing SbmlImporter', logger)
     def import_from_sbml_importer(self,
