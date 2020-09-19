@@ -12,7 +12,7 @@ namespace amici {
 
 SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N,
                                    sunindextype NNZ, int sparsetype)
-    : matrix_(SUNSparseMatrix(M, N, NNZ, sparsetype)) {
+    : matrix_(SUNSparseMatrix(M, N, NNZ, sparsetype)), id_(SUNMATRIX_SPARSE) {
 
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
@@ -20,10 +20,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N,
 
     if (NNZ && M && N && !matrix_)
         throw std::bad_alloc();
-    
-    
-    id_ = SUNMATRIX_SPARSE;
-        
+
     assert(num_nonzeros() == 0);
     assert(NNZ == capacity());
     assert(M == rows() || !matrix_);
@@ -31,11 +28,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N,
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
-    : matrix_(SUNDenseMatrix(M, N)) {
+    : matrix_(SUNDenseMatrix(M, N)), id_(SUNMATRIX_DENSE) {
     if (M && N && !matrix_)
         throw std::bad_alloc();
-        
-    id_ = SUNMATRIX_DENSE;
         
     assert(M == rows());
     assert(N == columns());
@@ -43,15 +38,13 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
 
 SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype ubw,
                                    sunindextype lbw)
-    : matrix_(SUNBandMatrix(M, ubw, lbw)) {
+    : matrix_(SUNBandMatrix(M, ubw, lbw)), id_(SUNMATRIX_BAND) {
     if (M && !matrix_)
         throw std::bad_alloc();
-    
-    id_ = SUNMATRIX_BAND;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
-                                   int sparsetype) {
+                                   int sparsetype) : id_(SUNMATRIX_SPARSE) {
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT");
@@ -69,36 +62,31 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
     }
     if (!matrix_)
         throw std::bad_alloc();
-    
-    id_ = SUNMATRIX_SPARSE;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix_(mat),
-    ownmat(false) {
-    if (matrix_)
-        id_ = SUNMatGetID(matrix_);
-    }
+    id_(matrix_ ? SUNMatGetID(matrix_) : SUNMATRIX_CUSTOM), ownmat(false) {}
 
 SUNMatrixWrapper::~SUNMatrixWrapper() {
     if (matrix_ && ownmat)
         SUNMatDestroy(matrix_);
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
+SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other)
+    : id_(other.matrix_ ? SUNMatGetID(other.matrix_) : SUNMATRIX_CUSTOM) {
     if (!other.matrix_)
         return;
 
     matrix_ = SUNMatClone(other.matrix_);
-    id_ = other.id_;
     if (!matrix_)
         throw std::bad_alloc();
 
     SUNMatCopy(other.matrix_, matrix_);
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) {
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other)
+    : id_(other.matrix_ ? SUNMatGetID(other.matrix_) : SUNMATRIX_CUSTOM) {
     std::swap(matrix_, other.matrix_);
-    id_ = other.id_;
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
