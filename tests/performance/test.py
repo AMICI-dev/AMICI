@@ -81,8 +81,7 @@ def main():
     else:
         print("Unknown argument:", arg)
         sys.exit(1)
-    while True:
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+    rdata = amici.runAmiciSimulation(model, solver, edata)
 
     diagnostics = ['numsteps', 'numstepsB', 'numrhsevals', 'numrhsevalsB',
                    'numerrtestfails', 'numerrtestfailsB',
