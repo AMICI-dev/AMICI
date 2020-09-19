@@ -56,7 +56,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT");
 
-    switch (SUNMatGetID(A.get())) {
+    switch (A.matrix_id()) {
     case SUNMATRIX_DENSE:
         matrix_ = SUNSparseFromDenseMatrix(A.get(), droptol, sparsetype);
         break;
@@ -142,7 +142,7 @@ sunindextype SUNMatrixWrapper::rows() const {
     if (!matrix_)
         return 0;
 
-    switch (SUNMatGetID(matrix_)) {
+    switch (matrix_id()) {
     case SUNMATRIX_DENSE:
         return SM_ROWS_D(matrix_);
     case SUNMATRIX_SPARSE:
@@ -161,7 +161,7 @@ sunindextype SUNMatrixWrapper::columns() const {
     if (!matrix_)
         return 0;
 
-    switch (SUNMatGetID(matrix_)) {
+    switch (matrix_id()) {
     case SUNMATRIX_DENSE:
         return SM_COLUMNS_D(matrix_);
     case SUNMATRIX_SPARSE:
@@ -180,7 +180,7 @@ sunindextype SUNMatrixWrapper::capacity() const {
     if (!matrix_)
         return 0;
 
-    switch (SUNMatGetID(matrix_)) {
+    switch (matrix_id()) {
     case SUNMATRIX_SPARSE:
         return SM_NNZ_S(matrix_);
     default:
@@ -193,7 +193,7 @@ sunindextype SUNMatrixWrapper::num_nonzeros() const {
     if (!matrix_)
         return 0;
     
-    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE)
+    if (matrix_id() == SUNMATRIX_SPARSE)
         return SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)];
     else
         throw std::domain_error("Non-zeros property only available for "
@@ -214,7 +214,7 @@ static void check_dense(const SUNMatrix_ID id) {
 realtype SUNMatrixWrapper::get_data(sunindextype idx) const{
     assert(matrix_);
     check_sparse(matrix_id());
-    assert(idx < SM_NNZ_S(matrix_));
+    assert(idx < capacity());
     return SM_DATA_S(matrix_)[idx];
 };
 
@@ -230,7 +230,7 @@ realtype SUNMatrixWrapper::get_data(sunindextype irow, sunindextype icol) const{
 void SUNMatrixWrapper::set_data(sunindextype idx, realtype data) {
     assert(matrix_);
     check_sparse(matrix_id());
-    assert(idx < SM_NNZ_S(matrix_));
+    assert(idx < capacity());
     SM_DATA_S(matrix_)[idx] = data;
 }
 
@@ -247,7 +247,7 @@ const realtype *SUNMatrixWrapper::data() const {
     if (!matrix_)
         return nullptr;
         
-    switch (SUNMatGetID(matrix_)) {
+    switch (matrix_id()) {
     case SUNMATRIX_DENSE:
         return SM_DATA_D(matrix_);
     case SUNMATRIX_SPARSE:
@@ -265,14 +265,14 @@ realtype *SUNMatrixWrapper::data() {
 sunindextype SUNMatrixWrapper::get_indexval(sunindextype idx) const {
     assert(matrix_);
     check_sparse(matrix_id());
-    assert(idx < SM_NNZ_S(matrix_));
+    assert(idx < capacity());
     return SM_INDEXVALS_S(matrix_)[idx];
 }
 
 void SUNMatrixWrapper::set_indexval(sunindextype idx, sunindextype val) {
     assert(matrix_);
     check_sparse(matrix_id());
-    assert(idx < SM_NNZ_S(matrix_));
+    assert(idx < capacity());
     SM_INDEXVALS_S(matrix_)[idx] = val;
 }
 
@@ -280,7 +280,7 @@ void SUNMatrixWrapper::set_indexvals(const gsl::span<const sunindextype> vals) {
     assert(matrix_);
     check_sparse(matrix_id());
     assert(static_cast<sunindextype>(vals.size()) == SM_NNZ_S(matrix_));
-    std::copy_n(vals.begin(), SM_NNZ_S(matrix_), SM_INDEXVALS_S(matrix_));
+    std::copy_n(vals.begin(), capacity(), SM_INDEXVALS_S(matrix_));
 }
 
 sunindextype SUNMatrixWrapper::get_indexptr(sunindextype ptr_idx) const {
@@ -309,15 +309,15 @@ int SUNMatrixWrapper::sparsetype() const {
     if (!matrix_)
         throw std::runtime_error("Cannot determine type of uninitialized "
                                  "matrices");
-    if (SUNMatGetID(matrix_) == SUNMATRIX_SPARSE)
+    if (id_ == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(matrix_);
     throw std::domain_error("Function only available for sparse matrices");
 }
 
 void SUNMatrixWrapper::scale(realtype a) {
     if (matrix_) {
-        auto nonzeros_ = SM_NNZ_S(matrix_);
-        for (sunindextype i = 0; i < nonzeros_; ++i)
+        auto capacity_ = capacity();
+        for (sunindextype i = 0; i < capacity_; ++i)
             SM_DATA_S(matrix_)[i] *= a;
     }
 }
@@ -342,7 +342,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     assert(nrows == static_cast<sunindextype>(c.size()));
     assert(ncols == static_cast<sunindextype>(b.size()));
 
-    switch (SUNMatGetID(matrix_)) {
+    switch (matrix_id()) {
     case SUNMATRIX_DENSE:
         amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans,
                     static_cast<int>(nrows), static_cast<int>(ncols),
