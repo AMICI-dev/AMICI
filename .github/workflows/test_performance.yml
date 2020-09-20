@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - master
+      - speedup
 
   pull_request:
     branches:
@@ -87,3 +88,9 @@ jobs:
     - name: adjoint_sensitivities_non_optimal_parameters
       run: |
         check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters
+    - name: forward_steadystate_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters
+    - name: adjoint_steadystate_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters

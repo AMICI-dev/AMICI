@@ -161,7 +161,7 @@ def ode_model_from_pysb_importer(
         New ODEModel instance according to pysbModel
     """
 
-    ode = ODEModel(simplify=simplify)
+    ode = ODEModel(verbose=verbose, simplify=simplify)
 
     if constant_parameters is None:
         constant_parameters = []

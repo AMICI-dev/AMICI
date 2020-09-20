@@ -185,3 +185,5 @@ documentation/generated/*
 
 # vim
 *.swp
+tests/performance/CS_Signalling_ERBB_RAS_AKT/
+tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*

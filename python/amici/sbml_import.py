@@ -16,6 +16,7 @@ import logging
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel, get_measurement_symbol
+from .ode_export import logger as oe_logger
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
@@ -322,7 +323,7 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._replace_special_constants()
 
-        ode_model = ODEModel(simplify=simplify)
+        ode_model = ODEModel(verbose=verbose, simplify=simplify)
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
@@ -909,6 +910,17 @@ class SbmlImporter:
             return specie in self.constant_species or \
                    specie in self.boundary_condition_species
 
+        math_subs = []
+        for r in reactions:
+            elements = list(r.getListOfReactants()) \
+                       + list(r.getListOfProducts())
+            for element in elements:
+                if element.isSetId() & element.isSetStoichiometry():
+                    math_subs.append((
+                        sp.sympify(element.getId(), locals=self.local_symbols),
+                        sp.sympify(element.getStoichiometry())
+                    ))
+
         for reaction_index, reaction in enumerate(reactions):
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                       (reaction.getListOfProducts(), 1.0)]:
@@ -948,16 +960,8 @@ class SbmlImporter:
                                     'unsupported expression!')
             sym_math = _parse_special_functions(sym_math)
             _check_unsupported_functions(sym_math, 'KineticLaw')
-            for r in reactions:
-                elements = list(r.getListOfReactants()) \
-                           + list(r.getListOfProducts())
-                for element in elements:
-                    if element.isSetId() & element.isSetStoichiometry():
-                        sym_math = sym_math.subs(
-                            sp.sympify(element.getId(),
-                                       locals=self.local_symbols),
-                            sp.sympify(element.getStoichiometry())
-                        )
+
+            sym_math = sym_math.subs(math_subs)
 
             self.flux_vector[reaction_index] = sym_math
             if any([

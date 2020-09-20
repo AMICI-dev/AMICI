@@ -817,32 +817,32 @@ TEST_GROUP(sunmatrixwrapper)
     std::vector<double> d{1.3753, 1.5084, 1.1655};
 
     void setup() {
-        SM_ELEMENT_D(A.get(), 0, 0) = 0.69;
-        SM_ELEMENT_D(A.get(), 1, 0) = 0.32;
-        SM_ELEMENT_D(A.get(), 2, 0) = 0.95;
-        SM_ELEMENT_D(A.get(), 0, 1) = 0.03;
-        SM_ELEMENT_D(A.get(), 1, 1) = 0.44;
-        SM_ELEMENT_D(A.get(), 2, 1) = 0.38;
+        A.set_data(0, 0, 0.69);
+        A.set_data(1, 0, 0.32);
+        A.set_data(2, 0, 0.95);
+        A.set_data(0, 1, 0.03);
+        A.set_data(1, 1, 0.44);
+        A.set_data(2, 1, 0.38);
 
-        SM_INDEXPTRS_S(B.get())[0] = 0;
-        SM_INDEXPTRS_S(B.get())[1] = 2;
-        SM_INDEXPTRS_S(B.get())[2] = 4;
-        SM_INDEXPTRS_S(B.get())[3] = 5;
-        SM_INDEXPTRS_S(B.get())[4] = 7;
-        SM_DATA_S(B.get())[0] = 3;
-        SM_DATA_S(B.get())[1] = 1;
-        SM_DATA_S(B.get())[2] = 3;
-        SM_DATA_S(B.get())[3] = 7;
-        SM_DATA_S(B.get())[4] = 1;
-        SM_DATA_S(B.get())[5] = 2;
-        SM_DATA_S(B.get())[6] = 9;
-        SM_INDEXVALS_S(B.get())[0] = 1;
-        SM_INDEXVALS_S(B.get())[1] = 3;
-        SM_INDEXVALS_S(B.get())[2] = 0;
-        SM_INDEXVALS_S(B.get())[3] = 2;
-        SM_INDEXVALS_S(B.get())[4] = 0;
-        SM_INDEXVALS_S(B.get())[5] = 1;
-        SM_INDEXVALS_S(B.get())[6] = 3;
+        B.set_indexptr(0, 0);
+        B.set_indexptr(1, 2);
+        B.set_indexptr(2, 4);
+        B.set_indexptr(3, 5);
+        B.set_indexptr(4, 7);
+        B.set_data(0, 3);
+        B.set_data(1, 1);
+        B.set_data(2, 3);
+        B.set_data(3, 7);
+        B.set_data(4, 1);
+        B.set_data(5, 2);
+        B.set_data(6, 9);
+        B.set_indexval(0, 1);
+        B.set_indexval(1, 3);
+        B.set_indexval(2, 0);
+        B.set_indexval(3, 2);
+        B.set_indexval(4, 0);
+        B.set_indexval(5, 1);
+        B.set_indexval(6, 3);
 
     }
 
@@ -851,12 +851,9 @@ TEST_GROUP(sunmatrixwrapper)
 
 TEST(sunmatrixwrapper, sparse_multiply)
 {
-    auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
-    auto c(a); //copy c
-    CHECK_THROWS(std::invalid_argument, A_sparse.multiply(c, b));
 
-    A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
-    c = a; //copy c
+    auto A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
+    auto c(a); //copy c
     A_sparse.multiply(c, b);
     checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
 }
@@ -884,17 +881,8 @@ TEST(sunmatrixwrapper, dense_multiply)
 
 TEST(sunmatrixwrapper, multiply_throws)
 {
-    CHECK_THROWS(std::invalid_argument, A.multiply(b, a));
-    CHECK_THROWS(std::invalid_argument, A.multiply(a, a));
-    CHECK_THROWS(std::invalid_argument, A.multiply(b, b));
     auto b_amivector = AmiVector(b);
     auto a_amivector = AmiVector(a);
-    CHECK_THROWS(std::invalid_argument, A.multiply(b_amivector.getNVector(),
-                                          a_amivector.getNVector()));
-    CHECK_THROWS(std::invalid_argument, A.multiply(a_amivector.getNVector(),
-                                          a_amivector.getNVector()));
-    CHECK_THROWS(std::invalid_argument, A.multiply(b_amivector.getNVector(),
-                                          b_amivector.getNVector()));
 }
 
 TEST(sunmatrixwrapper, transform_throws)

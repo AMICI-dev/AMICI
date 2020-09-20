@@ -66,13 +66,6 @@ MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
 # sparse format. sparse format means that the function will only return an
 # array of nonzero values and not a full matrix.
 functions = {
-    'JSparse': {
-        'signature':
-            '(realtype *JSparse, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *dwdx)',
-        'flags': ['assume_pow_positivity', 'sparse']
-    },
     'Jy': {
         'signature':
             '(realtype *Jy, const int iy, const realtype *p, '
@@ -660,8 +653,9 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
 
 @log_execution_time('running smart_multiply', logger)
-def smart_multiply(x: sp.MutableDenseMatrix,
-                   y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+def smart_multiply(x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+                   y: sp.MutableDenseMatrix
+                   ) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
     """
     Wrapper around symbolic multiplication with some additional checks that
     reduce computation time for large matrices
@@ -676,10 +670,11 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) or \
             smart_is_zero_matrix(y):
         return sp.zeros(x.shape[0], y.shape[1])
-    return x * y
+    return x.multiply(y)
 
 
-def smart_is_zero_matrix(x: sp.MutableDenseMatrix) -> bool:
+def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
+                                  sp.MutableSparseMatrix]) -> bool:
     """A faster implementation of sympy's is_zero_matrix
 
     Avoids repeated indexer type checks and double iteration to distinguish
@@ -688,7 +683,12 @@ def smart_is_zero_matrix(x: sp.MutableDenseMatrix) -> bool:
     :param x: Matrix to check
     """
 
-    return not any(xx.is_zero is not True for xx in x._mat)
+    if isinstance(x, sp.MutableDenseMatrix):
+        nonzero = any(xx.is_zero is not True for xx in x._mat)
+    else:
+        nonzero = x.nnz() > 0
+
+    return not nonzero
 
 
 class ODEModel:
@@ -794,9 +794,14 @@ class ODEModel:
         recursion depth in w, quantified as nilpotency of dwdw
     """
 
-    def __init__(self, simplify: Optional[Callable] = sp.powsimp):
+    def __init__(self, verbose: Optional[Union[bool, int]] = False,
+                 simplify: Optional[Callable] = sp.powsimp):
         """
         Create a new ODEModel instance.
+
+        :param verbose:
+            verbosity level for logging, True/False default to
+            ``logging.DEBUG``/``logging.ERROR``
 
         :param simplify:
             see :meth:`ODEModel._simplify`
@@ -849,11 +854,6 @@ class ODEModel:
         }
         self._total_derivative_prototypes: \
             Dict[str, Dict[str, Union[str, List[str]]]] = {
-                'JSparse': {
-                    'eq': 'xdot',
-                    'chainvars': ['w'],
-                    'var': 'x',
-                },
                 'sx_rdata': {
                     'eq': 'x_rdata',
                     'chainvars': ['x'],
@@ -866,7 +866,9 @@ class ODEModel:
         self._simplify: Callable = simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
+        set_log_level(logger, verbose)
 
+    @log_execution_time('importing SbmlImporter', logger)
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter',
                                   compute_cls: Optional[bool] = True) -> None:
@@ -898,7 +900,7 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def dx_dt(x_index, x_Sw):
+        def dx_dt(x_index, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
@@ -909,7 +911,7 @@ class ODEModel:
                 The index (not identifier) of the species in the variables
                 (generated in "sbml_import.py") that describe the model.
 
-            :param x_Sw:
+            :param dxdt:
                 The element-wise product of the row in the stoichiometric
                 matrix that corresponds to the species (row x_index) and the
                 flux (kinetic laws) vector. Ignored in the case of rate rules.
@@ -936,7 +938,7 @@ class ODEModel:
             v_name = si.species_compartment[x_index]
             if v_name in si.compartment_rate_rules:
                 dv_dt = si.compartment_rate_rules[v_name]
-                xdot = (x_Sw - dv_dt*x_id)/v_name
+                xdot = (dxdt - dv_dt * x_id) / v_name
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
@@ -944,25 +946,30 @@ class ODEModel:
                 v = si.compartment_assignment_rules[v_name]
                 dv_dt = v.diff(si.amici_time_symbol)
                 dv_dx = v.diff(x_id)
-                xdot = (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+                xdot = (dxdt - dv_dt * x_id) / (dv_dx * x_id + v)
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
             else:
                 v = si.compartment_volume[list(si.compartment_symbols).index(
                     si.species_compartment[x_index])]
+
+                if v == 1.0:
+                    return dxdt
+
                 for w_index, flux in enumerate(fluxes):
                     if si.stoichiometric_matrix[x_index, w_index] != 0:
                         dxdotdw_updates.append((x_index, w_index,
                             si.stoichiometric_matrix[x_index, w_index] / v))
-                return x_Sw/v
+                return dxdt / v
 
         # create dynamics without respecting conservation laws first
-        Sw = smart_multiply(MutableDenseMatrix(si.stoichiometric_matrix),
-                            MutableDenseMatrix(fluxes))
-        symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
-            lambda x_Sw: dx_dt(x_index, x_Sw))
-            for x_index in range(Sw.rows)])
+        dxdt = smart_multiply(si.stoichiometric_matrix,
+                              MutableDenseMatrix(fluxes))
+        symbols['species']['dt'] = sp.Matrix([
+            dx_dt(x_index, dxdt[x_index])
+            for x_index in range(dxdt.rows)
+        ])
 
         # create all basic components of the ODE model and add them.
         for symbol in [s for s in symbols if s != 'my']:
@@ -1393,6 +1400,8 @@ class ODEModel:
             if var not in self._syms:
                 self._generate_symbol(var, from_sbml=from_sbml)
 
+        self._generate_symbol('x', from_sbml=from_sbml)
+
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
         """
         Counts how often a state appears in the time derivative of
@@ -1444,9 +1453,6 @@ class ODEModel:
         if match_deriv:
             rownames = self.sym(match_deriv.group(1))
             colnames = self.sym(match_deriv.group(2))
-        elif name == 'JSparse':
-            rownames = self.sym('xdot')
-            colnames = self.sym('x')
 
         if name == 'dJydy':
             # One entry per y-slice
@@ -1690,7 +1696,7 @@ class ODEModel:
                     nonzeros = nonzeros.dot(nonzeros)
                     self._w_recursion_depth += 1
 
-        if name == 'dydw':
+        if name == 'dydw' and not smart_is_zero_matrix(derivative):
             dwdw = self.eq('dwdw')
             # h(k) = d{eq}dw*dwdw^k* (k=1)
             h = smart_multiply(derivative, dwdw)
@@ -2658,7 +2664,7 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
-            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit', 'JSparse',
+            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit',
             'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \

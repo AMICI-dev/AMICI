@@ -23,9 +23,6 @@ extern std::array<const char*, TPL_NK> fixedParameterIds;
 extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 
-TPL_JSPARSE_DEF
-TPL_JSPARSE_COLPTRS_DEF
-TPL_JSPARSE_ROWVALS_DEF
 extern void Jy_TPL_MODELNAME(realtype *nllh, const int iy, const realtype *p,
                              const realtype *k, const realtype *y,
                              const realtype *sigmay, const realtype *my);
@@ -142,12 +139,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual amici::Model *clone() const override {
         return new Model_TPL_MODELNAME(*this);
     }
-
-    TPL_JSPARSE_IMPL
-
-    TPL_JSPARSE_COLPTRS_IMPL
-
-    TPL_JSPARSE_ROWVALS_IMPL
 
     /** model specific implementation of fJrz
      * @param nllh regularization for event measurements z

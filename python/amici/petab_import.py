@@ -438,7 +438,7 @@ def import_model_sbml(
     if model_output_dir is None:
         model_output_dir = os.path.join(os.getcwd(), model_name)
 
-    logger.info(f"Model name is '{model_name}'. "
+    logger.info(f"Model name is '{model_name}'.\n"
                 f"Writing model code to '{model_output_dir}'.")
 
     # Load model
