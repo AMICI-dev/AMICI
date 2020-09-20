@@ -961,7 +961,7 @@ class SbmlImporter:
             sym_math = _parse_special_functions(sym_math)
             _check_unsupported_functions(sym_math, 'KineticLaw')
 
-            sym_math.subs(math_subs)
+            sym_math = sym_math.subs(math_subs)
 
             self.flux_vector[reaction_index] = sym_math
             if any([
