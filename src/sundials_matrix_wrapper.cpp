@@ -292,7 +292,7 @@ void SUNMatrixWrapper::set_indexptrs(const gsl::span<const sunindextype> ptrs) {
 int SUNMatrixWrapper::sparsetype() const {
     assert(matrix_);
     assert(matrix_id() == SUNMATRIX_SPARSE);
-    return SM_SPARSETYPE_S(matrix_);
+    return sparsetype_;
 }
 
 void SUNMatrixWrapper::scale(realtype a) {
