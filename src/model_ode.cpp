@@ -14,6 +14,7 @@ void Model_ODE::fJ(realtype t, N_Vector x, N_Vector /*xdot*/, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
     fJSparse(t, x, J_.get());
+    J_.refresh();
     auto JDense = SUNMatrixWrapper(J);
     J_.to_dense(JDense);
 }
@@ -63,6 +64,7 @@ void Model_ODE::fJv(const realtype t, const AmiVector &x,
 void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
     N_VConst(0.0, Jv);
     fJSparse(t, x, J_.get());
+    J_.refresh();
     J_.multiply(Jv, v);
 }
 
@@ -280,6 +282,7 @@ void Model_ODE::fJB(const realtype t, realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJB(realtype t, N_Vector x, N_Vector /*xB*/, N_Vector /*xBdot*/,
                     SUNMatrix JB) {
     fJSparse(t, x, J_.get());
+    J_.refresh();
     auto JDenseB = SUNMatrixWrapper(JB);
     J_.transpose(JDenseB, -1.0, nxtrue_solver);
 }
@@ -294,12 +297,14 @@ void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector /*xB*/,
                           N_Vector /*xBdot*/, SUNMatrix JB) {
     fJSparse(t, x, J_.get());
+    J_.refresh();
     auto JSparseB = SUNMatrixWrapper(JB);
     J_.transpose(JSparseB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
     fJSparse(t, x, J_.get());
+    J_.refresh();
     J_.to_diag(JDiag);
 }
 
@@ -307,12 +312,14 @@ void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                      N_Vector xB) {
     N_VConst(0.0, JvB);
     fJSparseB(t, x, xB, nullptr, JB_.get());
+    JB_.refresh();
     JB_.multiply(JvB, vB);
 }
 
 void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
     fJSparseB(t, x, xB, nullptr, JB_.get());
+    JB_.refresh();
     JB_.multiply(xBdot, xB);
 }
 
@@ -361,6 +368,7 @@ void Model_ODE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector qBdot) const {
 void Model_ODE::fJSparseB_ss(SUNMatrix JB) {
     /* Just copy the model Jacobian */
     SUNMatCopy(JB_.get(), JB);
+    JB_.refresh();
 }
 
 void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
@@ -370,6 +378,7 @@ void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
     /* Get backward Jacobian */
     fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(),
               JB_.get());
+    JB_.refresh();
     /* Switch sign, as we integrate forward in time, not backward */
     JB_.scale(-1);
 }
@@ -391,6 +400,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         // the same for all remaining
         fdxdotdp(t, x);
         fJSparse(t, x, J_.get());
+        J_.refresh();
     }
     if (pythonGenerated) {
         /* copy dxdotdp and the implicit version over */

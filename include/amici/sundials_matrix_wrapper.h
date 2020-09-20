@@ -107,9 +107,10 @@ class SUNMatrixWrapper {
     /**
      * @brief Get the wrapped SUNMatrix
      * @return raw SunMatrix object
-     * @note Even though the returned SUNMatrix is const qualified, the values member pointers point to
-     * will not be const-qualified. This is a shortcoming in the underlying C library, which we cannot address
-     * and it is not intended that any of those values are modified externally.
+     * @note Even though the returned matrix_ pointer is const qualified, matrix_->content will not be const.
+     * This is a shortcoming in the underlying C library, which we cannot address and it is not intended that
+     * any of those values are modified externally. If matrix_->content is manipulated,
+     * cpp:meth:SUNMatrixWrapper:`refresh` needs to be called.
      */
     const SUNMatrix get() const;
 
@@ -362,6 +363,12 @@ class SUNMatrixWrapper {
      * @return SUNMatrix_ID
      */
     SUNMatrix_ID matrix_id() const {return id_;};
+    
+    /**
+     * @brief Update internal cache, needs to be called after external manipulation of matrix_->content
+     */
+    void refresh();
+    
   private:
 
     /**
@@ -369,21 +376,57 @@ class SUNMatrixWrapper {
      */
     SUNMatrix matrix_ {nullptr};
     
+    /**
+     * @brief cache for SUNMatrixGetId(matrix_)
+     */
     SUNMatrix_ID id_ {SUNMATRIX_CUSTOM};
     
+    /**
+     * @brief cache for SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)]
+     */
     sunindextype num_nonzeros_ {0};
+    /**
+     * @brief cache for SM_NNZ_S(matrix_)
+     */
     sunindextype capacity_ {0};
     
+    /**
+     * @brief cache for SM_DATA_S(matrix_)
+     */
     realtype *data_ {nullptr};
+    /**
+     * @brief cache for SM_INDEXPTRS_S(matrix_)
+     */
     sunindextype *indexptrs_ {nullptr};
+    /**
+     * @brief cache for SM_INDEXVALS_S(matrix_)
+     */
     sunindextype *indexvals_ {nullptr};
     
+    /**
+     * @brief cache for SM_ROWS_X(matrix_)
+     */
     sunindextype num_rows_ {0};
+    /**
+     * @brief cache for SM_COLUMS_X(matrix_)
+     */
     sunindextype num_columns_ {0};
+    /**
+     * @brief cache for SM_NP_S(matrix_)
+     */
     sunindextype num_indexptrs_ {0};
     
+    /**
+     * @brief call update_ptrs & update_size
+     */
     void finish_init();
+    /**
+     * @brief update data_, indexptrs_, indexvals_ if applicable
+     */
     void update_ptrs();
+    /**
+     * @brief update num_rows_, num_columns_, num_indexptrs if applicable
+     */
     void update_size();
     /**
      * @brief indicator whether this wrapper allocated matrix_ and is responsible for deallocation

@@ -427,8 +427,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
         for (cidx = C.get_indexptr(bcol); cidx < nnz; cidx++)
             C.set_data(cidx, x.at(C.get_indexval(cidx))); // copy data to C
     }
-    C.set_indexptr(C.columns(), nnz);
-    C.num_nonzeros_ = nnz;
+    C.set_indexptr(C.num_indexptrs(), nnz);
     
     /*
      * do not reallocate here since we rather keep a matrix that is a bit
@@ -488,8 +487,7 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
             set_data(cidx, x.at(get_indexval(cidx))); // copy data to C
         }
     }
-    set_indexptr(columns(), nnz);
-    num_nonzeros_ = nnz;
+    set_indexptr(num_indexptrs(), nnz);
     if (capacity() == A.num_nonzeros() + B.num_nonzeros())
         realloc(); // resize if necessary, will have correct size in future calls
 }
@@ -541,8 +539,7 @@ void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
             set_data(aidx, x.at(get_indexval(aidx))); // copy data to C
         }
     }
-    set_indexptr(columns(), nnz);
-    num_nonzeros_ = nnz;
+    set_indexptr(num_indexptrs(), nnz);
     if (capacity() == max_total_nonzero)
         realloc(); // resize if necessary
 }
@@ -767,6 +764,13 @@ void SUNMatrixWrapper::update_size() {
     default:
         throw std::domain_error("Not Implemented.");
     }
+}
+
+void SUNMatrixWrapper::refresh() {
+    update_ptrs();
+    update_size();
+    if (matrix_id() == SUNMATRIX_SPARSE)
+        num_nonzeros_ = SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)];
 }
 
 const SUNMatrix SUNMatrixWrapper::get() const { return matrix_; }

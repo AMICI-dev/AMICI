@@ -131,6 +131,7 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
 
 void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
@@ -140,6 +141,7 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
 
 void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
@@ -152,6 +154,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
     int status = SUNLinSolSolve_Dense(linsol_, Jtmp_.get(),
                                       rhs.getNVector(), rhs.getNVector(),
                                       0.0);
+    Jtmp_.refresh();
     // last argument is tolerance and does not have any influence on result
 
     if(status != AMICI_SUCCESS)
@@ -184,6 +187,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
 void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     /* Get sparse Jacobian */
     model_->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
@@ -194,6 +198,7 @@ void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
 void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     /* Get sparse Jacobian */
     model_->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
@@ -245,6 +250,7 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 
     // Get the Jacobian and its diagonal for preconditioning
     model_->fJ(*t_, 0.0, *x_, dx_, xdot_, ns_J_.get());
+    ns_J_.refresh();
     model_->fJDiag(*t_, ns_Jdiag_, 0.0, *x_, dx_);
 
     // Ensure positivity of entries in ns_Jdiag
@@ -267,7 +273,7 @@ void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
 
     // Get the Jacobian and its diagonal for preconditioning
     model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, ns_J_.get());
-
+    ns_J_.refresh();
     // Get the diagonal and ensure negativity of entries is ns_J. Note that diag(JB) = -diag(J).
     model_->fJDiag(*t_, ns_Jdiag_, 0.0, *x_, dx_);
 
