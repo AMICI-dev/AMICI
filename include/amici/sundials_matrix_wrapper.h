@@ -382,6 +382,11 @@ class SUNMatrixWrapper {
     SUNMatrix_ID id_ {SUNMATRIX_CUSTOM};
     
     /**
+     * @brief cache for SUNMatrixGetId(matrix_)
+     */
+    int sparsetype_ {CSC_MAT};
+    
+    /**
      * @brief cache for SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)]
      */
     sunindextype num_nonzeros_ {0};

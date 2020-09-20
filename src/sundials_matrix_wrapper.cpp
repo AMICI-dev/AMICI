@@ -12,7 +12,8 @@ namespace amici {
 
 SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N,
                                    sunindextype NNZ, int sparsetype)
-    : matrix_(SUNSparseMatrix(M, N, NNZ, sparsetype)), id_(SUNMATRIX_SPARSE) {
+    : matrix_(SUNSparseMatrix(M, N, NNZ, sparsetype)), id_(SUNMATRIX_SPARSE),
+    sparsetype_(sparsetype) {
 
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
@@ -47,7 +48,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype ubw,
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
-                                   int sparsetype) : id_(SUNMATRIX_SPARSE) {
+                                   int sparsetype)
+    : id_(SUNMATRIX_SPARSE), sparsetype_(sparsetype) {
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT");
@@ -69,8 +71,21 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
     num_nonzeros_ = indexptrs_[num_indexptrs()];
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix_(mat),
-    id_(matrix_ ? SUNMatGetID(matrix_) : SUNMATRIX_CUSTOM), ownmat(false) {
+static inline const SUNMatrix_ID get_sparse_id_w_default(SUNMatrix mat) {
+    if (mat)
+        return SUNMatGetID(mat);
+    return SUNMATRIX_CUSTOM;
+}
+
+static inline const int get_sparse_type_w_default(SUNMatrix mat) {
+    if (mat && SUNMatGetID(mat) == SUNMATRIX_SPARSE)
+        return SM_SPARSETYPE_S(mat);
+    return CSC_MAT;
+}
+
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat)
+    : matrix_(mat),  id_(get_sparse_id_w_default(mat)),
+    sparsetype_(get_sparse_type_w_default(mat)), ownmat(false) {
     finish_init();
 }
 
@@ -80,7 +95,8 @@ SUNMatrixWrapper::~SUNMatrixWrapper() {
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other)
-    : id_(other.matrix_ ? SUNMatGetID(other.matrix_) : SUNMATRIX_CUSTOM) {
+    : id_(get_sparse_id_w_default(other.matrix_)),
+    sparsetype_(get_sparse_type_w_default(other.matrix_))  {
     if (!other.matrix_)
         return;
 
@@ -93,7 +109,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other)
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other)
-    : id_(other.matrix_ ? SUNMatGetID(other.matrix_) : SUNMATRIX_CUSTOM) {
+    : id_(get_sparse_id_w_default(other.matrix_)),
+    sparsetype_(get_sparse_type_w_default(other.matrix_)) {
     std::swap(matrix_, other.matrix_);
     finish_init();
 }
@@ -107,6 +124,7 @@ SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(SUNMatrixWrapper &&other) {
     std::swap(matrix_, other.matrix_);
     id_ = other.id_;
+    sparsetype_ = other.sparsetype_;
     finish_init();
     return *this;
 }
