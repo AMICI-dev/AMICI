@@ -801,7 +801,7 @@ class ODEModel:
 
         :param verbose:
             verbosity level for logging, True/False default to
-            logging.Error/logging.DEBUG
+            ``logging.DEBUG``/``logging.ERROR``
 
         :param simplify:
             see :meth:`ODEModel._simplify`
