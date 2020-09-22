@@ -111,7 +111,7 @@ class SUNLinSolWrapper {
     /**
      * @brief Returns the integer and real workspace sizes for the linear solver
      * @param lenrwLS output argument for size of real workspace
-     * @param leniwLS output argument for size of interger workspace
+     * @param leniwLS output argument for size of integer workspace
      * @return workspace size
      */
     int space(long int *lenrwLS, long int *leniwLS) const;

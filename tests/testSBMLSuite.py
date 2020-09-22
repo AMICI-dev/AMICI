@@ -129,14 +129,19 @@ def verify_results(settings, rdata, results, wrapper,
     # Add observables to the verification. This includes compartments with
     # assignment rules, as they are implemented as observables.
     # Currently only used for SBML test suite case 01223.
-    observables = {str(o_id): (o_index, variables_species.index(str(o_id)))
-            for o_index, o_id in enumerate(
-                wrapper.symbols['observable']['identifier'])
-            if str(o_id) in variables_species and (
-                str(o_id) not in wrapper.species_index)}
+    observables = {
+        str(o_id): (o_index, variables_species.index(str(o_id)))
+        for o_index, o_id in enumerate(
+            wrapper.symbols['observable']['identifier']
+        )
+        if str(o_id) in variables_species
+        and (str(o_id) not in wrapper.species_index)
+    }
     for o_id, indices in observables.items():
-        simulated_x = np.hstack((simulated_x, np.array([rdata['y'][:,indices[0]]]).T))
-        expected_x = np.hstack((expected_x, np.array([results[1:, 1+indices[1]]]).T))
+        simulated_x = np.hstack((simulated_x, np.array([rdata['y'][:,
+                                                        indices[0]]]).T))
+        expected_x = np.hstack((expected_x, np.array([results[1:,
+                                                      1+indices[1]]]).T))
         x_ids.append(o_id)
 
     assert np.isclose(simulated_x, expected_x, atol, rtol).all()

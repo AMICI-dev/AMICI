@@ -56,12 +56,12 @@ class ForwardProblem {
     ~ForwardProblem() = default;
 
     /** allow FinalStateStorer to access private members and functions */
-    friend FinalStateStorer;
+    friend ::amici::FinalStateStorer;
 
     /**
      * @brief Solve the forward problem.
      *
-     * If forward sensitivities are enabled this will also compute sensitivies.
+     * If forward sensitivities are enabled this will also compute sensitivities.
      */
     void workForwardProblem();
 
@@ -235,7 +235,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified timepoint index
-     * @param it timpoint index
+     * @param it timepoint index
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
@@ -289,9 +289,10 @@ class ForwardProblem {
      * @brief Execute everything necessary for the handling of events
      *
      * @param tlastroot pointer to the timepoint of the last event
+     * @param seflag Secondary event flag
      */
 
-    void handleEvent(realtype *tlastroot_,bool seflag);
+    void handleEvent(realtype *tlastroot,bool seflag);
 
     /**
      * @brief Extract output information for events
@@ -303,7 +304,7 @@ class ForwardProblem {
      *
      * @param it index of data point
      */
-    void handleDataPoint(int it_);
+    void handleDataPoint(int it);
 
     /**
      * @brief Applies the event bolus to the current state
@@ -395,7 +396,7 @@ class ForwardProblem {
     realtype t_;
 
     /**
-     * @brief Array of flags indicating which root has beend found.
+     * @brief Array of flags indicating which root has been found.
      *
      * Array of length nr (ne) with the indices of the user functions gi found
      * to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
@@ -445,7 +446,7 @@ class ForwardProblem {
     /** storage for last found root */
     realtype tlastroot_ {0.0};
 
-    /** flag to indicate wheter solver was preeinitialized via preequilibration */
+    /** flag to indicate whether solver was preeinitialized via preequilibration */
     bool preequilibrated_ {false};
 
     /** current iteration number for time index */

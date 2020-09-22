@@ -8,7 +8,6 @@ import os
 import sys
 import shlex
 import subprocess
-import shutil
 
 from distutils import log
 from .swig import find_swig, get_swig_version
@@ -215,16 +214,16 @@ def add_debug_flags_if_required(cxx_flags: List[str],
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         log.info("ENABLE_AMICI_DEBUGGING was set to TRUE."
                  " Building AMICI with debug symbols.")
-        cxx_flags.extend(['-g', '-O0'])
+        cxx_flags.extend(['-g', '-O0', '-UNDEBUG'])
         linker_flags.extend(['-g'])
 
 
-def generate_swig_interface_files(with_hdf5: bool = None) -> None:
+def generate_swig_interface_files(swig_outdir: str = None,
+                                  with_hdf5: bool = None) -> None:
     """
     Compile the swig python interface to amici
     """
 
-    swig_outdir = os.path.join(os.path.abspath(os.getcwd()), "amici")
     swig_exe = find_swig()
     swig_version = get_swig_version(swig_exe)
 
@@ -233,6 +232,7 @@ def generate_swig_interface_files(with_hdf5: bool = None) -> None:
         '-python',
         '-py3',
         '-threads',
+        '-Wall',
         f'-Iamici{os.sep}swig',
         f'-Iamici{os.sep}include',
     ]
@@ -246,13 +246,15 @@ def generate_swig_interface_files(with_hdf5: bool = None) -> None:
     if not with_hdf5:
         swig_args.append('-DAMICI_SWIG_WITHOUT_HDF5')
 
+    if swig_outdir is not None:
+        swig_args.extend(['-outdir', swig_outdir])
+
     # Do we have -doxygen?
     if swig_version >= (4, 0, 0):
         swig_args.append('-doxygen')
 
     swig_cmd = [swig_exe,
                 *swig_args,
-                '-outdir', swig_outdir,
                 '-o', os.path.join("amici", "amici_wrap.cxx"),
                 os.path.join("amici", "swig", "amici.i")]
 

@@ -14,7 +14,10 @@ fonts/*
 images/*
 stylesheets/*
 documentation/_build/*
-
+documentation/_exhale_cpp_api/*
+documentation/_exhale_matlab_api/*
+documentation/_doxyoutput_amici_cpp/*
+documentation/_doxyoutput_amici_matlab/*
 sed-ml/*
 
 models/*
@@ -92,6 +95,8 @@ python/.idea/*
 matlab/mtoc/config/latexextras.sty-e
 matlab/mtoc/config/latexextras.sty
 matlab/mtoc/config/Doxyfile-e
+matlab/mtoc/Doxyfile
+matlab/mtoc/config/mtocpp_filter.sh
 
 cppcheck.txt
 coverage_py.xml
@@ -173,10 +178,12 @@ ThirdParty/SuiteSparse/share/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
-
+ThirdParty/ragel-*.tar.gz
 _untracked/
 
 documentation/generated/*
 
 # vim
 *.swp
+tests/performance/CS_Signalling_ERBB_RAS_AKT/
+tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*

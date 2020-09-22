@@ -32,11 +32,7 @@ message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_jakstat_adjoint_J.cpp
-${MODEL_DIR}/model_jakstat_adjoint_JB.cpp
-${MODEL_DIR}/model_jakstat_adjoint_JDiag.cpp
-${MODEL_DIR}/model_jakstat_adjoint_JSparse.cpp
-${MODEL_DIR}/model_jakstat_adjoint_JSparseB.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/model_jakstat_adjoint_JSparse.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_Jy.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydsigma.cpp
 ${MODEL_DIR}/model_jakstat_adjoint_dJydy.cpp

@@ -40,11 +40,6 @@ class AmiciInstall(install):
             self.no_clibs = True
         install.finalize_options(self)
 
-    def run(self):
-        if not self.no_clibs:
-            generate_swig_interface_files()
-        install.run(self)
-
 
 def compile_parallel(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
@@ -147,7 +142,9 @@ class AmiciDevelop(develop):
         log.debug("running AmiciDevelop")
 
         if not self.no_clibs:
-            generate_swig_interface_files()
+            generate_swig_interface_files(
+                swig_outdir=os.path.join(os.path.abspath(os.getcwd()),
+                                         "amici"))
             self.get_finalized_command('build_clib').run()
 
         develop.run(self)
@@ -167,11 +164,12 @@ class AmiciInstallLib(install_lib):
         if 'ENABLE_AMICI_DEBUGGING' in os.environ \
                 and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
                 and sys.platform == 'darwin':
-            search_dir = os.path.join(os.getcwd(),self.build_dir,'amici')
+            search_dir = os.path.join(os.getcwd(), self.build_dir, 'amici')
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
-                    subprocess.run(['dsymutil',os.path.join(search_dir,file),
-                                    '-o',os.path.join(search_dir,file + '.dSYM')])
+                    subprocess.run(['dsymutil', os.path.join(search_dir, file),
+                                    '-o',
+                                    os.path.join(search_dir, file + '.dSYM')])
 
         # Continue with the actual installation
         install_lib.run(self)
@@ -198,9 +196,6 @@ class AmiciBuildExt(build_ext):
                    and self.get_finalized_command('develop').no_clibs
         no_clibs |= 'install' in self.distribution.command_obj \
                     and self.get_finalized_command('install').no_clibs
-
-        lib_dir = "" if self.inplace \
-            else self.get_finalized_command('build_py').build_lib
 
         if no_clibs:
             # Nothing to build
@@ -231,6 +226,9 @@ class AmiciBuildExt(build_ext):
                 log.info(f"copying {src} -> {dest}")
                 copyfile(src, dest)
 
+            generate_swig_interface_files(
+                swig_outdir=os.path.join(build_dir, 'amici'))
+
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
         # to crashes or wrong results. We rather compile once too often...
@@ -241,55 +239,34 @@ class AmiciBuildExt(build_ext):
 
 
 class AmiciSDist(sdist):
-    """Custom sdist to run swig and add the interface files to the source
-    distribution
-
-    Could have relied on letting build_ext run swig. However, that would
-    require any user having swig installed during package installation. This
-    way we can postpone that until the  package is used to compile generated
-    models.
-    """
+    """Customized creation of source distribution"""
 
     def run(self):
-        """Setuptools entry-point
-
-        Returns:
-
-        """
+        """Setuptools entry-point"""
 
         log.debug("running AmiciSDist")
 
-        self.run_swig()
-        self.save_git_version()
+        save_git_version()
+
         sdist.run(self)
 
-    def run_swig(self):
-        """Run swig
 
-        Returns:
+def save_git_version():
+    """Create file with extended version string
 
-        """
+    This requires git. We assume that whoever creates the sdist will work
+    inside a valid git repository.
 
-        if not self.dry_run:  # --dry-run
-            # We create two SWIG interfaces, one with HDF5 support, one without
-            generate_swig_interface_files()
+    Returns:
 
-    def save_git_version(self):
-        """Create file with extended version string
-
-        This requires git. We assume that whoever creates the sdist will work
-        inside a valid git repository.
-
-        Returns:
-
-        """
-        with open(os.path.join("amici", "git_version.txt"), "w") as f:
-            try:
-                cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
-                       '--always', '--tags']
-                subprocess.run(cmd, stdout=f)
-            except Exception as e:
-                print(e)
+    """
+    with open(os.path.join("amici", "git_version.txt"), "w") as f:
+        try:
+            cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
+                   '--always', '--tags']
+            subprocess.run(cmd, stdout=f)
+        except Exception as e:
+            log.warn(e)
 
 
 def set_compiler_specific_library_options(
@@ -343,7 +320,7 @@ def set_compiler_specific_extension_options(
     for attr in ['extra_compile_args', 'extra_link_args']:
         try:
             new_value = getattr(ext, attr) + \
-                getattr(ext, f'{attr}_{compiler_type}')
+                        getattr(ext, f'{attr}_{compiler_type}')
             setattr(ext, attr, new_value)
             log.info(f"Changed {attr} for {compiler_type} to {new_value}")
         except AttributeError:

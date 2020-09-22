@@ -171,8 +171,7 @@ class SteadystateProblem {
      * @brief Runs the Newton solver iterations and checks for convergence
      * to steady state
      * @param model pointer to the model object
-     * @param newtonSolver pointer to the NewtonSolver object @type
-     * NewtonSolver
+     * @param newtonSolver pointer to the NewtonSolver object
      * @param newton_retry flag indicating if Newton solver is rerun
      */
     void applyNewtonsMethod(Model *model, NewtonSolver *newtonSolver,
@@ -336,7 +335,7 @@ class SteadystateProblem {
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
-     * @return covergence of steady state solver
+     * @return convergence of steady state solver
      */
     bool checkSteadyStateSuccess() const;
 
@@ -349,9 +348,9 @@ class SteadystateProblem {
     AmiVector ewt_;
     /** error weights for backward quadratures, dimension nplist() */
     AmiVector ewtQB_;
-    /** container for relative error calcuation? */
+    /** container for relative error calculation? */
     AmiVector rel_x_newton_;
-    /** container for absolute error calcuation? */
+    /** container for absolute error calculation? */
     AmiVector x_newton_;
     /** state vector */
     AmiVector x_;

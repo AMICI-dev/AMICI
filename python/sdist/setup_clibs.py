@@ -229,7 +229,7 @@ def get_lib_amici(extra_compiler_flags: List[str] = None,
         'sources': get_amici_base_sources(
             with_hdf5=(h5pkgcfg
                        and 'include_dirs' in h5pkgcfg
-                       and h5pkgcfg['include_dirs'])
+                       and len(h5pkgcfg['include_dirs']))
             ),
         'include_dirs': ['amici/include',
                          *suite_sparse_include_dirs,

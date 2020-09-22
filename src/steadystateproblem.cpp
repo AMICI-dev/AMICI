@@ -103,7 +103,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Finalize by setting addjoint state to zero (its steady state) */
-    xB_.reset();
+    xB_.zero();
 }
 
 void SteadystateProblem::findSteadyState(Solver *solver,
@@ -231,9 +231,9 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
     }
 
     /* Will need to write quadratures: set to 0 */
-    xQ_.reset();
-    xQB_.reset();
-    xQBdot_.reset();
+    xQ_.zero();
+    xQB_.zero();
+    xQBdot_.zero();
 
     return true;
 }
@@ -298,8 +298,8 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
 
     /* set starting timepoint for the simulation solver */
     t_ = model->t0();
-    /* xQ was written in getQuadratureByLinSolve() -> reset */
-    xQ_.reset();
+    /* xQ was written in getQuadratureByLinSolve() -> set to zero */
+    xQ_.zero();
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
@@ -482,7 +482,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     bool compNewStep = true;
 
     /* initialize output of linear solver for Newton step */
-    delta_.reset();
+    delta_.zero();
 
     model->fxdot(t_, x_, dx_, xdot_);
 
@@ -679,30 +679,25 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                         AmiVector &yQB) const {
     /* Compute the quadrature as the inner product: yQB = dxotdp * yQ */
 
-    /* reset first, as multiplication add to existing value */
-    yQB.reset();
+    /* set to zero first, as multiplication adds to existing value */
+    yQB.zero();
     /* multiply */
     if (model->pythonGenerated) {
         /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
         model->fdxdotdp(t_, x_, x_);
-
-        if (model->ndxdotdp_explicit > 0)
-            model->dxdotdp_explicit.multiply(yQB.getNVector(),
-                                             yQ.getNVector(), plist, true);
-        if (model->ndxdotdp_implicit > 0)
-            model->dxdotdp_implicit.multiply(yQB.getNVector(),
-                                             yQ.getNVector(), plist, true);
+        model->get_dxdotdp_full().multiply(yQB.getNVector(), yQ.getNVector(),
+                                           plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
             yQB[ip] = N_VDotProd(yQ.getNVector(),
-                                 model->dxdotdp.getNVector(ip));
+                                 model->get_dxdotdp().getNVector(ip));
     }
 }
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
-    xB_.reset();
+    xB_.zero();
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(

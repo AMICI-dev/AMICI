@@ -1,8 +1,3 @@
-.. AMICI documentation master file, created by
-   sphinx-quickstart on Fri Feb 14 13:16:43 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to AMICI's documentation!
 =================================
 
@@ -26,40 +21,30 @@ Welcome to AMICI's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: About
+
+   about
+   availability
+   LICENSE
+   how_to_cite
+   references
+   background
+   glossary
+   contributing
+
+.. toctree::
+   :maxdepth: 2
    :caption: User's guide
 
-   INSTALL
    PYTHON
-
+   CPP
+   MATLAB
 
 .. toctree::
    :maxdepth: 2
    :caption: Developer's guide
 
-   README
-   CONTRIBUTING
-   CPP
    development
-   code_review_guide
-   CI
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API reference
-
-   modules
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: About
-
-   FAQ
-   LICENSE
-   references
-
-
 
 Indices and tables
 ==================

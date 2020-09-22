@@ -6,6 +6,8 @@
 using namespace amici;
 %}
 
+%ignore fM;
+
 // Process symbols in header
 
 %include "amici/model_dae.h"
