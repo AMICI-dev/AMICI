@@ -1,3 +1,11 @@
 \_form#0=33x13:$ \dot{x} = f $
 \_form#1=54x13:$ M \cdot \dot{x} = f $
 \_form#2=104x26:$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
+\_form#3=10x6:$w$
+\_form#4=25x10:$xdot$
+\_form#5=8x9:$y$
+\_form#6=21x13:$dJy$
+\_form#7=121x13:$sy = dydx * sx + dydp$
+\_form#8=15x13:$Jy$
+\_form#9=14x10:$Jz$
+\_form#10=14x6:$rz$

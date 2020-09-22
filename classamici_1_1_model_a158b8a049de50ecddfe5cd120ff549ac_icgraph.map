@@ -1,20 +1,4 @@
 <map id="ncl" name="ncl">
-<area shape="rect" id="node1" title="Number of conservation laws." alt="" coords="836,123,875,150"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a647b2865d4c9f26ad461a51246bbefcd" title="Initial value for initial state sensitivities." alt="" coords="711,22,758,49"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#ac4044c8b06d92618b69d0d4fcc083811" title="Initialization of initial state sensitivities." alt="" coords="461,70,632,97"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a79d8a1d0d4ef31605f9c21e2f6828ae0" title="Sets only those initial states sensitivities that are affected from fx0 fixedParmeters." alt="" coords="472,121,621,147"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="697,178,773,205"/>
-<area shape="rect" id="node12" href="$classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="681,333,788,359"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a1d8b7271972a7882f18e1c9ea3308e38" title="Get the initial states sensitivities." alt="" coords="460,15,633,42"/>
-<area shape="rect" id="node4" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="240,5,400,47"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a76f3aa67bb6232cce1f56cc1ec9c9c4e" title="Initialization of model properties." alt="" coords="285,71,355,98"/>
-<area shape="rect" id="node9" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="479,172,614,213"/>
-<area shape="rect" id="node10" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="239,212,401,253"/>
-<area shape="rect" id="node11" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,343,180,384"/>
-<area shape="rect" id="node13" href="$classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="477,325,616,367"/>
-<area shape="rect" id="node18" href="$classamici_1_1_model_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original state on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="476,391,617,432"/>
-<area shape="rect" id="node14" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="233,277,407,319"/>
-<area shape="rect" id="node15" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="237,343,403,384"/>
-<area shape="rect" id="node16" href="$classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="241,408,399,449"/>
-<area shape="rect" id="node17" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,474,412,530"/>
+<area shape="rect" id="node1" title="Get number of conservation laws." alt="" coords="160,5,199,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="Set the current model state." alt="" coords="5,5,112,32"/>
 </map>

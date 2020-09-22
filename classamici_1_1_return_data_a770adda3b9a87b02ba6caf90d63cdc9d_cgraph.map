@@ -1,12 +1,6 @@
 <map id="storeJacobianAndDerivativeInReturnData" name="storeJacobianAndDerivativeInReturnData">
-<area shape="rect" id="node1" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,57,189,98"/>
-<area shape="rect" id="node2" href="$classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="237,5,401,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="247,57,392,98"/>
-<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="250,123,389,149"/>
-<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="489,72,597,99"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="449,123,637,149"/>
-<area shape="rect" id="node10" href="$classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="486,173,601,200"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="685,72,807,99"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="687,123,805,149"/>
-<area shape="rect" id="node9" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="687,173,805,200"/>
+<area shape="rect" id="node1" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,57,191,98"/>
+<area shape="rect" id="node2" href="$classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="239,5,403,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="248,57,393,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="251,123,390,149"/>
 </map>

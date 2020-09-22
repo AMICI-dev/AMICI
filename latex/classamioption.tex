@@ -2,7 +2,7 @@
 \label{classamioption}\index{amioption@{amioption}}
 
 
-A\+M\+I\+O\+P\+T\+I\+ON provides an option container to pass simulation parameters to the simulation routine.  
+AMIOPTION provides an option container to pass simulation parameters to the simulation routine.  
 
 
 
@@ -12,14 +12,19 @@ Inheritance diagram for amioption\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=163pt]{classamioption__inherit__graph}
+\includegraphics[width=164pt]{classamioption__inherit__graph}
 \end{center}
 \end{figure}
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{amioption}} (matlabtypesubstitute varargin)
-\begin{DoxyCompactList}\small\item\em amioptions Construct a new amioptions object O\+P\+TS = \mbox{\hyperlink{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{amioption()}} creates a set of options with each option set to its default value. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em amioptions Construct a new amioptions object OPTS = \mbox{\hyperlink{classamioption_a86c655c4010c1c2ddb3e68693a07ef37}{amioption()}} creates a set of options with each option set to its default value. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamioption_ab36a59e8722964858e702a11b4fce78f}{get\+Integer\+PScale}} (matlabtypesubstitute pscale\+String)
+\begin{DoxyCompactList}\small\item\em pscale\+Int converts a parameter scaling string into the corresponding integer representation \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
@@ -99,9 +104,9 @@ Definition at line 17 of file amioption.\+m.
 \doxyparagraph{\texorpdfstring{amioption()}{amioption()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamioption}{amioption}} (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{varargin }\end{DoxyParamCaption})}
 
-O\+P\+TS = \mbox{\hyperlink{classamioption}{amioption(\+P\+A\+R\+A\+M, V\+A\+L, ...)}} creates a set of options with the named parameters altered with the specified values.
+OPTS = \mbox{\hyperlink{classamioption}{amioption(\+PARAM, VAL, ...)}} creates a set of options with the named parameters altered with the specified values.
 
-O\+P\+TS = \mbox{\hyperlink{classamioption}{amioption(\+O\+L\+D\+O\+P\+T\+S, P\+A\+R\+A\+M, V\+A\+L, ...)}} creates a copy of O\+L\+D\+O\+P\+TS with the named parameters altered with the specified value
+OPTS = \mbox{\hyperlink{classamioption}{amioption(\+OLDOPTS, PARAM, VAL, ...)}} creates a copy of OLDOPTS with the named parameters altered with the specified value
 
 Note\+: to see the parameters, check the documentation page for amioption
 
@@ -113,6 +118,29 @@ Note\+: to see the parameters, check the documentation page for amioption
 
 
 Definition at line 275 of file amioption.\+m.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamioption_ab36a59e8722964858e702a11b4fce78f}\label{classamioption_ab36a59e8722964858e702a11b4fce78f}} 
+\index{amioption@{amioption}!getIntegerPScale@{getIntegerPScale}}
+\index{getIntegerPScale@{getIntegerPScale}!amioption@{amioption}}
+\doxyparagraph{\texorpdfstring{getIntegerPScale()}{getIntegerPScale()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ get\+Integer\+PScale (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{pscale\+String }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em pscale\+String} & parameter scaling string\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em pscale\+String} & int \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 494 of file amioption.\+m.
 
 
 

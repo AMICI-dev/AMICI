@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['returndata_1003',['ReturnData',['../classamici_1_1_return_data.html',1,'amici']]]
+  ['returndata_1011',['ReturnData',['../classamici_1_1_return_data.html',1,'amici']]]
 ];

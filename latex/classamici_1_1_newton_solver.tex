@@ -39,7 +39,7 @@ virtual void \mbox{\hyperlink{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0
 \doxysubsubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} $>$ \mbox{\hyperlink{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696}{get\+Solver}} (realtype $\ast$t, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$x, \mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&simulation\+Solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model)
+static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} $>$ \mbox{\hyperlink{classamici_1_1_newton_solver_a4b960bd1009b7927ecd3d35b7025abc1}{get\+Solver}} (realtype $\ast$t, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$x, \mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&simulation\+Solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model)
 \begin{DoxyCompactList}\small\item\em Factory method to create a \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} based on linsol\+Type. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
@@ -102,16 +102,12 @@ Definition at line 22 of file newton\+\_\+solver.\+h.
 \end{DoxyParams}
 
 
-Definition at line 18 of file newton\+\_\+solver.\+cpp.
-
-
-
 \doxysubsubsection{Member Function Documentation}
-\mbox{\Hypertarget{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696}\label{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696}} 
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a4b960bd1009b7927ecd3d35b7025abc1}\label{classamici_1_1_newton_solver_a4b960bd1009b7927ecd3d35b7025abc1}} 
 \index{NewtonSolver@{NewtonSolver}!getSolver@{getSolver}}
 \index{getSolver@{getSolver}!NewtonSolver@{NewtonSolver}}
 \doxyparagraph{\texorpdfstring{getSolver()}{getSolver()}}
-{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} $>$ get\+Solver (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{t,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$}]{x,  }\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&}]{simulation\+Solver,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+{\footnotesize\ttfamily static std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}}$>$ get\+Solver (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{t,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$}]{x,  }\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&}]{simulation\+Solver,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
 
 
 \begin{DoxyParams}{Parameters}
@@ -127,26 +123,6 @@ Definition at line 18 of file newton\+\_\+solver.\+cpp.
 \begin{DoxyReturn}{Returns}
 solver \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} according to the specified linsol\+Type 
 \end{DoxyReturn}
-
-
-Definition at line 25 of file newton\+\_\+solver.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=293pt]{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_newton_solver_a5d7771aef57a9dd773fedb39323b3a04}\label{classamici_1_1_newton_solver_a5d7771aef57a9dd773fedb39323b3a04}} 
 \index{NewtonSolver@{NewtonSolver}!getStep@{getStep}}
 \index{getStep@{getStep}!NewtonSolver@{NewtonSolver}}
@@ -159,29 +135,9 @@ Here is the caller graph for this function\+:
 \hline
 {\em nnewt} & integer number of current Newton step \\
 \hline
-{\em delta} & containing the R\+HS of the linear system, will be overwritten by solution to the linear system \\
+{\em delta} & containing the RHS of the linear system, will be overwritten by solution to the linear system \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 85 of file newton\+\_\+solver.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=289pt]{classamici_1_1_newton_solver_a5d7771aef57a9dd773fedb39323b3a04_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_newton_solver_a5d7771aef57a9dd773fedb39323b3a04_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_newton_solver_a8061901935161d3cbd563daae8fa4e9f}\label{classamici_1_1_newton_solver_a8061901935161d3cbd563daae8fa4e9f}} 
 \index{NewtonSolver@{NewtonSolver}!computeNewtonSensis@{computeNewtonSensis}}
 \index{computeNewtonSensis@{computeNewtonSensis}!NewtonSolver@{NewtonSolver}}
@@ -193,18 +149,6 @@ Here is the caller graph for this function\+:
 {\em sx} & pointer to state variable sensitivities \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 94 of file newton\+\_\+solver.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_newton_solver_a8061901935161d3cbd563daae8fa4e9f_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_newton_solver_a528485b9baf6dfda4348cc5a22d89a13}\label{classamici_1_1_newton_solver_a528485b9baf6dfda4348cc5a22d89a13}} 
 \index{NewtonSolver@{NewtonSolver}!getNumLinSteps@{getNumLinSteps}}
 \index{getNumLinSteps@{getNumLinSteps}!NewtonSolver@{NewtonSolver}}
@@ -235,14 +179,6 @@ Definition at line 69 of file newton\+\_\+solver.\+h.
 
 Implemented in \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_a0b900656d018299b08d0f027e95bd347}{Newton\+Solver\+Iterative}}, \mbox{\hyperlink{classamici_1_1_newton_solver_sparse_a0b900656d018299b08d0f027e95bd347}{Newton\+Solver\+Sparse}}, and \mbox{\hyperlink{classamici_1_1_newton_solver_dense_a0b900656d018299b08d0f027e95bd347}{Newton\+Solver\+Dense}}.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_newton_solver_a4aed46b0343374f171f9b4b51fa009e7_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_newton_solver_a522e8e16d023d90584a0666e5cff9862}\label{classamici_1_1_newton_solver_a522e8e16d023d90584a0666e5cff9862}} 
 \index{NewtonSolver@{NewtonSolver}!prepareLinearSystemB@{prepareLinearSystemB}}
 \index{prepareLinearSystemB@{prepareLinearSystemB}!NewtonSolver@{NewtonSolver}}
@@ -262,14 +198,6 @@ Writes the Jacobian (JB) for the Newton iteration and passes it to the linear so
 
 Implemented in \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_aaa73aa6ff400b0a59dc47a586bd2024a}{Newton\+Solver\+Iterative}}, \mbox{\hyperlink{classamici_1_1_newton_solver_sparse_aaa73aa6ff400b0a59dc47a586bd2024a}{Newton\+Solver\+Sparse}}, and \mbox{\hyperlink{classamici_1_1_newton_solver_dense_aaa73aa6ff400b0a59dc47a586bd2024a}{Newton\+Solver\+Dense}}.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_newton_solver_a522e8e16d023d90584a0666e5cff9862_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0f28b6191793f}\label{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0f28b6191793f}} 
 \index{NewtonSolver@{NewtonSolver}!solveLinearSystem@{solveLinearSystem}}
 \index{solveLinearSystem@{solveLinearSystem}!NewtonSolver@{NewtonSolver}}
@@ -278,21 +206,13 @@ Here is the caller graph for this function\+:
 
 
 \begin{DoxyParams}{Parameters}
-{\em rhs} & containing the R\+HS of the linear system, will be overwritten by solution to the linear system \\
+{\em rhs} & containing the RHS of the linear system, will be overwritten by solution to the linear system \\
 \hline
 \end{DoxyParams}
 
 
 Implemented in \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_ab46a7b328bc1be64b6b9e4ee8213626a}{Newton\+Solver\+Iterative}}, \mbox{\hyperlink{classamici_1_1_newton_solver_sparse_ab46a7b328bc1be64b6b9e4ee8213626a}{Newton\+Solver\+Sparse}}, and \mbox{\hyperlink{classamici_1_1_newton_solver_dense_ab46a7b328bc1be64b6b9e4ee8213626a}{Newton\+Solver\+Dense}}.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0f28b6191793f_icgraph}
-\end{center}
-\end{figure}
 
 
 \doxysubsubsection{Member Data Documentation}
@@ -402,7 +322,7 @@ Definition at line 125 of file newton\+\_\+solver.\+h.
 \doxyparagraph{\texorpdfstring{dx\_}{dx\_}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
-current state time derivative (D\+AE) 
+current state time derivative (DAE) 
 
 Definition at line 127 of file newton\+\_\+solver.\+h.
 
@@ -432,7 +352,7 @@ Definition at line 131 of file newton\+\_\+solver.\+h.
 \doxyparagraph{\texorpdfstring{dxB\_}{dxB\_}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\+B\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
-current adjoint state time derivative (D\+AE) 
+current adjoint state time derivative (DAE) 
 
 Definition at line 133 of file newton\+\_\+solver.\+h.
 

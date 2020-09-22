@@ -2,7 +2,7 @@
 \label{classamici_1_1_ami_exception}\index{AmiException@{AmiException}}
 
 
-A\+M\+I\+CI exception class.  
+AMICI exception class.  
 
 
 
@@ -24,9 +24,9 @@ Inheritance diagram for Ami\+Exception\+:
 \item 
 \mbox{\hyperlink{classamici_1_1_ami_exception_a002ee872acedd472df0550357a67393c}{Ami\+Exception}} (char const $\ast$fmt,...)
 \begin{DoxyCompactList}\small\item\em Constructor with printf style interface. \end{DoxyCompactList}\item 
-const char $\ast$ \mbox{\hyperlink{classamici_1_1_ami_exception_abf843cbb29dec939d0731e491bab6f70}{what}} () const noexcept override
+const char $\ast$ \mbox{\hyperlink{classamici_1_1_ami_exception_aac1c33909e01e1dfc85617cf2477d3eb}{what}} () const noexcept override
 \begin{DoxyCompactList}\small\item\em Override of default error message function. \end{DoxyCompactList}\item 
-const char $\ast$ \mbox{\hyperlink{classamici_1_1_ami_exception_af39d1951aaa964b373590ff5a00f9d31}{get\+Backtrace}} () const
+const char $\ast$ \mbox{\hyperlink{classamici_1_1_ami_exception_abd4eec3294e3af56ff54130ca3f2dea9}{get\+Backtrace}} () const
 \begin{DoxyCompactList}\small\item\em Returns the stored backtrace. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_ami_exception_abe5c15906f4291bad376c2e2245dfc4a}{store\+Backtrace}} (int n\+Max\+Frames)
 \begin{DoxyCompactList}\small\item\em Stores the current backtrace. \end{DoxyCompactList}\end{DoxyCompactItemize}
@@ -50,50 +50,30 @@ Definition at line 16 of file exception.\+h.
 \begin{DoxyParams}{Parameters}
 {\em fmt} & error message with printf format \\
 \hline
-{\em ...} & printf formating variables \\
+{\em ...} & printf formatting variables \\
 \hline
 \end{DoxyParams}
 
 
-Definition at line 11 of file exception.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=276pt]{classamici_1_1_ami_exception_a002ee872acedd472df0550357a67393c_cgraph}
-\end{center}
-\end{figure}
-
-
 \doxysubsubsection{Member Function Documentation}
-\mbox{\Hypertarget{classamici_1_1_ami_exception_abf843cbb29dec939d0731e491bab6f70}\label{classamici_1_1_ami_exception_abf843cbb29dec939d0731e491bab6f70}} 
+\mbox{\Hypertarget{classamici_1_1_ami_exception_aac1c33909e01e1dfc85617cf2477d3eb}\label{classamici_1_1_ami_exception_aac1c33909e01e1dfc85617cf2477d3eb}} 
 \index{AmiException@{AmiException}!what@{what}}
 \index{what@{what}!AmiException@{AmiException}}
 \doxyparagraph{\texorpdfstring{what()}{what()}}
-{\footnotesize\ttfamily const char $\ast$ what (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [noexcept]}}
+{\footnotesize\ttfamily const char$\ast$ what (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [noexcept]}}
 
 \begin{DoxyReturn}{Returns}
 msg error message 
 \end{DoxyReturn}
-
-
-Definition at line 19 of file exception.\+cpp.
-
-\mbox{\Hypertarget{classamici_1_1_ami_exception_af39d1951aaa964b373590ff5a00f9d31}\label{classamici_1_1_ami_exception_af39d1951aaa964b373590ff5a00f9d31}} 
+\mbox{\Hypertarget{classamici_1_1_ami_exception_abd4eec3294e3af56ff54130ca3f2dea9}\label{classamici_1_1_ami_exception_abd4eec3294e3af56ff54130ca3f2dea9}} 
 \index{AmiException@{AmiException}!getBacktrace@{getBacktrace}}
 \index{getBacktrace@{getBacktrace}!AmiException@{AmiException}}
 \doxyparagraph{\texorpdfstring{getBacktrace()}{getBacktrace()}}
-{\footnotesize\ttfamily const char $\ast$ get\+Backtrace (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily const char$\ast$ get\+Backtrace (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 trace backtrace 
 \end{DoxyReturn}
-
-
-Definition at line 23 of file exception.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_ami_exception_abe5c15906f4291bad376c2e2245dfc4a}\label{classamici_1_1_ami_exception_abe5c15906f4291bad376c2e2245dfc4a}} 
 \index{AmiException@{AmiException}!storeBacktrace@{storeBacktrace}}
 \index{storeBacktrace@{storeBacktrace}!AmiException@{AmiException}}
@@ -105,15 +85,3 @@ Definition at line 23 of file exception.\+cpp.
 {\em n\+Max\+Frames} & number of frames to go back in stacktrace \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 27 of file exception.\+cpp.
-
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=276pt]{classamici_1_1_ami_exception_abe5c15906f4291bad376c2e2245dfc4a_icgraph}
-\end{center}
-\end{figure}

@@ -1,7 +1,4 @@
 <map id="fJ" name="fJ">
-<area shape="rect" id="node1" title="Dense Jacobian function." alt="" coords="464,78,503,105"/>
-<area shape="rect" id="node2" href="$classamici_1_1_newton_solver_dense.html#a0b900656d018299b08d0f027e95bd347" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="233,5,411,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_newton_solver_iterative.html#a0b900656d018299b08d0f027e95bd347" title=" " alt="" coords="228,71,416,112"/>
-<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="230,137,414,193"/>
-<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,144,180,185"/>
+<area shape="rect" id="node1" title="Dense Jacobian function." alt="" coords="239,20,277,47"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,5,191,61"/>
 </map>

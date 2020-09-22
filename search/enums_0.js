@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mexrhsarguments_1980',['mexRhsArguments',['../interface__matlab_8cpp.html#a21e434b9deb0ebd129f5b554336b8268',1,'amici']]]
+  ['stateordering_2008',['StateOrdering',['../classamici_1_1_s_u_n_lin_sol_k_l_u.html#a890d968060d6d830aeed98dbeb04447f',1,'amici::SUNLinSolKLU']]]
 ];

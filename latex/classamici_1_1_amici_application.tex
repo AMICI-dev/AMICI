@@ -2,7 +2,7 @@
 \label{classamici_1_1_amici_application}\index{AmiciApplication@{AmiciApplication}}
 
 
-Main class for making calls to A\+M\+I\+CI.  
+Main class for making calls to AMICI.  
 
 
 
@@ -12,9 +12,9 @@ Main class for making calls to A\+M\+I\+CI.
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}} $>$ \mbox{\hyperlink{classamici_1_1_amici_application_a025192a6f53e19eae958cd3b14786f80}{run\+Amici\+Simulation}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&solver, const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$edata, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, bool rethrow=false)
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}} $>$ \mbox{\hyperlink{classamici_1_1_amici_application_ae6efa3325db6e57d2791d55d3d534eca}{run\+Amici\+Simulation}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&solver, const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$edata, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, bool rethrow=false)
 \begin{DoxyCompactList}\small\item\em Core integration routine. Initializes the solver and runs the forward and backward problem. \end{DoxyCompactList}\item 
-std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}} $>$ $>$ \mbox{\hyperlink{classamici_1_1_amici_application_a8f9dcb693a4bba91fe1b4fdd47e96ed9}{run\+Amici\+Simulations}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} const \&solver, const std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$ $>$ \&edatas, \mbox{\hyperlink{classamici_1_1_model}{Model}} const \&model, bool failfast, int num\+\_\+threads)
+std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}} $>$ $>$ \mbox{\hyperlink{classamici_1_1_amici_application_a344809c6767bbdeef4ab56b66ba6d4d8}{run\+Amici\+Simulations}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} const \&solver, const std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$ $>$ \&edatas, \mbox{\hyperlink{classamici_1_1_model}{Model}} const \&model, bool failfast, int num\+\_\+threads)
 \begin{DoxyCompactList}\small\item\em Same as run\+Amici\+Simulation, but for multiple \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} instances. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_amici_application_adf3072bba7da1cf35c33dd0770e5b873}{warningF}} (const char $\ast$identifier, const char $\ast$format,...) const
 \begin{DoxyCompactList}\small\item\em printf interface to \mbox{\hyperlink{classamici_1_1_amici_application_a0530e15cbbe0c03b6b15aee9a7da885b}{warning()}} \end{DoxyCompactList}\item 
@@ -32,20 +32,20 @@ output\+Function\+Type \mbox{\hyperlink{classamici_1_1_amici_application_ae2a9ce
 
 
 \doxysubsubsection{Detailed Description}
-This class is used to provide separate A\+M\+I\+CI contexts, for example, for use in multi-\/threaded applications where different threads want to use A\+M\+I\+CI with different settings, such custom logging functions.
+This class is used to provide separate AMICI contexts, for example, for use in multi-\/threaded applications where different threads want to use AMICI with different settings, such custom logging functions.
 
-N\+O\+TE\+: For this moment, the context object needs to be set manually to any \mbox{\hyperlink{classamici_1_1_model}{Model}} and \mbox{\hyperlink{classamici_1_1_solver}{Solver}} object. If not set, they will use the default output channel. 
+NOTE\+: For this moment, the context object needs to be set manually to any \mbox{\hyperlink{classamici_1_1_model}{Model}} and \mbox{\hyperlink{classamici_1_1_solver}{Solver}} object. If not set, they will use the default output channel. 
 
 Definition at line 44 of file amici.\+h.
 
 
 
 \doxysubsubsection{Member Function Documentation}
-\mbox{\Hypertarget{classamici_1_1_amici_application_a025192a6f53e19eae958cd3b14786f80}\label{classamici_1_1_amici_application_a025192a6f53e19eae958cd3b14786f80}} 
+\mbox{\Hypertarget{classamici_1_1_amici_application_ae6efa3325db6e57d2791d55d3d534eca}\label{classamici_1_1_amici_application_ae6efa3325db6e57d2791d55d3d534eca}} 
 \index{AmiciApplication@{AmiciApplication}!runAmiciSimulation@{runAmiciSimulation}}
 \index{runAmiciSimulation@{runAmiciSimulation}!AmiciApplication@{AmiciApplication}}
 \doxyparagraph{\texorpdfstring{runAmiciSimulation()}{runAmiciSimulation()}}
-{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}} $>$ run\+Amici\+Simulation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&}]{solver,  }\item[{const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$}]{edata,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} \&}]{model,  }\item[{bool}]{rethrow = {\ttfamily false} }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}}$>$ run\+Amici\+Simulation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&}]{solver,  }\item[{const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$}]{edata,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} \&}]{model,  }\item[{bool}]{rethrow = {\ttfamily false} }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -61,23 +61,11 @@ Definition at line 44 of file amici.\+h.
 \begin{DoxyReturn}{Returns}
 rdata pointer to return data object 
 \end{DoxyReturn}
-
-
-Definition at line 98 of file amici.\+cpp.
-
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=323pt]{classamici_1_1_amici_application_a025192a6f53e19eae958cd3b14786f80_icgraph}
-\end{center}
-\end{figure}
-\mbox{\Hypertarget{classamici_1_1_amici_application_a8f9dcb693a4bba91fe1b4fdd47e96ed9}\label{classamici_1_1_amici_application_a8f9dcb693a4bba91fe1b4fdd47e96ed9}} 
+\mbox{\Hypertarget{classamici_1_1_amici_application_a344809c6767bbdeef4ab56b66ba6d4d8}\label{classamici_1_1_amici_application_a344809c6767bbdeef4ab56b66ba6d4d8}} 
 \index{AmiciApplication@{AmiciApplication}!runAmiciSimulations@{runAmiciSimulations}}
 \index{runAmiciSimulations@{runAmiciSimulations}!AmiciApplication@{AmiciApplication}}
 \doxyparagraph{\texorpdfstring{runAmiciSimulations()}{runAmiciSimulations()}}
-{\footnotesize\ttfamily std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}} $>$ $>$ run\+Amici\+Simulations (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} const \&}]{solver,  }\item[{const std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$ $>$ \&}]{edatas,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} const \&}]{model,  }\item[{bool}]{failfast,  }\item[{int}]{num\+\_\+threads }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily std\+::vector$<$std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classamici_1_1_return_data}{Return\+Data}}$>$ $>$ run\+Amici\+Simulations (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} const \&}]{solver,  }\item[{const std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$ $>$ \&}]{edatas,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} const \&}]{model,  }\item[{bool}]{failfast,  }\item[{int}]{num\+\_\+threads }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -95,18 +83,6 @@ Here is the caller graph for this function\+:
 \begin{DoxyReturn}{Returns}
 vector of pointers to return data objects 
 \end{DoxyReturn}
-
-
-Definition at line 200 of file amici.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=325pt]{classamici_1_1_amici_application_a8f9dcb693a4bba91fe1b4fdd47e96ed9_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_amici_application_adf3072bba7da1cf35c33dd0770e5b873}\label{classamici_1_1_amici_application_adf3072bba7da1cf35c33dd0770e5b873}} 
 \index{AmiciApplication@{AmiciApplication}!warningF@{warningF}}
 \index{warningF@{warningF}!AmiciApplication@{AmiciApplication}}
@@ -122,18 +98,6 @@ Here is the call graph for this function\+:
 {\em ...} & arguments to be formatted \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 241 of file amici.\+cpp.
-
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_amici_application_adf3072bba7da1cf35c33dd0770e5b873_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_amici_application_a36140e18b0fe7c7ac4a2b44ae3c6e3b8}\label{classamici_1_1_amici_application_a36140e18b0fe7c7ac4a2b44ae3c6e3b8}} 
 \index{AmiciApplication@{AmiciApplication}!errorF@{errorF}}
 \index{errorF@{errorF}!AmiciApplication@{AmiciApplication}}
@@ -149,18 +113,6 @@ Here is the caller graph for this function\+:
 {\em ...} & arguments to be formatted \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 251 of file amici.\+cpp.
-
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=231pt]{classamici_1_1_amici_application_a36140e18b0fe7c7ac4a2b44ae3c6e3b8_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_amici_application_a7f48f4919daa680eb35a4a03b427e717}\label{classamici_1_1_amici_application_a7f48f4919daa680eb35a4a03b427e717}} 
 \index{AmiciApplication@{AmiciApplication}!checkFinite@{checkFinite}}
 \index{checkFinite@{checkFinite}!AmiciApplication@{AmiciApplication}}
@@ -175,28 +127,8 @@ Here is the caller graph for this function\+:
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-A\+M\+I\+C\+I\+\_\+\+R\+E\+C\+O\+V\+E\+R\+A\+B\+L\+E\+\_\+\+E\+R\+R\+OR if a Na\+N/\+Inf value was found, A\+M\+I\+C\+I\+\_\+\+S\+U\+C\+C\+E\+SS otherwise 
+AMICI\+\_\+\+RECOVERABLE\+\_\+\+ERROR if a Na\+N/\+Inf value was found, AMICI\+\_\+\+SUCCESS otherwise 
 \end{DoxyReturn}
-
-
-Definition at line 261 of file amici.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=239pt]{classamici_1_1_amici_application_a7f48f4919daa680eb35a4a03b427e717_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_amici_application_a7f48f4919daa680eb35a4a03b427e717_icgraph}
-\end{center}
-\end{figure}
 
 
 \doxysubsubsection{Member Data Documentation}

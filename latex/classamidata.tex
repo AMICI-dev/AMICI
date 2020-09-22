@@ -2,7 +2,7 @@
 \label{classamidata}\index{amidata@{amidata}}
 
 
-A\+M\+I\+D\+A\+TA provides a data container to pass experimental data to the simulation routine for likelihood computation. when any of the properties are updated, the class automatically checks consistency of dimension and updates related properties and initialises them with Na\+Ns.  
+AMIDATA provides a data container to pass experimental data to the simulation routine for likelihood computation. when any of the properties are updated, the class automatically checks consistency of dimension and updates related properties and initialises them with Na\+Ns.  
 
 
 
@@ -65,12 +65,12 @@ Definition at line 17 of file amidata.\+m.
 \doxyparagraph{\texorpdfstring{amidata()}{amidata()}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamidata}{amidata}} (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{varargin }\end{DoxyParamCaption})}
 
-A\+M\+I\+D\+A\+T\+A(amidata) creates a copy of the input container
+AMIDATA(amidata) creates a copy of the input container
 
-A\+M\+I\+D\+A\+T\+A(struct) tries to creates an amidata container from the input struct. the struct should have the following \begin{DoxyParagraph}{fields}
+AMIDATA(struct) tries to creates an amidata container from the input struct. the struct should have the following \begin{DoxyParagraph}{fields}
 t \mbox{[}nt,1\mbox{]} Y \mbox{[}nt,ny\mbox{]} Sigma\+\_\+Y \mbox{[}nt,ny\mbox{]} Z \mbox{[}ne,nz\mbox{]} Sigma\+\_\+Z \mbox{[}ne,nz\mbox{]} condition \mbox{[}nk,1\mbox{]} condition\+Preequilibration \mbox{[}nk,1\mbox{]} if some fields are missing the function will try to initialise them with Na\+Ns with consistent dimensions
 \end{DoxyParagraph}
-A\+M\+I\+D\+A\+T\+A(nt,ny,nz,ne,nk) constructs an empty data container with in the provided dimensions intialised with Na\+Ns
+AMIDATA(nt,ny,nz,ne,nk) constructs an empty data container with in the provided dimensions intialised with Na\+Ns
 
 
 \begin{DoxyParams}{Parameters}

@@ -1,6 +1,7 @@
 var classamioption =
 [
     [ "amioption", "classamioption.html#a86c655c4010c1c2ddb3e68693a07ef37", null ],
+    [ "getIntegerPScale", "classamioption.html#ab36a59e8722964858e702a11b4fce78f", null ],
     [ "atol", "classamioption.html#a0c5f3dcf809a17b895fe12fc91272349", null ],
     [ "rtol", "classamioption.html#a7978e9a4674f869e6b2950e2f6262ca5", null ],
     [ "maxsteps", "classamioption.html#ac37622882dacee1f11688d4941ccb45e", null ],

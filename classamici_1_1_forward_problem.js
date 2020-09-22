@@ -28,7 +28,6 @@ var classamici_1_1_forward_problem =
     [ "getSimulationStateEvent", "classamici_1_1_forward_problem.html#acee64e6e29f62a05406e9202e1fcbe91", null ],
     [ "getInitialSimulationState", "classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e", null ],
     [ "getFinalSimulationState", "classamici_1_1_forward_problem.html#a1a982c5ab1520f78f01323170919a7d3", null ],
-    [ "FinalStateStorer", "classamici_1_1_forward_problem.html#a1f14d35be891ba8fb75ad730ddb938a3", null ],
     [ "model", "classamici_1_1_forward_problem.html#a7b56c3ca57dde73bdbc8dbe9772bca19", null ],
     [ "solver", "classamici_1_1_forward_problem.html#ae1ad25a4dd6b076c27672dc94d11dad0", null ],
     [ "edata", "classamici_1_1_forward_problem.html#a9ec6aee8cd7c91d0e49aed6e3d0db4ce", null ]

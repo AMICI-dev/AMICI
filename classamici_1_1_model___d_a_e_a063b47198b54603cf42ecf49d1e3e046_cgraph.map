@@ -1,22 +1,5 @@
 <map id="fdxdotdp" name="fdxdotdp">
-<area shape="rect" id="node1" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="5,171,77,197"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model___d_a_e.html#a8620db421a61b89420be89f9b2d8306b" title="Sensitivity of dx/dt wrt model parameters p." alt="" coords="125,291,197,317"/>
-<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a3e1efd4f449f6a618dcbce7df70689d0" title="N_Vector accessor." alt="" coords="487,5,680,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="245,95,436,121"/>
-<area shape="rect" id="node7" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="497,158,669,199"/>
-<area shape="rect" id="node8" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="265,367,417,409"/>
-<area shape="rect" id="node9" href="$classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="271,316,410,343"/>
-<area shape="rect" id="node18" href="$classamici_1_1_ami_vector_array.html#a387bfb58f20388d99da7f946a3a27ab8" title="accessor to NVector element" alt="" coords="265,433,417,474"/>
-<area shape="rect" id="node19" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="273,499,408,525"/>
-<area shape="rect" id="node20" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="277,215,405,241"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="513,107,653,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="490,56,677,83"/>
-<area shape="rect" id="node10" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="731,490,889,531"/>
-<area shape="rect" id="node11" href="$classamici_1_1_abstract_model.html#af01c88fa595b044dfe13b89c38c3e4aa" title="Model specific implementation for dwdp, column pointers." alt="" coords="511,574,656,615"/>
-<area shape="rect" id="node12" href="$classamici_1_1_abstract_model.html#a7f8f45ae5b3f2edc4c4c64bbe4c6bce4" title="Model specific implementation for dwdp, row values." alt="" coords="511,639,656,681"/>
-<area shape="rect" id="node13" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="525,523,642,549"/>
-<area shape="rect" id="node14" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="484,224,683,251"/>
-<area shape="rect" id="node15" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="497,275,669,317"/>
-<area shape="rect" id="node16" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="497,341,669,382"/>
-<area shape="rect" id="node17" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="497,406,669,447"/>
+<area shape="rect" id="node1" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="5,31,77,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model___d_a_e.html#a8620db421a61b89420be89f9b2d8306b" title="Sensitivity of dx/dt wrt model parameters p." alt="" coords="187,5,259,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a3e1efd4f449f6a618dcbce7df70689d0" title="N_Vector accessor." alt="" coords="125,56,320,83"/>
 </map>

@@ -1,8 +1,10 @@
-In the following we will give a detailed overview how to specify models in M\+A\+T\+L\+AB and how to call the generated simulation files.\hypertarget{matlab_interface_autotoc_md53}{}\doxysubsection{Model Definition}\label{matlab_interface_autotoc_md53}
-This guide will guide the user on how to specify models in M\+A\+T\+L\+AB. For example implementations see the examples in the matlab/examples directory.\hypertarget{matlab_interface_autotoc_md54}{}\doxysubsubsection{Header}\label{matlab_interface_autotoc_md54}
+\label{matlab_interface_md_documentation_MATLAB_}%
+\Hypertarget{matlab_interface_md_documentation_MATLAB_}%
+ In the following we will give a detailed overview how to specify models in MATLAB and how to call the generated simulation files.\hypertarget{matlab_interface_autotoc_md45}{}\doxysubsection{Model Definition}\label{matlab_interface_autotoc_md45}
+This guide will guide the user on how to specify models in MATLAB. For example implementations see the examples in the matlab/examples directory.\hypertarget{matlab_interface_autotoc_md46}{}\doxysubsubsection{Header}\label{matlab_interface_autotoc_md46}
 The model definition needs to be defined as a function which returns a struct with all symbolic definitions and options. \begin{DoxyVerb}function [model] = example_model_syms()
 \end{DoxyVerb}
-\hypertarget{matlab_interface_autotoc_md55}{}\doxysubsubsection{Options}\label{matlab_interface_autotoc_md55}
+\hypertarget{matlab_interface_autotoc_md47}{}\doxysubsubsection{Options}\label{matlab_interface_autotoc_md47}
 Set the options by specifying the respective field of the modelstruct \begin{DoxyVerb}model.(fieldname) = value
 \end{DoxyVerb}
 
@@ -12,42 +14,42 @@ The options specify default options for simulation, parametrisation and compilat
 \tabulinesep=1mm
 \begin{longtabu}spread 0pt [c]{*{3}{|X[-1]}|}
 \hline
-\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ field }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ description }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ default  }\\\cline{1-3}
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ field   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ description   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ default    }\\\cline{1-3}
 \endfirsthead
 \hline
 \endfoot
 \hline
-\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ field }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ description }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ default  }\\\cline{1-3}
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ field   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ description   }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ default    }\\\cline{1-3}
 \endhead
-.param &default parametrisation \textquotesingle{}log\textquotesingle{}/\textquotesingle{}log10\textquotesingle{}/\textquotesingle{}lin\textquotesingle{} &\textquotesingle{}lin\textquotesingle{}  \\\cline{1-3}
-.debug &flag to compile with debug symbols &false  \\\cline{1-3}
-.forward &flag to activate forward sensitivities &true  \\\cline{1-3}
-.adjoint &flag to activate adjoint sensitivities &true  \\\cline{1-3}
+.param   &default parametrisation \textquotesingle{}log\textquotesingle{}/\textquotesingle{}log10\textquotesingle{}/\textquotesingle{}lin\textquotesingle{}   &\textquotesingle{}lin\textquotesingle{}    \\\cline{1-3}
+.debug   &flag to compile with debug symbols   &false    \\\cline{1-3}
+.forward   &flag to activate forward sensitivities   &true    \\\cline{1-3}
+.adjoint   &flag to activate adjoint sensitivities   &true    \\\cline{1-3}
 \end{longtabu}
 
 
-When set to false, the fields \textquotesingle{}forward\textquotesingle{} and \textquotesingle{}adjoint\textquotesingle{} will speed up the time required to compile the model but also disable the respective sensitivity computation.\hypertarget{matlab_interface_autotoc_md56}{}\doxysubsubsection{States}\label{matlab_interface_autotoc_md56}
+When set to false, the fields \textquotesingle{}forward\textquotesingle{} and \textquotesingle{}adjoint\textquotesingle{} will speed up the time required to compile the model but also disable the respective sensitivity computation.\hypertarget{matlab_interface_autotoc_md48}{}\doxysubsubsection{States}\label{matlab_interface_autotoc_md48}
 Create the respective symbolic variables. The name of the symbolic variable can be chosen arbitrarily. \begin{DoxyVerb}syms state1 state2 state3
 \end{DoxyVerb}
 
 
 Create the state vector containing all states\+: \begin{DoxyVerb}model.sym.x = [ state1 state2 state3 ];
 \end{DoxyVerb}
-\hypertarget{matlab_interface_autotoc_md57}{}\doxysubsubsection{Parameters}\label{matlab_interface_autotoc_md57}
+\hypertarget{matlab_interface_autotoc_md49}{}\doxysubsubsection{Parameters}\label{matlab_interface_autotoc_md49}
 Create the respective symbolic variables. The name of the symbolic variable can be chosen arbitrarily. Sensitivities {\bfseries{will be derived}} for all paramaters. \begin{DoxyVerb}syms param1 param2 param3 param4 param5 param6
 \end{DoxyVerb}
 
 
 Create the parameters vector \begin{DoxyVerb}model.sym.p = [ param1 param2 param3 param4 param5 param6 ];
 \end{DoxyVerb}
-\hypertarget{matlab_interface_autotoc_md58}{}\doxysubsubsection{Constants}\label{matlab_interface_autotoc_md58}
+\hypertarget{matlab_interface_autotoc_md50}{}\doxysubsubsection{Constants}\label{matlab_interface_autotoc_md50}
 Create the respective symbolic variables. The name of the symbolic variable can be chosen arbitrarily. Sensitivities with respect to constants {\bfseries{will not be derived}}. \begin{DoxyVerb}syms const1 const2
 \end{DoxyVerb}
 
 
 Create the parameters vector \begin{DoxyVerb}model.sym.k = [ const1 const2 ];
 \end{DoxyVerb}
-\hypertarget{matlab_interface_autotoc_md59}{}\doxysubsubsection{Differential Equation}\label{matlab_interface_autotoc_md59}
+\hypertarget{matlab_interface_autotoc_md51}{}\doxysubsubsection{Differential Equation}\label{matlab_interface_autotoc_md51}
 For time-\/dependent differential equations you can specify a symbolic variable for time. This {\bfseries{needs}} to be denoted by {\ttfamily t}. \begin{DoxyVerb}syms t
 \end{DoxyVerb}
 
@@ -66,7 +68,7 @@ model.sym.f(3) = [ param4*state2 ];
 
 The specification of {\ttfamily f} or {\ttfamily xdot} may depend on states, parameters and constants.
 
-For D\+A\+Es also specify the mass matrix. \begin{DoxyVerb}model.sym.M = [1, 0, 0;...
+For DAEs also specify the mass matrix. \begin{DoxyVerb}model.sym.M = [1, 0, 0;...
                 0, 1, 0;...
                 0, 0, 0];
 \end{DoxyVerb}
@@ -74,27 +76,27 @@ For D\+A\+Es also specify the mass matrix. \begin{DoxyVerb}model.sym.M = [1, 0, 
 
 The specification of M may depend on parameters and constants.
 
-For O\+D\+Es the integrator will solve the equation $ \dot{x} = f $ and for D\+A\+Es the equations $ M \cdot \dot{x} = f $. A\+M\+I\+CI will decide whether to use C\+V\+O\+D\+ES (for O\+D\+Es) or I\+D\+AS (for D\+A\+Es) based on whether the mass matrix is defined or not.
+For ODEs the integrator will solve the equation $ \dot{x} = f $ and for DAEs the equations $ M \cdot \dot{x} = f $. AMICI will decide whether to use CVODES (for ODEs) or IDAS (for DAEs) based on whether the mass matrix is defined or not.
 
-In the definition of the differential equation you can use certain symbolic functions. For a full list of available functions see {\ttfamily \mbox{\hyperlink{symbolic__functions_8cpp}{src/symbolic\+\_\+functions.\+cpp}}}.
+In the definition of the differential equation you can use certain symbolic functions. For a full list of available functions see {\ttfamily src/symbolic\+\_\+functions.\+cpp}.
 
-Dirac functions can be used to cause a jump in the respective states at the specified time-\/point. This is typically used to model injections, or other external stimuli. Spline functions can be used to model time/state dependent response with unkown time/state dependence.\hypertarget{matlab_interface_autotoc_md60}{}\doxysubsubsection{Initial Conditions}\label{matlab_interface_autotoc_md60}
+Dirac functions can be used to cause a jump in the respective states at the specified time-\/point. This is typically used to model injections, or other external stimuli. Spline functions can be used to model time/state dependent response with unkown time/state dependence.\hypertarget{matlab_interface_autotoc_md52}{}\doxysubsubsection{Initial Conditions}\label{matlab_interface_autotoc_md52}
 Specify the initial conditions. These may depend on parameters on constants and must have the same size as {\ttfamily x}. \begin{DoxyVerb}model.sym.x0 = [ param4, 0, 0 ];
 \end{DoxyVerb}
-\hypertarget{matlab_interface_autotoc_md61}{}\doxysubsubsection{Observables}\label{matlab_interface_autotoc_md61}
+\hypertarget{matlab_interface_autotoc_md53}{}\doxysubsubsection{Observables}\label{matlab_interface_autotoc_md53}
 Specify the observables. These may depend on parameters and constants. \begin{DoxyVerb}model.sym.y(1) = state1 + state2;
 model.sym.y(2) = state3 - state2;
 \end{DoxyVerb}
 
 
-In the definition of the observable you can use certain symbolic functions. For a full list of available functions see {\ttfamily \mbox{\hyperlink{symbolic__functions_8cpp}{src/symbolic\+\_\+functions.\+cpp}}}. Dirac functions in observables will have no effect.\hypertarget{matlab_interface_autotoc_md62}{}\doxysubsubsection{Events}\label{matlab_interface_autotoc_md62}
+In the definition of the observable you can use certain symbolic functions. For a full list of available functions see {\ttfamily src/symbolic\+\_\+functions.\+cpp}. Dirac functions in observables will have no effect.\hypertarget{matlab_interface_autotoc_md54}{}\doxysubsubsection{Events}\label{matlab_interface_autotoc_md54}
 Specifying events is optional. Events are specified in terms of a trigger function, a bolus fuction and an output function. The roots of the trigger function defines the occurences of the event. The bolus function defines the change in the state on event occurences. The output function defines the expression which is evaluated and reported by the simulation routine on every event occurence. The user can create events by constructing a vector of objects of the class \mbox{\hyperlink{classamievent}{amievent}}. \begin{DoxyVerb}model.sym.event(1) = amievent(state1 - state2,0,[]);
 \end{DoxyVerb}
 
 
 Events may depend on states, parameters and constants but {\bfseries{not}} on observables.
 
-For more details about event support see \href{https://doi.org/10.1093/bioinformatics/btw764}{\texttt{ https\+://doi.\+org/10.\+1093/bioinformatics/btw764}}\hypertarget{matlab_interface_autotoc_md63}{}\doxysubsubsection{Standard Deviation}\label{matlab_interface_autotoc_md63}
+For more details about event support see \href{https://doi.org/10.1093/bioinformatics/btw764}{\texttt{ https\+://doi.\+org/10.\+1093/bioinformatics/btw764}}\hypertarget{matlab_interface_autotoc_md55}{}\doxysubsubsection{Standard Deviation}\label{matlab_interface_autotoc_md55}
 Specifying standard deviations is optional. It only has an effect when computing adjoint sensitivities. It allows the user to specify standard deviations of experimental data for observables and events.
 
 Standard deviaton for observable data is denoted by sigma\+\_\+y \begin{DoxyVerb}model.sym.sigma_y(1) = param5;
@@ -105,8 +107,8 @@ Standard deviaton for event data is denoted by sigma\+\_\+t \begin{DoxyVerb}mode
 \end{DoxyVerb}
 
 
-Both {\ttfamily sigma\+\_\+y} and {\ttfamily sigma\+\_\+t} can either be a scalar or of the same dimension as the observables / events function. They can depend on time and parameters but must not depend on the states or observables. The values provided in {\ttfamily sigma\+\_\+y} and {\ttfamily sigma\+\_\+t} will only be used if the value in {\ttfamily D.\+Sigma\+\_\+Y} or {\ttfamily D.\+Sigma\+\_\+T} in the user-\/provided data struct is {\ttfamily NaN}. See simulation for details.\hypertarget{matlab_interface_autotoc_md64}{}\doxysubsubsection{Objective Function}\label{matlab_interface_autotoc_md64}
-By default, A\+M\+I\+CI assumes a normal noise model and uses the corresponding negative log-\/likelihood \begin{DoxyVerb}J = 1/2*sum(((y_i(t)-my_ti)/sigma_y_i)^2 + log(2*pi*sigma_y^2)
+Both {\ttfamily sigma\+\_\+y} and {\ttfamily sigma\+\_\+t} can either be a scalar or of the same dimension as the observables / events function. They can depend on time and parameters but must not depend on the states or observables. The values provided in {\ttfamily sigma\+\_\+y} and {\ttfamily sigma\+\_\+t} will only be used if the value in {\ttfamily D.\+Sigma\+\_\+Y} or {\ttfamily D.\+Sigma\+\_\+T} in the user-\/provided data struct is {\ttfamily NaN}. See simulation for details.\hypertarget{matlab_interface_autotoc_md56}{}\doxysubsubsection{Objective Function}\label{matlab_interface_autotoc_md56}
+By default, AMICI assumes a normal noise model and uses the corresponding negative log-\/likelihood \begin{DoxyVerb}J = 1/2*sum(((y_i(t)-my_ti)/sigma_y_i)^2 + log(2*pi*sigma_y^2)
 \end{DoxyVerb}
 
 
@@ -114,8 +116,8 @@ as objective function. A user provided objective function can be specified in \b
 \end{DoxyVerb}
 
 
-As reference see the default specification of {\ttfamily this.\+sym.\+Jy} in {\ttfamily \mbox{\hyperlink{classamimodel_a5aba9155145df4b3f70bfec887c25af9}{amimodel.\+make\+Syms}}}.\hypertarget{matlab_interface_autotoc_md65}{}\doxysubsubsection{S\+B\+ML}\label{matlab_interface_autotoc_md65}
-A\+M\+I\+CI can also import S\+B\+ML models using the command {\ttfamily S\+B\+M\+L2\+A\+M\+I\+CI}. This will generate a model specification as described above, which may be edited by the user to apply further changes.\hypertarget{matlab_interface_autotoc_md66}{}\doxysubsection{Model Compilation}\label{matlab_interface_autotoc_md66}
+As reference see the default specification of {\ttfamily this.\+sym.\+Jy} in {\ttfamily \mbox{\hyperlink{classamimodel_a5aba9155145df4b3f70bfec887c25af9}{amimodel.\+make\+Syms}}}.\hypertarget{matlab_interface_autotoc_md57}{}\doxysubsubsection{SBML}\label{matlab_interface_autotoc_md57}
+AMICI can also import SBML models using the command {\ttfamily SBML2\+AMICI}. This will generate a model specification as described above, which may be edited by the user to apply further changes.\hypertarget{matlab_interface_autotoc_md58}{}\doxysubsection{Model Compilation}\label{matlab_interface_autotoc_md58}
 The model can then be compiled by calling {\ttfamily \mbox{\hyperlink{amiwrap_8m}{amiwrap.\+m}}}\+: \begin{DoxyVerb}amiwrap(modelname,'example_model_syms',dir,o2flag)
 \end{DoxyVerb}
 
@@ -128,9 +130,9 @@ and subsequently provide the generated struct to {\ttfamily amiwrap(...)}, inste
 \end{DoxyVerb}
 
 
-In a similar fashion, the user could also generate multiple models and pass them directly to {\ttfamily amiwrap(...)} without generating respective model definition scripts.\hypertarget{matlab_interface_autotoc_md67}{}\doxysubsubsection{Compiling a Python-\/generated model}\label{matlab_interface_autotoc_md67}
-Due to better performance or to avoid the Symbolic Toolbox requirement, it might be desirable to import a model in Python and compile the resulting code into a mex file. For Python model import, consult the respective section of the Python documentation. Once the imported succeeded, there will be a {\ttfamily compile\+Mex\+File.\+m} script inside the newly created model directory which can be invoked to compile the mex file. This mex file and {\ttfamily simulate\+\_\+$\ast$.m} can be used as if fully created by matlab.\hypertarget{matlab_interface_autotoc_md68}{}\doxyparagraph{Using Python-\/\+A\+M\+I\+C\+I model import from Matlab}\label{matlab_interface_autotoc_md68}
-With recent matlab versions it is possible to use the A\+M\+I\+CI python package from within Matlab. This not quite comfortable yet, but it is possible.
+In a similar fashion, the user could also generate multiple models and pass them directly to {\ttfamily amiwrap(...)} without generating respective model definition scripts.\hypertarget{matlab_interface_autotoc_md59}{}\doxysubsubsection{Compiling a Python-\/generated model}\label{matlab_interface_autotoc_md59}
+Due to better performance or to avoid the Symbolic Toolbox requirement, it might be desirable to import a model in Python and compile the resulting code into a mex file. For Python model import, consult the respective section of the Python documentation. Once the imported succeeded, there will be a {\ttfamily compile\+Mex\+File.\+m} script inside the newly created model directory which can be invoked to compile the mex file. This mex file and {\ttfamily simulate\+\_\+$\ast$.m} can be used as if fully created by matlab.\hypertarget{matlab_interface_autotoc_md60}{}\doxyparagraph{Using Python-\/\+AMICI model import from Matlab}\label{matlab_interface_autotoc_md60}
+With recent matlab versions it is possible to use the AMICI python package from within Matlab. This not quite comfortable yet, but it is possible.
 
 Here for proof of concept\+:
 
@@ -138,13 +140,13 @@ Here for proof of concept\+:
 \begin{DoxyItemize}
 \item Install the python package as described in the documentation
 \item Ensure {\ttfamily pyversion} shows the correct python version (3.\+6 or 3.\+7)
-\item Then, from within the A\+M\+I\+CI {\ttfamily matlab/} directory\+:
+\item Then, from within the AMICI {\ttfamily matlab/} directory\+:
 
 \`{}\`{}` sbml\+\_\+importer = py.\+amici.\+Sbml\+Importer('../python/examples/example\+\_\+steadystate/model\+\_\+steadystate\+\_\+scaled.xml\textquotesingle{}) sbml\+\_\+importer.\+sbml2amici(\textquotesingle{}steadystate\textquotesingle{}, \textquotesingle{}steadystate\+\_\+example\+\_\+from\+\_\+python\textquotesingle{}) model = py.\+steadystate.\+get\+Model() solver = model.\+get\+Solver() model.\+set\+Timepoints(linspace(0, 50, 51)) rdata = py.\+amici.\+run\+Amici\+Simulation(model, solver) result = struct(py.\+dict(rdata.\+items())) t = double(py.\+array.\+array(\textquotesingle{}d\textquotesingle{}, result.\+ts)) x = double(py.\+array.\+array(\textquotesingle{}d\textquotesingle{}, result.\+x.\+flatten())) x = reshape(x, flip(double(py.\+array.\+array(\textquotesingle{}d\textquotesingle{}, result.\+x.\+shape)))) plot(t, x) \`{}\`{}\`{}
-\end{DoxyItemize}\hypertarget{matlab_interface_autotoc_md69}{}\doxysubsection{Model Simulation}\label{matlab_interface_autotoc_md69}
-After the call to {\ttfamily amiwrap(...)} two files will be placed in the specified directory. One is a {\itshape modelname}.mex and the other is simulate\+\_\+ {\itshape modelname}.m. The mex file should never be called directly. Instead the M\+A\+T\+L\+AB script, which acts as a wrapper around the .mex simulation file should be used.
+\end{DoxyItemize}\hypertarget{matlab_interface_autotoc_md61}{}\doxysubsection{Model Simulation}\label{matlab_interface_autotoc_md61}
+After the call to {\ttfamily amiwrap(...)} two files will be placed in the specified directory. One is a {\itshape modelname}.mex and the other is simulate\+\_\+ {\itshape modelname}.m. The mex file should never be called directly. Instead the MATLAB script, which acts as a wrapper around the .mex simulation file should be used.
 
-The simulate\+\_\+ {\itshape modelname}.m itself carries extensive documentation on how to call the function, what it returns and what additional options can be specified. In the following we will give a short overview of possible function calls.\hypertarget{matlab_interface_autotoc_md70}{}\doxysubsubsection{Integration}\label{matlab_interface_autotoc_md70}
+The simulate\+\_\+ {\itshape modelname}.m itself carries extensive documentation on how to call the function, what it returns and what additional options can be specified. In the following we will give a short overview of possible function calls.\hypertarget{matlab_interface_autotoc_md62}{}\doxysubsubsection{Integration}\label{matlab_interface_autotoc_md62}
 Define a time vector\+: \begin{DoxyVerb}t = linspace(0,10,100)
 \end{DoxyVerb}
 
@@ -167,7 +169,7 @@ Alternatively the integration can also be called via \begin{DoxyVerb}[status,t,x
 \end{DoxyVerb}
 
 
-The integration status will be indicated by the flag {\ttfamily status} . Negative values indicated failed integration. The states will then be available as {\ttfamily x}. The observables will then be available as {\ttfamily y}. No event output will be given.\hypertarget{matlab_interface_autotoc_md71}{}\doxysubsubsection{Forward Sensitivities}\label{matlab_interface_autotoc_md71}
+The integration status will be indicated by the flag {\ttfamily status} . Negative values indicated failed integration. The states will then be available as {\ttfamily x}. The observables will then be available as {\ttfamily y}. No event output will be given.\hypertarget{matlab_interface_autotoc_md63}{}\doxysubsubsection{Forward Sensitivities}\label{matlab_interface_autotoc_md63}
 Set the sensitivity computation to forward sensitivities and integrate\+: \begin{DoxyVerb}options.sensi = 1;
 options.sensi_meth = 'forward;
 sol = simulate_modelname(t,theta,kappa,[],options)
@@ -180,7 +182,7 @@ Alternatively the integration can also be called via \begin{DoxyVerb}[status,t,x
 \end{DoxyVerb}
 
 
-The integration status will be indicated by the status flag. Negative values indicate failed integration. The states will then be available as {\ttfamily x}, with derivative with respect to the parameters in {\ttfamily sx}. The observables will then be available as {\ttfamily y}, with derivative with respect to the parameters in {\ttfamily sy}. No event output will be given.\hypertarget{matlab_interface_autotoc_md72}{}\doxysubsubsection{Adjoint Sensitivities}\label{matlab_interface_autotoc_md72}
+The integration status will be indicated by the status flag. Negative values indicate failed integration. The states will then be available as {\ttfamily x}, with derivative with respect to the parameters in {\ttfamily sx}. The observables will then be available as {\ttfamily y}, with derivative with respect to the parameters in {\ttfamily sy}. No event output will be given.\hypertarget{matlab_interface_autotoc_md64}{}\doxysubsubsection{Adjoint Sensitivities}\label{matlab_interface_autotoc_md64}
 Set the sensitivity computation to adjoint sensitivities\+: \begin{DoxyVerb}options.sensi = 1;
 options.sensi_meth = 'adjoint';
 \end{DoxyVerb}
@@ -199,7 +201,7 @@ Integrate\+: \begin{DoxyVerb}sol = simulate_modelname(t,theta,kappa,D,options)
 \end{DoxyVerb}
 
 
-The integration status will be indicated by the sol.\+status flag. Negative values indicate failed integration. The log-\/likelihood will then be available as {\ttfamily sol.\+llh} and the derivative with respect to the parameters in {\ttfamily sol.\+sllh}. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.\hypertarget{matlab_interface_autotoc_md73}{}\doxysubsubsection{Steady State Sensitivities}\label{matlab_interface_autotoc_md73}
+The integration status will be indicated by the sol.\+status flag. Negative values indicate failed integration. The log-\/likelihood will then be available as {\ttfamily sol.\+llh} and the derivative with respect to the parameters in {\ttfamily sol.\+sllh}. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.\hypertarget{matlab_interface_autotoc_md65}{}\doxysubsubsection{Steady State Sensitivities}\label{matlab_interface_autotoc_md65}
 This will compute state sensitivities according to the formula $ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
 
 In the current implementation this formulation does not allow for conservation laws as this would result in a singular Jacobian.

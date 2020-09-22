@@ -2,7 +2,7 @@
 \label{classamimodel}\index{amimodel@{amimodel}}
 
 
-A\+M\+I\+M\+O\+D\+EL carries all model definitions including functions and events.  
+AMIMODEL carries all model definitions including functions and events.  
 
 
 
@@ -20,8 +20,8 @@ Inheritance diagram for amimodel\+:
 \item 
 \mbox{\hyperlink{classamimodel_a05d52506788717b3d482845748446a60}{amimodel}} (\+::string symfun,\+::string \mbox{\hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname}})
 \begin{DoxyCompactList}\small\item\em amimodel initializes the model object based on the provided symfun and modelname \end{DoxyCompactList}\item 
-noret\+::substitute \mbox{\hyperlink{classamimodel_aa508c0cd4ac026e464f85cec25678850}{update\+R\+HS}} (matlabtypesubstitute xdot)
-\begin{DoxyCompactList}\small\item\em update\+R\+HS updates the private fun property .fun.\+xdot.\+sym (right hand side of the differential equation) \end{DoxyCompactList}\item 
+noret\+::substitute \mbox{\hyperlink{classamimodel_aa508c0cd4ac026e464f85cec25678850}{update\+RHS}} (matlabtypesubstitute xdot)
+\begin{DoxyCompactList}\small\item\em update\+RHS updates the private fun property .fun.\+xdot.\+sym (right hand side of the differential equation) \end{DoxyCompactList}\item 
 noret\+::substitute \mbox{\hyperlink{classamimodel_a5692662c7851369abd5ca0e51295f33a}{update\+Model\+Name}} (matlabtypesubstitute \mbox{\hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname}})
 \begin{DoxyCompactList}\small\item\em update\+Model\+Name updates the modelname \end{DoxyCompactList}\item 
 noret\+::substitute \mbox{\hyperlink{classamimodel_a802e66e0a311bd894de30058b7bf028a}{update\+Wrap\+Path}} (matlabtypesubstitute \mbox{\hyperlink{classamimodel_a0b316a20054ba282555674d939a82406}{wrap\+\_\+path}})
@@ -34,13 +34,13 @@ noret\+::substitute \mbox{\hyperlink{classamimodel_abf720a0c3104977029538e3b19d4
 \begin{DoxyCompactList}\small\item\em compileC compiles the mex simulation file \end{DoxyCompactList}\item 
 noret\+::substitute \mbox{\hyperlink{classamimodel_a6e93ea24824d9d90c322960e6d78fed0}{generateM}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} amimodelo2)
 \begin{DoxyCompactList}\small\item\em generateM generates the matlab wrapper for the compiled C files. \end{DoxyCompactList}\item 
-noret\+::substitute \mbox{\hyperlink{classamimodel_a08d58ae650e5ff9310760f6d3f08015c}{get\+Fun}} (\+::struct \mbox{\hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table}},\+::string funstr)
+noret\+::substitute \mbox{\hyperlink{classamimodel_a08d58ae650e5ff9310760f6d3f08015c}{get\+Fun}} (\+::struct \mbox{\hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{HTable}},\+::string funstr)
 \begin{DoxyCompactList}\small\item\em get\+Fun generates symbolic expressions for the requested function. \end{DoxyCompactList}\item 
 noret\+::substitute \mbox{\hyperlink{classamimodel_a4d4b20c81af6d7ed977b6b818c7b22db}{make\+Events}} ()
 \begin{DoxyCompactList}\small\item\em make\+Events extracts discontiniuties from the model right hand side and converts them into events \end{DoxyCompactList}\item 
 noret\+::substitute \mbox{\hyperlink{classamimodel_a5aba9155145df4b3f70bfec887c25af9}{make\+Syms}} ()
 \begin{DoxyCompactList}\small\item\em make\+Syms extracts symbolic definition from the user provided model and checks them for consistency \end{DoxyCompactList}\item 
-mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b}{check\+Deps}} (\+::struct \mbox{\hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table}},\+::cell deps)
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b}{check\+Deps}} (\+::struct \mbox{\hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{HTable}},\+::cell deps)
 \begin{DoxyCompactList}\small\item\em check\+Deps checks the dependencies of functions and populates sym fields if necessary \end{DoxyCompactList}\item 
 mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamimodel_a93346c96338624e417ee9732ffd96b28}{load\+Old\+Hashes}} ()
 \begin{DoxyCompactList}\small\item\em load\+Old\+Hashes loads information from a previous compilation of the model. \end{DoxyCompactList}\item 
@@ -66,7 +66,7 @@ static noret\+::substitute \mbox{\hyperlink{classamimodel_aed66701025485d8fa04c2
 \begin{DoxyCompactList}\small\item\em struct which stores information for which functions c code needs to be generated \end{DoxyCompactList}\item 
 \+::string \mbox{\hyperlink{classamimodel_a71bca9c21a6de42d8079ade31cb61044}{modelname}} = char.\+empty(\char`\"{}\char`\"{})
 \begin{DoxyCompactList}\small\item\em name of the model \end{DoxyCompactList}\item 
-\+::struct \mbox{\hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{H\+Table}} = struct.\+empty(\char`\"{}\char`\"{})
+\+::struct \mbox{\hyperlink{classamimodel_aafe6335df413dd688a2f44efba012cf1}{HTable}} = struct.\+empty(\char`\"{}\char`\"{})
 \begin{DoxyCompactList}\small\item\em struct that contains hash values for the symbolic model definitions \end{DoxyCompactList}\item 
 \+::bool \mbox{\hyperlink{classamimodel_a0514aabed091ee5e2f35766eb01eced6}{debug}} = false
 \begin{DoxyCompactList}\small\item\em flag indicating whether debugging symbols should be compiled \end{DoxyCompactList}\item 
@@ -99,7 +99,7 @@ static noret\+::substitute \mbox{\hyperlink{classamimodel_aed66701025485d8fa04c2
 \+::int \mbox{\hyperlink{classamimodel_a364ecd990baeeefd1de3e6795cd50a58}{nztrue}} = double.\+empty(\char`\"{}\char`\"{})
 \begin{DoxyCompactList}\small\item\em number of original event outputs for second order sensitivities \end{DoxyCompactList}\item 
 \+::$\ast$int \mbox{\hyperlink{classamimodel_acf2488b95c97e0378c9bf49de3b50f28}{id}} = double.\+empty(\char`\"{}\char`\"{})
-\begin{DoxyCompactList}\small\item\em flag for D\+A\+Es \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em flag for DAEs \end{DoxyCompactList}\item 
 \+::int \mbox{\hyperlink{classamimodel_a955c9d10635afed4ebc04c60010e5d40}{ubw}} = double.\+empty(\char`\"{}\char`\"{})
 \begin{DoxyCompactList}\small\item\em upper Jacobian bandwidth \end{DoxyCompactList}\item 
 \+::int \mbox{\hyperlink{classamimodel_a784f5fb2b8eda576179be087c2a09a39}{lbw}} = double.\+empty(\char`\"{}\char`\"{})
@@ -190,7 +190,7 @@ Here is the caller graph for this function\+:
 \index{amimodel@{amimodel}!updateRHS@{updateRHS}}
 \index{updateRHS@{updateRHS}!amimodel@{amimodel}}
 \doxyparagraph{\texorpdfstring{updateRHS()}{updateRHS()}}
-{\footnotesize\ttfamily noret\+::substitute update\+R\+HS (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{xdot }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily noret\+::substitute update\+RHS (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{xdot }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -211,7 +211,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=273pt]{classamimodel_aa508c0cd4ac026e464f85cec25678850_icgraph}
+\includegraphics[width=275pt]{classamimodel_aa508c0cd4ac026e464f85cec25678850_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamimodel_a5692662c7851369abd5ca0e51295f33a}\label{classamimodel_a5692662c7851369abd5ca0e51295f33a}} 
@@ -312,7 +312,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=285pt]{classamimodel_abf720a0c3104977029538e3b19d429bb_cgraph}
+\includegraphics[width=286pt]{classamimodel_abf720a0c3104977029538e3b19d429bb_cgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamimodel_a6e93ea24824d9d90c322960e6d78fed0}\label{classamimodel_a6e93ea24824d9d90c322960e6d78fed0}} 
@@ -347,11 +347,11 @@ Here is the call graph for this function\+:
 \index{amimodel@{amimodel}!getFun@{getFun}}
 \index{getFun@{getFun}!amimodel@{amimodel}}
 \doxyparagraph{\texorpdfstring{getFun()}{getFun()}}
-{\footnotesize\ttfamily noret\+::substitute get\+Fun (\begin{DoxyParamCaption}\item[{\+::struct}]{H\+Table,  }\item[{\+::string}]{funstr }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily noret\+::substitute get\+Fun (\begin{DoxyParamCaption}\item[{\+::struct}]{HTable,  }\item[{\+::string}]{funstr }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
-{\em H\+Table} & struct with hashes of symbolic definition from the previous compilation \\
+{\em HTable} & struct with hashes of symbolic definition from the previous compilation \\
 \hline
 {\em funstr} & function for which symbolic expressions should be computed\\
 \hline
@@ -370,7 +370,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=228pt]{classamimodel_a08d58ae650e5ff9310760f6d3f08015c_cgraph}
+\includegraphics[width=229pt]{classamimodel_a08d58ae650e5ff9310760f6d3f08015c_cgraph}
 \end{center}
 \end{figure}
 Here is the caller graph for this function\+:
@@ -378,7 +378,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=264pt]{classamimodel_a08d58ae650e5ff9310760f6d3f08015c_icgraph}
+\includegraphics[width=265pt]{classamimodel_a08d58ae650e5ff9310760f6d3f08015c_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamimodel_a4d4b20c81af6d7ed977b6b818c7b22db}\label{classamimodel_a4d4b20c81af6d7ed977b6b818c7b22db}} 
@@ -401,7 +401,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=285pt]{classamimodel_a4d4b20c81af6d7ed977b6b818c7b22db_cgraph}
+\includegraphics[width=286pt]{classamimodel_a4d4b20c81af6d7ed977b6b818c7b22db_cgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamimodel_a5aba9155145df4b3f70bfec887c25af9}\label{classamimodel_a5aba9155145df4b3f70bfec887c25af9}} 
@@ -423,18 +423,18 @@ Definition at line 18 of file make\+Syms.\+m.
 \index{amimodel@{amimodel}!checkDeps@{checkDeps}}
 \index{checkDeps@{checkDeps}!amimodel@{amimodel}}
 \doxyparagraph{\texorpdfstring{checkDeps()}{checkDeps()}}
-{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::bool $>$ check\+Deps (\begin{DoxyParamCaption}\item[{\+::struct}]{H\+Table,  }\item[{\+::cell}]{deps }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::bool $>$ check\+Deps (\begin{DoxyParamCaption}\item[{\+::struct}]{HTable,  }\item[{\+::cell}]{deps }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
-{\em H\+Table} & struct with reference hashes of functions in its fields\\
+{\em HTable} & struct with reference hashes of functions in its fields\\
 \hline
 {\em deps} & cell array with containing a list of dependencies\\
 \hline
 \end{DoxyParams}
 
 \begin{DoxyRetVals}{Return values}
-{\em cflag} & boolean indicating whether any of the dependencies have changed with respect to the hashes stored in H\+Table \\
+{\em cflag} & boolean indicating whether any of the dependencies have changed with respect to the hashes stored in HTable \\
 \hline
 \end{DoxyRetVals}
 
@@ -446,7 +446,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=228pt]{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b_cgraph}
+\includegraphics[width=229pt]{classamimodel_ab566026e57f6cbce21a2a2c72b9f7f2b_cgraph}
 \end{center}
 \end{figure}
 Here is the caller graph for this function\+:
@@ -465,7 +465,7 @@ Here is the caller graph for this function\+:
 
 
 \begin{DoxyRetVals}{Return values}
-{\em H\+Table} & struct with hashes of symbolic definition from the previous compilation \\
+{\em HTable} & struct with hashes of symbolic definition from the previous compilation \\
 \hline
 \end{DoxyRetVals}
 
@@ -500,7 +500,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=341pt]{classamimodel_abddb278082c1ff018f3b0ef121bba51a_cgraph}
+\includegraphics[width=342pt]{classamimodel_abddb278082c1ff018f3b0ef121bba51a_cgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamimodel_ab8fea0d36484809cb38e0035a564e919}\label{classamimodel_ab8fea0d36484809cb38e0035a564e919}} 
@@ -561,7 +561,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=285pt]{classamimodel_a16e01624de4534ac1d1992bd685e2f56_icgraph}
+\includegraphics[width=286pt]{classamimodel_a16e01624de4534ac1d1992bd685e2f56_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamimodel_aed66701025485d8fa04c20c5bae32a83}\label{classamimodel_aed66701025485d8fa04c20c5bae32a83}} 
@@ -685,7 +685,7 @@ Definition at line 61 of file amimodel.\+m.
 \index{amimodel@{amimodel}!HTable@{HTable}}
 \index{HTable@{HTable}!amimodel@{amimodel}}
 \doxyparagraph{\texorpdfstring{HTable}{HTable}}
-{\footnotesize\ttfamily H\+Table = struct.\+empty(\char`\"{}\char`\"{})}
+{\footnotesize\ttfamily HTable = struct.\+empty(\char`\"{}\char`\"{})}
 
 \begin{DoxyNote}{Note}
 This property has non-\/standard access specifiers\+: {\ttfamily Set\+Access = Private, Get\+Access = Public} 

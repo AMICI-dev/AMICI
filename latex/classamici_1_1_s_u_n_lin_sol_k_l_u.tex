@@ -1,8 +1,8 @@
-\hypertarget{classamici_1_1_s_u_n_lin_sol_k_l_u}{}\doxysubsection{S\+U\+N\+Lin\+Sol\+K\+LU Class Reference}
+\hypertarget{classamici_1_1_s_u_n_lin_sol_k_l_u}{}\doxysubsection{SUNLin\+Sol\+KLU Class Reference}
 \label{classamici_1_1_s_u_n_lin_sol_k_l_u}\index{SUNLinSolKLU@{SUNLinSolKLU}}
 
 
-S\+U\+N\+D\+I\+A\+LS K\+LU sparse direct solver.  
+SUNDIALS KLU sparse direct solver.  
 
 
 
@@ -11,35 +11,35 @@ S\+U\+N\+D\+I\+A\+LS K\+LU sparse direct solver.
 
 
 
-Inheritance diagram for S\+U\+N\+Lin\+Sol\+K\+LU\+:
+Inheritance diagram for SUNLin\+Sol\+KLU\+:
 \nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=180pt]{classamici_1_1_s_u_n_lin_sol_k_l_u__inherit__graph}
+\includegraphics[width=181pt]{classamici_1_1_s_u_n_lin_sol_k_l_u__inherit__graph}
 \end{center}
 \end{figure}
 \doxysubsubsection*{Public Types}
 \begin{DoxyCompactItemize}
 \item 
-enum \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}} \{ {\bfseries A\+MD}, 
-{\bfseries C\+O\+L\+A\+MD}, 
+enum \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}} \{ {\bfseries AMD}, 
+{\bfseries COLAMD}, 
 {\bfseries natural}
  \}
 \end{DoxyCompactItemize}
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a359ed28a14b6f1c7490f020ac704f04f}{S\+U\+N\+Lin\+Sol\+K\+LU}} (N\+\_\+\+Vector x, S\+U\+N\+Matrix A)
-\begin{DoxyCompactList}\small\item\em Create K\+LU solver with given matrix. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_afb237071f248e08df33dbda7f08bcabd}{S\+U\+N\+Lin\+Sol\+K\+LU}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&x, int nnz, int sparsetype, \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}} ordering)
-\begin{DoxyCompactList}\small\item\em Create K\+LU solver and matrix to operate on. \end{DoxyCompactList}\item 
-S\+U\+N\+Matrix \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a5596912ab7fe2bbca31b1c58113b4cb5}{get\+Matrix}} () const override
+\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a359ed28a14b6f1c7490f020ac704f04f}{SUNLin\+Sol\+KLU}} (N\+\_\+\+Vector x, SUNMatrix A)
+\begin{DoxyCompactList}\small\item\em Create KLU solver with given matrix. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_afb237071f248e08df33dbda7f08bcabd}{SUNLin\+Sol\+KLU}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&x, int nnz, int sparsetype, \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}} ordering)
+\begin{DoxyCompactList}\small\item\em Create KLU solver and matrix to operate on. \end{DoxyCompactList}\item 
+SUNMatrix \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a5596912ab7fe2bbca31b1c58113b4cb5}{get\+Matrix}} () const override
 \begin{DoxyCompactList}\small\item\em Get the matrix A (matrix solvers only). \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_ae2ecbbf50a311b53c68703ee81734ad5}{re\+Init}} (int nnz, int reinit\+\_\+type)
 \begin{DoxyCompactList}\small\item\em Reinitializes memory and flags for a new factorization (symbolic and numeric) to be conducted at the next solver setup call. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a96e902aba75a3d4c7f7dd44d070ca96e}{set\+Ordering}} (\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}} ordering)
-\begin{DoxyCompactList}\small\item\em Sets the ordering used by K\+LU for reducing fill in the linear solve. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Sets the ordering used by KLU for reducing fill in the linear solve. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Additional Inherited Members}
 
 
@@ -57,7 +57,7 @@ Definition at line 189 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
 \doxyparagraph{\texorpdfstring{StateOrdering}{StateOrdering}}
 {\footnotesize\ttfamily enum \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}}\hspace{0.3cm}{\ttfamily [strong]}}
 
-K\+LU state reordering (different from Super\+L\+U\+MT ordering!) 
+KLU state reordering (different from Super\+LUMT ordering!) 
 
 Definition at line 192 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
 
@@ -68,7 +68,7 @@ Definition at line 192 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
 \index{SUNLinSolKLU@{SUNLinSolKLU}!SUNLinSolKLU@{SUNLinSolKLU}}
 \index{SUNLinSolKLU@{SUNLinSolKLU}!SUNLinSolKLU@{SUNLinSolKLU}}
 \doxyparagraph{\texorpdfstring{SUNLinSolKLU()}{SUNLinSolKLU()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u}{S\+U\+N\+Lin\+Sol\+K\+LU}} (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{x,  }\item[{S\+U\+N\+Matrix}]{A }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u}{SUNLin\+Sol\+KLU}} (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{x,  }\item[{SUNMatrix}]{A }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -77,15 +77,11 @@ Definition at line 192 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
 {\em A} & sparse matrix \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 173 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_k_l_u_afb237071f248e08df33dbda7f08bcabd}\label{classamici_1_1_s_u_n_lin_sol_k_l_u_afb237071f248e08df33dbda7f08bcabd}} 
 \index{SUNLinSolKLU@{SUNLinSolKLU}!SUNLinSolKLU@{SUNLinSolKLU}}
 \index{SUNLinSolKLU@{SUNLinSolKLU}!SUNLinSolKLU@{SUNLinSolKLU}}
 \doxyparagraph{\texorpdfstring{SUNLinSolKLU()}{SUNLinSolKLU()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u}{S\+U\+N\+Lin\+Sol\+K\+LU}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&}]{x,  }\item[{int}]{nnz,  }\item[{int}]{sparsetype,  }\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}}}]{ordering }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u}{SUNLin\+Sol\+KLU}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&}]{x,  }\item[{int}]{nnz,  }\item[{int}]{sparsetype,  }\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_k_l_u_a890d968060d6d830aeed98dbeb04447f}{State\+Ordering}}}]{ordering }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -93,23 +89,11 @@ Definition at line 173 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \hline
 {\em nnz} & Number of non-\/zeros in matrix A \\
 \hline
-{\em sparsetype} & Sparse matrix type (C\+S\+C\+\_\+\+M\+AT, C\+S\+R\+\_\+\+M\+AT) \\
+{\em sparsetype} & Sparse matrix type (CSC\+\_\+\+MAT, CSR\+\_\+\+MAT) \\
 \hline
 {\em ordering} & \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 179 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=348pt]{classamici_1_1_s_u_n_lin_sol_k_l_u_afb237071f248e08df33dbda7f08bcabd_cgraph}
-\end{center}
-\end{figure}
 
 
 \doxysubsubsection{Member Function Documentation}
@@ -117,27 +101,15 @@ Here is the call graph for this function\+:
 \index{SUNLinSolKLU@{SUNLinSolKLU}!getMatrix@{getMatrix}}
 \index{getMatrix@{getMatrix}!SUNLinSolKLU@{SUNLinSolKLU}}
 \doxyparagraph{\texorpdfstring{getMatrix()}{getMatrix()}}
-{\footnotesize\ttfamily S\+U\+N\+Matrix get\+Matrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+{\footnotesize\ttfamily SUNMatrix get\+Matrix (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
 
 \begin{DoxyReturn}{Returns}
 A 
 \end{DoxyReturn}
 
 
-Reimplemented from \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_wrapper_afc453d52914c43f55b0086da4eeb778b}{S\+U\+N\+Lin\+Sol\+Wrapper}}.
+Reimplemented from \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_wrapper_a6be36dfa7120790db4f12806688bc5ba}{SUNLin\+Sol\+Wrapper}}.
 
-
-
-Definition at line 189 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=322pt]{classamici_1_1_s_u_n_lin_sol_k_l_u_a5596912ab7fe2bbca31b1c58113b4cb5_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_k_l_u_ae2ecbbf50a311b53c68703ee81734ad5}\label{classamici_1_1_s_u_n_lin_sol_k_l_u_ae2ecbbf50a311b53c68703ee81734ad5}} 
 \index{SUNLinSolKLU@{SUNLinSolKLU}!reInit@{reInit}}
 \index{reInit@{reInit}!SUNLinSolKLU@{SUNLinSolKLU}}
@@ -148,21 +120,9 @@ For more details see sunlinsol/sunlinsol\+\_\+klu.\+h
 \begin{DoxyParams}{Parameters}
 {\em nnz} & Number of non-\/zeros \\
 \hline
-{\em reinit\+\_\+type} & S\+U\+N\+K\+L\+U\+\_\+\+R\+E\+I\+N\+I\+T\+\_\+\+F\+U\+LL or S\+U\+N\+K\+L\+U\+\_\+\+R\+E\+I\+N\+I\+T\+\_\+\+P\+A\+R\+T\+I\+AL \\
+{\em reinit\+\_\+type} & SUNKLU\+\_\+\+REINIT\+\_\+\+FULL or SUNKLU\+\_\+\+REINIT\+\_\+\+PARTIAL \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 191 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=303pt]{classamici_1_1_s_u_n_lin_sol_k_l_u_ae2ecbbf50a311b53c68703ee81734ad5_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_k_l_u_a96e902aba75a3d4c7f7dd44d070ca96e}\label{classamici_1_1_s_u_n_lin_sol_k_l_u_a96e902aba75a3d4c7f7dd44d070ca96e}} 
 \index{SUNLinSolKLU@{SUNLinSolKLU}!setOrdering@{setOrdering}}
 \index{setOrdering@{setOrdering}!SUNLinSolKLU@{SUNLinSolKLU}}
@@ -174,15 +134,3 @@ Here is the call graph for this function\+:
 {\em ordering} & \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 197 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=266pt]{classamici_1_1_s_u_n_lin_sol_k_l_u_a96e902aba75a3d4c7f7dd44d070ca96e_icgraph}
-\end{center}
-\end{figure}

@@ -1,5 +1,5 @@
 <map id="getSimulationStateTimepoint" name="getSimulationStateTimepoint">
 <area shape="rect" id="node1" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="5,31,195,57"/>
 <area shape="rect" id="node2" href="$classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="251,5,413,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="243,56,421,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="Get simulation timepoint for time index it." alt="" coords="243,56,421,83"/>
 </map>

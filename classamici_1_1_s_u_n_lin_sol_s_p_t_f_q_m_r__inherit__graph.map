@@ -1,4 +1,4 @@
 <map id="SUNLinSolSPTFQMR" name="SUNLinSolSPTFQMR">
-<area shape="rect" id="node1" title="SUNDIALS scaled preconditioned TFQMR (Transpose&#45;Free Quasi&#45;Minimal Residual method) (SPTFQMR) solver." alt="" coords="5,80,155,107"/>
-<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_wrapper.html" title="A RAII wrapper for SUNLinearSolver structs." alt="" coords="13,5,147,32"/>
+<area shape="rect" id="node1" title="SUNDIALS scaled preconditioned TFQMR (Transpose&#45;Free Quasi&#45;Minimal Residual method) (SPTFQMR) solver." alt="" coords="5,80,157,107"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_wrapper.html" title="A RAII wrapper for SUNLinearSolver structs." alt="" coords="14,5,149,32"/>
 </map>

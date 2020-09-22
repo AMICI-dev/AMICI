@@ -1,4 +1,4 @@
 <map id="am_piecewise" name="am_piecewise">
-<area shape="rect" id="node1" title="am_piecewise is the amici implementation of the mathml piecewise function" alt="" coords="5,5,109,32"/>
-<area shape="rect" id="node2" href="$am__if_8m.html#a58a64757aff7bbcd1bb688fe89a138eb" title="am_if is the amici implementation of the symbolic if function" alt="" coords="157,5,212,32"/>
+<area shape="rect" id="node1" title="am_piecewise is the amici implementation of the mathml piecewise function" alt="" coords="5,5,111,32"/>
+<area shape="rect" id="node2" href="$am__if_8m.html#a58a64757aff7bbcd1bb688fe89a138eb" title="am_if is the amici implementation of the symbolic if function" alt="" coords="159,5,213,32"/>
 </map>

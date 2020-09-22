@@ -1,11 +1,11 @@
 <map id="SUNLinSolWrapper" name="SUNLinSolWrapper">
-<area shape="rect" id="node1" title="A RAII wrapper for SUNLinearSolver structs." alt="" coords="5,183,139,209"/>
-<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_band.html" title="SUNDIALS band direct solver." alt="" coords="204,5,319,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_lin_sol_dense.html" title="SUNDIALS dense direct solver." alt="" coords="200,56,323,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_s_u_n_lin_sol_k_l_u.html" title="SUNDIALS KLU sparse direct solver." alt="" coords="206,107,317,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_s_u_n_lin_sol_p_c_g.html" title="SUNDIALS scaled preconditioned CG (Conjugate Gradient method) (PCG) solver." alt="" coords="205,157,318,184"/>
-<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_lin_sol_s_p_b_c_g_s.html" title="SUNDIALS scaled preconditioned Bi&#45;CGStab (Bi&#45;Conjugate Gradient Stable method) (SPBCGS) solver." alt="" coords="191,208,331,235"/>
-<area shape="rect" id="node7" href="$classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r.html" title="SUNDIALS scaled preconditioned FGMRES (Flexible Generalized Minimal Residual method) (SPFGMR) solver." alt="" coords="191,259,332,285"/>
-<area shape="rect" id="node8" href="$classamici_1_1_s_u_n_lin_sol_s_p_g_m_r.html" title="SUNDIALS scaled preconditioned GMRES (Generalized Minimal Residual method) solver (SPGMR)." alt="" coords="195,309,328,336"/>
-<area shape="rect" id="node9" href="$classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r.html" title="SUNDIALS scaled preconditioned TFQMR (Transpose&#45;Free Quasi&#45;Minimal Residual method) (SPTFQMR) solver." alt="" coords="187,360,336,387"/>
+<area shape="rect" id="node1" title="A RAII wrapper for SUNLinearSolver structs." alt="" coords="5,183,140,209"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_band.html" title="SUNDIALS band direct solver." alt="" coords="205,5,323,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_lin_sol_dense.html" title="SUNDIALS dense direct solver." alt="" coords="201,56,327,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_s_u_n_lin_sol_k_l_u.html" title="SUNDIALS KLU sparse direct solver." alt="" coords="207,107,321,133"/>
+<area shape="rect" id="node5" href="$classamici_1_1_s_u_n_lin_sol_p_c_g.html" title="SUNDIALS scaled preconditioned CG (Conjugate Gradient method) (PCG) solver." alt="" coords="206,157,322,184"/>
+<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_lin_sol_s_p_b_c_g_s.html" title="SUNDIALS scaled preconditioned Bi&#45;CGStab (Bi&#45;Conjugate Gradient Stable method) (SPBCGS) solver." alt="" coords="193,208,335,235"/>
+<area shape="rect" id="node7" href="$classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r.html" title="SUNDIALS scaled preconditioned FGMRES (Flexible Generalized Minimal Residual method) (SPFGMR) solver." alt="" coords="192,259,336,285"/>
+<area shape="rect" id="node8" href="$classamici_1_1_s_u_n_lin_sol_s_p_g_m_r.html" title="SUNDIALS scaled preconditioned GMRES (Generalized Minimal Residual method) solver (SPGMR)." alt="" coords="196,309,332,336"/>
+<area shape="rect" id="node9" href="$classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r.html" title="SUNDIALS scaled preconditioned TFQMR (Transpose&#45;Free Quasi&#45;Minimal Residual method) (SPTFQMR) solver." alt="" coords="188,360,340,387"/>
 </map>

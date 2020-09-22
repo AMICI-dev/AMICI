@@ -1,7 +1,7 @@
 var classamici_1_1_model___d_a_e =
 [
     [ "Model_DAE", "classamici_1_1_model___d_a_e.html#a7da74e90fc0e61bda8ee186606870fe6", null ],
-    [ "Model_DAE", "classamici_1_1_model___d_a_e.html#a51ce09d26f66e65b969ab443c7c8deb2", null ],
+    [ "Model_DAE", "classamici_1_1_model___d_a_e.html#ac0be07e15db73af55651ad93487b54a9", null ],
     [ "fJ", "classamici_1_1_model___d_a_e.html#ac0c58a5c04ff52daaa4254becbf18ad6", null ],
     [ "fJ", "classamici_1_1_model___d_a_e.html#ada5cd49cad6c0b8e60cdb5bc8d0c7301", null ],
     [ "fJB", "classamici_1_1_model___d_a_e.html#a93a8eccf4486f48116cb2a9d977ef28b", null ],
@@ -30,15 +30,10 @@ var classamici_1_1_model___d_a_e =
     [ "fsxdot", "classamici_1_1_model___d_a_e.html#a320dee9a1de0c38fb49eb1f5826e626c", null ],
     [ "fsxdot", "classamici_1_1_model___d_a_e.html#a26e76f86f173a718466c9cc19d68550a", null ],
     [ "fM", "classamici_1_1_model___d_a_e.html#a82db0639f98056acc376569457c95ca4", null ],
-    [ "getSolver", "classamici_1_1_model___d_a_e.html#aee7564098e889917627afd3c00772f81", null ],
-    [ "fJ", "classamici_1_1_model___d_a_e.html#a1dfae8d3959321b57b0d5ae4f730f9ac", null ],
-    [ "fJB", "classamici_1_1_model___d_a_e.html#a4cc42f7329bc0684c380357d333a2cd5", null ],
+    [ "getSolver", "classamici_1_1_model___d_a_e.html#af7869b79fdaffbaacfb078099ee8ec51", null ],
     [ "fJSparse", "classamici_1_1_model___d_a_e.html#aa9f4e75b60b4863968d56e3c155c5f69", null ],
-    [ "fJSparseB", "classamici_1_1_model___d_a_e.html#a2eebbea9f674de24f98f561efd477e71", null ],
-    [ "fJDiag", "classamici_1_1_model___d_a_e.html#ac8f8c86d956408c91f829045dcab6305", null ],
-    [ "fJvB", "classamici_1_1_model___d_a_e.html#a0da2a7b8898a5534f706ffb59eecaf03", null ],
-    [ "froot", "classamici_1_1_model___d_a_e.html#a7fb1667a8ba1060d34ec912be7726104", null ],
+    [ "froot", "classamici_1_1_model___d_a_e.html#a9984c243ad0d4f4092c85cb2f857f5a0", null ],
     [ "fxdot", "classamici_1_1_model___d_a_e.html#a4956a1a29270f1f4d09d1a1d441a06e3", null ],
-    [ "fdxdotdp", "classamici_1_1_model___d_a_e.html#aa450a2e822df2a8257e25ac6a30c728b", null ],
-    [ "fM", "classamici_1_1_model___d_a_e.html#ac27c8e66a76b0de9c93ce3cfbb0bb035", null ]
+    [ "fdxdotdp", "classamici_1_1_model___d_a_e.html#a720b9490fb65c98ba2546681f8e8ab73", null ],
+    [ "fM", "classamici_1_1_model___d_a_e.html#ae29c11385a5d319a8be2126432046046", null ]
 ];

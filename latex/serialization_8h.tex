@@ -1,0 +1,331 @@
+\hypertarget{serialization_8h}{}\doxysubsection{serialization.\+h File Reference}
+\label{serialization_8h}\index{serialization.h@{serialization.h}}
+{\ttfamily \#include \char`\"{}amici/rdata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/model.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/solver.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/solver\+\_\+cvodes.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$cassert$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$boost/serialization/array.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/serialization/vector.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/archive/binary\+\_\+iarchive.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/archive/binary\+\_\+oarchive.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/archive/text\+\_\+iarchive.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/archive/text\+\_\+oarchive.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/iostreams/device/back\+\_\+inserter.\+hpp$>$}\newline
+{\ttfamily \#include $<$boost/iostreams/stream.\+hpp$>$}\newline
+Include dependency graph for serialization.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{serialization_8h__incl}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$class Archive , typename T $>$ }\\void \mbox{\hyperlink{serialization_8h_af86aa0f3f9dd45587bcdf92e8e023819}{archive\+Vector}} (Archive \&ar, T $\ast$$\ast$p, int size)
+\begin{DoxyCompactList}\small\item\em Serialize a raw array to a boost archive. \end{DoxyCompactList}\item 
+{\footnotesize template$<$class Archive $>$ }\\void \mbox{\hyperlink{serialization_8h_a7fe11bd61566784dac63b43f6eb9a6dd}{serialize}} (Archive \&ar, \mbox{\hyperlink{classamici_1_1_solver}{amici\+::\+Solver}} \&s, const unsigned int)
+\begin{DoxyCompactList}\small\item\em Serialize \mbox{\hyperlink{classamici_1_1_solver}{amici\+::\+Solver}} to boost archive. \end{DoxyCompactList}\item 
+{\footnotesize template$<$class Archive $>$ }\\void \mbox{\hyperlink{serialization_8h_af4f88bcb9dc1df249266d947d4cfe08d}{serialize}} (Archive \&ar, amici\+::\+CVode\+Solver \&s, const unsigned int)
+\begin{DoxyCompactList}\small\item\em Serialize amici\+::\+CVode\+Solver to boost archive. \end{DoxyCompactList}\item 
+{\footnotesize template$<$class Archive $>$ }\\void {\bfseries serialize} (Archive \&ar, \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}} \&m, const unsigned int)
+\begin{DoxyCompactList}\small\item\em Serialize \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}} to boost archive. \end{DoxyCompactList}\item 
+{\footnotesize template$<$class Archive $>$ }\\void {\bfseries serialize} (Archive \&ar, \mbox{\hyperlink{classamici_1_1_return_data}{amici\+::\+Return\+Data}} \&r, const unsigned int)
+\begin{DoxyCompactList}\small\item\em Serialize \mbox{\hyperlink{classamici_1_1_return_data}{amici\+::\+Return\+Data}} to boost archive. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename T $>$ }\\char $\ast$ \mbox{\hyperlink{serialization_8h_a042a9a4166aeef6cd263d9975a4192ed}{serialize\+To\+Char}} (T const \&data, int $\ast$size)
+\begin{DoxyCompactList}\small\item\em Serialize object to char array. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename T $>$ }\\T \mbox{\hyperlink{serialization_8h_ad633859edca1bf95ecdbdb5500d3c28c}{deserialize\+From\+Char}} (const char $\ast$buffer, int size)
+\begin{DoxyCompactList}\small\item\em Deserialize object that has been serialized using serialize\+To\+Char. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename T $>$ }\\std\+::string \mbox{\hyperlink{serialization_8h_aed4ae7f193798ade342a0f70491e849e}{serialize\+To\+String}} (T const \&data)
+\begin{DoxyCompactList}\small\item\em Serialize object to string. \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename T $>$ }\\std\+::vector$<$ char $>$ \mbox{\hyperlink{serialization_8h_ad5b38b6ae6007acbaf43521f2a616937}{serialize\+To\+Std\+Vec}} (T const \&data)
+\begin{DoxyCompactList}\small\item\em Serialize object to std\+::vector$<$char$>$ \end{DoxyCompactList}\item 
+{\footnotesize template$<$typename T $>$ }\\T \mbox{\hyperlink{serialization_8h_a863d35f9934623bc5f7f409a05fa0d67}{deserialize\+From\+String}} (std\+::string const \&serialized)
+\begin{DoxyCompactList}\small\item\em Deserialize object that has been serialized using serialize\+To\+String. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+Helper functions and forward declarations for boost\+::serialization 
+
+\doxysubsubsection{Function Documentation}
+\mbox{\Hypertarget{serialization_8h_af86aa0f3f9dd45587bcdf92e8e023819}\label{serialization_8h_af86aa0f3f9dd45587bcdf92e8e023819}} 
+\index{serialization.h@{serialization.h}!archiveVector@{archiveVector}}
+\index{archiveVector@{archiveVector}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{archiveVector()}{archiveVector()}}
+{\footnotesize\ttfamily void boost\+::serialization\+::archive\+Vector (\begin{DoxyParamCaption}\item[{Archive \&}]{ar,  }\item[{T $\ast$$\ast$}]{p,  }\item[{int}]{size }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em ar} & archive \\
+\hline
+{\em p} & Pointer to array \\
+\hline
+{\em size} & Size of p \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 34 of file serialization.\+h.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=156pt]{serialization_8h_af86aa0f3f9dd45587bcdf92e8e023819_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=156pt]{serialization_8h_af86aa0f3f9dd45587bcdf92e8e023819_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{serialization_8h_a7fe11bd61566784dac63b43f6eb9a6dd}\label{serialization_8h_a7fe11bd61566784dac63b43f6eb9a6dd}} 
+\index{serialization.h@{serialization.h}!serialize@{serialize}}
+\index{serialize@{serialize}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serialize()}{serialize()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily void serialize (\begin{DoxyParamCaption}\item[{Archive \&}]{ar,  }\item[{\mbox{\hyperlink{classamici_1_1_solver}{amici\+::\+Solver}} \&}]{s,  }\item[{const unsigned int}]{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em ar} & Archive \\
+\hline
+{\em s} & Solver instance to serialize \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 54 of file serialization.\+h.
+
+\mbox{\Hypertarget{serialization_8h_af4f88bcb9dc1df249266d947d4cfe08d}\label{serialization_8h_af4f88bcb9dc1df249266d947d4cfe08d}} 
+\index{serialization.h@{serialization.h}!serialize@{serialize}}
+\index{serialize@{serialize}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serialize()}{serialize()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily void boost\+::serialization\+::serialize (\begin{DoxyParamCaption}\item[{Archive \&}]{ar,  }\item[{amici\+::\+CVode\+Solver \&}]{s,  }\item[{const unsigned int}]{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em ar} & Archive \\
+\hline
+{\em s} & Solver instance to serialize \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 94 of file serialization.\+h.
+
+\mbox{\Hypertarget{model_8h_a717a6870aee2f4ee1bd9e0d02e82fed1}\label{model_8h_a717a6870aee2f4ee1bd9e0d02e82fed1}} 
+\index{serialization.h@{serialization.h}!serialize@{serialize}}
+\index{serialize@{serialize}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serialize()}{serialize()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily void serialize (\begin{DoxyParamCaption}\item[{Archive \&}]{ar,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}} \&}]{m,  }\item[{const unsigned int}]{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em ar} & Archive \\
+\hline
+{\em m} & Model instance to serialize \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 104 of file serialization.\+h.
+
+\mbox{\Hypertarget{rdata_8h_a2a249f4ec168c1e35f7496fc04d79ac8}\label{rdata_8h_a2a249f4ec168c1e35f7496fc04d79ac8}} 
+\index{serialization.h@{serialization.h}!serialize@{serialize}}
+\index{serialize@{serialize}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serialize()}{serialize()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily void serialize (\begin{DoxyParamCaption}\item[{Archive \&}]{ar,  }\item[{\mbox{\hyperlink{classamici_1_1_return_data}{amici\+::\+Return\+Data}} \&}]{r,  }\item[{const unsigned int}]{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em ar} & Archive \\
+\hline
+{\em r} & Return\+Data instance to serialize \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 146 of file serialization.\+h.
+
+\mbox{\Hypertarget{serialization_8h_a042a9a4166aeef6cd263d9975a4192ed}\label{serialization_8h_a042a9a4166aeef6cd263d9975a4192ed}} 
+\index{serialization.h@{serialization.h}!serializeToChar@{serializeToChar}}
+\index{serializeToChar@{serializeToChar}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serializeToChar()}{serializeToChar()}}
+{\footnotesize\ttfamily char$\ast$ amici\+::serialize\+To\+Char (\begin{DoxyParamCaption}\item[{T const \&}]{data,  }\item[{int $\ast$}]{size }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & input object \\
+\hline
+{\em size} & maximum char length\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The object serialized as char 
+\end{DoxyReturn}
+
+
+Definition at line 230 of file serialization.\+h.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=164pt]{serialization_8h_a042a9a4166aeef6cd263d9975a4192ed_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=164pt]{serialization_8h_a042a9a4166aeef6cd263d9975a4192ed_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{serialization_8h_ad633859edca1bf95ecdbdb5500d3c28c}\label{serialization_8h_ad633859edca1bf95ecdbdb5500d3c28c}} 
+\index{serialization.h@{serialization.h}!deserializeFromChar@{deserializeFromChar}}
+\index{deserializeFromChar@{deserializeFromChar}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{deserializeFromChar()}{deserializeFromChar()}}
+{\footnotesize\ttfamily T amici\+::deserialize\+From\+Char (\begin{DoxyParamCaption}\item[{const char $\ast$}]{buffer,  }\item[{int}]{size }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em buffer} & serialized object \\
+\hline
+{\em size} & length of buffer\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The deserialized object 
+\end{DoxyReturn}
+
+
+Definition at line 264 of file serialization.\+h.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=187pt]{serialization_8h_ad633859edca1bf95ecdbdb5500d3c28c_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=187pt]{serialization_8h_ad633859edca1bf95ecdbdb5500d3c28c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{serialization_8h_aed4ae7f193798ade342a0f70491e849e}\label{serialization_8h_aed4ae7f193798ade342a0f70491e849e}} 
+\index{serialization.h@{serialization.h}!serializeToString@{serializeToString}}
+\index{serializeToString@{serializeToString}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serializeToString()}{serializeToString()}}
+{\footnotesize\ttfamily std\+::string amici\+::serialize\+To\+String (\begin{DoxyParamCaption}\item[{T const \&}]{data }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & input object\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The object serialized as string 
+\end{DoxyReturn}
+
+
+Definition at line 288 of file serialization.\+h.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=169pt]{serialization_8h_aed4ae7f193798ade342a0f70491e849e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=169pt]{serialization_8h_aed4ae7f193798ade342a0f70491e849e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{serialization_8h_ad5b38b6ae6007acbaf43521f2a616937}\label{serialization_8h_ad5b38b6ae6007acbaf43521f2a616937}} 
+\index{serialization.h@{serialization.h}!serializeToStdVec@{serializeToStdVec}}
+\index{serializeToStdVec@{serializeToStdVec}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{serializeToStdVec()}{serializeToStdVec()}}
+{\footnotesize\ttfamily std\+::vector$<$char$>$ amici\+::serialize\+To\+Std\+Vec (\begin{DoxyParamCaption}\item[{T const \&}]{data }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & input object\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The object serialized as std\+::vector$<$char$>$ 
+\end{DoxyReturn}
+
+
+Definition at line 315 of file serialization.\+h.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=175pt]{serialization_8h_ad5b38b6ae6007acbaf43521f2a616937_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=175pt]{serialization_8h_ad5b38b6ae6007acbaf43521f2a616937_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{serialization_8h_a863d35f9934623bc5f7f409a05fa0d67}\label{serialization_8h_a863d35f9934623bc5f7f409a05fa0d67}} 
+\index{serialization.h@{serialization.h}!deserializeFromString@{deserializeFromString}}
+\index{deserializeFromString@{deserializeFromString}!serialization.h@{serialization.h}}
+\doxyparagraph{\texorpdfstring{deserializeFromString()}{deserializeFromString()}}
+{\footnotesize\ttfamily T amici\+::deserialize\+From\+String (\begin{DoxyParamCaption}\item[{std\+::string const \&}]{serialized }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em serialized} & serialized object\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The deserialized object 
+\end{DoxyReturn}
+
+
+Definition at line 343 of file serialization.\+h.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=191pt]{serialization_8h_a863d35f9934623bc5f7f409a05fa0d67_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=191pt]{serialization_8h_a863d35f9934623bc5f7f409a05fa0d67_icgraph}
+\end{center}
+\end{figure}

@@ -1,8 +1,8 @@
-\hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}{}\doxysubsection{S\+U\+N\+Lin\+Sol\+S\+P\+F\+G\+MR Class Reference}
+\hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}{}\doxysubsection{SUNLin\+Sol\+SPFGMR Class Reference}
 \label{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}\index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
 
 
-S\+U\+N\+D\+I\+A\+LS scaled preconditioned F\+G\+M\+R\+ES (Flexible Generalized Minimal Residual method) (S\+P\+F\+G\+MR) solver.  
+SUNDIALS scaled preconditioned FGMRES (Flexible Generalized Minimal Residual method) (SPFGMR) solver.  
 
 
 
@@ -11,23 +11,23 @@ S\+U\+N\+D\+I\+A\+LS scaled preconditioned F\+G\+M\+R\+ES (Flexible Generalized 
 
 
 
-Inheritance diagram for S\+U\+N\+Lin\+Sol\+S\+P\+F\+G\+MR\+:
+Inheritance diagram for SUNLin\+Sol\+SPFGMR\+:
 \nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=186pt]{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r__inherit__graph}
+\includegraphics[width=188pt]{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r__inherit__graph}
 \end{center}
 \end{figure}
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ad9336d8cc5909669787988b6d3ab1839}{S\+U\+N\+Lin\+Sol\+S\+P\+F\+G\+MR}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&x, int pretype, int maxl)
-\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}{S\+U\+N\+Lin\+Sol\+S\+P\+F\+G\+MR}}. \end{DoxyCompactList}\item 
-int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_af89903c9cacf169646afc7f81d9ba827}{set\+A\+Times}} (void $\ast$A\+\_\+data, A\+Times\+Fn A\+Times)
-\begin{DoxyCompactList}\small\item\em Sets the function pointer for A\+Times (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
-int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}{set\+Preconditioner}} (void $\ast$P\+\_\+data, P\+Setup\+Fn Pset, P\+Solve\+Fn Psol)
-\begin{DoxyCompactList}\small\item\em Sets function pointers for P\+Setup and P\+Solve routines inside of iterative linear solver objects (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ad9336d8cc5909669787988b6d3ab1839}{SUNLin\+Sol\+SPFGMR}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&x, int pretype, int maxl)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}{SUNLin\+Sol\+SPFGMR}}. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_af89903c9cacf169646afc7f81d9ba827}{set\+ATimes}} (void $\ast$A\+\_\+data, ATimes\+Fn ATimes)
+\begin{DoxyCompactList}\small\item\em Sets the function pointer for ATimes (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}{set\+Preconditioner}} (void $\ast$P\+\_\+data, PSetup\+Fn Pset, PSolve\+Fn Psol)
+\begin{DoxyCompactList}\small\item\em Sets function pointers for PSetup and PSolve routines inside of iterative linear solver objects (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a6edf4ca4468ac8d512f99b641d179b24}{set\+Scaling\+Vectors}} (N\+\_\+\+Vector s, N\+\_\+\+Vector nul)
 \begin{DoxyCompactList}\small\item\em Sets pointers to left/right scaling vectors for the linear system solve (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ad166bae46ad003fc3928c57e3ac19232}{get\+Num\+Iters}} () const
@@ -51,21 +51,17 @@ Definition at line 449 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
 \doxyparagraph{\texorpdfstring{SUNLinSolSPFGMR()}{SUNLinSolSPFGMR()}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}{S\+U\+N\+Lin\+Sol\+S\+P\+F\+G\+MR}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&}]{x,  }\item[{int}]{pretype,  }\item[{int}]{maxl }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r}{SUNLin\+Sol\+SPFGMR}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&}]{x,  }\item[{int}]{pretype,  }\item[{int}]{maxl }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
 {\em x} & A template for cloning vectors needed within the solver. \\
 \hline
-{\em pretype} & Preconditioner type (P\+R\+E\+C\+\_\+\+N\+O\+NE, P\+R\+E\+C\+\_\+\+L\+E\+FT, P\+R\+E\+C\+\_\+\+R\+I\+G\+HT, P\+R\+E\+C\+\_\+\+B\+O\+TH) \\
+{\em pretype} & Preconditioner type (PREC\+\_\+\+NONE, PREC\+\_\+\+LEFT, PREC\+\_\+\+RIGHT, PREC\+\_\+\+BOTH) \\
 \hline
 {\em maxl} & Maximum number of solver iterations \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 261 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 
 
 \doxysubsubsection{Member Function Documentation}
@@ -73,27 +69,23 @@ Definition at line 261 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!setATimes@{setATimes}}
 \index{setATimes@{setATimes}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
 \doxyparagraph{\texorpdfstring{setATimes()}{setATimes()}}
-{\footnotesize\ttfamily int set\+A\+Times (\begin{DoxyParamCaption}\item[{void $\ast$}]{A\+\_\+data,  }\item[{A\+Times\+Fn}]{A\+Times }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily int set\+ATimes (\begin{DoxyParamCaption}\item[{void $\ast$}]{A\+\_\+data,  }\item[{ATimes\+Fn}]{ATimes }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
 {\em A\+\_\+data} & \\
 \hline
-{\em A\+Times} & \\
+{\em ATimes} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 267 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}\label{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}} 
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!setPreconditioner@{setPreconditioner}}
 \index{setPreconditioner@{setPreconditioner}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
 \doxyparagraph{\texorpdfstring{setPreconditioner()}{setPreconditioner()}}
-{\footnotesize\ttfamily int set\+Preconditioner (\begin{DoxyParamCaption}\item[{void $\ast$}]{P\+\_\+data,  }\item[{P\+Setup\+Fn}]{Pset,  }\item[{P\+Solve\+Fn}]{Psol }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily int set\+Preconditioner (\begin{DoxyParamCaption}\item[{void $\ast$}]{P\+\_\+data,  }\item[{PSetup\+Fn}]{Pset,  }\item[{PSolve\+Fn}]{Psol }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -107,10 +99,6 @@ Definition at line 267 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 271 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a6edf4ca4468ac8d512f99b641d179b24}\label{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_a6edf4ca4468ac8d512f99b641d179b24}} 
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!setScalingVectors@{setScalingVectors}}
 \index{setScalingVectors@{setScalingVectors}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
@@ -127,10 +115,6 @@ Definition at line 271 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 276 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ad166bae46ad003fc3928c57e3ac19232}\label{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ad166bae46ad003fc3928c57e3ac19232}} 
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!getNumIters@{getNumIters}}
 \index{getNumIters@{getNumIters}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
@@ -140,10 +124,6 @@ Definition at line 276 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 Number of iterations 
 \end{DoxyReturn}
-
-
-Definition at line 280 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ab1ffe76caa2d32c733af5113aa3c371f}\label{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_ab1ffe76caa2d32c733af5113aa3c371f}} 
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!getResNorm@{getResNorm}}
 \index{getResNorm@{getResNorm}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
@@ -153,10 +133,6 @@ Definition at line 280 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 residual norm 
 \end{DoxyReturn}
-
-
-Definition at line 282 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_adbc9e10ee3bb914864fecc50be5cb2f0}\label{classamici_1_1_s_u_n_lin_sol_s_p_f_g_m_r_adbc9e10ee3bb914864fecc50be5cb2f0}} 
 \index{SUNLinSolSPFGMR@{SUNLinSolSPFGMR}!getResid@{getResid}}
 \index{getResid@{getResid}!SUNLinSolSPFGMR@{SUNLinSolSPFGMR}}
@@ -166,7 +142,3 @@ Definition at line 282 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 286 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-

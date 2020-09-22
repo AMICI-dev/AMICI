@@ -1,8 +1,4 @@
 <map id="getInitialSimulationState" name="getInitialSimulationState">
-<area shape="rect" id="node1" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="676,64,839,91"/>
-<area shape="rect" id="node2" href="$classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="439,13,628,40"/>
-<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="228,57,391,98"/>
-<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="447,115,620,157"/>
-<area shape="rect" id="node3" href="$classamici_1_1_forward_problem.html#a8dbb2ec401605a1ecac13a9313659404" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="245,5,373,32"/>
-<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,86,180,127"/>
+<area shape="rect" id="node1" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="243,5,405,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="5,5,195,32"/>
 </map>

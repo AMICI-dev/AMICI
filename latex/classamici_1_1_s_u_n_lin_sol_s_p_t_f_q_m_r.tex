@@ -1,8 +1,8 @@
-\hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}{}\doxysubsection{S\+U\+N\+Lin\+Sol\+S\+P\+T\+F\+Q\+MR Class Reference}
+\hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}{}\doxysubsection{SUNLin\+Sol\+SPTFQMR Class Reference}
 \label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}\index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 
 
-S\+U\+N\+D\+I\+A\+LS scaled preconditioned T\+F\+Q\+MR (Transpose-\/\+Free Quasi-\/\+Minimal Residual method) (S\+P\+T\+F\+Q\+MR) solver.  
+SUNDIALS scaled preconditioned TFQMR (Transpose-\/\+Free Quasi-\/\+Minimal Residual method) (SPTFQMR) solver.  
 
 
 
@@ -11,25 +11,25 @@ S\+U\+N\+D\+I\+A\+LS scaled preconditioned T\+F\+Q\+MR (Transpose-\/\+Free Quasi
 
 
 
-Inheritance diagram for S\+U\+N\+Lin\+Sol\+S\+P\+T\+F\+Q\+MR\+:
+Inheritance diagram for SUNLin\+Sol\+SPTFQMR\+:
 \nopagebreak
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=192pt]{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r__inherit__graph}
+\includegraphics[width=194pt]{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r__inherit__graph}
 \end{center}
 \end{figure}
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ac262baf30387142a034f1bdca601a140}{S\+U\+N\+Lin\+Sol\+S\+P\+T\+F\+Q\+MR}} (N\+\_\+\+Vector x, int pretype=P\+R\+E\+C\+\_\+\+N\+O\+NE, int maxl=S\+U\+N\+S\+P\+T\+F\+Q\+M\+R\+\_\+\+M\+A\+X\+L\+\_\+\+D\+E\+F\+A\+U\+LT)
-\begin{DoxyCompactList}\small\item\em Create S\+P\+T\+F\+Q\+MR solver. \end{DoxyCompactList}\item 
-\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_aacf2e518f6d2794eee6daeeb6a14feca}{S\+U\+N\+Lin\+Sol\+S\+P\+T\+F\+Q\+MR}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&x, int pretype=P\+R\+E\+C\+\_\+\+N\+O\+NE, int maxl=S\+U\+N\+S\+P\+T\+F\+Q\+M\+R\+\_\+\+M\+A\+X\+L\+\_\+\+D\+E\+F\+A\+U\+LT)
-\begin{DoxyCompactList}\small\item\em Create S\+P\+T\+F\+Q\+MR solver. \end{DoxyCompactList}\item 
-int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_af89903c9cacf169646afc7f81d9ba827}{set\+A\+Times}} (void $\ast$A\+\_\+data, A\+Times\+Fn A\+Times)
-\begin{DoxyCompactList}\small\item\em Sets the function pointer for A\+Times (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
-int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}{set\+Preconditioner}} (void $\ast$P\+\_\+data, P\+Setup\+Fn Pset, P\+Solve\+Fn Psol)
-\begin{DoxyCompactList}\small\item\em Sets function pointers for P\+Setup and P\+Solve routines inside of iterative linear solver objects (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ac262baf30387142a034f1bdca601a140}{SUNLin\+Sol\+SPTFQMR}} (N\+\_\+\+Vector x, int pretype=PREC\+\_\+\+NONE, int maxl=SUNSPTFQMR\+\_\+\+MAXL\+\_\+\+DEFAULT)
+\begin{DoxyCompactList}\small\item\em Create SPTFQMR solver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_aacf2e518f6d2794eee6daeeb6a14feca}{SUNLin\+Sol\+SPTFQMR}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&x, int pretype=PREC\+\_\+\+NONE, int maxl=SUNSPTFQMR\+\_\+\+MAXL\+\_\+\+DEFAULT)
+\begin{DoxyCompactList}\small\item\em Create SPTFQMR solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_af89903c9cacf169646afc7f81d9ba827}{set\+ATimes}} (void $\ast$A\+\_\+data, ATimes\+Fn ATimes)
+\begin{DoxyCompactList}\small\item\em Sets the function pointer for ATimes (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}{set\+Preconditioner}} (void $\ast$P\+\_\+data, PSetup\+Fn Pset, PSolve\+Fn Psol)
+\begin{DoxyCompactList}\small\item\em Sets function pointers for PSetup and PSolve routines inside of iterative linear solver objects (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a6edf4ca4468ac8d512f99b641d179b24}{set\+Scaling\+Vectors}} (N\+\_\+\+Vector s, N\+\_\+\+Vector nul)
 \begin{DoxyCompactList}\small\item\em Sets pointers to left/right scaling vectors for the linear system solve (see sundials/sundials\+\_\+linearsolver.\+h). \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ad166bae46ad003fc3928c57e3ac19232}{get\+Num\+Iters}} () const
@@ -53,48 +53,32 @@ Definition at line 582 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 \doxyparagraph{\texorpdfstring{SUNLinSolSPTFQMR()}{SUNLinSolSPTFQMR()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}{S\+U\+N\+Lin\+Sol\+S\+P\+T\+F\+Q\+MR}} (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{x,  }\item[{int}]{pretype = {\ttfamily PREC\+\_\+NONE},  }\item[{int}]{maxl = {\ttfamily SUNSPTFQMR\+\_\+MAXL\+\_\+DEFAULT} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}{SUNLin\+Sol\+SPTFQMR}} (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{x,  }\item[{int}]{pretype = {\ttfamily PREC\+\_\+NONE},  }\item[{int}]{maxl = {\ttfamily SUNSPTFQMR\+\_\+MAXL\+\_\+DEFAULT} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 
 \begin{DoxyParams}{Parameters}
 {\em x} & A template for cloning vectors needed within the solver. \\
 \hline
-{\em pretype} & Preconditioner type (P\+R\+E\+C\+\_\+\+N\+O\+NE, P\+R\+E\+C\+\_\+\+L\+E\+FT, P\+R\+E\+C\+\_\+\+R\+I\+G\+HT, P\+R\+E\+C\+\_\+\+B\+O\+TH) \\
+{\em pretype} & Preconditioner type (PREC\+\_\+\+NONE, PREC\+\_\+\+LEFT, PREC\+\_\+\+RIGHT, PREC\+\_\+\+BOTH) \\
 \hline
 {\em maxl} & Maximum number of solver iterations \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 313 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_aacf2e518f6d2794eee6daeeb6a14feca}\label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_aacf2e518f6d2794eee6daeeb6a14feca}} 
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 \doxyparagraph{\texorpdfstring{SUNLinSolSPTFQMR()}{SUNLinSolSPTFQMR()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}{S\+U\+N\+Lin\+Sol\+S\+P\+T\+F\+Q\+MR}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&}]{x,  }\item[{int}]{pretype = {\ttfamily PREC\+\_\+NONE},  }\item[{int}]{maxl = {\ttfamily SUNSPTFQMR\+\_\+MAXL\+\_\+DEFAULT} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r}{SUNLin\+Sol\+SPTFQMR}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&}]{x,  }\item[{int}]{pretype = {\ttfamily PREC\+\_\+NONE},  }\item[{int}]{maxl = {\ttfamily SUNSPTFQMR\+\_\+MAXL\+\_\+DEFAULT} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 
 \begin{DoxyParams}{Parameters}
 {\em x} & A template for cloning vectors needed within the solver. \\
 \hline
-{\em pretype} & Preconditioner type (P\+R\+E\+C\+\_\+\+N\+O\+NE, P\+R\+E\+C\+\_\+\+L\+E\+FT, P\+R\+E\+C\+\_\+\+R\+I\+G\+HT, P\+R\+E\+C\+\_\+\+B\+O\+TH) \\
+{\em pretype} & Preconditioner type (PREC\+\_\+\+NONE, PREC\+\_\+\+LEFT, PREC\+\_\+\+RIGHT, PREC\+\_\+\+BOTH) \\
 \hline
 {\em maxl} & Maximum number of solver iterations \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 319 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_aacf2e518f6d2794eee6daeeb6a14feca_cgraph}
-\end{center}
-\end{figure}
 
 
 \doxysubsubsection{Member Function Documentation}
@@ -102,27 +86,23 @@ Here is the call graph for this function\+:
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!setATimes@{setATimes}}
 \index{setATimes@{setATimes}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 \doxyparagraph{\texorpdfstring{setATimes()}{setATimes()}}
-{\footnotesize\ttfamily int set\+A\+Times (\begin{DoxyParamCaption}\item[{void $\ast$}]{A\+\_\+data,  }\item[{A\+Times\+Fn}]{A\+Times }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily int set\+ATimes (\begin{DoxyParamCaption}\item[{void $\ast$}]{A\+\_\+data,  }\item[{ATimes\+Fn}]{ATimes }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
 {\em A\+\_\+data} & \\
 \hline
-{\em A\+Times} & \\
+{\em ATimes} & \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 325 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}\label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a9bb7b7cc37fbbfc0501ec3f66ba03aec}} 
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!setPreconditioner@{setPreconditioner}}
 \index{setPreconditioner@{setPreconditioner}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
 \doxyparagraph{\texorpdfstring{setPreconditioner()}{setPreconditioner()}}
-{\footnotesize\ttfamily int set\+Preconditioner (\begin{DoxyParamCaption}\item[{void $\ast$}]{P\+\_\+data,  }\item[{P\+Setup\+Fn}]{Pset,  }\item[{P\+Solve\+Fn}]{Psol }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily int set\+Preconditioner (\begin{DoxyParamCaption}\item[{void $\ast$}]{P\+\_\+data,  }\item[{PSetup\+Fn}]{Pset,  }\item[{PSolve\+Fn}]{Psol }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
@@ -136,10 +116,6 @@ Definition at line 325 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 329 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a6edf4ca4468ac8d512f99b641d179b24}\label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_a6edf4ca4468ac8d512f99b641d179b24}} 
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!setScalingVectors@{setScalingVectors}}
 \index{setScalingVectors@{setScalingVectors}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
@@ -156,10 +132,6 @@ Definition at line 329 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 334 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ad166bae46ad003fc3928c57e3ac19232}\label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ad166bae46ad003fc3928c57e3ac19232}} 
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!getNumIters@{getNumIters}}
 \index{getNumIters@{getNumIters}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
@@ -169,10 +141,6 @@ Definition at line 334 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 Number of iterations 
 \end{DoxyReturn}
-
-
-Definition at line 338 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ab1ffe76caa2d32c733af5113aa3c371f}\label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_ab1ffe76caa2d32c733af5113aa3c371f}} 
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!getResNorm@{getResNorm}}
 \index{getResNorm@{getResNorm}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
@@ -182,10 +150,6 @@ Definition at line 338 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 residual norm 
 \end{DoxyReturn}
-
-
-Definition at line 342 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_adbc9e10ee3bb914864fecc50be5cb2f0}\label{classamici_1_1_s_u_n_lin_sol_s_p_t_f_q_m_r_adbc9e10ee3bb914864fecc50be5cb2f0}} 
 \index{SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}!getResid@{getResid}}
 \index{getResid@{getResid}!SUNLinSolSPTFQMR@{SUNLinSolSPTFQMR}}
@@ -195,7 +159,3 @@ Definition at line 342 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 \begin{DoxyReturn}{Returns}
 
 \end{DoxyReturn}
-
-
-Definition at line 346 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
-

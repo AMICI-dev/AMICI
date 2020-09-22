@@ -2,7 +2,7 @@ var classamici_1_1_newton_solver =
 [
     [ "NewtonSolver", "classamici_1_1_newton_solver.html#a5326d5b9704845cb30e6953c0977d486", null ],
     [ "~NewtonSolver", "classamici_1_1_newton_solver.html#ad9f477c29abe2d763bc64916b6a5f848", null ],
-    [ "getSolver", "classamici_1_1_newton_solver.html#aabb17410aff4385a0161ecc47f176696", null ],
+    [ "getSolver", "classamici_1_1_newton_solver.html#a4b960bd1009b7927ecd3d35b7025abc1", null ],
     [ "getStep", "classamici_1_1_newton_solver.html#a5d7771aef57a9dd773fedb39323b3a04", null ],
     [ "computeNewtonSensis", "classamici_1_1_newton_solver.html#a8061901935161d3cbd563daae8fa4e9f", null ],
     [ "getNumLinSteps", "classamici_1_1_newton_solver.html#a528485b9baf6dfda4348cc5a22d89a13", null ],

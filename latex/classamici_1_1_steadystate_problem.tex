@@ -15,7 +15,7 @@ The \mbox{\hyperlink{classamici_1_1_steadystate_problem}{Steadystate\+Problem}} 
 \mbox{\hyperlink{classamici_1_1_steadystate_problem_ade21b8173491eb88400a985523768b74}{Steadystate\+Problem}} (const \mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&solver, const \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model)
 \begin{DoxyCompactList}\small\item\em constructor \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_steadystate_problem_a0b71cc4193afae24ae5890094e210682}{work\+Steady\+State\+Problem}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, int it)
-\begin{DoxyCompactList}\small\item\em Handles steady state computation in the forward case\+: tries to determine the steady state of the O\+DE system and computes steady state sensitivities if requested. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Handles steady state computation in the forward case\+: tries to determine the steady state of the ODE system and computes steady state sensitivities if requested. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_steadystate_problem_a4b4624b422c1f6c070a5bde7168a5cbf}{work\+Steady\+State\+Backward\+Problem}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, const \mbox{\hyperlink{classamici_1_1_backward_problem}{Backward\+Problem}} $\ast$bwd)
 \item 
 void \mbox{\hyperlink{classamici_1_1_steadystate_problem_adae1ade11b3137002e39282ec4992a2a}{find\+Steady\+State}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} $\ast$newton\+Solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, int it)
@@ -44,11 +44,11 @@ void \mbox{\hyperlink{classamici_1_1_steadystate_problem_aca32c27fbd6b2eef05fc01
 \begin{DoxyCompactList}\small\item\em Runs the Newton solver iterations and checks for convergence to steady state. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_steadystate_problem_a03638c9858ce163444a52badde828d1f}{run\+Steadystate\+Simulation}} (const \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, bool backward)
 \begin{DoxyCompactList}\small\item\em Simulation is launched, if Newton solver or linear system solve fails. \end{DoxyCompactList}\item 
-std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $>$ \mbox{\hyperlink{classamici_1_1_steadystate_problem_a0a473db2e23c6a94ccd16150a4aa93ea}{create\+Steadystate\+Sim\+Solver}} (const \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, bool forward\+Sensis, bool backward) const
-\begin{DoxyCompactList}\small\item\em Initialize C\+Vode\+Solver instance for preequilibration simulation. \end{DoxyCompactList}\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $>$ \mbox{\hyperlink{classamici_1_1_steadystate_problem_a9e9a3a31a2d26bd2f1921c97cb2c4e30}{create\+Steadystate\+Sim\+Solver}} (const \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, bool forward\+Sensis, bool backward) const
+\begin{DoxyCompactList}\small\item\em Initialize CVode\+Solver instance for preequilibration simulation. \end{DoxyCompactList}\item 
 bool \mbox{\hyperlink{classamici_1_1_steadystate_problem_a6b871b5be8dfa63fc4bb5bd0bd7ff052}{initialize\+Backward\+Problem}} (\mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, const \mbox{\hyperlink{classamici_1_1_backward_problem}{Backward\+Problem}} $\ast$bwd)
 \begin{DoxyCompactList}\small\item\em Initialize backward computation by setting state, time, adjoint state and checking for preequilibration mode. \end{DoxyCompactList}\item 
-void \mbox{\hyperlink{classamici_1_1_steadystate_problem_a8e3a8eeeb0b157da84fe7dac1e0d209b}{compute\+Q\+BfromQ}} (\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&yQ, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&y\+QB) const
+void \mbox{\hyperlink{classamici_1_1_steadystate_problem_a8e3a8eeeb0b157da84fe7dac1e0d209b}{compute\+QBfromQ}} (\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&yQ, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&y\+QB) const
 \begin{DoxyCompactList}\small\item\em Compute the backward quadratures, which contribute to the gradient (x\+QB) from the quadrature over the backward state itself (xQ) \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_steadystate_problem_af78ddb4a1ac2298676dae66e99d9c082}{store\+Simulation\+State}} (\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, bool storesensi)
 \begin{DoxyCompactList}\small\item\em Store carbon copy of current simulation state variables as \mbox{\hyperlink{structamici_1_1_simulation_state}{Simulation\+State}}. \end{DoxyCompactList}\item 
@@ -60,11 +60,11 @@ const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \& \mbox{\hyperl
 \begin{DoxyCompactList}\small\item\em Returns state at steadystate. \end{DoxyCompactList}\item 
 const \mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} \& \mbox{\hyperlink{classamici_1_1_steadystate_problem_a00ffd955c069b7c9d1359f484b01e04a}{get\+State\+Sensitivity}} () const
 \begin{DoxyCompactList}\small\item\em Returns state sensitivity at steadystate. \end{DoxyCompactList}\item 
-std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_steadystate_problem_afb4ec4e3a67624dddea0cd64fca29ae9}{get\+D\+Jydx}} () const
+std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_steadystate_problem_afb4ec4e3a67624dddea0cd64fca29ae9}{get\+DJydx}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for d\+Jydx. \end{DoxyCompactList}\item 
-double \mbox{\hyperlink{classamici_1_1_steadystate_problem_adea50b83240e3dd99641a3d0e7ce63b3}{get\+C\+P\+U\+Time}} () const
+double \mbox{\hyperlink{classamici_1_1_steadystate_problem_adea50b83240e3dd99641a3d0e7ce63b3}{get\+CPUTime}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for run\+\_\+time of the forward problem. \end{DoxyCompactList}\item 
-double \mbox{\hyperlink{classamici_1_1_steadystate_problem_affaad444d59c9b86e734144434487a64}{get\+C\+P\+U\+TimeB}} () const
+double \mbox{\hyperlink{classamici_1_1_steadystate_problem_affaad444d59c9b86e734144434487a64}{get\+CPUTimeB}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for run\+\_\+time of the backward problem. \end{DoxyCompactList}\item 
 std\+::vector$<$ Steady\+State\+Status $>$ const  \& \mbox{\hyperlink{classamici_1_1_steadystate_problem_a022a2bce957f1533e15f9b456b971768}{get\+Steady\+State\+Status}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for steady\+\_\+state\+\_\+status. \end{DoxyCompactList}\item 
@@ -111,18 +111,6 @@ Definition at line 25 of file steadystateproblem.\+h.
 \end{DoxyParams}
 
 
-Definition at line 21 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=340pt]{classamici_1_1_steadystate_problem_ade21b8173491eb88400a985523768b74_cgraph}
-\end{center}
-\end{figure}
-
-
 \doxysubsubsection{Member Function Documentation}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a0b71cc4193afae24ae5890094e210682}\label{classamici_1_1_steadystate_problem_a0b71cc4193afae24ae5890094e210682}} 
 \index{SteadystateProblem@{SteadystateProblem}!workSteadyStateProblem@{workSteadyStateProblem}}
@@ -139,18 +127,6 @@ Here is the call graph for this function\+:
 {\em it} & integer with the index of the current time step \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 44 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a0b71cc4193afae24ae5890094e210682_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a4b4624b422c1f6c070a5bde7168a5cbf}\label{classamici_1_1_steadystate_problem_a4b4624b422c1f6c070a5bde7168a5cbf}} 
 \index{SteadystateProblem@{SteadystateProblem}!workSteadyStateBackwardProblem@{workSteadyStateBackwardProblem}}
 \index{workSteadyStateBackwardProblem@{workSteadyStateBackwardProblem}!SteadystateProblem@{SteadystateProblem}}
@@ -166,18 +142,6 @@ Integrates over the adjoint state backward in time by solving a linear system of
 {\em bwd} & backward problem \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 90 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a4b4624b422c1f6c070a5bde7168a5cbf_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_adae1ade11b3137002e39282ec4992a2a}\label{classamici_1_1_steadystate_problem_adae1ade11b3137002e39282ec4992a2a}} 
 \index{SteadystateProblem@{SteadystateProblem}!findSteadyState@{findSteadyState}}
 \index{findSteadyState@{findSteadyState}!SteadystateProblem@{SteadystateProblem}}
@@ -195,10 +159,6 @@ Here is the call graph for this function\+:
 {\em it} & integer with the index of the current time step \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 109 of file steadystateproblem.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_ad62b1882c1bc397bcda7a9fcfc7456f1}\label{classamici_1_1_steadystate_problem_ad62b1882c1bc397bcda7a9fcfc7456f1}} 
 \index{SteadystateProblem@{SteadystateProblem}!findSteadyStateByNewtonsMethod@{findSteadyStateByNewtonsMethod}}
 \index{findSteadyStateByNewtonsMethod@{findSteadyStateByNewtonsMethod}!SteadystateProblem@{SteadystateProblem}}
@@ -214,18 +174,6 @@ Definition at line 109 of file steadystateproblem.\+cpp.
 {\em newton\+\_\+retry} & bool flag indicating whether being relaunched \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 129 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_ad62b1882c1bc397bcda7a9fcfc7456f1_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a72e578eb6c847a599352b10f1c5856d7}\label{classamici_1_1_steadystate_problem_a72e578eb6c847a599352b10f1c5856d7}} 
 \index{SteadystateProblem@{SteadystateProblem}!findSteadyStateBySimulation@{findSteadyStateBySimulation}}
 \index{findSteadyStateBySimulation@{findSteadyStateBySimulation}!SteadystateProblem@{SteadystateProblem}}
@@ -241,18 +189,6 @@ Here is the call graph for this function\+:
 {\em it} & integer with the index of the current time step \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 172 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a72e578eb6c847a599352b10f1c5856d7_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a57d59940a343a7a6753f4f374beb933b}\label{classamici_1_1_steadystate_problem_a57d59940a343a7a6753f4f374beb933b}} 
 \index{SteadystateProblem@{SteadystateProblem}!computeSteadyStateQuadrature@{computeSteadyStateQuadrature}}
 \index{computeSteadyStateQuadrature@{computeSteadyStateQuadrature}!SteadystateProblem@{SteadystateProblem}}
@@ -268,26 +204,6 @@ Here is the call graph for this function\+:
 {\em model} & pointer to the model object \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 241 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a57d59940a343a7a6753f4f374beb933b_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a57d59940a343a7a6753f4f374beb933b_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_ab0b999d56e310b3326d8bcbaa095e86f}\label{classamici_1_1_steadystate_problem_ab0b999d56e310b3326d8bcbaa095e86f}} 
 \index{SteadystateProblem@{SteadystateProblem}!getQuadratureByLinSolve@{getQuadratureByLinSolve}}
 \index{getQuadratureByLinSolve@{getQuadratureByLinSolve}!SteadystateProblem@{SteadystateProblem}}
@@ -301,26 +217,6 @@ Here is the caller graph for this function\+:
 {\em model} & pointer to the model object \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 265 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_ab0b999d56e310b3326d8bcbaa095e86f_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_ab0b999d56e310b3326d8bcbaa095e86f_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_acc59d589b6de48155b59d23316db007d}\label{classamici_1_1_steadystate_problem_acc59d589b6de48155b59d23316db007d}} 
 \index{SteadystateProblem@{SteadystateProblem}!getQuadratureBySimulation@{getQuadratureBySimulation}}
 \index{getQuadratureBySimulation@{getQuadratureBySimulation}!SteadystateProblem@{SteadystateProblem}}
@@ -334,26 +230,6 @@ Here is the caller graph for this function\+:
 {\em model} & pointer to the model object \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 293 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_acc59d589b6de48155b59d23316db007d_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_acc59d589b6de48155b59d23316db007d_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_aa32c3c07543307c7d146db5e8a10bfbd}\label{classamici_1_1_steadystate_problem_aa32c3c07543307c7d146db5e8a10bfbd}} 
 \index{SteadystateProblem@{SteadystateProblem}!handleSteadyStateFailure@{handleSteadyStateFailure}}
 \index{handleSteadyStateFailure@{handleSteadyStateFailure}!SteadystateProblem@{SteadystateProblem}}
@@ -367,18 +243,6 @@ Here is the caller graph for this function\+:
 {\em model} & pointer to the model object \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 316 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_aa32c3c07543307c7d146db5e8a10bfbd_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a08f338f1e9657ac58629f3cdfb378216}\label{classamici_1_1_steadystate_problem_a08f338f1e9657ac58629f3cdfb378216}} 
 \index{SteadystateProblem@{SteadystateProblem}!writeErrorString@{writeErrorString}}
 \index{writeErrorString@{writeErrorString}!SteadystateProblem@{SteadystateProblem}}
@@ -392,10 +256,6 @@ Here is the call graph for this function\+:
 {\em status} & Entry of steady\+\_\+state\+\_\+staus to be processed \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 334 of file steadystateproblem.\+cpp.
-
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a760e800c6f910a835b9235ce389a6331}\label{classamici_1_1_steadystate_problem_a760e800c6f910a835b9235ce389a6331}} 
 \index{SteadystateProblem@{SteadystateProblem}!getSensitivityFlag@{getSensitivityFlag}}
 \index{getSensitivityFlag@{getSensitivityFlag}!SteadystateProblem@{SteadystateProblem}}
@@ -416,26 +276,6 @@ Definition at line 334 of file steadystateproblem.\+cpp.
 \begin{DoxyReturn}{Returns}
 flag telling how to process state sensis 
 \end{DoxyReturn}
-
-
-Definition at line 359 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a760e800c6f910a835b9235ce389a6331_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a760e800c6f910a835b9235ce389a6331_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a1235c7def8fc10df5600ae84759230cb}\label{classamici_1_1_steadystate_problem_a1235c7def8fc10df5600ae84759230cb}} 
 \index{SteadystateProblem@{SteadystateProblem}!getWrmsNorm@{getWrmsNorm}}
 \index{getWrmsNorm@{getWrmsNorm}!SteadystateProblem@{SteadystateProblem}}
@@ -458,26 +298,6 @@ Here is the caller graph for this function\+:
 \begin{DoxyReturn}{Returns}
 root-\/mean-\/square norm 
 \end{DoxyReturn}
-
-
-Definition at line 414 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=340pt]{classamici_1_1_steadystate_problem_a1235c7def8fc10df5600ae84759230cb_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a1235c7def8fc10df5600ae84759230cb_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_acace0e4d1a8cd079bf189718db73208a}\label{classamici_1_1_steadystate_problem_acace0e4d1a8cd079bf189718db73208a}} 
 \index{SteadystateProblem@{SteadystateProblem}!checkConvergence@{checkConvergence}}
 \index{checkConvergence@{checkConvergence}!SteadystateProblem@{SteadystateProblem}}
@@ -496,18 +316,6 @@ Here is the caller graph for this function\+:
 \begin{DoxyReturn}{Returns}
 boolean indicating convergence 
 \end{DoxyReturn}
-
-
-Definition at line 428 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_acace0e4d1a8cd079bf189718db73208a_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_aca32c27fbd6b2eef05fc01f0cb85d536}\label{classamici_1_1_steadystate_problem_aca32c27fbd6b2eef05fc01f0cb85d536}} 
 \index{SteadystateProblem@{SteadystateProblem}!applyNewtonsMethod@{applyNewtonsMethod}}
 \index{applyNewtonsMethod@{applyNewtonsMethod}!SteadystateProblem@{SteadystateProblem}}
@@ -518,32 +326,11 @@ Here is the call graph for this function\+:
 \begin{DoxyParams}{Parameters}
 {\em model} & pointer to the model object \\
 \hline
-{\em newton\+Solver} & pointer to the \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} object ~\newline
-{\bfseries{Type}}\+: \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} \\
+{\em newton\+Solver} & pointer to the \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} object \\
 \hline
 {\em newton\+\_\+retry} & flag indicating if Newton solver is rerun \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 476 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_aca32c27fbd6b2eef05fc01f0cb85d536_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_aca32c27fbd6b2eef05fc01f0cb85d536_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a03638c9858ce163444a52badde828d1f}\label{classamici_1_1_steadystate_problem_a03638c9858ce163444a52badde828d1f}} 
 \index{SteadystateProblem@{SteadystateProblem}!runSteadystateSimulation@{runSteadystateSimulation}}
 \index{runSteadystateSimulation@{runSteadystateSimulation}!SteadystateProblem@{SteadystateProblem}}
@@ -559,23 +346,11 @@ Here is the caller graph for this function\+:
 {\em backward} & flag indicating adjoint mode (including quadrature) \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 571 of file steadystateproblem.\+cpp.
-
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a03638c9858ce163444a52badde828d1f_icgraph}
-\end{center}
-\end{figure}
-\mbox{\Hypertarget{classamici_1_1_steadystate_problem_a0a473db2e23c6a94ccd16150a4aa93ea}\label{classamici_1_1_steadystate_problem_a0a473db2e23c6a94ccd16150a4aa93ea}} 
+\mbox{\Hypertarget{classamici_1_1_steadystate_problem_a9e9a3a31a2d26bd2f1921c97cb2c4e30}\label{classamici_1_1_steadystate_problem_a9e9a3a31a2d26bd2f1921c97cb2c4e30}} 
 \index{SteadystateProblem@{SteadystateProblem}!createSteadystateSimSolver@{createSteadystateSimSolver}}
 \index{createSteadystateSimSolver@{createSteadystateSimSolver}!SteadystateProblem@{SteadystateProblem}}
 \doxyparagraph{\texorpdfstring{createSteadystateSimSolver()}{createSteadystateSimSolver()}}
-{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $>$ create\+Steadystate\+Sim\+Solver (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$}]{solver,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model,  }\item[{bool}]{forward\+Sensis,  }\item[{bool}]{backward }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classamici_1_1_solver}{Solver}}$>$ create\+Steadystate\+Sim\+Solver (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $\ast$}]{solver,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model,  }\item[{bool}]{forward\+Sensis,  }\item[{bool}]{backward }\end{DoxyParamCaption}) const}
 
 
 \begin{DoxyParams}{Parameters}
@@ -583,7 +358,7 @@ Here is the caller graph for this function\+:
 \hline
 {\em model} & pointer to the model object \\
 \hline
-{\em forward\+Sensis} & flag switching on integration with F\+SA \\
+{\em forward\+Sensis} & flag switching on integration with FSA \\
 \hline
 {\em backward} & flag switching on quadratures computation \\
 \hline
@@ -591,26 +366,6 @@ Here is the caller graph for this function\+:
 \begin{DoxyReturn}{Returns}
 solver instance 
 \end{DoxyReturn}
-
-
-Definition at line 642 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a0a473db2e23c6a94ccd16150a4aa93ea_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a0a473db2e23c6a94ccd16150a4aa93ea_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a6b871b5be8dfa63fc4bb5bd0bd7ff052}\label{classamici_1_1_steadystate_problem_a6b871b5be8dfa63fc4bb5bd0bd7ff052}} 
 \index{SteadystateProblem@{SteadystateProblem}!initializeBackwardProblem@{initializeBackwardProblem}}
 \index{initializeBackwardProblem@{initializeBackwardProblem}!SteadystateProblem@{SteadystateProblem}}
@@ -629,31 +384,11 @@ Here is the caller graph for this function\+:
 \begin{DoxyReturn}{Returns}
 flag indicating whether backward computation to be carried out 
 \end{DoxyReturn}
-
-
-Definition at line 211 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a6b871b5be8dfa63fc4bb5bd0bd7ff052_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a6b871b5be8dfa63fc4bb5bd0bd7ff052_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a8e3a8eeeb0b157da84fe7dac1e0d209b}\label{classamici_1_1_steadystate_problem_a8e3a8eeeb0b157da84fe7dac1e0d209b}} 
 \index{SteadystateProblem@{SteadystateProblem}!computeQBfromQ@{computeQBfromQ}}
 \index{computeQBfromQ@{computeQBfromQ}!SteadystateProblem@{SteadystateProblem}}
 \doxyparagraph{\texorpdfstring{computeQBfromQ()}{computeQBfromQ()}}
-{\footnotesize\ttfamily void compute\+Q\+BfromQ (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{yQ,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{y\+QB }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily void compute\+QBfromQ (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{yQ,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{y\+QB }\end{DoxyParamCaption}) const}
 
 
 \begin{DoxyParams}{Parameters}
@@ -664,26 +399,6 @@ Here is the caller graph for this function\+:
 {\em y\+QB} & resulting vector after multiplication \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 678 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a8e3a8eeeb0b157da84fe7dac1e0d209b_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a8e3a8eeeb0b157da84fe7dac1e0d209b_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_af78ddb4a1ac2298676dae66e99d9c082}\label{classamici_1_1_steadystate_problem_af78ddb4a1ac2298676dae66e99d9c082}} 
 \index{SteadystateProblem@{SteadystateProblem}!storeSimulationState@{storeSimulationState}}
 \index{storeSimulationState@{storeSimulationState}!SteadystateProblem@{SteadystateProblem}}
@@ -697,26 +412,6 @@ Here is the caller graph for this function\+:
 {\em storesensi} & flag to enable storage of sensitivities \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 716 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_af78ddb4a1ac2298676dae66e99d9c082_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_af78ddb4a1ac2298676dae66e99d9c082_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a1a982c5ab1520f78f01323170919a7d3}\label{classamici_1_1_steadystate_problem_a1a982c5ab1520f78f01323170919a7d3}} 
 \index{SteadystateProblem@{SteadystateProblem}!getFinalSimulationState@{getFinalSimulationState}}
 \index{getFinalSimulationState@{getFinalSimulationState}!SteadystateProblem@{SteadystateProblem}}
@@ -728,16 +423,8 @@ stored \mbox{\hyperlink{structamici_1_1_simulation_state}{Simulation\+State}}
 \end{DoxyReturn}
 
 
-Definition at line 233 of file steadystateproblem.\+h.
+Definition at line 232 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a1a982c5ab1520f78f01323170919a7d3_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_aeeb77382d64bd0b953b7de583cf59c9a}\label{classamici_1_1_steadystate_problem_aeeb77382d64bd0b953b7de583cf59c9a}} 
 \index{SteadystateProblem@{SteadystateProblem}!getEquilibrationQuadratures@{getEquilibrationQuadratures}}
 \index{getEquilibrationQuadratures@{getEquilibrationQuadratures}!SteadystateProblem@{SteadystateProblem}}
@@ -749,16 +436,8 @@ x\+QB Vector with quadratures
 \end{DoxyReturn}
 
 
-Definition at line 241 of file steadystateproblem.\+h.
+Definition at line 240 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_aeeb77382d64bd0b953b7de583cf59c9a_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a538d1695d76545a4d69218ef14136217}\label{classamici_1_1_steadystate_problem_a538d1695d76545a4d69218ef14136217}} 
 \index{SteadystateProblem@{SteadystateProblem}!getState@{getState}}
 \index{getState@{getState}!SteadystateProblem@{SteadystateProblem}}
@@ -770,16 +449,8 @@ x
 \end{DoxyReturn}
 
 
-Definition at line 248 of file steadystateproblem.\+h.
+Definition at line 247 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=285pt]{classamici_1_1_steadystate_problem_a538d1695d76545a4d69218ef14136217_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a00ffd955c069b7c9d1359f484b01e04a}\label{classamici_1_1_steadystate_problem_a00ffd955c069b7c9d1359f484b01e04a}} 
 \index{SteadystateProblem@{SteadystateProblem}!getStateSensitivity@{getStateSensitivity}}
 \index{getStateSensitivity@{getStateSensitivity}!SteadystateProblem@{SteadystateProblem}}
@@ -791,79 +462,47 @@ sx
 \end{DoxyReturn}
 
 
-Definition at line 257 of file steadystateproblem.\+h.
+Definition at line 256 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=331pt]{classamici_1_1_steadystate_problem_a00ffd955c069b7c9d1359f484b01e04a_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_afb4ec4e3a67624dddea0cd64fca29ae9}\label{classamici_1_1_steadystate_problem_afb4ec4e3a67624dddea0cd64fca29ae9}} 
 \index{SteadystateProblem@{SteadystateProblem}!getDJydx@{getDJydx}}
 \index{getDJydx@{getDJydx}!SteadystateProblem@{SteadystateProblem}}
 \doxyparagraph{\texorpdfstring{getDJydx()}{getDJydx()}}
-{\footnotesize\ttfamily std\+::vector$<$realtype$>$ const\& get\+D\+Jydx (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$realtype$>$ const\& get\+DJydx (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 d\+Jydx 
 \end{DoxyReturn}
 
 
-Definition at line 265 of file steadystateproblem.\+h.
+Definition at line 264 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=299pt]{classamici_1_1_steadystate_problem_afb4ec4e3a67624dddea0cd64fca29ae9_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_adea50b83240e3dd99641a3d0e7ce63b3}\label{classamici_1_1_steadystate_problem_adea50b83240e3dd99641a3d0e7ce63b3}} 
 \index{SteadystateProblem@{SteadystateProblem}!getCPUTime@{getCPUTime}}
 \index{getCPUTime@{getCPUTime}!SteadystateProblem@{SteadystateProblem}}
 \doxyparagraph{\texorpdfstring{getCPUTime()}{getCPUTime()}}
-{\footnotesize\ttfamily double get\+C\+P\+U\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily double get\+CPUTime (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 run\+\_\+time 
 \end{DoxyReturn}
 
 
-Definition at line 273 of file steadystateproblem.\+h.
+Definition at line 272 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_adea50b83240e3dd99641a3d0e7ce63b3_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_affaad444d59c9b86e734144434487a64}\label{classamici_1_1_steadystate_problem_affaad444d59c9b86e734144434487a64}} 
 \index{SteadystateProblem@{SteadystateProblem}!getCPUTimeB@{getCPUTimeB}}
 \index{getCPUTimeB@{getCPUTimeB}!SteadystateProblem@{SteadystateProblem}}
 \doxyparagraph{\texorpdfstring{getCPUTimeB()}{getCPUTimeB()}}
-{\footnotesize\ttfamily double get\+C\+P\+U\+TimeB (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily double get\+CPUTimeB (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 run\+\_\+time 
 \end{DoxyReturn}
 
 
-Definition at line 279 of file steadystateproblem.\+h.
+Definition at line 278 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_affaad444d59c9b86e734144434487a64_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a022a2bce957f1533e15f9b456b971768}\label{classamici_1_1_steadystate_problem_a022a2bce957f1533e15f9b456b971768}} 
 \index{SteadystateProblem@{SteadystateProblem}!getSteadyStateStatus@{getSteadyStateStatus}}
 \index{getSteadyStateStatus@{getSteadyStateStatus}!SteadystateProblem@{SteadystateProblem}}
@@ -875,16 +514,8 @@ steady\+\_\+state\+\_\+status
 \end{DoxyReturn}
 
 
-Definition at line 285 of file steadystateproblem.\+h.
+Definition at line 284 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a022a2bce957f1533e15f9b456b971768_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a00611f9c3470baae41775eeb7793e88a}\label{classamici_1_1_steadystate_problem_a00611f9c3470baae41775eeb7793e88a}} 
 \index{SteadystateProblem@{SteadystateProblem}!getSteadyStateTime@{getSteadyStateTime}}
 \index{getSteadyStateTime@{getSteadyStateTime}!SteadystateProblem@{SteadystateProblem}}
@@ -896,7 +527,7 @@ t
 \end{DoxyReturn}
 
 
-Definition at line 292 of file steadystateproblem.\+h.
+Definition at line 291 of file steadystateproblem.\+h.
 
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_ac490bf8c607d1eaf7715dc0097a9ba05}\label{classamici_1_1_steadystate_problem_ac490bf8c607d1eaf7715dc0097a9ba05}} 
 \index{SteadystateProblem@{SteadystateProblem}!getResidualNorm@{getResidualNorm}}
@@ -909,16 +540,8 @@ wrms
 \end{DoxyReturn}
 
 
-Definition at line 298 of file steadystateproblem.\+h.
+Definition at line 297 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_ac490bf8c607d1eaf7715dc0097a9ba05_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a00cb3548807a26965134af0f146c98ba}\label{classamici_1_1_steadystate_problem_a00cb3548807a26965134af0f146c98ba}} 
 \index{SteadystateProblem@{SteadystateProblem}!getNumSteps@{getNumSteps}}
 \index{getNumSteps@{getNumSteps}!SteadystateProblem@{SteadystateProblem}}
@@ -930,7 +553,7 @@ numsteps
 \end{DoxyReturn}
 
 
-Definition at line 304 of file steadystateproblem.\+h.
+Definition at line 303 of file steadystateproblem.\+h.
 
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a5044a56e26451622be9a59f8e02e8d9d}\label{classamici_1_1_steadystate_problem_a5044a56e26451622be9a59f8e02e8d9d}} 
 \index{SteadystateProblem@{SteadystateProblem}!getNumStepsB@{getNumStepsB}}
@@ -943,16 +566,8 @@ numstepsB
 \end{DoxyReturn}
 
 
-Definition at line 310 of file steadystateproblem.\+h.
+Definition at line 309 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a5044a56e26451622be9a59f8e02e8d9d_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a528485b9baf6dfda4348cc5a22d89a13}\label{classamici_1_1_steadystate_problem_a528485b9baf6dfda4348cc5a22d89a13}} 
 \index{SteadystateProblem@{SteadystateProblem}!getNumLinSteps@{getNumLinSteps}}
 \index{getNumLinSteps@{getNumLinSteps}!SteadystateProblem@{SteadystateProblem}}
@@ -964,7 +579,7 @@ numlinsteps
 \end{DoxyReturn}
 
 
-Definition at line 316 of file steadystateproblem.\+h.
+Definition at line 315 of file steadystateproblem.\+h.
 
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a8dbb2ec401605a1ecac13a9313659404}\label{classamici_1_1_steadystate_problem_a8dbb2ec401605a1ecac13a9313659404}} 
 \index{SteadystateProblem@{SteadystateProblem}!getAdjointUpdates@{getAdjointUpdates}}
@@ -979,18 +594,6 @@ Definition at line 316 of file steadystateproblem.\+h.
 {\em edata} & experimental data \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 703 of file steadystateproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a8dbb2ec401605a1ecac13a9313659404_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_ad9244b5f79d36e988083b9428db4c586}\label{classamici_1_1_steadystate_problem_ad9244b5f79d36e988083b9428db4c586}} 
 \index{SteadystateProblem@{SteadystateProblem}!getAdjointQuadrature@{getAdjointQuadrature}}
 \index{getAdjointQuadrature@{getAdjointQuadrature}!SteadystateProblem@{SteadystateProblem}}
@@ -1002,16 +605,8 @@ x\+QB
 \end{DoxyReturn}
 
 
-Definition at line 329 of file steadystateproblem.\+h.
+Definition at line 328 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_ad9244b5f79d36e988083b9428db4c586_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a9bf93870e0c77fd1f2efaf6cf4df4686}\label{classamici_1_1_steadystate_problem_a9bf93870e0c77fd1f2efaf6cf4df4686}} 
 \index{SteadystateProblem@{SteadystateProblem}!hasQuadrature@{hasQuadrature}}
 \index{hasQuadrature@{hasQuadrature}!SteadystateProblem@{SteadystateProblem}}
@@ -1023,16 +618,8 @@ has\+Quadrature\+\_\+
 \end{DoxyReturn}
 
 
-Definition at line 335 of file steadystateproblem.\+h.
+Definition at line 334 of file steadystateproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_steadystate_problem_a9bf93870e0c77fd1f2efaf6cf4df4686_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_steadystate_problem_a726d2723bea960aebfd89aca755d5ba6}\label{classamici_1_1_steadystate_problem_a726d2723bea960aebfd89aca755d5ba6}} 
 \index{SteadystateProblem@{SteadystateProblem}!checkSteadyStateSuccess@{checkSteadyStateSuccess}}
 \index{checkSteadyStateSuccess@{checkSteadyStateSuccess}!SteadystateProblem@{SteadystateProblem}}
@@ -1040,9 +627,5 @@ Here is the caller graph for this function\+:
 {\footnotesize\ttfamily bool check\+Steady\+State\+Success (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
-covergence of steady state solver 
+convergence of steady state solver 
 \end{DoxyReturn}
-
-
-Definition at line 465 of file steadystateproblem.\+cpp.
-

@@ -28,9 +28,9 @@ realtype \mbox{\hyperlink{classamici_1_1_forward_problem_a1bc77462943aa0bae032ff
 \begin{DoxyCompactList}\small\item\em Accessor for sx. \end{DoxyCompactList}\item 
 std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a6d74f3ad1768554046976e6f79d80eda}{get\+States\+At\+Discontinuities}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for x\+\_\+disc. \end{DoxyCompactList}\item 
-std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a83484a032e7691514d3531e29007679a}{get\+R\+H\+S\+At\+Discontinuities}} () const
+std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a83484a032e7691514d3531e29007679a}{get\+RHSAt\+Discontinuities}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for xdot\+\_\+disc. \end{DoxyCompactList}\item 
-std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a810a65f02e63f40554eef5f4c965ec55}{get\+R\+H\+S\+Before\+Discontinuities}} () const
+std\+::vector$<$ \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a810a65f02e63f40554eef5f4c965ec55}{get\+RHSBefore\+Discontinuities}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for xdot\+\_\+old\+\_\+disc. \end{DoxyCompactList}\item 
 std\+::vector$<$ int $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_ac5b41527ea8caadc2484221795a9e94f}{get\+Number\+Of\+Roots}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for nroots. \end{DoxyCompactList}\item 
@@ -38,9 +38,9 @@ std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_
 \begin{DoxyCompactList}\small\item\em Accessor for discs. \end{DoxyCompactList}\item 
 std\+::vector$<$ std\+::vector$<$ int $>$ $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_af2c5d78fef5c100312d030ded489d4a3}{get\+Root\+Indexes}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for rootidx. \end{DoxyCompactList}\item 
-std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_afb4ec4e3a67624dddea0cd64fca29ae9}{get\+D\+Jydx}} () const
+std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_afb4ec4e3a67624dddea0cd64fca29ae9}{get\+DJydx}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for d\+Jydx. \end{DoxyCompactList}\item 
-std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a3ea9fa40cc5f7ce1f4e1bd0a6db0f785}{get\+D\+Jzdx}} () const
+std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_forward_problem_a3ea9fa40cc5f7ce1f4e1bd0a6db0f785}{get\+DJzdx}} () const
 \begin{DoxyCompactList}\small\item\em Accessor for d\+Jzdx. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$ \mbox{\hyperlink{classamici_1_1_forward_problem_a0efbb7c64b718e9b8b8020acd59afb78}{get\+State\+Pointer}} ()
 \begin{DoxyCompactList}\small\item\em Accessor for pointer to x. \end{DoxyCompactList}\item 
@@ -68,8 +68,6 @@ const \mbox{\hyperlink{structamici_1_1_simulation_state}{Simulation\+State}} \& 
 \begin{DoxyCompactList}\small\item\em Retrieves the carbon copy of the simulation state variables at the final timepoint (or when simulation failed) \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
-\item 
-friend \mbox{\hyperlink{classamici_1_1_forward_problem_a1f14d35be891ba8fb75ad730ddb938a3}{Final\+State\+Storer}}
 \item 
 \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$ \mbox{\hyperlink{classamici_1_1_forward_problem_a7b56c3ca57dde73bdbc8dbe9772bca19}{model}}
 \item 
@@ -106,18 +104,6 @@ Definition at line 43 of file forwardproblem.\+h.
 \end{DoxyParams}
 
 
-Definition at line 17 of file forwardproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=337pt]{classamici_1_1_forward_problem_af95f3206674f5dc395c529a0ab1d1721_cgraph}
-\end{center}
-\end{figure}
-
-
 \doxysubsubsection{Member Function Documentation}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_a4ef001eef23bc48270159d6193036858}\label{classamici_1_1_forward_problem_a4ef001eef23bc48270159d6193036858}} 
 \index{ForwardProblem@{ForwardProblem}!workForwardProblem@{workForwardProblem}}
@@ -125,19 +111,7 @@ Here is the call graph for this function\+:
 \doxyparagraph{\texorpdfstring{workForwardProblem()}{workForwardProblem()}}
 {\footnotesize\ttfamily void work\+Forward\+Problem (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
-If forward sensitivities are enabled this will also compute sensitivies. 
-
-Definition at line 46 of file forwardproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_a4ef001eef23bc48270159d6193036858_cgraph}
-\end{center}
-\end{figure}
-\mbox{\Hypertarget{classamici_1_1_forward_problem_a8dbb2ec401605a1ecac13a9313659404}\label{classamici_1_1_forward_problem_a8dbb2ec401605a1ecac13a9313659404}} 
+If forward sensitivities are enabled this will also compute sensitivities. \mbox{\Hypertarget{classamici_1_1_forward_problem_a8dbb2ec401605a1ecac13a9313659404}\label{classamici_1_1_forward_problem_a8dbb2ec401605a1ecac13a9313659404}} 
 \index{ForwardProblem@{ForwardProblem}!getAdjointUpdates@{getAdjointUpdates}}
 \index{getAdjointUpdates@{getAdjointUpdates}!ForwardProblem@{ForwardProblem}}
 \doxyparagraph{\texorpdfstring{getAdjointUpdates()}{getAdjointUpdates()}}
@@ -150,18 +124,6 @@ Here is the call graph for this function\+:
 {\em edata} & experimental data \\
 \hline
 \end{DoxyParams}
-
-
-Definition at line 313 of file forwardproblem.\+cpp.
-
-Here is the call graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_a8dbb2ec401605a1ecac13a9313659404_cgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_a1bc77462943aa0bae032ffa5d6e887ee}\label{classamici_1_1_forward_problem_a1bc77462943aa0bae032ffa5d6e887ee}} 
 \index{ForwardProblem@{ForwardProblem}!getTime@{getTime}}
 \index{getTime@{getTime}!ForwardProblem@{ForwardProblem}}
@@ -231,7 +193,7 @@ Definition at line 111 of file forwardproblem.\+h.
 \index{ForwardProblem@{ForwardProblem}!getRHSAtDiscontinuities@{getRHSAtDiscontinuities}}
 \index{getRHSAtDiscontinuities@{getRHSAtDiscontinuities}!ForwardProblem@{ForwardProblem}}
 \doxyparagraph{\texorpdfstring{getRHSAtDiscontinuities()}{getRHSAtDiscontinuities()}}
-{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}}$>$ const\& get\+R\+H\+S\+At\+Discontinuities (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}}$>$ const\& get\+RHSAt\+Discontinuities (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 xdot\+\_\+disc 
@@ -244,7 +206,7 @@ Definition at line 119 of file forwardproblem.\+h.
 \index{ForwardProblem@{ForwardProblem}!getRHSBeforeDiscontinuities@{getRHSBeforeDiscontinuities}}
 \index{getRHSBeforeDiscontinuities@{getRHSBeforeDiscontinuities}!ForwardProblem@{ForwardProblem}}
 \doxyparagraph{\texorpdfstring{getRHSBeforeDiscontinuities()}{getRHSBeforeDiscontinuities()}}
-{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}}$>$ const\& get\+R\+H\+S\+Before\+Discontinuities (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}}$>$ const\& get\+RHSBefore\+Discontinuities (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 xdot\+\_\+old\+\_\+disc 
@@ -292,19 +254,11 @@ rootidx
 
 Definition at line 151 of file forwardproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_af2c5d78fef5c100312d030ded489d4a3_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_afb4ec4e3a67624dddea0cd64fca29ae9}\label{classamici_1_1_forward_problem_afb4ec4e3a67624dddea0cd64fca29ae9}} 
 \index{ForwardProblem@{ForwardProblem}!getDJydx@{getDJydx}}
 \index{getDJydx@{getDJydx}!ForwardProblem@{ForwardProblem}}
 \doxyparagraph{\texorpdfstring{getDJydx()}{getDJydx()}}
-{\footnotesize\ttfamily std\+::vector$<$realtype$>$ const\& get\+D\+Jydx (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$realtype$>$ const\& get\+DJydx (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 d\+Jydx 
@@ -317,7 +271,7 @@ Definition at line 159 of file forwardproblem.\+h.
 \index{ForwardProblem@{ForwardProblem}!getDJzdx@{getDJzdx}}
 \index{getDJzdx@{getDJzdx}!ForwardProblem@{ForwardProblem}}
 \doxyparagraph{\texorpdfstring{getDJzdx()}{getDJzdx()}}
-{\footnotesize\ttfamily std\+::vector$<$realtype$>$ const\& get\+D\+Jzdx (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$realtype$>$ const\& get\+DJzdx (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 d\+Jzdx 
@@ -404,14 +358,6 @@ time point
 
 Definition at line 215 of file forwardproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_ae17dd6aa916d07ce78853dbec8ce6978_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_a5b390dd8ff2b3fd953a4e42471562385}\label{classamici_1_1_forward_problem_a5b390dd8ff2b3fd953a4e42471562385}} 
 \index{ForwardProblem@{ForwardProblem}!getEventCounter@{getEventCounter}}
 \index{getEventCounter@{getEventCounter}!ForwardProblem@{ForwardProblem}}
@@ -425,14 +371,6 @@ index
 
 Definition at line 223 of file forwardproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_a5b390dd8ff2b3fd953a4e42471562385_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_a9ba8c1d4ef2ba23e6f4faaaefd28aae9}\label{classamici_1_1_forward_problem_a9ba8c1d4ef2ba23e6f4faaaefd28aae9}} 
 \index{ForwardProblem@{ForwardProblem}!getRootCounter@{getRootCounter}}
 \index{getRootCounter@{getRootCounter}!ForwardProblem@{ForwardProblem}}
@@ -454,7 +392,7 @@ Definition at line 231 of file forwardproblem.\+h.
 
 
 \begin{DoxyParams}{Parameters}
-{\em it} & timpoint index \\
+{\em it} & timepoint index \\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -470,14 +408,6 @@ Here is the call graph for this function\+:
 \begin{center}
 \leavevmode
 \includegraphics[width=350pt]{classamici_1_1_forward_problem_aaa838b8a9c5e6e5ecf4bf7a95d9430df_cgraph}
-\end{center}
-\end{figure}
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_aaa838b8a9c5e6e5ecf4bf7a95d9430df_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_acee64e6e29f62a05406e9202e1fcbe91}\label{classamici_1_1_forward_problem_acee64e6e29f62a05406e9202e1fcbe91}} 
@@ -498,14 +428,6 @@ Here is the caller graph for this function\+:
 
 Definition at line 253 of file forwardproblem.\+h.
 
-Here is the caller graph for this function\+:
-\nopagebreak
-\begin{figure}[H]
-\begin{center}
-\leavevmode
-\includegraphics[width=350pt]{classamici_1_1_forward_problem_acee64e6e29f62a05406e9202e1fcbe91_icgraph}
-\end{center}
-\end{figure}
 \mbox{\Hypertarget{classamici_1_1_forward_problem_ae7a51d698c0762500308576c3813268e}\label{classamici_1_1_forward_problem_ae7a51d698c0762500308576c3813268e}} 
 \index{ForwardProblem@{ForwardProblem}!getInitialSimulationState@{getInitialSimulationState}}
 \index{getInitialSimulationState@{getInitialSimulationState}!ForwardProblem@{ForwardProblem}}
@@ -543,16 +465,6 @@ Definition at line 271 of file forwardproblem.\+h.
 
 
 \doxysubsubsection{Member Data Documentation}
-\mbox{\Hypertarget{classamici_1_1_forward_problem_a1f14d35be891ba8fb75ad730ddb938a3}\label{classamici_1_1_forward_problem_a1f14d35be891ba8fb75ad730ddb938a3}} 
-\index{ForwardProblem@{ForwardProblem}!FinalStateStorer@{FinalStateStorer}}
-\index{FinalStateStorer@{FinalStateStorer}!ForwardProblem@{ForwardProblem}}
-\doxyparagraph{\texorpdfstring{FinalStateStorer}{FinalStateStorer}}
-{\footnotesize\ttfamily friend \mbox{\hyperlink{classamici_1_1_final_state_storer}{Final\+State\+Storer}}}
-
-allow \mbox{\hyperlink{classamici_1_1_final_state_storer}{Final\+State\+Storer}} to access private members and functions 
-
-Definition at line 59 of file forwardproblem.\+h.
-
 \mbox{\Hypertarget{classamici_1_1_forward_problem_a7b56c3ca57dde73bdbc8dbe9772bca19}\label{classamici_1_1_forward_problem_a7b56c3ca57dde73bdbc8dbe9772bca19}} 
 \index{ForwardProblem@{ForwardProblem}!model@{model}}
 \index{model@{model}!ForwardProblem@{ForwardProblem}}
