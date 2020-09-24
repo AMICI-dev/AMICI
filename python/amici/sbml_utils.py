@@ -534,8 +534,8 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
     if ast is None:
         raise SbmlException(
             f'error while converting the following expression to SBML AST.\n'
-            'expression:\n{expr}\n'
-            'MathML:\n{pretty_xml(mathml)}'
+            f'expression:\n{expr}\n'
+            f'MathML:\n{pretty_xml(mathml)}'
         )
     return ast
 
@@ -558,8 +558,8 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
     if obj.setMath(mathml) != libsbml.LIBSBML_OPERATION_SUCCESS:
         raise SbmlException(
             f'Could not set math attribute of SBML object {obj}\n'
-            'expression:\n{expr}\n'
-            'MathML:\n{pretty_xml(mathml)}'
+            f'expression:\n{expr}\n'
+            f'MathML:\n{pretty_xml(mathml)}'
         )
 
 

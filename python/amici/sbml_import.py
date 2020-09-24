@@ -784,6 +784,7 @@ class SbmlImporter:
     def _process_annotations(self) -> None:
         # Remove all parameters (and corresponding rules)
         # for which amici:discard is set
+        parameter_ids_to_remove = []
         for p in self.sbml.getListOfParameters():
             annotation = p.getAnnotationString()
             assert isinstance(annotation, str)
@@ -791,11 +792,12 @@ class SbmlImporter:
                 annotation = ET.fromstring(annotation)
                 for child in annotation.getchildren():
                     if child.tag == f'{{{annotation_namespace}}}discard':
-                        pId = p.getIdAttribute()
-                        # Remove corresponding rules
-                        self.sbml.removeRuleByVariable(pId)
-                        # Remove parameter
-                        self.sbml.removeParameter(pId)
+                        parameter_ids_to_remove.append(p.getIdAttribute())
+        for pId in parameter_ids_to_remove:
+            # Remove corresponding rules
+            self.sbml.removeRuleByVariable(pId)
+            # Remove parameter
+            self.sbml.removeParameter(pId)
 
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,

@@ -28,7 +28,7 @@ class AbstractSpline {
                    bool equidistant_spacing,
                    bool logarithmic_paraterization);
 
-    ~AbstractSpline(){};
+    virtual ~AbstractSpline(){};
 
     virtual void computeCoefficients() = 0;
 

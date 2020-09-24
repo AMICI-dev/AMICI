@@ -113,7 +113,7 @@ def create_petab_problem(splines,
                          params_true,
                          initial_values,
                          use_reactions=False,
-                         measure_upsample=3,
+                         measure_upsample=8,
                          sigma=1.0,
                          Textrapolate=0.25,
                          folder=None
@@ -145,7 +145,7 @@ def create_petab_problem(splines,
         if spline.extrapolate[0] is None:
             assert spline.xx[0] <= 0
         if spline.extrapolate[1] is not None:
-            DT = (spline.xx[-1] - spline.xx[0]) * Textrapolate
+            DT = (spline.xx[-1] - spline.xx[0]) * (Textrapolate if spline.extrapolate[1] != 'periodic' else 1 + Textrapolate)
         else:
             DT = 0
         T = max(T, spline.xx[-1] + DT)
@@ -236,7 +236,7 @@ def random_suffix(n):
     return ''.join(chars)
 
 
-def _simulate_splines(folder, splines, params_true, initial_values=None, *, benchmark=False, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, use_adjoint=False, skip_sensitivity=False, **kwargs):
+def _simulate_splines(folder, splines, params_true, initial_values=None, *, benchmark=False, rtol=1e-12, atol=1e-12, maxsteps=500_000, discard_annotations=False, use_adjoint=False, skip_sensitivity=False, **kwargs):
     # Default initial values
     if initial_values is None:
         initial_values = _default_initial_values(len(splines))
@@ -261,6 +261,7 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, benc
     solver = model.getSolver()
     solver.setRelativeTolerance(rtol)
     solver.setAbsoluteTolerance(atol)
+    solver.setMaxSteps(maxsteps)
     if not skip_sensitivity:
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
         if use_adjoint:
@@ -269,9 +270,10 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, benc
             solver.setSensitivityMethod(amici.SensitivityMethod_forward)
 
     # Compute and set timepoints
-    n = max(len(spline.xx) for spline in splines) * simulate_upsample
-    tt = np.linspace(0, float(T), n)
-    model.setTimepoints(tt)
+    # not working, will always be equal to the observation times
+    # n = max(len(spline.xx) for spline in splines) * simulate_upsample
+    # tt = np.linspace(0, float(T), n)
+    # model.setTimepoints(tt)
 
     # Create dictionary for parameter values
     params_str = {p.name : v for p, v in params_true.items()}
@@ -458,10 +460,23 @@ def check_splines(splines,
         )
 
 
-def check_splines_full(*args, **kwargs):
-    check_splines(*args, **kwargs, discard_annotations=True, use_adjoint=False)
-    check_splines(*args, **kwargs, discard_annotations=False, use_adjoint=False)
-    check_splines(*args, **kwargs, discard_annotations=False, use_adjoint=True)
+def check_splines_full(splines, params, tols, *args, **kwargs):
+    if isinstance(tols, dict):
+        tols1 = tols2 = tols3 = tols
+    else:
+        tols1, tols2, tols3 = tols
+
+    if isinstance(splines, AbstractSpline) and splines.extrapolate == ('periodic', 'periodic'):
+        contains_periodic = True
+    elif any(spline.extrapolate == ('periodic', 'periodic') for spline in splines):
+        contains_periodic = True
+    else:
+        contains_periodic = False
+
+    if not contains_periodic:
+        check_splines(splines, params, *args, **kwargs, **tols1, discard_annotations=True, use_adjoint=False)
+    check_splines(splines, params, *args, **kwargs, **tols2, discard_annotations=False, use_adjoint=False)
+    check_splines(splines, params, *args, **kwargs, **tols3, discard_annotations=False, use_adjoint=True)
 
 
 def example_spline_1(idx: int = 0, offset: float = 0, scale: float = 1, num_nodes: int = 9, fixed_values=None):
@@ -510,7 +525,11 @@ def example_spline_2(idx: int = 0):
         xx, yy,
         bc='periodic', extrapolate=None
     )
-    tols = {}
+    tols = (
+        dict(llh_rtol=1e-15),
+        dict(llh_rtol=1e-15),
+        dict(llh_rtol=1e-15, sllh_atol=5e-8, x_rtol=1e-10, x_atol=5e-10)
+    )
     return spline, params, tols
 
 
@@ -523,9 +542,25 @@ def example_spline_3(idx: int = 0):
     spline = CubicHermiteSpline(
         f'y{idx}', amici_time_symbol,
         xx, yy,
-        bc=None, extrapolate=(None, 'constant')
+        bc=(None, 'zeroderivative'), extrapolate=(None, 'constant')
     )
-    tols = dict(llh_rtol=1e-15)
+    tols = {}
+    return spline, params, tols
+
+
+def example_spline_4(idx: int = 0):
+    "A simple spline with periodic extrapolation."
+    yy_true = [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0]
+    xx = UniformGrid(0, 25, length=len(yy_true))
+    yy = list(sp.symbols(f'y{idx}_0:{len(yy_true) - 1}'))
+    yy.append(yy[0])
+    params = dict(zip(yy, yy_true))
+    spline = CubicHermiteSpline(
+        f'y{idx}', amici_time_symbol,
+        xx, yy,
+        bc='periodic', extrapolate='periodic'
+    )
+    tols = dict(llh_rtol=1e-15, sllh_atol=5e-7, x_rtol=5e-10, x_atol=7.5e-10, sx_rtol=5e-10, sx_atol=5e-10)
     return spline, params, tols
 
 
@@ -554,19 +589,19 @@ def example_splines_1():
 
 def test_CubicHermiteSpline():
     spline, params, tols = example_spline_1()
-    check_splines_full(spline, params, **tols)
+    check_splines_full(spline, params, tols)
 
     # same as above, but with some fixed values
     spline, params, tols = example_spline_1(fixed_values=[0, 2])
-    check_splines_full(spline, params, **tols)
+    check_splines_full(spline, params, tols)
 
     spline, params, tols = example_spline_2()
-    check_splines_full(spline, params, **tols)
+    check_splines_full(spline, params, tols)
 
 
 def test_multiple_splines():
     splines, params, tols = example_splines_1()
-    check_splines_full(splines, params, **tols)
+    check_splines_full(splines, params, tols)
 
 
 def test_splines_evaluated_at_formula():

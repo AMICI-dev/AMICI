@@ -47,6 +47,7 @@ from .sbml_utils import (
     hasParameter,
     addParameter,
     addAssignmentRule,
+    SbmlException
 )
 
 
@@ -650,7 +651,7 @@ class AbstractSpline(ABC):
         if extrapolate[0] == 'periodic' or extrapolate[1] == 'periodic':
             if sbml_ops:
                 # NB mod is not supported in SBML
-                x = sympy.Symbol(self.sbmlId + '_x_in_fundamental_period')
+                x = sp.Symbol(self.sbmlId.name + '_x_in_fundamental_period')
                 # NB we will do the parameter substitution in SBML
                 #    because the formula for x will be a piecewise
                 #    and sympy handles Piecewises inside other Piecewises
@@ -690,14 +691,26 @@ class AbstractSpline(ABC):
 
     @property
     def period(self):
-        return self.xx[-1] - self.xx[0] if bc == 'periodic' else None
+        return self.xx[-1] - self.xx[0] if self.bc == ('periodic', 'periodic') else None
 
-    def _to_base_interval(self, x):
-        if bc != 'periodic':
+    def _to_base_interval(self, x, *, with_interval_number: bool = False):
+        if self.bc != ('periodic', 'periodic'):
             raise ValueError(
                 '_to_base_interval makes no sense with non-periodic bc'
             )
-        return self.xx[0] + sp.Mod(x - self.xx[0], self.period)
+
+        xA = self.xx[0]
+        xB = self.xx[-1]
+        T = self.period
+        z = xA + sp.Mod(x - xA, T)
+        assert xA <= z < xB
+
+        if with_interval_number:
+            k = sp.floor((x - xA) / T)
+            assert x == z + k*T
+            return k, z
+        else:
+            return z
 
     def evaluate(self, x):
         _x = sp.Dummy('x')
@@ -717,39 +730,31 @@ class AbstractSpline(ABC):
         x = sp.Dummy('x')
         x0, x1 = sp.sympify((x0, x1))
 
-        if self.extrapolate != ('periodic', 'periodic'):
+        if x0 > x1:
+            raise ValueError('x0 > x1')
+
+        elif x0 == x1:
+            return sp.sympify(0)
+
+        elif self.extrapolate != ('periodic', 'periodic'):
             return self._formula(x=x, cache=False).integrate((x, x0, x1))
 
         else:
             formula = self._formula(x=x, cache=False, extrapolate=None)
 
-            x00 = _to_base_interval(x0)
-            x11 = _to_base_interval(x1)
+            T = self.period
+            xA, xB = self.xx[0], self.xx[-1]
+            k0, z0 = self._to_base_interval(x0, with_interval_number=True)
+            k1, z1 = self._to_base_interval(x1, with_interval_number=True)
 
-            assert self.xx[0] <= x00 <= self.xx[-1]
-            assert self.xx[0] <= x11 <= self.xx[-1]
+            assert k0 <= k1
 
-            x01 = self.xx[-1] + x0 - x00
-            x10 = self.xx[0] + x1 - x11
-
-            if x1 <= x01:
-                assert x10 < x01
-                return formula.integrate((x, x00, x11))
-
+            if k0 == k1:
+                return formula.integrate((x, z0, z1))
+            elif k0 + 1 == k1:
+                return formula.integrate((x, z0, xB)) + formula.integrate((x, xA, z1))
             else:
-                assert x01 <= x10
-
-                if x01 == x10:
-                    return formula.integrate((x, x00, self.xx[-1])) + \
-                           formula.integrate((x, self.xx[0], x11))
-
-                else:
-                    n = (x10 - x01) / self.period
-                    assert n.is_Integer
-                    assert n > 0
-                    return formula.integrate((x, x00, self.xx[-1])) + \
-                           n*formula.integrate((x, self.xx[0], self.xx[-1])) + \
-                           formula.integrate((x, self.xx[0], x11))
+                return formula.integrate((x, z0, xB)) + (k1 - k0 - 1) * formula.integrate((x, xA, xB)) + formula.integrate((x, xA, z1))
 
     @property
     def amiciAnnotation(self) -> str:
@@ -921,12 +926,14 @@ class AbstractSpline(ABC):
         rule = addAssignmentRule(model, self.sbmlId, self.mathmlFormula)
 
         # Add annotation specifying spline method
-        rule.setAnnotation(self.amiciAnnotation)
+        retcode = rule.setAnnotation(self.amiciAnnotation)
+        if retcode != libsbml.LIBSBML_OPERATION_SUCCESS:
+            raise SbmlException('Could not set SBML annotation')
 
         # Create additional assignment rule for periodic extrapolation
         # NB mod is not in the subset of MathML supported by SBML
         if self.extrapolate[0] == 'periodic' or self.extrapolate[1] == 'periodic':
-            parameterId = self.sbmlId + '_x_in_fundamental_period'
+            parameterId = self.sbmlId.name + '_x_in_fundamental_period'
             T = self.xx[-1] - self.xx[0]
             x0 = self.xx[0]
             s = 2 * sp.pi * ((x - x0) / T - sp.sympify(1)/4)
@@ -934,9 +941,11 @@ class AbstractSpline(ABC):
             formula = x0 + T * (sp.atan(sp.tan(s)) / (2 * sp.pi) + k/4)
             assert amici_time_symbol not in formula.free_symbols
             par = addParameter(model, parameterId, constant=False, units=x_units)
-            par.setAnnotation(
-                f'<amici:discard xmlns:amici="{annotation_namespace}">'
+            retcode = par.setAnnotation(
+                f'<amici:discard xmlns:amici="{annotation_namespace}" />'
             )
+            if retcode != libsbml.LIBSBML_OPERATION_SUCCESS:
+                raise SbmlException('Could not set SBML annotation')
             addAssignmentRule(model, parameterId, formula)
 
     # def _replace_sbml_time_with_amici_time(self):

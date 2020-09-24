@@ -2616,8 +2616,10 @@ class ODEExporter:
         for ispl, spline in enumerate(self.model.splines):
             # create the vector with the node locations
             nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
-            if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
+            if isinstance(spline.xx, UniformGrid):
                 nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
+            else:
+                nodes += ', '.join(spline.xx) + '};'
             body.append(nodes)
 
             # create the vector with the node values
@@ -2632,32 +2634,48 @@ class ODEExporter:
             constr = f'\tHermiteSpline spline{ispl} = HermiteSpline('
             constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
 
-            # write boundary and extrapolation conditions
-            if spline.bc[0] is None and (spline.extrapolate[0] == 'linear' or spline.extrapolate[0] is None):
-                constr += 'SplineBoundaryCondition::linearFinDiff, '
-            elif spline.bc[0] == 'zeroderivative' and (spline.extrapolate[0] == 'constant' or spline.extrapolate[0] is None):
-                constr += 'SplineBoundaryCondition::constant, '
-            else:
-                raise NotImplementedError(
-                    f'CubicHermiteSpline with bc = {spline.bc} and extrapolate = {spline.extrapolate} not supported yet in ODEExporter.'
-                )
-            if spline.bc[1] is None and (spline.extrapolate[1] == 'linear' or spline.extrapolate[1] is None):
-                constr += 'SplineBoundaryCondition::linearFinDiff, '
-            elif spline.bc[1] == 'zeroderivative' and (spline.extrapolate[1] == 'constant' or spline.extrapolate[1] is None):
-                constr += 'SplineBoundaryCondition::constant, '
-            else:
-                raise NotImplementedError(
-                    f'CubicHermiteSpline with bc = {spline.bc} and extrapolate = {spline.extrapolate} not supported yet in ODEExporter.'
-                )
+            for bc in spline.bc:
+                if bc is None:
+                    constr += 'SplineBoundaryCondition::given, '
+                elif bc == 'zeroderivative':
+                    constr += 'SplineBoundaryCondition::zeroDerivative, '
+                elif bc == 'natural':
+                    constr += 'SplineBoundaryCondition::natural, '
+                elif bc == 'zeroderivative+natural':
+                    constr += 'SplineBoundaryCondition::naturalZeroDerivative, '
+                elif bc == 'periodic':
+                    constr += 'SplineBoundaryCondition::periodic, '
+                else:
+                    raise ValueError(
+                        f'unknown bc {bc} found in spline object'
+                    )
+
+            for extr in spline.extrapolate:
+                if extr is None:
+                    constr += 'SplineExtrapolation::noExtrapolation, '
+                elif extr == 'polynomial':
+                    constr += 'SplineExtrapolation::polynomial, '
+                elif extr == 'constant':
+                    constr += 'SplineExtrapolation::constant, '
+                elif extr == 'linear':
+                    constr += 'SplineExtrapolation::linear, '
+                elif extr == 'periodic':
+                    constr += 'SplineExtrapolation::periodic, '
+                else:
+                    raise ValueError(
+                        f'unknown extrapolation {extr} found in spline object'
+                    )
 
             if spline.derivatives_by_fd:
                 constr += 'true, '
             else:
                 constr += 'false, '
+
             if isinstance(spline.xx, UniformGrid):
                 constr += 'true, '
             else:
                 constr += 'false, '
+
             if spline.logarithmic_paraterization:
                 constr += 'true);'
             else:
