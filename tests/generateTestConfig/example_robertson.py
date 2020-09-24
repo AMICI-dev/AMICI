@@ -23,6 +23,7 @@ class ExampleRobertson(AmiciExample):
 
         self.solverOptions['atol'] = 1e-12
         self.solverOptions['rtol'] = 1e-8
+        self.solverOptions['maxsteps'] = 1e5
         self.solverOptions['sens_ind'] = []
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1

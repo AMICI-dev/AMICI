@@ -2,20 +2,49 @@
 
 import amici
 import sys
+import petab
+import subprocess
+import os
 
-import CS_Signalling_ERBB_RAS_AKT_petab as model_module
+from amici.petab_import import import_model
 
 
 def main():
     arg = sys.argv[1]
 
-    model = model_module.getModel()
-    solver = model.getSolver()
-    # TODO
-    edata = amici.ExpData(model)
-    edata.setTimepoints([1e8])
-    edata.setObservedData([1.0])
-    edata.setObservedDataStdDev([1.0])
+    if arg == 'compilation':
+        git_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT')
+        if not os.path.exists(git_dir):
+            subprocess.run([
+                'git', 'clone', '--depth', '1',
+                'https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT']
+            )
+        os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT'))
+
+        pp = petab.Problem.from_yaml('FroehlichKes2018/PEtab/FroehlichKes2018.yaml')
+        petab.lint_problem(pp)
+        os.chdir(os.path.dirname(os.path.abspath(os.curdir)))
+        import_model(model_name='CS_Signalling_ERBB_RAS_AKT_petab',
+                     sbml_model=pp.sbml_model,
+                     condition_table=pp.condition_df,
+                     observable_table=pp.observable_df,
+                     measurement_table=pp.measurement_df,
+                     compile=False,
+                     verbose=True)
+        os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT_petab'))
+
+        subprocess.run(['python', 'setup.py', 'install'])
+
+        return
+    else:
+        import CS_Signalling_ERBB_RAS_AKT_petab as model_module
+        model = model_module.getModel()
+        solver = model.getSolver()
+        # TODO
+        edata = amici.ExpData(model)
+        edata.setTimepoints([1e8])
+        edata.setObservedData([1.0])
+        edata.setObservedDataStdDev([1.0])
 
     if arg == 'forward_simulation':
         solver.setSensitivityMethod(amici.SensitivityMethod.none)
@@ -56,7 +85,10 @@ def main():
 
     diagnostics = ['numsteps', 'numstepsB', 'numrhsevals', 'numrhsevalsB',
                    'numerrtestfails', 'numerrtestfailsB',
-                   'numnonlinsolvconvfails', 'numnonlinsolvconvfailsB']
+                   'numnonlinsolvconvfails', 'numnonlinsolvconvfailsB',
+                   'preeq_cpu_time', 'preeq_cpu_timeB',
+                   'cpu_time', 'cpu_timeB',
+                   'posteq_cpu_time', 'posteq_cpu_timeB']
     for d in diagnostics:
         print(d, rdata[d])
     assert rdata['status'] == amici.AMICI_SUCCESS

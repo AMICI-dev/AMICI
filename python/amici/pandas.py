@@ -87,7 +87,7 @@ def getDataObservablesAsDataFrame(
     # list of all column names using either ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for edata in edata_list:
         npdata = ExpDataView(edata)
@@ -200,7 +200,7 @@ def getSimulationStatesAsDataFrame(
     # get conditions and state column names by name or id
     cols = _get_state_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
@@ -259,7 +259,7 @@ def getResidualsAsDataFrame(model: amici.Model,
     # get all column names using names or ids
     cols = _get_observable_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for row in df_rdata.index:
         datadict = {

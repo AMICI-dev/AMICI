@@ -30,6 +30,8 @@ namespace amici {
 
 class CVodeSolver : public Solver {
   public:
+    using Solver::Solver;
+
     ~CVodeSolver() override = default;
 
     /**
@@ -205,7 +207,7 @@ class CVodeSolver : public Solver {
                                                 unsigned int /*version*/);
 
     /**
-     * @brief Equality operatator
+     * @brief Equality operator
      * @param a
      * @param b
      * @return Whether a and b are equal

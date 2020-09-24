@@ -1,0 +1,220 @@
+#
+# This is a valgrind suppression file that should be used when using valgrind.
+#
+#  Here's an example of running valgrind:
+#
+#	cd python/dist/src
+#	valgrind --tool=memcheck --suppressions=Misc/valgrind-python.supp \
+#		./python -E -tt ./Lib/test/regrtest.py -u bsddb,network
+#
+# You must edit Objects/obmalloc.c and uncomment Py_USING_MEMORY_DEBUGGER
+# to use the preferred suppressions with Py_ADDRESS_IN_RANGE.
+#
+# If you do not want to recompile Python, you can uncomment
+# suppressions for PyObject_Free and PyObject_Realloc.
+#
+# See Misc/README.valgrind for more information.
+
+# all tool names: Addrcheck,Memcheck,cachegrind,helgrind,massif
+
+#
+# Leaks (including possible leaks)
+#   Hmmm, I wonder if this masks some real leaks.  I think it does.
+#   Will need to fix that.
+#
+
+{
+   Suppress leaking the GIL.  Happens once per process, see comment in ceval.c.
+   Memcheck:Leak
+   fun:malloc
+   fun:PyThread_allocate_lock
+   fun:PyEval_InitThreads
+}
+
+#
+# libsbml
+#
+
+{
+   lisbml
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_wrap_SBase_getListOfAllElementsFromPlugins
+}
+
+{
+   lisbml
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_wrap_SBMLReader_readSBML
+}
+
+#
+# numpy
+#
+
+{
+   pyx_pymod
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__pyx_pymod_exec_*
+}
+
+{
+   numpy
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:__pyx_pw_5numpy_6random_13bit_generator_12BitGenerator_1__init__
+}
+
+#
+# scipy
+#
+
+{
+   _csparsetools
+   Memcheck:Leak
+   fun:malloc
+   ...
+   obj:*/_csparsetools.cpython-3*-x86_64-linux-gnu.so
+}
+
+#
+# module loading
+#
+
+{
+   LoadDynamicModuleWithSpec
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_PyImport_LoadDynamicModuleWithSpec
+}
+
+{
+   LoadDynamicModuleWithSpec
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_PyImport_LoadDynamicModuleWithSpec
+}
+
+#
+# swig (false positives?)
+#
+
+{
+   swig
+   Memcheck:Leak
+   fun:malloc
+   fun:SwigPyClientData_New
+}
+
+#
+# wcstombs
+#
+
+{
+   wcstombs-__wcsnlen_avx2
+   Memcheck:Cond
+   fun:__wcsnlen_avx2
+   ...
+   fun:wcstombs
+}
+
+{
+   wcstombs-internal_utf8_loop
+   Memcheck:Cond
+   fun:internal_utf8_loop
+   ...
+   fun:wcstombs
+}
+
+#
+# epoll_ctl
+#
+
+{
+   epoll_ctl
+   Memcheck:Param
+   epoll_ctl(event)
+   fun:epoll_ctl
+}
+
+#
+# other
+#
+
+{
+   other
+   Memcheck:Cond
+   fun:PyUnicode_Decode
+   fun:PyUnicode_FromEncodedObject
+   obj:/usr/bin/python3.?
+   fun:_PyObject_MakeTpCall
+   fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.?
+   fun:_PyObject_MakeTpCall
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+}
+
+{
+   other
+   Memcheck:Cond
+   obj:/usr/bin/python3.?
+   obj:/usr/bin/python3.?
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+   fun:_PyEval_EvalFrameDefault
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+   fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.?
+   fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.?
+}
+
+{
+   other
+   Memcheck:Leak
+   fun:realloc
+   obj:*
+   obj:*
+   obj:*
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}
+
+{
+   other
+   Memcheck:Leak
+   fun:malloc
+   obj:*
+   obj:*
+   obj:*
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+}

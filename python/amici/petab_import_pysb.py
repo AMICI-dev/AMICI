@@ -1,6 +1,6 @@
 """
 PySB-PEtab Import
-------------
+-----------------
 Import a model in the PySB-adapted :mod:`petab`
 (https://github.com/PEtab-dev/PEtab) format into AMICI.
 """
@@ -11,14 +11,15 @@ from typing import List, Dict, Union, Optional, Tuple, Iterable
 
 import libsbml
 import petab
+import pysb
 import sympy as sp
 from petab.C import (CONDITION_NAME, OBSERVABLE_TRANSFORMATION, LIN,
                      OBSERVABLE_FORMULA, NOISE_FORMULA, FORMAT_VERSION,
                      PARAMETER_FILE, SBML_FILES, CONDITION_FILES,
                      MEASUREMENT_FILES, VISUALIZATION_FILES, OBSERVABLE_FILES)
 
-from .logging import get_logger, log_execution_time, set_log_level
 from . import petab_import
+from .logging import get_logger, log_execution_time, set_log_level
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -42,8 +43,8 @@ class PysbPetabProblem(petab.Problem):
         Constructor
 
         :param pysb_model: PySB model instance for this PEtab problem
-        :param args: See petab.Problem.__init__
-        :param kwargs: See petab.Problem.__init__
+        :param args: See :meth:`petab.Problem.__init__`
+        :param kwargs: See :meth:`petab.Problem.__init__`
         """
 
         super().__init__(*args, **kwargs)
@@ -62,8 +63,6 @@ class PysbPetabProblem(petab.Problem):
     def _add_observation_model(self):
         """Extend PySB model by observation model as defined in the PEtab
         observables table"""
-
-        import pysb
 
         # add any required output parameters
         local_syms = {sp.Symbol.__str__(comp): comp for comp in
@@ -91,7 +90,10 @@ class PysbPetabProblem(petab.Problem):
                         "Observable transformation currently unsupported "
                         "for PySB models")
             obs_symbol = sp.sympify(observable_formula, locals=local_syms)
-            obs_expr = pysb.Expression(observable_id, obs_symbol)
+            if observable_id in self.pysb_model.expressions.keys():
+                obs_expr = self.pysb_model.expressions[observable_id]
+            else:
+                obs_expr = pysb.Expression(observable_id, obs_symbol)
             local_syms[observable_id] = obs_expr
 
             sigma_id = f"{observable_id}_sigma"
@@ -287,7 +289,7 @@ def import_model_pysb(
     # For pysb, we only allow parameters in the condition table
     # those must be pysb model parameters (either natively, or output
     # parameters from measurement or condition table that have been added in
-    # PysbPetabProblem
+    # PysbPetabProblem)
     model_parameters = [p.name for p in pysb_model.parameters]
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:

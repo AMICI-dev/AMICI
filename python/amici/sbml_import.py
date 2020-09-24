@@ -15,7 +15,8 @@ import logging
 import xml.etree.ElementTree as ET
 from typing import Dict, Union, List, Callable, Any, Iterable
 
-from .ode_export import ODEExporter, ODEModel
+from .ode_export import ODEExporter, ODEModel, get_measurement_symbol
+from .ode_export import logger as oe_logger
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import (
     setSbmlMath,
@@ -329,7 +330,7 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._replace_special_constants()
 
-        ode_model = ODEModel(simplify=simplify)
+        ode_model = ODEModel(verbose=verbose, simplify=simplify)
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
@@ -937,6 +938,17 @@ class SbmlImporter:
             return specie in self.constant_species or \
                    specie in self.boundary_condition_species
 
+        math_subs = []
+        for r in reactions:
+            elements = list(r.getListOfReactants()) \
+                       + list(r.getListOfProducts())
+            for element in elements:
+                if element.isSetId() & element.isSetStoichiometry():
+                    math_subs.append((
+                        sp.sympify(element.getId(), locals=self.local_symbols),
+                        sp.sympify(element.getStoichiometry())
+                    ))
+
         for reaction_index, reaction in enumerate(reactions):
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                       (reaction.getListOfProducts(), 1.0)]:
@@ -976,16 +988,8 @@ class SbmlImporter:
                                     'unsupported expression!')
             sym_math = _parse_special_functions(sym_math)
             _check_unsupported_functions(sym_math, 'KineticLaw')
-            for r in reactions:
-                elements = list(r.getListOfReactants()) \
-                           + list(r.getListOfProducts())
-                for element in elements:
-                    if element.isSetId() & element.isSetStoichiometry():
-                        sym_math = sym_math.subs(
-                            sp.sympify(element.getId(),
-                                       locals=self.local_symbols),
-                            sp.sympify(element.getStoichiometry())
-                        )
+
+            sym_math = sym_math.subs(math_subs)
 
             self.flux_vector[reaction_index] = sym_math
             if any([
@@ -1314,7 +1318,7 @@ class SbmlImporter:
                 sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
 
         measurement_y_syms = sp.Matrix(
-            [sp.symbols(f'm{symbol}', real=True) for symbol in observable_syms]
+            [get_measurement_symbol(obs_id) for obs_id in observable_ids]
         )
         measurement_y_values = sp.Matrix(
             [0.0] * len(observable_syms)
@@ -1362,12 +1366,12 @@ class SbmlImporter:
             ODEModel object with basic definitions
 
         :param volume_updates:
-            List with updates for the stoichiometrix matrix accounting for
+            List with updates for the stoichiometric matrix accounting for
             compartment volumes
 
         :returns volume_updates_solver:
             List (according to reduced stoichiometry) with updates for the
-            stoichiometrix matrix accounting for compartment volumes
+            stoichiometric matrix accounting for compartment volumes
         """
         conservation_laws = []
 
@@ -1379,7 +1383,7 @@ class SbmlImporter:
         # cannot handle ODEs without species, CLs must switched in this case
         if len(species_solver) == 0:
             conservation_laws = []
-            species_solver = list(range(ode_model.nx_rdata()))
+            species_solver = list(range(ode_model.num_states_rdata()))
 
         # prune out species from stoichiometry and
         volume_updates_solver = self._reduce_stoichiometry(species_solver,
@@ -1410,10 +1414,10 @@ class SbmlImporter:
         """
 
         # decide which species to keep in stoichiometry
-        species_solver = list(range(ode_model.nx_rdata()))
+        species_solver = list(range(ode_model.num_states_rdata()))
 
         # iterate over species, find constant ones
-        for ix in reversed(range(ode_model.nx_rdata())):
+        for ix in reversed(range(ode_model.num_states_rdata())):
             if ode_model.state_is_constant(ix):
                 # dont use sym('x') here since conservation laws need to be
                 # added before symbols are generated
@@ -1425,7 +1429,7 @@ class SbmlImporter:
                     'state_expr': total_abundance,
                     'abundance_expr': target_state,
                 })
-                # mark species to delete from stoichiometrix matrix
+                # mark species to delete from stoichiometric matrix
                 species_solver.pop(ix)
 
         return species_solver
@@ -1438,12 +1442,12 @@ class SbmlImporter:
             List of species indices which remain later in the ODE solver
 
         :param volume_updates:
-            List with updates for the stoichiometrix matrix accounting for
+            List with updates for the stoichiometric matrix accounting for
             compartment volumes
 
         :returns volume_updates_solver:
             List (according to reduced stoichiometry) with updates for the
-            stoichiometrix matrix accounting for compartment volumes
+            stoichiometric matrix accounting for compartment volumes
         """
 
         # prune out constant species from stoichiometric matrix
@@ -1458,7 +1462,6 @@ class SbmlImporter:
 
         return volume_updates_solver
 
-
     def _replace_compartments_with_volumes(self):
         """
         Replaces compartment symbols in expressions with their respective
@@ -1470,10 +1473,10 @@ class SbmlImporter:
                 comp, vol
             )
 
-
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
-                                    new: sp.Symbol) -> None:
+                                    new: sp.Symbol,
+                                    include_rate_rule_targets=False) -> None:
         """
         Replace 'old' by 'new' in all symbolic expressions.
 
@@ -1482,10 +1485,20 @@ class SbmlImporter:
 
         :param new:
             replacement symbolic variables
+
+        :param include_rate_rule_targets:
+            perform replacement in case ``old`` is a target of a rate rule
         """
         # Avoid replacing variables with rates
-        if old not in set((*self.compartment_rate_rules.keys(),
+        if include_rate_rule_targets \
+                or old not in set((*self.compartment_rate_rules.keys(),
                            *self.species_rate_rules.keys())):
+            for rule_dict in (self.compartment_rate_rules,
+                              self.species_rate_rules):
+                if old in rule_dict.keys():
+                    rule_dict[new] = rule_dict[old].subs(old, new)
+                    del rule_dict[old]
+
             fields = [
                 'stoichiometric_matrix', 'flux_vector',
             ]
@@ -1547,11 +1560,12 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['k', 'p', 'y', 'w']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w']
         for sym in reserved_symbols:
             old_symbol = sp.Symbol(sym, real=True)
             new_symbol = sp.Symbol('amici_' + sym, real=True)
-            self._replace_in_all_expressions(old_symbol, new_symbol)
+            self._replace_in_all_expressions(old_symbol, new_symbol,
+                                             include_rate_rule_targets=True)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
                     self.symbols[symbol]['identifier'] = \
@@ -1784,16 +1798,92 @@ def noise_distribution_to_cost_function(
     Parse noise distribution string to a cost function definition amici can
     work with.
 
+    The noise distributions listed in the following are supported. :math:`m`
+    denotes the measurement, :math:`y` the simulation, and :math:`\\sigma` a
+    distribution scale parameter
+    (currently, AMICI only supports a single distribution parameter).
+
+    - 'normal', 'lin-normal': A normal distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+    - 'log-normal': A log-normal distribution (i.e. log(m) is
+      normally distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
+
+    - 'log10-normal': A log10-normal distribution (i.e. log10(m) is
+      normally distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
+
+    - 'laplace', 'lin-laplace': A laplace distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}\\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+
+    - 'log-laplace': A log-Laplace distribution (i.e. log(m) is Laplace distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}\\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
+
+    - 'log10-laplace': A log10-Laplace distribution (i.e. log10(m) is Laplace distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}\\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
+
+    - 'binomial', 'lin-binomial': A (continuation of a discrete) binomial
+      distribution, parameterized via the success probability
+      :math:`p=\\sigma`:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\operatorname{Heaviside}(y-m) \\cdot
+                \\frac{\\Gamma(y+1)}{\\Gamma(m+1) \\Gamma(y-m+1)}
+                \\sigma^m (1-\\sigma)^{(y-m)}
+
+    - 'negative-binomial', 'lin-negative-binomial': A (continuation of a
+      discrete) negative binomial distribution, with with `mean = y`,
+      parameterized via success probability `p`:
+
+      .. math::
+
+         \\pi(m|y,\\sigma) = \\frac{\\Gamma(m+r)}{\\Gamma(m+1) \\Gamma(r)}
+            (1-\\sigma)^m \\sigma^r
+
+      where
+
+      .. math::
+         r = \\frac{1-\\sigma}{\\sigma} y
+
+    The distributions above are for a single data point.
+    For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
+    simulations :math:`Y=\\{y_i\\}_i` and noise parameters
+    :math:`\\Sigma=\\{\\sigma_i\\}_i`, AMICI assumes independence,
+    i.e. the full distributions is
+
+    .. math::
+       \\pi(D|Y,\\Sigma) = \\prod_i\\pi(m_i|y_i,\\sigma_i)
+
+    AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
+
+    In addition to the above mentioned distributions, it is also possible to
+    pass a function taking a symbol string and returning a log-distribution
+    string with variables '{str_symbol}', 'm{str_symbol}', 'sigma{str_symbol}'
+    for y, m, sigma, respectively.
+
     :param noise_distribution: An identifier specifying a noise model.
         Possible values are
 
         {'normal', 'lin-normal', 'log-normal', 'log10-normal',
         'laplace', 'lin-laplace', 'log-laplace', 'log10-laplace',
         'binomial', 'lin-binomial',
-        'negative-binomial', 'lin-negative-binomial'}
+        'negative-binomial', 'lin-negative-binomial',
+        <Callable>}
 
-        Details on the distributions and their parameterization can be
-        found in the function.
+        For the meaning of the values see above.
 
     :return: A function that takes a strSymbol and then creates a cost
         function string (negative log-likelihood) from it, which can be
@@ -1836,12 +1926,14 @@ def noise_distribution_to_cost_function(
                 f'- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
     elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
         def nllh_y_string(str_symbol):
-            """Negative binomial noise model with mean = y, parameterized via
-            success probability p."""
+            """Negative binomial noise model of the number of successes m
+            (data) before r=(1-sigma)/sigma * y failures occur,
+            with mean number of successes y (simulation),
+            parameterized via success probability p = sigma."""
             y, m, sigma = _get_str_symbol_identifiers(str_symbol)
             r = f'{y} * (1-{sigma}) / {sigma}'
             return f'- loggamma({m}+{r}) + loggamma({m}+1) + loggamma({r}) ' \
-                f'- {m} * log(1-{sigma}) - {r} * log({sigma})'
+                f'- {r} * log(1-{sigma}) - {m} * log({sigma})'
     elif isinstance(noise_distribution, Callable):
         return noise_distribution
     else:

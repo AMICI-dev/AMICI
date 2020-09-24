@@ -480,7 +480,9 @@ def pretty_xml(ugly_xml: str):
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
-    Differences from `sympy.MathMLContentPrinter`:
+
+    Differences from :class:`sympy.MathMLContentPrinter`:
+
     1. underscores in symbol names are not converted to subscripts
     2. symbols with name 'time' are converted to the SBML time symbol
     """
@@ -488,6 +490,14 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
+
+    # _print_Float can be removed if sympy PR #19958 is merged
+    def _print_Float(self, expr):
+        x = self.dom.createElement(self.mathml_tag(expr))
+        repr_expr = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
+        x.appendChild(self.dom.createTextNode(repr_expr))
+        return x
+
     def doprint(self, expr, *, pretty: bool = False):
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
         mathml += super().doprint(expr)

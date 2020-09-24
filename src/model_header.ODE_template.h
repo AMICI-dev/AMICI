@@ -24,25 +24,6 @@ extern std::array<const char*, TPL_NK> fixedParameterIds;
 extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 
-
-extern void J_TPL_MODELNAME(realtype *J, const realtype t, const realtype *x,
-                            const realtype *p, const realtype *k,
-                            const realtype *h, const realtype *w,
-                            const realtype *dwdx);
-extern void JB_TPL_MODELNAME(realtype *JB, const realtype t, const realtype *x,
-                             const realtype *p, const realtype *k,
-                             const realtype *h, const realtype *xB,
-                             const realtype *w, const realtype *dwdx);
-extern void JDiag_TPL_MODELNAME(realtype *JDiag, const realtype t,
-                                const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h,
-                                const realtype *w, const realtype *dwdx);
-TPL_JSPARSE_DEF
-TPL_JSPARSE_COLPTRS_DEF
-TPL_JSPARSE_ROWVALS_DEF
-TPL_JSPARSEB_DEF
-TPL_JSPARSEB_COLPTRS_DEF
-TPL_JSPARSEB_ROWVALS_DEF
 extern void Jy_TPL_MODELNAME(realtype *nllh, const int iy, const realtype *p,
                              const realtype *k, const realtype *y,
                              const realtype *sigmay, const realtype *my);
@@ -59,14 +40,18 @@ TPL_DWDP_ROWVALS_DEF
 TPL_DWDX_DEF
 TPL_DWDX_COLPTRS_DEF
 TPL_DWDX_ROWVALS_DEF
+TPL_DWDW_DEF
+TPL_DWDW_COLPTRS_DEF
+TPL_DWDW_ROWVALS_DEF
 TPL_DXDOTDW_DEF
 TPL_DXDOTDW_COLPTRS_DEF
 TPL_DXDOTDW_ROWVALS_DEF
 TPL_DXDOTDP_EXPLICIT_DEF
 TPL_DXDOTDP_EXPLICIT_COLPTRS_DEF
 TPL_DXDOTDP_EXPLICIT_ROWVALS_DEF
-TPL_DXDOTDP_IMPLICIT_COLPTRS_DEF
-TPL_DXDOTDP_IMPLICIT_ROWVALS_DEF
+TPL_DXDOTDX_EXPLICIT_DEF
+TPL_DXDOTDX_EXPLICIT_COLPTRS_DEF
+TPL_DXDOTDX_EXPLICIT_ROWVALS_DEF
 
 extern void dydx_TPL_MODELNAME(realtype *dydx, const realtype t,
                                const realtype *x, const realtype *p,
@@ -137,9 +122,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NW,                                      // nw
               TPL_NDWDX,                                   // ndwdx
               TPL_NDWDP,                                   // ndwdp
+              TPL_NDWDW,                                   // ndwdw
               TPL_NDXDOTDW,                                // ndxdotdw
               TPL_NDJYDY,                                  // ndjydy
-              TPL_NNZ,                                     // nnz
+              0,                                           // nnz
               TPL_UBW,                                     // ubw
               TPL_LBW,                                     // lbw
               TPL_O2MODE,                                  // o2mode
@@ -150,7 +136,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               std::vector<int>{},                          // z2event
               true,                                        // pythonGenerated
               TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
-              TPL_NDXDOTDP_IMPLICIT                        // ndxdotdp_implicit
+              TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
+              TPL_W_RECURSION_DEPTH                        // w_recursion_depth
           ) {}
 
     /**
@@ -160,68 +147,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual amici::Model *clone() const override {
         return new Model_TPL_MODELNAME(*this);
     }
-
-    /** model specific implementation for fJ
-     * @param J Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heaviside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJ(realtype *J, const realtype t, const realtype *x,
-                    const realtype *p, const realtype *k, const realtype *h,
-                    const realtype *w, const realtype *dwdx) override {
-        J_TPL_MODELNAME(J, t, x, p, k, h, w, dwdx);
-    }
-
-    /** model specific implementation for fJB
-     * @param JB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heaviside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJB(realtype *JB, const realtype t, const realtype *x,
-                     const realtype *p, const realtype *k, const realtype *h,
-                     const realtype *xB, const realtype *w,
-                     const realtype *dwdx) override {
-        JB_TPL_MODELNAME(JB, t, x, p, k, h, xB, w, dwdx);
-    }
-
-    /** model specific implementation for fJDiag
-     * @param JDiag Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heaviside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJDiag(realtype *JDiag, const realtype t, const realtype *x,
-                        const realtype *p, const realtype *k, const realtype *h,
-                        const realtype *w, const realtype *dwdx) override {
-        JDiag_TPL_MODELNAME(JDiag, t, x, p, k, h, w, dwdx);
-    }
-
-    TPL_JSPARSE_IMPL
-
-    TPL_JSPARSE_COLPTRS_IMPL
-
-    TPL_JSPARSE_ROWVALS_IMPL
-
-    TPL_JSPARSEB_IMPL
-
-    TPL_JSPARSEB_COLPTRS_IMPL
-
-    TPL_JSPARSEB_ROWVALS_IMPL
 
     /** model specific implementation of fJrz
      * @param nllh regularization for event measurements z
@@ -486,30 +411,28 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     }
 
     TPL_DWDP_IMPL
-
     TPL_DWDP_COLPTRS_IMPL
-
     TPL_DWDP_ROWVALS_IMPL
 
     TPL_DWDX_IMPL
-
     TPL_DWDX_COLPTRS_IMPL
-
     TPL_DWDX_ROWVALS_IMPL
+
+    TPL_DWDW_IMPL
+    TPL_DWDW_COLPTRS_IMPL
+    TPL_DWDW_ROWVALS_IMPL
 
     TPL_DXDOTDW_IMPL
     TPL_DXDOTDW_COLPTRS_IMPL
     TPL_DXDOTDW_ROWVALS_IMPL
 
     TPL_DXDOTDP_EXPLICIT_IMPL
-
     TPL_DXDOTDP_EXPLICIT_COLPTRS_IMPL
-
     TPL_DXDOTDP_EXPLICIT_ROWVALS_IMPL
 
-    TPL_DXDOTDP_IMPLICIT_COLPTRS_IMPL
-
-    TPL_DXDOTDP_IMPLICIT_ROWVALS_IMPL
+    TPL_DXDOTDX_EXPLICIT_IMPL
+    TPL_DXDOTDX_EXPLICIT_COLPTRS_IMPL
+    TPL_DXDOTDX_EXPLICIT_ROWVALS_IMPL
 
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x

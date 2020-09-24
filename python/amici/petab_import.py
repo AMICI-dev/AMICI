@@ -22,8 +22,14 @@ import pandas as pd
 import petab
 import sympy as sp
 from amici.logging import get_logger, log_execution_time, set_log_level
-from amici.petab_import_pysb import PysbPetabProblem, import_model_pysb
 from petab.C import *
+
+try:
+    from amici.petab_import_pysb import PysbPetabProblem, import_model_pysb
+except ModuleNotFoundError:
+    # pysb not available
+    PysbPetabProblem = None
+    import_model_pysb = None
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -254,7 +260,7 @@ def import_petab_problem(
     """
     # generate folder and model name if necessary
     if model_output_dir is None:
-        if isinstance(petab_problem, PysbPetabProblem):
+        if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
             raise ValueError("Parameter `model_output_dir` is required.")
 
         model_output_dir = \
@@ -262,7 +268,7 @@ def import_petab_problem(
     else:
         model_output_dir = os.path.abspath(model_output_dir)
 
-    if isinstance(petab_problem, PysbPetabProblem):
+    if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
         if model_name is None:
             model_name = petab_problem.pysb_model.name
         else:
@@ -289,7 +295,7 @@ def import_petab_problem(
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
         # compile the model
-        if isinstance(petab_problem, PysbPetabProblem):
+        if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
             import_model_pysb(
                 petab_problem,
                 model_output_dir=model_output_dir,
@@ -361,16 +367,17 @@ def _can_import_model(model_name: str) -> bool:
 
 
 @log_execution_time('Importing PEtab model', logger)
-def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
-                 condition_table: Optional[Union[str, pd.DataFrame]] = None,
-                 observable_table: Optional[Union[str, pd.DataFrame]] = None,
-                 measurement_table: Optional[Union[str, pd.DataFrame]] = None,
-                 model_name: Optional[str] = None,
-                 model_output_dir: Optional[str] = None,
-                 verbose: Optional[Union[bool, int]] = True,
-                 allow_reinit_fixpar_initcond: bool = True,
-                 discard_annotations: bool = False,
-                 **kwargs) -> None:
+def import_model_sbml(
+        sbml_model: Union[str, 'libsbml.Model'],
+        condition_table: Optional[Union[str, pd.DataFrame]] = None,
+        observable_table: Optional[Union[str, pd.DataFrame]] = None,
+        measurement_table: Optional[Union[str, pd.DataFrame]] = None,
+        model_name: Optional[str] = None,
+        model_output_dir: Optional[str] = None,
+        verbose: Optional[Union[bool, int]] = True,
+        allow_reinit_fixpar_initcond: bool = True,
+        discard_annotations: bool = False,
+        **kwargs) -> None:
     """
     Create AMICI model from PEtab problem
 
@@ -435,7 +442,7 @@ def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
     if model_output_dir is None:
         model_output_dir = os.path.join(os.getcwd(), model_name)
 
-    logger.info(f"Model name is '{model_name}'. "
+    logger.info(f"Model name is '{model_name}'.\n"
                 f"Writing model code to '{model_output_dir}'.")
 
     # Load model

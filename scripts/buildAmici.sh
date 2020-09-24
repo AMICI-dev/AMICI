@@ -14,7 +14,8 @@ cd "${amici_build_dir}"
 
 cpputest_build_dir="${amici_path}/ThirdParty/cpputest-master/build/"
 
-if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]]; then
+if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]] || [[ $ENABLE_AMICI_DEBUGGING = TRUE ]];
+then
   # Running on CI server
   build_type="Debug"
 else

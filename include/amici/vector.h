@@ -119,9 +119,9 @@ class AmiVector {
     int getLength() const;
 
     /**
-     * @brief resets the Vector by filling with zero values
+     * @brief fills vector with zero values
      */
-    void reset();
+    void zero();
 
     /**
      * @brief changes the sign of data elements
@@ -164,7 +164,7 @@ class AmiVector {
     /** main data storage */
     std::vector<realtype> vec_;
 
-    /** N_Vector, will be synchronised such that it points to data in vec */
+    /** N_Vector, will be synchronized such that it points to data in vec */
     N_Vector nvec_ {nullptr};
 
     /**
@@ -260,7 +260,7 @@ class AmiVectorArray {
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    const_N_Vector getNVector(int pos) const;
+    const N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements
@@ -283,9 +283,9 @@ class AmiVectorArray {
     int getLength() const;
 
     /**
-     * @brief resets every AmiVector in AmiVectorArray
+     * @brief set every AmiVector in AmiVectorArray to zero
      */
-    void reset();
+    void zero();
 
     /**
      * @brief flattens the AmiVectorArray to a vector in row-major format
@@ -305,7 +305,7 @@ class AmiVectorArray {
     std::vector<AmiVector> vec_array_;
 
     /**
-     * N_Vector array, will be synchronised such that it points to
+     * N_Vector array, will be synchronized such that it points to
      * respective elements in the vec_array
      */
     std::vector<N_Vector> nvec_array_;

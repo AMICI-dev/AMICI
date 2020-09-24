@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
+<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left" alt="AMICI logo">
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
@@ -12,8 +12,8 @@ AMICI provides a multi-language (Python, C++, Matlab) interface for the
 (for algebraic differential equations). AMICI allows the user to read
 differential equation models specified as [SBML](http://sbml.org/)
 or [PySB](http://pysb.org/)
-and automatically compiles such models into `.mex` simulation files
-(Matlab), C++ executables or Python modules.
+and automatically compiles such models into Python modules, C++ libraries or
+Matlab `.mex` simulation files.
 
 In contrast to the (no longer maintained)
 [sundialsTB](https://computing.llnl.gov/projects/sundials/sundials-software)
@@ -31,20 +31,20 @@ constrained optimization problems.
 
 ## Current build status
 
-<a href="https://badge.fury.io/py/amici" alt="PyPI version">
-  <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/AMICI-dev/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/AMICI-dev/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg"></a>
-<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master" alt="SonarCloud">
-  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index"></a>
-<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
-  <img src="https://zenodo.org/badge/43677177.svg"></a>
-<a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
- <img src="https://readthedocs.org/projects/amici/badge/?version=latest"></a>
+<a href="https://badge.fury.io/py/amici">
+  <img src="https://badge.fury.io/py/amici.svg" alt="PyPI version"></a>
+<a href="https://travis-ci.com/AMICI-dev/AMICI">
+  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master" alt="Build Status"></a>
+<a href="https://codecov.io/gh/AMICI-dev/AMICI">
+  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg" alt="Code coverage"></a>
+<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master">
+  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index" alt="SonarCloud technical debt"></a>
+<a href="https://zenodo.org/badge/latestdoi/43677177">
+  <img src="https://zenodo.org/badge/43677177.svg" alt="Zenodo DOI"></a>
+<a href="https://amici.readthedocs.io/en/latest/?badge=latest">
+ <img src="https://readthedocs.org/projects/amici/badge/?version=latest" alt="ReadTheDocs status"></a>
 <a href="https://bestpractices.coreinfrastructure.org/projects/3780">
-  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge"></a>
+  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge" alt="coreinfrastructure bestpractices badge"></a>
 
 ## Features
 
@@ -96,7 +96,7 @@ Any [contributions](http://amici-dev.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
-### Getting help
+## Getting help
 
 In case of questions or problems with using AMICI, feel free to post an
 [issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
@@ -143,31 +143,5 @@ which are available under a
 license:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75">
+  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75" alt="AMICI Logo">
 </p>
-
-## Status of SBML support in Python-AMICI
-
-Python-AMICI currently passes 696 out of the 1780 (~39%) test cases from
-the semantic
-[SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
-([current status](https://github.com/AMICI-dev/AMICI/actions)).
-
-In addition, we currently plan to add support for the following features
-(see corresponding issues for details and progress):
-
-- Events (currently Matlab-only)
-- Algebraic rules
-- Models without species
-
-contributions are welcome.
-
-However, the following features are unlikely to be supported:
-
-- SBML extensions
-- `factorial()`, `ceil()`, `floor()`, due to incompatibility with
-  symbolic sensitivity computations
-- initial assignments for parameters
-- `delay()` due to missing SUNDIALS solver support
-
-In addition to SBML, we also plan to implement support for the [Simulation Experiment Description Markup Language (SED-ML)](https://sed-ml.org/).

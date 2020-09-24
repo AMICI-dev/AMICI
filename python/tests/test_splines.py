@@ -466,12 +466,10 @@ def check_splines_full(splines, params, tols, *args, **kwargs):
     else:
         tols1, tols2, tols3 = tols
 
-    if isinstance(splines, AbstractSpline) and splines.extrapolate == ('periodic', 'periodic'):
-        contains_periodic = True
-    elif any(spline.extrapolate == ('periodic', 'periodic') for spline in splines):
-        contains_periodic = True
+    if isinstance(splines, AbstractSpline):
+        contains_periodic = (splines.extrapolate == ('periodic', 'periodic'))
     else:
-        contains_periodic = False
+        contains_periodic = any(spline.extrapolate == ('periodic', 'periodic') for spline in splines)
 
     if not contains_periodic:
         check_splines(splines, params, *args, **kwargs, **tols1, discard_annotations=True, use_adjoint=False)

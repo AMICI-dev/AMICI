@@ -27,6 +27,8 @@ namespace amici {
  */
 class IDASolver : public Solver {
   public:
+    using Solver::Solver;
+
     ~IDASolver() override = default;
 
     /**

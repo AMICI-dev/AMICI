@@ -214,7 +214,7 @@ def add_debug_flags_if_required(cxx_flags: List[str],
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         log.info("ENABLE_AMICI_DEBUGGING was set to TRUE."
                  " Building AMICI with debug symbols.")
-        cxx_flags.extend(['-g', '-O0'])
+        cxx_flags.extend(['-g', '-O0', '-UNDEBUG'])
         linker_flags.extend(['-g'])
 
 
@@ -232,6 +232,7 @@ def generate_swig_interface_files(swig_outdir: str = None,
         '-python',
         '-py3',
         '-threads',
+        '-Wall',
         f'-Iamici{os.sep}swig',
         f'-Iamici{os.sep}include',
     ]

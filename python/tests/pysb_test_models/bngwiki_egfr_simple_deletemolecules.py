@@ -1,7 +1,5 @@
 """Translation of the BioNetGen example "egfr_simple" from the BNG wiki.
-
 added delete_molecules=True to egfr_dimer_degrade to conserve adapter proteins
-
 http://bionetgen.org/index.php/Egfr_simple
 """
 

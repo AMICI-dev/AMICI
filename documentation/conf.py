@@ -9,10 +9,71 @@
 import os
 import sys
 import re
-import subprocess
 import mock
+import subprocess
 
 from sphinx.transforms.post_transforms import ReferencesResolver
+import exhale_multiproject_monkeypatch
+from exhale import configs as exhale_configs
+import exhale.deploy
+
+# BEGIN Monkeypatch exhale
+exhale_multiproject_monkeypatch  # to avoid removal of unused import
+from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
+
+
+def my_exhale_generate_doxygen(doxygen_input):
+    """Monkey-patch exhale for post-processing doxygen output"""
+
+    # run mtocpp_post
+    doxy_xml_dir = exhale_configs._doxygen_xml_output_directory
+    if 'matlab' in doxy_xml_dir:
+        print('Running mtocpp_post on ', doxy_xml_dir)
+        mtocpp_post = os.path.join(amici_dir, 'ThirdParty', 'mtocpp-master',
+                                   'build', 'mtocpp_post')
+        subprocess.run([mtocpp_post, doxy_xml_dir])
+
+    # let exhale do it's job
+    exhale_generate_doxygen(doxygen_input)
+
+
+exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
+# END Monkeypatch exhale
+
+
+# BEGIN Monkeypatch breathe
+from breathe.renderer.sphinxrenderer import \
+    DomainDirectiveFactory as breathe_DomainDirectiveFactory
+
+old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+
+
+def my_breathe_DomainDirectiveFactory_create(domain: str, args):
+    if domain != 'mat':
+        return old_breathe_DomainDirectiveFactory_create(domain, args)
+
+    from sphinxcontrib.matlab import MATLABDomain, MatClassmember
+
+    matlab_classes = {k: (v, k) for k, v in MATLABDomain.directives.items()}
+    matlab_classes['variable'] = (MatClassmember, 'attribute')
+    cls, name = matlab_classes[args[0]]
+    return cls(domain + ':' + name, *args[1:])
+
+
+breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+
+
+# END Monkeypatch breathe
+
+
+def install_mtocpp():
+    """Install mtocpp (Matlab doxygen filter)"""
+    cmd = os.path.join(amici_dir, 'scripts', 'downloadAndBuildMtocpp.sh')
+    ret = subprocess.run(cmd, shell=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if ret.returncode != 0:
+        print(ret.stdout.decode('utf-8'))
+        raise RuntimeError('downloadAndBuildMtocpp.sh failed')
 
 
 def install_amici_deps_rtd():
@@ -67,6 +128,9 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
 
+# Required for matlab doxygen processing
+install_mtocpp()
+
 # Install AMICI if not already present
 try:
     import amici
@@ -77,6 +141,7 @@ except ModuleNotFoundError:
     ], check=True)
 
     from importlib import invalidate_caches
+
     invalidate_caches()
 
     sys.path.insert(0, amici_dir)
@@ -113,6 +178,9 @@ for mod_name in autodoc_mock_imports:
 # ones.
 extensions = [
     'readthedocs_ext.readthedocs',
+    # Required, e.g. for PEtab-derived classes where the base class has non-rst
+    #  docstrings
+    'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
@@ -120,6 +188,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinxcontrib.matlab',
     'nbsphinx',
     'IPython.sphinxext.ipython_console_highlighting',
     'recommonmark',
@@ -160,8 +229,17 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store',
-                    '**.ipynb_checkpoints', 'numpy.py', 'MATLAB.md', 'gfx']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    '**.ipynb_checkpoints',
+    'numpy.py',
+    'INSTALL.md',
+    'MATLAB_.md',
+    'CPP_.md',
+    'gfx'
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -181,40 +259,73 @@ hoverxref_domains = ['py']
 hoverxref_role_types = {
     'hoverxref': 'tooltip',
     'ref': 'tooltip',
+    'term': 'tooltip',
+    'obj': 'tooltip',
     'func': 'tooltip',
     'mod': 'tooltip',
+    'meth': 'tooltip',
     'class': 'tooltip',
 }
 
 # breathe settings
 breathe_projects = {
-    "AMICI": "./_doxyoutput/xml",
+    "AMICI_Matlab": "./_doxyoutput_amici_matlab/xml",
+    "AMICI_CPP": "./_doxyoutput_amici_cpp/xml",
 }
 
-breathe_default_project = "AMICI"
+breathe_default_project = "AMICI_CPP"
+breathe_domain_by_extension = {
+    "m": "mat",
+    "h": "cpp",
+    "cpp": "cpp",
+}
 
 # exhale settings
-
 exhale_args = {
-    # These arguments are required
-    "containmentFolder": "./_exhale_cpp_api",
     "rootFileName": "library_root.rst",
-    "rootFileTitle": "AMICI C++ API",
     "doxygenStripFromPath": "..",
-    # Suggested optional arguments
     "createTreeView": True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
-    "exhaleDoxygenStdin": "\n".join([
-        "INPUT = ../include",
-        "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
-    ]),
-    "afterTitleDescription":
-        "AMICI C++ library functions",
-    "verboseBuild": False,
+    "verboseBuild": True,
 }
 
+mtocpp_filter = os.path.join(amici_dir, 'matlab', 'mtoc',
+                             'config', 'mtocpp_filter.sh')
+exhale_projects_args = {
+    "AMICI_CPP": {
+        "exhaleDoxygenStdin": "\n".join([
+            "INPUT = ../include",
+            "BUILTIN_STL_SUPPORT    = YES",
+            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+        ]),
+        "containmentFolder": "_exhale_cpp_api",
+        "rootFileTitle": "AMICI C++ API",
+        "afterTitleDescription":
+            "AMICI C++ library functions",
+    },
+    # Third Party Project Includes
+    "AMICI_Matlab": {
+        "exhaleDoxygenStdin": "\n".join([
+            "INPUT = ../matlab",
+            "EXTENSION_MAPPING = .m=C++",
+            "FILTER_PATTERNS = "
+            f"*.m={mtocpp_filter}",
+            "EXCLUDE += ../matlab/examples",
+            "EXCLUDE += ../matlab/mtoc",
+            "EXCLUDE += ../matlab/SBMLimporter",
+            "EXCLUDE += ../matlab/auxiliary",
+            "EXCLUDE += ../matlab/tests",
+            "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
+        ]),
+        "containmentFolder": "_exhale_matlab_api",
+        "rootFileTitle": "AMICI Matlab API",
+        "afterTitleDescription":
+            "AMICI Matlab library functions",
+        "lexerMapping": {r'.*\.m$': 'matlab'}
+    },
+}
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -250,7 +361,6 @@ html_favicon = "gfx/logo.png"
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'AMICIdoc'
 
-
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
@@ -279,7 +389,6 @@ latex_documents = [
      author, 'manual'),
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
@@ -288,7 +397,6 @@ man_pages = [
     (master_doc, 'amici', title,
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -385,7 +493,7 @@ def process_docstring(app, what, name, obj, options, lines):
         cname = name.split('.')[2]
         lines.append(
             f'Swig-Generated class that implements smart pointers to '
-            f'{cname.replace("Ptr","")} as objects.'
+            f'{cname.replace("Ptr", "")} as objects.'
         )
         return
 
@@ -454,7 +562,6 @@ def fix_typehints(sig: str) -> str:
 
 def process_signature(app, what: str, name: str, obj, options, signature,
                       return_annotation):
-
     if signature is None:
         return
 
