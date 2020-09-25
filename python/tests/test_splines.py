@@ -113,7 +113,7 @@ def create_petab_problem(splines,
                          params_true,
                          initial_values,
                          use_reactions=False,
-                         measure_upsample=8,
+                         measure_upsample=6,
                          sigma=1.0,
                          Textrapolate=0.25,
                          folder=None
@@ -583,6 +583,13 @@ def example_splines_1():
             tols1[key] if key in tols1.keys() else 0.0,
             tols2[key] if key in tols2.keys() else 0.0,
         )
+
+    tols['llh_rtol'] = 1e-14
+    tols['sllh_atol'] = 5e-8
+    tols['sx_rtol'] = 1e-9
+    tols['sx_atol'] = 1e-10
+    tols['x_rtol'] = 1e-10
+    tols['x_atol'] = 1e-9
 
     return splines, params, tols
 
