@@ -2619,7 +2619,7 @@ class ODEExporter:
             if isinstance(spline.xx, UniformGrid):
                 nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
             else:
-                nodes += ', '.join(spline.xx) + '};'
+                nodes += ', '.join(str(x) for x in spline.xx) + '};'
             body.append(nodes)
 
             # create the vector with the node values
