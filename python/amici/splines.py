@@ -703,7 +703,7 @@ class AbstractSpline(ABC):
         xB = self.xx[-1]
         T = self.period
         z = xA + sp.Mod(x - xA, T)
-        assert xA <= z < xB
+        assert not z.is_Number or xA <= z < xB
 
         if with_interval_number:
             k = sp.floor((x - xA) / T)
