@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 36.
+List of publications using AMICI. Total number is 37.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -11,6 +11,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-SchmiesterWei2020">
 <p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2020. “Parameterization of Mechanistic Models from Qualitative Data Using an Efficient Optimal Scaling Approach.” <em>Journal of Mathematical Biology</em>, July. <a href="https://doi.org/10.1007/s00285-020-01522-w">https://doi.org/10.1007/s00285-020-01522-w</a>.</p>
+</div>
+<div id="ref-Staedter2020.09.03.268276">
+<p>Städter, Philipp, Yannik Schälte, Leonard Schmiester, Jan Hasenauer, and Paul L. Stapor. 2020. “Benchmarking of Numerical Integration Methods for Ode Models of Biological Systems.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.09.03.268276">https://doi.org/10.1101/2020.09.03.268276</a>.</p>
 </div>
 </div>
 <h1 id="section" class="unnumbered">2019</h1>
@@ -49,7 +52,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2019. “A Comparison of Methods for Quantifying Prediction Uncertainty in Systems Biology⁎⁎This Research Has Received Funding from the European Unions Horizon 2020 Research and Innovation Program Under Grant Agreement No 686282 (Canpathpro) and the German Ministry of Education and Research (Bmbf) Under the Grant Agreement No 01ZX1310B (Sys-Stomach) and No 01ZX1705A (Income).” <em>IFAC-PapersOnLine</em> 52 (26): 45–51. <a href="https://doi.org/10.1016/j.ifacol.2019.12.234">https://doi.org/10.1016/j.ifacol.2019.12.234</a>.</p>
 </div>
 <div id="ref-WangSta2019">
-<p>Wang, Dantong, Paul Stapor, and Jan Hasenauer. 2019. “Dirac Mixture Distributions for the Approximation of Mixed Effects Models⁎⁎We Acknowledge Financial Support by the China Scholarship Council (201706060200) and the German Ministry for Education and Research (Bmbf) in the Fitmulticell Project (Grant Number 031L0159A).” <em>IFAC-PapersOnLine</em> 52 (26): 200–206. <a href="https://doi.org/10.1016/j.ifacol.2019.12.258">https://doi.org/10.1016/j.ifacol.2019.12.258</a>.</p>
+<p>Wang, Dantong, Paul Stapor, and Jan Hasenauer. 2019. “Dirac Mixture Distributions for the Approximation of Mixed Effects Models.” <em>IFAC-PapersOnLine</em> 52 (26): 200–206. <a href="https://doi.org/10.1016/j.ifacol.2019.12.258">https://doi.org/10.1016/j.ifacol.2019.12.258</a>.</p>
 </div>
 </div>
 <h1 id="section" class="unnumbered">2018</h1>
