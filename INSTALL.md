@@ -171,8 +171,8 @@ Then, follow these steps:
     + `C:\swigwin-3.0.12`
 * Install AMICI using:
 
-    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" \
-        --global-option="build_ext" --global-option="--compiler=mingw32" \
+    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" 
+        --global-option="build_ext" --global-option="--compiler=mingw32" 
         amici --no-cache-dir --verbose`
 
 Possible sources of errors:
