@@ -405,7 +405,7 @@ class SbmlImporter:
                                 'species and compartments.')
 
         for component, component_ids in zip(['compartment',   'species',
-                                   compartment_ids, species_ids]):
+                                             compartment_ids, species_ids]):
             if any([not (rule.isAssignment() or rule.isRate()) and
                     (rule.getVariable() in component_ids)
                     for rule in self.sbml.getListOfRules()]):
@@ -689,7 +689,7 @@ class SbmlImporter:
         if name is None:
             name = ''
 
-        ### d_dt may contain speciesReference symbols, that may be defined in
+        # d_dt may contain speciesReference symbols, that may be defined in
         # an initial assignment (e.g. see SBML test suite case 1498, which
         # uses a speciesReference Id in a species rate rule).
         # Here, such speciesReference symbols are replaced with the initial
@@ -867,7 +867,6 @@ class SbmlImporter:
             if reaction.isSetId()
         ]
 
-
         math_subs = []
         for r in reactions:
             elements = list(r.getListOfReactants()) \
@@ -890,7 +889,7 @@ class SbmlImporter:
                     elements[index]['stoichiometry'] = \
                         self._get_element_stoichiometry(element,
                                                         assignment_ids,
-                                                       rulevars)
+                                                        rulevars)
 
                 for index in elements.keys():
                     if not self._is_constant(elements[index]['species']):
@@ -1310,8 +1309,8 @@ class SbmlImporter:
         # updates of stoichiometry (later dxdotdw in ode_exporter) must be
         # corrected for conserved quantities:
         volume_updates_solver = [(species_solver.index(ix), iw, val)
-                       for (ix, iw, val) in volume_updates
-                       if ix in species_solver]
+                                 for (ix, iw, val) in volume_updates
+                                 if ix in species_solver]
 
         return volume_updates_solver
 
@@ -1835,34 +1834,42 @@ def noise_distribution_to_cost_function(
     - 'normal', 'lin-normal': A normal distribution:
 
       .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+         exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
 
     - 'log-normal': A log-normal distribution (i.e. log(m) is
       normally distributed):
 
       .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\
+         exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
 
     - 'log10-normal': A log10-normal distribution (i.e. log10(m) is
       normally distributed):
 
       .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
+         exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
 
     - 'laplace', 'lin-laplace': A laplace distribution:
 
       .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}\\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
+         \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
 
-    - 'log-laplace': A log-Laplace distribution (i.e. log(m) is Laplace distributed):
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}\\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
-
-    - 'log10-laplace': A log10-Laplace distribution (i.e. log10(m) is Laplace distributed):
+    - 'log-laplace': A log-Laplace distribution
+                     (i.e. log(m) is Laplace distributed):
 
       .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}\\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}
+         \\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
+
+    - 'log10-laplace': A log10-Laplace distribution
+                       (i.e. log10(m) is Laplace distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}
+         \\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
 
     - 'binomial', 'lin-binomial': A (continuation of a discrete) binomial
       distribution, parameterized via the success probability
@@ -2038,10 +2045,15 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         return x
 
     def doprint(self, expr):
-        mathml = super().doprint(expr)
-        mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + mathml + '</math>'
-        mathml = mathml.replace(f'<ci>time</ci>', '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>')
-        return mathml
+        mathml_str = super().doprint(expr)
+        mathml_str = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + \
+                     mathml_str + '</math>'
+        mathml_str = mathml_str.replace(
+            '<ci>time</ci>',
+            '<csymbol encoding="text" definitionURL='
+            '"http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
+        )
+        return mathml_str
 
 
 def mathml(expr, **settings):
