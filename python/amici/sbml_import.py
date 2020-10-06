@@ -1343,8 +1343,8 @@ class SbmlImporter:
         """
         # Avoid replacing variables with rates
         if include_rate_rule_targets \
-                or old not in {*self.compartment_rate_rules.keys(),
-                               *self.species_rate_rules.keys()}:
+                or old not in {*self.compartment_rate_rules,
+                               *self.species_rate_rules}:
             for rule_dict in (self.compartment_rate_rules,
                               self.species_rate_rules):
                 if old in rule_dict.keys():
