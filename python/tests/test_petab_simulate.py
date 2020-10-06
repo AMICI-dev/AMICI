@@ -5,6 +5,7 @@ import petab
 
 from amici.petab_simulate import PetabSimulator
 
+
 def test_petab_simulate():
     model_name = 'conversion_reaction'
     petab_yaml_filepath = os.path.join(
@@ -16,4 +17,3 @@ def test_petab_simulate():
     simulator = PetabSimulator(petab_problem)
     simulator.simulate(noise=True)
     simulator.clean_working_dir()
-
