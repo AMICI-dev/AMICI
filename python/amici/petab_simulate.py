@@ -20,11 +20,7 @@ class PetabSimulator(Simulator):
         :param amici_model:
             AMICI Model assumed to be compatible with ``petab_problem``.
         """
-        #if 'amici_model' not in kwargs:
         if amici_model is None and 'amici_model' not in dir(self):
-            #defaults_import = {
-            #    'model_output_dir': self.working_dir + '/amici_models',
-            #}
             if 'model_output_dir' not in kwargs:
                 import os
                 kwargs['model_output_dir'] = os.path.join(self.working_dir,
@@ -34,30 +30,17 @@ class PetabSimulator(Simulator):
                 'model_name',
                 'force_compile',
             ]
-            #kwargs_import = {
-            #    **defaults_import,
-            #    **{k: v
-            #       for k, v in kwargs.items()
-            #       if k in kwargs_import_supported}
-            #}
-            #self.model_output_dir = kwargs_import['model_output_dir']
             # TODO don't compute sensitivities
             # TODO allow amici_model to be passed as argument
-            #self.amici_model = import_petab_problem(
             self.amici_model = import_petab_problem(
                 self.petab_problem,
-                #model_output_dir=self.model_output_dir,
-                #**kwargs_import,
                 **{k: v
                    for k, v in kwargs.items()
                    if k in relevant_kwargs_import},
             )
         else:
+            # TODO don't save kwarg amici_model in `self` state?
             self.amici_model = amici_model
-        #else:
-        #    self.amici_modle
-
-        #amici_model = kwargs['amici_model']
 
         # due to the `simulate_petab` decorator (I think), the inspect module
         # cannot be used to identify this automatically with e.g.:
@@ -77,7 +60,6 @@ class PetabSimulator(Simulator):
         result = simulate_petab(
             self.petab_problem,
             self.amici_model,
-            #self.amici_model,
             **{k: v
                for k, v in kwargs.items()
                if k in relevant_kwargs_simulate},
@@ -91,15 +73,3 @@ class PetabSimulator(Simulator):
         )
 
         return simulation_df
-
-#    # TODO double-check type of amici_model
-#    def set_model(self, amici_model: amici.amici.ModelPtr):
-#        """
-#        Set the model to be used for simulation. If set before the first call
-#        to `self.simulate(...)`, then the model will not be recompiled.
-#
-#        Arguments:
-#            amici_model: an AMICI model instance, e.g. the return of
-#                         `amici.petab_import.import_petab_problem(...)`.
-#        """
-#        self.amici_model = amici_model
