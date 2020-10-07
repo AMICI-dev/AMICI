@@ -1924,56 +1924,46 @@ def noise_distribution_to_cost_function(
         function string (negative log-likelihood) from it, which can be
         sympified.
     """
-    if noise_distribution in ['normal', 'lin-normal']:
-        def nllh_y_string(str_symbol):
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'0.5*log(2*pi*{sigma}**2) ' \
-                f'+ 0.5*(({y} - {m}) / {sigma})**2'
-    elif noise_distribution == 'log-normal':
-        def nllh_y_string(str_symbol):
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'0.5*log(2*pi*{sigma}**2*{m}**2) ' \
-                f'+ 0.5*((log({y}) - log({m})) / {sigma})**2'
-    elif noise_distribution == 'log10-normal':
-        def nllh_y_string(str_symbol):
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
-                f'+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
-    elif noise_distribution in ['laplace', 'lin-laplace']:
-        def nllh_y_string(str_symbol):
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
-    elif noise_distribution == 'log-laplace':
-        def nllh_y_string(str_symbol):
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
-    elif noise_distribution == 'log10-laplace':
-        def nllh_y_string(str_symbol):
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'log(2*{sigma}*{m}*log(10)) ' \
-                f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
-    elif noise_distribution in ['binomial', 'lin-binomial']:
-        def nllh_y_string(str_symbol):
-            """Binomial noise model parameterized via success probability p,"""
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'- log(Heaviside({y}-{m})) ' \
-                f'- loggamma({y}+1) + loggamma({m}+1) + loggamma({y}-{m}+1) ' \
-                f'- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
-    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
-        def nllh_y_string(str_symbol):
-            """Negative binomial noise model of the number of successes m
-            (data) before r=(1-sigma)/sigma * y failures occur,
-            with mean number of successes y (simulation),
-            parameterized via success probability p = sigma."""
-            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            r = f'{y} * (1-{sigma}) / {sigma}'
-            return f'- loggamma({m}+{r}) + loggamma({m}+1) + loggamma({r}) ' \
-                f'- {r} * log(1-{sigma}) - {m} * log({sigma})'
-    elif isinstance(noise_distribution, Callable):
+
+    if isinstance(noise_distribution, Callable):
         return noise_distribution
+
+    if noise_distribution in ['normal', 'lin-normal']:
+        y_string = '0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2'
+    elif noise_distribution == 'log-normal':
+        y_string = '0.5*log(2*pi*{sigma}**2*{m}**2) ' \
+                   '+ 0.5*((log({y}) - log({m})) / {sigma})**2'
+    elif noise_distribution == 'log10-normal':
+        y_string = '0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
+                   '+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
+    elif noise_distribution in ['laplace', 'lin-laplace']:
+        y_string = 'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
+    elif noise_distribution == 'log-laplace':
+        y_string = 'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
+    elif noise_distribution == 'log10-laplace':
+        y_string = 'log(2*{sigma}*{m}*log(10)) ' \
+                   '+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
+    elif noise_distribution in ['binomial', 'lin-binomial']:
+        # Binomial noise model parameterized via success probability p
+        y_string = '- log(Heaviside({y} - {m})) - loggamma({y}+1) ' \
+                   '+ loggamma({m}+1) + loggamma({y}-{m}+1) ' \
+                   '- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
+    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
+        # Negative binomial noise model of the number of successes m
+        # (data) before r=(1-sigma)/sigma * y failures occur,
+        # with mean number of successes y (simulation),
+        # parameterized via success probability p = sigma.
+        r = '{y} * (1-{sigma}) / {sigma}'
+        y_string = f'- loggamma({{m}}+{r}) + loggamma({{m}}+1) ' \
+                   f'+ loggamma({r}) - {r} * log(1-{{sigma}}) ' \
+                   f'- {{m}} * log({{sigma}})'
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized.")
+
+    def nllh_y_string(str_symbol):
+        y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+        return y_string.format(y=y, m=m, sigma=sigma)
 
     return nllh_y_string
 
