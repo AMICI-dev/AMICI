@@ -893,15 +893,13 @@ class SbmlImporter:
         assignments = {}
 
         for rule in rules:
-            # Rate rules should not be substituted for the target of the rate
-            # rule.
+            # rate rules are processed in _process_species
             if rule.getTypeCode() == sbml.SBML_RATE_RULE:
                 continue
             if rule.getFormula() == '':
                 continue
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
-            # avoid incorrect parsing of pow(x, -1) in symengine
             formula = self._sympy_from_sbml_math(rule)
             formula = self._replace_reactions_in_rule_formula(rule, formula)
 
@@ -909,27 +907,15 @@ class SbmlImporter:
                 self.stoichiometric_matrix = \
                     self.stoichiometric_matrix.subs(variable, formula)
 
-            elif variable in specvars:
-                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                    self.species_assignment_rules[variable] = formula
-                    assignments[str(variable)] = formula
-                    break
+            elif variable in specvars and \
+                    rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                self.species_assignment_rules[variable] = formula
+                assignments[str(variable)] = formula
 
-                # Rate rules are handled in _process_species, and are
-                # skipped in this loop
-                raise KeyError('Only assignment and rate rules are '
-                               'currently supported for species!')
-
-            elif variable in compartmentvars:
-                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                    self.compartment_assignment_rules[variable] = formula
-                    assignments[str(variable)] = formula
-                    break
-
-                # Rate rules are handled in _process_species, and are
-                # skipped in this loop
-                raise KeyError('Only assignment and rate rules are '
-                               'currently supported for compartments!')
+            elif variable in compartmentvars and \
+                    rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                self.compartment_assignment_rules[variable] = formula
+                assignments[str(variable)] = formula
 
             elif variable in parametervars:
                 if str(variable) in self.parameter_index:
@@ -947,10 +933,12 @@ class SbmlImporter:
                 self.compartment_volume = \
                     self.compartment_volume.subs(variable, formula)
 
-            elif variable in rulevars:
+            if variable in rulevars:
                 for nested_rule in rules:
 
-                    nested_formula = self._sympy_from_sbml_math(nested_rule)
+                    nested_formula = self._sympy_from_sbml_math(
+                        nested_rule
+                    ).subs(variable, formula)
 
                     nested_rule_math_ml = mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(
@@ -1135,11 +1123,10 @@ class SbmlImporter:
                     [compartment]))
             for species in self.species_assignment_rules:
                 x_index = self.species_index[str(species)]
-                observable_values[x_index] = sp.Matrix(
-                    [replace_assignments(str(species))])
+                observable_values[x_index] = replace_assignments(str(species))
                 observable_ids[x_index] = str(species)
                 observable_names[x_index] = str(species)
-                observable_syms[x_index] = sp.Matrix([species])
+                observable_syms[x_index] = species
 
         sigma_y_syms = sp.Matrix(
             [sp.symbols(f'sigma{symbol}', real=True)
@@ -1315,23 +1302,17 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        for symbol in ['species', 'observable']:
-            if not self.symbols.get(symbol, None):
-                continue
-            # Initial species values that are specified as amounts need to
-            # be divided by their compartment volume to obtain
-            # concentration. The condition below ensures that species
-            # initial amount is divided by the initial compartment size,
-            # and not the expression for a compartment assignment rule.
-            subs = self.compartment_volume[
-                    list(self.compartment_symbols).index(old)
-            ] if (
-                symbol == 'species' and
-                old in self.compartment_assignment_rules
-            ) else new
+        # Initial species values that are specified as amounts need to
+        # be divided by their compartment volume to obtain
+        # concentration. The condition below ensures that species
+        # initial amount is divided by the initial compartment size,
+        # and not the expression for a compartment assignment rule.
+        subs = self.compartment_volume[
+                list(self.compartment_symbols).index(old)
+        ] if old in self.compartment_assignment_rules else new
 
-            self.symbols[symbol]['value'] = \
-                self.symbols[symbol]['value'].subs(old, subs)
+        self.symbols['species']['value'] = \
+            self.symbols['species']['value'].subs(old, subs)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be

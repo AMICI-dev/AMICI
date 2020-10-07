@@ -91,15 +91,7 @@ def verify_results(settings, rdata, results, wrapper,
     amount_species, variables_species = get_amount_and_variables(settings)
 
     # verify states
-    simulated_x = rdata['x']
-
-    # Add species with assignment rules to the simulated data.
-    for x_id, x_index in wrapper.species_index.items():
-        # Currently assumes that x_id is also an observable.
-        # Also assumes that observable "species" have the same index in both
-        # the 'x' and 'y' keys of rdata.
-        if x_id in [str(s) for s in wrapper.species_assignment_rules]:
-            simulated_x[:, x_index] = rdata['y'][:, x_index]
+    simulated_x = rdata['y']
 
     x_ids = [x_id for x_id in wrapper.species_index
              if x_id in variables_species]
