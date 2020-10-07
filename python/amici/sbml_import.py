@@ -1841,15 +1841,15 @@ def noise_distribution_to_cost_function(
          \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
          \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
 
-    - 'log-laplace': A log-Laplace distribution
-                     (i.e. log(m) is Laplace distributed):
+    - 'log-laplace': A log-Laplace distribution (i.e. log(m) is Laplace
+      distributed):
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}
          \\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
 
-    - 'log10-laplace': A log10-Laplace distribution
-                       (i.e. log10(m) is Laplace distributed):
+    - 'log10-laplace': A log10-Laplace distribution (i.e. log10(m) is
+      Laplace distributed):
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}
