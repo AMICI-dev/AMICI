@@ -536,13 +536,18 @@ class SbmlImporter:
 
         species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
         for initial_assignment in self.sbml.getListOfInitialAssignments():
-            if initial_assignment.getId() in species_ids:
-                index = species_ids.index(
-                    initial_assignment.getId()
-                )
-                sym_math = self._sympy_from_sbml_math(initial_assignment)
-                if sym_math is not None:
-                    species_initial[index] = sym_math
+            if initial_assignment.getId() not in species_ids:
+                continue
+
+            index = species_ids.index(
+                initial_assignment.getId()
+            )
+
+            sym_math = self._sympy_from_sbml_math(initial_assignment)
+            if sym_math is None:
+                continue
+
+            species_initial[index] = sym_math
 
         for ix, (symbol, init) in enumerate(zip(
                 self.symbols['species']['identifier'], species_initial
