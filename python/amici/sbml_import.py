@@ -1815,47 +1815,47 @@ def noise_distribution_to_cost_function(
     distribution scale parameter
     (currently, AMICI only supports a single distribution parameter).
 
-    - 'normal', 'lin-normal': A normal distribution:
+    - `'normal'`, `'lin-normal'`: A normal distribution:
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
          exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
 
-    - 'log-normal': A log-normal distribution (i.e. log(m) is
+    - `'log-normal'`: A log-normal distribution (i.e. log(m) is
       normally distributed):
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\
          exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
 
-    - 'log10-normal': A log10-normal distribution (i.e. log10(m) is
+    - `'log10-normal'`: A log10-normal distribution (i.e. log10(m) is
       normally distributed):
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
          exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
 
-    - 'laplace', 'lin-laplace': A laplace distribution:
+    - `'laplace'`, `'lin-laplace'`: A laplace distribution:
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
          \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
 
-    - 'log-laplace': A log-Laplace distribution (i.e. log(m) is Laplace
+    - `'log-laplace'`: A log-Laplace distribution (i.e. log(m) is Laplace
       distributed):
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}
          \\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
 
-    - 'log10-laplace': A log10-Laplace distribution (i.e. log10(m) is
+    - `'log10-laplace'`: A log10-Laplace distribution (i.e. log10(m) is
       Laplace distributed):
 
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}
          \\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
 
-    - 'binomial', 'lin-binomial': A (continuation of a discrete) binomial
+    - `'binomial'`, `'lin-binomial'`: A (continuation of a discrete) binomial
       distribution, parameterized via the success probability
       :math:`p=\\sigma`:
 
@@ -1864,7 +1864,7 @@ def noise_distribution_to_cost_function(
                 \\frac{\\Gamma(y+1)}{\\Gamma(m+1) \\Gamma(y-m+1)}
                 \\sigma^m (1-\\sigma)^{(y-m)}
 
-    - 'negative-binomial', 'lin-negative-binomial': A (continuation of a
+    - `'negative-binomial'`, `'lin-negative-binomial'`: A (continuation of a
       discrete) negative binomial distribution, with with `mean = y`,
       parameterized via success probability `p`:
 
@@ -1897,11 +1897,10 @@ def noise_distribution_to_cost_function(
     :param noise_distribution: An identifier specifying a noise model.
         Possible values are
 
-        {'normal', 'lin-normal', 'log-normal', 'log10-normal',
-        'laplace', 'lin-laplace', 'log-laplace', 'log10-laplace',
-        'binomial', 'lin-binomial',
-        'negative-binomial', 'lin-negative-binomial',
-        <Callable>}
+        {`'normal'`, `'lin-normal'`, `'log-normal'`, `'log10-normal'`,
+        `'laplace'`, `'lin-laplace'`, `'log-laplace'`, `'log10-laplace'`,
+        `'binomial'`, `'lin-binomial'`, `'negative-binomial'`,
+        `'lin-negative-binomial'`, `<Callable>`}
 
         For the meaning of the values see above.
 
