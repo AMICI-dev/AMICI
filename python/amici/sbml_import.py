@@ -404,8 +404,8 @@ class SbmlImporter:
                                 'and rate rules are only supported for '
                                 'species and compartments.')
 
-        for component, component_ids in zip(['compartment',   'species',
-                                             compartment_ids, species_ids]):
+        for component, component_ids in zip(['compartment',   'species'],
+                                            [compartment_ids, species_ids]):
             if any([not (rule.isAssignment() or rule.isRate()) and
                     (rule.getVariable() in component_ids)
                     for rule in self.sbml.getListOfRules()]):
