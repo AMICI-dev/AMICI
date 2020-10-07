@@ -1104,7 +1104,9 @@ class SbmlImporter:
             observable_ids = [
                 f'x{index}' for index in range(len(species_syms))
             ]
-            observable_names = observable_ids[:]
+            observable_names = [
+                str(sym) for sym in observable_values
+            ]
             observable_syms = sp.Matrix(
                 [sp.symbols(f'y{index}', real=True)
                  for index in range(len(species_syms))]
@@ -1302,17 +1304,21 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        # Initial species values that are specified as amounts need to
-        # be divided by their compartment volume to obtain
-        # concentration. The condition below ensures that species
-        # initial amount is divided by the initial compartment size,
-        # and not the expression for a compartment assignment rule.
-        subs = self.compartment_volume[
-                list(self.compartment_symbols).index(old)
-        ] if old in self.compartment_assignment_rules else new
+        for symbol in ['species', 'observable']:
+            if not self.symbols.get(symbol, None):
+                continue
+            # Initial species values that are specified as amounts need to
+            # be divided by their compartment volume to obtain
+            # concentration. The condition below ensures that species
+            # initial amount is divided by the initial compartment size,
+            # and not the expression for a compartment assignment rule.
+            subs = self.compartment_volume[
+                    list(self.compartment_symbols).index(old)
+            ] if old in self.compartment_assignment_rules \
+                and symbol == 'species' else new
 
-        self.symbols['species']['value'] = \
-            self.symbols['species']['value'].subs(old, subs)
+            self.symbols[symbol]['value'] = \
+                self.symbols[symbol]['value'].subs(old, subs)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
