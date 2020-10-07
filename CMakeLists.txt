@@ -217,7 +217,7 @@ endif()
 include(clang-tools)
 
 set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
-set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
+set(AUTHOR_EMAIL "Fabian_Froehlich@hms.harvard.edu")
 
 # <Export cmake configuration>
 install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
