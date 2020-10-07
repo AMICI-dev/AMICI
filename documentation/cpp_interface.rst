@@ -119,7 +119,8 @@ and link the following libraries:
 * SUNDIALS libraries
 * SuiteSparse libraries
 * CBLAS-compatible BLAS
-* HDF5 (C, HL, and CXX components)
+* optionally HDF5 (C, HL, and CXX components)
+  set CMake option ``ENABLE_HDF5`` to ``OFF`` to build without HDF5-support
 * optionally OpenMP (for parallel simulation of multiple conditions, see
   :cpp:func:`amici::runAmiciSimulations`)
 * optionally boost (only when using serialization of AMICI object)
