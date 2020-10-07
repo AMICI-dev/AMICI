@@ -25,7 +25,7 @@ from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 from sympy.printing.mathml import MathMLContentPrinter
 
-# the following import can be removed if sympy PR #19958 is merged
+# the following import can be removed when sympy 1.6.3 is released
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 
@@ -585,6 +585,9 @@ class SbmlImporter:
         for rule in rules:
             if rule.getFormula() == '':
                 continue
+            if rule.getTypeCode() != sbml.SBML_RATE_RULE:
+                continue
+
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
@@ -595,66 +598,19 @@ class SbmlImporter:
             # implemented as species). Could also be avoided with a
             # `not in self.compartment_rate_rules` condition.
             if variable in self.symbols['species']['identifier']:
-                self._process_species_rate_rule_species(
-                    rule, variable, formula
-                )
+                initial_value = self.symbols['species']['value']
+                component_type = sbml.SBML_SPECIES
 
-            if variable in compartmentvars:
-                self._process_species_rate_rule_compartments(
-                    rule, variable, formula
-                )
-
-    def _process_species_rate_rule_species(self,
-                                           rule: sbml.Rule,
-                                           variable: sp.Symbol,
-                                           formula: sp.Expr):
-        """
-        Apply rate rules that apply to sbml species
-        :param rule:
-            rate rule
-        :param variable:
-            sbml species
-        :param formula:
-            assignment formula
-        """
-        if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-            # Handled in _process_rules and _process_observables.
-            pass
-        elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
-            self.add_d_dt(
-                formula,
-                variable,
-                self.symbols['species']['value'],
-                sbml.SBML_SPECIES)
-        else:
-            raise SBMLException('The only rules currently supported '
-                                'for species are assignment and rate '
-                                'rules!')
-
-    def _process_species_rate_rule_compartments(self,
-                                                rule: sbml.Rule,
-                                                variable: sp.Symbol,
-                                                formula: sp.Expr):
-        if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-            # Handled in _process_rules and _process_observables
-            # SBML Assignment Rules can be used to specify initial
-            # values (see SBML L3V2 manual, Section 3.4.8).
-            # has higher priority than InitialAssignment.
-            self.compartment_volume[list(
-                self.compartment_symbols
-            ).index(variable)] = formula
-        elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
-            self.add_d_dt(
-                formula,
-                variable,
-                self.compartment_volume[list(
+            elif variable in compartmentvars:
+                initial_value = self.compartment_volume[list(
                     self.compartment_symbols
-                ).index(variable)],
-                sbml.SBML_COMPARTMENT)
-        else:
-            raise SBMLException('The only rules currently supported '
-                                'for compartments are assignment and '
-                                'rate rules!')
+                ).index(variable)]
+                component_type = sbml.SBML_COMPARTMENT
+            else:
+                raise ValueError('Rate rules are only supported for '
+                                 'compartments and species')
+
+            self.add_d_dt(formula, variable, initial_value, component_type)
 
     def add_d_dt(
             self,
@@ -740,7 +696,6 @@ class SbmlImporter:
                                         f'{type(sym_math)}.')
                 else:
                     d_dt = d_dt.subs(symbol, sym_math)
-        ###
 
         if component_type == sbml.SBML_COMPARTMENT:
             self.symbols['species']['identifier'] = \
@@ -954,27 +909,29 @@ class SbmlImporter:
                 self.stoichiometric_matrix = \
                     self.stoichiometric_matrix.subs(variable, formula)
 
-            if variable in specvars:
+            elif variable in specvars:
                 if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
                     self.species_assignment_rules[variable] = formula
                     assignments[str(variable)] = formula
-                else:
-                    # Rate rules are handled in _process_species, and are
-                    # skipped in this loop
-                    raise KeyError('Only assignment and rate rules are '
-                                   'currently supported for species!')
+                    break
 
-            if variable in compartmentvars:
+                # Rate rules are handled in _process_species, and are
+                # skipped in this loop
+                raise KeyError('Only assignment and rate rules are '
+                               'currently supported for species!')
+
+            elif variable in compartmentvars:
                 if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
                     self.compartment_assignment_rules[variable] = formula
                     assignments[str(variable)] = formula
-                else:
-                    # Rate rules are handled in _process_species, and are
-                    # skipped in this loop
-                    raise KeyError('Only assignment and rate rules are '
-                                   'currently supported for compartments!')
+                    break
 
-            if variable in parametervars:
+                # Rate rules are handled in _process_species, and are
+                # skipped in this loop
+                raise KeyError('Only assignment and rate rules are '
+                               'currently supported for compartments!')
+
+            elif variable in parametervars:
                 if str(variable) in self.parameter_index:
                     idx = self.parameter_index[str(variable)]
                     self.symbols['parameter']['value'][idx] \
@@ -983,14 +940,14 @@ class SbmlImporter:
                     self.sbml.removeParameter(str(variable))
                     assignments[str(variable)] = formula
 
-            if variable in fluxvars:
+            elif variable in fluxvars:
                 self.flux_vector = self.flux_vector.subs(variable, formula)
 
-            if variable in volumevars:
+            elif variable in volumevars:
                 self.compartment_volume = \
                     self.compartment_volume.subs(variable, formula)
 
-            if variable in rulevars:
+            elif variable in rulevars:
                 for nested_rule in rules:
 
                     nested_formula = self._sympy_from_sbml_math(nested_rule)
@@ -1332,67 +1289,57 @@ class SbmlImporter:
             perform replacement in case ``old`` is a target of a rate rule
         """
         # Avoid replacing variables with rates
-        if include_rate_rule_targets \
-                or old not in {*self.compartment_rate_rules,
-                               *self.species_rate_rules}:
+        if include_rate_rule_targets or old not in \
+                {*self.compartment_rate_rules, *self.species_rate_rules}:
             for rule_dict in (self.compartment_rate_rules,
                               self.species_rate_rules):
                 if old in rule_dict.keys():
                     rule_dict[new] = rule_dict[old].subs(old, new)
                     del rule_dict[old]
 
-            fields = [
-                'stoichiometric_matrix', 'flux_vector',
-            ]
-            for field in fields:
-                if field in dir(self):
-                    self.__setattr__(field, self.__getattribute__(field).subs(
-                        old, new
-                    ))
-            for compartment in self.compartment_rate_rules:
-                self.compartment_rate_rules[compartment] = \
-                    self.compartment_rate_rules[compartment].subs(old, new)
-            for species in self.species_rate_rules:
-                self.species_rate_rules[species] = \
-                    self.species_rate_rules[species].subs(old, new)
-
-        symbols = [
-            'species', 'observable',
+        fields = [
+            'stoichiometric_matrix', 'flux_vector',
         ]
-        for symbol in symbols:
-            if symbol in self.symbols:
-                # Initial species values that are specified as amounts need to
-                # be divided by their compartment volume to obtain
-                # concentration. The condition below ensures that species
-                # initial amount is divided by the initial compartment size,
-                # and not the expression for a compartment assignment rule.
-                if symbol == 'species' and (
-                        old in self.compartment_assignment_rules):
-                    comp_v0 = self.compartment_volume[
-                        list(self.compartment_symbols).index(old)]
-                    self.symbols[symbol]['value'] = \
-                        self.symbols[symbol]['value'].subs(old, comp_v0)
-                else:
-                    # self.symbols['observable'] may not yet be defined.
-                    if not self.symbols[symbol]:
-                        continue
-                    self.symbols[symbol]['value'] = \
-                        self.symbols[symbol]['value'].subs(old, new)
+        for field in fields:
+            if field in dir(self):
+                self.__setattr__(field, self.__getattribute__(field).subs(
+                    old, new
+                ))
 
-        for compartment in self.compartment_assignment_rules:
-            self.compartment_assignment_rules[compartment] = \
-                self.compartment_assignment_rules[compartment].subs(old, new)
+        dictfields = [
+            'compartment_rate_rules', 'species_rate_rules',
+            'compartment_assignment_rules'
+        ]
+        for dictfield in dictfields:
+            d = getattr(self, dictfield)
+            for k in d:
+                d[k] = d[k].subs(old, new)
+
+        for symbol in ['species', 'observable']:
+            if not self.symbols.get(symbol, None):
+                continue
+            # Initial species values that are specified as amounts need to
+            # be divided by their compartment volume to obtain
+            # concentration. The condition below ensures that species
+            # initial amount is divided by the initial compartment size,
+            # and not the expression for a compartment assignment rule.
+            subs = self.compartment_volume[
+                    list(self.compartment_symbols).index(old)
+            ] if (
+                symbol == 'species' and
+                old in self.compartment_assignment_rules
+            ) else new
+
+            self.symbols[symbol]['value'] = \
+                self.symbols[symbol]['value'].subs(old, subs)
+
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
+        subs = 0 if getattr(self, 'amici_time_symbol', sp.nan) == new else new
         for index in range(len(self.compartment_volume)):
-            if 'amici_time_symbol' in dir(self) and (
-                    new == self.amici_time_symbol):
-                self.compartment_volume[index] = \
-                    self.compartment_volume[index].subs(old, 0)
-            else:
-                self.compartment_volume[index] = \
-                    self.compartment_volume[index].subs(old, new)
+            self.compartment_volume[index] = \
+                self.compartment_volume[index].subs(old, subs)
 
     def _clean_reserved_symbols(self) -> None:
         """
@@ -2075,7 +2022,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
 
-    # _print_Float can be removed if sympy PR #19958 is merged
+    # _print_Float can be removed when sympy 1.6.3 is released
     def _print_Float(self, expr):
         x = self.dom.createElement(self.mathml_tag(expr))
         repr_expr = mlib_to_str(expr._mpf_, repr_dps(expr._prec))

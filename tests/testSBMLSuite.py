@@ -74,7 +74,7 @@ def test_sbml_testsuite_case(test_number, result_path):
 
         # verify
         simulated_x, x_ids = verify_results(settings, rdata, results, wrapper,
-                                     model, atol, rtol)
+                                            model, atol, rtol)
 
         print(f'TestCase {test_id} passed.')
 
@@ -99,32 +99,36 @@ def verify_results(settings, rdata, results, wrapper,
         # Also assumes that observable "species" have the same index in both
         # the 'x' and 'y' keys of rdata.
         if x_id in [str(s) for s in wrapper.species_assignment_rules]:
-            simulated_x[:,x_index] = rdata['y'][:,x_index]
+            simulated_x[:, x_index] = rdata['y'][:, x_index]
 
-    x_ids = [x_id
-            for x_id in wrapper.species_index
-            if x_id in variables_species]
-    x_ids_results_columns = [variables_species.index(x_id)
-            for x_id in x_ids]
+    x_ids = [x_id for x_id in wrapper.species_index
+             if x_id in variables_species]
+    x_ids_results_columns = [variables_species.index(x_id) for x_id in x_ids]
 
     expected_x = results[1:, [1+c for c in x_ids_results_columns]]
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
-    requested_concentrations = [s
-            for s in settings['concentration'].replace(
-                ' ', '').replace('\n', '').split(',') if s]
+    requested_concentrations = [
+        s for s in
+        settings['concentration'].replace(' ', '').replace('\n', '').split(',')
+        if s
+    ]
     # The rate rules condition here may be unnecessary/better implemented
     # elsewhere.
-    concentration_species = [species for species in requested_concentrations
-            if wrapper.species_has_only_substance_units[
-                wrapper.species_index[species]]
-            and species in [str(s) for s in wrapper.species_rate_rules]]
+    concentration_species = [
+        species for species in requested_concentrations
+        if wrapper.species_has_only_substance_units[
+               wrapper.species_index[species]
+        ] and species in [str(s) for s in wrapper.species_rate_rules]
+    ]
     amounts_to_concentrations(concentration_species, wrapper, model,
-            simulated_x, rdata['y'], requested_concentrations)
+                              simulated_x, rdata['y'],
+                              requested_concentrations)
 
     concentrations_to_amounts(amount_species, wrapper, model,
-            simulated_x, rdata['y'], requested_concentrations)
+                              simulated_x, rdata['y'],
+                              requested_concentrations)
 
     # Add observables to the verification. This includes compartments with
     # assignment rules, as they are implemented as observables.
