@@ -432,7 +432,7 @@ class SbmlImporter:
         for c in list(self.sbml.getListOfSpecies()) + \
                 list(self.sbml.getListOfParameters()) + \
                 list(self.sbml.getListOfCompartments()):
-            self.local_symbols[c.getId()] = sp.Symbol(c.getId(), real=True)
+            self.local_symbols[c.getId()] = _get_identifier_symbol(c)
 
         for r in self.sbml.getListOfRules():
             self.local_symbols[r.getVariable()] = sp.Symbol(r.getVariable(),
@@ -450,7 +450,7 @@ class SbmlImporter:
         """
         compartments = self.sbml.getListOfCompartments()
         self.compartment_symbols = sp.Matrix(
-            [sp.Symbol(comp.getId(), real=True) for comp in compartments]
+            [_get_identifier_symbol(comp) for comp in compartments]
         )
 
         # Initial volumes may be overridden at the end of _process_species,
@@ -483,7 +483,7 @@ class SbmlImporter:
         }
 
         self.symbols['species']['identifier'] = sp.Matrix(
-            [sp.Symbol(spec.getId(), real=True) for spec in species]
+            [_get_identifier_symbol(spec) for spec in species]
         )
 
         self.symbols['species']['name'] = [
@@ -549,6 +549,7 @@ class SbmlImporter:
 
             species_initial[index] = sym_math
 
+        # default everything that wasn't set by rules to zero
         for ix, (symbol, init) in enumerate(zip(
                 self.symbols['species']['identifier'], species_initial
         )):
@@ -819,7 +820,7 @@ class SbmlImporter:
 
         for partype, settings in loop_settings.items():
             self.symbols[partype]['identifier'] = sp.Matrix(
-                [sp.Symbol(par.getId(), real=True) for par in settings['var']]
+                [_get_identifier_symbol(par) for par in settings['var']]
             )
             self.symbols[partype]['name'] = [
                 par.getName() if par.isSetName() else par.getId()
@@ -929,7 +930,7 @@ class SbmlImporter:
         volumevars = self.compartment_volume.free_symbols
         compartmentvars = self.compartment_symbols.free_symbols
         parametervars = sp.Matrix([
-            sp.Symbol(par.getId(), real=True)
+            _get_identifier_symbol(par)
             for par in self.sbml.getListOfParameters()
         ])
         stoichvars = self.stoichiometric_matrix.free_symbols
@@ -1557,7 +1558,7 @@ class SbmlImporter:
                 if sym is None:
                     sym = sp.sympify(ele.getStoichiometry())
             elif ele.getId() in rulevars:
-                return sp.Symbol(ele.getId(), real=True)
+                return _get_identifier_symbol(ele)
             else:
                 # dont put the symbol if it wont get replaced by a
                 # rule
@@ -1984,7 +1985,7 @@ def _add_conservation_for_constant_species(
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
             target_state = ode_model._states[ix].get_id()
-            total_abundance = sp.Symbol(f'tcl_{target_state}')
+            total_abundance = sp.Symbol(f'tcl_{target_state}', real=True)
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
@@ -2011,6 +2012,20 @@ def _get_species_compartment_symbol(species: sbml.Species) -> sp.Symbol:
     return sp.Symbol(species.getCompartment(), real=True)
 
 
+def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
+    """
+    Generate identifier symbol for a sbml variable.
+    This function will always return the same unique python object for a
+    given species name.
+
+    :param var:
+        sbml variable
+    :return:
+        identifier symbol
+    """
+    return sp.Symbol(var.getId(), real=True)
+
+
 def _get_species_initial(species: sbml.Species) -> sp.Expr:
     """
     Extract the initial concentration from a given species
@@ -2024,7 +2039,7 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     amount = species.getInitialAmount()
 
     # default (allows override from rules)
-    initial = species.getId()
+    initial = _get_identifier_symbol(species)
 
     # defined concentration
     conc_conc = sp.sympify(species.getInitialConcentration())
