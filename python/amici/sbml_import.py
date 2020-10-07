@@ -44,7 +44,7 @@ default_symbols = {
     'llhy': {},
 }
 
-ConservationLaw = Dict[str, Union[str, sp.Basic]]
+ConservationLaw = Dict[str, Union[str, sp.Expr]]
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -523,7 +523,7 @@ class SbmlImporter:
              for specie in species
         ])
 
-        self._process_species_compartment_rules()
+        self._process_species_rate_rules()
 
     def _process_species_initial(self):
         """
@@ -587,7 +587,7 @@ class SbmlImporter:
 
         self.symbols['species']['value'] = species_initial
 
-    def _process_species_compartment_rules(self):
+    def _process_species_rate_rules(self):
         """
         Process assignment and rate rules for species and compartments.
         Compartments with rate rules are implemented as species. Species and
@@ -608,48 +608,72 @@ class SbmlImporter:
                                   locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
             formula = self._replace_reactions_in_rule_formula(rule, formula)
-            ###
 
             # Species rules are processed first, to avoid processing
             # compartments twice (as compartments with rate rules are
             # implemented as species). Could also be avoided with a
             # `not in self.compartment_rate_rules` condition.
             if variable in self.symbols['species']['identifier']:
-                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                    # Handled in _process_rules and _process_observables.
-                    pass
-                elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
-                    self.add_d_dt(
-                        formula,
-                        variable,
-                        self.symbols['species']['value'],
-                        sbml.SBML_SPECIES)
-                else:
-                    raise SBMLException('The only rules currently supported '
-                                        'for species are assignment and rate '
-                                        'rules!')
+                self._process_species_rate_rule_species(
+                    rule, variable, formula
+                )
 
             if variable in compartmentvars:
-                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                    # Handled in _process_rules and _process_observables
-                    # SBML Assignment Rules can be used to specify initial
-                    # values (see SBML L3V2 manual, Section 3.4.8).
-                    # Priority appears to be above InitialAssignment.
-                    self.compartment_volume[list(
-                        self.compartment_symbols
-                    ).index(variable)] = formula
-                elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
-                    self.add_d_dt(
-                        formula,
-                        variable,
-                        self.compartment_volume[list(
-                            self.compartment_symbols
-                        ).index(variable)],
-                        sbml.SBML_COMPARTMENT)
-                else:
-                    raise SBMLException('The only rules currently supported '
-                                        'for compartments are assignment and '
-                                        'rate rules!')
+                self._process_species_rate_rule_compartments(
+                    rule, variable, formula
+                )
+
+    def _process_species_rate_rule_species(self,
+                                           rule: sbml.Rule,
+                                           variable: sp.Symbol,
+                                           formula: sp.Expr):
+        """
+        Apply rate rules that apply to sbml species
+        :param rule:
+            rate rule
+        :param variable:
+            sbml species
+        :param formula:
+            assignment formula
+        """
+        if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            # Handled in _process_rules and _process_observables.
+            pass
+        elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
+            self.add_d_dt(
+                formula,
+                variable,
+                self.symbols['species']['value'],
+                sbml.SBML_SPECIES)
+        else:
+            raise SBMLException('The only rules currently supported '
+                                'for species are assignment and rate '
+                                'rules!')
+
+    def _process_species_rate_rule_compartments(self,
+                                                rule: sbml.Rule,
+                                                variable: sp.Symbol,
+                                                formula: sp.Expr):
+        if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            # Handled in _process_rules and _process_observables
+            # SBML Assignment Rules can be used to specify initial
+            # values (see SBML L3V2 manual, Section 3.4.8).
+            # has higher priority than InitialAssignment.
+            self.compartment_volume[list(
+                self.compartment_symbols
+            ).index(variable)] = formula
+        elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
+            self.add_d_dt(
+                formula,
+                variable,
+                self.compartment_volume[list(
+                    self.compartment_symbols
+                ).index(variable)],
+                sbml.SBML_COMPARTMENT)
+        else:
+            raise SBMLException('The only rules currently supported '
+                                'for compartments are assignment and '
+                                'rate rules!')
 
     def add_d_dt(
             self,
@@ -1105,7 +1129,7 @@ class SbmlImporter:
         assignments.update({str(s): str(r)
                             for s, r in self.species_assignment_rules.items()})
 
-        def replace_assignments(formula: str) -> sp.Basic:
+        def replace_assignments(formula: str) -> sp.Expr:
             """
             Replace assignment rules in observables
 
@@ -1428,7 +1452,7 @@ class SbmlImporter:
 
     def _replace_reactions_in_rule_formula(self,
                                            rule: sbml.Rule,
-                                           formula: sp.Basic):
+                                           formula: sp.Expr):
         """
         SBML allows reaction IDs in rules, which should be interpreted as the
         reaction rate.
@@ -1455,7 +1479,7 @@ class SbmlImporter:
                                      for s in formula.free_symbols
                                      if str(s) in reaction_ids}
         if reactions_in_rule_formula and rule.getTypeCode() not in \
-                (sbml.SBML_ASSIGNMENT_RULE,sbml.SBML_RATE_RULE):
+                (sbml.SBML_ASSIGNMENT_RULE, sbml.SBML_RATE_RULE):
             raise SBMLException('Currently, only assignment and rate'
                                 ' rules have reaction replacement'
                                 ' implemented.')
@@ -1471,7 +1495,7 @@ class SbmlImporter:
                 for r_sym in reactions_in_rule_formula}
         return formula.subs(subs)
 
-    def _sympy_from_sbml_math(self, var: sbml.SBase) -> sp.Basic:
+    def _sympy_from_sbml_math(self, var: sbml.SBase) -> sp.Expr:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
@@ -1497,7 +1521,7 @@ class SbmlImporter:
                                          expression_type=var.element_name)
         return formula
 
-    def _get_element_from_assignment(self, element_id: str) -> sp.Basic:
+    def _get_element_from_assignment(self, element_id: str) -> sp.Expr:
         """
         Extract value of sbml variable according to its initial assignment
         :param element_id:
@@ -1533,7 +1557,7 @@ class SbmlImporter:
     def _get_element_stoichiometry(self,
                                    ele: sbml.SBase,
                                    assignment_ids: Sequence[str],
-                                   rulevars: Sequence[str]) -> sp.Basic:
+                                   rulevars: Sequence[str]) -> sp.Expr:
         """
         Computes the stoichiometry of a reactant or product of an reaction
         :param ele:
@@ -1633,9 +1657,9 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         )
 
 
-def _check_unsupported_functions(sym: sp.Basic,
+def _check_unsupported_functions(sym: sp.Expr,
                                  expression_type: str,
-                                 full_sym: sp.Basic = None):
+                                 full_sym: sp.Expr = None):
     """
     Recursively checks the symbolic expression for unsupported symbolic
     functions
@@ -1685,7 +1709,7 @@ def _check_unsupported_functions(sym: sp.Basic,
             _check_unsupported_functions(fun, expression_type)
 
 
-def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
+def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     """
     Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
