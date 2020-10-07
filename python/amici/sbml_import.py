@@ -879,10 +879,10 @@ class SbmlImporter:
                     ))
 
         for reaction_index, reaction in enumerate(reactions):
-            for elementList, sign in [(reaction.getListOfReactants(), -1.0),
+            for element_list, sign in [(reaction.getListOfReactants(), -1.0),
                                       (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
-                for index, element in enumerate(elementList):
+                for index, element in enumerate(element_list):
                     # we need the index here as we might have multiple elements
                     # for the same species
                     elements[index] = {'species': element.getSpecies()}
@@ -1221,10 +1221,10 @@ class SbmlImporter:
                 noise_distributions.get(y_name, 'normal')))
 
         llh_y_values = []
-        for llhYString, o_sym, m_sym, s_sym \
+        for llh_y_string, o_sym, m_sym, s_sym \
                 in zip(llh_y_strings, observable_syms,
                        measurement_y_syms, sigma_y_syms):
-            f = sp.sympify(llhYString(o_sym), locals={str(o_sym): o_sym,
+            f = sp.sympify(llh_y_string(o_sym), locals={str(o_sym): o_sym,
                                                       str(m_sym): m_sym,
                                                       str(s_sym): s_sym})
             llh_y_values.append(f)
@@ -1469,12 +1469,11 @@ class SbmlImporter:
         reactions_in_rule_formula = {s
                                      for s in formula.free_symbols
                                      if str(s) in reaction_ids}
-        if reactions_in_rule_formula:
-            if rule.getTypeCode() not in (sbml.SBML_ASSIGNMENT_RULE,
-                                          sbml.SBML_RATE_RULE):
-                raise SBMLException('Currently, only assignment and rate'
-                                    ' rules have reaction replacement'
-                                    ' implemented.')
+        if reactions_in_rule_formula and rule.getTypeCode() not in \
+                (sbml.SBML_ASSIGNMENT_RULE,sbml.SBML_RATE_RULE):
+            raise SBMLException('Currently, only assignment and rate'
+                                ' rules have reaction replacement'
+                                ' implemented.')
 
         # Reactions are assigned indices in
         # `sbml_import.py:_process_reactions()`, and these indices are used to
@@ -1638,8 +1637,8 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
     num_fatal = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
 
     if num_warning + num_error + num_fatal:
-        for iError in range(0, sbml_doc.getNumErrors()):
-            error = sbml_doc.getError(iError)
+        for i_error in range(0, sbml_doc.getNumErrors()):
+            error = sbml_doc.getError(i_error)
             # we ignore any info messages for now
             if error.getSeverity() >= sbml.LIBSBML_SEV_ERROR \
                     or (show_warnings and
