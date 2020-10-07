@@ -467,7 +467,7 @@ class SbmlImporter:
                         initial_assignment.getId()
                     )
                 self.compartment_volume[index] = self._sympy_from_sbml_math(
-                    initial_assignment.getMath(), 'initialAssignment'
+                    initial_assignment
                 )
 
     @log_execution_time('processing SBML species', logger)
@@ -565,12 +565,8 @@ class SbmlImporter:
                 index = species_ids.index(
                     initial_assignment.getId()
                 )
-                sym_math = self._sympy_from_sbml_math(
-                    initial_assignment.getMath(), 'initialAssignment'
-                )
+                sym_math = self._sympy_from_sbml_math(initial_assignment)
                 if sym_math is not None:
-                    sym_math = _parse_special_functions(sym_math)
-                    _check_unsupported_functions(sym_math, 'InitialAssignment')
                     species_initial[index] = sym_math
 
         for ix, (symbol, init) in enumerate(zip(
@@ -610,9 +606,7 @@ class SbmlImporter:
                 continue
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
-            formula = self._sympy_from_sbml_math(
-                rule.getMath(), 'Rule'
-            )
+            formula = self._sympy_from_sbml_math(rule)
             formula = self._replace_reactions_in_rule_formula(rule, formula)
             ###
 
@@ -723,8 +717,7 @@ class SbmlImporter:
                str(symbol) in initial_assignments:
                 # Taken from _process_species
                 sym_math = self._sympy_from_sbml_math(
-                    initial_assignments[str(symbol)].getMath(),
-                    'initialAssignment'
+                    initial_assignments[str(symbol)]
                 )
                 if sym_math is not None:
                     sym_math = _parse_special_functions(sym_math)
@@ -906,9 +899,7 @@ class SbmlImporter:
                             * elements[index]['stoichiometry'] \
                             * self.species_conversion_factor[specie_index]
 
-            sym_math = self._sympy_from_sbml_math(
-                reaction.getKineticLaw(), 'KineticLaw'
-            )
+            sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
             sym_math = sym_math.subs(math_subs)
 
             self.flux_vector[reaction_index] = sym_math
@@ -951,9 +942,7 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             # avoid incorrect parsing of pow(x, -1) in symengine
-            formula = self._sympy_from_sbml_math(
-                rule.getMath(), 'Rule'
-            )
+            formula = self._sympy_from_sbml_math(rule)
             formula = self._replace_reactions_in_rule_formula(rule, formula)
 
             if variable in stoichvars:
@@ -999,9 +988,7 @@ class SbmlImporter:
             if variable in rulevars:
                 for nested_rule in rules:
 
-                    nested_formula = self._sympy_from_sbml_math(
-                        nested_rule.getMath(), 'Rule'
-                    )
+                    nested_formula = self._sympy_from_sbml_math(nested_rule)
 
                     nested_rule_math_ml = mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(
@@ -1132,9 +1119,7 @@ class SbmlImporter:
             for s in formula.free_symbols:
                 r = self.sbml.getAssignmentRuleByVariable(str(s))
                 if r is not None:
-                    rule_formula = self._sympy_from_sbml_math(
-                        r.getMath(), 'Rule'
-                    )
+                    rule_formula = self._sympy_from_sbml_math(r)
                     formula = formula.replace(s, rule_formula)
             return formula
 
@@ -1486,33 +1471,30 @@ class SbmlImporter:
                 for r_sym in reactions_in_rule_formula}
         return formula.subs(subs)
 
-    def _sympy_from_sbml_math(self, sbml_math: sbml.ASTNode,
-                              expression_type: str) -> sp.Basic:
+    def _sympy_from_sbml_math(self, var: sbml.SBase) -> sp.Basic:
         """
-        Sympify libsbml math ASTNodes with all sanity checks and
+        Sympify Math of SBML variables with all sanity checks and
         transformations
 
-        :param sbml_math:
-            sbml math object returned from a getMath() function
-        :param expression_type:
-            type of expression, only used when throwing errors
+        :param var:
+            SBML variable that has a getMath() function
         :return:
             sympfified symbolic expression
         """
 
-        math_string = sbml.formulaToL3String(sbml_math)
+        math_string = sbml.formulaToL3String(var.getMath())
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
             ), locals=self.local_symbols)
         except sp.SympifyError:
-            raise SBMLException(f'Expression "{math_string}" contains an '
-                                'unsupported expression!')
+            raise SBMLException(f'{var.element_name} "{math_string}" '
+                                f'contains an unsupported expression!')
 
         if formula is not None:
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula,
-                                         expression_type=expression_type)
+                                         expression_type=var.element_name)
         return formula
 
     def _get_element_from_assignment(self, element_id: str) -> sp.Basic:
@@ -1526,9 +1508,7 @@ class SbmlImporter:
         assignment = self.sbml.getInitialAssignment(
             element_id
         )
-        sym = self._sympy_from_sbml_math(
-            assignment.getMath(), 'initialAssignment'
-        )
+        sym = self._sympy_from_sbml_math(assignment)
         # this is an initial assignment so we need to use
         # initial conditions
         if sym is not None:
