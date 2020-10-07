@@ -2013,7 +2013,7 @@ def _get_species_compartment_symbol(species: sbml.Species) -> sp.Symbol:
 
 def _get_species_initial(species: sbml.Species) -> sp.Expr:
     """
-    Extract the initial concentration froma given species
+    Extract the initial concentration from a given species
 
     :param species:
         species index
@@ -2022,17 +2022,30 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
         initial species amount
     """
     amount = species.getInitialAmount()
-    conc = species.getInitialConcentration()
-    species_id = species.getId()
-    # We always simulate concentrations!
 
-    if species.isSetInitialConcentration():
-        return sp.sympify(conc)
+    # default (allows override from rules)
+    initial = species.getId()
 
-    if species.isSetInitialAmount() and not math.isnan(amount):
-        return sp.sympify(amount) / _get_species_compartment_symbol(species)
+    # defined concentration
+    conc_conc = sp.sympify(species.getInitialConcentration())
+    # computed concentration
+    conc_amount = sp.sympify(amount) / _get_species_compartment_symbol(species)
 
-    return species_id
+    if species.getHasOnlySubstanceUnits():
+        if species.isSetInitialAmount() and not math.isnan(amount):
+            initial = conc_amount
+
+        if species.isSetInitialConcentration():
+            initial = conc_conc
+
+    else:
+        if species.isSetInitialConcentration():
+            initial = conc_conc
+
+        if species.isSetInitialAmount() and not math.isnan(amount):
+            initial = conc_amount
+
+    return initial
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
