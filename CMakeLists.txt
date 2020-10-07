@@ -41,8 +41,13 @@ endforeach(FLAG)
 
 # find dependencies
 include(GNUInstallDirs)
-find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
-set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+
+option(ENABLE_HDF5 "Build with HDF5 support?" ON)
+if(ENABLE_HDF5)
+    find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
+    set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+endif()
+
 set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse/")
 set(SUITESPARSE_INCLUDE_DIRS "${SUITESPARSE_DIR}/include" "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
 set(SUITESPARSE_LIBRARIES
@@ -122,7 +127,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/rdata.cpp
     ${CMAKE_SOURCE_DIR}/src/edata.cpp
     ${CMAKE_SOURCE_DIR}/src/exception.cpp
-    ${CMAKE_SOURCE_DIR}/src/hdf5.cpp
+
     ${CMAKE_SOURCE_DIR}/src/spline.cpp
     ${CMAKE_SOURCE_DIR}/src/solver.cpp
     ${CMAKE_SOURCE_DIR}/src/solver_cvodes.cpp
@@ -139,6 +144,9 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     ${CMAKE_SOURCE_DIR}/src/vector.cpp
     )
+if(ENABLE_HDF5)
+    list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
+endif()
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 add_dependencies(${PROJECT_NAME} version)
@@ -255,7 +263,12 @@ endif()
 
 option(BUILD_TESTS "Build integration tests?" ON)
 if(BUILD_TESTS)
-    enable_testing()
+    if(ENABLE_HDF5)
+        enable_testing()
 
-    add_subdirectory(tests/cpputest)
+        add_subdirectory(tests/cpputest)
+    else()
+        message(WARNING "Cannot build tests with ENABLE_HDF5=OFF.")
+    endif()
+
 endif()
