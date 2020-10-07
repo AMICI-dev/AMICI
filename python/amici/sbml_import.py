@@ -492,7 +492,7 @@ class SbmlImporter:
         ]
 
         self.species_compartment = sp.Matrix(
-            [sp.Symbol(spec.getCompartment(), real=True) for spec in species]
+            [_get_species_compartment_symbol(spec) for spec in species]
         )
 
         self.constant_species = [species_element.getId()
@@ -529,35 +529,10 @@ class SbmlImporter:
         """
         Extract initial values and initial assignments from species
         """
-        species = self.sbml.getListOfSpecies()
-
-        concentrations = [spec.getInitialConcentration() for spec in species]
-        amounts = [spec.getInitialAmount() for spec in species]
-
-        def get_species_initial(index, conc):
-            # We always simulate concentrations!
-            if self.species_has_only_substance_units[index]:
-                if species[index].isSetInitialAmount() \
-                        and not math.isnan(amounts[index]):
-                    return sp.sympify(amounts[index]) \
-                           / self.species_compartment[index]
-                if species[index].isSetInitialConcentration():
-                    return sp.sympify(conc)
-            else:
-                if species[index].isSetInitialConcentration():
-                    return sp.sympify(conc)
-
-                if species[index].isSetInitialAmount() \
-                        and not math.isnan(amounts[index]):
-                    return sp.sympify(amounts[index]) \
-                           / self.species_compartment[index]
-
-            return self.symbols['species']['identifier'][index]
-
-        species_initial = sp.Matrix(
-            [get_species_initial(index, conc)
-             for index, conc in enumerate(concentrations)]
-        )
+        species_initial = sp.Matrix([
+            _get_species_initial(specie)
+            for specie in self.sbml.getListOfSpecies()
+        ])
 
         species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
         for initial_assignment in self.sbml.getListOfInitialAssignments():
@@ -2015,6 +1990,44 @@ def _add_conservation_for_constant_species(
             species_solver.pop(ix)
 
     return species_solver
+
+
+def _get_species_compartment_symbol(species: sbml.Species) -> sp.Symbol:
+    """
+    Generate compartment symbol for the compartment of a specific species.
+    This function will always return the same unique python object for a
+    given species name.
+
+    :param species:
+        sbml species
+    :return:
+        compartment symbol
+    """
+    return sp.Symbol(species.getCompartment(), real=True)
+
+
+def _get_species_initial(species: sbml.Species) -> sp.Expr:
+    """
+    Extract the initial concentration froma given species
+
+    :param species:
+        species index
+
+    :return:
+        initial species amount
+    """
+    amount = species.getInitialAmount()
+    conc = species.getInitialConcentration()
+    species_id = species.getId()
+    # We always simulate concentrations!
+
+    if species.isSetInitialConcentration():
+        return sp.sympify(conc)
+
+    if species.isSetInitialAmount() and not math.isnan(amount):
+        return sp.sympify(amount) / _get_species_compartment_symbol(species)
+
+    return species_id
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
