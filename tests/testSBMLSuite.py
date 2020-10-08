@@ -118,9 +118,10 @@ def verify_results(settings, rdata, expected, wrapper,
     concentrations_to_amounts(amount_species, wrapper, model,
                               simulated, requested_concentrations)
     for variable in variables:
-        assert np.isclose(simulated[variable],
-                          expected[variable],
-                          atol, rtol).all()
+        assert np.isclose(
+            simulated[variable].astype(expected[variable].dtype).values,
+            expected[variable].values, atol, rtol
+        ).all()
 
     return simulated[variables + ['time']]
 
