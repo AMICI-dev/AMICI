@@ -1312,18 +1312,8 @@ class SbmlImporter:
         for symbol in ['species', 'observable']:
             if not self.symbols.get(symbol, None):
                 continue
-            # Initial species values that are specified as amounts need to
-            # be divided by their compartment volume to obtain
-            # concentration. The condition below ensures that species
-            # initial amount is divided by the initial compartment size,
-            # and not the expression for a compartment assignment rule.
-            subs = self.compartment_volume[
-                    list(self.compartment_symbols).index(old)
-            ] if old in self.compartment_assignment_rules \
-                and symbol == 'species' else new
-
             self.symbols[symbol]['value'] = \
-                self.symbols[symbol]['value'].subs(old, subs)
+                self.symbols[symbol]['value'].subs(old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
