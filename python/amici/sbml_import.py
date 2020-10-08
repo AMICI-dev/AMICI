@@ -1257,6 +1257,11 @@ class SbmlImporter:
         """
         for comp, vol in zip(self.compartment_symbols,
                              self.compartment_volume):
+            if comp in self.compartment_rate_rules:
+                # for comps with rate rules volume is only initial
+                self.symbols['species']['value'] = \
+                    self.symbols['species']['value'].subs(comp, vol)
+                continue
             self._replace_in_all_expressions(
                 comp, vol
             )
