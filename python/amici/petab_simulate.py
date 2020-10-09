@@ -66,7 +66,7 @@ class PetabSimulator(Simulator):
         )
 
         # TODO use `rdatas_to_simulation_df` instead?
-        simulation_df = rdatas_to_measurement_df(
+        measurement_df = rdatas_to_measurement_df(
             result['rdatas'],
             self.amici_model,
             self.petab_problem.measurement_df,
