@@ -15,7 +15,7 @@ class PetabSimulator(Simulator):
             **kwargs
     ):
         """
-        See `petab.simulate.Simulator.simulate()` docstring.
+        See :py:func:`petab.simulate.Simulator.simulate()` docstring.
 
         :param amici_model:
             AMICI Model assumed to be compatible with ``petab_problem``.
