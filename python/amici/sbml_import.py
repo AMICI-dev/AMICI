@@ -1126,7 +1126,7 @@ class SbmlImporter:
             observable_names = [
                 str(sym) for sym in observable_values
             ]
-            observable_syms = sp.Mat567rix(
+            observable_syms = sp.Matrix(
                 [sp.symbols(f'y{index}', real=True)
                  for index in range(len(species_syms))]
             )
@@ -1135,13 +1135,14 @@ class SbmlImporter:
             # used to calculate species amounts).
             # The id's and names below may conflict with the automatically
             # generated id's and names above.
-            for variable, formula in {
+            for variable, formula in (
                 *self.parameter_assignment_rules.items(),
                 *self.compartment_assignment_rules.items(),
                 *dict(zip(self.compartment_symbols,
                           self.compartment_volume)).items()
-            }:
-                if variable in self.compartment_rate_rules:
+            ):
+                if variable in self.compartment_rate_rules or\
+                        str(variable) in observable_ids:
                     continue
                 observable_values = observable_values.col_join(sp.Matrix(
                     [formula]))
