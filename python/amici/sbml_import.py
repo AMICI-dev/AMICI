@@ -80,10 +80,10 @@ class SbmlImporter:
     :ivar species_index:
         maps species names to indices
 
-    :ivar parameters_index:
+    :ivar parameter_index:
         maps species names to indices
 
-    :ivar fixed_parameters_index:
+    :ivar fixed_parameter_index:
         maps species names to indices
 
     :ivar species_compartment: :py:class:`sympy.Matrix`
@@ -117,6 +117,15 @@ class SbmlImporter:
     :ivar local_symbols:
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
+
+    :ivar species_assignment_rules:
+        assignment rules for species
+
+    :ivar compartment_assignment_rules:
+        assignment rules for compartments
+
+    :ivar parameter_assignment_rules:
+        assignment rules for parameters
 
     """
 
@@ -164,6 +173,7 @@ class SbmlImporter:
         self.species_rate_rules: Dict = {}
         self.compartment_assignment_rules: Dict = {}
         self.species_assignment_rules: Dict = {}
+        self.parameter_assignment_rules: Dict = {}
 
         self.species_index: Dict[str, int] = {}
         self.parameter_index: Dict[str, int] = {}
@@ -924,6 +934,15 @@ class SbmlImporter:
                         = float(formula)
                 else:
                     self.sbml.removeParameter(str(variable))
+                    for var in formula.free_symbols:
+                        if str(var) in self.species_index:
+                            sindex = self.species_index[str(var)]
+                            if self.species_has_only_substance_units[sindex]:
+                                formula = formula.subs(
+                                    var, var*self.species_compartment[sindex]
+                                )
+
+                    self.parameter_assignment_rules[variable] = formula
                     assignments[str(variable)] = formula
 
             elif variable in fluxvars:
@@ -1116,13 +1135,17 @@ class SbmlImporter:
             # used to calculate species amounts).
             # The id's and names below may conflict with the automatically
             # generated id's and names above.
-            for compartment in self.compartment_assignment_rules:
+            for variable, formula in [
+                *self.parameter_assignment_rules.items(),
+                *self.compartment_assignment_rules.items()
+            ]:
                 observable_values = observable_values.col_join(sp.Matrix(
-                    [self.compartment_assignment_rules[compartment]]))
-                observable_ids.append(str(compartment))
-                observable_names.append(str(compartment))
+                    [formula]))
+                observable_ids.append(str(variable))
+                observable_names.append(str(variable))
                 observable_syms = observable_syms.col_join(sp.Matrix(
-                    [compartment]))
+                    [variable]))
+
             for species in self.species_assignment_rules:
                 x_index = self.species_index[str(species)]
                 observable_values[x_index] = replace_assignments(str(species))

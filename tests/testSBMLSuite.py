@@ -20,10 +20,6 @@ import numpy as np
 import sympy as sp
 import pandas as pd
 
-import libsbml
-
-from typing import List
-
 
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -99,6 +95,13 @@ def verify_results(settings, rdata, expected, wrapper,
     simulated['time'] = rdata['ts']
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
+    for comp in wrapper.compartment_symbols:
+        if comp not in wrapper.compartment_rate_rules:
+            simulated[str(comp)] = rdata['ts'] * 0 + float(next(
+                v for c, v in zip(wrapper.compartment_symbols,
+                                  wrapper.compartment_volume)
+                if c == comp
+            ))
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
@@ -121,10 +124,12 @@ def verify_results(settings, rdata, expected, wrapper,
     concentrations_to_amounts(amount_species, wrapper, model,
                               simulated, requested_concentrations)
     for variable in variables:
+        # some values in expected will be int64, so we cast everything as float
+        # to avoid errors from downcasting float64 to int64
         assert np.isclose(
-            simulated[variable].astype(expected[variable].dtype).values,
-            expected[variable].values, atol, rtol
-        ).all()
+            simulated[variable].astype(np.float64).values,
+            expected[variable].astype(np.float64).values, atol, rtol
+        ).all(), variable
 
     return simulated[variables + ['time']]
 
@@ -256,8 +261,8 @@ def apply_settings(settings, solver, model):
 
     model.setTimepoints(ts)
     solver.setMaxSteps(int(1e6))
-    solver.setRelativeTolerance(rtol / 1000.0)
-    solver.setAbsoluteTolerance(atol / 1000.0)
+    solver.setRelativeTolerance(rtol / 1e4)
+    solver.setAbsoluteTolerance(atol / 1e4)
 
     return atol, rtol
 
