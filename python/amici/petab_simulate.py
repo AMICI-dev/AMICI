@@ -6,8 +6,10 @@ from petab.simulate import Simulator
 
 class PetabSimulator(Simulator):
     """
+    Implementation of the PEtab `Simulator` class that uses AMICI.
+
     amici_model:
-        Amici model instance.
+        AMICI model instance to be simulated.
     """
     def _simulate_without_noise(
             self,
@@ -31,7 +33,6 @@ class PetabSimulator(Simulator):
                 'force_compile',
             ]
             # TODO don't compute sensitivities
-            # TODO allow amici_model to be passed as argument
             self.amici_model = import_petab_problem(
                 self.petab_problem,
                 **{k: v
@@ -72,4 +73,4 @@ class PetabSimulator(Simulator):
             self.petab_problem.measurement_df,
         )
 
-        return simulation_df
+        return measurement_df
