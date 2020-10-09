@@ -45,6 +45,7 @@ Welcome to AMICI's documentation!
    :caption: Developer's guide
 
    development
+   implementation_events
 
 Indices and tables
 ==================
