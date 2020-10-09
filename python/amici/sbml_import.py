@@ -1126,7 +1126,7 @@ class SbmlImporter:
             observable_names = [
                 str(sym) for sym in observable_values
             ]
-            observable_syms = sp.Matrix(
+            observable_syms = sp.Mat567rix(
                 [sp.symbols(f'y{index}', real=True)
                  for index in range(len(species_syms))]
             )
@@ -1141,6 +1141,8 @@ class SbmlImporter:
                 *dict(zip(self.compartment_symbols,
                           self.compartment_volume)).items()
             }:
+                if variable in self.compartment_rate_rules:
+                    continue
                 observable_values = observable_values.col_join(sp.Matrix(
                     [formula]))
                 observable_ids.append(str(variable))
