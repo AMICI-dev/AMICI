@@ -62,6 +62,9 @@ def test_sbml_testsuite_case(test_number, result_path):
         results_file = os.path.join(current_test_path,
                                     test_id + '-results.csv')
         results = pd.read_csv(results_file, delimiter=',')
+        results.rename(columns={c: c.replace(' ', '')
+                                for c in results.columns},
+                       inplace=True)
 
         # setup model
         model, solver, wrapper = compile_model(current_test_path, test_id)
