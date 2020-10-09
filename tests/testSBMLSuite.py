@@ -95,13 +95,6 @@ def verify_results(settings, rdata, expected, wrapper,
     simulated['time'] = rdata['ts']
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
-    for comp in wrapper.compartment_symbols:
-        if str(comp) not in simulated:
-            simulated[str(comp)] = rdata['ts'] * 0 + float(next(
-                v for c, v in zip(wrapper.compartment_symbols,
-                                  wrapper.compartment_volume)
-                if c == comp
-            ))
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
@@ -121,8 +114,8 @@ def verify_results(settings, rdata, expected, wrapper,
     amounts_to_concentrations(concentration_species, wrapper, model,
                               simulated, requested_concentrations)
 
-    concentrations_to_amounts(amount_species, wrapper, model,
-                              simulated, requested_concentrations)
+    concentrations_to_amounts(amount_species, wrapper, simulated,
+                              requested_concentrations)
     for variable in variables:
         # some values in expected will be int64, so we cast everything as float
         # to avoid errors from downcasting float64 to int64
@@ -156,7 +149,7 @@ def amounts_to_concentrations(
     for species in amount_species:
         if not species == '':
             simulated.loc[:, species] = 1 / simulated.loc[:, species]
-            concentrations_to_amounts([species], wrapper, model, simulated,
+            concentrations_to_amounts([species], wrapper, simulated,
                                       requested_concentrations)
             simulated.loc[:, species] = 1 / simulated.loc[:, species]
 
@@ -164,57 +157,25 @@ def amounts_to_concentrations(
 def concentrations_to_amounts(
         amount_species,
         wrapper,
-        model,
         simulated,
         requested_concentrations
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
         # Skip "species" that are actually compartments
-        compartments = [str(c) for c in wrapper.compartment_symbols] + \
+        compartment_species = [str(c) for c in wrapper.compartment_symbols] + \
             list(set([
                 str(s) for s in wrapper.species_rate_rules
                 if wrapper.species_has_only_substance_units[
                     wrapper.species_index[str(s)]
                 ]
             ]).difference(requested_concentrations))
-        if not species == '' and species not in compartments:
+        if not species == '' and species not in compartment_species:
             symvolume = wrapper.species_compartment[
                 wrapper.species_index[species]
             ]
 
-            # Volumes are already reported for compartments with rate rules
-            if symvolume in {*wrapper.compartment_rate_rules,
-                             *wrapper.compartment_assignment_rules}:
-                simulated.loc[:, species] *= \
-                    simulated.loc[:, str(symvolume)]
-                continue
-
-            volume = symvolume.subs({
-                comp: vol
-                for comp, vol in zip(
-                    wrapper.compartment_symbols,
-                    wrapper.compartment_volume
-                )
-            })
-            volume = volume.subs({
-                sp.Symbol(name, real=True): value
-                for name, value in zip(
-                    model.getParameterIds(),
-                    model.getParameters()
-                )
-            })
-
-            # required for 525-527, 530 as k is renamed to amici_k
-            volume = volume.subs({
-                sp.Symbol(name, real=True): value
-                for name, value in zip(
-                    model.getParameterNames(),
-                    model.getParameters()
-                )
-            })
-
-            simulated.loc[:, species] *= volume
+            simulated.loc[:, species] *= simulated.loc[:, str(symvolume)]
 
 
 def write_result_file(simulated: pd.DataFrame,

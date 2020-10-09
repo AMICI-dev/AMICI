@@ -1135,10 +1135,12 @@ class SbmlImporter:
             # used to calculate species amounts).
             # The id's and names below may conflict with the automatically
             # generated id's and names above.
-            for variable, formula in [
+            for variable, formula in {
                 *self.parameter_assignment_rules.items(),
-                *self.compartment_assignment_rules.items()
-            ]:
+                *self.compartment_assignment_rules.items(),
+                *dict(zip(self.compartment_symbols,
+                          self.compartment_volume)).items()
+            }:
                 observable_values = observable_values.col_join(sp.Matrix(
                     [formula]))
                 observable_ids.append(str(variable))
