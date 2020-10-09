@@ -96,7 +96,7 @@ def verify_results(settings, rdata, expected, wrapper,
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
     for comp in wrapper.compartment_symbols:
-        if comp not in wrapper.compartment_rate_rules:
+        if str(comp) not in simulated:
             simulated[str(comp)] = rdata['ts'] * 0 + float(next(
                 v for c, v in zip(wrapper.compartment_symbols,
                                   wrapper.compartment_volume)
