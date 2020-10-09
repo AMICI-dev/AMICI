@@ -7,7 +7,7 @@ from petab.simulate import Simulator
 class PetabSimulator(Simulator):
     """
     amici_model:
-        Instance of an `amici.amici.ModelPtr` object (TODO confirm).
+        Amici model instance.
     """
     def _simulate_without_noise(
             self,
