@@ -96,6 +96,9 @@ def verify_results(settings, rdata, expected, wrapper,
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
 
+    simulated.rename(columns={c: c.replace('amici_', '')
+                              for c in simulated.columns}, inplace=True)
+
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
     requested_concentrations = [

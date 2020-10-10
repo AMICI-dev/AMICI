@@ -124,7 +124,12 @@ class SbmlImporter:
         assignment rules for compartments
 
     :ivar parameter_assignment_rules:
-        assignment rules for parameters
+        assignment rules for parameters, these parameters are not permissible
+        for sensitivity analysis
+
+    :ivar self.parameter_initial_assignments:
+        initial assignments for parameters, these parameters are not
+        permissible for sensitivity analysis
 
     """
 
@@ -168,11 +173,12 @@ class SbmlImporter:
         self.symbols: Dict = {}
 
         self.local_symbols: Dict = {}
-        self.compartment_rate_rules: Dict = {}
-        self.species_rate_rules: Dict = {}
-        self.compartment_assignment_rules: Dict = {}
-        self.species_assignment_rules: Dict = {}
-        self.parameter_assignment_rules: Dict = {}
+        self.compartment_rate_rules: Dict[sp.Symbol, sp.Expr] = {}
+        self.species_rate_rules: Dict[sp.Symbol, sp.Expr] = {}
+        self.compartment_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
+        self.species_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
+        self.parameter_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
+        self.parameter_initial_assignments: Dict[sp.Symbol, sp.Expr] = {}
 
         self.species_index: Dict[str, int] = {}
         self.parameter_index: Dict[str, int] = {}
@@ -528,7 +534,7 @@ class SbmlImporter:
             conversion_factor = 1.0
 
         self.species_conversion_factor = sp.Matrix([
-             sp.sympify(specie.getConversionFactor())
+             sp.Symbol(specie.getConversionFactor(), real=True)
              if specie.isSetConversionFactor()
              else conversion_factor
              for specie in species
@@ -1086,6 +1092,7 @@ class SbmlImporter:
             # definitions, so they need to be evaluated first
             for variable, formula in (
                 *self.parameter_assignment_rules.items(),
+                *self.parameter_initial_assignments.items(),
                 *self.compartment_assignment_rules.items(),
                 *dict(zip(self.compartment_symbols,
                           self.compartment_volume)).items()
@@ -1173,9 +1180,9 @@ class SbmlImporter:
 
             elif ia.getId() in parameter_ids:
                 sym_math = self._sympy_from_sbml_math(ia)
-                self._replace_in_all_expressions(
-                    sp.Symbol(ia.getId(), real=True), sym_math
-                )
+                identifier = sp.Symbol(ia.getId(), real=True)
+                self.parameter_initial_assignments[identifier] = sym_math
+                self._replace_in_all_expressions(identifier, sym_math)
 
             else:
                 sym_math = self._sympy_from_sbml_math(ia)
