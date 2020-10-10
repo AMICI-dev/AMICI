@@ -17,7 +17,7 @@ from typing import (
     Dict, Union, List, Callable, Any, Iterable, Optional, Sequence
 )
 
-from .ode_export import ODEExporter, ODEModel, get_measurement_symbol
+from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
@@ -40,7 +40,6 @@ default_symbols = {
     'observable': {},
     'expression': {},
     'sigmay': {},
-    'my': {},
     'llhy': {},
 }
 
@@ -384,6 +383,8 @@ class SbmlImporter:
         self._process_reactions()
         self._process_rules()
         self._process_volume_conversion()
+        self._process_initial_assignments()
+        self._process_species_references()
 
     def check_support(self) -> None:
         """
@@ -535,6 +536,7 @@ class SbmlImporter:
 
         self._process_species_rate_rules()
 
+    @log_execution_time('processing SBML species initials', logger)
     def _process_species_initial(self):
         """
         Extract initial values and initial assignments from species
@@ -578,6 +580,7 @@ class SbmlImporter:
 
         self.symbols['species']['value'] = species_initial
 
+    @log_execution_time('processing SBML species rate rules', logger)
     def _process_species_rate_rules(self):
         """
         Process assignment and rate rules for species and compartments.
@@ -654,59 +657,6 @@ class SbmlImporter:
         if name is None:
             name = ''
 
-        # d_dt may contain speciesReference symbols, that may be defined in
-        # an initial assignment (e.g. see SBML test suite case 1498, which
-        # uses a speciesReference Id in a species rate rule).
-        # Here, such speciesReference symbols are replaced with the initial
-        # assignment expression, if the expression is a constant (time-
-        # dependent expression symbols are not evaluated at zero, rather raise
-        # an error).
-        # One method to implement expressions with time-dependent symbols
-        # may be to produce a dictionary of speciesReference symbols and
-        # their initial assignment expressions here, then add this dictionary
-        # to the _replace_in_all_expressions method. After _process_sbml,
-        # substitute initial values in for any remaining symbols, evaluate the
-        # the expressions at $t=0$ (self.amici_time_symbol), then substitute
-        # them into d_dt.
-
-        # Initial assignment symbols may be compartments, species, parameters,
-        # speciesReferences, or an (extension?) package element. Here, it is
-        # assumed that a symbol is a speciesReference if it is not a
-        # compartment, species, or parameter, and is the symbol of an initial
-        # assignment.
-        alternative_components = [
-            s.getId() for s in
-            list(self.sbml.getListOfCompartments()) +
-            list(self.sbml.getListOfSpecies()) +
-            list(self.sbml.getListOfParameters())
-        ]
-        initial_assignments = {ia.getId(): ia for ia in
-                               self.sbml.getListOfInitialAssignments()}
-
-        for symbol in d_dt.free_symbols:
-            if str(symbol) not in alternative_components and\
-               str(symbol) in initial_assignments:
-                # Taken from _process_species
-                sym_math = self._sympy_from_sbml_math(
-                    initial_assignments[str(symbol)]
-                )
-                if sym_math is not None:
-                    sym_math = _parse_special_functions(sym_math)
-                    _check_unsupported_functions(sym_math, 'InitialAssignment')
-
-                if not isinstance(sym_math, sp.Float):
-                    raise SBMLException('Rate rules that contain '
-                                        'speciesReferences, defined in '
-                                        'initial assignments that contain '
-                                        'symbols, are currently not '
-                                        'supported! Rate rule symbol: '
-                                        f'{variable}, species reference '
-                                        f'symbol: {symbol}, initial '
-                                        f'assignment: {sym_math}, type: '
-                                        f'{type(sym_math)}.')
-                else:
-                    d_dt = d_dt.subs(symbol, sym_math)
-
         if component_type == sbml.SBML_COMPARTMENT:
             self.symbols['species']['identifier'] = \
                 self.symbols['species']['identifier'].col_join(
@@ -752,10 +702,6 @@ class SbmlImporter:
 
         parameter_ids = [par.getId() for par
                          in self.sbml.getListOfParameters()]
-        for initial_assignment in self.sbml.getListOfInitialAssignments():
-            if initial_assignment.getId() in parameter_ids:
-                raise SBMLException('Initial assignments for parameters are'
-                                    ' currently not supported')
 
         fixed_parameters = [
             parameter
@@ -1146,16 +1092,16 @@ class SbmlImporter:
                     continue
                 observable_values = observable_values.col_join(sp.Matrix(
                     [formula]))
-                observable_ids.append(str(variable))
-                observable_names.append(str(variable))
+                observable_ids.append(f'y{variable}')
+                observable_names.append(f'{variable}')
                 observable_syms = observable_syms.col_join(sp.Matrix(
                     [variable]))
 
             for species in self.species_assignment_rules:
                 x_index = self.species_index[str(species)]
                 observable_values[x_index] = replace_assignments(str(species))
-                observable_ids[x_index] = str(species)
-                observable_names[x_index] = str(species)
+                observable_ids[x_index] = f'y{species}'
+                observable_names[x_index] = f'{species}'
                 observable_syms[x_index] = species
 
         sigma_y_syms = sp.Matrix(
@@ -1172,10 +1118,7 @@ class SbmlImporter:
                 sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
 
         measurement_y_syms = sp.Matrix(
-            [get_measurement_symbol(obs_id) for obs_id in observable_ids]
-        )
-        measurement_y_values = sp.Matrix(
-            [0.0] * len(observable_syms)
+            [generate_measurement_symbol(obs_id) for obs_id in observable_ids]
         )
 
         # set cost functions
@@ -1189,8 +1132,8 @@ class SbmlImporter:
                 in zip(llh_y_strings, observable_syms,
                        measurement_y_syms, sigma_y_syms):
             f = sp.sympify(llh_y_string(o_sym), locals={str(o_sym): o_sym,
-                                                      str(m_sym): m_sym,
-                                                      str(s_sym): s_sym})
+                                                        f'm{o_sym}': m_sym,
+                                                        str(s_sym): s_sym})
             llh_y_values.append(f)
         llh_y_values = sp.Matrix(llh_y_values)
 
@@ -1202,15 +1145,56 @@ class SbmlImporter:
         self.symbols['observable']['identifier'] = observable_syms
         self.symbols['observable']['name'] = l2s(observable_names)
         self.symbols['observable']['value'] = observable_values
+        self.symbols['observable']['measurement_symbol'] = measurement_y_syms
         self.symbols['sigmay']['identifier'] = sigma_y_syms
         self.symbols['sigmay']['name'] = l2s(sigma_y_syms)
         self.symbols['sigmay']['value'] = sigma_y_values
-        self.symbols['my']['identifier'] = measurement_y_syms
-        self.symbols['my']['name'] = l2s(measurement_y_syms)
-        self.symbols['my']['value'] = measurement_y_values
         self.symbols['llhy']['value'] = llh_y_values
         self.symbols['llhy']['name'] = l2s(llh_y_syms)
         self.symbols['llhy']['identifier'] = llh_y_syms
+
+    @log_execution_time('processing SBML initial assignments', logger)
+    def _process_initial_assignments(self):
+        # Initial assignment symbols may be compartments, species, parameters,
+        # speciesReferences, or an (extension?) package element. Here, it is
+        # assumed that an initial assignment specifies a speciesReference
+        # if it is not a compartment, species, or parameter.
+        for ia in self.sbml.getListOfInitialAssignments():
+            if ia in list(self.sbml.getListOfCompartments()) + \
+                    list(self.sbml.getListOfSpecies()):
+                # processed in _process_initial_species and
+                # _process_compartments
+                continue
+
+            elif ia in self.sbml.getListOfParameters():
+                raise SBMLException('Initial assignments for parameters are'
+                                    ' currently not supported')
+
+            else:
+                sym_math = self._sympy_from_sbml_math(ia)
+                self._replace_in_all_expressions(
+                    # Do NOT use real=True here since the SpeciesReference
+                    # symbol is created by sympify
+                    sp.Symbol(ia.getId()), sym_math
+                )
+
+    def _process_species_references(self):
+        # doesnt look like there is a better way to get hold of those lists:
+        for element in self.sbml.all_elements:
+            if not isinstance(element, sbml.ListOfSpeciesReferences):
+                continue
+            for species_reference in element:
+                if species_reference.getStoichiometryMath() is not None:
+                    raise SBMLException('StoichiometryMath is currently not '
+                                        'supported for species references.')
+                if species_reference.getId() == '':
+                    continue
+                self._replace_in_all_expressions(
+                    # Do NOT use real=True here since the SpeciesReference
+                    # symbol is created by sympify
+                    sp.Symbol(species_reference.getId()),
+                    species_reference.getStoichiometry()
+                )
 
     def process_conservation_laws(self, ode_model, volume_updates) -> List:
         """
@@ -1296,7 +1280,7 @@ class SbmlImporter:
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
-                                    new: sp.Symbol,
+                                    new: sp.Expr,
                                     include_rate_rule_targets=False) -> None:
         """
         Replace 'old' by 'new' in all symbolic expressions.
@@ -1330,14 +1314,14 @@ class SbmlImporter:
 
         dictfields = [
             'compartment_rate_rules', 'species_rate_rules',
-            'compartment_assignment_rules'
+            'compartment_assignment_rules', 'parameter_assignment_rules'
         ]
         for dictfield in dictfields:
             d = getattr(self, dictfield)
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        for symbol in ['species', 'observable']:
+        for symbol in ['species', 'observable', 'llhy', 'sigmay']:
             if not self.symbols.get(symbol, None):
                 continue
             self.symbols[symbol]['value'] = \
@@ -1361,11 +1345,10 @@ class SbmlImporter:
             new_symbol = sp.Symbol('amici_' + sym, real=True)
             self._replace_in_all_expressions(old_symbol, new_symbol,
                                              include_rate_rule_targets=True)
-            for symbol in self.symbols.keys():
-                if 'identifier' in self.symbols[symbol].keys():
-                    self.symbols[symbol]['identifier'] = \
-                        self.symbols[symbol]['identifier'].subs(old_symbol,
-                                                                new_symbol)
+            for symbols in self.symbols.values():
+                if 'identifier' in symbols.keys():
+                    symbols['identifier'] = \
+                        symbols['identifier'].subs(old_symbol, new_symbol)
 
     def _replace_special_constants(self) -> None:
         """

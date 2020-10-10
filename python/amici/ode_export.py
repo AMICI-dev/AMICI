@@ -348,13 +348,17 @@ class State(ModelQuantity):
     A State variable defines an entity that evolves with time according to
     the provided time derivative, abbreviated by `x`
 
-    :ivar conservation_law:
+    :ivar _conservation_law:
         algebraic formula that allows computation of this
         species according to a conservation law
 
+    :ivar _dt:
+        algebraic formula that defines the temporal derivative of this state
+
     """
 
-    conservation_law: Union[sp.Basic, None] = None
+    _dt: Union[sp.Expr, None] = None
+    _conservation_law: Union[sp.Expr, None] = None
 
     def __init__(self,
                  identifier: sp.Symbol,
@@ -378,15 +382,15 @@ class State(ModelQuantity):
             time derivative
         """
         super(State, self).__init__(identifier, name, value)
-        if not isinstance(dt, sp.Basic):
+        if not isinstance(dt, sp.Expr):
             raise TypeError(f'dt must have type sympy.Basic, was '
                             f'{type(dt)}')
 
         self._dt = dt
-        self.conservation_law = None
+        self._conservation_law = None
 
     def set_conservation_law(self,
-                             law: sp.Basic) -> None:
+                             law: sp.Expr) -> None:
         """
         Sets the conservation law of a state. If the a conservation law
         is set, the respective state will be replaced by an algebraic
@@ -396,21 +400,21 @@ class State(ModelQuantity):
             linear sum of states that if added to this state remain
             constant over time
         """
-        if not isinstance(law, sp.Basic):
-            raise TypeError(f'conservation law must have type sympy.Basic, '
+        if not isinstance(law, sp.Expr):
+            raise TypeError(f'conservation law must have type sympy.Expr, '
                             f'was {type(law)}')
 
-        self.conservation_law = law
+        self._conservation_law = law
 
     def set_dt(self,
-               dt: sp.Basic) -> None:
+               dt: sp.Expr) -> None:
         """
         Sets the time derivative
 
         :param dt:
             time derivative
         """
-        if not isinstance(dt, sp.Basic):
+        if not isinstance(dt, sp.Expr):
             raise TypeError(f'time derivative must have type sympy.Basic, '
                             f'was {type(dt)}')
         self._dt = dt
@@ -467,11 +471,17 @@ class Observable(ModelQuantity):
     """
     An Observable links model simulations to experimental measurements,
     abbreviated by `y`
+
+    :ivar:
     """
+
+    _measurement_symbol: Union[sp.Symbol, None] = None
+
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic):
+                 value: sp.Basic,
+                 measurement_symbol: Optional[sp.Symbol] = None):
         """
         Create a new Observable instance.
 
@@ -485,6 +495,15 @@ class Observable(ModelQuantity):
             formula
         """
         super(Observable, self).__init__(identifier, name, value)
+        self._measurement_symbol = measurement_symbol
+
+    def get_measurement_symbol(self) -> sp.Symbol:
+        if self._measurement_symbol is None:
+            self._measurement_symbol = generate_measurement_symbol(
+                self.get_id()
+            )
+
+        return self._measurement_symbol
 
 
 class SigmaY(ModelQuantity):
@@ -1347,7 +1366,7 @@ class ODEModel:
                 ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
-                    get_measurement_symbol(comp.get_id())
+                    comp.get_measurement_symbol()
                     for comp in getattr(self, component)
                 ])
             return
@@ -1355,14 +1374,14 @@ class ODEModel:
             self._syms[name] = sp.Matrix([
                 state.get_id()
                 for state in self._states
-                if state.conservation_law is None
+                if state._conservation_law is None
             ])
             return
         elif name == 'sx0':
             self._syms[name] = sp.Matrix([
                 f's{state.get_id()}_0'
                 for state in self._states
-                if state.conservation_law is None
+                if state._conservation_law is None
             ])
             return
         elif name == 'dtcldp':
@@ -1509,14 +1528,14 @@ class ODEModel:
         elif name == 'xdot':
             self._eqs[name] = sp.Matrix([
                 s.get_dt() for s in self._states
-                if s.conservation_law is None
+                if s._conservation_law is None
             ])
 
         elif name == 'x_rdata':
             self._eqs[name] = sp.Matrix([
                 state.get_id()
-                if state.conservation_law is None
-                else state.conservation_law
+                if state._conservation_law is None
+                else state._conservation_law
                 for state in self._states
             ])
 
@@ -1524,14 +1543,14 @@ class ODEModel:
             self._eqs[name] = sp.Matrix([
                 state.get_id()
                 for state in self._states
-                if state.conservation_law is None
+                if state._conservation_law is None
             ])
 
         elif name == 'sx_solver':
             self._eqs[name] = sp.Matrix([
                 self.sym('sx_rdata')[ix]
                 for ix, state in enumerate(self._states)
-                if state.conservation_law is None
+                if state._conservation_law is None
             ])
 
         elif name == 'sx0':
@@ -1860,9 +1879,9 @@ class ODEModel:
 
         """
         return [
-            (state.get_id(), state.conservation_law)
+            (state.get_id(), state._conservation_law)
             for state in self._states
-            if state.conservation_law is not None
+            if state._conservation_law is not None
         ]
 
     def _generate_value(self, name: str) -> None:
@@ -1934,7 +1953,7 @@ class ODEModel:
             boolean indicating if conservation_law is not None
 
         """
-        return self._states[ix].conservation_law is not None
+        return self._states[ix]._conservation_law is not None
 
     def state_is_constant(self, ix: int) -> bool:
         """
@@ -3171,7 +3190,7 @@ def is_valid_identifier(x: str) -> bool:
     return re.match(r'^[a-zA-Z_]\w*$', x) is not None
 
 
-def get_measurement_symbol(observable_id: Union[str, sp.Symbol]):
+def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     """
     Generates the appropriate measurement symbol for the provided observable
 

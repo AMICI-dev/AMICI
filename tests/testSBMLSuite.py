@@ -111,7 +111,7 @@ def verify_results(settings, rdata, expected, wrapper,
                wrapper.species_index[species]
         ] and species in [str(s) for s in wrapper.species_rate_rules]
     ]
-    amounts_to_concentrations(concentration_species, wrapper, model,
+    amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)
 
     concentrations_to_amounts(amount_species, wrapper, simulated,
@@ -130,7 +130,6 @@ def verify_results(settings, rdata, expected, wrapper,
 def amounts_to_concentrations(
         amount_species,
         wrapper,
-        model,
         simulated,
         requested_concentrations
 ):
