@@ -1184,7 +1184,8 @@ class SbmlImporter:
             if not isinstance(element, sbml.ListOfSpeciesReferences):
                 continue
             for species_reference in element:
-                if species_reference.getStoichiometryMath() is not None:
+                if hasattr(species_reference, 'getStoichiometryMath') and \
+                        species_reference.getStoichiometryMath() is not None:
                     raise SBMLException('StoichiometryMath is currently not '
                                         'supported for species references.')
                 if species_reference.getId() == '':
