@@ -667,6 +667,7 @@ class SbmlImporter:
                     sp.Matrix([variable0]))
 
             self.species_index[str(variable)] = len(self.species_index)
+            self.species_has_only_substance_units.append(False)
             self.compartment_rate_rules[variable] = d_dt
 
         elif component_type == sbml.SBML_SPECIES:
@@ -700,9 +701,6 @@ class SbmlImporter:
                 raise KeyError('Cannot make %s a constant parameter: '
                                'Parameter does not exist.' % parameter)
 
-        parameter_ids = [par.getId() for par
-                         in self.sbml.getListOfParameters()]
-
         fixed_parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
@@ -710,11 +708,12 @@ class SbmlImporter:
         ]
 
         rulevars = [rule.getVariable() for rule in self.sbml.getListOfRules()]
+        iavars = [ia.getId() for ia in self.sbml.getListOfInitialAssignments()]
 
         parameters = [parameter for parameter
                       in self.sbml.getListOfParameters()
-                      if parameter.getId() not in constant_parameters
-                      and parameter.getId() not in rulevars]
+                      if parameter.getId() not in
+                      constant_parameters + rulevars + iavars]
 
         loop_settings = {
             'parameter': {
@@ -883,7 +882,8 @@ class SbmlImporter:
                     for var in formula.free_symbols:
                         if str(var) in self.species_index:
                             sindex = self.species_index[str(var)]
-                            if self.species_has_only_substance_units[sindex]:
+                            if self.species_has_only_substance_units[sindex]\
+                                    and var not in self.species_rate_rules:
                                 formula = formula.subs(
                                     var, var*self.species_compartment[sindex]
                                 )
@@ -1081,6 +1081,9 @@ class SbmlImporter:
             # used to calculate species amounts).
             # The id's and names below may conflict with the automatically
             # generated id's and names above.
+
+            # Assignment rules take precedence of compartment volumen
+            # definitions, so they need to be evaluated first
             for variable, formula in (
                 *self.parameter_assignment_rules.items(),
                 *self.compartment_assignment_rules.items(),
@@ -1088,7 +1091,7 @@ class SbmlImporter:
                           self.compartment_volume)).items()
             ):
                 if variable in self.compartment_rate_rules or\
-                        str(variable) in observable_ids:
+                        f'y{variable}' in observable_ids:
                     continue
                 observable_values = observable_values.col_join(sp.Matrix(
                     [formula]))
@@ -1159,16 +1162,20 @@ class SbmlImporter:
         # speciesReferences, or an (extension?) package element. Here, it is
         # assumed that an initial assignment specifies a speciesReference
         # if it is not a compartment, species, or parameter.
+        parameter_ids = [p.getId() for p in self.sbml.getListOfParameters()]
+        species_ids = [s.getId() for s in self.sbml.getListOfSpecies()]
+        comp_ids = [c.getId() for c in self.sbml.getListOfCompartments()]
         for ia in self.sbml.getListOfInitialAssignments():
-            if ia in list(self.sbml.getListOfCompartments()) + \
-                    list(self.sbml.getListOfSpecies()):
+            if ia.getId() in species_ids + comp_ids:
                 # processed in _process_initial_species and
                 # _process_compartments
                 continue
 
-            elif ia in self.sbml.getListOfParameters():
-                raise SBMLException('Initial assignments for parameters are'
-                                    ' currently not supported')
+            elif ia.getId() in parameter_ids:
+                sym_math = self._sympy_from_sbml_math(ia)
+                self._replace_in_all_expressions(
+                    sp.Symbol(ia.getId(), real=True), sym_math
+                )
 
             else:
                 sym_math = self._sympy_from_sbml_math(ia)
