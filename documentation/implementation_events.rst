@@ -1,18 +1,18 @@
 Event Implementation
 =======================
 
-This document provides guidance an rational on the implementation of events in
+This document provides guidance and rationale on the implementation of events in
 AMICI. Events include any discontinuities in the right hand side of the
 differential equation. There are three types of discontinuities:
 
-- **Solution Jump Discontinuities** can be created by SBML  events or delta
+- **Solution Jump Discontinuities** can be created by SBML events or delta
   functions in the right hand side.
 
 - **Right-Hand-Side Jump Discontinuities** result in removable
   discontinuities in the solution and can be created by SBML Piecewise or
   Heaviside functions.
 
-- **Right-Hand-Side Removeable Discontinuities** do not lead to
+- **Right-Hand-Side Removable Discontinuities** do not lead to
   discontinuities in the solution, but may lead to discontinuous higher
   order temporal derivatives and can be created by functions such as max or
   min.
@@ -39,29 +39,29 @@ empirically, the solver may overstep or completely ignore the discontinuity,
 leading to poor solution quality. This is particularly problematic when
 step size is large and changes in step size, which can be caused by
 parameter changes, inclusion of forward sensitivities or during backward
-solves, may alter solutions in unexpected ways. Accordingly finite
-difference approximations, forward sensitivies as well as adjoint
-sensitivies will yield poor derivative approximations.
+solves, may alter solutions in unexpected ways. Accordingly, finite
+difference approximations, forward sensitivities as well as adjoint
+sensitivities will yield poor derivative approximations.
 
 To address these issues, we use the built-in rootfinding functionality in
-SUNDIALS, WHICH pauses the solver at the locations of discontinuities and
+SUNDIALS, which pauses the solver at the locations of discontinuities and
 avoids overstepping or ignoring of discontinuities.
 
-Another difficulty comes with the evaluation of heaviside functions. After
+Another difficulty comes with the evaluation of Heaviside functions. After
 or during processing of discontinuities, Heaviside functions need to be
 evaluated at the left and right hand limit of discontinuities.
-This is challenging as the solver may slightly over or understep the
+This is challenging as the solver may slightly over- or understep the
 discontinuity timepoint by a small epsilon and limits have to be correctly
-computed in both forward and backward pass.
+computed in both forward and backward passes.
 
-To address this issue, AMICI uses a vector heaviside helper variables `h` that
+To address this issue, AMICI uses a vector of Heaviside helper variables `h` that
 keeps track of the values of the Heaviside functions that have the
-respective root function as argument. These will be automatically update
+respective root function as argument. These will be automatically updated
 during events and take either 0 or 1 values as appropriate pre/post event
 limits.
 
-In order to fully support SBML events, AMICI uses the SUNDIALs functionality to
-only track zero crossings from negative to positive. Accordingly two root
+In order to fully support SBML events, AMICI uses the SUNDIALS functionality to
+only track zero crossings from negative to positive. Accordingly, two root
 functions are necessary to keep track of Heaviside functions and two
 Heaviside function helper variables will be created, where one corresponds
 to the value of `Heaviside(...)` and one to the value of `1-Heaviside(...)`.
@@ -73,13 +73,13 @@ Solution Jump Discontinuities
 SUNDIALS by itself does not support solution jump discontinuities. We
 implement support by accessing private SUNDIALS API in
 :cpp:func:`Solver::resetState`, :cpp:func:`Solver::reInitPostProcess` and
-:cpp:func:`Solver::reInitPostProcessB`. These functions resets interval
+:cpp:func:`Solver::reInitPostProcessB`. These functions reset interval
 variables to initial values to simulate a fresh integration start, but
 keep/update the solution history, which is important for adjoint solutions.
 
 
-Right-Hand-Side Removeable Discontinuities
+Right-Hand-Side Removable Discontinuities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Removeable discontinuities do not require any special treatment. Numerically
-this may be advantageous, but currently not implemented.
+Removable discontinuities do not require any special treatment. Numerically,
+this may be advantageous, but is currently not implemented.
