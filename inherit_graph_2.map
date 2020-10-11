@@ -1,6 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" title=" " alt="" coords="5,56,65,83"/>
-<area shape="rect" id="node2" href="$classamidata.html" title="AMIDATA provides a data container to pass experimental data to the simulation routine for likelihood ..." alt="" coords="119,5,187,32"/>
-<area shape="rect" id="node3" href="$classamimodel.html" title="AMIMODEL carries all model definitions including functions and events." alt="" coords="113,56,192,83"/>
-<area shape="rect" id="node4" href="$classamised.html" title="AMISED is a container for SED&#45;ML objects." alt="" coords="121,107,185,133"/>
-</map>

@@ -1,7 +1,0 @@
-<map id="run" name="run">
-<area shape="rect" id="node1" title="runs a forward simulation until the specified timepoint" alt="" coords="5,81,45,108"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a89667d5b61c9ad3829415b9cd26baf5e" title="checks whether memory for forward interpolation has been allocated" alt="" coords="93,5,200,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a8faeb1a0df796471d15cbfde4b936fd2" title="Sets a timepoint at which the simulation will be stopped." alt="" coords="99,56,195,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#ac57d2931544456c9fe17c667c1566add" title="Solves the forward problem until a predefined timepoint." alt="" coords="120,107,173,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_solver.html#a66d1fb2002720f3045deccc56e21021a" title="Solves the forward problem until a predefined timepoint (adjoint only)" alt="" coords="116,157,177,184"/>
-</map>

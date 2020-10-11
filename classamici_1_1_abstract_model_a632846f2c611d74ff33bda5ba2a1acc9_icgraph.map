@@ -1,8 +1,0 @@
-<map id="fdxdotdp" name="fdxdotdp">
-<area shape="rect" id="node1" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="723,46,795,73"/>
-<area shape="rect" id="node2" href="$classamici_1_1_newton_solver.html#a8061901935161d3cbd563daae8fa4e9f" title="Computes steady state sensitivities." alt="" coords="504,5,667,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#a8e3a8eeeb0b157da84fe7dac1e0d209b" title="Compute the backward quadratures, which contribute to the gradient (xQB) from the quadrature over the..." alt="" coords="496,71,675,112"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="269,37,448,79"/>
-<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="269,103,448,144"/>
-<area shape="rect" id="node6" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="5,103,221,144"/>
-</map>

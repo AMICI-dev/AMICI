@@ -1,5 +1,0 @@
-<map id="hasParameterNames" name="hasParameterNames">
-<area shape="rect" id="node1" title="Reports whether the model has parameter names set. Also returns true if the number of corresponding v..." alt="" coords="5,31,149,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa99eb9052c2bbddc98547a0ad9a3c7bf" title="Get names of the model parameters." alt="" coords="197,5,339,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="249,56,287,83"/>
-</map>

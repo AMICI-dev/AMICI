@@ -1,5 +1,0 @@
-<map id="getModelState" name="getModelState">
-<area shape="rect" id="node1" title="retrieves the current model state" alt="" coords="459,13,565,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#af78ddb4a1ac2298676dae66e99d9c082" title="Store carbon copy of current simulation state variables as SimulationState." alt="" coords="232,5,411,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#aa32c3c07543307c7d146db5e8a10bfbd" title="Stores state and throws an exception if equilibration failed." alt="" coords="5,5,184,47"/>
-</map>

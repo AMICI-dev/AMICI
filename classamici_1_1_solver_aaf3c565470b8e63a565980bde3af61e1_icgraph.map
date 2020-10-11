@@ -1,4 +1,0 @@
-<map id="allocateSolverB" name="allocateSolverB">
-<area shape="rect" id="node1" title="Specifies solver method and initializes solver memory for the backward problem." alt="" coords="116,5,229,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a24382c0c42c9c60990ce2019fa2c0062" title="Initialises the AMI memory object for the backwards problem." alt="" coords="5,5,68,32"/>
-</map>

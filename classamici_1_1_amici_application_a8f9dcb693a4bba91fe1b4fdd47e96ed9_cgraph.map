@@ -1,6 +1,0 @@
-<map id="runAmiciSimulations" name="runAmiciSimulations">
-<area shape="rect" id="node1" title="Same as runAmiciSimulation, but for multiple ExpData instances." alt="" coords="5,56,147,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#ad40c0e06f5ee35afc1dd60e9f80ac5be" title="Clone this instance." alt="" coords="195,5,332,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a109f753bb5889d6563476826f5a3666d" title="Clone this instance." alt="" coords="196,56,331,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#a025192a6f53e19eae958cd3b14786f80" title="Core integration routine. Initializes the solver and runs the forward and backward problem." alt="" coords="196,107,331,133"/>
-</map>

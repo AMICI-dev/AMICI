@@ -1,7 +1,0 @@
-<map id="ExpData" name="ExpData">
-<area shape="rect" id="node1" title="constructor that initializes timepoints and fixed parameters from vectors" alt="" coords="5,31,77,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#a81a6a21cd5d905d5b6199f3a97030f61" title="resizes observedData, observedDataStdDev, observedEvents and observedEventsStdDev" alt="" coords="125,31,247,57"/>
-<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#ae0f51d05d7fbaf7f61e0795301bad084" title="resizes observedData and observedDataStdDev" alt="" coords="298,5,439,32"/>
-<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#ae872e294aa6f34e90844905fd203eb16" title="resizes observedEvents and observedEventsStdDev" alt="" coords="295,56,443,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="491,5,529,32"/>
-</map>

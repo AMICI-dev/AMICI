@@ -1,5 +1,0 @@
-<map id="fM" name="fM">
-<area shape="rect" id="node1" title="Mass matrix for DAE systems." alt="" coords="113,31,152,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model___d_a_e.html#a26e76f86f173a718466c9cc19d68550a" title="Right hand side of differential equation for state sensitivities sx." alt="" coords="6,5,65,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model___d_a_e.html#acc0b085abdde1955773d61f3e3bac21b" title="Right hand side of differential equation for adjoint state xB." alt="" coords="5,56,65,83"/>
-</map>

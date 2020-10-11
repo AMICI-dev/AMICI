@@ -1,4 +1,0 @@
-<map id="hasObservableIds" name="hasObservableIds">
-<area shape="rect" id="node1" title="Reports whether the model has observable ids set. Also returns true if the number of corresponding va..." alt="" coords="5,5,132,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a8d356757af0856dbdb6c45548f788377" title="Get ids of the observables." alt="" coords="180,5,304,32"/>
-</map>

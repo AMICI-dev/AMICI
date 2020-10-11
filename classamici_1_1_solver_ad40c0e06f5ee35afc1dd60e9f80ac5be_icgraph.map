@@ -1,7 +1,0 @@
-<map id="clone" name="clone">
-<area shape="rect" id="node1" title="Clone this instance." alt="" coords="751,46,804,73"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#a0a473db2e23c6a94ccd16150a4aa93ea" title="Initialize CVodeSolver instance for preequilibration simulation." alt="" coords="507,5,703,47"/>
-<area shape="rect" id="node5" href="$classamici_1_1_amici_application.html#a8f9dcb693a4bba91fe1b4fdd47e96ed9" title="Same as runAmiciSimulation, but for multiple ExpData instances." alt="" coords="525,71,684,112"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#acc59d589b6de48155b59d23316db007d" title="Computes the quadrature in steady state backward mode by numerical integration of xB forward in time." alt="" coords="269,5,459,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="5,5,221,47"/>
-</map>

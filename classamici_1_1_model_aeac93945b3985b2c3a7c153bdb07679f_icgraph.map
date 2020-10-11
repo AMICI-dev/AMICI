@@ -1,4 +1,0 @@
-<map id="getObservableNames" name="getObservableNames">
-<area shape="rect" id="node1" title="Get names of the observables." alt="" coords="204,5,351,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#aee41b755785a17eda8e67ec1462638b4" title="Reports whether the model has observable names set. Also returns true if the number of corresponding ..." alt="" coords="5,5,156,32"/>
-</map>

@@ -1,8 +1,0 @@
-<map id="froot" name="froot">
-<area shape="rect" id="node1" title="Implementation of froot at the N_Vector level This function provides an interface to the model specif..." alt="" coords="5,81,53,108"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="101,56,292,83"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model___o_d_e.html#a46fb620204a7cc2198125f714e9e69e1" title="Root function." alt="" coords="173,107,221,133"/>
-<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="367,5,507,32"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="343,56,530,83"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a3e1efd4f449f6a618dcbce7df70689d0" title="N_Vector accessor." alt="" coords="340,107,533,133"/>
-</map>

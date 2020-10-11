@@ -1,5 +1,0 @@
-<map id="getParameterScale" name="getParameterScale">
-<area shape="rect" id="node1" title="Get ParameterScale for each parameter." alt="" coords="500,20,633,47"/>
-<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a3a3470e764e1e0f4772cd458d2bb2dd2" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="228,5,452,61"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,13,180,54"/>
-</map>

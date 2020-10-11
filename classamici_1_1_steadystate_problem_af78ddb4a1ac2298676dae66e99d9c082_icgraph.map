@@ -1,4 +1,0 @@
-<map id="storeSimulationState" name="storeSimulationState">
-<area shape="rect" id="node1" title="Store carbon copy of current simulation state variables as SimulationState." alt="" coords="224,5,367,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#aa32c3c07543307c7d146db5e8a10bfbd" title="Stores state and throws an exception if equilibration failed." alt="" coords="5,5,176,32"/>
-</map>

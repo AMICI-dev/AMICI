@@ -1,5 +1,0 @@
-<map id="solveF" name="solveF">
-<area shape="rect" id="node1" title="Solves the forward problem until a predefined timepoint (adjoint only)" alt="" coords="100,31,161,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a59922504af5d337cbdddcb72b6f75a99" title="runs a forward simulation until the specified timepoint" alt="" coords="9,5,49,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#acba96a996e86d06866334c3534dc731f" title="makes a single step in the simulation" alt="" coords="5,56,52,83"/>
-</map>

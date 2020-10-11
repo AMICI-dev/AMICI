@@ -1,6 +1,0 @@
-<map id="checkDataDimension" name="checkDataDimension">
-<area shape="rect" id="node1" title="checker for dimensions of input observedData or observedDataStdDev" alt="" coords="340,31,485,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#a85ca23791c279fe94e5d9f8e528ca63e" title="set function that copies data from input to ExpData::my" alt="" coords="147,5,270,32"/>
-<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#a5d84a162eb705e032820acd004603f29" title="set function that copies data from input to ExpData::observedDataStdDev" alt="" coords="125,56,292,83"/>
-<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a7e70d4539123fe541fb9318e2933810e" title="constructor that initializes timepoints and data from vectors" alt="" coords="5,31,77,57"/>
-</map>

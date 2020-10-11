@@ -1,4 +1,0 @@
-<map id="getStateIds" name="getStateIds">
-<area shape="rect" id="node1" title="Get ids of the model states." alt="" coords="145,5,235,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#ad85d26b9b10e042e39685ac6c39d6a50" title="Reports whether the model has state ids set. Also returns true if the number of corresponding variabl..." alt="" coords="5,5,97,32"/>
-</map>

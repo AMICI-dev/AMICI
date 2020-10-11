@@ -1,6 +1,0 @@
-<map id="getSensDky" name="getSensDky">
-<area shape="rect" id="node1" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="412,42,505,69"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2ce4f693b9a7df86285918d00ab39efa" title="Access state sensitivity solution at time t." alt="" coords="232,42,364,69"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="5,5,184,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="47,71,143,98"/>
-</map>

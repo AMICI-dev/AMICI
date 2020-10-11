@@ -1,8 +1,0 @@
-<map id="fdrzdp" name="fdrzdp">
-<area shape="rect" id="node1" title="Sensitivity of event&#45;resolved root output w.r.t. to model parameters p." alt="" coords="5,97,64,123"/>
-<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="112,5,271,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="114,71,269,98"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="165,122,218,149"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="168,173,215,199"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="319,5,477,47"/>
-</map>

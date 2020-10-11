@@ -1,5 +1,0 @@
-<map id="SUNNonLinSolWrapper" name="SUNNonLinSolWrapper">
-<area shape="rect" id="node1" title="A RAII wrapper for SUNNonLinearSolver structs which solve the nonlinear system F (y) = 0 or G(y) = y." alt="" coords="107,5,266,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_non_lin_sol_fixed_point.html" title="SUNDIALS Fixed point non&#45;linear solver to solve G(y) = y." alt="" coords="5,80,179,107"/>
-<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_non_lin_sol_newton.html" title="SUNDIALS Newton non&#45;linear solver to solve F (y) = 0." alt="" coords="203,80,359,107"/>
-</map>

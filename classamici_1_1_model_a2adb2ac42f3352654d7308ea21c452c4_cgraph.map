@@ -1,7 +1,0 @@
-<map id="addStateEventUpdate" name="addStateEventUpdate">
-<area shape="rect" id="node1" title="Update state variables after event." alt="" coords="5,71,155,98"/>
-<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="203,5,361,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="205,71,359,98"/>
-<area shape="rect" id="node5" href="$classamici_1_1_abstract_model.html#ae4dcf1784ea90714e75ded102ca8f2e2" title="Model specific implementation of fdeltax." alt="" coords="209,123,355,164"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="409,5,568,47"/>
-</map>

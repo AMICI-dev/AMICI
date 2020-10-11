@@ -1,4 +1,0 @@
-<map id="getQuadrature" name="getQuadrature">
-<area shape="rect" id="node1" title="Access quadrature solution at time t." alt="" coords="149,5,253,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,5,101,32"/>
-</map>

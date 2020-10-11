@@ -1,4 +1,0 @@
-<map id="fJSparse" name="fJSparse">
-<area shape="rect" id="node1" title="Sparse Jacobian function." alt="" coords="236,13,311,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_newton_solver_sparse.html#a0b900656d018299b08d0f027e95bd347" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="5,5,188,47"/>
-</map>

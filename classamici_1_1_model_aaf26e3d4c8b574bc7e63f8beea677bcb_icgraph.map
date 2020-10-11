@@ -1,4 +1,0 @@
-<map id="setReinitializeFixedParameterInitialStates" name="setReinitializeFixedParameterInitialStates">
-<area shape="rect" id="node1" title="Set whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="213,5,408,47"/>
-<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="5,5,165,47"/>
-</map>

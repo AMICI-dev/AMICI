@@ -1,9 +1,0 @@
-<map id="setNonlinearSolverIteration" name="setNonlinearSolverIteration">
-<area shape="rect" id="node1" title="sets the nonlinear system solution method" alt="" coords="5,75,184,102"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a0f8e994055e37954d7746f3c1af27a5c" title="number of parameters with which the solver was initialized" alt="" coords="426,13,479,39"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a5df527ca34def937e6ca2835fc644ec3" title="number of quadratures with which the solver was initialized" alt="" coords="424,126,481,153"/>
-<area shape="rect" id="node6" href="$classamici_1_1_solver.html#ad5665a34d43b7022af0fc096c204ee34" title="number of states with which the solver was initialized" alt="" coords="433,75,472,102"/>
-<area shape="rect" id="node7" href="$classamici_1_1_solver.html#adadf5f53f5e713fdca870877af5563a1" title="resets solverMemory and solverMemoryB" alt="" coords="232,50,376,77"/>
-<area shape="rect" id="node3" href="$classamici_1_1_ami_vector_array.html#a5f00d4dc3e7866d193ce926f35542801" title="length of AmiVectorArray" alt="" coords="547,5,699,47"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="529,93,716,119"/>
-</map>

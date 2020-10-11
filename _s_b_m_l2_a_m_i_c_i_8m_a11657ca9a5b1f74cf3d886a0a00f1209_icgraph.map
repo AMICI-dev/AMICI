@@ -1,4 +1,0 @@
-<map id="SBML2AMICI" name="SBML2AMICI">
-<area shape="rect" id="node1" title="SBML2AMICI generates AMICI model definition files from SBML." alt="" coords="168,5,271,32"/>
-<area shape="rect" id="node2" href="$classamised.html#ad3f005f06f3a83fccf6ae55ad0d102c0" title="amised reads in an SEDML document using the JAVA binding of of libSEDML" alt="" coords="5,5,120,32"/>
-</map>

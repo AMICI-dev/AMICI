@@ -1,4 +1,0 @@
-<map id="getDerivativeState" name="getDerivativeState">
-<area shape="rect" id="node1" title="Access derivative state solution at time t." alt="" coords="5,5,135,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#aed7206cd845eb0ae060060b6dfa3c483" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="183,5,245,32"/>
-</map>

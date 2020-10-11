@@ -1,4 +1,0 @@
-<map id="flatten_to_vector" name="flatten_to_vector">
-<area shape="rect" id="node1" title="flattens the AmiVectorArray to a vector in row&#45;major format" alt="" coords="5,5,124,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="172,5,211,32"/>
-</map>

@@ -1,6 +1,0 @@
-<map id="setFixedParameterByName" name="setFixedParameterByName">
-<area shape="rect" id="node1" title="Set value of first fixed parameter with the specified name,." alt="" coords="5,31,188,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#abdfc1bad63f4c3b927aac8c3422d639a" title="Get names of the fixed model parameters." alt="" coords="460,5,633,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#adfe23b552732bba8d8f54298522abf3c" title="Reports whether the model has fixed parameter names set. Also returns true if the number of correspon..." alt="" coords="236,56,412,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="527,56,566,83"/>
-</map>

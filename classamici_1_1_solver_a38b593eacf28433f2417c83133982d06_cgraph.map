@@ -1,7 +1,0 @@
-<map id="getAdjointQuadrature" name="getAdjointQuadrature">
-<area shape="rect" id="node1" title="Access adjoint quadrature solution at time t." alt="" coords="5,56,149,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a68595a451b9a53d7babc886e71b27d00" title="extracts the adjoint quadrature state at the current timepoint from solver memory and writes it to th..." alt="" coords="237,5,317,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a815b4f92e4dd31c1fe89db33238d6871" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="225,56,328,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="197,107,356,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="404,107,551,133"/>
-</map>

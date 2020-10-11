@@ -1,7 +1,0 @@
-<map id="fJSparseB" name="fJSparseB">
-<area shape="rect" id="node1" title="Sparse Jacobian function." alt="" coords="188,81,271,108"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model___d_a_e.html#ab638f22b268d6191b14b9a64e076cbc3" title="JB in sparse form (for sparse solvers from the SuiteSparse Package)" alt="" coords="31,5,114,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model___d_a_e.html#a837e1b2b4f0e13b64180040a9cb8e6b2" title="Matrix vector product of JB with a vector v (for iterative solvers)" alt="" coords="48,56,97,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model___d_a_e.html#acc0b085abdde1955773d61f3e3bac21b" title="Right hand side of differential equation for adjoint state xB." alt="" coords="43,107,103,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model___d_a_e.html#a1bfd97f4f4469ae7250ecb281eaaee4a" title="Computes the sparse backward Jacobian for steadystate integration and writes it to the model member." alt="" coords="5,157,140,184"/>
-</map>

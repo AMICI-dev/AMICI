@@ -1,6 +1,0 @@
-<map id="fJrz" name="fJrz">
-<area shape="rect" id="node1" title="Regularization of negative log&#45;likelihood with roots of event&#45;resolved measurements rz." alt="" coords="661,13,705,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a5b274a170d0e0564dcb39dcb9dd10b2f" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="399,13,613,39"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="216,5,351,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="5,5,168,47"/>
-</map>

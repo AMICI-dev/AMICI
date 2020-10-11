@@ -1,5 +1,0 @@
-<map id="fsz" name="fsz">
-<area shape="rect" id="node1" title="Model specific implementation of fsz." alt="" coords="459,13,499,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a9fc47fbafb63293084d293aa39b5a191" title="Sensitivities of event&#45;resolved observables, total derivative, total derivative (only forward sensiti..." alt="" coords="193,13,411,39"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,5,145,47"/>
-</map>

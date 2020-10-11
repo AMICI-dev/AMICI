@@ -1,5 +1,0 @@
-<map id="setTimepoints" name="setTimepoints">
-<area shape="rect" id="node1" title="set function that copies data from input to ExpData::ts" alt="" coords="5,5,109,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#ae0f51d05d7fbaf7f61e0795301bad084" title="resizes observedData and observedDataStdDev" alt="" coords="157,5,299,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="347,5,385,32"/>
-</map>

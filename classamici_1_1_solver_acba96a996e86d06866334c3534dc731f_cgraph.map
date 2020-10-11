@@ -1,6 +1,0 @@
-<map id="step" name="step">
-<area shape="rect" id="node1" title="makes a single step in the simulation" alt="" coords="5,56,52,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a89667d5b61c9ad3829415b9cd26baf5e" title="checks whether memory for forward interpolation has been allocated" alt="" coords="100,5,207,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#ac57d2931544456c9fe17c667c1566add" title="Solves the forward problem until a predefined timepoint." alt="" coords="127,56,180,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a66d1fb2002720f3045deccc56e21021a" title="Solves the forward problem until a predefined timepoint (adjoint only)" alt="" coords="123,107,184,133"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="handleSx0Backward" name="handleSx0Backward">
-<area shape="rect" id="node1" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="5,42,145,69"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="193,5,372,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="215,71,350,98"/>
-</map>

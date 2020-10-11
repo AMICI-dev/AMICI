@@ -1,5 +1,0 @@
-<map id="fdxdotdp" name="fdxdotdp">
-<area shape="rect" id="node1" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="5,31,77,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model___d_a_e.html#a8620db421a61b89420be89f9b2d8306b" title="Sensitivity of dx/dt wrt model parameters p." alt="" coords="187,5,259,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a3e1efd4f449f6a618dcbce7df70689d0" title="N_Vector accessor." alt="" coords="125,56,320,83"/>
-</map>

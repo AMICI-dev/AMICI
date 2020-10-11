@@ -1,5 +1,0 @@
-<map id="fsrz" name="fsrz">
-<area shape="rect" id="node1" title="Model specific implementation of fsrz." alt="" coords="480,13,524,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#ab56e70cc5a9d095c9386ab3f7bc01388" title="Sensitivities of regularization for event&#45;resolved observables, total derivative (only forward sensit..." alt="" coords="193,5,432,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,5,145,47"/>
-</map>

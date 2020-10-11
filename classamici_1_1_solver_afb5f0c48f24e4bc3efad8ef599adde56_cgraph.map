@@ -1,7 +1,0 @@
-<map id="setRelativeTolerance" name="setRelativeTolerance">
-<area shape="rect" id="node1" title="Sets the relative tolerances for the forward problem." alt="" coords="5,56,148,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#afaf648266a045d246ff24e38b8ba3077" title="updates all senstivivity solver tolerances according to the currently specified member variables" alt="" coords="196,5,373,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a61eeb2f4cd6bb29b4042340f756fdbe0" title="updates solver tolerances according to the currently specified member variables" alt="" coords="227,107,343,133"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#aea8f6f9bb1b00f58ea0ae27faf11b65f" title="checks whether memory for the forward problem has been allocated" alt="" coords="437,56,525,83"/>
-<area shape="rect" id="node5" href="$classamici_1_1_solver.html#a9165e303f0d9fa9427c55a94debdea4c" title="sets scalar relative and absolute tolerances for the forward problem" alt="" coords="421,107,540,133"/>
-</map>

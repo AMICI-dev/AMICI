@@ -1,5 +1,0 @@
-<map id="getQuadDkyB" name="getQuadDkyB">
-<area shape="rect" id="node1" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="351,5,453,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a38b593eacf28433f2417c83133982d06" title="Access adjoint quadrature solution at time t." alt="" coords="159,5,303,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#af892618e72c2824035f019a4fa3af7b3" title="write solution from forward simulation" alt="" coords="5,5,111,32"/>
-</map>

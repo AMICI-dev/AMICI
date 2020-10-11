@@ -1,5 +1,0 @@
-<map id="checkSensitivityMethod" name="checkSensitivityMethod">
-<area shape="rect" id="node1" title="Sets sensitivity method (for simulation or preequilibration)" alt="" coords="287,31,448,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a3a7713f2ce77ffade77445a825ad289d" title="Set sensitivity method." alt="" coords="50,5,194,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#ac8f0a3f0606db2c7b90caae5a21b91bc" title="Set sensitivity method for preequilibration." alt="" coords="5,56,239,83"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="applyQuadTolerancesASA" name="applyQuadTolerancesASA">
-<area shape="rect" id="node1" title="updates ASA quadrature solver tolerances according to the currently specified member variables" alt="" coords="268,31,443,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a086428d30274f2b7e6f94e8e7593dd8b" title="sets the relative tolerance for the quadrature problem" alt="" coords="5,5,220,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a24382c0c42c9c60990ce2019fa2c0062" title="Initialises the AMI memory object for the backwards problem." alt="" coords="81,56,144,83"/>
-</map>

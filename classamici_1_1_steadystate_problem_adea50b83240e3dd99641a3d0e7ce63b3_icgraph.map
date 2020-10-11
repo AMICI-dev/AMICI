@@ -1,5 +1,0 @@
-<map id="getCPUTime" name="getCPUTime">
-<area shape="rect" id="node1" title="Accessor for run_time of the forward problem." alt="" coords="443,13,539,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="228,5,395,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,47"/>
-</map>

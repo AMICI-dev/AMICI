@@ -1,8 +1,0 @@
-<map id="nt" name="nt">
-<area shape="rect" id="node1" title="Get number of timepoints." alt="" coords="455,111,493,138"/>
-<area shape="rect" id="node2" href="$classamici_1_1_backward_problem.html#a9bc9191cca7550a167ae7edaff1d5d9a" title="Construct backward problem from forward problem." alt="" coords="234,5,401,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_forward_problem.html#a8dbb2ec401605a1ecac13a9313659404" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="240,71,395,112"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a8dbb2ec401605a1ecac13a9313659404" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="228,136,407,177"/>
-<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="236,201,399,243"/>
-<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,201,180,243"/>
-</map>

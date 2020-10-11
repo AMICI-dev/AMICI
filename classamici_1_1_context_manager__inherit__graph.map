@@ -1,6 +1,0 @@
-<map id="ContextManager" name="ContextManager">
-<area shape="rect" id="node1" title="Generic implementation for a context manager, explicitly deletes copy and move operators for derived ..." alt="" coords="151,5,270,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html" title="The ConditionContext class applies condition&#45;specific amici::Model settings and restores them when go..." alt="" coords="5,80,128,107"/>
-<area shape="rect" id="node3" href="$classamici_1_1_final_state_storer.html" title="stores the stimulation state when it goes out of scope" alt="" coords="153,80,269,107"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model_context.html" title="The ModelContext temporarily stores amici::Model::state and restores it when going out of scope." alt="" coords="293,80,395,107"/>
-</map>

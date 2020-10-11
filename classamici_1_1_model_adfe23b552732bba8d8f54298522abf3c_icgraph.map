@@ -1,6 +1,0 @@
-<map id="hasFixedParameterNames" name="hasFixedParameterNames">
-<area shape="rect" id="node1" title="Reports whether the model has fixed parameter names set. Also returns true if the number of correspon..." alt="" coords="243,56,419,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a99cc00a08b2f2d87d3eac047d00a7c57" title="Get value of fixed parameter with the specified name, if multiple parameters have the same name,..." alt="" coords="9,5,191,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#af1225439bd6deceb98b224e75a960800" title="Set value of first fixed parameter with the specified name,." alt="" coords="9,56,191,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#a4802f7d56264e3b592c167da8166cb73" title="Set value of all fixed parameters with name matching the specified regex,." alt="" coords="5,107,195,149"/>
-</map>

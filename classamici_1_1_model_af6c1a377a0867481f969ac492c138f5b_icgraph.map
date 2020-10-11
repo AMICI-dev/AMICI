@@ -1,5 +1,0 @@
-<map id="getInitialStates" name="getInitialStates">
-<area shape="rect" id="node1" title="Get the initial states." alt="" coords="435,13,544,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="5,5,165,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a1d8b7271972a7882f18e1c9ea3308e38" title="Get the initial states sensitivities." alt="" coords="213,38,387,65"/>
-</map>

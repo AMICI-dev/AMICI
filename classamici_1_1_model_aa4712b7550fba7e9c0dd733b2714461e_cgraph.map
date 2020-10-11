@@ -1,8 +1,0 @@
-<map id="fx_rdata" name="fx_rdata">
-<area shape="rect" id="node1" title="Expands conservation law for states." alt="" coords="5,63,75,90"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="170,13,259,39"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="137,63,292,90"/>
-<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="123,114,307,141"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="355,5,513,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="561,5,720,47"/>
-</map>

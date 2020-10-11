@@ -1,6 +1,0 @@
-<map id="fx0_fixedParameters" name="fx0_fixedParameters">
-<area shape="rect" id="node1" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="753,13,896,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a866aff1e4eed9246aa2b8d18e40853c0" title="Reinitializes state and respective sensitivities (if necessary) according to changes in fixedParamete..." alt="" coords="519,5,705,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#a6b871b5be8dfa63fc4bb5bd0bd7ff052" title="Initialize backward computation by setting state, time, adjoint state and checking for preequilibrati..." alt="" coords="288,5,471,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,5,240,47"/>
-</map>

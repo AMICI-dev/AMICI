@@ -1,4 +1,0 @@
-<map id="solveB" name="solveB">
-<area shape="rect" id="node1" title="Solves the backward problem until a predefined timepoint (adjoint only)" alt="" coords="103,5,165,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a0abdd3a675437f2107de3e7729d15adb" title="runs a backward simulation until the specified timepoint" alt="" coords="5,5,55,32"/>
-</map>

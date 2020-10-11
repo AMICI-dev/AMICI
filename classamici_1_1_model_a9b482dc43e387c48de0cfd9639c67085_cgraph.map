@@ -1,6 +1,0 @@
-<map id="setModelState" name="setModelState">
-<area shape="rect" id="node1" title="Set the current model state." alt="" coords="5,56,112,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Get number of conservation laws." alt="" coords="160,5,199,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Get number of constants." alt="" coords="160,56,199,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Get total number of model parameters." alt="" coords="160,107,199,133"/>
-</map>

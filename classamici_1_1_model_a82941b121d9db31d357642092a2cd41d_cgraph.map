@@ -1,5 +1,0 @@
-<map id="setInitialStateSensitivities" name="setInitialStateSensitivities">
-<area shape="rect" id="node1" title="Set the initial state sensitivities." alt="" coords="5,31,179,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="227,5,280,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="230,56,277,83"/>
-</map>

@@ -1,4 +1,0 @@
-<map id="multiply" name="multiply">
-<area shape="rect" id="node1" title="Perform reordered matrix vector multiplication c += A[:,cols]*b." alt="" coords="5,5,72,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_matrix_wrapper.html#af2c987388fcb260819e5279e0ab3d556" title="N_Vector interface for multiply." alt="" coords="120,5,187,32"/>
-</map>

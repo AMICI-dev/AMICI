@@ -1,6 +1,0 @@
-<map id="getLastOrder" name="getLastOrder">
-<area shape="rect" id="node1" title="Accessor order." alt="" coords="411,42,508,69"/>
-<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#aed2cf6582516b9977b0922d51ff91d1a" title="extracts results from solver" alt="" coords="228,5,363,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#aa2a0da7d0fc6d769eab4edf5a2c6afd5" title="Stores diagnosis information from solver memory block for forward problem." alt="" coords="241,71,349,98"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,47"/>
-</map>

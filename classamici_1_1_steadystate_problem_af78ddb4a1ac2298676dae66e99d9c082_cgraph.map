@@ -1,4 +1,0 @@
-<map id="storeSimulationState" name="storeSimulationState">
-<area shape="rect" id="node1" title="Store carbon copy of current simulation state variables as SimulationState." alt="" coords="5,5,148,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#ab2733c5ce759b0eb7782e18bb0a08483" title="retrieves the current model state" alt="" coords="196,5,384,32"/>
-</map>

@@ -1,4 +1,0 @@
-<map id="getInitialSimulationState" name="getInitialSimulationState">
-<area shape="rect" id="node1" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="243,5,405,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="5,5,195,32"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="initializeB" name="initializeB">
-<area shape="rect" id="node1" title="Initialization of model properties." alt="" coords="5,5,84,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="132,5,291,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="339,5,485,32"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="getSensitivityOrder" name="getSensitivityOrder">
-<area shape="rect" id="node1" title="Get sensitivity order." alt="" coords="163,31,296,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#ac90ebf01f586436cf1402912bc8da598" title="check if ASA is being computed" alt="" coords="5,5,115,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="check if FSA is being computed" alt="" coords="6,56,114,83"/>
-</map>

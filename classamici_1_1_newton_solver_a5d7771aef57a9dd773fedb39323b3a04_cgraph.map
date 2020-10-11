@@ -1,6 +1,0 @@
-<map id="getStep" name="getStep">
-<area shape="rect" id="node1" title="Computes the solution of one Newton iteration." alt="" coords="5,56,72,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a19ad39a609bfc430ed6f7992e841b024" title="changes the sign of data elements" alt="" coords="120,5,284,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_newton_solver.html#a4aed46b0343374f171f9b4b51fa009e7" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="129,56,275,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_newton_solver.html#addfdd7afbe1eff3d47b0f28b6191793f" title="Solves the linear system for the Newton step." alt="" coords="135,107,269,133"/>
-</map>

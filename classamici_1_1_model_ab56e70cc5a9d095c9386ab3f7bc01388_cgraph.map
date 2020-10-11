@@ -1,8 +1,0 @@
-<map id="getEventRegularizationSensitivity" name="getEventRegularizationSensitivity">
-<area shape="rect" id="node1" title="Sensitivities of regularization for event&#45;resolved observables, total derivative (only forward sensit..." alt="" coords="5,129,223,156"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="271,5,425,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="272,57,424,98"/>
-<area shape="rect" id="node4" href="$classamici_1_1_abstract_model.html#a8413f1ea9f3df6a74a24709651101df0" title="Model specific implementation of fsrz." alt="" coords="275,122,421,163"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="321,188,375,215"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="325,239,371,265"/>
-</map>

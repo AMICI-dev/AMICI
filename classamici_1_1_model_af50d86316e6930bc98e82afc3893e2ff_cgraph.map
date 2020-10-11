@@ -1,5 +1,0 @@
-<map id="hasFixedParameterIds" name="hasFixedParameterIds">
-<area shape="rect" id="node1" title="Reports whether the model has fixed parameter ids set. Also returns true if the number of correspondi..." alt="" coords="5,31,159,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa9278a175bc86b5b020df35dd2581734" title="Get ids of the fixed model parameters." alt="" coords="207,5,357,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="263,56,301,83"/>
-</map>

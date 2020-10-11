@@ -1,6 +1,0 @@
-<map id="storeJacobianAndDerivativeInReturnData" name="storeJacobianAndDerivativeInReturnData">
-<area shape="rect" id="node1" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,57,191,98"/>
-<area shape="rect" id="node2" href="$classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="239,5,403,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="248,57,393,98"/>
-<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="251,123,390,149"/>
-</map>
