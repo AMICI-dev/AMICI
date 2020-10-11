@@ -451,9 +451,15 @@ class SbmlImporter:
         This is later used during sympifications to avoid sympy builtins
         shadowing model entities.
         """
+        species_references = next((
+            list(element)
+            for element in self.sbml.all_elements
+            if isinstance(element, sbml.ListOfSpeciesReferences)
+        ), [])
         for c in list(self.sbml.getListOfSpecies()) + \
                 list(self.sbml.getListOfParameters()) + \
-                list(self.sbml.getListOfCompartments()):
+                list(self.sbml.getListOfCompartments()) + \
+                species_references:
             self.local_symbols[c.getId()] = _get_identifier_symbol(c)
 
         for r in self.sbml.getListOfRules():
@@ -1198,8 +1204,6 @@ class SbmlImporter:
 
             else:
                 self._replace_in_all_expressions(
-                    # Do NOT use real=True here since the SpeciesReference
-                    # symbol is created by sympify
                     identifier, sym_math
                 )
 
@@ -1225,11 +1229,7 @@ class SbmlImporter:
                                                          assignment_ids,
                                                          rulevars)
                 self._replace_in_all_expressions(
-                    # Do NOT use _get_identifier_symbol here since the
-                    # SpeciesReferencevsymbol is created by sympify and does
-                    # not exist as local symbol
-                    sp.Symbol(species_reference.getId()),
-                    # stoichiometry can be float
+                    _get_identifier_symbol(species_reference),
                     sp.sympify(stoich, locals=self.local_symbols)
                 )
 
