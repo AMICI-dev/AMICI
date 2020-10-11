@@ -1204,6 +1204,11 @@ class SbmlImporter:
                 )
 
     def _process_species_references(self):
+        assignment_ids = [ass.getId()
+                          for ass in self.sbml.getListOfInitialAssignments()]
+        rulevars = [rule.getVariable()
+                    for rule in self.sbml.getListOfRules()
+                    if rule.getFormula() != '']
         # doesnt look like there is a better way to get hold of those lists:
         for element in self.sbml.all_elements:
             if not isinstance(element, sbml.ListOfSpeciesReferences):
@@ -1215,13 +1220,17 @@ class SbmlImporter:
                                         'supported for species references.')
                 if species_reference.getId() == '':
                     continue
+
+                stoich = self._get_element_stoichiometry(species_reference,
+                                                         assignment_ids,
+                                                         rulevars)
                 self._replace_in_all_expressions(
-                    # Do NOT use real=True here since the SpeciesReference
-                    # symbol is created by sympify
-                    _get_identifier_symbol(species_reference),
+                    # Do NOT use _get_identifier_symbol here since the
+                    # SpeciesReferencevsymbol is created by sympify and does
+                    # not exist as local symbol
+                    sp.Symbol(species_reference.getId()),
                     # stoichiometry can be float
-                    sp.sympify(species_reference.getStoichiometry(),
-                               locals=self.local_symbols)
+                    sp.sympify(stoich, locals=self.local_symbols)
                 )
 
     def _process_reaction_identifiers(self):
