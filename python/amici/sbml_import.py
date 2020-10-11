@@ -1214,24 +1214,27 @@ class SbmlImporter:
                     for rule in self.sbml.getListOfRules()
                     if rule.getFormula() != '']
         # doesnt look like there is a better way to get hold of those lists:
-        for element in self.sbml.all_elements:
-            if not isinstance(element, sbml.ListOfSpeciesReferences):
-                continue
-            for species_reference in element:
-                if hasattr(species_reference, 'getStoichiometryMath') and \
-                        species_reference.getStoichiometryMath() is not None:
-                    raise SBMLException('StoichiometryMath is currently not '
-                                        'supported for species references.')
-                if species_reference.getId() == '':
-                    continue
+        species_references = next((
+            list(element)
+            for element in self.sbml.all_elements
+            if isinstance(element, sbml.ListOfSpeciesReferences)
+        ), [])
 
-                stoich = self._get_element_stoichiometry(species_reference,
-                                                         assignment_ids,
-                                                         rulevars)
-                self._replace_in_all_expressions(
-                    _get_identifier_symbol(species_reference),
-                    sp.sympify(stoich, locals=self.local_symbols)
-                )
+        for species_reference in species_references:
+            if hasattr(species_reference, 'getStoichiometryMath') and \
+                    species_reference.getStoichiometryMath() is not None:
+                raise SBMLException('StoichiometryMath is currently not '
+                                    'supported for species references.')
+            if species_reference.getId() == '':
+                continue
+
+            stoich = self._get_element_stoichiometry(species_reference,
+                                                     assignment_ids,
+                                                     rulevars)
+            self._replace_in_all_expressions(
+                _get_identifier_symbol(species_reference),
+                sp.sympify(stoich, locals=self.local_symbols)
+            )
 
     def _process_reaction_identifiers(self):
         for symbol, formula in self.reaction_ids.items():
