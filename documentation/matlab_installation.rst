@@ -1,3 +1,5 @@
+.. _amici_matlab_installation:
+
 Installing the AMICI MATLAB toolbox
 ===================================
 
