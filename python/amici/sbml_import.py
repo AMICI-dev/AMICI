@@ -14,7 +14,7 @@ import itertools as itt
 import warnings
 import logging
 from typing import (
-    Dict, Union, List, Callable, Any, Iterable, Optional, Sequence, Union
+    Dict, List, Callable, Any, Iterable, Optional, Sequence, Union
 )
 
 from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
@@ -1219,19 +1219,19 @@ class SbmlImporter:
                     # Do NOT use real=True here since the SpeciesReference
                     # symbol is created by sympify
                     _get_identifier_symbol(species_reference),
-                    species_reference.getStoichiometry()
+                    # stoichiometry can be float
+                    sp.sympify(species_reference.getStoichiometry(),
+                               locals=self.local_symbols)
                 )
 
     def _process_reaction_identifiers(self):
         for symbol, formula in self.reaction_ids.items():
-            self._replace_in_all_expressions(
-                symbol, formula
-            )
+            self._replace_in_all_expressions(symbol, formula)
 
     def _make_initial(self,
                       sym_math: Union[sp.Expr, None]) -> Union[sp.Expr, None]:
-        if sym_math is None:
-            return None
+        if not isinstance(sym_math, sp.Expr):
+            return sym_math
 
         return sym_math.subs(
             self.symbols['species']['identifier'],
