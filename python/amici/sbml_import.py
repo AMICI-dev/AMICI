@@ -14,7 +14,7 @@ import itertools as itt
 import warnings
 import logging
 from typing import (
-    Dict, Union, List, Callable, Any, Iterable, Optional, Sequence
+    Dict, Union, List, Callable, Any, Iterable, Optional, Sequence, Union
 )
 
 from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
@@ -127,9 +127,12 @@ class SbmlImporter:
         assignment rules for parameters, these parameters are not permissible
         for sensitivity analysis
 
-    :ivar self.parameter_initial_assignments:
+    :ivar parameter_initial_assignments:
         initial assignments for parameters, these parameters are not
         permissible for sensitivity analysis
+
+    :ivar reaction_ids:
+        symbol definition as kinetic law of the respective reaction
 
     """
 
@@ -179,6 +182,7 @@ class SbmlImporter:
         self.species_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
         self.parameter_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
         self.parameter_initial_assignments: Dict[sp.Symbol, sp.Expr] = {}
+        self.reaction_ids: Dict[sp.Symbol, sp.Expr] = {}
 
         self.species_index: Dict[str, int] = {}
         self.parameter_index: Dict[str, int] = {}
@@ -391,6 +395,7 @@ class SbmlImporter:
         self._process_volume_conversion()
         self._process_initial_assignments()
         self._process_species_references()
+        self._process_reaction_identifiers()
 
     def check_support(self) -> None:
         """
@@ -454,6 +459,10 @@ class SbmlImporter:
         for r in self.sbml.getListOfRules():
             self.local_symbols[r.getVariable()] = sp.Symbol(r.getVariable(),
                                                             real=True)
+
+        for r in self.sbml.getListOfReactions():
+            if r.isSetId():
+                self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
         # SBML time symbol + constants
         self.local_symbols['time'] = sp.Symbol('time', real=True)
@@ -610,7 +619,6 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
-            formula = self._replace_reactions_in_rule_formula(rule, formula)
 
             # Species rules are processed first, to avoid processing
             # compartments twice (as compartments with rate rules are
@@ -794,7 +802,7 @@ class SbmlImporter:
 
         for reaction_index, reaction in enumerate(reactions):
             for element_list, sign in [(reaction.getListOfReactants(), -1.0),
-                                      (reaction.getListOfProducts(), 1.0)]:
+                                       (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
                 for index, element in enumerate(element_list):
                     # we need the index here as we might have multiple elements
@@ -822,6 +830,8 @@ class SbmlImporter:
 
             sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
             sym_math = sym_math.subs(math_subs)
+            if reaction.isSetId():
+                self.reaction_ids[_get_identifier_symbol(reaction)] = sym_math
 
             self.flux_vector[reaction_index] = sym_math
             if any([
@@ -862,7 +872,6 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
-            formula = self._replace_reactions_in_rule_formula(rule, formula)
 
             if variable in stoichvars:
                 self.stoichiometric_matrix = \
@@ -953,13 +962,14 @@ class SbmlImporter:
             if comp not in self.compartment_rate_rules:
                 compartments = compartments.subs(comp, vol)
         for index, sunits in enumerate(self.species_has_only_substance_units):
-            if sunits:
-                self.flux_vector = \
-                    self.flux_vector.subs(
-                        self.symbols['species']['identifier'][index],
-                        self.symbols['species']['identifier'][index]
-                        * compartments[index]
-                    )
+            if not sunits:
+                continue
+            self.flux_vector = \
+                self.flux_vector.subs(
+                    self.symbols['species']['identifier'][index],
+                    self.symbols['species']['identifier'][index]
+                    * compartments[index]
+                )
 
     def _process_time(self) -> None:
         """
@@ -1178,18 +1188,19 @@ class SbmlImporter:
                 # _process_compartments
                 continue
 
-            elif ia.getId() in parameter_ids:
-                sym_math = self._sympy_from_sbml_math(ia)
-                identifier = sp.Symbol(ia.getId(), real=True)
+            sym_math = self._sympy_from_sbml_math(ia)
+            sym_math = self._make_initial(sym_math)
+
+            identifier = _get_identifier_symbol(ia)
+            if ia.getId() in parameter_ids:
                 self.parameter_initial_assignments[identifier] = sym_math
                 self._replace_in_all_expressions(identifier, sym_math)
 
             else:
-                sym_math = self._sympy_from_sbml_math(ia)
                 self._replace_in_all_expressions(
                     # Do NOT use real=True here since the SpeciesReference
                     # symbol is created by sympify
-                    sp.Symbol(ia.getId()), sym_math
+                    identifier, sym_math
                 )
 
     def _process_species_references(self):
@@ -1207,9 +1218,25 @@ class SbmlImporter:
                 self._replace_in_all_expressions(
                     # Do NOT use real=True here since the SpeciesReference
                     # symbol is created by sympify
-                    sp.Symbol(species_reference.getId()),
+                    _get_identifier_symbol(species_reference),
                     species_reference.getStoichiometry()
                 )
+
+    def _process_reaction_identifiers(self):
+        for symbol, formula in self.reaction_ids.items():
+            self._replace_in_all_expressions(
+                symbol, formula
+            )
+
+    def _make_initial(self,
+                      sym_math: Union[sp.Expr, None]) -> Union[sp.Expr, None]:
+        if sym_math is None:
+            return None
+
+        return sym_math.subs(
+            self.symbols['species']['identifier'],
+            self.symbols['species']['value']
+        )
 
     def process_conservation_laws(self, ode_model, volume_updates) -> List:
         """
@@ -1329,12 +1356,19 @@ class SbmlImporter:
 
         dictfields = [
             'compartment_rate_rules', 'species_rate_rules',
-            'compartment_assignment_rules', 'parameter_assignment_rules'
+            'compartment_assignment_rules', 'parameter_assignment_rules',
+            'parameter_initial_assignments'
         ]
         for dictfield in dictfields:
             d = getattr(self, dictfield)
+
+            if dictfield == 'parameter_initial_assignments':
+                new = self._make_initial(new)
+
             for k in d:
                 d[k] = d[k].subs(old, new)
+
+
 
         for symbol in ['species', 'observable', 'llhy', 'sigmay']:
             if not self.symbols.get(symbol, None):
@@ -1386,51 +1420,6 @@ class SbmlImporter:
                     f'Encountered currently unsupported element id {constant}!'
                 )
 
-    def _replace_reactions_in_rule_formula(self,
-                                           rule: sbml.Rule,
-                                           formula: sp.Expr):
-        """
-        SBML allows reaction IDs in rules, which should be interpreted as the
-        reaction rate.
-
-        An assignment or rate "...rule cannot be defined for a species that is
-        created or destroyed in a reaction, unless that species is defined as
-        a boundary condition in the model." Here, valid SBML is assumed, so
-        this restriction is not checked.
-
-        :param rule:
-            The SBML rule.
-
-        :param formula:
-            The `rule` formula that has already been parsed.
-            TODO create a function to parse rule formulae, as this logic is
-                 repeated a few times.
-
-        :return:
-            The formula, but reaction IDs are replaced with respective
-            reaction rate symbols.
-        """
-        reaction_ids = [r.getId() for r in self.sbml.getListOfReactions()]
-        reactions_in_rule_formula = {s
-                                     for s in formula.free_symbols
-                                     if str(s) in reaction_ids}
-        if reactions_in_rule_formula and rule.getTypeCode() not in \
-                (sbml.SBML_ASSIGNMENT_RULE, sbml.SBML_RATE_RULE):
-            raise SBMLException('Currently, only assignment and rate'
-                                ' rules have reaction replacement'
-                                ' implemented.')
-
-        # Reactions are assigned indices in
-        # `sbml_import.py:_process_reactions()`, and these indices are used to
-        # generate flux variables in
-        # `ode_export.py:import_from_sbml_importer()`.
-        # These flux variables are anticipated here, as the symbols that
-        # represent the rates of reactions in the model.
-        subs = {r_sym: sp.Symbol(f'flux_r{reaction_ids.index(str(r_sym))}',
-                                 real=True)
-                for r_sym in reactions_in_rule_formula}
-        return formula.subs(subs)
-
     def _sympy_from_sbml_math(self, var: sbml.SBase) -> sp.Expr:
         """
         Sympify Math of SBML variables with all sanity checks and
@@ -1471,11 +1460,7 @@ class SbmlImporter:
         sym = self._sympy_from_sbml_math(assignment)
         # this is an initial assignment so we need to use
         # initial conditions
-        if sym is not None:
-            sym = sym.subs(
-                self.symbols['species']['identifier'],
-                self.symbols['species']['value']
-            )
+        sym = self._make_initial(sym)
         return sym
 
     def _is_constant(self, specie: str) -> bool:
