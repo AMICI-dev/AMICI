@@ -1,76 +1,107 @@
+"""
+PEtab Simulate
+--------------
+Functionality related to the use of AMICI for simulation with PEtab's
+Simulator class. Use cases:
+- generate data for use with PEtab's plotting methods
+- generate synthetic data
+"""
+
+import inspect
+import sys
+from typing import Callable
+
+import pandas as pd
+
+from amici import SensitivityMethod_none
 from amici import AmiciModel
 from amici.petab_import import import_petab_problem
-from amici.petab_objective import simulate_petab, rdatas_to_measurement_df
-from petab.simulate import Simulator
+from amici.petab_objective import (simulate_petab,
+                                   rdatas_to_measurement_df,
+                                   RDATAS)
+import petab
+
+AMICI_MODEL = 'amici_model'
+AMICI_SOLVER = 'solver'
+MODEL_NAME = 'model_name'
+MODEL_OUTPUT_DIR = 'model_output_dir'
+
+PETAB_PROBLEM = 'petab_problem'
 
 
-class PetabSimulator(Simulator):
-    """
-    Implementation of the PEtab `Simulator` class that uses AMICI.
+class PetabSimulator(petab.simulate.Simulator):
+    """Implementation of the PEtab `Simulator` class that uses AMICI."""
+    def __init__(self, *args, amici_model: AmiciModel = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.amici_model = amici_model
 
-    amici_model:
-        AMICI model instance to be simulated.
-    """
-    def _simulate_without_noise(
-            self,
-            amici_model: AmiciModel = None,
-            **kwargs
-    ):
+    def simulate_without_noise(self, **kwargs) -> pd.DataFrame:
         """
         See :py:func:`petab.simulate.Simulator.simulate()` docstring.
 
-        :param amici_model:
-            AMICI Model assumed to be compatible with ``petab_problem``.
+        Additional keyword arguments can be supplied to specify arguments for
+        the AMICI PEtab import, simulate, and export methods. See the
+        docstrings for the respective methods for argument options:
+        - :py:func:`amici.petab_import.import_petab_problem`, and
+        - :py:func:`amici.petab_objective.simulate_petab`.
+
+        Note that some arguments are expected to have already been specified
+        in the Simulator constructor (including the PEtab problem).
         """
-        if amici_model is None and 'amici_model' not in dir(self):
-            if 'model_output_dir' not in kwargs:
-                import os
-                kwargs['model_output_dir'] = os.path.join(self.working_dir,
-                                                          'amici_models')
-            relevant_kwargs_import = [
-                'model_output_dir',
-                'model_name',
-                'force_compile',
-            ]
-            # TODO don't compute sensitivities
-            self.amici_model = import_petab_problem(
-                self.petab_problem,
-                **{k: v
-                   for k, v in kwargs.items()
-                   if k in relevant_kwargs_import},
-            )
-        else:
-            # TODO don't save kwarg amici_model in `self` state?
-            self.amici_model = amici_model
+        if AMICI_MODEL in {*kwargs, *dir(self)} and (
+                any([k in kwargs for k in
+                     inspect.signature(import_petab_problem).parameters])):
+            print('Arguments related to the PEtab import are unused if '
+                  f'`{AMICI_MODEL}` is specified, or the '
+                  '`PetabSimulator.simulate()` method was previously called.')
 
-        # due to the `simulate_petab` decorator (I think), the inspect module
-        # cannot be used to identify this automatically with e.g.:
-        # inspect.getfullargspec(simulate_petab).args
-        # `amici_model` is skipped here, as it is handled separately
-        relevant_kwargs_simulate = [
-            'solver',
-            'problem_parameters',
-            'simulation_conditions',
-            'edatas',
-            'parameter_mapping',
-            'scaled_parameters',
-            'log_level',
-        ]
+        kwargs[PETAB_PROBLEM] = self.petab_problem
 
-        # TODO allow specification of solver?
-        result = simulate_petab(
-            self.petab_problem,
-            self.amici_model,
-            **{k: v
-               for k, v in kwargs.items()
-               if k in relevant_kwargs_simulate},
-        )
+        # The AMICI model instance for the PEtab problem is saved in the state,
+        # such that it need not be supplied with each request for simulated
+        # data. Any user-supplied AMICI model will overwrite the model saved
+        # in the state.
+        if AMICI_MODEL not in kwargs:
+            if self.amici_model is None:
+                if MODEL_NAME not in kwargs:
+                    kwargs[MODEL_NAME] = AMICI_MODEL
+                    # If the model name is the name of module that is already
+                    # cached, it can cause issues during import.
+                    while kwargs[MODEL_NAME] in sys.modules:
+                        kwargs[MODEL_NAME] += str(self.rng.integers(10))
+                if MODEL_OUTPUT_DIR not in kwargs:
+                    kwargs[MODEL_OUTPUT_DIR] = self.working_dir
+                self.amici_model = subset_call(import_petab_problem, kwargs)
+            kwargs[AMICI_MODEL] = self.amici_model
+        self.amici_model = kwargs[AMICI_MODEL]
 
-        # TODO use `rdatas_to_simulation_df` instead?
-        measurement_df = rdatas_to_measurement_df(
-            result['rdatas'],
-            self.amici_model,
-            self.petab_problem.measurement_df,
-        )
+        if AMICI_SOLVER not in kwargs:
+            kwargs[AMICI_SOLVER] = self.amici_model.getSolver()
+            kwargs[AMICI_SOLVER].setSensitivityMethod(
+                SensitivityMethod_none)
 
-        return measurement_df
+        result = subset_call(simulate_petab, kwargs)
+        return rdatas_to_measurement_df(result[RDATAS],
+                                        self.amici_model,
+                                        self.petab_problem.measurement_df)
+
+
+def subset_call(method: Callable, kwargs: dict):
+    """
+    Helper function to call a method with the intersection of arguments in the
+    method signature and the supplied arguments.
+
+    :param method:
+        The method to be called.
+    :param kwargs:
+        The argument superset as a dictionary, similar to `**kwargs` in method
+        signatures.
+    :return:
+        The output of `method`, called with the applicable arguments in
+        `kwargs`.
+    """
+    method_args = inspect.signature(method).parameters
+    subset_kwargs = {k: v
+                     for k, v in kwargs.items()
+                     if k in method_args}
+    return method(**subset_kwargs)
