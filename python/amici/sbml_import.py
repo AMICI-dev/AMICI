@@ -1181,17 +1181,17 @@ class SbmlImporter:
 
     @log_execution_time('processing SBML initial assignments', logger)
     def _process_initial_assignments(self):
-        # Initial assignment symbols may be compartments, species, parameters,
-        # speciesReferences, or an (extension?) package element. Here, it is
-        # assumed that an initial assignment specifies a speciesReference
-        # if it is not a compartment, species, or parameter.
+        """
+        Accounts for initial assignments of parameters and species
+        references. Initial assignments for species and compartments are
+        processed in :py:func:`amici.SBMLImporter._process_initial_species` and
+        :py:func:`amici.SBMLImporter._process_compartments` respectively.
+        """
         parameter_ids = [p.getId() for p in self.sbml.getListOfParameters()]
         species_ids = [s.getId() for s in self.sbml.getListOfSpecies()]
         comp_ids = [c.getId() for c in self.sbml.getListOfCompartments()]
         for ia in self.sbml.getListOfInitialAssignments():
             if ia.getId() in species_ids + comp_ids:
-                # processed in _process_initial_species and
-                # _process_compartments
                 continue
 
             sym_math = self._sympy_from_sbml_math(ia)
@@ -1208,6 +1208,11 @@ class SbmlImporter:
                 )
 
     def _process_species_references(self):
+        """
+        Replaces species references that define anything but stoichiometries.
+        Species references for stoichiometries are processed in
+        :py:func:`amici.SBMLImporter._process_reactions`.
+        """
         assignment_ids = [ass.getId()
                           for ass in self.sbml.getListOfInitialAssignments()]
         rulevars = [rule.getVariable()
@@ -1237,11 +1242,23 @@ class SbmlImporter:
             )
 
     def _process_reaction_identifiers(self):
+        """
+        Replaces references to reaction ids. These reaction ids are
+        generated in :py:func:`amici.SBMLImporter._process_reactions`.
+        """
         for symbol, formula in self.reaction_ids.items():
             self._replace_in_all_expressions(symbol, formula)
 
     def _make_initial(self,
                       sym_math: Union[sp.Expr, None]) -> Union[sp.Expr, None]:
+        """
+        Transforms an expression to its value at the initial timepoint by
+        replacing species by their initial values.
+        :param sym_math:
+            symbolic expression
+        :return:
+            transformed expression
+        """
         if not isinstance(sym_math, sp.Expr):
             return sym_math
 
