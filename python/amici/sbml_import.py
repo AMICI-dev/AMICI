@@ -77,13 +77,13 @@ class SbmlImporter:
         SBML model to import
 
     :ivar species_index:
-        maps species names to indices
+        maps species IDs to indices
 
     :ivar parameter_index:
-        maps species names to indices
+        maps parameter IDs to indices
 
     :ivar fixed_parameter_index:
-        maps species names to indices
+        maps fixed parameter IDs to indices
 
     :ivar species_compartment: :py:class:`sympy.Matrix`
         compartment for each species
@@ -201,7 +201,7 @@ class SbmlImporter:
 
         # apply several model simplifications that make our life substantially
         # easier
-        if len(self.sbml_doc.getModel().getListOfFunctionDefinitions()):
+        if self.sbml_doc.getModel().getNumFunctionDefinitions():
             convert_config = sbml.SBMLFunctionDefinitionConverter()\
                 .getDefaultProperties()
             self.sbml_doc.convert(convert_config)
@@ -403,7 +403,7 @@ class SbmlImporter:
         Also ensures that the SBML contains at least one reaction, or rate
         rule, or assignment rule, to produce change in the system over time.
         """
-        if not len(self.sbml.getListOfSpecies()):
+        if not self.sbml.getNumSpecies():
             raise SBMLException('Models without species '
                                 'are currently not supported!')
 
@@ -411,7 +411,7 @@ class SbmlImporter:
                 and self.sbml.all_elements_from_plugins.getSize():
             raise SBMLException('SBML extensions are currently not supported!')
 
-        if len(self.sbml.getListOfEvents()):
+        if self.sbml.getNumEvents():
             raise SBMLException('Events are currently not supported!')
 
         # Contains condition to allow compartment rate rules
@@ -1104,7 +1104,7 @@ class SbmlImporter:
             # The id's and names below may conflict with the automatically
             # generated id's and names above.
 
-            # Assignment rules take precedence of compartment volumen
+            # Assignment rules take precedence over compartment volume
             # definitions, so they need to be evaluated first
             for variable, formula in (
                 *self.parameter_assignment_rules.items(),
@@ -1210,6 +1210,7 @@ class SbmlImporter:
     def _process_species_references(self):
         """
         Replaces species references that define anything but stoichiometries.
+
         Species references for stoichiometries are processed in
         :py:func:`amici.SBMLImporter._process_reactions`.
         """
@@ -1254,6 +1255,7 @@ class SbmlImporter:
         """
         Transforms an expression to its value at the initial timepoint by
         replacing species by their initial values.
+
         :param sym_math:
             symbolic expression
         :return:
@@ -1397,8 +1399,6 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-
-
         for symbol in ['species', 'observable', 'llhy', 'sigmay']:
             if not self.symbols.get(symbol, None):
                 continue
@@ -1478,6 +1478,7 @@ class SbmlImporter:
     def _get_element_from_assignment(self, element_id: str) -> sp.Expr:
         """
         Extract value of sbml variable according to its initial assignment
+
         :param element_id:
             sbml variable name
         :return:
@@ -1509,7 +1510,8 @@ class SbmlImporter:
                                    assignment_ids: Sequence[str],
                                    rulevars: Sequence[str]) -> sp.Expr:
         """
-        Computes the stoichiometry of a reactant or product of an reaction
+        Computes the stoichiometry of a reactant or product of a reaction
+        
         :param ele:
             reactant or product
         :param assignment_ids:
@@ -1984,7 +1986,7 @@ def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
     """
     Generate identifier symbol for a sbml variable.
     This function will always return the same unique python object for a
-    given species name.
+    given entity.
 
     :param var:
         sbml variable

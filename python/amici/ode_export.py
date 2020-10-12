@@ -350,7 +350,7 @@ class State(ModelQuantity):
 
     :ivar _conservation_law:
         algebraic formula that allows computation of this
-        species according to a conservation law
+        state according to a conservation law
 
     :ivar _dt:
         algebraic formula that defines the temporal derivative of this state
