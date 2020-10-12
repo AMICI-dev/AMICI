@@ -433,7 +433,7 @@ class SbmlImporter:
             if any([not (rule.isAssignment() or rule.isRate()) and
                     (rule.getVariable() in component_ids)
                     for rule in self.sbml.getListOfRules()]):
-                raise SBMLException(f'Only assignment and rate rules are '
+                raise SBMLException('Only assignment and rate rules are '
                                     f'currently supported for {component}!')
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
