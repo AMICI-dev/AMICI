@@ -48,7 +48,7 @@ constrained optimization problems.
 
 ## Features
 
-* SBML import (see details below)
+* SBML import
 * PySB import
 * Generation of C++ code for model simulation and sensitivity
   computation
@@ -79,8 +79,10 @@ is then used for model simulation.
 ## Getting started
 
 The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
-To install AMICI, first read the
-[installation instructions](http://amici-dev.github.io/AMICI/md__i_n_s_t_a_l_l.html).
+To install AMICI, first read the installation instructions for
+[Python](https://amici.readthedocs.io/en/latest/python_installation.html),
+[C++](https://amici.readthedocs.io/en/develop/cpp_installation.html) or
+[Matlab](https://amici.readthedocs.io/en/develop/matlab_installation.html).
 
 To get you started with Python-AMICI, the best way might be checking out this
 [Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/python/examples/example_steadystate/ExampleSteadystate.ipynb).
@@ -88,18 +90,17 @@ To get you started with Python-AMICI, the best way might be checking out this
 To get started with Matlab-AMICI, various examples are available
 in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/examples).
 
-Comprehensive documentation on installation and usage of AMICI is available
-online for the [python](https://amici.readthedocs.io/en/latest/) and 
-[MATLAB/C++](http://amici-dev.github.io/AMICI/) interfaces.
+Comprehensive documentation is available at
+[https://amici.readthedocs.io/en/latest/](https://amici.readthedocs.io/en/latest/).
 
-Any [contributions](http://amici-dev.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
+Any [contributions](https://amici.readthedocs.io/en/develop/CONTRIBUTING.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
 ## Getting help
 
 In case of questions or problems with using AMICI, feel free to post an
-[issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
+[issue](https://github.com/AMICI-dev/AMICI/issues) on GitHub. We are trying to
 get back to you quickly.
 
 ## Projects using AMICI
