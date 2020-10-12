@@ -17,8 +17,9 @@ import copy
 
 import amici
 import numpy as np
-import sympy as sp
 import pandas as pd
+
+from amici.sbml_import import symbol_with_assumptions
 
 
 # directory with sbml semantic test cases
@@ -106,13 +107,14 @@ def verify_results(settings, rdata, expected, wrapper,
         settings['concentration'].replace(' ', '').replace('\n', '').split(',')
         if s
     ]
-    # The rate rules condition here may be unnecessary/better implemented
-    # elsewhere.
+    # We only need to convert species that have only substance units and that
+    # are targets of rate rules
     concentration_species = [
-        species for species in requested_concentrations
-        if wrapper.species_has_only_substance_units[
-               wrapper.species_index[species]
-        ] and species in [str(s) for s in wrapper.species_rate_rules]
+        str(species_id)
+        for species_id, species in wrapper.symbols['species'].items()
+        if str(species_id) in requested_concentrations
+        and species['only_substance']
+        and species_id in wrapper.species_rate_rules
     ]
     amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)
@@ -165,18 +167,19 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        # Skip "species" that are actually compartments
-        compartment_species = [str(c) for c in wrapper.compartment_symbols] + \
-            list(set([
-                str(s) for s in wrapper.species_rate_rules
-                if wrapper.species_has_only_substance_units[
-                    wrapper.species_index[str(s)]
-                ]
-            ]).difference(requested_concentrations))
-        if not species == '' and species not in compartment_species:
-            symvolume = wrapper.species_compartment[
-                wrapper.species_index[species]
-            ]
+        # Skip "species" that are actually compartments or rate rules that
+        # already specify amounts
+        compartment_species = [str(c) for c in wrapper.compartment_symbols]
+        amount_species = list(set(
+            s for s in wrapper.species_rate_rules
+            if wrapper.symbols['species'][s]['only_substance']
+        ).difference(requested_concentrations))
+
+        if not species == '' and \
+                species not in compartment_species + amount_species:
+            symvolume = wrapper.symbols['species'][
+                symbol_with_assumptions(species)
+            ]['compartment']
 
             simulated.loc[:, species] *= simulated.loc[:, str(symvolume)]
 

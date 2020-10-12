@@ -17,8 +17,6 @@ from typing import (
     Dict, List, Callable, Any, Iterable, Optional, Sequence, Union
 )
 
-SymbolicFormula = Dict[sp.Symbol, sp.Expr]
-
 from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
@@ -33,6 +31,9 @@ from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 class SBMLException(Exception):
     pass
+
+
+SymbolicFormula = Dict[sp.Symbol, sp.Expr]
 
 
 default_symbols = {
@@ -77,31 +78,6 @@ class SbmlImporter:
 
     :ivar sbml:
         SBML model to import
-
-    :ivar species_index:
-        maps species IDs to indices
-
-    :ivar parameter_index:
-        maps parameter IDs to indices
-
-    :ivar fixed_parameter_index:
-        maps fixed parameter IDs to indices
-
-    :ivar species_compartment: :py:class:`sympy.Matrix`
-        compartment for each species
-
-    :ivar constant_species:
-        ids of species that are marked as constant
-
-    :ivar boundary_condition_species:
-        ids of species that are marked as boundary
-        condition
-
-    :ivar species_has_only_substance_units:
-        flags indicating whether a species has only substance units
-
-    :ivar species_conversion_factor:
-        conversion factors for every species
 
     :ivar compartment_symbols:
         compartment ids
@@ -185,10 +161,6 @@ class SbmlImporter:
         self.parameter_assignment_rules: SymbolicFormula = {}
         self.parameter_initial_assignments: SymbolicFormula = {}
         self.reaction_ids: SymbolicFormula = {}
-
-        self.species_index: Dict[str, int] = {}
-        self.parameter_index: Dict[str, int] = {}
-        self.fixed_parameter_index: Dict[str, int] = {}
 
         self._reset_symbols()
 
@@ -461,16 +433,17 @@ class SbmlImporter:
             self.local_symbols[c.getId()] = _get_identifier_symbol(c)
 
         for r in self.sbml.getListOfRules():
-            self.local_symbols[r.getVariable()] = sp.Symbol(r.getVariable(),
-                                                            real=True)
+            self.local_symbols[r.getVariable()] = symbol_with_assumptions(
+                r.getVariable()
+            )
 
         for r in self.sbml.getListOfReactions():
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
         # SBML time symbol + constants
-        self.local_symbols['time'] = sp.Symbol('time', real=True)
-        self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
+        self.local_symbols['time'] = symbol_with_assumptions('time')
+        self.local_symbols['avogadro'] = symbol_with_assumptions('avogadro')
 
     @log_execution_time('processing SBML compartments', logger)
     def _process_compartments(self) -> None:
@@ -505,54 +478,32 @@ class SbmlImporter:
         """
         Get species information from SBML model.
         """
-        species = self.sbml.getListOfSpecies()
-
-        self.species_index = {
-            species_element.getId(): species_index
-            for species_index, species_element in enumerate(species)
-        }
-
-        self.symbols['species']['identifier'] = sp.Matrix(
-            [_get_identifier_symbol(spec) for spec in species]
-        )
-
-        self.symbols['species']['name'] = [
-            spec.getName() if spec.isSetName() else spec.getId()
-            for spec in species
-        ]
-
-        self.species_compartment = sp.Matrix(
-            [_get_species_compartment_symbol(spec) for spec in species]
-        )
-
-        self.constant_species = [species_element.getId()
-                                 for species_element in species
-                                 if species_element.getConstant()]
-
-        self.boundary_condition_species = [
-            species_element.getId()
-            for species_element in species
-            if species_element.getBoundaryCondition()
-        ]
-        self.species_has_only_substance_units = [
-            specie.getHasOnlySubstanceUnits() for specie in species
-        ]
-
-        self._process_species_initial()
 
         if self.sbml.isSetConversionFactor():
-            conversion_factor = sp.Symbol(self.sbml.getConversionFactor(),
-                                          real=True)
+            conversion_factor = symbol_with_assumptions(
+                self.sbml.getConversionFactor()
+            )
         else:
             conversion_factor = 1.0
 
-        self.species_conversion_factor = sp.Matrix([
-             sp.Symbol(specie.getConversionFactor(), real=True)
-             if specie.isSetConversionFactor()
-             else conversion_factor
-             for specie in species
-        ])
+        self.symbols['species'] = {
+            _get_identifier_symbol(spec): {
+                'name': spec.getName() if spec.isSetName() else spec.getId(),
+                'compartment': _get_species_compartment_symbol(spec),
+                'constant': spec.getConstant(),
+                'boundary': spec.getBoundaryCondition(),
+                'only_substance': spec.getHasOnlySubstanceUnits(),
+                'conversion_factor': symbol_with_assumptions(
+                    spec.getConversionFactor()
+                )
+                if spec.isSetConversionFactor()
+                else conversion_factor,
+                'index': ix,
+            }
+            for ix, spec in enumerate(self.sbml.getListOfSpecies())
+        }
 
+        self._process_species_initial()
         self._process_species_rate_rules()
 
     @log_execution_time('processing SBML species initials', logger)
@@ -560,44 +511,29 @@ class SbmlImporter:
         """
         Extract initial values and initial assignments from species
         """
-        species_initial = sp.Matrix([
-            _get_species_initial(specie)
-            for specie in self.sbml.getListOfSpecies()
-        ])
+        for specie in self.sbml.getListOfSpecies():
+            initial = _get_species_initial(specie)
 
-        species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
-        for initial_assignment in self.sbml.getListOfInitialAssignments():
-            if initial_assignment.getId() not in species_ids:
-                continue
+            ia = self.sbml.getInitialAssignment(specie.getId())
+            if ia is not None:
+                initial = self._sympy_from_sbml_math(ia)
 
-            index = species_ids.index(
-                initial_assignment.getId()
-            )
-
-            sym_math = self._sympy_from_sbml_math(initial_assignment)
-            if sym_math is None:
-                continue
-
-            species_initial[index] = sym_math
-
-        # default everything that wasn't set by rules to zero
-        for ix, (symbol, init) in enumerate(zip(
-                self.symbols['species']['identifier'], species_initial
-        )):
-            if symbol == init:
-                species_initial[ix] = sp.sympify(0.0)
+            self.symbols['species'][_get_identifier_symbol(specie)]['value']\
+                = initial
 
         # flatten initSpecies
-        while any([species in species_initial.free_symbols
-                   for species in self.symbols['species']['identifier']]):
-            species_initial = species_initial.subs([
-                (symbol, init)
-                for symbol, init in zip(
-                    self.symbols['species']['identifier'], species_initial
-                )
-            ])
+        for specie in self.symbols['species'].values():
+            nested_species_count = 1
+            while nested_species_count > 0:
+                nested_species_count = 0
+                for symbol in specie['value'].free_symbols:
+                    if symbol not in self.symbols['species']:
+                        continue
 
-        self.symbols['species']['value'] = species_initial
+                    nested_species_count += 1
+                    specie['value'].subs(
+                        symbol, self.symbols['species'][symbol]['value']
+                    )
 
     @log_execution_time('processing SBML species rate rules', logger)
     def _process_species_rate_rules(self):
@@ -628,8 +564,8 @@ class SbmlImporter:
             # compartments twice (as compartments with rate rules are
             # implemented as species). Could also be avoided with a
             # `not in self.compartment_rate_rules` condition.
-            if variable in self.symbols['species']['identifier']:
-                initial_value = self.symbols['species']['value']
+            if variable in self.symbols['species']:
+                initial_value = self.symbols['species'][variable]['value']
                 component_type = sbml.SBML_SPECIES
 
             elif variable in compartmentvars:
@@ -676,24 +612,23 @@ class SbmlImporter:
             name = ''
 
         if component_type == sbml.SBML_COMPARTMENT:
-            self.symbols['species']['identifier'] = \
-                self.symbols['species']['identifier'].col_join(
-                    sp.Matrix([variable]))
-            self.symbols['species']['name'].append(name)
-            self.symbols['species']['value'] = \
-                self.symbols['species']['value'].col_join(
-                    sp.Matrix([variable0]))
-
-            self.species_index[str(variable)] = len(self.species_index)
-            self.species_has_only_substance_units.append(False)
+            self.symbols['species'][variable] = {
+                'name': name,
+                'value': variable0,
+                'only_substance': True,
+                'constant': False,
+                'boundary': False,
+                'compartment': sp.sympify(1.0),
+                'index': len(self.symbols['species'])
+            }
             self.compartment_rate_rules[variable] = d_dt
 
         elif component_type == sbml.SBML_SPECIES:
             # SBML species are already in the species symbols
-            x_index = self.species_index[str(variable)]
-            if self.species_has_only_substance_units[x_index]:
-                self.symbols['species']['value'][x_index] *= \
-                    self.species_compartment[x_index]
+            if self.symbols['species'][variable]['only_substance']:
+                # transform initial to amounts
+                self.symbols['species'][variable]['value'] *= \
+                    self.symbols['species'][variable]['compartment']
             self.species_rate_rules[variable] = d_dt
         else:
             raise TypeError(f'Rate rules are currently only supported for '
@@ -747,25 +682,11 @@ class SbmlImporter:
         }
 
         for partype, settings in loop_settings.items():
-            self.symbols[partype]['identifier'] = sp.Matrix(
-                [_get_identifier_symbol(par) for par in settings['var']]
-            )
-            self.symbols[partype]['name'] = [
-                par.getName() if par.isSetName() else par.getId()
-                for par in settings['var']
-            ]
-            self.symbols[partype]['value'] = [
-                par.getValue() for par in settings['var']
-            ]
-            setattr(
-                self,
-                f'{settings["name"]}_index',
-                {
-                    parameter_element.getId(): parameter_index
-                    for parameter_index, parameter_element
-                    in enumerate(settings['var'])
+            for par in settings['var']:
+                self.symbols[partype][_get_identifier_symbol(par)] = {
+                    'name': par.getName() if par.isSetName() else par.getId(),
+                    'value': par.getValue()
                 }
-            )
 
     @log_execution_time('processing SBML reactions', logger)
     def _process_reactions(self):
@@ -777,13 +698,13 @@ class SbmlImporter:
         # to ensure that, if there are no reactions, the stoichiometric matrix
         # and flux vector multiply to a zero vector with dimensions (nx, 1).
         nr = max(1, len(reactions))
-        nx = len(self.symbols['species']['name'])
+        nx = len(self.symbols['species'])
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
         self.flux_vector = sp.zeros(nr, 1)
 
-        assignment_ids = [ass.getId()
-                          for ass in self.sbml.getListOfInitialAssignments()]
+        assignment_ids = [ia.getId()
+                          for ia in self.sbml.getListOfInitialAssignments()]
         rulevars = [rule.getVariable()
                     for rule in self.sbml.getListOfRules()
                     if rule.getFormula() != '']
@@ -807,30 +728,25 @@ class SbmlImporter:
         for reaction_index, reaction in enumerate(reactions):
             for element_list, sign in [(reaction.getListOfReactants(), -1.0),
                                        (reaction.getListOfProducts(), 1.0)]:
-                elements = {}
-                for index, element in enumerate(element_list):
-                    # we need the index here as we might have multiple elements
-                    # for the same species
-                    elements[index] = {'species': element.getSpecies()}
-                    elements[index]['stoichiometry'] = \
-                        self._get_element_stoichiometry(element,
-                                                        assignment_ids,
-                                                        rulevars)
+                for element in element_list:
+                    stoichiometry = self._get_element_stoichiometry(
+                        element, assignment_ids, rulevars
+                    )
+                    species_id = _get_identifier_symbol(
+                        self.sbml.getSpecies(element.getSpecies())
+                    )
+                    species = self.symbols['species'][species_id]
 
-                for index in elements.keys():
-                    if not self._is_constant(elements[index]['species']):
-                        specie_index = self.species_index[
-                            elements[index]['species']
-                        ]
-                        # Division by species compartment size (to find the
-                        # rate of change in species concentration) now occurs
-                        # in the `dx_dt` method in "ode_export.py", which also
-                        # accounts for possibly variable compartments.
-                        self.stoichiometric_matrix[specie_index,
-                                                   reaction_index] += \
-                            sign \
-                            * elements[index]['stoichiometry'] \
-                            * self.species_conversion_factor[specie_index]
+                    if self._is_constant(species_id):
+                        continue
+
+                    # Division by species compartment size (to find the
+                    # rate of change in species concentration) now occurs
+                    # in the `dx_dt` method in "ode_export.py", which also
+                    # accounts for possibly variable compartments.
+                    self.stoichiometric_matrix[species['index'],
+                                               reaction_index] += \
+                        sign * stoichiometry * species['conversion_factor']
 
             sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
             sym_math = sym_math.subs(math_subs)
@@ -856,7 +772,7 @@ class SbmlImporter:
 
         rulevars = get_rule_vars(rules, local_symbols=self.local_symbols)
         fluxvars = self.flux_vector.free_symbols
-        specvars = self.symbols['species']['identifier'].free_symbols
+        specvars = self.symbols['species']
         volumevars = self.compartment_volume.free_symbols
         compartmentvars = self.compartment_symbols.free_symbols
         parametervars = sp.Matrix([
@@ -899,13 +815,14 @@ class SbmlImporter:
                 else:
                     self.sbml.removeParameter(str(variable))
                     for var in formula.free_symbols:
-                        if str(var) in self.species_index:
-                            sindex = self.species_index[str(var)]
-                            if self.species_has_only_substance_units[sindex]\
-                                    and var not in self.species_rate_rules:
-                                formula = formula.subs(
-                                    var, var*self.species_compartment[sindex]
-                                )
+                        species = self.symbols['species'].get(var, None)
+                        if species is None:
+                            continue
+                        if species['only_substance'] \
+                                and var not in self.species_rate_rules:
+                            formula = formula.subs(
+                                var, var * species['compartment']
+                            )
 
                     self.parameter_assignment_rules[variable] = formula
                     assignments[str(variable)] = formula
@@ -952,7 +869,7 @@ class SbmlImporter:
         # rules
         for variable in assignments.keys():
             self._replace_in_all_expressions(
-                sp.Symbol(variable, real=True),
+                symbol_with_assumptions(variable),
                 assignments[variable]
             )
 
@@ -960,27 +877,22 @@ class SbmlImporter:
         """
         Convert equations from amount to volume.
         """
-        compartments = self.species_compartment
-        for comp, vol in zip(self.compartment_symbols,
-                             self.compartment_volume):
-            if comp not in self.compartment_rate_rules:
-                compartments = compartments.subs(comp, vol)
-        for index, sunits in enumerate(self.species_has_only_substance_units):
-            if not sunits:
+        for species, definition in self.symbols['species'].items():
+            if not definition['only_substance']:
                 continue
+            volume = definition['compartment']
+            for comp, vol in zip(self.compartment_symbols,
+                                 self.compartment_volume):
+                volume = volume.subs(comp, vol)
             self.flux_vector = \
-                self.flux_vector.subs(
-                    self.symbols['species']['identifier'][index],
-                    self.symbols['species']['identifier'][index]
-                    * compartments[index]
-                )
+                self.flux_vector.subs(species, species * volume)
 
     def _process_time(self) -> None:
         """
         Convert time_symbol into cpp variable.
         """
-        sbml_time_symbol = sp.Symbol('time', real=True)
-        amici_time_symbol = sp.Symbol('t', real=True)
+        sbml_time_symbol = symbol_with_assumptions('time')
+        amici_time_symbol = symbol_with_assumptions('t')
         self.amici_time_symbol = amici_time_symbol
 
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
@@ -1034,7 +946,7 @@ class SbmlImporter:
                     f"Noise distribution provided for unknown observableIds: "
                     f"{unknown_ids}.")
 
-        species_syms = self.symbols['species']['identifier']
+        species_syms = sp.Matrix(list(self.symbols['species'].keys()))
         assignments = {str(c): str(r)
                        for c, r in self.compartment_assignment_rules.items()}
         assignments.update({str(s): str(r)
@@ -1080,7 +992,7 @@ class SbmlImporter:
                 for index, observable in enumerate(observables)
             ]
             observable_syms = sp.Matrix([
-                sp.symbols(obs, real=True) for obs in observables.keys()
+                symbol_with_assumptions('obs') for obs in observables.keys()
             ])
             observable_ids = observables.keys()
         else:
@@ -1093,7 +1005,7 @@ class SbmlImporter:
                 str(sym) for sym in observable_values
             ]
             observable_syms = sp.Matrix(
-                [sp.symbols(f'y{index}', real=True)
+                [symbol_with_assumptions(f'y{index}')
                  for index in range(len(species_syms))]
             )
             # Add compartment and species assignment rules as observables
@@ -1122,14 +1034,14 @@ class SbmlImporter:
                     [variable]))
 
             for species in self.species_assignment_rules:
-                x_index = self.species_index[str(species)]
+                x_index = self.symbols['species'][species]['index']
                 observable_values[x_index] = replace_assignments(str(species))
                 observable_ids[x_index] = f'y{species}'
                 observable_names[x_index] = f'{species}'
                 observable_syms[x_index] = species
 
         sigma_y_syms = sp.Matrix(
-            [sp.symbols(f'sigma{symbol}', real=True)
+            [symbol_with_assumptions(f'sigma{symbol}')
              for symbol in observable_syms]
         )
         sigma_y_values = sp.Matrix(
@@ -1161,9 +1073,10 @@ class SbmlImporter:
             llh_y_values.append(f)
         llh_y_values = sp.Matrix(llh_y_values)
 
-        llh_y_syms = sp.Matrix(
-            [sp.Symbol(f'J{symbol}', real=True) for symbol in observable_syms]
-        )
+        llh_y_syms = sp.Matrix([
+            symbol_with_assumptions(f'J{symbol}')
+             for symbol in observable_syms
+        ])
 
         # set symbols
         self.symbols['observable']['identifier'] = observable_syms
@@ -1257,10 +1170,10 @@ class SbmlImporter:
         if not isinstance(sym_math, sp.Expr):
             return sym_math
 
-        return sym_math.subs(
-            self.symbols['species']['identifier'],
-            self.symbols['species']['value']
-        )
+        return sym_math.subs({
+            key: value['value']
+            for key, value in self.symbols['species'].items()
+        })
 
     def process_conservation_laws(self, ode_model, volume_updates) -> List:
         """
@@ -1337,8 +1250,8 @@ class SbmlImporter:
                              self.compartment_volume):
             if comp in self.compartment_rate_rules:
                 # for comps with rate rules volume is only initial
-                self.symbols['species']['value'] = \
-                    self.symbols['species']['value'].subs(comp, vol)
+                for species in self.symbols['species'].items():
+                    species['value'] = species['value'].subs(comp, vol)
                 continue
             self._replace_in_all_expressions(
                 comp, vol
@@ -1392,11 +1305,17 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        for symbol in ['species', 'observable', 'llhy', 'sigmay']:
+        for symbol in ['observable', 'llhy', 'sigmay']:
             if not self.symbols.get(symbol, None):
                 continue
             self.symbols[symbol]['value'] = \
                 self.symbols[symbol]['value'].subs(old, new)
+
+        for symbol in ['species']:
+            if not self.symbols.get(symbol, None):
+                continue
+            for element in self.symbols[symbol].values():
+                element['value'] = element['value'].subs(old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
@@ -1412,8 +1331,8 @@ class SbmlImporter:
         """
         reserved_symbols = ['x', 'k', 'p', 'y', 'w']
         for sym in reserved_symbols:
-            old_symbol = sp.Symbol(sym, real=True)
-            new_symbol = sp.Symbol('amici_' + sym, real=True)
+            old_symbol = symbol_with_assumptions(sym)
+            new_symbol = symbol_with_assumptions(f'amici_{sym}')
             self._replace_in_all_expressions(old_symbol, new_symbol,
                                              include_rate_rule_targets=True)
             for symbols in self.symbols.values():
@@ -1427,7 +1346,7 @@ class SbmlImporter:
         csymbol definition
         """
         constants = [
-            (sp.Symbol('avogadro', real=True), sp.Symbol('6.02214179e23')),
+            (symbol_with_assumptions('avogadro'), sp.sympify(6.02214179e23)),
         ]
         for constant, value in constants:
             # do not replace if any symbol is shadowing default definition
@@ -1486,7 +1405,7 @@ class SbmlImporter:
         sym = self._make_initial(sym)
         return sym
 
-    def _is_constant(self, specie: str) -> bool:
+    def _is_constant(self, specie: sp.Symbol) -> bool:
         """
         Check if the respective species
         :param specie:
@@ -1495,8 +1414,8 @@ class SbmlImporter:
             True if constant is marked constant or as boundary condition
             else false
         """
-        return specie in self.constant_species or \
-            specie in self.boundary_condition_species
+        return self.symbols['species'][specie]['constant'] or \
+            self.symbols['species'][specie]['boundary']
 
     def _get_element_stoichiometry(self,
                                    ele: sbml.SBase,
@@ -1948,7 +1867,7 @@ def _add_conservation_for_constant_species(
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
             target_state = ode_model._states[ix].get_id()
-            total_abundance = sp.Symbol(f'tcl_{target_state}', real=True)
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
@@ -1972,7 +1891,7 @@ def _get_species_compartment_symbol(species: sbml.Species) -> sp.Symbol:
     :return:
         compartment symbol
     """
-    return sp.Symbol(species.getCompartment(), real=True)
+    return symbol_with_assumptions(species.getCompartment())
 
 
 def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
@@ -1986,7 +1905,7 @@ def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
     :return:
         identifier symbol
     """
-    return sp.Symbol(var.getId(), real=True)
+    return symbol_with_assumptions(var.getId())
 
 
 def _get_species_initial(species: sbml.Species) -> sp.Expr:
@@ -2002,7 +1921,7 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     amount = species.getInitialAmount()
 
     # default (allows override from rules)
-    conc = _get_identifier_symbol(species)
+    conc = sp.sympify(0.0)
 
     # defined concentration
     conc_from_conc = sp.sympify(species.getInitialConcentration())
@@ -2045,6 +1964,17 @@ def _get_list_of_species_references(sbml_model: sbml.Model) \
         if isinstance(element, sbml.ListOfSpeciesReferences)
         for reference in element
     ]
+
+
+def symbol_with_assumptions(name: str):
+    """
+    Central function to create symbols with consistent, canonical assumptions
+    :param name:
+        name of the symbolc
+    :return:
+        symbol with canonical assumptions
+    """
+    return sp.Symbol(name, real=True)
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):

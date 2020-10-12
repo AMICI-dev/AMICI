@@ -921,31 +921,28 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def dx_dt(x_index, dxdt):
+        def dx_dt(specie_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
             compartments with a constant volume, or a volume that is defined by
             an assignment or rate rule.
 
-            :param x_index:
-                The index (not identifier) of the species in the variables
-                (generated in "sbml_import.py") that describe the model.
+            :param specie:
+                The identifier of the species (generated in "sbml_import.py").
 
             :param dxdt:
                 The element-wise product of the row in the stoichiometric
                 matrix that corresponds to the species (row x_index) and the
                 flux (kinetic laws) vector. Ignored in the case of rate rules.
             """
-            x_id = symbols['species']['identifier'][x_index]
-
             # Rate rules specify dx_dt.
             # Note that the rate rule of species may describe amount, not
             # concentration.
-            if x_id in si.compartment_rate_rules:
-                return si.compartment_rate_rules[x_id]
-            elif x_id in si.species_rate_rules:
-                return si.species_rate_rules[x_id]
+            if specie_id in si.compartment_rate_rules:
+                return si.compartment_rate_rules[specie_id]
+            elif specie_id in si.species_rate_rules:
+                return si.species_rate_rules[specie_id]
 
             # The derivation of the below return expressions can be found in
             # the documentation. They are found by rearranging
@@ -956,24 +953,25 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            v_name = si.species_compartment[x_index]
+            v_name = si.symbols['species'][specie_id]['compartment']
+            x_index = si.symbols['species'][specie_id]['index']
             if v_name in si.compartment_rate_rules:
                 dv_dt = si.compartment_rate_rules[v_name]
-                xdot = (dxdt - dv_dt * x_id) / v_name
+                xdot = (dxdt - dv_dt * specie_id) / v_name
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
             elif v_name in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[v_name]
                 dv_dt = v.diff(si.amici_time_symbol)
-                dv_dx = v.diff(x_id)
-                xdot = (dxdt - dv_dt * x_id) / (dv_dx * x_id + v)
+                dv_dx = v.diff(specie_id)
+                xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
             else:
                 v = si.compartment_volume[list(si.compartment_symbols).index(
-                    si.species_compartment[x_index])]
+                    v_name)]
 
                 if v == 1.0:
                     return dxdt
@@ -987,18 +985,30 @@ class ODEModel:
         # create dynamics without respecting conservation laws first
         dxdt = smart_multiply(si.stoichiometric_matrix,
                               MutableDenseMatrix(fluxes))
-        symbols['species']['dt'] = sp.Matrix([
-            dx_dt(x_index, dxdt[x_index])
-            for x_index in range(dxdt.rows)
-        ])
+        for ix, ((specie_id, specie), formula) in enumerate(zip(
+                symbols['species'].items(),
+                dxdt
+        )):
+            assert ix == specie['index']  # check that no reordering occured
+            specie['dt'] = dx_dt(specie_id, formula)
+            specie['identifier'] = specie_id
 
         # create all basic components of the ODE model and add them.
-        for symbol in [s for s in symbols if s != 'my']:
+        for symbol in [s for s in symbols]:
             # transform dict of lists into a list of dicts
-            protos = [dict(zip(symbols[symbol], t))
-                      for t in zip(*symbols[symbol].values())]
+            if symbol == 'species':
+                protos = [
+                    {k: v for k, v in specie.items()
+                     if k in ['name', 'value', 'identifier', 'dt']}
+                    for specie_id, specie in symbols[symbol].items()
+                ]
+            else:
+                protos = [dict(zip(symbols[symbol], t))
+                          for t in zip(*symbols[symbol].values())]
+
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
+
 
         # process conservation laws
         if compute_cls:
