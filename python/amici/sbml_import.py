@@ -17,6 +17,8 @@ from typing import (
     Dict, List, Callable, Any, Iterable, Optional, Sequence, Union
 )
 
+SymbolicFormula = Dict[sp.Symbol, sp.Expr]
+
 from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
@@ -176,13 +178,13 @@ class SbmlImporter:
         self.symbols: Dict = {}
 
         self.local_symbols: Dict = {}
-        self.compartment_rate_rules: Dict[sp.Symbol, sp.Expr] = {}
-        self.species_rate_rules: Dict[sp.Symbol, sp.Expr] = {}
-        self.compartment_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
-        self.species_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
-        self.parameter_assignment_rules: Dict[sp.Symbol, sp.Expr] = {}
-        self.parameter_initial_assignments: Dict[sp.Symbol, sp.Expr] = {}
-        self.reaction_ids: Dict[sp.Symbol, sp.Expr] = {}
+        self.compartment_rate_rules: SymbolicFormula = {}
+        self.species_rate_rules: SymbolicFormula = {}
+        self.compartment_assignment_rules: SymbolicFormula = {}
+        self.species_assignment_rules: SymbolicFormula = {}
+        self.parameter_assignment_rules: SymbolicFormula = {}
+        self.parameter_initial_assignments: SymbolicFormula = {}
+        self.reaction_ids: SymbolicFormula = {}
 
         self.species_index: Dict[str, int] = {}
         self.parameter_index: Dict[str, int] = {}
@@ -451,11 +453,7 @@ class SbmlImporter:
         This is later used during sympifications to avoid sympy builtins
         shadowing model entities.
         """
-        species_references = next((
-            list(element)
-            for element in self.sbml.all_elements
-            if isinstance(element, sbml.ListOfSpeciesReferences)
-        ), [])
+        species_references = _get_list_of_species_references(self.sbml)
         for c in list(self.sbml.getListOfSpecies()) + \
                 list(self.sbml.getListOfParameters()) + \
                 list(self.sbml.getListOfCompartments()) + \
@@ -1220,12 +1218,7 @@ class SbmlImporter:
                     for rule in self.sbml.getListOfRules()
                     if rule.getFormula() != '']
         # doesnt look like there is a better way to get hold of those lists:
-        species_references = next((
-            list(element)
-            for element in self.sbml.all_elements
-            if isinstance(element, sbml.ListOfSpeciesReferences)
-        ), [])
-
+        species_references = _get_list_of_species_references(self.sbml)
         for species_reference in species_references:
             if hasattr(species_reference, 'getStoichiometryMath') and \
                     species_reference.getStoichiometryMath() is not None:
@@ -1497,7 +1490,7 @@ class SbmlImporter:
         """
         Check if the respective species
         :param specie:
-            species names
+            species ids
         :return:
             True if constant is marked constant or as boundary condition
             else false
@@ -2004,33 +1997,54 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
         species index
 
     :return:
-        initial species amount
+        initial species concentration
     """
     amount = species.getInitialAmount()
 
     # default (allows override from rules)
-    initial = _get_identifier_symbol(species)
+    conc = _get_identifier_symbol(species)
 
     # defined concentration
-    conc_conc = sp.sympify(species.getInitialConcentration())
+    conc_from_conc = sp.sympify(species.getInitialConcentration())
     # computed concentration
-    conc_amount = sp.sympify(amount) / _get_species_compartment_symbol(species)
+    conc_from_amount = \
+        sp.sympify(amount) / _get_species_compartment_symbol(species)
 
     if species.getHasOnlySubstanceUnits():
         if species.isSetInitialAmount() and not math.isnan(amount):
-            initial = conc_amount
+            conc = conc_from_amount
 
         if species.isSetInitialConcentration():
-            initial = conc_conc
+            conc = conc_from_conc
 
     else:
         if species.isSetInitialConcentration():
-            initial = conc_conc
+            conc = conc_from_conc
 
         if species.isSetInitialAmount() and not math.isnan(amount):
-            initial = conc_amount
+            conc = conc_from_amount
 
-    return initial
+    return conc
+
+
+def _get_list_of_species_references(sbml_model: sbml.Model) \
+        -> List[sbml.SpeciesReferences]:
+    """
+    Extracts list of species references as SBML doesn't provide a native
+    function for this.
+
+    :param sbml_model:
+        SBML model instance
+
+    :return:
+        ListOfSpeciesReferences
+    """
+    return [
+        reference
+        for element in sbml_model.all_elements
+        if isinstance(element, sbml.ListOfSpeciesReferences)
+        for reference in element
+    ]
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):

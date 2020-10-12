@@ -472,7 +472,9 @@ class Observable(ModelQuantity):
     An Observable links model simulations to experimental measurements,
     abbreviated by `y`
 
-    :ivar:
+    :ivar _measurement_symbol:
+        sympy symbol used in the objective function to represent
+        measurements to this observable
     """
 
     _measurement_symbol: Union[sp.Symbol, None] = None
