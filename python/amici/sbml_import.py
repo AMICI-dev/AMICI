@@ -120,10 +120,20 @@ class SbmlImporter:
         see `locals`argument in `sympy.sympify`
 
     :ivar species_assignment_rules:
-        assignment rules for species
+        Assignment rules for species.
+        Key is symbolic identifier and value is assignment value
+
+    :ivar species_rate_rules:
+        Rate rules for species.
+        Key is symbolic identifier and value is rate
 
     :ivar compartment_assignment_rules:
-        assignment rules for compartments
+        Assignment rules for compartments.
+        Key is symbolic identifier and value is assignment value
+
+    :ivar compartment_rate_rules:
+        Rate rules for compartments.
+        Key is symbolic identifier and value is rate
 
     :ivar parameter_assignment_rules:
         assignment rules for parameters, these parameters are not permissible
