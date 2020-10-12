@@ -991,24 +991,25 @@ class ODEModel:
         )):
             assert ix == specie['index']  # check that no reordering occured
             specie['dt'] = dx_dt(specie_id, formula)
-            specie['identifier'] = specie_id
 
         # create all basic components of the ODE model and add them.
-        for symbol in [s for s in symbols]:
+        for symbol_name in symbols:
             # transform dict of lists into a list of dicts
-            if symbol == 'species':
-                protos = [
-                    {k: v for k, v in specie.items()
-                     if k in ['name', 'value', 'identifier', 'dt']}
-                    for specie_id, specie in symbols[symbol].items()
-                ]
-            else:
-                protos = [dict(zip(symbols[symbol], t))
-                          for t in zip(*symbols[symbol].values())]
+            args = ['name', 'value', 'identifier']
+
+            if symbol_name == 'species':
+                args += ['dt']
+
+            protos = [
+                {
+                    'identifier': var_id,
+                    **{k: v for k, v in var.items() if k in args}
+                }
+                for var_id, var in symbols[symbol_name].items()
+            ]
 
             for proto in protos:
-                self.add_component(symbol_to_type[symbol](**proto))
-
+                self.add_component(symbol_to_type[symbol_name](**proto))
 
         # process conservation laws
         if compute_cls:

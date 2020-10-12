@@ -772,13 +772,7 @@ class SbmlImporter:
 
         rulevars = get_rule_vars(rules, local_symbols=self.local_symbols)
         fluxvars = self.flux_vector.free_symbols
-        specvars = self.symbols['species']
         volumevars = self.compartment_volume.free_symbols
-        compartmentvars = self.compartment_symbols.free_symbols
-        parametervars = sp.Matrix([
-            _get_identifier_symbol(par)
-            for par in self.sbml.getListOfParameters()
-        ])
         stoichvars = self.stoichiometric_matrix.free_symbols
 
         assignments = {}
@@ -789,31 +783,29 @@ class SbmlImporter:
                 continue
             if rule.getFormula() == '':
                 continue
-            variable = sp.sympify(rule.getVariable(),
-                                  locals=self.local_symbols)
+
+            sbml_var = self.sbml.getElementBySId(rule.getVariable())
+            sym_id = sp.sympify(rule.getVariable(),
+                                locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
 
-            if variable in stoichvars:
-                self.stoichiometric_matrix = \
-                    self.stoichiometric_matrix.subs(variable, formula)
-
-            elif variable in specvars and \
+            if isinstance(sbml_var, sbml.Species) and \
                     rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                self.species_assignment_rules[variable] = formula
-                assignments[str(variable)] = formula
+                self.species_assignment_rules[sym_id] = formula
+                assignments[str(sym_id)] = formula
 
-            elif variable in compartmentvars and \
+            elif isinstance(sbml_var, sbml.Compartment) and \
                     rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                self.compartment_assignment_rules[variable] = formula
-                assignments[str(variable)] = formula
+                self.compartment_assignment_rules[sym_id] = formula
+                assignments[str(sym_id)] = formula
 
-            elif variable in parametervars:
-                if str(variable) in self.parameter_index:
-                    idx = self.parameter_index[str(variable)]
-                    self.symbols['parameter']['value'][idx] \
-                        = float(formula)
+            elif isinstance(sbml_var, sbml.Parameter):
+                parameters = [str(p) for p in self.symbols['parameter']]
+                if str(sym_id) in parameters:
+                    idx = parameters.index(str(sym_id))
+                    self.symbols['parameter']['value'][idx] = float(formula)
                 else:
-                    self.sbml.removeParameter(str(variable))
+                    self.sbml.removeParameter(str(sym_id))
                     for var in formula.free_symbols:
                         species = self.symbols['species'].get(var, None)
                         if species is None:
@@ -824,22 +816,26 @@ class SbmlImporter:
                                 var, var * species['compartment']
                             )
 
-                    self.parameter_assignment_rules[variable] = formula
-                    assignments[str(variable)] = formula
+                    self.parameter_assignment_rules[sym_id] = formula
+                    assignments[str(sym_id)] = formula
 
-            elif variable in fluxvars:
-                self.flux_vector = self.flux_vector.subs(variable, formula)
+            if sym_id in stoichvars:
+                self.stoichiometric_matrix = \
+                    self.stoichiometric_matrix.subs(sym_id, formula)
 
-            elif variable in volumevars:
+            if sym_id in fluxvars:
+                self.flux_vector = self.flux_vector.subs(sym_id, formula)
+
+            if sym_id in volumevars:
                 self.compartment_volume = \
-                    self.compartment_volume.subs(variable, formula)
+                    self.compartment_volume.subs(sym_id, formula)
 
-            if variable in rulevars:
+            if sym_id in rulevars:
                 for nested_rule in rules:
 
                     nested_formula = self._sympy_from_sbml_math(
                         nested_rule
-                    ).subs(variable, formula)
+                    ).subs(sym_id, formula)
 
                     nested_rule_math_ml = mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(
@@ -862,15 +858,15 @@ class SbmlImporter:
 
                 for assignment in assignments:
                     assignments[assignment] = assignments[assignment].subs(
-                        variable, formula
+                        sym_id, formula
                     )
 
         # do this at the very end to ensure we have flattened all recursive
         # rules
-        for variable in assignments.keys():
+        for sym_id in assignments.keys():
             self._replace_in_all_expressions(
-                symbol_with_assumptions(variable),
-                assignments[variable]
+                symbol_with_assumptions(sym_id),
+                assignments[sym_id]
             )
 
     def _process_volume_conversion(self) -> None:
@@ -946,7 +942,6 @@ class SbmlImporter:
                     f"Noise distribution provided for unknown observableIds: "
                     f"{unknown_ids}.")
 
-        species_syms = sp.Matrix(list(self.symbols['species'].keys()))
         assignments = {str(c): str(r)
                        for c, r in self.compartment_assignment_rules.items()}
         assignments.update({str(s): str(r)
@@ -973,41 +968,28 @@ class SbmlImporter:
         # add user-provided observables or make all species, and compartments
         # with assignment rules, observable
         if observables:
-            # Replace logX(.) by log(., X) since sympy cannot parse the
-            # former.
-            for observable in observables:
-                observables[observable]['formula'] = re.sub(
-                    r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
-                    observables[observable]['formula']
-                )
-
-            observable_values = sp.Matrix([
-                replace_assignments(observables[observable]['formula'])
-                for observable in observables
-            ])
-            observable_names = [
-                observables[observable]['name'] if 'name' in observables[
-                    observable].keys()
-                else f'y{index}'
-                for index, observable in enumerate(observables)
-            ]
-            observable_syms = sp.Matrix([
-                symbol_with_assumptions('obs') for obs in observables.keys()
-            ])
-            observable_ids = observables.keys()
+            self.symbols['observable'] = {
+                symbol_with_assumptions(obs): {
+                    'name': definition.get('name', f'y{iobs}'),
+                    # Replace logX(.) by log(., X) since sympy cannot parse the
+                    # former.
+                    'value': replace_assignments(re.sub(
+                        r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
+                        definition['formula']
+                    ))
+                }
+                for iobs, (obs, definition) in enumerate(observables.items())
+            }
         else:
-            # prefer sympy's copy over deepcopy, see sympy issue #7672
-            observable_values = species_syms.copy()
-            observable_ids = [
-                f'x{index}' for index in range(len(species_syms))
-            ]
-            observable_names = [
-                str(sym) for sym in observable_values
-            ]
-            observable_syms = sp.Matrix(
-                [symbol_with_assumptions(f'y{index}')
-                 for index in range(len(species_syms))]
-            )
+            self.symbols['observable'] = {
+                symbol_with_assumptions(f'y{ix}'): {
+                    'name': specie['name'],
+                    'value': specie_id
+                }
+                for ix, (specie_id, specie)
+                in enumerate(self.symbols['species'].items())
+            }
+
             # Add compartment and species assignment rules as observables
             # Useful for passing the SBML Test Suite (compartment volumes are
             # used to calculate species amounts).
@@ -1020,75 +1002,43 @@ class SbmlImporter:
                 *self.parameter_assignment_rules.items(),
                 *self.parameter_initial_assignments.items(),
                 *self.compartment_assignment_rules.items(),
+                *self.species_assignment_rules.items(),
                 *dict(zip(self.compartment_symbols,
                           self.compartment_volume)).items()
             ):
+                symbol = symbol_with_assumptions(f'y{variable}')
                 if variable in self.compartment_rate_rules or\
-                        f'y{variable}' in observable_ids:
+                        symbol in self.symbols['observable']:
                     continue
-                observable_values = observable_values.col_join(sp.Matrix(
-                    [formula]))
-                observable_ids.append(f'y{variable}')
-                observable_names.append(f'{variable}')
-                observable_syms = observable_syms.col_join(sp.Matrix(
-                    [variable]))
+                self.symbols['observable'][symbol] = {'name': str(variable),
+                                                      'value': formula}
 
-            for species in self.species_assignment_rules:
-                x_index = self.symbols['species'][species]['index']
-                observable_values[x_index] = replace_assignments(str(species))
-                observable_ids[x_index] = f'y{species}'
-                observable_names[x_index] = f'{species}'
-                observable_syms[x_index] = species
+        for obs_id, obs in self.symbols['observable'].items():
+            obs['measurement_symbol'] = generate_measurement_symbol(obs_id)
 
-        sigma_y_syms = sp.Matrix(
-            [symbol_with_assumptions(f'sigma{symbol}')
-             for symbol in observable_syms]
-        )
-        sigma_y_values = sp.Matrix(
-            [1.0] * len(observable_syms)
-        )
+        self.symbols['sigmay'] = {
+            symbol_with_assumptions(f'sigma_{obs_id}'): {
+                'name': f'sigma_{obs["name"]}',
+                'value': replace_assignments(sigmas.get(str(obs_id), '1.0'))
+            }
+            for obs_id, obs in self.symbols['observable'].items()
+        }
 
-        # set user-provided sigmas
-        for iy, obs_name in enumerate(observables):
-            if obs_name in sigmas:
-                sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
-
-        measurement_y_syms = sp.Matrix(
-            [generate_measurement_symbol(obs_id) for obs_id in observable_ids]
-        )
-
-        # set cost functions
-        llh_y_strings = []
-        for y_name in observable_ids:
-            llh_y_strings.append(noise_distribution_to_cost_function(
-                noise_distributions.get(y_name, 'normal')))
-
-        llh_y_values = []
-        for llh_y_string, o_sym, m_sym, s_sym \
-                in zip(llh_y_strings, observable_syms,
-                       measurement_y_syms, sigma_y_syms):
-            f = sp.sympify(llh_y_string(o_sym), locals={str(o_sym): o_sym,
-                                                        f'm{o_sym}': m_sym,
-                                                        str(s_sym): s_sym})
-            llh_y_values.append(f)
-        llh_y_values = sp.Matrix(llh_y_values)
-
-        llh_y_syms = sp.Matrix([
-            symbol_with_assumptions(f'J{symbol}')
-             for symbol in observable_syms
-        ])
-
-        # set symbols
-        self.symbols['observable']['identifier'] = observable_syms
-        self.symbols['observable']['name'] = l2s(observable_names)
-        self.symbols['observable']['value'] = observable_values
-        self.symbols['observable']['measurement_symbol'] = measurement_y_syms
-        self.symbols['sigmay']['identifier'] = sigma_y_syms
-        self.symbols['sigmay']['name'] = l2s(sigma_y_syms)
-        self.symbols['sigmay']['value'] = sigma_y_values
-        self.symbols['llhy']['value'] = llh_y_values
-        self.symbols['llhy']['name'] = l2s(llh_y_syms)
-        self.symbols['llhy']['identifier'] = llh_y_syms
+        self.symbols['llhy'] = {
+            symbol_with_assumptions(f'J{obs_id}'): {
+                'name': f'J{obs["name"]}',
+                'value': sp.sympify(noise_distribution_to_cost_function(
+                    noise_distributions.get(str(obs_id), 'normal')
+                )(obs_id), locals=dict(zip(
+                    _get_str_symbol_identifiers(obs_id),
+                    (obs_id, obs['measurement_symbol'], sigma_id)
+                )))
+            }
+            for (obs_id, obs), (sigma_id, sigma) in zip(
+                    self.symbols['observable'].items(),
+                    self.symbols['sigmay'].items()
+            )
+        }
 
     @log_execution_time('processing SBML initial assignments', logger)
     def _process_initial_assignments(self):
@@ -1305,13 +1255,7 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        for symbol in ['observable', 'llhy', 'sigmay']:
-            if not self.symbols.get(symbol, None):
-                continue
-            self.symbols[symbol]['value'] = \
-                self.symbols[symbol]['value'].subs(old, new)
-
-        for symbol in ['species']:
+        for symbol in ['species', 'observable', 'llhy', 'sigmay']:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
@@ -1920,7 +1864,6 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     """
     amount = species.getInitialAmount()
 
-    # default (allows override from rules)
     conc = sp.sympify(0.0)
 
     # defined concentration
