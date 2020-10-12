@@ -2028,7 +2028,7 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
 
 
 def _get_list_of_species_references(sbml_model: sbml.Model) \
-        -> List[sbml.SpeciesReferences]:
+        -> List[sbml.SpeciesReference]:
     """
     Extracts list of species references as SBML doesn't provide a native
     function for this.

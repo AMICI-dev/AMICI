@@ -119,9 +119,10 @@ def verify_results(settings, rdata, expected, wrapper,
 
     concentrations_to_amounts(amount_species, wrapper, simulated,
                               requested_concentrations)
+
+    # simulated may contain `obdect` dtype columns and `expected` may
+    # contain `np.int64` columns so we cast everything to `np.float64`.
     for variable in variables:
-        # some values in expected will be int64, so we cast everything as float
-        # to avoid errors from downcasting float64 to int64
         assert np.isclose(
             simulated[variable].astype(np.float64).values,
             expected[variable].astype(np.float64).values, atol, rtol
