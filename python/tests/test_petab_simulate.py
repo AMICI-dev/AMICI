@@ -12,23 +12,22 @@ import petabtests
 @pytest.fixture
 def petab_problem() -> petab.Problem:
     """Create a PEtab problem for use in tests."""
-    petab_test_suite_path = (
-        pathlib.Path(__file__)
-        .parent
-        .parent
-        .parent
-        .absolute()
-        / 'petab_test_suite'
-    )
     test_case = '0001'
-    test_case_yaml_path = \
-        pathlib.Path('cases') / test_case / f'_{test_case}.yaml'
-    petab_yaml_path = petab_test_suite_path / test_case_yaml_path
-    return petab.Problem.from_yaml(str(petab_yaml_path))
+    #petab_test_suite_path = (
+    #    Path(__file__)
+    #    .parent
+    #    .parent
+    #    .parent
+    #    .absolute()
+    #    / 'petab_test_suite'
+    #)
+    #test_case_yaml_path = Path('cases') / test_case / f'_{test_case}.yaml'
+    #petab_yaml_path = petab_test_suite_path / test_case_yaml_path
+    #return petab.Problem.from_yaml(str(petab_yaml_path))
 
-    test_case_dir = pathlib.Path(petabtests.SBML_DIR) / petabtests.CASES_LIST[0]
-    yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
-    problem = petab.Problem.from_yaml(yaml_file)
+    test_case_dir = Path(petabtests.SBML_DIR) / petabtests.CASES_LIST[0]
+    petab_yaml_path = test_case_dir / petabtests.problem_yaml_name(test_case)
+    return petab.Problem.from_yaml(petab_yaml_path)
 
 
 def test_simulate_without_noise(petab_problem):
@@ -61,14 +60,14 @@ def test_subset_call(petab_problem):
     model_output_dir = tempfile.mkdtemp()
 
     simulator0 = PetabSimulator(petab_problem)
-    assert not (pathlib.Path(model_output_dir)/model_name).is_dir()
+    assert not (Path(model_output_dir)/model_name).is_dir()
     simulator0.simulate(model_name=model_name,
                         model_output_dir=model_output_dir)
     # Model name is handled correctly
     assert simulator0.amici_model.getName() == model_name
     # Check model output directory is created, by
     # :py:func:`amici.petab_import.import_petab_problem`
-    assert (pathlib.Path(model_output_dir)/model_name).is_dir()
+    assert (Path(model_output_dir)/model_name).is_dir()
 
     simulator = PetabSimulator(petab_problem)
     simulator.simulate(amici_model=simulator0.amici_model)
