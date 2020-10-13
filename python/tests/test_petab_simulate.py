@@ -1,11 +1,12 @@
 """Tests for petab_simulate.py."""
 
-import pathlib
+from pathlib import Path
 import pytest
 import tempfile
 
 from amici.petab_simulate import PetabSimulator
 import petab
+import petabtests
 
 
 @pytest.fixture
@@ -24,6 +25,10 @@ def petab_problem() -> petab.Problem:
         pathlib.Path('cases') / test_case / f'_{test_case}.yaml'
     petab_yaml_path = petab_test_suite_path / test_case_yaml_path
     return petab.Problem.from_yaml(str(petab_yaml_path))
+
+    test_case_dir = pathlib.Path(petabtests.SBML_DIR) / petabtests.CASES_LIST[0]
+    yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+    problem = petab.Problem.from_yaml(yaml_file)
 
 
 def test_simulate_without_noise(petab_problem):
