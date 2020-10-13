@@ -1124,7 +1124,7 @@ class SbmlImporter:
         if not isinstance(sym_math, sp.Expr):
             return sym_math
 
-        for species_id, species in self.symbols[SymbolId.SPECIES]:
+        for species_id, species in self.symbols[SymbolId.SPECIES].items():
             sym_math.subs(species_id, species['value'])
 
         return sym_math
