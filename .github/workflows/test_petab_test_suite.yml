@@ -63,7 +63,7 @@ jobs:
       - name: Run PEtab-related unit tests
         run: |
           source ./build/venv/bin/activate \
-            && pip list
+            && pip list \
             && pytest --cov-report=xml --cov=./ python/tests/test_*petab*.py
 
       # run test models
