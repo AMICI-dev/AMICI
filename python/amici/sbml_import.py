@@ -2009,32 +2009,15 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     :return:
         initial species concentration
     """
-    amount = species.getInitialAmount()
+    if species.isSetInitialConcentration():
+        return sp.sympify(species.getInitialConcentration())
+    
+    if species.isSetInitialAmount():
+        amt = species.getInitialAmount()
+        if not math.isnan(amt):
+            return sp.sympify(amt) / _get_species_compartment_symbol(species)
 
-    # default (allows override from rules)
-    conc = _get_identifier_symbol(species)
-
-    # defined concentration
-    conc_from_conc = sp.sympify(species.getInitialConcentration())
-    # computed concentration
-    conc_from_amount = \
-        sp.sympify(amount) / _get_species_compartment_symbol(species)
-
-    if species.getHasOnlySubstanceUnits():
-        if species.isSetInitialAmount() and not math.isnan(amount):
-            conc = conc_from_amount
-
-        if species.isSetInitialConcentration():
-            conc = conc_from_conc
-
-    else:
-        if species.isSetInitialConcentration():
-            conc = conc_from_conc
-
-        if species.isSetInitialAmount() and not math.isnan(amount):
-            conc = conc_from_amount
-
-    return conc
+    return _get_identifier_symbol(species)
 
 
 def _get_list_of_species_references(sbml_model: sbml.Model) \
