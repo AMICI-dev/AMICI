@@ -209,9 +209,10 @@ def main():
         setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
         extras_require={
-            'petab': ['petab==0.1.7'],
+            #'petab': ['petab==0.1.7'],
             'pysb': ['pysb>=1.11.0']
         },
+        dependency_links=['https://github.com/petab-dev/petab.git@develop#egg=petab'],
         package_data={
             'amici': ['amici/include/amici/*',
                       'src/*template*',
