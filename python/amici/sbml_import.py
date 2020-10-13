@@ -999,7 +999,8 @@ class SbmlImporter:
             }
 
             # Assignment rules take precedence over compartment volume
-            # definitions, so they need to be evaluated first
+            # definitions, so they need to be evaluated first.
+            # Species assignment rules may overwrite though
             for variable, formula in (
                 *self.parameter_assignment_rules.items(),
                 *self.parameter_initial_assignments.items(),
@@ -1010,7 +1011,8 @@ class SbmlImporter:
             ):
                 symbol = symbol_with_assumptions(f'y{variable}')
                 if variable in self.compartment_rate_rules or\
-                        symbol in self.symbols[SymbolId.OBSERVABLE]:
+                        (symbol in self.symbols[SymbolId.OBSERVABLE]
+                        and symbol not in self.species_assignment_rules):
                     continue
                 self.symbols[SymbolId.OBSERVABLE][symbol] = {
                     'name': str(variable), 'value': formula
@@ -1424,18 +1426,6 @@ def get_rule_vars(rules: List[sbml.Rule],
                     locals=local_symbols)
          for rule in rules if rule.getFormula() != '']
     ).free_symbols
-
-
-def l2s(inputs: List) -> List[str]:
-    """
-    Transforms a list into list of strings.
-
-    :param inputs:
-        objects
-
-    :return: list of str(object)
-    """
-    return [str(inp) for inp in inputs]
 
 
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
