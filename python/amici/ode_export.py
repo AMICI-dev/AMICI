@@ -2551,12 +2551,13 @@ class ODEExporter:
             # was applied
 
             lines.extend([
-                # Keep list of indices fixed parameters occuring in x0
+                # Keep list of indices of fixed parameters occurring in x0
                 "    static const std::array<int, "
                 + str(len(self.model._x0_fixedParameters_idx))
                 + "> _x0_fixedParameters_idxs = {",
                 "        "
-                + ', '.join(str(x) for x in self.model._x0_fixedParameters_idx),
+                + ', '.join(str(x)
+                            for x in self.model._x0_fixedParameters_idx),
                 "    };",
                 "",
                 # Set all parameters that are to be reset to 0, so that the
