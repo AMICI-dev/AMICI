@@ -990,7 +990,7 @@ class SbmlImporter:
             }
         else:
             self.symbols[SymbolId.OBSERVABLE] = {
-                symbol_with_assumptions(f'y{ix}'): {
+                symbol_with_assumptions(f'y{specie["name"]}'): {
                     'name': specie['name'],
                     'value': specie_id
                 }
@@ -1000,7 +1000,7 @@ class SbmlImporter:
 
             # Assignment rules take precedence over compartment volume
             # definitions, so they need to be evaluated first.
-            # Species assignment rules may overwrite though
+            # Species assignment rules always overwrite
             for variable, formula in (
                 *self.parameter_assignment_rules.items(),
                 *self.parameter_initial_assignments.items(),
@@ -1012,7 +1012,7 @@ class SbmlImporter:
                 symbol = symbol_with_assumptions(f'y{variable}')
                 if variable in self.compartment_rate_rules or\
                         (symbol in self.symbols[SymbolId.OBSERVABLE]
-                        and symbol not in self.species_assignment_rules):
+                         and variable not in self.species_assignment_rules):
                     continue
                 self.symbols[SymbolId.OBSERVABLE][symbol] = {
                     'name': str(variable), 'value': formula
@@ -1865,7 +1865,7 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
         if not math.isnan(amt):
             return sp.sympify(amt) / _get_species_compartment_symbol(species)
 
-    return _get_identifier_symbol(species)
+    return sp.sympify(0.0)
 
 
 def _get_list_of_species_references(sbml_model: sbml.Model) \
