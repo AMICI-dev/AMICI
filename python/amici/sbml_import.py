@@ -13,6 +13,7 @@ import math
 import itertools as itt
 import warnings
 import logging
+import copy
 from typing import (
     Dict, List, Callable, Any, Iterable, Optional, Sequence, Union
 )
@@ -193,7 +194,7 @@ class SbmlImporter:
         """
         Reset the symbols attribute to default values
         """
-        self.symbols = default_symbols
+        self.symbols = copy.copy(default_symbols)
 
     def sbml2amici(self,
                    model_name: str = None,
