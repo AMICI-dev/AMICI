@@ -1109,10 +1109,10 @@ class SbmlImporter:
         for symbol, formula in self.reaction_ids.items():
             self._replace_in_all_expressions(symbol, formula)
 
-    def _make_initial(self,
-                      sym_math: Union[sp.Expr, None]) -> Union[sp.Expr, None]:
+    def _make_initial(self, sym_math: Union[sp.Expr, None, float]
+                      ) -> Union[sp.Expr, None, float]:
         """
-        Transforms an expression to its value at the initial timepoint by
+        Transforms an expression to its value at the initial time point by
         replacing species by their initial values.
 
         :param sym_math:
@@ -1120,13 +1120,14 @@ class SbmlImporter:
         :return:
             transformed expression
         """
+
         if not isinstance(sym_math, sp.Expr):
             return sym_math
 
-        return sym_math.subs(
-            self.symbols['species']['identifier'],
-            self.symbols['species']['value']
-        )
+        for species_id, species in self.symbols[SymbolId.SPECIES]:
+            sym_math.subs(species_id, species['value'])
+
+        return sym_math
 
     def process_conservation_laws(self, ode_model, volume_updates) -> List:
         """
