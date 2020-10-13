@@ -10,6 +10,7 @@ import importlib
 import logging
 import math
 import os
+import re
 import shutil
 import tempfile
 from _collections import OrderedDict
@@ -586,9 +587,11 @@ def get_observation_model(observable_df: pd.DataFrame
 
     for _, observable in observable_df.iterrows():
         oid = observable.name
-        name = observable.get(OBSERVABLE_NAME, "")
-        formula_obs = observable[OBSERVABLE_FORMULA]
-        formula_noise = observable[NOISE_FORMULA]
+        # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
+        pat = r'^[nN]a[nN]$'
+        name = re.sub(pat, '', str(observable.get(OBSERVABLE_NAME, '')))
+        formula_obs = re.sub(pat, '', str(observable[OBSERVABLE_FORMULA]))
+        formula_noise = re.sub(pat, '', str(observable[NOISE_FORMULA]))
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
 
