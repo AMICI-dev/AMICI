@@ -204,6 +204,7 @@ def main():
                           'python-libsbml',
                           'h5py',
                           'pandas',
+                          'petab @ git+https://github.com/petab-dev/petab@develop#egg=petab',
                           'pkgconfig',
                           'wurlitzer'],
         setup_requires=['setuptools>=40.6.3'],
@@ -212,7 +213,6 @@ def main():
             #'petab': ['petab==0.1.7'],
             'pysb': ['pysb>=1.11.0']
         },
-        dependency_links=['http://github.com/petab-dev/petab/tarball/develop#egg=petab'],
         package_data={
             'amici': ['amici/include/amici/*',
                       'src/*template*',
