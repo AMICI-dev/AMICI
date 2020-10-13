@@ -190,7 +190,7 @@ def ExpData(*args) -> 'amici.ExpData':
     :returns: ExpData Instance
     """
     if isinstance(args[0], ReturnDataView):
-        return amici.ExpData(args[0]['ptr'].get(), *args[1:])
+        return amici.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
     elif isinstance(args[0], (amici.ExpData, amici.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed and you are glad this
