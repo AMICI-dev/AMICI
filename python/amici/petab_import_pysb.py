@@ -73,7 +73,8 @@ class PysbPetabProblem(petab.Problem):
             sym = sp.sympify(formula, locals=local_syms)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
-                    p = pysb.Parameter(str(s), 1.0)
+                    p = pysb.Parameter(str(s), 1.0, _export=False)
+                    self.pysb_model.add_component(p)
                     local_syms[sp.Symbol.__str__(p)] = p
 
         # add observables and sigmas to pysb model
@@ -93,7 +94,9 @@ class PysbPetabProblem(petab.Problem):
             if observable_id in self.pysb_model.expressions.keys():
                 obs_expr = self.pysb_model.expressions[observable_id]
             else:
-                obs_expr = pysb.Expression(observable_id, obs_symbol)
+                obs_expr = pysb.Expression(observable_id, obs_symbol,
+                                           _export=False)
+                self.pysb_model.add_component(obs_expr)
             local_syms[observable_id] = obs_expr
 
             sigma_id = f"{observable_id}_sigma"
@@ -101,7 +104,8 @@ class PysbPetabProblem(petab.Problem):
                 noise_formula,
                 locals=local_syms
             )
-            sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
+            sigma_expr = pysb.Expression(sigma_id, sigma_symbol, _export=False)
+            self.pysb_model.add_component(sigma_expr)
             local_syms[sigma_id] = sigma_expr
 
     @staticmethod
