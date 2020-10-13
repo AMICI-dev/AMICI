@@ -995,7 +995,7 @@ class SbmlImporter:
                     'value': specie_id
                 }
                 for ix, (specie_id, specie)
-                in enumerate(self.symbols[SymbolId.OBSERVABLE].items())
+                in enumerate(self.symbols[SymbolId.SPECIES].items())
             }
 
             # Assignment rules take precedence over compartment volume

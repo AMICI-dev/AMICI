@@ -93,7 +93,8 @@ def verify_results(settings, rdata, expected, wrapper,
     # verify states
     simulated = pd.DataFrame(
         rdata['y'],
-        columns=wrapper.symbols[SymbolId.OBSERVABLE]['name']
+        columns=[obs['name']
+                 for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()]
     )
     simulated['time'] = rdata['ts']
     for par in model.getParameterIds():
