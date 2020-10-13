@@ -526,8 +526,10 @@ def import_model_sbml(
             init_par = sbml_model.createParameter()
             init_par.setId(init_par_id)
             init_par.setName(init_par_id)
-        assignment = sbml_model.createInitialAssignment()
-        assignment.setSymbol(assignee_id)
+        assignment = sbml_model.getInitialAssignment(assignee_id)
+        if assignment is None:
+            assignment = sbml_model.createInitialAssignment()
+            assignment.setSymbol(assignee_id)
         formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)
