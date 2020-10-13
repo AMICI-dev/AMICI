@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from amici.sbml_import import symbol_with_assumptions
+from amici.constants import SymbolId
 
 
 # directory with sbml semantic test cases
@@ -91,8 +92,10 @@ def verify_results(settings, rdata, expected, wrapper,
     amount_species, variables = get_amount_and_variables(settings)
 
     # verify states
-    simulated = pd.DataFrame(rdata['y'],
-                             columns=wrapper.symbols['observable']['name'])
+    simulated = pd.DataFrame(
+        rdata['y'],
+        columns=wrapper.symbols[SymbolId.OBSERVABLE]['name']
+    )
     simulated['time'] = rdata['ts']
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
@@ -111,7 +114,7 @@ def verify_results(settings, rdata, expected, wrapper,
     # are targets of rate rules
     concentration_species = [
         str(species_id)
-        for species_id, species in wrapper.symbols['species'].items()
+        for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
         if str(species_id) in requested_concentrations
         and species['only_substance']
         and species_id in wrapper.species_rate_rules
@@ -172,12 +175,12 @@ def concentrations_to_amounts(
         compartment_species = [str(c) for c in wrapper.compartment_symbols]
         amount_species = list(set(
             s for s in wrapper.species_rate_rules
-            if wrapper.symbols['species'][s]['only_substance']
+            if wrapper.symbols[SymbolId.SPECIES][s]['only_substance']
         ).difference(requested_concentrations))
 
         if not species == '' and \
                 species not in compartment_species + amount_species:
-            symvolume = wrapper.symbols['species'][
+            symvolume = wrapper.symbols[SymbolId.SPECIES][
                 symbol_with_assumptions(species)
             ]['compartment']
 

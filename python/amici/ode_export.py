@@ -4,9 +4,9 @@ C++ Export
 This module provides all necessary functionality specify an ODE model and
 generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by
-:func:`amici.pysb_import.pysb2amici`,
-:meth:`amici.sbml_import.SbmlImporter.sbml2amici` and
-:func:`amici.petab_import.import_model`
+:py:func:`amici.pysb_import.pysb2amici`,
+:py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
+:py:func:`amici.petab_import.import_model`
 """
 import sympy as sp
 import numpy as np
@@ -40,6 +40,7 @@ from . import (
     sbml_import
 )
 from .logging import get_logger, log_execution_time, set_log_level
+from .constants import SymbolId
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -641,13 +642,13 @@ class LogLikelihood(ModelQuantity):
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
-    'species': State,
-    'parameter': Parameter,
-    'fixed_parameter': Constant,
-    'observable': Observable,
-    'sigmay': SigmaY,
-    'llhy': LogLikelihood,
-    'expression': Expression,
+    SymbolId.SPECIES: State,
+    SymbolId.PARAMETER: Parameter,
+    SymbolId.FIXED_PARAMETER: Constant,
+    SymbolId.OBSERVABLE: Observable,
+    SymbolId.SIGMAY: SigmaY,
+    SymbolId.LLHY: LogLikelihood,
+    SymbolId.EXPRESSION: Expression,
 }
 
 
@@ -953,8 +954,8 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            v_name = si.symbols['species'][specie_id]['compartment']
-            x_index = si.symbols['species'][specie_id]['index']
+            v_name = si.symbols[SymbolId.SPECIES][specie_id]['compartment']
+            x_index = si.symbols[SymbolId.SPECIES][specie_id]['index']
             if v_name in si.compartment_rate_rules:
                 dv_dt = si.compartment_rate_rules[v_name]
                 xdot = (dxdt - dv_dt * specie_id) / v_name
@@ -986,7 +987,7 @@ class ODEModel:
         dxdt = smart_multiply(si.stoichiometric_matrix,
                               MutableDenseMatrix(fluxes))
         for ix, ((specie_id, specie), formula) in enumerate(zip(
-                symbols['species'].items(),
+                symbols[SymbolId.SPECIES].items(),
                 dxdt
         )):
             assert ix == specie['index']  # check that no reordering occured
@@ -997,7 +998,7 @@ class ODEModel:
             # transform dict of lists into a list of dicts
             args = ['name', 'value', 'identifier']
 
-            if symbol_name == 'species':
+            if symbol_name == SymbolId.SPECIES:
                 args += ['dt']
 
             protos = [
