@@ -93,10 +93,20 @@ class SbmlImporter:
         see `locals`argument in `sympy.sympify`
 
     :ivar species_assignment_rules:
-        assignment rules for species
+        Assignment rules for species.
+        Key is symbolic identifier and value is assignment value
+
+    :ivar species_rate_rules:
+        Rate rules for species.
+        Key is symbolic identifier and value is rate
 
     :ivar compartment_assignment_rules:
-        assignment rules for compartments
+        Assignment rules for compartments.
+        Key is symbolic identifier and value is assignment value
+
+    :ivar compartment_rate_rules:
+        Rate rules for compartments.
+        Key is symbolic identifier and value is rate
 
     :ivar parameter_assignment_rules:
         assignment rules for parameters, these parameters are not permissible
@@ -402,7 +412,7 @@ class SbmlImporter:
             if any([not (rule.isAssignment() or rule.isRate()) and
                     (rule.getVariable() in component_ids)
                     for rule in self.sbml.getListOfRules()]):
-                raise SBMLException(f'Only assignment and rate rules are '
+                raise SBMLException('Only assignment and rate rules are '
                                     f'currently supported for {component}!')
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
@@ -433,6 +443,10 @@ class SbmlImporter:
             self.local_symbols[r.getVariable()] = symbol_with_assumptions(
                 r.getVariable()
             )
+
+        for r in self.sbml.getListOfReactions():
+            if r.isSetId():
+                self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
         for r in self.sbml.getListOfReactions():
             if r.isSetId():
@@ -475,7 +489,6 @@ class SbmlImporter:
         """
         Get species information from SBML model.
         """
-
         if self.sbml.isSetConversionFactor():
             conversion_factor = symbol_with_assumptions(
                 self.sbml.getConversionFactor()
@@ -989,12 +1002,6 @@ class SbmlImporter:
                 in enumerate(self.symbols[SymbolId.OBSERVABLE].items())
             }
 
-            # Add compartment and species assignment rules as observables
-            # Useful for passing the SBML Test Suite (compartment volumes are
-            # used to calculate species amounts).
-            # The id's and names below may conflict with the automatically
-            # generated id's and names above.
-
             # Assignment rules take precedence over compartment volume
             # definitions, so they need to be evaluated first
             for variable, formula in (
@@ -1124,6 +1131,91 @@ class SbmlImporter:
             key: value['value']
             for key, value in self.symbols[SymbolId.SPECIES].items()
         })
+
+    @log_execution_time('processing SBML initial assignments', logger)
+    def _process_initial_assignments(self):
+        """
+        Accounts for initial assignments of parameters and species
+        references. Initial assignments for species and compartments are
+        processed in :py:func:`amici.SBMLImporter._process_initial_species` and
+        :py:func:`amici.SBMLImporter._process_compartments` respectively.
+        """
+        parameter_ids = [p.getId() for p in self.sbml.getListOfParameters()]
+        species_ids = [s.getId() for s in self.sbml.getListOfSpecies()]
+        comp_ids = [c.getId() for c in self.sbml.getListOfCompartments()]
+        for ia in self.sbml.getListOfInitialAssignments():
+            if ia.getId() in species_ids + comp_ids:
+                continue
+
+            sym_math = self._sympy_from_sbml_math(ia)
+            sym_math = self._make_initial(sym_math)
+
+            identifier = _get_identifier_symbol(ia)
+            if ia.getId() in parameter_ids:
+                self.parameter_initial_assignments[identifier] = sym_math
+                self._replace_in_all_expressions(identifier, sym_math)
+
+            else:
+                self._replace_in_all_expressions(
+                    identifier, sym_math
+                )
+
+    def _process_species_references(self):
+        """
+        Replaces species references that define anything but stoichiometries.
+
+        Species references for stoichiometries are processed in
+        :py:func:`amici.SBMLImporter._process_reactions`.
+        """
+        assignment_ids = [ass.getId()
+                          for ass in self.sbml.getListOfInitialAssignments()]
+        rulevars = [rule.getVariable()
+                    for rule in self.sbml.getListOfRules()
+                    if rule.getFormula() != '']
+        # doesnt look like there is a better way to get hold of those lists:
+        species_references = _get_list_of_species_references(self.sbml)
+        for species_reference in species_references:
+            if hasattr(species_reference, 'getStoichiometryMath') and \
+                    species_reference.getStoichiometryMath() is not None:
+                raise SBMLException('StoichiometryMath is currently not '
+                                    'supported for species references.')
+            if species_reference.getId() == '':
+                continue
+
+            stoich = self._get_element_stoichiometry(species_reference,
+                                                     assignment_ids,
+                                                     rulevars)
+            self._replace_in_all_expressions(
+                _get_identifier_symbol(species_reference),
+                sp.sympify(stoich, locals=self.local_symbols)
+            )
+
+    def _process_reaction_identifiers(self):
+        """
+        Replaces references to reaction ids. These reaction ids are
+        generated in :py:func:`amici.SBMLImporter._process_reactions`.
+        """
+        for symbol, formula in self.reaction_ids.items():
+            self._replace_in_all_expressions(symbol, formula)
+
+    def _make_initial(self,
+                      sym_math: Union[sp.Expr, None]) -> Union[sp.Expr, None]:
+        """
+        Transforms an expression to its value at the initial timepoint by
+        replacing species by their initial values.
+
+        :param sym_math:
+            symbolic expression
+        :return:
+            transformed expression
+        """
+        if not isinstance(sym_math, sp.Expr):
+            return sym_math
+
+        return sym_math.subs(
+            self.symbols['species']['identifier'],
+            self.symbols['species']['value']
+        )
 
     def process_conservation_laws(self, ode_model, volume_updates) -> List:
         """
@@ -1863,31 +1955,15 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     :return:
         initial species concentration
     """
-    amount = species.getInitialAmount()
+    if species.isSetInitialConcentration():
+        return sp.sympify(species.getInitialConcentration())
+    
+    if species.isSetInitialAmount():
+        amt = species.getInitialAmount()
+        if not math.isnan(amt):
+            return sp.sympify(amt) / _get_species_compartment_symbol(species)
 
-    conc = sp.sympify(0.0)
-
-    # defined concentration
-    conc_from_conc = sp.sympify(species.getInitialConcentration())
-    # computed concentration
-    conc_from_amount = \
-        sp.sympify(amount) / _get_species_compartment_symbol(species)
-
-    if species.getHasOnlySubstanceUnits():
-        if species.isSetInitialAmount() and not math.isnan(amount):
-            conc = conc_from_amount
-
-        if species.isSetInitialConcentration():
-            conc = conc_from_conc
-
-    else:
-        if species.isSetInitialConcentration():
-            conc = conc_from_conc
-
-        if species.isSetInitialAmount() and not math.isnan(amount):
-            conc = conc_from_amount
-
-    return conc
+    return _get_identifier_symbol(species)
 
 
 def _get_list_of_species_references(sbml_model: sbml.Model) \

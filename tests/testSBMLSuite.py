@@ -22,7 +22,6 @@ import pandas as pd
 from amici.sbml_import import symbol_with_assumptions
 from amici.constants import SymbolId
 
-
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
                          'semantic')

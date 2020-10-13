@@ -384,7 +384,7 @@ class State(ModelQuantity):
         """
         super(State, self).__init__(identifier, name, value)
         if not isinstance(dt, sp.Expr):
-            raise TypeError(f'dt must have type sympy.Basic, was '
+            raise TypeError(f'dt must have type sympy.Expr, was '
                             f'{type(dt)}')
 
         self._dt = dt
@@ -416,7 +416,7 @@ class State(ModelQuantity):
             time derivative
         """
         if not isinstance(dt, sp.Expr):
-            raise TypeError(f'time derivative must have type sympy.Basic, '
+            raise TypeError(f'time derivative must have type sympy.Expr, '
                             f'was {type(dt)}')
         self._dt = dt
 
