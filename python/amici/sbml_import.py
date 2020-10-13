@@ -1913,8 +1913,10 @@ def _get_list_of_species_references(sbml_model: sbml.Model) \
 def symbol_with_assumptions(name: str):
     """
     Central function to create symbols with consistent, canonical assumptions
+
     :param name:
-        name of the symbolc
+        name of the symbol
+
     :return:
         symbol with canonical assumptions
     """
@@ -1922,7 +1924,8 @@ def symbol_with_assumptions(name: str):
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
-    """Prints a SymPy expression to a MathML expression parsable by libSBML.
+    """
+    Prints a SymPy expression to a MathML expression parsable by libSBML.
 
     Differences from :class:`sympy.MathMLContentPrinter`:
 
