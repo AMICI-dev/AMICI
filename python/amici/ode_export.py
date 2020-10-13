@@ -2550,19 +2550,20 @@ class ODEExporter:
 
             lines.extend([
                 # Keep list of indices fixed parameters occuring in x0
-                "static const std::array<int, "
+                "    static const std::array<int, "
                 + str(len(self.model._x0_fixedParameters_idx))
                 + "> _x0_fixedParameters_idxs = {",
-                ', '.join(str(x) for x in self.model._x0_fixedParameters_idx),
-                "};",
+                "        "
+                + ', '.join(str(x) for x in self.model._x0_fixedParameters_idx),
+                "    };",
                 "",
                 # Set all parameters that are to be reset to 0, so that the
                 #  switch statement below only needs to handle non-zero entries
                 #  (which usually reduces file size and speeds up
                 #  compilation significantly).
-                "for(auto idx: _x0_fixedParameters_idxs) {",
-                "sx0_fixedParameters[idx] = 0.0;",
-                "}"])
+                "    for(auto idx: _x0_fixedParameters_idxs) {",
+                "        sx0_fixedParameters[idx] = 0.0;",
+                "    }"])
 
             cases = dict()
             for ipar in range(self.model.num_par()):
