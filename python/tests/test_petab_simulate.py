@@ -13,21 +13,9 @@ import petabtests
 def petab_problem() -> petab.Problem:
     """Create a PEtab problem for use in tests."""
     test_case = '0001'
-    #petab_test_suite_path = (
-    #    Path(__file__)
-    #    .parent
-    #    .parent
-    #    .parent
-    #    .absolute()
-    #    / 'petab_test_suite'
-    #)
-    #test_case_yaml_path = Path('cases') / test_case / f'_{test_case}.yaml'
-    #petab_yaml_path = petab_test_suite_path / test_case_yaml_path
-    #return petab.Problem.from_yaml(str(petab_yaml_path))
-
     test_case_dir = Path(petabtests.SBML_DIR) / petabtests.CASES_LIST[0]
     petab_yaml_path = test_case_dir / petabtests.problem_yaml_name(test_case)
-    return petab.Problem.from_yaml(petab_yaml_path)
+    return petab.Problem.from_yaml(str(petab_yaml_path))
 
 
 def test_simulate_without_noise(petab_problem):
