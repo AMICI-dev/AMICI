@@ -33,9 +33,10 @@ jobs:
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
     - run: pip3 install pytest shyaml
-    - run: |
-        echo ::add-path::${HOME}/.local/bin/
-        echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
+
+    - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+    - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
+
     # install AMICI
     - name: Create AMICI sdist
       run: |
