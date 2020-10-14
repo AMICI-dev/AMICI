@@ -803,7 +803,7 @@ class SbmlImporter:
             if sym_id in self.flux_vector.free_symbols:
                 self.flux_vector = self.flux_vector.subs(sym_id, formula)
 
-            for c, v in self.compartments:
+            for c, v in self.compartments.items():
                 if sym_id in v.free_symbols:
                     self.compartments[c] = v.subs(sym_id, formula)
 
