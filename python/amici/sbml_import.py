@@ -382,25 +382,22 @@ class SbmlImporter:
         if self.sbml.getNumEvents():
             raise SBMLException('Events are currently not supported!')
 
-        # Contains condition to allow compartment rate rules
-        compartment_ids = list(map(lambda x: x.getId(),
-                                   self.sbml.getListOfCompartments()))
-        species_ids = list(map(lambda x: x.getId(),
-                               self.sbml.getListOfSpecies()))
-        if any([not rule.isAssignment() and
-                rule.getVariable() not in compartment_ids + species_ids
-                for rule in self.sbml.getListOfRules()]):
+        if any([not rule.isAssignment() and not isinstance(
+                    self.sbml.getElementBySId(rule.getVariable()),
+                    (sbml.Compartment, sbml.Species, sbml.Parameter)
+                ) for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Algebraic rules are currently not supported, '
                                 'and rate rules are only supported for '
                                 'species and compartments.')
 
-        for component, component_ids in zip(['compartment',   'species'],
-                                            [compartment_ids, species_ids]):
-            if any([not (rule.isAssignment() or rule.isRate()) and
-                    (rule.getVariable() in component_ids)
-                    for rule in self.sbml.getListOfRules()]):
+        for comp_type in (sbml.Compartment, sbml.Species, sbml.Parameter):
+            if any([not (rule.isAssignment() or rule.isRate())
+                    and isinstance(
+                        self.sbml.getElementBySId(rule.getVariable()),
+                        comp_type
+                    ) for rule in self.sbml.getListOfRules()]):
                 raise SBMLException('Only assignment and rate rules are '
-                                    f'currently supported for {component}!')
+                                    f'currently supported for {comp_type}!')
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
@@ -551,15 +548,26 @@ class SbmlImporter:
             if variable in self.symbols[SymbolId.SPECIES]:
                 init = self.symbols[SymbolId.SPECIES][variable]['value']
                 component_type = sbml.SBML_SPECIES
+                name = None
 
             elif variable in self.compartments:
                 init = self.compartments[variable]
                 component_type = sbml.SBML_COMPARTMENT
+                name = str(variable)
+
+            elif variable in self.symbols[SymbolId.PARAMETER]:
+                init = sp.sympify(
+                    self.symbols[SymbolId.PARAMETER][variable]['value'],
+                    locals=self.local_symbols
+                )
+                name = self.symbols[SymbolId.PARAMETER][variable]['name']
+                del self.symbols[SymbolId.PARAMETER][variable]
+                component_type = sbml.SBML_PARAMETER
             else:
                 raise ValueError('Rate rules are only supported for '
                                  'compartments and species')
 
-            self.add_d_dt(formula, variable, init, component_type)
+            self.add_d_dt(formula, variable, init, component_type, name)
 
     def add_d_dt(
             self,
@@ -567,7 +575,7 @@ class SbmlImporter:
             variable: sp.Symbol,
             variable0: Union[float, sp.Expr],
             component_type: int,
-            name: Optional[str] = None
+            name: str,
     ) -> None:
         """
         Creates or modifies species, to implement rate rules for
@@ -590,14 +598,11 @@ class SbmlImporter:
             Species name, only applicable if this function generates a new
             species
         """
-        if name is None:
-            name = ''
-
-        if component_type == sbml.SBML_COMPARTMENT:
+        if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
             self.symbols[SymbolId.SPECIES][variable] = {
                 'name': name,
                 'value': variable0,
-                'amount': True,
+                'amount': component_type == sbml.SBML_COMPARTMENT,
                 'constant': False,
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': d_dt,
@@ -640,7 +645,10 @@ class SbmlImporter:
             if parameter.getId() in constant_parameters
         ]
 
-        rulevars = [rule.getVariable() for rule in self.sbml.getListOfRules()]
+        # ignore rate rules here since we need initial values when
+        # converting them to species
+        rulevars = [rule.getVariable() for rule in self.sbml.getListOfRules()
+                    if not rule.isRate()]
         iavars = [ia.getId() for ia in self.sbml.getListOfInitialAssignments()]
 
         parameters = [parameter for parameter
@@ -649,16 +657,9 @@ class SbmlImporter:
                       constant_parameters + rulevars + iavars]
 
         loop_settings = {
-            SymbolId.PARAMETER: {
-                'var': parameters,
-                'name': 'parameter',
-
-            },
-            SymbolId.FIXED_PARAMETER: {
-                'var': fixed_parameters,
-                'name': 'fixed_parameter'
-            }
-
+            SymbolId.PARAMETER: {'var': parameters, 'name': 'parameter'},
+            SymbolId.FIXED_PARAMETER: {'var': fixed_parameters,
+                                       'name': 'fixed_parameter'}
         }
 
         for partype, settings in loop_settings.items():
@@ -1167,7 +1168,8 @@ class SbmlImporter:
             if comp in self.symbols[SymbolId.SPECIES]:
                 # for comps with rate rules volume is only initial
                 for specie in self.symbols[SymbolId.SPECIES].values():
-                    specie['value'] = specie['value'].subs(comp, vol)
+                    if isinstance(specie['value'], sp.Expr):
+                        specie['value'] = specie['value'].subs(comp, vol)
                 continue
             self._replace_in_all_expressions(comp, vol)
 
