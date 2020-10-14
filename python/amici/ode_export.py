@@ -959,6 +959,13 @@ class ODEModel:
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
                 dv_dt = v.diff(si.amici_time_symbol)
+                # we may end up with a time derivative of the compartent
+                # volume due to parameter rate rules
+                comp_rate_vars = [p for p in v.free_symbols
+                                  if p in si.symbols[SymbolId.SPECIES]]
+                for var in comp_rate_vars:
+                    dv_dt += \
+                        v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
                 dv_dx = v.diff(specie_id)
                 xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
                 dxdotdw_updates.extend(

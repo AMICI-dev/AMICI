@@ -487,7 +487,7 @@ class SbmlImporter:
         }
 
         self._process_species_initial()
-        self._process_species_rate_rules()
+        self._process_rate_rules()
 
     @log_execution_time('processing SBML species initials', logger)
     def _process_species_initial(self):
@@ -522,15 +522,14 @@ class SbmlImporter:
                         symbol, self.symbols[SymbolId.SPECIES][symbol]['value']
                     )
 
-    @log_execution_time('processing SBML species rate rules', logger)
-    def _process_species_rate_rules(self):
+    @log_execution_time('processing SBML rate rules', logger)
+    def _process_rate_rules(self):
         """
-        Process assignment and rate rules for species and compartments.
-        Compartments with rate rules are implemented as species. Species and
-        compartments with assignments are implemented as observables (and
-        replaced with their assignment in all expressions). Note that, in the
-        case of species, rate rules may describe the change in amount, not
-        concentration, of a species.
+        Process assignment and rate rules for species compartments and
+        parameters. Compartments and parameters with rate rules are
+        implemented as species. Note that, in the case of species,
+        rate rules may describe the change in amount, not concentration,
+        of a species.
         """
         rules = self.sbml.getListOfRules()
         # compartments with rules are replaced with constants in the relevant
@@ -558,6 +557,7 @@ class SbmlImporter:
                 init = self.compartments[variable]
                 component_type = sbml.SBML_COMPARTMENT
                 name = str(variable)
+                del self.compartments[variable]
 
             elif variable in self.symbols[SymbolId.PARAMETER]:
                 init = sp.sympify(
@@ -603,6 +603,13 @@ class SbmlImporter:
             species
         """
         if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
+
+            for specie_id, specie in self.symbols[SymbolId.SPECIES].items():
+                variable0 = variable0.subs(specie_id, specie['value'])
+
+            for specie in self.symbols[SymbolId.SPECIES].values():
+                specie['value'] = specie['value'].subs(variable, variable0)
+
             self.symbols[SymbolId.SPECIES][variable] = {
                 'name': name,
                 'value': variable0,
@@ -612,6 +619,8 @@ class SbmlImporter:
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': d_dt,
             }
+            # update initial values
+
 
         elif component_type == sbml.SBML_SPECIES:
             # SBML species are already in the species symbols
@@ -1091,7 +1100,7 @@ class SbmlImporter:
             return sym_math
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            sym_math.subs(species_id, species['value'])
+            sym_math = sym_math.subs(species_id, species['value'])
 
         return sym_math
 
@@ -1214,7 +1223,12 @@ class SbmlImporter:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
-                element['value'] = element['value'].subs(old, new)
+                if symbol is SymbolId.SPECIES:
+                    repl = self._make_initial(new)
+                else:
+                    repl = new
+
+                element['value'] = element['value'].subs(old, repl)
                 if symbol == SymbolId.SPECIES and 'dt' in element:
                     element['dt'] = element['dt'].subs(old, new)
 
