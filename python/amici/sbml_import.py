@@ -15,7 +15,7 @@ import warnings
 import logging
 import copy
 from typing import (
-    Dict, List, Callable, Any, Iterable, Optional, Sequence, Union
+    Dict, List, Callable, Any, Iterable, Sequence, Union
 )
 
 from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
@@ -342,6 +342,7 @@ class SbmlImporter:
                               'Generated model code, but unable to compile.')
             exporter.compile_model()
 
+    @log_execution_time('importing SBML', logger)
     def _process_sbml(self, constant_parameters: List[str] = None) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
@@ -606,6 +607,7 @@ class SbmlImporter:
                 'name': name,
                 'value': variable0,
                 'amount': component_type == sbml.SBML_COMPARTMENT,
+                'conversion_factor': 1.0,
                 'constant': False,
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': d_dt,
@@ -843,6 +845,7 @@ class SbmlImporter:
             self._replace_in_all_expressions(symbol_with_assumptions(sym_id),
                                              assignments[sym_id])
 
+    @log_execution_time('processing SBML concentration conversion', logger)
     def _process_concentration_conversion(self) -> None:
         """
         Convert species that only have amounts to concentration.
@@ -1032,6 +1035,7 @@ class SbmlImporter:
             else:
                 self._replace_in_all_expressions(identifier, sym_math)
 
+    @log_execution_time('processing SBML species references', logger)
     def _process_species_references(self):
         """
         Replaces species references that define anything but stoichiometries.
@@ -1062,6 +1066,7 @@ class SbmlImporter:
                 sp.sympify(stoich, locals=self.local_symbols)
             )
 
+    @log_execution_time('processing SBML reaction identifiers', logger)
     def _process_reaction_identifiers(self):
         """
         Replaces references to reaction ids. These reaction ids are
