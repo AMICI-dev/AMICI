@@ -538,7 +538,7 @@ class SbmlImporter:
                         continue
 
                     nested_species_count += 1
-                    specie['value'].subs(
+                    specie['value'] = specie['value'].subs(
                         symbol, self.symbols[SymbolId.SPECIES][symbol]['value']
                     )
 
