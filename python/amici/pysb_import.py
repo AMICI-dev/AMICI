@@ -7,7 +7,7 @@ in the :class:`pysb.core.Model` format.
 
 from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
-    Expression, LogLikelihood, get_measurement_symbol
+    Expression, LogLikelihood, generate_measurement_symbol
 )
 
 import logging
@@ -333,7 +333,7 @@ def _add_expression(
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
-        my = get_measurement_symbol(obs.get_id())
+        my = generate_measurement_symbol(obs.get_id())
         pi = sp.pi
         ode_model.add_component(
             LogLikelihood(
