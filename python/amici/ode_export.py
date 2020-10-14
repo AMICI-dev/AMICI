@@ -2375,6 +2375,8 @@ class ODEExporter:
             '#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
+            '',
+            '#include <array>',
         ]
 
         # function signature
@@ -2547,6 +2549,25 @@ class ODEExporter:
         if function == 'sx0_fixedParameters':
             # here we only want to overwrite values where x0_fixedParameters
             # was applied
+
+            lines.extend([
+                # Keep list of indices of fixed parameters occurring in x0
+                "    static const std::array<int, "
+                + str(len(self.model._x0_fixedParameters_idx))
+                + "> _x0_fixedParameters_idxs = {",
+                "        "
+                + ', '.join(str(x)
+                            for x in self.model._x0_fixedParameters_idx),
+                "    };",
+                "",
+                # Set all parameters that are to be reset to 0, so that the
+                #  switch statement below only needs to handle non-zero entries
+                #  (which usually reduces file size and speeds up
+                #  compilation significantly).
+                "    for(auto idx: _x0_fixedParameters_idxs) {",
+                "        sx0_fixedParameters[idx] = 0.0;",
+                "    }"])
+
             cases = dict()
             for ipar in range(self.model.num_par()):
                 expressions = []
@@ -2554,8 +2575,10 @@ class ODEExporter:
                         self.model._x0_fixedParameters_idx,
                         equations[:, ipar]
                 ):
-                    expressions.append(f'{function}[{index}] = '
-                                       f'{_print_with_exception(formula)};')
+                    if not formula.is_zero:
+                        expressions.append(
+                            f'{function}[{index}] = '
+                            f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
