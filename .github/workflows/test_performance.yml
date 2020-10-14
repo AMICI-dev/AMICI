@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - speedup
+      - speedup_reaction_ids
 
   pull_request:
     branches:
