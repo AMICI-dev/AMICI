@@ -929,7 +929,7 @@ class ODEModel:
             compartments with a constant volume, or a volume that is defined by
             an assignment or rate rule.
 
-            :param specie:
+            :param specie_id:
                 The identifier of the species (generated in "sbml_import.py").
 
             :param dxdt:
@@ -937,14 +937,6 @@ class ODEModel:
                 matrix that corresponds to the species (row x_index) and the
                 flux (kinetic laws) vector. Ignored in the case of rate rules.
             """
-            # Rate rules specify dx_dt.
-            # Note that the rate rule of species may describe amount, not
-            # concentration.
-            if specie_id in si.compartment_rate_rules:
-                return si.compartment_rate_rules[specie_id]
-            elif specie_id in si.species_rate_rules:
-                return si.species_rate_rules[specie_id]
-
             # The derivation of the below return expressions can be found in
             # the documentation. They are found by rearranging
             # $\frac{d}{dt} (vx) = Sw$ for $\frac{dx}{dt}$, where $v$ is the
@@ -954,33 +946,39 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            v_name = si.symbols[SymbolId.SPECIES][specie_id]['compartment']
+            comp = si.symbols[SymbolId.SPECIES][specie_id]['compartment']
             x_index = si.symbols[SymbolId.SPECIES][specie_id]['index']
-            if v_name in si.compartment_rate_rules:
-                dv_dt = si.compartment_rate_rules[v_name]
-                xdot = (dxdt - dv_dt * specie_id) / v_name
-                for w_index, flux in enumerate(fluxes):
-                    dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
+            if comp in si.symbols[SymbolId.SPECIES]:
+                dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
+                xdot = (dxdt - dv_dt * specie_id) / comp
+                dxdotdw_updates += [
+                    (x_index, w_index, xdot.diff(flux))
+                    for w_index, flux in enumerate(fluxes)
+                ]
                 return xdot
-            elif v_name in si.compartment_assignment_rules:
-                v = si.compartment_assignment_rules[v_name]
+            elif comp in si.compartment_assignment_rules:
+                v = si.compartment_assignment_rules[comp]
                 dv_dt = v.diff(si.amici_time_symbol)
                 dv_dx = v.diff(specie_id)
                 xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
-                for w_index, flux in enumerate(fluxes):
-                    dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
+                dxdotdw_updates += [
+                    (x_index, w_index, xdot.diff(flux))
+                    for w_index, flux in enumerate(fluxes)
+                ]
                 return xdot
             else:
-                v = si.compartment_volume[list(si.compartment_symbols).index(
-                    v_name)]
+                v = si.compartments[comp]
 
                 if v == 1.0:
                     return dxdt
 
-                for w_index, flux in enumerate(fluxes):
-                    if si.stoichiometric_matrix[x_index, w_index] != 0:
-                        dxdotdw_updates.append((x_index, w_index,
-                            si.stoichiometric_matrix[x_index, w_index] / v))
+                dxdotdw_updates += [
+                    (x_index, w_index,
+                     si.stoichiometric_matrix[x_index, w_index] / v)
+                    for w_index in si.stoichiometric_matrix.shape[1]
+                    if si.stoichiometric_matrix[x_index, w_index] != 0
+                ]
+
                 return dxdt / v
 
         # create dynamics without respecting conservation laws first
@@ -991,6 +989,8 @@ class ODEModel:
                 dxdt
         )):
             assert ix == specie['index']  # check that no reordering occured
+            if 'dt' in specie:
+                continue
             specie['dt'] = dx_dt(specie_id, formula)
 
         # create all basic components of the ODE model and add them.

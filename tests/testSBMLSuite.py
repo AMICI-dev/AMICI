@@ -172,14 +172,12 @@ def concentrations_to_amounts(
     for species in amount_species:
         # Skip "species" that are actually compartments or rate rules that
         # already specify amounts
-        compartment_species = [str(c) for c in wrapper.compartment_symbols]
         amt_species = list(set(
-            str(s) for s in wrapper.species_rate_rules
-            if wrapper.symbols[SymbolId.SPECIES][s]['amount']
+            str(sid) for sid, s in wrapper.symbols[SymbolId.SPECIES].items()
+            if s['amount'] and s['dt']
         ).difference(requested_concentrations))
 
-        if not species == '' and \
-                species not in compartment_species + amt_species:
+        if not species == '' and species not in amt_species:
             symvolume = wrapper.symbols[SymbolId.SPECIES][
                 symbol_with_assumptions(species)
             ]['compartment']
