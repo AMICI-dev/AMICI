@@ -115,9 +115,7 @@ def verify_results(settings, rdata, expected, wrapper,
     concentration_species = [
         str(species_id)
         for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
-        if str(species_id) in requested_concentrations
-        and species['amount']
-        and species_id in wrapper.species_rate_rules
+        if str(species_id) in requested_concentrations and species['amount']
     ]
     amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)
@@ -174,7 +172,7 @@ def concentrations_to_amounts(
         # already specify amounts
         amt_species = list(set(
             str(sid) for sid, s in wrapper.symbols[SymbolId.SPECIES].items()
-            if s['amount'] and s['dt']
+            if s['amount']
         ).difference(requested_concentrations))
 
         if not species == '' and species not in amt_species:

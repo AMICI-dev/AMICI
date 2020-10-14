@@ -360,7 +360,7 @@ class SbmlImporter:
         self._process_species()
         self._process_reactions()
         self._process_rules()
-        self._process_volume_conversion()
+        self._process_concentration_conversion()
         self._process_initial_assignments()
         self._process_species_references()
         self._process_reaction_identifiers()
@@ -500,9 +500,12 @@ class SbmlImporter:
             if ia is not None:
                 initial = self._sympy_from_sbml_math(ia)
 
-            self.symbols[SymbolId.SPECIES][
-                _get_identifier_symbol(specie)
-            ]['value'] = initial
+            specie_id = _get_identifier_symbol(specie)
+            specie_def = self.symbols[SymbolId.SPECIES][specie_id]
+            if specie_def['amount'] and 'compartment' in specie_def:
+                initial *= self.compartments[specie_def['compartment']]
+
+            specie_def['value'] = initial
 
         # flatten initSpecies
         for specie in self.symbols[SymbolId.SPECIES].values():
@@ -788,10 +791,6 @@ class SbmlImporter:
                         species = self.symbols[SymbolId.SPECIES].get(var, None)
                         if species is None:
                             continue
-                        if species['amount'] and 'dt' not in species:
-                            formula = formula.subs(
-                                var, var * species['compartment']
-                            )
 
                     self.parameter_assignment_rules[sym_id] = formula
                     assignments[str(sym_id)] = formula
@@ -844,18 +843,16 @@ class SbmlImporter:
             self._replace_in_all_expressions(symbol_with_assumptions(sym_id),
                                              assignments[sym_id])
 
-    def _process_volume_conversion(self) -> None:
+    def _process_concentration_conversion(self) -> None:
         """
-        Convert equations from amount to concentration.
+        Convert species that only have amounts to concentration.
         """
         for species, definition in self.symbols[SymbolId.SPECIES].items():
             if not definition['amount'] or 'compartment' not in definition:
                 continue
-            volume = definition['compartment']
-            for comp, vol in self.compartments.items():
-                volume = volume.subs(comp, vol)
+            volume = self.compartments[definition['compartment']]
             self.flux_vector = \
-                self.flux_vector.subs(species, species * volume)
+                self.flux_vector.subs(species, species / volume)
 
     def _process_time(self) -> None:
         """
