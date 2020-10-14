@@ -975,7 +975,7 @@ class SbmlImporter:
             ):
                 symbol = symbol_with_assumptions(f'y{variable}')
                 if symbol in self.symbols[SymbolId.OBSERVABLE] \
-                        and variable not in self.species_assignment_rules):
+                        and variable not in self.species_assignment_rules:
                     continue
                 self.symbols[SymbolId.OBSERVABLE][symbol] = {
                     'name': str(variable), 'value': formula
@@ -1182,9 +1182,6 @@ class SbmlImporter:
 
         :param new:
             replacement symbolic variables
-
-        :param include_rate_rule_targets:
-            perform replacement in case ``old`` is a target of a rate rule
         """
         fields = [
             'stoichiometric_matrix', 'flux_vector',
