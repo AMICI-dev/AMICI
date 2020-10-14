@@ -951,20 +951,20 @@ class ODEModel:
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
                 xdot = (dxdt - dv_dt * specie_id) / comp
-                dxdotdw_updates.extend([
-                    (x_index, w_index, xdot.diff(flux))
-                    for w_index, flux in enumerate(fluxes)
-                ])
+                dxdotdw_updates.extend(
+                    (x_index, w_index, xdot.diff(r_flux))
+                    for w_index, r_flux in enumerate(fluxes)
+                )
                 return xdot
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
                 dv_dt = v.diff(si.amici_time_symbol)
                 dv_dx = v.diff(specie_id)
                 xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
-                dxdotdw_updates.extend([
-                    (x_index, w_index, xdot.diff(flux))
-                    for w_index, flux in enumerate(fluxes)
-                ])
+                dxdotdw_updates.extend(
+                    (x_index, w_index, xdot.diff(r_flux))
+                    for w_index, r_flux in enumerate(fluxes)
+                )
                 return xdot
             else:
                 v = si.compartments[comp]
@@ -972,12 +972,12 @@ class ODEModel:
                 if v == 1.0:
                     return dxdt
 
-                dxdotdw_updates.extend([
+                dxdotdw_updates.extend(
                     (x_index, w_index,
                      si.stoichiometric_matrix[x_index, w_index] / v)
                     for w_index in range(si.stoichiometric_matrix.shape[1])
                     if si.stoichiometric_matrix[x_index, w_index] != 0
-                ])
+                )
 
                 return dxdt / v
 
