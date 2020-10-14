@@ -846,10 +846,10 @@ class SbmlImporter:
 
     def _process_volume_conversion(self) -> None:
         """
-        Convert equations from amount to volume.
+        Convert equations from amount to concentration.
         """
         for species, definition in self.symbols[SymbolId.SPECIES].items():
-            if not definition['amount']:
+            if not definition['amount'] or 'compartment' not in definition:
                 continue
             volume = definition['compartment']
             for comp, vol in self.compartments.items():
@@ -1233,9 +1233,9 @@ class SbmlImporter:
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
             self._replace_in_all_expressions(old_symbol, new_symbol)
             for symbols in self.symbols.values():
-                if 'identifier' in symbols.keys():
-                    symbols['identifier'] = \
-                        symbols['identifier'].subs(old_symbol, new_symbol)
+                if old_symbol in symbols:
+                    symbols[new_symbol] = symbols[old_symbol]
+                    del symbols[old_symbol]
 
     def _replace_special_constants(self) -> None:
         """
