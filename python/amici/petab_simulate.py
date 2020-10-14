@@ -65,7 +65,7 @@ class PetabSimulator(petab.simulate.Simulator):
             if self.amici_model is None:
                 if MODEL_NAME not in kwargs:
                     kwargs[MODEL_NAME] = AMICI_MODEL
-                    # If the model name is the name of module that is already
+                    # If the model name is the name of a module that is already
                     # cached, it can cause issues during import.
                     while kwargs[MODEL_NAME] in sys.modules:
                         kwargs[MODEL_NAME] += str(self.rng.integers(10))
