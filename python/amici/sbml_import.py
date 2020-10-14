@@ -35,7 +35,6 @@ class SBMLException(Exception):
     pass
 
 
-
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
 
 
@@ -493,20 +492,19 @@ class SbmlImporter:
             conversion_factor = 1.0
 
         self.symbols[SymbolId.SPECIES] = {
-            _get_identifier_symbol(spec): {
-                'name': spec.getName() if spec.isSetName() else spec.getId(),
-                'compartment': _get_species_compartment_symbol(spec),
-                'constant': spec.getConstant(),
-                'boundary': spec.getBoundaryCondition(),
-                'only_substance': spec.getHasOnlySubstanceUnits(),
+            _get_identifier_symbol(s): {
+                'name': s.getName() if s.isSetName() else s.getId(),
+                'compartment': _get_species_compartment_symbol(s),
+                'constant': s.getConstant() or s.getBoundaryCondition(),
+                'amount': s.getHasOnlySubstanceUnits(),
                 'conversion_factor': symbol_with_assumptions(
-                    spec.getConversionFactor()
+                    s.getConversionFactor()
                 )
-                if spec.isSetConversionFactor()
+                if s.isSetConversionFactor()
                 else conversion_factor,
                 'index': ix,
             }
-            for ix, spec in enumerate(self.sbml.getListOfSpecies())
+            for ix, s in enumerate(self.sbml.getListOfSpecies())
         }
 
         self._process_species_initial()
@@ -622,9 +620,8 @@ class SbmlImporter:
             self.symbols[SymbolId.SPECIES][variable] = {
                 'name': name,
                 'value': variable0,
-                'only_substance': True,
+                'amount': True,
                 'constant': False,
-                'boundary': False,
                 'compartment': sp.sympify(1.0),
                 'index': len(self.symbols[SymbolId.SPECIES])
             }
@@ -632,7 +629,7 @@ class SbmlImporter:
 
         elif component_type == sbml.SBML_SPECIES:
             # SBML species are already in the species symbols
-            if self.symbols[SymbolId.SPECIES][variable]['only_substance']:
+            if self.symbols[SymbolId.SPECIES][variable]['amount']:
                 # transform initial to amounts
                 self.symbols[SymbolId.SPECIES][variable]['value'] *= \
                     self.symbols[SymbolId.SPECIES][variable]['compartment']
@@ -744,7 +741,7 @@ class SbmlImporter:
                     )
                     species = self.symbols[SymbolId.SPECIES][species_id]
 
-                    if self._is_constant(species_id):
+                    if species['constant']:
                         continue
 
                     # Division by species compartment size (to find the
@@ -818,7 +815,7 @@ class SbmlImporter:
                         species = self.symbols[SymbolId.SPECIES].get(var, None)
                         if species is None:
                             continue
-                        if species['only_substance'] \
+                        if species['amount'] \
                                 and var not in self.species_rate_rules:
                             formula = formula.subs(
                                 var, var * species['compartment']
@@ -882,7 +879,7 @@ class SbmlImporter:
         Convert equations from amount to volume.
         """
         for species, definition in self.symbols[SymbolId.SPECIES].items():
-            if not definition['only_substance']:
+            if not definition['amount']:
                 continue
             volume = definition['compartment']
             for comp, vol in zip(self.compartment_symbols,
@@ -1356,17 +1353,6 @@ class SbmlImporter:
         sym = self._make_initial(sym)
         return sym
 
-    def _is_constant(self, specie: sp.Symbol) -> bool:
-        """
-        Check if the respective species
-        :param specie:
-            species ids
-        :return:
-            True if constant is marked constant or as boundary condition
-            else false
-        """
-        return self.symbols[SymbolId.SPECIES][specie]['constant'] or \
-            self.symbols[SymbolId.SPECIES][specie]['boundary']
 
     def _get_element_stoichiometry(self,
                                    ele: sbml.SBase,

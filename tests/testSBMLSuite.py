@@ -116,7 +116,7 @@ def verify_results(settings, rdata, expected, wrapper,
         str(species_id)
         for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
         if str(species_id) in requested_concentrations
-        and species['only_substance']
+        and species['amount']
         and species_id in wrapper.species_rate_rules
     ]
     amounts_to_concentrations(concentration_species, wrapper,
@@ -175,7 +175,7 @@ def concentrations_to_amounts(
         compartment_species = [str(c) for c in wrapper.compartment_symbols]
         amt_species = list(set(
             str(s) for s in wrapper.species_rate_rules
-            if wrapper.symbols[SymbolId.SPECIES][s]['only_substance']
+            if wrapper.symbols[SymbolId.SPECIES][s]['amount']
         ).difference(requested_concentrations))
 
         if not species == '' and \
