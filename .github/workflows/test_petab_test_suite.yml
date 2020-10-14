@@ -69,7 +69,8 @@ jobs:
       - name: Run PEtab test suite
         # git clone --depth 1 https://github.com/petab-dev/petab_test_suite
         run: |
-          AMICI_PARALLEL_COMPILE=2 pytest -v \
+          source ./build/venv/bin/activate \
+          && AMICI_PARALLEL_COMPILE=2 pytest -v \
             --cov-report=xml --cov-append --cov=amici tests/petab_test_suite/
 
       - name: Codecov
