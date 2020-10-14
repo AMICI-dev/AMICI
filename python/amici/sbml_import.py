@@ -193,7 +193,7 @@ class SbmlImporter:
                    model_name: str = None,
                    output_dir: str = None,
                    observables: Dict[str, Dict[str, str]] = None,
-                   constant_parameters: List[str] = None,
+                   constant_parameters: Iterable[str] = None,
                    sigmas: Dict[str, Union[str, float]] = None,
                    noise_distributions: Dict[str, Union[str, Callable]] = None,
                    verbose: Union[int, bool] = logging.ERROR,
@@ -287,6 +287,7 @@ class SbmlImporter:
 
         elif constant_parameters is None:
             constant_parameters = []
+        constant_parameters = list(constant_parameters)
 
         if sigmas is None:
             sigmas = {}
