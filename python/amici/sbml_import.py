@@ -19,7 +19,9 @@ from typing import (
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
 
-from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
+from .ode_export import (
+    ODEExporter, ODEModel, generate_measurement_symbol, generate_flux_symbol
+)
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
@@ -194,7 +196,6 @@ class SbmlImporter:
         self.species_assignment_rules: SymbolicFormula = {}
         self.parameter_assignment_rules: SymbolicFormula = {}
         self.parameter_initial_assignments: SymbolicFormula = {}
-        self.reaction_ids: SymbolicFormula = {}
 
         self.species_index: Dict[str, int] = {}
         self.parameter_index: Dict[str, int] = {}
@@ -386,6 +387,7 @@ class SbmlImporter:
                               'Generated model code, but unable to compile.')
             exporter.compile_model()
 
+    @log_execution_time('importing SBML', logger)
     def _process_sbml(self, constant_parameters: List[str] = None) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
@@ -407,7 +409,6 @@ class SbmlImporter:
         self._process_volume_conversion()
         self._process_initial_assignments()
         self._process_species_references()
-        self._process_reaction_identifiers()
 
     def check_support(self) -> None:
         """
@@ -456,6 +457,7 @@ class SbmlImporter:
             raise SBMLException('Non-unity stoichiometry is'
                                 ' currently not supported!')
 
+    @log_execution_time('gathering local SBML symbols', logger)
     def _gather_locals(self) -> None:
         """
         Populate self.local_symbols with all model entities.
@@ -473,14 +475,25 @@ class SbmlImporter:
         for r in self.sbml.getListOfRules():
             self.local_symbols[r.getVariable()] = sp.Symbol(r.getVariable(),
                                                             real=True)
-
-        for r in self.sbml.getListOfReactions():
-            if r.isSetId():
-                self.local_symbols[r.getId()] = _get_identifier_symbol(r)
-
         # SBML time symbol + constants
         self.local_symbols['time'] = sp.Symbol('time', real=True)
         self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
+
+        # definitions below already use self.local_symbols and shouldn't be
+        # reordered
+        for r in self.sbml.getListOfReactions():
+            for e in list(r.getListOfReactants()) + \
+                     list(r.getListOfProducts()):
+                if e.isSetId() and e.isSetStoichiometry():
+                    self.local_symbols[e.getId()] = sp.sympify(
+                        e.getStoichiometry(), locals=self.local_symbols
+                    )
+
+        for r in self.sbml.getListOfReactions():
+            if r.isSetId():
+                self.local_symbols[r.getId()] = self._sympy_from_sbml_math(
+                    r.getKineticLaw()
+                )
 
     @log_execution_time('processing SBML compartments', logger)
     def _process_compartments(self) -> None:
@@ -803,17 +816,6 @@ class SbmlImporter:
             if reaction.isSetId()
         ]
 
-        math_subs = []
-        for r in reactions:
-            elements = list(r.getListOfReactants()) \
-                       + list(r.getListOfProducts())
-            for element in elements:
-                if element.isSetId() & element.isSetStoichiometry():
-                    math_subs.append((
-                        sp.sympify(element.getId(), locals=self.local_symbols),
-                        sp.sympify(element.getStoichiometry())
-                    ))
-
         for reaction_index, reaction in enumerate(reactions):
             for element_list, sign in [(reaction.getListOfReactants(), -1.0),
                                        (reaction.getListOfProducts(), 1.0)]:
@@ -842,10 +844,10 @@ class SbmlImporter:
                             * elements[index]['stoichiometry'] \
                             * self.species_conversion_factor[specie_index]
 
-            sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
-            sym_math = sym_math.subs(math_subs)
             if reaction.isSetId():
-                self.reaction_ids[_get_identifier_symbol(reaction)] = sym_math
+                sym_math = self.local_symbols[reaction.getId()]
+            else:
+                sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
 
             self.flux_vector[reaction_index] = sym_math
             if any([
@@ -1215,6 +1217,7 @@ class SbmlImporter:
                     identifier, sym_math
                 )
 
+    @log_execution_time('processing SBML species references', logger)
     def _process_species_references(self):
         """
         Replaces species references that define anything but stoichiometries.
@@ -1244,14 +1247,6 @@ class SbmlImporter:
                 _get_identifier_symbol(species_reference),
                 sp.sympify(stoich, locals=self.local_symbols)
             )
-
-    def _process_reaction_identifiers(self):
-        """
-        Replaces references to reaction ids. These reaction ids are
-        generated in :py:func:`amici.SBMLImporter._process_reactions`.
-        """
-        for symbol, formula in self.reaction_ids.items():
-            self._replace_in_all_expressions(symbol, formula)
 
     def _make_initial(self,
                       sym_math: Union[sp.Expr, None]) -> Union[sp.Expr, None]:

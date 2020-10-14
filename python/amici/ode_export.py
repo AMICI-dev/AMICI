@@ -908,7 +908,7 @@ class ODEModel:
         # assemble fluxes and add them as expressions to the model
         fluxes = []
         for ir, flux in enumerate(si.flux_vector):
-            flux_id = sp.Symbol(f'flux_r{ir}', real=True)
+            flux_id = generate_flux_symbol(ir)
             self.add_component(Expression(
                 identifier=flux_id,
                 name=str(flux),
@@ -3228,3 +3228,17 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     if not isinstance(observable_id, str):
         observable_id = strip_pysb(observable_id)
     return sp.Symbol(f'm{observable_id}', real=True)
+
+
+def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
+    """
+    Generate identifier symbol for a reaction flux.
+    This function will always return the same unique python object for a
+    given entity.
+
+    :param reaction_index:
+        index of the reaction to which the flux corresponds
+    :return:
+        identifier symbol
+    """
+    return sp.Symbol(f'flux_r{reaction_index}', real=True)
