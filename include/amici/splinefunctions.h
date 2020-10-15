@@ -26,7 +26,7 @@ class AbstractSpline {
     AbstractSpline(std::vector<realtype> nodes,
                    std::vector<realtype> node_values,
                    bool equidistant_spacing,
-                   bool logarithmic_paraterization);
+                   bool logarithmic_parametrization);
 
     virtual ~AbstractSpline(){};
 
@@ -49,10 +49,10 @@ class AbstractSpline {
     bool get_equidistant_spacing();
 
     /**
-     * @brief Accessor to logarithmic_paraterization_ member
-     * @return logarithmic_paraterization flag
+     * @brief Accessor to logarithmic_parametrization_ member
+     * @return logarithmic_parametrization flag
      */
-    bool get_logarithmic_paraterization();
+    bool get_logarithmic_parametrization();
 
     const int n_nodes() { return n_nodes_; }
 
@@ -97,9 +97,9 @@ class AbstractSpline {
     /**
      * @brief Switch enforced positivity by logarithmic parametrization
      * on or off
-     * @param logarithmic_paraterization flag for logarithmic parametrization
+     * @param logarithmic_parametrization flag for logarithmic parametrization
      */
-    void set_logarithmic_paraterization(bool logarithmic_paraterization);
+    void set_logarithmic_parametrization(bool logarithmic_parametrization);
 
   private:
     realtype finalValue_;
@@ -108,7 +108,7 @@ class AbstractSpline {
 
     bool equidistant_spacing_ = false;
 
-    bool logarithmic_paraterization_ = false;
+    bool logarithmic_parametrization_ = false;
 
     int n_nodes_;
 
@@ -129,7 +129,7 @@ class HermiteSpline : public AbstractSpline {
                   SplineExtrapolation lastNodeExtrapol,
                   bool node_derivative_by_FD,
                   bool equidistant_spacing,
-                  bool logarithmic_paraterization);
+                  bool logarithmic_parametrization);
 
     ~HermiteSpline(){};
 

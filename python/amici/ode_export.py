@@ -2778,7 +2778,7 @@ class ODEExporter:
             else:
                 constr += 'false, '
 
-            if spline.logarithmic_paraterization:
+            if spline.logarithmic_parametrization:
                 constr += 'true);'
             else:
                 constr += 'false);'
