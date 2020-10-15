@@ -219,21 +219,37 @@ def export_steadystates(
         return pd.DataFrame(columns=amici_model.getStateIds(), index=[], data=[])
 
     # if steady state measurements are available: get the simulation conditions
-    steady_state_conditions = petab_problem.measurement_df.loc[measurement_ids,
+    steadystate_conditions = petab_problem.measurement_df.loc[measurement_ids,
         ('preequilibrationConditionId', 'simulationConditionId')]
-    steady_state_conditions = steady_state_conditions.drop_duplicates()
+    steadystate_conditions = steadystate_conditions.drop_duplicates()
 
-    steady_state_conditions['preequilibrationConditionId'] = [
-        '' if np.isnan(pc) else str(pc)
-        for pc in steady_state_conditions['preequilibrationConditionId']
+    # pandas reads in "NaN" if a cell is empty. Correct that.
+    steadystate_conditions['preequilibrationConditionId'] = [
+        '' if np.isnan(preeq_cond) else str(preeq_cond)
+        for preeq_cond in steadystate_conditions['preequilibrationConditionId']
     ]
+    steadystate_conditions.drop_duplicates(inplace=True)
 
     if simulation_conditions is not None:
-        # if conditions were passed, drop those without steady state measurements
-        for cond in simulation_conditions:
-            print(tuple(cond[('preequilibrationConditionId', 'simulationConditionId')]))
-    else:
-        simulation_conditions = steady_state_conditions.drop_duplicates()
+        # if we don't need a preequilibration condition, drop the column
+        if 'preequilibrationConditionId' not in simulation_conditions.keys():
+            steadystate_conditions.drop('preequilibrationConditionId',
+                                        axis=1, inplace=True)
+
+        # if conditions were passed drop those without steadystate measurements
+        for id in list(steadystate_conditions.index):
+            if steadystate_conditions.loc[id, 'simulationConditionId'] \
+                    not in simulation_conditions['simulationConditionId']:
+                steadystate_conditions.drop(id, axis=0, inplace=True)
+                continue
+
+            if 'preequilibrationConditionId' in steadystate_conditions.keys() \
+                    and steadystate_conditions.loc[id,
+                        'preequilibrationConditionId'] not in \
+                    simulation_conditions['preequilibrationConditionId']:
+                steadystate_conditions.drop(id, axis=0, inplace=True)
+
+    simulation_conditions = steadystate_conditions
 
     # simulate the model
     sim_results = simulate_petab(petab_problem=petab_problem,
@@ -249,11 +265,18 @@ def export_steadystates(
     steady_states = np.array([rdata['x'][-1,:]
                               for rdata in sim_results['rdatas']])
     # create dataframe
-    conditions_list = [steady_state_conditions.loc[id, 'preequilibrationConditionId'] + ':'
-                       + steady_state_conditions.loc[id, 'simulationConditionId']
-                       for id in range(steady_state_conditions.shape[0])]
+    condition_list = []
+    for id in list(steadystate_conditions.index):
+        if steadystate_conditions.loc[id, 'preequilibrationConditionId'] == '':
+            condition_list.append(steadystate_conditions.loc[
+                                   id, 'simulationConditionId'])
+        else:
+            condition_list.append(
+                steadystate_conditions.loc[id, 'preequilibrationConditionId']
+                + ':' + steadystate_conditions.loc[id, 'simulationConditionId']
+            )
     steady_state_df = pd.DataFrame(columns=amici_model.getStateIds(),
-        index=conditions_list, data=steady_states)
+        index=condition_list, data=steady_states)
 
     # export to file
     if export_file is not None:
