@@ -21,10 +21,10 @@ static realtype evaluatePolynomial(realtype x, realtype *coeff) {
 AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
                                std::vector<realtype> node_values,
                                bool equidistant_spacing,
-                               bool logarithmic_paraterization)
+                               bool logarithmic_parametrization)
     : nodes_(nodes), node_values_(node_values),
     equidistant_spacing_(equidistant_spacing),
-    logarithmic_paraterization_(logarithmic_paraterization) {
+    logarithmic_parametrization_(logarithmic_parametrization) {
 
     /* we want to set the number of nodes */
     n_nodes_ = node_values.size();
@@ -42,7 +42,7 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
             nodes_[i_node] = node_start + i_node * node_step;
     }
 
-    if (logarithmic_paraterization_)
+    if (logarithmic_parametrization_)
         for (int iNode = 0; iNode < n_nodes_; iNode++)
             node_values_[iNode] = std::log(node_values_[iNode]);
 }
@@ -71,12 +71,12 @@ void AbstractSpline::set_equidistant_spacing(bool equidistant_spacing) {
     equidistant_spacing_ = equidistant_spacing;
 }
 
-bool AbstractSpline::get_logarithmic_paraterization() {
-    return logarithmic_paraterization_;
+bool AbstractSpline::get_logarithmic_parametrization() {
+    return logarithmic_parametrization_;
 }
 
-void AbstractSpline::set_logarithmic_paraterization(bool logarithmic_paraterization) {
-    logarithmic_paraterization_ = logarithmic_paraterization;
+void AbstractSpline::set_logarithmic_parametrization(bool logarithmic_parametrization) {
+    logarithmic_parametrization_ = logarithmic_parametrization;
 }
 
 
@@ -89,9 +89,9 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              SplineExtrapolation lastNodeExtrapol,
                              bool node_derivative_by_FD,
                              bool equidistant_spacing,
-                             bool logarithmic_paraterization)
+                             bool logarithmic_parametrization)
     : AbstractSpline(nodes, node_values, equidistant_spacing,
-                     logarithmic_paraterization),
+                     logarithmic_parametrization),
     node_values_derivative_(node_values_derivative),
     firstNodeBC_(firstNodeBC), lastNodeBC_(lastNodeBC),
     firstNodeEP_(firstNodeExtrapol),

@@ -1837,7 +1837,7 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
 
 void Model::fspl(const realtype t) {
     for (int ispl = 0; ispl < nspl; ispl++) {
-        if (splines_[ispl].get_logarithmic_paraterization()) {
+        if (splines_[ispl].get_logarithmic_parametrization()) {
             spl_[ispl] = std::exp(splines_[ispl].getValue(t));
         } else {
             spl_[ispl] = splines_[ispl].getValue(t);
@@ -1850,7 +1850,7 @@ void Model::fsspl(const realtype t) {
     realtype *sspl_data = sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++) {
-            if (splines_[ispl].get_logarithmic_paraterization()) {
+            if (splines_[ispl].get_logarithmic_parametrization()) {
                 sspl_data[ispl + nspl * ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
             } else {
                 sspl_data[ispl + nspl * ip] = splines_[ispl].getSensitivity(t, ip);

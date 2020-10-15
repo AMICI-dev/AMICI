@@ -169,7 +169,7 @@ class AbstractSpline(ABC):
             *,
             bc: BClike = None,
             extrapolate: BClike = None,
-            logarithmic_paraterization: bool = False
+            logarithmic_parametrization: bool = False
         ):
         """
         Base constructor for `AbstractSpline` objects.
@@ -233,7 +233,7 @@ class AbstractSpline(ABC):
             * `'periodic'`: periodic extrapolation.
               Requires `'periodic'` boundary conditions.
 
-            :param logarithmic_paraterization:
+            :param logarithmic_parametrization:
             Interpolation is done in log scale.
         """
 
@@ -263,7 +263,7 @@ class AbstractSpline(ABC):
         if all(x.is_Number for x in xx) and not np.all(np.diff(xx) >= 0):
             raise ValueError('xx should be stricly increasing')
 
-        if logarithmic_paraterization:
+        if logarithmic_parametrization:
             if all(y.is_Number for y in yy) and any(y <= 0 for y in yy):
                 raise ValueError(
                     'when interpolation is done in log-scale, '
@@ -283,7 +283,7 @@ class AbstractSpline(ABC):
         self._yy = yy
         self._bc = bc
         self._extrapolate = extrapolate
-        self._logarithmic_paraterization = logarithmic_paraterization
+        self._logarithmic_parametrization = logarithmic_parametrization
 
         self._formula_cache = {}
 
@@ -461,9 +461,9 @@ class AbstractSpline(ABC):
         return self._extrapolate
 
     @property
-    def logarithmic_paraterization(self) -> bool:
+    def logarithmic_parametrization(self) -> bool:
         "Whether interpolation is done in log-scale."
-        return self._logarithmic_paraterization
+        return self._logarithmic_parametrization
 
     @property
     @abstractmethod
@@ -554,13 +554,13 @@ class AbstractSpline(ABC):
         if x is None:
             x = self.x
         poly = self.poly(i, x=x)
-        if self.logarithmic_paraterization:
+        if self.logarithmic_parametrization:
             return sp.exp(poly)
         else:
             return poly
 
     def y_scaled(self, i: int):
-        if self.logarithmic_paraterization:
+        if self.logarithmic_parametrization:
             return sp.log(self.yy[i])
         else:
             return self.yy[i]
@@ -806,8 +806,8 @@ class AbstractSpline(ABC):
         if extr is not None:
             attributes['spline_extrapolate'] = extr
 
-        if self.logarithmic_paraterization:
-            attributes['spline_logarithmic_paraterization'] = True
+        if self.logarithmic_parametrization:
+            attributes['spline_logarithmic_parametrization'] = True
 
         return attributes
 
@@ -1069,8 +1069,8 @@ class AbstractSpline(ABC):
             extr = (extr_cmps[0].strip(), extr_cmps[1].strip())
         kwargs['extrapolate'] = extr
 
-        kwargs['logarithmic_paraterization'] = \
-            attributes.pop('spline_logarithmic_paraterization', False)
+        kwargs['logarithmic_parametrization'] = \
+            attributes.pop('spline_logarithmic_parametrization', False)
 
         if 'spline_evaluation_point' not in children.keys():
             raise ValueError(
@@ -1214,7 +1214,7 @@ class CubicHermiteSpline(AbstractSpline):
             *,
             bc: BClike = 'auto',
             extrapolate: BClike = None,
-            logarithmic_paraterization: bool = False
+            logarithmic_parametrization: bool = False
         ):
         """
         Constructor for `CubicHermiteSpline` objects.
@@ -1254,7 +1254,7 @@ class CubicHermiteSpline(AbstractSpline):
             Extrapolation method
             (see `AbstractSpline` documentation).
 
-            :param logarithmic_paraterization:
+            :param logarithmic_parametrization:
             Interpolation is done in log scale.
         """
 
@@ -1301,7 +1301,7 @@ class CubicHermiteSpline(AbstractSpline):
             sbmlId, x, xx, yy,
             bc=bc,
             extrapolate=extrapolate,
-            logarithmic_paraterization=logarithmic_paraterization
+            logarithmic_parametrization=logarithmic_parametrization
         )
 
         self._dd = dd
@@ -1344,7 +1344,7 @@ class CubicHermiteSpline(AbstractSpline):
         super().check_if_valid(importer)
 
     def d_scaled(self, i: int):
-        if self.logarithmic_paraterization:
+        if self.logarithmic_parametrization:
             return self.dd[i] / self.yy[i]
         else:
             return self.dd[i]
