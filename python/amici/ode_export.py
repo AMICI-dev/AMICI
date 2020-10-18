@@ -2405,11 +2405,11 @@ class ODEExporter:
         body = self._get_function_body(function, equations)
         if self.assume_pow_positivity and 'assume_pow_positivity' \
                 in self.functions[function].get('flags', []):
-            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
+            body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
             # execute this twice to catch cases where the ending ( would be the
             # starting (^|\W) for the following match
-            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
+            body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
         self.functions[function]['body'] = body
         lines += body
