@@ -2266,7 +2266,7 @@ class ODEExporter:
                                     stderr=subprocess.STDOUT,
                                     check=True)
         except subprocess.CalledProcessError as e:
-            print(e.output.decode('utf-8', errors='ignore'))
+            print(e.output.decode(sys.stdout.encoding))
             print("Failed building the model extension.")
             if self._build_hints:
                 print("Note:")
@@ -2274,7 +2274,7 @@ class ODEExporter:
             raise
 
         if verbose:
-            print(result.stdout.decode('utf-8', errors='ignore'))
+            print(result.stdout.decode(sys.stdout.encoding))
 
     def _generate_m_code(self) -> None:
         """
