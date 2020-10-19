@@ -276,7 +276,7 @@ class ModelQuantity:
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: Union[SupportsFloat, numbers.Number, sp.Basic]):
+                 value: Union[SupportsFloat, numbers.Number, sp.Expr]):
         """
         Create a new ModelQuantity instance.
 
@@ -302,8 +302,8 @@ class ModelQuantity:
         if isinstance(value, sp.RealNumber) \
                 or isinstance(value, numbers.Number):
             value = float(value)
-        if not isinstance(value, sp.Basic) and not isinstance(value, float):
-            raise TypeError(f'value must be sympy.Symbol or float, was '
+        if not isinstance(value, sp.Expr) and not isinstance(value, float):
+            raise TypeError(f'value must be sympy.Expr or float, was '
                             f'{type(value)}')
         self._value = value
 
@@ -364,8 +364,8 @@ class State(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic,
-                 dt: sp.Basic):
+                 init: sp.Expr,
+                 dt: sp.Expr):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
         by dt
@@ -376,13 +376,13 @@ class State(ModelQuantity):
         :param name:
             individual name of the state (does not need to be unique)
 
-        :param value:
+        :param init:
             initial value
 
         :param dt:
             time derivative
         """
-        super(State, self).__init__(identifier, name, value)
+        super(State, self).__init__(identifier, name, init)
         if not isinstance(dt, sp.Expr):
             raise TypeError(f'dt must have type sympy.Expr, was '
                             f'{type(dt)}')
@@ -922,7 +922,7 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def transform_dxd_to_concentration(specie_id, dxdt):
+        def transform_dxdt_to_concentration(specie_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
@@ -999,17 +999,23 @@ class ODEModel:
         )):
             assert ix == specie['index']  # check that no reordering occured
             # rate rules and amount species don't need to be update
-            if 'dt' in specie or specie['amount']:
+            if 'dt' in specie:
                 continue
-            specie['dt'] = transform_dxd_to_concentration(specie_id, formula)
+            if specie['amount']:
+                specie['dt'] = formula
+            else:
+                specie['dt'] = transform_dxdt_to_concentration(specie_id,
+                                                               formula)
 
         # create all basic components of the ODE model and add them.
         for symbol_name in symbols:
             # transform dict of lists into a list of dicts
-            args = ['name', 'value', 'identifier']
+            args = ['name', 'identifier']
 
             if symbol_name == SymbolId.SPECIES:
-                args += ['dt']
+                args += ['dt', 'init']
+            else:
+                args += ['value']
 
             protos = [
                 {

@@ -508,20 +508,20 @@ class SbmlImporter:
             if specie_def['amount'] and 'compartment' in specie_def:
                 initial *= self.compartments[specie_def['compartment']]
 
-            specie_def['value'] = initial
+            specie_def['init'] = initial
 
         # flatten initSpecies
         for specie in self.symbols[SymbolId.SPECIES].values():
             nested_species = True
             while nested_species:
                 nested_species = False
-                for symbol in specie['value'].free_symbols:
+                for symbol in specie['init'].free_symbols:
                     if symbol not in self.symbols[SymbolId.SPECIES]:
                         continue
 
                     nested_species = True
-                    specie['value'] = specie['value'].subs(
-                        symbol, self.symbols[SymbolId.SPECIES][symbol]['value']
+                    specie['init'] = specie['init'].subs(
+                        symbol, self.symbols[SymbolId.SPECIES][symbol]['init']
                     )
 
     @log_execution_time('processing SBML rate rules', logger)
@@ -551,7 +551,7 @@ class SbmlImporter:
             # compartments twice (as compartments with rate rules are
             # implemented as species).
             if variable in self.symbols[SymbolId.SPECIES]:
-                init = self.symbols[SymbolId.SPECIES][variable]['value']
+                init = self.symbols[SymbolId.SPECIES][variable]['init']
                 component_type = sbml.SBML_SPECIES
                 name = None
 
@@ -563,7 +563,7 @@ class SbmlImporter:
 
             elif variable in self.symbols[SymbolId.PARAMETER]:
                 init = sp.sympify(
-                    self.symbols[SymbolId.PARAMETER][variable]['value'],
+                    self.symbols[SymbolId.PARAMETER][variable]['init'],
                     locals=self.local_symbols
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
@@ -607,14 +607,14 @@ class SbmlImporter:
         if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
 
             for specie_id, specie in self.symbols[SymbolId.SPECIES].items():
-                variable0 = variable0.subs(specie_id, specie['value'])
+                variable0 = variable0.subs(specie_id, specie['init'])
 
             for specie in self.symbols[SymbolId.SPECIES].values():
-                specie['value'] = specie['value'].subs(variable, variable0)
+                specie['init'] = specie['init'].subs(variable, variable0)
 
             self.symbols[SymbolId.SPECIES][variable] = {
                 'name': name,
-                'value': variable0,
+                'init': variable0,
                 'amount': component_type == sbml.SBML_COMPARTMENT,
                 'conversion_factor': 1.0,
                 'constant': False,
@@ -628,7 +628,7 @@ class SbmlImporter:
             # SBML species are already in the species symbols
             if self.symbols[SymbolId.SPECIES][variable]['amount']:
                 # transform initial to amounts
-                self.symbols[SymbolId.SPECIES][variable]['value'] *= \
+                self.symbols[SymbolId.SPECIES][variable]['init'] *= \
                     self.symbols[SymbolId.SPECIES][variable]['compartment']
             self.symbols[SymbolId.SPECIES][variable]['dt'] = d_dt
         else:
@@ -1104,7 +1104,7 @@ class SbmlImporter:
             return sym_math
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            sym_math = sym_math.subs(species_id, species['value'])
+            sym_math = sym_math.subs(species_id, species['init'])
 
         return sym_math
 
@@ -1183,8 +1183,8 @@ class SbmlImporter:
             if comp in self.symbols[SymbolId.SPECIES]:
                 # for comps with rate rules volume is only initial
                 for specie in self.symbols[SymbolId.SPECIES].values():
-                    if isinstance(specie['value'], sp.Expr):
-                        specie['value'] = specie['value'].subs(comp, vol)
+                    if isinstance(specie['init'], sp.Expr):
+                        specie['init'] = specie['init'].subs(comp, vol)
                 continue
             self._replace_in_all_expressions(comp, vol)
 
@@ -1222,19 +1222,19 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        for symbol in [SymbolId.SPECIES, SymbolId.OBSERVABLE, SymbolId.LLHY,
-                       SymbolId.SIGMAY]:
+        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
-                if symbol is SymbolId.SPECIES:
-                    repl = self._make_initial(new)
-                else:
-                    repl = new
+                element['value'] = element['value'].subs(old, new)
 
-                element['value'] = element['value'].subs(old, repl)
-                if symbol == SymbolId.SPECIES and 'dt' in element:
-                    element['dt'] = element['dt'].subs(old, new)
+        if SymbolId.SPECIES in self.symbols:
+            for specie in self.symbols[SymbolId.SPECIES].values():
+                specie['init'] = specie['init'].subs(old,
+                                                     self._make_initial(new))
+                if 'dt' in specie:
+                    specie['dt'] = specie['dt'].subs(old, new)
+
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
