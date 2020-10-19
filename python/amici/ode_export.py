@@ -946,8 +946,14 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            comp = si.symbols[SymbolId.SPECIES][specie_id]['compartment']
-            x_index = si.symbols[SymbolId.SPECIES][specie_id]['index']
+            specie = si.symbols[SymbolId.SPECIES][specie_id]
+
+            # no transformation to volume means no update to derivative
+            if specie['amount']:
+                return dxdt
+
+            comp = specie['compartment']
+            x_index = specie['index']
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
                 xdot = (dxdt - dv_dt * specie_id) / comp

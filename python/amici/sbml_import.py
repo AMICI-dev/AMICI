@@ -863,7 +863,9 @@ class SbmlImporter:
         for species, definition in self.symbols[SymbolId.SPECIES].items():
             if not definition['amount'] or 'compartment' not in definition:
                 continue
-            volume = self.compartments[definition['compartment']]
+            # for compartment rate rules, keep the compartment symbol
+            volume = self.compartments.get(definition['compartment'],
+                                           definition['compartment'])
             self.flux_vector = \
                 self.flux_vector.subs(species, species / volume)
 
