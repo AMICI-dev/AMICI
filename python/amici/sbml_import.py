@@ -563,7 +563,7 @@ class SbmlImporter:
 
             elif variable in self.symbols[SymbolId.PARAMETER]:
                 init = sp.sympify(
-                    self.symbols[SymbolId.PARAMETER][variable]['init'],
+                    self.symbols[SymbolId.PARAMETER][variable]['value'],
                     locals=self.local_symbols
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
