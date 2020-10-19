@@ -110,8 +110,7 @@ def verify_results(settings, rdata, expected, wrapper,
         settings['concentration'].replace(' ', '').replace('\n', '').split(',')
         if s
     ]
-    # We only need to convert species that have only substance units and that
-    # are targets of rate rules
+    # We only need to convert species that have only substance units
     concentration_species = [
         str(species_id)
         for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
@@ -168,8 +167,8 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        # Skip "species" that are actually compartments or rate rules that
-        # already specify amounts
+        # Skip species that are marked to only have substance units since
+        # they are already simulated as amounts
         amt_species = list(set(
             str(sid) for sid, s in wrapper.symbols[SymbolId.SPECIES].items()
             if s['amount']

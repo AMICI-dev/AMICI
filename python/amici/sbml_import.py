@@ -205,16 +205,16 @@ class SbmlImporter:
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                    **kwargs) -> None:
         """
-        Generate AMICI C++ files for the model provided to the constructor.
+        Generate and compile AMICI C++ files for the model provided to the
+        constructor.
 
         The resulting model can be imported as a regular Python module (if
         `compile=True`), or used from Matlab or C++ as described in the
         documentation of the respective AMICI interface.
 
         Note that this generates model ODEs for changes in concentrations, not
-        amounts. The simulation results obtained from the model will be
-        concentrations, independently of the SBML `hasOnlySubstanceUnits`
-        attribute.
+        amounts unless `hasOnlySubstanceUnits` the attribute has been
+        defined for a particular species.
 
         :param model_name:
             name of the model/model directory
@@ -900,7 +900,7 @@ class SbmlImporter:
 
         :param noise_distributions:
             dictionary(observableId: noise type)
-            See :func:`sbml2amici`.
+            See :py:func:`sbml2amici`.
         """
 
         if observables is None:
@@ -1817,7 +1817,12 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     
     if species.isSetInitialAmount():
         amt = species.getInitialAmount()
-        if not math.isnan(amt):
+        if math.isnan(amt):
+            return sp.sympify(0.0)
+
+        if species.getHasOnlySubstanceUnits():
+            return sp.sympify(amt)
+        else:
             return sp.sympify(amt) / _get_species_compartment_symbol(species)
 
     return sp.sympify(0.0)

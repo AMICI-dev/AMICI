@@ -922,7 +922,7 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def dx_dt(specie_id, dxdt):
+        def transform_dxd_to_concentration(specie_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
@@ -947,10 +947,6 @@ class ODEModel:
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
             specie = si.symbols[SymbolId.SPECIES][specie_id]
-
-            # no transformation to volume means no update to derivative
-            if specie['amount']:
-                return dxdt
 
             comp = specie['compartment']
             x_index = specie['index']
@@ -1002,9 +998,10 @@ class ODEModel:
                 dxdt
         )):
             assert ix == specie['index']  # check that no reordering occured
-            if 'dt' in specie:
+            # rate rules and amount species don't need to be update
+            if 'dt' in specie or specie['amount']:
                 continue
-            specie['dt'] = dx_dt(specie_id, formula)
+            specie['dt'] = transform_dxd_to_concentration(specie_id, formula)
 
         # create all basic components of the ODE model and add them.
         for symbol_name in symbols:
