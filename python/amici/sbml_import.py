@@ -509,7 +509,13 @@ class SbmlImporter:
 
             specie_def['init'] = initial
 
-        # flatten initSpecies
+        self._flatten_species_initial()
+
+    @log_execution_time('flattening SBML species initials', logger)
+    def _flatten_species_initial(self):
+        """
+        Flattens species interdependency for species initial values
+        """
         for specie in self.symbols[SymbolId.SPECIES].values():
             nested_species = True
             while nested_species:
