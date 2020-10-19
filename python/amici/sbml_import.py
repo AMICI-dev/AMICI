@@ -216,6 +216,9 @@ class SbmlImporter:
         amounts unless `hasOnlySubstanceUnits` the attribute has been
         defined for a particular species.
 
+        Sensitivity analysis for local parameters is enabled by creating
+        global parameters _{reactionId}_{localParameterName}.
+
         :param model_name:
             name of the model/model directory
 
@@ -405,8 +408,8 @@ class SbmlImporter:
             raise SBMLException('Fast reactions are currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
-                     for element in list(reaction.getListOfReactants())
-                     + list(reaction.getListOfProducts())])
+                     for element in itt.chain(reaction.getListOfReactants(),
+                                              reaction.getListOfProducts())])
                 for reaction in self.sbml.getListOfReactions()]):
             raise SBMLException('Non-unity stoichiometry is'
                                 ' currently not supported!')
@@ -419,10 +422,10 @@ class SbmlImporter:
         shadowing model entities.
         """
         species_references = _get_list_of_species_references(self.sbml)
-        for c in list(self.sbml.getListOfSpecies()) + \
-                list(self.sbml.getListOfParameters()) + \
-                list(self.sbml.getListOfCompartments()) + \
-                species_references:
+        for c in itt.chain(self.sbml.getListOfSpecies(),
+                           self.sbml.getListOfParameters(),
+                           self.sbml.getListOfCompartments(),
+                           species_references):
             self.local_symbols[c.getId()] = _get_identifier_symbol(c)
 
         for r in self.sbml.getListOfRules():
@@ -435,8 +438,16 @@ class SbmlImporter:
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
         # SBML time symbol + constants
-        self.local_symbols['time'] = symbol_with_assumptions('time')
-        self.local_symbols['avogadro'] = symbol_with_assumptions('avogadro')
+        for symbol_name in ['time', 'avogadro']:
+            if symbol_name in self.local_symbols:
+                # Supporting this is probably kinda tricky and this sounds
+                # like a stupid thing to do in the first place.
+                raise SBMLException(f'AMICI does not support SBML models '
+                                    f'containing variables with Id '
+                                    f'{symbol_name}.')
+            self.local_symbols[symbol_name] = symbol_with_assumptions(
+                symbol_name
+            )
 
     @log_execution_time('processing SBML compartments', logger)
     def _process_compartments(self) -> None:
@@ -503,9 +514,14 @@ class SbmlImporter:
 
             ia = self.sbml.getInitialAssignment(specie.getId())
             if ia is not None:
-                initial = self._sympy_from_sbml_math(ia)
-                if specie_def['amount'] and 'compartment' in specie_def:
-                    initial *= self.compartments[specie_def['compartment']]
+                ia_initial = self._sympy_from_sbml_math(ia)
+                if ia_initial is not None:
+                    if specie_def['amount'] and 'compartment' in specie_def:
+                        ia_initial *= self.compartments.get(
+                            specie_def['compartment'],
+                            specie_def['compartment']
+                        )
+                    initial = ia_initial
 
             specie_def['init'] = initial
 
@@ -708,7 +724,7 @@ class SbmlImporter:
             elements = list(r.getListOfReactants()) \
                        + list(r.getListOfProducts())
             for element in elements:
-                if element.isSetId() & element.isSetStoichiometry():
+                if element.isSetId() and element.isSetStoichiometry():
                     math_subs.append((
                         sp.sympify(element.getId(), locals=self.local_symbols),
                         sp.sympify(element.getStoichiometry())
@@ -796,6 +812,12 @@ class SbmlImporter:
                     assignments[str(sym_id)] = formula
 
             if sym_id in self.stoichiometric_matrix.free_symbols:
+                if any(s in self.symbols[SymbolId.SPECIES]
+                       for s in formula.free_symbols):
+                    raise SBMLException(
+                        f'AMICI does not support species-dependent '
+                        f'stoichiometric matrices.'
+                    )
                 self.stoichiometric_matrix = \
                     self.stoichiometric_matrix.subs(sym_id, formula)
 
@@ -1294,7 +1316,6 @@ class SbmlImporter:
         # initial conditions
         sym = self._make_initial(sym)
         return sym
-
 
     def _get_element_stoichiometry(self,
                                    ele: sbml.SBase,
