@@ -442,8 +442,8 @@ class SbmlImporter:
             if symbol_name in self.local_symbols:
                 # Supporting this is probably kinda tricky and this sounds
                 # like a stupid thing to do in the first place.
-                raise SBMLException(f'AMICI does not support SBML models '
-                                    f'containing variables with Id '
+                raise SBMLException('AMICI does not support SBML models '
+                                    'containing variables with Id '
                                     f'{symbol_name}.')
             self.local_symbols[symbol_name] = symbol_with_assumptions(
                 symbol_name
@@ -815,8 +815,8 @@ class SbmlImporter:
                 if any(s in self.symbols[SymbolId.SPECIES]
                        for s in formula.free_symbols):
                     raise SBMLException(
-                        f'AMICI does not support species-dependent '
-                        f'stoichiometric matrices.'
+                        'AMICI does not support species-dependent '
+                        'stoichiometric matrices.'
                     )
                 self.stoichiometric_matrix = \
                     self.stoichiometric_matrix.subs(sym_id, formula)

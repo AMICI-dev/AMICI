@@ -997,8 +997,8 @@ class ODEModel:
                 symbols[SymbolId.SPECIES].items(),
                 dxdt
         )):
-            assert ix == specie['index']  # check that no reordering occured
-            # rate rules and amount species don't need to be update
+            assert ix == specie['index']  # check that no reordering occurred
+            # rate rules and amount species don't need to be updated
             if 'dt' in specie:
                 continue
             if specie['amount']:
