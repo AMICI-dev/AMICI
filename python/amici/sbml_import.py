@@ -390,7 +390,7 @@ class SbmlImporter:
                 ) for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Algebraic rules are currently not supported, '
                                 'and rate rules are only supported for '
-                                'species and compartments.')
+                                'species, compartments, and parameters.')
 
         for comp_type in (sbml.Compartment, sbml.Species, sbml.Parameter):
             if any([not (rule.isAssignment() or rule.isRate())
@@ -511,14 +511,14 @@ class SbmlImporter:
 
         # flatten initSpecies
         for specie in self.symbols[SymbolId.SPECIES].values():
-            nested_species_count = 1
-            while nested_species_count > 0:
-                nested_species_count = 0
+            nested_species = True
+            while nested_species:
+                nested_species = False
                 for symbol in specie['value'].free_symbols:
                     if symbol not in self.symbols[SymbolId.SPECIES]:
                         continue
 
-                    nested_species_count += 1
+                    nested_species = True
                     specie['value'] = specie['value'].subs(
                         symbol, self.symbols[SymbolId.SPECIES][symbol]['value']
                     )
@@ -526,7 +526,7 @@ class SbmlImporter:
     @log_execution_time('processing SBML rate rules', logger)
     def _process_rate_rules(self):
         """
-        Process assignment and rate rules for species compartments and
+        Process assignment and rate rules for species, compartments and
         parameters. Compartments and parameters with rate rules are
         implemented as species. Note that, in the case of species,
         rate rules may describe the change in amount, not concentration,

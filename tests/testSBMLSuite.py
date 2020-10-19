@@ -175,7 +175,7 @@ def concentrations_to_amounts(
             if s['amount']
         ).difference(requested_concentrations))
 
-        if not species == '' and species not in amt_species:
+        if species and species not in amt_species:
             symvolume = wrapper.symbols[SymbolId.SPECIES][
                 symbol_with_assumptions(species)
             ]['compartment']
@@ -290,4 +290,3 @@ def format_test_id(test_id) -> str:
     test_str = str(test_id)
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
-

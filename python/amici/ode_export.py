@@ -959,7 +959,7 @@ class ODEModel:
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
                 dv_dt = v.diff(si.amici_time_symbol)
-                # we may end up with a time derivative of the compartent
+                # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
                 comp_rate_vars = [p for p in v.free_symbols
                                   if p in si.symbols[SymbolId.SPECIES]]
