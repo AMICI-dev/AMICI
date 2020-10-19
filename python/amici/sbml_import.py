@@ -392,14 +392,15 @@ class SbmlImporter:
                                 'and rate rules are only supported for '
                                 'species, compartments, and parameters.')
 
-        for comp_type in (sbml.Compartment, sbml.Species, sbml.Parameter):
-            if any([not (rule.isAssignment() or rule.isRate())
-                    and isinstance(
-                        self.sbml.getElementBySId(rule.getVariable()),
-                        comp_type
-                    ) for rule in self.sbml.getListOfRules()]):
-                raise SBMLException('Only assignment and rate rules are '
-                                    f'currently supported for {comp_type}!')
+        if any([not (rule.isAssignment() or rule.isRate())
+                and isinstance(
+                    self.sbml.getElementBySId(rule.getVariable()),
+                    (sbml.Compartment, sbml.Species, sbml.Parameter)
+                ) for rule in self.sbml.getListOfRules()]):
+            raise SBMLException('Only assignment and rate rules are '
+                                'currently supported for compartments, '
+                                'species, and parameters! Error '
+                                f'occurred with rule: {rule.getVariable()}')
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
