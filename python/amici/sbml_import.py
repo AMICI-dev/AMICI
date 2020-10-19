@@ -362,7 +362,6 @@ class SbmlImporter:
         self._process_species()
         self._process_reactions()
         self._process_rules()
-        self._process_concentration_conversion()
         self._process_initial_assignments()
         self._process_species_references()
         self._process_reaction_identifiers()
@@ -499,14 +498,14 @@ class SbmlImporter:
         for specie in self.sbml.getListOfSpecies():
             initial = _get_species_initial(specie)
 
+            specie_id = _get_identifier_symbol(specie)
+            specie_def = self.symbols[SymbolId.SPECIES][specie_id]
+
             ia = self.sbml.getInitialAssignment(specie.getId())
             if ia is not None:
                 initial = self._sympy_from_sbml_math(ia)
-
-            specie_id = _get_identifier_symbol(specie)
-            specie_def = self.symbols[SymbolId.SPECIES][specie_id]
-            if specie_def['amount'] and 'compartment' in specie_def:
-                initial *= self.compartments[specie_def['compartment']]
+                if specie_def['amount'] and 'compartment' in specie_def:
+                    initial *= self.compartments[specie_def['compartment']]
 
             specie_def['init'] = initial
 
@@ -569,9 +568,6 @@ class SbmlImporter:
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
                 del self.symbols[SymbolId.PARAMETER][variable]
                 component_type = sbml.SBML_PARAMETER
-            else:
-                raise ValueError('Rate rules are only supported for '
-                                 'compartments and species')
 
             self.add_d_dt(formula, variable, init, component_type, name)
 
@@ -605,13 +601,14 @@ class SbmlImporter:
             species
         """
         if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
-
+            # update initial values
             for specie_id, specie in self.symbols[SymbolId.SPECIES].items():
                 variable0 = variable0.subs(specie_id, specie['init'])
 
             for specie in self.symbols[SymbolId.SPECIES].values():
                 specie['init'] = specie['init'].subs(variable, variable0)
 
+            # add compartment/parameter species
             self.symbols[SymbolId.SPECIES][variable] = {
                 'name': name,
                 'init': variable0,
@@ -621,20 +618,9 @@ class SbmlImporter:
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': d_dt,
             }
-            # update initial values
-
-
         elif component_type == sbml.SBML_SPECIES:
             # SBML species are already in the species symbols
-            if self.symbols[SymbolId.SPECIES][variable]['amount']:
-                # transform initial to amounts
-                self.symbols[SymbolId.SPECIES][variable]['init'] *= \
-                    self.symbols[SymbolId.SPECIES][variable]['compartment']
             self.symbols[SymbolId.SPECIES][variable]['dt'] = d_dt
-        else:
-            raise TypeError(f'Rate rules are currently only supported for '
-                            'libsbml.SBML_COMPARTMENT and '
-                            'libsbml.SBML_SPECIES components.')
 
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
@@ -800,11 +786,6 @@ class SbmlImporter:
                         float(formula)
                 else:
                     self.sbml.removeParameter(str(sym_id))
-                    for var in formula.free_symbols:
-                        species = self.symbols[SymbolId.SPECIES].get(var, None)
-                        if species is None:
-                            continue
-
                     self.parameter_assignment_rules[sym_id] = formula
                     assignments[str(sym_id)] = formula
 
@@ -855,20 +836,6 @@ class SbmlImporter:
         for sym_id in assignments.keys():
             self._replace_in_all_expressions(symbol_with_assumptions(sym_id),
                                              assignments[sym_id])
-
-    @log_execution_time('processing SBML concentration conversion', logger)
-    def _process_concentration_conversion(self) -> None:
-        """
-        Convert species that only have amounts to concentration.
-        """
-        for species, definition in self.symbols[SymbolId.SPECIES].items():
-            if not definition['amount'] or 'compartment' not in definition:
-                continue
-            # for compartment rate rules, keep the compartment symbol
-            volume = self.compartments.get(definition['compartment'],
-                                           definition['compartment'])
-            self.flux_vector = \
-                self.flux_vector.subs(species, species / volume)
 
     def _process_time(self) -> None:
         """
@@ -1813,7 +1780,11 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
         initial species concentration
     """
     if species.isSetInitialConcentration():
-        return sp.sympify(species.getInitialConcentration())
+        conc = species.getInitialConcentration()
+        if species.getHasOnlySubstanceUnits():
+            return sp.sympify(conc) * _get_species_compartment_symbol(species)
+        else:
+            return sp.sympify(conc)
     
     if species.isSetInitialAmount():
         amt = species.getInitialAmount()

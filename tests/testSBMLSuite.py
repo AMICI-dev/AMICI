@@ -4,9 +4,13 @@ Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
 
 Usage:
-    testSBMLSuite.py SELECTION
+    python tests/testSBMLSuite.py SELECTION
         SELECTION can be e.g.: `1`, `1,3`, or `-3,4,6-7` to select specific
         test cases or 1-1780 to run all.
+
+    pytest tests.testSBMLSuite -n CORES --cases SELECTION
+        CORES can be an integer or `auto` for all available cores.
+        SELECTION same as above.
 """
 
 import os
@@ -75,8 +79,6 @@ def test_sbml_testsuite_case(test_number, result_path):
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
                                    model, atol, rtol)
-
-        print(f'TestCase {test_id} passed.')
 
         # record results
         write_result_file(simulated, test_id, result_path)
