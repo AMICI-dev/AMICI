@@ -188,6 +188,7 @@ class SbmlImporter:
         Reset the symbols attribute to default values
         """
         self.symbols = copy.deepcopy(default_symbols)
+        self.local_symbols = dict()
 
     def sbml2amici(self,
                    model_name: str = None,
@@ -426,7 +427,8 @@ class SbmlImporter:
                            self.sbml.getListOfParameters(),
                            self.sbml.getListOfCompartments(),
                            species_references):
-            self.local_symbols[c.getId()] = _get_identifier_symbol(c)
+            if c.getId():
+                self.local_symbols[c.getId()] = _get_identifier_symbol(c)
 
         for r in self.sbml.getListOfRules():
             self.local_symbols[r.getVariable()] = symbol_with_assumptions(
