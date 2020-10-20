@@ -454,8 +454,7 @@ class SbmlImporter:
         # definitions below already use self.local_symbols and shouldn't be
         # reordered
         for r in self.sbml.getListOfReactions():
-            for e in list(r.getListOfReactants()) + \
-                     list(r.getListOfProducts()):
+            for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
                 if e.isSetId() and e.isSetStoichiometry():
                     self.local_symbols[e.getId()] = sp.sympify(
                         e.getStoichiometry(), locals=self.local_symbols
