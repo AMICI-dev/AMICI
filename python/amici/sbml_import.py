@@ -21,6 +21,7 @@ from typing import (
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol, generate_flux_symbol
 )
+from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
