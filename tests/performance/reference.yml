@@ -1,7 +1,7 @@
 # Reference wall times (seconds) with some buffer
 create_sdist: 5
 install_sdist: 150
-petab_import: 2000
+petab_import: 2100
 install_model: 350
 forward_simulation: 2
 forward_sensitivities: 2
