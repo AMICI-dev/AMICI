@@ -449,18 +449,18 @@ class SbmlImporter:
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
-                # SBML time symbol + constants
-                for symbol_name in ['time', 'avogadro']:
-                    if symbol_name in self.local_symbols:
-                        # Supporting this is probably kinda tricky and this sounds
-                        # like a stupid thing to do in the first place.
-                        raise SBMLException(
-                            'AMICI does not support SBML models '
-                            'containing variables with Id '
-                            f'{symbol_name}.')
-                    self.local_symbols[symbol_name] = symbol_with_assumptions(
-                        symbol_name
-                    )
+        # SBML time symbol + constants
+        for symbol_name in ['time', 'avogadro']:
+            if symbol_name in self.local_symbols:
+                # Supporting this is probably kinda tricky and this sounds
+                # like a stupid thing to do in the first place.
+                raise SBMLException(
+                    'AMICI does not support SBML models '
+                    'containing variables with Id '
+                    f'{symbol_name}.')
+            self.local_symbols[symbol_name] = symbol_with_assumptions(
+                symbol_name
+            )
 
     def _gather_dependent_locals(self):
         """
