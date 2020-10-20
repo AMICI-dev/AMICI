@@ -214,7 +214,7 @@ class SbmlImporter:
         documentation of the respective AMICI interface.
 
         Note that this generates model ODEs for changes in concentrations, not
-        amounts unless `hasOnlySubstanceUnits` the attribute has been
+        amounts unless the `hasOnlySubstanceUnits` attribute has been
         defined for a particular species.
 
         Sensitivity analysis for local parameters is enabled by creating
