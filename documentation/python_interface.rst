@@ -44,7 +44,6 @@ However, the following features are unlikely to be supported:
 - SBML extensions
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
-- initial assignments for parameters
 - `delay()` due to missing SUNDIALS solver support
 
 
