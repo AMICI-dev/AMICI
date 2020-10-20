@@ -4,9 +4,9 @@ C++ Export
 This module provides all necessary functionality specify an ODE model and
 generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by
-:func:`amici.pysb_import.pysb2amici`,
-:meth:`amici.sbml_import.SbmlImporter.sbml2amici` and
-:func:`amici.petab_import.import_model`
+:py:func:`amici.pysb_import.pysb2amici`,
+:py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
+:py:func:`amici.petab_import.import_model`
 """
 import sympy as sp
 import numpy as np
@@ -40,6 +40,7 @@ from . import (
     sbml_import
 )
 from .logging import get_logger, log_execution_time, set_log_level
+from .constants import SymbolId
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -275,7 +276,7 @@ class ModelQuantity:
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: Union[SupportsFloat, numbers.Number, sp.Basic]):
+                 value: Union[SupportsFloat, numbers.Number, sp.Expr]):
         """
         Create a new ModelQuantity instance.
 
@@ -301,8 +302,8 @@ class ModelQuantity:
         if isinstance(value, sp.RealNumber) \
                 or isinstance(value, numbers.Number):
             value = float(value)
-        if not isinstance(value, sp.Basic) and not isinstance(value, float):
-            raise TypeError(f'value must be sympy.Symbol or float, was '
+        if not isinstance(value, sp.Expr) and not isinstance(value, float):
+            raise TypeError(f'value must be sympy.Expr or float, was '
                             f'{type(value)}')
         self._value = value
 
@@ -363,8 +364,8 @@ class State(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic,
-                 dt: sp.Basic):
+                 init: sp.Expr,
+                 dt: sp.Expr):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
         by dt
@@ -375,13 +376,13 @@ class State(ModelQuantity):
         :param name:
             individual name of the state (does not need to be unique)
 
-        :param value:
+        :param init:
             initial value
 
         :param dt:
             time derivative
         """
-        super(State, self).__init__(identifier, name, value)
+        super(State, self).__init__(identifier, name, init)
         if not isinstance(dt, sp.Expr):
             raise TypeError(f'dt must have type sympy.Expr, was '
                             f'{type(dt)}')
@@ -641,13 +642,13 @@ class LogLikelihood(ModelQuantity):
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
-    'species': State,
-    'parameter': Parameter,
-    'fixed_parameter': Constant,
-    'observable': Observable,
-    'sigmay': SigmaY,
-    'llhy': LogLikelihood,
-    'expression': Expression,
+    SymbolId.SPECIES: State,
+    SymbolId.PARAMETER: Parameter,
+    SymbolId.FIXED_PARAMETER: Constant,
+    SymbolId.OBSERVABLE: Observable,
+    SymbolId.SIGMAY: SigmaY,
+    SymbolId.LLHY: LogLikelihood,
+    SymbolId.EXPRESSION: Expression,
 }
 
 
@@ -921,32 +922,21 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def dx_dt(x_index, dxdt):
+        def transform_dxdt_to_concentration(specie_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
             compartments with a constant volume, or a volume that is defined by
             an assignment or rate rule.
 
-            :param x_index:
-                The index (not identifier) of the species in the variables
-                (generated in "sbml_import.py") that describe the model.
+            :param specie_id:
+                The identifier of the species (generated in "sbml_import.py").
 
             :param dxdt:
                 The element-wise product of the row in the stoichiometric
                 matrix that corresponds to the species (row x_index) and the
                 flux (kinetic laws) vector. Ignored in the case of rate rules.
             """
-            x_id = symbols['species']['identifier'][x_index]
-
-            # Rate rules specify dx_dt.
-            # Note that the rate rule of species may describe amount, not
-            # concentration.
-            if x_id in si.compartment_rate_rules:
-                return si.compartment_rate_rules[x_id]
-            elif x_id in si.species_rate_rules:
-                return si.species_rate_rules[x_id]
-
             # The derivation of the below return expressions can be found in
             # the documentation. They are found by rearranging
             # $\frac{d}{dt} (vx) = Sw$ for $\frac{dx}{dt}$, where $v$ is the
@@ -956,49 +946,87 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            v_name = si.species_compartment[x_index]
-            if v_name in si.compartment_rate_rules:
-                dv_dt = si.compartment_rate_rules[v_name]
-                xdot = (dxdt - dv_dt * x_id) / v_name
-                for w_index, flux in enumerate(fluxes):
-                    dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
+            specie = si.symbols[SymbolId.SPECIES][specie_id]
+
+            comp = specie['compartment']
+            x_index = specie['index']
+            if comp in si.symbols[SymbolId.SPECIES]:
+                dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
+                xdot = (dxdt - dv_dt * specie_id) / comp
+                dxdotdw_updates.extend(
+                    (x_index, w_index, xdot.diff(r_flux))
+                    for w_index, r_flux in enumerate(fluxes)
+                )
                 return xdot
-            elif v_name in si.compartment_assignment_rules:
-                v = si.compartment_assignment_rules[v_name]
+            elif comp in si.compartment_assignment_rules:
+                v = si.compartment_assignment_rules[comp]
                 dv_dt = v.diff(si.amici_time_symbol)
-                dv_dx = v.diff(x_id)
-                xdot = (dxdt - dv_dt * x_id) / (dv_dx * x_id + v)
-                for w_index, flux in enumerate(fluxes):
-                    dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
+                # we may end up with a time derivative of the compartment
+                # volume due to parameter rate rules
+                comp_rate_vars = [p for p in v.free_symbols
+                                  if p in si.symbols[SymbolId.SPECIES]]
+                for var in comp_rate_vars:
+                    dv_dt += \
+                        v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
+                dv_dx = v.diff(specie_id)
+                xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
+                dxdotdw_updates.extend(
+                    (x_index, w_index, xdot.diff(r_flux))
+                    for w_index, r_flux in enumerate(fluxes)
+                )
                 return xdot
             else:
-                v = si.compartment_volume[list(si.compartment_symbols).index(
-                    si.species_compartment[x_index])]
+                v = si.compartments[comp]
 
                 if v == 1.0:
                     return dxdt
 
-                for w_index, flux in enumerate(fluxes):
-                    if si.stoichiometric_matrix[x_index, w_index] != 0:
-                        dxdotdw_updates.append((x_index, w_index,
-                            si.stoichiometric_matrix[x_index, w_index] / v))
+                dxdotdw_updates.extend(
+                    (x_index, w_index,
+                     si.stoichiometric_matrix[x_index, w_index] / v)
+                    for w_index in range(si.stoichiometric_matrix.shape[1])
+                    if si.stoichiometric_matrix[x_index, w_index] != 0
+                )
+
                 return dxdt / v
 
         # create dynamics without respecting conservation laws first
         dxdt = smart_multiply(si.stoichiometric_matrix,
                               MutableDenseMatrix(fluxes))
-        symbols['species']['dt'] = sp.Matrix([
-            dx_dt(x_index, dxdt[x_index])
-            for x_index in range(dxdt.rows)
-        ])
+        for ix, ((specie_id, specie), formula) in enumerate(zip(
+                symbols[SymbolId.SPECIES].items(),
+                dxdt
+        )):
+            assert ix == specie['index']  # check that no reordering occurred
+            # rate rules and amount species don't need to be updated
+            if 'dt' in specie:
+                continue
+            if specie['amount']:
+                specie['dt'] = formula
+            else:
+                specie['dt'] = transform_dxdt_to_concentration(specie_id,
+                                                               formula)
 
         # create all basic components of the ODE model and add them.
-        for symbol in [s for s in symbols if s != 'my']:
+        for symbol_name in symbols:
             # transform dict of lists into a list of dicts
-            protos = [dict(zip(symbols[symbol], t))
-                      for t in zip(*symbols[symbol].values())]
+            args = ['name', 'identifier']
+
+            if symbol_name == SymbolId.SPECIES:
+                args += ['dt', 'init']
+            else:
+                args += ['value']
+
+            protos = [
+                {
+                    'identifier': var_id,
+                    **{k: v for k, v in var.items() if k in args}
+                }
+                for var_id, var in symbols[symbol_name].items()
+            ]
+
             for proto in protos:
-                self.add_component(symbol_to_type[symbol](**proto))
+                self.add_component(symbol_to_type[symbol_name](**proto))
 
         # process conservation laws
         if compute_cls:
@@ -2405,11 +2433,11 @@ class ODEExporter:
         body = self._get_function_body(function, equations)
         if self.assume_pow_positivity and 'assume_pow_positivity' \
                 in self.functions[function].get('flags', []):
-            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
+            body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
             # execute this twice to catch cases where the ending ( would be the
             # starting (^|\W) for the following match
-            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
+            body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
         self.functions[function]['body'] = body
         lines += body
