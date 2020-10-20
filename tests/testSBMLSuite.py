@@ -4,9 +4,13 @@ Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
 
 Usage:
-    testSBMLSuite.py SELECTION
+    python tests/testSBMLSuite.py SELECTION
         SELECTION can be e.g.: `1`, `1,3`, or `-3,4,6-7` to select specific
         test cases or 1-1780 to run all.
+
+    pytest tests.testSBMLSuite -n CORES --cases SELECTION
+        CORES can be an integer or `auto` for all available cores.
+        SELECTION same as above.
 """
 
 import os
@@ -17,9 +21,10 @@ import copy
 
 import amici
 import numpy as np
-import sympy as sp
 import pandas as pd
 
+from amici.sbml_import import symbol_with_assumptions
+from amici.constants import SymbolId
 
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -75,8 +80,6 @@ def test_sbml_testsuite_case(test_number, result_path):
         simulated = verify_results(settings, rdata, results, wrapper,
                                    model, atol, rtol)
 
-        print(f'TestCase {test_id} passed.')
-
         # record results
         write_result_file(simulated, test_id, result_path)
 
@@ -90,8 +93,11 @@ def verify_results(settings, rdata, expected, wrapper,
     amount_species, variables = get_amount_and_variables(settings)
 
     # verify states
-    simulated = pd.DataFrame(rdata['y'],
-                             columns=wrapper.symbols['observable']['name'])
+    simulated = pd.DataFrame(
+        rdata['y'],
+        columns=[obs['name']
+                 for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()]
+    )
     simulated['time'] = rdata['ts']
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
@@ -106,13 +112,11 @@ def verify_results(settings, rdata, expected, wrapper,
         settings['concentration'].replace(' ', '').replace('\n', '').split(',')
         if s
     ]
-    # The rate rules condition here may be unnecessary/better implemented
-    # elsewhere.
+    # We only need to convert species that have only substance units
     concentration_species = [
-        species for species in requested_concentrations
-        if wrapper.species_has_only_substance_units[
-               wrapper.species_index[species]
-        ] and species in [str(s) for s in wrapper.species_rate_rules]
+        str(species_id)
+        for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
+        if str(species_id) in requested_concentrations and species['amount']
     ]
     amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)
@@ -165,18 +169,17 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        # Skip "species" that are actually compartments
-        compartment_species = [str(c) for c in wrapper.compartment_symbols] + \
-            list(set([
-                str(s) for s in wrapper.species_rate_rules
-                if wrapper.species_has_only_substance_units[
-                    wrapper.species_index[str(s)]
-                ]
-            ]).difference(requested_concentrations))
-        if not species == '' and species not in compartment_species:
-            symvolume = wrapper.species_compartment[
-                wrapper.species_index[species]
-            ]
+        # Skip species that are marked to only have substance units since
+        # they are already simulated as amounts
+        amt_species = list(set(
+            str(sid) for sid, s in wrapper.symbols[SymbolId.SPECIES].items()
+            if s['amount']
+        ).difference(requested_concentrations))
+
+        if species and species not in amt_species:
+            symvolume = wrapper.symbols[SymbolId.SPECIES][
+                symbol_with_assumptions(species)
+            ]['compartment']
 
             simulated.loc[:, species] *= simulated.loc[:, str(symvolume)]
 
@@ -288,4 +291,3 @@ def format_test_id(test_id) -> str:
     test_str = str(test_id)
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
-

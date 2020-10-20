@@ -10,6 +10,7 @@ import importlib
 import logging
 import math
 import os
+import re
 import shutil
 import tempfile
 from _collections import OrderedDict
@@ -526,8 +527,10 @@ def import_model_sbml(
             init_par = sbml_model.createParameter()
             init_par.setId(init_par_id)
             init_par.setName(init_par_id)
-        assignment = sbml_model.createInitialAssignment()
-        assignment.setSymbol(assignee_id)
+        assignment = sbml_model.getInitialAssignment(assignee_id)
+        if assignment is None:
+            assignment = sbml_model.createInitialAssignment()
+            assignment.setSymbol(assignee_id)
         formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)
@@ -584,9 +587,11 @@ def get_observation_model(observable_df: pd.DataFrame
 
     for _, observable in observable_df.iterrows():
         oid = observable.name
-        name = observable.get(OBSERVABLE_NAME, "")
-        formula_obs = observable[OBSERVABLE_FORMULA]
-        formula_noise = observable[NOISE_FORMULA]
+        # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
+        pat = r'^[nN]a[nN]$'
+        name = re.sub(pat, '', str(observable.get(OBSERVABLE_NAME, '')))
+        formula_obs = re.sub(pat, '', str(observable[OBSERVABLE_FORMULA]))
+        formula_noise = re.sub(pat, '', str(observable[NOISE_FORMULA]))
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
 
