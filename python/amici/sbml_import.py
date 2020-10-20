@@ -19,7 +19,7 @@ from typing import (
 )
 
 from .ode_export import (
-    ODEExporter, ODEModel, generate_measurement_symbol, generate_flux_symbol
+    ODEExporter, ODEModel, generate_measurement_symbol
 )
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
@@ -798,26 +798,17 @@ class SbmlImporter:
                                 locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
 
-            if isinstance(sbml_var, sbml.Species) and \
-                    rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            if isinstance(sbml_var, sbml.Species):
                 self.species_assignment_rules[sym_id] = formula
                 assignments[str(sym_id)] = formula
 
-            elif isinstance(sbml_var, sbml.Compartment) and \
-                    rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            elif isinstance(sbml_var, sbml.Compartment):
                 self.compartment_assignment_rules[sym_id] = formula
                 assignments[str(sym_id)] = formula
 
             elif isinstance(sbml_var, sbml.Parameter):
-                parameters = [str(p) for p in self.symbols[SymbolId.PARAMETER]]
-                if str(sym_id) in parameters:
-                    idx = parameters.index(str(sym_id))
-                    self.symbols[SymbolId.PARAMETER]['value'][idx] = \
-                        float(formula)
-                else:
-                    self.sbml.removeParameter(str(sym_id))
-                    self.parameter_assignment_rules[sym_id] = formula
-                    assignments[str(sym_id)] = formula
+                self.parameter_assignment_rules[sym_id] = formula
+                assignments[str(sym_id)] = formula
 
             if sym_id in self.stoichiometric_matrix.free_symbols:
                 if any(s in self.symbols[SymbolId.SPECIES]
@@ -931,11 +922,6 @@ class SbmlImporter:
                 raise ValueError(
                     f"Noise distribution provided for unknown observableIds: "
                     f"{unknown_ids}.")
-
-        assignments = {str(c): str(r)
-                       for c, r in self.compartment_assignment_rules.items()}
-        assignments.update({str(s): str(r)
-                            for s, r in self.species_assignment_rules.items()})
 
         def replace_assignments(formula: str) -> sp.Expr:
             """
@@ -1358,7 +1344,7 @@ class SbmlImporter:
 
 
 def get_rule_vars(rules: List[sbml.Rule],
-                  local_symbols: Dict[str, sp.Symbol] = None) -> sp.Matrix:
+                  local_symbols: Dict[str, sp.Expr] = None) -> sp.Matrix:
     """
     Extract free symbols in SBML rule formulas.
 
