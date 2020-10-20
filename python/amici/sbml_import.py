@@ -421,7 +421,16 @@ class SbmlImporter:
         Populate self.local_symbols with all model entities.
 
         This is later used during sympifications to avoid sympy builtins
-        shadowing model entities.
+        shadowing model entities as well as to avoid possibly costly
+        symbolic substitutions/
+        """
+        self._gather_base_locals()
+        self._gather_dependent_locals()
+
+    def _gather_base_locals(self):
+        """
+        Populate self.local_symbols with pure symbol definitions that do not
+        depend on any other symbol.
         """
         species_references = _get_list_of_species_references(self.sbml)
         for c in itt.chain(self.sbml.getListOfSpecies(),
@@ -440,20 +449,24 @@ class SbmlImporter:
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
-        # SBML time symbol + constants
-        for symbol_name in ['time', 'avogadro']:
-            if symbol_name in self.local_symbols:
-                # Supporting this is probably kinda tricky and this sounds
-                # like a stupid thing to do in the first place.
-                raise SBMLException('AMICI does not support SBML models '
-                                    'containing variables with Id '
-                                    f'{symbol_name}.')
-            self.local_symbols[symbol_name] = symbol_with_assumptions(
-                symbol_name
-            )
+                # SBML time symbol + constants
+                for symbol_name in ['time', 'avogadro']:
+                    if symbol_name in self.local_symbols:
+                        # Supporting this is probably kinda tricky and this sounds
+                        # like a stupid thing to do in the first place.
+                        raise SBMLException(
+                            'AMICI does not support SBML models '
+                            'containing variables with Id '
+                            f'{symbol_name}.')
+                    self.local_symbols[symbol_name] = symbol_with_assumptions(
+                        symbol_name
+                    )
 
-        # definitions below already use self.local_symbols and shouldn't be
-        # reordered
+    def _gather_dependent_locals(self):
+        """
+        Populate self.local_symbols with symbol definitions that may depend on
+        other symbol definitions.
+        """
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
                 if e.isSetId() and e.isSetStoichiometry() and \
