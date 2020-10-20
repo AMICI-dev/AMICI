@@ -456,7 +456,8 @@ class SbmlImporter:
         # reordered
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
-                if e.isSetId() and e.isSetStoichiometry():
+                if e.isSetId() and e.isSetStoichiometry() and \
+                        e.getId() not in self.local_symbols:
                     self.local_symbols[e.getId()] = sp.sympify(
                         e.getStoichiometry(), locals=self.local_symbols
                     )
@@ -730,7 +731,7 @@ class SbmlImporter:
                           for ia in self.sbml.getListOfInitialAssignments()]
         rulevars = [rule.getVariable()
                     for rule in self.sbml.getListOfRules()
-                    if rule.getFormula() != '']
+                    if rule.getFormula()]
 
         reaction_ids = [
             reaction.getId() for reaction in reactions
@@ -1327,7 +1328,7 @@ class SbmlImporter:
         :param assignment_ids:
             sequence of sbml variables names that have initial assigments
         :param rulevars:
-            sequence of sbml variables names that have initial assigments
+            sequence of sbml variables names that have rule assignment
         :return:
             symbolic variable that defines stoichiometry
         """
@@ -1337,15 +1338,18 @@ class SbmlImporter:
             if ele.getId() in assignment_ids:
                 sym = self._get_element_from_assignment(ele.getId())
                 if sym is None:
-                    sym = sp.sympify(ele.getStoichiometry())
+                    sym = sp.sympify(ele.getStoichiometry(),
+                                     locals=self.local_symbols)
             elif ele.getId() in rulevars:
-                return _get_identifier_symbol(ele)
+                return self.local_symbols[ele.getId()]
             else:
                 # dont put the symbol if it wont get replaced by a
                 # rule
-                sym = sp.sympify(ele.getStoichiometry())
+                sym = sp.sympify(ele.getStoichiometry(),
+                                 locals=self.local_symbols)
         elif ele.isSetStoichiometry():
-            sym = sp.sympify(ele.getStoichiometry())
+            sym = sp.sympify(ele.getStoichiometry(),
+                             locals=self.local_symbols)
         else:
             return sp.sympify(1.0)
         sym = _parse_special_functions(sym)
