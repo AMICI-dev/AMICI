@@ -106,7 +106,7 @@ class SbmlImporter:
         initial assignments for parameters, these parameters are not
         permissible for sensitivity analysis
 
-    :ivar sbml_parse_settings:
+    :ivar sbml_parser_settings:
         sets behaviour of SBML Formula parsing
 
     """
@@ -161,7 +161,7 @@ class SbmlImporter:
 
         # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
         # all defaults except disable unit parsing
-        self.sbml_parse_settings = sbml.L3ParserSettings(
+        self.sbml_parser_settings = sbml.L3ParserSettings(
             self.sbml, sbml.L3P_PARSE_LOG_AS_LOG10,
             sbml.L3P_EXPAND_UNARY_MINUS, sbml.L3P_NO_UNITS,
             sbml.L3P_AVOGADRO_IS_CSYMBOL
@@ -802,7 +802,7 @@ class SbmlImporter:
         Process Rules defined in the SBML model.
         """
         rules = self.sbml.getListOfRules()
-        rulevars = get_rule_vars(rules, local_symbols=self.local_symbols)
+        rulevars = self.get_rule_vars(rules)
 
         assignments = {}
 
@@ -1290,7 +1290,7 @@ class SbmlImporter:
         """
 
         math_string = sbml.formulaToL3StringWithSettings(
-            var.getMath(), self.sbml_parse_settings
+            var.getMath(), self.sbml_parser_settings
         )
         try:
             formula = sp.sympify(_parse_logical_operators(
@@ -1364,27 +1364,23 @@ class SbmlImporter:
         _check_unsupported_functions(sym, 'Stoichiometry')
         return sym
 
+    def get_rule_vars(self, rules: List[sbml.Rule]) -> sp.Matrix:
+        """
+        Extract free symbols in SBML rule formulas.
 
-def get_rule_vars(rules: List[sbml.Rule],
-                  local_symbols: Dict[str, sp.Expr] = None) -> sp.Matrix:
-    """
-    Extract free symbols in SBML rule formulas.
+        :param rules:
+            sbml definitions of rules
 
-    :param rules:
-        sbml definitions of rules
+        :param local_symbols:
+            locals to pass to sympy.sympify
 
-    :param local_symbols:
-        locals to pass to sympy.sympify
-
-    :return:
-        Tuple of free symbolic variables in the formulas all provided rules
-    """
-    return sp.Matrix(
-        [sp.sympify(_parse_logical_operators(
-                    sbml.formulaToL3String(rule.getMath())),
-                    locals=local_symbols)
-         for rule in rules if rule.getFormula() != '']
-    ).free_symbols
+        :return:
+            Tuple of free symbolic variables in the formulas all provided rules
+        """
+        return sp.Matrix([
+            self._sympy_from_sbml_math(rule.getMath())
+            for rule in rules if rule.getFormula()
+        ]).free_symbols
 
 
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
