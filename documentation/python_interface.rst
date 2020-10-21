@@ -25,7 +25,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 696 out of the 1780 (~39%) test cases** from
+Python-AMICI currently **passes 750 out of the 1780 (~42%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -44,7 +44,6 @@ However, the following features are unlikely to be supported:
 - SBML extensions
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
-- initial assignments for parameters
 - `delay()` due to missing SUNDIALS solver support
 
 

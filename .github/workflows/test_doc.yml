@@ -8,6 +8,7 @@ on:
     branches:
       - develop
       - master
+  workflow_dispatch:
 
 jobs:
   doxygen:
@@ -45,8 +46,8 @@ jobs:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
 
-      - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-      - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
+      - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+      - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig" >> $GITHUB_ENV
 
       - name: Build doxygen
         run: |

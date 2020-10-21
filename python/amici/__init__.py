@@ -105,6 +105,7 @@ has_clibs = any([os.path.isfile(os.path.join(amici_path, wrapper))
 AmiciModel = Union['amici.Model', 'amici.ModelPtr']
 AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
 AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
+AmiciReturnData = Union['amici.ReturnData', 'amici.ReturnDataPtr']
 AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
 
 # Get version number from file
@@ -136,8 +137,9 @@ if not _imported_from_setup():
 hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
 
 
-def _get_ptr(obj: Union[AmiciModel, AmiciExpData, AmiciSolver]
-             ) -> Union['amici.Model', 'amici.ExpData', 'amici.Solver']:
+def _get_ptr(obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData]
+             ) -> Union['amici.Model', 'amici.ExpData', 'amici.Solver',
+                        'amici.ReturnData']:
     """
     Convenience wrapper that returns the smart pointer pointee, if applicable
 
@@ -147,7 +149,8 @@ def _get_ptr(obj: Union[AmiciModel, AmiciExpData, AmiciSolver]
     :returns:
         Non-smart pointer
     """
-    if isinstance(obj, (amici.ModelPtr, amici.ExpDataPtr, amici.SolverPtr)):
+    if isinstance(obj, (amici.ModelPtr, amici.ExpDataPtr, amici.SolverPtr,
+                        amici.ReturnDataPtr)):
         return obj.get()
     return obj
 
@@ -190,7 +193,7 @@ def ExpData(*args) -> 'amici.ExpData':
     :returns: ExpData Instance
     """
     if isinstance(args[0], ReturnDataView):
-        return amici.ExpData(args[0]['ptr'].get(), *args[1:])
+        return amici.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
     elif isinstance(args[0], (amici.ExpData, amici.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed and you are glad this

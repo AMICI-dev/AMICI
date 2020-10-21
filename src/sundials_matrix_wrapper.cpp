@@ -24,7 +24,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N,
         
     finish_init();
     assert(num_nonzeros() == 0);
-    assert(NNZ == capacity());
+    assert(NNZ == capacity() || !matrix_);
     assert(M == rows() || !matrix_);
     assert(N == columns() || !matrix_);
 }

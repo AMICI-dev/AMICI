@@ -33,3 +33,12 @@ Python package
 ++++++++++++++
 
 A Python package is available on `PyPI <https://pypi.org/project/amici/>`_.
+
+Installation instructions
++++++++++++++++++++++++++
+
+Installation instructions are available for
+
+* :ref:`Python <amici_python_installation>`
+* :ref:`C++ <amici_cpp_installation>`
+* :ref:`Matlab <amici_matlab_installation>`

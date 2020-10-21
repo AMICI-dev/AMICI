@@ -1,5 +1,5 @@
 name: C++/Python Tests
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
@@ -16,15 +16,15 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
 
     # sonar cloud
-    - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
-    - run: echo "::set-env name=SONAR_SCANNER_HOME::$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux"
-    - run: echo "::set-env name=SONAR_SCANNER_OPTS::-server"
-    - run: echo "::add-path::${SONAR_SCANNER_HOME}/bin"
-    - run: echo "::add-path::$HOME/.sonar/build-wrapper-linux-x86"
+    - run: echo "SONAR_SCANNER_VERSION=4.2.0.1873" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_HOME=${HOME}/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_OPTS=-server" >> $GITHUB_ENV
+    - run: echo "${SONAR_SCANNER_HOME}/bin" >> $GITHUB_PATH
+    - run: echo "${HOME}/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
 
     # TODO: add to ci image
     - name: Install sonarcloud tools
@@ -129,8 +129,8 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew

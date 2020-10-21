@@ -1,5 +1,5 @@
 name: Installation
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   archive:
@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: apt
@@ -58,7 +58,7 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: apt

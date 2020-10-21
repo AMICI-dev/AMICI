@@ -187,3 +187,5 @@ documentation/generated/*
 *.swp
 tests/performance/CS_Signalling_ERBB_RAS_AKT/
 tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*
+coverage_SBMLSuite.xml
+Benchmark-Models-PEtab/
