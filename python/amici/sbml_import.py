@@ -106,8 +106,8 @@ class SbmlImporter:
         initial assignments for parameters, these parameters are not
         permissible for sensitivity analysis
 
-    :ivar reaction_ids:
-        symbol definition as kinetic law of the respective reaction
+    :ivar sbml_parse_settings:
+        sets behaviour of SBML Formula parsing
 
     """
 
@@ -158,6 +158,14 @@ class SbmlImporter:
         self.parameter_initial_assignments: SymbolicFormula = {}
 
         self._reset_symbols()
+
+        # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
+        # all defaults except disable unit parsing
+        self.sbml_parse_settings = sbml.L3ParserSettings(
+            self.sbml, sbml.L3P_PARSE_LOG_AS_LOG10,
+            sbml.L3P_EXPAND_UNARY_MINUS, sbml.L3P_NO_UNITS,
+            sbml.L3P_AVOGADRO_IS_CSYMBOL
+        )
 
     def _process_document(self) -> None:
         """
@@ -449,21 +457,8 @@ class SbmlImporter:
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
-        for u in self.sbml.getListOfUnitDefinitions():
-            self.local_symbols[u.getId()] = sp.sympify(1.0)
-
-        units = ['ampere', 'coulomb', 'gray', 'dimensionless', 'henry',
-                 'becquerel', 'farad', 'hertz', 'candela', 'gram', 'item',
-                 'joule', 'litre', 'mole', 'radian', 'steradian',
-                 'weber', 'katal', 'lumen', 'newton', 'second',
-                 'tesla', 'kelvin', 'lux', 'ohm', 'siemens', 'volt',
-                 'kilogram', 'metre', 'pascal', 'sievert', 'wat']
-
-        # SBML time symbol + constants + base units
-        # avogadro is a special unit that is defined as avogadro constant
-        # times dimensionless, so we replace it by the respective numerical
-        # value
-        for symbol_name in ['time', 'avogadro'] + units:
+        # SBML time symbol + constants
+        for symbol_name in ['time', 'avogadro']:
             if symbol_name in self.local_symbols:
                 # Supporting this is probably kinda tricky and this sounds
                 # like a stupid thing to do in the first place.
@@ -471,11 +466,8 @@ class SbmlImporter:
                     'AMICI does not support SBML models  containing '
                     f'variables with Id {symbol_name}.'
                 )
-            if symbol_name in units:
-                sym = sp.sympify(1.0)
-            else:
-                sym = symbol_with_assumptions(symbol_name)
-            self.local_symbols[symbol_name] = sym
+            self.local_symbols[symbol_name] = \
+                symbol_with_assumptions(symbol_name)
 
     def _gather_dependent_locals(self):
         """
@@ -1297,7 +1289,9 @@ class SbmlImporter:
             sympfified symbolic expression
         """
 
-        math_string = sbml.formulaToL3String(var.getMath())
+        math_string = sbml.formulaToL3StringWithSettings(
+            var.getMath(), self.sbml_parse_settings
+        )
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string

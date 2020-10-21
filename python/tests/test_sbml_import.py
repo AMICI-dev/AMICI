@@ -298,11 +298,11 @@ def test_likelihoods_error():
         )
 
 
-def test_units(mode_units_module):
+def test_units(model_units_module):
     """
     Test whether SBML import works for models using sbml:units annotations.
     """
-    model = mode_units_module.getModel()
+    model = model_units_module.getModel()
     model.setTimepoints(np.linspace(0, 1, 101))
     solver = model.getSolver()
 
