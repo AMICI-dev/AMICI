@@ -889,24 +889,6 @@ class SbmlImporter:
                     f"Noise distribution provided for unknown observableIds: "
                     f"{unknown_ids}.")
 
-        def replace_assignments(formula: str) -> sp.Expr:
-            """
-            Replace assignment rules in observables
-
-            :param formula:
-                algebraic formula of the observable
-
-            :return:
-                observable formula with assignment rules replaced
-            """
-            formula = sp.sympify(formula, locals=self.local_symbols)
-            for s in formula.free_symbols:
-                if is_assignment_rule_target(self.sbml, str(s)):
-                    r = self.sbml.getAssignmentRuleByVariable(str(s))
-                    rule_formula = self._sympy_from_sbml_math(r)
-                    formula = formula.replace(s, rule_formula)
-            return formula
-
         # add user-provided observables or make all species, and compartments
         # with assignment rules, observable
         if observables:
@@ -915,10 +897,10 @@ class SbmlImporter:
                     'name': definition.get('name', f'y{iobs}'),
                     # Replace logX(.) by log(., X) since sympy cannot parse the
                     # former.
-                    'value': replace_assignments(re.sub(
+                    'value': re.sub(
                         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
                         definition['formula']
-                    ))
+                    )
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
