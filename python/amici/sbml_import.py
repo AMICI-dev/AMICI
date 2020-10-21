@@ -846,8 +846,8 @@ class SbmlImporter:
                              sigmas: Dict[str, Union[str, float]],
                              noise_distributions: Dict[str, str]) -> None:
         """
-        Perform symbolic computations required for objective function
-        evaluation.
+        Perform symbolic computations required for observable and objective
+        function evaluation.
 
         :param observables:
             dictionary(observableId: {'name':observableName
@@ -897,40 +897,63 @@ class SbmlImporter:
                     'name': definition.get('name', f'y{iobs}'),
                     # Replace logX(.) by log(., X) since sympy cannot parse the
                     # former.
-                    'value': re.sub(
+                    'value': self._sympy_from_sbml_math(re.sub(
                         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
                         definition['formula']
-                    )
+                    ))
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
         else:
-            self.symbols[SymbolId.OBSERVABLE] = {
-                symbol_with_assumptions(f'y{specie["name"]}'): {
-                    'name': specie['name'],
-                    'value': specie_id
-                }
-                for ix, (specie_id, specie)
-                in enumerate(self.symbols[SymbolId.SPECIES].items())
-            }
+            self._generate_defaul_observables()
 
-            # Assignment rules take precedence over compartment volume
-            # definitions, so they need to be evaluated first.
-            # Species assignment rules always overwrite
-            for variable, formula in (
+        self._process_log_likelihood(sigmas, noise_distributions)
+
+    def _generate_defaul_observables(self):
+        """
+        Generate default observables from species, compartments and
+        (initial) assignment rules.
+        """
+        self.symbols[SymbolId.OBSERVABLE] = {
+            symbol_with_assumptions(f'y{specie["name"]}'): {
+                'name': specie['name'],
+                'value': specie_id
+            }
+            for ix, (specie_id, specie)
+            in enumerate(self.symbols[SymbolId.SPECIES].items())
+        }
+
+        # Assignment rules take precedence over compartment volume
+        # definitions, so they need to be evaluated first.
+        # Species assignment rules always overwrite
+        for variable, formula in (
                 *self.parameter_assignment_rules.items(),
                 *self.parameter_initial_assignments.items(),
                 *self.compartment_assignment_rules.items(),
                 *self.species_assignment_rules.items(),
                 *self.compartments.items()
-            ):
-                symbol = symbol_with_assumptions(f'y{variable}')
-                if symbol in self.symbols[SymbolId.OBSERVABLE] \
-                        and variable not in self.species_assignment_rules:
-                    continue
-                self.symbols[SymbolId.OBSERVABLE][symbol] = {
-                    'name': str(variable), 'value': formula
-                }
+        ):
+            symbol = symbol_with_assumptions(f'y{variable}')
+            if symbol in self.symbols[SymbolId.OBSERVABLE] \
+                    and variable not in self.species_assignment_rules:
+                continue
+            self.symbols[SymbolId.OBSERVABLE][symbol] = {
+                'name': str(variable), 'value': formula
+            }
+
+    def _process_log_likelihood(self,
+                                sigmas: Dict[str, Union[str, float]],
+                                noise_distributions: Dict[str, str]):
+        """
+        Perform symbolic computations required for objective function
+        evaluation.
+
+        :param sigmas:
+            See :py:func:`SBMLImporter._process_observables`
+
+        :param noise_distributions:
+            See :py:func:`SBMLImporter._process_observables`
+        """
 
         for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items():
             obs['measurement_symbol'] = generate_measurement_symbol(obs_id)
@@ -938,7 +961,9 @@ class SbmlImporter:
         self.symbols[SymbolId.SIGMAY] = {
             symbol_with_assumptions(f'sigma_{obs_id}'): {
                 'name': f'sigma_{obs["name"]}',
-                'value': sigmas.get(str(obs_id), '1.0')
+                'value': self._sympy_from_sbml_math(
+                    sigmas.get(str(obs_id), '1.0')
+                )
             }
             for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items()
         }
@@ -954,8 +979,8 @@ class SbmlImporter:
                 )))
             }
             for (obs_id, obs), (sigma_id, sigma) in zip(
-                    self.symbols[SymbolId.OBSERVABLE].items(),
-                    self.symbols[SymbolId.SIGMAY].items()
+                self.symbols[SymbolId.OBSERVABLE].items(),
+                self.symbols[SymbolId.SIGMAY].items()
             )
         }
 
@@ -1196,18 +1221,20 @@ class SbmlImporter:
                     f'Encountered currently unsupported element id {constant}!'
                 )
 
-    def _sympy_from_sbml_math(self, var: sbml.SBase) -> sp.Expr:
+    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]) -> sp.Expr:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
 
-        :param var:
-            SBML variable that has a getMath() function
+        :param var_or_math:
+            SBML variable that has a getMath() function or math string
         :return:
             sympfified symbolic expression
         """
-
-        math_string = sbml.formulaToL3String(var.getMath())
+        if isinstance(var_or_math, sbml.SBase):
+            math_string = sbml.formulaToL3String(var_or_math.getMath())
+        else:
+            math_string = var_or_math
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
