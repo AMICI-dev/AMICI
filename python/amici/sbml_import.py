@@ -18,7 +18,9 @@ from typing import (
     Dict, List, Callable, Any, Iterable, Sequence, Union
 )
 
-from .ode_export import ODEExporter, ODEModel, generate_measurement_symbol
+from .ode_export import (
+    ODEExporter, ODEModel, generate_measurement_symbol
+)
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
@@ -154,7 +156,6 @@ class SbmlImporter:
         self.species_assignment_rules: SymbolicFormula = {}
         self.parameter_assignment_rules: SymbolicFormula = {}
         self.parameter_initial_assignments: SymbolicFormula = {}
-        self.reaction_ids: SymbolicFormula = {}
 
         self._reset_symbols()
 
@@ -368,7 +369,6 @@ class SbmlImporter:
         self._process_rules()
         self._process_initial_assignments()
         self._process_species_references()
-        self._process_reaction_identifiers()
 
     def check_support(self) -> None:
         """
@@ -415,12 +415,22 @@ class SbmlImporter:
             raise SBMLException('Non-unity stoichiometry is'
                                 ' currently not supported!')
 
+    @log_execution_time('gathering local SBML symbols', logger)
     def _gather_locals(self) -> None:
         """
         Populate self.local_symbols with all model entities.
 
         This is later used during sympifications to avoid sympy builtins
-        shadowing model entities.
+        shadowing model entities as well as to avoid possibly costly
+        symbolic substitutions/
+        """
+        self._gather_base_locals()
+        self._gather_dependent_locals()
+
+    def _gather_base_locals(self):
+        """
+        Populate self.local_symbols with pure symbol definitions that do not
+        depend on any other symbol.
         """
         species_references = _get_list_of_species_references(self.sbml)
         for c in itt.chain(self.sbml.getListOfSpecies(),
@@ -444,12 +454,32 @@ class SbmlImporter:
             if symbol_name in self.local_symbols:
                 # Supporting this is probably kinda tricky and this sounds
                 # like a stupid thing to do in the first place.
-                raise SBMLException('AMICI does not support SBML models '
-                                    'containing variables with Id '
-                                    f'{symbol_name}.')
+                raise SBMLException(
+                    'AMICI does not support SBML models '
+                    'containing variables with Id '
+                    f'{symbol_name}.')
             self.local_symbols[symbol_name] = symbol_with_assumptions(
                 symbol_name
             )
+
+    def _gather_dependent_locals(self):
+        """
+        Populate self.local_symbols with symbol definitions that may depend on
+        other symbol definitions.
+        """
+        for r in self.sbml.getListOfReactions():
+            for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
+                if e.isSetId() and e.isSetStoichiometry() and \
+                        e.getId() not in self.local_symbols:
+                    self.local_symbols[e.getId()] = sp.sympify(
+                        e.getStoichiometry(), locals=self.local_symbols
+                    )
+
+        for r in self.sbml.getListOfReactions():
+            if r.isSetId():
+                self.local_symbols[r.getId()] = self._sympy_from_sbml_math(
+                    r.getKineticLaw()
+                )
 
     @log_execution_time('processing SBML compartments', logger)
     def _process_compartments(self) -> None:
@@ -714,23 +744,12 @@ class SbmlImporter:
                           for ia in self.sbml.getListOfInitialAssignments()]
         rulevars = [rule.getVariable()
                     for rule in self.sbml.getListOfRules()
-                    if rule.getFormula() != '']
+                    if rule.getFormula()]
 
         reaction_ids = [
             reaction.getId() for reaction in reactions
             if reaction.isSetId()
         ]
-
-        math_subs = []
-        for r in reactions:
-            elements = list(r.getListOfReactants()) \
-                       + list(r.getListOfProducts())
-            for element in elements:
-                if element.isSetId() and element.isSetStoichiometry():
-                    math_subs.append((
-                        sp.sympify(element.getId(), locals=self.local_symbols),
-                        sp.sympify(element.getStoichiometry())
-                    ))
 
         for reaction_index, reaction in enumerate(reactions):
             for element_list, sign in [(reaction.getListOfReactants(), -1.0),
@@ -755,10 +774,10 @@ class SbmlImporter:
                                                reaction_index] += \
                         sign * stoichiometry * species['conversion_factor']
 
-            sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
-            sym_math = sym_math.subs(math_subs)
             if reaction.isSetId():
-                self.reaction_ids[_get_identifier_symbol(reaction)] = sym_math
+                sym_math = self.local_symbols[reaction.getId()]
+            else:
+                sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
 
             self.flux_vector[reaction_index] = sym_math
             if any([
@@ -792,26 +811,17 @@ class SbmlImporter:
                                 locals=self.local_symbols)
             formula = self._sympy_from_sbml_math(rule)
 
-            if isinstance(sbml_var, sbml.Species) and \
-                    rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            if isinstance(sbml_var, sbml.Species):
                 self.species_assignment_rules[sym_id] = formula
                 assignments[str(sym_id)] = formula
 
-            elif isinstance(sbml_var, sbml.Compartment) and \
-                    rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+            elif isinstance(sbml_var, sbml.Compartment):
                 self.compartment_assignment_rules[sym_id] = formula
                 assignments[str(sym_id)] = formula
 
             elif isinstance(sbml_var, sbml.Parameter):
-                parameters = [str(p) for p in self.symbols[SymbolId.PARAMETER]]
-                if str(sym_id) in parameters:
-                    idx = parameters.index(str(sym_id))
-                    self.symbols[SymbolId.PARAMETER]['value'][idx] = \
-                        float(formula)
-                else:
-                    self.sbml.removeParameter(str(sym_id))
-                    self.parameter_assignment_rules[sym_id] = formula
-                    assignments[str(sym_id)] = formula
+                self.parameter_assignment_rules[sym_id] = formula
+                assignments[str(sym_id)] = formula
 
             if sym_id in self.stoichiometric_matrix.free_symbols:
                 if any(s in self.symbols[SymbolId.SPECIES]
@@ -925,11 +935,6 @@ class SbmlImporter:
                 raise ValueError(
                     f"Noise distribution provided for unknown observableIds: "
                     f"{unknown_ids}.")
-
-        assignments = {str(c): str(r)
-                       for c, r in self.compartment_assignment_rules.items()}
-        assignments.update({str(s): str(r)
-                            for s, r in self.species_assignment_rules.items()})
 
         def replace_assignments(formula: str) -> sp.Expr:
             """
@@ -1075,15 +1080,6 @@ class SbmlImporter:
                 _get_identifier_symbol(species_reference),
                 sp.sympify(stoich, locals=self.local_symbols)
             )
-
-    @log_execution_time('processing SBML reaction identifiers', logger)
-    def _process_reaction_identifiers(self):
-        """
-        Replaces references to reaction ids. These reaction ids are
-        generated in :py:func:`amici.SBMLImporter._process_reactions`.
-        """
-        for symbol, formula in self.reaction_ids.items():
-            self._replace_in_all_expressions(symbol, formula)
 
     def _make_initial(self, sym_math: Union[sp.Expr, None, float]
                       ) -> Union[sp.Expr, None, float]:
@@ -1331,7 +1327,7 @@ class SbmlImporter:
         :param assignment_ids:
             sequence of sbml variables names that have initial assigments
         :param rulevars:
-            sequence of sbml variables names that have initial assigments
+            sequence of sbml variables names that have rule assignment
         :return:
             symbolic variable that defines stoichiometry
         """
@@ -1341,15 +1337,18 @@ class SbmlImporter:
             if ele.getId() in assignment_ids:
                 sym = self._get_element_from_assignment(ele.getId())
                 if sym is None:
-                    sym = sp.sympify(ele.getStoichiometry())
+                    sym = sp.sympify(ele.getStoichiometry(),
+                                     locals=self.local_symbols)
             elif ele.getId() in rulevars:
-                return _get_identifier_symbol(ele)
+                return self.local_symbols[ele.getId()]
             else:
                 # dont put the symbol if it wont get replaced by a
                 # rule
-                sym = sp.sympify(ele.getStoichiometry())
+                sym = sp.sympify(ele.getStoichiometry(),
+                                 locals=self.local_symbols)
         elif ele.isSetStoichiometry():
-            sym = sp.sympify(ele.getStoichiometry())
+            sym = sp.sympify(ele.getStoichiometry(),
+                             locals=self.local_symbols)
         else:
             return sp.sympify(1.0)
         sym = _parse_special_functions(sym)
@@ -1358,7 +1357,7 @@ class SbmlImporter:
 
 
 def get_rule_vars(rules: List[sbml.Rule],
-                  local_symbols: Dict[str, sp.Symbol] = None) -> sp.Matrix:
+                  local_symbols: Dict[str, sp.Expr] = None) -> sp.Matrix:
     """
     Extract free symbols in SBML rule formulas.
 
