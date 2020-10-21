@@ -15,7 +15,7 @@ import warnings
 import logging
 import copy
 from typing import (
-    Dict, List, Callable, Any, Iterable, Sequence, Union, Optional
+    Dict, List, Callable, Any, Iterable, Sequence, Union
 )
 
 from .ode_export import (
@@ -888,12 +888,10 @@ class SbmlImporter:
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
     @log_execution_time('processing SBML observables', logger)
-    def _process_observables(
-            self,
-            observables: Optional[Dict[str, Dict[str, str]]] = None,
-            sigmas: Optional[Dict[str, Union[str, float]]] = None,
-            noise_distributions: Optional[Dict[str, str]] = None
-    ) -> None:
+    def _process_observables(self,
+                             observables: Dict[str, Dict[str, str]],
+                             sigmas: Dict[str, Union[str, float]],
+                             noise_distributions: Dict[str, str]) -> None:
         """
         Perform symbolic computations required for objective function
         evaluation.
@@ -911,6 +909,9 @@ class SbmlImporter:
             dictionary(observableId: noise type)
             See :py:func:`sbml2amici`.
         """
+
+        if observables is None:
+            observables = {}
 
         if sigmas is None:
             sigmas = {}
@@ -968,9 +969,9 @@ class SbmlImporter:
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
-        elif observables is None:
+        else:
             self.symbols[SymbolId.OBSERVABLE] = {
-                symbol_with_assumptions(f'y{specie}'): {
+                symbol_with_assumptions(f'y{specie["name"]}'): {
                     'name': specie['name'],
                     'value': specie_id
                 }
