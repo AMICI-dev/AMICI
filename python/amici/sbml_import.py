@@ -938,7 +938,7 @@ class SbmlImporter:
         self.symbols[SymbolId.SIGMAY] = {
             symbol_with_assumptions(f'sigma_{obs_id}'): {
                 'name': f'sigma_{obs["name"]}',
-                'value': replace_assignments(sigmas.get(str(obs_id), '1.0'))
+                'value': sigmas.get(str(obs_id), '1.0')
             }
             for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items()
         }
