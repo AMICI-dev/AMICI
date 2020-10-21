@@ -15,11 +15,11 @@ import warnings
 import logging
 import copy
 from typing import (
-    Dict, List, Callable, Any, Iterable, Sequence, Union
+    Dict, List, Callable, Any, Iterable, Union
 )
 
 from .ode_export import (
-    ODEExporter, ODEModel, generate_measurement_symbol
+    ODEExporter, ODEModel, generate_measurement_symbol, symbol_with_assumptions
 )
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
@@ -1770,19 +1770,6 @@ def _get_list_of_species_references(sbml_model: sbml.Model) \
         if isinstance(element, sbml.ListOfSpeciesReferences)
         for reference in element
     ]
-
-
-def symbol_with_assumptions(name: str):
-    """
-    Central function to create symbols with consistent, canonical assumptions
-
-    :param name:
-        name of the symbol
-
-    :return:
-        symbol with canonical assumptions
-    """
-    return sp.Symbol(name, real=True)
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):

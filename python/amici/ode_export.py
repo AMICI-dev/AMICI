@@ -909,14 +909,21 @@ class ODEModel:
         symbols = copy.copy(si.symbols)
 
         # sort expressions according to dependency
+        ordered_symbol_ids = toposort_flatten({
+            str(identifier): {
+                str(s) for s in definition['value'].free_symbols
+                if s in symbols[SymbolId.EXPRESSION]
+            }
+            for identifier, definition
+            in symbols[SymbolId.EXPRESSION].items()
+        })
+
         symbols[SymbolId.EXPRESSION] = {
-            symbol_id: symbols[SymbolId.EXPRESSION][symbol_id]
-            for symbol_id in toposort_flatten({
-                identifier: {s for s in definition['value'].free_symbols
-                             if s in symbols[SymbolId.EXPRESSION]}
-                for identifier, definition
-                in symbols[SymbolId.EXPRESSION].items()
-            })
+            symbol_with_assumptions(symbol_id):
+                symbols[SymbolId.EXPRESSION][
+                    symbol_with_assumptions(symbol_id)
+                ]
+            for symbol_id in ordered_symbol_ids
         }
         nexpr = len(symbols[SymbolId.EXPRESSION])
 
@@ -3275,7 +3282,7 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     """
     if not isinstance(observable_id, str):
         observable_id = strip_pysb(observable_id)
-    return sp.Symbol(f'm{observable_id}', real=True)
+    return symbol_with_assumptions(f'm{observable_id}')
 
 
 def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
@@ -3289,4 +3296,17 @@ def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
     :return:
         identifier symbol
     """
-    return sp.Symbol(f'flux_r{reaction_index}', real=True)
+    return symbol_with_assumptions(f'flux_r{reaction_index}')
+
+
+def symbol_with_assumptions(name: str):
+    """
+    Central function to create symbols with consistent, canonical assumptions
+
+    :param name:
+        name of the symbol
+
+    :return:
+        symbol with canonical assumptions
+    """
+    return sp.Symbol(name, real=True)
