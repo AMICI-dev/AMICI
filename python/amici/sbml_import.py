@@ -1911,7 +1911,7 @@ def mathml(expr, **settings):
     return MathMLSbmlPrinter(settings).doprint(expr)
 
 
-def replace_logx(math_str: str) -> str:
+def replace_logx(math_str: Union[str, None]) -> Union[str, None]:
     """
     Replace logX(.) by log(., X) since sympy cannot parse the former
 
@@ -1921,6 +1921,9 @@ def replace_logx(math_str: str) -> str:
     :return:
         sympifiable string
     """
+    if math_str is None:
+        return None
+
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
     )
