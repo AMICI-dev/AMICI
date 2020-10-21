@@ -287,9 +287,6 @@ class SbmlImporter:
         """
         set_log_level(logger, verbose)
 
-        if observables is None:
-            observables = {}
-
         if 'constantParameters' in kwargs:
             logger.warning('Use of `constantParameters` as argument name '
                            'is deprecated and will be removed in a future '
@@ -928,7 +925,7 @@ class SbmlImporter:
             See :py:func:`sbml2amici`.
         """
 
-        if sigmas is None:
+        if sigmas is None or observables is None:
             sigmas = {}
         else:
             # Ensure no non-existing observableIds have been specified
@@ -939,7 +936,7 @@ class SbmlImporter:
                     f"Sigma provided for unknown observableIds: "
                     f"{unknown_ids}.")
 
-        if noise_distributions is None:
+        if noise_distributions is None or observables is None:
             noise_distributions = {}
         else:
             # Ensure no non-existing observableIds have been specified
@@ -985,7 +982,7 @@ class SbmlImporter:
             }
         elif observables is None:
             self.symbols[SymbolId.OBSERVABLE] = {
-                symbol_with_assumptions(f'y{specie}'): {
+                symbol_with_assumptions(f'y{specie_id}'): {
                     'name': specie['name'],
                     'value': specie_id
                 }
