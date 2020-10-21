@@ -1233,20 +1233,22 @@ class SbmlImporter:
         """
         if isinstance(var_or_math, sbml.SBase):
             math_string = sbml.formulaToL3String(var_or_math.getMath())
+            ele_name = var_or_math.element_name
         else:
             math_string = var_or_math
+            ele_name = 'string'
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
             ), locals=self.local_symbols)
         except sp.SympifyError:
-            raise SBMLException(f'{var.element_name} "{math_string}" '
+            raise SBMLException(f'{ele_name} "{math_string}" '
                                 f'contains an unsupported expression!')
 
         if formula is not None:
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula,
-                                         expression_type=var.element_name)
+                                         expression_type=ele_name)
         return formula
 
     def _get_element_from_assignment(self, element_id: str) -> sp.Expr:
