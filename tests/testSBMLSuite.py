@@ -176,9 +176,11 @@ def concentrations_to_amounts(
             if s['amount']
         ).difference(requested_concentrations))
 
-        if species and species not in amt_species:
+        species_id = symbol_with_assumptions(species)
+        if species and species not in amt_species \
+                and species_id in wrapper.symbols[SymbolId.SPECIES]:
             symvolume = wrapper.symbols[SymbolId.SPECIES][
-                symbol_with_assumptions(species)
+                species_id
             ]['compartment']
 
             simulated.loc[:, species] *= simulated.loc[:, str(symvolume)]

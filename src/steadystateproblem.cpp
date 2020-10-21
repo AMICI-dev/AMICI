@@ -43,7 +43,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
-
+    
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -480,6 +480,10 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     int ix = 0;
     double gamma = 1.0;
     bool compNewStep = true;
+    
+    if (model->nx_solver <= 0) {
+        return;
+    }
 
     /* initialize output of linear solver for Newton step */
     delta_.zero();
@@ -572,6 +576,9 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
                                                   Model *model,
                                                   bool backward)
 {
+    if (model->nx_solver <= 0) {
+        return;
+    }
     /* Loop over steps and check for convergence
        NB: This function is used for forward and backward simulation, and may
        be called by workSteadyStateProblem and workSteadyStateBackwardProblem.

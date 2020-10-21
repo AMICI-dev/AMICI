@@ -34,6 +34,8 @@ import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 from itertools import chain
+from toposort import toposort_flatten
+
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -906,15 +908,22 @@ class ODEModel:
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
 
+        # sort expressions according to dependency
+        symbols[SymbolId.EXPRESSION] = {
+            symbol_id: symbols[SymbolId.EXPRESSION][symbol_id]
+            for symbol_id in toposort_flatten({
+                identifier: {s for s in definition['value'].free_symbols
+                             if s in symbols[SymbolId.EXPRESSION]}
+                for identifier, definition
+                in symbols[SymbolId.EXPRESSION].items()
+            })
+        }
+        nexpr = len(symbols[SymbolId.EXPRESSION])
+
         # assemble fluxes and add them as expressions to the model
         fluxes = []
         for ir, flux in enumerate(si.flux_vector):
             flux_id = generate_flux_symbol(ir)
-            self.add_component(Expression(
-                identifier=flux_id,
-                name=str(flux),
-                value=flux
-            ))
             fluxes.append(flux_id)
         nr = len(fluxes)
 
@@ -1028,6 +1037,15 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol_name](**proto))
 
+        # add fluxes as expressions, this needs to happen after base
+        # expressions from symbols have been parsed
+        for flux_id, flux in zip(fluxes, si.flux_vector):
+            self.add_component(Expression(
+                identifier=flux_id,
+                name=str(flux_id),
+                value=flux
+            ))
+
         # process conservation laws
         if compute_cls:
             dxdotdw_updates = si.process_conservation_laws(self,
@@ -1043,12 +1061,14 @@ class ODEModel:
         # expressions, but conservation law expressions are inserted before
         # flux expressions. If this ordering is to be changed, the following
         # code will have to be adapted.
-        ncl = nw - nr
-        self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl).row_join(
-            si.stoichiometric_matrix
-        )
-        for ix, iw, val in dxdotdw_updates:
-            self._eqs['dxdotdw'][ix, ncl + iw] = val
+        ncl = nw - nr - nexpr
+        if not any(s in [e.get_id() for e in self._expressions]
+                   for s in si.stoichiometric_matrix.free_symbols):
+            self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl + nexpr).row_join(
+                si.stoichiometric_matrix
+            )
+            for ix, iw, val in dxdotdw_updates:
+                self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
