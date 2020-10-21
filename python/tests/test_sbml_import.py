@@ -78,6 +78,25 @@ def model_steadystate_module():
     shutil.rmtree(outdir, ignore_errors=True)
 
 
+@pytest.fixture
+def model_units_module():
+    sbml_file = os.path.join(os.path.dirname(__file__), '..',
+                             'examples', 'example_units',
+                             'model_units.xml')
+    sbml_importer = amici.SbmlImporter(sbml_file)
+
+    outdir = 'test_model_units'
+    module_name = 'test_model_units'
+    sbml_importer.sbml2amici(model_name=module_name,
+                             output_dir=outdir)
+
+    model_module = amici.import_model_module(module_name=module_name,
+                                             module_path=outdir)
+    yield model_module
+
+    shutil.rmtree(outdir, ignore_errors=True)
+
+
 def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
     model = sbml_example_presimulation_module.getModel()
@@ -277,6 +296,18 @@ def test_likelihoods_error():
             constant_parameters=['k0'],
             noise_distributions=noise_distributions,
         )
+
+
+def test_units(model_units_module):
+    """
+    Test whether SBML import works for models using sbml:units annotations.
+    """
+    model = model_units_module.getModel()
+    model.setTimepoints(np.linspace(0, 1, 101))
+    solver = model.getSolver()
+
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata['status'] == amici.AMICI_SUCCESS
 
 
 def normal_nllh(m, y, sigma):
