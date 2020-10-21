@@ -114,6 +114,7 @@ tests/test/*
 */tests/test_model_presimulation/*
 */tests/test_model_presimulation_pysb/*
 */tests/test_model_presimulation_sbml/*
+*/tests/test_model_units/*
 */tests/model_constant_species_cl/*
 */tests/model_constant_species/*
 */tests/test_likelihoods/*
