@@ -1165,7 +1165,8 @@ class SbmlImporter:
             for k in d:
                 d[k] = d[k].subs(old, new)
 
-        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY]:
+        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
+                       SymbolId.EXPRESSION]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
