@@ -449,18 +449,33 @@ class SbmlImporter:
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
-        # SBML time symbol + constants
-        for symbol_name in ['time', 'avogadro']:
+        for u in self.sbml.getListOfUnitDefinitions():
+            self.local_symbols[u.getId()] = sp.sympify(1.0)
+
+        units = ['ampere', 'coulomb', 'gray', 'dimensionless', 'henry',
+                 'becquerel', 'farad', 'hertz', 'candela', 'gram', 'item',
+                 'joule', 'litre', 'mole', 'radian', 'steradian',
+                 'weber', 'katal', 'lumen', 'newton', 'second',
+                 'tesla', 'kelvin', 'lux', 'ohm', 'siemens', 'volt',
+                 'kilogram', 'metre', 'pascal', 'sievert', 'wat']
+
+        # SBML time symbol + constants + base units
+        # avogadro is a special unit that is defined as avogadro constant
+        # times dimensionless, so we replace it by the respective numerical
+        # value
+        for symbol_name in ['time', 'avogadro'] + units:
             if symbol_name in self.local_symbols:
                 # Supporting this is probably kinda tricky and this sounds
                 # like a stupid thing to do in the first place.
                 raise SBMLException(
-                    'AMICI does not support SBML models '
-                    'containing variables with Id '
-                    f'{symbol_name}.')
-            self.local_symbols[symbol_name] = symbol_with_assumptions(
-                symbol_name
-            )
+                    'AMICI does not support SBML models  containing '
+                    f'variables with Id {symbol_name}.'
+                )
+            if symbol_name in units:
+                sym = sp.sympify(1.0)
+            else:
+                sym = symbol_with_assumptions(symbol_name)
+            self.local_symbols[symbol_name] = sym
 
     def _gather_dependent_locals(self):
         """
