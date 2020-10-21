@@ -1378,7 +1378,7 @@ class SbmlImporter:
             Tuple of free symbolic variables in the formulas all provided rules
         """
         return sp.Matrix([
-            self._sympy_from_sbml_math(rule.getMath())
+            self._sympy_from_sbml_math(rule)
             for rule in rules if rule.getFormula()
         ]).free_symbols
 
