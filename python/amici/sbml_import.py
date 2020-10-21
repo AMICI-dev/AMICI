@@ -213,6 +213,7 @@ class SbmlImporter:
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+                   log_as_log10: bool = True,
                    **kwargs) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -279,6 +280,10 @@ class SbmlImporter:
 
         :param simplify:
             see :attr:`ODEModel._simplify`
+
+        :param log_as_log10:
+            If True, log in the SBML model will be parsed as `log10` (default),
+            if False, log will be parsed as natural logarithm `ln`
         """
         set_log_level(logger, verbose)
 
@@ -327,6 +332,10 @@ class SbmlImporter:
             raise ValueError(f'Unknown arguments {kwargs.keys()}.')
 
         self._reset_symbols()
+        self.sbml_parser_settings.setParseLog(
+            sbml.L3P_PARSE_LOG_AS_LOG10 if log_as_log10 else
+            sbml.L3P_PARSE_LOG_AS_LN
+        )
         self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
         self._replace_compartments_with_volumes()
@@ -969,8 +978,7 @@ class SbmlImporter:
                     'name': definition.get('name', f'y{iobs}'),
                     # Replace logX(.) by log(., X) since sympy cannot parse the
                     # former.
-                    'value': replace_assignments(re.sub(
-                        r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
+                    'value': replace_assignments(replace_logx(
                         definition['formula']
                     ))
                 }
@@ -1292,6 +1300,7 @@ class SbmlImporter:
         math_string = sbml.formulaToL3StringWithSettings(
             var.getMath(), self.sbml_parser_settings
         )
+        math_string = replace_logx(math_string)
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
@@ -1900,3 +1909,18 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
 
 def mathml(expr, **settings):
     return MathMLSbmlPrinter(settings).doprint(expr)
+
+
+def replace_logx(math_str: str) -> str:
+    """
+    Replace logX(.) by log(., X) since sympy cannot parse the former
+
+    :param math_str:
+        string for sympification
+
+    :return:
+        sympifiable string
+    """
+    return re.sub(
+        r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
+    )
