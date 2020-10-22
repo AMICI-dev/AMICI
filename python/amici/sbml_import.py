@@ -1251,7 +1251,10 @@ class SbmlImporter:
             sympfified symbolic expression
         """
         if isinstance(var_or_math, sbml.SBase):
-            math_string = sbml.formulaToL3String(var_or_math.getMath())
+            math_string = sbml.formulaToL3StringWithSettings(
+                var_or_math.getMath(),
+                self.sbml_parser_settings
+            )
             ele_name = var_or_math.element_name
         else:
             math_string = var_or_math
