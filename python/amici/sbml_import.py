@@ -15,7 +15,7 @@ import warnings
 import logging
 import copy
 from typing import (
-    Dict, List, Callable, Any, Iterable, Union
+    Dict, List, Callable, Any, Iterable, Union, Optional
 )
 
 from .ode_export import (
@@ -286,9 +286,6 @@ class SbmlImporter:
             if False, log will be parsed as natural logarithm `ln`
         """
         set_log_level(logger, verbose)
-
-        if observables is None:
-            observables = {}
 
         if 'constantParameters' in kwargs:
             logger.warning('Use of `constantParameters` as argument name '
@@ -860,10 +857,12 @@ class SbmlImporter:
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
     @log_execution_time('processing SBML observables', logger)
-    def _process_observables(self,
-                             observables: Dict[str, Dict[str, str]],
-                             sigmas: Dict[str, Union[str, float]],
-                             noise_distributions: Dict[str, str]) -> None:
+    def _process_observables(
+            self,
+            observables: Optional[Dict[str, Dict[str, str]]] = None,
+            sigmas: Optional[Dict[str, Union[str, float]]] = None,
+            noise_distributions: Optional[Dict[str, str]] = None
+    ) -> None:
         """
         Perform symbolic computations required for observable and objective
         function evaluation.
@@ -882,10 +881,7 @@ class SbmlImporter:
             See :py:func:`sbml2amici`.
         """
 
-        if observables is None:
-            observables = {}
-
-        if sigmas is None:
+        if sigmas is None or observables is None:
             sigmas = {}
         else:
             # Ensure no non-existing observableIds have been specified
@@ -896,7 +892,7 @@ class SbmlImporter:
                     f"Sigma provided for unknown observableIds: "
                     f"{unknown_ids}.")
 
-        if noise_distributions is None:
+        if noise_distributions is None or observables is None:
             noise_distributions = {}
         else:
             # Ensure no non-existing observableIds have been specified
@@ -922,7 +918,7 @@ class SbmlImporter:
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
-        else:
+        elif observables is None:
             self._generate_defaul_observables()
 
         self._process_log_likelihood(sigmas, noise_distributions)
