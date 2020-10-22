@@ -492,7 +492,7 @@ class SbmlImporter:
         compartments = self.sbml.getListOfCompartments()
         self.compartments = {}
         for comp in compartments:
-            init = sp.sympify(1.0)
+            init = sp.Float(1.0)
 
             if comp.isSetVolume():
                 init = self._sympy_from_sbml_math(comp.getVolume())
@@ -540,29 +540,28 @@ class SbmlImporter:
         """
         Extract initial values and initial assignments from species
         """
-        for specie in self.sbml.getListOfSpecies():
-            initial = _get_species_initial(specie)
+        for species in self.sbml.getListOfSpecies():
+            initial = _get_species_initial(species)
 
-            specie_id = _get_identifier_symbol(specie)
-            # species is target of AssignmentRule targets, specie_def will be
+            species_id = _get_identifier_symbol(species)
+            # If species_id is a target of an AssignmentRule, species will be
             # None, but we don't have to account for the initial definition
-            # of the species itself and SBML doesnt permit AssignmentRule
+            # of the species itself and SBML doesn't permit AssignmentRule
             # targets to have InitialAssignments.
-            specie_def = self.symbols[SymbolId.SPECIES].get(specie_id, None)
+            species = self.symbols[SymbolId.SPECIES].get(species_id, None)
 
-            ia = self.sbml.getInitialAssignment(specie.getId())
+            ia = self.sbml.getInitialAssignment(species.getId())
             if ia is not None:
                 ia_initial = self._sympy_from_sbml_math(ia)
                 if ia_initial is not None:
-                    if specie_def and specie_def['amount'] and 'compartment' \
-                            in specie_def:
+                    if species and species['amount'] \
+                            and 'compartment' in species:
                         ia_initial *= self.compartments.get(
-                            specie_def['compartment'],
-                            specie_def['compartment']
+                            species['compartment'], species['compartment']
                         )
                     initial = ia_initial
-            if specie_def:
-                specie_def['init'] = initial
+            if species:
+                species['init'] = initial
 
         self._flatten_species_initial()
 
@@ -571,16 +570,16 @@ class SbmlImporter:
         """
         Flattens interdependency of species initial values
         """
-        for specie in self.symbols[SymbolId.SPECIES].values():
+        for species in self.symbols[SymbolId.SPECIES].values():
             nested_species = True
             while nested_species:
                 nested_species = False
-                for symbol in specie['init'].free_symbols:
+                for symbol in species['init'].free_symbols:
                     if symbol not in self.symbols[SymbolId.SPECIES]:
                         continue
 
                     nested_species = True
-                    specie['init'] = specie['init'].subs(
+                    species['init'] = species['init'].subs(
                         symbol, self.symbols[SymbolId.SPECIES][symbol]['init']
                     )
 
@@ -661,11 +660,11 @@ class SbmlImporter:
         """
         if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
             # update initial values
-            for specie_id, specie in self.symbols[SymbolId.SPECIES].items():
-                variable0 = variable0.subs(specie_id, specie['init'])
+            for species_id, species in self.symbols[SymbolId.SPECIES].items():
+                variable0 = variable0.subs(species_id, species['init'])
 
-            for specie in self.symbols[SymbolId.SPECIES].values():
-                specie['init'] = specie['init'].subs(variable, variable0)
+            for species in self.symbols[SymbolId.SPECIES].values():
+                species['init'] = species['init'].subs(variable, variable0)
 
             # add compartment/parameter species
             self.symbols[SymbolId.SPECIES][variable] = {
@@ -822,20 +821,20 @@ class SbmlImporter:
                     'value': formula
                 }
 
-        self._flatte_rules_in_species_initial()
+        self._flatten_rules_in_species_initial()
 
-    def _flatte_rules_in_species_initial(self):
+    def _flatten_rules_in_species_initial(self):
         """
         Applies AssignmentRule to species initial values until they no longer
         contain AssignmentRule targets.
         """
-        for specie in self.symbols[SymbolId.SPECIES].values():
+        for species in self.symbols[SymbolId.SPECIES].values():
             contains_rule_assignment = True
             while contains_rule_assignment:
                 contains_rule_assignment = False
-                for s in specie['init'].free_symbols:
+                for s in species['init'].free_symbols:
                     if s in self.symbols[SymbolId.EXPRESSION]:
-                        specie['init'] = specie['init'].subs(
+                        species['init'] = species['init'].subs(
                             s, self._make_initial(
                                 self.symbols[SymbolId.EXPRESSION][s]['value']
                             )
@@ -915,11 +914,11 @@ class SbmlImporter:
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
         elif observables is None:
-            self._generate_defaul_observables()
+            self._generate_default_observables()
 
         self._process_log_likelihood(sigmas, noise_distributions)
 
-    def _generate_defaul_observables(self):
+    def _generate_default_observables(self):
         """
         Generate default observables from species, compartments and
         (initial) assignment rules.
@@ -927,9 +926,9 @@ class SbmlImporter:
         self.symbols[SymbolId.OBSERVABLE] = {
             symbol_with_assumptions(f'y{specie["name"]}'): {
                 'name': specie['name'],
-                'value': specie_id
+                'value': species_id
             }
-            for ix, (specie_id, specie)
+            for ix, (species_id, specie)
             in enumerate(self.symbols[SymbolId.SPECIES].items())
         }
 
@@ -1135,9 +1134,9 @@ class SbmlImporter:
         for comp, vol in self.compartments.items():
             if comp in self.symbols[SymbolId.SPECIES]:
                 # for comps with rate rules volume is only initial
-                for specie in self.symbols[SymbolId.SPECIES].values():
-                    if isinstance(specie['init'], sp.Expr):
-                        specie['init'] = specie['init'].subs(comp, vol)
+                for species in self.symbols[SymbolId.SPECIES].values():
+                    if isinstance(species['init'], sp.Expr):
+                        species['init'] = species['init'].subs(comp, vol)
                 continue
             self._replace_in_all_expressions(comp, vol)
 
@@ -1183,11 +1182,11 @@ class SbmlImporter:
                 element['value'] = element['value'].subs(old, new)
 
         if SymbolId.SPECIES in self.symbols:
-            for specie in self.symbols[SymbolId.SPECIES].values():
-                specie['init'] = specie['init'].subs(old,
+            for species in self.symbols[SymbolId.SPECIES].values():
+                species['init'] = species['init'].subs(old,
                                                      self._make_initial(new))
-                if 'dt' in specie:
-                    specie['dt'] = specie['dt'].subs(old, new)
+                if 'dt' in species:
+                    species['dt'] = species['dt'].subs(old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
@@ -1216,7 +1215,7 @@ class SbmlImporter:
         csymbol definition
         """
         constants = [
-            (symbol_with_assumptions('avogadro'), sp.sympify(6.02214179e23)),
+            (symbol_with_assumptions('avogadro'), sp.Float(6.02214179e23)),
         ]
         for constant, value in constants:
             self._replace_in_all_expressions(constant, value)
@@ -1246,9 +1245,10 @@ class SbmlImporter:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
             ), locals=self.local_symbols)
-        except sp.SympifyError:
+        except (BaseException, TypeError) as err:
             raise SBMLException(f'{ele_name} "{math_string}" '
-                                f'contains an unsupported expression!')
+                                'contains an unsupported expression: '
+                                f'{err}.')
 
         if isinstance(formula, sp.Expr):
             formula = _parse_special_functions(formula)
@@ -1298,7 +1298,7 @@ class SbmlImporter:
         elif ele.isSetStoichiometry():
             sym = self._sympy_from_sbml_math(ele.getStoichiometry())
         else:
-            sym = sp.sympify(1.0)
+            sym = sp.Float(1.0)
         return sym
 
                                     
@@ -1722,21 +1722,21 @@ def _get_species_initial(species: sbml.Species) -> sp.Expr:
     if species.isSetInitialConcentration():
         conc = species.getInitialConcentration()
         if species.getHasOnlySubstanceUnits():
-            return sp.sympify(conc) * _get_species_compartment_symbol(species)
+            return sp.Float(conc) * _get_species_compartment_symbol(species)
         else:
-            return sp.sympify(conc)
+            return sp.Float(conc)
 
     if species.isSetInitialAmount():
         amt = species.getInitialAmount()
         if math.isnan(amt):
-            return sp.sympify(0.0)
+            return sp.Float(0.0)
 
         if species.getHasOnlySubstanceUnits():
-            return sp.sympify(amt)
+            return sp.Float(amt)
         else:
-            return sp.sympify(amt) / _get_species_compartment_symbol(species)
+            return sp.Float(amt) / _get_species_compartment_symbol(species)
 
-    return sp.sympify(0.0)
+    return sp.Float(0.0)
 
 
 def _get_list_of_species_references(sbml_model: sbml.Model) \
