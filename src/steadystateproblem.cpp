@@ -481,9 +481,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     double gamma = 1.0;
     bool compNewStep = true;
     
-    if (model->nx_solver <= 0) {
+    if (model->nx_solver == 0)
         return;
-    }
 
     /* initialize output of linear solver for Newton step */
     delta_.zero();
@@ -576,9 +575,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
                                                   Model *model,
                                                   bool backward)
 {
-    if (model->nx_solver <= 0) {
+    if (model->nx_solver == 0)
         return;
-    }
     /* Loop over steps and check for convergence
        NB: This function is used for forward and backward simulation, and may
        be called by workSteadyStateProblem and workSteadyStateBackwardProblem.

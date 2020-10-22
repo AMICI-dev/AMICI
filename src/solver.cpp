@@ -139,7 +139,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     rootInit(model->ne);
 
-    if (nx() <= 0)
+    if (nx() == 0)
         return;
     
     initializeLinearSolver(model);
@@ -186,7 +186,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     /* Attach user data */
     setUserDataB(*which, model);
 
-    if (nx() <= 0)
+    if (nx() == 0)
         return;
     
     initializeLinearSolverB(model, *which);
