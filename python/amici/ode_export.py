@@ -977,13 +977,16 @@ class ODEModel:
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
 
+                # we need to flatten out assignments in the compartment in
+                # order to ensure that we catch all species dependencies
                 contains_rule_target = True
                 while contains_rule_target:
                     contains_rule_target = False
                     for s in list(v.free_symbols):
                         if s not in si.symbols[SymbolId.EXPRESSION]:
                             continue
-                        v = v.subs(s, si.symbols[SymbolId.EXPRESSION][s])
+                        v = v.subs(s,
+                                   si.symbols[SymbolId.EXPRESSION][s]['value'])
                         contains_rule_target = True
 
                 dv_dt = v.diff(si.amici_time_symbol)
