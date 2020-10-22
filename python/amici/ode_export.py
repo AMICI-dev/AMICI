@@ -1058,31 +1058,37 @@ class ODEModel:
             dxdotdw_updates = si.process_conservation_laws(self,
                                                            dxdotdw_updates)
 
-        # set derivatives of xdot, this circumvents regular computation. we
-        # do this as we can save a substantial amount of computations by
-        # knowing the right solutions here
         nx_solver = si.stoichiometric_matrix.shape[0]
         nw = len(self._expressions)
-        # append zero rows for conservation law `w`s, note that
-        # _process_conservation_laws is called after the fluxes are added as
-        # expressions, but conservation law expressions are inserted before
-        # flux expressions. If this ordering is to be changed, the following
-        # code will have to be adapted.
         ncl = nw - nr - nexpr
+
+        # set derivatives of xdot, if applicable. We do this as we can save
+        # a substantial amount of computations by exploiting the structure
+        # of the right hand side.
+        # the tricky part is that the expressions w do not only contain the
+        # flux entries, but also assignment rules and conservation laws.
+        # assignment rules are added before the fluxes and
+        # _process_conservation_laws is called after the fluxes,
+        # but conservation law expressions are inserted at the beginning
+        # of the self.eq['w']. Accordingly we concatenate a zero matrix (for
+        # rule assignments and conservation laws) with the stoichiometric
+        # matrix and then apply the necessary updates from
+        # transform_dxdt_to_concentration
+
         if not any(s in [e.get_id() for e in self._expressions]
                    for s in si.stoichiometric_matrix.free_symbols):
             self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl + nexpr).row_join(
                 si.stoichiometric_matrix
             )
             for ix, iw, val in dxdotdw_updates:
+                # offset update according to concatenated zero matrix
                 self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
 
     def add_component(self, component: ModelQuantity,
-                      insert_first: Optional[bool] = False) -> \
-        None:
+                      insert_first: Optional[bool] = False) -> None:
         """
         Adds a new ModelQuantity to the model.
 
@@ -1110,8 +1116,8 @@ class ODEModel:
     def add_conservation_law(self,
                              state: sp.Symbol,
                              total_abundance: sp.Symbol,
-                             state_expr: sp.Basic,
-                             abundance_expr: sp.Basic) -> None:
+                             state_expr: sp.Expr,
+                             abundance_expr: sp.Expr) -> None:
         """
         Adds a new conservation law to the model. A conservation law is defined
         by the conserved quantity T = sum_i(a_i * x_i), where a_i are
