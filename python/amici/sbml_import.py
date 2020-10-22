@@ -1835,4 +1835,3 @@ def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
     )
-
