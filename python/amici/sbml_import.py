@@ -587,16 +587,6 @@ class SbmlImporter:
             while nested_species:
                 nested_species = False
                 for symbol in specie['init'].free_symbols:
-                    if is_assignment_rule_target(
-                            self.sbml, self.sbml.getElementBySId(str(symbol))
-                    ):
-                        raise SBMLException('AMICI does not support '
-                                            'species initial  values that '
-                                            'are targets of assignment rules.'
-                                            f'Initial value of {specie} '
-                                            'depends on assignment of '
-                                            f'{symbol}')
-
                     if symbol not in self.symbols[SymbolId.SPECIES]:
                         continue
 
@@ -845,6 +835,26 @@ class SbmlImporter:
                     'name': str(sym_id),
                     'value': formula
                 }
+
+        self._flatte_rules_in_species_initial()
+
+    def _flatte_rules_in_species_initial(self):
+        """
+        Applies AssignmentRule to species initial values until they no longer
+        contain AssignmentRule targets.
+        """
+        for specie in self.symbols[SymbolId.SPECIES].values():
+            contains_rule_assignment = True
+            while contains_rule_assignment:
+                contains_rule_assignment = False
+                for s in specie['init'].free_symbols:
+                    if s in self.symbols[SymbolId.EXPRESSION]:
+                        specie['init'] = specie['init'].subs(
+                            s, self._make_initial(
+                                self.symbols[SymbolId.EXPRESSION][s]['value']
+                            )
+                        )
+                        contains_rule_assignment = True
 
     def _process_time(self) -> None:
         """
