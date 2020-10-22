@@ -976,6 +976,16 @@ class ODEModel:
                 return xdot
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
+
+                contains_rule_target = True
+                while contains_rule_target:
+                    contains_rule_target = False
+                    for s in list(v.free_symbols):
+                        if s not in si.symbols[SymbolId.EXPRESSION]:
+                            continue
+                        v = v.subs(s, si.symbols[SymbolId.EXPRESSION][s])
+                        contains_rule_target = True
+
                 dv_dt = v.diff(si.amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules

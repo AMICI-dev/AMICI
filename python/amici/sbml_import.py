@@ -823,6 +823,7 @@ class SbmlImporter:
                     'name': str(sym_id),
                     'value': formula
                 }
+                self.compartments[sym_id] = formula
 
             elif isinstance(sbml_var, sbml.Parameter):
                 self.parameter_assignment_rules[sym_id] = formula
