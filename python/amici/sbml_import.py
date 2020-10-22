@@ -421,13 +421,6 @@ class SbmlImporter:
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
 
-        if any([any([not element.getStoichiometryMath() is None
-                     for element in itt.chain(reaction.getListOfReactants(),
-                                              reaction.getListOfProducts())])
-                for reaction in self.sbml.getListOfReactions()]):
-            raise SBMLException('Non-unity stoichiometry is'
-                                ' currently not supported!')
-
     @log_execution_time('gathering local SBML symbols', logger)
     def _gather_locals(self) -> None:
         """
