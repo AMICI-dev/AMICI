@@ -1257,7 +1257,7 @@ class SbmlImporter:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
             ), locals=self.local_symbols)
-        except (BaseException, TypeError) as err:
+        except (sp.SympifyError, TypeError) as err:
             raise SBMLException(f'{ele_name} "{math_string}" '
                                 'contains an unsupported expression: '
                                 f'{err}.')
