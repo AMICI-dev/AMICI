@@ -540,17 +540,17 @@ class SbmlImporter:
         """
         Extract initial values and initial assignments from species
         """
-        for species in self.sbml.getListOfSpecies():
-            initial = _get_species_initial(species)
+        for species_variable in self.sbml.getListOfSpecies():
+            initial = _get_species_initial(species_variable)
 
-            species_id = _get_identifier_symbol(species)
+            species_id = _get_identifier_symbol(species_variable)
             # If species_id is a target of an AssignmentRule, species will be
             # None, but we don't have to account for the initial definition
             # of the species itself and SBML doesn't permit AssignmentRule
             # targets to have InitialAssignments.
             species = self.symbols[SymbolId.SPECIES].get(species_id, None)
 
-            ia = self.sbml.getInitialAssignment(species.getId())
+            ia = self.sbml.getInitialAssignment(species_variable.getId())
             if ia is not None:
                 ia_initial = self._sympy_from_sbml_math(ia)
                 if ia_initial is not None:
@@ -613,7 +613,7 @@ class SbmlImporter:
                 component_type = sbml.SBML_SPECIES
                 name = None
 
-            elif variable in self.compartments:
+            if variable in self.compartments:
                 init = self.compartments[variable]
                 component_type = sbml.SBML_COMPARTMENT
                 name = str(variable)
@@ -625,6 +625,14 @@ class SbmlImporter:
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
                 del self.symbols[SymbolId.PARAMETER][variable]
+                component_type = sbml.SBML_PARAMETER
+
+            elif self.sbml.getInitialAssignment(rule.getVariable()) is not \
+                    None:
+                # parameter with initial assigment
+                init = self._get_element_from_assignment(rule.getVariable())
+                par = self.sbml.getElementBySId(rule.getVariable())
+                name = par.getName() if par.isSetName() else par.getId()
                 component_type = sbml.SBML_PARAMETER
 
             self.add_d_dt(formula, variable, init, component_type, name)
