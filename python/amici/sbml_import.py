@@ -1189,7 +1189,6 @@ class SbmlImporter:
                 if 'dt' in specie:
                     specie['dt'] = specie['dt'].subs(old, new)
 
-
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
@@ -1221,9 +1220,8 @@ class SbmlImporter:
         ]
         for constant, value in constants:
             # do not replace if any symbol is shadowing default definition
-            if not any([constant in self.symbols[symbol]['identifier']
-                        for symbol in self.symbols.keys()
-                        if 'identifier' in self.symbols[symbol].keys()]):
+            if not any([constant in self.symbols[symbol]
+                        for symbol in self.symbols]):
                 self._replace_in_all_expressions(constant, value)
             else:
                 # yes sbml supports this but we wont. Are you really expecting
