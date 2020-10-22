@@ -1408,12 +1408,12 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
-        return sp.Piecewise(*(
-            (piece[0], sp.sympify(bool(piece[0]))
-                       if piece[0].is_number
-                       else piece[0])
-            for piece in grouper(args, 2, True)
-        ))
+        return sp.Piecewise(*((
+            piece[0],
+            sp.sympify(bool(piece[1]))
+            if isinstance(piece[1], sp.Basic) and piece[1].is_number
+            else piece[1]
+        ) for piece in grouper(args, 2, True)))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
     elif toplevel:
