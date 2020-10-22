@@ -1228,7 +1228,7 @@ class SbmlImporter:
             (symbol_with_assumptions('avogadro'), sp.Float(6.02214179e23)),
         ]
         for constant, value in constants:
-            self._replace_in_all_expressions(constants, value)
+            self._replace_in_all_expressions(constant, value)
 
     def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
