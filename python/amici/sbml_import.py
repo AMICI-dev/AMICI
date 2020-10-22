@@ -1219,16 +1219,7 @@ class SbmlImporter:
             (symbol_with_assumptions('avogadro'), sp.sympify(6.02214179e23)),
         ]
         for constant, value in constants:
-            # do not replace if any symbol is shadowing default definition
-            if not any([constant in self.symbols[symbol]
-                        for symbol in self.symbols]):
-                self._replace_in_all_expressions(constant, value)
-            else:
-                # yes sbml supports this but we wont. Are you really expecting
-                # to be saved if you are trying to shoot yourself in the foot?
-                raise SBMLException(
-                    f'Encountered currently unsupported element id {constant}!'
-                )
+            self._replace_in_all_expressions(constant, value)
 
     def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
