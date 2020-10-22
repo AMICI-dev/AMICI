@@ -171,7 +171,7 @@ def export_steadystates(
         log_level: int = logging.WARNING,
         num_threads: int = 1,
         export_file: str = None,
-        sep: str = None,
+        sep: str = '\t'
 ) -> pd.DataFrame:
     """Simulate PEtab model.
     :param petab_problem:
@@ -266,9 +266,6 @@ def export_steadystates(
 
     # export to file (if requested)
     if export_file is not None:
-        # use tab as default separator
-        if sep is None:
-            sep = '\t'
         steady_state_df.to_csv(export_file, sep=sep, index=False)
 
 
@@ -745,7 +742,22 @@ def _get_measurements_and_sigmas(
     return y, sigma_y
 
 
-def _find_steadystate_conditions(petab_problem, measurement_ids):
+def _find_steadystate_conditions(petab_problem: petab.Problem,
+                                 measurement_ids: Sequence[numbers.Number],
+    ) -> pd.DataFrame:
+    """
+    Find simulation conditions which have steadystate data
+
+    :param petab_problem:
+        PEtab problem to work on.
+
+    :param measurement_ids:
+        List of measurement indices in PEtab problem, with inf as timepoint.
+
+    :return:
+        dataframe with conditions having steadystate measurements
+    """
+    # get simulation conditions with timepoint 'inf' make unique
     steadystate_conditions = petab_problem.measurement_df.loc[measurement_ids,
         ('preequilibrationConditionId', 'simulationConditionId')]
     steadystate_conditions = steadystate_conditions.drop_duplicates()
@@ -760,8 +772,22 @@ def _find_steadystate_conditions(petab_problem, measurement_ids):
     return steadystate_conditions
 
 
-def _filter_simulation_conditions(simulation_conditions,
-                                  steadystate_conditions):
+def _filter_simulation_conditions(simulation_conditions: pd.DataFrame,
+                                  steadystate_conditions: pd.DataFrame,
+    ) -> pd.DataFrame:
+    """
+    Filter simulation conditions passed by user for steadystate data
+
+    :param simulation_conditions:
+        dataframe with simulation conditions passed by user
+
+    :param steadystate_conditions:
+        ddataframe with simulation conditions with all steadystate measurements
+
+    :return:
+        dataframe with conditions passed by user restricted to having
+        steadystate measurements
+    """
     # if we don't need a preequilibration condition, drop the column
     if 'preequilibrationConditionId' not in simulation_conditions.keys():
         steadystate_conditions.drop('preequilibrationConditionId',
