@@ -826,7 +826,9 @@ class SbmlImporter:
     def _flatten_rules_in_species_initial(self):
         """
         Applies AssignmentRule to species initial values until they no longer
-        contain AssignmentRule targets.
+        contain AssignmentRule targets. This loop is explicitly necessary
+        since we currently do not allow any occurrences of expressions in
+        state initialization.
         """
         for species in self.symbols[SymbolId.SPECIES].values():
             contains_rule_assignment = True
@@ -932,17 +934,17 @@ class SbmlImporter:
             in enumerate(self.symbols[SymbolId.SPECIES].items())
         }
 
-        # Assignment rules take precedence over compartment volume
-        # definitions, so they need to be evaluated first.
-        # Species assignment rules always overwrite
-        for variable, formula in (
-                *self.parameter_assignment_rules.items(),
-                *self.parameter_initial_assignments.items(),
-                *self.compartment_assignment_rules.items(),
-                *self.species_assignment_rules.items(),
-                *self.compartments.items()
+        for variable, formula in itt.chain(
+                self.parameter_assignment_rules.items(),
+                self.parameter_initial_assignments.items(),
+                self.compartment_assignment_rules.items(),
+                self.species_assignment_rules.items(),
+                self.compartments.items()
         ):
             symbol = symbol_with_assumptions(f'y{variable}')
+            # Assignment rules take precedence over compartment volume
+            # definitions, so they need to be evaluated first.
+            # Species assignment rules always overwrite.
             if symbol in self.symbols[SymbolId.OBSERVABLE] \
                     and variable not in self.species_assignment_rules:
                 continue
@@ -1218,7 +1220,7 @@ class SbmlImporter:
             (symbol_with_assumptions('avogadro'), sp.Float(6.02214179e23)),
         ]
         for constant, value in constants:
-            self._replace_in_all_expressions(constant, value)
+            self._replace_in_all_expressions(constants, value)
 
     def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
