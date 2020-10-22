@@ -937,7 +937,7 @@ class SbmlImporter:
         (initial) assignment rules.
         """
         self.symbols[SymbolId.OBSERVABLE] = {
-            symbol_with_assumptions(f'y{specie["name"]}'): {
+            symbol_with_assumptions(f'y{species_id}'): {
                 'name': specie['name'],
                 'value': species_id
             }
