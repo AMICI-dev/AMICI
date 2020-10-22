@@ -583,7 +583,8 @@ class SbmlImporter:
                         continue
 
                     nested_species = True
-                    species['init'] = species['init'].subs(
+                    species['init'] = smart_subs(
+                        species['init'],
                         symbol, self.symbols[SymbolId.SPECIES][symbol]['init']
                     )
 
@@ -671,10 +672,11 @@ class SbmlImporter:
         if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
             # update initial values
             for species_id, species in self.symbols[SymbolId.SPECIES].items():
-                variable0 = variable0.subs(species_id, species['init'])
+                variable0 = smart_subs(variable0, species_id, species['init'])
 
             for species in self.symbols[SymbolId.SPECIES].values():
-                species['init'] = species['init'].subs(variable, variable0)
+                species['init'] = smart_subs(species['init'],
+                                             variable, variable0)
 
             # add compartment/parameter species
             self.symbols[SymbolId.SPECIES][variable] = {
@@ -847,8 +849,8 @@ class SbmlImporter:
                 contains_rule_assignment = False
                 for s in species['init'].free_symbols:
                     if s in self.symbols[SymbolId.EXPRESSION]:
-                        species['init'] = species['init'].subs(
-                            s, self._make_initial(
+                        species['init'] = smart_subs(
+                            species['init'], s, self._make_initial(
                                 self.symbols[SymbolId.EXPRESSION][s]['value']
                             )
                         )
@@ -1069,7 +1071,7 @@ class SbmlImporter:
             return sym_math
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            sym_math = sym_math.subs(species_id, species['init'])
+            sym_math = smart_subs(sym_math,species_id, species['init'])
 
         return sym_math
 
@@ -1149,7 +1151,8 @@ class SbmlImporter:
                 # for comps with rate rules volume is only initial
                 for species in self.symbols[SymbolId.SPECIES].values():
                     if isinstance(species['init'], sp.Expr):
-                        species['init'] = species['init'].subs(comp, vol)
+                        species['init'] = smart_subs(species['init'],
+                                                     comp, vol)
                 continue
             self._replace_in_all_expressions(comp, vol)
 
@@ -1170,8 +1173,8 @@ class SbmlImporter:
         ]
         for field in fields:
             if field in dir(self):
-                self.__setattr__(field, self.__getattribute__(field).subs(
-                    old, new
+                self.__setattr__(field, smart_subs(
+                    self.__getattribute__(field), old, new
                 ))
 
         dictfields = [
@@ -1185,27 +1188,27 @@ class SbmlImporter:
                 new = self._make_initial(new)
 
             for k in d:
-                d[k] = d[k].subs(old, new)
+                d[k] = smart_subs(d[k], old, new)
 
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
                        SymbolId.EXPRESSION]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
-                element['value'] = element['value'].subs(old, new)
+                element['value'] = smart_subs(element['value'], old, new)
 
         if SymbolId.SPECIES in self.symbols:
             for species in self.symbols[SymbolId.SPECIES].values():
-                species['init'] = species['init'].subs(old,
-                                                     self._make_initial(new))
+                species['init'] = smart_subs(species['init'],
+                                             old, self._make_initial(new))
                 if 'dt' in species:
-                    species['dt'] = species['dt'].subs(old, new)
+                    species['dt'] = smart_subs(species['dt'], old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
         subs = 0 if getattr(self, 'amici_time_symbol', sp.nan) == new else new
-        self.compartments = {c: v.subs(old, subs)
+        self.compartments = {c: smart_subs(v, old, subs)
                              for c, v in self.compartments.items()}
 
     def _clean_reserved_symbols(self) -> None:
@@ -1314,7 +1317,7 @@ class SbmlImporter:
             sym = sp.Float(1.0)
         return sym
 
-                                    
+
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
                            show_warnings: bool = False) -> None:
     """
@@ -1848,3 +1851,25 @@ def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
     )
+
+
+def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
+    """
+    Optimized substitution that checks whether anything needs to be done first
+
+    :param element:
+        substitution target
+
+    :param old:
+        to be substituted
+
+    :param new:
+        subsitution value
+
+    :return:
+        substituted expression
+    """
+    if old in element.free_symbols:
+        return element.subs(old, new)
+    else:
+        return element
