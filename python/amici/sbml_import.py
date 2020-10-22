@@ -473,8 +473,8 @@ class SbmlImporter:
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
                 if e.isSetId() and e.isSetStoichiometry() and \
                         e.getId() not in self.local_symbols:
-                    self.local_symbols[e.getId()] = sp.sympify(
-                        e.getStoichiometry(), locals=self.local_symbols
+                    self.local_symbols[e.getId()] = self._sympy_from_sbml_math(
+                        e.getStoichiometry()
                     )
 
         for r in self.sbml.getListOfReactions():
@@ -495,8 +495,7 @@ class SbmlImporter:
             init = sp.sympify(1.0)
 
             if comp.isSetVolume():
-                init = sp.sympify(comp.getVolume(),
-                                  locals=self.local_symbols)
+                init = self._sympy_from_sbml_math(comp.getVolume())
 
             ia = self.sbml.getInitialAssignment(comp.getId())
             if ia is not None:
@@ -604,8 +603,7 @@ class SbmlImporter:
             if rule.getTypeCode() != sbml.SBML_RATE_RULE:
                 continue
 
-            variable = sp.sympify(rule.getVariable(),
-                                  locals=self.local_symbols)
+            variable = symbol_with_assumptions(rule.getVariable())
             formula = self._sympy_from_sbml_math(rule)
 
             # Species rules are processed first, to avoid processing
@@ -623,9 +621,8 @@ class SbmlImporter:
                 del self.compartments[variable]
 
             elif variable in self.symbols[SymbolId.PARAMETER]:
-                init = sp.sympify(
+                init = self._sympy_from_sbml_math(
                     self.symbols[SymbolId.PARAMETER][variable]['value'],
-                    locals=self.local_symbols
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
                 del self.symbols[SymbolId.PARAMETER][variable]
@@ -801,8 +798,7 @@ class SbmlImporter:
                 continue
 
             sbml_var = self.sbml.getElementBySId(rule.getVariable())
-            sym_id = sp.sympify(rule.getVariable(),
-                                locals=self.local_symbols)
+            sym_id = symbol_with_assumptions(rule.getVariable())
             formula = self._sympy_from_sbml_math(rule)
 
             if isinstance(sbml_var, sbml.Species):
@@ -1042,7 +1038,7 @@ class SbmlImporter:
             stoich = self._get_element_stoichiometry(species_reference)
             self._replace_in_all_expressions(
                 _get_identifier_symbol(species_reference),
-                sp.sympify(stoich, locals=self.local_symbols)
+                self._sympy_from_sbml_math(stoich)
             )
 
     def _make_initial(self, sym_math: Union[sp.Expr, None, float]
@@ -1303,29 +1299,24 @@ class SbmlImporter:
             if self.sbml.getInitialAssignment(ele.getId()) is not None:
                 sym = self._get_element_from_assignment(ele.getId())
                 if sym is None:
-                    sym = sp.sympify(ele.getStoichiometry(),
-                                     locals=self.local_symbols)
+                    sym = self._sympy_from_sbml_math(ele.getStoichiometry())
             elif is_assignment_rule_target(self.sbml, ele):
                 sym = _get_identifier_symbol(ele)
             else:
                 # dont put the symbol if it wont get replaced by a
                 # rule
-                sym = sp.sympify(ele.getStoichiometry(),
-                                 locals=self.local_symbols)
+                sym = self._sympy_from_sbml_math(ele.getStoichiometry())
         elif ele.isSetStoichiometry():
-            sym = sp.sympify(ele.getStoichiometry(),
-                             locals=self.local_symbols)
+            sym = self._sympy_from_sbml_math(ele.getStoichiometry())
         else:
             sym = sp.sympify(1.0)
-        sym = _parse_special_functions(sym)
-        _check_unsupported_functions(sym, 'Stoichiometry')
         return sym
 
                                     
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
                            show_warnings: bool = False) -> None:
     """
-        Checks the error log in the current self.sbml_doc.
+    Checks the error log in the current self.sbml_doc.
 
     :param sbml_doc:
         SBML document
@@ -1356,7 +1347,7 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
 
 def _check_unsupported_functions(sym: sp.Expr,
                                  expression_type: str,
-                                 full_sym: sp.Expr = None):
+                                 full_sym: Optional[sp.Expr] = None):
     """
     Recursively checks the symbolic expression for unsupported symbolic
     functions
@@ -1366,41 +1357,28 @@ def _check_unsupported_functions(sym: sp.Expr,
 
     :param expression_type:
         type of expression, only used when throwing errors
+
+    :param full sym:
+        outermost symbolic expression in recursive checks, only used for errors
     """
     if full_sym is None:
         full_sym = sym
 
-    unsupported_functions = [
+    unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
         sp.function.UndefinedFunction
-    ]
-
-    unsupp_fun_type = next(
-        (
-            fun_type
-            for fun_type in unsupported_functions
-            if isinstance(sym.func, fun_type)
-        ),
-        None
     )
-    if unsupp_fun_type:
+
+    if isinstance(sym.func, unsupported_functions):
         raise SBMLException(f'Encountered unsupported expression '
                             f'"{sym.func}" of type '
-                            f'"{unsupp_fun_type}" as part of a '
+                            f'"{type(sym.func)}" as part of a '
                             f'{expression_type}: "{full_sym}"!')
     for fun in list(sym._args) + [sym]:
-        unsupp_fun_type = next(
-            (
-                fun_type
-                for fun_type in unsupported_functions
-                if isinstance(fun, fun_type)
-            ),
-            None
-        )
-        if unsupp_fun_type:
+        if isinstance(fun, unsupported_functions):
             raise SBMLException(f'Encountered unsupported expression '
                                 f'"{fun}" of type '
-                                f'"{unsupp_fun_type}" as part of a '
+                                f'"{type(fun)}" as part of a '
                                 f'{expression_type}: "{full_sym}"!')
         if fun is not sym:
             _check_unsupported_functions(fun, expression_type)
@@ -1440,7 +1418,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     return sym
 
 
-def _parse_logical_operators(math_str: str) -> Union[str, None]:
+def _parse_logical_operators(math_str: Union[str, float, None]
+                             ) -> Union[str, float, None]:
     """
     Parses a math string in order to replace logical operators by a form
     parsable for sympy
@@ -1450,8 +1429,8 @@ def _parse_logical_operators(math_str: str) -> Union[str, None]:
     :param math_str:
         parsed math_str
     """
-    if math_str is None:
-        return None
+    if not isinstance(math_str, str):
+        return math_str
 
     if ' xor(' in math_str or ' Xor(' in math_str:
         raise SBMLException('Xor is currently not supported as logical '
