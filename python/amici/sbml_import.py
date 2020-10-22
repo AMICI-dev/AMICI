@@ -1240,7 +1240,8 @@ class SbmlImporter:
                     f'Encountered currently unsupported element id {constant}!'
                 )
 
-    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]) -> sp.Expr:
+    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
+                              ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
@@ -1854,7 +1855,7 @@ def is_assignment_rule_target(model: sbml.Model, element: sbml.SBase) -> bool:
     return True
 
 
-def replace_logx(math_str: Union[str, None]) -> Union[str, None]:
+def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     """
     Replace logX(.) by log(., X) since sympy cannot parse the former
 
@@ -1864,8 +1865,8 @@ def replace_logx(math_str: Union[str, None]) -> Union[str, None]:
     :return:
         sympifiable string
     """
-    if math_str is None:
-        return None
+    if not isinstance(math_str, str):
+        return math_str
 
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
