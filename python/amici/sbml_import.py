@@ -106,8 +106,8 @@ class SbmlImporter:
         initial assignments for parameters, these parameters are not
         permissible for sensitivity analysis
 
-    :ivar reaction_ids:
-        symbol definition as kinetic law of the respective reaction
+    :ivar sbml_parser_settings:
+        sets behaviour of SBML Formula parsing
 
     """
 
@@ -159,6 +159,14 @@ class SbmlImporter:
 
         self._reset_symbols()
 
+        # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
+        # all defaults except disable unit parsing
+        self.sbml_parser_settings = sbml.L3ParserSettings(
+            self.sbml, sbml.L3P_PARSE_LOG_AS_LOG10,
+            sbml.L3P_EXPAND_UNARY_MINUS, sbml.L3P_NO_UNITS,
+            sbml.L3P_AVOGADRO_IS_CSYMBOL
+        )
+
     def _process_document(self) -> None:
         """
         Validate and simplify document.
@@ -205,6 +213,7 @@ class SbmlImporter:
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+                   log_as_log10: bool = True,
                    **kwargs) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -271,6 +280,10 @@ class SbmlImporter:
 
         :param simplify:
             see :attr:`ODEModel._simplify`
+
+        :param log_as_log10:
+            If True, log in the SBML model will be parsed as `log10` (default),
+            if False, log will be parsed as natural logarithm `ln`
         """
         set_log_level(logger, verbose)
 
@@ -319,6 +332,10 @@ class SbmlImporter:
             raise ValueError(f'Unknown arguments {kwargs.keys()}.')
 
         self._reset_symbols()
+        self.sbml_parser_settings.setParseLog(
+            sbml.L3P_PARSE_LOG_AS_LOG10 if log_as_log10 else
+            sbml.L3P_PARSE_LOG_AS_LN
+        )
         self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
         self._replace_compartments_with_volumes()
@@ -451,12 +468,11 @@ class SbmlImporter:
                 # Supporting this is probably kinda tricky and this sounds
                 # like a stupid thing to do in the first place.
                 raise SBMLException(
-                    'AMICI does not support SBML models '
-                    'containing variables with Id '
-                    f'{symbol_name}.')
-            self.local_symbols[symbol_name] = symbol_with_assumptions(
-                symbol_name
-            )
+                    'AMICI does not support SBML models  containing '
+                    f'variables with Id {symbol_name}.'
+                )
+            self.local_symbols[symbol_name] = \
+                symbol_with_assumptions(symbol_name)
 
     def _gather_dependent_locals(self):
         """
@@ -897,10 +913,9 @@ class SbmlImporter:
                     'name': definition.get('name', f'y{iobs}'),
                     # Replace logX(.) by log(., X) since sympy cannot parse the
                     # former.
-                    'value': self._sympy_from_sbml_math(re.sub(
-                        r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
+                    'value': self._sympy_from_sbml_math(
                         definition['formula']
-                    ))
+                    )
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
@@ -1238,6 +1253,7 @@ class SbmlImporter:
         else:
             math_string = var_or_math
             ele_name = 'string'
+        math_string = replace_logx(math_string)
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
@@ -1302,7 +1318,7 @@ class SbmlImporter:
         _check_unsupported_functions(sym, 'Stoichiometry')
         return sym
 
-
+                                    
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
                            show_warnings: bool = False) -> None:
     """
@@ -1830,3 +1846,22 @@ def is_assignment_rule_target(model: sbml.Model, element: sbml.SBase) -> bool:
         return False
 
     return True
+
+
+def replace_logx(math_str: Union[str, None]) -> Union[str, None]:
+    """
+    Replace logX(.) by log(., X) since sympy cannot parse the former
+
+    :param math_str:
+        string for sympification
+
+    :return:
+        sympifiable string
+    """
+    if math_str is None:
+        return None
+
+    return re.sub(
+        r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
+    )
+
