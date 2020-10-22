@@ -1265,7 +1265,7 @@ class SbmlImporter:
             raise SBMLException(f'{ele_name} "{math_string}" '
                                 f'contains an unsupported expression!')
 
-        if formula is not None:
+        if isinstance(formula, sp.Expr):
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula,
                                          expression_type=ele_name)
