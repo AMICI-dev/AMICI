@@ -452,6 +452,10 @@ class SbmlImporter:
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
+        # oo is sympy infinity
+        self.local_symbols['INF'] = sp.sympify('oo')
+        self.local_symbols['NaN'] = sp.nan
+
         # SBML time symbol + constants
         for symbol_name in ['time', 'avogadro']:
             if symbol_name in self.local_symbols:
@@ -627,10 +631,8 @@ class SbmlImporter:
                 del self.symbols[SymbolId.PARAMETER][variable]
                 component_type = sbml.SBML_PARAMETER
 
-            elif self.sbml.getInitialAssignment(rule.getVariable()) is not \
-                    None:
-                # parameter with initial assigment
-                init = self._get_element_from_assignment(rule.getVariable())
+            elif variable in self.parameter_initial_assignments:
+                init = self.parameter_initial_assignments[variable]
                 par = self.sbml.getElementBySId(rule.getVariable())
                 name = par.getName() if par.isSetName() else par.getId()
                 component_type = sbml.SBML_PARAMETER

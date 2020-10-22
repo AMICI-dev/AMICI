@@ -129,7 +129,8 @@ def verify_results(settings, rdata, expected, wrapper,
     for variable in variables:
         assert np.isclose(
             simulated[variable].astype(np.float64).values,
-            expected[variable].astype(np.float64).values, atol, rtol
+            expected[variable].astype(np.float64).values,
+            atol, rtol, equal_nan=True
         ).all(), variable
 
     return simulated[variables + ['time']]
