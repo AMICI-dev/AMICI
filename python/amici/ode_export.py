@@ -27,12 +27,13 @@ except ImportError:
 
 from typing import (
     Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
-    Set
+    Set,
 )
 from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy.logic.boolalg import BooleanAtom
 from itertools import chain
 from toposort import toposort_flatten
 
@@ -295,19 +296,13 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        self._identifier = identifier
+        self._identifier: sp.Symbol = identifier
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
-        self._name = name
+        self._name: str = name
 
-        if isinstance(value, sp.RealNumber) \
-                or isinstance(value, numbers.Number):
-            value = float(value)
-        if not isinstance(value, sp.Expr) and not isinstance(value, float):
-            raise TypeError(f'value must be sympy.Expr or float, was '
-                            f'{type(value)}')
-        self._value = value
+        self._value: sp.Expr = cast_to_sym(value, 'value')
 
     def __repr__(self) -> str:
         """
@@ -336,7 +331,7 @@ class ModelQuantity:
         """
         return self._name
 
-    def get_val(self) -> Union[float, sp.Basic]:
+    def get_val(self) -> sp.Expr:
         """
         ModelQuantity value
 
@@ -385,11 +380,7 @@ class State(ModelQuantity):
             time derivative
         """
         super(State, self).__init__(identifier, name, init)
-        if not isinstance(dt, sp.Expr):
-            raise TypeError(f'dt must have type sympy.Expr, was '
-                            f'{type(dt)}')
-
-        self._dt = dt
+        self._dt = cast_to_sym(dt, 'dt')
         self._conservation_law = None
 
     def set_conservation_law(self,
@@ -417,12 +408,9 @@ class State(ModelQuantity):
         :param dt:
             time derivative
         """
-        if not isinstance(dt, sp.Expr):
-            raise TypeError(f'time derivative must have type sympy.Expr, '
-                            f'was {type(dt)}')
-        self._dt = dt
+        self._dt = cast_to_sym(dt, 'dt')
 
-    def get_dt(self) -> sp.Basic:
+    def get_dt(self) -> sp.Expr:
         """
         Gets the time derivative
 
@@ -431,18 +419,14 @@ class State(ModelQuantity):
         """
         return self._dt
 
-    def get_free_symbols(self) -> Set[sp.Basic]:
+    def get_free_symbols(self) -> Set[sp.Symbol]:
         """
-        Gets the set of free symbols in time derivative and inital conditions
+        Gets the set of free symbols in time derivative and initial conditions
 
         :return:
             free symbols
         """
-        symbols = self._dt.free_symbols
-        if isinstance(self._value, sp.Basic):
-            symbols = symbols.union(self._value.free_symbols)
-
-        return symbols
+        return self._dt.free_symbols.union(self._value.free_symbols)
 
 
 class ConservationLaw(ModelQuantity):
@@ -3329,3 +3313,29 @@ def symbol_with_assumptions(name: str):
         symbol with canonical assumptions
     """
     return sp.Symbol(name, real=True)
+
+
+def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
+                input_name: str) -> sp.Expr:
+    """
+    Typecasts the value to float or an symbolic expression, if possible
+
+    :param value:
+        value to be cast
+
+    :param input_name:
+        name of input variable
+
+    :return:
+        typecast value
+    """
+    if isinstance(value, (sp.RealNumber, numbers.Number)):
+        value = sp.Float(float(value))
+    elif isinstance(value, BooleanAtom):
+        value = sp.Float(float(bool(value)))
+
+    if not isinstance(value, sp.Expr):
+        raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
+                        f"{type(value)}")
+
+    return value
