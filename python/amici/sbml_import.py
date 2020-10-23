@@ -160,7 +160,7 @@ class SbmlImporter:
         self._reset_symbols()
 
         # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
-        # all defaults except disable unit parsing + rem parsing
+        # all defaults except disable unit parsing
         self.sbml_parser_settings = sbml.L3ParserSettings(
             self.sbml, sbml.L3P_PARSE_LOG_AS_LOG10,
             sbml.L3P_EXPAND_UNARY_MINUS, sbml.L3P_NO_UNITS,
@@ -1892,5 +1892,5 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
 
     if old in element.free_symbols:
         return element.subs(old, new)
-    else:
-        return element
+
+    return element
