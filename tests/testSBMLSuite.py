@@ -179,7 +179,8 @@ def concentrations_to_amounts(
             continue
 
         if species_id in wrapper.symbols[SymbolId.SPECIES]:
-            if wrapper.symbols[SymbolId.SPECIES][species_id]['amount']:
+            if wrapper.symbols[SymbolId.SPECIES][species_id]['amount'] and \
+                    species_id not in requested_concentrations:
                 continue
             comp = wrapper.symbols[SymbolId.SPECIES][species_id].get(
                 'compartment', None
