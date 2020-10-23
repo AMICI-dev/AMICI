@@ -2738,8 +2738,11 @@ class ODEExporter:
             'NP': str(self.model.num_par()),
             'NK': str(self.model.num_const()),
             'O2MODE': 'amici::SecondOrderMode::none',
-            'PARAMETERS': str(self.model.val('p'))[1:-1],
-            'FIXED_PARAMETERS': str(self.model.val('k'))[1:-1],
+            # using cxxcode ensures proper handling of nan/inf
+            'PARAMETERS': cxxcode(self.model.val('p'),
+                                  standard='c++11')[1:-1],
+            'FIXED_PARAMETERS': cxxcode(self.model.val('p'),
+                                        standard='c++11')[1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('p'),
             'STATE_NAMES_INITIALIZER_LIST':
@@ -3339,3 +3342,6 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                         f"{type(value)}")
 
     return value
+
+def replace_inf_nan(val_str: str):
+    return val_str.replace('oo', 'std::')
