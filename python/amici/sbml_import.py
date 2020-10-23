@@ -521,8 +521,10 @@ class SbmlImporter:
         else:
             conversion_factor = 1.0
 
-        self.symbols[SymbolId.SPECIES] = {
-            _get_identifier_symbol(s): {
+        for s in self.sbml.getListOfSpecies():
+            if is_assignment_rule_target(self.sbml, s):
+                continue
+            self.symbols[SymbolId.SPECIES][_get_identifier_symbol(s)] = {
                 'name': s.getName() if s.isSetName() else s.getId(),
                 'compartment': _get_species_compartment_symbol(s),
                 'constant': s.getConstant() or s.getBoundaryCondition(),
@@ -534,9 +536,6 @@ class SbmlImporter:
                 else conversion_factor,
                 'index': len(self.symbols[SymbolId.SPECIES]),
             }
-            for s in self.sbml.getListOfSpecies()
-            if not is_assignment_rule_target(self.sbml, s)
-        }
 
         self._process_species_initial()
         self._process_rate_rules()
