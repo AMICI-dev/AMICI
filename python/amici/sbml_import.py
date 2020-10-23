@@ -1084,7 +1084,8 @@ class SbmlImporter:
             return sym_math
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            sym_math = smart_subs(sym_math,species_id, species['init'])
+            if 'init' in species:
+                sym_math = smart_subs(sym_math, species_id, species['init'])
 
         return sym_math
 
