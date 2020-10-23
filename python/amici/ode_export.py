@@ -2741,7 +2741,7 @@ class ODEExporter:
             # using cxxcode ensures proper handling of nan/inf
             'PARAMETERS': cxxcode(self.model.val('p'),
                                   standard='c++11')[1:-1],
-            'FIXED_PARAMETERS': cxxcode(self.model.val('p'),
+            'FIXED_PARAMETERS': cxxcode(self.model.val('k'),
                                         standard='c++11')[1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('p'),
@@ -3342,6 +3342,3 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                         f"{type(value)}")
 
     return value
-
-def replace_inf_nan(val_str: str):
-    return val_str.replace('oo', 'std::')
