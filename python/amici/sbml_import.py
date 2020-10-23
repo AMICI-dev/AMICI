@@ -150,7 +150,7 @@ class SbmlImporter:
         # Long and short names for model components
         self.symbols: Dict[SymbolId, Dict[sp.Symbol, Dict[str, Any]]] = {}
 
-        self.local_symbols: Dict[str, sp.Expr] = {}
+        self.local_symbols: Dict[str, Union[sp.Expr, sp.Funcion]] = {}
         self.compartments: SymbolicFormula = {}
         self.compartment_assignment_rules: SymbolicFormula = {}
         self.species_assignment_rules: SymbolicFormula = {}
@@ -458,6 +458,9 @@ class SbmlImporter:
         self.local_symbols['INF'] = sp.sympify('oo')
         self.local_symbols['NaN'] = sp.nan
 
+        # rem function
+        self.local_symbols['rem'] = sp.Mod
+
         # SBML time symbol + constants
         for symbol_name in ['time', 'avogadro', 'exponentiale']:
             if symbol_name in self.local_symbols:
@@ -522,7 +525,7 @@ class SbmlImporter:
             conversion_factor = 1.0
 
         for s in self.sbml.getListOfSpecies():
-            if is_assignment_rule_target(self.sbml, s):
+            if self.is_assignment_rule_target(s):
                 continue
             self.symbols[SymbolId.SPECIES][_get_identifier_symbol(s)] = {
                 'name': s.getName() if s.isSetName() else s.getId(),
@@ -603,13 +606,13 @@ class SbmlImporter:
         # equations during the _replace_in_all_expressions call inside
         # _process_rules
         for rule in rules:
-            if rule.getFormula() == '':
-                continue
             if rule.getTypeCode() != sbml.SBML_RATE_RULE:
                 continue
 
             variable = symbol_with_assumptions(rule.getVariable())
             formula = self._sympy_from_sbml_math(rule)
+            if formula is None:
+                continue
 
             # Species rules are processed first, to avoid processing
             # compartments twice (as compartments with rate rules are
@@ -719,7 +722,7 @@ class SbmlImporter:
             in self.sbml.getListOfParameters()
             if parameter.getId() not in constant_parameters
             and self._get_element_initial_assignment(parameter.getId()) is None
-            and not is_assignment_rule_target(self.sbml, parameter)
+            and not self.is_assignment_rule_target(parameter)
         ]
 
         loop_settings = {
@@ -802,12 +805,12 @@ class SbmlImporter:
             # rate rules are processed in _process_species
             if rule.getTypeCode() == sbml.SBML_RATE_RULE:
                 continue
-            if rule.getFormula() == '':
-                continue
 
             sbml_var = self.sbml.getElementBySId(rule.getVariable())
             sym_id = symbol_with_assumptions(rule.getVariable())
             formula = self._sympy_from_sbml_math(rule)
+            if formula is None:
+                continue
 
             if isinstance(sbml_var, sbml.Species):
                 self.species_assignment_rules[sym_id] = formula
@@ -1275,8 +1278,7 @@ class SbmlImporter:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
             ), locals=self.local_symbols)
-        except (sp.SympifyError, TypeError,
-                sp.polys.polyerrors.ComputationFailed) as err:
+        except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
             raise SBMLException(f'{ele_name} "{math_string}" '
                                 'contains an unsupported expression: '
                                 f'{err}.')
@@ -1324,13 +1326,33 @@ class SbmlImporter:
             if sym is not None:
                 return sym
 
-            if is_assignment_rule_target(self.sbml, ele):
+            if self.is_assignment_rule_target(ele):
                 return _get_identifier_symbol(ele)
 
         if ele.isSetStoichiometry():
             return self._sympy_from_sbml_math(ele.getStoichiometry())
 
         return sp.Float(1.0)
+
+    def is_assignment_rule_target(self,
+                                  element: sbml.SBase) -> bool:
+        """
+        Checks if an element has a valid assignment rule in the specified model
+
+        :param model:
+            SBML model
+
+        :param element:
+            SBML variable
+
+        :return:
+            boolean indicating truth of function name
+        """
+        a = self.sbml.getAssignmentRuleByVariable(element.getId())
+        if a is None or self._sympy_from_sbml_math(a) is None:
+            return False
+
+        return True
 
 
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
@@ -1830,29 +1852,6 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
 
 def mathml(expr, **settings):
     return MathMLSbmlPrinter(settings).doprint(expr)
-
-
-def is_assignment_rule_target(model: sbml.Model, element: sbml.SBase) -> bool:
-    """
-    Checks if an element has a valid assignment rule in the specified model
-
-    :param model:
-        SBML model
-
-    :param element:
-        SBML variable
-
-    :return:
-        boolean indicating truth of function name
-    """
-    a = model.getAssignmentRuleByVariable(element.getId())
-    if a is None:
-        return False
-
-    if not a.getFormula():
-        return False
-
-    return True
 
 
 def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:

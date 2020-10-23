@@ -178,6 +178,9 @@ def concentrations_to_amounts(
         if not isinstance(wrapper.sbml.getElementBySId(species), sbml.Species):
             continue
 
+        if wrapper.symbols[SymbolId.SPECIES][species_id]['amount']:
+            continue
+
         if species_id in wrapper.symbols[SymbolId.SPECIES]:
             comp = wrapper.symbols[SymbolId.SPECIES][species_id].get(
                 'compartment', None
