@@ -2046,7 +2046,7 @@ class ODEModel:
         return n_species > 1
 
 
-def _print_with_exception(math: sp.Basic) -> str:
+def _print_with_exception(math: sp.Expr) -> str:
     """
     Generate C++ code for a symbolic expression
 
@@ -2739,10 +2739,9 @@ class ODEExporter:
             'NK': str(self.model.num_const()),
             'O2MODE': 'amici::SecondOrderMode::none',
             # using cxxcode ensures proper handling of nan/inf
-            'PARAMETERS': cxxcode(self.model.val('p'),
-                                  standard='c++11')[1:-1],
-            'FIXED_PARAMETERS': cxxcode(self.model.val('k'),
-                                        standard='c++11')[1:-1],
+            'PARAMETERS': _print_with_exception(self.model.val('p'))[1:-1],
+            'FIXED_PARAMETERS': _print_with_exception(self.model.val('k'))[
+                                1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('p'),
             'STATE_NAMES_INITIALIZER_LIST':

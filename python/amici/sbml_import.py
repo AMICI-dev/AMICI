@@ -617,7 +617,6 @@ class SbmlImporter:
             ia_init = self._get_element_initial_assignment(rule.getVariable())
             if variable in self.symbols[SymbolId.SPECIES]:
                 init = self.symbols[SymbolId.SPECIES][variable]['init']
-                component_type = sbml.SBML_SPECIES
                 name = None
 
             if variable in self.compartments:
@@ -1019,7 +1018,16 @@ class SbmlImporter:
 
             self.initial_assignments[_get_identifier_symbol(ia)] = sym_math
 
-        # flatten
+        self._flatten_initial_assignments()
+
+        for identifier, sym_math in self.initial_assignments.items():
+            self._replace_in_all_expressions(identifier, sym_math)
+
+    def _flatten_initial_assignments(self):
+        """
+        Resolves initial assignment interdependency by substituting until no
+        nested assignments remain
+        """
         contains_ia = True
         while contains_ia:
             contains_ia = False
@@ -1031,9 +1039,6 @@ class SbmlImporter:
                             sym_math, s, self.initial_assignments[s]
                         )
                 self.initial_assignments[sym_id] = sym_math
-
-        for identifier, sym_math in self.initial_assignments.items():
-            self._replace_in_all_expressions(identifier, sym_math)
 
     @log_execution_time('processing SBML species references', logger)
     def _process_species_references(self):

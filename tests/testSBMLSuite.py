@@ -175,15 +175,7 @@ def concentrations_to_amounts(
 
         # Skip species that are marked to only have substance units since
         # they are already simulated as amounts
-        if species_id in wrapper.symbols[SymbolId.SPECIES] and \
-                wrapper.symbols[SymbolId.SPECIES][species_id]['amount']:
-            continue
-
-        if species in requested_concentrations:
-            continue
-
-        if species_id in wrapper.species_assignment_rules and wrapper.sbml.\
-                getElementBySId(species).getHasOnlySubstanceUnits():
+        if not isinstance(wrapper.sbml.getElementBySId(species), sbml.Species):
             continue
 
         if species_id in wrapper.symbols[SymbolId.SPECIES]:
@@ -192,13 +184,10 @@ def concentrations_to_amounts(
             )
             if comp is None:
                 continue
-            comp = str(comp)
-        elif isinstance(wrapper.sbml.getElementBySId(species), sbml.Species):
-            comp = wrapper.sbml.getElementBySId(species).getCompartment()
         else:
-            continue
+            comp = wrapper.sbml.getElementBySId(species).getCompartment()
 
-        simulated.loc[:, species] *= simulated.loc[:, comp]
+        simulated.loc[:, species] *= simulated.loc[:, str(comp)]
 
 
 def write_result_file(simulated: pd.DataFrame,
