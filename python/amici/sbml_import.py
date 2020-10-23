@@ -532,9 +532,9 @@ class SbmlImporter:
                 )
                 if s.isSetConversionFactor()
                 else conversion_factor,
-                'index': ix,
+                'index': len(self.symbols[SymbolId.SPECIES]),
             }
-            for ix, s in enumerate(self.sbml.getListOfSpecies())
+            for s in self.sbml.getListOfSpecies()
             if not is_assignment_rule_target(self.sbml, s)
         }
 
@@ -623,7 +623,6 @@ class SbmlImporter:
 
             if variable in self.compartments:
                 init = self.compartments[variable]
-                component_type = sbml.SBML_COMPARTMENT
                 name = str(variable)
                 del self.compartments[variable]
 
@@ -633,24 +632,22 @@ class SbmlImporter:
                 )
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
                 del self.symbols[SymbolId.PARAMETER][variable]
-                component_type = sbml.SBML_PARAMETER
 
             # parameter with initial assigment, cannot use
             # self.parameter_initial_assignments as it is not filled at this
             # point
             elif ia_init is not None:
+                init = ia_init
                 par = self.sbml.getElementBySId(rule.getVariable())
                 name = par.getName() if par.isSetName() else par.getId()
-                component_type = sbml.SBML_PARAMETER
 
-            self.add_d_dt(formula, variable, init, component_type, name)
+            self.add_d_dt(formula, variable, init, name)
 
     def add_d_dt(
             self,
             d_dt: sp.Expr,
             variable: sp.Symbol,
             variable0: Union[float, sp.Expr],
-            component_type: int,
             name: str,
     ) -> None:
         """
@@ -666,15 +663,14 @@ class SbmlImporter:
         :param variable0:
             The initial value of the variable.
 
-        :param component_type:
-            The type of SBML component. Currently, species and compartments
-            are supported.
-
         :param name:
             Species name, only applicable if this function generates a new
             species
         """
-        if component_type in [sbml.SBML_COMPARTMENT, sbml.SBML_PARAMETER]:
+        if variable in self.symbols[SymbolId.SPECIES]:
+            # only update dt if species was already generated
+            self.symbols[SymbolId.SPECIES][variable]['dt'] = d_dt
+        else:
             # update initial values
             for species_id, species in self.symbols[SymbolId.SPECIES].items():
                 variable0 = smart_subs(variable0, species_id, species['init'])
@@ -687,15 +683,13 @@ class SbmlImporter:
             self.symbols[SymbolId.SPECIES][variable] = {
                 'name': name,
                 'init': variable0,
-                'amount': component_type == sbml.SBML_COMPARTMENT,
+                'amount': False,
                 'conversion_factor': 1.0,
                 'constant': False,
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': d_dt,
             }
-        elif component_type == sbml.SBML_SPECIES:
-            # SBML species are already in the species symbols
-            self.symbols[SymbolId.SPECIES][variable]['dt'] = d_dt
+
 
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
@@ -1014,18 +1008,17 @@ class SbmlImporter:
         processed in :py:func:`amici.SBMLImporter._process_initial_species` and
         :py:func:`amici.SBMLImporter._process_compartments` respectively.
         """
-        parameter_ids = [p.getId() for p in self.sbml.getListOfParameters()]
-        species_ids = [s.getId() for s in self.sbml.getListOfSpecies()]
-        comp_ids = [c.getId() for c in self.sbml.getListOfCompartments()]
         for ia in self.sbml.getListOfInitialAssignments():
-            if ia.getId() in species_ids + comp_ids:
+            identifier = _get_identifier_symbol(ia)
+            if identifier in itt.chain(self.symbols[SymbolId.SPECIES],
+                                       self.compartments):
                 continue
 
             sym_math = self._get_element_initial_assignment(ia.getId())
             if sym_math is None:
                 continue
             identifier = _get_identifier_symbol(ia)
-            if ia.getId() in parameter_ids:
+            if identifier in self.symbols[SymbolId.PARAMETER]:
                 self.parameter_initial_assignments[identifier] = sym_math
 
         # flatten
@@ -1234,10 +1227,13 @@ class SbmlImporter:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
             self._replace_in_all_expressions(old_symbol, new_symbol)
-            for symbols in self.symbols.values():
+            for symbols_ids, symbols in self.symbols.items():
                 if old_symbol in symbols:
-                    symbols[new_symbol] = symbols[old_symbol]
-                    del symbols[old_symbol]
+                    # reconstitute the whole dict in order to keep the ordering
+                    self.symbols[symbols_ids] = {
+                        new_symbol if k is old_symbol else k: v
+                        for k, v in symbols.items()
+                    }
 
     def _replace_special_constants(self) -> None:
         """

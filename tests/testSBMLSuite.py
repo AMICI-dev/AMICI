@@ -22,6 +22,7 @@ import copy
 import amici
 import numpy as np
 import pandas as pd
+import libsbml as sbml
 
 from amici.sbml_import import symbol_with_assumptions
 from amici.constants import SymbolId
@@ -189,8 +190,10 @@ def concentrations_to_amounts(
             comp = str(wrapper.symbols[SymbolId.SPECIES][
                 species_id
             ]['compartment'])
-        else:
+        elif isinstance(wrapper.sbml.getElementBySId(species), sbml.Species):
             comp = wrapper.sbml.getElementBySId(species).getCompartment()
+        else:
+            continue
 
         simulated.loc[:, species] *= simulated.loc[:, comp]
 
