@@ -102,7 +102,7 @@ class SbmlImporter:
         assignment rules for parameters, these parameters are not permissible
         for sensitivity analysis
 
-    :ivar parameter_initial_assignments:
+    :ivar initial_assignments:
         initial assignments for parameters, these parameters are not
         permissible for sensitivity analysis
 
@@ -155,7 +155,7 @@ class SbmlImporter:
         self.compartment_assignment_rules: SymbolicFormula = {}
         self.species_assignment_rules: SymbolicFormula = {}
         self.parameter_assignment_rules: SymbolicFormula = {}
-        self.parameter_initial_assignments: SymbolicFormula = {}
+        self.initial_assignments: SymbolicFormula = {}
 
         self._reset_symbols()
 
@@ -633,7 +633,7 @@ class SbmlImporter:
                 del self.symbols[SymbolId.PARAMETER][variable]
 
             # parameter with initial assigment, cannot use
-            # self.parameter_initial_assignments as it is not filled at this
+            # self.initial_assignments as it is not filled at this
             # point
             elif ia_init is not None:
                 init = ia_init
@@ -940,7 +940,7 @@ class SbmlImporter:
 
         for variable, formula in itt.chain(
                 self.parameter_assignment_rules.items(),
-                self.parameter_initial_assignments.items(),
+                self.initial_assignments.items(),
                 self.compartment_assignment_rules.items(),
                 self.species_assignment_rules.items(),
                 self.compartments.items()
@@ -1016,24 +1016,23 @@ class SbmlImporter:
             sym_math = self._get_element_initial_assignment(ia.getId())
             if sym_math is None:
                 continue
-            identifier = _get_identifier_symbol(ia)
-            if identifier in self.symbols[SymbolId.PARAMETER]:
-                self.parameter_initial_assignments[identifier] = sym_math
+
+            self.initial_assignments[_get_identifier_symbol(ia)] = sym_math
 
         # flatten
         contains_ia = True
         while contains_ia:
             contains_ia = False
-            for sym_id, sym_math in self.parameter_initial_assignments.items():
+            for sym_id, sym_math in self.initial_assignments.items():
                 for s in sym_math.free_symbols:
-                    if s in self.parameter_initial_assignments:
+                    if s in self.initial_assignments:
                         contains_ia = True
                         sym_math = smart_subs(
-                            sym_math, s, self.parameter_initial_assignments[s]
+                            sym_math, s, self.initial_assignments[s]
                         )
-                self.parameter_initial_assignments[sym_id] = sym_math
+                self.initial_assignments[sym_id] = sym_math
 
-        for identifier, sym_math in self.parameter_initial_assignments.items():
+        for identifier, sym_math in self.initial_assignments.items():
             self._replace_in_all_expressions(identifier, sym_math)
 
     @log_execution_time('processing SBML species references', logger)
@@ -1185,12 +1184,12 @@ class SbmlImporter:
 
         dictfields = [
             'compartment_assignment_rules', 'parameter_assignment_rules',
-            'parameter_initial_assignments'
+            'initial_assignments'
         ]
         for dictfield in dictfields:
             d = getattr(self, dictfield)
 
-            if dictfield == 'parameter_initial_assignments':
+            if dictfield == 'initial_assignments':
                 new = self._make_initial(new)
 
             for k in d:
