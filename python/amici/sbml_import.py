@@ -150,7 +150,7 @@ class SbmlImporter:
         # Long and short names for model components
         self.symbols: Dict[SymbolId, Dict[sp.Symbol, Dict[str, Any]]] = {}
 
-        self.local_symbols: Dict[str, Union[sp.Expr, sp.Funcion]] = {}
+        self.local_symbols: Dict[str, Union[sp.Expr, sp.Function]] = {}
         self.compartments: SymbolicFormula = {}
         self.compartment_assignment_rules: SymbolicFormula = {}
         self.species_assignment_rules: SymbolicFormula = {}
@@ -634,7 +634,7 @@ class SbmlImporter:
                 name = self.symbols[SymbolId.PARAMETER][variable]['name']
                 del self.symbols[SymbolId.PARAMETER][variable]
 
-            # parameter with initial assigment, cannot use
+            # parameter with initial assignment, cannot use
             # self.initial_assignments as it is not filled at this
             # point
             elif ia_init is not None:
@@ -1337,7 +1337,8 @@ class SbmlImporter:
     def is_assignment_rule_target(self,
                                   element: sbml.SBase) -> bool:
         """
-        Checks if an element has a valid assignment rule in the specified model
+        Checks if an element has a valid assignment rule in the specified
+        model.
 
         :param model:
             SBML model

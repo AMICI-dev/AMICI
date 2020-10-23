@@ -3320,7 +3320,8 @@ def symbol_with_assumptions(name: str):
 def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                 input_name: str) -> sp.Expr:
     """
-    Typecasts the value to float or an symbolic expression, if possible
+    Typecasts the value to sympy.Float if possible, and ensures the
+    value is a symbolic expression.
 
     :param value:
         value to be cast

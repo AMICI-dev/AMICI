@@ -184,6 +184,8 @@ def concentrations_to_amounts(
             comp = wrapper.symbols[SymbolId.SPECIES][species_id].get(
                 'compartment', None
             )
+            # Compartments and parameters that are treated as species do not
+            # exist within a compartment.
             if comp is None:
                 continue
         else:
