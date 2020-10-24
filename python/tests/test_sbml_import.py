@@ -1,6 +1,7 @@
 """Tests related to amici.sbml_import"""
 
 import os
+import re
 from urllib.request import urlopen
 import shutil
 from tempfile import TemporaryDirectory
@@ -326,6 +327,12 @@ def test_sympy_exp_monkeypatch():
     model.setTimepoints(np.linspace(0, 8, 250))
     model.requireSensitivitiesForAllParameters()
     model.setAlwaysCheckFinite(True)
+    model.setParameterScale(amici.parameterScalingFromIntVector([
+        amici.ParameterScaling.none
+        if re.match(r'n[0-9]+$', par_id)
+        else amici.ParameterScaling.log10
+        for par_id in model.getParameterIds()
+    ]))
 
     solver = model.getSolver()
     solver.setSensitivityMethod(amici.SensitivityMethod.forward)

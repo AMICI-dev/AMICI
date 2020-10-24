@@ -52,8 +52,8 @@ def _pow_eval_derivative(self, s):
     part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
     part2 = self * dexp * sp.log(self.base)
     if (dbase.is_number and not dbase.is_zero) or self.base.is_positive or \
-            dbase.is_positive or dexp.is_zero:
-        # first piece never applies or is equal to regular_derivative
+            dbase.is_positive or part2.is_zero:
+        # first piece never applies or is zero anyways
         return part1 + part2
 
     return part1 + sp.Piecewise(
