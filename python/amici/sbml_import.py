@@ -14,12 +14,14 @@ import itertools as itt
 import warnings
 import logging
 import copy
+from toposort import toposort
 from typing import (
     Dict, List, Callable, Any, Iterable, Union, Optional
 )
 
 from .ode_export import (
-    ODEExporter, ODEModel, generate_measurement_symbol, symbol_with_assumptions
+    ODEExporter, ODEModel, generate_measurement_symbol,
+    symbol_with_assumptions, SymbolDef, smart_subs_dict
 )
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
@@ -341,7 +343,6 @@ class SbmlImporter:
 
         self._process_time()
         self._clean_reserved_symbols()
-        self._replace_special_constants()
 
         ode_model = ODEModel(verbose=verbose, simplify=simplify)
         ode_model.import_from_sbml_importer(
@@ -454,24 +455,25 @@ class SbmlImporter:
             if r.isSetId():
                 self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
-        # oo is sympy infinity
-        self.local_symbols['INF'] = sp.sympify('oo')
-        self.local_symbols['NaN'] = sp.nan
-
-        # rem function
-        self.local_symbols['rem'] = sp.Mod
-
-        # SBML time symbol + constants
-        for symbol_name in ['time', 'avogadro', 'exponentiale']:
-            if symbol_name in self.local_symbols:
-                # Supporting this is probably kinda tricky and this sounds
-                # like a stupid thing to do in the first place.
+        special_symbols_and_funs = {
+            # oo is sympy infinity
+            'INF': sp.sympify('oo'),
+            'NaN': sp.nan,
+            'rem': sp.Mod,
+            'time': symbol_with_assumptions('time'),
+            # SBML L3 exlicitely defines this value, which is not equal
+            # to the most recent SI definition.
+            'avogadro': sp.Float(6.02214179e23),
+            'exponentiale': sp.E,
+        }
+        for s, v in special_symbols_and_funs.items():
+            if s in self.local_symbols:
                 raise SBMLException(
-                    'AMICI does not support SBML models  containing '
-                    f'variables with Id {symbol_name}.'
+                    'AMICI does not support SBML models containing '
+                    f'variables with SId {s}.'
                 )
-            self.local_symbols[symbol_name] = \
-                symbol_with_assumptions(symbol_name)
+            self.local_symbols[s] = v
+
 
     def _gather_dependent_locals(self):
         """
@@ -571,26 +573,13 @@ class SbmlImporter:
             if species:
                 species['init'] = initial
 
-        self._flatten_species_initial()
-
-    @log_execution_time('flattening SBML species initials', logger)
-    def _flatten_species_initial(self):
-        """
-        Flattens interdependency of species initial values
-        """
+        # don't assign this since they need to stay in order
+        sorted_species = toposort_symbols(self.symbols[SymbolId.SPECIES],
+                                          'init')
         for species in self.symbols[SymbolId.SPECIES].values():
-            nested_species = True
-            while nested_species:
-                nested_species = False
-                for symbol in species['init'].free_symbols:
-                    if symbol not in self.symbols[SymbolId.SPECIES]:
-                        continue
-
-                    nested_species = True
-                    species['init'] = smart_subs(
-                        species['init'],
-                        symbol, self.symbols[SymbolId.SPECIES][symbol]['init']
-                    )
+            species['init'] = smart_subs_dict(species['init'],
+                                              sorted_species,
+                                              'init')
 
     @log_execution_time('processing SBML rate rules', logger)
     def _process_rate_rules(self):
@@ -827,27 +816,17 @@ class SbmlImporter:
                 'value': formula
             }
 
-        self._flatten_rules_in_species_initial()
+        self.symbols[SymbolId.EXPRESSION] = toposort_symbols(
+            self.symbols[SymbolId.EXPRESSION], 'value'
+        )
 
-    def _flatten_rules_in_species_initial(self):
-        """
-        Applies AssignmentRule to species initial values until they no longer
-        contain AssignmentRule targets. This loop is explicitly necessary
-        since we currently do not allow any occurrences of expressions in
-        state initialization.
-        """
+        # expressions must not occur in definition of x0
         for species in self.symbols[SymbolId.SPECIES].values():
-            contains_rule_assignment = True
-            while contains_rule_assignment:
-                contains_rule_assignment = False
-                for s in species['init'].free_symbols:
-                    if s in self.symbols[SymbolId.EXPRESSION]:
-                        species['init'] = smart_subs(
-                            species['init'], s, self._make_initial(
-                                self.symbols[SymbolId.EXPRESSION][s]['value']
-                            )
-                        )
-                        contains_rule_assignment = True
+            species['init'] = self._make_initial(
+                smart_subs_dict(species['init'],
+                                self.symbols[SymbolId.EXPRESSION],
+                                'value')
+            )
 
     def _process_time(self) -> None:
         """
@@ -1021,27 +1000,15 @@ class SbmlImporter:
 
             self.initial_assignments[_get_identifier_symbol(ia)] = sym_math
 
-        self._flatten_initial_assignments()
+        # sort and flatten
+        self.initial_assignments = toposort_symbols(self.initial_assignments)
+        for ia_id, ia in self.initial_assignments.items():
+            self.initial_assignments[ia_id] = smart_subs_dict(
+                ia, self.initial_assignment
+            )
 
         for identifier, sym_math in self.initial_assignments.items():
             self._replace_in_all_expressions(identifier, sym_math)
-
-    def _flatten_initial_assignments(self):
-        """
-        Resolves initial assignment interdependency by substituting until no
-        nested assignments remain
-        """
-        contains_ia = True
-        while contains_ia:
-            contains_ia = False
-            for sym_id, sym_math in self.initial_assignments.items():
-                for s in sym_math.free_symbols:
-                    if s in self.initial_assignments:
-                        contains_ia = True
-                        sym_math = smart_subs(
-                            sym_math, s, self.initial_assignments[s]
-                        )
-                self.initial_assignments[sym_id] = sym_math
 
     @log_execution_time('processing SBML species references', logger)
     def _process_species_references(self):
@@ -1240,18 +1207,6 @@ class SbmlImporter:
                         new_symbol if k is old_symbol else k: v
                         for k, v in symbols.items()
                     }
-
-    def _replace_special_constants(self) -> None:
-        """
-        Replace all special constants by their respective SBML
-        csymbol definition
-        """
-        constants = [
-            (symbol_with_assumptions('avogadro'), sp.Float(6.02214179e23)),
-            (symbol_with_assumptions('exponentiale'), sp.E),
-        ]
-        for constant, value in constants:
-            self._replace_in_all_expressions(constant, value)
 
     def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
@@ -1894,3 +1849,33 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
         return element.subs(old, new)
 
     return element
+
+
+def toposort_symbols(symbols: SymbolDef,
+                     field: Optional[str] = None) -> SymbolDef:
+    """
+    Topologically sort symbol definitions according to their interdependency
+    :param symbols:
+        symbol definitions
+    :param field:
+        field of definition.values() that is used to compute interdependency
+    :return:
+        ordered symbol definitions
+    """
+    sorted_symbols = toposort({
+        identifier: {
+            s for s in (
+                definition[field].free_symbols
+                if field is not None else definition
+            )
+            if s in symbols
+        }
+        for identifier, definition
+        in symbols.items()
+    })
+    return {
+        s: symbols[s]
+        for symbol_group in sorted_symbols
+        for s in symbol_group
+    }
+

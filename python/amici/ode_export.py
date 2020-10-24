@@ -35,7 +35,6 @@ from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.logic.boolalg import BooleanAtom
 from itertools import chain
-from toposort import toposort_flatten
 
 
 from . import (
@@ -891,24 +890,6 @@ class ODEModel:
 
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
-
-        # sort expressions according to dependency
-        ordered_symbol_ids = toposort_flatten({
-            str(identifier): {
-                str(s) for s in definition['value'].free_symbols
-                if s in symbols[SymbolId.EXPRESSION]
-            }
-            for identifier, definition
-            in symbols[SymbolId.EXPRESSION].items()
-        })
-
-        symbols[SymbolId.EXPRESSION] = {
-            symbol_with_assumptions(symbol_id):
-                symbols[SymbolId.EXPRESSION][
-                    symbol_with_assumptions(symbol_id)
-                ]
-            for symbol_id in ordered_symbol_ids
-        }
         nexpr = len(symbols[SymbolId.EXPRESSION])
 
         # assemble fluxes and add them as expressions to the model
@@ -963,16 +944,8 @@ class ODEModel:
 
                 # we need to flatten out assignments in the compartment in
                 # order to ensure that we catch all species dependencies
-                contains_rule_target = True
-                while contains_rule_target:
-                    contains_rule_target = False
-                    for s in list(v.free_symbols):
-                        if s not in si.symbols[SymbolId.EXPRESSION]:
-                            continue
-                        v = v.subs(s,
-                                   si.symbols[SymbolId.EXPRESSION][s]['value'])
-                        contains_rule_target = True
-
+                v = smart_subs_dict(v, si.symbols[SymbolId.EXPRESSION],
+                                    'value')
                 dv_dt = v.diff(si.amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
@@ -3342,3 +3315,32 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                         f"{type(value)}")
 
     return value
+
+
+SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
+
+
+def smart_subs_dict(sym: sp.Expr,
+                    subs: SymbolDef,
+                    field: Optional[str] = None) -> sp.Expr:
+    """
+    Subsitutes expressions completely flattening them out. Requires
+    sorting of expressions with toposort.
+
+    :param sym:
+        Symbolic expression in which expressions will be substituted
+
+    :param subs:
+        Substitutions
+
+    :param field:
+        field of substitution expressions in subs.values(), if applicable
+
+    :return:
+        Substituted symbolic expression
+    """
+    return sym.subs({
+        eid: expr[field] if field is not None else expr
+        for eid, expr in subs.items()
+        if eid in sym.free_symbols
+    })
