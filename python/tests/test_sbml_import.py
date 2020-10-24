@@ -334,7 +334,9 @@ def test_sympy_exp_monkeypatch():
     rdata = amici.runAmiciSimulation(model, solver)
 
     # print sensitivity-related results
-    assert not np.isnan(rdata['sy']).any()
+    assert rdata['status'] == amici.AMICI_SUCCESS
+    check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
+                      epsilon=1e-3)
 
 
 def normal_nllh(m, y, sigma):

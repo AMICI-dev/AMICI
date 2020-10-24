@@ -49,16 +49,17 @@ from .constants import SymbolId
 def _pow_eval_derivative(self, s):
     dbase = self.base.diff(s)
     dexp = self.exp.diff(s)
-    regular_derivative = self * (dexp * sp.log(self.base) +
-                                 dbase * self.exp/self.base)
+    part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
+    part2 = self * dexp * sp.log(self.base)
     if (dbase.is_number and not dbase.is_zero) or self.base.is_positive or \
             dbase.is_positive or dexp.is_zero:
         # first piece never applies or is equal to regular_derivative
-        return regular_derivative
-    return sp.piecewise_fold(sp.Piecewise(
+        return part1 + part2
+
+    return part1 + sp.Piecewise(
         (sp.sympify(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
-        (regular_derivative, True)
-    ))
+        (part2, True)
+    )
 
 
 sp.Pow._eval_derivative = _pow_eval_derivative
