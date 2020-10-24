@@ -1855,10 +1855,13 @@ def toposort_symbols(symbols: SymbolDef,
                      field: Optional[str] = None) -> SymbolDef:
     """
     Topologically sort symbol definitions according to their interdependency
+
     :param symbols:
         symbol definitions
+
     :param field:
         field of definition.values() that is used to compute interdependency
+    
     :return:
         ordered symbol definitions
     """
