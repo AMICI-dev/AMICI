@@ -27,8 +27,7 @@ from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
+from sympy.logic.boolalg import BooleanAtom
 from sympy.printing.mathml import MathMLContentPrinter
 
 # the following import can be removed when sympy 1.6.3 is released
@@ -473,7 +472,6 @@ class SbmlImporter:
                     f'variables with SId {s}.'
                 )
             self.local_symbols[s] = v
-
 
     def _gather_dependent_locals(self):
         """
@@ -998,6 +996,9 @@ class SbmlImporter:
             if sym_math is None:
                 continue
 
+            sym_math = self._make_initial(smart_subs_dict(
+                sym_math, self.symbols[SymbolId.EXPRESSION], 'value'
+            ))
             self.initial_assignments[_get_identifier_symbol(ia)] = sym_math
 
         # sort and flatten
@@ -1052,6 +1053,9 @@ class SbmlImporter:
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
             if 'init' in species:
                 sym_math = smart_subs(sym_math, species_id, species['init'])
+
+        sym_math = smart_subs(sym_math, self.local_symbols['time'],
+                              sp.Float(0))
 
         return sym_math
 
@@ -1413,10 +1417,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
         #  it the complete expression consists only of a Boolean value.
-        if isinstance(sym, spTrue):
-            sym = sp.Float(1.0)
-        elif isinstance(sym, spFalse):
-            sym = sp.Float(0.0)
+        if isinstance(sym, BooleanAtom):
+            sym = sp.Float(int(bool(sym)))
 
     return sym
 
@@ -1773,43 +1775,6 @@ def _get_list_of_species_references(sbml_model: sbml.Model) \
     ]
 
 
-class MathMLSbmlPrinter(MathMLContentPrinter):
-    """
-    Prints a SymPy expression to a MathML expression parsable by libSBML.
-
-    Differences from :class:`sympy.MathMLContentPrinter`:
-
-    1. underscores in symbol names are not converted to subscripts
-    2. symbols with name 'time' are converted to the SBML time symbol
-    """
-    def _print_Symbol(self, sym):
-        ci = self.dom.createElement(self.mathml_tag(sym))
-        ci.appendChild(self.dom.createTextNode(sym.name))
-        return ci
-
-    # _print_Float can be removed when sympy 1.6.3 is released
-    def _print_Float(self, expr):
-        x = self.dom.createElement(self.mathml_tag(expr))
-        repr_expr = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
-        x.appendChild(self.dom.createTextNode(repr_expr))
-        return x
-
-    def doprint(self, expr):
-        mathml_str = super().doprint(expr)
-        mathml_str = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + \
-                     mathml_str + '</math>'
-        mathml_str = mathml_str.replace(
-            '<ci>time</ci>',
-            '<csymbol encoding="text" definitionURL='
-            '"http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
-        )
-        return mathml_str
-
-
-def mathml(expr, **settings):
-    return MathMLSbmlPrinter(settings).doprint(expr)
-
-
 def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     """
     Replace logX(.) by log(., X) since sympy cannot parse the former
@@ -1861,7 +1826,7 @@ def toposort_symbols(symbols: SymbolDef,
 
     :param field:
         field of definition.values() that is used to compute interdependency
-    
+
     :return:
         ordered symbol definitions
     """

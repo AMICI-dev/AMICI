@@ -125,7 +125,7 @@ def verify_results(settings, rdata, expected, wrapper,
     concentrations_to_amounts(amount_species, wrapper, simulated,
                               requested_concentrations)
 
-    # simulated may contain `obdect` dtype columns and `expected` may
+    # simulated may contain `object` dtype columns and `expected` may
     # contain `np.int64` columns so we cast everything to `np.float64`.
     for variable in variables:
         assert np.isclose(
@@ -180,7 +180,7 @@ def concentrations_to_amounts(
 
         if species_id in wrapper.symbols[SymbolId.SPECIES]:
             if wrapper.symbols[SymbolId.SPECIES][species_id]['amount'] and \
-                    species_id not in requested_concentrations:
+                    species not in requested_concentrations:
                 continue
             comp = wrapper.symbols[SymbolId.SPECIES][species_id].get(
                 'compartment', None
@@ -190,7 +190,11 @@ def concentrations_to_amounts(
             if comp is None:
                 continue
         else:
-            comp = wrapper.sbml.getElementBySId(species).getCompartment()
+            s = wrapper.sbml.getElementBySId(species)
+            if s.getHasOnlySubstanceUnits() and \
+                    species not in requested_concentrations:
+                continue
+            comp = s.getCompartment()
 
         simulated.loc[:, species] *= simulated.loc[:, str(comp)]
 
