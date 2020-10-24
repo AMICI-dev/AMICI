@@ -45,9 +45,6 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
 
 void ForwardProblem::workForwardProblem() {
     FinalStateStorer fss(this);
-    if(model->nx_solver == 0){
-        return;
-    }
 
     auto presimulate = edata && edata->t_presim > 0;
 
