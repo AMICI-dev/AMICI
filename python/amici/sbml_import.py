@@ -1413,12 +1413,11 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         ) for piece in grouper(args, 2, True)))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
-    elif toplevel:
+    elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
         #  it the complete expression consists only of a Boolean value.
-        if isinstance(sym, BooleanAtom):
-            sym = sp.Float(int(bool(sym)))
+        sym = sp.Float(int(bool(sym)))
 
     return sym
 

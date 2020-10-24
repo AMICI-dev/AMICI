@@ -179,22 +179,23 @@ def concentrations_to_amounts(
             continue
 
         if species_id in wrapper.symbols[SymbolId.SPECIES]:
-            if wrapper.symbols[SymbolId.SPECIES][species_id]['amount'] and \
-                    species not in requested_concentrations:
-                continue
+            is_amt = wrapper.symbols[SymbolId.SPECIES][species_id]['amount']
             comp = wrapper.symbols[SymbolId.SPECIES][species_id].get(
                 'compartment', None
             )
-            # Compartments and parameters that are treated as species do not
-            # exist within a compartment.
-            if comp is None:
-                continue
         else:
             s = wrapper.sbml.getElementBySId(species)
-            if s.getHasOnlySubstanceUnits() and \
-                    species not in requested_concentrations:
-                continue
+            is_amt = s.getHasOnlySubstanceUnits()
             comp = s.getCompartment()
+
+        # Compartments and parameters that are treated as species do not
+        # exist within a compartment.
+        # Species with OnlySubstanceUnits don't have to be converted as long
+        # as we don't request concentrations for them. Only applies when
+        # called from amounts_to_concentrations.
+        if (is_amt and species not in requested_concentrations) \
+                or comp is None:
+            continue
 
         simulated.loc[:, species] *= simulated.loc[:, str(comp)]
 
