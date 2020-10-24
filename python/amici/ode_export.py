@@ -44,6 +44,25 @@ from . import (
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
 
+
+# monkeypatch sympy derivative for exp
+def _pow_eval_derivative(self, s):
+    dbase = self.base.diff(s)
+    dexp = self.exp.diff(s)
+    regular_derivative = self * (dexp * sp.log(self.base) +
+                                 dbase * self.exp/self.base)
+    if (dbase.is_number and not dbase.is_zero) or self.base.is_positive or \
+            dbase.is_positive or dexp.is_zero:
+        # first piece never applies or is equal to regular_derivative
+        return regular_derivative
+    return sp.piecewise_fold(sp.Piecewise(
+        (sp.sympify(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
+        (regular_derivative, True)
+    ))
+
+
+sp.Pow._eval_derivative = _pow_eval_derivative
+
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
 # Template for model/swig/CMakeLists.txt
@@ -2095,8 +2114,9 @@ def _get_sym_lines_symbols(symbols: sp.Matrix,
 
     """
 
-    return [' ' * indent_level + f'{sym} = {_print_with_exception(math)};' \
-                                 f'  // {variable}[{index}]'
+    return [f'{" " * indent_level}{sym} = {_print_with_exception(math)};'
+            f'  // {variable}[{index}]'.replace('\n',
+                                                '\n' + ' ' * indent_level)
             for index, (sym, math) in enumerate(zip(symbols, equations))
             if not (math == 0 or math == 0.0)]
 

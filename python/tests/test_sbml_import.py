@@ -1,6 +1,7 @@
 """Tests related to amici.sbml_import"""
 
 import os
+from urllib.request import urlopen
 import shutil
 from tempfile import TemporaryDirectory
 
@@ -308,6 +309,32 @@ def test_units(model_units_module):
 
     rdata = amici.runAmiciSimulation(model, solver)
     assert rdata['status'] == amici.AMICI_SUCCESS
+
+
+def test_sympy_exp_monkeypatch():
+    url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
+          'filename=BIOMD0000000529_url.xml'
+    importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
+                                  from_file=False)
+    module_name = 'BIOMD0000000529'
+    outdir = 'BIOMD0000000529'
+    importer.sbml2amici(module_name, outdir)
+    model_module = amici.import_model_module(module_name=module_name,
+                                             module_path=outdir)
+
+    model = model_module.getModel()
+    model.setTimepoints(np.linspace(0, 8, 250))
+    model.requireSensitivitiesForAllParameters()
+    model.setAlwaysCheckFinite(True)
+
+    solver = model.getSolver()
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+    rdata = amici.runAmiciSimulation(model, solver)
+
+    # print sensitivity-related results
+    assert not np.isnan(rdata['sy']).any()
 
 
 def normal_nllh(m, y, sigma):
