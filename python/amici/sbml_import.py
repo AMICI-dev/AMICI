@@ -1865,9 +1865,8 @@ def toposort_symbols(symbols: SymbolDef,
     sorted_symbols = toposort({
         identifier: {
             s for s in (
-                definition[field].free_symbols
-                if field is not None else definition
-            )
+                definition[field] if field is not None else definition
+            ).free_symbols
             if s in symbols
         }
         for identifier, definition
