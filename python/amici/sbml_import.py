@@ -1004,7 +1004,7 @@ class SbmlImporter:
         self.initial_assignments = toposort_symbols(self.initial_assignments)
         for ia_id, ia in self.initial_assignments.items():
             self.initial_assignments[ia_id] = smart_subs_dict(
-                ia, self.initial_assignment
+                ia, self.initial_assignments
             )
 
         for identifier, sym_math in self.initial_assignments.items():
