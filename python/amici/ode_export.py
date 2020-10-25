@@ -45,24 +45,26 @@ from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
 
 
-# monkeypatch sympy derivative for exp
-def _pow_eval_derivative(self, s):
-    dbase = self.base.diff(s)
-    dexp = self.exp.diff(s)
-    part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
-    part2 = self * dexp * sp.log(self.base)
-    if (dbase.is_number and not dbase.is_zero) or self.base.is_positive or \
-            dbase.is_positive or part2.is_zero:
-        # first piece never applies or is zero anyways
-        return part1 + part2
+# Specialized Pow Function with customized derivative
+class AmiPow(sp.Pow):
+    def _eval_derivative(self, s):
+        dbase = self.base.diff(s)
+        dexp = self.exp.diff(s)
+        part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
+        part2 = self * dexp * sp.log(self.base)
+        if dbase.is_nonzero or self.base.is_nonzero  or dbase.is_nonzero or \
+                part2.is_zero:
+            # first piece never applies or is zero anyways
+            return part1 + part2
 
-    return part1 + sp.Piecewise(
-        (sp.sympify(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
-        (part2, True)
-    )
+        return part1 + sp.Piecewise(
+            (sp.sympify(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
+            (part2, True)
+        )
 
+    def __repr__(self):
+        return 'AmiPow'
 
-sp.Pow._eval_derivative = _pow_eval_derivative
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -3335,7 +3337,8 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
         raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
                         f"{type(value)}")
 
-    return value
+    # use Pow function with custom derivative
+    return value.replace(sp.Pow, AmiPow)
 
 
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
