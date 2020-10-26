@@ -28,10 +28,6 @@ from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanAtom
-from sympy.printing.mathml import MathMLContentPrinter
-
-# the following import can be removed when sympy 1.6.3 is released
-from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 
 class SBMLException(Exception):
@@ -87,7 +83,7 @@ class SbmlImporter:
     :ivar flux_vector:
         reaction kinetic laws
 
-    :ivar local_symbols:
+    :ivar _local_symbols:
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
 
@@ -151,7 +147,7 @@ class SbmlImporter:
         # Long and short names for model components
         self.symbols: Dict[SymbolId, Dict[sp.Symbol, Dict[str, Any]]] = {}
 
-        self.local_symbols: Dict[str, Union[sp.Expr, sp.Function]] = {}
+        self._local_symbols: Dict[str, Union[sp.Expr, sp.Function]] = {}
         self.compartments: SymbolicFormula = {}
         self.compartment_assignment_rules: SymbolicFormula = {}
         self.species_assignment_rules: SymbolicFormula = {}
@@ -200,7 +196,7 @@ class SbmlImporter:
         Reset the symbols attribute to default values
         """
         self.symbols = copy.deepcopy(default_symbols)
-        self.local_symbols = dict()
+        self._local_symbols = dict()
 
     def sbml2amici(self,
                    model_name: str = None,
@@ -437,22 +433,6 @@ class SbmlImporter:
         Populate self.local_symbols with pure symbol definitions that do not
         depend on any other symbol.
         """
-        species_references = _get_list_of_species_references(self.sbml)
-        for c in itt.chain(self.sbml.getListOfSpecies(),
-                           self.sbml.getListOfParameters(),
-                           self.sbml.getListOfCompartments(),
-                           species_references):
-            if c.getId():
-                self.local_symbols[c.getId()] = _get_identifier_symbol(c)
-
-        for r in self.sbml.getListOfRules():
-            self.local_symbols[r.getVariable()] = symbol_with_assumptions(
-                r.getVariable()
-            )
-
-        for r in self.sbml.getListOfReactions():
-            if r.isSetId():
-                self.local_symbols[r.getId()] = _get_identifier_symbol(r)
 
         special_symbols_and_funs = {
             # oo is sympy infinity
@@ -466,12 +446,23 @@ class SbmlImporter:
             'exponentiale': sp.E,
         }
         for s, v in special_symbols_and_funs.items():
-            if s in self.local_symbols:
-                raise SBMLException(
-                    'AMICI does not support SBML models containing '
-                    f'variables with SId {s}.'
-                )
-            self.local_symbols[s] = v
+            self.add_local_symbol(s, v)
+
+        species_references = _get_list_of_species_references(self.sbml)
+        for c in itt.chain(self.sbml.getListOfSpecies(),
+                           self.sbml.getListOfParameters(),
+                           self.sbml.getListOfCompartments(),
+                           species_references):
+            if c.getId():
+                self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
+
+        for r in self.sbml.getListOfRules():
+            self.add_local_symbol(r.getVariable(),
+                                  symbol_with_assumptions(r.getVariable()))
+
+        for r in self.sbml.getListOfReactions():
+            if r.isSetId():
+                self.add_local_symbol(r.getId(), _get_identifier_symbol(r))
 
     def _gather_dependent_locals(self):
         """
@@ -481,16 +472,38 @@ class SbmlImporter:
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
                 if e.isSetId() and e.isSetStoichiometry() and \
-                        e.getId() not in self.local_symbols:
-                    self.local_symbols[e.getId()] = self._sympy_from_sbml_math(
-                        e.getStoichiometry()
+                        not self.is_assignment_rule_target(e):
+                    self.add_local_symbol(
+                        e.getId(),
+                        self._sympy_from_sbml_math(e.getStoichiometry())
                     )
 
         for r in self.sbml.getListOfReactions():
             if r.isSetId():
-                self.local_symbols[r.getId()] = self._sympy_from_sbml_math(
-                    r.getKineticLaw()
+                self.add_local_symbol(
+                    r.getId(),
+                    self._sympy_from_sbml_math(r.getKineticLaw())
                 )
+
+    def add_local_symbol(self, key: str, value: sp.Expr):
+        """
+        Add local symbols with some sanity checking for duplication which
+        would indicate redefinition of internals, which SBML permits,
+        but we don't.
+
+        :param key:
+            local symbol key
+
+        :param value:
+            local symbol value
+        """
+        if key in itt.chain(self._local_symbols.keys(),
+                            ['True', 'False', 'pi']):
+            raise SBMLException(
+                'AMICI does not support SBML models containing '
+                f'variables with SId {key}.'
+            )
+        self._local_symbols[key] = value
 
     @log_execution_time('processing SBML compartments', logger)
     def _process_compartments(self) -> None:
@@ -769,7 +782,7 @@ class SbmlImporter:
                         sign * stoichiometry * species['conversion_factor']
 
             if reaction.isSetId():
-                sym_math = self.local_symbols[reaction.getId()]
+                sym_math = self._local_symbols[reaction.getId()]
             else:
                 sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
 
@@ -1054,7 +1067,7 @@ class SbmlImporter:
             if 'init' in species:
                 sym_math = smart_subs(sym_math, species_id, species['init'])
 
-        sym_math = smart_subs(sym_math, self.local_symbols['time'],
+        sym_math = smart_subs(sym_math, self._local_symbols['time'],
                               sp.Float(0))
 
         return sym_math
@@ -1236,7 +1249,7 @@ class SbmlImporter:
         try:
             formula = sp.sympify(_parse_logical_operators(
                 math_string
-            ), locals=self.local_symbols)
+            ), locals=self._local_symbols)
         except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
             raise SBMLException(f'{ele_name} "{math_string}" '
                                 'contains an unsupported expression: '
