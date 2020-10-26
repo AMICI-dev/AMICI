@@ -313,6 +313,11 @@ def test_units(model_units_module):
 
 
 def test_sympy_exp_monkeypatch():
+    """
+    This model contains a removeable discontinuity at t=0 that requires
+    monkeypatching sympy.Pow._eval_derivative in order to be able to compute
+    non-nan sensitivities
+    """
     url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
           'filename=BIOMD0000000529_url.xml'
     importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
