@@ -3352,7 +3352,6 @@ def smart_subs_dict(sym: sp.Expr,
     })
 
 
-# https://gist.github.com/rectangletangle/0a0d5a2e84dd3178d348
 @contextlib.contextmanager
 def _monkeypatched(obj: object, name: str, patch: Any):
     """
