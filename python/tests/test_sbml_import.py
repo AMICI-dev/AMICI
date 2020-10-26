@@ -321,7 +321,6 @@ def test_sympy_exp_monkeypatch():
     module_name = 'BIOMD0000000529'
     outdir = 'BIOMD0000000529'
 
-
     importer.sbml2amici(module_name, outdir)
     model_module = amici.import_model_module(module_name=module_name,
                                              module_path=outdir)
