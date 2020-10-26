@@ -213,28 +213,34 @@ def export_steadystates(
         * the steady state values of the state variables as table content`.
     """
 
-    # Find those combinations of preequilibration and simulation condition,
-    # where measurements in steady state are available
-    timepoints = list(petab_problem.measurement_df['time'])
-    measurement_ids = [i for i, t in enumerate(timepoints) if np.isinf(t)]
-
-    if not measurement_ids:
-        # no steady state conditions found. Return an empty dataframe.
-        return pd.DataFrame(columns=amici_model.getStateIds(), index=[], data=[])
-
     # if steady state measurements are available: get the simulation conditions
-    steadystate_conditions = _find_steadystate_conditions(petab_problem,
-                                                          measurement_ids)
+    steadystate_conditions = _find_steadystate_conditions(petab_problem)
 
     if simulation_conditions is not None:
         # filter simulation conditions for steadystate simulations
         simulation_conditions = _filter_simulation_conditions(
             simulation_conditions, steadystate_conditions)
+    else:
+        simulation_conditions = steadystate_conditions
+    # get a list identifying the conditions to be simulated
+    condition_list = _create_condition_list(simulation_conditions)
 
     if edatas is not None:
-        # filter simulation conditions for steadystate simulations
+        # edatas overwrites simulation_conditions: Overwrite condition_list.
+        condition_list = [f'edata_{ie}' for ie, edata in enumerate(edatas)
+                          if any(np.isinf(edata.getTimepoints()))]
+        # filter edata objects for steadystate simulations
         edatas = [edata for edata in edatas
                   if any(np.isinf(edata.getTimepoints()))]
+
+    if not condition_list:
+        if export_file is not None:
+            logging.warning('No output file could be written, as no matching '
+                            'preequilibration and simulation condition with '
+                            'steady state data was found.')
+        # no steady state conditions found. Return an empty dataframe.
+        return pd.DataFrame(columns=amici_model.getStateIds(),
+                            index=[], data=[])
 
     # simulate the model
     sim_results = simulate_petab(petab_problem=petab_problem,
@@ -251,22 +257,14 @@ def export_steadystates(
     steady_states = np.array([rdata['x'][-1,:]
                               for rdata in sim_results['rdatas']])
     # create dataframe
-    condition_list = []
-    for id in list(steadystate_conditions.index):
-        if steadystate_conditions.loc[id, 'preequilibrationConditionId'] == '':
-            condition_list.append(steadystate_conditions.loc[
-                                   id, 'simulationConditionId'])
-        else:
-            condition_list.append(
-                steadystate_conditions.loc[id, 'preequilibrationConditionId']
-                + ':' + steadystate_conditions.loc[id, 'simulationConditionId']
-            )
     steady_state_df = pd.DataFrame(columns=amici_model.getStateIds(),
         index=condition_list, data=steady_states)
 
     # export to file (if requested)
     if export_file is not None:
         steady_state_df.to_csv(export_file, sep=sep, index=False)
+
+    return steady_state_df
 
 
 def create_parameterized_edatas(
@@ -742,31 +740,39 @@ def _get_measurements_and_sigmas(
     return y, sigma_y
 
 
-def _find_steadystate_conditions(petab_problem: petab.Problem,
-                                 measurement_ids: Sequence[numbers.Number],
-    ) -> pd.DataFrame:
+def _find_steadystate_conditions(petab_problem: petab.Problem) -> pd.DataFrame:
     """
     Find simulation conditions which have steadystate data
 
     :param petab_problem:
         PEtab problem to work on.
 
-    :param measurement_ids:
-        List of measurement indices in PEtab problem, with inf as timepoint.
-
     :return:
         dataframe with conditions having steadystate measurements
     """
+    # Find those combinations of preequilibration and simulation condition,
+    # where measurements in steady state are available
+    timepoints = list(petab_problem.measurement_df['time'])
+    measurement_ids = [i for i, t in enumerate(timepoints) if np.isinf(t)]
+
+    if not measurement_ids:
+        # no steady state conditions found. Return an empty dataframe.
+        return pd.DataFrame(columns=('preequilibrationConditionId',
+                                     'simulationConditionId'),
+                            index=[], data=[])
+
     # get simulation conditions with timepoint 'inf' make unique
     steadystate_conditions = petab_problem.measurement_df.loc[measurement_ids,
         ('preequilibrationConditionId', 'simulationConditionId')]
     steadystate_conditions = steadystate_conditions.drop_duplicates()
 
-    # pandas reads in "NaN" if a cell is empty. Correct that.
-    steadystate_conditions['preequilibrationConditionId'] = [
-        '' if np.isnan(preeq_cond) else str(preeq_cond)
-        for preeq_cond in steadystate_conditions['preequilibrationConditionId']
-    ]
+    # pandas sometimes reads in "NaN" if a cell is empty. Correct that.
+    for i_cond in steadystate_conditions.index:
+        tmp = steadystate_conditions.loc[i_cond, 'preequilibrationConditionId']
+        if type(tmp) == float and np.isnan(tmp):
+                steadystate_conditions.loc[i_cond,
+                                           'preequilibrationConditionId'] = ''
+
     steadystate_conditions.drop_duplicates(inplace=True)
 
     return steadystate_conditions
@@ -788,25 +794,50 @@ def _filter_simulation_conditions(simulation_conditions: pd.DataFrame,
         dataframe with conditions passed by user restricted to having
         steadystate measurements
     """
-    # if we don't need a preequilibration condition, drop the column
-    if 'preequilibrationConditionId' not in simulation_conditions.keys():
-        steadystate_conditions.drop('preequilibrationConditionId',
-                                    axis=1, inplace=True)
+    steadystate_tuples = [
+        (steadystate_conditions.loc[id, 'preequilibrationConditionId'],
+         steadystate_conditions.loc[id, 'simulationConditionId'])
+        for id in list(steadystate_conditions.index)
+    ]
+
+    # to avoid if-else-switches due to (non-)existing preequilibrationCondition
+    # column: Add a column, if not yet there
+    if 'preequilibrationConditionId' not in simulation_conditions.columns:
+        simulation_conditions['preequilibrationConditionId'] = \
+            [''] * simulation_conditions.shape[0]
 
     # if conditions were passed drop those without steadystate measurements
-    for id in list(steadystate_conditions.index):
-        if steadystate_conditions.loc[id, 'simulationConditionId'] \
-                not in simulation_conditions['simulationConditionId']:
-            steadystate_conditions.drop(id, axis=0, inplace=True)
-            continue
+    for id in list(simulation_conditions.index):
+        if (simulation_conditions.loc[id, 'preequilibrationConditionId'],
+            simulation_conditions.loc[id, 'simulationConditionId']) not in \
+                steadystate_tuples:
+            simulation_conditions.drop(id, axis=0, inplace=True)
 
-        if 'preequilibrationConditionId' in steadystate_conditions.keys() \
-                and steadystate_conditions.loc[id,
-                    'preequilibrationConditionId'] not in \
-                simulation_conditions['preequilibrationConditionId']:
-            steadystate_conditions.drop(id, axis=0, inplace=True)
+    return simulation_conditions
 
-    return steadystate_conditions
+
+def _create_condition_list(simulation_conditions: pd.DataFrame) -> List[str]:
+    """
+    Create a list identifying the preequilibration and simulation conditions
+
+    :param simulation_conditions:
+        dataframe with simulation conditions passed by user
+
+    :return:
+        list with the preequilibration and simulation conditions
+    """
+    condition_list = []
+    for id in list(simulation_conditions.index):
+        if simulation_conditions.loc[id, 'preequilibrationConditionId'] == '':
+            condition_list.append(simulation_conditions.loc[
+                                      id, 'simulationConditionId'])
+        else:
+            condition_list.append(
+                simulation_conditions.loc[id, 'preequilibrationConditionId']
+                + ':' + simulation_conditions.loc[id, 'simulationConditionId']
+            )
+
+    return condition_list
 
 
 def rdatas_to_measurement_df(
