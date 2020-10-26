@@ -3320,7 +3320,6 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
         raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
                         f"{type(value)}")
 
-    # use Pow function with custom derivative
     return value
 
 
