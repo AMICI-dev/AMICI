@@ -1936,7 +1936,7 @@ void Model::fdwdw(const realtype t, const realtype *x) {
           state_.total_cl.data());
     
     if (always_check_finite_) {
-        app->checkFinite(gsl::make_span(dwdw_.get()), "dwdx");
+        app->checkFinite(gsl::make_span(dwdw_.get()), "dwdw");
     }
 }
 

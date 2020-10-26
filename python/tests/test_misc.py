@@ -102,5 +102,5 @@ def test_monkeypatch():
                         _custom_pow_eval_derivative):
         assert (t ** n).diff(t).subs(vals) is not sp.nan
 
-    # check that the monkeypatch is transiet
+    # check that the monkeypatch is transient
     assert (t ** n).diff(t).subs(vals) is sp.nan
