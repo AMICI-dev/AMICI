@@ -3370,8 +3370,10 @@ def _monkeypatched(obj: object, name: str, patch: Any):
     """
     pre_patched_value = getattr(obj, name)
     setattr(obj, name, patch)
-    yield object
-    setattr(obj, name, pre_patched_value)
+    try:
+        yield object
+    finally:
+        setattr(obj, name, pre_patched_value)
 
 
 def _custom_pow_eval_derivative(self, s):
