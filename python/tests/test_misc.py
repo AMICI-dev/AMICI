@@ -8,6 +8,7 @@ import amici
 import libsbml
 import pytest
 import sympy as sp
+from amici.ode_export import _monkeypatched, _custom_pow_eval_derivative
 
 
 def test_parameter_scaling_from_int_vector():
@@ -85,3 +86,21 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
     subprocess.run(cmd, shell=True, check=True,
                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def test_monkeypatch():
+    t = sp.Symbol('t')
+    n = sp.Symbol('n')
+    vals = [(t, 0),
+            (n, 1)]
+
+    # check that the removable singularity still exists
+    assert (t**n).diff(t).subs(vals) is sp.nan
+
+    # check that we can monkeypatch it out
+    with _monkeypatched(sp.Pow, '_eval_derivative',
+                        _custom_pow_eval_derivative):
+        assert (t ** n).diff(t).subs(vals) is not sp.nan
+
+    # check that the monkeypatch is transiet
+    assert (t ** n).diff(t).subs(vals) is sp.nan

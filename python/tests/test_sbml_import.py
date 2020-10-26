@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 import amici
 import libsbml
 import numpy as np
+import sympy as sp
 import pytest
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
@@ -319,6 +320,8 @@ def test_sympy_exp_monkeypatch():
                                   from_file=False)
     module_name = 'BIOMD0000000529'
     outdir = 'BIOMD0000000529'
+
+
     importer.sbml2amici(module_name, outdir)
     model_module = amici.import_model_module(module_name=module_name,
                                              module_path=outdir)

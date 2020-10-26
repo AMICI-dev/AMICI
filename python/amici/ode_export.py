@@ -19,6 +19,7 @@ import copy
 import numbers
 import logging
 import itertools
+import contextlib
 
 try:
     import pysb
@@ -27,7 +28,7 @@ except ImportError:
 
 from typing import (
     Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
-    Set,
+    Set, Any
 )
 from string import Template
 import sympy.printing.cxxcode as cxxcode
@@ -43,27 +44,6 @@ from . import (
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
-
-
-# Specialized Pow Function with customized derivative
-class AmiPow(sp.Pow):
-    def _eval_derivative(self, s):
-        dbase = self.base.diff(s)
-        dexp = self.exp.diff(s)
-        part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
-        part2 = self * dexp * sp.log(self.base)
-        if dbase.is_nonzero or self.base.is_nonzero  or dbase.is_nonzero or \
-                part2.is_zero:
-            # first piece never applies or is zero anyways
-            return part1 + part2
-
-        return part1 + sp.Piecewise(
-            (sp.sympify(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
-            (part2, True)
-        )
-
-    def __repr__(self):
-        return 'AmiPow'
 
 
 # Template for model simulation main.cpp file
@@ -2233,9 +2213,12 @@ class ODEExporter:
 
 
         """
-        self._prepare_model_folder()
-        self._generate_c_code()
-        self._generate_m_code()
+        with _monkeypatched(sp.Pow, '_eval_derivative',
+                            _custom_pow_eval_derivative):
+
+            self._prepare_model_folder()
+            self._generate_c_code()
+            self._generate_m_code()
 
     @log_execution_time('compiling cpp code', logger)
     def compile_model(self) -> None:
@@ -3338,7 +3321,7 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                         f"{type(value)}")
 
     # use Pow function with custom derivative
-    return value.replace(sp.Pow, AmiPow)
+    return value
 
 
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
@@ -3368,3 +3351,54 @@ def smart_subs_dict(sym: sp.Expr,
         for eid, expr in subs.items()
         if eid in sym.free_symbols
     })
+
+
+# https://gist.github.com/rectangletangle/0a0d5a2e84dd3178d348
+@contextlib.contextmanager
+def _monkeypatched(obj: object, name: str, patch: Any):
+    """
+    Temporarily monkeypatches an object.
+
+    :param obj:
+        object to be patched
+
+    :param name:
+        name of the attribute to be patched
+
+    :param patch:
+        patched value
+
+    """
+    pre_patched_value = getattr(obj, name)
+    setattr(obj, name, patch)
+    yield object
+    setattr(obj, name, pre_patched_value)
+
+
+def _custom_pow_eval_derivative(self, s):
+    """
+    Custom Pow derivative that removes a removeable singularity for
+    self.base == 0 and self.base.diff(s) == 0. This function is intended to
+    be monkeypatched into sp.Pow._eval_derivative.
+
+    :param self:
+        sp.Pow class
+
+    :param s:
+        variable with respect to which the derivative will be computed
+
+    """
+    dbase = self.base.diff(s)
+    dexp = self.exp.diff(s)
+    part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
+    part2 = self * dexp * sp.log(self.base)
+    if dbase.is_nonzero or self.base.is_nonzero or dbase.is_nonzero or \
+            part2.is_zero:
+        # first piece never applies or is zero anyways
+        return part1 + part2
+
+    return part1 + sp.Piecewise(
+        (
+            sp.sympify(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
+        (part2, True)
+    )
