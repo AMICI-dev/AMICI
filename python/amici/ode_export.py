@@ -3392,8 +3392,7 @@ def _custom_pow_eval_derivative(self, s):
     dexp = self.exp.diff(s)
     part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
     part2 = self * dexp * sp.log(self.base)
-    if dbase.is_nonzero or self.base.is_nonzero or dbase.is_nonzero or \
-            part2.is_zero:
+    if self.base.is_nonzero or dbase.is_nonzero or part2.is_zero:
         # first piece never applies or is zero anyways
         return part1 + part2
 
