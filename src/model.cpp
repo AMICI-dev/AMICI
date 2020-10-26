@@ -1119,6 +1119,7 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
         app->checkFinite(state_.fixedParameters, "k");
         app->checkFinite(state_.unscaledParameters, "p");
         app->checkFinite(w_, "w");
+        app->checkFinite(ts_, "t");
     }
 
     return result;
