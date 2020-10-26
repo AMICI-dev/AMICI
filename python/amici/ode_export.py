@@ -3397,7 +3397,6 @@ def _custom_pow_eval_derivative(self, s):
         return part1 + part2
 
     return part1 + sp.Piecewise(
-        (
-            sp.Float(0.0), sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
+        (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
         (part2, True)
     )
