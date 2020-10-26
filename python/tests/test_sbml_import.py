@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 import amici
 import libsbml
 import numpy as np
-import sympy as sp
 import pytest
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
