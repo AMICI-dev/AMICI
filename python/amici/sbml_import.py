@@ -1306,7 +1306,7 @@ class SbmlImporter:
                 return _get_identifier_symbol(ele)
 
         if ele.isSetStoichiometry():
-            return self._sympy_from_sbml_math(ele.getStoichiometry())
+            return sp.Float(ele.getStoichiometry())
 
         return sp.Float(1.0)
 
