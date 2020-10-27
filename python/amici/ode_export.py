@@ -945,7 +945,7 @@ class ODEModel:
                 # we need to flatten out assignments in the compartment in
                 # order to ensure that we catch all species dependencies
                 v = smart_subs_dict(v, si.symbols[SymbolId.EXPRESSION],
-                                    True, 'value')
+                                    'value')
                 dv_dt = v.diff(si.amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
@@ -3322,7 +3322,7 @@ SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 def smart_subs_dict(sym: sp.Expr,
                     subs: SymbolDef,
-                    reverse: False,
+                    reverse: bool = True,
                     field: Optional[str] = None) -> sp.Expr:
     """
     Subsitutes expressions completely flattening them out. Requires

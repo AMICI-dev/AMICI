@@ -5,6 +5,7 @@ import subprocess
 from tempfile import TemporaryDirectory
 
 import amici
+from amici.ode_export import smart_subs_dict
 import libsbml
 import pytest
 import sympy as sp
@@ -85,3 +86,24 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
     subprocess.run(cmd, shell=True, check=True,
                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def test_smart_subs_dict():
+    expr_str = 'c + d'
+    subs_dict = {
+        'c': 'a + b',
+        'd': 'c + a',
+    }
+    expected_default_str = '3*a + 2*b'
+    expected_reverse_str = '2*a + b + c'
+
+    expr_sym = sp.sympify(expr_str)
+    subs_sym = {sp.sympify(k): sp.sympify(v) for k, v in subs_dict.items()}
+    expected_default = sp.sympify(expected_default_str)
+    expected_reverse = sp.sympify(expected_reverse_str)
+
+    result_default = smart_subs_dict(expr_sym, subs_sym)
+    result_reverse = smart_subs_dict(expr_sym, subs_sym, reverse=False)
+
+    assert sp.simplify(result_default - expected_default).is_zero
+    assert sp.simplify(result_reverse - expected_reverse).is_zero
