@@ -453,16 +453,28 @@ class SbmlImporter:
                            self.sbml.getListOfParameters(),
                            self.sbml.getListOfCompartments(),
                            species_references):
-            if c.getId():
-                self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
+            if not c.getId():
+                continue
+
+            self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
         for r in self.sbml.getListOfRules():
+            if not isinstance(self.sbml.getElementBySId(r.getVariable()),
+                              sbml.SpeciesReference) \
+                    or self._sympy_from_sbml_math(r) is None:
+                continue
+
             self.add_local_symbol(r.getVariable(),
                                   symbol_with_assumptions(r.getVariable()))
 
         for r in self.sbml.getListOfReactions():
-            if r.isSetId():
-                self.add_local_symbol(r.getId(), _get_identifier_symbol(r))
+            for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
+                if not (e.isSetId() and e.isSetStoichiometry()) or \
+                        self.is_assignment_rule_target(e):
+                    continue
+
+                self.add_local_symbol(e.getId(),
+                                      sp.Float(e.getStoichiometry()))
 
     def _gather_dependent_locals(self):
         """
@@ -470,20 +482,12 @@ class SbmlImporter:
         other symbol definitions.
         """
         for r in self.sbml.getListOfReactions():
-            for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
-                if e.isSetId() and e.isSetStoichiometry() and \
-                        not self.is_assignment_rule_target(e):
-                    self.add_local_symbol(
-                        e.getId(),
-                        self._sympy_from_sbml_math(e.getStoichiometry())
-                    )
-
-        for r in self.sbml.getListOfReactions():
-            if r.isSetId():
-                self.add_local_symbol(
-                    r.getId(),
-                    self._sympy_from_sbml_math(r.getKineticLaw())
-                )
+            if not r.isSetId():
+                continue
+            self.add_local_symbol(
+                r.getId(),
+                self._sympy_from_sbml_math(r.getKineticLaw())
+            )
 
     def add_local_symbol(self, key: str, value: sp.Expr):
         """
