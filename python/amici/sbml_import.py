@@ -594,6 +594,7 @@ class SbmlImporter:
         for species in self.symbols[SymbolId.SPECIES].values():
             species['init'] = smart_subs_dict(species['init'],
                                               sorted_species,
+                                              True,
                                               'init')
 
     @log_execution_time('processing SBML rate rules', logger)
@@ -840,6 +841,7 @@ class SbmlImporter:
             species['init'] = self._make_initial(
                 smart_subs_dict(species['init'],
                                 self.symbols[SymbolId.EXPRESSION],
+                                True,
                                 'value')
             )
 
@@ -1014,7 +1016,7 @@ class SbmlImporter:
                 continue
 
             sym_math = self._make_initial(smart_subs_dict(
-                sym_math, self.symbols[SymbolId.EXPRESSION], 'value'
+                sym_math, self.symbols[SymbolId.EXPRESSION], True, 'value'
             ))
             self.initial_assignments[_get_identifier_symbol(ia)] = sym_math
 
@@ -1022,7 +1024,7 @@ class SbmlImporter:
         self.initial_assignments = toposort_symbols(self.initial_assignments)
         for ia_id, ia in self.initial_assignments.items():
             self.initial_assignments[ia_id] = smart_subs_dict(
-                ia, self.initial_assignments
+                ia, self.initial_assignments, True
             )
 
         for identifier, sym_math in self.initial_assignments.items():

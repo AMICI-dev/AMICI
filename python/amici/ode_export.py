@@ -945,7 +945,7 @@ class ODEModel:
                 # we need to flatten out assignments in the compartment in
                 # order to ensure that we catch all species dependencies
                 v = smart_subs_dict(v, si.symbols[SymbolId.EXPRESSION],
-                                    'value')
+                                    True, 'value')
                 dv_dt = v.diff(si.amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
@@ -3322,6 +3322,7 @@ SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 def smart_subs_dict(sym: sp.Expr,
                     subs: SymbolDef,
+                    reverse: False,
                     field: Optional[str] = None) -> sp.Expr:
     """
     Subsitutes expressions completely flattening them out. Requires
@@ -3334,13 +3335,24 @@ def smart_subs_dict(sym: sp.Expr,
         Substitutions
 
     :param field:
-        field of substitution expressions in subs.values(), if applicable
+        Field of substitution expressions in subs.values(), if applicable
+
+    :param reverse:
+        Whether ordering in subs should be reversed. Note that substitution
+        requires the reverse order of what is required for evaluation.
 
     :return:
         Substituted symbolic expression
     """
-    return sym.subs({
-        eid: expr[field] if field is not None else expr
+    s = [
+        (eid, expr[field] if field is not None else expr)
         for eid, expr in subs.items()
-        if eid in sym.free_symbols
-    })
+    ]
+    if reverse:
+        s.reverse()
+    for substitution in s:
+        # note that substitution may change free symbols, so we have to do
+        # this recursively
+        if substitution[0] in sym.free_symbols:
+            sym = sym.subs(*substitution)
+    return sym
