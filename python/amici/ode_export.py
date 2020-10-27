@@ -3328,8 +3328,8 @@ SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 def smart_subs_dict(sym: sp.Expr,
                     subs: SymbolDef,
-                    reverse: bool = True,
-                    field: Optional[str] = None) -> sp.Expr:
+                    field: Optional[str] = None,
+                    reverse: bool = True) -> sp.Expr:
     """
     Subsitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
