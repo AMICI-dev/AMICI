@@ -1,6 +1,8 @@
 """Tests related to amici.sbml_import"""
 
 import os
+import re
+from urllib.request import urlopen
 import shutil
 from tempfile import TemporaryDirectory
 
@@ -308,6 +310,48 @@ def test_units(model_units_module):
 
     rdata = amici.runAmiciSimulation(model, solver)
     assert rdata['status'] == amici.AMICI_SUCCESS
+
+
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='Avoid `CERTIFICATE_VERIFY_FAILED` error')
+def test_sympy_exp_monkeypatch():
+    """
+    This model contains a removeable discontinuity at t=0 that requires
+    monkeypatching sympy.Pow._eval_derivative in order to be able to compute
+    non-nan sensitivities
+    """
+    url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
+          'filename=BIOMD0000000529_url.xml'
+    importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
+                                  from_file=False)
+    module_name = 'BIOMD0000000529'
+    outdir = 'BIOMD0000000529'
+
+    importer.sbml2amici(module_name, outdir)
+    model_module = amici.import_model_module(module_name=module_name,
+                                             module_path=outdir)
+
+    model = model_module.getModel()
+    model.setTimepoints(np.linspace(0, 8, 250))
+    model.requireSensitivitiesForAllParameters()
+    model.setAlwaysCheckFinite(True)
+    model.setParameterScale(amici.parameterScalingFromIntVector([
+        amici.ParameterScaling.none
+        if re.match(r'n[0-9]+$', par_id)
+        else amici.ParameterScaling.log10
+        for par_id in model.getParameterIds()
+    ]))
+
+    solver = model.getSolver()
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+    rdata = amici.runAmiciSimulation(model, solver)
+
+    # print sensitivity-related results
+    assert rdata['status'] == amici.AMICI_SUCCESS
+    check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
+                      epsilon=1e-3)
 
 
 def normal_nllh(m, y, sigma):

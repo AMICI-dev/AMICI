@@ -9,6 +9,7 @@ from amici.ode_export import smart_subs_dict
 import libsbml
 import pytest
 import sympy as sp
+from amici.ode_export import _monkeypatched, _custom_pow_eval_derivative
 
 
 def test_parameter_scaling_from_int_vector():
@@ -107,3 +108,21 @@ def test_smart_subs_dict():
 
     assert sp.simplify(result_default - expected_default).is_zero
     assert sp.simplify(result_reverse - expected_reverse).is_zero
+
+    
+def test_monkeypatch():
+    t = sp.Symbol('t')
+    n = sp.Symbol('n')
+    vals = [(t, 0),
+            (n, 1)]
+
+    # check that the removable singularity still exists
+    assert (t**n).diff(t).subs(vals) is sp.nan
+
+    # check that we can monkeypatch it out
+    with _monkeypatched(sp.Pow, '_eval_derivative',
+                        _custom_pow_eval_derivative):
+        assert (t ** n).diff(t).subs(vals) is not sp.nan
+
+    # check that the monkeypatch is transient
+    assert (t ** n).diff(t).subs(vals) is sp.nan
