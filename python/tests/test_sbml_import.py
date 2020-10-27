@@ -312,8 +312,8 @@ def test_units(model_units_module):
     assert rdata['status'] == amici.AMICI_SUCCESS
 
 
-@pytest.skipif(os.name == 'nt',
-               reason='Avoid `CERTIFICATE_VERIFY_FAILED` error')
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='Avoid `CERTIFICATE_VERIFY_FAILED` error')
 def test_sympy_exp_monkeypatch():
     """
     This model contains a removeable discontinuity at t=0 that requires
