@@ -19,6 +19,7 @@ import copy
 import numbers
 import logging
 import itertools
+import contextlib
 
 try:
     import pysb
@@ -27,7 +28,7 @@ except ImportError:
 
 from typing import (
     Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
-    Set,
+    Set, Any
 )
 from string import Template
 import sympy.printing.cxxcode as cxxcode
@@ -43,6 +44,7 @@ from . import (
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
+
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -2095,8 +2097,9 @@ def _get_sym_lines_symbols(symbols: sp.Matrix,
 
     """
 
-    return [' ' * indent_level + f'{sym} = {_print_with_exception(math)};' \
-                                 f'  // {variable}[{index}]'
+    return [f'{" " * indent_level}{sym} = {_print_with_exception(math)};'
+            f'  // {variable}[{index}]'.replace('\n',
+                                                '\n' + ' ' * indent_level)
             for index, (sym, math) in enumerate(zip(symbols, equations))
             if not (math == 0 or math == 0.0)]
 
@@ -2210,9 +2213,12 @@ class ODEExporter:
 
 
         """
-        self._prepare_model_folder()
-        self._generate_c_code()
-        self._generate_m_code()
+        with _monkeypatched(sp.Pow, '_eval_derivative',
+                            _custom_pow_eval_derivative):
+
+            self._prepare_model_folder()
+            self._generate_c_code()
+            self._generate_m_code()
 
     @log_execution_time('compiling cpp code', logger)
     def compile_model(self) -> None:
@@ -3344,3 +3350,53 @@ def smart_subs_dict(sym: sp.Expr,
         for eid, expr in subs.items()
         if eid in sym.free_symbols
     })
+
+
+@contextlib.contextmanager
+def _monkeypatched(obj: object, name: str, patch: Any):
+    """
+    Temporarily monkeypatches an object.
+
+    :param obj:
+        object to be patched
+
+    :param name:
+        name of the attribute to be patched
+
+    :param patch:
+        patched value
+
+    """
+    pre_patched_value = getattr(obj, name)
+    setattr(obj, name, patch)
+    try:
+        yield object
+    finally:
+        setattr(obj, name, pre_patched_value)
+
+
+def _custom_pow_eval_derivative(self, s):
+    """
+    Custom Pow derivative that removes a removeable singularity for
+    self.base == 0 and self.base.diff(s) == 0. This function is intended to
+    be monkeypatched into sp.Pow._eval_derivative.
+
+    :param self:
+        sp.Pow class
+
+    :param s:
+        variable with respect to which the derivative will be computed
+
+    """
+    dbase = self.base.diff(s)
+    dexp = self.exp.diff(s)
+    part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
+    part2 = self * dexp * sp.log(self.base)
+    if self.base.is_nonzero or dbase.is_nonzero or part2.is_zero:
+        # first piece never applies or is zero anyways
+        return part1 + part2
+
+    return part1 + sp.Piecewise(
+        (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
+        (part2, True)
+    )

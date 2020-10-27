@@ -146,7 +146,7 @@ tests/SBMLTestModels/
 tests/benchmark-models/test_bmc
 tests/petab_test_suite
 petab_test_suite
-/python/test/amici-SBMLTest*/
+*/tests/BIOMD0000000529/*
 
 python/examples/example_steadystate/model_steadystate_scaled/*
 python/examples/example_presimulation/model_presimulation/*
@@ -190,3 +190,4 @@ tests/performance/CS_Signalling_ERBB_RAS_AKT/
 tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*
 coverage_SBMLSuite.xml
 Benchmark-Models-PEtab/
+
