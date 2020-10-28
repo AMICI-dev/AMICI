@@ -139,7 +139,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
 
         if (edata && solver.computingASA()) {
-            bwd_success = false;
             fwd->getAdjointUpdates(model, *edata);
             if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
@@ -147,10 +146,12 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                                        bwd.get());
             }
 
+            bwd_success = false;
 
             bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
             bwd->workBackwardProblem();
 
+            bwd_success = true;
 
             if (preeq) {
                 ConditionContext cc2(&model, edata,
@@ -158,7 +159,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 preeq->workSteadyStateBackwardProblem(&solver, &model,
                                                       bwd.get());
             }
-            bwd_success = true;
         }
 
         rdata->status = AMICI_SUCCESS;
