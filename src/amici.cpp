@@ -111,6 +111,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     std::unique_ptr<ForwardProblem> fwd {};
     std::unique_ptr<BackwardProblem> bwd {};
     std::unique_ptr<SteadystateProblem> posteq {};
+    // tracks whether backwards integration finished without exceptions
+    bool bwd_success = true;
 
     try {
         if (solver.getPreequilibration() ||
@@ -137,6 +139,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
 
         if (edata && solver.computingASA()) {
+            bwd_success = false;
             fwd->getAdjointUpdates(model, *edata);
             if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
@@ -155,6 +158,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 preeq->workSteadyStateBackwardProblem(&solver, &model,
                                                       bwd.get());
             }
+            bwd_success = true;
         }
 
         rdata->status = AMICI_SUCCESS;
@@ -187,8 +191,10 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.getBacktrace());
     }
 
-    rdata->processSimulationObjects(preeq.get(), fwd.get(), bwd.get(),
-                                    posteq.get(), model, solver, edata);
+    rdata->processSimulationObjects(
+        preeq.get(), fwd.get(),
+        bwd_success?bwd.get():nullptr,
+        posteq.get(), model, solver, edata);
     return rdata;
 }
 
