@@ -193,7 +193,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
     rdata->processSimulationObjects(
         preeq.get(), fwd.get(),
-        bwd_success?bwd.get():nullptr,
+        bwd_success ? bwd.get() : nullptr,
         posteq.get(), model, solver, edata);
     return rdata;
 }
