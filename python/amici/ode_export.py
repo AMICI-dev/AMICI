@@ -3328,7 +3328,8 @@ SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 def smart_subs_dict(sym: sp.Expr,
                     subs: SymbolDef,
-                    field: Optional[str] = None) -> sp.Expr:
+                    field: Optional[str] = None,
+                    reverse: bool = True) -> sp.Expr:
     """
     Subsitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
@@ -3340,16 +3341,27 @@ def smart_subs_dict(sym: sp.Expr,
         Substitutions
 
     :param field:
-        field of substitution expressions in subs.values(), if applicable
+        Field of substitution expressions in subs.values(), if applicable
+
+    :param reverse:
+        Whether ordering in subs should be reversed. Note that substitution
+        requires the reverse order of what is required for evaluation.
 
     :return:
         Substituted symbolic expression
     """
-    return sym.subs({
-        eid: expr[field] if field is not None else expr
+    s = [
+        (eid, expr[field] if field is not None else expr)
         for eid, expr in subs.items()
-        if eid in sym.free_symbols
-    })
+    ]
+    if reverse:
+        s.reverse()
+    for substitution in s:
+        # note that substitution may change free symbols, so we have to do
+        # this recursively
+        if substitution[0] in sym.free_symbols:
+            sym = sym.subs(*substitution)
+    return sym
 
 
 @contextlib.contextmanager
