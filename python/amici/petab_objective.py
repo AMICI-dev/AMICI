@@ -788,7 +788,7 @@ def _filter_simulation_conditions(simulation_conditions: pd.DataFrame,
         dataframe with simulation conditions passed by user
 
     :param steadystate_conditions:
-        ddataframe with simulation conditions with all steadystate measurements
+        Dataframe with simulation conditions with all steadystate measurements
 
     :return:
         dataframe with conditions passed by user restricted to having
