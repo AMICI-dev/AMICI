@@ -336,8 +336,8 @@ class SbmlImporter:
         self._process_observables(observables, sigmas, noise_distributions)
         self._replace_compartments_with_volumes()
 
-        self._process_time()
         self._clean_reserved_symbols()
+        self._process_time()
 
         ode_model = ODEModel(verbose=verbose, simplify=simplify)
         ode_model.import_from_sbml_importer(
@@ -1185,12 +1185,37 @@ class SbmlImporter:
         for dictfield in dictfields:
             d = getattr(self, dictfield)
 
+            # replace identifiers
+            if old in d:
+                d[new] = d[old]
+                del d[old]
+
             if dictfield == 'initial_assignments':
-                new = self._make_initial(new)
+                tmp_new = self._make_initial(new)
+            else:
+                tmp_new = new
 
+            # replace values
             for k in d:
-                d[k] = smart_subs(d[k], old, new)
+                d[k] = smart_subs(d[k], old, tmp_new)
 
+        # replace in identifiers
+        for symbol in [SymbolId.EXPRESSION, SymbolId.SPECIES]:
+            # completely recreate the dict to keep ordering consistent
+            if old not in self.symbols[symbol]:
+                continue
+            self.symbols[symbol] = {
+                smart_subs(k, old, new): v
+                for k, v in self.symbols[symbol].items()
+            }
+
+        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY]:
+            if old not in self.symbols[symbol]:
+                continue
+            self.symbols[symbol][new] = self.symbols[symbol][old]
+            del self.symbols[symbol][old]
+
+        # replace in values
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
                        SymbolId.EXPRESSION]:
             if not self.symbols.get(symbol, None):
@@ -1209,14 +1234,14 @@ class SbmlImporter:
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
         subs = 0 if getattr(self, 'amici_time_symbol', sp.nan) == new else new
-        self.compartments = {c: smart_subs(v, old, subs)
+        self.compartments = {smart_subs(c, old, subs): smart_subs(v, old, subs)
                              for c, v in self.compartments.items()}
 
     def _clean_reserved_symbols(self) -> None:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't']
         for sym in reserved_symbols:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
