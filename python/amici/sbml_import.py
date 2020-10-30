@@ -1227,14 +1227,15 @@ class SbmlImporter:
             for species in self.symbols[SymbolId.SPECIES].values():
                 species['init'] = smart_subs(species['init'],
                                              old, self._make_initial(new))
-                if 'dt' in species:
-                    species['dt'] = smart_subs(species['dt'], old, new)
+                for field in ['dt', 'compartment']:
+                    if field in species:
+                        species[field] = smart_subs(species[field], old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
-        subs = 0 if getattr(self, 'amici_time_symbol', sp.nan) == new else new
-        self.compartments = {smart_subs(c, old, subs): smart_subs(v, old, subs)
+        self.compartments = {smart_subs(c, old, new):
+                                 smart_subs(v, old, self._make_initial(new))
                              for c, v in self.compartments.items()}
 
     def _clean_reserved_symbols(self) -> None:
