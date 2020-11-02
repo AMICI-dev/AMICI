@@ -188,7 +188,9 @@ def concentrations_to_amounts(
                 or comp is None:
             continue
 
-        simulated.loc[:, species] *= simulated.loc[:, str(comp)]
+        simulated.loc[:, species] *= simulated.loc[
+            :, comp if comp in simulated.columns else 'amici_' + comp
+        ]
 
 
 def write_result_file(simulated: pd.DataFrame,
