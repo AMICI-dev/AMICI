@@ -1241,7 +1241,7 @@ class SbmlImporter:
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
         self.compartments = {smart_subs(c, old, new) if replace_identifiers
-                             else old:
+                             else c:
                              smart_subs(v, old, self._make_initial(new))
                              for c, v in self.compartments.items()}
 
