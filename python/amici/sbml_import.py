@@ -1025,7 +1025,7 @@ class SbmlImporter:
                 ia, self.initial_assignments
             )
 
-        for identifier, sym_math in self.initial_assignments.items():
+        for identifier, sym_math in list(self.initial_assignments.items()):
             self._replace_in_all_expressions(identifier, sym_math)
 
     @log_execution_time('processing SBML species references', logger)
