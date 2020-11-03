@@ -171,23 +171,14 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        species_id = symbol_with_assumptions(species)
-
+        s = wrapper.sbml.getElementBySId(species)
         # Skip species that are marked to only have substance units since
         # they are already simulated as amounts
-        if not isinstance(wrapper.sbml.getElementBySId(species), sbml.Species):
+        if not isinstance(s, sbml.Species):
             continue
 
-        if species_id in wrapper.symbols[SymbolId.SPECIES]:
-            is_amt = wrapper.symbols[SymbolId.SPECIES][species_id]['amount']
-            comp = wrapper.symbols[SymbolId.SPECIES][species_id].get(
-                'compartment', None
-            )
-        else:
-            s = wrapper.sbml.getElementBySId(species)
-            is_amt = s.getHasOnlySubstanceUnits()
-            comp = s.getCompartment()
-
+        is_amt = s.getHasOnlySubstanceUnits()
+        comp = s.getCompartment()
         # Compartments and parameters that are treated as species do not
         # exist within a compartment.
         # Species with OnlySubstanceUnits don't have to be converted as long
@@ -197,7 +188,9 @@ def concentrations_to_amounts(
                 or comp is None:
             continue
 
-        simulated.loc[:, species] *= simulated.loc[:, str(comp)]
+        simulated.loc[:, species] *= simulated.loc[
+            :, comp if comp in simulated.columns else 'amici_' + comp
+        ]
 
 
 def write_result_file(simulated: pd.DataFrame,

@@ -1749,6 +1749,13 @@ class ODEModel:
                 while nonzeros.max():
                     nonzeros = nonzeros.dot(nonzeros)
                     self._w_recursion_depth += 1
+                    if self._w_recursion_depth > len(sym_eq):
+                        raise RuntimeError(
+                            'dwdw is not nilpotent. Something, somewhere went '
+                            'terribly wrong. Please file a bug report at '
+                            'https://github.com/AMICI-dev/AMICI/issues and '
+                            'attach this model.'
+                        )
 
         if name == 'dydw' and not smart_is_zero_matrix(derivative):
             dwdw = self.eq('dwdw')

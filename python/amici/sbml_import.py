@@ -16,7 +16,7 @@ import logging
 import copy
 from toposort import toposort
 from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional
+    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple
 )
 
 from .ode_export import (
@@ -336,8 +336,8 @@ class SbmlImporter:
         self._process_observables(observables, sigmas, noise_distributions)
         self._replace_compartments_with_volumes()
 
-        self._process_time()
         self._clean_reserved_symbols()
+        self._process_time()
 
         ode_model = ODEModel(verbose=verbose, simplify=simplify)
         ode_model.import_from_sbml_importer(
@@ -695,7 +695,6 @@ class SbmlImporter:
                 'dt': d_dt,
             }
 
-
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
                             constant_parameters: List[str] = None) -> None:
@@ -1025,7 +1024,7 @@ class SbmlImporter:
                 ia, self.initial_assignments
             )
 
-        for identifier, sym_math in self.initial_assignments.items():
+        for identifier, sym_math in list(self.initial_assignments.items()):
             self._replace_in_all_expressions(identifier, sym_math)
 
     @log_execution_time('processing SBML species references', logger)
@@ -1159,7 +1158,8 @@ class SbmlImporter:
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
-                                    new: sp.Expr) -> None:
+                                    new: sp.Expr,
+                                    replace_identifiers=False) -> None:
         """
         Replace 'old' by 'new' in all symbolic expressions.
 
@@ -1185,12 +1185,38 @@ class SbmlImporter:
         for dictfield in dictfields:
             d = getattr(self, dictfield)
 
+            # replace identifiers
+            if old in d and replace_identifiers:
+                d[new] = d[old]
+                del d[old]
+
             if dictfield == 'initial_assignments':
-                new = self._make_initial(new)
+                tmp_new = self._make_initial(new)
+            else:
+                tmp_new = new
 
+            # replace values
             for k in d:
-                d[k] = smart_subs(d[k], old, new)
+                d[k] = smart_subs(d[k], old, tmp_new)
 
+        # replace in identifiers
+        if replace_identifiers:
+            for symbol in [SymbolId.EXPRESSION, SymbolId.SPECIES]:
+                # completely recreate the dict to keep ordering consistent
+                if old not in self.symbols[symbol]:
+                    continue
+                self.symbols[symbol] = {
+                    smart_subs(k, old, new): v
+                    for k, v in self.symbols[symbol].items()
+                }
+
+            for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY]:
+                if old not in self.symbols[symbol]:
+                    continue
+                self.symbols[symbol][new] = self.symbols[symbol][old]
+                del self.symbols[symbol][old]
+
+        # replace in values
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
                        SymbolId.EXPRESSION]:
             if not self.symbols.get(symbol, None):
@@ -1202,25 +1228,33 @@ class SbmlImporter:
             for species in self.symbols[SymbolId.SPECIES].values():
                 species['init'] = smart_subs(species['init'],
                                              old, self._make_initial(new))
-                if 'dt' in species:
-                    species['dt'] = smart_subs(species['dt'], old, new)
+
+                fields = ['dt']
+                if replace_identifiers:
+                    fields.append('compartment')
+
+                for field in ['dt']:
+                    if field in species:
+                        species[field] = smart_subs(species[field], old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
-        subs = 0 if getattr(self, 'amici_time_symbol', sp.nan) == new else new
-        self.compartments = {c: smart_subs(v, old, subs)
+        self.compartments = {smart_subs(c, old, new) if replace_identifiers
+                             else c:
+                             smart_subs(v, old, self._make_initial(new))
                              for c, v in self.compartments.items()}
 
     def _clean_reserved_symbols(self) -> None:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't']
         for sym in reserved_symbols:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
-            self._replace_in_all_expressions(old_symbol, new_symbol)
+            self._replace_in_all_expressions(old_symbol, new_symbol,
+                                             replace_identifiers=True)
             for symbols_ids, symbols in self.symbols.items():
                 if old_symbol in symbols:
                     # reconstitute the whole dict in order to keep the ordering
@@ -1315,9 +1349,6 @@ class SbmlImporter:
         """
         Checks if an element has a valid assignment rule in the specified
         model.
-
-        :param model:
-            SBML model
 
         :param element:
             SBML variable
@@ -1461,7 +1492,7 @@ def _parse_logical_operators(math_str: Union[str, float, None]
 
 
 def grouper(iterable: Iterable, n: int,
-            fillvalue: Any = None) -> Iterable[Iterable]:
+            fillvalue: Any = None) -> Iterable[Tuple[Any]]:
     """
     Collect data into fixed-length chunks or blocks
 
