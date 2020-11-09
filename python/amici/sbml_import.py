@@ -439,6 +439,7 @@ class SbmlImporter:
             'INF': sp.sympify('oo'),
             'NaN': sp.nan,
             'rem': sp.Mod,
+            'times': sp.Mul,
             'time': symbol_with_assumptions('time'),
             # SBML L3 exlicitely defines this value, which is not equal
             # to the most recent SI definition.
