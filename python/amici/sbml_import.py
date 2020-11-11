@@ -423,7 +423,7 @@ class SbmlImporter:
 
         This is later used during sympifications to avoid sympy builtins
         shadowing model entities as well as to avoid possibly costly
-        symbolic substitutions/
+        symbolic substitutions
         """
         self._gather_base_locals()
         self._gather_dependent_locals()
@@ -436,11 +436,12 @@ class SbmlImporter:
 
         special_symbols_and_funs = {
             # oo is sympy infinity
-            'INF': sp.sympify('oo'),
+            'INF': sp.oo,
             'NaN': sp.nan,
             'rem': sp.Mod,
+            'times': sp.Mul,
             'time': symbol_with_assumptions('time'),
-            # SBML L3 exlicitely defines this value, which is not equal
+            # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
             'avogadro': sp.Float(6.02214179e23),
             'exponentiale': sp.E,
