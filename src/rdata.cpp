@@ -237,7 +237,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
         initializeObjectiveFunction();
 
     auto initialState = fwd.getInitialSimulationState();
-    if (initialState.x.getLength() == 0)
+    if (initialState.x.getLength() == 0 && model.nx_solver > 0)
         return; // if x wasn't set forward problem failed during initialization
     readSimulationState(initialState, model);
 

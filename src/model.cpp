@@ -1119,6 +1119,7 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
         app->checkFinite(state_.fixedParameters, "k");
         app->checkFinite(state_.unscaledParameters, "p");
         app->checkFinite(w_, "w");
+        app->checkFinite(ts_, "t");
     }
 
     return result;
@@ -1934,6 +1935,10 @@ void Model::fdwdw(const realtype t, const realtype *x) {
     fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(), w_.data(),
           state_.total_cl.data());
+    
+    if (always_check_finite_) {
+        app->checkFinite(gsl::make_span(dwdw_.get()), "dwdw");
+    }
 }
 
 void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,

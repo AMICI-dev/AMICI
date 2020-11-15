@@ -19,6 +19,7 @@ import copy
 import numbers
 import logging
 import itertools
+import contextlib
 
 try:
     import pysb
@@ -27,13 +28,15 @@ except ImportError:
 
 from typing import (
     Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
-    Set
+    Set, Any
 )
 from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy.logic.boolalg import BooleanAtom
 from itertools import chain
+
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -41,6 +44,7 @@ from . import (
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
+
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -293,19 +297,13 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        self._identifier = identifier
+        self._identifier: sp.Symbol = identifier
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
-        self._name = name
+        self._name: str = name
 
-        if isinstance(value, sp.RealNumber) \
-                or isinstance(value, numbers.Number):
-            value = float(value)
-        if not isinstance(value, sp.Expr) and not isinstance(value, float):
-            raise TypeError(f'value must be sympy.Expr or float, was '
-                            f'{type(value)}')
-        self._value = value
+        self._value: sp.Expr = cast_to_sym(value, 'value')
 
     def __repr__(self) -> str:
         """
@@ -334,7 +332,7 @@ class ModelQuantity:
         """
         return self._name
 
-    def get_val(self) -> Union[float, sp.Basic]:
+    def get_val(self) -> sp.Expr:
         """
         ModelQuantity value
 
@@ -383,11 +381,7 @@ class State(ModelQuantity):
             time derivative
         """
         super(State, self).__init__(identifier, name, init)
-        if not isinstance(dt, sp.Expr):
-            raise TypeError(f'dt must have type sympy.Expr, was '
-                            f'{type(dt)}')
-
-        self._dt = dt
+        self._dt = cast_to_sym(dt, 'dt')
         self._conservation_law = None
 
     def set_conservation_law(self,
@@ -415,12 +409,9 @@ class State(ModelQuantity):
         :param dt:
             time derivative
         """
-        if not isinstance(dt, sp.Expr):
-            raise TypeError(f'time derivative must have type sympy.Expr, '
-                            f'was {type(dt)}')
-        self._dt = dt
+        self._dt = cast_to_sym(dt, 'dt')
 
-    def get_dt(self) -> sp.Basic:
+    def get_dt(self) -> sp.Expr:
         """
         Gets the time derivative
 
@@ -429,18 +420,14 @@ class State(ModelQuantity):
         """
         return self._dt
 
-    def get_free_symbols(self) -> Set[sp.Basic]:
+    def get_free_symbols(self) -> Set[sp.Symbol]:
         """
-        Gets the set of free symbols in time derivative and inital conditions
+        Gets the set of free symbols in time derivative and initial conditions
 
         :return:
             free symbols
         """
-        symbols = self._dt.free_symbols
-        if isinstance(self._value, sp.Basic):
-            symbols = symbols.union(self._value.free_symbols)
-
-        return symbols
+        return self._dt.free_symbols.union(self._value.free_symbols)
 
 
 class ConservationLaw(ModelQuantity):
@@ -905,16 +892,12 @@ class ODEModel:
 
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
+        nexpr = len(symbols[SymbolId.EXPRESSION])
 
         # assemble fluxes and add them as expressions to the model
         fluxes = []
         for ir, flux in enumerate(si.flux_vector):
             flux_id = generate_flux_symbol(ir)
-            self.add_component(Expression(
-                identifier=flux_id,
-                name=str(flux),
-                value=flux
-            ))
             fluxes.append(flux_id)
         nr = len(fluxes)
 
@@ -960,6 +943,11 @@ class ODEModel:
                 return xdot
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
+
+                # we need to flatten out assignments in the compartment in
+                # order to ensure that we catch all species dependencies
+                v = smart_subs_dict(v, si.symbols[SymbolId.EXPRESSION],
+                                    'value')
                 dv_dt = v.diff(si.amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
@@ -1028,34 +1016,51 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol_name](**proto))
 
+        # add fluxes as expressions, this needs to happen after base
+        # expressions from symbols have been parsed
+        for flux_id, flux in zip(fluxes, si.flux_vector):
+            self.add_component(Expression(
+                identifier=flux_id,
+                name=str(flux_id),
+                value=flux
+            ))
+
         # process conservation laws
         if compute_cls:
             dxdotdw_updates = si.process_conservation_laws(self,
                                                            dxdotdw_updates)
 
-        # set derivatives of xdot, this circumvents regular computation. we
-        # do this as we can save a substantial amount of computations by
-        # knowing the right solutions here
         nx_solver = si.stoichiometric_matrix.shape[0]
         nw = len(self._expressions)
-        # append zero rows for conservation law `w`s, note that
-        # _process_conservation_laws is called after the fluxes are added as
-        # expressions, but conservation law expressions are inserted before
-        # flux expressions. If this ordering is to be changed, the following
-        # code will have to be adapted.
-        ncl = nw - nr
-        self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl).row_join(
-            si.stoichiometric_matrix
-        )
-        for ix, iw, val in dxdotdw_updates:
-            self._eqs['dxdotdw'][ix, ncl + iw] = val
+        ncl = nw - nr - nexpr
+
+        # set derivatives of xdot, if applicable. We do this as we can save
+        # a substantial amount of computations by exploiting the structure
+        # of the right hand side.
+        # the tricky part is that the expressions w do not only contain the
+        # flux entries, but also assignment rules and conservation laws.
+        # assignment rules are added before the fluxes and
+        # _process_conservation_laws is called after the fluxes,
+        # but conservation law expressions are inserted at the beginning
+        # of the self.eq['w']. Accordingly we concatenate a zero matrix (for
+        # rule assignments and conservation laws) with the stoichiometric
+        # matrix and then apply the necessary updates from
+        # transform_dxdt_to_concentration
+
+        if not any(s in [e.get_id() for e in self._expressions]
+                   for s in si.stoichiometric_matrix.free_symbols):
+            self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl + nexpr).row_join(
+                si.stoichiometric_matrix
+            )
+            for ix, iw, val in dxdotdw_updates:
+                # offset update according to concatenated zero matrix
+                self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
 
     def add_component(self, component: ModelQuantity,
-                      insert_first: Optional[bool] = False) -> \
-        None:
+                      insert_first: Optional[bool] = False) -> None:
         """
         Adds a new ModelQuantity to the model.
 
@@ -1083,8 +1088,8 @@ class ODEModel:
     def add_conservation_law(self,
                              state: sp.Symbol,
                              total_abundance: sp.Symbol,
-                             state_expr: sp.Basic,
-                             abundance_expr: sp.Basic) -> None:
+                             state_expr: sp.Expr,
+                             abundance_expr: sp.Expr) -> None:
         """
         Adds a new conservation law to the model. A conservation law is defined
         by the conserved quantity T = sum_i(a_i * x_i), where a_i are
@@ -1744,6 +1749,13 @@ class ODEModel:
                 while nonzeros.max():
                     nonzeros = nonzeros.dot(nonzeros)
                     self._w_recursion_depth += 1
+                    if self._w_recursion_depth > len(sym_eq):
+                        raise RuntimeError(
+                            'dwdw is not nilpotent. Something, somewhere went '
+                            'terribly wrong. Please file a bug report at '
+                            'https://github.com/AMICI-dev/AMICI/issues and '
+                            'attach this model.'
+                        )
 
         if name == 'dydw' and not smart_is_zero_matrix(derivative):
             dwdw = self.eq('dwdw')
@@ -2016,7 +2028,7 @@ class ODEModel:
         return n_species > 1
 
 
-def _print_with_exception(math: sp.Basic) -> str:
+def _print_with_exception(math: sp.Expr) -> str:
     """
     Generate C++ code for a symbolic expression
 
@@ -2092,8 +2104,9 @@ def _get_sym_lines_symbols(symbols: sp.Matrix,
 
     """
 
-    return [' ' * indent_level + f'{sym} = {_print_with_exception(math)};' \
-                                 f'  // {variable}[{index}]'
+    return [f'{" " * indent_level}{sym} = {_print_with_exception(math)};'
+            f'  // {variable}[{index}]'.replace('\n',
+                                                '\n' + ' ' * indent_level)
             for index, (sym, math) in enumerate(zip(symbols, equations))
             if not (math == 0 or math == 0.0)]
 
@@ -2207,9 +2220,12 @@ class ODEExporter:
 
 
         """
-        self._prepare_model_folder()
-        self._generate_c_code()
-        self._generate_m_code()
+        with _monkeypatched(sp.Pow, '_eval_derivative',
+                            _custom_pow_eval_derivative):
+
+            self._prepare_model_folder()
+            self._generate_c_code()
+            self._generate_m_code()
 
     @log_execution_time('compiling cpp code', logger)
     def compile_model(self) -> None:
@@ -2708,8 +2724,10 @@ class ODEExporter:
             'NP': str(self.model.num_par()),
             'NK': str(self.model.num_const()),
             'O2MODE': 'amici::SecondOrderMode::none',
-            'PARAMETERS': str(self.model.val('p'))[1:-1],
-            'FIXED_PARAMETERS': str(self.model.val('k'))[1:-1],
+            # using cxxcode ensures proper handling of nan/inf
+            'PARAMETERS': _print_with_exception(self.model.val('p'))[1:-1],
+            'FIXED_PARAMETERS': _print_with_exception(self.model.val('k'))[
+                                1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('p'),
             'STATE_NAMES_INITIALIZER_LIST':
@@ -3255,7 +3273,7 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     """
     if not isinstance(observable_id, str):
         observable_id = strip_pysb(observable_id)
-    return sp.Symbol(f'm{observable_id}', real=True)
+    return symbol_with_assumptions(f'm{observable_id}')
 
 
 def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
@@ -3269,4 +3287,135 @@ def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
     :return:
         identifier symbol
     """
-    return sp.Symbol(f'flux_r{reaction_index}', real=True)
+    return symbol_with_assumptions(f'flux_r{reaction_index}')
+
+
+def symbol_with_assumptions(name: str):
+    """
+    Central function to create symbols with consistent, canonical assumptions
+
+    :param name:
+        name of the symbol
+
+    :return:
+        symbol with canonical assumptions
+    """
+    return sp.Symbol(name, real=True)
+
+
+def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
+                input_name: str) -> sp.Expr:
+    """
+    Typecasts the value to sympy.Float if possible, and ensures the
+    value is a symbolic expression.
+
+    :param value:
+        value to be cast
+
+    :param input_name:
+        name of input variable
+
+    :return:
+        typecast value
+    """
+    if isinstance(value, (sp.RealNumber, numbers.Number)):
+        value = sp.Float(float(value))
+    elif isinstance(value, BooleanAtom):
+        value = sp.Float(float(bool(value)))
+
+    if not isinstance(value, sp.Expr):
+        raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
+                        f"{type(value)}")
+
+    return value
+
+
+SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
+
+
+def smart_subs_dict(sym: sp.Expr,
+                    subs: SymbolDef,
+                    field: Optional[str] = None,
+                    reverse: bool = True) -> sp.Expr:
+    """
+    Subsitutes expressions completely flattening them out. Requires
+    sorting of expressions with toposort.
+
+    :param sym:
+        Symbolic expression in which expressions will be substituted
+
+    :param subs:
+        Substitutions
+
+    :param field:
+        Field of substitution expressions in subs.values(), if applicable
+
+    :param reverse:
+        Whether ordering in subs should be reversed. Note that substitution
+        requires the reverse order of what is required for evaluation.
+
+    :return:
+        Substituted symbolic expression
+    """
+    s = [
+        (eid, expr[field] if field is not None else expr)
+        for eid, expr in subs.items()
+    ]
+    if reverse:
+        s.reverse()
+    for substitution in s:
+        # note that substitution may change free symbols, so we have to do
+        # this recursively
+        if substitution[0] in sym.free_symbols:
+            sym = sym.subs(*substitution)
+    return sym
+
+
+@contextlib.contextmanager
+def _monkeypatched(obj: object, name: str, patch: Any):
+    """
+    Temporarily monkeypatches an object.
+
+    :param obj:
+        object to be patched
+
+    :param name:
+        name of the attribute to be patched
+
+    :param patch:
+        patched value
+
+    """
+    pre_patched_value = getattr(obj, name)
+    setattr(obj, name, patch)
+    try:
+        yield object
+    finally:
+        setattr(obj, name, pre_patched_value)
+
+
+def _custom_pow_eval_derivative(self, s):
+    """
+    Custom Pow derivative that removes a removeable singularity for
+    self.base == 0 and self.base.diff(s) == 0. This function is intended to
+    be monkeypatched into sp.Pow._eval_derivative.
+
+    :param self:
+        sp.Pow class
+
+    :param s:
+        variable with respect to which the derivative will be computed
+
+    """
+    dbase = self.base.diff(s)
+    dexp = self.exp.diff(s)
+    part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
+    part2 = self * dexp * sp.log(self.base)
+    if self.base.is_nonzero or dbase.is_nonzero or part2.is_zero:
+        # first piece never applies or is zero anyways
+        return part1 + part2
+
+    return part1 + sp.Piecewise(
+        (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
+        (part2, True)
+    )
