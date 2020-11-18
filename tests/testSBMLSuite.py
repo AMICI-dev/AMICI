@@ -22,6 +22,7 @@ import copy
 import amici
 import numpy as np
 import pandas as pd
+import libsbml as sbml
 
 from amici.sbml_import import symbol_with_assumptions
 from amici.constants import SymbolId
@@ -124,12 +125,13 @@ def verify_results(settings, rdata, expected, wrapper,
     concentrations_to_amounts(amount_species, wrapper, simulated,
                               requested_concentrations)
 
-    # simulated may contain `obdect` dtype columns and `expected` may
+    # simulated may contain `object` dtype columns and `expected` may
     # contain `np.int64` columns so we cast everything to `np.float64`.
     for variable in variables:
         assert np.isclose(
             simulated[variable].astype(np.float64).values,
-            expected[variable].astype(np.float64).values, atol, rtol
+            expected[variable].astype(np.float64).values,
+            atol, rtol, equal_nan=True
         ).all(), variable
 
     return simulated[variables + ['time']]
@@ -169,19 +171,26 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
+        s = wrapper.sbml.getElementBySId(species)
         # Skip species that are marked to only have substance units since
         # they are already simulated as amounts
-        amt_species = list(set(
-            str(sid) for sid, s in wrapper.symbols[SymbolId.SPECIES].items()
-            if s['amount']
-        ).difference(requested_concentrations))
+        if not isinstance(s, sbml.Species):
+            continue
 
-        if species and species not in amt_species:
-            symvolume = wrapper.symbols[SymbolId.SPECIES][
-                symbol_with_assumptions(species)
-            ]['compartment']
+        is_amt = s.getHasOnlySubstanceUnits()
+        comp = s.getCompartment()
+        # Compartments and parameters that are treated as species do not
+        # exist within a compartment.
+        # Species with OnlySubstanceUnits don't have to be converted as long
+        # as we don't request concentrations for them. Only applies when
+        # called from amounts_to_concentrations.
+        if (is_amt and species not in requested_concentrations) \
+                or comp is None:
+            continue
 
-            simulated.loc[:, species] *= simulated.loc[:, str(symvolume)]
+        simulated.loc[:, species] *= simulated.loc[
+            :, comp if comp in simulated.columns else 'amici_' + comp
+        ]
 
 
 def write_result_file(simulated: pd.DataFrame,
