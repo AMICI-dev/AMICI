@@ -9,6 +9,10 @@ $webclient = New-Object System.Net.WebClient
 $webclient.DownloadFile($uri,"$output")
 Expand-Archive -Path "C:\BLAS\v$version.zip" -DestinationPath "C:\BLAS\OpenBLAS-v$version" -Force # expand zip file
 cmd /c "C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd $version"
+Write-Output "test: check for C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\Release\openblas.lib"
+Get-ChildItem -Path "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\Release"
+Write-Output "test: check for C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\openblas.dll"
+Get-ChildItem -Path "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib"
 # New-Item -Path 'C:\BLAS\lib' -ItemType Directory -Force # create directory
 Copy-Item "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\Release\openblas.lib" -Destination "C:\BLAS\lib" -Recurse
 # New-Item -Path 'C:\BLAS\bin' -ItemType Directory -Force # create directory
