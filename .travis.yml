@@ -34,7 +34,7 @@ matrix:
         # run BLAS installation script
         - openBLAS_version='0.3.12'
         - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1'
-        - export BLAS_LIBS="/LIBPATH:C:\\BLAS\\lib openblas.lib" BLAS_CFLAGS="-IC:/BLAS/OpenBLAS-v$openBLAS_version/OpenBLAS-$openBLAS_version"
+        - export BLAS_LIBS="/LIBPATH:C:/BLAS/lib openblas.lib" BLAS_CFLAGS="-IC:/BLAS/OpenBLAS-v$openBLAS_version/OpenBLAS-$openBLAS_version"
         - export PATH=${PATH}:C:\\BLAS\\bin
 
 install:
