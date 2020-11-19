@@ -13,9 +13,9 @@ Write-Output "test: check for C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\R
 Get-ChildItem -Path "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\Release"
 Write-Output "test: check for C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\openblas.dll"
 Get-ChildItem -Path "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib"
-# New-Item -Path 'C:\BLAS\lib' -ItemType Directory -Force # create directory
+New-Item -Path 'C:\BLAS\lib' -ItemType Directory -Force # create directory
 Copy-Item "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\Release\openblas.lib" -Destination "C:\BLAS\lib" -Recurse
-# New-Item -Path 'C:\BLAS\bin' -ItemType Directory -Force # create directory
+New-Item -Path 'C:\BLAS\bin' -ItemType Directory -Force # create directory
 Copy-Item "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\openblas.dll" -Destination "C:\BLAS\bin" -Recurse
 Get-ChildItem -Path "C:\BLAS" -Include "openblas.lib" -Recurse # check for file
 Get-ChildItem -Path "C:\BLAS" -Include "openblas.dll" -Recurse # check for file
