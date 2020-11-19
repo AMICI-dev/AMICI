@@ -7,7 +7,7 @@ $uri = "https://github.com/xianyi/OpenBLAS/archive/v$version.zip"
 $output = "C:\BLAS\v$version.zip"
 $webclient = New-Object System.Net.WebClient
 $webclient.DownloadFile($uri,"$output")
-Expand-Archive -Path "C:\BLAS\v$version.zip" -DestinationPath 'C:\BLAS\OpenBLAS-v$version" -Force # expand zip file
+Expand-Archive -Path "C:\BLAS\v$version.zip" -DestinationPath "C:\BLAS\OpenBLAS-v$version" -Force # expand zip file
 cmd /c "C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd $version"
 # New-Item -Path 'C:\BLAS\lib' -ItemType Directory -Force # create directory
 Copy-Item "C:\BLAS\OpenBLAS-v$version\OpenBLAS-$version\lib\Release\openblas.lib" -Destination "C:\BLAS\lib" -Recurse
