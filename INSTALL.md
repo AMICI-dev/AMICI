@@ -212,7 +212,7 @@ We assume that Visual Studio (not to be confused with Visual Studio Code) is alr
 
 #### openBLAS
 
-To install open BLAS, download the following scripts from AMICI:
+Installation of AMICI using MSVC also requires installation of Basic Linear Algebra Subprograms (BLAS) and OpenBLAS version 0.3.12 is known to work. To install open BLAS, download the following scripts from AMICI:
 
 https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1
 https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd
@@ -230,8 +230,8 @@ This will download openBLAS and compile it, creating
 
 You will also need to define two environment variables:
 
-    BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"
-    BLAS_CFLAGS="/IC:\BLAS\OpenBLAS-v0.3.12\OpenBLAS-0.3.12"
+    BLAS_LIBS="/LIBPATH:C:/BLAS/lib openblas.lib"
+    BLAS_CFLAGS="/IC:/BLAS/OpenBLAS-v0.3.12/OpenBLAS-0.3.12"
     
 One way to do that is to run a PowerShell script with the following commands:
 
