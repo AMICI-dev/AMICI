@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 49.
+List of publications using AMICI. Total number is 50.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -8,6 +8,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="refs" class="references">
 <div id="ref-AlabertLoo2020">
 <p>Alabert, Constance, Carolin Loos, Moritz Voelker-Albert, Simona Graziano, Ignasi Forné, Nazaret Reveron-Gomez, Lea Schuh, et al. 2020. “Domain Model Explains Propagation Dynamics and Stability of Histone H3k27 and H3k36 Methylation Landscapes.” <em>Cell Reports</em> 30 (4): 1223–1234.e8. <a href="https://doi.org/10.1016/j.celrep.2019.12.060">https://doi.org/10.1016/j.celrep.2019.12.060</a>.</p>
+</div>
+<div id="ref-Erdem2020.11.09.373407">
+<p>Erdem, Cemal, Ethan M. Bensman, Arnab Mutsuddy, Michael M. Saint-Antoine, Mehdi Bouhaddou, Robert C. Blake, Will Dodd, et al. 2020. “A Simple and Efficient Pipeline for Construction, Merging, Expansion, and Simulation of Large-Scale, Single-Cell Mechanistic Models.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.11.09.373407">https://doi.org/10.1101/2020.11.09.373407</a>.</p>
 </div>
 <div id="ref-GerosaChi2020">
 <p>Gerosa, Luca, Christopher Chidley, Fabian Fröhlich, Gabriela Sanchez, Sang Kyun Lim, Jeremy Muhlich, Jia-Yun Chen, et al. 2020. “Receptor-Driven Erk Pulses Reconfigure Mapk Signaling and Enable Persistence of Drug-Adapted Braf-Mutant Melanoma Cells.” <em>Cell Systems</em>. <a href="https://doi.org/https://doi.org/10.1016/j.cels.2020.10.002">https://doi.org/https://doi.org/10.1016/j.cels.2020.10.002</a>.</p>
