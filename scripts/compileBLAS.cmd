@@ -8,6 +8,6 @@ cmake -G "Ninja" ^
     -DCMAKE_C_COMPILER:FILEPATH=cl ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCMAKE_MAKE_PROGRAM=ninja ^
-    "C:\BLAS\OpenBLAS-v%1\OpenBLAS-%1"
+    "C:\BLAS\OpenBLAS-%1\OpenBLAS-%1"
 cmake --build "C:\BLAS\OpenBLAS-%1\OpenBLAS-%1" --parallel 2
 echo compileBLAS.cmd completed
