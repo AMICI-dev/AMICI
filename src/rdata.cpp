@@ -809,6 +809,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     for (int iy = 0; iy < nytrue; ++iy) {
         if (!edata.isSetObservedData(it, iy))
             continue;
+        int iyt = iy + it * ny;
         for (int ip = 0; ip < nplist; ++ip) {
             for (int jp = 0; jp < nplist; ++jp) {
                 FIM.at(ip + nplist * jp) +=
@@ -818,7 +819,15 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
                     *
                     amici::fsres(y_it.at(iy), sy_it.at(iy + ny * jp),
                                  observedData[iy], sigmay_it.at(iy),
-                                 ssigmay_it.at(iy + ny * jp));
+                                 ssigmay_it.at(iy + ny * jp))
+                    -
+                    ssigmay_it.at(iy + ny * ip) * ssigmay_it.at(iy + ny * jp)
+                    / pow(sigmay_it.at(iy), 2)
+                    +
+                    ssigmay_it.at(iy + ny * ip) * ssigmay_it.at(iy + ny * jp)
+                    * pow(amici::fres(y_it.at(iy), observedData[iy],
+                    sigmay_it.at(iy)), 2)
+                    / pow(sigmay_it.at(iy), 2);
             }
         }
     }
