@@ -818,11 +818,8 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
                 FIM.at(ip + nplist * jp) +=
                     amici::fsres(y_, dy_i, m, s, ds_i) *
                     amici::fsres(y_, dy_j, m, s, ds_j)
-                    // chainrule terms
-                    - (amici::fres(y_, m, s) *
-                       (dy_i * ds_i + dy_j * ds_i + dy_i * ds_j + dy_j * ds_j)
-                    // term from 0.5*log(2*pi*sigma^2) term
-                       + ds_i * ds_j ) / pow(s, 2.0);
+                    // term from 0.5*log(2*pi*sigma^2)
+                    - ds_i * ds_j / pow(s, 2.0);
             }
         }
     }
