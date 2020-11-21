@@ -730,7 +730,7 @@ static realtype fsres(realtype y, realtype sy, realtype my,
                       realtype sigma_y, realtype ssigma_y) {
     double r = fres(sy, 0.0, sigma_y);
     if (ssigma_y > 0)
-        r += fres(y, my, sigma_y * sigma_y / ssigma_y);
+        r += fres(y, my, sigma_y * sigma_y / (sqrt(3) * ssigma_y));
     return r;
 }
 
@@ -807,27 +807,25 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
 
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
+        double y_ = y_it.at(iy);
+        double m = observedData[iy];
+        double s = sigmay.at(iy);
         if (!edata.isSetObservedData(it, iy))
             continue;
-        int iyt = iy + it * ny;
         for (int ip = 0; ip < nplist; ++ip) {
+            double dy_i = sy_it.at(iy + ny * ip);
+            double ds_i = ssigmay_it.at(iy + ny * ip);
             for (int jp = 0; jp < nplist; ++jp) {
+                double dy_j = sy_it.at(iy + ny * jp);
+                double ds_j = ssigmay_it.at(iy + ny * jp);
                 FIM.at(ip + nplist * jp) +=
-                    amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
-                                 observedData[iy], sigmay_it.at(iy),
-                                 ssigmay_it.at(iy + ny * ip))
-                    *
-                    amici::fsres(y_it.at(iy), sy_it.at(iy + ny * jp),
-                                 observedData[iy], sigmay_it.at(iy),
-                                 ssigmay_it.at(iy + ny * jp))
-                    -
-                    ssigmay_it.at(iy + ny * ip) * ssigmay_it.at(iy + ny * jp)
-                    / pow(sigmay_it.at(iy), 2)
-                    +
-                    ssigmay_it.at(iy + ny * ip) * ssigmay_it.at(iy + ny * jp)
-                    * pow(amici::fres(y_it.at(iy), observedData[iy],
-                    sigmay_it.at(iy)), 2)
-                    / pow(sigmay_it.at(iy), 2);
+                    amici::fsres(y_, dy_i, m, s, ds_i) *
+                    amici::fsres(y_, dy_j, m, s, ds_j)
+                    // chainrule terms
+                    - (amici::fres(y_, m, s) *
+                       (dy_i * ds_i + dy_j * ds_i + dy_i * ds_j + dy_j * ds_j)
+                    // term from 0.5*log(2*pi*sigma^2) term
+                       + ds_i * ds_j ) / pow(s, 2.0);
             }
         }
     }
