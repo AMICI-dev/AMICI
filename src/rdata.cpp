@@ -728,10 +728,7 @@ static realtype fres(realtype y, realtype my, realtype sigma_y) {
 
 static realtype fsres(realtype y, realtype sy, realtype my,
                       realtype sigma_y, realtype ssigma_y) {
-    double r = fres(sy, 0.0, sigma_y);
-    if (ssigma_y > 0)
-        r += fres(y, my, sigma_y * sigma_y / (sqrt(3) * ssigma_y));
-    return r;
+    return fres(sy, 0.0, sigma_y) - ssigma_y * fres(y, my, sigma_y) / sigma_y;
 }
 
 void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
