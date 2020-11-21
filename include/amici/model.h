@@ -597,6 +597,11 @@ class Model : public AbstractModel {
      * @return Observable IDs
      */
     virtual std::vector<std::string> getObservableIds() const;
+    
+    /**
+     * @brief Checks whether
+     */
+    bool hasQuadraticLLH() const;
 
     /**
      * @brief Get the timepoint vector.

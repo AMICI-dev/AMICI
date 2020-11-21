@@ -22,7 +22,7 @@ ReturnData::ReturnData(Solver const &solver, const Model &model)
                  solver.getNewtonMaxSteps(), model.nw,
                  model.getParameterScale(), model.o2mode,
                  solver.getSensitivityOrder(), solver.getSensitivityMethod(),
-                 solver.getReturnDataReportingMode()) {}
+                 solver.getReturnDataReportingMode(), model.hasQuadraticLLH()) {}
 
 ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
                        int nx_solver, int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz,
@@ -30,7 +30,8 @@ ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
                        int nt, int newton_maxsteps, int nw,
                        std::vector<ParameterScaling> pscale,
                        SecondOrderMode o2mode, SensitivityOrder sensi,
-                       SensitivityMethod sensi_meth, RDataReporting rdrm)
+                       SensitivityMethod sensi_meth, RDataReporting rdrm,
+                       bool quadratic_llh)
     : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver),
       nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
       nJ(nJ), nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
@@ -41,20 +42,23 @@ ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
 
     switch (rdata_reporting) {
     case RDataReporting::full:
-        initializeFullReporting();
+        initializeFullReporting(quadratic_llh);
         break;
 
     case RDataReporting::residuals:
+        if (!quadratic_llh)
+            throw AmiException("Residual computation is not supported for "
+                               "non-quadratic log-likelihoods");
         initializeResidualReporting();
         break;
 
     case RDataReporting::likelihood:
-        initializeLikelihoodReporting();
+        initializeLikelihoodReporting(quadratic_llh);
         break;
     }
 }
 
-void ReturnData::initializeLikelihoodReporting() {
+void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
     llh = getNaN();
     chi2 = getNaN();
     if (sensi >= SensitivityOrder::first) {
@@ -62,8 +66,8 @@ void ReturnData::initializeLikelihoodReporting() {
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
 
-        if (sensi_meth == SensitivityMethod::forward ||
-            sensi >= SensitivityOrder::second)
+        if ((sensi_meth == SensitivityMethod::forward ||
+            sensi >= SensitivityOrder::second) & enable_fim)
             FIM.resize(nplist * nplist, 0.0);
     }
 }
@@ -82,10 +86,11 @@ void ReturnData::initializeResidualReporting() {
     }
 }
 
-void ReturnData::initializeFullReporting() {
+void ReturnData::initializeFullReporting(bool quadratic_llh) {
 
-    initializeLikelihoodReporting();
-    initializeResidualReporting();
+    initializeLikelihoodReporting(quadratic_llh);
+    if (quadratic_llh)
+        initializeResidualReporting();
 
     xdot.resize(nx_solver, getNaN());
 

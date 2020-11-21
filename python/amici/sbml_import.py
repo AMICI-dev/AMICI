@@ -987,7 +987,8 @@ class SbmlImporter:
                 )(obs_id), locals=dict(zip(
                     _get_str_symbol_identifiers(obs_id),
                     (obs_id, obs['measurement_symbol'], sigma_id)
-                )))
+                ))),
+                'dist': noise_distributions.get(str(obs_id), 'normal'),
             }
             for (obs_id, obs), (sigma_id, sigma) in zip(
                 self.symbols[SymbolId.OBSERVABLE].items(),

@@ -546,6 +546,10 @@ std::vector<std::string> Model::getObservableIds() const {
     return std::vector<std::string>();
 }
 
+bool Model::hasQuadraticLLH() const {
+    return true;
+}
+
 std::vector<realtype> const &Model::getTimepoints() const { return ts_; }
 
 double Model::getTimepoint(const int it) const { return ts_.at(it); }
