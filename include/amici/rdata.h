@@ -470,6 +470,7 @@ class ReturnData {
 
     /**
      * @brief initialize values for chi2 and llh and derivatives
+     * @param enable_chi2 wheter chi2 values are to be computed
      */
     void initializeObjectiveFunction(bool enable_chi2);
 

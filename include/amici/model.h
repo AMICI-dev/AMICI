@@ -599,7 +599,8 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getObservableIds() const;
     
     /**
-     * @brief Checks whether
+     * @brief Checks whether the defined noise model is gaussian, i.e., the nllh is quadratic
+     * @return boolean flag
      */
     virtual bool hasQuadraticLLH() const;
 
