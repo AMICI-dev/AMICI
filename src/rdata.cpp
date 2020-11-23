@@ -733,7 +733,7 @@ static realtype fres(realtype y, realtype my, realtype sigma_y) {
 
 static realtype fsres(realtype y, realtype sy, realtype my,
                       realtype sigma_y, realtype ssigma_y) {
-    return fres(sy, 0.0, sigma_y) - ssigma_y * fres(y, my, sigma_y) / sigma_y;
+    return sy / sigma_y;
 }
 
 void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
@@ -808,9 +808,33 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
 
     auto observedData = edata.getObservedDataPtr(it);
+    
+    /*
+     * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+0.5*log%282+*+pi+*+s%28u%2Cv%29%5E2%29+%2B+0.5+*+%28%28y%28u%2Cv%29+-+m%29%2Fs%28u%2Cv%29%29%5E2
+     * d/du(d/(dv)(0.5 log(2 π s^2) + 0.5 ((y - m)/s)^2)) =
+     * (-s_du*y_dv*(m - y) + 2*s_dv*y_du (m - y) - s_du_dv*(m - y)^2 -
+     * ###################   ###################   ~~~~~~~~~~~~~~~~~
+     *
+     *  s*y_du_dv*(m - y) + s_du_dv*s^2 + 2*s_dv*s_du*s + s*y_dv*y_du)/s^3 -
+     *  #################   +++++++++++   -------------   xxxxxxxxxxx
+     *
+     * (3*s_du*(-s_dv*(m - y)^2 - s*y_dv*(m - y) + s_dv*s^2))/s^4
+     *          ~~~~~~~~~~~~~~~   ##############   --------
+     *
+     * drop:
+     * ~~~~~~~~: residual squared terms
+     * ########: residual terms
+     * ++++++++: second sigma derivative, typically zero anyways
+     *
+     * keep:
+     * --------: these terms are combined: 2-3 = -1, accounted for in fsres
+     * xxxxxxxx: canonical FIM
+     *
+     * result: y_dv*y_du/s^2 - s_dv*s_du/s^2
+     */
+    
+    
     for (int iy = 0; iy < nytrue; ++iy) {
-        double y_ = y_it.at(iy);
-        double m = observedData[iy];
         double s = sigmay.at(iy);
         if (!edata.isSetObservedData(it, iy))
             continue;
@@ -821,10 +845,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
                 double dy_j = sy_it.at(iy + ny * jp);
                 double ds_j = ssigmay_it.at(iy + ny * jp);
                 FIM.at(ip + nplist * jp) +=
-                    amici::fsres(y_, dy_i, m, s, ds_i) *
-                    amici::fsres(y_, dy_j, m, s, ds_j)
-                    // term from 0.5*log(2*pi*sigma^2)
-                    - ds_i * ds_j / pow(s, 2.0);
+                    (dy_i * dy_j - ds_i * ds_j) / pow(s, 2.0);
             }
         }
     }
