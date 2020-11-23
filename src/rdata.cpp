@@ -825,6 +825,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      * = y_du*y_dv/s^2 - (y_du*s_dv + y_dv*s_du)*r/s^3 + s_du*s_dv*r^2/s^4
      *   1111111111111   22222222222222222222222222222   33333333333333333
      *
+     * r should be on the same order as s. We keep 1/s^2 and drop 1/s terms.
      * drop:
      * ~~~~~~~~: r^2/s^3 term
      * ########: r/s^2 term

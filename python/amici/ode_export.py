@@ -2759,7 +2759,7 @@ class ODEExporter:
             'AMICI_VERSION_STRING':  __version__,
             'AMICI_COMMIT_STRING': __commit__,
             'W_RECURSION_DEPTH': self.model._w_recursion_depth,
-            'TPL_AMICI_QUADRATIC_LLH': 'true'
+            'QUADRATIC_LLH': 'true'
                 if self.model._has_quadratic_nllh else 'false',
         }
 

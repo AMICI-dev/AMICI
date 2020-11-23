@@ -601,7 +601,7 @@ class Model : public AbstractModel {
     /**
      * @brief Checks whether
      */
-    bool hasQuadraticLLH() const;
+    virtual bool hasQuadraticLLH() const;
 
     /**
      * @brief Get the timepoint vector.

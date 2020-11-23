@@ -765,8 +765,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         return "TPL_AMICI_COMMIT_STRING";
     }
 
-    const bool hasQuadraticLLH() const override {
-        return TPL_AMICI_QUADRATIC_LLH;
+    virtual bool hasQuadraticLLH() const override {
+        return TPL_QUADRATIC_LLH;
     }
 };
 
