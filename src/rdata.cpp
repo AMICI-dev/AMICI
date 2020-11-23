@@ -733,7 +733,7 @@ static realtype fres(realtype y, realtype my, realtype sigma_y) {
 
 static realtype fsres(realtype y, realtype sy, realtype my,
                       realtype sigma_y, realtype ssigma_y) {
-    return sy / sigma_y;
+    return (sy - ssigma_y * fres(y, my, sigma_y)) / sigma_y;
 }
 
 void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
@@ -806,8 +806,6 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
-
-    auto observedData = edata.getObservedDataPtr(it);
     
     /*
      * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+0.5*log%282+*+pi+*+s%28u%2Cv%29%5E2%29+%2B+0.5+*+%28%28y%28u%2Cv%29+-+m%29%2Fs%28u%2Cv%29%29%5E2
@@ -827,7 +825,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      * ++++++++: second sigma derivative, typically zero anyways
      *
      * keep:
-     * --------: these terms are combined: 2-3 = -1, accounted for in fsres
+     * --------: these terms are combined: 2-3 = -1
      * xxxxxxxx: canonical FIM
      *
      * result: y_dv*y_du/s^2 - s_dv*s_du/s^2
