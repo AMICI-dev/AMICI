@@ -457,8 +457,9 @@ class ReturnData {
 
     /**
      * @brief initializes storage for residual reporting mode
+     * @param enable_res wheter residuals are to be computed
      */
-    void initializeResidualReporting();
+    void initializeResidualReporting(bool enable_res);
 
     /**
      * @brief initializes storage for full reporting mode
@@ -470,7 +471,7 @@ class ReturnData {
     /**
      * @brief initialize values for chi2 and llh and derivatives
      */
-    void initializeObjectiveFunction();
+    void initializeObjectiveFunction(bool enable_chi2);
 
     /**
      * @brief extracts data from a preequilibration steadystateproblem

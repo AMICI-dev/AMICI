@@ -46,10 +46,7 @@ ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
         break;
 
     case RDataReporting::residuals:
-        if (!quadratic_llh)
-            throw AmiException("Residual computation is not supported for "
-                               "non-quadratic log-likelihoods");
-        initializeResidualReporting();
+        initializeResidualReporting(quadratic_llh);
         break;
 
     case RDataReporting::likelihood:
@@ -72,25 +69,26 @@ void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
     }
 }
 
-void ReturnData::initializeResidualReporting() {
+void ReturnData::initializeResidualReporting(bool enable_res) {
     y.resize(nt * ny, 0.0);
     sigmay.resize(nt * ny, 0.0);
-    res.resize(nt * nytrue, 0.0);
+    if (enable_res)
+        res.resize(nt * nytrue, 0.0);
     if ((sensi_meth == SensitivityMethod::forward &&
          sensi >= SensitivityOrder::first)
         || sensi >= SensitivityOrder::second) {
 
         sy.resize(nt * ny * nplist, 0.0);
         ssigmay.resize(nt * ny * nplist, 0.0);
-        sres.resize(nt * nytrue * nplist, 0.0);
+        if (enable_res)
+            sres.resize(nt * nytrue * nplist, 0.0);
     }
 }
 
 void ReturnData::initializeFullReporting(bool quadratic_llh) {
 
     initializeLikelihoodReporting(quadratic_llh);
-    if (quadratic_llh)
-        initializeResidualReporting();
+    initializeResidualReporting(quadratic_llh);
 
     xdot.resize(nx_solver, getNaN());
 
@@ -239,7 +237,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
                                        ExpData const *edata) {
     if (edata)
-        initializeObjectiveFunction();
+        initializeObjectiveFunction(model.hasQuadraticLLH());
 
     auto initialState = fwd.getInitialSimulationState();
     if (initialState.x.getLength() == 0 && model.nx_solver > 0)
@@ -715,15 +713,15 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
     }
 }
 
-void ReturnData::initializeObjectiveFunction() {
+void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
     if (rdata_reporting == RDataReporting::likelihood ||
         rdata_reporting == RDataReporting::full) {
         llh = 0.0;
         std::fill(sllh.begin(), sllh.end(), 0.0);
         std::fill(s2llh.begin(), s2llh.end(), 0.0);
     }
-    if (rdata_reporting == RDataReporting::residuals ||
-        rdata_reporting == RDataReporting::full)
+    if ((rdata_reporting == RDataReporting::residuals ||
+        rdata_reporting == RDataReporting::full) && enable_chi2)
         chi2 = 0.0;
 }
 
