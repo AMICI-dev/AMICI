@@ -809,41 +809,53 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     
     /*
      * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+0.5*log%282+*+pi+*+s%28u%2Cv%29%5E2%29+%2B+0.5+*+%28%28y%28u%2Cv%29+-+m%29%2Fs%28u%2Cv%29%29%5E2
+     * r = (m - y)
      * d/du(d/(dv)(0.5 log(2 π s^2) + 0.5 ((y - m)/s)^2)) =
-     * (-s_du*y_dv*(m - y) + 2*s_dv*y_du (m - y) - s_du_dv*(m - y)^2 -
-     * ###################   ###################   ~~~~~~~~~~~~~~~~~
+     * (-s_du*y_dv*r + 2*s_dv*y_du*r - s_du_dv*r^2 -
+     *  222222222222   2222222222222   ~~~~~~~~~~~
      *
-     *  s*y_du_dv*(m - y) + s_du_dv*s^2 + 2*s_dv*s_du*s + s*y_dv*y_du)/s^3 -
-     *  #################   +++++++++++   -------------   xxxxxxxxxxx
+     *  s*y_du_dv*r + s_du_dv*s^2 + 2*s_dv*s_du*s + s*y_dv*y_du)/s^3 -
+     *  ###########   +++++++++++   -------------   11111111111
      *
-     * (3*s_du*(-s_dv*(m - y)^2 - s*y_dv*(m - y) + s_dv*s^2))/s^4
-     *          ~~~~~~~~~~~~~~~   ##############   --------
+     * (3*s_du*(-s_dv*r^2 - s*y_dv*r + s_dv*s^2))/s^4
+     *          333333333   22222222   --------
+     *
+     * we compute this using fsres:
+     * sres_u * sres_v = (y_du*s - s_du * r) * (y_dv*s - s_dv * r) / s^4
+     * = y_du*y_dv/s^2 - (y_du*s_dv + y_dv*s_du)*r/s^3 + s_du*s_dv*r^2/s^4
+     *   1111111111111   22222222222222222222222222222   33333333333333333
      *
      * drop:
-     * ~~~~~~~~: residual squared terms
-     * ########: residual terms
-     * ++++++++: second sigma derivative, typically zero anyways
+     * ~~~~~~~~: r^2/s^3 term
+     * ########: r/s^2 term
+     * ++++++++: 1/s term, typically zero anyways
      *
      * keep:
-     * --------: these terms are combined: 2-3 = -1
-     * xxxxxxxx: canonical FIM
-     *
-     * result: y_dv*y_du/s^2 - s_dv*s_du/s^2
+     * ---------: accounts for .5(2*pi*sigma^2), but
+     * -2*s_du*s_dv/s^2 is missing
+     * 123123123: accounted for by sres*sres, but
+     * -3*(s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2 and
+     * -2*s_du*s_dv*r^2/s^4 is missing from 3
      */
     
-    
+    auto observedData = edata.getObservedDataPtr(it);
+
     for (int iy = 0; iy < nytrue; ++iy) {
-        double s = sigmay.at(iy);
+        auto y = y_it.at(iy);
+        auto m = observedData[iy];
+        auto s = sigmay.at(iy);
         if (!edata.isSetObservedData(it, iy))
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
-            double dy_i = sy_it.at(iy + ny * ip);
-            double ds_i = ssigmay_it.at(iy + ny * ip);
+            auto dy_i = sy_it.at(iy + ny * ip);
+            auto ds_i = ssigmay_it.at(iy + ny * ip);
             for (int jp = 0; jp < nplist; ++jp) {
-                double dy_j = sy_it.at(iy + ny * jp);
-                double ds_j = ssigmay_it.at(iy + ny * jp);
+                auto dy_j = sy_it.at(iy + ny * jp);
+                auto ds_j = ssigmay_it.at(iy + ny * jp);
                 FIM.at(ip + nplist * jp) +=
-                    (dy_i * dy_j - ds_i * ds_j) / pow(s, 2.0);
+                    amici::fsres(y, dy_i, m, s, ds_i) *
+                    amici::fsres(y, dy_j, m, s, ds_j)
+                    - ds_i * ds_j / pow(s, 2.0);
             }
         }
     }

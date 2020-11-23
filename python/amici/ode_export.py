@@ -1065,7 +1065,7 @@ class ODEModel:
         self.generate_basic_variables(from_sbml=True)
         self._has_quadratic_nllh = all(
             llh['dist'] in ['normal', 'lin-normal']
-            for llh in si.symbols[SymbolId.LLHY]
+            for llh in si.symbols[SymbolId.LLHY].values()
         )
 
     def add_component(self, component: ModelQuantity,
