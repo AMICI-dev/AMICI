@@ -810,7 +810,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      * r = (m - y)
      * d/du(d/(dv)(0.5 log(2 π s^2) + 0.5 ((y - m)/s)^2)) =
      * (-s_du*y_dv*r + 2*s_dv*y_du*r - s_du_dv*r^2 -
-     *  222222222222   2222222222222   ~~~~~~~~~~~
+     *  222222222222   2222222222222   ***********
      *
      *  s*y_du_dv*r + s_du_dv*s^2 + 2*s_dv*s_du*s + s*y_dv*y_du)/s^3 -
      *  ###########   +++++++++++   -------------   11111111111
@@ -825,16 +825,15 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      *
      * r should be on the same order as s. We keep 1/s^2 and drop 1/s terms.
      * drop:
-     * ~~~~~~~~: r^2/s^3 term
+     * ********: r^2/s^3 term
      * ########: r/s^2 term
      * ++++++++: 1/s term, typically zero anyways
      *
      * keep:
-     * ---------: accounts for .5(2*pi*sigma^2), but
-     * -2*s_du*s_dv/s^2 is missing
+     * ---------: accounts for .5(2*pi*sigma^2)
      * 123123123: accounted for by sres*sres, but
-     * -3*(s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2 and
-     * -2*s_du*s_dv*r^2/s^4 is missing from 3
+     * -3*(s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
+     * -2*s_du*s_dv*r^2/s^4 is missing from 3333
      */
     
     auto observedData = edata.getObservedDataPtr(it);
