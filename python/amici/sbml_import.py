@@ -979,22 +979,23 @@ class SbmlImporter:
             for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items()
         }
 
-        self.symbols[SymbolId.LLHY] = {
-            symbol_with_assumptions(f'J{obs_id}'): {
-                'name': f'J{obs["name"]}',
-                'value': sp.sympify(noise_distribution_to_cost_function(
-                    noise_distributions.get(str(obs_id), 'normal')
-                )(obs_id), locals=dict(zip(
-                    _get_str_symbol_identifiers(obs_id),
-                    (obs_id, obs['measurement_symbol'], sigma_id)
-                ))),
-                'dist': noise_distributions.get(str(obs_id), 'normal'),
-            }
-            for (obs_id, obs), (sigma_id, sigma) in zip(
+        self.symbols[SymbolId.LLHY] = {}
+        for (obs_id, obs), (sigma_id, sigma) in zip(
                 self.symbols[SymbolId.OBSERVABLE].items(),
                 self.symbols[SymbolId.SIGMAY].items()
-            )
-        }
+        ):
+            symbol = symbol_with_assumptions(f'J{obs_id}')
+            dist = noise_distributions.get(str(obs_id), 'normal')
+            cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
+            value = sp.sympify(cost_fun, locals=dict(zip(
+                _get_str_symbol_identifiers(obs_id),
+                (obs_id, obs['measurement_symbol'], sigma_id)
+            )))
+            self.symbols[SymbolId.LLHY][symbol] = {
+                    'name': f'J{obs["name"]}',
+                    'value': value,
+                    'dist': dist,
+                }
 
     @log_execution_time('processing SBML initial assignments', logger)
     def _process_initial_assignments(self):
