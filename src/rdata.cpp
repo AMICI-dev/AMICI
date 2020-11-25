@@ -22,24 +22,25 @@ ReturnData::ReturnData(Solver const &solver, const Model &model)
                  solver.getNewtonMaxSteps(), model.nw,
                  model.getParameterScale(), model.o2mode,
                  solver.getSensitivityOrder(), solver.getSensitivityMethod(),
-                 solver.getReturnDataReportingMode(), model.hasQuadraticLLH()) {}
+                 solver.getReturnDataReportingMode(), model.hasQuadraticLLH()) {
+}
 
 ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
-                       int nx_solver, int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz,
-                       int nztrue, int ne, int nJ, int nplist, int nmaxevent,
-                       int nt, int newton_maxsteps, int nw,
-                       std::vector<ParameterScaling> pscale,
+                       int nx_solver, int nxtrue, int nx_solver_reinit, int ny,
+                       int nytrue, int nz, int nztrue, int ne, int nJ,
+                       int nplist, int nmaxevent, int nt, int newton_maxsteps,
+                       int nw, std::vector<ParameterScaling> pscale,
                        SecondOrderMode o2mode, SensitivityOrder sensi,
                        SensitivityMethod sensi_meth, RDataReporting rdrm,
                        bool quadratic_llh)
     : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver),
-      nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
-      nJ(nJ), nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
-      newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
-      o2mode(o2mode), sensi(sensi), sensi_meth(sensi_meth),
-      rdata_reporting(rdrm), x_solver_(nx_solver), sx_solver_(nx_solver, nplist),
-      x_rdata_(nx), sx_rdata_(nx, nplist), nroots_(ne) {
-
+      nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny),
+      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nJ(nJ), nplist(nplist),
+      nmaxevent(nmaxevent), nt(nt), nw(nw), newton_maxsteps(newton_maxsteps),
+      pscale(std::move(pscale)), o2mode(o2mode), sensi(sensi),
+      sensi_meth(sensi_meth), rdata_reporting(rdrm), x_solver_(nx_solver),
+      sx_solver_(nx_solver, nplist), x_rdata_(nx), sx_rdata_(nx, nplist),
+      nroots_(ne) {
     switch (rdata_reporting) {
     case RDataReporting::full:
         initializeFullReporting(quadratic_llh);
@@ -721,7 +722,7 @@ void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
         std::fill(s2llh.begin(), s2llh.end(), 0.0);
     }
     if ((rdata_reporting == RDataReporting::residuals ||
-        rdata_reporting == RDataReporting::full) && enable_chi2)
+         rdata_reporting == RDataReporting::full) && enable_chi2)
         chi2 = 0.0;
 }
 
@@ -843,7 +844,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
             continue;
         auto y = y_it.at(iy);
         auto m = observedData[iy];
-        auto s = sigmay.at(iy);
+        auto s = sigmay_it.at(iy);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
