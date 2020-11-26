@@ -439,7 +439,7 @@ class ConservationLaw(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic):
+                 value: sp.Expr):
         """
         Create a new ConservationLaw instance.
 
@@ -470,7 +470,7 @@ class Observable(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic,
+                 value: sp.Expr,
                  measurement_symbol: Optional[sp.Symbol] = None):
         """
         Create a new Observable instance.
@@ -505,7 +505,7 @@ class SigmaY(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic):
+                 value: sp.Expr):
         """
         Create a new Standard Deviation instance.
 
@@ -532,7 +532,7 @@ class Expression(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic):
+                 value: sp.Expr):
         """
         Create a new Expression instance.
 
@@ -610,7 +610,7 @@ class LogLikelihood(ModelQuantity):
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
-                 value: sp.Basic):
+                 value: sp.Expr):
         """
         Create a new Expression instance.
 
@@ -801,6 +801,10 @@ class ODEModel:
 
     :ivar _w_recursion_depth:
         recursion depth in w, quantified as nilpotency of dwdw
+
+    :ivar _has_quadratic_nllh:
+        whether all observables have a gaussian noise model, i.e. whether
+        res and FIM make sense.
     """
 
     def __init__(self, verbose: Optional[Union[bool, int]] = False,
@@ -875,6 +879,7 @@ class ODEModel:
         self._simplify: Callable = simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
+        self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
 
     @log_execution_time('importing SbmlImporter', logger)
@@ -1058,6 +1063,10 @@ class ODEModel:
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
+        self._has_quadratic_nllh = all(
+            llh['dist'] in ['normal', 'lin-normal']
+            for llh in si.symbols[SymbolId.LLHY].values()
+        )
 
     def add_component(self, component: ModelQuantity,
                       insert_first: Optional[bool] = False) -> None:
@@ -2750,6 +2759,8 @@ class ODEExporter:
             'AMICI_VERSION_STRING':  __version__,
             'AMICI_COMMIT_STRING': __commit__,
             'W_RECURSION_DEPTH': self.model._w_recursion_depth,
+            'QUADRATIC_LLH': 'true'
+                if self.model._has_quadratic_nllh else 'false',
         }
 
         for fun in [
