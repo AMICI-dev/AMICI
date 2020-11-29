@@ -65,28 +65,34 @@ void Solver::apply_max_num_steps_B() const {
 int Solver::run(const realtype tout) const {
     setStopTime(tout);
     clock_t starttime = clock();
-    int status;
+    int status = AMICI_SUCCESS;
     
     apply_max_num_steps();
-    
-    if (getAdjInitDone()) {
-        status = solveF(tout, AMICI_NORMAL, &ncheckPtr_);
+    if (nx() > 0) {
+        if (getAdjInitDone()) {
+            status = solveF(tout, AMICI_NORMAL, &ncheckPtr_);
+        } else {
+            status = solve(tout, AMICI_NORMAL);
+        }
     } else {
-        status = solve(tout, AMICI_NORMAL);
+        t_ = tout;
     }
     cpu_time_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     return status;
 }
 
 int Solver::step(const realtype tout) const {
-    int status;
+    int status = AMICI_SUCCESS;
     
     apply_max_num_steps();
-    
-    if (getAdjInitDone()) {
-        status = solveF(tout, AMICI_ONE_STEP, &ncheckPtr_);
+    if (nx() > 0) {
+        if (getAdjInitDone()) {
+            status = solveF(tout, AMICI_ONE_STEP, &ncheckPtr_);
+        } else {
+            status = solve(tout, AMICI_ONE_STEP);
+        }
     } else {
-        status = solve(tout, AMICI_ONE_STEP);
+        t_ = tout;
     }
     return status;
 }
@@ -95,8 +101,9 @@ void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
     
     apply_max_num_steps_B();
-    
-    solveB(tout, AMICI_NORMAL);
+    if (nx() > 0) {
+        solveB(tout, AMICI_NORMAL);
+    }
     cpu_timeB_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     t_ = tout;
 }
@@ -132,6 +139,9 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     rootInit(model->ne);
 
+    if (nx() == 0)
+        return;
+    
     initializeLinearSolver(model);
     initializeNonLinearSolver();
 
@@ -176,6 +186,9 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     /* Attach user data */
     setUserDataB(*which, model);
 
+    if (nx() == 0)
+        return;
+    
     initializeLinearSolverB(model, *which);
     initializeNonLinearSolverB(*which);
 

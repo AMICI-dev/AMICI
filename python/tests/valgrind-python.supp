@@ -185,6 +185,45 @@
 {
    other
    Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.?
+   fun:_PyObject_MakeTpCall
+}
+
+{
+   other
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.?
+   obj:/usr/bin/python3.?
+   fun:_PyObject_MakeTpCall
+}
+
+{
+   other
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.?
+   fun:PyTuple_New
+   fun:_PyEval_EvalCodeWithName
+   fun:_PyFunction_Vectorcall
+}
+
+{
+   other
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.?
+   fun:PyList_AsTuple
+}
+
+{
+   other
+   Memcheck:Leak
    fun:realloc
    obj:*
    obj:*

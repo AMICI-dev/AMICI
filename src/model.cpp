@@ -546,6 +546,10 @@ std::vector<std::string> Model::getObservableIds() const {
     return std::vector<std::string>();
 }
 
+bool Model::hasQuadraticLLH() const {
+    return true;
+}
+
 std::vector<realtype> const &Model::getTimepoints() const { return ts_; }
 
 double Model::getTimepoint(const int it) const { return ts_.at(it); }
@@ -1119,6 +1123,7 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
         app->checkFinite(state_.fixedParameters, "k");
         app->checkFinite(state_.unscaledParameters, "p");
         app->checkFinite(w_, "w");
+        app->checkFinite(ts_, "t");
     }
 
     return result;
@@ -1934,6 +1939,10 @@ void Model::fdwdw(const realtype t, const realtype *x) {
     fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(), w_.data(),
           state_.total_cl.data());
+    
+    if (always_check_finite_) {
+        app->checkFinite(gsl::make_span(dwdw_.get()), "dwdw");
+    }
 }
 
 void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,

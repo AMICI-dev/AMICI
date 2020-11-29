@@ -205,7 +205,8 @@ def main():
                           'h5py',
                           'pandas',
                           'pkgconfig',
-                          'wurlitzer'],
+                          'wurlitzer',
+                          'toposort'],
         setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
         extras_require={

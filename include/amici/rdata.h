@@ -65,6 +65,8 @@ class ReturnData {
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
      * @param rdrm see amici::Solver::rdata_reporting
+     * @param quadratic_llh whether model defines a quadratic nllh and computing res, sres and
+     * FIM makes sense
      */
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
                int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
@@ -72,7 +74,7 @@ class ReturnData {
                int nw,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
                SensitivityOrder sensi, SensitivityMethod sensi_meth,
-               RDataReporting rdrm);
+               RDataReporting rdrm, bool quadratic_llh);
 
     /**
      * @brief constructor that uses information from model and solver to
@@ -448,24 +450,29 @@ class ReturnData {
 
     /**
      * @brief initializes storage for likelihood reporting mode
+     * @param quadratic_llh whether model defines a quadratic nllh and computing res, sres and FIM
+     * makes sense.
      */
-    void initializeLikelihoodReporting();
+    void initializeLikelihoodReporting(bool quadratic_llh);
 
     /**
      * @brief initializes storage for residual reporting mode
+     * @param enable_res wheter residuals are to be computed
      */
-    void initializeResidualReporting();
+    void initializeResidualReporting(bool enable_res);
 
     /**
      * @brief initializes storage for full reporting mode
+     * @param enable_fim wheter FIM Hessian approximation is to be computed
      */
-    void initializeFullReporting();
+    void initializeFullReporting(bool enable_fim);
 
 
     /**
      * @brief initialize values for chi2 and llh and derivatives
+     * @param enable_chi2 wheter chi2 values are to be computed
      */
-    void initializeObjectiveFunction();
+    void initializeObjectiveFunction(bool enable_chi2);
 
     /**
      * @brief extracts data from a preequilibration steadystateproblem
