@@ -2632,17 +2632,18 @@ class ODEExporter:
             lines.extend(get_switch_statement('ip', cases, 1))
 
         elif function == 'x0_fixedParameters':
-            lines.append("realtype tmp;\n"
-                         "std::set<int> resettedStateIdxs;")
+            lines.append("    realtype tmp;\n"
+                         "    std::set<int> resettedStateIdxs;")
             for index, formula in zip(
                     self.model._x0_fixedParameters_idx,
                     equations
             ):
-                lines.append(f'tmp = {_print_with_exception(formula)};\n'
-                             'if(!std::isnan(tmp)) '
-                             f'{function}[{index}] = tmp;\n'
-                             f'resettedStateIdxs.emplace({index});')
-            lines.append("return resettedStateIdxs;")
+                lines.append(f'    tmp = {_print_with_exception(formula)};\n'
+                             '    if(!std::isnan(tmp)) {\n'
+                             f'        {function}[{index}] = tmp;\n'
+                             f'        resettedStateIdxs.emplace({index});\n'
+                             '    }')
+            lines.append("    return resettedStateIdxs;")
         elif function == 'x0':
             lines.append("realtype tmp;")
 
