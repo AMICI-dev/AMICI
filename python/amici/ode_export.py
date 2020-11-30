@@ -170,6 +170,7 @@ functions = {
         'signature':
             '(realtype *x0_fixedParameters, const realtype t, '
             'const realtype *p, const realtype *k)',
+        'ret_type': 'std::set<int>'
     },
     'sx0': {
         'signature':
@@ -180,7 +181,7 @@ functions = {
         'signature':
             '(realtype *sx0_fixedParameters, const realtype t, '
             'const realtype *x0, const realtype *p, const realtype *k, '
-            'const int ip)',
+            'const int ip, const std::set<int> &resettedStateIdxs)',
     },
     'xdot': {
         'signature':
@@ -2430,11 +2431,12 @@ class ODEExporter:
             '#include "sundials/sundials_types.h"',
             '',
             '#include <array>',
+            '#include <set>',
         ]
 
         # function signature
         signature = self.functions[function]['signature']
-
+        ret_type = self.functions[function].get('ret_type', 'void')
         lines.append('')
 
         for sym in self.model.sym_names():
@@ -2452,7 +2454,7 @@ class ODEExporter:
             '',
         ])
 
-        lines.append(f'void {function}_{self.model_name}{signature}{{')
+        lines.append(f'{ret_type} {function}_{self.model_name}{signature}{{')
 
         # function body
         body = self._get_function_body(function, equations)
@@ -2546,9 +2548,10 @@ class ODEExporter:
                 lines.append('    ' + ', '.join(map(str, values)))
                 lines.append("};")
 
+        ret_type = self.functions[function].get('ret_type', 'void')
         lines.extend([
             '',
-            f'void {function}_{indextype}_{self.model_name}{signature}{{',
+            f'{ret_type} {function}_{indextype}_{self.model_name}{signature}{{',
         ])
 
         if len(values):
@@ -2630,18 +2633,34 @@ class ODEExporter:
                 ):
                     if not formula.is_zero:
                         expressions.append(
+                            f'if(resettedStateIdxs.find({index}) != '
+                            'resettedStateIdxs.end()) '
                             f'{function}[{index}] = '
                             f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
         elif function == 'x0_fixedParameters':
+            lines.append("realtype tmp;\n"
+                         "std::set<int> resettedStateIdxs;")
             for index, formula in zip(
                     self.model._x0_fixedParameters_idx,
                     equations
             ):
-                lines.append(f'{function}[{index}] = '
-                             f'{_print_with_exception(formula)};')
+                lines.append(f'tmp = {_print_with_exception(formula)};\n'
+                             'if(!std::isnan(tmp)) '
+                             f'{function}[{index}] = tmp;\n'
+                             f'resettedStateIdxs.emplace({index});')
+            lines.append("return resettedStateIdxs;")
+        elif function == 'x0':
+            lines.append("realtype tmp;")
+
+            lines.extend([
+                f'    tmp = {_print_with_exception(math)};'
+                f'    if(!std::isnan(tmp)) {function}[{index}] = tmp;'
+                for index, math in enumerate(equations)
+                if not (math == 0 or math == 0.0)
+            ])
 
         elif function in sensi_functions:
             cases = {ipar: _get_sym_lines_array(equations[:, ipar], function,
@@ -3007,8 +3026,9 @@ def get_function_extern_declaration(fun: str, name: str) -> str:
         c++ function definition string
 
     """
-    return \
-        f'extern void {fun}_{name}{functions[fun]["signature"]};'
+    signature = functions[fun]["signature"]
+    ret_type = functions[fun].get('ret_type', 'void')
+    return f'extern {ret_type} {fun}_{name}{signature};'
 
 
 def get_sunindex_extern_declaration(fun: str, name: str,
@@ -3051,11 +3071,12 @@ def get_model_override_implementation(fun: str, name: str) -> str:
 
     """
     return \
-        'virtual void f{fun}{signature} override {{\n' \
+        'virtual {ret_type} f{fun}{signature} override {{\n' \
         '{ind8}{fun}_{name}{eval_signature};\n' \
         '{ind4}}}\n'.format(
             ind4=' '*4,
             ind8=' '*8,
+            ret_type=functions[fun].get('ret_type', 'void'),
             fun=fun,
             name=name,
             signature=functions[fun]["signature"],
@@ -3086,11 +3107,12 @@ def get_sunindex_override_implementation(fun: str, name: str,
     index_arg_eval = ', index' if fun in multiobs_functions else ''
 
     return \
-        'virtual void f{fun}_{indextype}{signature} override {{\n' \
+        'virtual {ret_type} f{fun}_{indextype}{signature} override {{\n' \
         '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
         '{ind4}}}\n'.format(
             ind4=' '*4,
             ind8=' '*8,
+            ret_type=functions[fun].get('ret_type', 'void'),
             fun=fun,
             indextype=indextype,
             name=name,

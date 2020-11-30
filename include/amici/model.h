@@ -210,7 +210,7 @@ class Model : public AbstractModel {
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
     using AbstractModel::fz;
-    
+
     /**
      * @brief Initialize model properties.
      * @param x Reference to state variables
@@ -597,7 +597,7 @@ class Model : public AbstractModel {
      * @return Observable IDs
      */
     virtual std::vector<std::string> getObservableIds() const;
-    
+
     /**
      * @brief Checks whether the defined noise model is gaussian, i.e., the nllh is quadratic
      * @return boolean flag
@@ -1204,8 +1204,9 @@ class Model : public AbstractModel {
      * @brief Set only those initial states that are specified via
      * fixed parameters.
      * @param x Output buffer.
+     * @return set of indices of states that have been reset
      */
-    void fx0_fixedParameters(AmiVector &x);
+    std::set<int> fx0_fixedParameters(AmiVector &x);
 
     /**
      * @brief Compute/get initial value for initial state sensitivities.
@@ -1219,8 +1220,11 @@ class Model : public AbstractModel {
      * from `amici::Model::fx0_fixedParameters`.
      * @param sx Output buffer for state sensitivities
      * @param x State variables
+     * @param resettedStateIdxs set of indices of states have been reset
      */
-    void fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x);
+    void fsx0_fixedParameters(AmiVectorArray &sx,
+                              const AmiVector &x,
+                              const std::set<int>& resettedStateIdxs);
 
     /**
      * @brief Compute sensitivity of derivative initial states sensitivities
@@ -1298,13 +1302,13 @@ class Model : public AbstractModel {
 
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;
-    
+
     /**
      * @brief getter for dxdotdp (matlab generated)
      * @return dxdotdp
      */
     const AmiVectorArray &get_dxdotdp() const;
-    
+
     /**
      * @brief getter for dxdotdp (python generated)
      * @return dxdotdp
@@ -1642,7 +1646,7 @@ class Model : public AbstractModel {
      * @param x Array with the states
      */
     void fdwdx(realtype t, const realtype *x);
-    
+
     /**
      * @brief Compute self derivative for recurring terms in xdot.
      * @param t Timepoint
@@ -1752,13 +1756,13 @@ class Model : public AbstractModel {
 
     /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
     mutable SUNMatrixWrapper dwdx_;
-    
+
     /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
     mutable SUNMatrixWrapper dwdp_;
-    
+
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     mutable SUNMatrixWrapper M_;
-    
+
     /**
      * Temporary storage of `dxdotdp_full` data across functions (Python only)
      * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
@@ -1780,7 +1784,7 @@ class Model : public AbstractModel {
      * type `CSC_MAT`)
      */
     mutable SUNMatrixWrapper dxdotdp_implicit;
-    
+
     /**
      * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
      * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
@@ -2005,10 +2009,10 @@ class Model : public AbstractModel {
 
     /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
     mutable SUNMatrixWrapper dwdw_;
-    
+
     /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
     mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
-    
+
     /** Recursion */
     int w_recursion_depth_ {0};
 };

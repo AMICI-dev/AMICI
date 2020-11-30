@@ -10,6 +10,7 @@
 #include <sunmatrix/sunmatrix_sparse.h>
 
 #include <memory>
+#include <set>
 
 namespace amici {
 
@@ -230,9 +231,11 @@ class AbstractModel {
      * @param t initial time
      * @param p parameter vector
      * @param k constant vector
+     * @return set of indices of states that have been reset
      */
-    virtual void fx0_fixedParameters(realtype *x0, const realtype t,
-                                     const realtype *p, const realtype *k);
+    virtual std::set<int> fx0_fixedParameters(
+        realtype *x0, const realtype t,
+        const realtype *p, const realtype *k);
 
     /**
      * @brief Model specific implementation of fsx0_fixedParameters
@@ -242,10 +245,11 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param ip sensitivity index
+     * @param resettedStateIdxs set of indices of states have been reset
      */
-    virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,
-                                      const realtype *x0, const realtype *p,
-                                      const realtype *k, int ip);
+    virtual void fsx0_fixedParameters(
+        realtype *sx0, const realtype t, const realtype *x0, const realtype *p,
+        const realtype *k, int ip, const std::set<int>& resettedStateIdxs);
 
     /**
      * @brief Model specific implementation of fsx0
@@ -626,7 +630,7 @@ class AbstractModel {
     virtual void fdJydy(realtype *dJydy, int iy, const realtype *p,
                         const realtype *k, const realtype *y,
                         const realtype *sigmay, const realtype *my);
-                        
+
     /**
      * @brief Model-specific implementation of fdJydy colptrs
      * @param dJydy sparse matrix to which colptrs will be written
@@ -800,7 +804,7 @@ class AbstractModel {
      * @param dwdx sparse matrix to which rowvals will be written
      */
     virtual void fdwdx_rowvals(SUNMatrixWrapper &dwdx);
-    
+
     /**
      * @brief Model specific implementation of fdwdw, no w chainrule (Py)
      * @param dwdw partial derivative w wrt w

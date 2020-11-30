@@ -43,7 +43,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
-    
+
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -56,8 +56,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
     }
-    
-    /* create a Newton solver obejct */
+
+    /* create a Newton solver object */
     auto newtonSolver = NewtonSolver::getSolver(&t_, &x_, *solver, model);
 
     /* Compute steady state and get the computation time */
@@ -76,7 +76,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
             /* No steady state could be inferred. Store simulation state */
             storeSimulationState(model, solver->getSensitivityOrder() >=
                                  SensitivityOrder::first);
-            throw AmiException("Steady state sensitvitiy computation failed due "
+            throw AmiException("Steady state sensitivity computation failed due "
                                "to unsuccessful factorization of RHS Jacobian");
         }
     }
@@ -480,7 +480,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     int ix = 0;
     double gamma = 1.0;
     bool compNewStep = true;
-    
+
     if (model->nx_solver == 0)
         return;
 

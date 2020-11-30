@@ -66,7 +66,7 @@ int Solver::run(const realtype tout) const {
     setStopTime(tout);
     clock_t starttime = clock();
     int status = AMICI_SUCCESS;
-    
+
     apply_max_num_steps();
     if (nx() > 0) {
         if (getAdjInitDone()) {
@@ -83,7 +83,7 @@ int Solver::run(const realtype tout) const {
 
 int Solver::step(const realtype tout) const {
     int status = AMICI_SUCCESS;
-    
+
     apply_max_num_steps();
     if (nx() > 0) {
         if (getAdjInitDone()) {
@@ -99,7 +99,7 @@ int Solver::step(const realtype tout) const {
 
 void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
-    
+
     apply_max_num_steps_B();
     if (nx() > 0) {
         solveB(tout, AMICI_NORMAL);
@@ -141,7 +141,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     if (nx() == 0)
         return;
-    
+
     initializeLinearSolver(model);
     initializeNonLinearSolver();
 
@@ -188,7 +188,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
 
     if (nx() == 0)
         return;
-    
+
     initializeLinearSolverB(model, *which);
     initializeNonLinearSolverB(*which);
 
@@ -223,11 +223,11 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
 }
 
 void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
-    model->fx0_fixedParameters(x_);
+    auto resettedStateIdxs = model->fx0_fixedParameters(x_);
     reInit(t_, x_, dx_);
 
     if (getSensitivityOrder() >= SensitivityOrder::first) {
-            model->fsx0_fixedParameters(sx_, x_);
+            model->fsx0_fixedParameters(sx_, x_, resettedStateIdxs);
             if (getSensitivityMethod() == SensitivityMethod::forward)
                 sensReInit(sx_, sdx_);
     }

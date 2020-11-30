@@ -31,13 +31,14 @@ AbstractModel::isFixedParameterStateReinitializationAllowed() const
     return false;
 }
 
-void
+std::set<int>
 AbstractModel::fx0_fixedParameters(realtype* /*x0*/,
                                    const realtype /*t*/,
                                    const realtype* /*p*/,
                                    const realtype* /*k*/)
 {
     // no-op default implementation
+    return std::set<int>();
 }
 
 void
@@ -46,7 +47,9 @@ AbstractModel::fsx0_fixedParameters(realtype* /*sx0*/,
                                     const realtype* /*x0*/,
                                     const realtype* /*p*/,
                                     const realtype* /*k*/,
-                                    const int /*ip*/)
+                                    const int /*ip*/,
+                                    const std::set<int>& /*resettedStateIdxs*/
+                                    )
 {
     // no-op default implementation
 }

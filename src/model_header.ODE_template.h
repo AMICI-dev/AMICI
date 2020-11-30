@@ -2,6 +2,7 @@
 #define _amici_TPL_MODELNAME_h
 #include <cmath>
 #include <memory>
+#include <set>
 
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
@@ -69,7 +70,7 @@ extern void sigmay_TPL_MODELNAME(realtype *sigmay, const realtype t,
 TPL_W_DEF
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p,
                              const realtype *k);
-extern void x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t,
+extern std::set<int> x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t,
                                              const realtype *p,
                                              const realtype *k);
 extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,
@@ -78,7 +79,8 @@ extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,
 extern void sx0_fixedParameters_TPL_MODELNAME(realtype *sx0, const realtype t,
                                               const realtype *x0,
                                               const realtype *p,
-                                              const realtype *k, const int ip);
+                                              const realtype *k, const int ip,
+                                              const std::set<int> &resettedParameterIdxs);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
@@ -572,8 +574,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,
                                       const realtype *x0, const realtype *p,
                                       const realtype *k,
-                                      const int ip) override {
-        sx0_fixedParameters_TPL_MODELNAME(sx0, t, x0, p, k, ip);
+                                      const int ip,
+                                      const std::set<int> &resettedStateIdxs) override {
+        sx0_fixedParameters_TPL_MODELNAME(sx0, t, x0, p, k, ip, resettedStateIdxs);
     }
 
     /** model specific implementation of fsz
@@ -611,10 +614,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param p parameter vector
      * @param k constant vector
      **/
-    virtual void fx0_fixedParameters(realtype *x0, const realtype t,
+    virtual std::set<int> fx0_fixedParameters(realtype *x0, const realtype t,
                                      const realtype *p,
                                      const realtype *k) override {
-        x0_fixedParameters_TPL_MODELNAME(x0, t, p, k);
+        return x0_fixedParameters_TPL_MODELNAME(x0, t, p, k);
     }
 
     /** model specific implementation for fxdot

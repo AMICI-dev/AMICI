@@ -1149,19 +1149,21 @@ void Model::fx0(AmiVector &x) {
     }
 }
 
-void Model::fx0_fixedParameters(AmiVector &x) {
+std::set<int>Model::fx0_fixedParameters(AmiVector &x) {
     if (!getReinitializeFixedParameterInitialStates())
-        return;
+        return std::set<int>();
     /* we transform to the unreduced states x_rdata and then apply
      x0_fixedparameters to (i) enable updates to states that were removed from
      conservation laws and (ii) be able to correctly compute total abundances
      after updating the state variables */
     fx_rdata(x_rdata_.data(), x.data(), state_.total_cl.data());
-    fx0_fixedParameters(x_rdata_.data(), tstart_, state_.unscaledParameters.data(),
-                        state_.fixedParameters.data());
+    auto resettedStateIdxs = fx0_fixedParameters(
+        x_rdata_.data(), tstart_, state_.unscaledParameters.data(),
+        state_.fixedParameters.data());
     fx_solver(x.data(), x_rdata_.data());
     /* update total abundances */
     ftotal_cl(state_.total_cl.data(), x_rdata_.data());
+    return resettedStateIdxs;
 }
 
 void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
@@ -1178,7 +1180,9 @@ void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
     }
 }
 
-void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
+void Model::fsx0_fixedParameters(AmiVectorArray &sx,
+                                 const AmiVector &x,
+                                 const std::set<int>& resettedStateIdxs) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
     realtype *stcl = nullptr;
@@ -1186,10 +1190,10 @@ void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
         fsx_rdata(sx_rdata_.data(), sx.data(ip), stcl, plist(ip));
-        fsx0_fixedParameters(sx_rdata_.data(), tstart_, x.data(),
-                             state_.unscaledParameters.data(),
+        fsx0_fixedParameters(sx_rdata_.data(), tstart_,
+                             x.data(), state_.unscaledParameters.data(),
                              state_.fixedParameters.data(),
-                             plist(ip));
+                             plist(ip), resettedStateIdxs);
         fsx_solver(sx.data(ip), sx_rdata_.data());
         fstotal_cl(stcl, sx_rdata_.data(), plist(ip));
     }
@@ -1855,7 +1859,7 @@ void Model::fw(const realtype t, const realtype *x) {
 void Model::fdwdp(const realtype t, const realtype *x) {
     if (!nw)
         return;
-        
+
     fw(t, x);
     dwdp_.zero();
     if (pythonGenerated) {
@@ -1896,7 +1900,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
         return;
 
     fw(t, x);
-    
+
     dwdx_.zero();
     if (pythonGenerated) {
         if (!dwdx_hierarchical_.at(0).capacity())
@@ -1939,7 +1943,7 @@ void Model::fdwdw(const realtype t, const realtype *x) {
     fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(), w_.data(),
           state_.total_cl.data());
-    
+
     if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdw_.get()), "dwdw");
     }
