@@ -102,7 +102,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
     computeSteadyStateQuadrature(newtonSolver.get(), solver, model);
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
-    /* Finalize by setting addjoint state to zero (its steady state) */
+    /* Finalize by setting adjoint state to zero (its steady state) */
     xB_.zero();
 }
 
@@ -304,7 +304,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
 
-    /* perform integration and qudrature */
+    /* perform integration and quadrature */
     try {
         runSteadystateSimulation(simSolver.get(), model, true);
         hasQuadrature_ = true;

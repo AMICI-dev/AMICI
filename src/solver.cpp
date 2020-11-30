@@ -217,7 +217,7 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
     if (linsol_ != LinearSolver::KLU)
         throw AmiException("Backward steady state computation via integration "
             "is currently only implemented for KLU linear solver");
-    /* Set Jacobian function and intialize values */
+    /* Set Jacobian function and initialize values */
     setSparseJacFn_ss();
     model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
