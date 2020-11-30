@@ -1455,13 +1455,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     elif sym.__class__.__name__ == 'xor':
         return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
-        # how many condition-expression pairs will we have?
-        return sp.Piecewise(*((
-            piece[0],
-            sp.sympify(bool(piece[1]))
-            if isinstance(piece[1], sp.Basic) and piece[1].is_number
-            else piece[1]
-        ) for piece in grouper(args, 2, True)))
+        # We need to parse piecewise functions into Heavisides
+        return _parse_piecewise_to_heaviside(args)
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
     elif toplevel and isinstance(sym, BooleanAtom):
@@ -1471,6 +1466,29 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         sym = sp.Float(int(bool(sym)))
 
     return sym
+
+
+def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
+    """
+   Piecewise functions cannot be transformed into C++ right away, but AMICI has
+   a special interface for Heaviside function, so we transform them
+
+    :param args:
+        symbolic expressions for arguments of the piecewise function
+    """
+    # how many condition-expression pairs will we have?
+    formula = sp.sympify('0')
+    lastroot = sp.sympify('1')
+    conditions = list(grouper(args, 2, False))
+    for coeff, root in conditions:
+        if root != sp.false:
+            root._assumptions['extended_real'] = True
+            tmp = sp.Heaviside(root)
+            formula += coeff * tmp
+            lastroot -= tmp
+        else:
+            formula += coeff * sp.Heaviside(lastroot)
+    return formula
 
 
 def _parse_logical_operators(math_str: Union[str, float, None]
