@@ -31,7 +31,7 @@ from typing import (
     Set, Any
 )
 from string import Template
-import sympy.printing.cxxcode as cxxcode
+from sympy.printing.codeprinter import cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.logic.boolalg import BooleanAtom

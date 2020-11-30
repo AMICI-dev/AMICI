@@ -1419,7 +1419,7 @@ def _check_unsupported_functions(sym: sp.Expr,
 
     unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.function.UndefinedFunction
+        sp.core.function.UndefinedFunction
     )
 
     if isinstance(sym.func, unsupported_functions):
