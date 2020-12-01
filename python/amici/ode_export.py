@@ -159,6 +159,12 @@ functions = {
             '(realtype *sigmay, const realtype t, const realtype *p, '
             'const realtype *k)',
     },
+    'sroot': {
+        'flags': ['dont_generate_body']
+    },
+    'drootdt': {
+        'flags': ['dont_generate_body']
+    },
     'stau': {
         'signature':
             '(double *stau, const realtype t, const realtype *x, '
@@ -235,6 +241,11 @@ sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
     and function != 'sxdot'
+]
+# list of event functions
+event_functions = [
+    function for function in functions
+    if 'const int ie' in functions[function]['signature']
 ]
 # list of multiobs functions
 multiobs_functions = [
@@ -930,11 +941,17 @@ class ODEModel:
                     'var': 'p',
                     'dxdz_name': 'sx',
                 },
-                'stau': {
+                'sroot': {
                     'eq': 'root',
                     'chainvars': ['x'],
                     'var': 'p',
                     'dxdz_name': 'sx',
+                },
+                'drootdt': {
+                    'eq': 'root',
+                    'chainvars': ['x'],
+                    'var': 't',
+                    'dxdz_name': 'xdot',
                 }
             }
 
@@ -1794,6 +1811,16 @@ class ODEModel:
         elif name == 'dxdotdp_explicit':
             # force symbols
             self._derivative('xdot', 'p', name=name)
+
+        elif name == 'stau':
+            self._eqs['stau'] = sp.Matrix([
+                
+            ])
+            for ie in range(self.num_events()):
+                # stau[ie, :] = - sroot[ievent,:] / drootdt[ievent]
+                pass
+
+        elif name == 'drootdt':
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
