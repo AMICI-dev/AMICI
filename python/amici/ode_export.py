@@ -1571,7 +1571,7 @@ class ODEModel:
                 if sp.simplify(root_found - root.value) == 0:
                     return root['id'], roots
             else:
-                root_symstr = f'root{len(roots)}'
+                root_symstr = f'HeavisideFunction_{len(roots)}'
                 roots.append(Event(
                     identifier=sp.Symbol(root_symstr),
                     name=root_symstr,
