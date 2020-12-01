@@ -1482,12 +1482,23 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     conditions = list(grouper(args, 2, False))
     for coeff, root in conditions:
         if root != sp.false:
+            # Sympy doesn't assume by default that the expression is real...
             root._assumptions['extended_real'] = True
-            tmp = sp.Heaviside(root)
+            # we now need to convert the relational >, >=, ... expression into
+            # a trigger function which will be a Heaviside argument
+            if root.is_Relational:
+                trigger = root.args[0] - root.args[1]
+                if type(root) in (sp.core.relational.StrictLessThan,
+                                  sp.core.relational.LessThan):
+                    trigger = -trigger
+            else:
+                raise SBMLException('AMICI can not parse peicewise functions '
+                                    'with non-relational arguments.')
+            tmp = sp.Heaviside(trigger)
             formula += coeff * tmp
             lastroot -= tmp
         else:
-            formula += coeff * sp.Heaviside(lastroot)
+            formula += coeff * lastroot
     return formula
 
 

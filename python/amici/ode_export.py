@@ -149,10 +149,21 @@ functions = {
             '(realtype *dsigmaydp, const realtype t, const realtype *p, '
             'const realtype *k, const int ip)',
     },
+    'root': {
+        'signature':
+            '(realtype *root, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h)'
+    },
     'sigmay': {
         'signature':
             '(realtype *sigmay, const realtype t, const realtype *p, '
             'const realtype *k)',
+    },
+    'stau': {
+        'signature':
+            '(double *stau, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *sx, const int ip, const int ie)'
     },
     'w': {
         'signature':
@@ -626,6 +637,49 @@ class LogLikelihood(ModelQuantity):
         """
         super(LogLikelihood, self).__init__(identifier, name, value)
 
+class Event(ModelQuantity):
+    """
+    A Event defines the either a trigger of an event or a root of the argument
+    of a Heaviside function. The Heaviside functions will be tracked via the
+    vector `h` during simulation and are needed to inform the ODE solver about
+    a discontinuity in either the right hand side or the states themselves,
+    causing a reinitialization of the solver.
+    """
+
+    def __init__(self,
+                 identifier: sp.Symbol,
+                 name: str,
+                 value: sp.Expr,
+                 state_update: Union[sp.Expr, None],
+                 event_observable: Union[sp.Expr, None]):
+        """
+        Create a new Expression instance.
+
+        :param identifier:
+            unique identifier of the LogLikelihood
+
+        :param name:
+            individual name of the LogLikelihood (does not need to be
+             unique)
+
+        :param value:
+            formula for the root / trigger function
+
+        :param rhs_update:
+            formula for the update of the rigth hand side (for Heaviside
+            functions this is just the coefficient)
+
+        :param state_update:
+            formula for the bolus function (0 for Heaviside functions)
+
+        :param event_observable:
+            formula for the bolus function (0 for Heaviside functions)
+        """
+        super(Event, self).__init__(identifier, name, value)
+        # add the Event specific components
+        self._state_update = state_update
+        self._observable = event_observable
+
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
@@ -636,6 +690,7 @@ symbol_to_type = {
     SymbolId.SIGMAY: SigmaY,
     SymbolId.LLHY: LogLikelihood,
     SymbolId.EXPRESSION: Expression,
+    SymbolId.EVENT: Event
 }
 
 
@@ -827,6 +882,7 @@ class ODEModel:
         self._loglikelihoods: List[LogLikelihood] = []
         self._expressions: List[Expression] = []
         self._conservationlaws: List[ConservationLaw] = []
+        self._events = []
         self._symboldim_funs: Dict[str, Callable[[], int]] = {
             'sx': self.num_states_solver,
             'v': self.num_states_solver,
@@ -850,7 +906,8 @@ class ODEModel:
             'y': '_observables',
             'Jy': '_loglikelihoods',
             'w': '_expressions',
-            'sigmay': '_sigmays',
+            'root': '_roots',
+            'sigmay': '_sigmays'
         }
         self._variable_prototype: Dict[str, str] = {
             'tcl': '_conservationlaws',
@@ -873,6 +930,12 @@ class ODEModel:
                     'var': 'p',
                     'dxdz_name': 'sx',
                 },
+                'stau': {
+                    'eq': 'root',
+                    'chainvars': ['x'],
+                    'var': 'p',
+                    'dxdz_name': 'sx',
+                }
             }
 
         self._lock_total_derivative: List[str] = list()
@@ -1081,7 +1144,7 @@ class ODEModel:
             may refer to other components of the same type.
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
-                          LogLikelihood, SigmaY, ConservationLaw]:
+                          LogLikelihood, SigmaY, ConservationLaw, Event]:
             if isinstance(component, comp_type):
                 component_list = getattr(
                     self, f'_{type(component).__name__.lower()}s'
@@ -1464,6 +1527,69 @@ class ODEModel:
                 self._generate_symbol(var, from_sbml=from_sbml)
 
         self._generate_symbol('x', from_sbml=from_sbml)
+
+    def get_events(self) -> None:
+        # We need to check the RHS for Heaviside functions (and later: events)
+        # track old all (unique) roots in roots
+        roots = []
+
+        def _dissect_expression(args):
+            root_fun_list = []
+            for arg in args:
+                if arg.func == sp.Heaviside:
+                    root_fun_list.append(arg.args[0])
+                elif arg.has(sp.Heaviside):
+                    root_fun_list.append(_dissect_expression(arg.args))
+            # flatten the expression
+            root_funs = []
+            for item in root_fun_list:
+                if type(item) is list:
+                    for subitem in item:
+                        root_funs.append(subitem)
+                else:
+                    root_funs.append(item)
+
+            return root_funs
+
+        def _make_unique(root_found, roots):
+            for root in roots:
+                if sp.simplify(root_found - root.value) == 0:
+                    return root['id'], roots
+            else:
+                root_symstr = f'root_{len(roots)}'
+                roots.append(Event(
+                    identifier=sp.Symbol(root_symstr),
+                    name=root_symstr,
+                    value=root_found,
+                    state_update=None,
+                    event_observable=None
+                ))
+                return roots[-1]._identifier, roots
+
+        def _extract_heavisides(dxdt, roots):
+            # expanding the rhs wll in general help to collect the same
+            # heaviside function
+            dt_expanded = dxdt.expand()
+            # track all the old Heaviside expressions in tmp_roots_old
+            # replace them later by the new expressions
+            heavisides = []
+            # run through the expression tree and get the roots
+            tmp_roots_old = _dissect_expression(dt_expanded.args)
+            for tmp_old in tmp_roots_old:
+                # we want unique identifiers for the roots
+                tmp_new, roots = _make_unique(tmp_old, roots)
+                heavisides.append((sp.Heaviside(tmp_old), tmp_new))
+
+            return roots, heavisides
+
+        for state in self._states:
+            roots, heavisides = _extract_heavisides(state._dt, roots)
+            for heaviside_sympy, heaviside_amici in heavisides:
+                state._dt.subs(heaviside_sympy, heaviside_amici)
+
+        # Now add the found roots to the model components
+        for root in roots:
+            self.add_component(root)
 
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
         """
@@ -2209,9 +2335,12 @@ class ODEExporter:
         self.model_path: str = os.path.abspath(output_dir)
         self.model_swig_path: str = os.path.join(self.model_path, 'swig')
 
+        # We need to process events and Heaviside functions in the ODE Model,
+        # before adding it to ODEExporter
+        ode_model = ode_model.get_events()
+
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
-
         self.model: ODEModel = ode_model
 
         # To only generate a subset of functions, apply subselection here
