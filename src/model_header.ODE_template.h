@@ -33,6 +33,11 @@ extern void dJydsigmay_TPL_MODELNAME(realtype *dJydsigmay, const int iy,
 TPL_DJYDY_DEF
 TPL_DJYDY_COLPTRS_DEF
 TPL_DJYDY_ROWVALS_DEF
+
+extern void root_TPL_MODELNAME(realtype *root, const realtype t,
+                               const realtype *x, const realtype *p,
+                               const realtype *k, const realtype *h);
+
 TPL_DWDP_DEF
 TPL_DWDP_COLPTRS_DEF
 TPL_DWDP_ROWVALS_DEF
@@ -86,6 +91,17 @@ extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t,
 extern void y_TPL_MODELNAME(realtype *y, const realtype t, const realtype *x,
                             const realtype *p, const realtype *k,
                             const realtype *h, const realtype *w);
+extern void stau_TPL_MODELNAME(realtype *stau, const realtype t,
+                               const realtype *x, const realtype *p,
+                               const realtype *k, const realtype *h,
+                               const realtype *sx, const int ip, const int ie);
+extern void deltasx_TPL_MODELNAME(realtype *deltasx, const realtype t,
+                                  const realtype *x, const realtype *p,
+                                  const realtype *k, const realtype *h,
+                                  const realtype *w, const int ip,
+                                  const int ie, const realtype *xdot,
+                                  const realtype *xdot_old, const realtype *sx,
+                                  const realtype *stau);
 TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
@@ -293,7 +309,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                           const realtype *k, const realtype *h,
                           const realtype *w, const int ip, const int ie,
                           const realtype *xdot, const realtype *xdot_old,
-                          const realtype *sx, const realtype *stau) override {}
+                          const realtype *sx, const realtype *stau) override {
+        deltasx_TPL_MODELNAME(deltasx, t, x, p, k, h, w, ip, ie, xdot,
+                              xdot_old, sx, stau);
+    }
 
     /** model specific implementation of fdeltax
      * @param deltax state update
@@ -479,7 +498,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      **/
     virtual void froot(realtype *root, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k,
-                       const realtype *h) override {}
+                       const realtype *h) override {
+        root_TPL_MODELNAME(root, t, x, p, k, h);
+    }
 
     /** model specific implementation of frz
      * @param rz value of root function at current timepoint (non-output events
@@ -545,7 +566,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual void fstau(realtype *stau, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *sx, const int ip,
-                       const int ie) override {}
+                       const int ie) override {
+        stau_TPL_MODELNAME(stau, t, x, p, k, h, sx, ip, ie);
+    }
 
     /** model specific implementation of fsx0
      * @param sx0 initial state sensitivities
