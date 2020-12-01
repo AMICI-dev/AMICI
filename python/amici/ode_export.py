@@ -90,6 +90,11 @@ functions = {
             'const realtype *sigmay, const realtype *my)',
         'flags': ['sparse']
     },
+    'root': {
+        'signature':
+            '(realtype *root, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h)'
+    },
     'dwdp': {
         'signature':
             '(realtype *dwdp, const realtype t, const realtype *x, '
@@ -148,11 +153,6 @@ functions = {
         'signature':
             '(realtype *dsigmaydp, const realtype t, const realtype *p, '
             'const realtype *k, const int ip)',
-    },
-    'root': {
-        'signature':
-            '(realtype *root, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h)'
     },
     'sigmay': {
         'signature':
@@ -882,7 +882,7 @@ class ODEModel:
         self._loglikelihoods: List[LogLikelihood] = []
         self._expressions: List[Expression] = []
         self._conservationlaws: List[ConservationLaw] = []
-        self._events = []
+        self._events: List[Event] = []
         self._symboldim_funs: Dict[str, Callable[[], int]] = {
             'sx': self.num_states_solver,
             'v': self.num_states_solver,
@@ -906,7 +906,7 @@ class ODEModel:
             'y': '_observables',
             'Jy': '_loglikelihoods',
             'w': '_expressions',
-            'root': '_roots',
+            'root': '_events',
             'sigmay': '_sigmays'
         }
         self._variable_prototype: Dict[str, str] = {
@@ -1286,6 +1286,15 @@ class ODEModel:
         """
         return len(self.sym('w'))
 
+    def num_events(self) -> int:
+        """
+        Number of Expressions.
+
+        :return:
+            number of expression symbols
+        """
+        return len(self.sym('h'))
+
     def sym(self,
             name: str,
             stripped: Optional[bool] = False) -> sp.Matrix:
@@ -1503,6 +1512,12 @@ class ODEModel:
                 for tcl in self._conservationlaws
             ])
             return
+        elif name == 'h':
+            # heaviside functions
+            self._syms[name] = sp.Matrix([
+                root.get_id() for root in self._events
+            ])
+            return
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
             return
@@ -1556,7 +1571,7 @@ class ODEModel:
                 if sp.simplify(root_found - root.value) == 0:
                     return root['id'], roots
             else:
-                root_symstr = f'root_{len(roots)}'
+                root_symstr = f'root{len(roots)}'
                 roots.append(Event(
                     identifier=sp.Symbol(root_symstr),
                     name=root_symstr,
@@ -1784,6 +1799,11 @@ class ODEModel:
 
         else:
             raise ValueError(f'Unknown equation {name}')
+
+        if name == 'root':
+            # Events et processed after the ODE model has been set up.
+            # Equations are there, but symbols for roots must be added
+            self.sym('h')
 
         if name in ['Jy', 'dydx']:
             # do not transpose if we compute the partial derivative as part of
@@ -2843,7 +2863,7 @@ class ODEExporter:
             'NYTRUE': str(self.model.num_obs()),
             'NZ': '0',
             'NZTRUE': '0',
-            'NEVENT': '0',
+            'NEVENT': str(self.model.num_events()),
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
