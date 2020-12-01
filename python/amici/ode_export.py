@@ -1585,7 +1585,7 @@ class ODEModel:
         for state in self._states:
             roots, heavisides = _extract_heavisides(state._dt, roots)
             for heaviside_sympy, heaviside_amici in heavisides:
-                state._dt.subs(heaviside_sympy, heaviside_amici)
+                state._dt = state._dt.subs(heaviside_sympy, heaviside_amici)
 
         # Now add the found roots to the model components
         for root in roots:
@@ -2337,7 +2337,7 @@ class ODEExporter:
 
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
-        ode_model = ode_model.get_events()
+        ode_model.get_events()
 
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
