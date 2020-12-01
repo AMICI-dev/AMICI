@@ -1568,8 +1568,8 @@ class ODEModel:
 
         def _make_unique(root_found, roots):
             for root in roots:
-                if sp.simplify(root_found - root.value) == 0:
-                    return root['id'], roots
+                if sp.simplify(root_found - root._value) == 0:
+                    return root._identifier, roots
             else:
                 root_symstr = f'HeavisideFunction_{len(roots)}'
                 roots.append(Event(
@@ -1593,6 +1593,7 @@ class ODEModel:
             for tmp_old in tmp_roots_old:
                 # we want unique identifiers for the roots
                 tmp_new, roots = _make_unique(tmp_old, roots)
+                _, roots = _make_unique(sp.sympify(-1 * tmp_old), roots)
                 heavisides.append((sp.Heaviside(tmp_old), tmp_new))
 
             return roots, heavisides
