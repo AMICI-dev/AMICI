@@ -699,7 +699,6 @@ class Event(ModelQuantity):
 
         :param name:
             individual name of the Event (does not need to be unique)
-             unique)
 
         :param value:
             formula for the root / trigger function
