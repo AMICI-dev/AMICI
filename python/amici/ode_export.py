@@ -695,7 +695,7 @@ class Event(ModelQuantity):
         Create a new Event instance.
 
         :param identifier:
-            unique identifier of the LogLikelihood
+            unique identifier of the Event
 
         :param name:
             individual name of the LogLikelihood (does not need to be
