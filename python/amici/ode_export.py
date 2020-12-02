@@ -692,7 +692,7 @@ class Event(ModelQuantity):
                  state_update: Union[sp.Expr, None],
                  event_observable: Union[sp.Expr, None]):
         """
-        Create a new Expression instance.
+        Create a new Event instance.
 
         :param identifier:
             unique identifier of the LogLikelihood
