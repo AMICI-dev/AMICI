@@ -161,44 +161,39 @@ functions = {
     },
     'sroot': {
         'signature':
-            '(double *stau, const realtype t, const realtype *x, '
+            '(realtype *stau, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *sx, const int ip, const int ie)',
         'flags': ['dont_generate_body']
     },
     'drootdt': {
-        'signature':
-            '(double *stau, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *sx, const int ie)',
+        'signature': '()',
         'flags': ['dont_generate_body']
     },
     'drootdt_total': {
-        'signature':
-            '(double *stau, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ie)',
+        'signature': '()',
         'flags': ['dont_generate_body']
     },
     'drootdp': {
-        'signature':
-            '(double *stau, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *sx, const int ip, const int ie)',
+        'signature': '()',
         'flags': ['dont_generate_body']
     },
     'drootdx': {
-        'signature':
-            '(double *stau, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ie)',
+        'signature': '()',
         'flags': ['dont_generate_body']
     },
     'stau': {
         'signature':
-            '(double *stau, const realtype t, const realtype *x, '
+            '(realtype *stau, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *sx, const int ip, const int ie)'
+    },
+    'deltasx': {
+        'signature':
+            '(realtype *deltasx, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const int ip, const int ie, const realtype *xdot, '
+            'const realtype *xdot_old, const realtype *sx, const realtype *stau)'
     },
     'w': {
         'signature':
@@ -234,6 +229,10 @@ functions = {
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w)',
         'flags': ['assume_pow_positivity']
+    },
+    'xdot_old': {
+        'signature': '()',
+        'flags': ['dont_generate_body'],
     },
     'y': {
         'signature':
@@ -1558,6 +1557,8 @@ class ODEModel:
                 root.get_id() for root in self._events
             ])
             return
+        elif name == 'xdot_old':
+            length = len(self.eq('xdot'))
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
             return
@@ -1844,15 +1845,21 @@ class ODEModel:
                               self.eq('drootdt')
 
         elif name == 'stau':
-            if self.eq('sroot').shape[1] == 0:
-                # sympy seems to make trouble for empty metrices and does not
-                # support stacking tham for whatever reason... -.-*
-                self._eqs[name] = sp.MutableDenseMatrix(2, 0, [])
-            else:
-                self._eqs[name] = sp.Matrix([
-                    -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
-                    for ie in range(self.num_events())
-                ])
+            self._eqs[name] = [
+                -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'deltasx':
+            self._eqs[name] = [
+                (self.eq('xdot_old') - self.eq('xdot')) * self.eq('stau')[ie]
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'xdot_old':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
@@ -1873,7 +1880,11 @@ class ODEModel:
 
         if self._simplify:
             dec = log_execution_time(f'simplifying {name}', logger)
-            self._eqs[name] = dec(self._eqs[name].applyfunc)(self._simplify)
+            if name in ('stau', 'deltasx'):
+                self._eqs[name] = [dec(sub_eq.applyfunc)(self._simplify)
+                                   for sub_eq in self._eqs[name]]
+            else:
+                self._eqs[name] = dec(self._eqs[name].applyfunc)(self._simplify)
 
     def sym_names(self) -> List[str]:
         """
@@ -2843,6 +2854,22 @@ class ODEExporter:
                             f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
+
+        elif function in event_functions:
+            outer_cases = {}
+            for ie in range(self.model.num_events()):
+                inner_equations = equations[ie]
+                inner_lines = []
+                if not smart_is_zero_matrix(inner_equations):
+                    inner_cases = {
+                        ipar: _get_sym_lines_array(inner_equations[:, ipar],
+                                                   function, 4)
+                        for ipar in range(self.model.num_par())
+                        if not smart_is_zero_matrix(equations[:, ipar])}
+                    inner_lines.extend(get_switch_statement(
+                        'ip', inner_cases, 2))
+                    outer_cases[ie] = copy.copy(inner_lines)
+            lines.extend(get_switch_statement('ie', outer_cases, 1))
 
         elif function == 'x0_fixedParameters':
             for index, formula in zip(
