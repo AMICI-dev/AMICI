@@ -698,7 +698,7 @@ class Event(ModelQuantity):
             unique identifier of the Event
 
         :param name:
-            individual name of the LogLikelihood (does not need to be
+            individual name of the Event (does not need to be unique)
              unique)
 
         :param value:
