@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 
 namespace amici {
 
@@ -234,6 +235,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     if (!seflag) {
         solver->reInit(t_, x_, dx_);
         if (solver->computingFSA()) {
+            std::cout << "This should really not occur!\n";
+            std::cout << "nplist(): " << solver->nplist() << "\n";
             solver->sensReInit(sx_, sdx_);
         }
     }

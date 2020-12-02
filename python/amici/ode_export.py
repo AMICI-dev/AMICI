@@ -2855,6 +2855,14 @@ class ODEExporter:
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
+        elif function == 'x0_fixedParameters':
+            for index, formula in zip(
+                    self.model._x0_fixedParameters_idx,
+                    equations
+            ):
+                lines.append(f'{function}[{index}] = '
+                             f'{_print_with_exception(formula)};')
+
         elif function in event_functions:
             outer_cases = {}
             for ie in range(self.model.num_events()):
@@ -2863,21 +2871,13 @@ class ODEExporter:
                 if not smart_is_zero_matrix(inner_equations):
                     inner_cases = {
                         ipar: _get_sym_lines_array(inner_equations[:, ipar],
-                                                   function, 4)
+                                                   function, 3)
                         for ipar in range(self.model.num_par())
-                        if not smart_is_zero_matrix(equations[:, ipar])}
+                        if not smart_is_zero_matrix(inner_equations[:, ipar])}
                     inner_lines.extend(get_switch_statement(
                         'ip', inner_cases, 2))
                     outer_cases[ie] = copy.copy(inner_lines)
             lines.extend(get_switch_statement('ie', outer_cases, 1))
-
-        elif function == 'x0_fixedParameters':
-            for index, formula in zip(
-                    self.model._x0_fixedParameters_idx,
-                    equations
-            ):
-                lines.append(f'{function}[{index}] = '
-                             f'{_print_with_exception(formula)};')
 
         elif function in sensi_functions:
             cases = {ipar: _get_sym_lines_array(equations[:, ipar], function,
