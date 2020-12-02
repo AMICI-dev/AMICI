@@ -160,9 +160,38 @@ functions = {
             'const realtype *k)',
     },
     'sroot': {
+        'signature':
+            '(double *stau, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *sx, const int ip, const int ie)',
         'flags': ['dont_generate_body']
     },
     'drootdt': {
+        'signature':
+            '(double *stau, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *sx, const int ie)',
+        'flags': ['dont_generate_body']
+    },
+    'drootdt_total': {
+        'signature':
+            '(double *stau, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ie)',
+        'flags': ['dont_generate_body']
+    },
+    'drootdp': {
+        'signature':
+            '(double *stau, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *sx, const int ip, const int ie)',
+        'flags': ['dont_generate_body']
+    },
+    'drootdx': {
+        'signature':
+            '(double *stau, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ie)',
         'flags': ['dont_generate_body']
     },
     'stau': {
@@ -946,12 +975,6 @@ class ODEModel:
                     'chainvars': ['x'],
                     'var': 'p',
                     'dxdz_name': 'sx',
-                },
-                'drootdt': {
-                    'eq': 'root',
-                    'chainvars': ['x'],
-                    'var': 't',
-                    'dxdz_name': 'xdot',
                 }
             }
 
@@ -1716,6 +1739,7 @@ class ODEModel:
 
         """
         match_deriv = re.match(r'd([\w_]+)d([a-z_]+)', name)
+        time_symbol = sp.Matrix([symbol_with_assumptions('t')])
 
         if name in self._equation_prototype:
             self._equation_from_component(name, self._equation_prototype[name])
@@ -1812,15 +1836,23 @@ class ODEModel:
             # force symbols
             self._derivative('xdot', 'p', name=name)
 
-        elif name == 'stau':
-            self._eqs['stau'] = sp.Matrix([
-                
-            ])
-            for ie in range(self.num_events()):
-                # stau[ie, :] = - sroot[ievent,:] / drootdt[ievent]
-                pass
-
         elif name == 'drootdt':
+            self._eqs[name] = self.eq('root').jacobian(time_symbol)
+
+        elif name == 'drootdt_total':
+            self._eqs[name] = self.eq('drootdt') * self._eqs['xdot'] + \
+                              self.eq('drootdt')
+
+        elif name == 'stau':
+            if self.eq('sroot').shape[1] == 0:
+                # sympy seems to make trouble for empty metrices and does not
+                # support stacking tham for whatever reason... -.-*
+                self._eqs[name] = sp.MutableDenseMatrix(2, 0, [])
+            else:
+                self._eqs[name] = sp.Matrix([
+                    -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
+                    for ie in range(self.num_events())
+                ])
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
