@@ -1879,7 +1879,7 @@ class ODEModel:
 
         if self._simplify:
             dec = log_execution_time(f'simplifying {name}', logger)
-            if name in ('stau', 'deltasx'):
+            if isinstance(self._eqs[name], list):
                 self._eqs[name] = [dec(sub_eq.applyfunc)(self._simplify)
                                    for sub_eq in self._eqs[name]]
             else:
