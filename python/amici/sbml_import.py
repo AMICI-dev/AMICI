@@ -1478,7 +1478,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     """
     # how many condition-expression pairs will we have?
     formula = sp.sympify('0')
-    lastroot = sp.sympify('1')
+    lastroot = sp.Float(1.0)
     conditions = list(grouper(args, 2, False))
     for coeff, root in conditions:
         if root != sp.false:
@@ -1924,4 +1924,3 @@ def toposort_symbols(symbols: SymbolDef,
         for symbol_group in sorted_symbols
         for s in symbol_group
     }
-
