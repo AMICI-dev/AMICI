@@ -2871,11 +2871,11 @@ class ODEExporter:
                 if not smart_is_zero_matrix(inner_equations):
                     inner_cases = {
                         ipar: _get_sym_lines_array(inner_equations[:, ipar],
-                                                   function, 3)
+                                                   function, 0)
                         for ipar in range(self.model.num_par())
                         if not smart_is_zero_matrix(inner_equations[:, ipar])}
                     inner_lines.extend(get_switch_statement(
-                        'ip', inner_cases, 2))
+                        'ip', inner_cases, 0))
                     outer_cases[ie] = copy.copy(inner_lines)
             lines.extend(get_switch_statement('ie', outer_cases, 1))
 
