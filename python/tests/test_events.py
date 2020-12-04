@@ -178,3 +178,85 @@ def test_piecewise():
     np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
 
     # TODO test sensitivities directly
+
+
+def test_piecewise_complex_condition():
+    """Test model for piecewise functions in ODEs.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    (alpha <= t and t < beta) or (gamma <= t and t < delta)
+        - { 0,    otherwise
+    """
+    # Model components
+    model_name = 'piecewise_complex'
+    species = ['x_1']
+    initial_assignments = {'x_1': 'x_1_0'}
+    rate_rules = {
+        'x_1': (
+            'piecewise('
+                '1, '
+                    '(alpha <= time && time < beta) || '
+                    '(gamma <= time && time < delta), '
+                '0'
+            ')'
+        ),
+    }
+    parameters = {
+        'alpha': 1,
+        'beta': 2,
+        'gamma': 3,
+        'delta': 4,
+        'x_1_0': 1,
+    }
+    timepoints = np.linspace(0, 5, 100)
+
+    # SBML model
+    sbml_document, sbml_model = create_sbml_model(
+        initial_assignments=initial_assignments,
+        parameters=parameters,
+        rate_rules=rate_rules,
+        species=species,
+        # uncomment `to_file` to save SBML model to file for inspection
+        to_file=sbml_test_models / (model_name + '.sbml'),
+    )
+
+    # AMICI model
+    model = create_amici_model(
+        sbml_model=sbml_model,
+        model_name=model_name,
+    )
+
+    # Analytical solution
+    def x_1(t, x_1_0, alpha, beta, gamma, delta):
+        if t < alpha:
+            return x_1_0
+        elif alpha <= t < beta:
+            return x_1_0 + (t - alpha)
+        elif beta <= t < gamma:
+            return x_1_0 + (beta - alpha)
+        elif gamma <= t < delta:
+            return x_1_0 + (beta - alpha) + (t - gamma)
+        else:
+            return x_1_0 + (beta - alpha) + (delta - gamma)
+
+    result_expected = np.array([
+        [x_1(t, **parameters) for t in timepoints],
+    ]).transpose()
+
+    model.setTimepoints(timepoints)
+    solver = model.getSolver()
+    rdata = runAmiciSimulation(model, solver=solver)
+    result_test = rdata['x']
+
+    # The AMICI simulation matches the analytical solution.
+    np.testing.assert_almost_equal(result_test, result_expected, decimal=5)
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = model.getSolver()
+    solver.setRelativeTolerance(1e-12)
+    rdata = runAmiciSimulation(model, solver=solver)
+    result_test = rdata['x']
+    np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
+
+    # TODO test sensitivities directly
