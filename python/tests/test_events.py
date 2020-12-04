@@ -43,6 +43,9 @@ def create_sbml_model(
     """Create an SBML model from simple definitions.
 
     See usage in :py:func:`test_piecewise` for example input.
+
+    The default initial concentration of species is `1.0`. This can currently
+    be changed by specifying an initial assignment.
     """
     document = libsbml.SBMLDocument(3, 1)
     model = document.createModel()
@@ -226,7 +229,7 @@ def test_piecewise():
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = model.getSolver()
-    solver.setRelativeTolerance(1.e-12)
+    solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(model, solver=solver)
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
 
