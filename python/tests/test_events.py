@@ -268,8 +268,8 @@ def test_piecewise_complex_condition():
     rate_rules = {
         'x_1': (
             'piecewise('
-                '1, '
-                    '(alpha <= time && time < beta) || '
+                '1, '                                       # noqa
+                    '(alpha <= time && time < beta) || '    # noqa
                     '(gamma <= time && time < delta), '
                 '0'
             ')'
@@ -301,7 +301,7 @@ def test_piecewise_complex_condition():
     )
 
     # Analytical solution
-    def x_1(t, x_1_0, alpha, beta, gamma, delta):
+    def x_pected(t, x_1_0, alpha, beta, gamma, delta):
         if t < alpha:
             return x_1_0
         elif alpha <= t < beta:
@@ -314,7 +314,82 @@ def test_piecewise_complex_condition():
             return x_1_0 + (beta - alpha) + (delta - gamma)
 
     result_expected = np.array([
-        [x_1(t, **parameters) for t in timepoints],
+        [x_pected(t, **parameters) for t in timepoints],
+    ]).transpose()
+
+    model.setTimepoints(timepoints)
+    solver = model.getSolver()
+    rdata = runAmiciSimulation(model, solver=solver)
+    result_test = rdata['x']
+
+    # The AMICI simulation matches the analytical solution.
+    np.testing.assert_almost_equal(result_test, result_expected, decimal=5)
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = model.getSolver()
+    solver.setRelativeTolerance(1e-12)
+    rdata = runAmiciSimulation(model, solver=solver)
+    result_test = rdata['x']
+    np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
+
+    # TODO test sensitivities directly
+
+
+def test_piecewise_many_conditions():
+    """Test model for piecewise functions in ODEs.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    floor(t) is odd
+        - { 0,    otherwise
+    """
+    # Model components
+    model_name = 'piecewise_many'
+    species = ['x_1']
+    initial_assignments = {'x_1': 'x_1_0'}
+    t_final = 5
+    rate_rules = {
+        'x_1': (
+            'piecewise( ' + ', '.join(
+                [
+                    f'1, {t} <= time && time < {t+1}'
+                    for t in range(0, t_final)
+                    if t % 2 == 1
+                ]
+            ) +
+            ', 0 )'
+        ),
+    }
+    parameters = {
+        'x_1_0': 1,
+    }
+    timepoints = np.linspace(0, t_final, 100)
+
+    # SBML model
+    sbml_document, sbml_model = create_sbml_model(
+        initial_assignments=initial_assignments,
+        parameters=parameters,
+        rate_rules=rate_rules,
+        species=species,
+        # uncomment `to_file` to save SBML model to file for inspection
+        to_file=sbml_test_models / (model_name + '.sbml'),
+    )
+
+    # AMICI model
+    model = create_amici_model(
+        sbml_model=sbml_model,
+        model_name=model_name,
+    )
+
+    # Analytical solution
+    def x_pected(t, x_1_0):
+        if np.floor(t) % 2 == 1:
+            return x_1_0 + (np.floor(t)-1)/2 + (t-np.floor(t))
+        else:
+            return x_1_0 + np.floor(t)/2
+
+    result_expected = np.array([
+        [x_pected(t, **parameters) for t in timepoints],
     ]).transpose()
 
     model.setTimepoints(timepoints)
