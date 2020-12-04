@@ -1840,7 +1840,7 @@ class ODEModel:
             self._eqs[name] = self.eq('root').jacobian(time_symbol)
 
         elif name == 'drootdt_total':
-            self._eqs[name] = self.eq('drootdt') * self._eqs['xdot'] + \
+            self._eqs[name] = self.eq('drootdx') * self._eqs['xdot'] + \
                               self.eq('drootdt')
 
         elif name == 'stau':

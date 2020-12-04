@@ -60,6 +60,7 @@ def create_sbml_model(
         species.setSubstanceUnits('dimensionless')
         species.setBoundaryCondition(False)
         species.setHasOnlySubstanceUnits(False)
+        species.setInitialConcentration(1.0)
 
     for target, formula in initial_assignments.items():
         initial_assignment = model.createInitialAssignment()
@@ -99,24 +100,17 @@ def test_piecewise():
         - { -beta * x_1,    t >= x_2
     d/dt x_2:
         - { gamma * x_2,    t <  delta
-        - {   eta      ,    t >= delta
+        - {         eta,    t >= delta
     """
     # Model components
     model_name = 'piecewise'
     species = ['x_1', 'x_2']
     initial_assignments = {
         'x_1': 'zeta',
-        'x_2': 'epsilon',
     }
     rate_rules = {
-        'x_1': (
-            'piecewise( alpha * x_1, time <    x_2, 0) + '
-            'piecewise(- beta * x_1, time >= delta, 0)'
-        ),
-        'x_2': (
-            'piecewise( gamma * x_2, time <  delta, 0) + '
-            'piecewise(   eta      , time >= delta, 0)'
-        ),
+        'x_1': 'piecewise( alpha * x_1, time < x_2,   -beta * x_1 )',
+        'x_2': 'piecewise( gamma * x_2, time < delta,  eta        )',
     }
     parameters = {
         'alpha': float(np.log(2)),
@@ -125,7 +119,6 @@ def test_piecewise():
         'delta': 1,
         'eta': 0.5,
         'zeta': 0.25,
-        'epsilon': 100,
     }
     timepoints = np.linspace(0, 10, 100)
 
@@ -146,36 +139,39 @@ def test_piecewise():
     )
 
     # Analytical solution
-    def x_1(t, alpha, beta, gamma, delta, eta, zeta, epsilon):
+    def x_1(t, alpha, beta, gamma, delta, eta, zeta):
         event_time = (
-            (np.exp(gamma * delta) + delta * eta) /
-                          (1 - eta)                      # noqa
+            (np.exp(gamma * delta) - delta * eta) / (1 - eta)  # noqa
         )
         if t < event_time:
             return zeta * np.exp(alpha * t)
         else:
             return zeta * np.exp(alpha * event_time - beta*(t - event_time))
 
-    def x_2(t, alpha, beta, gamma, delta, eta, zeta, epsilon):
+    def x_2(t, alpha, beta, gamma, delta, eta, zeta):
         event_time = delta
         if t < event_time:
-            # TODO confirm usage of epsilon here
-            return epsilon * np.exp(gamma*t)
+            return np.exp(gamma*t)
         else:
-            # TODO confirm usage of epsilon here
-            return epsilon * np.exp(gamma*delta) + eta*(t-delta)
+            return np.exp(gamma*delta) + eta*(t-delta)
+
     result_expected = np.array([
         [x_1(t, **parameters) for t in timepoints],
         [x_2(t, **parameters) for t in timepoints],
-    ])
+    ]).transpose()
 
     model.setTimepoints(timepoints)
     solver = model.getSolver()
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = np.array([
-        rdata['x'][:, 0],
-        rdata['x'][:, 1],
-    ])
+    result_test = rdata['x']
+
     # The AMICI simulation matches the analytical solution.
-    np.testing.assert_almost_equal(result_test, result_expected)
+    np.testing.assert_almost_equal(result_test, result_expected, decimal=5)
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = model.getSolver()
+    solver.setRelativeTolerance(1.e-12)
+    rdata = runAmiciSimulation(model, solver=solver)
+    result_test = rdata['x']
+    np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
+
     # TODO test sensitivities directly
