@@ -9,6 +9,8 @@ from amici import (
     AmiciModel,
     runAmiciSimulation,
     SbmlImporter,
+    SensitivityMethod,
+    SensitivityOrder
 )
 
 sbml_test_models = Path('sbml_test_models')
@@ -140,44 +142,114 @@ def test_piecewise():
         sbml_model=sbml_model,
         model_name=model_name,
     )
+    model.setTimepoints(timepoints)
 
     # Analytical solution
-    def x_1(t, alpha, beta, gamma, delta, eta, zeta):
-        event_time = (
-            (np.exp(gamma * delta) - delta * eta) / (1 - eta)
-        )
-        if t < event_time:
-            return zeta * np.exp(alpha * t)
+    def x_pected(t, alpha, beta, gamma, delta, eta, zeta):
+        # get x_1
+        tau_1 = (np.exp(gamma * delta) - delta * eta) / (1 - eta)
+        if t < tau_1:
+            x_1 = zeta * np.exp(alpha * t)
         else:
-            return zeta * np.exp(alpha * event_time - beta*(t - event_time))
+            x_1 = zeta * np.exp(alpha * tau_1 - beta*(t - tau_1))
 
-    def x_2(t, alpha, beta, gamma, delta, eta, zeta):
-        event_time = delta
-        if t < event_time:
-            return np.exp(gamma*t)
+        # get x_2
+        tau_2 = delta
+        if t < tau_2:
+            x_2 = np.exp(gamma*t)
         else:
-            return np.exp(gamma*delta) + eta*(t-delta)
+            x_2 = np.exp(gamma*delta) + eta*(t-delta)
 
-    result_expected = np.array([
-        [x_1(t, **parameters) for t in timepoints],
-        [x_2(t, **parameters) for t in timepoints],
-    ]).transpose()
+        return (x_1, x_2)
 
-    model.setTimepoints(timepoints)
+    def sx_pected(t, alpha, beta, gamma, delta, eta, zeta):
+        # get sx_1, w.r.t. parameters
+        tau_1 = (np.exp(gamma * delta) - delta * eta) / (1 - eta)
+        tmp = (np.exp(gamma * delta) - delta * eta)
+        if t < tau_1:
+            sx_1_alpha = zeta * t * np.exp(alpha * t)
+            sx_1_beta  = 0
+            sx_1_gamma = 0
+            sx_1_delta = 0
+            sx_1_eta   = 0
+            sx_1_zeta  = np.exp(alpha * t)
+        else:
+            # thank god there's Wolfram Alpha
+            sx_1_alpha = ( zeta * tmp * np.exp( (alpha * tmp) /
+                           (1 - eta) - beta * (t - (1 - eta) * tmp) )
+                         ) / (1 - eta)
+            sx_1_beta  = zeta * ((1 - eta) * tmp - t) * \
+                         np.exp(alpha * tau_1 - beta * (t - (1 - eta) * tmp ))
+            sx_1_gamma = zeta * ((alpha * delta * np.exp(gamma * delta))
+                                 / (1 - eta) + beta * delta *
+                                 (1 - eta) * np.exp(gamma * delta)) * \
+                         np.exp(alpha * tau_1 - beta * (t - (1 - eta) * tmp))
+            sx_1_delta = zeta * (alpha + beta) * \
+                         np.exp(alpha * tau_1 - beta*(t - tau_1)) * \
+                         (gamma * np.exp(gamma * delta) - eta) / (1 - eta)
+            sx_1_eta   = zeta * alpha * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            sx_1_zeta  = np.exp(alpha * tau_1 - beta*(t - tau_1))
+
+        # get sx_2, w.r.t. parameters
+        tau_2 = delta
+        if t < tau_2:
+            sx_2_alpha = 0
+            sx_2_beta = 0
+            sx_2_gamma = t * np.exp(gamma*t)
+            sx_2_delta = 0
+            sx_2_eta = 0
+            sx_2_zeta = 0
+        else:
+            sx_2_alpha = 0
+            sx_2_beta = 0
+            sx_2_gamma = delta * np.exp(gamma*delta)
+            sx_2_delta = gamma*np.exp(gamma*delta) - eta
+            sx_2_eta = t - delta
+            sx_2_zeta = 0
+
+        sx_1 = (sx_1_alpha, sx_1_beta, sx_1_gamma,
+                sx_1_delta, sx_1_eta, sx_1_zeta)
+        sx_2 = (sx_2_alpha, sx_2_beta, sx_2_gamma,
+                sx_2_delta, sx_2_eta, sx_2_zeta)
+
+        return np.array((sx_1, sx_2)).transpose()
+
+    result_expected_x  = np.array([x_pected(t, **parameters)
+                                   for t in timepoints])
+    result_expected_sx = np.array([sx_pected(t, **parameters)
+                                   for t in timepoints])
+
+
+
+    # --- Test the state trajectories without sensitivities -------------------
+    # Does the AMICI simulation match the analytical solution?
     solver = model.getSolver()
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = rdata['x']
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
 
-    # The AMICI simulation matches the analytical solution.
-    np.testing.assert_almost_equal(result_test, result_expected, decimal=5)
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = model.getSolver()
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = rdata['x']
-    np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
 
-    # TODO test sensitivities directly
+    # --- Test the state trajectories with sensitivities ----------------------
+
+    # Does the AMICI simulation match the analytical solution?
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    rdata = runAmiciSimulation(model, solver=solver)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setRelativeTolerance(1.e-12)
+    rdata = runAmiciSimulation(model, solver=solver)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
 
 
 def test_piecewise_complex_condition():
