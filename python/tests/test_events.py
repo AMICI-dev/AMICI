@@ -175,19 +175,17 @@ def test_piecewise():
             sx_1_zeta  = np.exp(alpha * t)
         else:
             # thank god there's Wolfram Alpha
-            sx_1_alpha = ( zeta * tmp * np.exp( (alpha * tmp) /
-                           (1 - eta) - beta * (t - (1 - eta) * tmp) )
-                         ) / (1 - eta)
-            sx_1_beta  = zeta * ((1 - eta) * tmp - t) * \
-                         np.exp(alpha * tau_1 - beta * (t - (1 - eta) * tmp ))
-            sx_1_gamma = zeta * ((alpha * delta * np.exp(gamma * delta))
-                                 / (1 - eta) + beta * delta *
-                                 (1 - eta) * np.exp(gamma * delta)) * \
-                         np.exp(alpha * tau_1 - beta * (t - (1 - eta) * tmp))
+            sx_1_alpha = zeta * tau_1 * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            sx_1_beta  = zeta * (tau_1 - t) * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            sx_1_gamma = zeta * (alpha + beta) * \
+                         delta * np.exp(gamma * delta) / (1 - eta) * \
+                         np.exp(alpha * tau_1 - beta*(t - tau_1))
             sx_1_delta = zeta * (alpha + beta) * \
                          np.exp(alpha * tau_1 - beta*(t - tau_1)) * \
                          (gamma * np.exp(gamma * delta) - eta) / (1 - eta)
-            sx_1_eta   = zeta * alpha * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            sx_1_eta   = zeta * (alpha + beta) * \
+                         (- delta *(1-eta) + (np.exp(gamma * delta) - delta * eta)) / (1 - eta)**2 * \
+                         np.exp(alpha * tau_1 - beta*(t - tau_1))
             sx_1_zeta  = np.exp(alpha * tau_1 - beta*(t - tau_1))
 
         # get sx_2, w.r.t. parameters
@@ -225,10 +223,12 @@ def test_piecewise():
     # Does the AMICI simulation match the analytical solution?
     solver = model.getSolver()
     rdata = runAmiciSimulation(model, solver=solver)
+    solver.setAbsoluteTolerance(1e-15)
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = model.getSolver()
+    solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(model, solver=solver)
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
@@ -239,7 +239,9 @@ def test_piecewise():
     solver = model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(model, solver=solver)
+
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
     np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
 
@@ -247,6 +249,11 @@ def test_piecewise():
     solver = model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setRelativeTolerance(1.e-12)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    solver.setAbsoluteToleranceFSA(1e-15)
+    solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(model, solver=solver)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=6)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=7)
     np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
