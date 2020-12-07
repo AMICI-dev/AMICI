@@ -257,7 +257,7 @@ def t3st_state_and_parameter_dependent_heavisides():
     np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
 
 
-def t3st_piecewise_with_boolean_operations():
+def test_piecewise_with_boolean_operations():
     """Test model for piecewise functions in ODEs.
 
     ODEs

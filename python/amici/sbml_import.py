@@ -1427,7 +1427,7 @@ def _check_unsupported_functions(sym: sp.Expr,
                             f'"{sym.func}" of type '
                             f'"{type(sym.func)}" as part of a '
                             f'{expression_type}: "{full_sym}"!')
-    for fun in list(sym._args) + [sym]:
+    for fun in list(sym.args) + [sym]:
         if isinstance(fun, unsupported_functions):
             raise SBMLException(f'Encountered unsupported expression '
                                 f'"{fun}" of type '
@@ -1478,48 +1478,43 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     """
     # how many condition-expression pairs will we have?
     formula = sp.Float(0.0)
-    lastroot = sp.Float(1.0)
+    not_condition = sp.Float(1.0)
 
-    def _disjoin_conditions(args):
+    def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
         """
-        Piecewse functions take a vector of conditions, where the first
-        fulfilled condition is accepted, unlike Heaviside functions.
-        So we need to parse this.
+        Recursively translates a boolean trigger function into a real valued
+        root function
+
+        :param trigger:
+        :return: real valued root function expression
         """
+        if trigger.is_Relational:
+            root = trigger.args[0] - trigger.args[1]
+            if isinstance(trigger, (sp.core.relational.StrictLessThan,
+                                    sp.core.relational.LessThan)):
+                root *= -1
+        elif isinstance(trigger, sp.Or):
+            return sp.Max(*[_parse_trigger(arg)
+                            for arg in trigger.args])
+        elif isinstance(trigger, sp.And):
+            return sp.Min(*[_parse_trigger(arg)
+                            for arg in trigger.args])
+        else:
+            raise SBMLException('AMICI can not parse piecewise functions '
+                                f'with argument {trigger}.')
+        return root
 
-        # We always get an odd number of arguments, listed as
-        # "coefficient, condition, coefficient, conditions ..., coefficient"
-        # The last one is used if all conditions are false
-        conditions = []
-        coefficients = []
-        for i_arg in range(int(len(args) / 2) + 1):
-            coefficients.append(args[2 * i_arg])
-            if 2 * i_arg + 2 < len(args):
-                conditions.append(args[2 * i_arg + 1])
-
-        for ic in range(len(conditions), 1, -1):
-            cond = conditions[ic-1]
-
-    conditions = _disjoin_conditions(args)
-    for coeff, root in conditions:
-        if root != sp.false:
-            # Sympy doesn't assume by default that the expression is real...
-            root._assumptions['extended_real'] = True
+    for coeff, trigger in grouper(args, 2, True):
+        if trigger != sp.true:
             # we now need to convert the relational >, >=, ... expression into
             # a trigger function which will be a Heaviside argument
-            if root.is_Relational:
-                trigger = root.args[0] - root.args[1]
-                if type(root) in (sp.core.relational.StrictLessThan,
-                                  sp.core.relational.LessThan):
-                    trigger = -trigger
-            else:
-                raise SBMLException('AMICI can not parse piecewise functions '
-                                    'with non-relational arguments.')
-            tmp = sp.Heaviside(trigger)
-            formula += coeff * tmp
-            lastroot -= tmp
+            root = _parse_trigger(trigger)
+
+            tmp = sp.Heaviside(root)
+            formula += coeff * sp.simplify(not_condition * tmp)
+            not_condition *= (1-tmp)
         else:
-            formula += coeff * lastroot
+            formula += coeff * not_condition
     return formula
 
 
