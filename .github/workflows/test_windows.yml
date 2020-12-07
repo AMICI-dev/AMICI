@@ -27,6 +27,14 @@ jobs:
     # Developer Command Prompt for Microsoft Visual C++
     - uses: ilammy/msvc-dev-cmd@v1
 
+    - name: Cache Chocolatey Dependencies
+      uses: actions/cache@v1
+      with:
+        path: C:\ProgramData\chocolatey\lib
+        key: choco-cache-${{ runner.os }}
+        restore-keys: |
+          choco-cache-
+
     - name: Install deps
       shell: bash
       run: |
