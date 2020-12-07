@@ -703,15 +703,13 @@ class Event(ModelQuantity):
         :param value:
             formula for the root / trigger function
 
-        :param rhs_update:
-            formula for the update of the rigth hand side (for Heaviside
-            functions this is just the coefficient)
-
         :param state_update:
-            formula for the bolus function (0 for Heaviside functions)
+            formula for the bolus function (None for Heaviside functions,
+            zero vector for events without bolus)
 
         :param event_observable:
-            formula for the bolus function (0 for Heaviside functions)
+            formula a potential observable linked to the event
+            (None for Heaviside functions, empty events without observable)
         """
         super(Event, self).__init__(identifier, name, value)
         # add the Event specific components
@@ -1584,6 +1582,12 @@ class ODEModel:
         self._generate_symbol('x', from_sbml=from_sbml)
 
     def get_events(self) -> None:
+        """
+        This functions checks the right hand side for roots of Heaviside
+        functions or events, collects the roots, removes redundant roots,
+        and replaces the formulae of the found roots by identifiers of AMICI's
+        Heaviside function implementation in the right hand side
+        """
         # We need to check the RHS for Heaviside functions (and later: events)
         # track old all (unique) roots in roots
         roots = []
@@ -1607,6 +1611,14 @@ class ODEModel:
             return root_funs
 
         def _make_unique(root_found, roots):
+            """
+            _make_unique collects roots of Heaviside functions and events and
+            stores them in the roots list. It checks for redundancy to not
+            store symbolicallly equivalent root functions more than once
+            :param:
+                root_found: equation of the root function
+                roots: list of already known root functions with identifier
+            """
             for root in roots:
                 if sp.simplify(root_found - root._value) == 0:
                     return root._identifier, roots
@@ -1622,6 +1634,14 @@ class ODEModel:
                 return roots[-1]._identifier, roots
 
         def _extract_heavisides(dxdt, roots):
+            """
+            _extract_heavisides parses the RHS of a state variable, checks for
+            Heaviside functions, and hands them over to the list of roots
+            :param:
+                dxdt: right hand sid eof state variable
+                roots: list of known root functions with identifier
+            """
+
             # expanding the rhs wll in general help to collect the same
             # heaviside function
             dt_expanded = dxdt.expand()
