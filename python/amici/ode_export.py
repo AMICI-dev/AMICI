@@ -1663,10 +1663,12 @@ class ODEModel:
                 for heaviside_sympy, heaviside_amici in heavisides:
                     dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
 
+            return dxdt
+
         # Track all roots functions in the right hand side
         roots = []
         for state in self._states:
-            _extract_heavisides(state._dt, roots)
+            state._dt = _extract_heavisides(state._dt, roots)
 
         # Now add the found roots to the model components
         for root in roots:
@@ -1862,7 +1864,7 @@ class ODEModel:
             self._derivative('xdot', 'p', name=name)
 
         elif name == 'drootdt':
-            self._eqs[name] = self.eq('root').smart_jacobian(time_symbol)
+            self._eqs[name] = smart_jacobian(self.eq('root'), time_symbol)
 
         elif name == 'drootdt_total':
             self._eqs[name] = smart_multiply(self.eq('drootdx'),
@@ -2891,7 +2893,7 @@ class ODEExporter:
 
         elif function in event_functions:
             outer_cases = {}
-            for ie, inner_equations in enumerate(self.model.num_events()):
+            for ie, inner_equations in enumerate(equations):
                 inner_lines = []
                 inner_cases = {
                     ipar: _get_sym_lines_array(inner_equations[:, ipar],

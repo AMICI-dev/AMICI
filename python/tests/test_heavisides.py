@@ -174,7 +174,7 @@ def t3st_state_and_parameter_dependent_heavisides():
             sx_1_eta   = 0
             sx_1_zeta  = np.exp(alpha * t)
         else:
-            # thank god there's Wolfram Alpha
+            # Never trust Wolfram Alpha...
             sx_1_alpha = zeta * tau_1 * np.exp(alpha * tau_1 - beta*(t - tau_1))
             sx_1_beta  = zeta * (tau_1 - t) * np.exp(alpha * tau_1 - beta*(t - tau_1))
             sx_1_gamma = zeta * (alpha + beta) * \
@@ -216,8 +216,6 @@ def t3st_state_and_parameter_dependent_heavisides():
                                    for t in timepoints])
     result_expected_sx = np.array([sx_pected(t, **parameters)
                                    for t in timepoints])
-
-
 
     # --- Test the state trajectories without sensitivities -------------------
     # Does the AMICI simulation match the analytical solution?

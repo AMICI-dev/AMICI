@@ -1479,7 +1479,28 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     # how many condition-expression pairs will we have?
     formula = sp.Float(0.0)
     lastroot = sp.Float(1.0)
-    conditions = list(grouper(args, 2, False))
+
+    def _disjoin_conditions(args):
+        """
+        Piecewse functions take a vector of conditions, where the first
+        fulfilled condition is accepted, unlike Heaviside functions.
+        So we need to parse this.
+        """
+
+        # We always get an odd number of arguments, listed as
+        # "coefficient, condition, coefficient, conditions ..., coefficient"
+        # The last one is used if all conditions are false
+        conditions = []
+        coefficients = []
+        for i_arg in range(int(len(args) / 2) + 1):
+            coefficients.append(args[2 * i_arg])
+            if 2 * i_arg + 2 < len(args):
+                conditions.append(args[2 * i_arg + 1])
+
+        for ic in range(len(conditions), 1, -1):
+            cond = conditions[ic-1]
+
+    conditions = _disjoin_conditions(args)
     for coeff, root in conditions:
         if root != sp.false:
             # Sympy doesn't assume by default that the expression is real...
