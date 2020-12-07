@@ -15,10 +15,14 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "C:\\BLAS\\bin" >> $GITHUB_PATH
-    - run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/lib openblas.lib" >> $GITHUB_ENV
-    - run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS-${openBLAS_version}/OpenBLAS-${openBLAS_version}" >> $GITHUB_ENV
+    - shell: bash
+      run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - shell: bash
+      run: echo "C:\\BLAS\\bin" >> $GITHUB_PATH
+    - shell: bash
+      run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/lib openblas.lib" >> $GITHUB_ENV
+    - shell: bash
+      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS-${openBLAS_version}/OpenBLAS-${openBLAS_version}" >> $GITHUB_ENV
 
     - name: Install deps
       shell: bash
