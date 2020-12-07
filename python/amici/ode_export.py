@@ -1588,11 +1588,11 @@ class ODEModel:
         and replaces the formulae of the found roots by identifiers of AMICI's
         Heaviside function implementation in the right hand side
         """
-        # We need to check the RHS for Heaviside functions (and later: events)
-        # track old all (unique) roots in roots
-        roots = []
-
         def _dissect_expression(args):
+            """
+            _dissect_expression recursively checks an expression for the
+            occurrence of Heaviside functions and return all roots found
+            """
             root_fun_list = []
             for arg in args:
                 if arg.func == sp.Heaviside:
@@ -1602,7 +1602,7 @@ class ODEModel:
             # flatten the expression
             root_funs = []
             for item in root_fun_list:
-                if type(item) is list:
+                if isinstance(item, list):
                     for subitem in item:
                         root_funs.append(subitem)
                 else:
@@ -1621,17 +1621,18 @@ class ODEModel:
             """
             for root in roots:
                 if sp.simplify(root_found - root._value) == 0:
-                    return root._identifier, roots
-            else:
-                root_symstr = f'HeavisideFunction_{len(roots)}'
-                roots.append(Event(
-                    identifier=sp.Symbol(root_symstr),
-                    name=root_symstr,
-                    value=root_found,
-                    state_update=None,
-                    event_observable=None
-                ))
-                return roots[-1]._identifier, roots
+                    return root._identifier
+
+            # create an event for a new root function
+            root_symstr = f'HeavisideFunction_{len(roots)}'
+            roots.append(Event(
+                identifier=sp.Symbol(root_symstr),
+                name=root_symstr,
+                value=root_found,
+                state_update=None,
+                event_observable=None
+            ))
+            return roots[-1]._identifier
 
         def _extract_heavisides(dxdt, roots):
             """
@@ -1652,16 +1653,20 @@ class ODEModel:
             tmp_roots_old = _dissect_expression(dt_expanded.args)
             for tmp_old in tmp_roots_old:
                 # we want unique identifiers for the roots
-                tmp_new, roots = _make_unique(tmp_old, roots)
-                _, roots = _make_unique(sp.sympify(-1 * tmp_old), roots)
+                tmp_new = _make_unique(tmp_old, roots)
+                # For Heavisides, we need to add the negative function as well
+                _make_unique(sp.sympify(-1 * tmp_old), roots)
                 heavisides.append((sp.Heaviside(tmp_old), tmp_new))
 
-            return roots, heavisides
+            if heavisides:
+                # only apply subs if necessary
+                for heaviside_sympy, heaviside_amici in heavisides:
+                    dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
 
+        # Track all roots functions in the right hand side
+        roots = []
         for state in self._states:
-            roots, heavisides = _extract_heavisides(state._dt, roots)
-            for heaviside_sympy, heaviside_amici in heavisides:
-                state._dt = state._dt.subs(heaviside_sympy, heaviside_amici)
+            _extract_heavisides(state._dt, roots)
 
         # Now add the found roots to the model components
         for root in roots:

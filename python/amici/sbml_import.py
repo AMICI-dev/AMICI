@@ -1477,7 +1477,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         symbolic expressions for arguments of the piecewise function
     """
     # how many condition-expression pairs will we have?
-    formula = sp.sympify('0')
+    formula = sp.Float(0.0)
     lastroot = sp.Float(1.0)
     conditions = list(grouper(args, 2, False))
     for coeff, root in conditions:
