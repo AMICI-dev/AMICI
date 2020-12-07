@@ -56,6 +56,5 @@ jobs:
       shell: bash
       run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
-
     - name: Run Python tests
       run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
