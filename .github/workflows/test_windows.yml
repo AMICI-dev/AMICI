@@ -32,8 +32,8 @@ jobs:
           && choco install -y swig --version=4.0.1
 
     - name: Install OpenBLAS
-      shell: bash
-      run: powershell -File scripts\installOpenBLAS
+      shell: powershell
+      run: scripts\installOpenBLAS
 
     - name: Create sdist
       working-directory: python/sdist
