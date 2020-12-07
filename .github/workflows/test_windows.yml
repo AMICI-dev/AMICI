@@ -28,7 +28,7 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
 
     - name: Cache Chocolatey Dependencies
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: C:\ProgramData\chocolatey\lib
         key: choco-cache-${{ runner.os }}
