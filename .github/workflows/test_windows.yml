@@ -1,0 +1,42 @@
+name: Windows Tests
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    name: Tests Windows
+
+    runs-on: windows-2019
+
+    env:
+      AMICI_SKIP_CMAKE_TESTS: "TRUE"
+      openBLAS_version: "0.3.12"
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "C:\\BLAS\\bin" >> $GITHUB_PATH
+    - run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/lib openblas.lib" >> $GITHUB_ENV
+    - run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS-${openBLAS_version}/OpenBLAS-${openBLAS_version}" >> $GITHUB_ENV
+
+    - name: Install deps
+      run: |
+        python -m pip install --upgrade pip \
+          && pip install pytest petab \
+          && choco install -y swig --version=4.0.1
+
+    - name: Install OpenBLAS
+      run: powershell -File scripts\installOpenBLAS.ps1
+
+    - name: Create sdist
+      working-directory: python/sdist
+      run: python setup.py sdist
+
+    - name: Install sdist
+      working-directory: python/sdist
+      run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
+
+
+    - name: Run Python tests
+      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
