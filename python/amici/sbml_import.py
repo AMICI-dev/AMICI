@@ -1492,7 +1492,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
                                   sp.core.relational.LessThan):
                     trigger = -trigger
             else:
-                raise SBMLException('AMICI can not parse peicewise functions '
+                raise SBMLException('AMICI can not parse piecewise functions '
                                     'with non-relational arguments.')
             tmp = sp.Heaviside(trigger)
             formula += coeff * tmp

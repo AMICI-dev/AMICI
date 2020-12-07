@@ -678,8 +678,8 @@ class LogLikelihood(ModelQuantity):
 
 class Event(ModelQuantity):
     """
-    A Event defines the either a trigger of an event or a root of the argument
-    of a Heaviside function. The Heaviside functions will be tracked via the
+    An Event defines either an SBML event or a root of the argument of a
+    Heaviside function. The Heaviside functions will be tracked via the
     vector `h` during simulation and are needed to inform the ODE solver about
     a discontinuity in either the right hand side or the states themselves,
     causing a reinitialization of the solver.
@@ -1324,10 +1324,10 @@ class ODEModel:
 
     def num_events(self) -> int:
         """
-        Number of Expressions.
+        Number of Events.
 
         :return:
-            number of expression symbols
+            number of event symbols (length of the root vector in AMICI)
         """
         return len(self.sym('h'))
 
@@ -1581,7 +1581,7 @@ class ODEModel:
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
-    def get_events(self) -> None:
+    def parse_events(self) -> None:
         """
         This functions checks the right hand side for roots of Heaviside
         functions or events, collects the roots, removes redundant roots,
@@ -1862,10 +1862,11 @@ class ODEModel:
             self._derivative('xdot', 'p', name=name)
 
         elif name == 'drootdt':
-            self._eqs[name] = self.eq('root').jacobian(time_symbol)
+            self._eqs[name] = self.eq('root').smart_jacobian(time_symbol)
 
         elif name == 'drootdt_total':
-            self._eqs[name] = self.eq('drootdx') * self._eqs['xdot'] + \
+            self._eqs[name] = smart_multiply(self.eq('drootdx'),
+                                             self._eqs['xdot']) + \
                               self.eq('drootdt')
 
         elif name == 'stau':
@@ -1876,7 +1877,8 @@ class ODEModel:
 
         elif name == 'deltasx':
             self._eqs[name] = [
-                (self.eq('xdot_old') - self.eq('xdot')) * self.eq('stau')[ie]
+                smart_multiply((self.eq('xdot_old') - self.eq('xdot')),
+                               self.eq('stau')[ie])
                 for ie in range(self.num_events())
             ]
 
@@ -1892,7 +1894,7 @@ class ODEModel:
             raise ValueError(f'Unknown equation {name}')
 
         if name == 'root':
-            # Events et processed after the ODE model has been set up.
+            # Events are processed after the ODE model has been set up.
             # Equations are there, but symbols for roots must be added
             self.sym('h')
 
@@ -2452,7 +2454,7 @@ class ODEExporter:
 
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
-        ode_model.get_events()
+        ode_model.parse_events()
 
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
@@ -2889,18 +2891,16 @@ class ODEExporter:
 
         elif function in event_functions:
             outer_cases = {}
-            for ie in range(self.model.num_events()):
-                inner_equations = equations[ie]
+            for ie, inner_equations in enumerate(self.model.num_events()):
                 inner_lines = []
-                if not smart_is_zero_matrix(inner_equations):
-                    inner_cases = {
-                        ipar: _get_sym_lines_array(inner_equations[:, ipar],
-                                                   function, 0)
-                        for ipar in range(self.model.num_par())
-                        if not smart_is_zero_matrix(inner_equations[:, ipar])}
-                    inner_lines.extend(get_switch_statement(
-                        'ip', inner_cases, 0))
-                    outer_cases[ie] = copy.copy(inner_lines)
+                inner_cases = {
+                    ipar: _get_sym_lines_array(inner_equations[:, ipar],
+                                               function, 0)
+                    for ipar in range(self.model.num_par())
+                    if not smart_is_zero_matrix(inner_equations[:, ipar])}
+                inner_lines.extend(get_switch_statement(
+                    'ip', inner_cases, 0))
+                outer_cases[ie] = copy.copy(inner_lines)
             lines.extend(get_switch_statement('ie', outer_cases, 1))
 
         elif function in sensi_functions:
