@@ -33,7 +33,7 @@ jobs:
 
     - name: Install OpenBLAS
       shell: powershell
-      run: scripts\installOpenBLAS
+      run: scripts/installOpenBLAS
 
     - name: Create sdist
       working-directory: python/sdist
