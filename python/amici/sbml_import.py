@@ -1288,9 +1288,18 @@ class SbmlImporter:
             ele_name = 'string'
         math_string = replace_logx(math_string)
         try:
-            formula = sp.sympify(_parse_logical_operators(
-                math_string
-            ), locals=self._local_symbols)
+            try:
+                formula = sp.sympify(_parse_logical_operators(
+                    math_string
+                ), locals=self._local_symbols)
+            except TypeError as err:
+                if str(err) == 'BooleanAtom not allowed in this context.':
+                    formula = sp.sympify(_parse_logical_operators(
+                        math_string
+                    ), locals={'true': sp.Float(1.0), 'false': sp.Float(0.0),
+                               **self._local_symbols})
+                else:
+                    raise
         except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
             raise SBMLException(f'{ele_name} "{math_string}" '
                                 'contains an unsupported expression: '
@@ -1462,12 +1471,18 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         def _denest_piecewise(args):
             args_out = []
             for coeff, cond in grouper(args, 2, True):
+                # handling of this case is explicitely disabled in
+                # _parse_special_functions as keeping track of coeff/cond
+                # arguments is tricky. Simpler to just parse them out here
+                if coeff.__class__.__name__ == 'piecewise':
+                    coeff = _parse_special_functions(coeff, False)
+
                 # we can have conditions that are piecewise function
                 # returning True or False
                 if cond.__class__.__name__ == 'piecewise':
                     # this keeps track of conditional that the previous
                     # piece was picked
-                    previous_was_picked = sp.logic.boolalg.BooleanFalse()
+                    previous_was_picked = sp.false
                     # recursively denest those first
                     for sub_coeff, sub_cond in grouper(
                             _denest_piecewise(cond.args), 2, True
@@ -1476,7 +1491,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
                         pick_this = sp.And(
                             sp.Not(previous_was_picked), sub_cond
                         )
-                        if isinstance(sub_coeff, sp.logic.boolalg.BooleanTrue):
+                        if sub_coeff is sp.true:
                             args_out.extend([coeff, pick_this])
                         previous_was_picked = pick_this
 
@@ -1536,16 +1551,19 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         return root
 
     for coeff, trigger in grouper(args, 2, True):
-        if trigger != sp.true:
-            # we now need to convert the relational >, >=, ... expression into
-            # a trigger function which will be a Heaviside argument
-            root = _parse_trigger(trigger)
+        if isinstance(coeff, BooleanAtom):
+            coeff = sp.Float(int(bool(coeff)))
+        if trigger is sp.true:
+            return formula + coeff * not_condition
 
-            tmp = sp.Heaviside(root)
-            formula += coeff * sp.simplify(not_condition * tmp)
-            not_condition *= (1-tmp)
-        else:
-            formula += coeff * not_condition
+        # we now need to convert the relational >, >=, ... expression into
+        # a trigger function which will be a Heaviside argument
+        root = _parse_trigger(trigger)
+
+        tmp = sp.Heaviside(root)
+        formula += coeff * sp.simplify(not_condition * tmp)
+        not_condition *= (1-tmp)
+
     return formula
 
 
