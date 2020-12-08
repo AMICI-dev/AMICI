@@ -31,7 +31,7 @@ from typing import (
     Set, Any
 )
 from string import Template
-from sympy.printing.codeprinter import cxxcode
+from sympy.printing import cxxcode
 from sympy.printing.cxx import _CXXCodePrinterBase
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
