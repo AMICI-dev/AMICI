@@ -1467,38 +1467,6 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     elif sym.__class__.__name__ == 'xor':
         return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
-        # denest piecewise
-        def _denest_piecewise(args):
-            args_out = []
-            for coeff, cond in grouper(args, 2, True):
-                # handling of this case is explicitely disabled in
-                # _parse_special_functions as keeping track of coeff/cond
-                # arguments is tricky. Simpler to just parse them out here
-                if coeff.__class__.__name__ == 'piecewise':
-                    coeff = _parse_special_functions(coeff, False)
-
-                # we can have conditions that are piecewise function
-                # returning True or False
-                if cond.__class__.__name__ == 'piecewise':
-                    # this keeps track of conditional that the previous
-                    # piece was picked
-                    previous_was_picked = sp.false
-                    # recursively denest those first
-                    for sub_coeff, sub_cond in grouper(
-                            _denest_piecewise(cond.args), 2, True
-                    ):
-                        # flatten the individual pieces
-                        pick_this = sp.And(
-                            sp.Not(previous_was_picked), sub_cond
-                        )
-                        if sub_coeff == sp.true:
-                            args_out.extend([coeff, pick_this])
-                        previous_was_picked = pick_this
-
-                else:
-                    args_out.extend([coeff, cond])
-            return tuple(args_out[:-1])
-
         # We need to parse piecewise functions into Heavisides
         return _parse_piecewise_to_heaviside(
             _denest_piecewise(args)
@@ -1513,6 +1481,48 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
     return sym
 
+
+def _denest_piecewise(args):
+    """
+    Denest piecewise functions that contain piecewise as condition
+
+    :param args:
+        Arguments to the piecewise function
+
+    :return:
+        Arguments where conditions no longer contain piecewise functions and
+        the coditional dependency is flattend out
+    """
+    args_out = []
+    for coeff, cond in grouper(args, 2, True):
+        # handling of this case is explicitely disabled in
+        # _parse_special_functions as keeping track of coeff/cond
+        # arguments is tricky. Simpler to just parse them out here
+        if coeff.__class__.__name__ == 'piecewise':
+            coeff = _parse_special_functions(coeff, False)
+
+        # we can have conditions that are piecewise function
+        # returning True or False
+        if cond.__class__.__name__ == 'piecewise':
+            # this keeps track of conditional that the previous
+            # piece was picked
+            previous_was_picked = sp.false
+            # recursively denest those first
+            for sub_coeff, sub_cond in grouper(
+                    _denest_piecewise(cond.args), 2, True
+            ):
+                # flatten the individual pieces
+                pick_this = sp.And(
+                    sp.Not(previous_was_picked), sub_cond
+                )
+                if sub_coeff == sp.true:
+                    args_out.extend([coeff, pick_this])
+                previous_was_picked = pick_this
+
+        else:
+            args_out.extend([coeff, cond])
+    # cut off last condition as that's the default
+    return tuple(args_out[:-1])
 
 def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     """

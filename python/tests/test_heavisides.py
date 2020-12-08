@@ -165,7 +165,6 @@ def test_state_and_parameter_dependent_heavisides():
     def sx_pected(t, alpha, beta, gamma, delta, eta, zeta):
         # get sx_1, w.r.t. parameters
         tau_1 = (np.exp(gamma * delta) - delta * eta) / (1 - eta)
-        tmp = (np.exp(gamma * delta) - delta * eta)
         if t < tau_1:
             sx_1_alpha = zeta * t * np.exp(alpha * t)
             sx_1_beta  = 0
