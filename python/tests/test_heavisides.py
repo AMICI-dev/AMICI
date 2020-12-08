@@ -95,7 +95,7 @@ def create_sbml_model(
     return document, model
 
 
-def t3st_state_and_parameter_dependent_heavisides():
+def test_state_and_parameter_dependent_heavisides():
     """Test model for piecewise functions in ODEs.
 
     ODEs
