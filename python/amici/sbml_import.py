@@ -1553,8 +1553,12 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     for coeff, trigger in grouper(args, 2, True):
         if isinstance(coeff, BooleanAtom):
             coeff = sp.Float(int(bool(coeff)))
-        if trigger is sp.true:
+
+        if trigger is sp.true or trigger is True:
             return formula + coeff * not_condition
+
+        if trigger is sp.false or trigger is False:
+            continue
 
         # we now need to convert the relational >, >=, ... expression into
         # a trigger function which will be a Heaviside argument
