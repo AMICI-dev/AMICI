@@ -32,6 +32,7 @@ from typing import (
 )
 from string import Template
 from sympy.printing.codeprinter import cxxcode
+from sympy.printing.cxx import _CXXCodePrinterBase
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.logic.boolalg import BooleanAtom
@@ -2296,7 +2297,10 @@ def _print_with_exception(math: sp.Expr) -> str:
     user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
 
     try:
-        ret = cxxcode(math, standard='c++11', user_functions=user_functions)
+        with _monkeypatched(_CXXCodePrinterBase, '_print_Max', _print_Max),\
+                _monkeypatched(_CXXCodePrinterBase, '_print_Min', _print_Min):
+            ret = cxxcode(math, standard='c++11',
+                          user_functions=user_functions)
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
@@ -3692,3 +3696,25 @@ def _custom_pow_eval_derivative(self, s):
         (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
         (part2, True)
     )
+
+
+def _print_Max(self, expr):
+    """
+    Custom Max printing function, see https://github.com/sympy/sympy/pull/20558
+    """
+    from sympy import Max
+    if len(expr.args) == 1:
+        return self._print(expr.args[0])
+    return "%smax(%s, %s)" % (self._ns, self._print(expr.args[0]),
+                              self._print(Max(*expr.args[1:])))
+
+
+def _print_Min(self, expr):
+    """
+    Custom Min printing function, see https://github.com/sympy/sympy/pull/20558
+    """
+    from sympy import Min
+    if len(expr.args) == 1:
+        return self._print(expr.args[0])
+    return "%smin(%s, %s)" % (self._ns, self._print(expr.args[0]),
+                              self._print(Min(*expr.args[1:])))
