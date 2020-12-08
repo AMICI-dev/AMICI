@@ -1491,7 +1491,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
                         pick_this = sp.And(
                             sp.Not(previous_was_picked), sub_cond
                         )
-                        if sub_coeff is sp.true:
+                        if sub_coeff == sp.true:
                             args_out.extend([coeff, pick_this])
                         previous_was_picked = pick_this
 
@@ -1554,10 +1554,10 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         if isinstance(coeff, BooleanAtom):
             coeff = sp.Float(int(bool(coeff)))
 
-        if trigger is sp.true or trigger is True:
+        if trigger == sp.true:
             return formula + coeff * not_condition
 
-        if trigger is sp.false or trigger is False:
+        if trigger == sp.false:
             continue
 
         # we now need to convert the relational >, >=, ... expression into
