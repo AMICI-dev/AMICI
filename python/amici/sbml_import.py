@@ -1448,15 +1448,46 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
-    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
+    args = tuple(arg if arg.__class__.__name__ == 'piecewise'
+                 and sym.__class__.__name__ == 'piecewise'
+                 else _parse_special_functions(arg, False)
+                 for arg in sym.args)
 
     if sym.__class__.__name__ == 'abs':
         return sp.Abs(sym._args[0])
     elif sym.__class__.__name__ == 'xor':
         return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
+        # denest piecewise
+        def _denest_piecewise(args):
+            args_out = []
+            for coeff, cond in grouper(args, 2, True):
+                # we can have conditions that are piecewise function
+                # returning True or False
+                if cond.__class__.__name__ == 'piecewise':
+                    # this keeps track of conditional that the previous
+                    # piece was picked
+                    previous_was_picked = sp.logic.boolalg.BooleanFalse()
+                    # recursively denest those first
+                    for sub_coeff, sub_cond in grouper(
+                            _denest_piecewise(cond.args), 2, True
+                    ):
+                        # flatten the individual pieces
+                        pick_this = sp.And(
+                            sp.Not(previous_was_picked), sub_cond
+                        )
+                        if isinstance(sub_coeff, sp.logic.boolalg.BooleanTrue):
+                            args_out.extend([coeff, pick_this])
+                        previous_was_picked = pick_this
+
+                else:
+                    args_out.extend([coeff, cond])
+            return tuple(args_out[:-1])
+
         # We need to parse piecewise functions into Heavisides
-        return _parse_piecewise_to_heaviside(args)
+        return _parse_piecewise_to_heaviside(
+            _denest_piecewise(args)
+        )
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
     elif toplevel and isinstance(sym, BooleanAtom):
