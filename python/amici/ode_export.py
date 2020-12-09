@@ -1789,8 +1789,11 @@ class ODEModel:
             self._eqs[name] = smart_jacobian(self.eq('root'), time_symbol)
 
         elif name == 'drootdt_total':
-            self._eqs[name] = smart_multiply(self.eq('drootdx'),
-                                             self._eqs['xdot']) + \
+            # backsubstitution of optimized right hand side terms into RHS
+            # calling subs() is costly. Due to looping over events though, the
+            # following lines are only evaluated if a model has events
+            tmp_xdot = self._eqs['xdot'].subs(self._syms['w'], self._eqs['w'])
+            self._eqs[name] = smart_multiply(self.eq('drootdx'), tmp_xdot) + \
                               self.eq('drootdt')
 
         elif name == 'stau':
