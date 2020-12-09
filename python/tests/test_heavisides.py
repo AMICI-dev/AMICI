@@ -251,8 +251,7 @@ def test_state_and_parameter_dependent_heavisides():
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=6)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=7)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
     np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
 
 
@@ -303,39 +302,83 @@ def test_piecewise_with_boolean_operations():
         sbml_model=sbml_model,
         model_name=model_name,
     )
+    model.setTimepoints(timepoints)
 
     # Analytical solution
     def x_pected(t, x_1_0, alpha, beta, gamma, delta):
         if t < alpha:
-            return x_1_0
+            return (x_1_0,)
         elif alpha <= t < beta:
-            return x_1_0 + (t - alpha)
+            return (x_1_0 + (t - alpha),)
         elif beta <= t < gamma:
-            return x_1_0 + (beta - alpha)
+            return (x_1_0 + (beta - alpha),)
         elif gamma <= t < delta:
-            return x_1_0 + (beta - alpha) + (t - gamma)
+            return (x_1_0 + (beta - alpha) + (t - gamma),)
         else:
-            return x_1_0 + (beta - alpha) + (delta - gamma)
+            return (x_1_0 + (beta - alpha) + (delta - gamma), )
 
-    result_expected = np.array([
-        [x_pected(t, **parameters) for t in timepoints],
-    ]).transpose()
+    def sx_pected(t, x_1_0, alpha, beta, gamma, delta):
+        # x0 is very simple...
+        sx_x0 = 1
+        sx_alpha = 0
+        sx_beta = 0
+        sx_gamma = 0
+        sx_delta = 0
 
-    model.setTimepoints(timepoints)
+        if t >= alpha:
+            sx_alpha = -1
+        if t >= beta:
+            sx_beta = 1
+        if t >= gamma:
+            sx_gamma = -1
+        if t >= delta:
+            sx_delta = 1
+
+        sx = (sx_alpha, sx_beta, sx_gamma, sx_delta, sx_x0)
+
+        return np.array((sx,)).transpose()
+
+    result_expected_x  = np.array([x_pected(t, **parameters)
+                                   for t in timepoints])
+    result_expected_sx = np.array([sx_pected(t, **parameters)
+                                   for t in timepoints])
+
+    # --- Test the state trajectories without sensitivities -------------------
+
     solver = model.getSolver()
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = rdata['x']
-
     # The AMICI simulation matches the analytical solution.
-    np.testing.assert_almost_equal(result_test, result_expected, decimal=5)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = model.getSolver()
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = rdata['x']
-    np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
 
-    # TODO test sensitivities directly
+    # --- Test the state trajectories with sensitivities ----------------------
+
+    # Does the AMICI simulation match the analytical solution?
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    rdata = runAmiciSimulation(model, solver=solver)
+
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    solver.setAbsoluteToleranceFSA(1e-15)
+    solver.setRelativeToleranceFSA(1e-13)
+    rdata = runAmiciSimulation(model, solver=solver)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
 
 
 def test_piecewise_many_conditions():
@@ -384,30 +427,56 @@ def test_piecewise_many_conditions():
         sbml_model=sbml_model,
         model_name=model_name,
     )
+    model.setTimepoints(timepoints)
 
     # Analytical solution
     def x_pected(t, x_1_0):
         if np.floor(t) % 2 == 1:
-            return x_1_0 + (np.floor(t)-1)/2 + (t-np.floor(t))
+            return (x_1_0 + (np.floor(t)-1)/2 + (t-np.floor(t)), )
         else:
-            return x_1_0 + np.floor(t)/2
+            return (x_1_0 + np.floor(t)/2, )
 
-    result_expected = np.array([
-        [x_pected(t, **parameters) for t in timepoints],
-    ]).transpose()
+    def sx_pected(t, x_1_0):
+        return np.array([[1,],])
 
-    model.setTimepoints(timepoints)
+    result_expected_x  = np.array([x_pected(t, **parameters)
+                                   for t in timepoints])
+    result_expected_sx = np.array([sx_pected(t, **parameters)
+                                   for t in timepoints])
+
+    # --- Test the state trajectories without sensitivities -------------------
+
     solver = model.getSolver()
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = rdata['x']
-
     # The AMICI simulation matches the analytical solution.
-    np.testing.assert_almost_equal(result_test, result_expected, decimal=5)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = model.getSolver()
+    solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(model, solver=solver)
-    result_test = rdata['x']
-    np.testing.assert_almost_equal(result_test, result_expected, decimal=8)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
 
-    # TODO test sensitivities directly
+    # --- Test the state trajectories with sensitivities ----------------------
 
+    # Does the AMICI simulation match the analytical solution?
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    rdata = runAmiciSimulation(model, solver=solver)
+
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    solver.setAbsoluteToleranceFSA(1e-15)
+    solver.setRelativeToleranceFSA(1e-13)
+    rdata = runAmiciSimulation(model, solver=solver)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
