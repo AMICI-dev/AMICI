@@ -1491,7 +1491,7 @@ def _denest_piecewise(args):
 
     :return:
         Arguments where conditions no longer contain piecewise functions and
-        the coditional dependency is flattend out
+        the conditional dependency is flattened out
     """
     args_out = []
     for coeff, cond in grouper(args, 2, True):
@@ -1549,16 +1549,19 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
             if isinstance(trigger, (sp.core.relational.StrictLessThan,
                                     sp.core.relational.LessThan)):
                 root *= -1
-        elif isinstance(trigger, sp.Or):
+            return root
+        
+        if isinstance(trigger, sp.Or):
             return sp.Max(*[_parse_trigger(arg)
                             for arg in trigger.args])
-        elif isinstance(trigger, sp.And):
+        
+        if isinstance(trigger, sp.And):
             return sp.Min(*[_parse_trigger(arg)
                             for arg in trigger.args])
-        else:
-            raise SBMLException('AMICI can not parse piecewise functions '
+        
+        raise SBMLException('AMICI can not parse piecewise functions '
                                 f'with argument {trigger}.')
-        return root
+        
 
     for coeff, trigger in grouper(args, 2, True):
         if isinstance(coeff, BooleanAtom):
