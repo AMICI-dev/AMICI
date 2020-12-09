@@ -3642,25 +3642,23 @@ def _custom_print_min(self, expr):
                               self._print(Min(*expr.args[1:])))
 
 
-def _collect_heaviside_roots(args):
+def _collect_heaviside_roots(args: Sequence[sp.Expr]) -> List[sp.Expr]:
     """
     Recursively checks an expression for the occurrence of Heaviside
     functions and return all roots found
+
+    :param args:
+        args attribute of the expanded expression
+
+    :returns:
+        root functions that were extracted from Heaviside function arguments
     """
-    root_fun_list = []
+    root_funs = []
     for arg in args:
         if arg.func == sp.Heaviside:
-            root_fun_list.append(arg.args[0])
+            root_funs.append(arg.args[0])
         elif arg.has(sp.Heaviside):
-            root_fun_list.append(_collect_heaviside_roots(arg.args))
-    # flatten the expression
-    root_funs = []
-    for item in root_fun_list:
-        if isinstance(item, list):
-            for subitem in item:
-                root_funs.append(subitem)
-        else:
-            root_funs.append(item)
+            root_funs.extend(_collect_heaviside_roots(arg.args))
 
     return root_funs
 
