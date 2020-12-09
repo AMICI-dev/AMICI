@@ -260,7 +260,7 @@ class AmiVectorArray {
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    const N_Vector getNVector(int pos) const;
+    N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements

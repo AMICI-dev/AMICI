@@ -183,7 +183,7 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
             recursion_level = sum(
                 frame.function == 'wrapper_timer'
                 and frame.filename == __file__
-                for frame in getouterframes(currentframe())
+                for frame in getouterframes(currentframe(), context=0)
             )
 
             recursion = ''
