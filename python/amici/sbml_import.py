@@ -438,8 +438,6 @@ class SbmlImporter:
             # oo is sympy infinity
             'INF': sp.oo,
             'NaN': sp.nan,
-            'rem': sp.Mod,
-            'times': sp.Mul,
             'time': symbol_with_assumptions('time'),
             # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
@@ -1417,6 +1415,9 @@ def _check_unsupported_functions(sym: sp.Expr,
     if full_sym is None:
         full_sym = sym
 
+    # note that sp.functions.factorial, sp.functions.ceiling,
+    # sp.functions.floor applied to numbers should be simplified out and
+    # thus pass this test
     unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
         sp.core.function.UndefinedFunction
@@ -1450,11 +1451,23 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     """
     args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
 
-    if sym.__class__.__name__ == 'abs':
-        return sp.Abs(sym._args[0])
-    elif sym.__class__.__name__ == 'xor':
-        return sp.Xor(*sym.args)
-    elif sym.__class__.__name__ == 'piecewise':
+    fun_mappings = {
+        'rem': sp.Mod,
+        'times': sp.Mul,
+        'xor': sp.Xor,
+        'abs': sp.Abs,
+        'min': sp.Min,
+        'max': sp.Max,
+        'ceil': sp.functions.ceiling,
+        'floor': sp.functions.floor,
+        'factorial': sp.functions.factorial,
+        'arcsec': sp.functions.asec,
+    }
+
+    if sym.__class__.__name__ in fun_mappings:
+        return fun_mappings[sym.__class__.__name__](*sym.args)
+
+    if sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
         return sp.Piecewise(*((
             piece[0],
@@ -1462,7 +1475,11 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
             if isinstance(piece[1], sp.Basic) and piece[1].is_number
             else piece[1]
         ) for piece in grouper(args, 2, True)))
-    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+
+    if sym.__class__.__name__ == 'plus':
+        return sp.Float(1.0)
+
+    if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
     elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
