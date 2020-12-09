@@ -1539,33 +1539,6 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     formula = sp.Float(0.0)
     not_condition = sp.Float(1.0)
 
-    def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
-        """
-        Recursively translates a boolean trigger function into a real valued
-        root function
-
-        :param trigger:
-        :return: real valued root function expression
-        """
-        if trigger.is_Relational:
-            root = trigger.args[0] - trigger.args[1]
-            if isinstance(trigger, (sp.core.relational.StrictLessThan,
-                                    sp.core.relational.LessThan)):
-                root *= -1
-            return root
-        
-        if isinstance(trigger, sp.Or):
-            return sp.Max(*[_parse_trigger(arg)
-                            for arg in trigger.args])
-        
-        if isinstance(trigger, sp.And):
-            return sp.Min(*[_parse_trigger(arg)
-                            for arg in trigger.args])
-        
-        raise SBMLException('AMICI can not parse piecewise functions '
-                                f'with argument {trigger}.')
-        
-
     for coeff, trigger in grouper(args, 2, True):
         if isinstance(coeff, BooleanAtom):
             coeff = sp.Float(int(bool(coeff)))
@@ -1585,6 +1558,33 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         not_condition *= (1-tmp)
 
     return formula
+
+
+def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
+    """
+    Recursively translates a boolean trigger function into a real valued
+    root function
+
+    :param trigger:
+    :return: real valued root function expression
+    """
+    if trigger.is_Relational:
+        root = trigger.args[0] - trigger.args[1]
+        if isinstance(trigger, (sp.core.relational.StrictLessThan,
+                                sp.core.relational.LessThan)):
+            root *= -1
+        return root
+
+    if isinstance(trigger, sp.Or):
+        return sp.Max(*[_parse_trigger(arg)
+                        for arg in trigger.args])
+
+    if isinstance(trigger, sp.And):
+        return sp.Min(*[_parse_trigger(arg)
+                        for arg in trigger.args])
+
+    raise SBMLException('AMICI can not parse piecewise functions '
+                        f'with argument {trigger}.')
 
 
 def _parse_logical_operators(math_str: Union[str, float, None]
