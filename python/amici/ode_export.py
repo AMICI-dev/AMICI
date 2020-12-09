@@ -1579,7 +1579,7 @@ class ODEModel:
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
-    def _parse_events(self) -> None:
+    def parse_events(self) -> None:
         """
         This functions checks the right hand side for roots of Heaviside
         functions or events, collects the roots, removes redundant roots,
@@ -1590,7 +1590,7 @@ class ODEModel:
         # Track all roots functions in the right hand side
         roots = []
         for state in self._states:
-            state._dt = _process_heavisides(state._dt, roots)
+            state.set_dt(_process_heavisides(state.get_dt(), roots))
 
         # Now add the found roots to the model components
         for root in roots:

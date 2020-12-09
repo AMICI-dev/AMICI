@@ -16,7 +16,7 @@ import logging
 import copy
 from toposort import toposort
 from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple
+    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
 )
 
 from .ode_export import (
@@ -1482,7 +1482,9 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     return sym
 
 
-def _denest_piecewise(args):
+def _denest_piecewise(
+        args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
+    ) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
     """
     Denest piecewise functions that contain piecewise as condition
 
@@ -1524,10 +1526,11 @@ def _denest_piecewise(args):
     # cut off last condition as that's the default
     return tuple(args_out[:-1])
 
+
 def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     """
-   Piecewise functions cannot be transformed into C++ right away, but AMICI has
-   a special interface for Heaviside function, so we transform them
+    Piecewise functions cannot be transformed into C++ right away, but AMICI has
+    a special interface for Heaviside function, so we transform them
 
     :param args:
         symbolic expressions for arguments of the piecewise function
