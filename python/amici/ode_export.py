@@ -1590,7 +1590,7 @@ class ODEModel:
         # Track all roots functions in the right hand side
         roots = []
         for state in self._states:
-            state._dt = _extract_heavisides(state._dt, roots)
+            state._dt = _process_heavisides(state._dt, roots)
 
         # Now add the found roots to the model components
         for root in roots:
@@ -3639,7 +3639,7 @@ def _custom_print_min(self, expr):
                               self._print(Min(*expr.args[1:])))
 
 
-def _dissect_expression(args):
+def _collect_heaviside_roots(args):
     """
     Recursively checks an expression for the occurrence of Heaviside
     functions and return all roots found
@@ -3649,7 +3649,7 @@ def _dissect_expression(args):
         if arg.func == sp.Heaviside:
             root_fun_list.append(arg.args[0])
         elif arg.has(sp.Heaviside):
-            root_fun_list.append(_dissect_expression(arg.args))
+            root_fun_list.append(_collect_heaviside_roots(arg.args))
     # flatten the expression
     root_funs = []
     for item in root_fun_list:
@@ -3662,22 +3662,26 @@ def _dissect_expression(args):
     return root_funs
 
 
-def _make_unique(root_found, roots) -> sp.Symbol:
+def _get_unique_root(root_found: sp.Expr, roots: List[Event]) -> sp.Symbol:
     """
     Collects roots of Heaviside functions and events and stores them in
-    the roots list. It checks for redundancy to not store
-    symbolicallly equivalent root functions more than once
+    the roots list. It checks for redundancy to not store symbolically
+    equivalent root functions more than once.
 
-    :param:
-        root_found: equation of the root function
-        roots: list of already known root functions with identifier
+    :param root_found:
+        equation of the root function
+    :param roots:
+        list of already known root functions with identifier
+
+    :returns:
+        unique identifier for root
     """
     for root in roots:
         if sp.simplify(root_found - root.get_val()) == 0:
             return root.get_id()
 
     # create an event for a new root function
-    root_symstr = f'HeavisideFunction_{len(roots)}'
+    root_symstr = f'Heaviside_{len(roots)}'
     roots.append(Event(
         identifier=sp.Symbol(root_symstr),
         name=root_symstr,
@@ -3688,28 +3692,35 @@ def _make_unique(root_found, roots) -> sp.Symbol:
     return roots[-1].get_id()
 
 
-def _extract_heavisides(dxdt, roots):
+def _process_heavisides(dxdt: sp.Expr, roots: List[Event]) -> sp.Expr:
     """
-    _extract_heavisides parses the RHS of a state variable, checks for
-    Heaviside functions, and hands them over to the list of roots
-    :param:
-        dxdt: right hand sid eof state variable
-        roots: list of known root functions with identifier
+    Parses the RHS of a state variable, checks for Heaviside functions,
+    collects unique roots functions that can be tracked by SUNDIALS and
+    replaces Heaviside Functions by amici helper variables that will be
+    updated based on SUNDIALS root tracking.
+
+    :param dxdt:
+        right hand sid eof state variable
+    :param roots:
+        list of known root functions with identifier
+
+    :returns:
+        dxdt with Heaviside functions replaced by amici helper variables
     """
 
-    # expanding the rhs wll in general help to collect the same
+    # expanding the rhs will in general help to collect the same
     # heaviside function
     dt_expanded = dxdt.expand()
     # track all the old Heaviside expressions in tmp_roots_old
     # replace them later by the new expressions
     heavisides = []
     # run through the expression tree and get the roots
-    tmp_roots_old = _dissect_expression(dt_expanded.args)
+    tmp_roots_old = _collect_heaviside_roots(dt_expanded.args)
     for tmp_old in tmp_roots_old:
         # we want unique identifiers for the roots
-        tmp_new = _make_unique(tmp_old, roots)
+        tmp_new = _get_unique_root(tmp_old, roots)
         # For Heavisides, we need to add the negative function as well
-        _make_unique(sp.sympify(-1 * tmp_old), roots)
+        _get_unique_root(sp.sympify(-1 * tmp_old), roots)
         heavisides.append((sp.Heaviside(tmp_old), tmp_new))
 
     if heavisides:
