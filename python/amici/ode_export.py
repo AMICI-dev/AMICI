@@ -679,7 +679,7 @@ class LogLikelihood(ModelQuantity):
 
 class Event(ModelQuantity):
     """
-    An Event defines either an SBML event or a root of the argument of a
+    An Event defines either a SBML event or a root of the argument of a
     Heaviside function. The Heaviside functions will be tracked via the
     vector `h` during simulation and are needed to inform the ODE solver about
     a discontinuity in either the right hand side or the states themselves,
