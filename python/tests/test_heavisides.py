@@ -131,7 +131,7 @@ def create_sbml_model(
 ):
     """Create an SBML model from simple definitions.
 
-    See usage in :py:func:`test_piecewise` for example input.
+    See the model definitions and usage in :py:func:`model` for example input.
 
     The default initial concentration of species is `1.0`. This can currently
     be changed by specifying an initial assignment.
@@ -320,6 +320,14 @@ def model_definition_state_and_parameter_dependent_heavisides():
 
 
 def model_definition_piecewise_with_boolean_operations():
+    """Test model for boolean operations in a piecewise condition.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    (alpha <= t and t < beta) or (gamma <= t and t < delta)
+        - { 0,    otherwise
+    """
     # Model components
     species = ['x_1']
     initial_assignments = {'x_1': 'x_1_0'}
@@ -344,14 +352,6 @@ def model_definition_piecewise_with_boolean_operations():
 
     # Analytical solution
     def x_pected(t, x_1_0, alpha, beta, gamma, delta):
-        """Test model for boolean operations in a piecewise condition.
-
-        ODEs
-        ----
-        d/dt x_1:
-            - { 1, (alpha <= t and t < beta) or (gamma <= t and t < delta)
-            - { 0, otherwise
-        """
         if t < alpha:
             return (x_1_0,)
         elif alpha <= t < beta:
@@ -396,6 +396,14 @@ def model_definition_piecewise_with_boolean_operations():
 
 
 def model_definition_piecewise_many_conditions():
+    """Test model for piecewise functions with many pieces.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    floor(t) is odd
+        - { 0,    otherwise
+    """
     # Model components
     species = ['x_1']
     initial_assignments = {'x_1': 'x_1_0'}
@@ -419,14 +427,6 @@ def model_definition_piecewise_many_conditions():
 
     # Analytical solution
     def x_pected(t, x_1_0):
-        """Test model for piecewise functions with many pieces.
-
-        ODEs
-        ----
-        d/dt x_1:
-            - { 1,    floor(t) is odd
-            - { 0,    otherwise
-        """
         if np.floor(t) % 2 == 1:
             return (x_1_0 + (np.floor(t)-1)/2 + (t-np.floor(t)), )
         else:
