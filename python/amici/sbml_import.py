@@ -459,15 +459,6 @@ class SbmlImporter:
 
             self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
-        for r in self.sbml.getListOfRules():
-            if isinstance(self.sbml.getElementBySId(r.getVariable()),
-                          sbml.SpeciesReference) \
-                    or self._sympy_from_sbml_math(r) is None:
-                continue
-
-            self.add_local_symbol(r.getVariable(),
-                                  symbol_with_assumptions(r.getVariable()))
-
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
                 if not (e.isSetId() and e.isSetStoichiometry()) or \
@@ -505,8 +496,13 @@ class SbmlImporter:
         if key in itt.chain(self._local_symbols.keys(),
                             ['True', 'False', 'pi']):
             raise SBMLException(
-                'AMICI does not support SBML models containing '
-                f'variables with SId {key}.'
+                f'AMICI tried to add a local symbol {key} with value {value}, '
+                f'but {key} was already instantiated with '
+                f'{self._local_symbols[key]}. This means either that there '
+                f'are multiple SBML element with SId {key}, which is '
+                f'invalid SBML, or that the employed SId {key} is a special '
+                'reserved symbol in AMICI. This can be fixed by renaming '
+                f'the element with SId {key}.'
             )
         self._local_symbols[key] = value
 
