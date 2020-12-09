@@ -24,7 +24,6 @@ import numpy as np
 import pandas as pd
 import libsbml as sbml
 
-from amici.sbml_import import symbol_with_assumptions
 from amici.constants import SymbolId
 
 # directory with sbml semantic test cases
