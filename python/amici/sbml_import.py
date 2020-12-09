@@ -460,8 +460,8 @@ class SbmlImporter:
             self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
         for r in self.sbml.getListOfRules():
-            if not isinstance(self.sbml.getElementBySId(r.getVariable()),
-                              sbml.SpeciesReference) \
+            if isinstance(self.sbml.getElementBySId(r.getVariable()),
+                          sbml.SpeciesReference) \
                     or self._sympy_from_sbml_math(r) is None:
                 continue
 
