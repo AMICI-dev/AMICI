@@ -1579,7 +1579,7 @@ class ODEModel:
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
-    def parse_events(self) -> None:
+    def _parse_events(self) -> None:
         """
         This functions checks the right hand side for roots of Heaviside
         functions or events, collects the roots, removes redundant roots,
@@ -2221,6 +2221,7 @@ def _print_with_exception(math: sp.Expr) -> str:
     user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
 
     try:
+        # Required until https://github.com/sympy/sympy/pull/20558 is released
         with _monkeypatched(_CXXCodePrinterBase, '_print_Max',
                             _custom_print_max),\
                 _monkeypatched(_CXXCodePrinterBase, '_print_Min',
@@ -3703,7 +3704,7 @@ def _process_heavisides(dxdt: sp.Expr, roots: List[Event]) -> sp.Expr:
     updated based on SUNDIALS root tracking.
 
     :param dxdt:
-        right hand sid eof state variable
+        right hand side of state variable
     :param roots:
         list of known root functions with identifier
 
