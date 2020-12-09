@@ -3,6 +3,7 @@ import importlib
 import libsbml
 import numpy as np
 from pathlib import Path
+import pytest
 import sys
 
 from amici import (
@@ -16,6 +17,94 @@ from amici import (
 sbml_test_models = Path('sbml_test_models')
 sbml_test_models_output_dir = sbml_test_models / 'amici_models'
 sbml_test_models_output_dir.mkdir(parents=True, exist_ok=True)
+
+
+@pytest.fixture(params=[
+    'state_and_parameter_dependent_heavisides',
+    'piecewise_with_boolean_operations',
+    'piecewise_many_conditions',
+])
+def model(request):
+    """Returns the requested AMICI model and analytical expressions."""
+    (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        timepoints,
+        x_pected,
+        sx_pected
+    ) = get_model_definition(request.param)
+
+    # SBML model
+    sbml_document, sbml_model = create_sbml_model(
+        initial_assignments=initial_assignments,
+        parameters=parameters,
+        rate_rules=rate_rules,
+        species=species,
+        # uncomment `to_file` to save SBML model to file for inspection
+        # to_file=sbml_test_models / (model_name + '.sbml'),
+    )
+
+    # AMICI model
+    amici_model = create_amici_model(
+        sbml_model=sbml_model,
+        model_name=request.param,
+    )
+    amici_model.setTimepoints(timepoints)
+
+    return amici_model, parameters, timepoints, x_pected, sx_pected
+
+
+def test_models(model):
+    amici_model, parameters, timepoints, x_pected, sx_pected = model
+
+    result_expected_x = np.array([
+        x_pected(t, **parameters)
+        for t in timepoints
+    ])
+    result_expected_sx = np.array([
+        sx_pected(t, **parameters)
+        for t in timepoints
+    ])
+
+    # --- Test the state trajectories without sensitivities -------------------
+    # Does the AMICI simulation match the analytical solution?
+    solver = amici_model.getSolver()
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    solver.setAbsoluteTolerance(1e-15)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = amici_model.getSolver()
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-12)
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+
+    # --- Test the state trajectories with sensitivities ----------------------
+
+    # Does the AMICI simulation match the analytical solution?
+    solver = amici_model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = amici_model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    solver.setAbsoluteToleranceFSA(1e-15)
+    solver.setRelativeToleranceFSA(1e-13)
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
 
 
 def create_amici_model(sbml_model, model_name) -> AmiciModel:
@@ -95,8 +184,21 @@ def create_sbml_model(
     return document, model
 
 
-def test_state_and_parameter_dependent_heavisides():
-    """Test model for piecewise functions in ODEs.
+def get_model_definition(model_name):
+    if model_name == 'state_and_parameter_dependent_heavisides':
+        return model_definition_state_and_parameter_dependent_heavisides()
+    elif model_name == 'piecewise_with_boolean_operations':
+        return model_definition_piecewise_with_boolean_operations()
+    elif model_name == 'piecewise_many_conditions':
+        return model_definition_piecewise_many_conditions()
+    else:
+        raise NotImplementedError(
+            f'Model with name {model_name} is not implemented.'
+        )
+
+
+def model_definition_state_and_parameter_dependent_heavisides():
+    """Test model for state- and parameter-dependent heavisides.
 
     ODEs
     ----
@@ -108,7 +210,6 @@ def test_state_and_parameter_dependent_heavisides():
         - {         eta,    t >= delta
     """
     # Model components
-    model_name = 'state_and_parameter_dependent_heavisides'
     species = ['x_1', 'x_2']
     initial_assignments = {
         'x_1': 'zeta',
@@ -126,23 +227,6 @@ def test_state_and_parameter_dependent_heavisides():
         'zeta': 0.25,
     }
     timepoints = np.linspace(0, 10, 100)
-
-    # SBML model
-    sbml_document, sbml_model = create_sbml_model(
-        initial_assignments=initial_assignments,
-        parameters=parameters,
-        rate_rules=rate_rules,
-        species=species,
-        # uncomment `to_file` to save SBML model to file for inspection
-        # to_file=sbml_test_models / (model_name + '.sbml'),
-    )
-
-    # AMICI model
-    model = create_amici_model(
-        sbml_model=sbml_model,
-        model_name=model_name,
-    )
-    model.setTimepoints(timepoints)
 
     # Analytical solution
     def x_pected(t, alpha, beta, gamma, delta, eta, zeta):
@@ -167,25 +251,38 @@ def test_state_and_parameter_dependent_heavisides():
         tau_1 = (np.exp(gamma * delta) - delta * eta) / (1 - eta)
         if t < tau_1:
             sx_1_alpha = zeta * t * np.exp(alpha * t)
-            sx_1_beta  = 0
+            sx_1_beta = 0
             sx_1_gamma = 0
             sx_1_delta = 0
-            sx_1_eta   = 0
-            sx_1_zeta  = np.exp(alpha * t)
+            sx_1_eta = 0
+            sx_1_zeta = np.exp(alpha * t)
         else:
             # Never trust Wolfram Alpha...
-            sx_1_alpha = zeta * tau_1 * np.exp(alpha * tau_1 - beta*(t - tau_1))
-            sx_1_beta  = zeta * (tau_1 - t) * np.exp(alpha * tau_1 - beta*(t - tau_1))
-            sx_1_gamma = zeta * (alpha + beta) * \
-                         delta * np.exp(gamma * delta) / (1 - eta) * \
-                         np.exp(alpha * tau_1 - beta*(t - tau_1))
-            sx_1_delta = zeta * (alpha + beta) * \
-                         np.exp(alpha * tau_1 - beta*(t - tau_1)) * \
-                         (gamma * np.exp(gamma * delta) - eta) / (1 - eta)
-            sx_1_eta   = zeta * (alpha + beta) * \
-                         (- delta *(1-eta) + (np.exp(gamma * delta) - delta * eta)) / (1 - eta)**2 * \
-                         np.exp(alpha * tau_1 - beta*(t - tau_1))
-            sx_1_zeta  = np.exp(alpha * tau_1 - beta*(t - tau_1))
+            sx_1_alpha = (
+                zeta * tau_1 * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            )
+            sx_1_beta = (
+                zeta * (tau_1 - t)
+                * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            )
+            sx_1_gamma = (
+                zeta * (alpha + beta) * delta * np.exp(gamma * delta)
+                / (1 - eta)
+                * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            )
+            sx_1_delta = (
+                zeta * (alpha + beta)
+                * np.exp(alpha * tau_1 - beta*(t - tau_1))
+                * (gamma * np.exp(gamma * delta) - eta)
+                / (1 - eta)
+            )
+            sx_1_eta = (
+                zeta * (alpha + beta)
+                * (-delta * (1-eta) + np.exp(gamma * delta) - delta * eta)
+                / (1 - eta)**2
+                * np.exp(alpha * tau_1 - beta*(t - tau_1))
+            )
+            sx_1_zeta = np.exp(alpha * tau_1 - beta*(t - tau_1))
 
         # get sx_2, w.r.t. parameters
         tau_2 = delta
@@ -211,61 +308,19 @@ def test_state_and_parameter_dependent_heavisides():
 
         return np.array((sx_1, sx_2)).transpose()
 
-    result_expected_x  = np.array([x_pected(t, **parameters)
-                                   for t in timepoints])
-    result_expected_sx = np.array([sx_pected(t, **parameters)
-                                   for t in timepoints])
-
-    # --- Test the state trajectories without sensitivities -------------------
-    # Does the AMICI simulation match the analytical solution?
-    solver = model.getSolver()
-    rdata = runAmiciSimulation(model, solver=solver)
-    solver.setAbsoluteTolerance(1e-15)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-12)
-    rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-
-    # --- Test the state trajectories with sensitivities ----------------------
-
-    # Does the AMICI simulation match the analytical solution?
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    rdata = runAmiciSimulation(model, solver=solver)
-
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    solver.setAbsoluteToleranceFSA(1e-15)
-    solver.setRelativeToleranceFSA(1e-13)
-    rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
 
 
-def test_piecewise_with_boolean_operations():
-    """Test model for piecewise functions in ODEs.
-
-    ODEs
-    ----
-    d/dt x_1:
-        - { 1,    (alpha <= t and t < beta) or (gamma <= t and t < delta)
-        - { 0,    otherwise
-    """
+def model_definition_piecewise_with_boolean_operations():
     # Model components
-    model_name = 'piecewise_with_boolean_operations'
     species = ['x_1']
     initial_assignments = {'x_1': 'x_1_0'}
     rate_rules = {
@@ -287,25 +342,16 @@ def test_piecewise_with_boolean_operations():
     }
     timepoints = np.linspace(0, 5, 100)
 
-    # SBML model
-    sbml_document, sbml_model = create_sbml_model(
-        initial_assignments=initial_assignments,
-        parameters=parameters,
-        rate_rules=rate_rules,
-        species=species,
-        # uncomment `to_file` to save SBML model to file for inspection
-        to_file=sbml_test_models / (model_name + '.sbml'),
-    )
-
-    # AMICI model
-    model = create_amici_model(
-        sbml_model=sbml_model,
-        model_name=model_name,
-    )
-    model.setTimepoints(timepoints)
-
     # Analytical solution
     def x_pected(t, x_1_0, alpha, beta, gamma, delta):
+        """Test model for boolean operations in a piecewise condition.
+
+        ODEs
+        ----
+        d/dt x_1:
+            - { 1, (alpha <= t and t < beta) or (gamma <= t and t < delta)
+            - { 0, otherwise
+        """
         if t < alpha:
             return (x_1_0,)
         elif alpha <= t < beta:
@@ -338,60 +384,19 @@ def test_piecewise_with_boolean_operations():
 
         return np.array((sx,)).transpose()
 
-    result_expected_x  = np.array([x_pected(t, **parameters)
-                                   for t in timepoints])
-    result_expected_sx = np.array([sx_pected(t, **parameters)
-                                   for t in timepoints])
-
-    # --- Test the state trajectories without sensitivities -------------------
-
-    solver = model.getSolver()
-    rdata = runAmiciSimulation(model, solver=solver)
-    # The AMICI simulation matches the analytical solution.
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = model.getSolver()
-    solver.setRelativeTolerance(1e-12)
-    rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-
-    # --- Test the state trajectories with sensitivities ----------------------
-
-    # Does the AMICI simulation match the analytical solution?
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    rdata = runAmiciSimulation(model, solver=solver)
-
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    solver.setAbsoluteToleranceFSA(1e-15)
-    solver.setRelativeToleranceFSA(1e-13)
-    rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
 
 
-def test_piecewise_many_conditions():
-    """Test model for piecewise functions in ODEs.
-
-    ODEs
-    ----
-    d/dt x_1:
-        - { 1,    floor(t) is odd
-        - { 0,    otherwise
-    """
+def model_definition_piecewise_many_conditions():
     # Model components
-    model_name = 'piecewise_many_conditions'
     species = ['x_1']
     initial_assignments = {'x_1': 'x_1_0'}
     t_final = 5
@@ -412,71 +417,30 @@ def test_piecewise_many_conditions():
     }
     timepoints = np.linspace(0, t_final, 100)
 
-    # SBML model
-    sbml_document, sbml_model = create_sbml_model(
-        initial_assignments=initial_assignments,
-        parameters=parameters,
-        rate_rules=rate_rules,
-        species=species,
-        # uncomment `to_file` to save SBML model to file for inspection
-        to_file=sbml_test_models / (model_name + '.sbml'),
-    )
-
-    # AMICI model
-    model = create_amici_model(
-        sbml_model=sbml_model,
-        model_name=model_name,
-    )
-    model.setTimepoints(timepoints)
-
     # Analytical solution
     def x_pected(t, x_1_0):
+        """Test model for piecewise functions with many pieces.
+
+        ODEs
+        ----
+        d/dt x_1:
+            - { 1,    floor(t) is odd
+            - { 0,    otherwise
+        """
         if np.floor(t) % 2 == 1:
             return (x_1_0 + (np.floor(t)-1)/2 + (t-np.floor(t)), )
         else:
             return (x_1_0 + np.floor(t)/2, )
 
     def sx_pected(t, x_1_0):
-        return np.array([[1,],])
+        return np.array([[1, ], ])
 
-    result_expected_x  = np.array([x_pected(t, **parameters)
-                                   for t in timepoints])
-    result_expected_sx = np.array([sx_pected(t, **parameters)
-                                   for t in timepoints])
-
-    # --- Test the state trajectories without sensitivities -------------------
-
-    solver = model.getSolver()
-    rdata = runAmiciSimulation(model, solver=solver)
-    # The AMICI simulation matches the analytical solution.
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = model.getSolver()
-    solver.setRelativeTolerance(1e-12)
-    rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-
-    # --- Test the state trajectories with sensitivities ----------------------
-
-    # Does the AMICI simulation match the analytical solution?
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    rdata = runAmiciSimulation(model, solver=solver)
-
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = model.getSolver()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setRelativeTolerance(1e-13)
-    solver.setAbsoluteToleranceFSA(1e-15)
-    solver.setRelativeToleranceFSA(1e-13)
-    rdata = runAmiciSimulation(model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
