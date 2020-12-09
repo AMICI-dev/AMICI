@@ -4,6 +4,21 @@ from typing import List
 import re
 import sys
 
+import _pytest.skipping as skipping
+
+
+def show_skipped(tr, lines):
+    for rep in tr.stats.get("skipped", []):
+        pos = tr.config.cwd_relative_nodeid(rep.nodeid)
+        reason = rep.longrepr[-1]
+        if reason.startswith("Skipped: "):
+            reason = reason[9:]
+        verbose_word = skipping._get_report_str(tr.config, report=rep)
+        lines.append(f"{verbose_word}\t{pos}: {reason}")
+
+
+skipping.show_skipped = show_skipped
+
 
 def parse_selection(selection_str: str) -> List[int]:
     """
