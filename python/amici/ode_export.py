@@ -953,7 +953,8 @@ class ODEModel:
             'p': '_parameters',
             'k': '_constants',
             'w': '_expressions',
-            'sigmay': '_sigmays'
+            'sigmay': '_sigmays',
+            'h': '_events'
         }
         self._value_prototype: Dict[str, str] = {
             'p': '_parameters',
@@ -1513,7 +1514,7 @@ class ODEModel:
                 else sp.Matrix([
                     sp.Symbol(comp.get_name())
                     for comp in getattr(self, component)
-            ])
+                ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
                     comp.get_measurement_symbol()
@@ -1546,12 +1547,6 @@ class ODEModel:
                 for tcl in self._conservationlaws
             ])
             return
-        elif name == 'h':
-            # heaviside functions
-            self._syms[name] = sp.Matrix([
-                root.get_id() for root in self._events
-            ])
-            return
         elif name == 'xdot_old':
             length = len(self.eq('xdot'))
         elif name in sparse_functions:
@@ -1573,6 +1568,11 @@ class ODEModel:
         Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
         """
+
+        # We need to process events and Heaviside functions in the ODE Model,
+        # before adding it to ODEExporter
+        self.parse_events()
+
         for var in self._variable_prototype:
             if var not in self._syms:
                 self._generate_symbol(var, from_sbml=from_sbml)
@@ -2380,10 +2380,6 @@ class ODEExporter:
                                   f'amici-{self.model_name}')
         self.model_path: str = os.path.abspath(output_dir)
         self.model_swig_path: str = os.path.join(self.model_path, 'swig')
-
-        # We need to process events and Heaviside functions in the ODE Model,
-        # before adding it to ODEExporter
-        ode_model.parse_events()
 
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
