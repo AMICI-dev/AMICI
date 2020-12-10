@@ -1421,7 +1421,7 @@ def _check_unsupported_functions(sym: sp.Expr,
     # thus pass this test
     unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.core.function.UndefinedFunction
+        sp.Mod, sp.core.function.UndefinedFunction
     )
 
     if isinstance(sym.func, unsupported_functions) \
