@@ -1423,19 +1423,14 @@ def _check_unsupported_functions(sym: sp.Expr,
         sp.core.function.UndefinedFunction
     )
 
-    if isinstance(sym.func, unsupported_functions):
+    if isinstance(sym.func, unsupported_functions) \
+            or isinstance(sym, unsupported_functions):
         raise SBMLException(f'Encountered unsupported expression '
                             f'"{sym.func}" of type '
                             f'"{type(sym.func)}" as part of a '
                             f'{expression_type}: "{full_sym}"!')
-    for fun in list(sym._args) + [sym]:
-        if isinstance(fun, unsupported_functions):
-            raise SBMLException(f'Encountered unsupported expression '
-                                f'"{fun}" of type '
-                                f'"{type(fun)}" as part of a '
-                                f'{expression_type}: "{full_sym}"!')
-        if fun is not sym:
-            _check_unsupported_functions(fun, expression_type)
+    for arg in list(sym.args):
+        _check_unsupported_functions(arg, expression_type)
 
 
 def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
@@ -1465,7 +1460,16 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     }
 
     if sym.__class__.__name__ in fun_mappings:
-        return fun_mappings[sym.__class__.__name__](*sym.args)
+        # c++ doesnt like mixing int and double for arguments of those
+        # functions
+        if sym.__class__.__name__ in ['min', 'max']:
+            args = tuple([
+                sp.Float(arg) if arg.is_number else arg
+                for arg in sym.args
+            ])
+        else:
+            args = sym.args
+        return fun_mappings[sym.__class__.__name__](*args)
 
     if sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
