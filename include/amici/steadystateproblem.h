@@ -122,7 +122,7 @@ class SteadystateProblem {
     /**
      * @brief Assembles the error message to be thrown.
      * @param errorString const pointer to string with error message
-     * @param status Entry of steady_state_staus to be processed
+     * @param status Entry of steady_state_status to be processed
      */
     void writeErrorString(std::string *errorString, SteadyStateStatus
                           status) const;

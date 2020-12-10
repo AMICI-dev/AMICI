@@ -454,6 +454,11 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
 
     status = CVode(ami_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
 
+    if (status == CV_ROOT_RETURN)
+        throw CvodeException(status, "CVode returned a root after "
+            "reinitialization. The initial step-size after the event or "
+            "heaviside function is too small. To fix this, increase absolute "
+            "and relative tolerances!");
     if (status != CV_SUCCESS)
         throw CvodeException(status, "reInitPostProcess");
 

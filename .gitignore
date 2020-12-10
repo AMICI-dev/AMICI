@@ -153,6 +153,7 @@ python/examples/example_presimulation/model_presimulation/*
 python/examples/example_presimulation/model_presimulation_re/*
 python/examples/example_constant_species/model_constant_species_reduced/*
 python/examples/example_constant_species/model_constant_species/*
+python/tests/sbml_test_models/*
 
 python/sdist/amici.egg-info/*
 python/sdist/amici/version.txt
@@ -190,4 +191,5 @@ tests/performance/CS_Signalling_ERBB_RAS_AKT/
 tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*
 coverage_SBMLSuite.xml
 Benchmark-Models-PEtab/
+
 

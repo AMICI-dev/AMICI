@@ -26,3 +26,4 @@ class SymbolId(str, enum.Enum):
     EXPRESSION = 'expression'
     SIGMAY = 'sigmay'
     LLHY = 'llhy'
+    EVENT = 'event'
