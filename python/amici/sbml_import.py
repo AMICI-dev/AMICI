@@ -1442,6 +1442,9 @@ def _check_unsupported_functions(sym: sp.Expr,
     # thus pass this test
     unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
+        sp.functions.sec, sp.functions.csc, sp.functions.cot,
+        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
+        sp.functions.acsch, sp.functions.acoth,
         sp.Mod, sp.core.function.UndefinedFunction
     )
 
