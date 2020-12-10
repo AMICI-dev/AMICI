@@ -459,10 +459,15 @@ class SbmlImporter:
         for x_ref in _get_list_of_species_references(self.sbml):
             if not x_ref.isSetId():
                 continue
-            if x_ref.isSetStoichiometry():
+            if x_ref.isSetStoichiometry() and not \
+                    self.is_assignment_rule_target(x_ref):
                 value = sp.Float(x_ref.getStoichiometry())
             else:
                 value = _get_identifier_symbol(x_ref)
+
+            ia_sym = self._get_element_initial_assignment(x_ref.getId())
+            if ia_sym is not None:
+                value = ia_sym
 
             self.add_local_symbol(x_ref.getId(), value)
 
