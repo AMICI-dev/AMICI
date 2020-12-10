@@ -438,6 +438,7 @@ class SbmlImporter:
             # oo is sympy infinity
             'INF': sp.oo,
             'NaN': sp.nan,
+            'rem': sp.Mod,
             'time': symbol_with_assumptions('time'),
             # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
@@ -1447,7 +1448,6 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
 
     fun_mappings = {
-        'rem': sp.Mod,
         'times': sp.Mul,
         'xor': sp.Xor,
         'abs': sp.Abs,
