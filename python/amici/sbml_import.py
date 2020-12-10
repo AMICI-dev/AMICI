@@ -1465,6 +1465,13 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         'floor': sp.functions.floor,
         'factorial': sp.functions.factorial,
         'arcsec': sp.functions.asec,
+        'arcsech': sp.functions.asech,
+        'arccsc': sp.functions.acsc,
+        'arcsch': sp.functions.acsch,
+        'arcsin': sp.functions.asin,
+        'arccos': sp.functions.acos,
+        'arctan': sp.functions.atan,
+        'arccot': sp.functions.acot,
     }
 
     if sym.__class__.__name__ in fun_mappings:
