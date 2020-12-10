@@ -448,18 +448,29 @@ class SbmlImporter:
         for s, v in special_symbols_and_funs.items():
             self.add_local_symbol(s, v)
 
-        species_references = _get_list_of_species_references(self.sbml)
         for c in itt.chain(self.sbml.getListOfSpecies(),
                            self.sbml.getListOfParameters(),
-                           self.sbml.getListOfCompartments(),
-                           species_references):
-            if not c.getId():
+                           self.sbml.getListOfCompartments()):
+            if not c.isSetId():
                 continue
 
             self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
+        for x_ref in _get_list_of_species_references(self.sbml):
+            if not x_ref.isSetId():
+                continue
+            if x_ref.isSetStoichiometry():
+                value = sp.Float(x_ref.getStoichiometry())
+            else:
+                value = _get_identifier_symbol(x_ref)
+
+            self.add_local_symbol(x_ref.getId(), value)
+
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
+                if isinstance(e, sbml.SpeciesReference):
+                    continue
+
                 if not (e.isSetId() and e.isSetStoichiometry()) or \
                         self.is_assignment_rule_target(e):
                     continue
@@ -1464,14 +1475,18 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         'ceil': sp.functions.ceiling,
         'floor': sp.functions.floor,
         'factorial': sp.functions.factorial,
-        'arcsec': sp.functions.asec,
-        'arcsech': sp.functions.asech,
-        'arccsc': sp.functions.acsc,
-        'arcsch': sp.functions.acsch,
         'arcsin': sp.functions.asin,
         'arccos': sp.functions.acos,
         'arctan': sp.functions.atan,
         'arccot': sp.functions.acot,
+        'arcsec': sp.functions.asec,
+        'arccsc': sp.functions.acsc,
+        'arcsinh': sp.functions.asinh,
+        'arccosh': sp.functions.acosh,
+        'arctanh': sp.functions.atanh,
+        'arccoth': sp.functions.acoth,
+        'arcsech': sp.functions.asech,
+        'arccsch': sp.functions.acsch,
     }
 
     if sym.__class__.__name__ in fun_mappings:
