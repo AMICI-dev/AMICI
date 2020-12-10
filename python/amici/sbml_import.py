@@ -16,7 +16,7 @@ import logging
 import copy
 from toposort import toposort
 from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple
+    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
 )
 
 from .ode_export import (
@@ -1287,9 +1287,18 @@ class SbmlImporter:
             ele_name = 'string'
         math_string = replace_logx(math_string)
         try:
-            formula = sp.sympify(_parse_logical_operators(
-                math_string
-            ), locals=self._local_symbols)
+            try:
+                formula = sp.sympify(_parse_logical_operators(
+                    math_string
+                ), locals=self._local_symbols)
+            except TypeError as err:
+                if str(err) == 'BooleanAtom not allowed in this context.':
+                    formula = sp.sympify(_parse_logical_operators(
+                        math_string
+                    ), locals={'true': sp.Float(1.0), 'false': sp.Float(0.0),
+                               **self._local_symbols})
+                else:
+                    raise
         except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
             raise SBMLException(f'{ele_name} "{math_string}" '
                                 'contains an unsupported expression: '
@@ -1445,7 +1454,10 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
-    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
+    args = tuple(arg if arg.__class__.__name__ == 'piecewise'
+                 and sym.__class__.__name__ == 'piecewise'
+                 else _parse_special_functions(arg, False)
+                 for arg in sym.args)
 
     fun_mappings = {
         'times': sp.Mul,
@@ -1471,20 +1483,18 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
             args = sym.args
         return fun_mappings[sym.__class__.__name__](*args)
 
-    if sym.__class__.__name__ == 'piecewise':
-        # how many condition-expression pairs will we have?
-        return sp.Piecewise(*((
-            piece[0],
-            sp.sympify(bool(piece[1]))
-            if isinstance(piece[1], sp.Basic) and piece[1].is_number
-            else piece[1]
-        ) for piece in grouper(args, 2, True)))
+    elif sym.__class__.__name__ == 'piecewise':
+        # We need to parse piecewise functions into Heavisides
+        return _parse_piecewise_to_heaviside(
+            _denest_piecewise(args)
+        )
 
     if sym.__class__.__name__ == 'plus':
         return sp.Float(1.0)
 
     if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
+        
     elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
@@ -1492,6 +1502,111 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         sym = sp.Float(int(bool(sym)))
 
     return sym
+
+
+def _denest_piecewise(
+        args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
+    ) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
+    """
+    Denest piecewise functions that contain piecewise as condition
+
+    :param args:
+        Arguments to the piecewise function
+
+    :return:
+        Arguments where conditions no longer contain piecewise functions and
+        the conditional dependency is flattened out
+    """
+    args_out = []
+    for coeff, cond in grouper(args, 2, True):
+        # handling of this case is explicitely disabled in
+        # _parse_special_functions as keeping track of coeff/cond
+        # arguments is tricky. Simpler to just parse them out here
+        if coeff.__class__.__name__ == 'piecewise':
+            coeff = _parse_special_functions(coeff, False)
+
+        # we can have conditions that are piecewise function
+        # returning True or False
+        if cond.__class__.__name__ == 'piecewise':
+            # this keeps track of conditional that the previous
+            # piece was picked
+            previous_was_picked = sp.false
+            # recursively denest those first
+            for sub_coeff, sub_cond in grouper(
+                    _denest_piecewise(cond.args), 2, True
+            ):
+                # flatten the individual pieces
+                pick_this = sp.And(
+                    sp.Not(previous_was_picked), sub_cond
+                )
+                if sub_coeff == sp.true:
+                    args_out.extend([coeff, pick_this])
+                previous_was_picked = pick_this
+
+        else:
+            args_out.extend([coeff, cond])
+    # cut off last condition as that's the default
+    return tuple(args_out[:-1])
+
+
+def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
+    """
+    Piecewise functions cannot be transformed into C++ right away, but AMICI has
+    a special interface for Heaviside function, so we transform them
+
+    :param args:
+        symbolic expressions for arguments of the piecewise function
+    """
+    # how many condition-expression pairs will we have?
+    formula = sp.Float(0.0)
+    not_condition = sp.Float(1.0)
+
+    for coeff, trigger in grouper(args, 2, True):
+        if isinstance(coeff, BooleanAtom):
+            coeff = sp.Float(int(bool(coeff)))
+
+        if trigger == sp.true:
+            return formula + coeff * not_condition
+
+        if trigger == sp.false:
+            continue
+
+        # we now need to convert the relational >, >=, ... expression into
+        # a trigger function which will be a Heaviside argument
+        root = _parse_trigger(trigger)
+
+        tmp = sp.Heaviside(root)
+        formula += coeff * sp.simplify(not_condition * tmp)
+        not_condition *= (1-tmp)
+
+    return formula
+
+
+def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
+    """
+    Recursively translates a boolean trigger function into a real valued
+    root function
+
+    :param trigger:
+    :return: real valued root function expression
+    """
+    if trigger.is_Relational:
+        root = trigger.args[0] - trigger.args[1]
+        if isinstance(trigger, (sp.core.relational.StrictLessThan,
+                                sp.core.relational.LessThan)):
+            root *= -1
+        return root
+
+    if isinstance(trigger, sp.Or):
+        return sp.Max(*[_parse_trigger(arg)
+                        for arg in trigger.args])
+
+    if isinstance(trigger, sp.And):
+        return sp.Min(*[_parse_trigger(arg)
+                        for arg in trigger.args])
+
+    raise SBMLException('AMICI can not parse piecewise functions '
+                        f'with argument {trigger}.')
 
 
 def _parse_logical_operators(math_str: Union[str, float, None]
@@ -1916,4 +2031,3 @@ def toposort_symbols(symbols: SymbolDef,
         for symbol_group in sorted_symbols
         for s in symbol_group
     }
-
