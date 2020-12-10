@@ -1515,8 +1515,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
             _denest_piecewise(args)
         )
 
-    if sym.__class__.__name__ == 'plus':
-        return sp.Float(1.0)
+    if sym.__class__.__name__ == 'plus' and not sym.args:
+        return sp.Float(0.0)
 
     if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
