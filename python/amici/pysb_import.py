@@ -9,8 +9,10 @@ from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
     Expression, LogLikelihood, generate_measurement_symbol
 )
-# TODO move away from sbml import
-from .sbml_import import noise_distribution_to_cost_function, _get_str_symbol_identifiers
+
+from .import_utils import (
+    noise_distribution_to_cost_function, _get_str_symbol_identifiers
+)
 import logging
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -49,7 +51,7 @@ def pysb2amici(
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
 ):
     """
-    Generate AMICI C++ files for the model provided to the constructor.
+    Generate AMICI C++ files for the provided model.
 
     :param model:
         pysb model, :attr:`pysb.Model.name` will determine the name of the
@@ -68,8 +70,9 @@ def pysb2amici(
 
     :param noise_distributions:
         dict with names of observable Expressions as keys and a noise type
-        identifier, or a callable generating a custom noise formula string.
-        If nothing is passed for some observable id, a normal model is
+        identifier, or a callable generating a custom noise formula string
+        (see :py:func:`amici.import_utils.noise_distribution_to_cost_function`
+        ). If nothing is passed for some observable id, a normal model is
         assumed as default.
 
     :param constant_parameters:
