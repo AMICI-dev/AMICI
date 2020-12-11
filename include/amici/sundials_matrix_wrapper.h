@@ -243,15 +243,18 @@ class SUNMatrixWrapper {
      * @brief N_Vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
+     * @param alpha scalar coefficient for matrix
      */
-    void multiply(N_Vector c, const_N_Vector b) const;
+    void multiply(N_Vector c, const_N_Vector b, realtype alpha = 1.0) const;
 
     /**
-     * @brief Perform matrix vector multiplication c += A*b
+     * @brief Perform matrix vector multiplication c += alpha * A*b
      * @param c output vector, may already contain values
      * @param b multiplication vector
+     * @param alpha scalar coefficient
      */
-    void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
+    void multiply(gsl::span<realtype> c, gsl::span<const realtype> b,
+                  const realtype alpha = 1.0) const;
 
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
@@ -261,7 +264,7 @@ class SUNMatrixWrapper {
      * @param transpose bool transpose A before multiplication
      */
     void multiply(N_Vector c,
-                  const N_Vector b,
+                  const_N_Vector b,
                   gsl::span <const int> cols,
                   bool transpose) const;
 

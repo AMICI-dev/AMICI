@@ -107,8 +107,8 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
         throw IDAException(status, "IDAInit");
 }
 
-void IDASolver::initSteadystate(const realtype t0, const AmiVector &x0,
-                                const AmiVector &dx0) const {
+void IDASolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/,
+                                const AmiVector &/*dx0*/) const {
     /* We need to set the steadystate rhs function. SUndials doesn't have this
        in its public api, so we have to change it in the solver memory,
        as re-calling init would unset solver settings. */
@@ -338,8 +338,8 @@ void IDASolver::resetState(void *ami_mem, const_N_Vector yy0,
 
     /* Initialize the phi array */
 
-    N_VScale(ONE, yy0, ida_mem->ida_phi[0]);
-    N_VScale(ONE, yp0, ida_mem->ida_phi[1]);
+    N_VScale(ONE, const_cast<N_Vector>(yy0), ida_mem->ida_phi[0]);
+    N_VScale(ONE, const_cast<N_Vector>(yp0), ida_mem->ida_phi[1]);
 
     /* Set step parameters */
 
@@ -561,7 +561,8 @@ void IDASolver::quadInit(const AmiVector &xQ0) const {
     int status;
     xQ_.copy(xQ0);
     if (getQuadInitDone()) {
-        status = IDAQuadReInit(solver_memory_.get(), xQ0.getNVector());
+        status = IDAQuadReInit(solver_memory_.get(),
+                               const_cast<N_Vector>(xQ0.getNVector()));
     } else {
         status = IDAQuadInit(solver_memory_.get(), fqBdot_ss, xQ_.getNVector());
         setQuadInitDone();

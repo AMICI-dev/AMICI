@@ -251,4 +251,4 @@ class CVodeSolver : public Solver {
 
 } // namespace amici
 
-#endif /* CVodewrap_h */
+#endif /* AMICI_SOLVER_CVODES_h */
