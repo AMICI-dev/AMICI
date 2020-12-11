@@ -318,15 +318,9 @@ def import_model_pysb(
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
-        noise_distrs = {}
-        if petab.NOISE_DISTRIBUTION in observable_table:
-            for obs_id in observables:
-                noise_distr = observable_table.loc[obs_id,
-                                                   petab.NOISE_DISTRIBUTION]
-                if isinstance(noise_distr, str) and noise_distr:
-                    noise_distrs[obs_id] = noise_distr
-                else:
-                    noise_distrs[obs_id] = 'normal'
+        noise_distrs = petab_import.petab_noise_distributions_to_amici(
+            observable_table)
+
 
     from amici.pysb_import import pysb2amici
     pysb2amici(pysb_model, model_output_dir, verbose=True,
