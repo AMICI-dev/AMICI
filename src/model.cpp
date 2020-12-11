@@ -20,7 +20,7 @@ namespace amici {
  * @param ids vector of name/ids of (fixed)Parameters
  * @param values values of the (fixed)Parameters
  * @param id name/id to look for in the vector
- * @param variable_name string indicating what variable we are lookin at
+ * @param variable_name string indicating what variable we are looking at
  * @param id_name string indicating whether name or id was specified
  * @return value of the selected parameter
  */
@@ -42,7 +42,7 @@ static realtype getValueById(std::vector<std::string> const &ids,
  * @param values values of the (fixed)Parameters
  * @param value for the selected parameter
  * @param id name/id to look for in the vector
- * @param variable_name string indicating what variable we are lookin at
+ * @param variable_name string indicating what variable we are looking at
  * @param id_name string indicating whether name or id was specified
  */
 static void setValueById(std::vector<std::string> const &ids,
@@ -63,7 +63,7 @@ static void setValueById(std::vector<std::string> const &ids,
  * @param values values of the (fixed)Parameters
  * @param value for the selected parameter
  * @param regex string according to which names/ids are to be matched
- * @param variable_name string indicating what variable we are lookin at
+ * @param variable_name string indicating what variable we are looking at
  * @param id_name string indicating whether name or id was specified
  * @return number of matched names/ids
  */
@@ -572,7 +572,7 @@ std::vector<bool> const &Model::getStateIsNonNegative() const {
 
 void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
     if (nx_solver != nx_rdata) {
-        throw AmiException("Nonnegative states are not supported whith"
+        throw AmiException("Non-negative states are not supported with"
                            " conservation laws enabled");
     }
     if (state_is_non_negative_.size() != static_cast<unsigned long>(nx_rdata)) {

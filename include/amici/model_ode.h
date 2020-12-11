@@ -124,7 +124,7 @@ class Model_ODE : public Model {
     /**
      * @brief Implementation of fJSparse at the N_Vector level, this function
      * provides an interface to the model specific routines for the solver
-     * implementation aswell as the AmiVector level implementation
+     * implementation as well as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param J Matrix to which the Jacobian will be written

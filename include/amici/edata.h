@@ -174,7 +174,7 @@ class ExpData {
      * @brief set function that copies observed data for specific observable
      *
      * @param observedData observed data (dimension: nt)
-     * @param iy oberved data index
+     * @param iy observed data index
      */
     void setObservedData(const std::vector<realtype> &observedData, int iy);
 

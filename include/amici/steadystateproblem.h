@@ -135,7 +135,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param it integer with the index of the current time step
      * @param context SteadyStateContext giving the situation for the flag
-     * @return flag telling how to process state sensis
+     * @return flag telling how to process state sensitivities
      */
     bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
                             SteadyStateContext context);

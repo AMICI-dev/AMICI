@@ -359,8 +359,8 @@ void Model_ODE::fxBdot_ss(const realtype t, const AmiVector &xB,
 }
 
 void Model_ODE::fxBdot_ss(realtype /*t*/, const_N_Vector xB, N_Vector xBdot) const {
-    /* Right hande side of the adjoint state for steady state computations.
-       J is fixed (as x remeins in steady state), so the RHS becomes simple. */
+    /* Right hand side of the adjoint state for steady state computations.
+       J is fixed (as x remains in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
     JB_.multiply(xBdot, xB);
 }

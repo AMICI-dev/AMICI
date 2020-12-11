@@ -457,20 +457,20 @@ class ReturnData {
 
     /**
      * @brief initializes storage for residual reporting mode
-     * @param enable_res wheter residuals are to be computed
+     * @param enable_res whether residuals are to be computed
      */
     void initializeResidualReporting(bool enable_res);
 
     /**
      * @brief initializes storage for full reporting mode
-     * @param enable_fim wheter FIM Hessian approximation is to be computed
+     * @param enable_fim whether FIM Hessian approximation is to be computed
      */
     void initializeFullReporting(bool enable_fim);
 
 
     /**
      * @brief initialize values for chi2 and llh and derivatives
-     * @param enable_chi2 wheter chi2 values are to be computed
+     * @param enable_chi2 whether chi2 values are to be computed
      */
     void initializeObjectiveFunction(bool enable_chi2);
 
@@ -677,7 +677,7 @@ class ReturnData {
      * @param model model that was used for forward/backward simulation
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * @param xB vector with final adjoint state
-     * (exluding conservation laws)
+     * (excluding conservation laws)
      */
     void handleSx0Forward(const Model &model,
                           std::vector<realtype> &llhS0,

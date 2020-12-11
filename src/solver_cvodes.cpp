@@ -113,8 +113,8 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
 
 void CVodeSolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/,
                                   const AmiVector &/*dx0*/) const {
-    /* We need to set the steadystate rhs function. SUndials doesn't have this
-       in its public api, so we have to change it in the solver memory,
+    /* We need to set the steadystate rhs function. Sundials doesn't have this
+       in its public API, so we have to change it in the solver memory,
        as re-calling init would unset solver settings. */
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_f = fxBdot_ss;

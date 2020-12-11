@@ -256,7 +256,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
             writeSlice(sx_rdata_[ip], slice(sx0, ip, nx));
     }
 
-    // process timpoint data
+    // process timepoint data
     realtype tf = fwd.getFinalTime();
     for (int it = 0; it < model.nt(); it++) {
         if (model.getTimepoint(it) <= tf) {
@@ -585,7 +585,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
     }
 
     if (sensi >= SensitivityOrder::first) {
-        // recover first order sensitivies from states for adjoint sensitivity
+        // recover first order sensitivities from states for adjoint sensitivity
         // analysis
         if (sensi == SensitivityOrder::second
             && o2mode == SecondOrderMode::full

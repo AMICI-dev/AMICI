@@ -186,7 +186,7 @@ double Dmin(int id, double a, double b, double c) {
  *
  * @param base base
  * @param exponent exponent
- * @return pow(max(base,0.0),exponen)
+ * @return pow(max(base,0.0),exponent)
  *
  */
 double pos_pow(double base, double exponent) {
