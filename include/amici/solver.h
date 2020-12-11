@@ -750,7 +750,7 @@ class Solver {
      */
     bool computingFSA() const {
         return getSensitivityOrder() >= SensitivityOrder::first &&
-        getSensitivityMethod() == SensitivityMethod::forward;
+        getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0;
     }
 
     /**
@@ -759,7 +759,7 @@ class Solver {
      */
     bool computingASA() const {
         return getSensitivityOrder() >= SensitivityOrder::first &&
-        getSensitivityMethod() == SensitivityMethod::adjoint;
+        getSensitivityMethod() == SensitivityMethod::adjoint && nplist() > 0;
     }
 
     /**
@@ -1644,18 +1644,18 @@ class Solver {
     mutable bool force_reinit_postprocess_B_ {false};
 
   private:
-  
+
     /**
      * @brief applies total number of steps for next solver call
      */
     void apply_max_num_steps() const;
-    
+
     /**
      * @brief applies total number of steps for next backwards solver call
      */
     void apply_max_num_steps_B() const;
-  
-  
+
+
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth_ {SensitivityMethod::forward};
 

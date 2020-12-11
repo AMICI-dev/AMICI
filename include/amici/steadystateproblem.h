@@ -122,7 +122,7 @@ class SteadystateProblem {
     /**
      * @brief Assembles the error message to be thrown.
      * @param errorString const pointer to string with error message
-     * @param status Entry of steady_state_staus to be processed
+     * @param status Entry of steady_state_status to be processed
      */
     void writeErrorString(std::string *errorString, SteadyStateStatus
                           status) const;
@@ -135,7 +135,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param it integer with the index of the current time step
      * @param context SteadyStateContext giving the situation for the flag
-     * @return flag telling how to process state sensis
+     * @return flag telling how to process state sensitivities
      */
     bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
                             SteadyStateContext context);

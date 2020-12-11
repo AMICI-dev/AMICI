@@ -567,7 +567,7 @@ void Solver::applyQuadTolerancesASA(const int which) const {
 
 void Solver::applyQuadTolerances() const {
     if (!getQuadInitDone())
-        throw AmiException("Quadratures were not intialized, the "
+        throw AmiException("Quadratures were not initialized, the "
                            "tolerances cannot be applied yet!");
 
     if (sensi_ < SensitivityOrder::first)

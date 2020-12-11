@@ -812,7 +812,7 @@ class AbstractModel {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
      */

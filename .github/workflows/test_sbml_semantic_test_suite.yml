@@ -9,6 +9,7 @@ on:
       - .github/workflows/test_sbml_semantic_test_suite.yml
       - python/amici/ode_export.py
       - python/amici/sbml_import.py
+      - python/amici/import_utils.py
       - scripts/run-SBMLTestsuite.sh
       - tests/testSBMLSuite.py
   check_suite:

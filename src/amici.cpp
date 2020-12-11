@@ -186,7 +186,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         if (rethrow)
             throw;
         warningF("AMICI:simulation",
-                 "AMICI simulation failed:\n%s\nError occured in:\n%s",
+                 "AMICI simulation failed:\n%s\nError occurred in:\n%s",
                  ex.what(),
                  ex.getBacktrace());
     }

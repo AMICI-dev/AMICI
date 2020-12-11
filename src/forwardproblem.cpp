@@ -135,13 +135,13 @@ void ForwardProblem::handlePresimulation()
 
 
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
-    /* store heaviside information at event occurence */
+    /* store Heaviside information at event occurrence */
     model->froot(t_, x_, dx_, rootvals_);
 
-    /* store timepoint at which the event occured*/
+    /* store timepoint at which the event occurred*/
     discs_.push_back(t_);
 
-    /* extract and store which events occured */
+    /* extract and store which events occurred */
     if (!seflag) {
         solver->getRootInfo(roots_found_.data());
     }

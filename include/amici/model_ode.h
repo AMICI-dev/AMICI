@@ -99,7 +99,7 @@ class Model_ODE : public Model {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J);
+    void fJ(realtype t, const_N_Vector x, const_N_Vector xdot, SUNMatrix J);
 
     void fJB(const realtype t, realtype cj, const AmiVector &x,
              const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
@@ -114,7 +114,8 @@ class Model_ODE : public Model {
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      **/
-    void fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB);
+    void fJB(realtype t, const_N_Vector x, const_N_Vector xB,
+             const_N_Vector xBdot, SUNMatrix JB);
 
     void fJSparse(realtype t, realtype cj, const AmiVector &x,
                   const AmiVector &dx, const AmiVector &xdot,
@@ -123,12 +124,12 @@ class Model_ODE : public Model {
     /**
      * @brief Implementation of fJSparse at the N_Vector level, this function
      * provides an interface to the model specific routines for the solver
-     * implementation aswell as the AmiVector level implementation
+     * implementation as well as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param J Matrix to which the Jacobian will be written
      */
-    void fJSparse(realtype t, N_Vector x, SUNMatrix J);
+    void fJSparse(realtype t, const_N_Vector x, SUNMatrix J);
 
     void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
                    const AmiVector &dx, const AmiVector &xB,
@@ -145,8 +146,8 @@ class Model_ODE : public Model {
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      */
-    void fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                   SUNMatrix JB);
+    void fJSparseB(realtype t, const_N_Vector x, const_N_Vector xB,
+                   const_N_Vector xBdot, SUNMatrix JB);
 
     /**
      * @brief Implementation of fJDiag at the N_Vector level, this function provides
@@ -155,7 +156,7 @@ class Model_ODE : public Model {
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param x Vector with the states
      **/
-    void fJDiag(realtype t, N_Vector JDiag, N_Vector x);
+    void fJDiag(realtype t, N_Vector JDiag, const_N_Vector x);
 
     /**
      * @brief Diagonal of the Jacobian (for preconditioning)
@@ -180,7 +181,7 @@ class Model_ODE : public Model {
      * @param Jv Vector to which the Jacobian vector product will be
      * written
      **/
-    void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x);
+    void fJv(const_N_Vector v, N_Vector Jv, realtype t, const_N_Vector x);
 
     /**
      * @brief Implementation of fJvB at the N_Vector level
@@ -190,7 +191,8 @@ class Model_ODE : public Model {
      * @param vB Vector with which the Jacobian is multiplied
      * @param JvB Vector to which the Jacobian vector product will be written
      **/
-    void fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB);
+    void fJvB(const_N_Vector vB, N_Vector JvB, realtype t, const_N_Vector x,
+              const_N_Vector xB);
 
     void froot(realtype t, const AmiVector &x, const AmiVector &dx,
                gsl::span<realtype> root) override;
@@ -203,7 +205,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param root array with root function values
      */
-    void froot(realtype t, N_Vector x, gsl::span<realtype> root);
+    void froot(realtype t, const_N_Vector x, gsl::span<realtype> root);
 
     void fxdot(realtype t, const AmiVector &x, const AmiVector &dx,
                AmiVector &xdot) override;
@@ -216,7 +218,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
      */
-    void fxdot(realtype t, N_Vector x, N_Vector xdot);
+    void fxdot(realtype t, const_N_Vector x, N_Vector xdot);
 
     /**
      * @brief Implementation of fxBdot at the N_Vector level
@@ -234,7 +236,7 @@ class Model_ODE : public Model {
      * @param xB Vector with the adjoint states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
+    void fqBdot(realtype t, const_N_Vector x, const_N_Vector xB, N_Vector qBdot);
 
     void fxBdot_ss(const realtype t, const AmiVector &xB,
                    const AmiVector & /*dxB*/, AmiVector &xBdot) override;
@@ -245,7 +247,7 @@ class Model_ODE : public Model {
      * @param xB Vector with the states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot) const;
+    void fxBdot_ss(realtype t, const_N_Vector xB, N_Vector xBdot) const;
 
     /**
      * @brief Implementation of fqBdot for steady state case at the N_Vector level
@@ -289,7 +291,8 @@ class Model_ODE : public Model {
      * @param sx Vector with the state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx, N_Vector sxdot);
+    void fsxdot(realtype t, const_N_Vector x, int ip, const_N_Vector sx,
+                N_Vector sxdot);
 
     std::unique_ptr<Solver> getSolver() override;
 
@@ -408,7 +411,7 @@ class Model_ODE : public Model {
      * @param dxdotdp sparse matrix to which rowvals will be written
      */
     virtual void fdxdotdp_explicit_rowvals(SUNMatrixWrapper &dxdotdp);
-    
+
     /**
      * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule (Py)
      * @param dxdotdx_explicit partial derivative xdot wrt x
@@ -461,19 +464,19 @@ class Model_ODE : public Model {
      * @param dxdotdw sparse matrix to which rowvals will be written
      */
     virtual void fdxdotdw_rowvals(SUNMatrixWrapper &dxdotdw);
-    
+
     /**
      * @brief Sensitivity of dx/dt wrt model parameters w
      * @param t timepoint
      * @param x Vector with the states
      */
-    void fdxdotdw(realtype t, const N_Vector x);
+    void fdxdotdw(realtype t, const_N_Vector x);
 
     /** Explicit sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
      */
-    void fdxdotdp(realtype t, const N_Vector x);
+    void fdxdotdp(realtype t, const_N_Vector x);
 
     void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
 };

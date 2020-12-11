@@ -1740,7 +1740,7 @@ class Model : public AbstractModel {
      * @return State vector with negative values replaced by `0` according to
      * stateIsNonNegative
      */
-    N_Vector computeX_pos(const_N_Vector x);
+    const_N_Vector computeX_pos(const_N_Vector x);
 
     /** All variables necessary for function evaluation */
     ModelState state_;
