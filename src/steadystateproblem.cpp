@@ -43,7 +43,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
-    
+
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -56,7 +56,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
     }
-    
+
     /* create a Newton solver obejct */
     auto newtonSolver = NewtonSolver::getSolver(&t_, &x_, *solver, model);
 
@@ -418,11 +418,12 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          AmiVector &ewt) const {
     /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
        we need to pass ewt[QB], as xdot and xQBdot have different sizes */
-    N_VAbs(x.getNVector(), ewt.getNVector());
+    N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    return N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
+    return N_VWrmsNorm(const_cast<N_Vector>(xdot.getNVector()),
+                       ewt.getNVector());
 }
 
 bool SteadystateProblem::checkConvergence(const Solver *solver,
@@ -480,7 +481,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     int ix = 0;
     double gamma = 1.0;
     bool compNewStep = true;
-    
+
     if (model->nx_solver == 0)
         return;
 
@@ -695,8 +696,9 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                            plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
-            yQB[ip] = N_VDotProd(yQ.getNVector(),
-                                 model->get_dxdotdp().getNVector(ip));
+            yQB[ip] = N_VDotProd(
+                const_cast<N_Vector>(yQ.getNVector()),
+                const_cast<N_Vector>(model->get_dxdotdp().getNVector(ip)));
     }
 }
 

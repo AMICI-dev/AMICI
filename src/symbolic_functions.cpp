@@ -437,7 +437,7 @@ double Dspline_pos(int id, double t, int num, ...) {
  *
  * @return ddspline(t)
  */
-double DDspline(int  id1, int  id2, double  t, int  num, ...) { return 0.0; }
+double DDspline(int  /*id1*/, int  /*id2*/, double  /*t*/, int  /*num*/, ...) { return 0.0; }
 
 /**
  * @brief Derivation of an exponentiated spline function

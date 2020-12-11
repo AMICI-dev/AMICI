@@ -14,7 +14,7 @@ namespace amici {
 
 /** Since const N_Vector is not what we want */
 using const_N_Vector =
-    std::add_const<typename std::remove_pointer<N_Vector>::type *>::type;
+    std::add_const<typename std::remove_pointer<N_Vector>::type>::type *;
 
 /** AmiVector class provides a generic interface to the NVector_Serial struct */
 class AmiVector {
@@ -260,7 +260,7 @@ class AmiVectorArray {
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    N_Vector getNVector(int pos) const;
+    const_N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements

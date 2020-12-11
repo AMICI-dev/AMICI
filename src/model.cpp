@@ -1855,7 +1855,7 @@ void Model::fw(const realtype t, const realtype *x) {
 void Model::fdwdp(const realtype t, const realtype *x) {
     if (!nw)
         return;
-        
+
     fw(t, x);
     dwdp_.zero();
     if (pythonGenerated) {
@@ -1896,7 +1896,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
         return;
 
     fw(t, x);
-    
+
     dwdx_.zero();
     if (pythonGenerated) {
         if (!dwdx_hierarchical_.at(0).capacity())
@@ -1939,7 +1939,7 @@ void Model::fdwdw(const realtype t, const realtype *x) {
     fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(), w_.data(),
           state_.total_cl.data());
-    
+
     if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdw_.get()), "dwdw");
     }
@@ -1989,7 +1989,7 @@ void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
     ftotal_cl(stotal_cl, sx_rdata);
 }
 
-N_Vector Model::computeX_pos(const_N_Vector x) {
+const_N_Vector Model::computeX_pos(const_N_Vector x) {
     if (any_state_non_negative_) {
         for (int ix = 0; ix < x_pos_tmp_.getLength(); ++ix) {
             x_pos_tmp_.at(ix) =

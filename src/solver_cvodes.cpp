@@ -416,7 +416,7 @@ void CVodeSolver::resetState(void *ami_mem, const_N_Vector y0) const {
     cv_mem->cv_next_q = 0;
 
     /* write updated state to Nordsieck history array  */
-    N_VScale(ONE, y0, cv_mem->cv_zn[0]);
+    N_VScale(ONE, const_cast<N_Vector>(y0), cv_mem->cv_zn[0]);
 }
 
 void CVodeSolver::reInitPostProcessF(const realtype tnext) const {
@@ -625,7 +625,8 @@ void CVodeSolver::quadInit(const AmiVector &xQ0) const {
     int status;
     xQ_.copy(xQ0);
     if (getQuadInitDone()) {
-        status = CVodeQuadReInit(solver_memory_.get(), xQ0.getNVector());
+        status = CVodeQuadReInit(solver_memory_.get(),
+                                 const_cast<N_Vector>(xQ0.getNVector()));
     } else {
         status = CVodeQuadInit(solver_memory_.get(), fqBdot_ss, xQ_.getNVector());
         setQuadInitDone();

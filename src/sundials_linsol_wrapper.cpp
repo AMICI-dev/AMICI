@@ -153,7 +153,7 @@ SUNLinSolBand::SUNLinSolBand(N_Vector x, SUNMatrix A)
 
 SUNLinSolBand::SUNLinSolBand(const AmiVector &x, int ubw, int lbw) :
     A_(SUNMatrixWrapper(x.getLength(), ubw, lbw)) {
-    solver_ = SUNLinSol_Band(x.getNVector(), A_.get());
+    solver_ = SUNLinSol_Band(const_cast<N_Vector>(x.getNVector()), A_.get());
     if (!solver_)
         throw AmiException("Failed to create solver.");
 
@@ -163,7 +163,7 @@ SUNMatrix SUNLinSolBand::getMatrix() const { return A_.get(); }
 
 SUNLinSolDense::SUNLinSolDense(const AmiVector &x) :
     A_(SUNMatrixWrapper(x.getLength(), x.getLength())) {
-    solver_ = SUNLinSol_Dense(x.getNVector(), A_.get());
+    solver_ = SUNLinSol_Dense(const_cast<N_Vector>(x.getNVector()), A_.get());
     if (!solver_)
         throw AmiException("Failed to create solver.");
 }
@@ -179,7 +179,7 @@ SUNLinSolKLU::SUNLinSolKLU(N_Vector x, SUNMatrix A)
 SUNLinSolKLU::SUNLinSolKLU(const AmiVector &x, int nnz, int sparsetype,
                            StateOrdering ordering) :
       A_(SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)) {
-    solver_ = SUNLinSol_KLU(x.getNVector(), A_.get());
+    solver_ = SUNLinSol_KLU(const_cast<N_Vector>(x.getNVector()), A_.get());
     if (!solver_)
         throw AmiException("Failed to create solver.");
 
@@ -232,7 +232,7 @@ SUNLinSolSPBCGS::SUNLinSolSPBCGS(N_Vector x, int pretype, int maxl)
 }
 
 SUNLinSolSPBCGS::SUNLinSolSPBCGS(const AmiVector &x, int pretype, int maxl) {
-    solver_ = SUNLinSol_SPBCGS(x.getNVector(), pretype, maxl);
+    solver_ = SUNLinSol_SPBCGS(const_cast<N_Vector>(x.getNVector()), pretype, maxl);
     if (!solver_)
         throw AmiException("Failed to create solver.");
 }
@@ -259,7 +259,7 @@ realtype SUNLinSolSPBCGS::getResNorm() const {
 N_Vector SUNLinSolSPBCGS::getResid() const { return SUNLinSolResid_SPBCGS(solver_); }
 
 SUNLinSolSPFGMR::SUNLinSolSPFGMR(const AmiVector &x, int pretype, int maxl)
-    : SUNLinSolWrapper(SUNLinSol_SPFGMR(x.getNVector(), pretype, maxl)) {
+    : SUNLinSolWrapper(SUNLinSol_SPFGMR(const_cast<N_Vector>(x.getNVector()), pretype, maxl)) {
     if (!solver_)
         throw AmiException("Failed to create solver.");
 }
@@ -286,7 +286,8 @@ realtype SUNLinSolSPFGMR::getResNorm() const {
 N_Vector SUNLinSolSPFGMR::getResid() const { return SUNLinSolResid_SPFGMR(solver_); }
 
 SUNLinSolSPGMR::SUNLinSolSPGMR(const AmiVector &x, int pretype, int maxl)
-    : SUNLinSolWrapper(SUNLinSol_SPGMR(x.getNVector(), pretype, maxl)) {
+    : SUNLinSolWrapper(SUNLinSol_SPGMR(const_cast<N_Vector>(x.getNVector()),
+                                       pretype, maxl)) {
     if (!solver_)
         throw AmiException("Failed to create solver.");
 }
@@ -317,7 +318,7 @@ SUNLinSolSPTFQMR::SUNLinSolSPTFQMR(N_Vector x, int pretype, int maxl)
 }
 
 SUNLinSolSPTFQMR::SUNLinSolSPTFQMR(const AmiVector &x, int pretype, int maxl) {
-    solver_ = SUNLinSol_SPTFQMR(x.getNVector(), pretype, maxl);
+    solver_ = SUNLinSol_SPTFQMR(const_cast<N_Vector>(x.getNVector()), pretype, maxl);
     if (!solver_)
         throw AmiException("Failed to create solver.");
 }
@@ -360,11 +361,12 @@ int SUNNonLinSolNewton::getSysFn(SUNNonlinSolSysFn *SysFn) const {
 }
 
 SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(const_N_Vector x, int m)
-    : SUNNonLinSolWrapper(SUNNonlinSol_FixedPoint(x, m)) {
+    : SUNNonLinSolWrapper(SUNNonlinSol_FixedPoint(const_cast<N_Vector>(x), m)) {
 }
 
 SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(int count, const_N_Vector x, int m)
-    : SUNNonLinSolWrapper(SUNNonlinSol_FixedPointSens(count, x, m)) {
+    : SUNNonLinSolWrapper(
+          SUNNonlinSol_FixedPointSens(count, const_cast<N_Vector>(x), m)) {
 }
 
 int SUNNonLinSolFixedPoint::getSysFn(SUNNonlinSolSysFn *SysFn) const {

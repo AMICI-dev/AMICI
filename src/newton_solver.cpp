@@ -296,7 +296,7 @@ void NewtonSolverIterative::solveLinearSystem(AmiVector &rhs) {
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
+void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
                                           AmiVector &ns_delta) {
     xdot_ = ns_delta;
     xdot_.minus();
