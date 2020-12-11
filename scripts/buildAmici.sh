@@ -24,6 +24,7 @@ fi
 
 CppUTest_DIR=${cpputest_build_dir} \
   ${cmake} \
+    -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
     -DCMAKE_BUILD_TYPE=$build_type \
     -DPython3_EXECUTABLE="$(command -v python3)" ..
 
