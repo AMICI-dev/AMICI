@@ -201,6 +201,10 @@ def ode_model_from_pysb_importer(
                               noise_distributions)
     _process_pysb_expressions(model, ode, observables, sigmas,
                               noise_distributions)
+    ode._has_quadratic_nllh = all(
+        noise_distr in ['normal', 'lin-normal']
+        for noise_distr in noise_distributions.values()
+    )
 
     ode.generate_basic_variables()
 
