@@ -16,6 +16,10 @@ namespace amici {
 using const_N_Vector =
     std::add_const<typename std::remove_pointer<N_Vector>::type>::type *;
 
+inline const realtype* N_VGetArrayPointerConst(const_N_Vector x) {
+    return N_VGetArrayPointer(const_cast<N_Vector>(x));
+}
+
 /** AmiVector class provides a generic interface to the NVector_Serial struct */
 class AmiVector {
   public:

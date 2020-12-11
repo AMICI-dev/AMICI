@@ -25,13 +25,13 @@ void Model_DAE::fJSparse(const realtype t, const realtype cj,
 void Model_DAE::fJSparse(realtype t, realtype cj, const_N_Vector x,
                          const_N_Vector dx, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)));
+    fdwdx(t, N_VGetArrayPointerConst(x_pos));
     SUNMatZero(J);
     fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
-             N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+             N_VGetArrayPointerConst(x_pos),
              state_.unscaledParameters.data(),
              state_.fixedParameters.data(), state_.h.data(), cj,
-             N_VGetArrayPointer(const_cast<N_Vector>(dx)),
+             N_VGetArrayPointerConst(dx),
              w_.data(), dwdx_.data());
 }
 
@@ -59,9 +59,9 @@ void Model_DAE::froot(realtype t, const_N_Vector x, const_N_Vector dx,
                       gsl::span<realtype> root) {
     std::fill(root.begin(), root.end(), 0.0);
     auto x_pos = computeX_pos(x);
-    froot(root.data(), t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+    froot(root.data(), t, N_VGetArrayPointerConst(x_pos),
           state_.unscaledParameters.data(), state_.fixedParameters.data(),
-          state_.h.data(), N_VGetArrayPointer(const_cast<N_Vector>(dx)));
+          state_.h.data(), N_VGetArrayPointerConst(dx));
 }
 
 void Model_DAE::fxdot(const realtype t, const AmiVector &x, const AmiVector &dx,
@@ -72,12 +72,12 @@ void Model_DAE::fxdot(const realtype t, const AmiVector &x, const AmiVector &dx,
 void Model_DAE::fxdot(realtype t, const_N_Vector x, const_N_Vector dx,
                       N_Vector xdot) {
     auto x_pos = computeX_pos(x);
-    fw(t, N_VGetArrayPointer(const_cast<N_Vector>(x)));
+    fw(t, N_VGetArrayPointerConst(x));
     N_VConst(0.0, xdot);
     fxdot(N_VGetArrayPointer(xdot), t,
-          N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+          N_VGetArrayPointerConst(x_pos),
           state_.unscaledParameters.data(), state_.fixedParameters.data(),
-          state_.h.data(), N_VGetArrayPointer(const_cast<N_Vector>(dx)), w_.data());
+          state_.h.data(), N_VGetArrayPointerConst(dx), w_.data());
 }
 
 void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
@@ -99,15 +99,15 @@ void Model_DAE::fdxdotdp(const realtype t, const const_N_Vector x,
         throw AmiException("Wrapping of DAEs is not yet implemented from Python");
     } else {
         // matlab generated
-        fdwdp(t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)));
+        fdwdp(t, N_VGetArrayPointerConst(x_pos));
 
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, dxdotdp.getNVector(ip));
             fdxdotdp(dxdotdp.data(ip), t,
-                     N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+                     N_VGetArrayPointerConst(x_pos),
                      state_.unscaledParameters.data(),
                      state_.fixedParameters.data(), state_.h.data(), plist(ip),
-                     N_VGetArrayPointer(const_cast<N_Vector>(dx)), w_.data(),
+                     N_VGetArrayPointerConst(dx), w_.data(),
                      dwdp_.data());
         }
     }
@@ -116,7 +116,7 @@ void Model_DAE::fdxdotdp(const realtype t, const const_N_Vector x,
 void Model_DAE::fM(realtype t, const_N_Vector x) {
     M_.zero();
     auto x_pos = computeX_pos(x);
-    fM(M_.data(), t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+    fM(M_.data(), t, N_VGetArrayPointerConst(x_pos),
        state_.unscaledParameters.data(),
        state_.fixedParameters.data());
 }

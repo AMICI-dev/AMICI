@@ -12,7 +12,7 @@ void Model_ODE::fJ(const realtype t, const realtype /*cj*/, const AmiVector &x,
 
 void Model_ODE::fJ(realtype t, const_N_Vector x, const_N_Vector /*xdot*/, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)));
+    fdwdx(t, N_VGetArrayPointerConst(x_pos));
     fJSparse(t, x, J_.get());
     J_.refresh();
     auto JDense = SUNMatrixWrapper(J);
@@ -27,7 +27,7 @@ void Model_ODE::fJSparse(const realtype t, const realtype /*cj*/,
 
 void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)));
+    fdwdx(t, N_VGetArrayPointerConst(x_pos));
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);
         // python generated
@@ -38,7 +38,7 @@ void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
             fdxdotdx_explicit_rowvals(dxdotdx_explicit);
             fdxdotdx_explicit(
                 dxdotdx_explicit.data(), t,
-                N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+                N_VGetArrayPointerConst(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), w_.data());
         }
@@ -50,7 +50,7 @@ void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
         JSparse.sparse_add(dxdotdx_explicit, 1.0, dxdotdx_implicit, 1.0);
     } else {
         fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
-                 N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+                 N_VGetArrayPointerConst(x_pos),
                  state_.unscaledParameters.data(),
                  state_.fixedParameters.data(), state_.h.data(), w_.data(),
                  dwdx_.data());
@@ -78,7 +78,7 @@ void Model_ODE::froot(const realtype t, const AmiVector &x,
 void Model_ODE::froot(realtype t, const_N_Vector x, gsl::span<realtype> root) {
     auto x_pos = computeX_pos(x);
     std::fill(root.begin(), root.end(), 0.0);
-    froot(root.data(), t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+    froot(root.data(), t, N_VGetArrayPointerConst(x_pos),
           state_.unscaledParameters.data(), state_.fixedParameters.data(),
           state_.h.data());
 }
@@ -90,10 +90,10 @@ void Model_ODE::fxdot(const realtype t, const AmiVector &x,
 
 void Model_ODE::fxdot(realtype t, const_N_Vector x, N_Vector xdot) {
     auto x_pos = computeX_pos(x);
-    fw(t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)));
+    fw(t, N_VGetArrayPointerConst(x_pos));
     N_VConst(0.0, xdot);
     fxdot(N_VGetArrayPointer(xdot), t,
-          N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+          N_VGetArrayPointerConst(x_pos),
           state_.unscaledParameters.data(), state_.fixedParameters.data(),
           state_.h.data(), w_.data());
 }
@@ -113,7 +113,7 @@ void Model_ODE::fdxdotdw(const realtype t, const_N_Vector x) {
 
         fdxdotdw_colptrs(dxdotdw_);
         fdxdotdw_rowvals(dxdotdw_);
-        fdxdotdw(dxdotdw_.data(), t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+        fdxdotdw(dxdotdw_.data(), t, N_VGetArrayPointerConst(x_pos),
                  state_.unscaledParameters.data(), state_.fixedParameters.data(),
                  state_.h.data(), w_.data());
     }
@@ -121,7 +121,7 @@ void Model_ODE::fdxdotdw(const realtype t, const_N_Vector x) {
 
 void Model_ODE::fdxdotdp(const realtype t, const_N_Vector x) {
     auto x_pos = computeX_pos(x);
-    fdwdp(t, N_VGetArrayPointer(const_cast<N_Vector>(x_pos)));
+    fdwdp(t, N_VGetArrayPointerConst(x_pos));
 
     if (pythonGenerated) {
         // python generated
@@ -132,7 +132,7 @@ void Model_ODE::fdxdotdp(const realtype t, const_N_Vector x) {
             fdxdotdp_explicit_rowvals(dxdotdp_explicit);
             fdxdotdp_explicit(
                 dxdotdp_explicit.data(), t,
-                N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+                N_VGetArrayPointerConst(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), w_.data());
         }
@@ -148,7 +148,7 @@ void Model_ODE::fdxdotdp(const realtype t, const_N_Vector x) {
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, dxdotdp.getNVector(ip));
             fdxdotdp(dxdotdp.data(ip), t,
-                     N_VGetArrayPointer(const_cast<N_Vector>(x_pos)),
+                     N_VGetArrayPointerConst(x_pos),
                      state_.unscaledParameters.data(),
                      state_.fixedParameters.data(), state_.h.data(), plist(ip),
                      w_.data(), dwdp_.data());
