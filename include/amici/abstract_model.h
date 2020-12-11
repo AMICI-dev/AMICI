@@ -626,7 +626,7 @@ class AbstractModel {
     virtual void fdJydy(realtype *dJydy, int iy, const realtype *p,
                         const realtype *k, const realtype *y,
                         const realtype *sigmay, const realtype *my);
-                        
+
     /**
      * @brief Model-specific implementation of fdJydy colptrs
      * @param dJydy sparse matrix to which colptrs will be written
@@ -800,7 +800,7 @@ class AbstractModel {
      * @param dwdx sparse matrix to which rowvals will be written
      */
     virtual void fdwdx_rowvals(SUNMatrixWrapper &dwdx);
-    
+
     /**
      * @brief Model specific implementation of fdwdw, no w chainrule (Py)
      * @param dwdw partial derivative w wrt w
@@ -808,7 +808,7 @@ class AbstractModel {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
      */

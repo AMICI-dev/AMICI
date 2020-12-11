@@ -71,13 +71,13 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
     num_nonzeros_ = indexptrs_[num_indexptrs()];
 }
 
-static inline const SUNMatrix_ID get_sparse_id_w_default(SUNMatrix mat) {
+static inline SUNMatrix_ID get_sparse_id_w_default(SUNMatrix mat) {
     if (mat)
         return SUNMatGetID(mat);
     return SUNMATRIX_CUSTOM;
 }
 
-static inline const int get_sparse_type_w_default(SUNMatrix mat) {
+static inline int get_sparse_type_w_default(SUNMatrix mat) {
     if (mat && SUNMatGetID(mat) == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(mat);
     return CSC_MAT;
@@ -302,18 +302,28 @@ void SUNMatrixWrapper::scale(realtype a) {
     }
 }
 
-void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
+void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b,
+                                const realtype alpha) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
-             gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));
+             gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)),
+             alpha);
 }
 
+#ifndef NDEBUG
 static inline void check_csc(const SUNMatrixWrapper *mat) {
     assert(mat->matrix_id() == SUNMATRIX_SPARSE);
     assert(mat->sparsetype() == CSC_MAT);
 }
+#else
+// avoid "unused parameter" warning
+static inline void check_csc(const SUNMatrixWrapper */*mat*/) {}
+#endif
 
 void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
-                                gsl::span<const realtype> b) const {
+                                gsl::span<const realtype> b,
+                                const realtype alpha) const {
+
+
     if (!matrix_)
         return;
 
@@ -324,7 +334,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     case SUNMATRIX_DENSE:
         amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans,
                     static_cast<int>(rows()), static_cast<int>(columns()),
-                    1.0, data(), static_cast<int>(rows()),
+                    alpha, data(), static_cast<int>(rows()),
                     b.data(), 1, 1.0, c.data(), 1);
         break;
     case SUNMATRIX_SPARSE:
@@ -333,7 +343,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
         }
         check_csc(this);
         for (sunindextype icol = 0; icol < columns(); ++icol) {
-            scatter(icol, b.at(icol), nullptr, c, icol+1, nullptr, 0);
+            scatter(icol, b.at(icol) * alpha, nullptr, c, icol+1, nullptr, 0);
         }
         break;
     default:
@@ -343,7 +353,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 }
 
 void SUNMatrixWrapper::multiply(N_Vector c,
-                                const N_Vector b,
+                                const_N_Vector b,
                                 gsl::span <const int> cols,
                                 bool transpose) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),

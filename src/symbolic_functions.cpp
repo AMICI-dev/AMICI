@@ -186,7 +186,7 @@ double Dmin(int id, double a, double b, double c) {
  *
  * @param base base
  * @param exponent exponent
- * @return pow(max(base,0.0),exponen)
+ * @return pow(max(base,0.0),exponent)
  *
  */
 double pos_pow(double base, double exponent) {
@@ -437,7 +437,7 @@ double Dspline_pos(int id, double t, int num, ...) {
  *
  * @return ddspline(t)
  */
-double DDspline(int  id1, int  id2, double  t, int  num, ...) { return 0.0; }
+double DDspline(int  /*id1*/, int  /*id2*/, double  /*t*/, int  /*num*/, ...) { return 0.0; }
 
 /**
  * @brief Derivation of an exponentiated spline function

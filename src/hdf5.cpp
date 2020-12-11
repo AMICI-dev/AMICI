@@ -694,7 +694,7 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     ibuffer = static_cast<int>(solver.getInternalSensitivityMethod());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "ism", &ibuffer, 1);
-    
+
     ibuffer = static_cast<int>(solver.getReturnDataReportingMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "rdrm", &ibuffer, 1);
@@ -861,7 +861,7 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     static_cast<InternalSensitivityMethod>(
                         getIntScalarAttribute(file, datasetPath, "ism")));
     }
-    
+
     if(attributeExists(file, datasetPath, "rdrm")) {
         solver.setReturnDataReportingMode(
                     static_cast<RDataReporting>(
@@ -956,17 +956,15 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model,
 
 H5::H5File createOrOpenForWriting(const std::string &hdf5filename)
 {
-    H5::H5File file;
     AMICI_H5_SAVE_ERROR_HANDLER;
     try {
-        file = H5::H5File(hdf5filename, H5F_ACC_RDWR);
+        H5::H5File file(hdf5filename, H5F_ACC_RDWR);
         AMICI_H5_RESTORE_ERROR_HANDLER;
+        return file;
     } catch(...) {
         AMICI_H5_RESTORE_ERROR_HANDLER;
-        file = H5::H5File(hdf5filename, H5F_ACC_EXCL);
+        return H5::H5File(hdf5filename, H5F_ACC_EXCL);
     }
-
-    return file;
 }
 
 bool locationExists(const H5::H5File &file, const std::string &location)
