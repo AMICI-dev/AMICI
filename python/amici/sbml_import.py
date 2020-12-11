@@ -443,7 +443,6 @@ class SbmlImporter:
             'INF': sp.oo,
             'NaN': sp.nan,
             'rem': sp.Mod,
-            'times': sp.Mul,
             'time': symbol_with_assumptions('time'),
             # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
@@ -453,18 +452,34 @@ class SbmlImporter:
         for s, v in special_symbols_and_funs.items():
             self.add_local_symbol(s, v)
 
-        species_references = _get_list_of_species_references(self.sbml)
         for c in itt.chain(self.sbml.getListOfSpecies(),
                            self.sbml.getListOfParameters(),
-                           self.sbml.getListOfCompartments(),
-                           species_references):
-            if not c.getId():
+                           self.sbml.getListOfCompartments()):
+            if not c.isSetId():
                 continue
 
             self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
+        for x_ref in _get_list_of_species_references(self.sbml):
+            if not x_ref.isSetId():
+                continue
+            if x_ref.isSetStoichiometry() and not \
+                    self.is_assignment_rule_target(x_ref):
+                value = sp.Float(x_ref.getStoichiometry())
+            else:
+                value = _get_identifier_symbol(x_ref)
+
+            ia_sym = self._get_element_initial_assignment(x_ref.getId())
+            if ia_sym is not None:
+                value = ia_sym
+
+            self.add_local_symbol(x_ref.getId(), value)
+
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
+                if isinstance(e, sbml.SpeciesReference):
+                    continue
+
                 if not (e.isSetId() and e.isSetStoichiometry()) or \
                         self.is_assignment_rule_target(e):
                     continue
@@ -1426,24 +1441,25 @@ def _check_unsupported_functions(sym: sp.Expr,
     if full_sym is None:
         full_sym = sym
 
+    # note that sp.functions.factorial, sp.functions.ceiling,
+    # sp.functions.floor applied to numbers should be simplified out and
+    # thus pass this test
     unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.core.function.UndefinedFunction
+        sp.functions.sec, sp.functions.csc, sp.functions.cot,
+        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
+        sp.functions.acsch, sp.functions.acoth,
+        sp.Mod, sp.core.function.UndefinedFunction
     )
 
-    if isinstance(sym.func, unsupported_functions):
+    if isinstance(sym.func, unsupported_functions) \
+            or isinstance(sym, unsupported_functions):
         raise SBMLException(f'Encountered unsupported expression '
                             f'"{sym.func}" of type '
                             f'"{type(sym.func)}" as part of a '
                             f'{expression_type}: "{full_sym}"!')
-    for fun in list(sym.args) + [sym]:
-        if isinstance(fun, unsupported_functions):
-            raise SBMLException(f'Encountered unsupported expression '
-                                f'"{fun}" of type '
-                                f'"{type(fun)}" as part of a '
-                                f'{expression_type}: "{full_sym}"!')
-        if fun is not sym:
-            _check_unsupported_functions(fun, expression_type)
+    for arg in list(sym.args):
+        _check_unsupported_functions(arg, expression_type)
 
 
 def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
@@ -1462,17 +1478,53 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
                  else _parse_special_functions(arg, False)
                  for arg in sym.args)
 
-    if sym.__class__.__name__ == 'abs':
-        return sp.Abs(sym._args[0])
-    elif sym.__class__.__name__ == 'xor':
-        return sp.Xor(*sym.args)
+    fun_mappings = {
+        'times': sp.Mul,
+        'xor': sp.Xor,
+        'abs': sp.Abs,
+        'min': sp.Min,
+        'max': sp.Max,
+        'ceil': sp.functions.ceiling,
+        'floor': sp.functions.floor,
+        'factorial': sp.functions.factorial,
+        'arcsin': sp.functions.asin,
+        'arccos': sp.functions.acos,
+        'arctan': sp.functions.atan,
+        'arccot': sp.functions.acot,
+        'arcsec': sp.functions.asec,
+        'arccsc': sp.functions.acsc,
+        'arcsinh': sp.functions.asinh,
+        'arccosh': sp.functions.acosh,
+        'arctanh': sp.functions.atanh,
+        'arccoth': sp.functions.acoth,
+        'arcsech': sp.functions.asech,
+        'arccsch': sp.functions.acsch,
+    }
+
+    if sym.__class__.__name__ in fun_mappings:
+        # c++ doesnt like mixing int and double for arguments of those
+        # functions
+        if sym.__class__.__name__ in ['min', 'max']:
+            args = tuple([
+                sp.Float(arg) if arg.is_number else arg
+                for arg in sym.args
+            ])
+        else:
+            args = sym.args
+        return fun_mappings[sym.__class__.__name__](*args)
+
     elif sym.__class__.__name__ == 'piecewise':
         # We need to parse piecewise functions into Heavisides
         return _parse_piecewise_to_heaviside(
             _denest_piecewise(args)
         )
-    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+
+    if sym.__class__.__name__ == 'plus' and not sym.args:
+        return sp.Float(0.0)
+
+    if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
+        
     elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
