@@ -10,6 +10,9 @@ from .ode_export import (
     Expression, LogLikelihood, generate_measurement_symbol
 )
 
+from .import_utils import (
+    noise_distribution_to_cost_function, _get_str_symbol_identifiers
+)
 import logging
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -19,7 +22,9 @@ import itertools
 import os
 import sys
 
-from typing import List, Union, Dict, Tuple, Set, Iterable, Any, Callable
+from typing import (
+    List, Union, Dict, Tuple, Set, Iterable, Any, Callable, Optional
+)
 
 CL_Prototype = Dict[str, Dict[str, Any]]
 ConservationLaw = Dict[str, Union[str, sp.Basic]]
@@ -31,20 +36,22 @@ import pysb.pattern
 logger = get_logger(__name__, logging.ERROR)
 
 
-def pysb2amici(model: pysb.Model,
-               output_dir: str = None,
-               observables: List[str] = None,
-               constant_parameters: List[str] = None,
-               sigmas: Dict[str, str] = None,
-               verbose: Union[int, bool] = False,
-               assume_pow_positivity: bool = False,
-               compiler: str = None,
-               compute_conservation_laws: bool = True,
-               compile: bool = True,
-               simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-               ):
+def pysb2amici(
+        model: pysb.Model,
+        output_dir: str = None,
+        observables: List[str] = None,
+        constant_parameters: List[str] = None,
+        sigmas: Dict[str, str] = None,
+        noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
+        verbose: Union[int, bool] = False,
+        assume_pow_positivity: bool = False,
+        compiler: str = None,
+        compute_conservation_laws: bool = True,
+        compile: bool = True,
+        simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+):
     """
-    Generate AMICI C++ files for the model provided to the constructor.
+    Generate AMICI C++ files for the provided model.
 
     :param model:
         pysb model, :attr:`pysb.Model.name` will determine the name of the
@@ -60,6 +67,13 @@ def pysb2amici(model: pysb.Model,
     :param sigmas:
         dict of :class:`pysb.core.Expression` names that should be mapped to
         sigmas
+
+    :param noise_distributions:
+        dict with names of observable Expressions as keys and a noise type
+        identifier, or a callable generating a custom noise formula string
+        (see :py:func:`amici.import_utils.noise_distribution_to_cost_function`
+        ). If nothing is passed for some observable id, a normal model is
+        assumed as default.
 
     :param constant_parameters:
         list of :class:`pysb.core.Parameter` names that should be mapped as
@@ -102,6 +116,7 @@ def pysb2amici(model: pysb.Model,
     ode_model = ode_model_from_pysb_importer(
         model, constant_parameters=constant_parameters,
         observables=observables, sigmas=sigmas,
+        noise_distributions=noise_distributions,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
         verbose=verbose,
@@ -127,6 +142,7 @@ def ode_model_from_pysb_importer(
         constant_parameters: List[str] = None,
         observables: List[str] = None,
         sigmas: Dict[str, str] = None,
+        noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
         compute_conservation_laws: bool = True,
         simplify: Callable = sp.powsimp,
         verbose: Union[int, bool] = False,
@@ -147,6 +163,9 @@ def ode_model_from_pysb_importer(
     :param sigmas:
         dict with names of observable Expressions as keys and names of sigma
         Expressions as value sigma
+
+    :param noise_distributions:
+        see :func:`amici.pysb_import.pysb2amici`
 
     :param compute_conservation_laws:
         see :func:`amici.pysb_import.pysb2amici`
@@ -178,8 +197,14 @@ def ode_model_from_pysb_importer(
     _process_pysb_parameters(model, ode, constant_parameters)
     if compute_conservation_laws:
         _process_pysb_conservation_laws(model, ode)
-    _process_pysb_observables(model, ode, observables, sigmas)
-    _process_pysb_expressions(model, ode, observables, sigmas)
+    _process_pysb_observables(model, ode, observables, sigmas,
+                              noise_distributions)
+    _process_pysb_expressions(model, ode, observables, sigmas,
+                              noise_distributions)
+    ode._has_quadratic_nllh = not noise_distributions or all(
+        noise_distr in ['normal', 'lin-normal']
+        for noise_distr in noise_distributions.values()
+    )
 
     ode.generate_basic_variables()
 
@@ -250,10 +275,13 @@ def _process_pysb_parameters(pysb_model: pysb.Model,
 
 
 @log_execution_time('processing PySB expressions', logger)
-def _process_pysb_expressions(pysb_model: pysb.Model,
-                              ode_model: ODEModel,
-                              observables: List[str],
-                              sigmas: Dict[str, str]) -> None:
+def _process_pysb_expressions(
+        pysb_model: pysb.Model,
+        ode_model: ODEModel,
+        observables: List[str],
+        sigmas: Dict[str, str],
+        noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
+) -> None:
     """
     Converts pysb expressions/observables into Observables (with
     corresponding standard deviation SigmaY and LogLikelihood) or
@@ -271,6 +299,9 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
         dict with names of observable pysb.Expressions/pysb.Observables
         names as keys and names of sigma pysb.Expressions as values
 
+    :param noise_distributions:
+        see :func:`amici.pysb_import.pysb2amici`
+
     :param ode_model:
         ODEModel instance
     """
@@ -280,7 +311,8 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
     # sure that observables are processed first though.
     for expr in pysb_model.expressions:
         _add_expression(expr, expr.name, expr.expr,
-                        pysb_model, ode_model, observables, sigmas)
+                        pysb_model, ode_model, observables, sigmas,
+                        noise_distributions)
 
 
 def _add_expression(
@@ -290,7 +322,8 @@ def _add_expression(
     pysb_model: pysb.Model,
     ode_model: ODEModel,
     observables: List[str],
-    sigmas: Dict[str, str]
+    sigmas: Dict[str, str],
+    noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
 ):
     """
     Adds expressions to the ODE model given and adds observables/sigmas if
@@ -314,6 +347,9 @@ def _add_expression(
     :param sigmas:
         see :py:func:`_process_pysb_expressions`
 
+    :param noise_distributions:
+        see :py:func:`amici.pysb_import.pysb2amici`
+
     :param ode_model:
         see :py:func:`_process_pysb_expressions`
     """
@@ -333,14 +369,19 @@ def _add_expression(
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
+        noise_dist = noise_distributions.get(name, 'normal') \
+            if noise_distributions else 'normal'
+        cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
         my = generate_measurement_symbol(obs.get_id())
-        pi = sp.pi
+        cost_fun_expr = sp.sympify(cost_fun_str,
+                                   locals=dict(zip(
+                                       _get_str_symbol_identifiers(name),
+                                       (y, my, sigma))))
         ode_model.add_component(
             LogLikelihood(
                 sp.Symbol(f'llh_{name}'),
                 f'llh_{name}',
-                0.5 * sp.log(2 * pi * sigma ** 2) +
-                0.5 * ((y - my) / sigma) ** 2
+                cost_fun_expr
             )
         )
 
@@ -386,10 +427,13 @@ def _get_sigma_name_and_value(
 
 
 @log_execution_time('processing PySB observables', logger)
-def _process_pysb_observables(pysb_model: pysb.Model,
-                              ode_model: ODEModel,
-                              observables: List[str],
-                              sigmas: Dict[str, str]) -> None:
+def _process_pysb_observables(
+        pysb_model: pysb.Model,
+        ode_model: ODEModel,
+        observables: List[str],
+        sigmas: Dict[str, str],
+        noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
+) -> None:
     """
     Converts :class:`pysb.core.Observable` into
     :class:`ODEModel.Expressions` and adds them to the ODEModel instance
@@ -407,12 +451,16 @@ def _process_pysb_observables(pysb_model: pysb.Model,
     :param sigmas:
         dict with names of observable pysb.Expressions/pysb.Observables
         names as keys and names of sigma pysb.Expressions as values
+
+    :param noise_distributions:
+        see :func:`amici.pysb_import.pysb2amici`
     """
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in pysb_model.observables:
         _add_expression(obs, obs.name, obs.expand_obs(),
-                        pysb_model, ode_model, observables, sigmas)
+                        pysb_model, ode_model, observables, sigmas,
+                        noise_distributions)
 
 
 @log_execution_time('computing PySB conservation laws', logger)
