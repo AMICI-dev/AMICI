@@ -642,7 +642,6 @@ class ReturnData {
     /**
      * @brief Extracts output information for events, expects that x_solver and sx_solver were
      * were set appropriately
-     * @param iroot event index
      * @param t event timepoint
      * @param rootidx information about which roots fired (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
