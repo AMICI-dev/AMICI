@@ -648,19 +648,18 @@ class ReturnData {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventOutput(int iroot, realtype t, const std::vector<int> rootidx,
+    void getEventOutput(realtype t, const std::vector<int> rootidx,
                         Model &model, ExpData const *edata);
 
     /**
      * @brief Extracts event information for forward sensitivity analysis, expects that x_solver and
      * sx_solver were set appropriately
-     * @param iroot event index
      * @param ie index of event type
      * @param t event timepoint
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
+    void getEventSensisFSA(int ie, realtype t, Model &model,
                            ExpData const *edata);
 
     /**

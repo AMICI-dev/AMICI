@@ -274,7 +274,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
         auto rootidx = fwd.getRootIndexes();
         for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
             readSimulationState(fwd.getSimulationStateEvent(iroot), model);
-            getEventOutput(iroot, t_, rootidx.at(iroot), model, edata);
+            getEventOutput(t_, rootidx.at(iroot), model, edata);
         }
     }
 }
@@ -336,7 +336,7 @@ void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
     }
 }
 
-void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
+void ReturnData::getEventOutput(realtype t, std::vector<int> rootidx,
                                 Model &model, ExpData const *edata) {
 
     for (int ie = 0; ie < ne; ie++) {
@@ -371,7 +371,7 @@ void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
 
         if (sensi >= SensitivityOrder::first) {
             if (sensi_meth == SensitivityMethod::forward) {
-                getEventSensisFSA(iroot, ie, t, model, edata);
+                getEventSensisFSA(ie, t, model, edata);
             } else if (edata && !sllh.empty()) {
                 model.addPartialEventObjectiveSensitivity(
                     sllh, s2llh, ie, nroots_.at(ie), t, x_solver_, *edata);
@@ -381,7 +381,7 @@ void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
     }
 }
 
-void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
+void ReturnData::getEventSensisFSA(int ie, realtype t, Model &model,
                                    ExpData const *edata) {
     if (t == model.getTimepoint(nt - 1)) {
         // call from fillEvent at last timepoint
@@ -805,7 +805,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
-    
+
     /*
      * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+0.5*log%282+*+pi+*+s%28u%2Cv%29%5E2%29+%2B+0.5+*+%28%28y%28u%2Cv%29+-+m%29%2Fs%28u%2Cv%29%29%5E2
      * r = (m - y)
@@ -836,7 +836,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      * -3*(s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
      * -2*s_du*s_dv*r^2/s^4 is missing from 3333
      */
-    
+
     auto observedData = edata.getObservedDataPtr(it);
 
     for (int iy = 0; iy < nytrue; ++iy) {
