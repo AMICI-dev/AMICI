@@ -14,14 +14,18 @@ import itertools as itt
 import warnings
 import logging
 import copy
-from toposort import toposort
 from typing import (
     Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
 )
 
+from .import_utils import (
+    smart_subs, smart_subs_dict, toposort_symbols,
+    _get_str_symbol_identifiers,
+    noise_distribution_to_cost_function
+)
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol,
-    symbol_with_assumptions, SymbolDef, smart_subs_dict
+    symbol_with_assumptions
 )
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
@@ -439,7 +443,6 @@ class SbmlImporter:
             'INF': sp.oo,
             'NaN': sp.nan,
             'rem': sp.Mod,
-            'times': sp.Mul,
             'time': symbol_with_assumptions('time'),
             # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
@@ -449,18 +452,34 @@ class SbmlImporter:
         for s, v in special_symbols_and_funs.items():
             self.add_local_symbol(s, v)
 
-        species_references = _get_list_of_species_references(self.sbml)
         for c in itt.chain(self.sbml.getListOfSpecies(),
                            self.sbml.getListOfParameters(),
-                           self.sbml.getListOfCompartments(),
-                           species_references):
-            if not c.getId():
+                           self.sbml.getListOfCompartments()):
+            if not c.isSetId():
                 continue
 
             self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
+        for x_ref in _get_list_of_species_references(self.sbml):
+            if not x_ref.isSetId():
+                continue
+            if x_ref.isSetStoichiometry() and not \
+                    self.is_assignment_rule_target(x_ref):
+                value = sp.Float(x_ref.getStoichiometry())
+            else:
+                value = _get_identifier_symbol(x_ref)
+
+            ia_sym = self._get_element_initial_assignment(x_ref.getId())
+            if ia_sym is not None:
+                value = ia_sym
+
+            self.add_local_symbol(x_ref.getId(), value)
+
         for r in self.sbml.getListOfReactions():
             for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
+                if isinstance(e, sbml.SpeciesReference):
+                    continue
+
                 if not (e.isSetId() and e.isSetStoichiometry()) or \
                         self.is_assignment_rule_target(e):
                     continue
@@ -1422,24 +1441,25 @@ def _check_unsupported_functions(sym: sp.Expr,
     if full_sym is None:
         full_sym = sym
 
+    # note that sp.functions.factorial, sp.functions.ceiling,
+    # sp.functions.floor applied to numbers should be simplified out and
+    # thus pass this test
     unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.core.function.UndefinedFunction
+        sp.functions.sec, sp.functions.csc, sp.functions.cot,
+        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
+        sp.functions.acsch, sp.functions.acoth,
+        sp.Mod, sp.core.function.UndefinedFunction
     )
 
-    if isinstance(sym.func, unsupported_functions):
+    if isinstance(sym.func, unsupported_functions) \
+            or isinstance(sym, unsupported_functions):
         raise SBMLException(f'Encountered unsupported expression '
                             f'"{sym.func}" of type '
                             f'"{type(sym.func)}" as part of a '
                             f'{expression_type}: "{full_sym}"!')
-    for fun in list(sym.args) + [sym]:
-        if isinstance(fun, unsupported_functions):
-            raise SBMLException(f'Encountered unsupported expression '
-                                f'"{fun}" of type '
-                                f'"{type(fun)}" as part of a '
-                                f'{expression_type}: "{full_sym}"!')
-        if fun is not sym:
-            _check_unsupported_functions(fun, expression_type)
+    for arg in list(sym.args):
+        _check_unsupported_functions(arg, expression_type)
 
 
 def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
@@ -1458,17 +1478,53 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
                  else _parse_special_functions(arg, False)
                  for arg in sym.args)
 
-    if sym.__class__.__name__ == 'abs':
-        return sp.Abs(sym._args[0])
-    elif sym.__class__.__name__ == 'xor':
-        return sp.Xor(*sym.args)
+    fun_mappings = {
+        'times': sp.Mul,
+        'xor': sp.Xor,
+        'abs': sp.Abs,
+        'min': sp.Min,
+        'max': sp.Max,
+        'ceil': sp.functions.ceiling,
+        'floor': sp.functions.floor,
+        'factorial': sp.functions.factorial,
+        'arcsin': sp.functions.asin,
+        'arccos': sp.functions.acos,
+        'arctan': sp.functions.atan,
+        'arccot': sp.functions.acot,
+        'arcsec': sp.functions.asec,
+        'arccsc': sp.functions.acsc,
+        'arcsinh': sp.functions.asinh,
+        'arccosh': sp.functions.acosh,
+        'arctanh': sp.functions.atanh,
+        'arccoth': sp.functions.acoth,
+        'arcsech': sp.functions.asech,
+        'arccsch': sp.functions.acsch,
+    }
+
+    if sym.__class__.__name__ in fun_mappings:
+        # c++ doesnt like mixing int and double for arguments of those
+        # functions
+        if sym.__class__.__name__ in ['min', 'max']:
+            args = tuple([
+                sp.Float(arg) if arg.is_number else arg
+                for arg in sym.args
+            ])
+        else:
+            args = sym.args
+        return fun_mappings[sym.__class__.__name__](*args)
+
     elif sym.__class__.__name__ == 'piecewise':
         # We need to parse piecewise functions into Heavisides
         return _parse_piecewise_to_heaviside(
             _denest_piecewise(args)
         )
-    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+
+    if sym.__class__.__name__ == 'plus' and not sym.args:
+        return sp.Float(0.0)
+
+    if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
+        
     elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
@@ -1663,161 +1719,6 @@ def assignmentRules2observables(sbml_model: sbml.Model,
     return observables
 
 
-def noise_distribution_to_cost_function(
-        noise_distribution: str
-) -> Callable[[str], str]:
-    """
-    Parse noise distribution string to a cost function definition amici can
-    work with.
-
-    The noise distributions listed in the following are supported. :math:`m`
-    denotes the measurement, :math:`y` the simulation, and :math:`\\sigma` a
-    distribution scale parameter
-    (currently, AMICI only supports a single distribution parameter).
-
-    - `'normal'`, `'lin-normal'`: A normal distribution:
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
-         exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
-
-    - `'log-normal'`: A log-normal distribution (i.e. log(m) is
-      normally distributed):
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\
-         exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
-
-    - `'log10-normal'`: A log10-normal distribution (i.e. log10(m) is
-      normally distributed):
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
-         exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
-
-    - `'laplace'`, `'lin-laplace'`: A laplace distribution:
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
-         \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
-
-    - `'log-laplace'`: A log-Laplace distribution (i.e. log(m) is Laplace
-      distributed):
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}
-         \\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
-
-    - `'log10-laplace'`: A log10-Laplace distribution (i.e. log10(m) is
-      Laplace distributed):
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}
-         \\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
-
-    - `'binomial'`, `'lin-binomial'`: A (continuation of a discrete) binomial
-      distribution, parameterized via the success probability
-      :math:`p=\\sigma`:
-
-      .. math::
-         \\pi(m|y,\\sigma) = \\operatorname{Heaviside}(y-m) \\cdot
-                \\frac{\\Gamma(y+1)}{\\Gamma(m+1) \\Gamma(y-m+1)}
-                \\sigma^m (1-\\sigma)^{(y-m)}
-
-    - `'negative-binomial'`, `'lin-negative-binomial'`: A (continuation of a
-      discrete) negative binomial distribution, with with `mean = y`,
-      parameterized via success probability `p`:
-
-      .. math::
-
-         \\pi(m|y,\\sigma) = \\frac{\\Gamma(m+r)}{\\Gamma(m+1) \\Gamma(r)}
-            (1-\\sigma)^m \\sigma^r
-
-      where
-
-      .. math::
-         r = \\frac{1-\\sigma}{\\sigma} y
-
-    The distributions above are for a single data point.
-    For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
-    simulations :math:`Y=\\{y_i\\}_i` and noise parameters
-    :math:`\\Sigma=\\{\\sigma_i\\}_i`, AMICI assumes independence,
-    i.e. the full distributions is
-
-    .. math::
-       \\pi(D|Y,\\Sigma) = \\prod_i\\pi(m_i|y_i,\\sigma_i)
-
-    AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
-
-    In addition to the above mentioned distributions, it is also possible to
-    pass a function taking a symbol string and returning a log-distribution
-    string with variables '{str_symbol}', 'm{str_symbol}', 'sigma{str_symbol}'
-    for y, m, sigma, respectively.
-
-    :param noise_distribution: An identifier specifying a noise model.
-        Possible values are
-
-        {`'normal'`, `'lin-normal'`, `'log-normal'`, `'log10-normal'`,
-        `'laplace'`, `'lin-laplace'`, `'log-laplace'`, `'log10-laplace'`,
-        `'binomial'`, `'lin-binomial'`, `'negative-binomial'`,
-        `'lin-negative-binomial'`, `<Callable>`}
-
-        For the meaning of the values see above.
-
-    :return: A function that takes a strSymbol and then creates a cost
-        function string (negative log-likelihood) from it, which can be
-        sympified.
-    """
-
-    if isinstance(noise_distribution, Callable):
-        return noise_distribution
-
-    if noise_distribution in ['normal', 'lin-normal']:
-        y_string = '0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2'
-    elif noise_distribution == 'log-normal':
-        y_string = '0.5*log(2*pi*{sigma}**2*{m}**2) ' \
-                   '+ 0.5*((log({y}) - log({m})) / {sigma})**2'
-    elif noise_distribution == 'log10-normal':
-        y_string = '0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
-                   '+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
-    elif noise_distribution in ['laplace', 'lin-laplace']:
-        y_string = 'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
-    elif noise_distribution == 'log-laplace':
-        y_string = 'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
-    elif noise_distribution == 'log10-laplace':
-        y_string = 'log(2*{sigma}*{m}*log(10)) ' \
-                   '+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
-    elif noise_distribution in ['binomial', 'lin-binomial']:
-        # Binomial noise model parameterized via success probability p
-        y_string = '- log(Heaviside({y} - {m})) - loggamma({y}+1) ' \
-                   '+ loggamma({m}+1) + loggamma({y}-{m}+1) ' \
-                   '- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
-    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
-        # Negative binomial noise model of the number of successes m
-        # (data) before r=(1-sigma)/sigma * y failures occur,
-        # with mean number of successes y (simulation),
-        # parameterized via success probability p = sigma.
-        r = '{y} * (1-{sigma}) / {sigma}'
-        y_string = f'- loggamma({{m}}+{r}) + loggamma({{m}}+1) ' \
-                   f'+ loggamma({r}) - {r} * log(1-{{sigma}}) ' \
-                   f'- {{m}} * log({{sigma}})'
-    else:
-        raise ValueError(
-            f"Cost identifier {noise_distribution} not recognized.")
-
-    def nllh_y_string(str_symbol):
-        y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-        return y_string.format(y=y, m=m, sigma=sigma)
-
-    return nllh_y_string
-
-
-def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
-    """Get identifiers for simulation, measurement, and sigma."""
-    y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
-    return y, m, sigma
-
-
 def _add_conservation_for_constant_species(
         ode_model: ODEModel,
         conservation_laws: List[ConservationLaw]
@@ -1951,57 +1852,3 @@ def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
     )
-
-
-def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
-    """
-    Optimized substitution that checks whether anything needs to be done first
-
-    :param element:
-        substitution target
-
-    :param old:
-        to be substituted
-
-    :param new:
-        subsitution value
-
-    :return:
-        substituted expression
-    """
-
-    if old in element.free_symbols:
-        return element.subs(old, new)
-
-    return element
-
-
-def toposort_symbols(symbols: SymbolDef,
-                     field: Optional[str] = None) -> SymbolDef:
-    """
-    Topologically sort symbol definitions according to their interdependency
-
-    :param symbols:
-        symbol definitions
-
-    :param field:
-        field of definition.values() that is used to compute interdependency
-
-    :return:
-        ordered symbol definitions
-    """
-    sorted_symbols = toposort({
-        identifier: {
-            s for s in (
-                definition[field] if field is not None else definition
-            ).free_symbols
-            if s in symbols
-        }
-        for identifier, definition
-        in symbols.items()
-    })
-    return {
-        s: symbols[s]
-        for symbol_group in sorted_symbols
-        for s in symbol_group
-    }
