@@ -82,14 +82,6 @@ class PysbPetabProblem(petab.Problem):
                 in zip(self.observable_df.index,
                        self.observable_df[OBSERVABLE_FORMULA],
                        self.observable_df[NOISE_FORMULA]):
-            # No observableTransformation so far
-            if OBSERVABLE_TRANSFORMATION in self.observable_df:
-                trafo = self.observable_df.loc[observable_id,
-                                               OBSERVABLE_TRANSFORMATION]
-                if trafo and trafo != LIN:
-                    raise NotImplementedError(
-                        "Observable transformation currently unsupported "
-                        "for PySB models")
             obs_symbol = sp.sympify(observable_formula, locals=local_syms)
             if observable_id in self.pysb_model.expressions.keys():
                 obs_expr = self.pysb_model.expressions[observable_id]
