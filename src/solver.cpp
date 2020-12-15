@@ -66,7 +66,7 @@ int Solver::run(const realtype tout) const {
     setStopTime(tout);
     clock_t starttime = clock();
     int status = AMICI_SUCCESS;
-    
+
     apply_max_num_steps();
     if (nx() > 0) {
         if (getAdjInitDone()) {
@@ -83,7 +83,7 @@ int Solver::run(const realtype tout) const {
 
 int Solver::step(const realtype tout) const {
     int status = AMICI_SUCCESS;
-    
+
     apply_max_num_steps();
     if (nx() > 0) {
         if (getAdjInitDone()) {
@@ -99,7 +99,7 @@ int Solver::step(const realtype tout) const {
 
 void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
-    
+
     apply_max_num_steps_B();
     if (nx() > 0) {
         solveB(tout, AMICI_NORMAL);
@@ -141,7 +141,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     if (nx() == 0)
         return;
-    
+
     initializeLinearSolver(model);
     initializeNonLinearSolver();
 
@@ -188,7 +188,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
 
     if (nx() == 0)
         return;
-    
+
     initializeLinearSolverB(model, *which);
     initializeNonLinearSolverB(*which);
 
@@ -217,7 +217,7 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
     if (linsol_ != LinearSolver::KLU)
         throw AmiException("Backward steady state computation via integration "
             "is currently only implemented for KLU linear solver");
-    /* Set Jacobian function and intialize values */
+    /* Set Jacobian function and initialize values */
     setSparseJacFn_ss();
     model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
@@ -567,7 +567,7 @@ void Solver::applyQuadTolerancesASA(const int which) const {
 
 void Solver::applyQuadTolerances() const {
     if (!getQuadInitDone())
-        throw AmiException("Quadratures were not intialized, the "
+        throw AmiException("Quadratures were not initialized, the "
                            "tolerances cannot be applied yet!");
 
     if (sensi_ < SensitivityOrder::first)

@@ -1,5 +1,4 @@
 project(amiciIntegrationTests)
-cmake_minimum_required(VERSION 2.8)
 
 find_package(CppUTest REQUIRED)
 # because Cpputest doesn't seem to care about MEMORY_LEAK_DETECTION=OFF

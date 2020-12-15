@@ -37,7 +37,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
         for (int it = 0; it < fwd.model->nt(); it++) {
             if (std::isinf(fwd.model->getTimepoint(it))) {
                 if (!posteq)
-                    throw AmiException("Model has non-finite timpoint but, "
+                    throw AmiException("Model has non-finite timepoint but, "
                                        "postequilibration did not run");
 
                 /* copy adjoint update to postequilibration */
@@ -65,7 +65,7 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     int it = model_->nt() - 1;
-    /* If we have posteq, infty timepoints were already treated */
+    /* If we have posteq, infinity timepoints were already treated */
     for (int jt = model_->nt() - 1; jt >= 0; jt--)
         if (std::isinf(model_->getTimepoint(jt)))
             --it;

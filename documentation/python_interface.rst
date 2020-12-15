@@ -25,7 +25,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 850 out of the 1780 (~48%) test cases** from
+Python-AMICI currently **passes 862 out of the 1780 (~48%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -35,7 +35,6 @@ In addition, we currently plan to add support for the following features
 
 - Events (currently Matlab-only)
 - Algebraic rules
-- Models without species
 
 contributions are welcome.
 

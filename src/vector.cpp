@@ -106,7 +106,7 @@ N_Vector *AmiVectorArray::getNVectorArray() { return nvec_array_.data(); }
 
 N_Vector AmiVectorArray::getNVector(int pos) { return nvec_array_.at(pos); }
 
-const N_Vector AmiVectorArray::getNVector(int pos) const { return nvec_array_.at(pos); }
+const_N_Vector AmiVectorArray::getNVector(int pos) const { return nvec_array_.at(pos); }
 
 AmiVector &AmiVectorArray::operator[](int pos) { return vec_array_.at(pos); }
 

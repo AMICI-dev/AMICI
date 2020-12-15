@@ -243,7 +243,7 @@ void createAndWriteDouble3DDataset(H5::H5File const &file,
 /**
  * @brief Read scalar native double attribute from HDF5 object.
  * @param file HDF5 file
- * @param optionsObject Object to read attribute frin
+ * @param optionsObject Object to read attribute from
  * @param attributeName Name of attribute to read
  * @return Attribute value
  */
