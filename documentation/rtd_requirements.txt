@@ -12,7 +12,7 @@ sphinx-autodoc-typehints>=1.10.3
 git+https://github.com/readthedocs/sphinx-hoverxref@master
 prompt-toolkit<=3.0.0
 ipython>=7.17.0
-https://github.com/michaeljones/jakobandersen@lookup-fix-ellipsis
+https://github.com/jakobandersen/breathe@lookup-fix-ellipsis
 #exhale>=0.2.3
 git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#egg=exhale
 # Newer versions cause trouble with including notebooks:
