@@ -787,6 +787,8 @@ class SbmlImporter:
                     species_id = _get_identifier_symbol(
                         self.sbml.getSpecies(element.getSpecies())
                     )
+                    if self.is_assignment_rule_target(self.sbml.getSpecies(element.getSpecies())):
+                        continue
                     species = self.symbols[SymbolId.SPECIES][species_id]
 
                     if species['constant']:
