@@ -184,7 +184,7 @@ end
 if(strcmp(this.wtype,'iw'))
     if(isfield(this.fun,'M'))
         this.getFun([],'M');
-        this.id = double(logical(sum(this.fun.M.sym,2)~=0));
+        this.id = double(logical(any(this.fun.M.sym)));
     else
         
     end
