@@ -200,7 +200,7 @@ def main():
                 'amici_import_petab.py = amici.petab_import:main'
             ]
         },
-        install_requires=['sympy>=1.6.0',
+        install_requires=['sympy>=1.7.1',
                           'python-libsbml',
                           'h5py',
                           'pandas',
