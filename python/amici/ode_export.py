@@ -2945,6 +2945,8 @@ class ODEExporter:
                 self._get_symbol_name_initializer_list('k'),
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('y'),
+            'EXPRESSION_NAMES_INITIALIZER_LIST':
+                self._get_symbol_name_initializer_list('w'),
             'PARAMETER_IDS_INITIALIZER_LIST':
                 self._get_symbol_id_initializer_list('p'),
             'STATE_IDS_INITIALIZER_LIST':
@@ -2953,6 +2955,8 @@ class ODEExporter:
                 self._get_symbol_id_initializer_list('k'),
             'OBSERVABLE_IDS_INITIALIZER_LIST':
                 self._get_symbol_id_initializer_list('y'),
+            'EXPRESSION_IDS_INITIALIZER_LIST':
+                self._get_symbol_id_initializer_list('w'),
             'REINIT_FIXPAR_INITCOND':
                 'true' if self.allow_reinit_fixpar_initcond else
                 'false',

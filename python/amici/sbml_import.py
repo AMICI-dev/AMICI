@@ -784,9 +784,10 @@ class SbmlImporter:
                     stoichiometry = self._get_element_stoichiometry(
                         element
                     )
-                    species_id = _get_identifier_symbol(
-                        self.sbml.getSpecies(element.getSpecies())
-                    )
+                    sbml_species = self.sbml.getSpecies(element.getSpecies())
+                    if self.is_assignment_rule_target(sbml_species):
+                        continue
+                    species_id = _get_identifier_symbol(sbml_species)
                     species = self.symbols[SymbolId.SPECIES][species_id]
 
                     if species['constant']:

@@ -514,6 +514,14 @@ std::vector<std::string> Model::getObservableNames() const {
     return std::vector<std::string>();
 }
 
+bool Model::hasExpressionNames() const {
+    return ny == 0 || !getExpressionNames().empty();
+}
+
+std::vector<std::string> Model::getExpressionNames() const {
+    return std::vector<std::string>();
+}
+
 bool Model::hasParameterIds() const {
     return np() == 0 || !getParameterIds().empty();
 }
@@ -545,6 +553,15 @@ bool Model::hasObservableIds() const {
 std::vector<std::string> Model::getObservableIds() const {
     return std::vector<std::string>();
 }
+
+bool Model::hasExpressionIds() const {
+    return ny == 0 || !getExpressionIds().empty();
+}
+
+std::vector<std::string> Model::getExpressionIds() const {
+    return std::vector<std::string>();
+}
+
 
 bool Model::hasQuadraticLLH() const {
     return true;

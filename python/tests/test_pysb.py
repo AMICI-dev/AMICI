@@ -7,6 +7,7 @@ import platform
 import shutil
 import sys
 import pytest
+
 pysb = pytest.importorskip("pysb")
 
 import amici
@@ -228,3 +229,47 @@ def get_results(model, edata):
         amici.SteadyStateSensitivityMode.simulationFSA
     )
     return amici.runAmiciSimulation(model, solver, edata)
+
+
+def test_names_and_ids(pysb_example_presimulation_module):
+    model_pysb = pysb_example_presimulation_module.getModel()
+    expected = {
+        'ExpressionIds': (
+            '__s2',
+            '__s1',
+            '__s5',
+            'pPROT',
+            'tPROT',
+            'initProt',
+            'initDrug',
+            'initKin',
+            'pPROT_obs'),
+        'FixedParameterIds': ('DRUG_0', 'KIN_0'),
+        'FixedParameterNames': ('DRUG_0', 'KIN_0'),
+        'ObservableIds': ('pPROT_obs',),
+        'ObservableNames': ('pPROT_obs',),
+        'ParameterIds': (
+            'PROT_0',
+            'kon_prot_drug',
+            'koff_prot_drug',
+            'kon_prot_kin',
+            'kphospho_prot_kin',
+            'kdephospho_prot'
+        ),
+        'StateIds': ('__s0', '__s1', '__s2', '__s3', '__s4', '__s5'),
+        'StateNames': (
+            "PROT(kin=None, drug=None, phospho='u')",
+            'DRUG(bound=None)',
+            'KIN(bound=None)',
+            "DRUG(bound=1) % PROT(kin=None, drug=1, phospho='u')",
+            "KIN(bound=1) % PROT(kin=1, drug=None, phospho='u')",
+            "PROT(kin=None, drug=None, phospho='p')"
+        ),
+    }
+    # Names and IDs are the same here
+    expected['ExpressionNames'] = expected['ExpressionIds']
+    expected['ParameterNames'] = expected['ParameterIds']
+
+    for field_name, cur_expected in expected.items():
+        actual = getattr(model_pysb, f'get{field_name}')()
+        assert actual == cur_expected

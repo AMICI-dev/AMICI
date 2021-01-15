@@ -547,6 +547,19 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getObservableNames() const;
 
     /**
+     * @brief Report whether the model has expression names set.
+     * @return Boolean indicating whether expression names were set. Also
+     * returns `true` if the number of corresponding variables is just zero.
+     */
+    virtual bool hasExpressionNames() const;
+
+    /**
+     * @brief Get names of the expressions.
+     * @return Expression names
+     */
+    virtual std::vector<std::string> getExpressionNames() const;
+
+    /**
      * @brief Report whether the model has parameter IDs set.
      * @return Boolean indicating whether parameter IDs were set. Also returns
      * `true` if the number of corresponding variables is just zero.
@@ -599,7 +612,21 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getObservableIds() const;
 
     /**
-     * @brief Checks whether the defined noise model is gaussian, i.e., the nllh is quadratic
+     * @brief Report whether the model has expression IDs set.
+     * @return Boolean indicating whether expression ids were set. Also returns
+     * `true` if the number of corresponding variables is just zero.
+     */
+    virtual bool hasExpressionIds() const;
+
+    /**
+     * @brief Get IDs of the expression.
+     * @return Expression IDs
+     */
+    virtual std::vector<std::string> getExpressionIds() const;
+
+    /**
+     * @brief Checks whether the defined noise model is gaussian, i.e., the nllh
+     * is quadratic
      * @return boolean flag
      */
     virtual bool hasQuadraticLLH() const;
