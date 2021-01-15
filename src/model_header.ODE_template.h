@@ -18,10 +18,12 @@ extern std::array<const char*, TPL_NP> parameterNames;
 extern std::array<const char*, TPL_NK> fixedParameterNames;
 extern std::array<const char*, TPL_NX_RDATA> stateNames;
 extern std::array<const char*, TPL_NY> observableNames;
+extern std::array<const char*, TPL_NW> expressionNames;
 extern std::array<const char*, TPL_NP> parameterIds;
 extern std::array<const char*, TPL_NK> fixedParameterIds;
 extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
+extern std::array<const char*, TPL_NW> expressionIds;
 
 extern void Jy_TPL_MODELNAME(realtype *nllh, const int iy, const realtype *p,
                              const realtype *k, const realtype *y,
@@ -728,6 +730,15 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     }
 
     /**
+     * @brief Get names of model expressions
+     * @return Expression names
+     */
+    virtual std::vector<std::string> getExpressionNames() const override {
+        return std::vector<std::string>(expressionNames.begin(),
+                                        expressionNames.end());
+    }
+
+    /**
      * @brief Get ids of the model parameters
      * @return the ids
      */
@@ -763,9 +774,18 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     }
 
     /**
+     * @brief Get IDs of model expressions
+     * @return Expression IDs
+     */
+    virtual std::vector<std::string> getExpressionIds() const override {
+        return std::vector<std::string>(expressionIds.begin(),
+                                        expressionIds.end());
+    }
+
+    /**
      * @brief function indicating whether reinitialization of states depending on
      fixed parameters is permissible
-     * @return flag inidication whether reinitialization of states depending on
+     * @return flag indicating whether reinitialization of states depending on
      fixed parameters is permissible
      */
     virtual bool isFixedParameterStateReinitializationAllowed() const override {
