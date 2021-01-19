@@ -2221,6 +2221,13 @@ def _print_with_exception(math: sp.Expr) -> str:
     # get list of custom replacements
     user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
 
+    # Floating-point optimizations
+    # e.g., log(1 + x) --> logp1(x)
+    if isinstance(math, list):
+        math = [optimize(expr, optims_c99) for expr in math]
+    else:
+        math = optimize(math, optims_c99)
+
     try:
         # Required until https://github.com/sympy/sympy/pull/20558 is released
         with _monkeypatched(_CXXCodePrinterBase, '_print_Max',
@@ -2228,7 +2235,7 @@ def _print_with_exception(math: sp.Expr) -> str:
                 _monkeypatched(_CXXCodePrinterBase, '_print_Min',
                                _custom_print_min):
             ret = cxxcode(
-                optimize(sp.sympify(math), optims_c99), # e.g., log(1 + x) --> logp1(x)
+                math,
                 standard='c++11',
                 user_functions=user_functions,
             )
