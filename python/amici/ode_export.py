@@ -2228,7 +2228,7 @@ def _print_with_exception(math: sp.Expr) -> str:
                 _monkeypatched(_CXXCodePrinterBase, '_print_Min',
                                _custom_print_min):
             ret = cxxcode(
-                optimize(math, optims_c99), # e.g., log(1 + x) --> logp1(x)
+                optimize(sp.sympify(math), optims_c99), # e.g., log(1 + x) --> logp1(x)
                 standard='c++11',
                 user_functions=user_functions,
             )
