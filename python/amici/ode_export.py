@@ -2223,10 +2223,11 @@ def _print_with_exception(math: sp.Expr) -> str:
 
     # Floating-point optimizations
     # e.g., log(1 + x) --> logp1(x)
+    fpoptimizer = lambda x : optimize(sp.sympify(x), optims_c99)
     if isinstance(math, list):
-        math = [optimize(expr, optims_c99) for expr in math]
+        math = [fpoptimizer(expr) for expr in math]
     else:
-        math = optimize(math, optims_c99)
+        math = fpoptimizer(math)
 
     try:
         # Required until https://github.com/sympy/sympy/pull/20558 is released
