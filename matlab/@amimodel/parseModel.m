@@ -184,12 +184,12 @@ end
 if(strcmp(this.wtype, 'iw'))
     if(isfield(this.fun, 'M'))
         this.getFun([], 'M');
-        this.id = double(logical(any(this.fun.M.sym)));
+        this.id = double(any(this.fun.M.sym));
     else
         
     end
 else
-    this.id = zeros(nx,1);
+    this.id = zeros(1, nx);
 end
 
 switch(this.o2flag)
