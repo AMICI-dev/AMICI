@@ -179,7 +179,7 @@ end
 fprintf(fid,['                    std::vector<realtype>(' num2str(this.np) ',1.0),\n']);
 fprintf(fid,['                    std::vector<realtype>(' num2str(this.nk) ',1.0),\n']);
 fprintf(fid,'                    std::vector<int>(),\n');
-initstr = num2str(transpose(double(this.id)), '%d, ');
+initstr = num2str(this.id, '%d, ');
 fprintf(fid,['                    std::vector<realtype>{' initstr(1:end-1) '},\n']);
 initstr = num2str(transpose(this.z2event), '%d, ');
 fprintf(fid,['                    std::vector<int>{' initstr(1:end-1) '})\n']);
