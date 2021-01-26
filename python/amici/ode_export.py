@@ -392,6 +392,15 @@ class ModelQuantity:
         """
         return self._value
 
+    def set_val(self, val: sp.Expr):
+        """
+        Set ModelQuantity value
+
+        :return:
+            value of the ModelQuantity
+        """
+        self._value = cast_to_sym(val, 'value')
+
 
 class State(ModelQuantity):
     """
@@ -1591,6 +1600,9 @@ class ODEModel:
         roots = []
         for state in self._states:
             state.set_dt(_process_heavisides(state.get_dt(), roots))
+
+        for expr in self._expressions:
+            expr.set_val(_process_heavisides(expr.get_val(), roots))
 
         # Now add the found roots to the model components
         for root in roots:
