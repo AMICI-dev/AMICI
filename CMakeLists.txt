@@ -230,13 +230,12 @@ install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
 export(EXPORT AmiciTargets FILE AmiciTargets.cmake
     NAMESPACE Upstream::
     )
+configure_file(cmake/AmiciConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+    @ONLY
+    )
 include(CMakePackageConfigHelpers)
 include(version)
-configure_package_config_file(
-    cmake/AmiciConfig.cmake
-    "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
-    INSTALL_DESTINATION "${LIB_INSTALL_DIR}/cmake/"
-    )
 write_basic_package_version_file(AmiciConfigVersion.cmake COMPATIBILITY ExactVersion)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake
