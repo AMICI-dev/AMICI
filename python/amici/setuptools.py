@@ -272,13 +272,13 @@ def add_openmp_flags(cxx_flags: List, ldflags: List) -> None:
     # Enable OpenMP support for Linux / OSX:
     if sys.platform == 'linux':
         log.info("Adding OpenMP flags...")
-        cxx_flags.append("-fopenmp")
-        ldflags.append("-fopenmp")
+        cxx_flags.insert(0, "-fopenmp")
+        ldflags.insert(0, "-fopenmp")
     elif sys.platform == 'darwin':
         if os.path.exists('/usr/local/lib/libomp.a'):
             log.info("Adding OpenMP flags...")
-            cxx_flags.extend(["-Xpreprocessor", "-fopenmp"])
-            ldflags.extend(["-Xpreprocessor", "-fopenmp", "-lomp"])
+            cxx_flags[0:0] = ["-Xpreprocessor", "-fopenmp"]
+            ldflags[0:0] = ["-Xpreprocessor", "-fopenmp", "-lomp"]
         else:
             log.info("Not adding OpenMP flags, because /usr/local/lib/libomp.a"
                      " does not exist. To enable, run `brew install libomp` "
