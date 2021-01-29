@@ -37,10 +37,6 @@ jobs:
       run: |
         scripts/buildCpputest.sh
 
-    - name: pip
-      run: |
-        pip3 install numpy
-
     - name: Build AMICI
       run: |
         scripts/buildAmici.sh

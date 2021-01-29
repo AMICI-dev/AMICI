@@ -283,7 +283,7 @@ def import_petab_problem(
         os.makedirs(model_output_dir)
 
     # check if compilation necessary
-    if not _can_import_model(model_name) or force_compile:
+    if force_compile or not _can_import_model(model_name, model_output_dir):
         # check if folder exists
         if os.listdir(model_output_dir) and not force_compile:
             raise ValueError(
@@ -353,13 +353,14 @@ def _create_model_name(folder: str) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str) -> bool:
+def _can_import_model(model_name: str, model_output_dir: str) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
     # try to import (in particular checks version)
     try:
-        model_module = importlib.import_module(model_name)
+        with amici.add_path(model_output_dir):
+            model_module = importlib.import_module(model_name)
     except ModuleNotFoundError:
         return False
 
