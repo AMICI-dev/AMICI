@@ -13,14 +13,15 @@ Non-python-package requirements:
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(__file__))
+
 import numpy as np
 import setup_clibs  # Must run from within containing directory
 from setuptools import find_packages, setup, Extension
 
 # Add current directory to path, as we need some modules from the AMICI
 # package already for installation
-sys.path.insert(0, os.getcwd())
-
+# sys.path.insert(0, os.getcwd())
 from amici import __version__
 from amici.custom_commands import (
     AmiciInstall, AmiciBuildCLib, AmiciDevelop,
