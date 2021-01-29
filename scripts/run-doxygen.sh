@@ -57,7 +57,7 @@ mv "${DOXY_WARNING_FILE}_tmp" "${DOXY_WARNING_FILE}"
 grep -v "warning: unable to resolve reference to \`https" "${DOXY_WARNING_FILE}" > "${DOXY_WARNING_FILE}_tmp" || [[ $? == 1 ]]
 mv "${DOXY_WARNING_FILE}_tmp" "${DOXY_WARNING_FILE}"
 
-grep -v "error: Problem running ghostscript gs -q -g146x60 -r384x384x -sDEVICE=ppmraw -sOutputFile=_form0.pnm -dNOPAUSE -dBATCH -- _form0.ps. Check your installation!" "${DOXY_WARNING_FILE}" > "${DOXY_WARNING_FILE}_tmp" || [[ $? == 1 ]]
+grep -v "error: Problem.* running g.*. Check your installation!" "${DOXY_WARNING_FILE}" > "${DOXY_WARNING_FILE}_tmp" || [[ $? == 1 ]]
 mv "${DOXY_WARNING_FILE}_tmp" "${DOXY_WARNING_FILE}"
 
 # check if warnings log was created
