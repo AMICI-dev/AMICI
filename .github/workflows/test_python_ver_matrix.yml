@@ -45,11 +45,6 @@ jobs:
           libatlas-base-dev \
           libhdf5-serial-dev \
           libboost-math-dev
-    - name: pip
-      run: |
-        pip3 install --upgrade --user wheel \
-          && pip3 install --upgrade --user setuptools
-
 
     # install AMICI
     - name: Build BNGL
