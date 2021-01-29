@@ -257,12 +257,6 @@ void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             state_.h.at(ie) = 0.0;
-        } else if (rootvals.at(ie) == 0) {
-            throw AmiException(
-                "Simulation started in an event. This could lead to "
-                "unexpected results, aborting simulation! Please "
-                "specify an earlier simulation start via "
-                "options.t0");
         } else {
             state_.h.at(ie) = 1.0;
         }

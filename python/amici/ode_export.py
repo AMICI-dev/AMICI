@@ -3697,7 +3697,7 @@ def _process_heavisides(dxdt: sp.Expr, roots: List[Event]) -> sp.Expr:
         # we want unique identifiers for the roots
         tmp_new = _get_unique_root(tmp_old, roots)
         # For Heavisides, we need to add the negative function as well
-        _get_unique_root(sp.sympify(-1 * tmp_old), roots)
+        _get_unique_root(sp.sympify(- tmp_old), roots)
         heavisides.append((sp.Heaviside(tmp_old), tmp_new))
 
     if heavisides:

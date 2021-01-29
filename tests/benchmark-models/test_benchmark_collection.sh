@@ -14,10 +14,9 @@ Schwen_PONE2014
 Fujita_SciSignal2010
 Sneyd_PNAS2002
 Zheng_PNAS2012
-Weber_BMC2015"
+Weber_BMC2015
+Chen_MSB2009"
 
-# Model needs fixing:
-# Chen_MSB2009
 #
 # Not matching reference for unclear reasons
 # Lucarelli_CellSystems2018
