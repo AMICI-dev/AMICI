@@ -9,6 +9,7 @@
 #include "amici/misc.h"
 
 #include <cstring>
+#include <cassert>
 
 namespace amici {
 
