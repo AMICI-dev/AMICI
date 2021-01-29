@@ -175,7 +175,9 @@ void BackwardProblem::handleDataPointB(const int it) {
 }
 
 realtype BackwardProblem::getTnext(const int it) {
-    if (discs_.size() > 0 && discs_.back() > model_->getTimepoint(it)) {
+    assert (it >= 0 || discs_.size() > 0);
+    if (discs_.size() > 0 &&
+        (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();
         return tdisc;
     }
