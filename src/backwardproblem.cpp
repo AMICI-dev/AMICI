@@ -89,7 +89,8 @@ void BackwardProblem::workBackwardProblem() {
             }
 
             /* handle discontinuity */
-            if (tnext > model_->getTimepoint(it)) {
+            if (tnext == discs_.back()) {
+                discs_.pop_back();
                 handleEventB();
             }
 
@@ -176,7 +177,6 @@ void BackwardProblem::handleDataPointB(const int it) {
 realtype BackwardProblem::getTnext(const int it) {
     if (discs_.size() > 0 && discs_.back() > model_->getTimepoint(it)) {
         double tdisc = discs_.back();
-        discs_.pop_back();
         return tdisc;
     }
 
