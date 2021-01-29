@@ -29,7 +29,7 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig3.0 libatlas-base-dev
+          && sudo apt-get install -y swig4.0 libatlas-base-dev
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/installAmiciSource.sh
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh
 

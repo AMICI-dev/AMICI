@@ -28,10 +28,6 @@ jobs:
       run: |
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
-    - name: pip
-      run: |
-        pip3 install --upgrade --user wheel \
-          && pip3 install --upgrade --user setuptools
     - run: pip3 install petab shyaml
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
