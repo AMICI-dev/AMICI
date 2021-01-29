@@ -13,16 +13,14 @@ Non-python-package requirements:
 import os
 import sys
 
+# Add containing directory to path, as we need some modules from the AMICI
+# package already for installation
 sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
 import setup_clibs  # Must run from within containing directory
 from setuptools import find_packages, setup, Extension
 
-# Add current directory to path, as we need some modules from the AMICI
-# package already for installation
-# sys.path.insert(0, os.getcwd())
-from amici import __version__
 from amici.custom_commands import (
     AmiciInstall, AmiciBuildCLib, AmiciDevelop,
     AmiciInstallLib, AmiciBuildExt, AmiciSDist)
@@ -33,11 +31,6 @@ from amici.setuptools import (
     add_debug_flags_if_required,
     add_openmp_flags,
 )
-
-# Python version check. We need >= 3.6 due to e.g. f-strings
-if sys.version_info < (3, 6):
-    sys.exit('amici requires at least Python version 3.6')
-
 
 def main():
     # Extra compiler flags
@@ -136,7 +129,6 @@ def main():
 
     # Install
     setup(
-        name='amici',
         cmdclass={
             'install': AmiciInstall,
             'sdist': AmiciSDist,
@@ -145,62 +137,10 @@ def main():
             'install_lib': AmiciInstallLib,
             'develop': AmiciDevelop,
         },
-        version=__version__,
-        description='Advanced multi-language Interface to CVODES and IDAS',
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url='https://github.com/AMICI-dev/AMICI',
-        author='Fabian Froehlich, Jan Hasenauer, Daniel Weindl and '
-               'Paul Stapor',
-        author_email='fabian_froehlich@hms.harvard.edu',
-        license='BSD',
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
-        packages=find_packages(),
-        package_dir={'amici': 'amici'},
-        entry_points={
-            'console_scripts': [
-                'amici_import_petab = amici.petab_import:main',
-                # for backwards compatibility
-                'amici_import_petab.py = amici.petab_import:main'
-            ]
-        },
-        install_requires=['sympy>=1.7.1',
-                          'python-libsbml',
-                          'h5py',
-                          'pandas',
-                          'pkgconfig',
-                          'wurlitzer',
-                          'toposort'],
-        python_requires='>=3.6',
-        extras_require={
-            'petab': ['petab>=0.1.11'],
-            'pysb': ['pysb>=1.11.0']
-        },
-        package_data={
-            'amici': ['amici/include/amici/*',
-                      'src/*template*',
-                      'swig/*',
-                      'libs/*',
-                      'setup.py.template',
-                      ],
-        },
-        zip_safe=False,
-        include_package_data=True,
-        exclude_package_data={
-            '': ['README.txt'],
-        },
-        test_suite="tests",
-        classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Intended Audience :: Science/Research',
-            'License :: OSI Approved :: BSD License',
-            'Operating System :: POSIX :: Linux',
-            'Operating System :: MacOS :: MacOS X',
-            'Programming Language :: Python',
-            'Programming Language :: C++',
-            'Topic :: Scientific/Engineering :: Bio-Informatics',
-        ],
     )
 
 
