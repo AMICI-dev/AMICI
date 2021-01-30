@@ -9,20 +9,21 @@
 #  ifndef SUNDIALS_EXPORT
 #    ifdef sundials_generic_EXPORTS
         /* We are building this library */
-#      define SUNDIALS_EXPORT 
+#      define SUNDIALS_EXPORT
 #    else
         /* We are using this library */
-#      define SUNDIALS_EXPORT 
+#      define SUNDIALS_EXPORT
 #    endif
 #  endif
 
 #  ifndef SUNDIALS_NO_EXPORT
-#    define SUNDIALS_NO_EXPORT 
+#    define SUNDIALS_NO_EXPORT
 #  endif
 #endif
 
 #ifndef SUNDIALS_DEPRECATED
-#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+//#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+#  define SUNDIALS_DEPRECATED
 #endif
 
 #ifndef SUNDIALS_DEPRECATED_EXPORT
