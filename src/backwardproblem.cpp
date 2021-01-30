@@ -90,7 +90,7 @@ void BackwardProblem::workBackwardProblem() {
             }
 
             /* handle discontinuity */
-            if (tnext == discs_.back()) {
+            if (!discs_.empty() && tnext == discs_.back()) {
                 discs_.pop_back();
                 handleEventB();
             }
@@ -176,14 +176,16 @@ void BackwardProblem::handleDataPointB(const int it) {
 }
 
 realtype BackwardProblem::getTnext(const int it) {
-    if (it < 0 && discs_.empty());
+    if (it < 0 && discs_.empty()) {
         throw AmiException(
-            "No more timepoints available. This should not happen, please "
-            "report a bug including this stacktrace at "
-            "https://github.com/AMICI-dev/AMICI/issues/new/choose"
+            "No more timepoints (it=%d, ie=%d) available at %f. This should "
+            "not happen, please report a bug including this stacktrace at "
+            "https://github.com/AMICI-dev/AMICI/issues/new/choose",
+            it, discs_.size(), this->t_
         );
+    }
         
-    if (discs_.size() > 0 &&
+    if (!discs_.empty() &&
         (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();
         return tdisc;
