@@ -325,33 +325,33 @@ def test_sympy_exp_monkeypatch():
     importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
                                   from_file=False)
     module_name = 'BIOMD0000000529'
-    outdir = 'BIOMD0000000529'
 
-    importer.sbml2amici(module_name, outdir)
-    model_module = amici.import_model_module(module_name=module_name,
-                                             module_path=outdir)
+    with TemporaryDirectory() as outdir:
+        importer.sbml2amici(module_name, outdir)
+        model_module = amici.import_model_module(module_name=module_name,
+                                                 module_path=outdir)
 
-    model = model_module.getModel()
-    model.setTimepoints(np.linspace(0, 8, 250))
-    model.requireSensitivitiesForAllParameters()
-    model.setAlwaysCheckFinite(True)
-    model.setParameterScale(amici.parameterScalingFromIntVector([
-        amici.ParameterScaling.none
-        if re.match(r'n[0-9]+$', par_id)
-        else amici.ParameterScaling.log10
-        for par_id in model.getParameterIds()
-    ]))
+        model = model_module.getModel()
+        model.setTimepoints(np.linspace(0, 8, 250))
+        model.requireSensitivitiesForAllParameters()
+        model.setAlwaysCheckFinite(True)
+        model.setParameterScale(amici.parameterScalingFromIntVector([
+            amici.ParameterScaling.none
+            if re.match(r'n[0-9]+$', par_id)
+            else amici.ParameterScaling.log10
+            for par_id in model.getParameterIds()
+        ]))
 
-    solver = model.getSolver()
-    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver = model.getSolver()
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
-    rdata = amici.runAmiciSimulation(model, solver)
+        rdata = amici.runAmiciSimulation(model, solver)
 
-    # print sensitivity-related results
-    assert rdata['status'] == amici.AMICI_SUCCESS
-    check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
-                      epsilon=1e-3)
+        # print sensitivity-related results
+        assert rdata['status'] == amici.AMICI_SUCCESS
+        check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
+                          epsilon=1e-3)
 
 
 def normal_nllh(m, y, sigma):
