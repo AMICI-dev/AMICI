@@ -179,7 +179,11 @@ def get_lib_sundials(extra_compiler_flags: Optional[List[str]] = None) -> \
                          ],
         'cflags': [*extra_compiler_flags],
         'cflags_mingw32': ['-Wno-misleading-indentation'],
-        'cflags_unix': ['-Wno-misleading-indentation']
+        'cflags_unix': ['-Wno-misleading-indentation'],
+        'cflags_msvc': [
+            '/DSUNDIALS_DEPRECATED=',
+            '/DSUNDIALS_DEPRECATED_EXPORT='
+        ],
     })
     return libsundials
 
