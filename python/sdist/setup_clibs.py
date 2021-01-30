@@ -240,10 +240,9 @@ def get_lib_amici(extra_compiler_flags: List[str] = None,
         'cflags_mingw32': ['-std=c++14'],
         'cflags_unix': ['-std=c++14'],
         'cflags_msvc': [
-            '/E',
             '/std:c++14',
-            '/DSUNDIALS_DEPRECATED',
-            '/DSUNDIALS_DEPRECATED_EXPORT'
+            '/DSUNDIALS_DEPRECATED=',
+            '/DSUNDIALS_DEPRECATED_EXPORT='
         ],
         'macros': [],
     })
