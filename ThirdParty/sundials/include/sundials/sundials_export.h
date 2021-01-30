@@ -22,8 +22,11 @@
 #endif
 
 #ifndef SUNDIALS_DEPRECATED
-//#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+#ifdef __GNUC__
+#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+#else
 #  define SUNDIALS_DEPRECATED
+#endif
 #endif
 
 #ifndef SUNDIALS_DEPRECATED_EXPORT
