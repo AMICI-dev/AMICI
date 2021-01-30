@@ -9,15 +9,15 @@
 #  ifndef SUNDIALS_EXPORT
 #    ifdef sundials_generic_EXPORTS
         /* We are building this library */
-#      define SUNDIALS_EXPORT __attribute__((visibility("default")))
+#      define SUNDIALS_EXPORT 
 #    else
         /* We are using this library */
-#      define SUNDIALS_EXPORT __attribute__((visibility("default")))
+#      define SUNDIALS_EXPORT 
 #    endif
 #  endif
 
 #  ifndef SUNDIALS_NO_EXPORT
-#    define SUNDIALS_NO_EXPORT __attribute__((visibility("hidden")))
+#    define SUNDIALS_NO_EXPORT 
 #  endif
 #endif
 
