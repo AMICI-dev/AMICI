@@ -1625,16 +1625,16 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
         # translating into aheaviside function that is implemented as unit step
         if isinstance(trigger, sp.core.relational.StrictLessThan):
             # x < y => x - y < 0 => r < 0
-            return sp.Heaviside(-root)
+            return 1 - sp.Heaviside(root)
         if isinstance(trigger, sp.core.relational.LessThan):
             # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
-            return 1 - sp.Heaviside(root)
+            return sp.Heaviside(-root)
         if isinstance(trigger, sp.core.relational.StrictGreaterThan):
             # y > x => y - x < 0 => -r < 0
-            return sp.Heaviside(root)
+            return 1 - sp.Heaviside(-root)
         if isinstance(trigger, sp.core.relational.GreaterThan):
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
-            return 1 - sp.Heaviside(-root)
+            return sp.Heaviside(root)
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
