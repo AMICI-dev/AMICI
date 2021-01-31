@@ -936,7 +936,7 @@ class ODEModel:
             'xB': self.num_states_solver,
             'sigmay': self.num_obs,
         }
-        self._eqs: Dict[str, sp.Matrix] = dict()
+        self._eqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._vals: Dict[str, List[float]] = dict()
         self._names: Dict[str, List[str]] = dict()
@@ -1804,7 +1804,8 @@ class ODEModel:
             # backsubstitution of optimized right hand side terms into RHS
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
-            tmp_xdot = self._eqs['xdot'].subs(self._syms['w'], self._eqs['w'])
+            tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
+                                                  self._eqs['w']))
             self._eqs[name] = smart_multiply(self.eq('drootdx'), tmp_xdot) + \
                               self.eq('drootdt')
 
