@@ -192,7 +192,7 @@ TEST(symbolicFunctions, testSign)
 TEST(symbolicFunctions, testHeaviside)
 {
     CHECK_EQUAL(0, heaviside(-1));
-    CHECK_EQUAL(0, heaviside(0));
+    CHECK_EQUAL(1, heaviside(0));
     CHECK_EQUAL(1, heaviside(1));
 }
 
