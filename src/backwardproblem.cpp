@@ -9,6 +9,7 @@
 #include "amici/misc.h"
 
 #include <cstring>
+#include <cassert>
 
 namespace amici {
 
@@ -89,7 +90,8 @@ void BackwardProblem::workBackwardProblem() {
             }
 
             /* handle discontinuity */
-            if (tnext > model_->getTimepoint(it)) {
+            if (!discs_.empty() && tnext == discs_.back()) {
+                discs_.pop_back();
                 handleEventB();
             }
 
@@ -174,9 +176,18 @@ void BackwardProblem::handleDataPointB(const int it) {
 }
 
 realtype BackwardProblem::getTnext(const int it) {
-    if (discs_.size() > 0 && discs_.back() > model_->getTimepoint(it)) {
+    if (it < 0 && discs_.empty()) {
+        throw AmiException(
+            "No more timepoints (it=%d, ie=%d) available at %f. This should "
+            "not happen, please report a bug including this stacktrace at "
+            "https://github.com/AMICI-dev/AMICI/issues/new/choose",
+            it, discs_.size(), this->t_
+        );
+    }
+        
+    if (!discs_.empty() &&
+        (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();
-        discs_.pop_back();
         return tdisc;
     }
 

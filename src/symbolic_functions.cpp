@@ -88,7 +88,7 @@ double dirac(double x) {
  *
  */
 double heaviside(double x) {
-    if (x <= 0.0) {
+    if (x < 0.0) {
         return 0.0;
     }
     return 1.0;
