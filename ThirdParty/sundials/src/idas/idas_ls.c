@@ -3,7 +3,7 @@
  *                Alan C. Hindmarsh and Radu Serban @ LLNL
  *-----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2020, Lawrence Livermore National Security
+ * Copyright (c) 2002-2021, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -218,6 +218,7 @@ int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
   idals_mem->jtimesDQ = SUNTRUE;
   idals_mem->jtsetup  = NULL;
   idals_mem->jtimes   = idaLsDQJtimes;
+  idals_mem->jt_res   = IDA_mem->ida_res;
   idals_mem->jt_data  = IDA_mem;
 
   /* Set defaults for preconditioner-related fields */
@@ -288,7 +289,7 @@ int IDASetLinearSolver(void *ida_mem, SUNLinearSolver LS, SUNMatrix A)
 
   /* For iterative LS, compute sqrtN */
   if (iterative)
-    idals_mem->sqrtN = SUNRsqrt( N_VGetLength(idals_mem->ytemp) );
+    idals_mem->nrmfac = SUNRsqrt( N_VGetLength(idals_mem->ytemp) );
 
   /* For matrix-based LS, enable soltuion scaling */
   if (matrixbased)
@@ -362,6 +363,35 @@ int IDASetEpsLin(void *ida_mem, realtype eplifac)
   }
 
   idals_mem->eplifac = (eplifac == ZERO) ? PT05 : eplifac;
+
+  return(IDALS_SUCCESS);
+}
+
+
+/* IDASetWRMSNormFactor sets or computes the factor to use when converting from
+   the integrator tolerance to the linear solver tolerance (WRMS to L2 norm). */
+int IDASetLSNormFactor(void *ida_mem, realtype nrmfac)
+{
+  IDAMem   IDA_mem;
+  IDALsMem idals_mem;
+  int      retval;
+
+  /* access IDALsMem structure */
+  retval = idaLs_AccessLMem(ida_mem, "IDASetLSNormFactor",
+                            &IDA_mem, &idals_mem);
+  if (retval != IDALS_SUCCESS) return(retval);
+
+  if (nrmfac > ZERO) {
+    /* user-provided factor */
+    idals_mem->nrmfac = nrmfac;
+  } else if (nrmfac < ZERO) {
+    /* compute factor for WRMS norm with dot product */
+    N_VConst(ONE, idals_mem->ytemp);
+    idals_mem->nrmfac = SUNRsqrt(N_VDotProd(idals_mem->ytemp, idals_mem->ytemp));
+  } else {
+    /* compute default factor for WRMS norm from vector legnth */
+    idals_mem->nrmfac = SUNRsqrt(N_VGetLength(idals_mem->ytemp));
+  }
 
   return(IDALS_SUCCESS);
 }
@@ -492,8 +522,40 @@ int IDASetJacTimes(void *ida_mem, IDALsJacTimesSetupFn jtsetup,
     idals_mem->jtimesDQ = SUNTRUE;
     idals_mem->jtsetup  = NULL;
     idals_mem->jtimes   = idaLsDQJtimes;
+    idals_mem->jt_res   = IDA_mem->ida_res;
     idals_mem->jt_data  = IDA_mem;
   }
+
+  return(IDALS_SUCCESS);
+}
+
+
+/* IDASetJacTimesResFn specifies an alternative user-supplied DAE residual
+   function to use in the internal finite difference Jacobian-vector
+   product */
+int IDASetJacTimesResFn(void *ida_mem, IDAResFn jtimesResFn)
+{
+  IDAMem   IDA_mem;
+  IDALsMem idals_mem;
+  int      retval;
+
+  /* access IDALsMem structure */
+  retval = idaLs_AccessLMem(ida_mem, "IDASetJacTimesResFn",
+                            &IDA_mem, &idals_mem);
+  if (retval != IDALS_SUCCESS) return(retval);
+
+  /* check if using internal finite difference approximation */
+  if (!(idals_mem->jtimesDQ)) {
+    IDAProcessError(IDA_mem, IDALS_ILL_INPUT, "IDASLS", "IDASetJacTimesResFn",
+                    "Internal finite-difference Jacobian-vector product is disabled.");
+    return(IDALS_ILL_INPUT);
+  }
+
+  /* store function pointers for Res function (NULL implies use DAE Res) */
+  if (jtimesResFn != NULL)
+    idals_mem->jt_res = jtimesResFn;
+  else
+    idals_mem->jt_res = IDA_mem->ida_res;
 
   return(IDALS_SUCCESS);
 }
@@ -917,7 +979,7 @@ int idaLsDenseDQJac(realtype tt, realtype c_j, N_Vector yy,
   idals_mem = (IDALsMem) IDA_mem->ida_lmem;
 
   /* access matrix dimension */
-  N = SUNDenseMatrix_Rows(Jac);
+  N = SUNDenseMatrix_Columns(Jac);
 
   /* Rename work vectors for readibility */
   rtemp = tmp1;
@@ -964,7 +1026,7 @@ int idaLsDenseDQJac(realtype tt, realtype c_j, N_Vector yy,
     y_data[j] += inc;
     yp_data[j] += c_j*inc;
 
-    retval = IDA_mem->ida_res(tt, yy, yp, rtemp, IDA_mem->ida_user_data);
+    retval = idals_mem->jt_res(tt, yy, yp, rtemp, IDA_mem->ida_user_data);
     idals_mem->nreDQ++;
     if (retval != 0) break;
 
@@ -1143,7 +1205,7 @@ int idaLsDQJtimes(realtype tt, N_Vector yy, N_Vector yp, N_Vector rr,
 
   LSID = SUNLinSolGetID(idals_mem->LS);
   if (LSID == SUNLINEARSOLVER_SPGMR || LSID == SUNLINEARSOLVER_SPFGMR)
-    sig = idals_mem->sqrtN * idals_mem->dqincfac;
+    sig = idals_mem->nrmfac * idals_mem->dqincfac;
   else
     sig = idals_mem->dqincfac / N_VWrmsNorm(v, IDA_mem->ida_ewt);
 
@@ -1353,11 +1415,11 @@ int idaLsSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight,
 
   /* If the linear solver is iterative: set convergence test constant tol,
      in terms of the Newton convergence test constant epsNewt and safety
-     factors. The factor sqrt(Neq) assures that the convergence test is
+     factors. The factor nrmfac assures that the convergence test is
      applied to the WRMS norm of the residual vector, rather than the
      weighted L2 norm. */
   if (idals_mem->iterative) {
-    tol = idals_mem->sqrtN * idals_mem->eplifac * IDA_mem->ida_epsNewt;
+    tol = idals_mem->nrmfac * idals_mem->eplifac * IDA_mem->ida_epsNewt;
   } else {
     tol = ZERO;
   }
@@ -1808,6 +1870,26 @@ int IDASetEpsLinB(void *ida_mem, int which, realtype eplifacB)
 }
 
 
+int IDASetLSNormFactorB(void *ida_mem, int which, realtype nrmfacB)
+{
+  IDAadjMem IDAADJ_mem;
+  IDAMem    IDA_mem;
+  IDABMem   IDAB_mem;
+  IDALsMemB idalsB_mem;
+  void      *ida_memB;
+  int       retval;
+
+  /* access relevant memory structures */
+  retval = idaLs_AccessLMemB(ida_mem, which, "IDASetLSNormFactorB", &IDA_mem,
+                             &IDAADJ_mem, &IDAB_mem, &idalsB_mem);
+  if (retval != IDALS_SUCCESS) return(retval);
+
+  /* call corresponding routine for IDAB_mem structure */
+  ida_memB = (void *) IDAB_mem->IDA_mem;
+  return(IDASetLSNormFactor(ida_memB, nrmfacB));
+}
+
+
 int IDASetLinearSolutionScalingB(void *ida_mem, int which, booleantype onoffB)
 {
   IDAadjMem IDAADJ_mem;
@@ -1965,6 +2047,26 @@ int IDASetJacTimesBS(void *ida_mem, int which,
   idals_jtsetup = (jtsetupBS == NULL) ? NULL : idaLsJacTimesSetupBS;
   idals_jtimes  = (jtimesBS == NULL)  ? NULL : idaLsJacTimesVecBS;
   return(IDASetJacTimes(ida_memB, idals_jtsetup, idals_jtimes));
+}
+
+
+int IDASetJacTimesResFnB(void *ida_mem, int which, IDAResFn jtimesResFn)
+{
+  IDAadjMem  IDAADJ_mem;
+  IDAMem     IDA_mem;
+  IDABMem    IDAB_mem;
+  IDALsMemB  idalsB_mem;
+  void      *ida_memB;
+  int        retval;
+
+  /* access relevant memory structures */
+  retval = idaLs_AccessLMemB(ida_mem, which, "IDASetJacTimesResFnB", &IDA_mem,
+                             &IDAADJ_mem, &IDAB_mem, &idalsB_mem);
+  if (retval != IDALS_SUCCESS) return(retval);
+
+  /* call corresponding routine for IDAB_mem structure */
+  ida_memB = (void *) IDAB_mem->IDA_mem;
+  return(IDASetJacTimesResFn(ida_memB, jtimesResFn));
 }
 
 
@@ -2467,7 +2569,7 @@ int idaLs_AccessLMemB(void *ida_mem, int which, const char *fname,
 
 
 /* idaLs_AccessLMemBCur unpacks the ida_mem, ca_mem, idaB_mem and
-   idalsB_mem structures from the void* idaode_mem pointer.
+   idalsB_mem structures from the void* ida_mem pointer.
    If any are missing it returns IDALS_MEM_NULL, IDALS_NO_ADJ,
    or IDALS_LMEMB_NULL. */
 int idaLs_AccessLMemBCur(void *ida_mem, const char *fname,
