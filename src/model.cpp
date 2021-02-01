@@ -95,21 +95,13 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
     }
 }
 
-Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-             const int nxtrue_solver, const int nx_solver_reinit, const int ny,
-             const int nytrue, const int nz, const int nztrue, const int ne,
-             const int nJ, const int nw, const int ndwdx, const int ndwdp,
-             const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
-             const int nnz, const int ubw, const int lbw,
+Model::Model(ModelDimensions const & model_dimensions,
              SecondOrderMode o2mode, const std::vector<realtype> &p,
              std::vector<realtype> k, const std::vector<int> &plist,
              std::vector<realtype> idlist, std::vector<int> z2event,
              const bool pythonGenerated, const int ndxdotdp_explicit,
              const int ndxdotdx_explicit, const int w_recursion_depth)
-    : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
-      nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
-      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), nnz(nnz),
-      nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
+    : ModelDimensions(model_dimensions), pythonGenerated(pythonGenerated),
       o2mode(o2mode), idlist(std::move(idlist)),
       J_(nx_solver, nx_solver, nnz, CSC_MAT),
       JB_(nx_solver, nx_solver, nnz, CSC_MAT),
@@ -119,6 +111,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       state_is_non_negative_(nx_solver, false),
       pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)),
       w_recursion_depth_(w_recursion_depth) {
+    Expects(model_dimensions.np == static_cast<int>(p.size()));
+    Expects(model_dimensions.nk == static_cast<int>(k.size()));
+
     state_.h.resize(ne, 0.0);
     state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
     state_.stotal_cl.resize((nx_rdata - nx_solver) * p.size(), 0.0);
@@ -177,14 +172,9 @@ bool operator==(const Model &a, const Model &b) {
     if (typeid(a) != typeid(b))
         return false;
 
-    return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
-           (a.nx_solver == b.nx_solver) &&
-           (a.nxtrue_solver == b.nxtrue_solver) &&
-           (a.nx_solver_reinit == b.nx_solver_reinit) && (a.ny == b.ny) &&
-           (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
-           (a.ne == b.ne) && (a.nw == b.nw) &&
-           (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
-           (a.lbw == b.lbw) && (a.o2mode == b.o2mode) &&
+    return (static_cast<ModelDimensions const&>(a)
+            == static_cast<ModelDimensions const&>(b))
+            && (a.o2mode == b.o2mode) &&
            (a.z2event_ == b.z2event_) && (a.idlist == b.idlist) &&
            (a.state_.h == b.state_.h) &&
            (a.state_.unscaledParameters == b.state_.unscaledParameters) &&
@@ -198,6 +188,23 @@ bool operator==(const Model &a, const Model &b) {
             b.reinitialize_fixed_parameter_initial_states_) &&
            (a.tstart_ == b.tstart_);
 }
+
+bool operator==(const ModelDimensions &a, const ModelDimensions &b) {
+    if (typeid(a) != typeid(b))
+        return false;
+    return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
+           (a.nx_solver == b.nx_solver) &&
+           (a.nxtrue_solver == b.nxtrue_solver) &&
+           (a.nx_solver_reinit == b.nx_solver_reinit) &&
+           (a.np == b.np) && (a.nk == b.nk) && (a.ny == b.ny) &&
+           (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
+           (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
+           (a.ndwdp == b.ndwdp) && (a.ndwdw == b.ndwdw) &&
+           (a.ndxdotdw == b.ndxdotdw) && (a.ndJydy == b.ndJydy) &&
+           (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
+           (a.lbw == b.lbw);
+}
+
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                        AmiVectorArray & /*sdx*/, bool computeSensitivities) {
