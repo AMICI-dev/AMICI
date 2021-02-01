@@ -95,21 +95,13 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
     }
 }
 
-Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-             const int nxtrue_solver, const int nx_solver_reinit, const int ny,
-             const int nytrue, const int nz, const int nztrue, const int ne,
-             const int nJ, const int nw, const int ndwdx, const int ndwdp,
-             const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
-             const int nnz, const int ubw, const int lbw,
+Model::Model(ModelDimensions model_dimensions,
              SecondOrderMode o2mode, const std::vector<realtype> &p,
              std::vector<realtype> k, const std::vector<int> &plist,
              std::vector<realtype> idlist, std::vector<int> z2event,
              const bool pythonGenerated, const int ndxdotdp_explicit,
              const int ndxdotdx_explicit, const int w_recursion_depth)
-    : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
-      nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
-      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), nnz(nnz),
-      nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
+    : ModelDimensions(model_dimensions), pythonGenerated(pythonGenerated),
       o2mode(o2mode), idlist(std::move(idlist)),
       J_(nx_solver, nx_solver, nnz, CSC_MAT),
       JB_(nx_solver, nx_solver, nnz, CSC_MAT),
