@@ -11,7 +11,7 @@ RUN apt update \
 
 COPY amici.tar.gz /tmp
 
-RUN pip3 install --upgrade pip build
+RUN pip3 install --upgrade pip build \
     && mkdir -p /tmp/amici/ \
     && cd /tmp/amici \
     && tar -xzf ../amici.tar.gz \
