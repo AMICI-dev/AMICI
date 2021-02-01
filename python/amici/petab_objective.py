@@ -12,6 +12,7 @@ from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
                     Collection, Iterator)
 
 import amici
+from amici.sbml_import import _get_species_initial
 import libsbml
 import numpy as np
 import pandas as pd
@@ -343,6 +344,17 @@ def create_parameter_mapping_for_condition(
                                        par_map, scale_map):
             value = petab.to_float_if_float(
                 petab_problem.condition_df.loc[condition_id, species_id])
+            if pd.isna(value):
+                value = float(
+                    _get_species_initial(
+                        petab_problem.sbml_model.getSpecies(species_id)
+                    )
+                )
+                logger.warning(f'The species {species_id} has no initial value'
+                               f' defined for the condition {condition_id} in'
+                               ' the PEtab conditions table. The initial value'
+                               f' is now set to {value}, which is the initial'
+                               ' value defined in the SBML model.')
             par_map[init_par_id] = value
             if isinstance(value, float):
                 # numeric initial state
