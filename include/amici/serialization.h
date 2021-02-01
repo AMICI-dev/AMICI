@@ -102,21 +102,7 @@ void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*
  */
 template <class Archive>
 void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
-    ar &m.nx_rdata;
-    ar &m.nxtrue_rdata;
-    ar &m.nx_solver;
-    ar &m.nxtrue_solver;
-    ar &m.nx_solver_reinit;
-    ar &m.ny;
-    ar &m.nytrue;
-    ar &m.nz;
-    ar &m.nztrue;
-    ar &m.ne;
-    ar &m.nw;
-    ar &m.nnz;
-    ar &m.nJ;
-    ar &m.ubw;
-    ar &m.lbw;
+    ar &dynamic_cast<amici::ModelDimensions&>(m);
     ar &m.o2mode;
     ar &m.z2event_;
     ar &m.idlist;
@@ -212,6 +198,38 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
     ar &r.status;
 }
 
+
+/**
+ * @brief Serialize amici::ModelDimensions to boost archive
+ * @param ar Archive
+ * @param md ModelDimensions instance to serialize
+ */
+
+template <class Archive>
+void serialize(Archive &ar, amici::ModelDimensions &m, const unsigned int /*version*/) {
+    ar &m.nx_rdata;
+    ar &m.nxtrue_rdata;
+    ar &m.nx_solver;
+    ar &m.nxtrue_solver;
+    ar &m.nx_solver_reinit;
+    ar &m.np;
+    ar &m.nk;
+    ar &m.ny;
+    ar &m.nytrue;
+    ar &m.nz;
+    ar &m.nztrue;
+    ar &m.ne;
+    ar &m.nw;
+    ar &m.ndwdx;
+    ar &m.ndwdp;
+    ar &m.ndwdw;
+    ar &m.ndxdotdw;
+    ar &m.ndJydy;
+    ar &m.nnz;
+    ar &m.nJ;
+    ar &m.ubw;
+    ar &m.lbw;
+}
 #endif
 } // namespace serialization
 } // namespace boost

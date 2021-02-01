@@ -299,8 +299,8 @@ TEST_GROUP(edata)
                     nx,        // nx_solver
                     nx,        // nxtrue_solver
                     0,         // nx_solver_reinit
-                    2,  // np
-                    2,  // nk
+                    1,  // np
+                    3,  // nk
                     ny,        // ny
                     ny,        // nytrue
                     nz,        // nz
@@ -319,10 +319,10 @@ TEST_GROUP(edata)
                     ),
                 SecondOrderMode::none,
                 std::vector<realtype>(1, 0.0),
-                std::vector<realtype>(3, 0),
+                std::vector<realtype>(3, 0.0),
                 std::vector<int>(2, 1),
-                std::vector<realtype>(0, 0.0),
-                std::vector<int>(0, 1));
+                std::vector<realtype>(),
+                std::vector<int>());
     void setup()
     {
         model->setTimepoints(timepoints);
@@ -612,8 +612,8 @@ TEST_GROUP(solver)
                     nx,        // nx_solver
                     nx,        // nxtrue_solver
                     0,         // nx_solver_reinit
-                    2,         // np
-                    2,         // nk
+                    1,         // np
+                    3,         // nk
                     ny,        // ny
                     ny,        // nytrue
                     nz,        // nz
@@ -632,10 +632,10 @@ TEST_GROUP(solver)
                     ),
                 SecondOrderMode::none,
                 std::vector<realtype>(1, 0.0),
-                std::vector<realtype>(3, 0),
+                std::vector<realtype>(3, 0.0),
                 std::vector<int>(2, 1),
                 std::vector<realtype>(0, 0.0),
-                std::vector<int>(0, 1));
+                std::vector<int>());
 
             CVodeSolver solver = CVodeSolver();
 
