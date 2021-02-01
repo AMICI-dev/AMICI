@@ -6,7 +6,6 @@
 #include "amici/model.h"
 #include "amici/misc.h"
 #include "amici/forwardproblem.h"
-
 #include <vector>
 
 namespace amici {
@@ -33,7 +32,7 @@ namespace amici {
  * NOTE: multidimensional arrays are stored in row-major order
  * (FORTRAN-style)
  */
-class ReturnData {
+class ReturnData: public ModelDimensions {
   public:
     /**
      * @brief default constructor
@@ -43,23 +42,11 @@ class ReturnData {
     /**
      * @brief ReturnData
      * @param ts see amici::Model::ts
-     * @param np see amici::Model::np
-     * @param nk see amici::Model::nk
-     * @param nx see amici::Model::nx_rdata
-     * @param nx_solver see amici::Model::nx_solver
-     * @param nxtrue see amici::Model::nxtrue_rdata
-     * @param nx_solver_reinit see amici::Model::nx_solver_reinit
-     * @param ny see amici::Model::ny
-     * @param nytrue see amici::Model::nytrue
-     * @param nz see amici::Model::nz
-     * @param nztrue see amici::Model::nztrue
-     * @param ne see amici::Model::ne
-     * @param nJ see amici::Model::nJ
+     * @param model_dimensions Model dimensions
      * @param nplist see amici::Model::nplist
      * @param nmaxevent see amici::Model::nmaxevent
      * @param nt see amici::Model::nt
      * @param newton_maxsteps see amici::Solver::newton_maxsteps
-     * @param nw see amici::Model::nw
      * @param pscale see amici::Model::pscale
      * @param o2mode see amici::Model::o2mode
      * @param sensi see amici::Solver::sensi
@@ -68,10 +55,10 @@ class ReturnData {
      * @param quadratic_llh whether model defines a quadratic nllh and computing res, sres and
      * FIM makes sense
      */
-    ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
-               int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
-               int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
-               int nw,
+    ReturnData(std::vector<realtype> ts,
+               ModelDimensions model_dimensions,
+               int nplist, int nmaxevent, int nt,
+               int newton_maxsteps,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
                SensitivityOrder sensi, SensitivityMethod sensi_meth,
                RDataReporting rdrm, bool quadratic_llh);
@@ -346,41 +333,14 @@ class ReturnData {
     /** status code */
     int status = 0;
 
-    /** total number of model parameters */
-    int np{0};
-
-    /** number of fixed parameters */
-    int nk{0};
-
-    /** number of states */
+    /** number of states (alias nx_rdata, kept for backward compatibility) */
     int nx{0};
 
-    /** number of states with conservation laws applied */
-    int nx_solver{0};
-
-    /** number of states in the unaugmented system */
+    /**
+     * number of states in the unaugmented system
+     * (alias nxtrue_rdata, kept for backward compatibility)
+     */
     int nxtrue{0};
-
-    /** number of solver states to be reinitialized after preequilibration */
-    int nx_solver_reinit{0};
-
-    /** number of observables */
-    int ny{0};
-
-    /** number of observables in the unaugmented system */
-    int nytrue{0};
-
-    /** number of event outputs */
-    int nz{0};
-
-    /** number of event outputs in the unaugmented system */
-    int nztrue{0};
-
-    /** number of events */
-    int ne{0};
-
-    /** dimension of the augmented objective function for 2nd order ASA */
-    int nJ{0};
 
     /** number of parameter for which sensitivities were requested */
     int nplist{0};
@@ -390,9 +350,6 @@ class ReturnData {
 
     /** number of considered timepoints */
     int nt{0};
-
-    /** number of columns in w */
-    int nw{0};
 
     /** maximal number of newton iterations for steady state calculation */
     int newton_maxsteps{0};

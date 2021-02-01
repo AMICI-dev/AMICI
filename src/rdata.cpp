@@ -15,28 +15,25 @@
 namespace amici {
 
 ReturnData::ReturnData(Solver const &solver, const Model &model)
-    : ReturnData(model.getTimepoints(), model.np(), model.nk(), model.nx_rdata,
-                 model.nx_solver, model.nxtrue_rdata, model.nx_solver_reinit,
-                 model.ny, model.nytrue, model.nz, model.nztrue, model.ne,
-                 model.nJ, model.nplist(), model.nMaxEvent(), model.nt(),
-                 solver.getNewtonMaxSteps(), model.nw,
+    : ReturnData(model.getTimepoints(), ModelDimensions(model),
+                 model.nplist(), model.nMaxEvent(), model.nt(),
+                 solver.getNewtonMaxSteps(),
                  model.getParameterScale(), model.o2mode,
                  solver.getSensitivityOrder(), solver.getSensitivityMethod(),
                  solver.getReturnDataReportingMode(), model.hasQuadraticLLH()) {
 }
 
-ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
-                       int nx_solver, int nxtrue, int nx_solver_reinit, int ny,
-                       int nytrue, int nz, int nztrue, int ne, int nJ,
-                       int nplist, int nmaxevent, int nt, int newton_maxsteps,
-                       int nw, std::vector<ParameterScaling> pscale,
+ReturnData::ReturnData(std::vector<realtype> ts,
+                       ModelDimensions model_dimensions,
+                       int nplist, int nmaxevent,
+                       int nt, int newton_maxsteps,
+                       std::vector<ParameterScaling> pscale,
                        SecondOrderMode o2mode, SensitivityOrder sensi,
                        SensitivityMethod sensi_meth, RDataReporting rdrm,
                        bool quadratic_llh)
-    : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver),
-      nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny),
-      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nJ(nJ), nplist(nplist),
-      nmaxevent(nmaxevent), nt(nt), nw(nw), newton_maxsteps(newton_maxsteps),
+    : ModelDimensions(model_dimensions), ts(std::move(ts)), nx(nx_rdata),
+      nxtrue(nxtrue_rdata), nplist(nplist),
+      nmaxevent(nmaxevent), nt(nt), newton_maxsteps(newton_maxsteps),
       pscale(std::move(pscale)), o2mode(o2mode), sensi(sensi),
       sensi_meth(sensi_meth), rdata_reporting(rdrm), x_solver_(nx_solver),
       sx_solver_(nx_solver, nplist), x_rdata_(nx), sx_rdata_(nx, nplist),

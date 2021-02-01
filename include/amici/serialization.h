@@ -130,17 +130,9 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
 
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
-    ar &r.np;
-    ar &r.nk;
+    ar &dynamic_cast<amici::ModelDimensions&>(r);
     ar &r.nx;
-    ar &r.nx_solver;
     ar &r.nxtrue;
-    ar &r.ny;
-    ar &r.nytrue;
-    ar &r.nz;
-    ar &r.nztrue;
-    ar &r.ne;
-    ar &r.nJ;
     ar &r.nplist;
     ar &r.nmaxevent;
     ar &r.nt;
