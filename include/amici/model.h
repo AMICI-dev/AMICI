@@ -276,7 +276,7 @@ struct ModelStateDerived {
     /**
      * Temporary storage of `dxdotdp_full` data across functions (Python only)
      * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     *  type `CSC_MAT`)
+     * type `CSC_MAT`)
      */
     SUNMatrixWrapper dxdotdp_full;
 
@@ -297,7 +297,7 @@ struct ModelStateDerived {
 
     /**
      * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
+     * (dimension: `nplist` x `nx_solver`, nnz: `nxdotdotdx_explicit`,
      *  type `CSC_MAT`)
      */
     SUNMatrixWrapper dxdotdx_explicit;
@@ -312,7 +312,7 @@ struct ModelStateDerived {
 
     /**
      * Temporary storage of `dxdotdp` data across functions, Matlab only
-     * (dimension: `nplist` x `nx_solver`, row-major)
+     * (dimension: `nplist` x `nx_solver` , row-major)
      */
     AmiVectorArray dxdotdp {0, 0};
 
@@ -322,7 +322,7 @@ struct ModelStateDerived {
     std::vector<SUNMatrixWrapper> dJydy_;
 
     /** Observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `false` (dimension `nJ` x `ny` x `nytrue`,
+     * `pythonGenerated` == `false` (dimension `nJ` x `ny` x `nytrue` ,
      * row-major)
      */
     std::vector<realtype> dJydy_matlab_;
@@ -333,7 +333,7 @@ struct ModelStateDerived {
     std::vector<realtype> dJydsigma_;
 
     /** State derivative of data likelihood
-     * (dimension nJ x nx_solver, row-major)
+     * (dimension `nJ` x `nx_solver`, row-major)
      */
     std::vector<realtype> dJydx_;
 
@@ -363,7 +363,7 @@ struct ModelStateDerived {
     std::vector<realtype> dJrzdsigma_;
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx_solver, row-major)
+     * (dimension `nJ` x `nx_solver`, row-major)
      */
     std::vector<realtype> dJzdx_;
 
@@ -373,7 +373,7 @@ struct ModelStateDerived {
     std::vector<realtype> dJzdp_;
 
     /** state derivative of event output
-     * (dimension: nz x nx_solver, row-major)
+     * (dimension: nz x `nx_solver`, row-major)
      */
     std::vector<realtype> dzdx_;
 
@@ -383,7 +383,7 @@ struct ModelStateDerived {
     std::vector<realtype> dzdp_;
 
     /** state derivative of event regularization variable
-     * (dimension: nz x nx_solver, row-major)
+     * (dimension: `nz` x `nx_solver`, row-major)
      */
     std::vector<realtype> drzdx_;
 
@@ -398,7 +398,7 @@ struct ModelStateDerived {
     std::vector<realtype> dydp_;
 
     /** state derivative of time-resolved observable
-     * (dimension: nx_solver x ny, row-major)
+     * (dimension: `nx_solver` x `ny`, row-major)
      */
     std::vector<realtype> dydx_;
 
@@ -406,14 +406,14 @@ struct ModelStateDerived {
     std::vector<realtype> w_;
 
     /** temporary storage for flattened sx,
-     * (dimension: nx_solver x nplist, row-major)
+     * (dimension: `nx_solver` x `nplist`, row-major)
      */
     std::vector<realtype> sx_;
 
-    /** temporary storage for x_rdata (dimension: nx_rdata) */
+    /** temporary storage for `x_rdata` (dimension: `nx_rdata`) */
     std::vector<realtype> x_rdata_;
 
-    /** temporary storage for sx_rdata slice (dimension: nx_rdata) */
+    /** temporary storage for `sx_rdata` slice (dimension: `nx_rdata`) */
     std::vector<realtype> sx_rdata_;
 
     /** temporary storage for time-resolved observable (dimension: ny) */
@@ -441,15 +441,15 @@ struct ModelStateDerived {
      */
     std::vector<realtype> dsigmazdp_;
 
-    /** temporary storage for change in x after event (dimension: nx_solver) */
+    /** temporary storage for change in x after event (dimension: `nx_solver`) */
     std::vector<realtype> deltax_;
 
     /** temporary storage for change in sx after event
-     * (dimension: nx_solver x nplist, row-major)
+     * (dimension: `nx_solver` x `nplist`, row-major)
      */
     std::vector<realtype> deltasx_;
 
-    /** temporary storage for change in xB after event (dimension: nx_solver) */
+    /** temporary storage for change in xB after event (dimension: `nx_solver`) */
     std::vector<realtype> deltaxB_;
 
     /** temporary storage for change in qB after event
@@ -458,7 +458,7 @@ struct ModelStateDerived {
     std::vector<realtype> deltaqB_;
 
     /** temporary storage of positified state variables according to
-     * stateIsNonNegative (dimension: nx_solver) */
+     * stateIsNonNegative (dimension: `nx_solver`) */
     AmiVector x_pos_tmp_ {0};
 };
 
