@@ -58,8 +58,8 @@ TEST_GROUP(model)
                     nx,        // nx_solver
                     nx,        // nxtrue_solver
                     0,         // nx_solver_reinit
-                    p.size(),  // np
-                    k.size(),  // nk
+                    static_cast<int>(p.size()),  // np
+                    static_cast<int>(k.size()),  // nk
                     ny,        // ny
                     ny,        // nytrue
                     nz,        // nz

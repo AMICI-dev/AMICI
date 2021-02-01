@@ -24,7 +24,7 @@ ReturnData::ReturnData(Solver const &solver, const Model &model)
 }
 
 ReturnData::ReturnData(std::vector<realtype> ts,
-                       ModelDimensions model_dimensions,
+                       ModelDimensions const& model_dimensions,
                        int nplist, int nmaxevent,
                        int nt, int newton_maxsteps,
                        std::vector<ParameterScaling> pscale,
