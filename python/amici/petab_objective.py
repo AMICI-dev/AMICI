@@ -12,7 +12,7 @@ from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
                     Collection, Iterator)
 
 import amici
-from amici.sbml_import import _get_species_initial
+from amici.sbml_import import get_species_initial
 import libsbml
 import numpy as np
 import pandas as pd
@@ -346,7 +346,7 @@ def create_parameter_mapping_for_condition(
                 petab_problem.condition_df.loc[condition_id, species_id])
             if pd.isna(value):
                 value = float(
-                    _get_species_initial(
+                    get_species_initial(
                         petab_problem.sbml_model.getSpecies(species_id)
                     )
                 )

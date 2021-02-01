@@ -533,8 +533,8 @@ def import_model_sbml(
             assignment = sbml_model.createInitialAssignment()
             assignment.setSymbol(assignee_id)
         else:
-            logger.warning(f'The SBML model has an initial assignment defined '
-                           'for model entity {assignee_id}, but this entity '
+            logger.warning('The SBML model has an initial assignment defined '
+                           f'for model entity {assignee_id}, but this entity '
                            'also has an initial value defined in the PEtab '
                            'condition table. The SBML initial assignment will '
                            'be overwritten to handle preequilibration and '

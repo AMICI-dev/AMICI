@@ -582,7 +582,7 @@ class SbmlImporter:
         Extract initial values and initial assignments from species
         """
         for species_variable in self.sbml.getListOfSpecies():
-            initial = _get_species_initial(species_variable)
+            initial = get_species_initial(species_variable)
 
             species_id = _get_identifier_symbol(species_variable)
             # If species_id is a target of an AssignmentRule, species will be
@@ -1787,7 +1787,7 @@ def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
     return symbol_with_assumptions(var.getId())
 
 
-def _get_species_initial(species: sbml.Species) -> sp.Expr:
+def get_species_initial(species: sbml.Species) -> sp.Expr:
     """
     Extract the initial concentration from a given species
 
