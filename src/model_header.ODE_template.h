@@ -118,26 +118,30 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      */
     Model_TPL_MODELNAME()
         : amici::Model_ODE(
-              TPL_NX_RDATA,                                // nx_rdata
-              TPL_NXTRUE_RDATA,                            // nxtrue_rdata
-              TPL_NX_SOLVER,                               // nx_solver
-              TPL_NXTRUE_SOLVER,                           // nxtrue_solver
-              TPL_NX_SOLVER_REINIT,                        // nx_solver_reinit
-              TPL_NY,                                      // ny
-              TPL_NYTRUE,                                  // nytrue
-              TPL_NZ,                                      // nz
-              TPL_NZTRUE,                                  // nztrue
-              TPL_NEVENT,                                  // nevent
-              TPL_NOBJECTIVE,                              // nobjective
-              TPL_NW,                                      // nw
-              TPL_NDWDX,                                   // ndwdx
-              TPL_NDWDP,                                   // ndwdp
-              TPL_NDWDW,                                   // ndwdw
-              TPL_NDXDOTDW,                                // ndxdotdw
-              TPL_NDJYDY,                                  // ndjydy
-              0,                                           // nnz
-              TPL_UBW,                                     // ubw
-              TPL_LBW,                                     // lbw
+              amici::ModelDimensions(
+                  TPL_NX_RDATA,                            // nx_rdata
+                  TPL_NXTRUE_RDATA,                        // nxtrue_rdata
+                  TPL_NX_SOLVER,                           // nx_solver
+                  TPL_NXTRUE_SOLVER,                       // nxtrue_solver
+                  TPL_NX_SOLVER_REINIT,                    // nx_solver_reinit
+                  TPL_NP,                                  // np
+                  TPL_NK,                                  // nk
+                  TPL_NY,                                  // ny
+                  TPL_NYTRUE,                              // nytrue
+                  TPL_NZ,                                  // nz
+                  TPL_NZTRUE,                              // nztrue
+                  TPL_NEVENT,                              // nevent
+                  TPL_NOBJECTIVE,                          // nobjective
+                  TPL_NW,                                  // nw
+                  TPL_NDWDX,                               // ndwdx
+                  TPL_NDWDP,                               // ndwdp
+                  TPL_NDWDW,                               // ndwdw
+                  TPL_NDXDOTDW,                            // ndxdotdw
+                  TPL_NDJYDY,                              // ndjydy
+                  0,                                       // nnz
+                  TPL_UBW,                                 // ubw
+                  TPL_LBW                                  // lbw
+              ),
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>{TPL_PARAMETERS},       // dynamic parameters
               std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
