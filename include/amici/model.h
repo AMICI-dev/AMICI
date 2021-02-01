@@ -243,7 +243,7 @@ struct ModelStateDerived {
 
     /**
      * @brief Constructor from model dimensions.
-     * @param model_dimensions Model dimensions
+     * @param dim Model dimensions
      */
     ModelStateDerived(ModelDimensions const& dim)
         : J_(dim.nx_solver, dim.nx_solver, dim.nnz, CSC_MAT),
