@@ -313,12 +313,6 @@ struct ModelStateDerived {
      */
     AmiVectorArray dxdotdp {0, 0};
 
-    /** Current observable (dimension: `nytrue`) */
-    std::vector<realtype> my_;
-
-    /** Current event measurement (dimension: `nztrue`) */
-    std::vector<realtype> mz_;
-
     /** Sparse observable derivative of data likelihood, only used if
      * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
      */
