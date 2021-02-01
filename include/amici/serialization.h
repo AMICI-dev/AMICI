@@ -194,7 +194,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
 /**
  * @brief Serialize amici::ModelDimensions to boost archive
  * @param ar Archive
- * @param md ModelDimensions instance to serialize
+ * @param m ModelDimensions instance to serialize
  */
 
 template <class Archive>
