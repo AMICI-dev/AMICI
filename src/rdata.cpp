@@ -15,7 +15,8 @@
 namespace amici {
 
 ReturnData::ReturnData(Solver const &solver, const Model &model)
-    : ReturnData(model.getTimepoints(), ModelDimensions(model),
+    : ReturnData(model.getTimepoints(),
+                 ModelDimensions(static_cast<ModelDimensions const&>(model)),
                  model.nplist(), model.nMaxEvent(), model.nt(),
                  solver.getNewtonMaxSteps(),
                  model.getParameterScale(), model.o2mode,

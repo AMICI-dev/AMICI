@@ -172,7 +172,8 @@ bool operator==(const Model &a, const Model &b) {
     if (typeid(a) != typeid(b))
         return false;
 
-    return (static_cast<ModelDimensions>(a) == static_cast<ModelDimensions>(b))
+    return (static_cast<ModelDimensions const&>(a)
+            == static_cast<ModelDimensions const&>(b))
             && (a.o2mode == b.o2mode) &&
            (a.z2event_ == b.z2event_) && (a.idlist == b.idlist) &&
            (a.state_.h == b.state_.h) &&
