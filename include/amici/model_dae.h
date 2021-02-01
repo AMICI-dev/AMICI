@@ -50,8 +50,8 @@ class Model_DAE : public Model {
         : Model(model_dimensions,
                 o2mode, p, k, plist, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit) {
-            M_ = SUNMatrixWrapper(nx_solver, nx_solver);
-        }
+        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+    }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
