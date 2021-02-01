@@ -65,13 +65,13 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %include abstract_model.i
 %include misc.i
 %include edata.i
-%include rdata.i
 %include solver.i
 %include solver_idas.i
 %include solver_cvodes.i
 %include model.i
 %include model_ode.i
 %include model_dae.i
+%include rdata.i
 
 #ifndef AMICI_SWIG_WITHOUT_HDF5
 %include hdf5.i
