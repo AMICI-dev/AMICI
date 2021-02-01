@@ -53,7 +53,7 @@ class Model_Test : public Model
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
-    Model_Test(ModelDimensions model_dimensions,
+    Model_Test(ModelDimensions const& model_dimensions,
                const SecondOrderMode o2mode,
                const std::vector<realtype> p,
                const std::vector<realtype> k,
