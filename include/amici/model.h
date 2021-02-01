@@ -241,7 +241,10 @@ struct ModelState {
 struct ModelStateDerived {
     ModelStateDerived() = default;
 
-    /** ctor */
+    /**
+     * @brief Constructor from model dimensions.
+     * @param model_dimensions Model dimensions
+     */
     ModelStateDerived(ModelDimensions const& dim)
         : J_(dim.nx_solver, dim.nx_solver, dim.nnz, CSC_MAT),
           JB_(dim.nx_solver, dim.nx_solver, dim.nnz, CSC_MAT),
