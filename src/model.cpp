@@ -111,6 +111,9 @@ Model::Model(ModelDimensions model_dimensions,
       state_is_non_negative_(nx_solver, false),
       pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)),
       w_recursion_depth_(w_recursion_depth) {
+    Expects(model_dimensions.np == static_cast<int>(p.size()));
+    Expects(model_dimensions.nk == static_cast<int>(k.size()));
+
     state_.h.resize(ne, 0.0);
     state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
     state_.stotal_cl.resize((nx_rdata - nx_solver) * p.size(), 0.0);

@@ -31,6 +31,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Constructor with model dimensions
+     * @param model_dimensions Model dimensions
      * @param o2mode second order sensitivity mode
      * @param p parameters
      * @param k constants
