@@ -1621,8 +1621,10 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
         root = trigger.args[0] - trigger.args[1]
 
         # normalize such that we always implement <,
-        # this ensures that we can correctly evaluate the condition by
-        # translating into aheaviside function that is implemented as unit step
+        # this ensures that we can correctly evaluate the condition if
+        # simulation starts at H(0). This is achieved by translating
+        # conditionals into Heaviside functions H that is implemented as unit
+        # step with H(0) = 1
         if isinstance(trigger, sp.core.relational.StrictLessThan):
             # x < y => x - y < 0 => r < 0
             return 1 - sp.Heaviside(root)
