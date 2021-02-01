@@ -2131,6 +2131,7 @@ class Model : public AbstractModel, public ModelDimensions {
 };
 
 bool operator==(const Model &a, const Model &b);
+bool operator==(const ModelDimensions &a, const ModelDimensions &b);
 
 } // namespace amici
 

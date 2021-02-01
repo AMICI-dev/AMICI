@@ -172,14 +172,8 @@ bool operator==(const Model &a, const Model &b) {
     if (typeid(a) != typeid(b))
         return false;
 
-    return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
-           (a.nx_solver == b.nx_solver) &&
-           (a.nxtrue_solver == b.nxtrue_solver) &&
-           (a.nx_solver_reinit == b.nx_solver_reinit) && (a.ny == b.ny) &&
-           (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
-           (a.ne == b.ne) && (a.nw == b.nw) &&
-           (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
-           (a.lbw == b.lbw) && (a.o2mode == b.o2mode) &&
+    return (static_cast<ModelDimensions>(a) == static_cast<ModelDimensions>(b))
+            && (a.o2mode == b.o2mode) &&
            (a.z2event_ == b.z2event_) && (a.idlist == b.idlist) &&
            (a.state_.h == b.state_.h) &&
            (a.state_.unscaledParameters == b.state_.unscaledParameters) &&
@@ -193,6 +187,23 @@ bool operator==(const Model &a, const Model &b) {
             b.reinitialize_fixed_parameter_initial_states_) &&
            (a.tstart_ == b.tstart_);
 }
+
+bool operator==(const ModelDimensions &a, const ModelDimensions &b) {
+    if (typeid(a) != typeid(b))
+        return false;
+    return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
+           (a.nx_solver == b.nx_solver) &&
+           (a.nxtrue_solver == b.nxtrue_solver) &&
+           (a.nx_solver_reinit == b.nx_solver_reinit) &&
+           (a.np == b.np) && (a.nk == b.nk) && (a.ny == b.ny) &&
+           (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
+           (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
+           (a.ndwdp == b.ndwdp) && (a.ndwdw == b.ndwdw) &&
+           (a.ndxdotdw == b.ndxdotdw) && (a.ndJydy == b.ndJydy) &&
+           (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
+           (a.lbw == b.lbw);
+}
+
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                        AmiVectorArray & /*sdx*/, bool computeSensitivities) {
