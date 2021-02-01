@@ -53,6 +53,8 @@ void ForwardProblem::workForwardProblem() {
         model->initialize(x_, dx_, sx_, sdx_,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
+    else if (model->ne)
+        model->initHeaviside(x_, dx_);
 
     /* compute initial time and setup solver for (pre-)simulation */
     auto t0 = model->t0();
@@ -67,6 +69,8 @@ void ForwardProblem::workForwardProblem() {
                                " is currently not implemented.");
         handlePresimulation();
         t_ = model->t0();
+        if (model->ne)
+            model->initHeaviside(x_, dx_);
     }
     /* when computing adjoint sensitivity analysis with presimulation,
      we need to store sx after the reinitialization after preequilibration

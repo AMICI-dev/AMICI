@@ -72,11 +72,20 @@ respective root function as argument. These will be automatically updated
 during events and take either 0 or 1 values as appropriate pre/post event
 limits.
 
-In order to fully support SBML events, AMICI uses the SUNDIALS functionality to
-only track zero crossings from negative to positive. Accordingly, two root
-functions are necessary to keep track of Heaviside functions and two
-Heaviside function helper variables will be created, where one corresponds
-to the value of `Heaviside(...)` and one to the value of `1-Heaviside(...)`.
+In order to fully support SBML events and Piecewise functions, AMICI uses 
+the SUNDIALS functionality to only track zero crossings from negative to 
+positive. Accordingly, two root functions are necessary to keep track of 
+Heaviside functions and two Heaviside function helper variables will be 
+created, where one corresponds to the value of `Heaviside(...)` and one 
+to the value of `1-Heaviside(...)`. To ensure that Heaviside functions are 
+correctly evaluated at the beginning of the simulation, Heaviside functions 
+are implement as unit steps that evaluate to `1` at `0`. The arguments of 
+Heaviside functions are normalized such that respective properties of 
+Piecewise functions are conserved for the first Heaviside function variable.
+Accordingly, the value of of the second helper variable is incorrect when
+simulation starts when the respective Heaviside function evaluates to zero
+at initialization and should generally not be used.
+
 
 
 Right-Hand-Side Removable Discontinuities
