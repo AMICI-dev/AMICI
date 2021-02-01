@@ -350,11 +350,11 @@ def create_parameter_mapping_for_condition(
                         petab_problem.sbml_model.getSpecies(species_id)
                     )
                 )
-                logger.warning(f'The species {species_id} has no initial value'
-                               f' defined for the condition {condition_id} in'
-                               ' the PEtab conditions table. The initial value'
-                               f' is now set to {value}, which is the initial'
-                               ' value defined in the SBML model.')
+                logger.debug(f'The species {species_id} has no initial value '
+                             f'defined for the condition {condition_id} in '
+                             'the PEtab conditions table. The initial value is '
+                             f'now set to {value}, which is the initial value '
+                             'defined in the SBML model.')
             par_map[init_par_id] = value
             if isinstance(value, float):
                 # numeric initial state
