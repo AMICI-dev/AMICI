@@ -2036,8 +2036,9 @@ static int CVAdataStore(CVodeMem cv_mem, CkpntMem ck_mem)
   /* Run CVode to set following structures in dt_mem[i] */
   i = 1;
   do {
-    // Modified for AMICI
-    // (dt_mem has dimension ca_mem->ca_nsteps)
+    /* Modified for AMICI
+     * (dt_mem has dimension ca_mem->ca_nsteps)
+     */
     if (i > ca_mem->ca_nsteps) return(CV_FWD_FAIL);
 
     flag = CVode(cv_mem, ck_mem->ck_t1, ca_mem->ca_ytmp, &t, CV_ONE_STEP);
