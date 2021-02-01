@@ -4,7 +4,7 @@
  *                Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2020, Lawrence Livermore National Security
+ * Copyright (c) 2002-2021, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -18,7 +18,9 @@
  * in nvector.h.
  * -----------------------------------------------------------------*/
 
+#include <stdio.h>
 #include <stdlib.h>
+
 #include <sundials/sundials_nvector.h>
 
 /* -----------------------------------------------------------------
@@ -43,15 +45,16 @@ N_Vector N_VNewEmpty()
   /* initialize operations to NULL */
 
   /* constructors, destructors, and utility operations */
-  ops->nvgetvectorid     = NULL;
-  ops->nvclone           = NULL;
-  ops->nvcloneempty      = NULL;
-  ops->nvdestroy         = NULL;
-  ops->nvspace           = NULL;
-  ops->nvgetarraypointer = NULL;
-  ops->nvsetarraypointer = NULL;
-  ops->nvgetcommunicator = NULL;
-  ops->nvgetlength       = NULL;
+  ops->nvgetvectorid           = NULL;
+  ops->nvclone                 = NULL;
+  ops->nvcloneempty            = NULL;
+  ops->nvdestroy               = NULL;
+  ops->nvspace                 = NULL;
+  ops->nvgetarraypointer       = NULL;
+  ops->nvgetdevicearraypointer = NULL;
+  ops->nvsetarraypointer       = NULL;
+  ops->nvgetcommunicator       = NULL;
+  ops->nvgetlength             = NULL;
 
   /* standard vector operations */
   ops->nvlinearsum    = NULL;
@@ -99,6 +102,15 @@ N_Vector N_VNewEmpty()
   ops->nvwsqrsumlocal     = NULL;
   ops->nvwsqrsummasklocal = NULL;
 
+  /* XBraid interface operations */
+  ops->nvbufsize   = NULL;
+  ops->nvbufpack   = NULL;
+  ops->nvbufunpack = NULL;
+
+  /* debugging functions (called when SUNDIALS_DEBUG_PRINTVEC is defined) */
+  ops->nvprint     = NULL;
+  ops->nvprintfile = NULL;
+
   /* attach ops and initialize content to NULL */
   v->ops     = ops;
   v->content = NULL;
@@ -138,15 +150,16 @@ int N_VCopyOps(N_Vector w, N_Vector v)
   /* Copy ops from w to v */
 
   /* constructors, destructors, and utility operations */
-  v->ops->nvgetvectorid     = w->ops->nvgetvectorid;
-  v->ops->nvclone           = w->ops->nvclone;
-  v->ops->nvcloneempty      = w->ops->nvcloneempty;
-  v->ops->nvdestroy         = w->ops->nvdestroy;
-  v->ops->nvspace           = w->ops->nvspace;
-  v->ops->nvgetarraypointer = w->ops->nvgetarraypointer;
-  v->ops->nvsetarraypointer = w->ops->nvsetarraypointer;
-  v->ops->nvgetcommunicator = w->ops->nvgetcommunicator;
-  v->ops->nvgetlength       = w->ops->nvgetlength;
+  v->ops->nvgetvectorid           = w->ops->nvgetvectorid;
+  v->ops->nvclone                 = w->ops->nvclone;
+  v->ops->nvcloneempty            = w->ops->nvcloneempty;
+  v->ops->nvdestroy               = w->ops->nvdestroy;
+  v->ops->nvspace                 = w->ops->nvspace;
+  v->ops->nvgetarraypointer       = w->ops->nvgetarraypointer;
+  v->ops->nvgetdevicearraypointer = w->ops->nvgetdevicearraypointer;
+  v->ops->nvsetarraypointer       = w->ops->nvsetarraypointer;
+  v->ops->nvgetcommunicator       = w->ops->nvgetcommunicator;
+  v->ops->nvgetlength             = w->ops->nvgetlength;
 
   /* standard vector operations */
   v->ops->nvlinearsum    = w->ops->nvlinearsum;
@@ -193,6 +206,15 @@ int N_VCopyOps(N_Vector w, N_Vector v)
   v->ops->nvminquotientlocal = w->ops->nvminquotientlocal;
   v->ops->nvwsqrsumlocal     = w->ops->nvwsqrsumlocal;
   v->ops->nvwsqrsummasklocal = w->ops->nvwsqrsummasklocal;
+
+  /* XBraid interface operations */
+  v->ops->nvbufsize   = w->ops->nvbufsize;
+  v->ops->nvbufpack   = w->ops->nvbufpack;
+  v->ops->nvbufunpack = w->ops->nvbufunpack;
+
+  /* debugging functions (called when SUNDIALS_DEBUG_PRINTVEC is defined) */
+  v->ops->nvprint     = w->ops->nvprint;
+  v->ops->nvprintfile = w->ops->nvprintfile;
 
   return(0);
 }
@@ -242,6 +264,14 @@ void N_VSpace(N_Vector v, sunindextype *lrw, sunindextype *liw)
 realtype *N_VGetArrayPointer(N_Vector v)
 {
   return((realtype *) v->ops->nvgetarraypointer(v));
+}
+
+realtype *N_VGetDeviceArrayPointer(N_Vector v)
+{
+  if (v->ops->nvgetdevicearraypointer)
+    return((realtype *) v->ops->nvgetdevicearraypointer(v));
+  else
+    return(NULL);
 }
 
 void N_VSetArrayPointer(realtype *v_data, N_Vector v)
@@ -673,6 +703,28 @@ realtype N_VMinQuotientLocal(N_Vector num, N_Vector denom)
   return((realtype) num->ops->nvminquotientlocal(num,denom));
 }
 
+/* ------------------------------------
+ * OPTIONAL XBraid interface operations
+ * ------------------------------------*/
+
+int N_VBufSize(N_Vector x, sunindextype *size)
+{
+  if (x->ops->nvbufsize == NULL) return(-1);
+  return(x->ops->nvbufsize(x, size));
+}
+
+int N_VBufPack(N_Vector x, void *buf)
+{
+  if (x->ops->nvbufpack == NULL) return(-1);
+  return(x->ops->nvbufpack(x, buf));
+}
+
+int N_VBufUnpack(N_Vector x, void *buf)
+{
+  if (x->ops->nvbufunpack == NULL) return(-1);
+  return(x->ops->nvbufunpack(x, buf));
+}
+
 /* -----------------------------------------------------------------
  * Additional functions exported by the generic NVECTOR:
  *   N_VNewVectorArray
@@ -760,4 +812,38 @@ void N_VSetVecAtIndexVectorArray(N_Vector* vs, int index, N_Vector w)
   if (vs==NULL)       return;
   else if (index < 0) return;
   else                vs[index] = w;
+}
+
+
+/* -----------------------------------------------------------------
+ * Debugging functions
+ * ----------------------------------------------------------------- */
+
+void N_VPrint(N_Vector v)
+{
+  if (v == NULL) {
+    printf("NULL Vector\n");
+    return;
+  }
+  if (v->ops->nvprint == NULL) {
+    printf("NULL Print Op\n");
+    return;
+  }
+  v->ops->nvprint(v);
+  return;
+}
+
+
+void N_VPrintFile(N_Vector v, FILE* outfile)
+{
+  if (v == NULL) {
+    fprintf(outfile, "NULL Vector\n");
+    return;
+  }
+  if (v->ops->nvprintfile == NULL) {
+    fprintf(outfile, "NULL PrintFile Op\n");
+    return;
+  }
+  v->ops->nvprintfile(v, outfile);
+  return;
 }
