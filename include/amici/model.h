@@ -258,7 +258,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
      * @param w_recursion_depth Recursion depth of fw
      */
-    Model(ModelDimensions model_dimensions,
+    Model(ModelDimensions const& model_dimensions,
           amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,

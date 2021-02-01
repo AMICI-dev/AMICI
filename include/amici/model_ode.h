@@ -43,7 +43,7 @@ class Model_ODE : public Model {
      * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
      * @param w_recursion_depth Recursion depth of fw
      */
-    Model_ODE(ModelDimensions model_dimensions,
+    Model_ODE(ModelDimensions const& model_dimensions,
               const SecondOrderMode o2mode,
               std::vector<realtype> const &p, std::vector<realtype> const &k,
               std::vector<int> const &plist,

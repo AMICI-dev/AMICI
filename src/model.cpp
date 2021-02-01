@@ -95,7 +95,7 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
     }
 }
 
-Model::Model(ModelDimensions model_dimensions,
+Model::Model(ModelDimensions const & model_dimensions,
              SecondOrderMode o2mode, const std::vector<realtype> &p,
              std::vector<realtype> k, const std::vector<int> &plist,
              std::vector<realtype> idlist, std::vector<int> z2event,

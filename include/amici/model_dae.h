@@ -41,7 +41,7 @@ class Model_DAE : public Model {
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
      */
-    Model_DAE(const ModelDimensions model_dimensions, const SecondOrderMode o2mode,
+    Model_DAE(const ModelDimensions &model_dimensions, const SecondOrderMode o2mode,
               std::vector<realtype> const &p, std::vector<realtype> const &k,
               std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
