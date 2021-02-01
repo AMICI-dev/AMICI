@@ -45,24 +45,7 @@ class Model_Test : public Model
 {
   public:
     /** constructor with model dimensions
-     * @param nx number of state variables
-     * @param nxtrue number of state variables of the non-augmented model
-     * @param ny number of observables
-     * @param nytrue number of observables of the non-augmented model
-     * @param nz number of event observables
-     * @param nztrue number of event observables of the non-augmented model
-     * @param ne number of events
-     * @param nJ number of objective functions
-     * @param nw number of repeating elements
-     * @param ndwdx number of nonzero elements in the x derivative of the
-     * repeating elements
-     * @param ndwdp number of nonzero elements in the p derivative of the
-     * repeating elements
-     * @param ndwdw number of nonzero elements in the w derivative of the
-     * repeating elements
-     * @param nnz number of nonzero elements in Jacobian
-     * @param ubw upper matrix bandwidth in the Jacobian
-     * @param lbw lower matrix bandwidth in the Jacobian
+     * @param model_dimensions ModelDimensions model_dimensions,
      * @param o2mode second order sensitivity mode
      * @param p parameters
      * @param k constants
@@ -70,51 +53,14 @@ class Model_Test : public Model
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
-    Model_Test(const int nx_rdata,
-               const int nxtrue_rdata,
-               const int nx_solver,
-               const int nxtrue_solver,
-               const int nx_solver_reinit,
-               const int ny,
-               const int nytrue,
-               const int nz,
-               const int nztrue,
-               const int ne,
-               const int nJ,
-               const int nw,
-               const int ndwdx,
-               const int ndwdp,
-               const int ndwdw,
-               const int ndxdotdw,
-               const int nnz,
-               const int ubw,
-               const int lbw,
+    Model_Test(ModelDimensions model_dimensions,
                const SecondOrderMode o2mode,
                const std::vector<realtype> p,
                const std::vector<realtype> k,
                const std::vector<int> plist,
                const std::vector<realtype> idlist,
                const std::vector<int> z2event)
-      : Model(nx_rdata,
-              nxtrue_rdata,
-              nx_solver,
-              nxtrue_solver,
-              nx_solver_reinit,
-              ny,
-              nytrue,
-              nz,
-              nztrue,
-              ne,
-              nJ,
-              nw,
-              ndwdx,
-              ndwdp,
-              ndwdw,
-              ndxdotdw,
-              {},
-              nnz,
-              ubw,
-              lbw,
+      : Model(model_dimensions,
               o2mode,
               p,
               k,
@@ -125,26 +71,8 @@ class Model_Test : public Model
 
     /** default constructor */
     Model_Test()
-      : Model(0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              {},
-              0,
-              0,
-              0,
+        : Model(
+              ModelDimensions(),
               SecondOrderMode::none,
               std::vector<realtype>(),
               std::vector<realtype>(),
