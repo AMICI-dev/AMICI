@@ -233,8 +233,8 @@ struct ModelState {
 
 
 /**
- * @brief Storage for amici::Model quantities computed based on
- * amici::ModelState for a specific timepoint.
+ * @brief Storage for `amici::Model` quantities computed based on
+ * `amici::ModelState` for a specific timepoint.
  *
  * Serves as workspace for a model simulation to avoid repeated reallocation.
  */
