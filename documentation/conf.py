@@ -108,7 +108,7 @@ def install_amici_deps_rtd():
                                 'downloadAndBuildSwig.sh'), check=True)
 
     # add swig to path
-    swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.1', 'install',
+    swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.2', 'install',
                             'bin')
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
 
