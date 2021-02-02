@@ -13,10 +13,10 @@ void Model_ODE::fJ(const realtype t, const realtype /*cj*/, const AmiVector &x,
 void Model_ODE::fJ(realtype t, const_N_Vector x, const_N_Vector /*xdot*/, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos));
-    fJSparse(t, x, J_.get());
-    J_.refresh();
+    fJSparse(t, x, derived_state_.J_.get());
+    derived_state_.J_.refresh();
     auto JDense = SUNMatrixWrapper(J);
-    J_.to_dense(JDense);
+    derived_state_.J_.to_dense(JDense);
 }
 
 void Model_ODE::fJSparse(const realtype t, const realtype /*cj*/,
@@ -31,29 +31,32 @@ void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);
         // python generated
-        dxdotdx_explicit.zero();
-        dxdotdx_implicit.zero();
-        if (dxdotdx_explicit.capacity()) {
-            fdxdotdx_explicit_colptrs(dxdotdx_explicit);
-            fdxdotdx_explicit_rowvals(dxdotdx_explicit);
+        derived_state_.dxdotdx_explicit.zero();
+        derived_state_.dxdotdx_implicit.zero();
+        if (derived_state_.dxdotdx_explicit.capacity()) {
+            fdxdotdx_explicit_colptrs(derived_state_.dxdotdx_explicit);
+            fdxdotdx_explicit_rowvals(derived_state_.dxdotdx_explicit);
             fdxdotdx_explicit(
-                dxdotdx_explicit.data(), t,
+                derived_state_.dxdotdx_explicit.data(), t,
                 N_VGetArrayPointerConst(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), w_.data());
+                state_.h.data(), derived_state_.w_.data());
         }
         fdxdotdw(t, x_pos);
         /* Sparse matrix multiplication
          dxdotdx_implicit += dxdotdw * dwdx */
-        dxdotdw_.sparse_multiply(dxdotdx_implicit, dwdx_);
+        derived_state_.dxdotdw_.sparse_multiply(derived_state_.dxdotdx_implicit,
+                                                derived_state_.dwdx_);
 
-        JSparse.sparse_add(dxdotdx_explicit, 1.0, dxdotdx_implicit, 1.0);
+        JSparse.sparse_add(derived_state_.dxdotdx_explicit, 1.0,
+                           derived_state_.dxdotdx_implicit, 1.0);
     } else {
         fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
                  N_VGetArrayPointerConst(x_pos),
                  state_.unscaledParameters.data(),
-                 state_.fixedParameters.data(), state_.h.data(), w_.data(),
-                 dwdx_.data());
+                 state_.fixedParameters.data(), state_.h.data(),
+                 derived_state_.w_.data(),
+                 derived_state_.dwdx_.data());
     }
 }
 
@@ -65,9 +68,9 @@ void Model_ODE::fJv(const realtype t, const AmiVector &x,
 
 void Model_ODE::fJv(const_N_Vector v, N_Vector Jv, realtype t, const_N_Vector x) {
     N_VConst(0.0, Jv);
-    fJSparse(t, x, J_.get());
-    J_.refresh();
-    J_.multiply(Jv, v);
+    fJSparse(t, x, derived_state_.J_.get());
+    derived_state_.J_.refresh();
+    derived_state_.J_.multiply(Jv, v);
 }
 
 void Model_ODE::froot(const realtype t, const AmiVector &x,
@@ -95,7 +98,7 @@ void Model_ODE::fxdot(realtype t, const_N_Vector x, N_Vector xdot) {
     fxdot(N_VGetArrayPointer(xdot), t,
           N_VGetArrayPointerConst(x_pos),
           state_.unscaledParameters.data(), state_.fixedParameters.data(),
-          state_.h.data(), w_.data());
+          state_.h.data(), derived_state_.w_.data());
 }
 
 void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
@@ -107,15 +110,15 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
 }
 
 void Model_ODE::fdxdotdw(const realtype t, const_N_Vector x) {
-    dxdotdw_.zero();
-    if (nw > 0 && dxdotdw_.capacity()) {
+    derived_state_.dxdotdw_.zero();
+    if (nw > 0 && derived_state_.dxdotdw_.capacity()) {
         auto x_pos = computeX_pos(x);
 
-        fdxdotdw_colptrs(dxdotdw_);
-        fdxdotdw_rowvals(dxdotdw_);
-        fdxdotdw(dxdotdw_.data(), t, N_VGetArrayPointerConst(x_pos),
+        fdxdotdw_colptrs(derived_state_.dxdotdw_);
+        fdxdotdw_rowvals(derived_state_.dxdotdw_);
+        fdxdotdw(derived_state_.dxdotdw_.data(), t, N_VGetArrayPointerConst(x_pos),
                  state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                 state_.h.data(), w_.data());
+                 state_.h.data(), derived_state_.w_.data());
     }
 }
 
@@ -125,33 +128,36 @@ void Model_ODE::fdxdotdp(const realtype t, const_N_Vector x) {
 
     if (pythonGenerated) {
         // python generated
-        dxdotdp_explicit.zero();
-        dxdotdp_implicit.zero();
-        if (dxdotdp_explicit.capacity()) {
-            fdxdotdp_explicit_colptrs(dxdotdp_explicit);
-            fdxdotdp_explicit_rowvals(dxdotdp_explicit);
+        derived_state_.dxdotdp_explicit.zero();
+        derived_state_.dxdotdp_implicit.zero();
+        if (derived_state_.dxdotdp_explicit.capacity()) {
+            fdxdotdp_explicit_colptrs(derived_state_.dxdotdp_explicit);
+            fdxdotdp_explicit_rowvals(derived_state_.dxdotdp_explicit);
             fdxdotdp_explicit(
-                dxdotdp_explicit.data(), t,
+                derived_state_.dxdotdp_explicit.data(), t,
                 N_VGetArrayPointerConst(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
-                state_.h.data(), w_.data());
+                state_.h.data(), derived_state_.w_.data());
         }
 
         fdxdotdw(t, x_pos);
         /* Sparse matrix multiplication
          dxdotdp_implicit += dxdotdw * dwdp */
-        dxdotdw_.sparse_multiply(dxdotdp_implicit, dwdp_);
+        derived_state_.dxdotdw_.sparse_multiply(derived_state_.dxdotdp_implicit,
+                                                derived_state_.dwdp_);
 
-        dxdotdp_full.sparse_add(dxdotdp_explicit, 1.0, dxdotdp_implicit, 1.0);
+        derived_state_.dxdotdp_full.sparse_add(
+                    derived_state_.dxdotdp_explicit, 1.0,
+                    derived_state_.dxdotdp_implicit, 1.0);
     } else {
         // matlab generated
         for (int ip = 0; ip < nplist(); ip++) {
-            N_VConst(0.0, dxdotdp.getNVector(ip));
-            fdxdotdp(dxdotdp.data(ip), t,
+            N_VConst(0.0, derived_state_.dxdotdp.getNVector(ip));
+            fdxdotdp(derived_state_.dxdotdp.data(ip), t,
                      N_VGetArrayPointerConst(x_pos),
                      state_.unscaledParameters.data(),
                      state_.fixedParameters.data(), state_.h.data(), plist(ip),
-                     w_.data(), dwdp_.data());
+                     derived_state_.w_.data(), derived_state_.dwdp_.data());
         }
     }
 }
@@ -286,10 +292,10 @@ void Model_ODE::fJB(const realtype t, realtype /*cj*/, const AmiVector &x,
 
 void Model_ODE::fJB(realtype t, const_N_Vector x, const_N_Vector /*xB*/,
                     const_N_Vector /*xBdot*/, SUNMatrix JB) {
-    fJSparse(t, x, J_.get());
-    J_.refresh();
+    fJSparse(t, x, derived_state_.J_.get());
+    derived_state_.J_.refresh();
     auto JDenseB = SUNMatrixWrapper(JB);
-    J_.transpose(JDenseB, -1.0, nxtrue_solver);
+    derived_state_.J_.transpose(JDenseB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
@@ -301,31 +307,31 @@ void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
 
 void Model_ODE::fJSparseB(realtype t, const_N_Vector x, const_N_Vector /*xB*/,
                           const_N_Vector /*xBdot*/, SUNMatrix JB) {
-    fJSparse(t, x, J_.get());
-    J_.refresh();
+    fJSparse(t, x, derived_state_.J_.get());
+    derived_state_.J_.refresh();
     auto JSparseB = SUNMatrixWrapper(JB);
-    J_.transpose(JSparseB, -1.0, nxtrue_solver);
+    derived_state_.J_.transpose(JSparseB, -1.0, nxtrue_solver);
 }
 
 void Model_ODE::fJDiag(realtype t, N_Vector JDiag, const_N_Vector x) {
-    fJSparse(t, x, J_.get());
-    J_.refresh();
-    J_.to_diag(JDiag);
+    fJSparse(t, x, derived_state_.J_.get());
+    derived_state_.J_.refresh();
+    derived_state_.J_.to_diag(JDiag);
 }
 
 void Model_ODE::fJvB(const_N_Vector vB, N_Vector JvB, realtype t, const_N_Vector x,
                      const_N_Vector xB) {
     N_VConst(0.0, JvB);
-    fJSparseB(t, x, xB, nullptr, JB_.get());
-    JB_.refresh();
-    JB_.multiply(JvB, vB);
+    fJSparseB(t, x, xB, nullptr, derived_state_.JB_.get());
+    derived_state_.JB_.refresh();
+    derived_state_.JB_.multiply(JvB, vB);
 }
 
 void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
-    fJSparseB(t, x, xB, nullptr, JB_.get());
-    JB_.refresh();
-    JB_.multiply(xBdot, xB);
+    fJSparseB(t, x, xB, nullptr, derived_state_.JB_.get());
+    derived_state_.JB_.refresh();
+    derived_state_.JB_.multiply(xBdot, xB);
 }
 
 void Model_ODE::fqBdot(realtype t, const_N_Vector x, const_N_Vector xB,
@@ -336,19 +342,22 @@ void Model_ODE::fqBdot(realtype t, const_N_Vector x, const_N_Vector xB,
 
     if (pythonGenerated) {
         /* call multiplication */
-        dxdotdp_full.multiply(qBdot, xB, state_.plist, true);
+        derived_state_.dxdotdp_full.multiply(qBdot, xB, state_.plist, true);
         N_VScale(-1.0, qBdot, qBdot);
     } else {
         /* was matlab generated */
         for (int ip = 0; ip < nplist(); ip++) {
             for (int ix = 0; ix < nxtrue_solver; ix++)
-                NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
+                NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix)
+                        * derived_state_.dxdotdp.at(ix, ip);
             // second order part
             for (int iJ = 1; iJ < nJ; iJ++)
                 for (int ix = 0; ix < nxtrue_solver; ix++)
                     NV_Ith_S(qBdot, ip * nJ + iJ) -=
-                    NV_Ith_S(xB, ix) * dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
-                    NV_Ith_S(xB, ix + iJ * nxtrue_solver) * dxdotdp.at(ix, ip);
+                            NV_Ith_S(xB, ix)
+                            * derived_state_.dxdotdp.at(ix + iJ * nxtrue_solver, ip)
+                            + NV_Ith_S(xB, ix + iJ * nxtrue_solver)
+                            * derived_state_.dxdotdp.at(ix, ip);
         }
     }
 }
@@ -362,7 +371,7 @@ void Model_ODE::fxBdot_ss(realtype /*t*/, const_N_Vector xB, N_Vector xBdot) con
     /* Right hand side of the adjoint state for steady state computations.
        J is fixed (as x remains in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
-    JB_.multiply(xBdot, xB);
+    derived_state_.JB_.multiply(xBdot, xB);
 }
 
 void Model_ODE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector qBdot) const {
@@ -373,8 +382,8 @@ void Model_ODE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector qBdot) const {
 
 void Model_ODE::fJSparseB_ss(SUNMatrix JB) {
     /* Just copy the model Jacobian */
-    SUNMatCopy(JB_.get(), JB);
-    JB_.refresh();
+    SUNMatCopy(derived_state_.JB_.get(), JB);
+    derived_state_.JB_.refresh();
 }
 
 void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
@@ -383,10 +392,10 @@ void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
                                    const AmiVector &xBdot) {
     /* Get backward Jacobian */
     fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(),
-              JB_.get());
-    JB_.refresh();
+              derived_state_.JB_.get());
+    derived_state_.JB_.refresh();
     /* Switch sign, as we integrate forward in time, not backward */
-    JB_.scale(-1);
+    derived_state_.JB_.scale(-1);
 }
 
 void Model_ODE::fsxdot(const realtype t, const AmiVector &x,
@@ -405,8 +414,8 @@ void Model_ODE::fsxdot(realtype t, const_N_Vector x, int ip, const_N_Vector sx,
         // we only need to call this for the first parameter index will be
         // the same for all remaining
         fdxdotdp(t, x);
-        fJSparse(t, x, J_.get());
-        J_.refresh();
+        fJSparse(t, x, derived_state_.J_.get());
+        derived_state_.J_.refresh();
     }
     if (pythonGenerated) {
         /* copy dxdotdp and the implicit version over */
@@ -414,15 +423,15 @@ void Model_ODE::fsxdot(realtype t, const_N_Vector x, int ip, const_N_Vector sx,
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 
-        dxdotdp_full.scatter(plist(ip), 1.0, nullptr,
+        derived_state_.dxdotdp_full.scatter(plist(ip), 1.0, nullptr,
                              gsl::make_span(sxdot_tmp, nx_solver),
                              0, nullptr, 0);
 
     } else {
         /* copy dxdotdp over */
-        N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+        N_VScale(1.0, derived_state_.dxdotdp.getNVector(ip), sxdot);
     }
-    J_.multiply(sxdot, sx);
+    derived_state_.J_.multiply(sxdot, sx);
 }
 
 } // namespace amici
