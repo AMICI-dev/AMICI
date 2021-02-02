@@ -16,12 +16,9 @@ Sneyd_PNAS2002
 Zheng_PNAS2012
 Weber_BMC2015"
 
-# Model needs fixing:
-# Chen_MSB2009
 #
 # Not matching reference for unclear reasons
 # Lucarelli_CellSystems2018
-# Weber_BMC2015
 #
 # PEtab needs fixing: Bachmann_MSB2011
 #
@@ -59,6 +56,9 @@ Weber_BMC2015"
 #
 # state-dependent sigmas:
 # Raia_CancerResearch2011
+#
+# Evaluation is known to be inconsistent:
+# Chen_MSB2009
 
 set -e
 

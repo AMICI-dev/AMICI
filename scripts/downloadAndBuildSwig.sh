@@ -2,16 +2,17 @@
 # Download and build SWIG
 set -e
 
-SCRIPT_PATH=$(dirname $BASH_SOURCE)
-AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
+SCRIPT_PATH=$(dirname "$BASH_SOURCE")
+AMICI_PATH=$(cd "$SCRIPT_PATH/.." && pwd)
 
-SWIG_URL='http://prdownloads.sourceforge.net/swig/swig-4.0.1.tar.gz'
-SWIG_ARCHIVE='swig-4.0.1.tar.gz'
-SWIG_DIR='swig-4.0.1'
+swig_version=4.0.2
+SWIG_URL="http://prdownloads.sourceforge.net/swig/swig-${swig_version}.tar.gz"
+SWIG_ARCHIVE="swig-${swig_version}.tar.gz"
+SWIG_DIR="swig-${swig_version}"
 PREFIX=${AMICI_PATH}/ThirdParty/${SWIG_DIR}/install
 SWIG_BIN_DIR=${PREFIX}/bin
 
-cd ${AMICI_PATH}/ThirdParty/
+cd "${AMICI_PATH}/ThirdParty/"
 
 if [[ ! -d ${SWIG_DIR} ]]; then
     if [[ ! -f ${SWIG_ARCHIVE} ]]
@@ -23,7 +24,7 @@ fi
 
 cd ${SWIG_DIR}
 ./configure \
-  --prefix=${PREFIX} \
+  --prefix="${PREFIX}" \
   --without-alllang \
   --with-python
 

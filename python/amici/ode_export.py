@@ -393,6 +393,15 @@ class ModelQuantity:
         """
         return self._value
 
+    def set_val(self, val: sp.Expr):
+        """
+        Set ModelQuantity value
+
+        :return:
+            value of the ModelQuantity
+        """
+        self._value = cast_to_sym(val, 'value')
+
 
 class State(ModelQuantity):
     """
@@ -928,7 +937,7 @@ class ODEModel:
             'xB': self.num_states_solver,
             'sigmay': self.num_obs,
         }
-        self._eqs: Dict[str, sp.Matrix] = dict()
+        self._eqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._vals: Dict[str, List[float]] = dict()
         self._names: Dict[str, List[str]] = dict()
@@ -1593,6 +1602,9 @@ class ODEModel:
         for state in self._states:
             state.set_dt(_process_heavisides(state.get_dt(), roots))
 
+        for expr in self._expressions:
+            expr.set_val(_process_heavisides(expr.get_val(), roots))
+
         # Now add the found roots to the model components
         for root in roots:
             self.add_component(root)
@@ -1793,7 +1805,8 @@ class ODEModel:
             # backsubstitution of optimized right hand side terms into RHS
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
-            tmp_xdot = self._eqs['xdot'].subs(self._syms['w'], self._eqs['w'])
+            tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
+                                                  self._eqs['w']))
             self._eqs[name] = smart_multiply(self.eq('drootdx'), tmp_xdot) + \
                               self.eq('drootdt')
 
@@ -3697,7 +3710,7 @@ def _process_heavisides(dxdt: sp.Expr, roots: List[Event]) -> sp.Expr:
         # we want unique identifiers for the roots
         tmp_new = _get_unique_root(tmp_old, roots)
         # For Heavisides, we need to add the negative function as well
-        _get_unique_root(sp.sympify(-1 * tmp_old), roots)
+        _get_unique_root(sp.sympify(- tmp_old), roots)
         heavisides.append((sp.Heaviside(tmp_old), tmp_new))
 
     if heavisides:

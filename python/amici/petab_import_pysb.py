@@ -7,6 +7,7 @@ Import a model in the PySB-adapted :mod:`petab`
 
 import logging
 import os
+from itertools import chain
 from typing import List, Dict, Union, Optional, Tuple, Iterable
 
 import libsbml
@@ -235,17 +236,31 @@ def create_dummy_sbml(
     dummy_sbml_model.setExtentUnits("mole")
     dummy_sbml_model.setSubstanceUnits('mole')
 
-    for species in pysb_model.parameters:
+    # parameters are required for parameter mapping
+    for parameter in pysb_model.parameters:
         p = dummy_sbml_model.createParameter()
-        p.setId(species.name)
+        p.setId(parameter.name)
         p.setConstant(True)
         p.setValue(0.0)
 
+    # noise parameters are required for every observable
     for observable_id in observable_ids:
         p = dummy_sbml_model.createParameter()
         p.setId(f"noiseParameter1_{observable_id}")
         p.setConstant(True)
         p.setValue(0.0)
+
+    # pysb observables and expressions are required in case they occur in
+    #  the observableFormula or noiseFormula.
+    #  as this code is only temporary and not performance-critical, we just add
+    #  all of them. we just need an sbml entity with the same ID. sbml species
+    #  seem to be the simplest, as parameters would interfere with parameter
+    #  mapping later on
+    for component in chain(pysb_model.expressions, pysb_model.observables):
+        s = dummy_sbml_model.createSpecies()
+        s.setId(component.name)
+        s.setInitialAmount(0.0)
+        s.setHasOnlySubstanceUnits(False)
 
     return document, dummy_sbml_model
 

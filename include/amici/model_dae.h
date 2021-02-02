@@ -31,31 +31,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Constructor with model dimensions
-     * @param nx_rdata number of state variables
-     * @param nxtrue_rdata number of state variables of the non-augmented model
-     * @param nx_solver number of state variables with conservation laws applied
-     * @param nxtrue_solver number of state variables of the non-augmented model
-     with conservation laws applied
-     * @param nx_solver_reinit number of state variables with conservation laws
-     * subject to reinitialization
-     * @param ny number of observables
-     * @param nytrue number of observables of the non-augmented model
-     * @param nz number of event observables
-     * @param nztrue number of event observables of the non-augmented model
-     * @param ne number of events
-     * @param nJ number of objective functions
-     * @param nw number of repeating elements
-     * @param ndwdx number of nonzero elements in the x derivative of the
-     * repeating elements
-     * @param ndwdp number of nonzero elements in the p derivative of the
-     * repeating elements
-     * @param ndwdw number of nonzero elements in the w derivative of the
-     * repeating elements
-     * @param ndxdotdw number of nonzero elements dxdotdw
-     * @param ndJydy number of nonzero elements dJydy
-     * @param nnz number of nonzero elements in Jacobian
-     * @param ubw upper matrix bandwidth in the Jacobian
-     * @param lbw lower matrix bandwidth in the Jacobian
+     * @param model_dimensions Model dimensions
      * @param o2mode second order sensitivity mode
      * @param p parameters
      * @param k constants
@@ -65,24 +41,17 @@ class Model_DAE : public Model {
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
      */
-    Model_DAE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-              const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
-              const int nz, const int nztrue, const int ne, const int nJ,
-              const int nw, const int ndwdx, const int ndwdp, const int ndwdw,
-              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
-              const int ubw, const int lbw, const SecondOrderMode o2mode,
+    Model_DAE(const ModelDimensions &model_dimensions, const SecondOrderMode o2mode,
               std::vector<realtype> const &p, std::vector<realtype> const &k,
               std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver,
-                nx_solver_reinit, ny, nytrue, nz, nztrue, ne, nJ, nw, ndwdx,
-                ndwdp, ndwdw, ndxdotdw, std::move(ndJydy), nnz, ubw, lbw,
+        : Model(model_dimensions,
                 o2mode, p, k, plist, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit) {
-            M_ = SUNMatrixWrapper(nx_solver, nx_solver);
-        }
+        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+    }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;

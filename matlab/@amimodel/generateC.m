@@ -148,42 +148,49 @@ end
 
 fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']);
 fprintf(fid,'public:\n');
-fprintf(fid,['    Model_' this.modelname '() : amici::' baseclass '(' num2str(this.nx) ',\n']);
-fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nx) ',\n']);
-fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
-fprintf(fid,['                    0,\n']);
-fprintf(fid,['                    ' num2str(this.ny) ',\n']);
-fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nz) ',\n']);
-fprintf(fid,['                    ' num2str(this.nztrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nevent) ',\n']);
-fprintf(fid,['                    ' num2str(this.ng) ',\n']);
-fprintf(fid,['                    ' num2str(this.nw) ',\n']);
-fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
-fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
-fprintf(fid,['                    0,\n']);
-fprintf(fid,['                    0,\n']);
-fprintf(fid,['                    {},\n']);
-fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
-fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
-fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
+fprintf(fid,['    Model_' this.modelname '()\n']);
+fprintf(fid,['        : amici::' baseclass '(\n']);
+fprintf(fid,['              amici::ModelDimensions(\n']);
+fprintf(fid,['                  ' num2str(this.nx) ',\n']);
+fprintf(fid,['                  ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                  ' num2str(this.nx) ',\n']);
+fprintf(fid,['                  ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                  0,\n']);
+fprintf(fid,['                  ' num2str(this.np) ',\n']);
+fprintf(fid,['                  ' num2str(this.nk) ',\n']);
+fprintf(fid,['                  ' num2str(this.ny) ',\n']);
+fprintf(fid,['                  ' num2str(this.nytrue) ',\n']);
+fprintf(fid,['                  ' num2str(this.nz) ',\n']);
+fprintf(fid,['                  ' num2str(this.nztrue) ',\n']);
+fprintf(fid,['                  ' num2str(this.nevent) ',\n']);
+fprintf(fid,['                  ' num2str(this.ng) ',\n']);
+fprintf(fid,['                  ' num2str(this.nw) ',\n']);
+fprintf(fid,['                  ' num2str(this.ndwdx) ',\n']);
+fprintf(fid,['                  ' num2str(this.ndwdp) ',\n']);
+fprintf(fid,['                  0,\n']);
+fprintf(fid,['                  0,\n']);
+fprintf(fid,['                  {},\n']);
+fprintf(fid,['                  ' num2str(this.nnz) ',\n']);
+fprintf(fid,['                  ' num2str(this.ubw) ',\n']);
+fprintf(fid,['                  ' num2str(this.lbw) '\n']);
+fprintf(fid,['              ),\n']);
+
 switch(this.o2flag)
     case 1
-        fprintf(fid,'                    amici::SecondOrderMode::full,\n');
+        fprintf(fid,'              amici::SecondOrderMode::full,\n');
     case 2
-        fprintf(fid,'                    amici::SecondOrderMode::directional,\n');
+        fprintf(fid,'              amici::SecondOrderMode::directional,\n');
     otherwise
-        fprintf(fid,'                    amici::SecondOrderMode::none,\n');
+        fprintf(fid,'              amici::SecondOrderMode::none,\n');
 end
-fprintf(fid,['                    std::vector<realtype>(' num2str(this.np) ',1.0),\n']);
-fprintf(fid,['                    std::vector<realtype>(' num2str(this.nk) ',1.0),\n']);
-fprintf(fid,'                    std::vector<int>(),\n');
-initstr = num2str(transpose(double(this.id)), '%d, ');
-fprintf(fid,['                    std::vector<realtype>{' initstr(1:end-1) '},\n']);
+fprintf(fid,['              std::vector<realtype>(' num2str(this.np) ',1.0),\n']);
+fprintf(fid,['              std::vector<realtype>(' num2str(this.nk) ',1.0),\n']);
+fprintf(fid,'               std::vector<int>(),\n');
+initstr = num2str(this.id, '%d, ');
+fprintf(fid,['              std::vector<realtype>{' initstr(1:end-1) '},\n']);
 initstr = num2str(transpose(this.z2event), '%d, ');
-fprintf(fid,['                    std::vector<int>{' initstr(1:end-1) '})\n']);
-fprintf(fid,['                    {};\n\n']);
+fprintf(fid,['              std::vector<int>{' initstr(1:end-1) '})\n']);
+fprintf(fid,['              {};\n\n']);
 fprintf(fid,['    virtual amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
 fprintf(fid,['    const  std::string getAmiciCommit() const override { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
 

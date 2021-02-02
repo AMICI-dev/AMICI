@@ -35,10 +35,6 @@ jobs:
             libatlas-base-dev \
             python3-venv
 
-      - name: pip
-        run: |
-          pip3 install --upgrade --user wheel \
-            && pip3 install --upgrade --user setuptools
       - run: pip3 install pytest shyaml pytest-cov pysb petab
 
       - name: Build BNGL
