@@ -47,7 +47,7 @@ jobs:
       - run: git fetch --prune --unshallow
 
       - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-      - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig" >> $GITHUB_ENV
+      - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.2/install/bin/swig" >> $GITHUB_ENV
 
       - name: Build doxygen
         run: |
