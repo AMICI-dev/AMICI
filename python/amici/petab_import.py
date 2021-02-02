@@ -532,6 +532,13 @@ def import_model_sbml(
         if assignment is None:
             assignment = sbml_model.createInitialAssignment()
             assignment.setSymbol(assignee_id)
+        else:
+            logger.debug('The SBML model has an initial assignment defined '
+                         f'for model entity {assignee_id}, but this entity '
+                         'also has an initial value defined in the PEtab '
+                         'condition table. The SBML initial assignment will '
+                         'be overwritten to handle preequilibration and '
+                         'initial values specified by the PEtab problem.')
         formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)
