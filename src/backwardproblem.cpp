@@ -96,7 +96,7 @@ void BackwardProblem::workBackwardProblem() {
             }
 
             /* handle data-point */
-            if (tnext == model_->getTimepoint(it)) {
+            if (it >=0 && tnext == model_->getTimepoint(it)) {
                 handleDataPointB(it);
                 it--;
             }
