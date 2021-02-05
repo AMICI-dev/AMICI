@@ -94,8 +94,7 @@ functions = {
     'root': {
         'signature':
             '(realtype *root, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w)'
+            'const realtype *p, const realtype *k, const realtype *h)'
     },
     'dwdp': {
         'signature':
@@ -1174,6 +1173,16 @@ class ODEModel:
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
+        # substitute 'w' expressions into event expressions now, to avoid
+        # rewriting *_root.cpp headers to include `w.h`
+        for index, event in enumerate(self._events):
+            self._events[index] = Event(
+                identifier=event.get_id(),
+                name=event.get_name(),
+                value=event.get_val().subs(zip(self._syms['w'], self.eq('w'))),
+                state_update=event._state_update,
+                event_observable=event._observable,
+            )
         self._has_quadratic_nllh = all(
             llh['dist'] in ['normal', 'lin-normal']
             for llh in si.symbols[SymbolId.LLHY].values()
