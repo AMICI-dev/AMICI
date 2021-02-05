@@ -1174,7 +1174,7 @@ class ODEModel:
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
         # substitute 'w' expressions into event expressions now, to avoid
-        # rewriting *_root.cpp headers to include `w.h`
+        # rewriting '{model_name}_root.cpp' headers to include 'w.h'
         for index, event in enumerate(self._events):
             self._events[index] = Event(
                 identifier=event.get_id(),
