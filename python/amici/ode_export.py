@@ -94,7 +94,8 @@ functions = {
     'root': {
         'signature':
             '(realtype *root, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h)'
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w)'
     },
     'dwdp': {
         'signature':
