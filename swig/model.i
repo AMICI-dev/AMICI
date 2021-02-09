@@ -46,6 +46,41 @@ using namespace amici;
 %ignore fsx0_fixedParameters;
 %ignore get_dxdotdp;
 %ignore get_dxdotdp_full;
+%ignore checkFinite;
+%ignore fJrz;
+%ignore fJy;
+%ignore fJz;
+%ignore fdJrzdsigma;
+%ignore fdJrzdz;
+%ignore fdJzdsigma;
+%ignore fdJzdz;
+%ignore fdJydsigma;
+%ignore fdeltaqB;
+%ignore fdeltasx;
+%ignore fdeltax;
+%ignore fdeltaxB;
+%ignore fdrzdp;
+%ignore fdrzdx;
+%ignore fdsigmaydp;
+%ignore fdsigmazdp;
+%ignore fdydp;
+%ignore fdydx;
+%ignore fdzdp;
+%ignore fdzdx;
+%ignore frz;
+%ignore fsdx0;
+%ignore fsigmay;
+%ignore fsigmaz;
+%ignore fsrz;
+%ignore fstau;
+%ignore fsz;
+%ignore fw;
+%ignore fy;
+%ignore fz;
+%ignore updateHeaviside;
+%ignore updateHeavisideB;
+
+
 
 %newobject amici::Model::clone;
 
