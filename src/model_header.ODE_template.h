@@ -144,7 +144,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               ),
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
-                  std::vector<realtype>{TPL_PARAMETERS},       // dynamic parameters
+                  std::vector<realtype>{TPL_PARAMETERS}        // dynamic parameters
               ),
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
