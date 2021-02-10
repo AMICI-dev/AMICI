@@ -2091,10 +2091,6 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     ModelStateDerived derived_state_;
 
-//    /** original user-provided, possibly scaled parameter array (dimension: np)
-//     */
-//    std::vector<realtype> original_parameters_;
-
     /** index indicating to which event an event output belongs */
     std::vector<int> z2event_;
 
@@ -2103,9 +2099,6 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** sensitivity initialization (size nx_rdata x nplist, row-major) */
     std::vector<realtype> sx0data_;
-
-//    /** timepoints (size nt) */
-//    std::vector<realtype> ts_;
 
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
@@ -2117,21 +2110,10 @@ class Model : public AbstractModel, public ModelDimensions {
     /** maximal number of events to track */
     int nmaxevent_ {10};
 
-//    /** parameter transformation of `originalParameters` (dimension np) */
-//    std::vector<ParameterScaling> pscale_;
-
-//    /** starting time */
-//    realtype tstart_ {0.0};
-
     /** flag indicating whether steadystate sensitivities are to be computed
      *  via FSA when steadyStateSimulation is used
      */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
-
-//    /** flag indicating whether reinitialization of states depending on
-//     *  fixed parameters is activated
-//     */
-//    bool reinitialize_fixed_parameter_initial_states_ {false};
 
     /** Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness */
