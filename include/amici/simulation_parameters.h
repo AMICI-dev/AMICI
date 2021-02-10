@@ -14,11 +14,20 @@ class SimulationParameters {
 public:
     SimulationParameters() = default;
 
+    /**
+     * @brief Constructor
+     * @param timepoints Timepoints for which simulation results are requested
+     */
     SimulationParameters(std::vector<realtype> timepoints)
         : ts_(std::move(timepoints))
     {
     }
 
+    /**
+     * @brief Constructor
+     * @param fixedParameters Model constants
+     * @param parameters Model parameters
+     */
     SimulationParameters(std::vector<realtype> fixedParameters,
                          std::vector<realtype> parameters)
         : fixedParameters(std::move(fixedParameters)),
@@ -28,6 +37,13 @@ public:
     {
     }
 
+    /**
+     * @brief Constructor
+     * @param fixedParameters Model constants
+     * @param parameters Model parameters
+     * @param plist Model parameter indices w.r.t. which sensitivities are to be
+     * computed
+     */
     SimulationParameters(std::vector<realtype> fixedParameters,
                          std::vector<realtype> parameters,
                          std::vector<int> plist
@@ -40,6 +56,12 @@ public:
     {
     }
 
+    /**
+     * @brief Constructor
+     * @param timepoints Timepoints for which simulation results are requested
+     * @param fixedParameters Model constants
+     * @param parameters Model parameters
+     */
     SimulationParameters(std::vector<realtype> timepoints,
                          std::vector<realtype> fixedParameters,
                          std::vector<realtype> parameters)

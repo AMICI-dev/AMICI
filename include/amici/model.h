@@ -477,7 +477,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Constructor with model dimensions.
      * @param model_dimensions Model dimensions
-     * @param simulation_parameter Simulation parameters
+     * @param simulation_parameters Simulation parameters
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events

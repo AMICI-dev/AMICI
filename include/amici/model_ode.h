@@ -34,9 +34,6 @@ class Model_ODE : public Model {
      * @param model_dimensions Model dimensions
      * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
-     * @param p parameters
-     * @param k constants
-     * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
