@@ -18,7 +18,7 @@ public:
      * @brief Constructor
      * @param timepoints Timepoints for which simulation results are requested
      */
-    SimulationParameters(std::vector<realtype> timepoints)
+    explicit SimulationParameters(std::vector<realtype> timepoints)
         : ts_(std::move(timepoints))
     {
     }
