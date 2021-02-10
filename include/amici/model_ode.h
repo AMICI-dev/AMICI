@@ -32,6 +32,7 @@ class Model_ODE : public Model {
     /**
      * @brief Constructor with model dimensions
      * @param model_dimensions Model dimensions
+     * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
      * @param p parameters
      * @param k constants
@@ -44,15 +45,14 @@ class Model_ODE : public Model {
      * @param w_recursion_depth Recursion depth of fw
      */
     Model_ODE(ModelDimensions const& model_dimensions,
+              SimulationParameters simulation_parameters,
               const SecondOrderMode o2mode,
-              std::vector<realtype> const &p, std::vector<realtype> const &k,
-              std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0, const int ndxdotdx_explicit=0,
               const int w_recursion_depth=0)
-        : Model(model_dimensions,
-                o2mode, p, k, plist, idlist, z2event, pythonGenerated,
+        : Model(model_dimensions, simulation_parameters,
+                o2mode, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit, ndxdotdx_explicit, w_recursion_depth) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,

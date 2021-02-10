@@ -103,23 +103,41 @@ void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*
 template <class Archive>
 void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
     ar &dynamic_cast<amici::ModelDimensions&>(m);
+    ar &m.simulation_parameters_;
     ar &m.o2mode;
     ar &m.z2event_;
     ar &m.idlist;
     ar &m.state_.h;
     ar &m.state_.unscaledParameters;
-    ar &m.original_parameters_;
     ar &m.state_.fixedParameters;
-    ar &m.reinitialize_fixed_parameter_initial_states_;
     ar &m.state_.plist;
     ar &m.x0data_;
     ar &m.sx0data_;
-    ar &m.ts_;
     ar &m.nmaxevent_;
-    ar &m.pscale_;
-    ar &m.tstart_;
     ar &m.state_is_non_negative_;
     ar &m.pythonGenerated;
+}
+
+
+/**
+ * @brief Serialize amici::SimulationParameters to boost archive
+ * @param ar Archive
+ * @param s amici::SimulationParameters instance to serialize
+ */
+template <class Archive>
+void serialize(Archive &ar, amici::SimulationParameters &s, const unsigned int /*version*/) {
+    ar &s.fixedParameters;
+    ar &s.fixedParametersPreequilibration;
+    ar &s.fixedParametersPresimulation;
+    ar &s.parameters;
+    ar &s.x0;
+    ar &s.sx0;
+    ar &s.pscale;
+    ar &s.plist;
+    ar &s.ts_;
+    ar &s.tstart_;
+    ar &s.t_presim;
+    ar &s.reinitializeFixedParameterInitialStates;
 }
 
 /**

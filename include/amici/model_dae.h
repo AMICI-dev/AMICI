@@ -32,6 +32,7 @@ class Model_DAE : public Model {
     /**
      * @brief Constructor with model dimensions
      * @param model_dimensions Model dimensions
+     * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
      * @param p parameters
      * @param k constants
@@ -41,14 +42,14 @@ class Model_DAE : public Model {
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
      */
-    Model_DAE(const ModelDimensions &model_dimensions, const SecondOrderMode o2mode,
-              std::vector<realtype> const &p, std::vector<realtype> const &k,
-              std::vector<int> const &plist,
+    Model_DAE(const ModelDimensions &model_dimensions,
+              SimulationParameters simulation_parameters,
+              const SecondOrderMode o2mode,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0)
-        : Model(model_dimensions,
-                o2mode, p, k, plist, idlist, z2event, pythonGenerated,
+        : Model(model_dimensions, simulation_parameters,
+                o2mode, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit) {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
     }
