@@ -99,11 +99,11 @@ The functionality of the Python, Matlab and C++ interfaces slightly differ, as s
      - no
      - no
      - yes
-   * - Preequilibration
+   * - :term:`preequilibration`
      - yes
      - yes
      - yes
-   * - Presimulation
+   * - :term:`presimulation`
      - yes
      - yes
      - no
