@@ -63,15 +63,15 @@ The functionality of the Python, Matlab and C++ interfaces slightly differ, as s
    :header-rows: 1
    :stub-columns: 1
 
-   * - Feature
+   * - Feature \\ Interface
      - Python
      - C++
      - Matlab
-   * - SBML import
+   * - :term:`SBML` import
      - yes
      - no
      - yes (<=R2017b)
-   * - PySB import
+   * - :term:`PySB` import
      - yes
      - no
      - no
