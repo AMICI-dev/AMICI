@@ -7,7 +7,7 @@
     } catch(std::exception const& ex) {
         SWIG_exception_fail(SWIG_RuntimeError, ex.what());
     } catch(...) {
-        SWIG_exception_fail(SWIG_RuntimeError, "Unknown exception occured");
+        SWIG_exception_fail(SWIG_RuntimeError, "Unknown exception occurred");
     }
 }
 
@@ -50,17 +50,19 @@ wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 wrap_unique_ptr(ModelPtr, amici::Model)
 wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
-%naturalvar amici::ExpData::x0;
-%naturalvar amici::ExpData::sx0;
-%naturalvar amici::ExpData::parameters;
-%naturalvar amici::ExpData::pscale;
-%naturalvar amici::ExpData::plist;
-%naturalvar amici::ExpData::fixedParameters;
-%naturalvar amici::ExpData::fixedParametersPreequilibration;
-%naturalvar amici::ExpData::fixedParametersPresimulation;
+%naturalvar amici::SimulationParameters::x0;
+%naturalvar amici::SimulationParameters::sx0;
+%naturalvar amici::SimulationParameters::parameters;
+%naturalvar amici::SimulationParameters::pscale;
+%naturalvar amici::SimulationParameters::plist;
+%naturalvar amici::SimulationParameters::fixedParameters;
+%naturalvar amici::SimulationParameters::fixedParametersPreequilibration;
+%naturalvar amici::SimulationParameters::fixedParametersPresimulation;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
+
+%include "amici/simulation_parameters.h"
 
 %include abstract_model.i
 %include misc.i

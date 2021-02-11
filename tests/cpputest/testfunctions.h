@@ -47,24 +47,18 @@ class Model_Test : public Model
     /** constructor with model dimensions
      * @param model_dimensions ModelDimensions model_dimensions,
      * @param o2mode second order sensitivity mode
-     * @param p parameters
-     * @param k constants
-     * @param plist indexes wrt to which sensitivities are to be computed
+     * @param simulation_parameters Simulation parameters
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
     Model_Test(ModelDimensions const& model_dimensions,
+               SimulationParameters simulation_parameters,
                const SecondOrderMode o2mode,
-               const std::vector<realtype> p,
-               const std::vector<realtype> k,
-               const std::vector<int> plist,
                const std::vector<realtype> idlist,
                const std::vector<int> z2event)
       : Model(model_dimensions,
+              simulation_parameters,
               o2mode,
-              p,
-              k,
-              plist,
               idlist,
               z2event)
     {}
@@ -73,10 +67,8 @@ class Model_Test : public Model
     Model_Test()
         : Model(
               ModelDimensions(),
+              SimulationParameters(),
               SecondOrderMode::none,
-              std::vector<realtype>(),
-              std::vector<realtype>(),
-              std::vector<int>(),
               std::vector<realtype>(),
               std::vector<int>())
     {}

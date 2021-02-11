@@ -5,6 +5,7 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
+#include "amici/simulation_parameters.h"
 
 #include <map>
 #include <memory>
@@ -476,10 +477,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Constructor with model dimensions.
      * @param model_dimensions Model dimensions
+     * @param simulation_parameters Simulation parameters
      * @param o2mode Second order sensitivity mode
-     * @param p Parameters
-     * @param k Constants
-     * @param plist Indexes wrt to which sensitivities are to be computed
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
      * @param pythonGenerated Flag indicating matlab or python wrapping
@@ -488,9 +487,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param w_recursion_depth Recursion depth of fw
      */
     Model(ModelDimensions const& model_dimensions,
+          SimulationParameters simulation_parameters,
           amici::SecondOrderMode o2mode,
-          const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
-          const std::vector<int> &plist, std::vector<amici::realtype> idlist,
+          std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
           int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
           int w_recursion_depth = 0);
@@ -2092,10 +2091,6 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     ModelStateDerived derived_state_;
 
-    /** original user-provided, possibly scaled parameter array (dimension: np)
-     */
-    std::vector<realtype> original_parameters_;
-
     /** index indicating to which event an event output belongs */
     std::vector<int> z2event_;
 
@@ -2104,9 +2099,6 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** sensitivity initialization (size nx_rdata x nplist, row-major) */
     std::vector<realtype> sx0data_;
-
-    /** timepoints (size nt) */
-    std::vector<realtype> ts_;
 
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
@@ -2118,21 +2110,10 @@ class Model : public AbstractModel, public ModelDimensions {
     /** maximal number of events to track */
     int nmaxevent_ {10};
 
-    /** parameter transformation of `originalParameters` (dimension np) */
-    std::vector<ParameterScaling> pscale_;
-
-    /** starting time */
-    realtype tstart_ {0.0};
-
     /** flag indicating whether steadystate sensitivities are to be computed
      *  via FSA when steadyStateSimulation is used
      */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
-
-    /** flag indicating whether reinitialization of states depending on
-     *  fixed parameters is activated
-     */
-    bool reinitialize_fixed_parameter_initial_states_ {false};
 
     /** Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness */
@@ -2150,6 +2131,9 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** Recursion */
     int w_recursion_depth_ {0};
+
+    /** Simulation parameters, initial state, etc. */
+    SimulationParameters simulation_parameters_;
 };
 
 bool operator==(const Model &a, const Model &b);
