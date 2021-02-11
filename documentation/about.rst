@@ -57,3 +57,53 @@ simulation.
 .. image:: gfx/amici_workflow.png
   :alt: AMICI workflow
 
+The functionality of the Python, Matlab and C++ interfaces slightly differ, as shown in the following table:
+
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+
+   * - Feature
+     - Python
+     - C++
+     - Matlab
+   * - SBML import
+     - yes
+     - no
+     - yes (<=R2017b)
+   * - PySB import
+     - yes
+     - no
+     - no
+   * - :term:`DAE` import
+     - no
+     - no
+     - yes
+   * - Forward sensitivities
+     - yes
+     - yes
+     - yes
+   * - Adjoint sensitivities
+     - yes
+     - yes
+     - yes
+   * - Steadystate sensitivities
+     - yes
+     - yes
+     - yes
+   * - Second-order sensitivities
+     - no
+     - no
+     - yes
+   * - Events
+     - no
+     - no
+     - yes
+   * - Preequilibration
+     - yes
+     - yes
+     - yes
+   * - Presimulation
+     - yes
+     - yes
+     - no
