@@ -21,11 +21,11 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, 3.10.0-alpha.5]
 
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
