@@ -17,7 +17,7 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
     # sonar cloud
     - run: echo "SONAR_SCANNER_VERSION=4.5.0.2216" >> $GITHUB_ENV
@@ -130,7 +130,7 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
