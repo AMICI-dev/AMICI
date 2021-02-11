@@ -68,7 +68,7 @@ The functionality of the Python, Matlab and C++ interfaces slightly differ, as s
      - C++
      - Matlab
    * - :term:`SBML` import
-     - yes
+     - yes (:ref:`details <amici_python_sbml_support>`)
      - no
      - yes (<=R2017b)
    * - :term:`PySB` import
