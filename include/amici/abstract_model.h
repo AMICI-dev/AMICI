@@ -232,7 +232,8 @@ class AbstractModel {
      * @param k constant vector
      */
     virtual void fx0_fixedParameters(realtype *x0, const realtype t,
-                                     const realtype *p, const realtype *k);
+                                     const realtype *p, const realtype *k,
+                                     gsl::span<const int> reinitialization_state_idxs);
 
     /**
      * @brief Model specific implementation of fsx0_fixedParameters
@@ -245,7 +246,8 @@ class AbstractModel {
      */
     virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,
                                       const realtype *x0, const realtype *p,
-                                      const realtype *k, int ip);
+                                      const realtype *k, int ip,
+                                      gsl::span<const int> reinitialization_state_idxs);
 
     /**
      * @brief Model specific implementation of fsx0

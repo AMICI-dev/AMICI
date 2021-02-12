@@ -1201,7 +1201,9 @@ void Model::fx0_fixedParameters(AmiVector &x) {
     fx0_fixedParameters(derived_state_.x_rdata_.data(),
                         simulation_parameters_.tstart_,
                         state_.unscaledParameters.data(),
-                        state_.fixedParameters.data());
+                        state_.fixedParameters.data(),
+                        simulation_parameters_.reinitialization_state_idxs_sim
+                        );
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     /* update total abundances */
     ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data());
@@ -1235,7 +1237,8 @@ void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
                              simulation_parameters_.tstart_, x.data(),
                              state_.unscaledParameters.data(),
                              state_.fixedParameters.data(),
-                             plist(ip));
+                             plist(ip),
+                             simulation_parameters_.reinitialization_state_idxs_sim);
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip));
     }
@@ -2074,6 +2077,21 @@ const_N_Vector Model::computeX_pos(const_N_Vector x) {
     }
 
     return x;
+}
+
+void Model::setReinitializationStateIdxs(std::vector<int> const& idxs)
+{
+    for(auto idx: idxs) {
+        if (idx < 0 || idx >= nx_solver)
+            throw AmiException("Invalid state index given: %d", idx);
+    }
+
+    simulation_parameters_.reinitialization_state_idxs_sim = idxs;
+}
+
+const std::vector<int> &Model::getReinitializationStateIdxs() const
+{
+    return simulation_parameters_.reinitialization_state_idxs_sim;
 }
 
 const AmiVectorArray &Model::get_dxdotdp() const{

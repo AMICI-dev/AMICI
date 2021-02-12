@@ -155,6 +155,18 @@ public:
      * fixed parameters is activated
      */
     bool reinitializeFixedParameterInitialStates {false};
+
+    /**
+     * @brief Indices of states to be reinitialized based on provided
+     * presimulation constants / fixed parameters.
+     */
+    std::vector<int> reinitialization_state_idxs_presim;
+
+    /**
+     * @brief Indices of states to be reinitialized based on provided
+     * constants / fixed parameters.
+     */
+    std::vector<int> reinitialization_state_idxs_sim;
 };
 
 bool operator==(const SimulationParameters &a, const SimulationParameters &b);
