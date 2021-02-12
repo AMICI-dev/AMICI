@@ -211,7 +211,8 @@ functions = {
     'x0_fixedParameters': {
         'signature':
             '(realtype *x0_fixedParameters, const realtype t, '
-            'const realtype *p, const realtype *k)',
+            'const realtype *p, const realtype *k, '
+            'gsl::span<const int> reinitialization_state_idxs)',
     },
     'sx0': {
         'signature':
@@ -222,7 +223,7 @@ functions = {
         'signature':
             '(realtype *sx0_fixedParameters, const realtype t, '
             'const realtype *x0, const realtype *p, const realtype *k, '
-            'const int ip)',
+            'const int ip, gsl::span<const int> reinitialization_state_idxs)',
     },
     'xdot': {
         'signature':
@@ -2627,6 +2628,7 @@ class ODEExporter:
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
             '',
+            '#include <gsl/gsl-lite.hpp>',
             '#include <array>',
         ]
 
