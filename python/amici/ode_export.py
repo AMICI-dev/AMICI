@@ -2822,7 +2822,7 @@ class ODEExporter:
                     if not formula.is_zero:
                         expressions.append(
                             f'if(reinitialization_state_idxs.find({index}) != '
-                            'resettedStateIdxs.end()) '
+                            'reinitialization_state_idxs.end()) '
                             f'{function}[{index}] = '
                             f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
