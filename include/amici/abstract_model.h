@@ -230,6 +230,8 @@ class AbstractModel {
      * @param t initial time
      * @param p parameter vector
      * @param k constant vector
+     * @param reinitialization_state_idxs Indices of states to be reinitialized
+     * based on provided constants / fixed parameters.
      */
     virtual void fx0_fixedParameters(realtype *x0, const realtype t,
                                      const realtype *p, const realtype *k,
@@ -243,6 +245,8 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param ip sensitivity index
+     * @param reinitialization_state_idxs Indices of states to be reinitialized
+     * based on provided constants / fixed parameters.
      */
     virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,
                                       const realtype *x0, const realtype *p,
