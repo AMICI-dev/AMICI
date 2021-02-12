@@ -2821,8 +2821,10 @@ class ODEExporter:
                 ):
                     if not formula.is_zero:
                         expressions.append(
-                            f'if(reinitialization_state_idxs.find({index}) != '
-                            'reinitialization_state_idxs.end()) '
+                            f'if(std::find('
+                            'reinitialization_state_idxs.cbegin(), '
+                            f'reinitialization_state_idxs.cend(), {index}) != '
+                            'reinitialization_state_idxs.cend()) '
                             f'{function}[{index}] = '
                             f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
