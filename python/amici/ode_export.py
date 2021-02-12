@@ -2804,20 +2804,11 @@ class ODEExporter:
             # was applied
 
             lines.extend([
-                # Keep list of indices of fixed parameters occurring in x0
-                "    static const std::array<int, "
-                + str(len(self.model._x0_fixedParameters_idx))
-                + "> _x0_fixedParameters_idxs = {",
-                "        "
-                + ', '.join(str(x)
-                            for x in self.model._x0_fixedParameters_idx),
-                "    };",
-                "",
                 # Set all parameters that are to be reset to 0, so that the
                 #  switch statement below only needs to handle non-zero entries
                 #  (which usually reduces file size and speeds up
                 #  compilation significantly).
-                "    for(auto idx: _x0_fixedParameters_idxs) {",
+                "    for(auto idx: reinitialization_state_idxs) {",
                 "        sx0_fixedParameters[idx] = 0.0;",
                 "    }"])
 
@@ -2830,6 +2821,8 @@ class ODEExporter:
                 ):
                     if not formula.is_zero:
                         expressions.append(
+                            f'if(reinitialization_state_idxs.find({index}) != '
+                            'resettedStateIdxs.end()) '
                             f'{function}[{index}] = '
                             f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
