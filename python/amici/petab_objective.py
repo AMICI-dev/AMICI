@@ -511,8 +511,12 @@ def create_edata_for_condition(
     # enable initial parameters reinitialization
     species_in_condition_table = [
         col for col in petab_problem.condition_df
-        if petab_problem.sbml_model.getSpecies(col) is not None
+        if not pd.isna(petab_problem.condition_df.loc[
+                           condition[SIMULATION_CONDITION_ID], col])
+           and petab_problem.sbml_model.getSpecies(col) is not None
     ]
+    # TODO: also need to consider any fixedParameters occuring in any initial
+    #  assignments
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
             and species_in_condition_table:
         edata.reinitializeFixedParameterInitialStates = True
