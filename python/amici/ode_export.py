@@ -2820,13 +2820,14 @@ class ODEExporter:
                         equations[:, ipar]
                 ):
                     if not formula.is_zero:
-                        expressions.append(
+                        expressions.extend([
                             f'if(std::find('
                             'reinitialization_state_idxs.cbegin(), '
                             f'reinitialization_state_idxs.cend(), {index}) != '
-                            'reinitialization_state_idxs.cend()) '
-                            f'{function}[{index}] = '
-                            f'{_print_with_exception(formula)};')
+                            'reinitialization_state_idxs.cend())',
+                            f'    {function}[{index}] = '
+                            f'{_print_with_exception(formula)};'
+                        ])
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
@@ -2835,8 +2836,12 @@ class ODEExporter:
                     self.model._x0_fixedParameters_idx,
                     equations
             ):
-                lines.append(f'{function}[{index}] = '
-                             f'{_print_with_exception(formula)};')
+                lines.append(
+                    f'    if(std::find(reinitialization_state_idxs.cbegin(), '
+                    f'reinitialization_state_idxs.cend(), {index}) != '
+                    'reinitialization_state_idxs.cend())\n        '
+                    f'{function}[{index}] = '
+                    f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
             outer_cases = {}
