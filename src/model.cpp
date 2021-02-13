@@ -2086,7 +2086,7 @@ const_N_Vector Model::computeX_pos(const_N_Vector x) {
 void Model::setReinitializationStateIdxs(std::vector<int> const& idxs)
 {
     for(auto idx: idxs) {
-        if (idx < 0 || idx >= nx_solver)
+        if (idx < 0 || idx >= nx_rdata)
             throw AmiException("Invalid state index given: %d", idx);
     }
 
