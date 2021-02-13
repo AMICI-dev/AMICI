@@ -758,6 +758,10 @@ void Model::setReinitializeFixedParameterInitialStates(bool flag) {
             " this was because some initial states depending on "
             "fixedParameters also depended on parameters");
     simulation_parameters_.reinitializeFixedParameterInitialStates = flag;
+
+    if(flag) {
+        simulation_parameters_.reinitializeAllParametersSimulation(nx_rdata);
+    }
 }
 
 bool Model::getReinitializeFixedParameterInitialStates() const {

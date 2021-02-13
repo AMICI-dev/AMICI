@@ -74,6 +74,43 @@ public:
     }
 
     /**
+     * @brief Set reinitialization of all states based on model constants for
+     * presimulation (only meaningful if preequilibration is performed).
+     *
+     * Convenience function to populate
+     * `reinitialization_state_idxs_presim` and
+     * `reinitialization_state_idxs_sim`
+     *
+     * @param nx_rdata Number of states (Model::nx_rdata)
+     */
+    void reinitializeAllParametersForPresimulation(int nx_rdata);
+
+    /**
+     * @brief Set reinitialization of all states based on model constants for
+     * the 'main' simulation (only meaningful if presimulation or
+     * preequilibration is performed).
+     *
+     * Convenience function to populate
+     * `reinitialization_state_idxs_presim` and
+     * `reinitialization_state_idxs_sim`
+     *
+     * @param nx_rdata Number of states (Model::nx_rdata)
+     */
+    void reinitializeAllParametersSimulation(int nx_rdata);
+
+    /**
+     * @brief Set reinitialization of all states based on model constants for
+     * all simulation phases.
+     *
+     * Convenience function to populate
+     * `reinitialization_state_idxs_presim` and
+     * `reinitialization_state_idxs_sim`
+     *
+     * @param nx_rdata Number of states (Model::nx_rdata)
+     */
+    void reinitializeAllParameters(int nx_rdata);
+
+    /**
      * @brief Model constants
      *
      * Vector of size Model::nk() or empty
