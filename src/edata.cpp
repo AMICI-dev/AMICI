@@ -416,8 +416,9 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                  "not match ExpData (%zd).",
                                  model_->nk(), edata->fixedParameters.size());
           model_->setFixedParameters(edata->fixedParameters);
-          model_->setReinitializationStateIdxs(
-                      edata->reinitialization_state_idxs_sim);
+          if(!edata->reinitializeFixedParameterInitialStates)
+              model_->setReinitializationStateIdxs(
+                          edata->reinitialization_state_idxs_sim);
       }
     break;
     case FixedParameterContext::preequilibration:
@@ -444,8 +445,9 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                  model_->nk(),
                                  edata->fixedParametersPresimulation.size());
           model_->setFixedParameters(edata->fixedParametersPresimulation);
-          model_->setReinitializationStateIdxs(
-                      edata->reinitialization_state_idxs_presim);
+          if(!edata->reinitializeFixedParameterInitialStates)
+              model_->setReinitializationStateIdxs(
+                          edata->reinitialization_state_idxs_presim);
       }
       break;
     }
