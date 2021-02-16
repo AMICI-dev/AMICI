@@ -79,9 +79,11 @@ def pytest_sessionfinish(session, exitstatus):
     from testSBMLSuite import format_test_id
     passed_ids = [re.sub(r'^.*\[(\d+)].*$', r'\1', item.name)
                   for item, result in session.results.items()
-                  if result.outcome == 'passed']
+                  if item.name.startswith('test_sbml_testsuite_case[')
+                  and result.outcome == 'passed']
     passed_ids = [format_test_id(_) for _ in passed_ids]
-    write_passed_tags(passed_ids, terminalreporter)
+    if passed_ids:
+        write_passed_tags(passed_ids, terminalreporter)
     terminalreporter.ensure_newline()
 
 
