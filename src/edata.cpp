@@ -56,7 +56,9 @@ ExpData::ExpData(Model const &model)
     : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
               model.getTimepoints(), model.getFixedParameters()) {
     reinitializeFixedParameterInitialStates =
-        model.getReinitializeFixedParameterInitialStates();
+        model.getReinitializeFixedParameterInitialStates()
+            && model.getReinitializationStateIdxs().empty();
+    reinitialization_state_idxs_sim = model.getReinitializationStateIdxs();
 }
 
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
@@ -336,7 +338,8 @@ ConditionContext::ConditionContext(Model *model, const ExpData *edata,
       original_parameter_list_(model->getParameterList()),
       original_scaling_(model->getParameterScale()),
       original_reinitialize_fixed_parameter_initial_states_(
-          model->getReinitializeFixedParameterInitialStates()),
+          model->getReinitializeFixedParameterInitialStates()
+          && model->getReinitializationStateIdxs().empty()),
       original_reinitialization_state_idxs(
           model->getReinitializationStateIdxs())
 {
@@ -372,7 +375,6 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                " match ExpData (%zd).",
                                model_->np(), edata->pscale.size());
         model_->setParameterScale(edata->pscale);
-
     }
 
     if(!edata->x0.empty()) {
@@ -399,6 +401,9 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                model_->np(), edata->parameters.size());
         model_->setParameters(edata->parameters);
     }
+
+    model_->setReinitializeFixedParameterInitialStates(
+        edata->reinitializeFixedParameterInitialStates);
 
     switch (fpc) {
     case FixedParameterContext::simulation:
@@ -449,9 +454,6 @@ void ConditionContext::applyCondition(const ExpData *edata,
         // fixed parameter in model are superseded by those provided in edata
         model_->setTimepoints(edata->getTimepoints());
     }
-
-    model_->setReinitializeFixedParameterInitialStates(
-        edata->reinitializeFixedParameterInitialStates);
 }
 
 void ConditionContext::restore()

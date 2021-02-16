@@ -519,12 +519,11 @@ def create_edata_for_condition(
     #  assignments
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
             and species_in_condition_table:
-        edata.reinitializeFixedParameterInitialStates = True
         state_ids = amici_model.getStateIds()
         state_idx_reinitalization = [state_ids.index(s)
                                      for s in species_in_condition_table]
         edata.reinitialization_state_idxs_sim = state_idx_reinitalization
-        logger.debug("Enabling state reinitialization for condition"
+        logger.debug("Enabling state reinitialization for condition "
                      f"{condition.get(PREEQUILIBRATION_CONDITION_ID, '')} - "
                      f"{condition.get(SIMULATION_CONDITION_ID)} "
                      f"{species_in_condition_table}")
