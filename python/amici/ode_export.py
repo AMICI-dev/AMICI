@@ -2669,8 +2669,8 @@ class ODEExporter:
         lines.extend([
             '}',
             '',
-            '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
+            '} // namespace amici\n',
         ])
 
         # check custom functions
@@ -2760,8 +2760,8 @@ class ODEExporter:
         lines.extend([
             '}'
             '',
-            '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
+            '} // namespace amici\n',
         ])
 
         filename = f'{self.model_name}_{function}_{indextype}.cpp'
