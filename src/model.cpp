@@ -753,10 +753,10 @@ SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
 void Model::setReinitializeFixedParameterInitialStates(bool flag) {
     if (flag && !isFixedParameterStateReinitializationAllowed())
         throw AmiException(
-            "State reinitialization cannot be enabled for this model"
+            "State reinitialization cannot be enabled for this model "
             "as this feature was disabled at compile time. Most likely,"
             " this was because some initial states depending on "
-            "fixedParameters also depended on parameters");
+            "fixedParameters also depended on parameters.");
     simulation_parameters_.reinitializeFixedParameterInitialStates = flag;
 
     if(flag) {
@@ -765,7 +765,8 @@ void Model::setReinitializeFixedParameterInitialStates(bool flag) {
 }
 
 bool Model::getReinitializeFixedParameterInitialStates() const {
-    return simulation_parameters_.reinitializeFixedParameterInitialStates;
+    return simulation_parameters_.reinitializeFixedParameterInitialStates
+            || !simulation_parameters_.reinitialization_state_idxs_sim.empty();
 }
 
 void Model::requireSensitivitiesForAllParameters() {
