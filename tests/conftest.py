@@ -1,8 +1,10 @@
 """Pytest configuration for SBML test suite"""
 
-from typing import List
 import re
 import sys
+from typing import List
+
+import pytest
 
 
 def parse_selection(selection_str: str) -> List[int]:
@@ -50,3 +52,44 @@ def pytest_generate_tests(metafunc):
         test_numbers -= {1395}
 
         metafunc.parametrize("test_number", test_numbers)
+
+
+def pytest_sessionstart(session):
+    """Initialize result collection"""
+    session.results = dict()
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Collect test results"""
+    outcome = yield
+    result = outcome.get_result()
+
+    if result.when == 'call':
+        item.session.results[item] = result
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Process test results"""
+    terminalreporter = session.config.pluginmanager.get_plugin(
+        'terminalreporter')
+    terminalreporter.ensure_newline()
+    # parse test names to get passed case IDs (don't know any better way to
+    # access fixture values)
+    from testSBMLSuite import format_test_id
+    passed_ids = [re.sub(r'^.*\[(\d+)].*$', r'\1', item.name)
+                  for item, result in session.results.items()
+                  if result.outcome == 'passed']
+    passed_ids = [format_test_id(_) for _ in passed_ids]
+    write_passed_tags(passed_ids, terminalreporter)
+    terminalreporter.ensure_newline()
+
+
+def write_passed_tags(passed_ids, out=sys.stdout):
+    passed_tags = set()
+    from testSBMLSuite import get_tags_for_test
+    for test_id in passed_ids:
+        passed_tags |= get_tags_for_test(test_id)
+
+    out.write("At least one test with the following tags has passed:\n")
+    out.write('  ' + '\n  '.join(passed_tags))
