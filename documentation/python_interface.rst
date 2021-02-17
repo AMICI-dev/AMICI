@@ -50,10 +50,10 @@ However, the following features are unlikely to be supported:
 Tutorials
 +++++++++
 
-A basic tutorial on how to import and simulate SBML models is available here
-`here <GettingStarted.ipynb>`_, while a more detailed example including
-customized import and sensitivity computation is available `here
-<ExampleSteadystate.ipynb>`_.
+A basic tutorial on how to import and simulate SBML models is available in the 
+`Getting Started notebook <GettingStarted.ipynb>`_, while a more detailed example 
+including customized import and sensitivity computation is available in the 
+`Example Steadystate notebook <ExampleSteadystate.ipynb>`_.
 
 PySB import
 -----------
