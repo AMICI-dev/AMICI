@@ -86,7 +86,7 @@ def write_passed_tags(passed_ids, out=sys.stdout):
 
 def pytest_runtest_logreport(report: "TestReport") -> None:
     """Collect test case IDs of passed SBML semantic test suite cases"""
-    if report.when == 'teardown'\
+    if report.when == 'call'\
             and report.outcome == 'passed'\
             and '::test_sbml_testsuite_case[' in report.nodeid:
         test_case_id = re.sub(r'^.*::test_sbml_testsuite_case\[(\d+)].*$',
