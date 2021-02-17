@@ -100,15 +100,13 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> xdot;
 
     /**
-     * Jacobian of differential equation right hand side (shape `nx` x `nx`,
-     * row-major)
+     * Jacobian of differential equation right hand side (shape `nx` x `nx`, row-major)
      */
     std::vector<realtype> J;
 
     /**
      * w data from the model (recurring terms in xdot, for imported SBML models
-     * from python, this contains the flux vector)
-     * (shape `nt` x `nw`, row major)
+     * from python, this contains the flux vector) (shape `nt` x `nw`, row major)
      */
     std::vector<realtype> w;
 
@@ -116,20 +114,17 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> z;
 
     /**
-     * event output sigma standard deviation (shape `nmaxevent` x `nz`,
-     * row-major)
+     * event output sigma standard deviation (shape `nmaxevent` x `nz`, row-major)
      */
     std::vector<realtype> sigmaz;
 
     /**
-     * parameter derivative of event output (shape `nmaxevent` x `nz`,
-     * row-major)
+     * parameter derivative of event output (shape `nmaxevent` x `nz`, row-major)
      */
     std::vector<realtype> sz;
 
     /**
-     * parameter derivative of event output standard deviation (shape :
-     * `nmaxevent` x `nz`, row-major)
+     * parameter derivative of event output standard deviation (shape `nmaxevent` x `nz`, row-major)
      */
     std::vector<realtype> ssigmaz;
 
@@ -137,18 +132,17 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> rz;
 
     /**
-     * parameter derivative of event trigger output (shape `nmaxevent` x `nz`
-     * x nplist, row-major)
+     * parameter derivative of event trigger output (shape `nmaxevent` x `nz` x `nplist`, row-major)
      */
     std::vector<realtype> srz;
 
     /**
-     * second order parameter derivative of event trigger output (shape :
-     * nmaxevent x nztrue x nplist x nplist, row-major)
+     * second order parameter derivative of event trigger output (shape
+     * `nmaxevent` x `nztrue` x `nplist` x `nplist`, row-major)
      */
     std::vector<realtype> s2rz;
 
-    /** state (shape `nt x nx`, row-major) */
+    /** state (shape `nt` x `nx`, row-major) */
     std::vector<realtype> x;
 
     /**
@@ -169,8 +163,7 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sy;
 
     /**
-     * parameter derivative of observable standard deviation (shape `nt` x `
-     * nplist` x `ny, row-major)
+     * parameter derivative of observable standard deviation (shape `nt` x `nplist` x `ny`, row-major)
      */
     std::vector<realtype> ssigmay;
 
@@ -178,7 +171,7 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> res;
 
     /**
-     * parameter derivative of residual (shape `nt*ny` x `nplist, row-major)
+     * parameter derivative of residual (shape `nt*ny` x `nplist`, row-major)
      */
     std::vector<realtype> sres;
 
@@ -204,13 +197,13 @@ class ReturnData: public ModelDimensions {
     std::vector<int> numerrtestfailsB;
 
     /**
-     * number of linear solver convergence failures forward problem (shape :
-     * nt) */
+     * number of linear solver convergence failures forward problem (shape `nt`)
+     */
     std::vector<int> numnonlinsolvconvfails;
 
     /**
-     * number of linear solver convergence failures backward problem (shape :
-     * nt) */
+     * number of linear solver convergence failures backward problem (shape `nt`)
+     */
     std::vector<int> numnonlinsolvconvfailsB;
 
     /** employed order forward problem (shape `nt`) */
@@ -251,7 +244,7 @@ class ReturnData: public ModelDimensions {
     /**
      * number of linear steps by Newton step for steady state problem. this
      * will only be filled for iterative solvers (preequilibration)
-     * (length = newton_maxsteps * 2)
+     * (shape `newton_maxsteps * 2`)
      */
     std::vector<int> preeq_numlinsteps;
 
@@ -263,14 +256,14 @@ class ReturnData: public ModelDimensions {
 
     /**
      * number of Newton steps for steady state problem (preequilibration)
-     * [newton, simulation, newton] (length = 3) (postequilibration)
+     * [newton, simulation, newton] (shape `3`) (postequilibration)
      */
     std::vector<int> posteq_numsteps;
 
     /**
      * number of linear steps by Newton step for steady state problem. this
      * will only be filled for iterative solvers (postequilibration)
-     * (length = newton_maxsteps * 2)
+     * (shape `newton_maxsteps * 2`)
      */
     std::vector<int> posteq_numlinsteps;
 
@@ -312,8 +305,7 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sx0;
 
     /**
-     * preequilibration sensitivities found by Newton solver (shape `nplist`
-     *` x `nx, row-major)
+     * preequilibration sensitivities found by Newton solver (shape `nplist` x `nx`, row-major)
      */
     std::vector<realtype> sx_ss;
 
@@ -327,8 +319,7 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sllh;
 
     /**
-     * second order parameter derivative of loglikelihood (shape `(nJ-1) x
-     * nplist`, row-major)
+     * second order parameter derivative of loglikelihood (shape `nJ-1` x `nplist`, row-major)
      */
     std::vector<realtype> s2llh;
 
@@ -372,7 +363,7 @@ class ReturnData: public ModelDimensions {
     RDataReporting rdata_reporting{RDataReporting::full};
 
     /**
-     * @brief Serialize ReturnData (see :cpp:`boost::serialization::serialize`)
+     * @brief Serialize ReturnData (see boost::serialization::serialize)
      * @param ar Archive to serialize to
      * @param r Data to serialize
      * @param version Version number
