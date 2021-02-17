@@ -59,6 +59,12 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::fixedParametersPreequilibration;
 %naturalvar amici::SimulationParameters::fixedParametersPresimulation;
 
+%ignore ModelContext;
+%ignore ContextManager;
+%ignore ModelDimensions;
+%ignore ModelState;
+%ingore ModelStateDerived;
+
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
 
