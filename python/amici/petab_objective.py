@@ -515,8 +515,6 @@ def create_edata_for_condition(
                            condition[SIMULATION_CONDITION_ID], col])
            and petab_problem.sbml_model.getSpecies(col) is not None
     ]
-    # TODO: also need to consider any fixedParameters occuring in any initial
-    #  assignments
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
             and species_in_condition_table:
         state_ids = amici_model.getStateIds()

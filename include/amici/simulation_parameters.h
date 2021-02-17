@@ -83,7 +83,7 @@ public:
      *
      * @param nx_rdata Number of states (Model::nx_rdata)
      */
-    void reinitializeAllParametersForPresimulation(int nx_rdata);
+    void reinitializeAllFixedParameterDependentInitialStatesForPresimulation(int nx_rdata);
 
     /**
      * @brief Set reinitialization of all states based on model constants for
@@ -108,7 +108,7 @@ public:
      *
      * @param nx_rdata Number of states (Model::nx_rdata)
      */
-    void reinitializeAllParameters(int nx_rdata);
+    void reinitializeAllFixedParameterDependentInitialStates(int nx_rdata);
 
     /**
      * @brief Model constants
