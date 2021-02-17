@@ -127,7 +127,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/rdata.cpp
     ${CMAKE_SOURCE_DIR}/src/edata.cpp
     ${CMAKE_SOURCE_DIR}/src/exception.cpp
-
+    ${CMAKE_SOURCE_DIR}/src/simulation_parameters.cpp
     ${CMAKE_SOURCE_DIR}/src/spline.cpp
     ${CMAKE_SOURCE_DIR}/src/solver.cpp
     ${CMAKE_SOURCE_DIR}/src/solver_cvodes.cpp
@@ -135,6 +135,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/model.cpp
     ${CMAKE_SOURCE_DIR}/src/model_ode.cpp
     ${CMAKE_SOURCE_DIR}/src/model_dae.cpp
+    ${CMAKE_SOURCE_DIR}/src/model_state.cpp
     ${CMAKE_SOURCE_DIR}/src/newton_solver.cpp
     ${CMAKE_SOURCE_DIR}/src/forwardproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/steadystateproblem.cpp
