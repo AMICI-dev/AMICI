@@ -92,11 +92,11 @@ jobs:
 
     - name: doc notebooks
       run: |
-        scripts/runNotebook.sh documentation/*.ipynb
+        scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
     - name: Codecov Python
       uses: codecov/codecov-action@v1
-      with:
+      with: 
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/coverage_py.xml
         flags: python
