@@ -91,7 +91,10 @@ class ReturnData: public ModelDimensions {
                                   Model &model, Solver const &solver,
                                   ExpData const *edata);
 
-    /** timepoints (dimension: nt) */
+    /**
+     * timepoints
+     * @note shape: nt
+     */
     std::vector<realtype> ts;
 
     /** time derivative (dimension: nx) */
