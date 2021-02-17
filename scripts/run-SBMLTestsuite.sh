@@ -10,6 +10,7 @@ if [[ ! -d "tests/sbml-test-suite" ]]; then
 fi
 
 source build/venv/bin/activate
+pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
 pip install coverage pytest-cov
 
 if [[ -z "$*" ]]; then
@@ -25,5 +26,5 @@ if [[ -d "${RESULT_DIR}" ]]; then
 fi
 mkdir "${RESULT_DIR}"
 
-pytest ./tests/testSBMLSuite.py --cases="${args}" -rfsE -s \
+pytest ./tests/testSBMLSuite.py --cases="${args}" -rfsE -s -n auto \
   --cov=amici --cov-report=xml:"coverage_SBMLSuite.xml" --cov-append
