@@ -41,17 +41,17 @@ class ReturnData: public ModelDimensions {
 
     /**
      * @brief ReturnData
-     * @param ts see :cpp:`amici::Model::ts`
+     * @param ts see \ref amici::Model::ts
      * @param model_dimensions Model dimensions`
-     * @param nplist see :cpp:`amici::Model::nplist`
-     * @param nmaxevent see :cpp:`amici::Model::nmaxevent`
-     * @param nt see :cpp:`amici::Model::nt`
-     * @param newton_maxsteps see :cpp:`amici::Solver::newton_maxsteps`
-     * @param pscale see :cpp:`amici::Model::pscale`
-     * @param o2mode see :cpp:`amici::Model::o2mode`
-     * @param sensi see :cpp:`amici::Solver::sensi`
-     * @param sensi_meth see :cpp:`amici::Solver::sensi_meth`
-     * @param rdrm see :cpp:`amici::Solver::rdata_reporting`
+     * @param nplist see \ref amici::Model::nplist
+     * @param nmaxevent see \ref amici::Model::nmaxevent
+     * @param nt see \ref amici::Model::nt
+     * @param newton_maxsteps see \ref amici::Solver::newton_maxsteps
+     * @param pscale see \ref amici::Model::pscale
+     * @param o2mode see \ref amici::Model::o2mode
+     * @param sensi see \ref amici::Solver::sensi
+     * @param sensi_meth see \ref amici::Solver::sensi_meth
+     * @param rdrm see \ref amici::Solver::rdata_reporting
      * @param quadratic_llh whether model defines a quadratic nllh and computing res, sres and
      * FIM makes sense
      */
