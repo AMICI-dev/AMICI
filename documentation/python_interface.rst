@@ -10,9 +10,8 @@ Python and how to call the generated simulation files.
 Model definition
 ================
 
-This guide will guide the user on how to specify models to import and simulate
-them using the Python interface. Further examples are available in the AMICI
-repository in the
+This document provides an overview of different interfaces to import models
+in AMICI. Further examples are available in the AMICI repository in the
 `python/examples <https://github.com/AMICI-dev/AMICI/tree/master/python/examples>`_
 directory.
 
@@ -45,78 +44,13 @@ However, the following features are unlikely to be supported:
   symbolic sensitivity computations
 - `delay()` due to missing SUNDIALS solver support
 
+Tutorials
++++++++++
 
-How to import an SBML model into AMICI
-++++++++++++++++++++++++++++++++++++++
-
-To import an :term:`SBML` model into AMICI, first, load an SBML file
-using the :py:func:`amici.sbml_import.SbmlImporter` class::
-
-    import amici
-    sbml_importer = amici.SbmlImporter('model_steadystate_scaled.sbml')
-
-the SBML model as imported by `libSBML <http://sbml.org/Software/libSBML>`_
-is available as::
-
-    sbml_model = sbml_importer.sbml
-
-Constants
-^^^^^^^^^
-
-Model parameters that should be considered :term:`constants <fixed parameters>`
-can be specified in a list
-of strings specifying the SBML ID of the respective parameter, e.g.::
-
-    constant_parameters=['k4']
-
-Observables
-^^^^^^^^^^^
-
-Observables are specified as a dictionary with observable ID as key and
-observable formula as value.
-
-A convenient way for specifying observables for an SBML model is storing them
-as ``AssignmentRule``\ s. Assignment rules that should be considered as observables
-can then be extracted using the :py:func:`amici.sbml_import.assignmentRules2observables`
-function, e.g.::
-
-    observables = amici.assignmentRules2observables(sbml, filter_function=lambda variable:
-                                                    variable.getId().startswith('observable_') and not variable.getId().endswith('_sigma'))
-
-Standard deviations
-^^^^^^^^^^^^^^^^^^^
-
-Standard deviations can be specified as dictionaries, such as::
-
-    sigmas = {'observable_x1withsigma': 'observable_x1withsigma_sigma'}
-
-Noise distributions
-^^^^^^^^^^^^^^^^^^^
-
-Various noise distributions including normal and Laplace and discrete
-distributions, and scale transformations including linear, log and log10
-are supported::
-
-    noise_distributions = {'observable_x1withsigma': 'log-normal'}
-
-Find details in :py:func:`amici.sbml_import.noise_distribution_to_cost_function`.
-
-Model compilation
-^^^^^^^^^^^^^^^^^
-
-To generate a Python module from the SBML model, call the method
-:py:func:`amici.sbml_import.SbmlImporter.sbml2amici`, passing all the
-previously defined model specifications::
-
-    sbml_importer.sbml2amici('test', 'test',
-                             observables=observables,
-                             constant_parameters=constant_parameters,
-                             sigmas=sigmas)
-
-Full example
-^^^^^^^^^^^^
-
-See `here <ExampleSteadystate.ipynb>`_ for a full example.
+A basic tutorial on how to import and simulate SBML models is available here
+`here <GettingStarted.ipynb>`_, while a more detailed example including
+customized import and sensitivity computation is available `here
+<ExampleSteadystate.ipynb>`_.
 
 PySB import
 -----------
@@ -148,44 +82,8 @@ of an ODE model. Besides the SBML model it can also create
 SED-ML import
 -------------
 
-We also plan to implement support for the `Simulation Experiment Description Markup Language (SED-ML) <https://sed-ml.org/>`_.
-
-Model simulation
-================
-
-AMICI model import creates a Python module for simulation of the respective
-model. To use the model module, the model directory has to be manually added to
-the python path::
-
-    import sys
-    sys.path.insert(0, 'test')
-
-the compiled model can then be imported as::
-
-    import test as model_module
-
-It is usually more convenient to use :py:func:`amici.import_model_module` for
-that purpose.
-
-To obtain a model instance call the `getModel()` method. This model instance
-will be instantiated using the default parameter values specified in the
-imported model::
-
-    model = model_module.getModel()
-
-Specify the simulation timepoints via :py:func:`amici.Model.setTimepoints`::
-
-    model.setTimepoints(np.linspace(0, 60, 60))
-
-For simulation, we need to generate a solver instance::
-
-    solver = model.getSolver()
-
-The model simulation can now be carried out using
-:py:func:`amici.runAmiciSimulation`::
-
-    rdata = amici.runAmiciSimulation(model, solver)
-
+We also plan to implement support for the
+`Simulation Experiment Description Markup Language (SED-ML) <https://sed-ml.org/>`_.
 
 Examples
 ========
@@ -193,6 +91,7 @@ Examples
 .. toctree::
    :maxdepth: 1
 
+   GettingStarted.ipynb
    ExampleSteadystate.ipynb
    petab.ipynb
    model_presimulation.ipynb
