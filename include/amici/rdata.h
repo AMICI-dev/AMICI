@@ -92,8 +92,7 @@ class ReturnData: public ModelDimensions {
                                   ExpData const *edata);
 
     /**
-     * timepoints
-     * @note shape: nt
+     * timepoints shape: nt
      */
     std::vector<realtype> ts;
 
