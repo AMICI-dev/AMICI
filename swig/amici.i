@@ -61,7 +61,6 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
 %ignore amici::ModelContext;
 %ignore amici::ContextManager;
-%ignore amici::ModelDimensions;
 %ignore amici::ModelState;
 %ingore amici::ModelStateDerived;
 
