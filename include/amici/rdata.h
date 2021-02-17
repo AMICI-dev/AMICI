@@ -92,15 +92,15 @@ class ReturnData: public ModelDimensions {
                                   ExpData const *edata);
 
     /**
-     * timepoints (shape : nt)
+     * timepoints (shape `nt`)
      */
     std::vector<realtype> ts;
 
-    /** time derivative (shape : nx) */
+    /** time derivative (shape `nx`) */
     std::vector<realtype> xdot;
 
     /**
-     * Jacobian of differential equation right hand side (shape nx x nx,
+     * Jacobian of differential equation right hand side (shape `nx` x `nx`,
      * row-major)
      */
     std::vector<realtype> J;
@@ -108,36 +108,36 @@ class ReturnData: public ModelDimensions {
     /**
      * w data from the model (recurring terms in xdot, for imported SBML models
      * from python, this contains the flux vector)
-     * (shape : nt x nw, row major)
+     * (shape `nt` x `nw`, row major)
      */
     std::vector<realtype> w;
 
-    /** event output (shape : nmaxevent x nz, row-major) */
+    /** event output (shape `nmaxevent` x `nz`, row-major) */
     std::vector<realtype> z;
 
     /**
-     * event output sigma standard deviation (shape : nmaxevent x nz,
+     * event output sigma standard deviation (shape `nmaxevent` x `nz`,
      * row-major)
      */
     std::vector<realtype> sigmaz;
 
     /**
-     * parameter derivative of event output (shape : nmaxevent x nz,
+     * parameter derivative of event output (shape `nmaxevent` x `nz`,
      * row-major)
      */
     std::vector<realtype> sz;
 
     /**
      * parameter derivative of event output standard deviation (shape :
-     * nmaxevent x nz, row-major)
+     * `nmaxevent` x `nz`, row-major)
      */
     std::vector<realtype> ssigmaz;
 
-    /** event trigger output (shape : nmaxevent x nz, row-major)*/
+    /** event trigger output (shape `nmaxevent` x `nz`, row-major)*/
     std::vector<realtype> rz;
 
     /**
-     * parameter derivative of event trigger output (shape : nmaxevent x nz
+     * parameter derivative of event trigger output (shape `nmaxevent` x `nz`
      * x nplist, row-major)
      */
     std::vector<realtype> srz;
@@ -148,59 +148,59 @@ class ReturnData: public ModelDimensions {
      */
     std::vector<realtype> s2rz;
 
-    /** state (shape : nt x nx, row-major) */
+    /** state (shape `nt x nx`, row-major) */
     std::vector<realtype> x;
 
     /**
-     * parameter derivative of state (shape : nt x nplist x nx, row-major)
+     * parameter derivative of state (shape `nt` x `nplist` x `nx`, row-major)
      */
     std::vector<realtype> sx;
 
-    /** observable (shape : nt x ny, row-major) */
+    /** observable (shape `nt` x `ny`, row-major) */
     std::vector<realtype> y;
 
-    /** observable standard deviation (shape : nt x ny, row-major) */
+    /** observable standard deviation (shape `nt` x `ny`, row-major) */
     std::vector<realtype> sigmay;
 
     /**
-     * parameter derivative of observable (shape : nt x nplist x ny,
+     * parameter derivative of observable (shape `nt` x `nplist` x `ny`,
      * row-major)
      */
     std::vector<realtype> sy;
 
     /**
-     * parameter derivative of observable standard deviation (shape : nt x
-     * nplist x ny, row-major)
+     * parameter derivative of observable standard deviation (shape `nt` x `
+     * nplist` x `ny, row-major)
      */
     std::vector<realtype> ssigmay;
 
-    /** observable (shape : nt*ny, row-major) */
+    /** observable (shape `nt*ny`, row-major) */
     std::vector<realtype> res;
 
     /**
-     * parameter derivative of residual (shape : nt*ny x nplist, row-major)
+     * parameter derivative of residual (shape `nt*ny` x `nplist, row-major)
      */
     std::vector<realtype> sres;
 
-    /** fisher information matrix (shape : nplist x nplist, row-major) */
+    /** fisher information matrix (shape `nplist` x `nplist`, row-major) */
     std::vector<realtype> FIM;
 
-    /** number of integration steps forward problem (shape : nt) */
+    /** number of integration steps forward problem (shape `nt`) */
     std::vector<int> numsteps;
 
-    /** number of integration steps backward problem (shape : nt) */
+    /** number of integration steps backward problem (shape `nt`) */
     std::vector<int> numstepsB;
 
-    /** number of right hand side evaluations forward problem (shape : nt) */
+    /** number of right hand side evaluations forward problem (shape `nt`) */
     std::vector<int> numrhsevals;
 
-    /** number of right hand side evaluations backward problem (shape : nt) */
+    /** number of right hand side evaluations backward problem (shape `nt`) */
     std::vector<int> numrhsevalsB;
 
-    /** number of error test failures forward problem (shape : nt) */
+    /** number of error test failures forward problem (shape `nt`) */
     std::vector<int> numerrtestfails;
 
-    /** number of error test failures backward problem (shape : nt) */
+    /** number of error test failures backward problem (shape `nt`) */
     std::vector<int> numerrtestfailsB;
 
     /**
@@ -213,7 +213,7 @@ class ReturnData: public ModelDimensions {
      * nt) */
     std::vector<int> numnonlinsolvconvfailsB;
 
-    /** employed order forward problem (shape : nt) */
+    /** employed order forward problem (shape `nt`) */
     std::vector<int> order;
 
     /** computation time of forward solve [ms] */
@@ -302,18 +302,18 @@ class ReturnData: public ModelDimensions {
      */
     realtype posteq_wrms = NAN;
 
-    /** initial state (shape : nx) */
+    /** initial state (shape `nx`) */
     std::vector<realtype> x0;
 
-    /** preequilibration steady state found by Newton solver (shape : nx) */
+    /** preequilibration steady state found by Newton solver (shape `nx`) */
     std::vector<realtype> x_ss;
 
-    /** initial sensitivities (shape : nplist x nx, row-major) */
+    /** initial sensitivities (shape `nplist` x `nx`, row-major) */
     std::vector<realtype> sx0;
 
     /**
-     * preequilibration sensitivities found by Newton solver (shape : nplist
-     * x nx, row-major)
+     * preequilibration sensitivities found by Newton solver (shape `nplist`
+     *` x `nx, row-major)
      */
     std::vector<realtype> sx_ss;
 
@@ -323,12 +323,12 @@ class ReturnData: public ModelDimensions {
     /** chi2 value */
     realtype chi2 = 0.0;
 
-    /** parameter derivative of loglikelihood (shape : nplist) */
+    /** parameter derivative of loglikelihood (shape `nplist`) */
     std::vector<realtype> sllh;
 
     /**
-     * second order parameter derivative of loglikelihood (shape : (nJ-1) x
-     * nplist, row-major)
+     * second order parameter derivative of loglikelihood (shape `(nJ-1) x
+     * nplist`, row-major)
      */
     std::vector<realtype> s2llh;
 
@@ -404,7 +404,7 @@ class ReturnData: public ModelDimensions {
     AmiVectorArray sx_rdata_;
 
     /** array of number of found roots for a certain event type
-     * (shape : ne) */
+     * (shape `ne`) */
     std::vector<int> nroots_;
 
     /**

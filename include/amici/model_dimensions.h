@@ -39,10 +39,8 @@ struct ModelDimensions {
      * repeating elements
      * @param ndwdw Number of nonzero elements in the `w` derivative of the
      * repeating elements
-     * @param ndxdotdw Number of nonzero elements in the \f$w\f$ derivative of
-     * \f$xdot\f$
-     * @param ndJydy Number of nonzero elements in the \f$y\f$ derivative of
-     * \f$dJy\f$ (dimension `nytrue`)
+     * @param ndxdotdw Number of nonzero elements in the \f$ w\f$ derivative of \f$ xdot\f$
+     * @param ndJydy Number of nonzero elements in the \f$ y\f$ derivative of \f$ dJy\f$ (shape `nytrue`)
      * @param nnz Number of nonzero elements in Jacobian
      * @param ubw Upper matrix bandwidth in the Jacobian
      * @param lbw Lower matrix bandwidth in the Jacobian
