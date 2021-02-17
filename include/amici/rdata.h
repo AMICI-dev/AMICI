@@ -92,7 +92,7 @@ class ReturnData: public ModelDimensions {
                                   ExpData const *edata);
 
     /**
-     * timepoints shape: nt
+     * timepoints (shape\: nt)
      */
     std::vector<realtype> ts;
 
@@ -100,7 +100,7 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> xdot;
 
     /**
-     * Jacobian of differential equation right hand side (dimension: nx x nx,
+     * Jacobian of differential equation right hand side (shape nx x nx,
      * row-major)
      */
     std::vector<realtype> J;
@@ -108,7 +108,7 @@ class ReturnData: public ModelDimensions {
     /**
      * w data from the model (recurring terms in xdot, for imported SBML models
      * from python, this contains the flux vector)
-     * (dimensions: nt x nw, row major)
+     * (dimensions : nt x nw, row major)
      */
     std::vector<realtype> w;
 
