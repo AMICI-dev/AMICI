@@ -85,6 +85,14 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
+          
+    - name: example notebooks
+      run: |
+        scripts/runNotebook.sh python/examples/example_*/
+
+    - name: doc notebooks
+      run: |
+        scripts/runNotebook.sh documentation/*.ipynb
 
     - name: Codecov Python
       uses: codecov/codecov-action@v1
