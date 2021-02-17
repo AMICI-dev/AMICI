@@ -174,7 +174,10 @@ fprintf(fid,['                  ' num2str(this.nnz) ',\n']);
 fprintf(fid,['                  ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                  ' num2str(this.lbw) '\n']);
 fprintf(fid,['              ),\n']);
-
+fprintf(fid,['              amici::SimulationParameters(\n']);
+fprintf(fid,['                  std::vector<realtype>(' num2str(this.nk) ', 1.0),\n']);
+fprintf(fid,['                  std::vector<realtype>(' num2str(this.np) ', 1.0)\n']);
+fprintf(fid,['              ),\n']);
 switch(this.o2flag)
     case 1
         fprintf(fid,'              amici::SecondOrderMode::full,\n');
@@ -183,9 +186,6 @@ switch(this.o2flag)
     otherwise
         fprintf(fid,'              amici::SecondOrderMode::none,\n');
 end
-fprintf(fid,['              std::vector<realtype>(' num2str(this.np) ',1.0),\n']);
-fprintf(fid,['              std::vector<realtype>(' num2str(this.nk) ',1.0),\n']);
-fprintf(fid,'               std::vector<int>(),\n');
 initstr = num2str(this.id, '%d, ');
 fprintf(fid,['              std::vector<realtype>{' initstr(1:end-1) '},\n']);
 initstr = num2str(transpose(this.z2event), '%d, ');

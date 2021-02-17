@@ -19,7 +19,8 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts))
+    : SimulationParameters(ts), nytrue_(nytrue),
+      nztrue_(nztrue), nmaxevent_(nmaxevent)
 {
     applyDimensions();
 }
@@ -28,8 +29,10 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts,
                  std::vector<realtype> fixedParameters
                  )
-    : fixedParameters(std::move(fixedParameters)), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts))
+    : SimulationParameters(ts), nytrue_(nytrue),
+      nztrue_(nztrue), nmaxevent_(nmaxevent)
 {
+    this->fixedParameters = std::move(fixedParameters);
     applyDimensions();
 }
 
@@ -39,7 +42,8 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> const& observedDataStdDev,
                  std::vector<realtype> const& observedEvents,
                  std::vector<realtype> const& observedEventsStdDev)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts))
+    : SimulationParameters(ts), nytrue_(nytrue), nztrue_(nztrue),
+      nmaxevent_(nmaxevent)
 {
     applyDimensions();
     setObservedData(observedData);

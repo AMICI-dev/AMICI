@@ -160,10 +160,12 @@ TEST(dataSerialization, testFile)
                     16,         // ubw
                     17         // lbw
                     ),
+                amici::SimulationParameters(
+                    std::vector<realtype>(nk, 0.0),
+                    std::vector<realtype>(np, 0.0),
+                    std::vector<int>(np, 0)
+                ),
                 amici::SecondOrderMode::none,
-                std::vector<realtype>(np, 0.0),
-                std::vector<realtype>(nk, 0.0),
-                std::vector<int>(np, 0),
                 std::vector<realtype>(nx, 0.0),
                 std::vector<int>(nz, 0));
 
@@ -219,10 +221,12 @@ TEST(dataSerialization, testString)
                     16,        // ubw
                     17         // lbw
                     ),
+                amici::SimulationParameters(
+                    std::vector<realtype>(nk, 0.0),
+                    std::vector<realtype>(np, 0.0),
+                    std::vector<int>(np, 0)
+                ),
                 amici::SecondOrderMode::none,
-                std::vector<realtype>(np, 0.0),
-                std::vector<realtype>(nk, 0.0),
-                std::vector<int>(np, 0),
                 std::vector<realtype>(nx, 0.0),
                 std::vector<int>(nz, 0));
 
