@@ -79,6 +79,11 @@ using namespace amici;
 %ignore fz;
 %ignore updateHeaviside;
 %ignore updateHeavisideB;
+%ignore getEventSigma;
+%ignore getEventSigmaSensitivity;
+%ignore getObservableSigma;
+%ignore getObservableSigmaSensitivity;
+%ignore getUnobservedEventSensitivity;
 
 
 
