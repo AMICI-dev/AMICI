@@ -96,7 +96,7 @@ public:
      *
      * @param nx_rdata Number of states (Model::nx_rdata)
      */
-    void reinitializeAllParametersSimulation(int nx_rdata);
+    void reinitializeAllFixedParameterDependentInitialStatesForSimulation(int nx_rdata);
 
     /**
      * @brief Set reinitialization of all states based on model constants for

@@ -26,7 +26,7 @@ void SimulationParameters::reinitializeAllParametersForPresimulation(int nx_rdat
 
 }
 
-void SimulationParameters::reinitializeAllParametersSimulation(int nx_rdata)
+void SimulationParameters::reinitializeAllFixedParameterDependentInitialStatesForSimulation(int nx_rdata)
 {
     reinitialization_state_idxs_sim.resize(nx_rdata);
     std::iota(reinitialization_state_idxs_sim.begin(),
@@ -36,7 +36,7 @@ void SimulationParameters::reinitializeAllParametersSimulation(int nx_rdata)
 void SimulationParameters::reinitializeAllParameters(int nx_rdata)
 {
     reinitializeAllParametersForPresimulation(nx_rdata);
-    reinitializeAllParametersSimulation(nx_rdata);
+    reinitializeAllFixedParameterDependentInitialStatesForSimulation(nx_rdata);
 }
 
 

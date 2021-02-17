@@ -760,7 +760,7 @@ void Model::setReinitializeFixedParameterInitialStates(bool flag) {
     simulation_parameters_.reinitializeFixedParameterInitialStates = flag;
 
     if(flag) {
-        simulation_parameters_.reinitializeAllParametersSimulation(nx_rdata);
+        simulation_parameters_.reinitializeAllFixedParameterDependentInitialStatesForSimulation(nx_rdata);
     } else {
         simulation_parameters_.reinitialization_state_idxs_sim.clear();
     }
