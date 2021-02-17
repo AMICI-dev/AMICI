@@ -42,7 +42,7 @@ class ReturnData: public ModelDimensions {
     /**
      * @brief ReturnData
      * @param ts see amici::SimulationParameters::ts
-     * @param model_dimensions Model dimensions`
+     * @param model_dimensions Model dimensions
      * @param nplist see amici::ModelDimensions::nplist
      * @param nmaxevent see amici::ModelDimensions::nmaxevent
      * @param nt see amici::ModelDimensions::nt
