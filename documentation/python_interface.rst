@@ -21,6 +21,8 @@ SBML import
 AMICI can import :term:`SBML` models via the
 :py:func:`amici.sbml_import.SbmlImporter` class.
 
+.. _amici_python_sbml_support:
+
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
@@ -30,19 +32,20 @@ the semantic
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
 
 In addition, we currently plan to add support for the following features
-(see corresponding issues for details and progress):
+(see corresponding `issues <https://github.com/AMICI-dev/AMICI/milestone/14>`_
+for details and progress):
 
-- Events (currently Matlab-only)
-- Algebraic rules
+- Events (currently Matlab-only) (`#757 <https://github.com/AMICI-dev/AMICI/issues/757>`_)
+- Algebraic rules (`#760 <https://github.com/AMICI-dev/AMICI/issues/760>`_)
 
 contributions are welcome.
 
 However, the following features are unlikely to be supported:
 
-- SBML extensions
+- any SBML extensions
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
-- `delay()` due to missing SUNDIALS solver support
+- `delay()` due to missing :term:`SUNDIALS` solver support
 
 Tutorials
 +++++++++
