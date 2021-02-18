@@ -1,3 +1,10 @@
+"""
+PySB Benchmark
+--------------
+This file allows the benchmarking of AMICI vs PySB simulations. Simulations
+times are averages of N_REPEATS simulations at reference values.
+"""
+
 import os
 import pysb
 import amici
