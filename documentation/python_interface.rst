@@ -32,7 +32,7 @@ the semantic
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
 
 The following SBML test tags are supported
-(i.e. at least one test case with the respective test passes;
+(i.e., at least one test case with the respective test passes;
 `tag descriptions <https://github.com/sbmlteam/sbml-test-suite/blob/master/docs/tags-documentation/all-tags.txt>`_):
 
 * 0D-Compartment
