@@ -66,7 +66,3 @@ jobs:
           && pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
-
-    - name: notebooks
-      run: |
-        scripts/runNotebook.sh python/examples/example_*/

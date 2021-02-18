@@ -26,6 +26,20 @@ using namespace amici;
 %ignore setupSteadystate;
 %ignore writeSolution;
 %ignore writeSolutionB;
+%ignore calcIC;
+%ignore calcICB;
+%ignore sensToggleOff;
+%ignore solveB;
+%ignore step;
+%ignore run;
+%ignore runB;
+%ignore resetDiagnosis;
+%ignore storeDiagnosis;
+%ignore storeDiagnosisB;
+%ignore turnOffRootFinding;
+%ignore getRootInfo;
+%ignore updateAndReinitStatesAndSensitivities;
+
 
 %newobject amici::Solver::clone;
 // Process symbols in header

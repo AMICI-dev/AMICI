@@ -16,6 +16,7 @@ Usage:
 import copy
 import importlib
 import os
+import re
 import shutil
 import sys
 
@@ -303,3 +304,18 @@ def format_test_id(test_id) -> str:
     test_str = str(test_id)
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
+
+
+def get_tags_for_test(test_id):
+    """Get sbml test suite tags for the given test ID"""
+
+    current_test_path = os.path.join(TEST_PATH, test_id)
+    info_file = os.path.join(current_test_path, f'{test_id}-model.m')
+    with open(info_file) as f:
+        for line in f:
+            if line.startswith('testTags:'):
+                res = set(re.split(r'[ ,:]', line[len('testTags:'):].strip()))
+                res.discard('')
+                return res
+    print(f"No testTags found for test case {test_id}.")
+    return set()

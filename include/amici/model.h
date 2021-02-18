@@ -749,7 +749,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get time-resolved `w`.
-     * @param w Buffer (dimension: `nw`)
+     * @param w Buffer (shape `nw`)
      * @param t Current timepoint
      * @param x Current state
      */
@@ -757,7 +757,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get time-resolved observables.
-     * @param y Buffer (dimension: `ny`)
+     * @param y Buffer (shape `ny`)
      * @param t Current timepoint
      * @param x Current state
      */
@@ -769,7 +769,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative \f$sy = dydx * sx + dydp\f$
      * (only for forward sensitivities).
-     * @param sy buffer (dimension: `ny` x `nplist`, row-major)
+     * @param sy buffer (shape `ny` x `nplist`, row-major)
      * @param t Timpoint
      * @param x State variables
      * @param sx State sensitivities
@@ -779,7 +779,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get time-resolved observable standard deviations
-     * @param sigmay Buffer (dimension: `ny`)
+     * @param sigmay Buffer (shape `ny`)
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
@@ -792,7 +792,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
-     * @param ssigmay Buffer (dimension: `ny` x `nplist`, row-major)
+     * @param ssigmay Buffer (shape `ny` x `nplist`, row-major)
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
@@ -802,7 +802,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add time-resolved measurement negative log-likelihood \f$Jy\f$.
-     * @param Jy Buffer (dimension: 1)
+     * @param Jy Buffer (shape 1)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data
@@ -814,8 +814,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Add sensitivity of time-resolved measurement negative log-likelihood
      * \f$Jy\f$.
      *
-     * @param sllh First-order buffer (dimension: `nplist`)
-     * @param s2llh Second-order buffer (dimension: `nJ - 1` x `nplist`, row-major)
+     * @param sllh First-order buffer (shape `nplist`)
+     * @param s2llh Second-order buffer (shape `nJ - 1` x `nplist`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param sx State sensitivities
@@ -833,9 +833,9 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param sllh First order output buffer (dimension: `nplist`)
+     * @param sllh First order output buffer (shape `nplist`)
      * @param s2llh Second order output buffer
-     * (dimension: `nJ - 1` x `nplist`, row-major)
+     * (shape `nJ - 1` x `nplist`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data
@@ -850,7 +850,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Get state sensitivity of the negative loglikelihood \f$Jy\f$,
      * partial derivative (to be used with adjoint sensitivities).
      *
-     * @param dJydx Output buffer (dimension: `nJ` x `nx_solver`, row-major)
+     * @param dJydx Output buffer (shape `nJ` x `nx_solver`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data instance
@@ -861,7 +861,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get event-resolved observables.
-     * @param z Output buffer (dimension: `nz`)
+     * @param z Output buffer (shape `nz`)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -873,7 +873,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative (only forward sensitivities).
      *
-     * @param sz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param sz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -888,14 +888,14 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Ignores sensitivity of timepoint. Total derivative.
      *
-     * @param sz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param sz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      */
     void getUnobservedEventSensitivity(gsl::span<realtype> sz, const int ie);
 
     /**
      * @brief Get regularization for event-resolved observables.
-     * @param rz Output buffer (dimension: `nz`)
+     * @param rz Output buffer (shape `nz`)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -909,7 +909,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative. Only forward sensitivities.
      *
-     * @param srz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param srz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -921,7 +921,7 @@ class Model : public AbstractModel, public ModelDimensions {
                                            const AmiVectorArray &sx);
     /**
      * @brief Get event-resolved observable standard deviations.
-     * @param sigmaz Output buffer (dimension: `nz`)
+     * @param sigmaz Output buffer (shape `nz`)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -938,7 +938,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative (only forward sensitivities).
      *
-     * @param ssigmaz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param ssigmaz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -951,7 +951,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add event-resolved observable negative log-likelihood.
-     * @param Jz Output buffer (dimension: 1)
+     * @param Jz Output buffer (shape 1)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -964,7 +964,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add event-resolved observable negative log-likelihood.
-     * @param Jrz Output buffer (dimension: 1)
+     * @param Jrz Output buffer (shape 1)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -982,9 +982,9 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Total derivative (to be used with forward sensitivities).
      *
-     * @param sllh First order buffer (dimension: `nplist`)
+     * @param sllh First order buffer (shape `nplist`)
      * @param s2llh Second order buffer
-     * (dimension: `(nJ-1) x nplist`, row-major)
+     * (shape `nJ-1` x `nplist`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1005,9 +1005,9 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param sllh First order buffer (dimension: `nplist`)
+     * @param sllh First order buffer (shape `nplist`)
      * @param s2llh Second order buffer
-     * (dimension: `(nJ-1) x nplist`, row-major)
+     * (shape `(nJ-1)` x `nplist`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1026,7 +1026,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param dJzdx Output buffer (dimension: `nJ x nx_solver`, row-major)
+     * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1042,7 +1042,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Only forward sensitivities.
      *
-     * @param stau Timepoint sensitivity (dimension: `nplist`)
+     * @param stau Timepoint sensitivity (shape `nplist`)
      * @param t Timepoint
      * @param ie Event index
      * @param x State variables
@@ -1693,23 +1693,26 @@ class Model : public AbstractModel, public ModelDimensions {
     /** maximal number of events to track */
     int nmaxevent_ {10};
 
-    /** flag indicating whether steadystate sensitivities are to be computed
-     *  via FSA when steadyStateSimulation is used
+    /**
+     * flag indicating whether steadystate sensitivities are to be computed
+     * via FSA when steadyStateSimulation is used
      */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
 
-    /** Indicates whether the result of every call to `Model::f*` should be
-     * checked for finiteness */
+    /**
+     * Indicates whether the result of every call to `Model::f*` should be
+     * checked for finiteness
+     */
     bool always_check_finite_ {false};
 
   private:
-    /** Sparse dwdp implicit temporary storage (dimension: `ndwdp`) */
+    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
     mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
 
-    /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
+    /** Sparse dwdw temporary storage (shape `ndwdw`) */
     mutable SUNMatrixWrapper dwdw_;
 
-    /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
+    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
     mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
 
     /** Recursion */
