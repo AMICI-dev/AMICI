@@ -211,7 +211,8 @@ functions = {
     'x0_fixedParameters': {
         'signature':
             '(realtype *x0_fixedParameters, const realtype t, '
-            'const realtype *p, const realtype *k)',
+            'const realtype *p, const realtype *k, '
+            'gsl::span<const int> reinitialization_state_idxs)',
     },
     'sx0': {
         'signature':
@@ -222,7 +223,7 @@ functions = {
         'signature':
             '(realtype *sx0_fixedParameters, const realtype t, '
             'const realtype *x0, const realtype *p, const realtype *k, '
-            'const int ip)',
+            'const int ip, gsl::span<const int> reinitialization_state_idxs)',
     },
     'xdot': {
         'signature':
@@ -2627,6 +2628,7 @@ class ODEExporter:
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
             '',
+            '#include <gsl/gsl-lite.hpp>',
             '#include <array>',
         ]
 
@@ -2667,8 +2669,8 @@ class ODEExporter:
         lines.extend([
             '}',
             '',
-            '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
+            '} // namespace amici\n',
         ])
 
         # check custom functions
@@ -2758,8 +2760,8 @@ class ODEExporter:
         lines.extend([
             '}'
             '',
-            '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
+            '} // namespace amici\n',
         ])
 
         filename = f'{self.model_name}_{function}_{indextype}.cpp'
@@ -2815,8 +2817,11 @@ class ODEExporter:
                 #  switch statement below only needs to handle non-zero entries
                 #  (which usually reduces file size and speeds up
                 #  compilation significantly).
-                "    for(auto idx: _x0_fixedParameters_idxs) {",
-                "        sx0_fixedParameters[idx] = 0.0;",
+                "    for(auto idx: reinitialization_state_idxs) {",
+                "        if(std::find(_x0_fixedParameters_idxs.cbegin(), "
+                "_x0_fixedParameters_idxs.cend(), idx) != "
+                "_x0_fixedParameters_idxs.cend())\n"
+                "            sx0_fixedParameters[idx] = 0.0;",
                 "    }"])
 
             cases = dict()
@@ -2827,9 +2832,14 @@ class ODEExporter:
                         equations[:, ipar]
                 ):
                     if not formula.is_zero:
-                        expressions.append(
-                            f'{function}[{index}] = '
-                            f'{_print_with_exception(formula)};')
+                        expressions.extend([
+                            f'if(std::find('
+                            'reinitialization_state_idxs.cbegin(), '
+                            f'reinitialization_state_idxs.cend(), {index}) != '
+                            'reinitialization_state_idxs.cend())',
+                            f'    {function}[{index}] = '
+                            f'{_print_with_exception(formula)};'
+                        ])
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
@@ -2838,8 +2848,12 @@ class ODEExporter:
                     self.model._x0_fixedParameters_idx,
                     equations
             ):
-                lines.append(f'{function}[{index}] = '
-                             f'{_print_with_exception(formula)};')
+                lines.append(
+                    f'    if(std::find(reinitialization_state_idxs.cbegin(), '
+                    f'reinitialization_state_idxs.cend(), {index}) != '
+                    'reinitialization_state_idxs.cend())\n        '
+                    f'{function}[{index}] = '
+                    f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
             outer_cases = {}

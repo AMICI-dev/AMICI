@@ -1210,7 +1210,19 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
 
+    /**
+     * @brief Set indices of states to be reinitialized based on provided
+     * constants / fixed parameters
+     * @param idxs Array of state indices
+     */
+    void setReinitializationStateIdxs(const std::vector<int> &idxs);
 
+    /**
+     * @brief Return indices of states to be reinitialized based on provided
+     * constants / fixed parameters
+     * @return Those indices.
+     */
+    std::vector<int> const& getReinitializationStateIdxs() const;
 
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;

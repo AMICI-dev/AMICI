@@ -515,8 +515,11 @@ def import_model_sbml(
         indicator.setName(PREEQ_INDICATOR_ID)
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
-
-    for assignee_id in initial_sizes + initial_states:
+        logger.debug("Adding preequilibration indicator "
+                     f"constant {PREEQ_INDICATOR_ID}")
+    logger.debug("Adding initial assignments for "
+                 f"{initial_sizes + initial_states}")
+    for assignee_id in chain(initial_sizes, initial_states):
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
         for init_par_id in [init_par_id_preeq, init_par_id_sim]:

@@ -74,6 +74,43 @@ public:
     }
 
     /**
+     * @brief Set reinitialization of all states based on model constants for
+     * presimulation (only meaningful if preequilibration is performed).
+     *
+     * Convenience function to populate
+     * `reinitialization_state_idxs_presim` and
+     * `reinitialization_state_idxs_sim`
+     *
+     * @param nx_rdata Number of states (Model::nx_rdata)
+     */
+    void reinitializeAllFixedParameterDependentInitialStatesForPresimulation(int nx_rdata);
+
+    /**
+     * @brief Set reinitialization of all states based on model constants for
+     * the 'main' simulation (only meaningful if presimulation or
+     * preequilibration is performed).
+     *
+     * Convenience function to populate
+     * `reinitialization_state_idxs_presim` and
+     * `reinitialization_state_idxs_sim`
+     *
+     * @param nx_rdata Number of states (Model::nx_rdata)
+     */
+    void reinitializeAllFixedParameterDependentInitialStatesForSimulation(int nx_rdata);
+
+    /**
+     * @brief Set reinitialization of all states based on model constants for
+     * all simulation phases.
+     *
+     * Convenience function to populate
+     * `reinitialization_state_idxs_presim` and
+     * `reinitialization_state_idxs_sim`
+     *
+     * @param nx_rdata Number of states (Model::nx_rdata)
+     */
+    void reinitializeAllFixedParameterDependentInitialStates(int nx_rdata);
+
+    /**
      * @brief Model constants
      *
      * Vector of size Model::nk() or empty
@@ -155,6 +192,18 @@ public:
      * fixed parameters is activated
      */
     bool reinitializeFixedParameterInitialStates {false};
+
+    /**
+     * @brief Indices of states to be reinitialized based on provided
+     * presimulation constants / fixed parameters.
+     */
+    std::vector<int> reinitialization_state_idxs_presim;
+
+    /**
+     * @brief Indices of states to be reinitialized based on provided
+     * constants / fixed parameters.
+     */
+    std::vector<int> reinitialization_state_idxs_sim;
 };
 
 bool operator==(const SimulationParameters &a, const SimulationParameters &b);
