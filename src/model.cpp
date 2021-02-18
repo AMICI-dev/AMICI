@@ -753,15 +753,22 @@ SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
 void Model::setReinitializeFixedParameterInitialStates(bool flag) {
     if (flag && !isFixedParameterStateReinitializationAllowed())
         throw AmiException(
-            "State reinitialization cannot be enabled for this model"
+            "State reinitialization cannot be enabled for this model "
             "as this feature was disabled at compile time. Most likely,"
             " this was because some initial states depending on "
-            "fixedParameters also depended on parameters");
+            "fixedParameters also depended on parameters.");
     simulation_parameters_.reinitializeFixedParameterInitialStates = flag;
+
+    if(flag) {
+        simulation_parameters_.reinitializeAllFixedParameterDependentInitialStatesForSimulation(nx_rdata);
+    } else {
+        simulation_parameters_.reinitialization_state_idxs_sim.clear();
+    }
 }
 
 bool Model::getReinitializeFixedParameterInitialStates() const {
-    return simulation_parameters_.reinitializeFixedParameterInitialStates;
+    return simulation_parameters_.reinitializeFixedParameterInitialStates
+            || !simulation_parameters_.reinitialization_state_idxs_sim.empty();
 }
 
 void Model::requireSensitivitiesForAllParameters() {
@@ -1201,7 +1208,9 @@ void Model::fx0_fixedParameters(AmiVector &x) {
     fx0_fixedParameters(derived_state_.x_rdata_.data(),
                         simulation_parameters_.tstart_,
                         state_.unscaledParameters.data(),
-                        state_.fixedParameters.data());
+                        state_.fixedParameters.data(),
+                        simulation_parameters_.reinitialization_state_idxs_sim
+                        );
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     /* update total abundances */
     ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data());
@@ -1235,7 +1244,8 @@ void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
                              simulation_parameters_.tstart_, x.data(),
                              state_.unscaledParameters.data(),
                              state_.fixedParameters.data(),
-                             plist(ip));
+                             plist(ip),
+                             simulation_parameters_.reinitialization_state_idxs_sim);
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip));
     }
@@ -2074,6 +2084,21 @@ const_N_Vector Model::computeX_pos(const_N_Vector x) {
     }
 
     return x;
+}
+
+void Model::setReinitializationStateIdxs(std::vector<int> const& idxs)
+{
+    for(auto idx: idxs) {
+        if (idx < 0 || idx >= nx_rdata)
+            throw AmiException("Invalid state index given: %d", idx);
+    }
+
+    simulation_parameters_.reinitialization_state_idxs_sim = idxs;
+}
+
+const std::vector<int> &Model::getReinitializationStateIdxs() const
+{
+    return simulation_parameters_.reinitialization_state_idxs_sim;
 }
 
 const AmiVectorArray &Model::get_dxdotdp() const{

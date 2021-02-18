@@ -513,6 +513,7 @@ class ConditionContext : public ContextManager {
     std::vector<int> original_parameter_list_;
     std::vector<amici::ParameterScaling> original_scaling_;
     bool original_reinitialize_fixed_parameter_initial_states_;
+    std::vector<int> original_reinitialization_state_idxs;
 };
 
 } // namespace amici

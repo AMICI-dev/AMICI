@@ -56,7 +56,9 @@ ExpData::ExpData(Model const &model)
     : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
               model.getTimepoints(), model.getFixedParameters()) {
     reinitializeFixedParameterInitialStates =
-        model.getReinitializeFixedParameterInitialStates();
+        model.getReinitializeFixedParameterInitialStates()
+            && model.getReinitializationStateIdxs().empty();
+    reinitialization_state_idxs_sim = model.getReinitializationStateIdxs();
 }
 
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
@@ -336,7 +338,10 @@ ConditionContext::ConditionContext(Model *model, const ExpData *edata,
       original_parameter_list_(model->getParameterList()),
       original_scaling_(model->getParameterScale()),
       original_reinitialize_fixed_parameter_initial_states_(
-          model->getReinitializeFixedParameterInitialStates())
+          model->getReinitializeFixedParameterInitialStates()
+          && model->getReinitializationStateIdxs().empty()),
+      original_reinitialization_state_idxs(
+          model->getReinitializationStateIdxs())
 {
     if(model->hasCustomInitialStates())
         original_x0_ = model->getInitialStates();
@@ -370,7 +375,6 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                " match ExpData (%zd).",
                                model_->np(), edata->pscale.size());
         model_->setParameterScale(edata->pscale);
-
     }
 
     if(!edata->x0.empty()) {
@@ -398,6 +402,9 @@ void ConditionContext::applyCondition(const ExpData *edata,
         model_->setParameters(edata->parameters);
     }
 
+    model_->setReinitializeFixedParameterInitialStates(
+        edata->reinitializeFixedParameterInitialStates);
+
     switch (fpc) {
     case FixedParameterContext::simulation:
       if (!edata->fixedParameters.empty()) {
@@ -409,6 +416,9 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                  "not match ExpData (%zd).",
                                  model_->nk(), edata->fixedParameters.size());
           model_->setFixedParameters(edata->fixedParameters);
+          if(!edata->reinitializeFixedParameterInitialStates)
+              model_->setReinitializationStateIdxs(
+                          edata->reinitialization_state_idxs_sim);
       }
     break;
     case FixedParameterContext::preequilibration:
@@ -435,6 +445,9 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                  model_->nk(),
                                  edata->fixedParametersPresimulation.size());
           model_->setFixedParameters(edata->fixedParametersPresimulation);
+          if(!edata->reinitializeFixedParameterInitialStates)
+              model_->setReinitializationStateIdxs(
+                          edata->reinitialization_state_idxs_presim);
       }
       break;
     }
@@ -443,9 +456,6 @@ void ConditionContext::applyCondition(const ExpData *edata,
         // fixed parameter in model are superseded by those provided in edata
         model_->setTimepoints(edata->getTimepoints());
     }
-
-    model_->setReinitializeFixedParameterInitialStates(
-        edata->reinitializeFixedParameterInitialStates);
 }
 
 void ConditionContext::restore()
@@ -466,6 +476,7 @@ void ConditionContext::restore()
     model_->setTimepoints(original_timepoints_);
     model_->setReinitializeFixedParameterInitialStates(
         original_reinitialize_fixed_parameter_initial_states_);
+    model_->setReinitializationStateIdxs(original_reinitialization_state_idxs);
 
 }
 
