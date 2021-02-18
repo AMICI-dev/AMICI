@@ -31,6 +31,34 @@ the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
 
+The following SBML test tags are supported
+(i.e., at least one test case with the respective test passes;
+`tag descriptions <https://github.com/sbmlteam/sbml-test-suite/blob/master/docs/tags-documentation/all-tags.txt>`_):
+
+* 0D-Compartment
+* Amount
+* AssignedConstantStoichiometry
+* AssignedVariableStoichiometry
+* BoolNumericSwap
+* BoundaryCondition
+* Concentration
+* ConstantSpecies
+* ConversionFactors
+* HasOnlySubstanceUnits
+* InitialValueReassigned
+* L3v2MathML
+* LocalParameters
+* MultiCompartment
+* NoMathML
+* NonConstantCompartment
+* NonConstantParameter
+* NonUnityCompartment
+* NonUnityStoichiometry
+* ReversibleReaction
+* SpeciesReferenceInMath
+* UncommonMathML
+* VolumeConcentrationRates
+
 In addition, we currently plan to add support for the following features
 (see corresponding `issues <https://github.com/AMICI-dev/AMICI/milestone/14>`_
 for details and progress):
@@ -50,9 +78,9 @@ However, the following features are unlikely to be supported:
 Tutorials
 +++++++++
 
-A basic tutorial on how to import and simulate SBML models is available in the 
-`Getting Started notebook <GettingStarted.ipynb>`_, while a more detailed example 
-including customized import and sensitivity computation is available in the 
+A basic tutorial on how to import and simulate SBML models is available in the
+`Getting Started notebook <GettingStarted.ipynb>`_, while a more detailed example
+including customized import and sensitivity computation is available in the
 `Example Steadystate notebook <ExampleSteadystate.ipynb>`_.
 
 PySB import
