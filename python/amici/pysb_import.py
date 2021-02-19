@@ -56,7 +56,7 @@ def pysb2amici(
     .. warning::
         **PySB models with Compartments**
 
-        When importing a PySB model with ``pysb.Compartment``s, BioNetGen
+        When importing a PySB model with ``pysb.Compartment``\ s, BioNetGen
         scales reaction fluxes with the compartment size. Instead of using the
         respective symbols, the compartment size Parameter or Expression is
         evaluated when generating equations. This may lead to unexpected
