@@ -1,11 +1,20 @@
 # References
 
-List of publications using AMICI. Total number is 50.
+List of publications using AMICI. Total number is 51.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
-<h1 id="section" class="unnumbered">2020</h1>
-<div id="refs" class="references">
+<h1 class="unnumbered" id="section">2021</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-Schmiester2021.02.06.430039">
+<p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2021. “Efficient Gradient-Based Parameter Estimation for Dynamic Models Using Qualitative Data.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2021.02.06.430039">https://doi.org/10.1101/2021.02.06.430039</a>.</p>
+</div>
+<div id="ref-StaedterSch2021">
+<p>Städter, Philipp, Yannik Schälte, Leonard Schmiester, Jan Hasenauer, and Paul L. Stapor. 2021. “Benchmarking of Numerical Integration Methods for Ode Models of Biological Systems.” <em>Scientific Reports</em> 11 (1): 2696. <a href="https://doi.org/10.1038/s41598-021-82196-2">https://doi.org/10.1038/s41598-021-82196-2</a>.</p>
+</div>
+</div>
+<h1 class="unnumbered" id="section">2020</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-AlabertLoo2020">
 <p>Alabert, Constance, Carolin Loos, Moritz Voelker-Albert, Simona Graziano, Ignasi Forné, Nazaret Reveron-Gomez, Lea Schuh, et al. 2020. “Domain Model Explains Propagation Dynamics and Stability of Histone H3k27 and H3k36 Methylation Landscapes.” <em>Cell Reports</em> 30 (4): 1223–1234.e8. <a href="https://doi.org/10.1016/j.celrep.2019.12.060">https://doi.org/10.1016/j.celrep.2019.12.060</a>.</p>
 </div>
@@ -33,9 +42,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="ref-Schuh2020.05.28.110684">
 <p>Schuh, Lea, Carolin Loos, Daniil Pokrovsky, Axel Imhof, Ralph Rupp, and Carsten Marr. 2020. “Computational Modeling Reveals Cell-Cycle Dependent Kinetics of H4k20 Methylation States During Xenopus Embryogenesis.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.05.28.110684">https://doi.org/10.1101/2020.05.28.110684</a>.</p>
 </div>
-<div id="ref-Staedter2020.09.03.268276">
-<p>Städter, Philipp, Yannik Schälte, Leonard Schmiester, Jan Hasenauer, and Paul L. Stapor. 2020. “Benchmarking of Numerical Integration Methods for Ode Models of Biological Systems.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.09.03.268276">https://doi.org/10.1101/2020.09.03.268276</a>.</p>
-</div>
 <div id="ref-Sten2020">
 <p>Sten, Sebastian. 2020. “Mathematical Modeling of Neurovascular Coupling.” Linköping University Medical Dissertations. PhD thesis, Linköping UniversityLinköping UniversityLinköping University, Division of Diagnostics; Specialist Medicine, Faculty of Medicine; Health Sciences, Center for Medical Image Science; Visualization (CMIV); Linköping University, Division of Diagnostics; Specialist Medicine. <a href="https://doi.org/10.3384/diss.diva-167806">https://doi.org/10.3384/diss.diva-167806</a>.</p>
 </div>
@@ -46,8 +52,8 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Tsipa, Argyro, Jake Alan Pitt, Julio R. Banga, and Athanasios Mantalaris. 2020. “A Dual-Parameter Identification Approach for Data-Based Predictive Modeling of Hybrid Gene Regulatory Network-Growth Kinetics in Pseudomonas Putida Mt-2.” <em>Bioprocess and Biosystems Engineering</em> 43 (9): 1671–88. <a href="https://doi.org/10.1007/s00449-020-02360-2">https://doi.org/10.1007/s00449-020-02360-2</a>.</p>
 </div>
 </div>
-<h1 id="section" class="unnumbered">2019</h1>
-<div id="refs" class="references">
+<h1 class="unnumbered" id="section">2019</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-Adlung866871">
 <p>Adlung, Lorenz, Paul Stapor, Christian Tönsing, Leonard Schmiester, Luisa E. Schwarzmüller, Dantong Wang, Jens Timmer, Ursula Klingmüller, Jan Hasenauer, and Marcel Schilling. 2019. “Cell-to-Cell Variability in Jak2/Stat5 Pathway Components and Cytoplasmic Volumes Define Survival Threshold in Erythroid Progenitor Cells.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/866871">https://doi.org/10.1101/866871</a>.</p>
 </div>
@@ -91,8 +97,8 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Watanabe, Simon Berglund. 2019. “Identiﬁability of Parameters in Pbpk Models.” Master’s thesis, Chalmers University of Technology / Department of Mathematical Sciences. <a href="https://hdl.handle.net/20.500.12380/256855">https://hdl.handle.net/20.500.12380/256855</a>.</p>
 </div>
 </div>
-<h1 id="section" class="unnumbered">2018</h1>
-<div id="refs" class="references">
+<h1 class="unnumbered" id="section">2018</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-BallnusSch2018">
 <p>Ballnus, Benjamin, Steffen Schaper, Fabian J Theis, and Jan Hasenauer. 2018. “Bayesian Parameter Estimation for Biochemical Reaction Networks Using Region-Based Adaptive Parallel Tempering.” <em>Bioinformatics</em> 34 (13): i494–i501. <a href="https://doi.org/10.1093/bioinformatics/bty229">https://doi.org/10.1093/bioinformatics/bty229</a>.</p>
 </div>
@@ -127,8 +133,8 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Villaverde, Alejandro F, Fabian Fröhlich, Daniel Weindl, Jan Hasenauer, and Julio R Banga. 2018. “Benchmarking optimization methods for parameter estimation in large kinetic models.” <em>Bioinformatics</em> 35 (5): 830–38. <a href="https://doi.org/10.1093/bioinformatics/bty736">https://doi.org/10.1093/bioinformatics/bty736</a>.</p>
 </div>
 </div>
-<h1 id="section" class="unnumbered">2017</h1>
-<div id="refs" class="references">
+<h1 class="unnumbered" id="section">2017</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-BallnusHug2017">
 <p>Ballnus, B., S. Hug, K. Hatz, L. Görlitz, J. Hasenauer, and F. J. Theis. 2017. “Comprehensive Benchmarking of Markov Chain Monte Carlo Methods for Dynamical Systems.” <em>BMC Syst. Biol.</em> 11 (63). <a href="https://doi.org/10.1186/s12918-017-0433-1">https://doi.org/10.1186/s12918-017-0433-1</a>.</p>
 </div>
@@ -145,8 +151,8 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Maier, C., C. Loos, and J. Hasenauer. 2017. “Robust Parameter Estimation for Dynamical Systems from Outlier-Corrupted Data.” <em>Bioinformatics</em> 33 (5): 718–25. <a href="https://doi.org/10.1093/bioinformatics/btw703">https://doi.org/10.1093/bioinformatics/btw703</a>.</p>
 </div>
 </div>
-<h1 id="section" class="unnumbered">2016</h1>
-<div id="refs" class="references">
+<h1 class="unnumbered" id="section">2016</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-BoigerHas2016">
 <p>Boiger, R., J. Hasenauer, S. Hross, and B. Kaltenbacher. 2016. “Integration Based Profile Likelihood Calculation for PDE Constrained Parameter Estimation Problems.” <em>Inverse Prob.</em> 32 (12): 125009. <a href="https://doi.org/10.1088/0266-5611/32/12/125009">https://doi.org/10.1088/0266-5611/32/12/125009</a>.</p>
 </div>
@@ -166,8 +172,8 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Loos, C., A. Fiedler, and J. Hasenauer. 2016. “Parameter Estimation for Reaction Rate Equation Constrained Mixture Models.” In <em>Proc. 13th Int. Conf. Comp. Meth. Syst. Biol.</em>, edited by E. Bartocci, P. Lio, and N. Paoletti, 186–200. Lecture Notes in Bioinformatics. Springer International Publishing. <a href="https://doi.org/10.1007/978-3-319-45177-0">https://doi.org/10.1007/978-3-319-45177-0</a>.</p>
 </div>
 </div>
-<h1 id="section" class="unnumbered">2015</h1>
-<div id="refs" class="references">
+<h1 class="unnumbered" id="section">2015</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-LoosMar2015">
 <p>Loos, C., C. Marr, F. J. Theis, and J. Hasenauer. 2015. “Computational Methods in Systems Biology.” In, edited by O. Roux and J. Bourdon, 9308:52–63. Lecture Notes in Computer Science. Springer International Publishing. <a href="https://doi.org/10.1007/978-3-319-23401-4_6">https://doi.org/10.1007/978-3-319-23401-4_6</a>.</p>
 </div>
