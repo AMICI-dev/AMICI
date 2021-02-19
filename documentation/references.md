@@ -6,6 +6,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 
 <h1 class="unnumbered" id="section">2021</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-RaimundezDud2021">
+<p>Raimúndez, Elba, Erika Dudkin, Jakob Vanhoefer, Emad Alamoudi, Simon Merkt, Lara Fuhrmann, Fan Bai, and Jan Hasenauer. 2021. “COVID-19 Outbreak in Wuhan Demonstrates the Limitations of Publicly Available Case Numbers for Epidemiological Modeling.” <em>Epidemics</em> 34: 100439. <a href="https://doi.org/https://doi.org/10.1016/j.epidem.2021.100439">https://doi.org/https://doi.org/10.1016/j.epidem.2021.100439</a>.</p>
+</div>
 <div id="ref-Schmiester2021.02.06.430039">
 <p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2021. “Efficient Gradient-Based Parameter Estimation for Dynamic Models Using Qualitative Data.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2021.02.06.430039">https://doi.org/10.1101/2021.02.06.430039</a>.</p>
 </div>
@@ -26,9 +29,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-Kuritz2020.03.30.015909">
 <p>Kuritz, Karsten, Alain R Bonny, João Pedro Fonseca, and Frank Allgöwer. 2020. “PDE-Constrained Optimization for Estimating Population Dynamics over Cell Cycle from Static Single Cell Measurements.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.03.30.015909">https://doi.org/10.1101/2020.03.30.015909</a>.</p>
-</div>
-<div id="ref-RaimundezDud2020">
-<p>Raimúndez, Elba, Erika Dudkin, Jakob Vanhoefer, Emad Alamoudi, Simon Merkt, Lara Fuhrmann, Fan Bai, and Jan Hasenauer. 2020. “COVID-19 Outbreak in Wuhan Demonstrates the Limitations of Publicly Available Case Numbers for Epidemiological Modelling.” <em>medRxiv</em>. <a href="https://doi.org/10.1101/2020.04.19.20071597">https://doi.org/10.1101/2020.04.19.20071597</a>.</p>
 </div>
 <div id="ref-Schaelte2020.01.30.927004">
 <p>Schälte, Yannik, and Jan Hasenauer. 2020. “Efficient Exact Inference for Dynamical Systems with Noisy Measurements Using Sequential Approximate Bayesian Computation.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.01.30.927004">https://doi.org/10.1101/2020.01.30.927004</a>.</p>
