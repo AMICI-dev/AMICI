@@ -594,20 +594,6 @@ Mechanistic models are essential to deepen the understanding of complex diseases
   url      = {http://www.sciencedirect.com/science/article/pii/S2405896319321433},
 }
 
-@Article{Staedter2020.09.03.268276,
-  author       = {St{\"a}dter, Philipp and Sch{\"a}lte, Yannik and Schmiester, Leonard and Hasenauer, Jan and Stapor, Paul L.},
-  journal      = {bioRxiv},
-  title        = {Benchmarking of numerical integration methods for ODE models of biological systems},
-  year         = {2020},
-  abstract     = {Ordinary differential equation (ODE) models are a key tool to understand complex mechanisms in systems biology. These models are studied using various approaches, including stability and bifurcation analysis, but most frequently by numerical simulations. The number of required simulations is often large, e.g., when unknown parameters need to be inferred. This renders efficient and reliable numerical integration methods essential. However, these methods depend on various hyperparameters, which strongly impact the ODE solution. Despite this, and although hundreds of published ODE models are freely available in public databases, a thorough study that quantifies the impact of hyperparameters on the ODE solver in terms of accuracy and computation time is still missing. In this manuscript, we investigate which choices of algorithms and hyperparameters are generally favorable when dealing with ODE models arising from biological processes. To ensure a representative evaluation, we considered 167 published models. Our study provides evidence that most ODEs in computational biology are stiff, and we give guidelines for the choice of algorithms and hyperparameters. We anticipate that our results will help researchers in systems biology to choose appropriate numerical methods when dealing with ODE models.Competing Interest StatementThe authors have declared no competing interest.},
-  doi          = {10.1101/2020.09.03.268276},
-  elocation-id = {2020.09.03.268276},
-  eprint       = {https://www.biorxiv.org/content/early/2020/09/04/2020.09.03.268276.full.pdf},
-  publisher    = {Cold Spring Harbor Laboratory},
-  timestamp    = {2020-09-30},
-  url          = {https://www.biorxiv.org/content/early/2020/09/04/2020.09.03.268276},
-}
-
 @Article{RaimundezDud2020,
   author       = {Raim{\'u}ndez, Elba and Dudkin, Erika and Vanhoefer, Jakob and Alamoudi, Emad and Merkt, Simon and Fuhrmann, Lara and Bai, Fan and Hasenauer, Jan},
   journal      = {medRxiv},
@@ -792,6 +778,36 @@ Targeted inhibition of oncogenic pathways can be highly effective in halting the
   publisher    = {Cold Spring Harbor Laboratory},
   timestamp    = {2020-11-16},
   url          = {https://www.biorxiv.org/content/early/2020/11/10/2020.11.09.373407},
+}
+
+@Article{,
+  author    = {Städter, Philipp and Schälte, Yannik and Schmiester, Leonard and Hasenauer, Jan and Stapor, Paul L.},
+  journal   = {Scientific Reports},
+  title     = {Benchmarking of numerical integration methods for ODE models of biological systems},
+  year      = {2021},
+  issn      = {2045-2322},
+  number    = {1},
+  pages     = {2696},
+  volume    = {11},
+  abstract  = {Ordinary differential equation (ODE) models are a key tool to understand complex mechanisms in systems biology. These models are studied using various approaches, including stability and bifurcation analysis, but most frequently by numerical simulations. The number of required simulations is often large, e.g., when unknown parameters need to be inferred. This renders efficient and reliable numerical integration methods essential. However, these methods depend on various hyperparameters, which strongly impact the ODE solution. Despite this, and although hundreds of published ODE models are freely available in public databases, a thorough study that quantifies the impact of hyperparameters on the ODE solver in terms of accuracy and computation time is still missing. In this manuscript, we investigate which choices of algorithms and hyperparameters are generally favorable when dealing with ODE models arising from biological processes. To ensure a representative evaluation, we considered 142 published models. Our study provides evidence that most ODEs in computational biology are stiff, and we give guidelines for the choice of algorithms and hyperparameters. We anticipate that our results will help researchers in systems biology to choose appropriate numerical methods when dealing with ODE models.},
+  doi       = {10.1038/s41598-021-82196-2},
+  refid     = {Städter2021},
+  timestamp = {2021-02-19},
+  url       = {https://doi.org/10.1038/s41598-021-82196-2},
+}
+
+@Article{Schmiester2021.02.06.430039,
+  author       = {Schmiester, Leonard and Weindl, Daniel and Hasenauer, Jan},
+  journal      = {bioRxiv},
+  title        = {Efficient gradient-based parameter estimation for dynamic models using qualitative data},
+  year         = {2021},
+  abstract     = {Motivation Unknown parameters of dynamical models are commonly estimated from experimental data. However, while various efficient optimization and uncertainty analysis methods have been proposed for quantitative data, methods for qualitative data are rare and suffer from bad scaling and convergence.Results Here, we propose an efficient and reliable framework for estimating the parameters of ordinary differential equation models from qualitative data. In this framework, we derive a semi-analytical algorithm for gradient calculation of the optimal scaling method developed for qualitative data. This enables the use of efficient gradient-based optimization algorithms. We demonstrate that the use of gradient information improves performance of optimization and uncertainty quantification on several application examples. On average, we achieve a speedup of more than one order of magnitude compared to gradient-free optimization. Additionally, in some examples, the gradient-based approach yields substantially improved objective function values and quality of the fits. Accordingly, the proposed framework substantially improves the parameterization of models from qualitative data.Availability The proposed approach is implemented in the open-source Python Parameter EStimation TOolbox (pyPESTO). All application examples and code to reproduce this study are available at https://doi.org/10.5281/zenodo.4507613.Competing Interest StatementThe authors have declared no competing interest.},
+  doi          = {10.1101/2021.02.06.430039},
+  elocation-id = {2021.02.06.430039},
+  eprint       = {https://www.biorxiv.org/content/early/2021/02/08/2021.02.06.430039.full.pdf},
+  publisher    = {Cold Spring Harbor Laboratory},
+  timestamp    = {2021-02-19},
+  url          = {https://www.biorxiv.org/content/early/2021/02/08/2021.02.06.430039},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
