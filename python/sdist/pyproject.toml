@@ -1,0 +1,17 @@
+[build-system]
+requires = [
+    "setuptools>=40.6.3",
+    "wheel",
+    # We pin numpy here to the lowest supported version to have
+    # ABI-compatibility with the numpy version in the runtime environment.
+    # There seems to be no easy way to require the numpy version from the
+    # runtime environment for the build requirement here. The only alternative
+    # would be pinning the setup.py numpy requirement to the same version as
+    # here, which we want to avoid.
+    # cf. discussion at https://github.com/numpy/numpy/issues/5888
+    # These requirements are taken from the h5py package, we depend on.
+    "numpy==1.14.5; python_version=='3.7'",
+    "numpy==1.17.5; python_version=='3.8'",
+    "numpy==1.19.3; python_version>='3.9'",
+]
+build-backend = "setuptools.build_meta"

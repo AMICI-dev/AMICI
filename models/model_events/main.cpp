@@ -1,114 +1,96 @@
-#include <cassert>
-#include <cmath>
-#include <memory>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <iostream>
 
 #include <amici/amici.h>    /* AMICI base functions */
-#include <amici/hdf5.h>     /* AMICI HDF5 I/O functions */
 #include "wrapfunctions.h"  /* model-provided functions */
 
-/* This is a scaffold for a stand-alone AMICI simulation executable
- * demonstrating the use of the AMICI C++ API.
- *
- * This program reads AMICI options from an HDF5 file, prints some results
- * and writes additional results to an HDF5 file. The name of the HDF5 file
- * is expected as single command line argument.
- *
- * An initial HDF5 file with the required fields can be generated using MATLAB
- * by adding the following lines
- * at the end of simulate_${MODEL_NAME}.m file just before the final "end":
- *
- *    %% Write data that is passed to AMICI to HDF5
- *    hdffile = fullfile(pwd, 'mydata.h5');
- *    structToHDF5Attribute(hdffile, '/options', options_ami);
- *    h5writeatt(hdffile, '/options', 'ts', tout);
- *    h5writeatt(hdffile, '/options', 'nt', numel(tout));
- *    h5writeatt(hdffile, '/options', 'theta', theta);
- *    h5writeatt(hdffile, '/options', 'kappa', kappa);
- *    if(~isempty(data))
- *      structToHDF5Attribute(hdffile, '/data', data);
- *    end
- *
- * ... and then running a simulation from MATLAB as usual.
- *
- * Default UserData settings can be written to an HDF5 file with:
- *     structToHDF5Attribute('test.h5', '/options', amioption())
+template < class T >
+std::ostream& operator << (std::ostream& os, const std::vector<T>& v)
+{
+    os << "[";
+    for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end(); ++ii)
+    {
+        os << " " << *ii;
+    }
+    os << "]";
+    return os;
+}
+
+/*
+ * This is a scaffold for a stand-alone AMICI simulation executable
+ * demonstrating the basic use of the AMICI C++ API.
  */
 
-// Function prototypes
-void processReturnData(amici::ReturnData *rdata, amici::Model *model);
-void printReturnData(amici::ReturnData *rdata, amici::Model *model);
+int main() {
+    std::cout<<"********************************"<<std::endl;
+    std::cout<<"** Running forward simulation **"<<std::endl;
+    std::cout<<"********************************"<<std::endl<<std::endl;
 
-int main(int argc, char **argv) {
-    // HDF5 file to read and write data (full path)
-    const char *hdffile;
-
-    // Check command line arguments
-    if (argc != 2) {
-        fprintf(stderr, "Error: must provide HDF5 input file as first and only "
-                        "argument.\n");
-        return 1;
-    } else {
-        hdffile = argv[1];
-    }
-
+    // Create a model instance
     auto model = amici::generic_model::getModel();
+
+    // Set desired output timepoints
+    model->setTimepoints({0.0, 1.0, 10.0, 100.0, 1000.0});
+
+    // Create a solver instance
     auto solver = model->getSolver();
 
-    // Read AMICI settings and model parameters from HDF5 file
-    amici::hdf5::readModelDataFromHDF5(hdffile, *model, "/options");
-    amici::hdf5::readSolverSettingsFromHDF5(hdffile, *solver, "/options");
+    // Optionally set integration tolerance
+    solver->setAbsoluteTolerance(1e-16);
+    solver->setRelativeTolerance(1e-8);
 
-    // Read ExpData (experimental data for model) from HDF5 file
-    auto edata = amici::hdf5::readSimulationExpData(hdffile, "/data", *model);
+    // Run the simulation using default parameters set during model import
+    // (can be changed using model->setParameters() or model->setParameterBy*())
+    auto rdata = runAmiciSimulation(*solver, nullptr, *model);
+
+    // Print observable time course
+    auto observable_ids = model->getObservableIds();
+    std::cout<<"Simulated observables for timepoints "<<rdata->ts<<"\n\n";
+    for(int i_observable = 0; i_observable < rdata->ny; ++i_observable) {
+        std::cout<<observable_ids[i_observable]<<":\n\t";
+        for(int i_time = 0; i_time < rdata->nt; ++i_time) {
+            // rdata->y is a flat 2D array in row-major ordering
+            std::cout<<rdata->y[i_time * rdata->ny + i_observable]<<" ";
+        }
+        std::cout<<std::endl<<std::endl;
+    }
+
+
+    std::cout<<std::endl;
+    std::cout<<"**********************************"<<std::endl;
+    std::cout<<"** Forward sensitivity analysis **"<<std::endl;
+    std::cout<<"**********************************"<<std::endl<<std::endl;
+
+    // Enable first-order sensitivity analysis
+    solver->setSensitivityOrder(amici::SensitivityOrder::first);
+    // Use forward sensitivities
+    solver->setSensitivityMethod(amici::SensitivityMethod::forward);
 
     // Run the simulation
-    auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
+    rdata = runAmiciSimulation(*solver, nullptr, *model);
 
-    // Do something with the simulation results
-    processReturnData(rdata.get(), model.get());
+    // Print state sensitivities sx...
+    // ... for the first timepoint...
+    int i_time = 0;
+    // ... with respect to the first parameter
+    int i_nplist = 0;
 
-    // Save simulation results to HDF5 file
-    amici::hdf5::writeReturnData(*rdata, hdffile, "/solution");
+    // get identifiers from model
+    auto state_ids = model->getStateIds();
+    auto parameter_ids = model->getParameterIds();
+
+    std::cout<<"State sensitivities for timepoint "
+              <<rdata->ts[i_time]
+              <<std::endl;//nt x nplist x nx
+    for(int i_state= 0; i_state < rdata->nx; ++i_state) {
+        std::cout<<"\td("<<state_ids[i_state]<<")/d("
+                  <<parameter_ids[model->plist(i_nplist)]<<") = ";
+
+        // rdata->sx is a flat 3D array in row-major ordering
+        std::cout<<rdata->sx[i_time * rdata->nplist * rdata->nx
+                              + i_nplist * rdata->nx
+                              + i_state];
+        std::cout<<std::endl;
+    }
 
     return 0;
-}
-
-void processReturnData(amici::ReturnData *rdata, amici::Model *model) {
-    // show some the simulation results
-    printReturnData(rdata, model);
-}
-
-void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
-    // Print of some the simulation results
-
-    printf("\n\nStates (xdata):\n");
-    for (int i = 0; i < model->nx_rdata; ++i) {
-        for (int j = 0; j < model->nt(); ++j)
-            printf("%e\t", rdata->x[j + model->nt() * i]);
-        printf("\n");
-    }
-
-    printf("\nObservables (ydata):\n");
-    for (int i = 0; i < model->ny; ++i) {
-        for (int j = 0; j < model->nt(); ++j)
-            printf("%e\t", rdata->y[j + model->nt() * i]);
-        printf("\n");
-    }
-
-    printf("\n\ndx/dt (xdotdata):\n");
-    for (int i = 0; i < model->nx_solver; ++i)
-        printf("%e\t", rdata->xdot[i]);
-
-    //    printf("\nJacobian (jdata)\n");
-    //    for(int i = 0; i < nx_solver; ++i) {
-    //        for(int j = 0; j < nx_solver; ++j)
-    //            printf("%e\t", rdata->J[i + nx_solver * j]);
-    //        printf("\n");
-    //    }
-
-    printf("\n");
-    printf("Loglikelihood (llh): %e\n", rdata->llh);
 }

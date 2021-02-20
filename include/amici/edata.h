@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/misc.h"
+#include "amici/simulation_parameters.h"
 
 #include <vector>
 
@@ -16,7 +17,7 @@ class ReturnData;
  * @brief ExpData carries all information about experimental or
  * condition-specific data
  */
-class ExpData {
+class ExpData : public SimulationParameters {
 
   public:
     /**
@@ -381,58 +382,6 @@ class ExpData {
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
 
-    /**
-     * @brief condition-specific fixed parameters of size Model::nk() or empty
-     */
-    std::vector<realtype> fixedParameters;
-    /**
-     * @brief condition-specific fixed parameters for pre-equilibration of size
-     * Model::nk() or empty. Overrides Solver::newton_preeq
-     */
-    std::vector<realtype> fixedParametersPreequilibration;
-    /**
-     * @brief condition-specific fixed parameters for pre-simulation of
-     * size Model::nk() or empty.
-     */
-    std::vector<realtype> fixedParametersPresimulation;
-
-    /**
-     * @brief condition-specific parameters of size Model::np() or empty
-     */
-    std::vector<realtype> parameters;
-    /**
-     * @brief condition-specific initial conditions of size Model::nx() or
-     * empty
-     */
-    std::vector<realtype> x0;
-    /**
-     * @brief condition-specific initial condition sensitivities of size
-     * Model::nx() * Model::nplist(), Model::nx() * ExpData::plist.size(), if
-     * ExpData::plist is not empty, or empty
-     */
-    std::vector<realtype> sx0;
-    /**
-     * @brief condition-specific parameter scales of size Model::np()
-     */
-    std::vector<ParameterScaling> pscale;
-    /**
-     * @brief condition-specific parameter list
-     */
-    std::vector<int> plist;
-
-    /**
-     * @brief duration of pre-simulation
-     * if this is > 0, presimulation will be performed from
-     * (model->t0 - t_presim) to model->t0 using the fixedParameters in
-     * fixedParametersPresimulation
-     */
-    realtype t_presim = 0;
-
-    /** flag indicating whether reinitialization of states depending on
-     *  fixed parameters is activated
-     */
-    bool reinitializeFixedParameterInitialStates = false;
-
   protected:
     /**
      * @brief resizes observedData, observedDataStdDev, observedEvents and
@@ -477,9 +426,6 @@ class ExpData {
 
     /** @brief maximal number of event occurrences */
     int nmaxevent_{0};
-
-    /** @brief observation timepoints (dimension: nt) */
-    std::vector<realtype> ts_;
 
     /** @brief observed data (dimension: nt x nytrue, row-major) */
     std::vector<realtype> observed_data_;
@@ -567,6 +513,7 @@ class ConditionContext : public ContextManager {
     std::vector<int> original_parameter_list_;
     std::vector<amici::ParameterScaling> original_scaling_;
     bool original_reinitialize_fixed_parameter_initial_states_;
+    std::vector<int> original_reinitialization_state_idxs;
 };
 
 } // namespace amici

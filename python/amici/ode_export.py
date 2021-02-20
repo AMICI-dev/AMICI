@@ -211,7 +211,8 @@ functions = {
     'x0_fixedParameters': {
         'signature':
             '(realtype *x0_fixedParameters, const realtype t, '
-            'const realtype *p, const realtype *k)',
+            'const realtype *p, const realtype *k, '
+            'gsl::span<const int> reinitialization_state_idxs)',
     },
     'sx0': {
         'signature':
@@ -222,7 +223,7 @@ functions = {
         'signature':
             '(realtype *sx0_fixedParameters, const realtype t, '
             'const realtype *x0, const realtype *p, const realtype *k, '
-            'const int ip)',
+            'const int ip, gsl::span<const int> reinitialization_state_idxs)',
     },
     'xdot': {
         'signature':
@@ -391,6 +392,15 @@ class ModelQuantity:
             value of the ModelQuantity
         """
         return self._value
+
+    def set_val(self, val: sp.Expr):
+        """
+        Set ModelQuantity value
+
+        :return:
+            value of the ModelQuantity
+        """
+        self._value = cast_to_sym(val, 'value')
 
 
 class State(ModelQuantity):
@@ -927,7 +937,7 @@ class ODEModel:
             'xB': self.num_states_solver,
             'sigmay': self.num_obs,
         }
-        self._eqs: Dict[str, sp.Matrix] = dict()
+        self._eqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._vals: Dict[str, List[float]] = dict()
         self._names: Dict[str, List[str]] = dict()
@@ -1164,6 +1174,16 @@ class ODEModel:
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
+        # substitute 'w' expressions into event expressions now, to avoid
+        # rewriting '{model_name}_root.cpp' headers to include 'w.h'
+        for index, event in enumerate(self._events):
+            self._events[index] = Event(
+                identifier=event.get_id(),
+                name=event.get_name(),
+                value=event.get_val().subs(zip(self._syms['w'], self.eq('w'))),
+                state_update=event._state_update,
+                event_observable=event._observable,
+            )
         self._has_quadratic_nllh = all(
             llh['dist'] in ['normal', 'lin-normal']
             for llh in si.symbols[SymbolId.LLHY].values()
@@ -1592,6 +1612,9 @@ class ODEModel:
         for state in self._states:
             state.set_dt(_process_heavisides(state.get_dt(), roots))
 
+        for expr in self._expressions:
+            expr.set_val(_process_heavisides(expr.get_val(), roots))
+
         # Now add the found roots to the model components
         for root in roots:
             self.add_component(root)
@@ -1792,7 +1815,8 @@ class ODEModel:
             # backsubstitution of optimized right hand side terms into RHS
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
-            tmp_xdot = self._eqs['xdot'].subs(self._syms['w'], self._eqs['w'])
+            tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
+                                                  self._eqs['w']))
             self._eqs[name] = smart_multiply(self.eq('drootdx'), tmp_xdot) + \
                               self.eq('drootdt')
 
@@ -2604,6 +2628,7 @@ class ODEExporter:
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
             '',
+            '#include <gsl/gsl-lite.hpp>',
             '#include <array>',
         ]
 
@@ -2644,8 +2669,8 @@ class ODEExporter:
         lines.extend([
             '}',
             '',
-            '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
+            '} // namespace amici\n',
         ])
 
         # check custom functions
@@ -2735,8 +2760,8 @@ class ODEExporter:
         lines.extend([
             '}'
             '',
-            '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
+            '} // namespace amici\n',
         ])
 
         filename = f'{self.model_name}_{function}_{indextype}.cpp'
@@ -2792,8 +2817,11 @@ class ODEExporter:
                 #  switch statement below only needs to handle non-zero entries
                 #  (which usually reduces file size and speeds up
                 #  compilation significantly).
-                "    for(auto idx: _x0_fixedParameters_idxs) {",
-                "        sx0_fixedParameters[idx] = 0.0;",
+                "    for(auto idx: reinitialization_state_idxs) {",
+                "        if(std::find(_x0_fixedParameters_idxs.cbegin(), "
+                "_x0_fixedParameters_idxs.cend(), idx) != "
+                "_x0_fixedParameters_idxs.cend())\n"
+                "            sx0_fixedParameters[idx] = 0.0;",
                 "    }"])
 
             cases = dict()
@@ -2804,9 +2832,14 @@ class ODEExporter:
                         equations[:, ipar]
                 ):
                     if not formula.is_zero:
-                        expressions.append(
-                            f'{function}[{index}] = '
-                            f'{_print_with_exception(formula)};')
+                        expressions.extend([
+                            f'if(std::find('
+                            'reinitialization_state_idxs.cbegin(), '
+                            f'reinitialization_state_idxs.cend(), {index}) != '
+                            'reinitialization_state_idxs.cend())',
+                            f'    {function}[{index}] = '
+                            f'{_print_with_exception(formula)};'
+                        ])
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
@@ -2815,8 +2848,12 @@ class ODEExporter:
                     self.model._x0_fixedParameters_idx,
                     equations
             ):
-                lines.append(f'{function}[{index}] = '
-                             f'{_print_with_exception(formula)};')
+                lines.append(
+                    f'    if(std::find(reinitialization_state_idxs.cbegin(), '
+                    f'reinitialization_state_idxs.cend(), {index}) != '
+                    'reinitialization_state_idxs.cend())\n        '
+                    f'{function}[{index}] = '
+                    f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
             outer_cases = {}
@@ -3685,7 +3722,7 @@ def _process_heavisides(dxdt: sp.Expr, roots: List[Event]) -> sp.Expr:
         # we want unique identifiers for the roots
         tmp_new = _get_unique_root(tmp_old, roots)
         # For Heavisides, we need to add the negative function as well
-        _get_unique_root(sp.sympify(-1 * tmp_old), roots)
+        _get_unique_root(sp.sympify(- tmp_old), roots)
         heavisides.append((sp.Heaviside(tmp_old), tmp_new))
 
     if heavisides:

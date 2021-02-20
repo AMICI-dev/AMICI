@@ -582,7 +582,7 @@ class SbmlImporter:
         Extract initial values and initial assignments from species
         """
         for species_variable in self.sbml.getListOfSpecies():
-            initial = _get_species_initial(species_variable)
+            initial = get_species_initial(species_variable)
 
             species_id = _get_identifier_symbol(species_variable)
             # If species_id is a target of an AssignmentRule, species will be
@@ -1602,11 +1602,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         if trigger == sp.false:
             continue
 
-        # we now need to convert the relational >, >=, ... expression into
-        # a trigger function which will be a Heaviside argument
-        root = _parse_trigger(trigger)
-
-        tmp = sp.Heaviside(root)
+        tmp = _parse_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
         not_condition *= (1-tmp)
 
@@ -1623,17 +1619,32 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
-        if isinstance(trigger, (sp.core.relational.StrictLessThan,
-                                sp.core.relational.LessThan)):
-            root *= -1
-        return root
 
+        # normalize such that we always implement <,
+        # this ensures that we can correctly evaluate the condition if
+        # simulation starts at H(0). This is achieved by translating
+        # conditionals into Heaviside functions H that is implemented as unit
+        # step with H(0) = 1
+        if isinstance(trigger, sp.core.relational.StrictLessThan):
+            # x < y => x - y < 0 => r < 0
+            return 1 - sp.Heaviside(root)
+        if isinstance(trigger, sp.core.relational.LessThan):
+            # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
+            return sp.Heaviside(-root)
+        if isinstance(trigger, sp.core.relational.StrictGreaterThan):
+            # y > x => y - x < 0 => -r < 0
+            return 1 - sp.Heaviside(-root)
+        if isinstance(trigger, sp.core.relational.GreaterThan):
+            # y >= x => not(x < y) => not(x - y < 0) => not r < 0
+            return sp.Heaviside(root)
+
+    # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return sp.Max(*[_parse_trigger(arg)
+        return 1-sp.Mul(*[1-_parse_trigger(arg)
                         for arg in trigger.args])
 
     if isinstance(trigger, sp.And):
-        return sp.Min(*[_parse_trigger(arg)
+        return sp.Mul(*[_parse_trigger(arg)
                         for arg in trigger.args])
 
     raise SBMLException('AMICI can not parse piecewise functions '
@@ -1787,7 +1798,7 @@ def _get_identifier_symbol(var: sbml.SBase) -> sp.Symbol:
     return symbol_with_assumptions(var.getId())
 
 
-def _get_species_initial(species: sbml.Species) -> sp.Expr:
+def get_species_initial(species: sbml.Species) -> sp.Expr:
     """
     Extract the initial concentration from a given species
 

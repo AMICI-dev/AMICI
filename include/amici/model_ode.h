@@ -31,35 +31,9 @@ class Model_ODE : public Model {
 
     /**
      * @brief Constructor with model dimensions
-     * @param nx_rdata number of state variables
-     * @param nxtrue_rdata number of state variables of the non-augmented model
-     * @param nx_solver number of state variables with conservation laws applied
-     * @param nxtrue_solver number of state variables of the non-augmented model
-     with conservation laws applied
-     * @param nx_solver_reinit number of state variables with conservation laws
-     * subject to reinitialization
-     * @param ny number of observables
-     * @param nytrue number of observables of the non-augmented model
-     * @param nz number of event observables
-     * @param nztrue number of event observables of the non-augmented model
-     * @param ne number of events
-     * @param nJ number of objective functions
-     * @param nw number of repeating elements
-     * @param ndwdx number of nonzero elements in the x derivative of the
-     * repeating elements
-     * @param ndwdp number of nonzero elements in the p derivative of the
-     * repeating elements
-     * @param ndwdw number of nonzero elements in the w derivative of the
-     * repeating elements
-     * @param ndxdotdw number of nonzero elements dxdotdw
-     * @param ndJydy number of nonzero elements dJydy
-     * @param nnz number of nonzero elements in Jacobian
-     * @param ubw upper matrix bandwidth in the Jacobian
-     * @param lbw lower matrix bandwidth in the Jacobian
+     * @param model_dimensions Model dimensions
+     * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
-     * @param p parameters
-     * @param k constants
-     * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
@@ -67,22 +41,15 @@ class Model_ODE : public Model {
      * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
      * @param w_recursion_depth Recursion depth of fw
      */
-    Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-              const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
-              const int nz, const int nztrue, const int ne, const int nJ,
-              const int nw, const int ndwdx, const int ndwdp, const int ndwdw,
-              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
-              const int ubw, const int lbw, const SecondOrderMode o2mode,
-              std::vector<realtype> const &p, std::vector<realtype> const &k,
-              std::vector<int> const &plist,
+    Model_ODE(ModelDimensions const& model_dimensions,
+              SimulationParameters simulation_parameters,
+              const SecondOrderMode o2mode,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0, const int ndxdotdx_explicit=0,
               const int w_recursion_depth=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver,
-                nx_solver_reinit, ny, nytrue, nz, nztrue, ne, nJ, nw, ndwdx,
-                ndwdp, ndwdw, ndxdotdw, std::move(ndJydy), nnz, ubw, lbw,
-                o2mode, p, k, plist, idlist, z2event, pythonGenerated,
+        : Model(model_dimensions, simulation_parameters,
+                o2mode, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit, ndxdotdx_explicit, w_recursion_depth) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,

@@ -35,7 +35,8 @@ void
 AbstractModel::fx0_fixedParameters(realtype* /*x0*/,
                                    const realtype /*t*/,
                                    const realtype* /*p*/,
-                                   const realtype* /*k*/)
+                                   const realtype* /*k*/,
+                                   gsl::span<const int> /*reinitialization_state_idxs*/)
 {
     // no-op default implementation
 }
@@ -46,7 +47,8 @@ AbstractModel::fsx0_fixedParameters(realtype* /*sx0*/,
                                     const realtype* /*x0*/,
                                     const realtype* /*p*/,
                                     const realtype* /*k*/,
-                                    const int /*ip*/)
+                                    const int /*ip*/,
+                                    gsl::span<const int> /*reinitialization_state_idxs*/)
 {
     // no-op default implementation
 }

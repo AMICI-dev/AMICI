@@ -2,6 +2,7 @@
 #define _amici_TPL_MODELNAME_h
 #include <cmath>
 #include <memory>
+#include <gsl/gsl-lite.hpp>
 
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
@@ -78,14 +79,16 @@ extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p,
                              const realtype *k);
 extern void x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t,
                                              const realtype *p,
-                                             const realtype *k);
+                                             const realtype *k,
+                                             gsl::span<const int> reinitialization_state_idxs);
 extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,
                               const realtype *x0, const realtype *p,
                               const realtype *k, const int ip);
 extern void sx0_fixedParameters_TPL_MODELNAME(realtype *sx0, const realtype t,
                                               const realtype *x0,
                                               const realtype *p,
-                                              const realtype *k, const int ip);
+                                              const realtype *k, const int ip,
+                                              gsl::span<const int> reinitialization_state_idxs);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
@@ -118,30 +121,35 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      */
     Model_TPL_MODELNAME()
         : amici::Model_ODE(
-              TPL_NX_RDATA,                                // nx_rdata
-              TPL_NXTRUE_RDATA,                            // nxtrue_rdata
-              TPL_NX_SOLVER,                               // nx_solver
-              TPL_NXTRUE_SOLVER,                           // nxtrue_solver
-              TPL_NX_SOLVER_REINIT,                        // nx_solver_reinit
-              TPL_NY,                                      // ny
-              TPL_NYTRUE,                                  // nytrue
-              TPL_NZ,                                      // nz
-              TPL_NZTRUE,                                  // nztrue
-              TPL_NEVENT,                                  // nevent
-              TPL_NOBJECTIVE,                              // nobjective
-              TPL_NW,                                      // nw
-              TPL_NDWDX,                                   // ndwdx
-              TPL_NDWDP,                                   // ndwdp
-              TPL_NDWDW,                                   // ndwdw
-              TPL_NDXDOTDW,                                // ndxdotdw
-              TPL_NDJYDY,                                  // ndjydy
-              0,                                           // nnz
-              TPL_UBW,                                     // ubw
-              TPL_LBW,                                     // lbw
+              amici::ModelDimensions(
+                  TPL_NX_RDATA,                            // nx_rdata
+                  TPL_NXTRUE_RDATA,                        // nxtrue_rdata
+                  TPL_NX_SOLVER,                           // nx_solver
+                  TPL_NXTRUE_SOLVER,                       // nxtrue_solver
+                  TPL_NX_SOLVER_REINIT,                    // nx_solver_reinit
+                  TPL_NP,                                  // np
+                  TPL_NK,                                  // nk
+                  TPL_NY,                                  // ny
+                  TPL_NYTRUE,                              // nytrue
+                  TPL_NZ,                                  // nz
+                  TPL_NZTRUE,                              // nztrue
+                  TPL_NEVENT,                              // nevent
+                  TPL_NOBJECTIVE,                          // nobjective
+                  TPL_NW,                                  // nw
+                  TPL_NDWDX,                               // ndwdx
+                  TPL_NDWDP,                               // ndwdp
+                  TPL_NDWDW,                               // ndwdw
+                  TPL_NDXDOTDW,                            // ndxdotdw
+                  TPL_NDJYDY,                              // ndjydy
+                  0,                                       // nnz
+                  TPL_UBW,                                 // ubw
+                  TPL_LBW                                  // lbw
+              ),
+              amici::SimulationParameters(
+                  std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
+                  std::vector<realtype>{TPL_PARAMETERS}        // dynamic parameters
+              ),
               TPL_O2MODE,                                  // o2mode
-              std::vector<realtype>{TPL_PARAMETERS},       // dynamic parameters
-              std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
-              std::vector<int>{},                          // plist
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
               std::vector<int>{},                          // z2event
               true,                                        // pythonGenerated
@@ -597,8 +605,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,
                                       const realtype *x0, const realtype *p,
                                       const realtype *k,
-                                      const int ip) override {
-        sx0_fixedParameters_TPL_MODELNAME(sx0, t, x0, p, k, ip);
+                                      const int ip,
+                                      gsl::span<const int> reinitialization_state_idxs
+                                      ) override {
+        sx0_fixedParameters_TPL_MODELNAME(sx0, t, x0, p, k, ip, reinitialization_state_idxs);
     }
 
     /** model specific implementation of fsz
@@ -638,8 +648,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      **/
     virtual void fx0_fixedParameters(realtype *x0, const realtype t,
                                      const realtype *p,
-                                     const realtype *k) override {
-        x0_fixedParameters_TPL_MODELNAME(x0, t, p, k);
+                                     const realtype *k,
+                                     gsl::span<const int> reinitialization_state_idxs
+                                     ) override {
+        x0_fixedParameters_TPL_MODELNAME(x0, t, p, k, reinitialization_state_idxs);
     }
 
     /** model specific implementation for fxdot

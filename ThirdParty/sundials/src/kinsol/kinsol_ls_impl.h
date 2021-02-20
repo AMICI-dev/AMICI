@@ -3,7 +3,7 @@
  *                David J. Gardner, Radu Serban and Aaron Collier @ LLNL
  *-----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2020, Lawrence Livermore National Security
+ * Copyright (c) 2002-2021, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -96,6 +96,7 @@ typedef struct KINLsMemRec {
          - jtimesDQ == SUNTRUE */
   booleantype jtimesDQ;
   KINLsJacTimesVecFn jtimes;
+  KINSysFn jt_func;
   void *jt_data;
 
 } *KINLsMem;

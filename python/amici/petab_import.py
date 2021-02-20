@@ -283,7 +283,7 @@ def import_petab_problem(
         os.makedirs(model_output_dir)
 
     # check if compilation necessary
-    if not _can_import_model(model_name) or force_compile:
+    if force_compile or not _can_import_model(model_name, model_output_dir):
         # check if folder exists
         if os.listdir(model_output_dir) and not force_compile:
             raise ValueError(
@@ -353,13 +353,14 @@ def _create_model_name(folder: str) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str) -> bool:
+def _can_import_model(model_name: str, model_output_dir: str) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
     # try to import (in particular checks version)
     try:
-        model_module = importlib.import_module(model_name)
+        with amici.add_path(model_output_dir):
+            model_module = importlib.import_module(model_name)
     except ModuleNotFoundError:
         return False
 
@@ -514,8 +515,11 @@ def import_model_sbml(
         indicator.setName(PREEQ_INDICATOR_ID)
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
-
-    for assignee_id in initial_sizes + initial_states:
+        logger.debug("Adding preequilibration indicator "
+                     f"constant {PREEQ_INDICATOR_ID}")
+    logger.debug("Adding initial assignments for "
+                 f"{initial_sizes + initial_states}")
+    for assignee_id in chain(initial_sizes, initial_states):
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
         for init_par_id in [init_par_id_preeq, init_par_id_sim]:
@@ -531,6 +535,13 @@ def import_model_sbml(
         if assignment is None:
             assignment = sbml_model.createInitialAssignment()
             assignment.setSymbol(assignee_id)
+        else:
+            logger.debug('The SBML model has an initial assignment defined '
+                         f'for model entity {assignee_id}, but this entity '
+                         'also has an initial value defined in the PEtab '
+                         'condition table. The SBML initial assignment will '
+                         'be overwritten to handle preequilibration and '
+                         'initial values specified by the PEtab problem.')
         formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)

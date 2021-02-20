@@ -7,8 +7,7 @@ set -e
 script_path=$(dirname "$BASH_SOURCE")
 amici_path=$(cd "$script_path/.." && pwd)
 
-pip3 install --upgrade --user wheel
-pip3 install --upgrade --user setuptools
+pip3 install build
 
 cd "${amici_path}/python/sdist"
-python3 setup.py sdist
+python -m build --sdist

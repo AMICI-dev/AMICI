@@ -230,9 +230,12 @@ class AbstractModel {
      * @param t initial time
      * @param p parameter vector
      * @param k constant vector
+     * @param reinitialization_state_idxs Indices of states to be reinitialized
+     * based on provided constants / fixed parameters.
      */
     virtual void fx0_fixedParameters(realtype *x0, const realtype t,
-                                     const realtype *p, const realtype *k);
+                                     const realtype *p, const realtype *k,
+                                     gsl::span<const int> reinitialization_state_idxs);
 
     /**
      * @brief Model specific implementation of fsx0_fixedParameters
@@ -242,10 +245,13 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param ip sensitivity index
+     * @param reinitialization_state_idxs Indices of states to be reinitialized
+     * based on provided constants / fixed parameters.
      */
     virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,
                                       const realtype *x0, const realtype *p,
-                                      const realtype *k, int ip);
+                                      const realtype *k, int ip,
+                                      gsl::span<const int> reinitialization_state_idxs);
 
     /**
      * @brief Model specific implementation of fsx0

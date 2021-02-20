@@ -15,17 +15,23 @@ jobs:
     name: Python Version Matrix
 
     runs-on: ubuntu-20.04
-
+    continue-on-error: ${{ matrix.experimental }}
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
+        experimental: [false]
+# Temporarily disabled because the respective jobs somehow runs infinitely
+#        include:
+#          - python-version:  3.10.0-alpha.5
+#            experimental: true
 
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -45,11 +51,6 @@ jobs:
           libatlas-base-dev \
           libhdf5-serial-dev \
           libboost-math-dev
-    - name: pip
-      run: |
-        pip3 install --upgrade --user wheel \
-          && pip3 install --upgrade --user setuptools
-
 
     # install AMICI
     - name: Build BNGL
@@ -65,7 +66,3 @@ jobs:
           && pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
-
-    - name: notebooks
-      run: |
-        scripts/runNotebook.sh python/examples/example_*/

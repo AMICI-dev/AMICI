@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2020, Lawrence Livermore National Security
+ * Copyright (c) 2002-2021, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -22,6 +22,8 @@
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 #include <sundials/sundials_math.h>
 #include <sundials/sundials_nvector_senswrapper.h>
+
+#include "sundials_debug.h"
 
 /* Internal utility routines */
 static int AndersonAccelerate(SUNNonlinearSolver NLS, N_Vector gval, N_Vector x,
@@ -87,16 +89,18 @@ SUNNonlinearSolver SUNNonlinSol_FixedPoint(N_Vector y, int m)
   NLS->content = content;
 
   /* Fill general content */
-  content->Sys        = NULL;
-  content->CTest      = NULL;
-  content->m          = m;
-  content->damping    = SUNFALSE;
-  content->beta       = ONE;
-  content->curiter    = 0;
-  content->maxiters   = 3;
-  content->niters     = 0;
-  content->nconvfails = 0;
-  content->ctest_data = NULL;
+  content->Sys         = NULL;
+  content->CTest       = NULL;
+  content->m           = m;
+  content->damping     = SUNFALSE;
+  content->beta        = ONE;
+  content->curiter     = 0;
+  content->maxiters    = 3;
+  content->niters      = 0;
+  content->nconvfails  = 0;
+  content->ctest_data  = NULL;
+  content->print_level = 0;
+  content->info_file   = NULL;
 
   /* Fill allocatable content */
   retval = AllocateContent(NLS, y);
@@ -202,6 +206,20 @@ int SUNNonlinSolSolve_FixedPoint(SUNNonlinearSolver NLS, N_Vector y0,
   gy    = FP_CONTENT(NLS)->gy;
   delta = FP_CONTENT(NLS)->delta;
 
+  /* initialize iteration and convergence fail counters for this solve */
+  FP_CONTENT(NLS)->niters     = 0;
+  FP_CONTENT(NLS)->nconvfails = 0;
+
+#ifdef SUNDIALS_BUILD_WITH_MONITORING
+      /* print current iteration number and the nonlinear residual */
+      if (FP_CONTENT(NLS)->print_level && FP_CONTENT(NLS)->info_file)
+      {
+        fprintf(FP_CONTENT(NLS)->info_file,
+                "SUNNONLINSOL_FIXEDPOINT (nni=%ld):\n",
+                (long int) FP_CONTENT(NLS)->niters);
+      }
+#endif
+
   /* Looping point for attempts at solution of the nonlinear system:
        Evaluate fixed-point function (store in gy).
        Performs the accelerated fixed-point iteration.
@@ -233,6 +251,17 @@ int SUNNonlinSolSolve_FixedPoint(SUNNonlinearSolver NLS, N_Vector y0,
     /* test for convergence */
     retval = FP_CONTENT(NLS)->CTest(NLS, ycor, delta, tol, w,
                                     FP_CONTENT(NLS)->ctest_data);
+
+#ifdef SUNDIALS_BUILD_WITH_MONITORING
+      /* print current iteration number and the nonlinear residual */
+      if (FP_CONTENT(NLS)->print_level && FP_CONTENT(NLS)->info_file)
+      {
+        fprintf(FP_CONTENT(NLS)->info_file,
+                SUN_NLS_MSG_RESIDUAL,
+                (long int) FP_CONTENT(NLS)->curiter,
+                N_VWrmsNorm(delta, w));
+      }
+#endif
 
     /* return if successful */
     if (retval == SUN_NLS_SUCCESS)  return(SUN_NLS_SUCCESS);
@@ -364,7 +393,7 @@ int SUNNonlinSolGetNumIters_FixedPoint(SUNNonlinearSolver NLS, long int *niters)
   if (NLS == NULL)
     return(SUN_NLS_MEM_NULL);
 
-  /* return the total number of nonlinear iterations */
+  /* return number of nonlinear iterations in the last solve */
   *niters = FP_CONTENT(NLS)->niters;
   return(SUN_NLS_SUCCESS);
 }
@@ -697,4 +726,42 @@ static void FreeContent(SUNNonlinearSolver NLS)
     FP_CONTENT(NLS)->Xvecs = NULL; }
 
   return;
+}
+
+int SUNNonlinSolSetInfoFile_FixedPoint(SUNNonlinearSolver NLS,
+                                       FILE* info_file)
+{
+#ifdef SUNDIALS_BUILD_WITH_MONITORING
+  /* check that the nonlinear solver is non-null */
+  if (NLS == NULL)
+    return(SUN_NLS_MEM_NULL);
+
+  FP_CONTENT(NLS)->info_file = info_file;
+
+  return(SUN_NLS_SUCCESS);
+#else
+  SUNDIALS_DEBUG_PRINT("ERROR in SUNNonlinSolSetInfoFile_FixedPoint: SUNDIALS was not built with monitoring\n");
+  return(SUN_NLS_ILL_INPUT);
+#endif
+}
+
+int SUNNonlinSolSetPrintLevel_FixedPoint(SUNNonlinearSolver NLS,
+                                         int print_level)
+{
+#ifdef SUNDIALS_BUILD_WITH_MONITORING
+  /* check that the nonlinear solver is non-null */
+  if (NLS == NULL)
+    return(SUN_NLS_MEM_NULL);
+
+  /* check for valid print level */
+  if (print_level < 0 || print_level > 1)
+    return(SUN_NLS_ILL_INPUT);
+
+  FP_CONTENT(NLS)->print_level = print_level;
+
+  return(SUN_NLS_SUCCESS);
+#else
+  SUNDIALS_DEBUG_PRINT("ERROR in SUNNonlinSolSetPrintLevel_FixedPoint: SUNDIALS was not built with monitoring\n");
+  return(SUN_NLS_ILL_INPUT);
+#endif
 }

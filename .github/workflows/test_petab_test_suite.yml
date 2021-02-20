@@ -35,10 +35,6 @@ jobs:
             libatlas-base-dev \
             python3-venv
 
-      - name: pip
-        run: |
-          pip3 install --upgrade --user wheel \
-            && pip3 install --upgrade --user setuptools
       - run: pip3 install pytest shyaml pytest-cov pysb petab
 
       - name: Build BNGL
@@ -48,7 +44,7 @@ jobs:
       - run: |
           echo "${HOME}/.local/bin/" >> $GITHUB_PATH
           echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
-          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.3.2" >> $GITHUB_ENV
+          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
       # install AMICI
       - name: Install python package
@@ -58,7 +54,7 @@ jobs:
       # retrieve test models
       - name: Download and install PEtab test suite
         run: |
-          git clone --depth 1  --branch pysb https://github.com/FFroehlich/petab_test_suite \
+          git clone --depth 1  --branch develop https://github.com/PEtab-dev/petab_test_suite \
             && source ./build/venv/bin/activate \
             && cd petab_test_suite && pip3 install -e . && cd ..
 

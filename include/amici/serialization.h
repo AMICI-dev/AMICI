@@ -102,38 +102,42 @@ void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*
  */
 template <class Archive>
 void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
-    ar &m.nx_rdata;
-    ar &m.nxtrue_rdata;
-    ar &m.nx_solver;
-    ar &m.nxtrue_solver;
-    ar &m.nx_solver_reinit;
-    ar &m.ny;
-    ar &m.nytrue;
-    ar &m.nz;
-    ar &m.nztrue;
-    ar &m.ne;
-    ar &m.nw;
-    ar &m.nnz;
-    ar &m.nJ;
-    ar &m.ubw;
-    ar &m.lbw;
+    ar &dynamic_cast<amici::ModelDimensions&>(m);
+    ar &m.simulation_parameters_;
     ar &m.o2mode;
     ar &m.z2event_;
     ar &m.idlist;
     ar &m.state_.h;
     ar &m.state_.unscaledParameters;
-    ar &m.original_parameters_;
     ar &m.state_.fixedParameters;
-    ar &m.reinitialize_fixed_parameter_initial_states_;
     ar &m.state_.plist;
     ar &m.x0data_;
     ar &m.sx0data_;
-    ar &m.ts_;
     ar &m.nmaxevent_;
-    ar &m.pscale_;
-    ar &m.tstart_;
     ar &m.state_is_non_negative_;
     ar &m.pythonGenerated;
+}
+
+
+/**
+ * @brief Serialize amici::SimulationParameters to boost archive
+ * @param ar Archive
+ * @param s amici::SimulationParameters instance to serialize
+ */
+template <class Archive>
+void serialize(Archive &ar, amici::SimulationParameters &s, const unsigned int /*version*/) {
+    ar &s.fixedParameters;
+    ar &s.fixedParametersPreequilibration;
+    ar &s.fixedParametersPresimulation;
+    ar &s.parameters;
+    ar &s.x0;
+    ar &s.sx0;
+    ar &s.pscale;
+    ar &s.plist;
+    ar &s.ts_;
+    ar &s.tstart_;
+    ar &s.t_presim;
+    ar &s.reinitializeFixedParameterInitialStates;
 }
 
 /**
@@ -144,17 +148,9 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
 
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
-    ar &r.np;
-    ar &r.nk;
+    ar &dynamic_cast<amici::ModelDimensions&>(r);
     ar &r.nx;
-    ar &r.nx_solver;
     ar &r.nxtrue;
-    ar &r.ny;
-    ar &r.nytrue;
-    ar &r.nz;
-    ar &r.nztrue;
-    ar &r.ne;
-    ar &r.nJ;
     ar &r.nplist;
     ar &r.nmaxevent;
     ar &r.nt;
@@ -212,6 +208,38 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
     ar &r.status;
 }
 
+
+/**
+ * @brief Serialize amici::ModelDimensions to boost archive
+ * @param ar Archive
+ * @param m ModelDimensions instance to serialize
+ */
+
+template <class Archive>
+void serialize(Archive &ar, amici::ModelDimensions &m, const unsigned int /*version*/) {
+    ar &m.nx_rdata;
+    ar &m.nxtrue_rdata;
+    ar &m.nx_solver;
+    ar &m.nxtrue_solver;
+    ar &m.nx_solver_reinit;
+    ar &m.np;
+    ar &m.nk;
+    ar &m.ny;
+    ar &m.nytrue;
+    ar &m.nz;
+    ar &m.nztrue;
+    ar &m.ne;
+    ar &m.nw;
+    ar &m.ndwdx;
+    ar &m.ndwdp;
+    ar &m.ndwdw;
+    ar &m.ndxdotdw;
+    ar &m.ndJydy;
+    ar &m.nnz;
+    ar &m.nJ;
+    ar &m.ubw;
+    ar &m.lbw;
+}
 #endif
 } // namespace serialization
 } // namespace boost

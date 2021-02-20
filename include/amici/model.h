@@ -5,6 +5,9 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
+#include "amici/simulation_parameters.h"
+#include "amici/model_dimensions.h"
+#include "amici/model_state.h"
 
 #include <map>
 #include <memory>
@@ -32,86 +35,21 @@ void serialize(Archive &ar, amici::Model &m, unsigned int version);
 namespace amici {
 
 /**
- * @brief Exchange format to store and transfer the state of the
- * model at a specific timepoint.
- *
- * This is designed to only encompass the minimal
- * number of attributes that need to be transferred.
- */
-struct ModelState {
-    /**
-     * Flag indicating whether a certain Heaviside function should be active or
-     * not (dimension: `ne`)
-     */
-    std::vector<realtype> h;
-
-    /** Total abundances for conservation laws
-     (dimension: `nx_rdata - nx_solver`) */
-    std::vector<realtype> total_cl;
-
-    /** Sensitivities of total abundances for conservation laws
-     (dimension: `(nx_rdata-nx_solver) x np`, row-major) */
-    std::vector<realtype> stotal_cl;
-
-    /** Unscaled parameters (dimension: `np`) */
-    std::vector<realtype> unscaledParameters;
-
-    /** Constants (dimension: `nk`) */
-    std::vector<realtype> fixedParameters;
-
-    /**
-     * Indexes of parameters wrt to which sensitivities are computed
-     * (dimension: nplist)
-     */
-    std::vector<int> plist;
-};
-
-
-
-/**
  * @brief The Model class represents an AMICI ODE/DAE model.
  *
  * The model can compute various model related quantities based on symbolically
  * generated code.
  */
-class Model : public AbstractModel {
+class Model : public AbstractModel, public ModelDimensions {
   public:
     /** Default constructor */
     Model() = default;
 
     /**
      * @brief Constructor with model dimensions.
-     * @param nx_rdata Number of state variables
-     * @param nxtrue_rdata Number of state variables of the non-augmented model
-     * @param nx_solver Number of state variables with conservation laws applied
-     * @param nxtrue_solver Number of state variables of the non-augmented model
-     * with conservation laws applied
-     * @param nx_solver_reinit Number of state variables with conservation laws
-     * subject to reinitialization
-     * @param ny Number of observables
-     * @param nytrue Number of observables of the non-augmented model
-     * @param nz Number of event observables
-     * @param nztrue Number of event observables of the non-augmented model
-     * @param ne Number of events
-     * @param nJ Number of objective functions
-     * @param nw Number of repeating elements
-     * @param ndwdx Number of nonzero elements in the `x` derivative of the
-     * repeating elements
-     * @param ndwdp Number of nonzero elements in the `p` derivative of the
-     * repeating elements
-     * @param ndwdw Number of nonzero elements in the `w` derivative of the
-     * repeating elements
-     * @param ndxdotdw Number of nonzero elements in the \f$w\f$ derivative of
-     * \f$xdot\f$
-     * @param ndJydy Number of nonzero elements in the \f$y\f$ derivative of
-     * \f$dJy\f$ (dimension `nytrue`)
-     * @param nnz Number of nonzero elements in Jacobian
-     * @param ubw Upper matrix bandwidth in the Jacobian
-     * @param lbw Lower matrix bandwidth in the Jacobian
+     * @param model_dimensions Model dimensions
+     * @param simulation_parameters Simulation parameters
      * @param o2mode Second order sensitivity mode
-     * @param p Parameters
-     * @param k Constants
-     * @param plist Indexes wrt to which sensitivities are to be computed
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
      * @param pythonGenerated Flag indicating matlab or python wrapping
@@ -119,13 +57,10 @@ class Model : public AbstractModel {
      * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
      * @param w_recursion_depth Recursion depth of fw
      */
-    Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
-          int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
-          int nJ, int nw, int ndwdx, int ndwdp, int ndwdw, int ndxdotdw,
-          std::vector<int> ndJydy, int nnz, int ubw, int lbw,
+    Model(ModelDimensions const& model_dimensions,
+          SimulationParameters simulation_parameters,
           amici::SecondOrderMode o2mode,
-          const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
-          const std::vector<int> &plist, std::vector<amici::realtype> idlist,
+          std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
           int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
           int w_recursion_depth = 0);
@@ -814,7 +749,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get time-resolved `w`.
-     * @param w Buffer (dimension: `nw`)
+     * @param w Buffer (shape `nw`)
      * @param t Current timepoint
      * @param x Current state
      */
@@ -822,7 +757,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get time-resolved observables.
-     * @param y Buffer (dimension: `ny`)
+     * @param y Buffer (shape `ny`)
      * @param t Current timepoint
      * @param x Current state
      */
@@ -834,7 +769,7 @@ class Model : public AbstractModel {
      *
      * Total derivative \f$sy = dydx * sx + dydp\f$
      * (only for forward sensitivities).
-     * @param sy buffer (dimension: `ny` x `nplist`, row-major)
+     * @param sy buffer (shape `ny` x `nplist`, row-major)
      * @param t Timpoint
      * @param x State variables
      * @param sx State sensitivities
@@ -844,7 +779,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get time-resolved observable standard deviations
-     * @param sigmay Buffer (dimension: `ny`)
+     * @param sigmay Buffer (shape `ny`)
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
@@ -857,7 +792,7 @@ class Model : public AbstractModel {
      *
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
-     * @param ssigmay Buffer (dimension: `ny` x `nplist`, row-major)
+     * @param ssigmay Buffer (shape `ny` x `nplist`, row-major)
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
@@ -867,7 +802,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Add time-resolved measurement negative log-likelihood \f$Jy\f$.
-     * @param Jy Buffer (dimension: 1)
+     * @param Jy Buffer (shape 1)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data
@@ -879,8 +814,8 @@ class Model : public AbstractModel {
      * @brief Add sensitivity of time-resolved measurement negative log-likelihood
      * \f$Jy\f$.
      *
-     * @param sllh First-order buffer (dimension: `nplist`)
-     * @param s2llh Second-order buffer (dimension: `nJ - 1` x `nplist`, row-major)
+     * @param sllh First-order buffer (shape `nplist`)
+     * @param s2llh Second-order buffer (shape `nJ - 1` x `nplist`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param sx State sensitivities
@@ -898,9 +833,9 @@ class Model : public AbstractModel {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param sllh First order output buffer (dimension: `nplist`)
+     * @param sllh First order output buffer (shape `nplist`)
      * @param s2llh Second order output buffer
-     * (dimension: `nJ - 1` x `nplist`, row-major)
+     * (shape `nJ - 1` x `nplist`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data
@@ -915,7 +850,7 @@ class Model : public AbstractModel {
      * @brief Get state sensitivity of the negative loglikelihood \f$Jy\f$,
      * partial derivative (to be used with adjoint sensitivities).
      *
-     * @param dJydx Output buffer (dimension: `nJ` x `nx_solver`, row-major)
+     * @param dJydx Output buffer (shape `nJ` x `nx_solver`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data instance
@@ -926,7 +861,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get event-resolved observables.
-     * @param z Output buffer (dimension: `nz`)
+     * @param z Output buffer (shape `nz`)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -938,7 +873,7 @@ class Model : public AbstractModel {
      *
      * Total derivative (only forward sensitivities).
      *
-     * @param sz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param sz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -953,14 +888,14 @@ class Model : public AbstractModel {
      *
      * Ignores sensitivity of timepoint. Total derivative.
      *
-     * @param sz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param sz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      */
     void getUnobservedEventSensitivity(gsl::span<realtype> sz, const int ie);
 
     /**
      * @brief Get regularization for event-resolved observables.
-     * @param rz Output buffer (dimension: `nz`)
+     * @param rz Output buffer (shape `nz`)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -974,7 +909,7 @@ class Model : public AbstractModel {
      *
      * Total derivative. Only forward sensitivities.
      *
-     * @param srz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param srz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      * @param t Timepoint
      * @param x State variables
@@ -986,7 +921,7 @@ class Model : public AbstractModel {
                                            const AmiVectorArray &sx);
     /**
      * @brief Get event-resolved observable standard deviations.
-     * @param sigmaz Output buffer (dimension: `nz`)
+     * @param sigmaz Output buffer (shape `nz`)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1003,7 +938,7 @@ class Model : public AbstractModel {
      *
      * Total derivative (only forward sensitivities).
      *
-     * @param ssigmaz Output buffer (dimension: `nz x nplist`, row-major)
+     * @param ssigmaz Output buffer (shape `nz x nplist`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1016,7 +951,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Add event-resolved observable negative log-likelihood.
-     * @param Jz Output buffer (dimension: 1)
+     * @param Jz Output buffer (shape 1)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1029,7 +964,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Add event-resolved observable negative log-likelihood.
-     * @param Jrz Output buffer (dimension: 1)
+     * @param Jrz Output buffer (shape 1)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1047,9 +982,9 @@ class Model : public AbstractModel {
      *
      * Total derivative (to be used with forward sensitivities).
      *
-     * @param sllh First order buffer (dimension: `nplist`)
+     * @param sllh First order buffer (shape `nplist`)
      * @param s2llh Second order buffer
-     * (dimension: `(nJ-1) x nplist`, row-major)
+     * (shape `nJ-1` x `nplist`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1070,9 +1005,9 @@ class Model : public AbstractModel {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param sllh First order buffer (dimension: `nplist`)
+     * @param sllh First order buffer (shape `nplist`)
      * @param s2llh Second order buffer
-     * (dimension: `(nJ-1) x nplist`, row-major)
+     * (shape `(nJ-1)` x `nplist`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1091,7 +1026,7 @@ class Model : public AbstractModel {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param dJzdx Output buffer (dimension: `nJ x nx_solver`, row-major)
+     * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, row-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1107,7 +1042,7 @@ class Model : public AbstractModel {
      *
      * Only forward sensitivities.
      *
-     * @param stau Timepoint sensitivity (dimension: `nplist`)
+     * @param stau Timepoint sensitivity (shape `nplist`)
      * @param t Timepoint
      * @param ie Event index
      * @param x State variables
@@ -1275,53 +1210,19 @@ class Model : public AbstractModel {
      */
     void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
 
-    /** Number of states */
-    int nx_rdata{0};
-
-    /** Number of states in the unaugmented system */
-    int nxtrue_rdata{0};
-
-    /** Number of states with conservation laws applied */
-    int nx_solver{0};
+    /**
+     * @brief Set indices of states to be reinitialized based on provided
+     * constants / fixed parameters
+     * @param idxs Array of state indices
+     */
+    void setReinitializationStateIdxs(const std::vector<int> &idxs);
 
     /**
-     * Number of states in the unaugmented system with conservation laws
-     * applied
+     * @brief Return indices of states to be reinitialized based on provided
+     * constants / fixed parameters
+     * @return Those indices.
      */
-    int nxtrue_solver{0};
-
-    /** Number of solver states subject to reinitialization */
-    int nx_solver_reinit{0};
-
-    /** Number of observables */
-    int ny{0};
-
-    /** Number of observables in the unaugmented system */
-    int nytrue{0};
-
-    /** Number of event outputs */
-    int nz{0};
-
-    /** Number of event outputs in the unaugmented system */
-    int nztrue{0};
-
-    /** Number of events */
-    int ne{0};
-
-    /** Number of common expressions */
-    int nw{0};
-
-    /** Number of nonzero entries in Jacobian */
-    int nnz{0};
-
-    /** Dimension of the augmented objective function for 2nd order ASA */
-    int nJ{0};
-
-    /** Upper bandwidth of the Jacobian */
-    int ubw{0};
-
-    /** Lower bandwidth of the Jacobian */
-    int lbw{0};
+    std::vector<int> const& getReinitializationStateIdxs() const;
 
     /** Flag indicating Matlab- or Python-based model generation */
     bool pythonGenerated;
@@ -1768,221 +1669,10 @@ class Model : public AbstractModel {
     /** All variables necessary for function evaluation */
     ModelState state_;
 
-    /** Sparse Jacobian (dimension: `amici::Model::nnz`) */
-    mutable SUNMatrixWrapper J_;
-
-    /** Sparse Backwards Jacobian (dimension: `amici::Model::nnz`) */
-    mutable SUNMatrixWrapper JB_;
-
-    /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
-    mutable SUNMatrixWrapper dxdotdw_;
-
-    /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
-    mutable SUNMatrixWrapper dwdx_;
-
-    /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
-    mutable SUNMatrixWrapper dwdp_;
-
-    /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
-    mutable SUNMatrixWrapper M_;
-
     /**
-     * Temporary storage of `dxdotdp_full` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     *  type `CSC_MAT`)
+     * Storage for model quantities beyond ModelState for the current timepoint
      */
-    mutable SUNMatrixWrapper dxdotdp_full;
-
-    /**
-     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_explicit;
-
-    /**
-     * Temporary storage of `dxdotdp_implicit` data across functions,
-     * Python-only
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     * type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdp_implicit;
-
-    /**
-     * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: 'nxdotdotdx_explicit',
-     *  type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdx_explicit;
-
-    /**
-     * Temporary storage of `dxdotdx_implicit` data across functions,
-     * Python-only
-     * (dimension: `nplist` x `nx_solver`, nnz: dynamic,
-     * type `CSC_MAT`)
-     */
-    mutable SUNMatrixWrapper dxdotdx_implicit;
-
-    /**
-     * Temporary storage of `dxdotdp` data across functions, Matlab only
-     * (dimension: `nplist` x `nx_solver`, row-major)
-     */
-    AmiVectorArray dxdotdp {0, 0};
-
-    /** Current observable (dimension: `nytrue`) */
-    mutable std::vector<realtype> my_;
-
-    /** Current event measurement (dimension: `nztrue`) */
-    mutable std::vector<realtype> mz_;
-
-    /** Sparse observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
-     */
-    mutable std::vector<SUNMatrixWrapper> dJydy_;
-
-    /** Observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `false` (dimension `nJ` x `ny` x `nytrue`,
-     * row-major)
-     */
-    mutable std::vector<realtype> dJydy_matlab_;
-
-    /** Observable sigma derivative of data likelihood
-     * (dimension nJ x ny x nytrue, row-major)
-     */
-    mutable std::vector<realtype> dJydsigma_;
-
-    /** State derivative of data likelihood
-     * (dimension nJ x nx_solver, row-major)
-     */
-    mutable std::vector<realtype> dJydx_;
-
-    /** Parameter derivative of data likelihood for current timepoint
-     * (dimension: nJ x nplist, row-major)
-     */
-    mutable std::vector<realtype> dJydp_;
-
-    /** event output derivative of event likelihood
-     * (dimension nJ x nz x nztrue, row-major)
-     */
-    mutable std::vector<realtype> dJzdz_;
-
-    /** event sigma derivative of event likelihood
-     * (dimension nJ x nz x nztrue, row-major)
-     */
-    mutable std::vector<realtype> dJzdsigma_;
-
-    /** event output derivative of event likelihood at final timepoint
-     * (dimension nJ x nz x nztrue, row-major)
-     */
-    mutable std::vector<realtype> dJrzdz_;
-
-    /** event sigma derivative of event likelihood at final timepoint
-     * (dimension nJ x nz x nztrue, row-major)
-     */
-    mutable std::vector<realtype> dJrzdsigma_;
-
-    /** state derivative of event likelihood
-     * (dimension nJ x nx_solver, row-major)
-     */
-    mutable std::vector<realtype> dJzdx_;
-
-    /** parameter derivative of event likelihood for current timepoint
-     * (dimension: nJ x nplist x, row-major)
-     */
-    mutable std::vector<realtype> dJzdp_;
-
-    /** state derivative of event output
-     * (dimension: nz x nx_solver, row-major)
-     */
-    mutable std::vector<realtype> dzdx_;
-
-    /** parameter derivative of event output
-     * (dimension: nz x nplist, row-major)
-     */
-    mutable std::vector<realtype> dzdp_;
-
-    /** state derivative of event regularization variable
-     * (dimension: nz x nx_solver, row-major)
-     */
-    mutable std::vector<realtype> drzdx_;
-
-    /** parameter derivative of event regularization variable
-     * (dimension: nz x nplist, row-major)
-     */
-    mutable std::vector<realtype> drzdp_;
-
-    /** parameter derivative of observable
-     * (dimension: ny x nplist, row-major)
-     */
-    mutable std::vector<realtype> dydp_;
-
-    /** state derivative of time-resolved observable
-     * (dimension: nx_solver x ny, row-major)
-     */
-    mutable std::vector<realtype> dydx_;
-
-    /** temporary storage of w data across functions (dimension: nw) */
-    mutable std::vector<realtype> w_;
-
-    /** temporary storage for flattened sx,
-     * (dimension: nx_solver x nplist, row-major)
-     */
-    mutable std::vector<realtype> sx_;
-
-    /** temporary storage for x_rdata (dimension: nx_rdata) */
-    mutable std::vector<realtype> x_rdata_;
-
-    /** temporary storage for sx_rdata slice (dimension: nx_rdata) */
-    mutable std::vector<realtype> sx_rdata_;
-
-    /** temporary storage for time-resolved observable (dimension: ny) */
-    mutable std::vector<realtype> y_;
-
-    /** data standard deviation for current timepoint (dimension: ny) */
-    mutable std::vector<realtype> sigmay_;
-
-    /** temporary storage for  parameter derivative of data standard deviation,
-     * (dimension: ny x nplist, row-major)
-     */
-    mutable std::vector<realtype> dsigmaydp_;
-
-    /** temporary storage for event-resolved observable (dimension: nz) */
-    mutable std::vector<realtype> z_;
-
-    /** temporary storage for event regularization (dimension: nz) */
-    mutable std::vector<realtype> rz_;
-
-    /** temporary storage for event standard deviation (dimension: nz) */
-    mutable std::vector<realtype> sigmaz_;
-
-    /** temporary storage for  parameter derivative of event standard deviation,
-     * (dimension: nz x nplist, row-major)
-     */
-    mutable std::vector<realtype> dsigmazdp_;
-
-    /** temporary storage for change in x after event (dimension: nx_solver) */
-    mutable std::vector<realtype> deltax_;
-
-    /** temporary storage for change in sx after event
-     * (dimension: nx_solver x nplist, row-major)
-     */
-    mutable std::vector<realtype> deltasx_;
-
-    /** temporary storage for change in xB after event (dimension: nx_solver) */
-    mutable std::vector<realtype> deltaxB_;
-
-    /** temporary storage for change in qB after event
-     * (dimension: nJ x nplist, row-major)
-     */
-    mutable std::vector<realtype> deltaqB_;
-
-    /** temporary storage of positified state variables according to
-     * stateIsNonNegative (dimension: nx_solver) */
-    mutable AmiVector x_pos_tmp_ {0};
-
-    /** original user-provided, possibly scaled parameter array (dimension: np)
-     */
-    std::vector<realtype> original_parameters_;
+    ModelStateDerived derived_state_;
 
     /** index indicating to which event an event output belongs */
     std::vector<int> z2event_;
@@ -1992,9 +1682,6 @@ class Model : public AbstractModel {
 
     /** sensitivity initialization (size nx_rdata x nplist, row-major) */
     std::vector<realtype> sx0data_;
-
-    /** timepoints (size nt) */
-    std::vector<realtype> ts_;
 
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
@@ -2006,41 +1693,37 @@ class Model : public AbstractModel {
     /** maximal number of events to track */
     int nmaxevent_ {10};
 
-    /** parameter transformation of `originalParameters` (dimension np) */
-    std::vector<ParameterScaling> pscale_;
-
-    /** starting time */
-    realtype tstart_ {0.0};
-
-    /** flag indicating whether steadystate sensitivities are to be computed
-     *  via FSA when steadyStateSimulation is used
+    /**
+     * flag indicating whether steadystate sensitivities are to be computed
+     * via FSA when steadyStateSimulation is used
      */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
 
-    /** flag indicating whether reinitialization of states depending on
-     *  fixed parameters is activated
+    /**
+     * Indicates whether the result of every call to `Model::f*` should be
+     * checked for finiteness
      */
-    bool reinitialize_fixed_parameter_initial_states_ {false};
-
-    /** Indicates whether the result of every call to `Model::f*` should be
-     * checked for finiteness */
     bool always_check_finite_ {false};
 
   private:
-    /** Sparse dwdp implicit temporary storage (dimension: `ndwdp`) */
+    /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
     mutable std::vector<SUNMatrixWrapper> dwdp_hierarchical_;
 
-    /** Sparse dwdw temporary storage (dimension: `ndwdw`) */
+    /** Sparse dwdw temporary storage (shape `ndwdw`) */
     mutable SUNMatrixWrapper dwdw_;
 
-    /** Sparse dwdx implicit temporary storage (dimension: `ndwdx`) */
+    /** Sparse dwdx implicit temporary storage (shape `ndwdx`) */
     mutable std::vector<SUNMatrixWrapper> dwdx_hierarchical_;
 
     /** Recursion */
     int w_recursion_depth_ {0};
+
+    /** Simulation parameters, initial state, etc. */
+    SimulationParameters simulation_parameters_;
 };
 
 bool operator==(const Model &a, const Model &b);
+bool operator==(const ModelDimensions &a, const ModelDimensions &b);
 
 } // namespace amici
 

@@ -51,31 +51,35 @@ TEST_GROUP(model)
     std::vector<int> plist{ 1 };
     std::vector<realtype> idlist{ 0 };
     std::vector<int> z2event{ 0, 0, 0 };
-    Model_Test model = Model_Test(nx,        // nx_rdata
-                                  nx,        // nxtrue_rdata
-                                  nx,        // nx_solver
-                                  nx,        // nxtrue_solver
-                                  0,         // nx_solver_reinit
-                                  ny,        // ny
-                                  ny,        // nytrue
-                                  nz,        // nz
-                                  nz,        // nztrue
-                                  nmaxevent, // ne
-                                  0,         // nw
-                                  0,         // ndwdx
-                                  0,         // ndwdp
-                                  0,         // dwdw
-                                  0,         // ndxdotdw
-                                  0,         // ndJydy
-                                  0,         // nnz
-                                  0,         // ubw
-                                  0,         // lbw
-                                  SecondOrderMode::none,
-                                  p,
-                                  k,
-                                  plist,
-                                  idlist,
-                                  z2event);
+    Model_Test model = Model_Test(
+                ModelDimensions(
+                    nx,        // nx_rdata
+                    nx,        // nxtrue_rdata
+                    nx,        // nx_solver
+                    nx,        // nxtrue_solver
+                    0,         // nx_solver_reinit
+                    static_cast<int>(p.size()),  // np
+                    static_cast<int>(k.size()),  // nk
+                    ny,        // ny
+                    ny,        // nytrue
+                    nz,        // nz
+                    nz,        // nztrue
+                    nmaxevent, // ne
+                    0,         // nJ
+                    0,         // nw
+                    0,         // ndwdx
+                    0,         // ndwdp
+                    0,         // dwdw
+                    0,         // ndxdotdw
+                    {},         // ndJydy
+                    0,         // nnz
+                    0,         // ubw
+                    0          // lbw
+                    ),
+                SimulationParameters(k, p, plist),
+                SecondOrderMode::none,
+                idlist,
+                z2event);
 
     std::vector<double> unscaled{ NAN };
 
@@ -192,7 +196,7 @@ TEST(symbolicFunctions, testSign)
 TEST(symbolicFunctions, testHeaviside)
 {
     CHECK_EQUAL(0, heaviside(-1));
-    CHECK_EQUAL(0, heaviside(0));
+    CHECK_EQUAL(1, heaviside(0));
     CHECK_EQUAL(1, heaviside(1));
 }
 
@@ -286,31 +290,39 @@ TEST_GROUP(edata)
 
     std::unique_ptr<amici::Model> model = amici::generic_model::getModel();
 
-    Model_Test testModel = Model_Test(nx,        // nx_rdata
-                                      nx,        // nxtrue_rdata
-                                      nx,        // nx_solver
-                                      nx,        // nxtrue_solver
-                                      0,         // nx_solver_reinit
-                                      ny,        // ny
-                                      ny,        // nytrue
-                                      nz,        // nz
-                                      nz,        // nztrue
-                                      nmaxevent, // ne
-                                      0,         // nw
-                                      0,         // ndwdx
-                                      0,         // ndwdp
-                                      0,         // dwdw
-                                      0,         // ndxdotdw
-                                      0,         // ndJydy
-                                      0,         // nnz
-                                      0,         // ubw
-                                      0,         // lbw
-                                      SecondOrderMode::none,
-                                      std::vector<realtype>(1, 0.0),
-                                      std::vector<realtype>(3, 0),
-                                      std::vector<int>(2, 1),
-                                      std::vector<realtype>(0, 0.0),
-                                      std::vector<int>(0, 1));
+    Model_Test testModel = Model_Test(
+                ModelDimensions(
+                    nx,        // nx_rdata
+                    nx,        // nxtrue_rdata
+                    nx,        // nx_solver
+                    nx,        // nxtrue_solver
+                    0,         // nx_solver_reinit
+                    1,  // np
+                    3,  // nk
+                    ny,        // ny
+                    ny,        // nytrue
+                    nz,        // nz
+                    nz,        // nztrue
+                    nmaxevent, // ne
+                    0,         // nJ
+                    0,         // nw
+                    0,         // ndwdx
+                    0,         // ndwdp
+                    0,         // dwdw
+                    0,         // ndxdotdw
+                    {},         // ndJydy
+                    0,         // nnz
+                    0,         // ubw
+                    0          // lbw
+                    ),
+                SimulationParameters(
+                    std::vector<realtype>(3, 0.0),
+                    std::vector<realtype>(1, 0.0),
+                    std::vector<int>(2, 1)
+                ),
+                SecondOrderMode::none,
+                std::vector<realtype>(),
+                std::vector<int>());
     void setup()
     {
         model->setTimepoints(timepoints);
@@ -593,33 +605,41 @@ TEST_GROUP(solver)
     InternalSensitivityMethod ism;
     InterpolationType interp;
 
-    Model_Test testModel = Model_Test(nx,        // nx_rdata
-                                      nx,        // nxtrue_rdata
-                                      nx,        // nx_solver
-                                      nx,        // nxtrue_solver
-                                      0,         // nx_solver_reinit
-                                      ny,        // ny
-                                      ny,        // nytrue
-                                      nz,        // nz
-                                      nz,        // nztrue
-                                      ne, // ne
-                                      0,         // nw
-                                      0,         // ndwdx
-                                      0,         // ndwdp
-                                      0,         // dwdw
-                                      0,         // ndxdotdw
-                                      0,         // ndJydy
-                                      1,         // nnz
-                                      0,         // ubw
-                                      0,         // lbw
-                                      SecondOrderMode::none,
-                                      std::vector<realtype>(1, 0.0),
-                                      std::vector<realtype>(3, 0),
-                                      std::vector<int>(2, 1),
-                                      std::vector<realtype>(0, 0.0),
-                                      std::vector<int>(0, 1));
+    Model_Test testModel = Model_Test(
+                ModelDimensions(
+                    nx,        // nx_rdata
+                    nx,        // nxtrue_rdata
+                    nx,        // nx_solver
+                    nx,        // nxtrue_solver
+                    0,         // nx_solver_reinit
+                    1,         // np
+                    3,         // nk
+                    ny,        // ny
+                    ny,        // nytrue
+                    nz,        // nz
+                    nz,        // nztrue
+                    ne,        // ne
+                    0,         // nJ
+                    0,         // nw
+                    0,         // ndwdx
+                    0,         // ndwdp
+                    0,         // dwdw
+                    0,         // ndxdotdw
+                    {},         // ndJydy
+                    1,         // nnz
+                    0,         // ubw
+                    0         // lbw
+                    ),
+                SimulationParameters(
+                    std::vector<realtype>(3, 0.0),
+                    std::vector<realtype>(1, 0.0),
+                    std::vector<int>(2, 1)
+                ),
+                SecondOrderMode::none,
+                std::vector<realtype>(0, 0.0),
+                std::vector<int>());
 
-    CVodeSolver solver = CVodeSolver();
+            CVodeSolver solver = CVodeSolver();
 
     void setup()
     {
