@@ -341,6 +341,15 @@
 
 {
    other
+   Memcheck:Cond
+   fun:realloc
+   obj:/usr/bin/python3.?
+   ...
+   fun:_PyFunction_Vectorcall
+}
+
+{
+   other
    Memcheck:Value8
    obj:/usr/bin/python3.?
    ...
