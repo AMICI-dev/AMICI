@@ -236,6 +236,11 @@ def create_dummy_sbml(
     dummy_sbml_model.setExtentUnits("mole")
     dummy_sbml_model.setSubstanceUnits('mole')
 
+    # mandatory if there are species
+    c = dummy_sbml_model.createCompartment()
+    c.setId('dummy_compartment')
+    c.setConstant(False)
+
     # parameters are required for parameter mapping
     for parameter in pysb_model.parameters:
         p = dummy_sbml_model.createParameter()
@@ -261,6 +266,9 @@ def create_dummy_sbml(
         s.setId(component.name)
         s.setInitialAmount(0.0)
         s.setHasOnlySubstanceUnits(False)
+        s.setBoundaryCondition(False)
+        s.setCompartment('dummy_compartment')
+        s.setConstant(False)
 
     return document, dummy_sbml_model
 
