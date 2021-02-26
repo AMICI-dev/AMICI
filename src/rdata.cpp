@@ -477,26 +477,58 @@ void ReturnData::handleSx0Forward(const Model &model,
 void ReturnData::processSolver(Solver const &solver) {
 
     cpu_time = solver.getCpuTime();
-    if (!numsteps.empty())
-        numsteps = solver.getNumSteps();
-    if (!numrhsevals.empty())
-        numrhsevals = solver.getNumRhsEvals();
-    if (!numerrtestfails.empty())
-        numerrtestfails = solver.getNumErrTestFails();
-    if (!numnonlinsolvconvfails.empty())
-        numnonlinsolvconvfails = solver.getNumNonlinSolvConvFails();
-    if (!order.empty())
-        order = solver.getLastOrder();
+
+    const std::vector<int> *tmp;
+
+    if (!numsteps.empty()) {
+        tmp = &solver.getNumSteps();
+        // copy_n instead of assignment to ensure length `nt`
+        // (vector from solver may be shorter in case of integration errors)
+        std::copy_n(tmp->cbegin(), tmp->size(), numsteps.begin());
+    }
+
+    if (!numsteps.empty()) {
+        tmp = &solver.getNumRhsEvals();
+        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevals.begin());
+    }
+
+    if (!numerrtestfails.empty()) {
+        tmp = &solver.getNumErrTestFails();
+        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfails.begin());
+    }
+
+    if (!numnonlinsolvconvfails.empty()) {
+        tmp = &solver.getNumNonlinSolvConvFails();
+        std::copy_n(tmp->cbegin(), tmp->size(), numnonlinsolvconvfails.begin());
+    }
+
+    if (!order.empty()) {
+        tmp = &solver.getLastOrder();
+        std::copy_n(tmp->cbegin(), tmp->size(), order.begin());
+    }
 
     cpu_timeB = solver.getCpuTimeB();
-    if (!numstepsB.empty())
-        numstepsB = solver.getNumStepsB();
-    if (!numrhsevalsB.empty())
-        numrhsevalsB = solver.getNumRhsEvalsB();
-    if (!numerrtestfailsB.empty())
-        numerrtestfailsB = solver.getNumErrTestFailsB();
-    if (!numnonlinsolvconvfailsB.empty())
-        numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
+
+    if (!numstepsB.empty()) {
+        tmp = &solver.getNumStepsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numstepsB.begin());
+    }
+
+    if (!numrhsevalsB.empty()) {
+        tmp = &solver.getNumRhsEvalsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevalsB.begin());
+    }
+
+    if (!numerrtestfailsB.empty()) {
+        tmp = &solver.getNumErrTestFailsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfailsB.begin());
+    }
+
+    if (!numnonlinsolvconvfailsB.empty()) {
+        tmp = &solver.getNumNonlinSolvConvFailsB();
+        std::copy_n(tmp->cbegin(), tmp->size(),
+                    numnonlinsolvconvfailsB.begin());
+    }
 }
 
 void ReturnData::readSimulationState(SimulationState const &state,
