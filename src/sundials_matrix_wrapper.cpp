@@ -629,14 +629,15 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
     if (!matrix_ || !C.matrix_)
         return;
 
-    if (!((C.matrix_id() == SUNMATRIX_SPARSE && C.sparsetype() == CSC_MAT)
-          || C.matrix_id() == SUNMATRIX_DENSE))
+    auto C_matrix_id = C.matrix_id();
+    if (!((C_matrix_id == SUNMATRIX_SPARSE && C.sparsetype() == CSC_MAT)
+          || C_matrix_id == SUNMATRIX_DENSE))
         throw std::domain_error("Not Implemented.");
 
     check_csc(this);
     assert(rows() == C.rows());
     assert(columns() == C.columns());
-    if (C.matrix_id() == SUNMATRIX_SPARSE) {
+    if (C_matrix_id == SUNMATRIX_SPARSE) {
         if (!C.capacity() && num_nonzeros())
             C.reallocate(num_nonzeros());
         assert(C.capacity() >= num_nonzeros());
@@ -651,40 +652,38 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
 
     // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
 
-    sunindextype aidx;
-    sunindextype cidx;
-    sunindextype acol;
-
     std::vector<sunindextype> w;
-
-    sunindextype ccol;
-    sunindextype crow;
-    sunindextype widx;
-
-    if (C.matrix_id()== SUNMATRIX_SPARSE) {
+    auto nrows = rows();
+    if (C_matrix_id == SUNMATRIX_SPARSE) {
         w = std::vector<sunindextype>(columns());
-        for (acol = 0; acol < rows(); acol++)                /* row counts */
-            for (aidx = get_indexptr(acol);
-                 aidx < get_indexptr(acol+1); aidx++) {
-                widx = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
-                w.at(widx)++;
-                assert(w[widx] <= rows());
+        for (sunindextype acol = 0; acol < nrows; acol++) { /* row counts */
+            auto next_indexptr = get_indexptr(acol+1);
+            for (sunindextype aidx = get_indexptr(acol);
+                 aidx < next_indexptr; aidx++) {
+                sunindextype widx = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
+                assert(widx >= 0 && widx < (sunindextype)w.size());
+                w[widx]++;
+                assert(w[widx] <= nrows);
             }
+        }
         /* row pointers */
         cumsum(gsl::make_span(C.indexptrs_, C.columns()+1), w);
     }
 
-    for (acol = 0; acol < rows(); acol++)
+    for (sunindextype acol = 0; acol < nrows; acol++)
     {
-        for (aidx = get_indexptr(acol); aidx < get_indexptr(acol+1); aidx++)
+        auto next_indexptr = get_indexptr(acol+1);
+
+        for (sunindextype aidx = get_indexptr(acol); aidx < next_indexptr; aidx++)
         {
-            ccol = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
-            crow = (get_indexval(aidx)/blocksize)*blocksize + acol % blocksize;
-            assert(crow < rows());
+            sunindextype ccol = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
+            sunindextype crow = (get_indexval(aidx)/blocksize)*blocksize + acol % blocksize;
+            assert(crow < nrows);
             assert(ccol < columns());
-            if (C.matrix_id() == SUNMATRIX_SPARSE) {
+            if (C_matrix_id == SUNMATRIX_SPARSE) {
                 assert(aidx < capacity());
-                cidx = w.at(ccol)++;
+                assert(ccol >= 0 && ccol < (sunindextype)w.size());
+                sunindextype cidx = w[ccol]++;
                 C.set_indexval(cidx, crow);  /* place A(i,j) as entry C(j,i) */
                 C.set_data(cidx, alpha * get_data(aidx));
             } else {
