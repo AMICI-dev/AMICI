@@ -189,6 +189,12 @@ functions = {
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *sx, const int ip, const int ie)'
     },
+    'deltax': {
+        'signature':
+            '(double *deltax, const realtype t, const realtype *x, c'
+            'onst realtype *p, const realtype *k, const realtype *h, '
+            'const int ie, const realtype *xdot, const realtype *xdot_old)'
+    },
     'deltasx': {
         'signature':
             '(realtype *deltasx, const realtype t, const realtype *x, '
@@ -1819,6 +1825,12 @@ class ODEModel:
                                                   self._eqs['w']))
             self._eqs[name] = smart_multiply(self.eq('drootdx'), tmp_xdot) + \
                               self.eq('drootdt')
+
+        elif name == 'deltax':
+            self._eqs[name] = [
+                self._events[ie]._state_update
+                for ie in range(self.num_events())
+            ]
 
         elif name == 'stau':
             self._eqs[name] = [
