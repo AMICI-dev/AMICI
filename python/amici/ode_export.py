@@ -3720,6 +3720,8 @@ def _get_unique_root(root_found: sp.Expr, roots: List[Event]) -> sp.Symbol:
     :returns:
         unique identifier for root
     """
+    #TODO: if rot_found is not time dependent: Do nothing, return void
+
     for root in roots:
         if sp.simplify(root_found - root.get_val()) == 0:
             return root.get_id()

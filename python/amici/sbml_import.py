@@ -891,7 +891,7 @@ class SbmlImporter:
             # self.symbols[SymbolId.SPECIES]
             state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 
-            bolus = [None] * len(state_vector)
+            bolus = [None for _ in state_vector]
 
             event_assignments = {}
             for event_assignment in event.getListOfEventAssignments():
