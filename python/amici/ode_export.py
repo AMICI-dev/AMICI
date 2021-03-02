@@ -2241,10 +2241,17 @@ class ODEModel:
             Whether the expression is time-dependent.
         """
         expr_syms = {str(sym) for sym in expr.free_symbols}
+
+        # Check if the time variable is in the expression.
+        if 't' in expr_syms:
+            return True
+
+        # Check if any time-dependent states are in the expression.
         state_syms = [str(sym) for sym in self._states]
         for state in expr_syms.intersection(state_syms):
             if not self.state_is_constant(state_syms.index(state)):
                 return True
+
         return False
 
 
