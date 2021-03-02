@@ -156,8 +156,8 @@ class UniformGrid(collections.abc.Sequence):
             return np.array(self._xx, dtype=dtype)
 
     def __repr__(self):
-        return 'UniformGrid(' +
-               f'start={self.start}, stop={self.stop}, step={self.step}' +
+        return 'UniformGrid(' + \
+               f'start={self.start}, stop={self.stop}, step={self.step}' + \
                ')'
 
 
@@ -812,11 +812,11 @@ class AbstractSpline(ABC):
             if k0 == k1:
                 return formula.integrate((x, z0, z1))
             elif k0 + 1 == k1:
-                return formula.integrate((x, z0, xB)) +
+                return formula.integrate((x, z0, xB)) + \
                        formula.integrate((x, xA, z1))
             else:
-                return formula.integrate((x, z0, xB)) +
-                       (k1 - k0 - 1) * formula.integrate((x, xA, xB)) +
+                return formula.integrate((x, z0, xB)) + \
+                       (k1 - k0 - 1) * formula.integrate((x, xA, xB)) + \
                        formula.integrate((x, xA, z1))
 
     @property
@@ -1500,7 +1500,7 @@ class CubicHermiteSpline(AbstractSpline):
         return kwargs
 
     def __str__(self):
-        s = 'HermiteCubicSpline ' +
+        s = 'HermiteCubicSpline ' + \
             f'on ({self.xx[0]}, {self.xx[-1]}) with {len(self.xx)} points'
         cmps = []
         if self.bc != (None, None):
