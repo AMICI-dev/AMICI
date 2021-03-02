@@ -397,8 +397,8 @@ class SbmlImporter:
                 and self.sbml.all_elements_from_plugins.getSize():
             raise SBMLException('SBML extensions are currently not supported!')
 
-        if self.sbml.getNumEvents():
-            raise SBMLException('Events are currently not supported!')
+        #if self.sbml.getNumEvents():
+        #    raise SBMLException('Events are currently not supported!')
 
         if any([not rule.isAssignment() and not isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
@@ -872,14 +872,45 @@ class SbmlImporter:
 
     @log_execution_time('processing SBML events', logger)
     def _process_events(self) -> None:
+        events = self.sbml.getListOfEvents()
 
-        self.symbols[SymbolId.EVENTS][<event_id>] = {
-            'name': name,
-            'trigger': False, # scalar function, allowing to use (fiexed/variable), paramters, species
-            'bolus': 1.0, # sympy vector with the size of the state variables
-            'observable': None, # alternatively an observable ID
-            'index': len(self.symbols[SymbolId.EVENTS]),
-        }
+        for event in events:
+            event_id = event.getId()  # FIXME optional SBML attribute
+
+            # TODO raise NotImplemented for Events with
+            #      - event.getDelay
+            #      - event.useValuesFromTriggerTime == False
+
+
+            trigger_sbml = event.getTrigger()
+            # FIXME trigger_sbml.getMath() is optional. If `trigger.getPersistent()`, then set `trigger = _parse_trigger(sp.True)`?
+            trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
+            trigger = _parse_trigger(trigger_sym)
+
+            # FIXME?: Currently, all event assignment targets must exist in
+            # self.symbols[SymbolId.SPECIES]
+            state_vector = list(self.symbols[SymbolId.SPECIES].keys())
+
+            bolus = [None] * len(state_vector)
+
+            event_assignments = {}
+            for event_assignment in event.getListOfEventAssignments():
+                formula = self._sympy_from_sbml_math(event_assignment)
+                variable_sym = symbol_with_assumptions(event_assignment.getVariable())
+                #event_assignments[variable_sym] = formula
+                bolus[state_vector.index(variable_sym)] = \
+                    formula - variable_sym
+
+            self.symbols[SymbolId.EVENT][event_id] = {
+                'trigger_raw': trigger_sym,  # FIXME remove
+                'trigger': trigger,
+                'bolus': bolus,
+                'starts_in_event': trigger_sbml.getInitialValue(),
+                'persistent': trigger_sbml.getPersistent(),
+                'observable': None,
+                #'index': len(self.symbols[SymbolId.Event]),
+            }
+
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(
@@ -1659,8 +1690,10 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
         return sp.Mul(*[_parse_trigger(arg)
                         for arg in trigger.args])
 
-    raise SBMLException('AMICI can not parse piecewise functions '
-                        f'with argument {trigger}.')
+    raise SBMLException(
+        'AMICI can not parse piecewise/event trigger functions with argument '
+        f'{trigger}.'
+    )
 
 
 def _parse_logical_operators(math_str: Union[str, float, None]
