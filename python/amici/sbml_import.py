@@ -385,6 +385,7 @@ class SbmlImporter:
         self._process_rules()
         self._process_initial_assignments()
         self._process_species_references()
+        self._process_events()
 
     def check_support(self) -> None:
         """
@@ -868,6 +869,17 @@ class SbmlImporter:
         self.amici_time_symbol = amici_time_symbol
 
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
+
+    @log_execution_time('processing SBML events', logger)
+    def _process_events(self) -> None:
+
+        self.symbols[SymbolId.EVENTS][<event_id>] = {
+            'name': name,
+            'trigger': False, # scalar function, allowing to use (fiexed/variable), paramters, species
+            'bolus': 1.0, # sympy vector with the size of the state variables
+            'observable': None, # alternatively an observable ID
+            'index': len(self.symbols[SymbolId.EVENTS]),
+        }
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(
