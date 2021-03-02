@@ -191,8 +191,8 @@ functions = {
     },
     'deltax': {
         'signature':
-            '(double *deltax, const realtype t, const realtype *x, c'
-            'onst realtype *p, const realtype *k, const realtype *h, '
+            '(double *deltax, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
             'const int ie, const realtype *xdot, const realtype *xdot_old)'
     },
     'deltasx': {
@@ -282,6 +282,11 @@ sensi_functions = [
 event_functions = [
     function for function in functions
     if 'const int ie' in functions[function]['signature']
+]
+event_sensi_functions = [
+    function for function in functions
+    if 'const int ie' in functions[function]['signature'] and
+       'const int ip' in functions[function]['signature']
 ]
 # list of multiobs functions
 multiobs_functions = [
@@ -1023,6 +1028,14 @@ class ODEModel:
             fluxes.append(flux_id)
         nr = len(fluxes)
 
+        sbml_events = [
+            {
+                'trigger': event['trigger'],
+                'state_update': event['bolus']
+            }
+            for event in symbols[SymbolId.EVENTS]
+        ]
+
         # correct time derivatives for compartment changes
 
         dxdotdw_updates = []
@@ -1146,6 +1159,11 @@ class ODEModel:
                 name=str(flux_id),
                 value=flux
             ))
+
+        for event in sbml_events:
+            self.add_component(
+
+            )
 
         # process conservation laws
         if compute_cls:
@@ -1620,6 +1638,15 @@ class ODEModel:
 
         for expr in self._expressions:
             expr.set_val(_process_heavisides(expr.get_val(), roots))
+
+        for ievent, event in enumerate(self._events):
+            self.add_component(Event(
+                identifier=sp.Symbol(str(ievent)),
+                name=event['Id'],
+                value=event['trigger'],
+                state_update=event['state_update'],
+                event_observable=None
+            ))
 
         # Now add the found roots to the model components
         for root in roots:
@@ -2868,6 +2895,9 @@ class ODEExporter:
                     f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
+            pass
+
+        elif function in event_sensi_functions:
             outer_cases = {}
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []
