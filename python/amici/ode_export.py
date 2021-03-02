@@ -1610,10 +1610,10 @@ class ODEModel:
         # Track all roots functions in the right hand side
         roots = []
         for state in self._states:
-            state.set_dt(_process_heavisides(state.get_dt(), roots))
+            state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
         for expr in self._expressions:
-            expr.set_val(_process_heavisides(expr.get_val(), roots))
+            expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
         # Now add the found roots to the model components
         for root in roots:
@@ -2229,6 +2229,107 @@ class ODEModel:
         state_set = set(self.sym('x_rdata'))
         n_species = len(state_set.intersection(tcl.get_val().free_symbols))
         return n_species > 1
+
+
+    def _expr_is_time_dependent(self, expr: sp.Expr) -> bool:
+        """Determine whether an expression is time-dependent.
+
+        :param expr:
+            The expression.
+
+        :returns:
+            Whether the expression is time-dependent.
+        """
+        expr_syms = {str(sym) for sym in expr.free_symbols}
+        state_syms = [str(sym) for sym in self._states]
+        for state in expr_syms.intersection(state_syms):
+            if not self.state_is_constant(state_syms.index(state)):
+                return True
+        return False
+
+
+    def _get_unique_root(
+            self,
+            root_found: sp.Expr,
+            roots: List[Event],
+    ) -> sp.Symbol:
+        """
+        Collects roots of Heaviside functions and events and stores them in
+        the roots list. It checks for redundancy to not store symbolically
+        equivalent root functions more than once.
+
+        :param root_found:
+            equation of the root function
+        :param roots:
+            list of already known root functions with identifier
+
+        :returns:
+            unique identifier for root, or `None` if the root is not
+            time-dependent
+        """
+        if not self._expr_is_time_dependent(root_found):
+            return None
+
+        for root in roots:
+            if sp.simplify(root_found - root.get_val()) == 0:
+                return root.get_id()
+
+        # create an event for a new root function
+        root_symstr = f'Heaviside_{len(roots)}'
+        roots.append(Event(
+            identifier=sp.Symbol(root_symstr),
+            name=root_symstr,
+            value=root_found,
+            state_update=None,
+            event_observable=None
+        ))
+        return roots[-1].get_id()
+
+
+    def _process_heavisides(
+            self,
+            dxdt: sp.Expr,
+            roots: List[Event],
+    ) -> sp.Expr:
+        """
+        Parses the RHS of a state variable, checks for Heaviside functions,
+        collects unique roots functions that can be tracked by SUNDIALS and
+        replaces Heaviside Functions by amici helper variables that will be
+        updated based on SUNDIALS root tracking.
+
+        :param dxdt:
+            right hand side of state variable
+        :param roots:
+            list of known root functions with identifier
+
+        :returns:
+            dxdt with Heaviside functions replaced by amici helper variables
+        """
+
+        # expanding the rhs will in general help to collect the same
+        # heaviside function
+        dt_expanded = dxdt.expand()
+        # track all the old Heaviside expressions in tmp_roots_old
+        # replace them later by the new expressions
+        heavisides = []
+        # run through the expression tree and get the roots
+        tmp_roots_old = _collect_heaviside_roots(dt_expanded.args)
+        for tmp_old in tmp_roots_old:
+            # we want unique identifiers for the roots
+            tmp_new = self._get_unique_root(tmp_old, roots)
+            # `tmp_new` is None if the root is not time-dependent.
+            if tmp_new is None:
+                continue
+            # For Heavisides, we need to add the negative function as well
+            self._get_unique_root(sp.sympify(- tmp_old), roots)
+            heavisides.append((sp.Heaviside(tmp_old), tmp_new))
+
+        if heavisides:
+            # only apply subs if necessary
+            for heaviside_sympy, heaviside_amici in heavisides:
+                dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
+
+        return dxdt
 
 
 def _print_with_exception(math: sp.Expr) -> str:
@@ -3662,72 +3763,3 @@ def _collect_heaviside_roots(args: Sequence[sp.Expr]) -> List[sp.Expr]:
             root_funs.extend(_collect_heaviside_roots(arg.args))
 
     return root_funs
-
-
-def _get_unique_root(root_found: sp.Expr, roots: List[Event]) -> sp.Symbol:
-    """
-    Collects roots of Heaviside functions and events and stores them in
-    the roots list. It checks for redundancy to not store symbolically
-    equivalent root functions more than once.
-
-    :param root_found:
-        equation of the root function
-    :param roots:
-        list of already known root functions with identifier
-
-    :returns:
-        unique identifier for root
-    """
-    for root in roots:
-        if sp.simplify(root_found - root.get_val()) == 0:
-            return root.get_id()
-
-    # create an event for a new root function
-    root_symstr = f'Heaviside_{len(roots)}'
-    roots.append(Event(
-        identifier=sp.Symbol(root_symstr),
-        name=root_symstr,
-        value=root_found,
-        state_update=None,
-        event_observable=None
-    ))
-    return roots[-1].get_id()
-
-
-def _process_heavisides(dxdt: sp.Expr, roots: List[Event]) -> sp.Expr:
-    """
-    Parses the RHS of a state variable, checks for Heaviside functions,
-    collects unique roots functions that can be tracked by SUNDIALS and
-    replaces Heaviside Functions by amici helper variables that will be
-    updated based on SUNDIALS root tracking.
-
-    :param dxdt:
-        right hand side of state variable
-    :param roots:
-        list of known root functions with identifier
-
-    :returns:
-        dxdt with Heaviside functions replaced by amici helper variables
-    """
-
-    # expanding the rhs will in general help to collect the same
-    # heaviside function
-    dt_expanded = dxdt.expand()
-    # track all the old Heaviside expressions in tmp_roots_old
-    # replace them later by the new expressions
-    heavisides = []
-    # run through the expression tree and get the roots
-    tmp_roots_old = _collect_heaviside_roots(dt_expanded.args)
-    for tmp_old in tmp_roots_old:
-        # we want unique identifiers for the roots
-        tmp_new = _get_unique_root(tmp_old, roots)
-        # For Heavisides, we need to add the negative function as well
-        _get_unique_root(sp.sympify(- tmp_old), roots)
-        heavisides.append((sp.Heaviside(tmp_old), tmp_new))
-
-    if heavisides:
-        # only apply subs if necessary
-        for heaviside_sympy, heaviside_amici in heavisides:
-            dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
-
-    return dxdt
