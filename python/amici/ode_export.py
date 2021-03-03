@@ -281,7 +281,8 @@ sensi_functions = [
 # list of event functions
 event_functions = [
     function for function in functions
-    if 'const int ie' in functions[function]['signature']
+    if 'const int ie' in functions[function]['signature'] and
+        'const int ip' not in functions[function]['signature']
 ]
 event_sensi_functions = [
     function for function in functions
@@ -1834,10 +1835,16 @@ class ODEModel:
                               self.eq('drootdt')
 
         elif name == 'deltax':
-            self._eqs[name] = [
-                self._events[ie]._state_update
-                for ie in range(self.num_events())
-            ]
+            # fill boluses for Heaviside functions, as empty state updates
+            # would cause problems when writing the function file later
+            event_eqs = []
+            for ie in range(self.num_events()):
+                if self._events[ie]._state_update is None:
+                    event_eqs.append(sp.zeros(self.num_states_solver(), 1))
+                else:
+                    event_eqs.append(self._events[ie]._state_update)
+
+            self._eqs[name] = event_eqs
 
         elif name == 'stau':
             self._eqs[name] = [
@@ -1846,11 +1853,14 @@ class ODEModel:
             ]
 
         elif name == 'deltasx':
-            self._eqs[name] = [
-                smart_multiply((self.eq('xdot_old') - self.eq('xdot')),
-                               self.eq('stau')[ie])
-                for ie in range(self.num_events())
-            ]
+            event_eqs = []
+            for ie in range(self.num_events()):
+                if self._events[ie]._state_update is None:
+                    event_eqs.append(smart_multiply(
+                        (self.eq('xdot_old') - self.eq('xdot')),
+                        self.eq('stau')[ie]))
+                else:
+                    pass
 
         elif name == 'xdot_old':
             # force symbols
@@ -2875,7 +2885,10 @@ class ODEExporter:
                     f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
-            pass
+            cases = {ie: _get_sym_lines_array(equations[ie], function, 0)
+                     for ie in range(self.model.num_events())
+                     if not smart_is_zero_matrix(equations[ie])}
+            lines.extend(get_switch_statement('ie', cases, 1))
 
         elif function in event_sensi_functions:
             outer_cases = {}
