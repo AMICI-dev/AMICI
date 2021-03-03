@@ -100,6 +100,11 @@ extern void stau_TPL_MODELNAME(realtype *stau, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
                                const realtype *sx, const int ip, const int ie);
+extern void deltax_TPL_MODELNAME(realtype *deltax, const realtype t,
+                                 const realtype *x, const realtype *p,
+                                 const realtype *k, const realtype *h,
+                                 const int ie, const realtype *xdot,
+                                 const realtype *xdot_old);
 extern void deltasx_TPL_MODELNAME(realtype *deltasx, const realtype t,
                                   const realtype *x, const realtype *p,
                                   const realtype *k, const realtype *h,
