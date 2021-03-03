@@ -872,6 +872,30 @@ class SbmlImporter:
 
     @log_execution_time('processing SBML events', logger)
     def _process_events(self) -> None:
+        """Process SBML events.
+
+        TODO
+        - raise SBMLException for unsupported Event features
+          - [X] Delay
+          - [X] Event.use_values_from_trigger_time
+        - [X] handle trigger
+        - [X] handle event assignments
+        - handle Event required attributes
+          - [ ] useValuesFromTriggerTime
+        - handle Event optional attributes
+          - [X] attribute: id
+          - [ ] attribute: sboTerm
+        - handle Event optional subobjects
+          - Trigger
+            - [X] (required) persistent
+            - [X] (required) initialValue
+            - [X] (optional) math
+            - [ ] (optional) sboTerm
+          - [ ] Delay
+          - [ ] Priority
+          - [ ] ListOfEventAssignments
+          - [ ] EventAssignment
+        """
         events = self.sbml.getListOfEvents()
 
         for ievent, event in enumerate(events):
@@ -880,17 +904,51 @@ class SbmlImporter:
                 event_id = f'event_{ievent}'
             event_sym = sp.Symbol(event_id)
 
+
+            # TODO move these checks to the `check_support` method?
             delay = event.getDelay()
-            if delay is not None and delay != 0:
-                raise SBMLException('Events with execution delays are '
-                                    'currently not supported in AMICI.')
+            if delay is not None:
+                # TODO try-catch on the float cast?
+                if float(self._sympy_from_sbml_math(delay)) != 0:
+                    raise SBMLException('Events with execution delays are '
+                                        'currently not supported in AMICI.')
             if event.use_values_from_trigger_time == False:
-                raise SBMLException('Events with execution delays are '
-                                    'currently not supported in AMICI.')
+                raise SBMLException('Events with '
+                                    '"use_values_from_trigger_time == False" '
+                                    'are currently not supported in AMICI.')
+            if event.getPriority is not None:
+                raise SBMLException(f'Event {event_id} has a priority '
+                                    'specified. This is currently not '
+                                    'supported in AMICI.')
 
             trigger_sbml = event.getTrigger()
-            # FIXME trigger_sbml.getMath() is optional. If `trigger.getPersistent()`, then set `trigger = _parse_trigger(sp.True)`?
-            # persistent is only interesting if a delay is supported
+            if trigger_sbml is None:
+                # TODO raise SBMLException? Or just ignore?
+                continue
+            if trigger_sbml.getMath() is None:
+                # TODO untested, find SBML test suite case
+                logger.warning(f'Event {event_id} trigger has no trigger '
+                               'expression. Ignoring event...')
+                continue
+            if trigger_sbml.getPersistent():
+                raise SBMLException(
+                    f'Event {event_id} trigger is persistent. '
+                    'Persistent / delayed / prioritized events are currently '
+                    'not supported in AMICI.'
+                )
+            # FIXME check what AMICI supports by default
+            # True means event does not executed if triggered at time == 0
+            # False means it does.
+            if not trigger_sbml.getInitialValue():
+                raise SBMLException(
+                    f'Event {event_id} has a trigger that has an initial '
+                    'value of False. This is currently not supported in AMICI.'
+                )
+            if not trigger_sbml.getInitialValue():
+                raise SBMLException(
+                    f'Event {event_id} has a trigger that has an initial '
+                    'value of False. This is currently not supported in AMICI.'
+                )
             trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
             trigger = _parse_event_trigger(trigger_sym)
 
@@ -1289,6 +1347,13 @@ class SbmlImporter:
                 continue
             for element in self.symbols[symbol].values():
                 element['value'] = smart_subs(element['value'], old, new)
+
+        # replace in event state updates (boluses)
+        if self.symbols.get(SymbolId.EVENT, False):
+            for element in self.symbols[SymbolId.EVENT].values():
+                for index in range(len(element['state_update'])):
+                    element['state_update'][index] = \
+                        smart_subs(element['state_update'][index], old, new)
 
         if SymbolId.SPECIES in self.symbols:
             for species in self.symbols[SymbolId.SPECIES].values():
