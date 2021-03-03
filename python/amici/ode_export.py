@@ -195,6 +195,18 @@ functions = {
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ie, const realtype *xdot, const realtype *xdot_old)'
     },
+    'ddeltaxdx': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'ddeltaxdt': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'ddeltaxdp': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
     'deltasx': {
         'signature':
             '(realtype *deltasx, const realtype t, const realtype *x, '
@@ -1591,8 +1603,10 @@ class ODEModel:
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
         else:
-            length = len(self.eq(name))
-
+            try:
+                length = len(self.eq(name))
+            except:
+                print("Don't piss me off")
         self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
@@ -1846,6 +1860,24 @@ class ODEModel:
 
             self._eqs[name] = event_eqs
 
+        elif name == 'ddeltaxdx':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], self.sym('x'))
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'ddeltaxdt':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], time_symbol)
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'ddeltaxdp':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], self.sym('p'))
+                for ie in range(self.num_events())
+            ]
+
         elif name == 'stau':
             self._eqs[name] = [
                 -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
@@ -1855,12 +1887,31 @@ class ODEModel:
         elif name == 'deltasx':
             event_eqs = []
             for ie in range(self.num_events()):
-                if self._events[ie]._state_update is None:
-                    event_eqs.append(smart_multiply(
-                        (self.eq('xdot_old') - self.eq('xdot')),
-                        self.eq('stau')[ie]))
-                else:
-                    pass
+                tmp_eq = smart_multiply(
+                    (self.eq('xdot_old') - self.eq('xdot')),
+                    self.eq('stau')[ie])
+                if self._events[ie]._state_update is not None:
+                    # ====== chain rule for the state variables ===============
+                    # get xdot with expressions back-substituted
+                    tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
+                                                          self._eqs['w']))
+                    # construct an enhanced state sensitivity, which accounts
+                    # for the time point sensitivity as well
+                    tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
+                    tmp_dxdp += smart_multiply(tmp_xdot, self.eq('stau')[ie])
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
+                                             tmp_dxdp)
+
+                    # ====== chain rule for the time point ====================
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                                             self.eq('stau')[ie])
+
+                    # ====== partial derivative for the parameters ============
+                    tmp_eq += self.eq('ddeltaxdp')[ie]
+
+                event_eqs.append(tmp_eq)
+
+            self._eqs[name] = event_eqs
 
         elif name == 'xdot_old':
             # force symbols

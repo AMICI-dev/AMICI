@@ -338,7 +338,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual void fdeltax(realtype *deltax, const realtype t, const realtype *x,
                          const realtype *p, const realtype *k,
                          const realtype *h, const int ie, const realtype *xdot,
-                         const realtype *xdot_old) override {}
+                         const realtype *xdot_old) override {
+        deltax_TPL_MODELNAME(deltax, t, x, p, k, h, ie, xdot, xdot_old);
+    }
 
     /** model specific implementation of fdeltaxB
      * @param deltaxB adjoint state update
