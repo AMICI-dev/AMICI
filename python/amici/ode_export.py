@@ -193,8 +193,9 @@ functions = {
         'signature':
             '(realtype *deltasx, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const int ip, const int ie, const realtype *xdot, '
-            'const realtype *xdot_old, const realtype *sx, const realtype *stau)'
+            'const realtype *w, const int ip, const int ie, '
+            'const realtype *xdot, const realtype *xdot_old, '
+            'const realtype *sx, const realtype *stau)'
     },
     'w': {
         'signature':
@@ -686,6 +687,7 @@ class LogLikelihood(ModelQuantity):
             formula
         """
         super(LogLikelihood, self).__init__(identifier, name, value)
+
 
 class Event(ModelQuantity):
     """
@@ -1579,7 +1581,6 @@ class ODEModel:
         else:
             length = len(self.eq(name))
 
-
         self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
@@ -1803,7 +1804,8 @@ class ODEModel:
 
         elif name == 'dtcldx':
             # this is always zero
-            self._eqs[name] = sp.zeros(self.num_cons_law(), self.num_states_solver())
+            self._eqs[name] = \
+                sp.zeros(self.num_cons_law(), self.num_states_solver())
 
         elif name == 'dtcldp':
             # force symbols
@@ -1826,8 +1828,10 @@ class ODEModel:
             # following lines are only evaluated if a model has events
             tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
                                                   self._eqs['w']))
-            self._eqs[name] = smart_multiply(self.eq('drootdx'), tmp_xdot) + \
-                              self.eq('drootdt')
+            self._eqs[name] = (
+                smart_multiply(self.eq('drootdx'), tmp_xdot)
+                + self.eq('drootdt')
+            )
 
         elif name == 'stau':
             self._eqs[name] = [
@@ -1845,7 +1849,6 @@ class ODEModel:
         elif name == 'xdot_old':
             # force symbols
             self._eqs[name] = self.sym(name)
-
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
@@ -1870,7 +1873,8 @@ class ODEModel:
                 self._eqs[name] = [dec(sub_eq.applyfunc)(self._simplify)
                                    for sub_eq in self._eqs[name]]
             else:
-                self._eqs[name] = dec(self._eqs[name].applyfunc)(self._simplify)
+                self._eqs[name] = \
+                    dec(self._eqs[name].applyfunc)(self._simplify)
 
     def sym_names(self) -> List[str]:
         """
@@ -2239,7 +2243,6 @@ class ODEModel:
         n_species = len(state_set.intersection(tcl.get_val().free_symbols))
         return n_species > 1
 
-
     def _expr_is_time_dependent(self, expr: sp.Expr) -> bool:
         """Determine whether an expression is time-dependent.
 
@@ -2268,7 +2271,6 @@ class ODEModel:
                 return True
 
         return False
-
 
     def _get_unique_root(
             self,
@@ -2306,7 +2308,6 @@ class ODEModel:
             event_observable=None
         ))
         return roots[-1].get_id()
-
 
     def _process_heavisides(
             self,
@@ -2683,8 +2684,8 @@ class ODEExporter:
         lines.append("amimodel.compileAndLinkModel"
                      "(modelName, '', [], [], [], []);")
         lines.append(f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
-                     f"{nytrue}, {self.model.num_par()}, {self.model.num_const()}, "
-                     f"{nz}, {o2flag}, ...\n    [], "
+                     f"{nytrue}, {self.model.num_par()}, "
+                     f"{self.model.num_const()}, {nz}, {o2flag}, ...\n    [], "
                      "['simulate_' modelName '.m'], modelName, ...\n"
                      "    'lin', 1, 1);")
 
@@ -2855,9 +2856,11 @@ class ODEExporter:
             static_array_name = f"{function}_{indextype}_{self.model_name}_"
             if function in multiobs_functions:
                 # list of index vectors
-                lines.append("static constexpr std::array<std::array<sunindextype, "
-                             f"{len(values[0])}>, {len(values)}> "
-                             f"{static_array_name} = {{{{")
+                lines.append(
+                    "static constexpr std::array<std::array<sunindextype, "
+                    f"{len(values[0])}>, {len(values)}> "
+                    f"{static_array_name} = {{{{"
+                )
                 lines.extend(['    {'
                               + ', '.join(map(str, index_vector)) + '}, '
                               for index_vector in values])
@@ -2876,9 +2879,15 @@ class ODEExporter:
 
         if len(values):
             if function in multiobs_functions:
-                lines.append(f"    {function}.set_{setter}(gsl::make_span({static_array_name}[index]));")
+                lines.append(
+                    f"    {function}.set_{setter}"
+                    f"(gsl::make_span({static_array_name}[index]));"
+                )
             else:
-                lines.append(f"    {function}.set_{setter}(gsl::make_span({static_array_name}));")
+                lines.append(
+                    f"    {function}.set_{setter}"
+                    f"(gsl::make_span({static_array_name}));"
+                )
 
         lines.extend([
             '}'
@@ -2912,9 +2921,13 @@ class ODEExporter:
 
         lines = []
 
-        if len(equations) == 0 or (isinstance(equations, (sp.Matrix,
-                                                          sp.ImmutableDenseMatrix))
-                                   and min(equations.shape) == 0):
+        if (
+                len(equations) == 0
+                or (
+                    isinstance(equations, (sp.Matrix, sp.ImmutableDenseMatrix))
+                    and min(equations.shape) == 0
+                )
+        ):
             # dJydy is a list
             return lines
 
@@ -3006,10 +3019,11 @@ class ODEExporter:
                          for iobs in range(self.model.num_obs())
                          if not smart_is_zero_matrix(equations[iobs])}
             else:
-                cases = {iobs: _get_sym_lines_array(equations[:, iobs], function,
-                                                    0)
-                         for iobs in range(self.model.num_obs())
-                         if not smart_is_zero_matrix(equations[:, iobs])}
+                cases = {
+                    iobs: _get_sym_lines_array(equations[:, iobs], function, 0)
+                    for iobs in range(self.model.num_obs())
+                    if not smart_is_zero_matrix(equations[:, iobs])
+                }
             lines.extend(get_switch_statement('iy', cases, 1))
 
         elif function in self.model.sym_names() \
