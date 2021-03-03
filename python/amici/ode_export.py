@@ -1028,14 +1028,6 @@ class ODEModel:
             fluxes.append(flux_id)
         nr = len(fluxes)
 
-        sbml_events = [
-            {
-                'trigger': event['trigger'],
-                'state_update': event['bolus']
-            }
-            for event in symbols[SymbolId.EVENTS]
-        ]
-
         # correct time derivatives for compartment changes
 
         dxdotdw_updates = []
@@ -1139,6 +1131,8 @@ class ODEModel:
                 args += ['dt', 'init']
             else:
                 args += ['value']
+            if symbol_name == SymbolId.EVENT:
+                args += ['state_update', 'event_observable']
 
             protos = [
                 {
@@ -1160,10 +1154,15 @@ class ODEModel:
                 value=flux
             ))
 
-        for event in sbml_events:
-            self.add_component(
-
-            )
+#        # add events (actual SBML events here)
+#        for event_key, sbml_event in symbols[SymbolId.EVENT].items():
+#            self.add_component(Event(
+#                identifier=sp.Symbol(event_key),
+#                name=event_key,
+#                value=sbml_event['trigger'],
+#                state_update=sp.MutableDenseMatrix(sbml_event['bolus']),
+#                event_observable=sbml_event['observable'],
+#            ))
 
         # process conservation laws
         if compute_cls:
@@ -1197,7 +1196,7 @@ class ODEModel:
                 self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
-        self.generate_basic_variables(from_sbml=True)
+        self.generate_basic_variables(from_sbml=True, events=sbml_events)
         # substitute 'w' expressions into event expressions now, to avoid
         # rewriting '{model_name}_root.cpp' headers to include 'w.h'
         for index, event in enumerate(self._events):

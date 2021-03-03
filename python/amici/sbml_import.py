@@ -874,18 +874,25 @@ class SbmlImporter:
     def _process_events(self) -> None:
         events = self.sbml.getListOfEvents()
 
-        for event in events:
-            event_id = event.getId()  # FIXME optional SBML attribute
+        for ievent, event in enumerate(events):
+            event_id = event.getId()
+            if event_id is None:
+                event_id = f'event_{ievent}'
+            event_sym = sp.Symbol(event_id)
 
-            # TODO raise NotImplemented for Events with
-            #      - event.getDelay
-            #      - event.useValuesFromTriggerTime == False
-
+            delay = event.getDelay()
+            if delay is not None and delay != 0:
+                raise SBMLException('Events with execution delays are '
+                                    'currently not supported in AMICI.')
+            if event.use_values_from_trigger_time == False:
+                raise SBMLException('Events with execution delays are '
+                                    'currently not supported in AMICI.')
 
             trigger_sbml = event.getTrigger()
             # FIXME trigger_sbml.getMath() is optional. If `trigger.getPersistent()`, then set `trigger = _parse_trigger(sp.True)`?
+            # persistent is only interesting if a delay is supported
             trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
-            trigger = _parse_trigger(trigger_sym)
+            trigger = _parse_event_trigger(trigger_sym)
 
             # FIXME?: Currently, all event assignment targets must exist in
             # self.symbols[SymbolId.SPECIES]
@@ -901,14 +908,11 @@ class SbmlImporter:
                 bolus[state_vector.index(variable_sym)] = \
                     formula - variable_sym
 
-            self.symbols[SymbolId.EVENT][event_id] = {
-                'trigger_raw': trigger_sym,  # FIXME remove
-                'trigger': trigger,
-                'bolus': bolus,
-                'starts_in_event': trigger_sbml.getInitialValue(),
-                'persistent': trigger_sbml.getPersistent(),
-                'observable': None,
-                #'index': len(self.symbols[SymbolId.Event]),
+            self.symbols[SymbolId.EVENT][event_sym] = {
+                'name': event_id,
+                'value': trigger,
+                'state_update': bolus, # 'starts_in_event': trigger_sbml.getInitialValue(),
+                'event_observable': None,
             }
 
 
@@ -1645,14 +1649,14 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         if trigger == sp.false:
             continue
 
-        tmp = _parse_trigger(trigger)
+        tmp = _parse_heaviside_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
         not_condition *= (1-tmp)
 
     return formula
 
 
-def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
+def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     Recursively translates a boolean trigger function into a real valued
     root function
@@ -1683,12 +1687,51 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return 1-sp.Mul(*[1-_parse_trigger(arg)
+        return 1-sp.Mul(*[1-_parse_heaviside_trigger(arg)
                         for arg in trigger.args])
 
     if isinstance(trigger, sp.And):
-        return sp.Mul(*[_parse_trigger(arg)
+        return sp.Mul(*[_parse_heaviside_trigger(arg)
                         for arg in trigger.args])
+
+    raise SBMLException(
+        'AMICI can not parse piecewise/event trigger functions with argument '
+        f'{trigger}.'
+    )
+
+
+def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
+    """
+    Recursively translates a boolean trigger function into a real valued
+    root function
+
+    :param trigger:
+    :return: real valued root function expression
+    """
+    if trigger.is_Relational:
+        root = trigger.args[0] - trigger.args[1]
+
+        # normalize such that we always implement <,
+        # this ensures that we can correctly evaluate the condition if
+        # simulation starts at H(0). This is achieved by translating
+        # conditionals into Heaviside functions H that is implemented as unit
+        # step with H(0) = 1
+        if isinstance(trigger, sp.core.relational.LessThan) or \
+                isinstance(trigger, sp.core.relational.StrictLessThan):
+            # y < x or y <= x
+            return -root
+        if isinstance(trigger, sp.core.relational.GreaterThan) or \
+                isinstance(trigger, sp.core.relational.StrictGreaterThan):
+            # y >= x or y > x
+            return root
+
+    # or(x,y) = not(and(not(x),not(y))
+    if isinstance(trigger, sp.Or):
+        return sp.Mul(*[_parse_event_trigger(arg) for arg in trigger.args])
+
+    if isinstance(trigger, sp.And):
+        raise SBMLException('AMICI can not logical AND expressions in event '
+                            'trigger functions.')
 
     raise SBMLException(
         'AMICI can not parse piecewise/event trigger functions with argument '
