@@ -1588,14 +1588,13 @@ class ODEModel:
         Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
         """
+        for var in self._variable_prototype:
+            if var not in self._syms:
+                self._generate_symbol(var, from_sbml=from_sbml)
 
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
         self.parse_events()
-
-        for var in self._variable_prototype:
-            if var not in self._syms:
-                self._generate_symbol(var, from_sbml=from_sbml)
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
@@ -2240,6 +2239,12 @@ class ODEModel:
         :returns:
             Whether the expression is time-dependent.
         """
+        # substitute 'w' expressions into root expressions now, to avoid
+        # rewriting '{model_name}_stau.cpp' headers to include 'w.h'
+        expr = expr.subs(zip(self._syms['w'], self.eq('w')))
+
+        # `expr.free_symbols` will be different to `self._states.keys()`, so
+        # it's easier to compare as `str`.
         expr_syms = {str(sym) for sym in expr.free_symbols}
 
         # Check if the time variable is in the expression.
