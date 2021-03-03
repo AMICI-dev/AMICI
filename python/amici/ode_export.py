@@ -1579,6 +1579,7 @@ class ODEModel:
         else:
             length = len(self.eq(name))
 
+
         self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
@@ -1588,13 +1589,22 @@ class ODEModel:
         Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
         """
-        for var in self._variable_prototype:
-            if var not in self._syms:
-                self._generate_symbol(var, from_sbml=from_sbml)
+        # Workaround to generate `'w'` before events, such that `'w'` can be
+        # replaced in events, to avoid adding `w` to the header of
+        # "{model_name}_stau.cpp".
+        if 'w' not in self._syms:
+            self._generate_symbol('w', from_sbml=from_sbml)
 
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
         self.parse_events()
+
+        for var in self._variable_prototype:
+            # Part of the workaround described earlier in this method.
+            if var == 'w':
+                continue
+            if var not in self._syms:
+                self._generate_symbol(var, from_sbml=from_sbml)
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
