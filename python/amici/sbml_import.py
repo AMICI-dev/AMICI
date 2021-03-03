@@ -908,15 +908,21 @@ class SbmlImporter:
             # TODO move these checks to the `check_support` method?
             delay = event.getDelay()
             if delay is not None:
-                # TODO try-catch on the float cast?
-                if float(self._sympy_from_sbml_math(delay)) != 0:
+                try:
+                    delay_time = float(self._sympy_from_sbml_math(delay))
+                    if delay_time != 0:
+                        # `TypeError` would be raised in the above `float(...)`
+                        # if the delay is not a fixed time, so is used here
+                        # also to represent unsupported delays.
+                        raise TypeError
+                except TypeError:
                     raise SBMLException('Events with execution delays are '
                                         'currently not supported in AMICI.')
-            if event.use_values_from_trigger_time == False:
+            if event.getUseValuesFromTriggerTime() == False:
                 raise SBMLException('Events with '
                                     '"use_values_from_trigger_time == False" '
                                     'are currently not supported in AMICI.')
-            if event.getPriority is not None:
+            if event.getPriority() is not None:
                 raise SBMLException(f'Event {event_id} has a priority '
                                     'specified. This is currently not '
                                     'supported in AMICI.')
@@ -930,11 +936,11 @@ class SbmlImporter:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression. Ignoring event...')
                 continue
-            if trigger_sbml.getPersistent():
+            if not trigger_sbml.getPersistent():
                 raise SBMLException(
                     f'Event {event_id} trigger is persistent. '
-                    'Persistent / delayed / prioritized events are currently '
-                    'not supported in AMICI.'
+                    'Non-persistent / delayed / prioritized events are '
+                    'currently not supported in AMICI.'
                 )
             # FIXME check what AMICI supports by default
             # True means event does not executed if triggered at time == 0
@@ -958,13 +964,16 @@ class SbmlImporter:
 
             bolus = [sp.Symbol('0') for _ in state_vector]
 
-            event_assignments = {}
             for event_assignment in event.getListOfEventAssignments():
                 formula = self._sympy_from_sbml_math(event_assignment)
                 variable_sym = symbol_with_assumptions(event_assignment.getVariable())
-                #event_assignments[variable_sym] = formula
                 bolus[state_vector.index(variable_sym)] = \
                     formula - variable_sym
+                if self.symbols[SymbolId.SPECIES][variable_sym]['constant']:
+                    raise SBMLException(
+                        'AMICI does not currently support models with SBML '
+                        'events that affect constant species.'
+                    )
 
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
