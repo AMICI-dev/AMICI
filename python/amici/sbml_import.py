@@ -875,26 +875,31 @@ class SbmlImporter:
         """Process SBML events.
 
         TODO
-        - raise SBMLException for unsupported Event features
+        - [X] raise SBMLException for unsupported Event features
           - [X] Delay
           - [X] Event.use_values_from_trigger_time
+          - others...
         - [X] handle trigger
         - [X] handle event assignments
-        - handle Event required attributes
-          - [ ] useValuesFromTriggerTime
-        - handle Event optional attributes
-          - [X] attribute: id
-          - [ ] attribute: sboTerm
-        - handle Event optional subobjects
-          - Trigger
+        - [X] handle Event required attributes
+          - [X] useValuesFromTriggerTime
+        - [X] handle Event optional attributes
+          - [X] id
+          - [ ] sboTerm
+        - [X] handle Event optional subobjects
+          - [X] Trigger
             - [X] (required) persistent
             - [X] (required) initialValue
             - [X] (optional) math
             - [ ] (optional) sboTerm
-          - [ ] Delay
-          - [ ] Priority
-          - [ ] ListOfEventAssignments
-          - [ ] EventAssignment
+          - [X] Delay
+          - [X] Priority
+          - [X] ListOfEventAssignments
+          - [X] EventAssignment
+            - [X] (required) variable
+            - [ ] (optional) sboTerm
+            - [ ] (optional) id
+            - [X] (optional) math
         """
         events = self.sbml.getListOfEvents()
 
@@ -918,7 +923,7 @@ class SbmlImporter:
                 except TypeError:
                     raise SBMLException('Events with execution delays are '
                                         'currently not supported in AMICI.')
-            if event.getUseValuesFromTriggerTime() == False:
+            if not event.getUseValuesFromTriggerTime():
                 raise SBMLException('Events with '
                                     '"use_values_from_trigger_time == False" '
                                     'are currently not supported in AMICI.')
@@ -964,16 +969,25 @@ class SbmlImporter:
 
             bolus = [sp.Symbol('0') for _ in state_vector]
 
-            for event_assignment in event.getListOfEventAssignments():
-                formula = self._sympy_from_sbml_math(event_assignment)
-                variable_sym = symbol_with_assumptions(event_assignment.getVariable())
-                bolus[state_vector.index(variable_sym)] = \
-                    formula - variable_sym
+            event_assignments = event.getListOfEventAssignments()
+            if not len(event_assignments):
+                # ignore events with no event assignments
+                # TODO raise exception?
+                continue
+            for event_assignment in event_assignments:
+                variable_sym = \
+                    symbol_with_assumptions(event_assignment.getVariable())
                 if self.symbols[SymbolId.SPECIES][variable_sym]['constant']:
                     raise SBMLException(
                         'AMICI does not currently support models with SBML '
                         'events that affect constant species.'
                     )
+                if event_assignment.getMath() is None:
+                    # ignore event assignments with no change in value
+                    continue
+                formula = self._sympy_from_sbml_math(event_assignment)
+                bolus[state_vector.index(variable_sym)] = \
+                    formula - variable_sym
 
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
