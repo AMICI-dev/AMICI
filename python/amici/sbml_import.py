@@ -911,7 +911,7 @@ class SbmlImporter:
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
                 'value': trigger,
-                'state_update': bolus, # 'starts_in_event': trigger_sbml.getInitialValue(),
+                'state_update': sp.MutableDenseMatrix(bolus), # 'starts_in_event': trigger_sbml.getInitialValue(),
                 'event_observable': None,
             }
 
@@ -1284,7 +1284,7 @@ class SbmlImporter:
 
         # replace in values
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
-                       SymbolId.EXPRESSION]:
+                       SymbolId.EXPRESSION, SymbolId.EVENT]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():

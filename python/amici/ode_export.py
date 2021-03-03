@@ -1154,16 +1154,6 @@ class ODEModel:
                 value=flux
             ))
 
-#        # add events (actual SBML events here)
-#        for event_key, sbml_event in symbols[SymbolId.EVENT].items():
-#            self.add_component(Event(
-#                identifier=sp.Symbol(event_key),
-#                name=event_key,
-#                value=sbml_event['trigger'],
-#                state_update=sp.MutableDenseMatrix(sbml_event['bolus']),
-#                event_observable=sbml_event['observable'],
-#            ))
-
         # process conservation laws
         if compute_cls:
             dxdotdw_updates = si.process_conservation_laws(self,
@@ -1196,7 +1186,7 @@ class ODEModel:
                 self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
-        self.generate_basic_variables(from_sbml=True, events=sbml_events)
+        self.generate_basic_variables(from_sbml=True)
         # substitute 'w' expressions into event expressions now, to avoid
         # rewriting '{model_name}_root.cpp' headers to include 'w.h'
         for index, event in enumerate(self._events):
@@ -1637,15 +1627,6 @@ class ODEModel:
 
         for expr in self._expressions:
             expr.set_val(_process_heavisides(expr.get_val(), roots))
-
-        for ievent, event in enumerate(self._events):
-            self.add_component(Event(
-                identifier=sp.Symbol(str(ievent)),
-                name=event['Id'],
-                value=event['trigger'],
-                state_update=event['state_update'],
-                event_observable=None
-            ))
 
         # Now add the found roots to the model components
         for root in roots:
