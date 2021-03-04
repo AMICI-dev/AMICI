@@ -865,18 +865,18 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      * keep:
      * 123123123: accounted for by sres*sres,
      * but
-     * - (s_dv*s_du)/s^2 is unaccounted for
+     * - (s_dv*s_du)/s^2 is unaccounted for and
      * - (s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
-     * + 2*(s_du*s_dv)*r^2/s^4 is missing from 3333 and
+     * + 2*(s_du*s_dv)*r^2/s^4 is missing from 3333
      *
      * s_dv*y_du and s_du*y_dv are usually zero since we do not have parameters
      * that affect both observables and sigmas. Accordingly, it is hard to know
      * emprically whether these terms are important or not.
      *
-     * this leaves us with
+     * This leaves us with
      * + (s_du*s_dv)(2*r^2-s^2)/s^4
      * which may be problematic, since this expression does not factorise and
-     * may thus introduce directions of negative curvature
+     * may thus introduce directions of negative curvature.
      *
      * For the least squares trick, where error residuals
      * er = sqrt(log(s) + c), with sensitivity er_du = s_du/(2*s*er). This
