@@ -837,17 +837,19 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
 
     /*
-     * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+0.5*log%282+*+pi+*+s%28u%2Cv%29%5E2%29+%2B+0.5+*+%28%28y%28u%2Cv%29+-+m%29%2Fs%28u%2Cv%29%29%5E2
-     * r = (m - y)
-     * d/du(d/(dv)(0.5 log(2 π s^2) + 0.5 ((y - m)/s)^2)) =
-     * (-s_du*y_dv*r + 2*s_dv*y_du*r - s_du_dv*r^2 -
-     *  222222222222   2222222222222   ***********
+     * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+log%28s%28u%2Cv%29%29+%2B+0.5+*+%28r%28u%2Cv%29%2Fs%28u%2Cv%29%29%5E2
+     * r = (y - m)
+     * r_du = y_du
+     * d/du(d/(dv)(log(s) + 0.5 (r/s)^2)) =
+     * -(2*y_du*s_dv)*r/s^3 - (2*y_dv*s_du)*r/s^3 + y_du_dv*r/s^2
+     * 22222222222222222222   2222222222222222222   #############
      *
-     *  s*y_du_dv*r + s_du_dv*s^2 + 2*s_dv*s_du*s + s*y_dv*y_du)/s^3 -
-     *  ###########   +++++++++++   -------------   11111111111
+     * + (y_dv*y_du)/s^2 + (3*s_dv*s_du)*r^2/s^4 - s_du_dv*r^2/s^3
+     *   111111111111111   333333333333333333333   ***************
      *
-     * (3*s_du*(-s_dv*r^2 - s*y_dv*r + s_dv*s^2))/s^4
-     *          333333333   22222222   --------
+     * - (s_dv*s_du)/s^2 + (s_du_dv)/s
+     *                     +++++++++++
+     *
      *
      * we compute this using fsres:
      * sres_u * sres_v = (y_du*s - s_du * r) * (y_dv*s - s_dv * r) / s^4
@@ -856,15 +858,33 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      *
      * r should be on the same order as s. We keep 1/s^2 and drop 1/s terms.
      * drop:
-     * ********: r^2/s^3 term
-     * ########: r/s^2 term
+     * ********: r^2/s^3 term, typically zero anyways
+     * ########: r/s^2 term, requires second order sensitivities
      * ++++++++: 1/s term, typically zero anyways
      *
      * keep:
-     * ---------: accounts for .5(2*pi*sigma^2)
-     * 123123123: accounted for by sres*sres, but
-     * -3*(s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
-     * -2*s_du*s_dv*r^2/s^4 is missing from 3333
+     * 123123123: accounted for by sres*sres,
+     * but
+     * - (s_dv*s_du)/s^2 is unaccounted for
+     * - (s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
+     * + 2*(s_du*s_dv)*r^2/s^4 is missing from 3333 and
+     *
+     * s_dv*y_du and s_du*y_dv are usually zero since we do not have parameters
+     * that affect both observables and sigmas. Accordingly, it is hard to know
+     * emprically whether these terms are important or not.
+     *
+     * this leaves us with
+     * + (s_du*s_dv)(2*r^2-s^2)/s^4
+     * which may be problematic, since this expression does not factorise and
+     * may thus introduce directions of negative curvature
+     *
+     * For the least squares trick, where error residuals
+     * er = sqrt(log(s) + c), with sensitivity er_du = s_du/(2*s*er). This
+     * would yield terms (s_du*s_dv)*(s^2/(4*er))/s^4.
+     * These terms are guaranteed to yield positive curvature, but go to zero
+     * in the limit c -> Infty.
+     *
+     *
      */
 
     auto observedData = edata.getObservedDataPtr(it);
@@ -883,8 +903,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
                 FIM.at(ip + nplist * jp) +=
                     amici::fsres(y, dy_i, m, s, ds_i) *
-                    amici::fsres(y, dy_j, m, s, ds_j)
-                    - ds_i * ds_j / pow(s, 2.0);
+                    amici::fsres(y, dy_j, m, s, ds_j);
             }
         }
     }
