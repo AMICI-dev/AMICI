@@ -895,15 +895,18 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
         auto y = y_it.at(iy);
         auto m = observedData[iy];
         auto s = sigmay_it.at(iy);
+        auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
+            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
             for (int jp = 0; jp < nplist; ++jp) {
                 auto dy_j = sy_it.at(iy + ny * jp);
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
+                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
                 FIM.at(ip + nplist * jp) +=
-                    amici::fsres(y, dy_i, m, s, ds_i) *
-                    amici::fsres(y, dy_j, m, s, ds_j);
+                    sr_i*sr_j
+                    + ds_i*ds_j*(2*pow(r/pow(s,2.0), 2.0) - 1/pow(s,2.0));
             }
         }
     }
