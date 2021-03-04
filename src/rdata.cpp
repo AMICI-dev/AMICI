@@ -884,7 +884,9 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      * These terms are guaranteed to yield positive curvature, but go to zero
      * in the limit c -> Infty.
      *
-     *
+     * Empirically, simply taking this limit and dropping all missing terms,
+     * works substantially better. This was evaluated using the fides optimizer
+     * on the Boehm2014 Benchmark example.
      */
 
     auto observedData = edata.getObservedDataPtr(it);
@@ -895,7 +897,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
         auto y = y_it.at(iy);
         auto m = observedData[iy];
         auto s = sigmay_it.at(iy);
-        auto r = amici::fres(y, m, s);
+        // auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
@@ -904,9 +906,8 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
                 auto dy_j = sy_it.at(iy + ny * jp);
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
                 auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
-                FIM.at(ip + nplist * jp) +=
-                    sr_i*sr_j
-                    + ds_i*ds_j*(2*pow(r/pow(s,2.0), 2.0) - 1/pow(s,2.0));
+                FIM.at(ip + nplist * jp) += sr_i*sr_j;
+                /*+ ds_i*ds_j*(2*pow(r/pow(s,2.0), 2.0) - 1/pow(s,2.0));*/
             }
         }
     }
