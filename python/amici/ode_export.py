@@ -45,7 +45,7 @@ from . import (
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
-from .import_utils import smart_subs_dict
+from .import_utils import smart_subs_dict, toposort_symbols
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -1178,11 +1178,12 @@ class ODEModel:
         self.generate_basic_variables(from_sbml=True)
         # substitute 'w' expressions into event expressions now, to avoid
         # rewriting '{model_name}_root.cpp' headers to include 'w.h'
+        w_sorted = toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
         for index, event in enumerate(self._events):
             self._events[index] = Event(
                 identifier=event.get_id(),
                 name=event.get_name(),
-                value=event.get_val().subs(zip(self._syms['w'], self.eq('w'))),
+                value=event.get_val().subs(w_sorted),
                 state_update=event._state_update,
                 event_observable=event._observable,
             )
@@ -1826,8 +1827,9 @@ class ODEModel:
             # backsubstitution of optimized right hand side terms into RHS
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
-            tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
-                                                  self._eqs['w']))
+            w_sorted = \
+                toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
+            tmp_xdot = self._eqs['xdot'].subs(w_sorted)
             self._eqs[name] = (
                 smart_multiply(self.eq('drootdx'), tmp_xdot)
                 + self.eq('drootdt')
@@ -2252,10 +2254,6 @@ class ODEModel:
         :returns:
             Whether the expression is time-dependent.
         """
-        # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting '{model_name}_stau.cpp' headers to include 'w.h'
-        expr = expr.subs(zip(self._syms['w'], self.eq('w')))
-
         # `expr.free_symbols` will be different to `self._states.keys()`, so
         # it's easier to compare as `str`.
         expr_syms = {str(sym) for sym in expr.free_symbols}
@@ -2291,6 +2289,7 @@ class ODEModel:
             unique identifier for root, or `None` if the root is not
             time-dependent
         """
+
         if not self._expr_is_time_dependent(root_found):
             return None
 
@@ -2308,6 +2307,38 @@ class ODEModel:
             event_observable=None
         ))
         return roots[-1].get_id()
+
+    def _collect_heaviside_roots(
+            self,
+            args: Sequence[sp.Expr]
+    ) -> List[sp.Expr]:
+        """
+        Recursively checks an expression for the occurrence of Heaviside
+        functions and return all roots found
+
+        :param args:
+            args attribute of the expanded expression
+
+        :returns:
+            root functions that were extracted from Heaviside function
+            arguments
+        """
+        root_funs = []
+        for arg in args:
+            if arg.func == sp.Heaviside:
+                root_funs.append(arg.args[0])
+            elif arg.has(sp.Heaviside):
+                root_funs.extend(self._collect_heaviside_roots(arg.args))
+
+        # substitute 'w' expressions into root expressions now, to avoid
+        # rewriting '{model_name}_stau.cpp' headers to include 'w.h'
+        w_sorted = toposort_symbols(dict(zip(self._syms['w'], self.eq('w'))))
+        root_funs = [
+            r.subs(w_sorted)
+            for r in root_funs
+        ]
+
+        return root_funs
 
     def _process_heavisides(
             self,
@@ -2336,7 +2367,7 @@ class ODEModel:
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = _collect_heaviside_roots(dt_expanded.args)
+        tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
         for tmp_old in tmp_roots_old:
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
@@ -3778,24 +3809,3 @@ def _custom_print_min(self, expr):
         return self._print(expr.args[0])
     return "%smin(%s, %s)" % (self._ns, self._print(expr.args[0]),
                               self._print(Min(*expr.args[1:])))
-
-
-def _collect_heaviside_roots(args: Sequence[sp.Expr]) -> List[sp.Expr]:
-    """
-    Recursively checks an expression for the occurrence of Heaviside
-    functions and return all roots found
-
-    :param args:
-        args attribute of the expanded expression
-
-    :returns:
-        root functions that were extracted from Heaviside function arguments
-    """
-    root_funs = []
-    for arg in args:
-        if arg.func == sp.Heaviside:
-            root_funs.append(arg.args[0])
-        elif arg.has(sp.Heaviside):
-            root_funs.extend(_collect_heaviside_roots(arg.args))
-
-    return root_funs
