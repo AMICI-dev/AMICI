@@ -397,9 +397,6 @@ class SbmlImporter:
                 and self.sbml.all_elements_from_plugins.getSize():
             raise SBMLException('SBML extensions are currently not supported!')
 
-        #if self.sbml.getNumEvents():
-        #    raise SBMLException('Events are currently not supported!')
-
         if any([not rule.isAssignment() and not isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
                     (sbml.Compartment, sbml.Species, sbml.Parameter)
@@ -420,6 +417,40 @@ class SbmlImporter:
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
+
+        # check support for events
+        for event in self.sbml.getListOfRules():
+            event_id = event.getId()
+            # Check for delays in events
+            delay = event.getDelay()
+            if delay is not None:
+                try:
+                    delay_time = float(self._sympy_from_sbml_math(delay))
+                    if delay_time != 0:
+                        # `TypeError` would be raised in the above `float(...)`
+                        # if the delay is not a fixed time
+                        raise ValueError
+                except (ValueError, TypeError):
+                    raise SBMLException('Events with execution delays are '
+                                        'currently not supported in AMICI.')
+            # Check for priorities
+            if event.getPriority() is not None:
+                raise SBMLException(f'Event {event_id} has a priority '
+                                    'specified. This is currently not '
+                                    'supported in AMICI.')
+
+            # check trigger
+            trigger_sbml = event.getTrigger()
+            if trigger_sbml.getMath() is None:
+                logger.warning(f'Event {event_id} trigger has no trigger '
+                               'expression. Ignoring event...')
+            if not trigger_sbml.getInitialValue():
+                # True: event not executed if triggered at time == 0
+                # (corresponding to AMICI default). Raise if set to False.
+                raise SBMLException(
+                    f'Event {event_id} has a trigger that has an initial '
+                    'value of False. This is currently not supported in AMICI.'
+                )
 
     @log_execution_time('gathering local SBML symbols', logger)
     def _gather_locals(self) -> None:
@@ -904,62 +935,14 @@ class SbmlImporter:
         events = self.sbml.getListOfEvents()
 
         for ievent, event in enumerate(events):
+            # get the event id (which is optional unfortunately)
             event_id = event.getId()
             if event_id is None:
                 event_id = f'event_{ievent}'
             event_sym = sp.Symbol(event_id)
 
-
-            # TODO move these checks to the `check_support` method?
-            delay = event.getDelay()
-            if delay is not None:
-                try:
-                    delay_time = float(self._sympy_from_sbml_math(delay))
-                    if delay_time != 0:
-                        # `TypeError` would be raised in the above `float(...)`
-                        # if the delay is not a fixed time, so is used here
-                        # also to represent unsupported delays.
-                        raise TypeError
-                except TypeError:
-                    raise SBMLException('Events with execution delays are '
-                                        'currently not supported in AMICI.')
-            if not event.getUseValuesFromTriggerTime():
-                raise SBMLException('Events with '
-                                    '"use_values_from_trigger_time == False" '
-                                    'are currently not supported in AMICI.')
-            if event.getPriority() is not None:
-                raise SBMLException(f'Event {event_id} has a priority '
-                                    'specified. This is currently not '
-                                    'supported in AMICI.')
-
+            # get and parse the trigger function
             trigger_sbml = event.getTrigger()
-            if trigger_sbml is None:
-                # TODO raise SBMLException? Or just ignore?
-                continue
-            if trigger_sbml.getMath() is None:
-                # TODO untested, find SBML test suite case
-                logger.warning(f'Event {event_id} trigger has no trigger '
-                               'expression. Ignoring event...')
-                continue
-            if not trigger_sbml.getPersistent():
-                raise SBMLException(
-                    f'Event {event_id} trigger is persistent. '
-                    'Non-persistent / delayed / prioritized events are '
-                    'currently not supported in AMICI.'
-                )
-            # FIXME check what AMICI supports by default
-            # True means event does not executed if triggered at time == 0
-            # False means it does.
-            if not trigger_sbml.getInitialValue():
-                raise SBMLException(
-                    f'Event {event_id} has a trigger that has an initial '
-                    'value of False. This is currently not supported in AMICI.'
-                )
-            if not trigger_sbml.getInitialValue():
-                raise SBMLException(
-                    f'Event {event_id} has a trigger that has an initial '
-                    'value of False. This is currently not supported in AMICI.'
-                )
             trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
             trigger = _parse_event_trigger(trigger_sym)
 
@@ -967,13 +950,9 @@ class SbmlImporter:
             # self.symbols[SymbolId.SPECIES]
             state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 
+            # parse the boluses / event assignments
             bolus = [sp.Symbol('0') for _ in state_vector]
-
             event_assignments = event.getListOfEventAssignments()
-            if not len(event_assignments):
-                # ignore events with no event assignments
-                # TODO raise exception?
-                continue
             for event_assignment in event_assignments:
                 variable_sym = \
                     symbol_with_assumptions(event_assignment.getVariable())
@@ -992,7 +971,7 @@ class SbmlImporter:
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
                 'value': trigger,
-                'state_update': sp.MutableDenseMatrix(bolus), # 'starts_in_event': trigger_sbml.getInitialValue(),
+                'state_update': sp.MutableDenseMatrix(bolus),
                 'event_observable': None,
             }
 

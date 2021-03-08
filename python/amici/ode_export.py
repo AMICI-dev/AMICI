@@ -753,6 +753,13 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._observable = event_observable
 
+    def __eq__(self, other):
+        """
+        Check equality of events at the level of trigger/root functions, as we
+        need to collect unique root functions for roots.cpp
+        """
+        return self.get_val() == other.get_val()
+
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
@@ -1606,10 +1613,7 @@ class ODEModel:
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
         else:
-            try:
-                length = len(self.eq(name))
-            except:
-                print("Don't piss me off")
+            length = len(self.eq(name))
         self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
@@ -1871,11 +1875,11 @@ class ODEModel:
             # fill boluses for Heaviside functions, as empty state updates
             # would cause problems when writing the function file later
             event_eqs = []
-            for ie in range(self.num_events()):
-                if self._events[ie]._state_update is None:
+            for event in self._events:
+                if event._state_update is None:
                     event_eqs.append(sp.zeros(self.num_states_solver(), 1))
                 else:
-                    event_eqs.append(self._events[ie]._state_update)
+                    event_eqs.append(event._state_update)
 
             self._eqs[name] = event_eqs
 
@@ -1905,12 +1909,12 @@ class ODEModel:
 
         elif name == 'deltasx':
             event_eqs = []
-            for ie in range(self.num_events()):
-                if self._events[ie]._state_update is not None:
+            for ie, event in enumerate(self._events):
+                if event._state_update is not None:
                     # ====== chain rule for the state variables ===============
                     # get xdot with expressions back-substituted
                     tmp_eq = smart_multiply(
-                        (self.eq('xdot_old') - self.sym('xdot')),
+                        (self.sym('xdot_old') - self.sym('xdot')),
                         self.eq('stau')[ie])
                     tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
                                                           self._eqs['w']))
