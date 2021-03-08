@@ -3311,8 +3311,8 @@ class ODEExporter:
         """
         return '\n'.join(
             [
-                f'"{symbol}",'
-                for symbol in self.model.name(name)
+                f'"{symbol}", // {name}[{idx}]'
+                for idx, symbol in enumerate(self.model.name(name))
             ]
         )
 
@@ -3329,8 +3329,8 @@ class ODEExporter:
         """
         return '\n'.join(
             [
-                f'"{strip_pysb(symbol)}",'
-                for symbol in self.model.sym(name)
+                f'"{strip_pysb(symbol)}", // {name}[{idx}]'
+                for idx, symbol in enumerate(self.model.sym(name))
             ]
         )
 
