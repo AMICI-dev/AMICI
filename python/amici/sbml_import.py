@@ -1818,8 +1818,8 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         return sp.Mul(*[_parse_event_trigger(arg) for arg in trigger.args])
 
     if isinstance(trigger, sp.And):
-        raise SBMLException('AMICI can not logical AND expressions in event '
-                            'trigger functions.')
+        raise SBMLException('AMICI can not parse logical AND expressions in '
+                            'event trigger functions.')
 
     raise SBMLException(
         'AMICI can not parse piecewise/event trigger functions with argument '

@@ -1636,7 +1636,7 @@ class ODEModel:
         """
 
         # Track all roots functions in the right hand side
-        roots = []
+        roots = copy.deepcopy(self._events)
         for state in self._states:
             state.set_dt(_process_heavisides(state.get_dt(), roots))
 
@@ -1645,6 +1645,10 @@ class ODEModel:
 
         # Now add the found roots to the model components
         for root in roots:
+            # skip roots of SBML events, as thise have already been added
+            if root.get_val() in [i_root.get_val() for i_root in self._events]:
+                continue
+            # add roots of heaviside functions
             self.add_component(root)
 
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
@@ -1887,18 +1891,18 @@ class ODEModel:
         elif name == 'deltasx':
             event_eqs = []
             for ie in range(self.num_events()):
-                tmp_eq = smart_multiply(
-                    (self.eq('xdot_old') - self.eq('xdot')),
-                    self.eq('stau')[ie])
                 if self._events[ie]._state_update is not None:
                     # ====== chain rule for the state variables ===============
                     # get xdot with expressions back-substituted
+                    tmp_eq = smart_multiply(
+                        (self.eq('xdot_old') - self.sym('xdot')),
+                        self.eq('stau')[ie])
                     tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
                                                           self._eqs['w']))
                     # construct an enhanced state sensitivity, which accounts
                     # for the time point sensitivity as well
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
-                    tmp_dxdp += smart_multiply(tmp_xdot, self.eq('stau')[ie])
+                    tmp_dxdp += smart_multiply(self.sym('xdot'), self.eq('stau')[ie])
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
 
@@ -1908,6 +1912,10 @@ class ODEModel:
 
                     # ====== partial derivative for the parameters ============
                     tmp_eq += self.eq('ddeltaxdp')[ie]
+                else:
+                    tmp_eq = smart_multiply(
+                        (self.eq('xdot_old') - self.eq('xdot')),
+                        self.eq('stau')[ie])
 
                 event_eqs.append(tmp_eq)
 
