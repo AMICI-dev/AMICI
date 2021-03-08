@@ -45,7 +45,6 @@ def model(request):
         rate_rules=rate_rules,
         species=species,
         events=events,
-        to_file=sbml_test_models / ('event_test' + '.sbml'),
         # uncomment `to_file` to save SBML model to file for inspection
         # to_file=sbml_test_models / (model_name + '.sbml'),
     )
