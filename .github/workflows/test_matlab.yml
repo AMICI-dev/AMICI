@@ -18,4 +18,4 @@ jobs:
     - name: Run script
       uses: matlab-actions/run-command@v0
       with:
-        command: cd matlab; installAMICI
+        command: cd matlab; installAMICI; addpath tests; testModels
