@@ -53,7 +53,7 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
  */
 template <typename T>
 void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
-                       std::vector<T> const &fieldData, const int dim0);
+                       gsl::span<const T> const &fieldData, const int dim0);
 
 /**
  * @brief initialize matrix, attach to the field and write data

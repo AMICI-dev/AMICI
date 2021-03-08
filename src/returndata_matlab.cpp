@@ -46,7 +46,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 
     writeMatlabField0(matlabSolutionStruct, "status", rdata->status);
 
-    writeMatlabField1(matlabSolutionStruct, "t", rdata->ts, rdata->nt);
+    writeMatlabField1(matlabSolutionStruct, "t", gsl::make_span(rdata->ts), rdata->nt);
     writeMatlabField0(matlabSolutionStruct, "llh", rdata->llh);
     writeMatlabField0(matlabSolutionStruct, "chi2", rdata->chi2);
 
@@ -64,7 +64,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
         writeMatlabField2(matlabSolutionStruct, "sigmay", rdata->sigmay, rdata->nt, rdata->ny, perm1);
     }
     if (rdata->sensi >= SensitivityOrder::first) {
-        writeMatlabField1(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist);
+        writeMatlabField1(matlabSolutionStruct, "sllh", gsl::make_span(rdata->sllh), rdata->nplist);
         writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nplist, rdata->nx, perm0);
 
         if (rdata->sensi_meth == SensitivityMethod::forward) {
@@ -141,18 +141,33 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         if (!std::isinf(rdata->ts[it]))
             finite_nt++;
 
-    writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, finite_nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, finite_nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numerrtestfails, finite_nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, finite_nt);
-    writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, finite_nt);
+    writeMatlabField1(
+        matlabDiagnosisStruct, "numsteps",
+        gsl::make_span(rdata->numsteps).subspan(0, finite_nt),
+        finite_nt);
+    writeMatlabField1(
+        matlabDiagnosisStruct, "numrhsevals",
+        gsl::make_span(rdata->numrhsevals).subspan(0, finite_nt),
+        finite_nt);
+    writeMatlabField1(
+        matlabDiagnosisStruct, "numerrtestfails",
+        gsl::make_span(rdata->numerrtestfails).subspan(0, finite_nt),
+        finite_nt);
+    writeMatlabField1(
+        matlabDiagnosisStruct, "numnonlinsolvconvfails",
+        gsl::make_span(rdata->numnonlinsolvconvfails).subspan(0, finite_nt),
+        finite_nt);
+    writeMatlabField1(
+        matlabDiagnosisStruct, "order",
+        gsl::make_span(rdata->order).subspan(0, finite_nt),
+        finite_nt);
 
     if (rdata->nx > 0) {
-        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx_solver);
+        writeMatlabField1(matlabDiagnosisStruct, "xdot", gsl::make_span(rdata->xdot), rdata->nx_solver);
         writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx_solver, rdata->nx_solver, perm1);
 
-        writeMatlabField1(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status, 3);
-        writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", rdata->preeq_numsteps, 3);
+        writeMatlabField1(matlabDiagnosisStruct, "preeq_status", gsl::make_span(rdata->preeq_status), 3);
+        writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", gsl::make_span(rdata->preeq_numsteps), 3);
         writeMatlabField2(matlabDiagnosisStruct, "preeq_numlinsteps",
                           rdata->preeq_numlinsteps,
                           rdata->preeq_numlinsteps.size() > 0
@@ -163,8 +178,8 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         writeMatlabField0(matlabDiagnosisStruct, "preeq_t", rdata->preeq_t);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_wrms", rdata->preeq_wrms);
 
-        writeMatlabField1(matlabDiagnosisStruct, "posteq_status", rdata->posteq_status, 3);
-        writeMatlabField1(matlabDiagnosisStruct, "posteq_numsteps", rdata->posteq_numsteps, 3);
+        writeMatlabField1(matlabDiagnosisStruct, "posteq_status", gsl::make_span(rdata->posteq_status), 3);
+        writeMatlabField1(matlabDiagnosisStruct, "posteq_numsteps", gsl::make_span(rdata->posteq_numsteps), 3);
         writeMatlabField2(matlabDiagnosisStruct, "posteq_numlinsteps",
                           rdata->posteq_numlinsteps,
                           rdata->posteq_numlinsteps.size() > 0
@@ -177,10 +192,23 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     }
     if (rdata->sensi >= SensitivityOrder::first) {
         if (rdata->sensi_meth == SensitivityMethod::adjoint) {
-            writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, finite_nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, finite_nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, finite_nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, finite_nt);
+            writeMatlabField1(
+                matlabDiagnosisStruct, "numstepsB",
+                gsl::make_span(rdata->numstepsB).subspan(0, finite_nt),
+                finite_nt);
+            writeMatlabField1(
+                matlabDiagnosisStruct, "numrhsevalsB",
+                gsl::make_span(rdata->numrhsevalsB).subspan(0, finite_nt),
+                finite_nt);
+            writeMatlabField1(
+                matlabDiagnosisStruct, "numerrtestfailsB",
+                gsl::make_span(rdata->numerrtestfailsB).subspan(0, finite_nt),
+                finite_nt);
+            writeMatlabField1(
+                matlabDiagnosisStruct, "numnonlinsolvconvfailsB",
+                gsl::make_span(rdata->numnonlinsolvconvfailsB
+                               ).subspan(0, finite_nt),
+                finite_nt);
         }
     }
 
@@ -201,16 +229,19 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
 
 template<typename T>
 void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
-                       std::vector<T> const& fieldData, int dim0) {
+                       gsl::span<const T> const& fieldData, int dim0) {
     if(fieldData.size() != dim0)
-        throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
+        throw AmiException("Dimension mismatch when writing rdata->%s to "
+                           "matlab results (expected %d, got %d)",
+                           fieldName, dim0, static_cast<int>(fieldData.size()));
 
     std::vector<mwSize> dim = {(mwSize)(dim0), (mwSize)(1)};
 
     double *array = initAndAttachArray(matlabStruct, fieldName, dim);
 
+    auto data_ptr = fieldData.data();
     for(int i = 0; i < dim0; i++)
-        array[i] = static_cast<double>(fieldData[i]);
+        array[i] = static_cast<double>(data_ptr[i]);
 }
 
 template<typename T>
