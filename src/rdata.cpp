@@ -880,7 +880,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      *
      * For the least squares trick, where error residuals
      * er = sqrt(log(s) + c), with sensitivity er_du = s_du/(2*s*er). This
-     * would yield terms (s_du*s_dv)*(s^2/(4*er))/s^4.
+     * would yield terms (s_du*s_dv)*(s^2/(4*er^2))/s^4.
      * These terms are guaranteed to yield positive curvature, but go to zero
      * in the limit c -> Infty.
      *
