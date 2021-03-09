@@ -509,12 +509,22 @@ def create_edata_for_condition(
 
     ##########################################################################
     # enable initial parameters reinitialization
-    species_in_condition_table = any(
+    species_in_condition_table = [
         col for col in petab_problem.condition_df
-        if petab_problem.sbml_model.getSpecies(col) is not None)
+        if not pd.isna(petab_problem.condition_df.loc[
+                           condition[SIMULATION_CONDITION_ID], col])
+           and petab_problem.sbml_model.getSpecies(col) is not None
+    ]
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
             and species_in_condition_table:
-        edata.reinitializeFixedParameterInitialStates = True
+        state_ids = amici_model.getStateIds()
+        state_idx_reinitalization = [state_ids.index(s)
+                                     for s in species_in_condition_table]
+        edata.reinitialization_state_idxs_sim = state_idx_reinitalization
+        logger.debug("Enabling state reinitialization for condition "
+                     f"{condition.get(PREEQUILIBRATION_CONDITION_ID, '')} - "
+                     f"{condition.get(SIMULATION_CONDITION_ID)} "
+                     f"{species_in_condition_table}")
 
     ##########################################################################
     # timepoints

@@ -96,27 +96,30 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
 }
 
 Model::Model(ModelDimensions const & model_dimensions,
-             SecondOrderMode o2mode, const std::vector<realtype> &p,
-             std::vector<realtype> k, const std::vector<int> &plist,
-             std::vector<realtype> idlist, std::vector<int> z2event,
+             SimulationParameters simulation_parameters,
+             SecondOrderMode o2mode, std::vector<realtype> idlist, std::vector<int> z2event,
              const bool pythonGenerated, const int ndxdotdp_explicit,
              const int ndxdotdx_explicit, const int w_recursion_depth)
     : ModelDimensions(model_dimensions), pythonGenerated(pythonGenerated),
       o2mode(o2mode), idlist(std::move(idlist)),
-      derived_state_(model_dimensions), original_parameters_(p),
+      derived_state_(model_dimensions),
       z2event_(std::move(z2event)),
       state_is_non_negative_(nx_solver, false),
-      pscale_(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)),
-      w_recursion_depth_(w_recursion_depth) {
-    Expects(model_dimensions.np == static_cast<int>(p.size()));
-    Expects(model_dimensions.nk == static_cast<int>(k.size()));
+      w_recursion_depth_(w_recursion_depth),
+      simulation_parameters_(std::move(simulation_parameters)) {
+    Expects(model_dimensions.np == static_cast<int>(simulation_parameters_.parameters.size()));
+    Expects(model_dimensions.nk == static_cast<int>(simulation_parameters_.fixedParameters.size()));
+
+    simulation_parameters.pscale = std::vector<ParameterScaling>(model_dimensions.np, ParameterScaling::none);
 
     state_.h.resize(ne, 0.0);
     state_.total_cl.resize(nx_rdata - nx_solver, 0.0);
-    state_.stotal_cl.resize((nx_rdata - nx_solver) * p.size(), 0.0);
-    state_.unscaledParameters = p;
-    state_.fixedParameters = k;
-    state_.plist = plist;
+    state_.stotal_cl.resize((nx_rdata - nx_solver) * np(), 0.0);
+    state_.unscaledParameters.resize(np());
+    unscaleParameters(simulation_parameters_.parameters,
+                      simulation_parameters_.pscale, state_.unscaledParameters);
+    state_.fixedParameters = simulation_parameters_.fixedParameters;
+    state_.plist = simulation_parameters_.plist;
 
     /* If Matlab wrapped: dxdotdp is a full AmiVector,
        if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices
@@ -126,13 +129,13 @@ Model::Model(ModelDimensions const & model_dimensions,
         dwdw_ = SUNMatrixWrapper(nw, nw, ndwdw, CSC_MAT);
         // size dynamically adapted for dwdx_ and dwdp_
         derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, 0, CSC_MAT);
-        derived_state_.dwdp_ = SUNMatrixWrapper(nw, p.size(), 0, CSC_MAT);
+        derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), 0, CSC_MAT);
 
         for (int irec = 0; irec <= w_recursion_depth_; ++irec) {
             /* for the first element we know the exact size, while for all others we
                guess the size*/
             dwdp_hierarchical_.emplace_back(
-                SUNMatrixWrapper(nw, p.size(), irec * ndwdw + ndwdp, CSC_MAT));
+                SUNMatrixWrapper(nw, np(), irec * ndwdw + ndwdp, CSC_MAT));
             dwdx_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT));
         }
@@ -142,10 +145,10 @@ Model::Model(ModelDimensions const & model_dimensions,
                w_recursion_depth_ + 1);
 
         derived_state_.dxdotdp_explicit = SUNMatrixWrapper(
-                    nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+                    nx_solver, np(), ndxdotdp_explicit, CSC_MAT);
         // guess size, will be dynamically reallocated
         derived_state_.dxdotdp_implicit = SUNMatrixWrapper(
-                    nx_solver, p.size(), ndwdp + ndxdotdw, CSC_MAT);
+                    nx_solver, np(), ndwdp + ndxdotdw, CSC_MAT);
         derived_state_.dxdotdx_explicit = SUNMatrixWrapper(
                     nx_solver, nx_solver, ndxdotdx_explicit, CSC_MAT);
         // guess size, will be dynamically reallocated
@@ -153,14 +156,14 @@ Model::Model(ModelDimensions const & model_dimensions,
                     nx_solver, nx_solver, ndwdx + ndxdotdw, CSC_MAT);
         // dynamically allocate on first call
         derived_state_.dxdotdp_full = SUNMatrixWrapper(
-                    nx_solver, p.size(), 0, CSC_MAT);
+                    nx_solver, np(), 0, CSC_MAT);
 
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
             derived_state_.dJydy_.emplace_back(
                 SUNMatrixWrapper(nJ, ny, ndJydy.at(iytrue), CSC_MAT));
     } else {
         derived_state_.dwdx_ = SUNMatrixWrapper(nw, nx_solver, ndwdx, CSC_MAT);
-        derived_state_.dwdp_ = SUNMatrixWrapper(nw, p.size(), ndwdp, CSC_MAT);
+        derived_state_.dwdp_ = SUNMatrixWrapper(nw, np(), ndwdp, CSC_MAT);
         derived_state_.dJydy_matlab_ = std::vector<realtype>(
                     nJ * nytrue * ny, 0.0);
     }
@@ -177,15 +180,12 @@ bool operator==(const Model &a, const Model &b) {
            (a.z2event_ == b.z2event_) && (a.idlist == b.idlist) &&
            (a.state_.h == b.state_.h) &&
            (a.state_.unscaledParameters == b.state_.unscaledParameters) &&
-           (a.original_parameters_ == b.original_parameters_) &&
+           (a.simulation_parameters_ == b.simulation_parameters_) &&
            (a.state_.fixedParameters == b.state_.fixedParameters) &&
            (a.state_.plist == b.state_.plist) && (a.x0data_ == b.x0data_) &&
-           (a.sx0data_ == b.sx0data_) && (a.ts_ == b.ts_) &&
-           (a.nmaxevent_ == b.nmaxevent_) && (a.pscale_ == b.pscale_) &&
-           (a.state_is_non_negative_ == b.state_is_non_negative_) &&
-           (a.reinitialize_fixed_parameter_initial_states_ ==
-            b.reinitialize_fixed_parameter_initial_states_) &&
-           (a.tstart_ == b.tstart_);
+           (a.sx0data_ == b.sx0data_) &&
+           (a.nmaxevent_ == b.nmaxevent_) &&
+           (a.state_is_non_negative_ == b.state_is_non_negative_);
 }
 
 bool operator==(const ModelDimensions &a, const ModelDimensions &b) {
@@ -259,7 +259,7 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx,
 
 void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
     std::vector<realtype> rootvals(ne, 0.0);
-    froot(tstart_, x, dx, rootvals);
+    froot(simulation_parameters_.tstart_, x, dx, rootvals);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             state_.h.at(ie) = 0.0;
@@ -271,7 +271,7 @@ void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
 
 int Model::nplist() const { return static_cast<int>(state_.plist.size()); }
 
-int Model::np() const { return static_cast<int>(original_parameters_.size()); }
+int Model::np() const { return static_cast<int>(static_cast<ModelDimensions const&>(*this).np); }
 
 int Model::nk() const { return static_cast<int>(state_.fixedParameters.size()); }
 
@@ -285,24 +285,26 @@ int Model::nMaxEvent() const { return nmaxevent_; }
 
 void Model::setNMaxEvent(int nmaxevent) { nmaxevent_ = nmaxevent; }
 
-int Model::nt() const { return static_cast<int>(ts_.size()); }
+int Model::nt() const { return static_cast<int>(simulation_parameters_.ts_.size()); }
 
 const std::vector<ParameterScaling> &Model::getParameterScale() const {
-    return pscale_;
+    return simulation_parameters_.pscale;
 }
 
 void Model::setParameterScale(ParameterScaling pscale) {
-    pscale_.assign(pscale_.size(), pscale);
-    scaleParameters(state_.unscaledParameters, pscale_, original_parameters_);
+    simulation_parameters_.pscale.assign(simulation_parameters_.pscale.size(), pscale);
+    scaleParameters(state_.unscaledParameters, simulation_parameters_.pscale,
+                    simulation_parameters_.parameters);
     sx0data_.clear();
 }
 
 void Model::setParameterScale(std::vector<ParameterScaling> const &pscaleVec) {
-    if (pscaleVec.size() != original_parameters_.size())
+    if (pscaleVec.size() != simulation_parameters_.parameters.size())
         throw AmiException("Dimension mismatch. Size of parameter scaling does "
                            "not match number of model parameters.");
-    pscale_ = pscaleVec;
-    scaleParameters(state_.unscaledParameters, pscale_, original_parameters_);
+    simulation_parameters_.pscale = pscaleVec;
+    scaleParameters(state_.unscaledParameters, simulation_parameters_.pscale,
+                    simulation_parameters_.parameters);
     sx0data_.clear();
 }
 
@@ -311,32 +313,34 @@ const std::vector<realtype> &Model::getUnscaledParameters() const {
 }
 
 std::vector<realtype> const &Model::getParameters() const {
-    return original_parameters_;
+    return simulation_parameters_.parameters;
 }
 
 realtype Model::getParameterById(std::string const &par_id) const {
     if (!hasParameterIds())
         throw AmiException(
             "Could not access parameters by id as they are not set");
-    return getValueById(getParameterIds(), original_parameters_, par_id,
-                        "parameters", "id");
+    return getValueById(getParameterIds(), simulation_parameters_.parameters,
+                        par_id, "parameters", "id");
 }
 
 realtype Model::getParameterByName(std::string const &par_name) const {
     if (!hasParameterNames())
         throw AmiException(
             "Could not access parameters by name as they are not set");
-    return getValueById(getParameterNames(), original_parameters_, par_name,
-                        "parameters", "name");
+    return getValueById(getParameterNames(), simulation_parameters_.parameters,
+                        par_name, "parameters", "name");
 }
 
 void Model::setParameters(const std::vector<realtype> &p) {
     if (p.size() != (unsigned)np())
         throw AmiException("Dimension mismatch. Size of parameters does not "
                            "match number of model parameters.");
-    original_parameters_ = p;
-    state_.unscaledParameters.resize(original_parameters_.size());
-    unscaleParameters(original_parameters_, pscale_, state_.unscaledParameters);
+    simulation_parameters_.parameters = p;
+    state_.unscaledParameters.resize(simulation_parameters_.parameters.size());
+    unscaleParameters(simulation_parameters_.parameters,
+                      simulation_parameters_.pscale,
+                      state_.unscaledParameters);
 }
 
 void Model::setParameterById(const std::map<std::string, realtype> &p,
@@ -357,9 +361,11 @@ void Model::setParameterById(std::string const &par_id, realtype value) {
         throw AmiException(
             "Could not access parameters by id as they are not set");
 
-    setValueById(getParameterIds(), original_parameters_, value, par_id,
-                 "parameter", "id");
-    unscaleParameters(original_parameters_, pscale_, state_.unscaledParameters);
+    setValueById(getParameterIds(), simulation_parameters_.parameters,
+                 value, par_id, "parameter", "id");
+    unscaleParameters(simulation_parameters_.parameters,
+                      simulation_parameters_.pscale,
+                      state_.unscaledParameters);
 }
 
 int Model::setParametersByIdRegex(std::string const &par_id_regex,
@@ -367,9 +373,11 @@ int Model::setParametersByIdRegex(std::string const &par_id_regex,
     if (!hasParameterIds())
         throw AmiException(
             "Could not access parameters by id as they are not set");
-    int n_found = setValueByIdRegex(getParameterIds(), original_parameters_,
+    int n_found = setValueByIdRegex(getParameterIds(),
+                                    simulation_parameters_.parameters,
                                     value, par_id_regex, "parameter", "id");
-    unscaleParameters(original_parameters_, pscale_, state_.unscaledParameters);
+    unscaleParameters(simulation_parameters_.parameters,
+                      simulation_parameters_.pscale, state_.unscaledParameters);
     return n_found;
 }
 
@@ -378,9 +386,10 @@ void Model::setParameterByName(std::string const &par_name, realtype value) {
         throw AmiException(
             "Could not access parameters by name as they are not set");
 
-    setValueById(getParameterNames(), original_parameters_, value, par_name,
-                 "parameter", "name");
-    unscaleParameters(original_parameters_, pscale_, state_.unscaledParameters);
+    setValueById(getParameterNames(), simulation_parameters_.parameters,
+                 value, par_name, "parameter", "name");
+    unscaleParameters(simulation_parameters_.parameters,
+                      simulation_parameters_.pscale, state_.unscaledParameters);
 }
 
 void Model::setParameterByName(const std::map<std::string, realtype> &p,
@@ -403,10 +412,11 @@ int Model::setParametersByNameRegex(std::string const &par_name_regex,
             "Could not access parameters by name as they are not set");
 
     int n_found = setValueByIdRegex(getParameterNames(),
-                                    original_parameters_,
+                                    simulation_parameters_.parameters,
                                     value, par_name_regex, "parameter", "name");
 
-    unscaleParameters(original_parameters_, pscale_, state_.unscaledParameters);
+    unscaleParameters(simulation_parameters_.parameters,
+                      simulation_parameters_.pscale, state_.unscaledParameters);
     return n_found;
 }
 
@@ -567,21 +577,21 @@ bool Model::hasQuadraticLLH() const {
     return true;
 }
 
-std::vector<realtype> const &Model::getTimepoints() const { return ts_; }
+std::vector<realtype> const &Model::getTimepoints() const { return simulation_parameters_.ts_; }
 
-double Model::getTimepoint(const int it) const { return ts_.at(it); }
+double Model::getTimepoint(const int it) const { return simulation_parameters_.ts_.at(it); }
 
 void Model::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
         throw AmiException("Encountered non-monotonic timepoints, please order"
                            " timepoints such that they are monotonically"
                            " increasing!");
-    ts_ = ts;
+    simulation_parameters_.ts_ = ts;
 }
 
-double Model::t0() const { return tstart_; }
+double Model::t0() const { return simulation_parameters_.tstart_; }
 
-void Model::setT0(double t0) { tstart_ = t0; }
+void Model::setT0(double t0) { simulation_parameters_.tstart_ = t0; }
 
 std::vector<bool> const &Model::getStateIsNonNegative() const {
     return state_is_non_negative_;
@@ -632,7 +642,7 @@ std::vector<realtype> Model::getInitialStates() {
      * changing parameters etc.
      */
     std::vector<realtype> x0(nx_rdata, 0.0);
-    fx0(x0.data(), tstart_, state_.unscaledParameters.data(),
+    fx0(x0.data(), simulation_parameters_.tstart_, state_.unscaledParameters.data(),
         state_.fixedParameters.data());
     return x0;
 }
@@ -667,7 +677,8 @@ std::vector<realtype> Model::getInitialStateSensitivities() {
     std::vector<realtype> sx0(nx_rdata * nplist(), 0.0);
     auto x0 = getInitialStates();
     for (int ip = 0; ip < nplist(); ip++) {
-        fsx0(sx0.data(), tstart_, x0.data(), state_.unscaledParameters.data(),
+        fsx0(sx0.data(), simulation_parameters_.tstart_, x0.data(),
+             state_.unscaledParameters.data(),
              state_.fixedParameters.data(), plist(ip));
     }
     return sx0;
@@ -690,7 +701,7 @@ void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
     for (int ip = 0; ip < nplist(); ip++) {
 
         // revert chainrule
-        switch (pscale_.at(plist(ip))) {
+        switch (simulation_parameters_.pscale.at(plist(ip))) {
         case ParameterScaling::log10:
             chainrulefactor = state_.unscaledParameters.at(plist(ip)) * log(10);
             break;
@@ -742,15 +753,22 @@ SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
 void Model::setReinitializeFixedParameterInitialStates(bool flag) {
     if (flag && !isFixedParameterStateReinitializationAllowed())
         throw AmiException(
-            "State reinitialization cannot be enabled for this model"
+            "State reinitialization cannot be enabled for this model "
             "as this feature was disabled at compile time. Most likely,"
             " this was because some initial states depending on "
-            "fixedParameters also depended on parameters");
-    reinitialize_fixed_parameter_initial_states_ = flag;
+            "fixedParameters also depended on parameters.");
+    simulation_parameters_.reinitializeFixedParameterInitialStates = flag;
+
+    if(flag) {
+        simulation_parameters_.reinitializeAllFixedParameterDependentInitialStatesForSimulation(nx_rdata);
+    } else {
+        simulation_parameters_.reinitialization_state_idxs_sim.clear();
+    }
 }
 
 bool Model::getReinitializeFixedParameterInitialStates() const {
-    return reinitialize_fixed_parameter_initial_states_;
+    return simulation_parameters_.reinitializeFixedParameterInitialStates
+            || !simulation_parameters_.reinitialization_state_idxs_sim.empty();
 }
 
 void Model::requireSensitivitiesForAllParameters() {
@@ -1152,7 +1170,7 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
         app->checkFinite(state_.fixedParameters, "k");
         app->checkFinite(state_.unscaledParameters, "p");
         app->checkFinite(derived_state_.w_, "w");
-        app->checkFinite(ts_, "t");
+        app->checkFinite(simulation_parameters_.ts_, "t");
     }
 
     return result;
@@ -1167,7 +1185,8 @@ bool Model::getAlwaysCheckFinite() const { return always_check_finite_; }
 void Model::fx0(AmiVector &x) {
     std::fill(derived_state_.x_rdata_.begin(), derived_state_.x_rdata_.end(), 0.0);
     /* this function  also computes initial total abundances */
-    fx0(derived_state_.x_rdata_.data(), tstart_, state_.unscaledParameters.data(),
+    fx0(derived_state_.x_rdata_.data(), simulation_parameters_.tstart_,
+        state_.unscaledParameters.data(),
         state_.fixedParameters.data());
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data());
@@ -1186,8 +1205,12 @@ void Model::fx0_fixedParameters(AmiVector &x) {
      conservation laws and (ii) be able to correctly compute total abundances
      after updating the state variables */
     fx_rdata(derived_state_.x_rdata_.data(), x.data(), state_.total_cl.data());
-    fx0_fixedParameters(derived_state_.x_rdata_.data(), tstart_, state_.unscaledParameters.data(),
-                        state_.fixedParameters.data());
+    fx0_fixedParameters(derived_state_.x_rdata_.data(),
+                        simulation_parameters_.tstart_,
+                        state_.unscaledParameters.data(),
+                        state_.fixedParameters.data(),
+                        simulation_parameters_.reinitialization_state_idxs_sim
+                        );
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     /* update total abundances */
     ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data());
@@ -1201,7 +1224,8 @@ void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
         std::fill(derived_state_.sx_rdata_.begin(),
                   derived_state_.sx_rdata_.end(), 0.0);
-        fsx0(derived_state_.sx_rdata_.data(), tstart_, x.data(), state_.unscaledParameters.data(),
+        fsx0(derived_state_.sx_rdata_.data(), simulation_parameters_.tstart_,
+             x.data(), state_.unscaledParameters.data(),
              state_.fixedParameters.data(), plist(ip));
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip));
@@ -1216,10 +1240,12 @@ void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
         fsx_rdata(derived_state_.sx_rdata_.data(), sx.data(ip), stcl, plist(ip));
-        fsx0_fixedParameters(derived_state_.sx_rdata_.data(), tstart_, x.data(),
+        fsx0_fixedParameters(derived_state_.sx_rdata_.data(),
+                             simulation_parameters_.tstart_, x.data(),
                              state_.unscaledParameters.data(),
                              state_.fixedParameters.data(),
-                             plist(ip));
+                             plist(ip),
+                             simulation_parameters_.reinitialization_state_idxs_sim);
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip));
     }
@@ -2058,6 +2084,21 @@ const_N_Vector Model::computeX_pos(const_N_Vector x) {
     }
 
     return x;
+}
+
+void Model::setReinitializationStateIdxs(std::vector<int> const& idxs)
+{
+    for(auto idx: idxs) {
+        if (idx < 0 || idx >= nx_rdata)
+            throw AmiException("Invalid state index given: %d", idx);
+    }
+
+    simulation_parameters_.reinitialization_state_idxs_sim = idxs;
+}
+
+const std::vector<int> &Model::getReinitializationStateIdxs() const
+{
+    return simulation_parameters_.reinitialization_state_idxs_sim;
 }
 
 const AmiVectorArray &Model::get_dxdotdp() const{

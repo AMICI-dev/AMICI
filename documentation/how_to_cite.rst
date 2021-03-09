@@ -13,17 +13,17 @@ your project, please let us know via a Github issue.
 
 When using AMICI in your project, please cite
 
-* Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017).
-  Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.
-  PLOS Computational Biology, 13(1), e1005331.
-  doi:`10.1371/journal.pcbi.1005331 <https://doi.org/10.1371/journal.pcbi.1005331>`_.
+* Fröhlich, F., Weindl, D., Schälte, Y., Pathirana, D., Paszkowski, Ł., Lines, G.T., Stapor, P. and Hasenauer, J., 2020.
+  AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models. arXiv preprint `arXiv:2012.09122 <https://arxiv.org/abs/2012.09122>`_.
 
-and/or
+  .. code-block:: bibtex
 
-* Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017).
-  Parameter estimation for dynamical systems with discrete events and logical
-  operations. Bioinformatics, 33(7), 1049-1056.
-  doi:`10.1093/bioinformatics/btw764 <https://doi.org/10.1093/bioinformatics/btw764>`_.
+     @article{frohlich2020amici,
+       title={AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models},
+       author={Fr{\"o}hlich, Fabian and Weindl, Daniel and Sch{\"a}lte, Yannik and Pathirana, Dilan and Paszkowski, {\L}ukasz and Lines, Glenn Terje and Stapor, Paul and Hasenauer, Jan},
+       journal={arXiv preprint arXiv:2012.09122},
+       year={2020}
+    }
 
 When presenting work that employs AMICI, feel free to use one of the icons in
 `documentation/gfx/ <https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx>`_,

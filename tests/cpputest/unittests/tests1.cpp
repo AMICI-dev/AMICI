@@ -76,10 +76,8 @@ TEST_GROUP(model)
                     0,         // ubw
                     0          // lbw
                     ),
+                SimulationParameters(k, p, plist),
                 SecondOrderMode::none,
-                p,
-                k,
-                plist,
                 idlist,
                 z2event);
 
@@ -317,10 +315,12 @@ TEST_GROUP(edata)
                     0,         // ubw
                     0          // lbw
                     ),
+                SimulationParameters(
+                    std::vector<realtype>(3, 0.0),
+                    std::vector<realtype>(1, 0.0),
+                    std::vector<int>(2, 1)
+                ),
                 SecondOrderMode::none,
-                std::vector<realtype>(1, 0.0),
-                std::vector<realtype>(3, 0.0),
-                std::vector<int>(2, 1),
                 std::vector<realtype>(),
                 std::vector<int>());
     void setup()
@@ -630,10 +630,12 @@ TEST_GROUP(solver)
                     0,         // ubw
                     0         // lbw
                     ),
+                SimulationParameters(
+                    std::vector<realtype>(3, 0.0),
+                    std::vector<realtype>(1, 0.0),
+                    std::vector<int>(2, 1)
+                ),
                 SecondOrderMode::none,
-                std::vector<realtype>(1, 0.0),
-                std::vector<realtype>(3, 0.0),
-                std::vector<int>(2, 1),
                 std::vector<realtype>(0, 0.0),
                 std::vector<int>());
 

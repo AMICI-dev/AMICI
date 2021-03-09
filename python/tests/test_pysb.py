@@ -5,7 +5,6 @@ import logging
 import os
 import platform
 import shutil
-import sys
 import pytest
 
 pysb = pytest.importorskip("pysb")
@@ -99,7 +98,6 @@ custom_models = [
     'bngwiki_egfr_simple_deletemolecules',
 ]
 
-
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
     pysb = pytest.importorskip("pysb")
@@ -117,7 +115,6 @@ def test_compare_to_pysb_simulation(example):
                 return
 
             # load example
-
             pysb.SelfExporter.cleanup()  # reset pysb
             pysb.SelfExporter.do_export = True
 
@@ -128,7 +125,6 @@ def test_compare_to_pysb_simulation(example):
             pysb_model.name += '_amici'
 
             # pysb part
-
             tspan = np.linspace(0, 100, 101)
             sim = ScipyOdeSimulator(
                 pysb_model,
@@ -157,9 +153,9 @@ def test_compare_to_pysb_simulation(example):
                 compute_conservation_laws=compute_conservation_laws,
                 observables=list(pysb_model.observables.keys())
             )
-            sys.path.insert(0, outdir)
 
-            amici_model_module = importlib.import_module(pysb_model.name)
+            amici_model_module = amici.import_model_module(pysb_model.name,
+                                                           outdir)
 
             model_pysb = amici_model_module.getModel()
 

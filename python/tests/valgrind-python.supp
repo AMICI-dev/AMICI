@@ -36,7 +36,7 @@
 #
 
 {
-   lisbml
+   libsbml
    Memcheck:Leak
    fun:_Znwm
    ...
@@ -44,7 +44,7 @@
 }
 
 {
-   lisbml
+   libsbml
    Memcheck:Leak
    fun:_Znwm
    ...
@@ -52,7 +52,7 @@
 }
 
 {
-   lisbml
+   libsbml
    Memcheck:Leak
    fun:_Znwm
    ...
@@ -179,6 +179,180 @@
    fun:_PyEval_EvalFrameDefault
    obj:/usr/bin/python3.?
    fun:_PyEval_EvalFrameDefault
+   obj:/usr/bin/python3.?
+}
+
+{
+   other
+   Memcheck:Value8
+   obj:/usr/bin/python3.?
+   ...
+   obj:/usr/bin/python3.?
+   fun:__Pyx_PyObject_Call
+   fun:__Pyx__PyObject_CallOneArg
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:PyBytes_Repr
+   fun:PyObject_Str
+   obj:/usr/bin/python3.?
+   ...
+   fun:PyObject_Format
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:PyBytes_Repr
+   fun:PyObject_Str
+   obj:/usr/bin/python3.?
+   ...
+   fun:PyObject_Format
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:_PyUnicodeWriter_WriteStr
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:_PyUnicodeWriter_WriteStr
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:_PyUnicodeWriter_Finish
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:_PyUnicodeWriter_Finish
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:_PyUnicode_JoinArray
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:_PyUnicode_JoinArray
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   obj:/usr/bin/python3.?
+   ...
+   obj:/usr/bin/python3.?
+   fun:__Pyx_PyObject_Call
+   fun:__Pyx__PyObject_CallOneArg
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   fun:memmove
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   fun:memmove
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   obj:/usr/bin/python3.?
+   fun:_PyObject_CallMethodIdObjArgs
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   obj:/usr/bin/python3.?
+   fun:_PyObject_CallMethodIdObjArgs
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   obj:/usr/bin/python3.?
+   fun:PyDict_SetItem
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   obj:/usr/bin/python3.?
+   fun:PyDict_SetItem
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   obj:/usr/bin/python3.?
+   ...
+   obj:/usr/bin/python3.?
+}
+
+{
+   other
+   Memcheck:Cond
+   fun:realloc
+   obj:/usr/bin/python3.?
+   ...
+   fun:_PyFunction_Vectorcall
+}
+
+{
+   other
+   Memcheck:Value8
+   obj:/usr/bin/python3.?
+   ...
    obj:/usr/bin/python3.?
 }
 

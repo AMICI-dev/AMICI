@@ -53,6 +53,16 @@ def pysb2amici(
     """
     Generate AMICI C++ files for the provided model.
 
+    .. warning::
+        **PySB models with Compartments**
+
+        When importing a PySB model with ``pysb.Compartment``\ s, BioNetGen
+        scales reaction fluxes with the compartment size. Instead of using the
+        respective symbols, the compartment size Parameter or Expression is
+        evaluated when generating equations. This may lead to unexpected
+        results if the compartment size parameter is changed for AMICI
+        simulations.
+
     :param model:
         pysb model, :attr:`pysb.Model.name` will determine the name of the
         generated module

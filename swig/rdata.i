@@ -7,5 +7,7 @@ using namespace amici;
 %}
 
 %ignore processSimulationObjects;
+%ignore ModelContext;
+
 // Process symbols in header
 %include "amici/rdata.h"

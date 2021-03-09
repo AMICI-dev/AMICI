@@ -13,17 +13,18 @@ Usage:
         SELECTION same as above.
 """
 
-import os
-import sys
-import importlib
-import pytest
 import copy
+import importlib
+import os
+import re
+import shutil
+import sys
 
 import amici
+import libsbml as sbml
 import numpy as np
 import pandas as pd
-import libsbml as sbml
-
+import pytest
 from amici.constants import SymbolId
 
 # directory with sbml semantic test cases
@@ -55,7 +56,7 @@ def sbml_test_dir():
 def test_sbml_testsuite_case(test_number, result_path):
 
     test_id = format_test_id(test_number)
-
+    model_dir = None
     try:
         current_test_path = os.path.join(TEST_PATH, test_id)
 
@@ -68,7 +69,10 @@ def test_sbml_testsuite_case(test_number, result_path):
                        inplace=True)
 
         # setup model
-        model, solver, wrapper = compile_model(current_test_path, test_id)
+        model_dir = os.path.join(os.path.dirname(__file__), 'SBMLTestModels',
+                                 test_id)
+        model, solver, wrapper = compile_model(current_test_path, test_id,
+                                               model_dir)
         settings = read_settings_file(current_test_path, test_id)
 
         atol, rtol = apply_settings(settings, solver, model)
@@ -85,6 +89,9 @@ def test_sbml_testsuite_case(test_number, result_path):
 
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
+    finally:
+        if model_dir:
+            shutil.rmtree(model_dir, ignore_errors=True)
 
 
 def verify_results(settings, rdata, expected, wrapper,
@@ -242,14 +249,12 @@ def apply_settings(settings, solver, model):
     return atol, rtol
 
 
-def compile_model(path, test_id):
+def compile_model(path, test_id, model_dir):
     """Import the given test model to AMICI"""
     sbml_file = find_model_file(path, test_id)
 
     wrapper = amici.SbmlImporter(sbml_file)
 
-    model_dir = os.path.join(os.path.dirname(__file__), 'SBMLTestModels',
-                             test_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
@@ -299,3 +304,18 @@ def format_test_id(test_id) -> str:
     test_str = str(test_id)
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
+
+
+def get_tags_for_test(test_id):
+    """Get sbml test suite tags for the given test ID"""
+
+    current_test_path = os.path.join(TEST_PATH, test_id)
+    info_file = os.path.join(current_test_path, f'{test_id}-model.m')
+    with open(info_file) as f:
+        for line in f:
+            if line.startswith('testTags:'):
+                res = set(re.split(r'[ ,:]', line[len('testTags:'):].strip()))
+                res.discard('')
+                return res
+    print(f"No testTags found for test case {test_id}.")
+    return set()
