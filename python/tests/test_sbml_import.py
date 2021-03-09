@@ -62,10 +62,12 @@ def test_nosensi(simple_sbml_model):
                                                  module_path=tmpdir)
 
         model = model_module.getModel()
+        model.setTimepoints(np.linspace(0, 60, 61))
         solver = model.getSolver()
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
-        with pytest.raises(RuntimeError):
-            amici.runAmiciSimulation(model, solver)
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        rdata = amici.runAmiciSimulation(model, solver)
+        assert rdata['sx'] is None
 
 
 def assert_fun(x):
