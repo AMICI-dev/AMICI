@@ -271,7 +271,6 @@ nobody_functions = [
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
-    and function != 'sxdot'
 ]
 # list of event functions
 event_functions = [
@@ -2516,6 +2515,9 @@ class ODEExporter:
     :ivar _build_hints:
         If the given model uses special functions, this set contains hints for
         model building.
+
+    :ivar generate_sensitivity_code:
+        Specifies whether code for sensitivity computation is to be generated
     """
 
     def __init__(
@@ -2525,7 +2527,8 @@ class ODEExporter:
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
-            allow_reinit_fixpar_initcond: Optional[bool] = True
+            allow_reinit_fixpar_initcond: Optional[bool] = True,
+            generate_sensitivity_code: Optional[bool] = True
     ):
         """
         Generate AMICI C++ files for the ODE provided to the constructor.
@@ -2550,6 +2553,9 @@ class ODEExporter:
 
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.ode_export.ODEExporter`
+
+        :param generate_sensitivity_code specifies whether code required for
+            sensitivity computation will be generated
         """
         set_log_level(logger, verbose)
 
@@ -2574,6 +2580,7 @@ class ODEExporter:
 
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
         self._build_hints = set()
+        self.generate_sensitivity_code: bool = generate_sensitivity_code
 
     @log_execution_time('generating cpp code', logger)
     def generate_model_code(self) -> None:
@@ -2614,6 +2621,10 @@ class ODEExporter:
         Create C++ code files for the model based on ODEExporter.model
         """
         for function in self.functions.keys():
+            if function in sensi_functions and \
+                    not self.generate_sensitivity_code:
+                continue
+
             if 'dont_generate_body' not in \
                     self.functions[function].get('flags', []):
                 dec = log_execution_time(f'writing {function}.cpp', logger)
