@@ -77,7 +77,8 @@ def test_nosensi(simple_sbml_model):
         del model_module
         del model
         del solver
-
+        import sys
+        del sys.modules['_test']
 
 def assert_fun(x):
     assert x
