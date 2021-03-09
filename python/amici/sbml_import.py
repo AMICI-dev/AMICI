@@ -381,10 +381,6 @@ class SbmlImporter:
         :param constant_parameters:
             SBML Ids identifying constant parameters
         """
-
-        if constant_parameters is None:
-            constant_parameters = []
-
         self.check_support()
         self._gather_locals()
         self._process_parameters(constant_parameters)
