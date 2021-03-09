@@ -424,9 +424,11 @@ class SbmlImporter:
     def check_event_support(self) -> None:
         """
         Check possible events in the model, as AMICI does currently not support
-            - delays in events
-            - priorities of events
-            - events fired at initial time
+        
+        * delays in events
+        * priorities of events
+        * events fired at initial time
+
         Furthermore, event triggers are optional (e.g., if an event is fired at
         initial time, no trigger function is necessary).
         In this case, warn that this event will have no effect.
@@ -779,6 +781,16 @@ class SbmlImporter:
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() in constant_parameters
         ]
+        for parameter in fixed_parameters:
+            if self._get_element_initial_assignment(parameter.getId()) is not \
+                    None or self.is_assignment_rule_target(parameter) or \
+                    self.is_rate_rule_target(parameter):
+                raise SBMLException(
+                    f'Cannot turn parameter {parameter.getId()} into a '
+                    'constant/fixed parameter since it either has an '
+                    'initial assignment or is the target of an assignment or '
+                    'rate rule.'
+                )
 
         parameters = [
             parameter for parameter
@@ -1498,8 +1510,7 @@ class SbmlImporter:
 
         return sp.Float(1.0)
 
-    def is_assignment_rule_target(self,
-                                  element: sbml.SBase) -> bool:
+    def is_assignment_rule_target(self, element: sbml.SBase) -> bool:
         """
         Checks if an element has a valid assignment rule in the specified
         model.
@@ -1511,6 +1522,23 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
+        if a is None or self._sympy_from_sbml_math(a) is None:
+            return False
+
+        return True
+
+    def is_rate_rule_target(self, element: sbml.SBase) -> bool:
+        """
+        Checks if an element has a valid assignment rule in the specified
+        model.
+
+        :param element:
+            SBML variable
+
+        :return:
+            boolean indicating truth of function name
+        """
+        a = self.sbml.getRateRuleByVariable(element.getId())
         if a is None or self._sympy_from_sbml_math(a) is None:
             return False
 
