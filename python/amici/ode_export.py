@@ -1661,7 +1661,7 @@ class ODEModel:
         # Now add the found roots to the model components
         for root in roots:
             # skip roots of SBML events, as these have already been added
-            if root.get_val() in [i_root.get_val() for i_root in self._events]:
+            if root in self._events:
                 continue
             # add roots of heaviside functions
             self.add_component(root)
