@@ -449,10 +449,10 @@ class SbmlImporter:
                 try:
                     delay_time = float(self._sympy_from_sbml_math(delay))
                     if delay_time != 0:
-                        # `TypeError` would be raised in the above `float(...)`
-                        # if the delay is not a fixed time
                         raise ValueError
-                except (ValueError, TypeError):
+                # `TypeError` would be raised in the above `float(...)`
+                # if the delay is not a fixed time
+                except (TypeError, ValueError):
                     raise SBMLException('Events with execution delays are '
                                         'currently not supported in AMICI.')
             # Check for priorities
@@ -669,11 +669,10 @@ class SbmlImporter:
     @log_execution_time('processing SBML rate rules', logger)
     def _process_rate_rules(self):
         """
-        Process assignment and rate rules for species, compartments and
-        parameters. Compartments and parameters with rate rules are
-        implemented as species. Note that, in the case of species,
-        rate rules may describe the change in amount, not concentration,
-        of a species.
+        Process rate rules for species, compartments and parameters.
+        Compartments and parameters with rate rules are implemented as species.
+        Note that, in the case of species, rate rules may describe the change
+        in amount, not concentration, of a species.
         """
         rules = self.sbml.getListOfRules()
         # compartments with rules are replaced with constants in the relevant
@@ -933,10 +932,60 @@ class SbmlImporter:
 
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
+    def _convert_event_assignment_parameter_targets_to_species(self):
+        """
+        Convert parameters that are targets of event assignments to species.
+
+        This is for the convenience of only implementing event assignments for
+        "species".
+        """
+        parameter_targets = \
+            _collect_event_assignment_parameter_targets(self.sbml)
+        for parameter_target in parameter_targets:
+            # Parameter rate rules already exist as species.
+            if parameter_target in self.symbols[SymbolId.SPECIES]:
+                continue
+            if parameter_target in self.parameter_assignment_rules:
+                raise SBMLException(
+                    'AMICI does not currently support models with SBML events'
+                    'that affect parameters that are also the target of '
+                    'assignment rules.'
+                )
+            parameter_def = None
+            for symbol_id in {SymbolId.PARAMETER, SymbolId.FIXED_PARAMETER}:
+                if parameter_target in self.symbols[symbol_id]:
+                    # `parameter_target` should only exist in one of the
+                    # `symbol_id` dictionaries.
+                    if parameter_def is not None:
+                        raise Exception(
+                            'Unexpected error. The parameter target of an '
+                            'event assignment was processed twice.'
+                        )
+                    parameter_def = \
+                        self.symbols[symbol_id].pop(parameter_target)
+            if parameter_def is None:
+                raise Exception(
+                    'Unexpected error. The parameter target of an event '
+                    'assignment could not be found.'
+                )
+            # Fixed parameters are added as species such that they can be
+            # targets of events.
+            self.symbols[SymbolId.SPECIES][parameter_target] = {
+                'name': parameter_def['name'],
+                'init': sp.Float(parameter_def['value']),
+                #'compartment': None,  # can ignore for amounts
+                'constant': False,
+                'amount': True,
+                #'conversion_factor': 1.0,  # probably can be ignored
+                'index': len(self.symbols[SymbolId.SPECIES]),
+                'dt': sp.Float(0),
+            }
+
     @log_execution_time('processing SBML events', logger)
     def _process_events(self) -> None:
         """Process SBML events."""
         events = self.sbml.getListOfEvents()
+        self._convert_event_assignment_parameter_targets_to_species()
 
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
@@ -960,11 +1009,6 @@ class SbmlImporter:
             for event_assignment in event_assignments:
                 variable_sym = \
                     symbol_with_assumptions(event_assignment.getVariable())
-                if self.symbols[SymbolId.SPECIES][variable_sym]['constant']:
-                    raise SBMLException(
-                        'AMICI does not currently support models with SBML '
-                        'events that affect constant species.'
-                    )
                 if event_assignment.getMath() is None:
                     # ignore event assignments with no change in value
                     continue
@@ -2034,3 +2078,17 @@ def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
     )
+
+
+def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
+    targets = set()
+    sbml_parameters = sbml_model.getListOfParameters()
+    sbml_parameter_ids = [p.getId() for p in sbml_parameters]
+    for event in sbml_model.getListOfEvents():
+        for event_assignment in event.getListOfEventAssignments():
+            target_id = event_assignment.getVariable()
+            if target_id in sbml_parameter_ids:
+                targets.add(_get_identifier_symbol(
+                    sbml_parameters[sbml_parameter_ids.index(target_id)]
+                ))
+    return targets
