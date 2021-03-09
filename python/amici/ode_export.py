@@ -272,6 +272,12 @@ sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
 ]
+# list of sensitivity functions
+sparse_sensi_functions = [
+    function for function in functions
+    if 'const int ip' not in functions[function]['signature']
+    and function.endswith('dp') or function.endswith('dp_explicit')
+]
 # list of event functions
 event_functions = [
     function for function in functions
@@ -1379,7 +1385,7 @@ class ODEModel:
         else:
             return self._syms[name]
 
-    def sparsesym(self, name: str) -> List[str]:
+    def sparsesym(self, name: str, force_generate: bool = True) -> List[str]:
         """
         Returns (and constructs if necessary) the sparsified identifiers for
         a sparsified symbolic variable.
@@ -1387,15 +1393,18 @@ class ODEModel:
         :param name:
             name of the symbolic variable
 
+        :param force_generate:
+            whether the symbols should be generated if not available
+
         :return:
             linearized Matrix containing the symbolic identifiers
 
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
-        if name not in self._sparsesyms:
+        if name not in self._sparsesyms and force_generate:
             self._generate_sparse_symbol(name)
-        return self._sparsesyms[name]
+        return self._sparsesyms.get(name, [])
 
     def eq(self, name: str) -> sp.Matrix:
         """
@@ -2621,7 +2630,7 @@ class ODEExporter:
         Create C++ code files for the model based on ODEExporter.model
         """
         for function in self.functions.keys():
-            if function in sensi_functions and \
+            if function in sensi_functions + sparse_sensi_functions and \
                     not self.generate_sensitivity_code:
                 continue
 
@@ -3123,12 +3132,16 @@ class ODEExporter:
             'NEVENT': str(self.model.num_events()),
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDP': str(len(self.model.sparsesym('dwdp'))),
+            'NDWDP': str(len(self.model.sparsesym(
+                'dwdp', force_generate=self.generate_sensitivity_code
+            ))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDWDW': str(len(self.model.sparsesym('dwdw'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
-                'dxdotdp_explicit'))),
+                'dxdotdp_explicit',
+                force_generate=self.generate_sensitivity_code
+            ))),
             'NDXDOTDX_EXPLICIT': str(len(self.model.sparsesym(
                 'dxdotdx_explicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
@@ -3173,11 +3186,23 @@ class ODEExporter:
                 if self.model._has_quadratic_nllh else 'false',
         }
 
-        for fun in [
-            'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
-            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit',
-            'dJydy'
-        ]:
+        funs = [
+            'w', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
+            'dxdotdw', 'dxdotdx_explicit', 'dJydy'
+        ]
+        if self.generate_sensitivity_code:
+            funs += sparse_sensi_functions + sensi_functions
+        else:
+            for fun in sparse_sensi_functions + sensi_functions:
+                tpl_data[f'{fun.upper()}_DEF'] = ''
+                tpl_data[f'{fun.upper()}_IMPL'] = ''
+                if fun in sparse_functions:
+                    tpl_data[f'{fun.upper()}_COLPTRS_DEF'] = ''
+                    tpl_data[f'{fun.upper()}_COLPTRS_IMPL'] = ''
+                    tpl_data[f'{fun.upper()}_ROWVALS_DEF'] = ''
+                    tpl_data[f'{fun.upper()}_ROWVALS_IMPL'] = ''
+
+        for fun in funs:
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
             tpl_data[f'{fun.upper()}_IMPL'] = \

@@ -46,6 +46,28 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  compute_conservation_laws=False)
 
 
+def test_nosensi(simple_sbml_model):
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(model_name="test",
+                                 output_dir=tmpdir,
+                                 observables=None,
+                                 compute_conservation_laws=False,
+                                 generate_sensitivity_code=False)
+
+        model_module = amici.import_model_module(module_name='test',
+                                                 module_path=tmpdir)
+
+        model = model_module.getModel()
+        solver = model.getSolver()
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        with pytest.raises(RuntimeError):
+            amici.runAmiciSimulation(model, solver)
+
+
 def assert_fun(x):
     assert x
 
