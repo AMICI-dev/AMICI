@@ -337,6 +337,14 @@ class SbmlImporter:
             sbml.L3P_PARSE_LOG_AS_LN
         )
         self._process_sbml(constant_parameters)
+        if self.symbols.get(SymbolId.EVENT, False):
+            if compute_conservation_laws:
+                logger.warning(
+                    'Conservation laws are currently not supported for models'
+                    'with events, and will be turned off.'
+                )
+            compute_conservation_laws = False
+
         self._process_observables(observables, sigmas, noise_distributions)
         self._replace_compartments_with_volumes()
 
@@ -927,35 +935,7 @@ class SbmlImporter:
 
     @log_execution_time('processing SBML events', logger)
     def _process_events(self) -> None:
-        """Process SBML events.
-
-        TODO
-        - [X] raise SBMLException for unsupported Event features
-          - [X] Delay
-          - [X] Event.use_values_from_trigger_time
-          - others...
-        - [X] handle trigger
-        - [X] handle event assignments
-        - [X] handle Event required attributes
-          - [X] useValuesFromTriggerTime
-        - [X] handle Event optional attributes
-          - [X] id
-          - [ ] sboTerm
-        - [X] handle Event optional subobjects
-          - [X] Trigger
-            - [X] (required) persistent
-            - [X] (required) initialValue
-            - [X] (optional) math
-            - [ ] (optional) sboTerm
-          - [X] Delay
-          - [X] Priority
-          - [X] ListOfEventAssignments
-          - [X] EventAssignment
-            - [X] (required) variable
-            - [ ] (optional) sboTerm
-            - [ ] (optional) id
-            - [X] (optional) math
-        """
+        """Process SBML events."""
         events = self.sbml.getListOfEvents()
 
         for ievent, event in enumerate(events):
