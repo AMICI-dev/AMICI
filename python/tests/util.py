@@ -147,6 +147,7 @@ def check_trajectories_with_forward_sensitivities(
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
+    solver.setAbsoluteTolerance(1e-15)
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
     rdata = runAmiciSimulation(amici_model, solver=solver)
