@@ -259,7 +259,8 @@ def compile_model(path, test_id, model_dir):
         os.makedirs(model_dir)
 
     model_name = 'SBMLTest' + test_id
-    wrapper.sbml2amici(model_name, output_dir=model_dir)
+    wrapper.sbml2amici(model_name, output_dir=model_dir,
+                       generate_sensitivity_code=False)
 
     # settings
     sys.path.insert(0, model_dir)
