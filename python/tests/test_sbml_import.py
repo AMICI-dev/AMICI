@@ -71,7 +71,7 @@ def test_nosensi(simple_sbml_model):
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
         with pytest.raises(RuntimeError):
-            rdata = amici.runAmiciSimulation(model, solver)
+            amici.runAmiciSimulation(model, solver)
 
 
 def assert_fun(x):
