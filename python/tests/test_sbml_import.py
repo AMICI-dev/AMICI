@@ -29,6 +29,10 @@ def simple_sbml_model():
     s1.setId('S1')
     s1.setCompartment('C1')
     model.addSpecies(s1)
+    p1 = model.createParameter()
+    p1.setId('p1')
+    p1.setValue(0.0)
+    model.addParameter(p1)
 
     return document, model
 
@@ -66,8 +70,8 @@ def test_nosensi(simple_sbml_model):
         solver = model.getSolver()
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-        rdata = amici.runAmiciSimulation(model, solver)
-        assert rdata['sx'] is None
+        with pytest.raises(RuntimeError):
+            rdata = amici.runAmiciSimulation(model, solver)
 
 
 def assert_fun(x):
