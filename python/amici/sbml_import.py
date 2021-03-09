@@ -449,10 +449,10 @@ class SbmlImporter:
                 try:
                     delay_time = float(self._sympy_from_sbml_math(delay))
                     if delay_time != 0:
-                        # `TypeError` would be raised in the above `float(...)`
-                        # if the delay is not a fixed time
                         raise ValueError
-                except (ValueError, TypeError):
+                # `TypeError` would be raised in the above `float(...)`
+                # if the delay is not a fixed time
+                except (TypeError, ValueError):
                     raise SBMLException('Events with execution delays are '
                                         'currently not supported in AMICI.')
             # Check for priorities
@@ -669,11 +669,10 @@ class SbmlImporter:
     @log_execution_time('processing SBML rate rules', logger)
     def _process_rate_rules(self):
         """
-        Process assignment and rate rules for species, compartments and
-        parameters. Compartments and parameters with rate rules are
-        implemented as species. Note that, in the case of species,
-        rate rules may describe the change in amount, not concentration,
-        of a species.
+        Process rate rules for species, compartments and parameters.
+        Compartments and parameters with rate rules are implemented as species.
+        Note that, in the case of species, rate rules may describe the change
+        in amount, not concentration, of a species.
         """
         rules = self.sbml.getListOfRules()
         # compartments with rules are replaced with constants in the relevant
@@ -800,6 +799,20 @@ class SbmlImporter:
                     'rate rule.'
                 )
 
+        # Fixed parameters are added as species such that they can be targets
+        # of events.
+        for par in fixed_parameters:
+            self.symbols[SymbolId.SPECIES][_get_identifier_symbol(par)] = {
+                'name': par.getName() if par.isSetName() else par.getId(),
+                'init': sp.Float(par.getValue()),
+                #'compartment': None,  # can ignore for amounts
+                'constant': True,
+                'amount': True,
+                #'conversion_factor': 1.0,  # probably can be ignored
+                'index': len(self.symbols[SymbolId.SPECIES]),
+                #'dt': None,  # Could set to 0?
+            }
+
         parameters = [
             parameter for parameter
             in self.sbml.getListOfParameters()
@@ -808,18 +821,11 @@ class SbmlImporter:
             and not self.is_assignment_rule_target(parameter)
         ]
 
-        loop_settings = {
-            SymbolId.PARAMETER: {'var': parameters, 'name': 'parameter'},
-            SymbolId.FIXED_PARAMETER: {'var': fixed_parameters,
-                                       'name': 'fixed_parameter'}
-        }
-
-        for partype, settings in loop_settings.items():
-            for par in settings['var']:
-                self.symbols[partype][_get_identifier_symbol(par)] = {
-                    'name': par.getName() if par.isSetName() else par.getId(),
-                    'value': par.getValue()
-                }
+        for par in parameters:
+            self.symbols[SymbolId.PARAMETER][_get_identifier_symbol(par)] = {
+                'name': par.getName() if par.isSetName() else par.getId(),
+                'value': par.getValue()
+            }
 
     @log_execution_time('processing SBML reactions', logger)
     def _process_reactions(self):
@@ -960,11 +966,6 @@ class SbmlImporter:
             for event_assignment in event_assignments:
                 variable_sym = \
                     symbol_with_assumptions(event_assignment.getVariable())
-                if self.symbols[SymbolId.SPECIES][variable_sym]['constant']:
-                    raise SBMLException(
-                        'AMICI does not currently support models with SBML '
-                        'events that affect constant species.'
-                    )
                 if event_assignment.getMath() is None:
                     # ignore event assignments with no change in value
                     continue
