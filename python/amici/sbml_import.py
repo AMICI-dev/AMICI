@@ -418,7 +418,19 @@ class SbmlImporter:
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
 
-        # check support for events
+        # Check events for unsupported functionality
+        self.check_event_support()
+
+    def check_event_support(self) -> None:
+        """
+        Check possible events in the model, as AMICI does currently not support
+            - delays in events
+            - priorities of events
+            - events fired at initial time
+        Furthermore, event triggers are optional (e.g., if an event is fired at
+        initial time, no trigger function is necessary).
+        In this case, warn that this event will have no effect.
+        """
         for event in self.sbml.getListOfEvents():
             event_id = event.getId()
             # Check for delays in events
