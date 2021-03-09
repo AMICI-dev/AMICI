@@ -1778,11 +1778,7 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
 
-        # normalize such that we always implement <,
-        # this ensures that we can correctly evaluate the condition if
-        # simulation starts at H(0). This is achieved by translating
-        # conditionals into Heaviside functions H that is implemented as unit
-        # step with H(0) = 1
+        # convert relational expressions into trigger functions
         if isinstance(trigger, sp.core.relational.LessThan) or \
                 isinstance(trigger, sp.core.relational.StrictLessThan):
             # y < x or y <= x
@@ -1792,13 +1788,12 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
             # y >= x or y > x
             return root
 
-    # or(x,y) = not(and(not(x),not(y))
+    # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
     if isinstance(trigger, sp.Or):
-        return sp.Mul(*[_parse_event_trigger(arg) for arg in trigger.args])
-
+        return sp.Max(*[_parse_event_trigger(arg) for arg in trigger.args])
+    # and(x,y): all out of {x,y} are > 0: sp.Min(x, y)
     if isinstance(trigger, sp.And):
-        raise SBMLException('AMICI can not parse logical AND expressions in '
-                            'event trigger functions.')
+        return sp.Min(*[_parse_event_trigger(arg) for arg in trigger.args])
 
     raise SBMLException(
         'AMICI can not parse piecewise/event trigger functions with argument '
