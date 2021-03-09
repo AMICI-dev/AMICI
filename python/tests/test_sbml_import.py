@@ -1,6 +1,7 @@
 """Tests related to amici.sbml_import"""
 
 import os
+import sys
 import re
 from urllib.request import urlopen
 import shutil
@@ -50,6 +51,8 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  compute_conservation_laws=False)
 
 
+@pytest.mark.skipif(sys.platform in ['win32', 'cygwin'],
+                    reason="windows stinks")
 def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
@@ -72,13 +75,6 @@ def test_nosensi(simple_sbml_model):
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
         with pytest.raises(RuntimeError):
             amici.runAmiciSimulation(model, solver)
-
-        # windows acting up
-        del model_module
-        del model
-        del solver
-        import sys
-        del sys.modules['_test']
 
 def assert_fun(x):
     assert x
