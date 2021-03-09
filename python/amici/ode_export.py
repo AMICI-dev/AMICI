@@ -1916,19 +1916,16 @@ class ODEModel:
                     tmp_eq = smart_multiply(
                         (self.sym('xdot_old') - self.sym('xdot')),
                         self.eq('stau')[ie])
-                    tmp_xdot = self._eqs['xdot'].subs(zip(self._syms['w'],
-                                                          self._eqs['w']))
                     # construct an enhanced state sensitivity, which accounts
                     # for the time point sensitivity as well
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
-                    tmp_dxdp += smart_multiply(self.sym('xdot'), self.eq('stau')[ie])
+                    tmp_dxdp += smart_multiply(self.sym('xdot'),
+                                               self.eq('stau')[ie])
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
-
                     # ====== chain rule for the time point ====================
                     tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
                                              self.eq('stau')[ie])
-
                     # ====== partial derivative for the parameters ============
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
