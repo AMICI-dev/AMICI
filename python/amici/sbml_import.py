@@ -424,9 +424,11 @@ class SbmlImporter:
     def check_event_support(self) -> None:
         """
         Check possible events in the model, as AMICI does currently not support
-            - delays in events
-            - priorities of events
-            - events fired at initial time
+        
+        * delays in events
+        * priorities of events
+        * events fired at initial time
+
         Furthermore, event triggers are optional (e.g., if an event is fired at
         initial time, no trigger function is necessary).
         In this case, warn that this event will have no effect.
