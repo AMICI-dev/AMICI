@@ -2843,7 +2843,8 @@ class ODEExporter:
                 f'#define {symbol_name} {name}[{index}]'
             )
 
-        with open(os.path.join(self.model_path, f'{name}.h'), 'w') as fileout:
+        filename = os.path.join(self.model_path, f'{self.model_name}_{name}.h')
+        with open(filename, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _write_function_file(self, function: str) -> None:
@@ -2887,7 +2888,7 @@ class ODEExporter:
             if re.search(
                     fr'const (realtype|double) \*{sym}[0]*[,)]+', signature
             ) or (function == sym and function not in non_unique_id_symbols):
-                lines.append(f'#include "{sym}.h"')
+                lines.append(f'#include "{self.model_name}_{sym}.h"')
 
         lines.extend([
             '',
@@ -3308,8 +3309,8 @@ class ODEExporter:
         """
         return '\n'.join(
             [
-                f'"{symbol}",'
-                for symbol in self.model.name(name)
+                f'"{symbol}", // {name}[{idx}]'
+                for idx, symbol in enumerate(self.model.name(name))
             ]
         )
 
@@ -3326,8 +3327,8 @@ class ODEExporter:
         """
         return '\n'.join(
             [
-                f'"{strip_pysb(symbol)}",'
-                for symbol in self.model.sym(name)
+                f'"{strip_pysb(symbol)}", // {name}[{idx}]'
+                for idx, symbol in enumerate(self.model.sym(name))
             ]
         )
 

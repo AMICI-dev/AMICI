@@ -419,7 +419,7 @@ class SbmlImporter:
             raise SBMLException('Fast reactions are currently not supported!')
 
         # check support for events
-        for event in self.sbml.getListOfRules():
+        for event in self.sbml.getListOfEvents():
             event_id = event.getId()
             # Check for delays in events
             delay = event.getDelay()
