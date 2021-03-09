@@ -26,21 +26,12 @@ extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 extern std::array<const char*, TPL_NW> expressionIds;
 
-extern void Jy_TPL_MODELNAME(realtype *nllh, const int iy, const realtype *p,
-                             const realtype *k, const realtype *y,
-                             const realtype *sigmay, const realtype *my);
-extern void dJydsigmay_TPL_MODELNAME(realtype *dJydsigmay, const int iy,
-                                     const realtype *p, const realtype *k,
-                                     const realtype *y, const realtype *sigmay,
-                                     const realtype *my);
+TPL_JY_DEF
+TPL_DJYDSIGMA_DEF
 TPL_DJYDY_DEF
 TPL_DJYDY_COLPTRS_DEF
 TPL_DJYDY_ROWVALS_DEF
-
-extern void root_TPL_MODELNAME(realtype *root, const realtype t,
-                               const realtype *x, const realtype *p,
-                               const realtype *k, const realtype *h);
-
+TPL_ROOT_DEF
 TPL_DWDP_DEF
 TPL_DWDP_COLPTRS_DEF
 TPL_DWDP_ROWVALS_DEF
@@ -59,35 +50,18 @@ TPL_DXDOTDP_EXPLICIT_ROWVALS_DEF
 TPL_DXDOTDX_EXPLICIT_DEF
 TPL_DXDOTDX_EXPLICIT_COLPTRS_DEF
 TPL_DXDOTDX_EXPLICIT_ROWVALS_DEF
-
-extern void dydx_TPL_MODELNAME(realtype *dydx, const realtype t,
-                               const realtype *x, const realtype *p,
-                               const realtype *k, const realtype *h,
-                               const realtype *w, const realtype *dwdx);
+TPL_DYDX_DEF
 TPL_DYDP_DEF
+TPL_SIGMAY_DEF
 TPL_DSIGMAYDP_DEF
-extern void sigmay_TPL_MODELNAME(realtype *sigmay, const realtype t,
-                                 const realtype *p, const realtype *k);
 TPL_W_DEF
-extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p,
-                             const realtype *k);
-extern void x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t,
-                                             const realtype *p,
-                                             const realtype *k,
-                                             gsl::span<const int> reinitialization_state_idxs);
+TPL_X0_DEF
+TPL_X0_FIXEDPARAMETERS_DEF
 TPL_SX0_DEF
 TPL_SX0_FIXEDPARAMETERS_DEF
-extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t,
-                               const realtype *x, const realtype *p,
-                               const realtype *k, const realtype *h,
-                               const realtype *w);
-extern void y_TPL_MODELNAME(realtype *y, const realtype t, const realtype *x,
-                            const realtype *p, const realtype *k,
-                            const realtype *h, const realtype *w);
-extern void stau_TPL_MODELNAME(realtype *stau, const realtype t,
-                               const realtype *x, const realtype *p,
-                               const realtype *k, const realtype *h,
-                               const realtype *sx, const int ip, const int ie);
+TPL_XDOT_DEF
+TPL_Y_DEF
+TPL_STAU_DEF
 TPL_DELTASX_DEF
 TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
@@ -160,20 +134,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                       const realtype *k, const realtype *rz,
                       const realtype *sigmaz) override {}
 
-    /** model specific implementation of fJy
-     * @param nllh negative log-likelihood for measurements y
-     * @param iy output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param y model output at timepoint
-     * @param sigmay measurement standard deviation at timepoint
-     * @param my measurements at timepoint
-     **/
-    virtual void fJy(realtype *nllh, const int iy, const realtype *p,
-                     const realtype *k, const realtype *y,
-                     const realtype *sigmay, const realtype *my) override {
-        Jy_TPL_MODELNAME(nllh, iy, p, k, y, sigmay, my);
-    }
+    TPL_JY_IMPL
 
     /** model specific implementation of fJz
      * @param nllh negative log-likelihood for event measurements z
@@ -214,23 +175,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                          const realtype *k, const realtype *rz,
                          const realtype *sigmaz) override {}
 
-    /** model specific implementation of fdJydsigma
-     * @param dJydsigma Sensitivity of time-resolved measurement
-     * negative log-likelihood Jy w.r.t. standard deviation sigmay
-     * @param iy output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param y model output at timepoint
-     * @param sigmay measurement standard deviation at timepoint
-     * @param my measurement at timepoint
-     **/
-    virtual void fdJydsigma(realtype *dJydsigma, const int iy,
-                            const realtype *p, const realtype *k,
-                            const realtype *y, const realtype *sigmay,
-                            const realtype *my) override {
-        dJydsigmay_TPL_MODELNAME(dJydsigma, iy, p, k, y, sigmay, my);
-    }
-
+    TPL_DJYDSIGMA_IMPL
 
     /** model specific implementation of fdJzdsigma
      * @param dJzdsigma Sensitivity of event measurement
@@ -387,19 +332,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DXDOTDX_EXPLICIT_COLPTRS_IMPL
     TPL_DXDOTDX_EXPLICIT_ROWVALS_IMPL
 
-    /** model specific implementation of fdydx
-     * @param dydx partial derivative of observables y w.r.t. model states x
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     **/
-    virtual void fdydx(realtype *dydx, const realtype t, const realtype *x,
-                       const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w, const realtype *dwdx) override {
-        dydx_TPL_MODELNAME(dydx, t, x, p, k, h, w, dwdx);
-    }
+    TPL_DYDX_IMPL
 
     TPL_DYDP_IMPL
 
@@ -432,19 +365,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                        const realtype *x, const realtype *p, const realtype *k,
                        const realtype *h) override {}
 
-    /** model specific implementation for froot
-     * @param root values of the trigger function
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heaviside vector
-     **/
-    virtual void froot(realtype *root, const realtype t, const realtype *x,
-                       const realtype *p, const realtype *k,
-                       const realtype *h) override {
-        root_TPL_MODELNAME(root, t, x, p, k, h);
-    }
+    TPL_ROOT_IMPL
 
     /** model specific implementation of frz
      * @param rz value of root function at current timepoint (non-output events
@@ -460,16 +381,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                      const realtype *x, const realtype *p, const realtype *k,
                      const realtype *h) override {}
 
-    /** model specific implementation of fsigmay
-     * @param sigmay standard deviation of measurements
-     * @param t current time
-     * @param p parameter vector
-     * @param k constant vector
-     **/
-    virtual void fsigmay(realtype *sigmay, const realtype t, const realtype *p,
-                         const realtype *k) override {
-        sigmay_TPL_MODELNAME(sigmay, t, p, k);
-    }
+    TPL_SIGMAY_IMPL
 
     /** model specific implementation of fsigmaz
      * @param sigmaz standard deviation of event measurements
@@ -518,59 +430,13 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_W_IMPL
 
-    /** model specific implementation of fx0
-     * @param x0 initial state
-     * @param t initial time
-     * @param p parameter vector
-     * @param k constant vector
-     **/
-    virtual void fx0(realtype *x0, const realtype t, const realtype *p,
-                     const realtype *k) override {
-        x0_TPL_MODELNAME(x0, t, p, k);
-    }
+    TPL_X0_IMPL
 
-    /** model specific implementation of fx0_fixedParameters
-     * @param x0 initial state
-     * @param t initial time
-     * @param p parameter vector
-     * @param k constant vector
-     **/
-    virtual void fx0_fixedParameters(realtype *x0, const realtype t,
-                                     const realtype *p,
-                                     const realtype *k,
-                                     gsl::span<const int> reinitialization_state_idxs
-                                     ) override {
-        x0_fixedParameters_TPL_MODELNAME(x0, t, p, k, reinitialization_state_idxs);
-    }
+    TPL_X0_FIXEDPARAMETERS_IMPL
 
-    /** model specific implementation for fxdot
-     * @param xdot residual function
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heaviside vector
-     * @param w vector with helper variables
-     **/
-    virtual void fxdot(realtype *xdot, const realtype t, const realtype *x,
-                       const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w) override {
-        xdot_TPL_MODELNAME(xdot, t, x, p, k, h, w);
-    }
+    TPL_XDOT_IMPL
 
-    /** model specific implementation of fy
-     * @param y model output at current timepoint
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     **/
-    virtual void fy(realtype *y, const realtype t, const realtype *x,
-                    const realtype *p, const realtype *k, const realtype *h,
-                    const realtype *w) override {
-        y_TPL_MODELNAME(y, t, x, p, k, h, w);
-    }
+    TPL_Y_IMPL
 
     /** model specific implementation of fz
      * @param z value of event output
