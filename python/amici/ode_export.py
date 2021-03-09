@@ -1054,14 +1054,14 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def transform_dxdt_to_concentration(specie_id, dxdt):
+        def transform_dxdt_to_concentration(species_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
             compartments with a constant volume, or a volume that is defined by
             an assignment or rate rule.
 
-            :param specie_id:
+            :param species_id:
                 The identifier of the species (generated in "sbml_import.py").
 
             :param dxdt:
@@ -1078,13 +1078,13 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            specie = si.symbols[SymbolId.SPECIES][specie_id]
+            species = si.symbols[SymbolId.SPECIES][species_id]
 
-            comp = specie['compartment']
-            x_index = specie['index']
+            comp = species['compartment']
+            x_index = species['index']
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
-                xdot = (dxdt - dv_dt * specie_id) / comp
+                xdot = (dxdt - dv_dt * species_id) / comp
                 dxdotdw_updates.extend(
                     (x_index, w_index, xdot.diff(r_flux))
                     for w_index, r_flux in enumerate(fluxes)
@@ -1105,8 +1105,8 @@ class ODEModel:
                 for var in comp_rate_vars:
                     dv_dt += \
                         v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
-                dv_dx = v.diff(specie_id)
-                xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
+                dv_dx = v.diff(species_id)
+                xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
                 dxdotdw_updates.extend(
                     (x_index, w_index, xdot.diff(r_flux))
                     for w_index, r_flux in enumerate(fluxes)
@@ -1130,19 +1130,19 @@ class ODEModel:
         # create dynamics without respecting conservation laws first
         dxdt = smart_multiply(si.stoichiometric_matrix,
                               MutableDenseMatrix(fluxes))
-        for ix, ((specie_id, specie), formula) in enumerate(zip(
+        for ix, ((species_id, species), formula) in enumerate(zip(
                 symbols[SymbolId.SPECIES].items(),
                 dxdt
         )):
-            assert ix == specie['index']  # check that no reordering occurred
+            assert ix == species['index']  # check that no reordering occurred
             # rate rules and amount species don't need to be updated
-            if 'dt' in specie:
+            if 'dt' in species:
                 continue
-            if specie['amount']:
-                specie['dt'] = formula
+            if species['amount']:
+                species['dt'] = formula
             else:
-                specie['dt'] = transform_dxdt_to_concentration(specie_id,
-                                                               formula)
+                species['dt'] = transform_dxdt_to_concentration(species_id,
+                                                                formula)
 
         # create all basic components of the ODE model and add them.
         for symbol_name in symbols:
