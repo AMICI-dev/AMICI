@@ -2651,7 +2651,8 @@ class ODEExporter:
             # check for both basic variables (not in functions) and function
             # computed values
             if (name in self.functions and
-                'body' not in self.functions[name]) or \
+                'body' not in self.functions[name] and
+                name not in nobody_functions) or \
                (name not in self.functions and
                     len(self.model.sym(name)) == 0):
                 continue
@@ -2826,6 +2827,9 @@ class ODEExporter:
         lines.append('')
 
         # extract symbols that need definitions from signature
+        # don't add includes for files that won't be generated.
+        # Unfortunately we cannot check for `self.functions[sym]['body']`
+        # here since it may not have been generated yet.
         for match in re.findall(
                 fr'const (realtype|double) \*([\w]+)[0]*[,\)]+', signature
         ):
