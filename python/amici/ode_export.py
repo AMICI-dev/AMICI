@@ -3559,10 +3559,11 @@ def remove_typedefs(signature: str) -> str:
         'const int ',
         'int ',
         'SUNMatrixContent_Sparse ',
+        'gsl::span<const int>'
     ]
 
     for typedef in typedefs:
-        signature = signature.replace(typedef, ' ')
+        signature = signature.replace(typedef, '')
 
     return signature
 
