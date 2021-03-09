@@ -73,6 +73,11 @@ def test_nosensi(simple_sbml_model):
         with pytest.raises(RuntimeError):
             amici.runAmiciSimulation(model, solver)
 
+        # windows acting up
+        del model_module
+        del model
+        del solver
+
 
 def assert_fun(x):
     assert x
