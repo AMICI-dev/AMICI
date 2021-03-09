@@ -76,6 +76,7 @@ def test_nosensi(simple_sbml_model):
         with pytest.raises(RuntimeError):
             amici.runAmiciSimulation(model, solver)
 
+
 def assert_fun(x):
     assert x
 

@@ -3331,9 +3331,10 @@ class ODEExporter:
         Write CMake CMakeLists.txt file for this model.
         """
 
-        sources = [self.model_name + '_' + function + '.cpp '
+        sources = [f'{self.model_name}_{function}.cpp '
                    for function in self.functions.keys()
-                   if self.functions[function].get('body', None) is not None]
+                   if f'{self.model_name}_{function}.cpp' 
+                   in os.listdir(self.model_path)]
 
         # add extra source files for sparse matrices
         for function in sparse_functions:
