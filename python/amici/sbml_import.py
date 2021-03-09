@@ -289,11 +289,12 @@ class SbmlImporter:
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
             (default), if ``False``, log will be parsed as natural logarithm
-            ``ln`
+            ``ln``
 
         :param generate_sensitivity_code:
-            If ``False``, the code required for sensitivity computation will not
-            be generated
+            If ``False``, the code required for sensitivity computation will
+            not be generated
+
         """
         set_log_level(logger, verbose)
 
