@@ -1,6 +1,7 @@
 # Continuous integration (CI) and tests
 
-AMICI uses a continuous integration pipeline running on https://travis-ci.org/.
+AMICI uses a continuous integration pipeline running via
+https://github.com/features/actions.
 This includes the following steps:
 
 - Checking existence and format of documentation
@@ -67,7 +68,7 @@ This code is to be updated whenever `amici::Model` changes.
 
 ### Regenerating C++ code of the test models
 
-Regeneration of the model code must done whenever `amici::Model` or
+Regeneration of the model code has to be done whenever `amici::Model` or
 the Matlab model import routines change.
 
 This is done with
@@ -89,7 +90,7 @@ replace `tests/cpputest/expectedResults.h5` by
 Before replacing the test results, confirm that only expected datasets have
 changed, e.g. using 
 
-    h5diff -v -r 1e-8 tests/cpputest/expectedResults.h5 tests/cpputest/writeResults.h5.bak | less
+    h5diff -v --relative 1e-8 tests/cpputest/expectedResults.h5 tests/cpputest/writeResults.h5.bak | less
 
 
 ## Adding/Updating tests
