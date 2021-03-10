@@ -49,6 +49,7 @@ def pysb2amici(
         compute_conservation_laws: bool = True,
         compile: bool = True,
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+        generate_sensitivity_code: bool = True,
 ):
     """
     Generate AMICI C++ files for the provided model.
@@ -93,7 +94,7 @@ def pysb2amici(
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :param assume_pow_positivity:
-        if set to ``true``, a special pow function is used to avoid problems
+        if set to ``True``, a special pow function is used to avoid problems
         with state variables that may become negative due to numerical
         errors
 
@@ -102,17 +103,21 @@ def pysb2amici(
         extension
 
     :param compute_conservation_laws:
-        if set to ``true``, conservation laws are automatically computed and
+        if set to ``True``, conservation laws are automatically computed and
         applied such that the state-jacobian of the ODE right-hand-side has
-        full rank. This option should be set to ``true`` when using the Newton
+        full rank. This option should be set to ``True`` when using the Newton
         algorithm to compute steadystates
 
     :param compile:
-        If ``true``, build the python module for the generated model. If false,
+        If ``True``, build the python module for the generated model. If false,
         just generate the source code.
 
     :param simplify:
         see :attr:`amici.ODEModel._simplify`
+
+    :param generate_sensitivity_code:
+        if set to ``False``, code for sensitivity computation will not be
+        generated
     """
     if observables is None:
         observables = []
