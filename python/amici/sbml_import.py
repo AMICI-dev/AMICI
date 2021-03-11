@@ -217,6 +217,7 @@ class SbmlImporter:
                    compute_conservation_laws: bool = True,
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                    log_as_log10: bool = True,
+                   generate_sensitivity_code: bool = True,
                    **kwargs) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -256,11 +257,11 @@ class SbmlImporter:
             callable generating a custom noise string.
 
         :param verbose:
-            verbosity level for logging, True/False default to
-            logging.Error/logging.DEBUG
+            verbosity level for logging, ``True``/``False`` default to
+            ``logging.Error``/``logging.DEBUG``
 
         :param assume_pow_positivity:
-            if set to True, a special pow function is
+            if set to ``True``, a special pow function is
             used to avoid problems with state variables that may become
             negative due to numerical errors
 
@@ -272,21 +273,28 @@ class SbmlImporter:
             see :class:`amici.ode_export.ODEExporter`
 
         :param compile:
-            If True, compile the generated Python package,
-            if False, just generate code.
+            If ``True``, compile the generated Python package,
+            if ``False``, just generate code.
 
         :param compute_conservation_laws:
-            if set to true, conservation laws are automatically computed and
-            applied such that the state-jacobian of the ODE right-hand-side has
-            full rank. This option should be set to True when using the newton
-            algorithm to compute steadystate sensitivities.
+            if set to ``True``, conservation laws are automatically computed
+            and applied such that the state-jacobian of the ODE
+            right-hand-side has full rank. This option should be set to
+            ``True`` when using the newton algorithm to compute steadystate
+            sensitivities.
 
         :param simplify:
             see :attr:`ODEModel._simplify`
 
         :param log_as_log10:
-            If True, log in the SBML model will be parsed as `log10` (default),
-            if False, log will be parsed as natural logarithm `ln`
+            If ``True``, log in the SBML model will be parsed as ``log10``
+            (default), if ``False``, log will be parsed as natural logarithm
+            ``ln``
+
+        :param generate_sensitivity_code:
+            If ``False``, the code required for sensitivity computation will
+            not be generated
+
         """
         set_log_level(logger, verbose)
 
@@ -352,7 +360,8 @@ class SbmlImporter:
             verbose=verbose,
             assume_pow_positivity=assume_pow_positivity,
             compiler=compiler,
-            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond
+            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+            generate_sensitivity_code=generate_sensitivity_code
         )
         exporter.set_name(model_name)
         exporter.set_paths(output_dir)
@@ -372,10 +381,6 @@ class SbmlImporter:
         :param constant_parameters:
             SBML Ids identifying constant parameters
         """
-
-        if constant_parameters is None:
-            constant_parameters = []
-
         self.check_support()
         self._gather_locals()
         self._process_parameters(constant_parameters)
@@ -735,6 +740,16 @@ class SbmlImporter:
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() in constant_parameters
         ]
+        for parameter in fixed_parameters:
+            if self._get_element_initial_assignment(parameter.getId()) is not \
+                    None or self.is_assignment_rule_target(parameter) or \
+                    self.is_rate_rule_target(parameter):
+                raise SBMLException(
+                    f'Cannot turn parameter {parameter.getId()} into a '
+                    'constant/fixed parameter since it either has an '
+                    'initial assignment or is the target of an assignment or '
+                    'rate rule.'
+                )
 
         parameters = [
             parameter for parameter
@@ -1372,8 +1387,7 @@ class SbmlImporter:
 
         return sp.Float(1.0)
 
-    def is_assignment_rule_target(self,
-                                  element: sbml.SBase) -> bool:
+    def is_assignment_rule_target(self, element: sbml.SBase) -> bool:
         """
         Checks if an element has a valid assignment rule in the specified
         model.
@@ -1385,6 +1399,23 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
+        if a is None or self._sympy_from_sbml_math(a) is None:
+            return False
+
+        return True
+
+    def is_rate_rule_target(self, element: sbml.SBase) -> bool:
+        """
+        Checks if an element has a valid assignment rule in the specified
+        model.
+
+        :param element:
+            SBML variable
+
+        :return:
+            boolean indicating truth of function name
+        """
+        a = self.sbml.getRateRuleByVariable(element.getId())
         if a is None or self._sympy_from_sbml_math(a) is None:
             return False
 
