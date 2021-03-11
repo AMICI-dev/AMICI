@@ -1,9 +1,7 @@
 """Tests for SBML events, including piecewise expressions."""
-import importlib
 import libsbml
 import numpy as np
 from pathlib import Path
-import sys
 
 from amici import (
     AmiciModel,
