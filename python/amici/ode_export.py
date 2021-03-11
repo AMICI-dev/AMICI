@@ -78,9 +78,9 @@ functions = {
             'const realtype *k, const realtype *y, const realtype *sigmay, '
             'const realtype *my)',
     },
-    'dJydsigmay': {
+    'dJydsigma': {
         'signature':
-            '(realtype *dJydsigmay, const int iy, const realtype *p, '
+            '(realtype *dJydsigma, const int iy, const realtype *p, '
             'const realtype *k, const realtype *y, const realtype *sigmay, '
             'const realtype *my)',
     },
@@ -289,7 +289,12 @@ nobody_functions = [
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
-    and function != 'sxdot'
+]
+# list of sensitivity functions
+sparse_sensi_functions = [
+    function for function in functions
+    if 'const int ip' not in functions[function]['signature']
+    and function.endswith('dp') or function.endswith('dp_explicit')
 ]
 # list of event functions
 event_functions = [
@@ -1413,7 +1418,7 @@ class ODEModel:
         else:
             return self._syms[name]
 
-    def sparsesym(self, name: str) -> List[str]:
+    def sparsesym(self, name: str, force_generate: bool = True) -> List[str]:
         """
         Returns (and constructs if necessary) the sparsified identifiers for
         a sparsified symbolic variable.
@@ -1421,15 +1426,18 @@ class ODEModel:
         :param name:
             name of the symbolic variable
 
+        :param force_generate:
+            whether the symbols should be generated if not available
+
         :return:
             linearized Matrix containing the symbolic identifiers
 
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
-        if name not in self._sparsesyms:
+        if name not in self._sparsesyms and force_generate:
             self._generate_sparse_symbol(name)
-        return self._sparsesyms[name]
+        return self._sparsesyms.get(name, [])
 
     def eq(self, name: str) -> sp.Matrix:
         """
@@ -1757,7 +1765,10 @@ class ODEModel:
             name of the symbolic variable
 
         """
-        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)', name)
+        # replacement ensures that we don't have to adapt name in abstract
+        # model and keep backwards compatibility with matlab
+        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)',
+                               name.replace('dJydsigma', 'dJydsigmay'))
         time_symbol = sp.Matrix([symbol_with_assumptions('t')])
 
         if name in self._equation_prototype:
@@ -1942,7 +1953,7 @@ class ODEModel:
             self._eqs[name] = self.sym(name)
 
         elif match_deriv:
-            self._derivative(match_deriv.group(1), match_deriv.group(2))
+            self._derivative(match_deriv.group(1), match_deriv.group(2), name)
 
         else:
             raise ValueError(f'Unknown equation {name}')
@@ -2605,6 +2616,9 @@ class ODEExporter:
     :ivar _build_hints:
         If the given model uses special functions, this set contains hints for
         model building.
+
+    :ivar generate_sensitivity_code:
+        Specifies whether code for sensitivity computation is to be generated
     """
 
     def __init__(
@@ -2614,7 +2628,8 @@ class ODEExporter:
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
-            allow_reinit_fixpar_initcond: Optional[bool] = True
+            allow_reinit_fixpar_initcond: Optional[bool] = True,
+            generate_sensitivity_code: Optional[bool] = True
     ):
         """
         Generate AMICI C++ files for the ODE provided to the constructor.
@@ -2639,6 +2654,9 @@ class ODEExporter:
 
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.ode_export.ODEExporter`
+
+        :param generate_sensitivity_code specifies whether code required for
+            sensitivity computation will be generated
         """
         set_log_level(logger, verbose)
 
@@ -2663,6 +2681,7 @@ class ODEExporter:
 
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
         self._build_hints = set()
+        self.generate_sensitivity_code: bool = generate_sensitivity_code
 
     @log_execution_time('generating cpp code', logger)
     def generate_model_code(self) -> None:
@@ -2703,15 +2722,29 @@ class ODEExporter:
         Create C++ code files for the model based on ODEExporter.model
         """
         for function in self.functions.keys():
+            if function in sensi_functions + sparse_sensi_functions and \
+                    not self.generate_sensitivity_code:
+                continue
+
             if 'dont_generate_body' not in \
                     self.functions[function].get('flags', []):
                 dec = log_execution_time(f'writing {function}.cpp', logger)
                 dec(self._write_function_file)(function)
-            if function in sparse_functions:
+            if function in sparse_functions \
+                    and 'body' in self.functions[function]:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')
 
         for name in self.model.sym_names():
+            # only generate for those that have nontrivial implementation,
+            # check for both basic variables (not in functions) and function
+            # computed values
+            if (name in self.functions and
+                'body' not in self.functions[name] and
+                name not in nobody_functions) or \
+               (name not in self.functions and
+                    len(self.model.sym(name)) == 0):
+                continue
             self._write_index_files(name)
 
         self._write_wrapfunctions_cpp()
@@ -2882,13 +2915,33 @@ class ODEExporter:
 
         lines.append('')
 
-        for sym in self.model.sym_names():
-            # added |double for data
-            # added '[0]*' for initial conditions
-            if re.search(
-                    fr'const (realtype|double) \*{sym}[0]*[,)]+', signature
-            ) or (function == sym and function not in non_unique_id_symbols):
-                lines.append(f'#include "{self.model_name}_{sym}.h"')
+        # extract symbols that need definitions from signature
+        # don't add includes for files that won't be generated.
+        # Unfortunately we cannot check for `self.functions[sym]['body']`
+        # here since it may not have been generated yet.
+        for match in re.findall(
+                fr'const (realtype|double) \*([\w]+)[0]*[,\)]+', signature
+        ):
+            sym = match[1]
+            if sym not in self.model.sym_names():
+                continue
+
+            if sym in sparse_functions:
+                iszero = smart_is_zero_matrix(self.model.sparseeq(sym))
+            elif sym in self.functions:
+                iszero = smart_is_zero_matrix(self.model.eq(sym))
+            else:
+                iszero = len(self.model.sym(sym)) == 0
+
+            if iszero:
+                continue
+
+            lines.append(f'#include "{self.model_name}_{sym}.h"')
+
+        # include return symbols
+        if function in self.model.sym_names() and \
+                function not in non_unique_id_symbols:
+            lines.append(f'#include "{self.model_name}_{function}.h"')
 
         lines.extend([
             '',
@@ -2909,7 +2962,11 @@ class ODEExporter:
             # starting (^|\W) for the following match
             body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
-        self.functions[function]['body'] = body
+
+        if body:
+            self.functions[function]['body'] = body
+        else:
+            return
         lines += body
         lines.extend([
             '}',
@@ -3207,12 +3264,16 @@ class ODEExporter:
             'NEVENT': str(self.model.num_events()),
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDP': str(len(self.model.sparsesym('dwdp'))),
+            'NDWDP': str(len(self.model.sparsesym(
+                'dwdp', force_generate=self.generate_sensitivity_code
+            ))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDWDW': str(len(self.model.sparsesym('dwdw'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
-                'dxdotdp_explicit'))),
+                'dxdotdp_explicit',
+                force_generate=self.generate_sensitivity_code
+            ))),
             'NDXDOTDX_EXPLICIT': str(len(self.model.sparsesym(
                 'dxdotdx_explicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
@@ -3257,11 +3318,39 @@ class ODEExporter:
                 if self.model._has_quadratic_nllh else 'false',
         }
 
-        for fun in [
-            'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
-            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit',
-            'dJydy'
-        ]:
+        for fun, fundef in self.functions.items():
+            if fun in nobody_functions:
+                continue
+
+            if 'body' not in fundef:
+                tpl_data[f'{fun.upper()}_DEF'] = ''
+
+                if fun in sensi_functions + sparse_sensi_functions and \
+                        not self.generate_sensitivity_code:
+                    impl = ''
+                else:
+                    impl = get_model_override_implementation(
+                        fun, self.model_name, nobody=True
+                    )
+
+                tpl_data[f'{fun.upper()}_IMPL'] = impl
+
+                if fun in sparse_functions:
+                    for indexfield in ['colptrs', 'rowvals']:
+                        if fun in sparse_sensi_functions and \
+                                not self.generate_sensitivity_code:
+                            impl = ''
+                        else:
+                            impl = get_sunindex_override_implementation(
+                                fun, self.model_name, indexfield, nobody=True
+                            )
+                        tpl_data[f'{fun.upper()}_{indexfield.upper()}_DEF'] \
+                            = ''
+                        tpl_data[f'{fun.upper()}_{indexfield.upper()}_IMPL'] \
+                            = impl
+
+                continue
+
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
             tpl_data[f'{fun.upper()}_IMPL'] = \
@@ -3337,18 +3426,10 @@ class ODEExporter:
         Write CMake CMakeLists.txt file for this model.
         """
 
-        sources = [self.model_name + '_' + function + '.cpp '
-                   for function in self.functions.keys()
-                   if self.functions[function].get('body', None) is not None]
-
-        # add extra source files for sparse matrices
-        for function in sparse_functions:
-            sources.append(self.model_name + '_' + function
-                           + '_colptrs.cpp')
-            sources.append(self.model_name + '_' + function
-                           + '_rowvals.cpp ')
-
-        sources.append(f'{self.model_name}.cpp')
+        sources = [
+            f + ' ' for f in os.listdir(self.model_path)
+            if f.endswith('.cpp') and f != 'main.cpp'
+        ]
 
         template_data = {'MODELNAME': self.model_name,
                          'SOURCES': '\n'.join(sources),
@@ -3530,7 +3611,8 @@ def get_sunindex_extern_declaration(fun: str, name: str,
         f'(SUNMatrixWrapper &{indextype}{index_arg});'
 
 
-def get_model_override_implementation(fun: str, name: str) -> str:
+def get_model_override_implementation(fun: str, name: str,
+                                      nobody: bool = False) -> str:
     """
     Constructs amici::Model::* override implementation for a given function
 
@@ -3540,14 +3622,21 @@ def get_model_override_implementation(fun: str, name: str) -> str:
     :param name:
         model name
 
+    :param nobody:
+        whether the function has a nontrivial implementation
+
     :return:
         c++ function implementation string
 
     """
-    return \
-        'virtual void f{fun}{signature} override {{\n' \
-        '{ind8}{fun}_{name}{eval_signature};\n' \
-        '{ind4}}}\n'.format(
+    impl = 'virtual void f{fun}{signature} override {{'
+
+    if nobody:
+        impl += '}}\n'
+    else:
+        impl += '\n{ind8}{fun}_{name}{eval_signature};\n{ind4}}}\n'
+
+    return impl.format(
             ind4=' '*4,
             ind8=' '*8,
             fun=fun,
@@ -3558,7 +3647,8 @@ def get_model_override_implementation(fun: str, name: str) -> str:
 
 
 def get_sunindex_override_implementation(fun: str, name: str,
-                                         indextype: str) -> str:
+                                         indextype: str,
+                                         nobody: bool = False) -> str:
     """
     Constructs the amici::Model:: function implementation for an index
     function of a given function
@@ -3572,6 +3662,9 @@ def get_sunindex_override_implementation(fun: str, name: str,
     :param indextype:
         index function {'colptrs', 'rowvals'}
 
+    :param nobody:
+        whether the corresponding function has a nontrivial implementation
+
     :return:
         c++ function implementation string
 
@@ -3579,10 +3672,14 @@ def get_sunindex_override_implementation(fun: str, name: str,
     index_arg = ', int index' if fun in multiobs_functions else ''
     index_arg_eval = ', index' if fun in multiobs_functions else ''
 
-    return \
-        'virtual void f{fun}_{indextype}{signature} override {{\n' \
-        '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
-        '{ind4}}}\n'.format(
+    impl = 'virtual void f{fun}_{indextype}{signature} override {{'
+
+    if nobody:
+        impl += '}}\n'
+    else:
+        impl += '{ind8}{fun}_{indextype}_{name}{eval_signature};\n{ind4}}}\n'
+
+    return impl.format(
             ind4=' '*4,
             ind8=' '*8,
             fun=fun,
@@ -3618,10 +3715,11 @@ def remove_typedefs(signature: str) -> str:
         'const int ',
         'int ',
         'SUNMatrixContent_Sparse ',
+        'gsl::span<const int>'
     ]
 
     for typedef in typedefs:
-        signature = signature.replace(typedef, ' ')
+        signature = signature.replace(typedef, '')
 
     return signature
 
