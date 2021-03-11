@@ -96,9 +96,18 @@ def create_sbml_model(
         trigger.setMath(libsbml.parseL3Formula(event_def['trigger']))
         trigger.setPersistent(True)
         trigger.setInitialValue(True)
-        assignment = event.createEventAssignment()
-        assignment.setVariable(event_def['target'])
-        assignment.setMath(libsbml.parseL3Formula(event_def['assignment']))
+        if isinstance(event_def['target'], list):
+            assignments = []
+            for ia, event_target in enumerate(event_def['target']):
+                event_assignment = event_def['assignment'][ia]
+                assignments.append(event.createEventAssignment())
+                assignments[ia].setVariable(event_target)
+                assignments[ia].setMath(
+                    libsbml.parseL3Formula(event_assignment))
+        else:
+            assignment = event.createEventAssignment()
+            assignment.setVariable(event_def['target'])
+            assignment.setMath(libsbml.parseL3Formula(event_def['assignment']))
 
     if to_file:
         libsbml.writeSBMLToFile(
@@ -123,7 +132,6 @@ def check_trajectories_without_sensitivities(
     # Does the AMICI simulation match the analytical solution?
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
-
     rdata = runAmiciSimulation(amici_model, solver=solver)
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
 

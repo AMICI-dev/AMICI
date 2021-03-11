@@ -962,14 +962,14 @@ class SbmlImporter:
                     # `parameter_target` should only exist in one of the
                     # `symbol_id` dictionaries.
                     if parameter_def is not None:
-                        raise Exception(
+                        raise KeyError(
                             'Unexpected error. The parameter target of an '
                             'event assignment was processed twice.'
                         )
                     parameter_def = \
                         self.symbols[symbol_id].pop(parameter_target)
             if parameter_def is None:
-                raise Exception(
+                raise KeyError(
                     'Unexpected error. The parameter target of an event '
                     'assignment could not be found.'
                 )
@@ -1004,7 +1004,7 @@ class SbmlImporter:
             trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
             trigger = _parse_event_trigger(trigger_sym)
 
-            # FIXME?: Currently, all event assignment targets must exist in
+            # Currently, all event assignment targets must exist in
             # self.symbols[SymbolId.SPECIES]
             state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 

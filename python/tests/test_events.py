@@ -1,6 +1,7 @@
 """Tests for SBML events, including piecewise expressions."""
 import numpy as np
 import pytest
+import os
 from scipy.linalg import expm
 from copy import deepcopy
 
@@ -12,7 +13,8 @@ from util import (
 )
 
 @pytest.fixture(params=[
-    'events_plus_heavisides', # TODO: nested_events
+    'events_plus_heavisides',
+    'nested_events',
 ])
 def model(request):
     """Returns the requested AMICI model and analytical expressions."""
@@ -34,6 +36,7 @@ def model(request):
         rate_rules=rate_rules,
         species=species,
         events=events,
+        to_file=os.path.join('sbml_test_models', (f'{request.param}.sbml')),
         # uncomment `to_file` to save SBML model to file for inspection
         # to_file=sbml_test_models / (model_name + '.sbml'),
     )
@@ -50,7 +53,9 @@ def model(request):
 
 def get_model_definition(model_name):
     if model_name == 'events_plus_heavisides':
-        return model_definition_events_plus_heavisides()
+       return model_definition_events_plus_heavisides()
+    if model_name == 'nested_events':
+        return model_definition_nested_events()
     else:
         raise NotImplementedError(
             f'Model with name {model_name} is not implemented.'
@@ -139,22 +144,22 @@ def model_definition_events_plus_heavisides():
                 A = np.array([[0, 0, 0],
                               [beta, -gamma, 0],
                               [0, 0, -eta]])
-                exp_At = expm(t * A)
-                return np.matmul(exp_At, x0)
+                tmp_x = expm(t * A)
+                return np.matmul(tmp_x, x0)
 
             elif t <= event_2_time:
                 # "simulate" until first event
                 A = np.array([[0, 0, 0],
                               [beta, -gamma, 0],
                               [0, 0, -eta]])
-                exp_At = expm(event_1_time * A)
-                x1 = np.matmul(exp_At, x0)
+                tmp_x = expm(event_1_time * A)
+                x1 = np.matmul(tmp_x, x0)
                 # apply bolus
                 delta_x = np.array([[float(-x1[2, :] / 2)], [0], [0]])
                 x1 += delta_x
                 # "simulate" on
-                exp_At = expm((t - event_1_time) * A)
-                return np.matmul(exp_At, x1)
+                tmp_x = expm((t - event_1_time) * A)
+                return np.matmul(tmp_x, x1)
 
         if t < event_2_time:
             x = get_early_x(t).flatten()
@@ -164,16 +169,16 @@ def model_definition_events_plus_heavisides():
             A = np.array([[-alpha, 0, 0],
                           [beta, -gamma, 0],
                           [0, 0, -eta]])
-            exp_At = expm((t - event_2_time) * A)
-            x = np.matmul(exp_At, x2).flatten()
+            tmp_x = expm((t - event_2_time) * A)
+            x = np.matmul(tmp_x, x2).flatten()
         else:
             x2 = get_early_x(event_2_time)
 
             A = np.array([[-alpha, 0, 0],
                           [beta, -gamma, 0],
                           [0, 0, -eta]])
-            exp_At = expm((event_3_time - event_2_time) * A)
-            x3 = np.matmul(exp_At, x2)
+            tmp_x = expm((event_3_time - event_2_time) * A)
+            x3 = np.matmul(tmp_x, x2)
             # apply bolus
             x3 += np.array([[0], [0], [zeta / 3]])
 
@@ -185,6 +190,120 @@ def model_definition_events_plus_heavisides():
             x = (hom_x + inhom_x).flatten()
 
         return np.array(x)
+
+    def sx_pected(t, parameters):
+        # get sx, w.r.t. parameters, via finite differences
+        sx = []
+
+        for ip in parameters:
+            eps = 1e-6
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = x_pected(t, **perturbed_params)
+            perturbed_params[ip] -= 2*eps
+            sx_m = x_pected(t, **perturbed_params)
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
+
+
+
+def model_definition_nested_events():
+    """Test model for state- and parameter-dependent heavisides.
+
+    ODEs
+    ----
+    d/dt x_1:
+        inflow_1 - decay_1 * x1
+    d/dt x_2:
+        - decay_2 * x_2
+
+    Events:
+    -------
+    event_1:
+        trigger: x_1 > inflow_1 / decay_2
+        bolus: [[          0],
+                [ -1 / time]]
+    event_2:
+        trigger: x_2 > 0.5
+        bolus: [[ bolus],
+                [ bolus]]
+    """
+    # Model components
+    species = ['x_1', 'x_2']
+    initial_assignments = {
+        'x_1': 'k1',
+        'x_2': 'k2',
+    }
+    rate_rules = {
+        'x_1': 'inflow_1 - decay_1 * x_1',
+        'x_2': '- decay_2 * x_2',
+    }
+    parameters = {
+        'k1': 0,
+        'k2': 0,
+        'inflow_1': 4,
+        'decay_1': 2,
+        'decay_2': 5,
+        'bolus': 0, # for bolus != 0, nested event sensitivities are off!
+    }
+    events = {
+        'event_1': {
+            'trigger': 'x_1 > inflow_1 / decay_2',
+            'target': 'x_2',
+            'assignment': 'x_2 - 1 / time'
+        },
+        'event_2': {
+            'trigger': 'x_2 < - 0.5',
+            'target': ['x_1', 'x_2'],
+            'assignment': ['x_1 + bolus', 'x_2 + bolus'],
+        }
+    }
+    timepoints = np.linspace(0, 1, 101)
+
+    # Analytical solution
+    def x_pected(t, k1, k2, inflow_1, decay_1, decay_2, bolus):
+        # gather temporary variables
+        # event_time = x_1 > inflow_1 / decay_2
+        equil = inflow_1 / decay_1
+        tmp1 = inflow_1 / decay_2 - inflow_1 / decay_1
+        tmp2 = k1 - inflow_1 / decay_1
+        event_time = (- 1 / decay_1) * np.log( tmp1 / tmp2)
+
+        def get_early_x(t):
+            # compute dynamics before event
+            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1*np.exp(-decay_1 * t)
+            x_2 = k2 * np.exp(-decay_2 * t)
+            return np.array([[x_1], [x_2]])
+
+        if t < event_time:
+            x = get_early_x(t).flatten()
+        else:
+            # compute state after event
+            x_tau = get_early_x(event_time)
+            tau_x1 = x_tau[0] + bolus
+            tau_x2 = x_tau[1] - 1 / event_time + bolus
+
+            # compute dynamics after event
+            inhom = np.exp(decay_1 * event_time) * tau_x1
+            x_1 = equil * (1 - np.exp(decay_1 * (event_time - t))) + \
+                inhom * np.exp(- decay_1 * t)
+            x_2 = tau_x2 * np.exp(decay_2 * event_time) * np.exp(-decay_2 * t)
+
+            x = np.array([[x_1], [x_2]])
+
+        return x.flatten()
 
     def sx_pected(t, parameters):
         # get sx, w.r.t. parameters, via finite differences
