@@ -348,7 +348,7 @@ class SbmlImporter:
         if self.symbols.get(SymbolId.EVENT, False):
             if compute_conservation_laws:
                 logger.warning(
-                    'Conservation laws are currently not supported for models'
+                    'Conservation laws are currently not supported for models '
                     'with events, and will be turned off.'
                 )
             compute_conservation_laws = False
@@ -952,7 +952,7 @@ class SbmlImporter:
                 continue
             if parameter_target in self.parameter_assignment_rules:
                 raise SBMLException(
-                    'AMICI does not currently support models with SBML events'
+                    'AMICI does not currently support models with SBML events '
                     'that affect parameters that are also the target of '
                     'assignment rules.'
                 )
@@ -962,14 +962,14 @@ class SbmlImporter:
                     # `parameter_target` should only exist in one of the
                     # `symbol_id` dictionaries.
                     if parameter_def is not None:
-                        raise KeyError(
+                        raise AssertionError(
                             'Unexpected error. The parameter target of an '
                             'event assignment was processed twice.'
                         )
                     parameter_def = \
                         self.symbols[symbol_id].pop(parameter_target)
             if parameter_def is None:
-                raise KeyError(
+                raise AssertionError(
                     'Unexpected error. The parameter target of an event '
                     'assignment could not be found.'
                 )
