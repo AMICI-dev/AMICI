@@ -232,6 +232,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
     /* fire the secondary event */
     if (secondevent > 0) {
+        /* Secondary events may result in wrong forward sensitivities,
+         * if the secondary event has a bolus... */
+        if (solver->computingFSA())
+            solver->app->warning("Nested event sensitivity warning",
+                                 "Secondary event was triggered. Depending on "
+                                 "the bolus of the secondary event, forward "
+                                 "sensitivities can be incorrect.");
         handleEvent(tlastroot, true);
     }
 

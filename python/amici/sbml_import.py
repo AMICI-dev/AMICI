@@ -981,7 +981,7 @@ class SbmlImporter:
                 #'compartment': None,  # can ignore for amounts
                 'constant': False,
                 'amount': True,
-                #'conversion_factor': 1.0,  # probably can be ignored
+                #'conversion_factor': 1.0,  # can be ignored
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': sp.Float(0),
             }
@@ -1009,7 +1009,7 @@ class SbmlImporter:
             state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 
             # parse the boluses / event assignments
-            bolus = [sp.Symbol('0') for _ in state_vector]
+            bolus = [sp.Float(0.0) for _ in state_vector]
             event_assignments = event.getListOfEventAssignments()
             for event_assignment in event_assignments:
                 variable_sym = \
@@ -1018,8 +1018,13 @@ class SbmlImporter:
                     # ignore event assignments with no change in value
                     continue
                 formula = self._sympy_from_sbml_math(event_assignment)
-                bolus[state_vector.index(variable_sym)] = \
-                    formula - variable_sym
+                try:
+                    bolus[state_vector.index(variable_sym)] = \
+                        formula - variable_sym
+                except ValueError:
+                    raise SBMLException('Could not process event assignment '
+                        f'for {str(variable_sym)}. AMICI only allows event '
+                        f'assignments to species or parameters at the moment.')
 
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
