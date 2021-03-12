@@ -969,7 +969,7 @@ class SbmlImporter:
                     parameter_def = \
                         self.symbols[symbol_id].pop(parameter_target)
             if parameter_def is None:
-                raise KeyError(
+                raise AssertionError(
                     'Unexpected error. The parameter target of an event '
                     'assignment could not be found.'
                 )
