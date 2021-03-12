@@ -962,7 +962,7 @@ class SbmlImporter:
                     # `parameter_target` should only exist in one of the
                     # `symbol_id` dictionaries.
                     if parameter_def is not None:
-                        raise KeyError(
+                        raise AssertionError(
                             'Unexpected error. The parameter target of an '
                             'event assignment was processed twice.'
                         )
