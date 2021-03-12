@@ -952,7 +952,7 @@ class SbmlImporter:
                 continue
             if parameter_target in self.parameter_assignment_rules:
                 raise SBMLException(
-                    'AMICI does not currently support models with SBML events'
+                    'AMICI does not currently support models with SBML events '
                     'that affect parameters that are also the target of '
                     'assignment rules.'
                 )
