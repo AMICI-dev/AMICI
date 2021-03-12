@@ -348,7 +348,7 @@ class SbmlImporter:
         if self.symbols.get(SymbolId.EVENT, False):
             if compute_conservation_laws:
                 logger.warning(
-                    'Conservation laws are currently not supported for models'
+                    'Conservation laws are currently not supported for models '
                     'with events, and will be turned off.'
                 )
             compute_conservation_laws = False
