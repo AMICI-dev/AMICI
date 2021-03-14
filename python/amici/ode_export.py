@@ -1925,7 +1925,7 @@ class ODEModel:
                     # ====== chain rule for the state variables ===============
                     # get xdot with expressions back-substituted
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot_old') - self.sym('xdot')),
+                        (self.sym('xdot_old') - self.eq('xdot')),
                         self.eq('stau')[ie])
                     # construct an enhanced state sensitivity, which accounts
                     # for the time point sensitivity as well
