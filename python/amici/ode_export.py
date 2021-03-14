@@ -1925,12 +1925,12 @@ class ODEModel:
                     # ====== chain rule for the state variables ===============
                     # get xdot with expressions back-substituted
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot_old') - self.eq('xdot')),
+                        (self.sym('xdot_old') - self.sym('xdot')),
                         self.eq('stau')[ie])
                     # construct an enhanced state sensitivity, which accounts
                     # for the time point sensitivity as well
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
-                    tmp_dxdp += smart_multiply(self.eq('xdot'),
+                    tmp_dxdp += smart_multiply(self.sym('xdot'),
                                                self.eq('stau')[ie])
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
@@ -1941,7 +1941,7 @@ class ODEModel:
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot_old') - self.eq('xdot')),
+                        (self.eq('xdot_old') - self.eq('xdot')),
                         self.eq('stau')[ie])
 
                 event_eqs.append(tmp_eq)
