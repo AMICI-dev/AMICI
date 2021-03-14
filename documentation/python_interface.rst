@@ -125,7 +125,7 @@ Examples
    GettingStarted.ipynb
    ExampleSteadystate.ipynb
    petab.ipynb
-   model_presimulation.ipynb
+   ExampleExperimentalConditions.ipynb
    ExampleEquilibrationLogic.ipynb
 
 
