@@ -1941,7 +1941,7 @@ class ODEModel:
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
                     tmp_eq = smart_multiply(
-                        (self.eq('xdot_old') - self.eq('xdot')),
+                        (self.sym('xdot_old') - self.eq('xdot')),
                         self.eq('stau')[ie])
 
                 event_eqs.append(tmp_eq)
