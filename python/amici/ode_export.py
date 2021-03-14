@@ -1930,7 +1930,7 @@ class ODEModel:
                     # construct an enhanced state sensitivity, which accounts
                     # for the time point sensitivity as well
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
-                    tmp_dxdp += smart_multiply(self.sym('xdot'),
+                    tmp_dxdp += smart_multiply(self.eq('xdot'),
                                                self.eq('stau')[ie])
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
