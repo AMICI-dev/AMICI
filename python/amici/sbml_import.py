@@ -468,7 +468,7 @@ class SbmlImporter:
 
             # check trigger
             trigger_sbml = event.getTrigger()
-            if trigger_sbml.getMath() is None:
+            if trigger_sbml is None or trigger_sbml.getMath() is None:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression. Ignoring event...')
             if not trigger_sbml.getInitialValue():
@@ -1025,6 +1025,10 @@ class SbmlImporter:
                     raise SBMLException('Could not process event assignment '
                         f'for {str(variable_sym)}. AMICI only allows event '
                         f'assignments to species or parameters at the moment.')
+                except TypeError:
+                    raise SBMLException('Could not process event assignment '
+                        f'for {str(variable_sym)}. AMICI only allows symbolic '
+                        'expressions as event assignments.')
 
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
@@ -1807,6 +1811,7 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
+        _check_unsupported_functions(root, 'sympy.Expression')
 
         # normalize such that we always implement <,
         # this ensures that we can correctly evaluate the condition if
@@ -1849,8 +1854,13 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     :param trigger:
     :return: real valued root function expression
     """
+    # Events can be defined without trigger, i.e., the event will never fire.
+    # In this case, set a dummy trigger:
+    if trigger is None:
+        return sp.Float(1.0)
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
+        _check_unsupported_functions(root, 'sympy.Expression')
 
         # convert relational expressions into trigger functions
         if isinstance(trigger, sp.core.relational.LessThan) or \
