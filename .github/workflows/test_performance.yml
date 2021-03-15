@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - compile_without_optmization
+      - compile_without_optimization
 
   pull_request:
     branches:
@@ -65,7 +65,7 @@ jobs:
 
     # copy preprocessed packages for compilation with different optimization
     - name: copy test models
-      run: |
+      run: >
         for opt in O0 O1 O2
         do
           cp CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab \
@@ -74,12 +74,12 @@ jobs:
 
     # install model package
     - name: Install test model
-      run: |
+      run: >
         check_time.sh install_model \
           python3 CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab/setup.py install --user
 
     - name: Install test model
-      run: |
+      run: >
         for opt in O0 O1 O2
         do
           check_time.sh install_model_{ \
@@ -88,21 +88,21 @@ jobs:
 
     # run simulations
     - name: forward_simulation
-      run: |
+      run: >
         check_time.sh forward_simulation tests/performance/test.py forward_simulation
         for opt in O0 O1 O2
         do
           check_time.sh forward_simulation_${opt} tests/performance/test.py forward_simulation_${opt}
         done
     - name: forward_sensitivities
-      run: |
+      run: >
         check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities
         for opt in O0 O1 O2
         do
           check_time.sh forward_sensitivities_${opt} tests/performance/test.py forward_sensitivities_${opt}
         done
     - name: adjoint_sensitivities
-      run: |
+      run: >
         check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities
         for opt in O0 O1 O2
         do
