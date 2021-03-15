@@ -145,7 +145,7 @@ class ExpData : public SimulationParameters {
     int nt() const;
 
     /**
-     * @brief set function that copies data from input to ExpData::ts
+     * @brief Set function that copies data from input to ExpData::ts
      *
      * @param ts timepoints
      */
@@ -432,6 +432,7 @@ class ExpData : public SimulationParameters {
 
     /** @brief observed data (dimension: nt x nytrue, row-major) */
     std::vector<realtype> observed_data_;
+
     /**
      * @brief standard deviation of observed data (dimension: nt x nytrue,
      * row-major)
@@ -442,6 +443,7 @@ class ExpData : public SimulationParameters {
      * @brief observed events (dimension: nmaxevents x nztrue, row-major)
      */
     std::vector<realtype> observed_events_;
+
     /**
      * @brief standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
