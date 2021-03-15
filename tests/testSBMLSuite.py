@@ -330,6 +330,6 @@ def get_tags_for_test(test_id) -> Tuple[Set[str], Set[str]]:
                     re.split(r'[ ,:]', line[len('componentTags:'):].strip()))
                 component_tags.discard('')
             if test_tags and component_tags:
-                return test_tags, component_tags
+                return component_tags, test_tags
     print(f"No componentTags or testTags found for test case {test_id}.")
-    return set(), set()
+    return component_tags, test_tags
