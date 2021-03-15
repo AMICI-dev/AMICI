@@ -29,6 +29,7 @@ Welcome to AMICI's documentation!
    how_to_cite
    references
    background
+   changelog
    glossary
    contributing
 
