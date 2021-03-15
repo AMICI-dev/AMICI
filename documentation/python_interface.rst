@@ -63,7 +63,6 @@ In addition, we currently plan to add support for the following features
 (see corresponding `issues <https://github.com/AMICI-dev/AMICI/milestone/14>`_
 for details and progress):
 
-- Events (currently Matlab-only) (`#757 <https://github.com/AMICI-dev/AMICI/issues/757>`_)
 - Algebraic rules (`#760 <https://github.com/AMICI-dev/AMICI/issues/760>`_)
 
 contributions are welcome.
@@ -74,6 +73,7 @@ However, the following features are unlikely to be supported:
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
 - `delay()` due to missing :term:`SUNDIALS` solver support
+- events with delays
 
 Tutorials
 +++++++++
