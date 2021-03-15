@@ -856,7 +856,7 @@ Main new features are:
 * Improved SBML import scripts
 * General Code Cleanup
 
-## 0.3.0 (2016-09-05)
+## v0.3.0 (2016-09-05)
 
 This update comes with many improvements, bug fixes and several new features. Most notably:
 
