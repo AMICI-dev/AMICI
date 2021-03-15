@@ -849,10 +849,6 @@ Main new features are:
 - Rewrote large parts of the code as proper c++11 code to allow easier code maintanance
 - Substantially extended testing in continuous integration to assure code quality
 
-## Second_order_adjoint_and_hybrid_profile_calculation_submission (2018-01-29)
-
-
-
 ## v0.4.0 (2017-05-15)
 
 * First citable version of AMICI (via zenodo integration).
@@ -886,4 +882,3 @@ This update comes with many improvements to the computation time for both compil
 ## v0.1 (2015-11-05)
 
 This is the initial release of the toolbox
-
