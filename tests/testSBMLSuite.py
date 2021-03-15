@@ -80,6 +80,8 @@ def test_sbml_testsuite_case(test_number, result_path):
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
+        if rdata['status'] != amici.AMICI_SUCCESS:
+            raise amici.sbml_import.SBMLException('Simulation Failed')
 
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
