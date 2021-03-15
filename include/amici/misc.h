@@ -44,8 +44,8 @@ gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
  */
 
 template <class T>
-const gsl::span<const T> slice(const std::vector<T> &data,
-                               int index, unsigned size) {
+gsl::span<const T> slice(const std::vector<T> &data,
+                         int index, unsigned size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
