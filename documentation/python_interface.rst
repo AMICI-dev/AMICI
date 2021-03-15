@@ -41,6 +41,7 @@ The following SBML test suite tags are currently supported
 * Compartment
 * CSymbolAvogadro
 * CSymbolTime
+* EventNoDelay
 * FunctionDefinition
 * InitialAssignment
 * Parameter
@@ -59,6 +60,7 @@ The following SBML test suite tags are currently supported
 * Concentration
 * ConstantSpecies
 * ConversionFactors
+* EventT0Firing
 * HasOnlySubstanceUnits
 * InitialValueReassigned
 * L3v2MathML
@@ -86,7 +88,7 @@ However, the following features are unlikely to be supported:
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
 - `delay()` due to missing :term:`SUNDIALS` solver support
-- events with delays
+- events with delays, events with non-persistent triggers
 
 Tutorials
 +++++++++
