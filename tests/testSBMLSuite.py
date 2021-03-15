@@ -19,6 +19,7 @@ import os
 import re
 import shutil
 import sys
+from typing import Tuple, Set
 
 import amici
 import libsbml as sbml
@@ -307,16 +308,28 @@ def format_test_id(test_id) -> str:
     return test_str
 
 
-def get_tags_for_test(test_id):
-    """Get sbml test suite tags for the given test ID"""
+def get_tags_for_test(test_id) -> Tuple[Set[str], Set[str]]:
+    """Get sbml test suite tags for the given test ID
+
+    Returns:
+        Tuple of set of strings for componentTags and testTags
+    """
 
     current_test_path = os.path.join(TEST_PATH, test_id)
     info_file = os.path.join(current_test_path, f'{test_id}-model.m')
     with open(info_file) as f:
+        component_tags = set()
+        test_tags = set()
         for line in f:
             if line.startswith('testTags:'):
-                res = set(re.split(r'[ ,:]', line[len('testTags:'):].strip()))
-                res.discard('')
-                return res
-    print(f"No testTags found for test case {test_id}.")
-    return set()
+                test_tags = set(
+                    re.split(r'[ ,:]', line[len('testTags:'):].strip()))
+                test_tags.discard('')
+            if line.startswith('componentTags:'):
+                component_tags = set(
+                    re.split(r'[ ,:]', line[len('componentTags:'):].strip()))
+                component_tags.discard('')
+            if test_tags and component_tags:
+                return component_tags, test_tags
+    print(f"No componentTags or testTags found for test case {test_id}.")
+    return component_tags, test_tags
