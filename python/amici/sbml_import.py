@@ -482,6 +482,12 @@ class SbmlImporter:
                     'value of False. This is currently not supported in AMICI.'
                 )
 
+            if not trigger_sbml.getPersistent():
+                raise SBMLException(
+                    f'Event {event_id} has a non-persistent trigger.'
+                    'This is currently not supported in AMICI.'
+                )
+
     @log_execution_time('gathering local SBML symbols', logger)
     def _gather_locals(self) -> None:
         """
