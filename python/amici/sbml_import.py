@@ -425,8 +425,7 @@ class SbmlImporter:
                 ) for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Only assignment and rate rules are '
                                 'currently supported for compartments, '
-                                'species, and parameters! Error '
-                                f'occurred with rule: {rule.getVariable()}')
+                                'species, and parameters!')
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
@@ -437,7 +436,7 @@ class SbmlImporter:
     def check_event_support(self) -> None:
         """
         Check possible events in the model, as AMICI does currently not support
-        
+
         * delays in events
         * priorities of events
         * events fired at initial time
@@ -978,10 +977,10 @@ class SbmlImporter:
             self.symbols[SymbolId.SPECIES][parameter_target] = {
                 'name': parameter_def['name'],
                 'init': sp.Float(parameter_def['value']),
-                #'compartment': None,  # can ignore for amounts
+                # 'compartment': None,  # can ignore for amounts
                 'constant': False,
                 'amount': True,
-                #'conversion_factor': 1.0,  # can be ignored
+                # 'conversion_factor': 1.0,  # can be ignored
                 'index': len(self.symbols[SymbolId.SPECIES]),
                 'dt': sp.Float(0),
             }
@@ -1040,7 +1039,7 @@ class SbmlImporter:
                 variable_sym = \
                     symbol_with_assumptions(event_assignment.getVariable())
                 if event_assignment.getMath() is None:
-                    # ignore event assignments with no change in value
+                    # Ignore event assignments with no change in value.
                     continue
                 formula = self._sympy_from_sbml_math(event_assignment)
                 try:
@@ -1048,19 +1047,22 @@ class SbmlImporter:
                     index = state_vector.index(variable_sym)
                     bolus[index] = formula
                 except ValueError:
-                    raise SBMLException('Could not process event assignment '
-                        f'for {str(variable_sym)}. AMICI currently only allows '
+                    raise SBMLException(
+                        'Could not process event assignment for '
+                        f'{str(variable_sym)}. AMICI currently only allows '
                         'event assignments to species; parameters; or, '
-                        'compartments with rate rules, at the moment.')
+                        'compartments with rate rules, at the moment.'
+                    )
                 try:
                     # Try working with the formula now to detect errors
                     # here instead of at multiple points downstream.
-                    _ = variable_sym - formula
+                    _ = formula - variable_sym
                 except TypeError:
-                    raise SBMLException('Could not process event assignment '
-                        f'for {str(variable_sym)}. AMICI only allows symbolic '
-                        'expressions as event assignments.')
-                # Skip non-compartment components.
+                    raise SBMLException(
+                        'Could not process event assignment for '
+                        f'{str(variable_sym)}. AMICI only allows symbolic '
+                        'expressions as event assignments.'
+                    )
                 if variable_sym in concentration_species_by_compartment:
                     compartment_event_assignments.append(variable_sym)
 
@@ -1081,7 +1083,7 @@ class SbmlImporter:
                     # hence the updated value should be updated further.
                     else:
                         species_value = bolus[state_vector.index(species_sym)]
-                    # New species value is old amount / new volume
+                    # New species value is old amount / new volume.
                     bolus[state_vector.index(species_sym)] = (
                         species_value * compartment_sym / formula
                     )
@@ -1099,7 +1101,6 @@ class SbmlImporter:
                 'state_update': sp.MutableDenseMatrix(bolus),
                 'event_observable': None,
             }
-
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(
@@ -1461,7 +1462,8 @@ class SbmlImporter:
                     for k, v in self.symbols[symbol].items()
                 }
 
-            for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY]:
+            for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY,
+                           SymbolId.SIGMAY]:
                 if old not in self.symbols[symbol]:
                     continue
                 self.symbols[symbol][new] = self.symbols[symbol][old]
@@ -1780,7 +1782,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
     if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
-        
+
     elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
@@ -1792,7 +1794,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 def _denest_piecewise(
         args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
-    ) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
+) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
     """
     Denest piecewise functions that contain piecewise as condition
 
@@ -1837,8 +1839,8 @@ def _denest_piecewise(
 
 def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     """
-    Piecewise functions cannot be transformed into C++ right away, but AMICI has
-    a special interface for Heaviside function, so we transform them
+    Piecewise functions cannot be transformed into C++ right away, but AMICI
+    has a special interface for Heaviside functions, so we transform them.
 
     :param args:
         symbolic expressions for arguments of the piecewise function
