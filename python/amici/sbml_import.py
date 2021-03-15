@@ -992,6 +992,30 @@ class SbmlImporter:
         events = self.sbml.getListOfEvents()
         self._convert_event_assignment_parameter_targets_to_species()
 
+        def get_empty_bolus_value() -> sp.Float:
+            """
+            Used in the event update vector for species that are not affected
+            by the event.
+            """
+            return sp.Float(0)
+
+        # Used to update species concentrations when an event affects a
+        # compartment.
+        concentration_species_by_compartment = {
+            symbol_with_assumptions(c.getId()): []
+            for c in self.sbml.getListOfCompartments()
+        }
+        for species, species_def in self.symbols[SymbolId.SPECIES].items():
+            if (
+                    # Species is a concentration
+                    not species_def.get('amount', True) and
+                    # Species has a compartment
+                    'compartment' in species_def
+            ):
+                concentration_species_by_compartment[
+                    species_def['compartment']
+                ].append(species)
+
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
@@ -1009,8 +1033,9 @@ class SbmlImporter:
             state_vector = list(self.symbols[SymbolId.SPECIES].keys())
 
             # parse the boluses / event assignments
-            bolus = [sp.Float(0.0) for _ in state_vector]
+            bolus = [get_empty_bolus_value() for _ in state_vector]
             event_assignments = event.getListOfEventAssignments()
+            compartment_event_assignments = []
             for event_assignment in event_assignments:
                 variable_sym = \
                     symbol_with_assumptions(event_assignment.getVariable())
@@ -1019,16 +1044,54 @@ class SbmlImporter:
                     continue
                 formula = self._sympy_from_sbml_math(event_assignment)
                 try:
-                    bolus[state_vector.index(variable_sym)] = \
-                        formula - variable_sym
+                    # Try to find the species in the state vector.
+                    index = state_vector.index(variable_sym)
+                    bolus[index] = formula
                 except ValueError:
                     raise SBMLException('Could not process event assignment '
-                        f'for {str(variable_sym)}. AMICI only allows event '
-                        f'assignments to species or parameters at the moment.')
+                        f'for {str(variable_sym)}. AMICI currently only allows '
+                        'event assignments to species; parameters; or, '
+                        'compartments with rate rules, at the moment.')
+                try:
+                    # Try working with the formula now to detect errors
+                    # here instead of at multiple points downstream.
+                    _ = variable_sym - formula
                 except TypeError:
                     raise SBMLException('Could not process event assignment '
                         f'for {str(variable_sym)}. AMICI only allows symbolic '
                         'expressions as event assignments.')
+                # Skip non-compartment components.
+                if variable_sym in concentration_species_by_compartment:
+                    compartment_event_assignments.append(variable_sym)
+
+            # Update the concentration of species with concentration units
+            # in compartments that were affected by the event assignments.
+            for compartment_sym in compartment_event_assignments:
+                for species_sym in concentration_species_by_compartment[
+                        compartment_sym
+                ]:
+                    # If the species was not affected by an event assignment
+                    # then the old value should be updated.
+                    if (
+                            bolus[state_vector.index(species_sym)]
+                            == get_empty_bolus_value()
+                    ):
+                        species_value = species_sym
+                    # else the species was affected by an event assignment,
+                    # hence the updated value should be updated further.
+                    else:
+                        species_value = bolus[state_vector.index(species_sym)]
+                    # New species value is old amount / new volume
+                    bolus[state_vector.index(species_sym)] = (
+                        species_value * compartment_sym / formula
+                    )
+
+            # Subtract the current species value from each species with an
+            # update, as the bolus will be added on to the current species
+            # value during simulation.
+            for index in range(len(bolus)):
+                if bolus[index] != get_empty_bolus_value():
+                    bolus[index] -= state_vector[index]
 
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
@@ -1414,10 +1477,10 @@ class SbmlImporter:
 
         # replace in event state updates (boluses)
         if self.symbols.get(SymbolId.EVENT, False):
-            for element in self.symbols[SymbolId.EVENT].values():
-                for index in range(len(element['state_update'])):
-                    element['state_update'][index] = \
-                        smart_subs(element['state_update'][index], old, new)
+            for event in self.symbols[SymbolId.EVENT].values():
+                for index in range(len(event['state_update'])):
+                    event['state_update'][index] = \
+                        smart_subs(event['state_update'][index], old, new)
 
         if SymbolId.SPECIES in self.symbols:
             for species in self.symbols[SymbolId.SPECIES].values():
