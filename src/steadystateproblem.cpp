@@ -66,24 +66,19 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
-    if (getSensitivityFlag(model, solver, it, SteadyStateContext::newtonSensi))
+    if (getSensitivityFlag(model, solver, it, SteadyStateContext::newtonSensi) && numsteps_[0] > 0)
     {
-        if (numsteps_[0] > 0) {
-            try {
-                /* this might still fail, if the Jacobian is singular and
-                 simulation did not find a steady state */
-                newtonSolver->computeNewtonSensis(sx_);
-            } catch (NewtonFailure const &) {
-                /* No steady state could be inferred. Store simulation state */
-                storeSimulationState(model, solver->getSensitivityOrder() >=
-                                     SensitivityOrder::first);
-                throw AmiException("Steady state sensitivity computation failed due "
-                                   "to unsuccessful factorization of RHS Jacobian");
-            }
-        } else {
-            model->initialize(x_, dx_, sx_, sdx_, true);
+        try {
+            /* this might still fail, if the Jacobian is singular and
+             simulation did not find a steady state */
+            newtonSolver->computeNewtonSensis(sx_);
+        } catch (NewtonFailure const &) {
+            /* No steady state could be inferred. Store simulation state */
+            storeSimulationState(model, solver->getSensitivityOrder() >=
+                                 SensitivityOrder::first);
+            throw AmiException("Steady state sensitivity computation failed due "
+                               "to unsuccessful factorization of RHS Jacobian");
         }
-
     }
 
     /* Get output of steady state solver, write it to x0 and reset time
