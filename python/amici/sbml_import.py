@@ -635,6 +635,7 @@ class SbmlImporter:
                 'index': len(self.symbols[SymbolId.SPECIES]),
             }
 
+        self._convert_event_assignment_parameter_targets_to_species()
         self._process_species_initial()
         self._process_rate_rules()
 
@@ -993,7 +994,6 @@ class SbmlImporter:
     def _process_events(self) -> None:
         """Process SBML events."""
         events = self.sbml.getListOfEvents()
-        self._convert_event_assignment_parameter_targets_to_species()
 
         def get_empty_bolus_value() -> sp.Float:
             """
@@ -1038,7 +1038,7 @@ class SbmlImporter:
             # parse the boluses / event assignments
             bolus = [get_empty_bolus_value() for _ in state_vector]
             event_assignments = event.getListOfEventAssignments()
-            compartment_event_assignments = []
+            compartment_event_assignments = set()
             for event_assignment in event_assignments:
                 variable_sym = \
                     symbol_with_assumptions(event_assignment.getVariable())
@@ -1068,7 +1068,13 @@ class SbmlImporter:
                         'expressions as event assignments.'
                     )
                 if variable_sym in concentration_species_by_compartment:
-                    compartment_event_assignments.append(variable_sym)
+                    compartment_event_assignments.add(variable_sym)
+
+                for comp, assignment in \
+                        self.compartment_assignment_rules.items():
+                    if variable_sym not in assignment.free_symbols:
+                        continue
+                    compartment_event_assignments.add(comp)
 
             # Update the concentration of species with concentration units
             # in compartments that were affected by the event assignments.
