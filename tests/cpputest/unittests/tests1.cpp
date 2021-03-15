@@ -20,7 +20,7 @@ namespace generic_model {
 
 std::unique_ptr<amici::Model> getModel()
 {
-    return std::unique_ptr<amici::Model>(new amici::Model_Test());
+    return std::make_unique<amici::Model_Test>();
 }
 
 } // namespace generic_model
@@ -82,10 +82,6 @@ TEST_GROUP(model)
                 z2event);
 
     std::vector<double> unscaled{ NAN };
-
-    void setup() {}
-
-    void teardown() {}
 };
 
 TEST(model, testScalingLin)
@@ -178,13 +174,7 @@ TEST(model, reinitializeFixedParameterInitialStates)
     AmiVectorArray sx(model.np(), nx);
 }
 
-TEST_GROUP(symbolicFunctions){ void setup(){
-
-}
-
-                               void teardown(){
-
-                               } };
+TEST_GROUP(symbolicFunctions){};
 
 TEST(symbolicFunctions, testSign)
 {
@@ -240,13 +230,7 @@ TEST(symbolicFunctions, testpos_pow)
     CHECK_EQUAL(pow(0.1, 3), amici::pos_pow(0.1, 3));
 }
 
-TEST_GROUP(amiciSolver){ void setup(){
-
-}
-
-                         void teardown(){
-
-                         } };
+TEST_GROUP(amiciSolver){ };
 
 TEST(amiciSolver, testEquality)
 {
@@ -270,13 +254,7 @@ TEST(amiciSolver, testClone)
     CHECK_FALSE(*i2 == *c2);
 }
 
-TEST_GROUP(amiciSolverIdas){ void setup(){
-
-}
-
-                             void teardown(){
-
-                             } };
+TEST_GROUP(amiciSolverIdas){};
 
 TEST(amiciSolverIdas, testConstructionDestruction)
 {
@@ -323,7 +301,7 @@ TEST_GROUP(edata)
                 SecondOrderMode::none,
                 std::vector<realtype>(),
                 std::vector<int>());
-    void setup()
+    void setup() override
     {
         model->setTimepoints(timepoints);
         model->setNMaxEvent(nmaxevent);
@@ -331,7 +309,7 @@ TEST_GROUP(edata)
         testModel.setNMaxEvent(nmaxevent);
     }
 
-    void teardown() {}
+    void teardown() override {}
 };
 
 TEST(edata, testConstructors1)
@@ -792,10 +770,6 @@ TEST_GROUP(amivector)
     std::vector<double> vec1{ 1, 2, 4, 3 };
     std::vector<double> vec2{ 4, 1, 2, 3 };
     std::vector<double> vec3{ 4, 4, 2, 1 };
-
-    void setup() {}
-
-    void teardown() {}
 };
 
 TEST(amivector, vector)
@@ -836,7 +810,7 @@ TEST_GROUP(sunmatrixwrapper)
     // result
     std::vector<double> d{1.3753, 1.5084, 1.1655};
 
-    void setup() {
+    void setup() override {
         A.set_data(0, 0, 0.69);
         A.set_data(1, 0, 0.32);
         A.set_data(2, 0, 0.95);
@@ -865,8 +839,6 @@ TEST_GROUP(sunmatrixwrapper)
         B.set_indexval(6, 3);
 
     }
-
-    void teardown() {}
 };
 
 TEST(sunmatrixwrapper, sparse_multiply)

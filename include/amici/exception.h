@@ -130,12 +130,8 @@ class IntegrationFailureB : public AmiException  {
  * and an error will be thrown
  */
 class SetupFailure : public AmiException {
-public:
-    /**
-     * @brief Constructor, simply calls AmiException constructor
-     * @param msg
-     */
-    explicit SetupFailure(const char *msg) : AmiException(msg) {}
+  public:
+    using AmiException::AmiException;
 };
 
 
