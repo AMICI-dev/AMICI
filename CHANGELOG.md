@@ -1,8 +1,4 @@
-Changelog
-=========
-
-v0.11.13 (2021-02-20)
----------------------
+# v0.11.13 (2021-02-20)
 
 Breaking changes:
 * AMICI requires Python>=3.7
@@ -38,8 +34,7 @@ Other:
 * Various minor CI improvements
 * ...
 
-v0.11.12 (2021-01-26)
----------------------
+# v0.11.12 (2021-01-26)
 
 Features: 
 * Add expression IDs and names to generated models (#1374)
@@ -53,8 +48,7 @@ Docs:
 * Update how-to-cite (#1378)
 
 
-v0.11.11 (2020-12-15)
----------------------
+# v0.11.11 (2020-12-15)
 
 ## Python
 * Restore support for species references (#1358)
@@ -75,13 +69,11 @@ v0.11.11 (2020-12-15)
 ## Docker
 * Update ubuntu to 20.04
 
-v0.11.10 (2020-11-30)
----------------------
+# v0.11.10 (2020-11-30)
 
 Bugfix release that restores compatibility with sympy 1.7
 
-v0.11.9 (2020-11-29)
---------------------
+# v0.11.9 (2020-11-29)
 
 ## Python
 * General improvements to SBML import (#1312, #1316, #1315, #1322 , #1324 #1333, #1329)
@@ -99,8 +91,7 @@ v0.11.9 (2020-11-29)
 ## CI
 * Update OpenBLAS for windows (#1334)
 
-v0.11.8 (2020-10-21)
---------------------
+# v0.11.8 (2020-10-21)
 
 ## Python
 * Fix pysb-petab support (#1288)
@@ -122,8 +113,7 @@ v0.11.8 (2020-10-21)
 * Remove appveyor config (#1295)
 * Update GHA env and path management (#1302)
 
-v0.11.7 (2020-09-22)
---------------------
+# v0.11.7 (2020-09-22)
 
 ## Python
 * Improve and extend available objective functions (#1235)
@@ -146,8 +136,7 @@ v0.11.7 (2020-09-22)
 * Add more gradient checks (#1213)
 * Update GHA to Ubuntu 20.04 (#1268)
 
-v0.11.6 (2020-08-20)
---------------------
+# v0.11.6 (2020-08-20)
 
 ## Python
 * Bugfix for piecewise functions (#1199)
@@ -169,8 +158,7 @@ v0.11.6 (2020-08-20)
 * Fix doc generation on readthedocs (#1196) 
 
 
-v0.11.5 (2020-08-07)
---------------------
+# v0.11.5 (2020-08-07)
 
 ## General
 * Move repo to new organization (#1193)
@@ -182,8 +170,7 @@ v0.11.5 (2020-08-07)
 ## CI
 * Fix release deployment (#1189)
 
-v0.11.4 (2020-08-06)
---------------------
+# v0.11.4 (2020-08-06)
 
 ## Python
 * Skip unnecessary expressions in pysb models (#1185)
@@ -194,8 +181,7 @@ v0.11.4 (2020-08-06)
 * Rename and group GitHub actions (#1186)
 * Fix release deployment (#1186)
 
-v0.11.3 (2020-08-06)
---------------------
+# v0.11.3 (2020-08-06)
 
 ## Python
 * Fix simplification for pysb models (#1168)
@@ -211,8 +197,7 @@ v0.11.3 (2020-08-06)
 * Move majority of tests to Github Actions (#1166, #1160)
 * Improve reporting of skipped tests in SBML testsuite (#1183)
 
-v0.11.2 (2020-07-17)
---------------------
+# v0.11.2 (2020-07-17)
 
 ## Python
 * Speed up model import, compilation (#1123, #1112)
@@ -230,8 +215,7 @@ v0.11.2 (2020-07-17)
 ## CI
 * Store build artifacts from github actions (#1138)
 
-v0.11.1 (2020-06-05)
---------------------
+# v0.11.1 (2020-06-05)
 
 ## Python
 * Upgrade to sympy 1.6.0, which is now required minimum version  (#1098, #1103)
@@ -260,8 +244,7 @@ v0.11.1 (2020-06-05)
 * Don't install/run valgrind on travis CI (done with github actions… (#1111)
 
 
-v0.11.0 (2020-05-10)
---------------------
+# v0.11.0 (2020-05-10)
 
 Python:
 
@@ -286,8 +269,7 @@ CI:
 - Move from Codacy to Sonarcloud (#1065)
 - Run SBML Testsuite when appropriate (#1058)
 
-v0.10.21 (2020-04-04)
----------------------
+# v0.10.21 (2020-04-04)
 
 Library:
 * Fix: Handle paths with blanks in build scripts
@@ -300,8 +282,7 @@ CI:
 * Fix: benchmark problem test should fail on missing files (Closes #1015)
 
 
-v0.10.20 (2020-03-18)
----------------------
+# v0.10.20 (2020-03-18)
 
 * Fixed (re)initialization of sensitivities if ExpData::fixedParametersPreequilibration is set (#994)
 * Fixed sensitivities for parameters in sigma expressions for Python/SBML in case provided expression was not just a single parameter ID
@@ -326,8 +307,7 @@ v0.10.20 (2020-03-18)
 * Removed mention of 'mex' in warning/error ids (#968)
 * More informative errors on SWIG interface import failures (#959)
 
-v0.10.19 (2020-02-13)
----------------------
+# v0.10.19 (2020-02-13)
 
 Python:
 * Fix logo display on pypi
@@ -336,8 +316,7 @@ Python:
 Matlab:
 * Fix compilation errors due to switch to C++14
 
-v0.10.18 (2020-02-11)
----------------------
+# v0.10.18 (2020-02-11)
 
 General:
 * AMICI now comes with a logo
@@ -364,8 +343,7 @@ CI:
 
 ... and various minor fixes/updates
 
-v0.10.17 (2020-01-15)
----------------------
+# v0.10.17 (2020-01-15)
 
 - **added python 3.8 support, dropped python 3.6 support** (#898) 
 - Added logging functionality (#900)
@@ -375,8 +353,7 @@ v0.10.17 (2020-01-15)
 - Improved petab support (#886, #888, #891)
 - CI related fixes (#865, #896)
 
-v0.10.16 (2019-12-11)
----------------------
+# v0.10.16 (2019-12-11)
 
 * **Sparsify dwdp to reduce computation time for adjoints (#858)**
 * Fix(matlab) update example name example_dae_events->example_calvetti (Closes #866)
@@ -385,15 +362,13 @@ v0.10.16 (2019-12-11)
 * Fix pysb_import (fixes #878)
 
 
-v0.10.15 (2019-12-03)
----------------------
+# v0.10.15 (2019-12-03)
 
 Bugfix release due to incorrect sensitivities w.r.t. sigmas introduced in 0.10.14.
 
 No other changes.
 
-v0.10.14 (2019-12-02)
----------------------
+# v0.10.14 (2019-12-02)
 
 **NOTE: For Python-imported SBML-models this release may compute incorrect sensitivities w.r.t. sigma. Bug introduced in 0.10.14, fixed in 0.10.15.**
 
@@ -426,8 +401,7 @@ Misc:
 * Update documentation and FAQ for CBLAS requirement and others
 * Update reference list
 
-v0.10.13 (2019-10-09)
----------------------
+# v0.10.13 (2019-10-09)
 
 * BREAKING CHANGE: Renaming {get|set}tNewtonPreequilibration to {get|set}Preequilibration (Closes #720)
 * Make wurlitzer non-optional requirement for AMICI python package (Fixes missing AMICI errors when running from jupyter notebooks)
@@ -441,8 +415,7 @@ v0.10.13 (2019-10-09)
 * Update workflow figure to include PySB (Closes #799)
 * Fix compiler warnings
 
-v0.10.12 (2019-09-28)
----------------------
+# v0.10.12 (2019-09-28)
 
 * Fix handling of species specified in PEtab condition table (#813)
 * Fix some Visual C++ issues, update cppcheck handling, cleanup (VisualC++ still not fully supported)
@@ -450,8 +423,7 @@ v0.10.12 (2019-09-28)
 * Create SBML test suite result files for upload to http://sbml.org/Facilities/Database/ (#798)
 
 
-v0.10.11 (2019-08-31)
----------------------
+# v0.10.11 (2019-08-31)
 
 * Fixed setting initial conditions for preequilibration (#784) 
 * Fixed species->parameter conversion during PEtab import (#782) 
@@ -460,8 +432,7 @@ v0.10.11 (2019-08-31)
 * Fix various SBML import issues
 * Run SBML test suite using github actions instead of travisCI (#789)
 
-v0.10.10 (2019-08-07)
----------------------
+# v0.10.10 (2019-08-07)
 
 * Simplify/fix AMICI installation
    * If available use environment modules to detect dependencies
@@ -498,13 +469,11 @@ Detaills:
     * Allow overriding cmake executable with environment variables in build scripts (Closes #738)
  
 
-v0.10.9 (2019-07-24)
---------------------
+# v0.10.9 (2019-07-24)
 
 Fixup for missing version bump in v0.10.8 release. No code changes compared to v0.10.8.
 
-v0.10.8 (2019-07-24)
---------------------
+# v0.10.8 (2019-07-24)
 
 Changes in this release:
 
@@ -522,14 +491,12 @@ Python:
 
 ... and various other minor fixes/improvements
 
-v0.10.7 (2019-05-01)
---------------------
+# v0.10.7 (2019-05-01)
 
 Python
 * fix unset noise distribution when automatically generating observables in case None are passed (#691)
 
-v0.10.6 (2019-04-19)
---------------------
+# v0.10.6 (2019-04-19)
 
 C++
 - Add SuperLUMT support (#681)
