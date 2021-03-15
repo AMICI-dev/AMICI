@@ -469,8 +469,8 @@ class SbmlImporter:
             trigger_sbml = event.getTrigger()
             if trigger_sbml is None:
                 logger.warning(f'Event {event_id} trigger has no trigger, '
-                               'so a dummy trigger will be set.')
-                return
+                               'so will be skipped.')
+                continue
             if trigger_sbml.getMath() is None:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression, so a dummy trigger will be set.')
