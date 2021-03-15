@@ -393,7 +393,7 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
     /* Do we need to do the linear system solve to get forward sensitivities? */
     bool needForwardSensisNewton =
-        (needForwardSensisPreeq || needForwardSensisPosteq);
+        needForwardSensisPreeq || needForwardSensisPosteq;
 
     /* When we're creating a new solver object */
     bool needForwardSensiAtCreation = needForwardSensisPreeq &&
