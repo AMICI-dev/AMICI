@@ -191,12 +191,12 @@ fprintf(fid,['              std::vector<realtype>{' initstr(1:end-1) '},\n']);
 initstr = num2str(transpose(this.z2event), '%d, ');
 fprintf(fid,['              std::vector<int>{' initstr(1:end-1) '})\n']);
 fprintf(fid,['              {};\n\n']);
-fprintf(fid,['    virtual amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
+fprintf(fid,['    amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
 fprintf(fid,['    std::string getAmiciCommit() const override { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
 
 for ifun = this.funs
     cppFunctionName = strrep(ifun{1}, 'sigma_', 'sigma');
-    fprintf(fid,['    virtual void f' cppFunctionName this.fun.(ifun{1}).argstr ' override {\n']);
+    fprintf(fid,['    void f' cppFunctionName this.fun.(ifun{1}).argstr ' override {\n']);
     if(checkIfFunctionBodyIsNonEmpty(this,ifun{1}))
         fprintf(fid,['        ' cppFunctionName '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
     end
