@@ -195,16 +195,16 @@ class AbstractModel {
                      realtype cj) = 0;
 
     /**
-     * @brief Returns the amici version that was used to generate the model
-     * @return ver amici version string
+     * @brief Returns the AMICI version that was used to generate the model
+     * @return AMICI version string
      */
-    virtual const std::string getAmiciVersion() const;
+    virtual std::string getAmiciVersion() const;
 
     /**
-     * @brief Returns the amici commit that was used to generate the model
-     * @return ver amici commit string
+     * @brief Returns the AMICI commit that was used to generate the model
+     * @return AMICI commit string
      */
-    virtual const std::string getAmiciCommit() const;
+    virtual std::string getAmiciCommit() const;
 
     /**
      * @brief Model specific implementation of fx0
