@@ -467,7 +467,11 @@ class SbmlImporter:
 
             # check trigger
             trigger_sbml = event.getTrigger()
-            if trigger_sbml is None or trigger_sbml.getMath() is None:
+            if trigger_sbml is None:
+                logger.warning(f'Event {event_id} trigger has no trigger, '
+                               'so a dummy trigger will be set.')
+                return
+            if trigger_sbml.getMath() is None:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression, so a dummy trigger will be set.')
             if not trigger_sbml.getInitialValue():
