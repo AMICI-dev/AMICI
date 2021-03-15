@@ -34,19 +34,19 @@ class ExpData : public SimulationParameters {
     /**
      * @brief constructor that only initializes dimensions
      *
-     * @param nytrue
-     * @param nztrue
-     * @param nmaxevent
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
      */
     ExpData(int nytrue, int nztrue, int nmaxevent);
 
     /**
      * @brief constructor that initializes timepoints from vectors
      *
-     * @param nytrue               (dimension: scalar)
-     * @param nztrue               (dimension: scalar)
-     * @param nmaxevent            (dimension: scalar)
-     * @param ts                   (dimension: nt)
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
+     * @param ts Timepoints (dimension: nt)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts);
 
@@ -54,11 +54,11 @@ class ExpData : public SimulationParameters {
      * @brief constructor that initializes timepoints and fixed parameters from
      * vectors
      *
-     * @param nytrue               (dimension: scalar)
-     * @param nztrue               (dimension: scalar)
-     * @param nmaxevent            (dimension: scalar)
-     * @param ts                   (dimension: nt)
-     * @param fixedParameters      (dimension: nk)
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
+     * @param ts Timepoints (dimension: nt)
+     * @param fixedParameters Model constants (dimension: nk)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
             std::vector<realtype> fixedParameters);
@@ -66,14 +66,17 @@ class ExpData : public SimulationParameters {
     /**
      * @brief constructor that initializes timepoints and data from vectors
      *
-     * @param nytrue               (dimension: scalar)
-     * @param nztrue               (dimension: scalar)
-     * @param nmaxevent            (dimension: scalar)
-     * @param ts                   (dimension: nt)
-     * @param observedData         (dimension: nt x nytrue, row-major)
-     * @param observedDataStdDev   (dimension: nt x nytrue, row-major)
-     * @param observedEvents       (dimension: nmaxevent x nztrue, row-major)
-     * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
+     * @param ts Timepoints (dimension: nt)
+     * @param observedData observed data (dimension: nt x nytrue, row-major)
+     * @param observedDataStdDev standard deviation of observed data
+     * (dimension: nt x nytrue, row-major)
+     * @param observedEvents observed events
+     * (dimension: nmaxevents x nztrue, row-major)
+     * @param observedEventsStdDev standard deviation of observed events/roots
+     * (dimension: nmaxevents x nztrue, row-major)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
             std::vector<realtype> const &observedData,
@@ -373,11 +376,11 @@ class ExpData : public SimulationParameters {
 
     /**
      * @brief get function that returns a pointer to standard deviation of
-     * observed event data at ieth occurrence
+     * observed event data at ie-th occurrence
      *
      * @param ie event occurrence
      *
-     * @return pointer to standard deviation of observed event data at ieth
+     * @return pointer to standard deviation of observed event data at ie-th
      * occurrence
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
