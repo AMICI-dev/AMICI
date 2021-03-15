@@ -66,10 +66,10 @@ jobs:
     # copy preprocessed packages for compilation with different optimization
     - name: copy test models
       run: >
-        for opt in O0 O1 O2
+        for opt in O0 O1 O2;
         do
           cp CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab \
-             CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_${opt}
+             CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_${opt};
         done
 
     # install model package
