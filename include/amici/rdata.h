@@ -29,18 +29,17 @@ namespace amici {
 /**
  * @brief Stores all data to be returned by amici::runAmiciSimulation.
  *
- * NOTE: multidimensional arrays are stored in row-major order
- * (FORTRAN-style)
+ * NOTE: multi-dimensional arrays are stored in row-major order (C-style)
  */
 class ReturnData: public ModelDimensions {
   public:
     /**
-     * @brief default constructor
+     * @brief Default constructor
      */
     ReturnData() = default;
 
     /**
-     * @brief ReturnData
+     * @brief Constructor
      * @param ts see amici::SimulationParameters::ts
      * @param model_dimensions Model dimensions
      * @param nplist see amici::ModelDimensions::nplist
@@ -52,8 +51,8 @@ class ReturnData: public ModelDimensions {
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
      * @param rdrm see amici::Solver::rdata_reporting
-     * @param quadratic_llh whether model defines a quadratic nllh and computing res, sres and
-     * FIM makes sense
+     * @param quadratic_llh whether model defines a quadratic nllh and
+     * computing res, sres and FIM makes sense
      */
     ReturnData(std::vector<realtype> ts,
                ModelDimensions const& model_dimensions,
@@ -76,10 +75,10 @@ class ReturnData: public ModelDimensions {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
-     * @param preeq simulated preequilibration problem, pass nullptr to ignore
-     * @param fwd simulated forward problem, pass nullptr to ignore
-     * @param bwd simulated backward problem, pass nullptr to ignore
-     * @param posteq simulated postequilibration problem, pass nullptr to ignore
+     * @param preeq simulated preequilibration problem, pass `nullptr` to ignore
+     * @param fwd simulated forward problem, pass `nullptr` to ignore
+     * @param bwd simulated backward problem, pass `nullptr` to ignore
+     * @param posteq simulated postequilibration problem, pass `nullptr` to ignore
      * @param model matching model instance
      * @param solver matching solver instance
      * @param edata matching experimental data
@@ -137,7 +136,7 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> srz;
 
     /**
-     * second order parameter derivative of event trigger output (shape
+     * second-order parameter derivative of event trigger output (shape
      * `nmaxevent` x `nztrue` x `nplist` x `nplist`, row-major)
      */
     std::vector<realtype> s2rz;
@@ -305,28 +304,30 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sx0;
 
     /**
-     * preequilibration sensitivities found by Newton solver (shape `nplist` x `nx`, row-major)
+     * preequilibration sensitivities found by Newton solver
+     * (shape `nplist` x `nx`, row-major)
      */
     std::vector<realtype> sx_ss;
 
-    /** loglikelihood value */
+    /** log-likelihood value */
     realtype llh = 0.0;
 
-    /** chi2 value */
+    /** \f$\chi^2\f$ value */
     realtype chi2 = 0.0;
 
-    /** parameter derivative of loglikelihood (shape `nplist`) */
+    /** parameter derivative of log-likelihood (shape `nplist`) */
     std::vector<realtype> sllh;
 
     /**
-     * second order parameter derivative of loglikelihood (shape `nJ-1` x `nplist`, row-major)
+     * second-order parameter derivative of log-likelihood
+     * (shape `nJ-1` x `nplist`, row-major)
      */
     std::vector<realtype> s2llh;
 
     /** status code */
     int status = 0;
 
-    /** number of states (alias nx_rdata, kept for backward compatibility) */
+    /** number of states (alias `nx_rdata`, kept for backward compatibility) */
     int nx{0};
 
     /**
@@ -347,10 +348,10 @@ class ReturnData: public ModelDimensions {
     /** maximal number of newton iterations for steady state calculation */
     int newton_maxsteps{0};
 
-    /** scaling of parameterization (lin,log,log10) */
+    /** scaling of parameterization */
     std::vector<ParameterScaling> pscale;
 
-    /** flag indicating whether second order sensitivities were requested */
+    /** flag indicating whether second-order sensitivities were requested */
     SecondOrderMode o2mode{SecondOrderMode::none};
 
     /** sensitivity order */
@@ -425,16 +426,16 @@ class ReturnData: public ModelDimensions {
     void initializeObjectiveFunction(bool enable_chi2);
 
     /**
-     * @brief extracts data from a preequilibration steadystateproblem
-     * @param preeq Steadystateproblem for preequilibration
+     * @brief extracts data from a preequilibration SteadystateProblem
+     * @param preeq SteadystateProblem for preequilibration
      * @param model Model instance to compute return values
      */
     void processPreEquilibration(SteadystateProblem const &preeq,
                                  Model &model);
 
     /**
-     * @brief extracts data from a preequilibration steadystateproblem
-     * @param posteq Steadystateproblem for postequilibration
+     * @brief extracts data from a preequilibration SteadystateProblem
+     * @param posteq SteadystateProblem for postequilibration
      * @param model Model instance to compute return values
      * @param edata ExpData instance containing observable data
      */
@@ -457,7 +458,7 @@ class ReturnData: public ModelDimensions {
      * @brief extracts results from backward problem
      * @param fwd forward problem
      * @param bwd backward problem
-     * @param preeq Steadystateproblem for preequilibration
+     * @param preeq SteadystateProblem for preequilibration
      * @param model model that was used for forward/backward simulation
      */
     void processBackwardProblem(ForwardProblem const &fwd,
@@ -572,8 +573,8 @@ class ReturnData: public ModelDimensions {
     }
 
     /**
-     * @brief Extracts output information for data-points, expects that x_solver and sx_solver were
-     * were set appropriately
+     * @brief Extracts output information for data-points, expects that
+     * x_solver_ and sx_solver_ were set appropriately
      * @param it timepoint index
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
@@ -581,8 +582,8 @@ class ReturnData: public ModelDimensions {
     void getDataOutput(int it, Model &model, ExpData const *edata);
 
     /**
-     * @brief Extracts data information for forward sensitivity analysis, expects that x_solver and
-     * sx_solver were were set appropriately
+     * @brief Extracts data information for forward sensitivity analysis,
+     * expects that x_solver_ and sx_solver_ were set appropriately
      * @param it index of current timepoint
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
@@ -590,10 +591,11 @@ class ReturnData: public ModelDimensions {
     void getDataSensisFSA(int it, Model &model, ExpData const *edata);
 
     /**
-     * @brief Extracts output information for events, expects that x_solver and sx_solver were
-     * were set appropriately
+     * @brief Extracts output information for events, expects that x_solver_
+     * and sx_solver_ were set appropriately
      * @param t event timepoint
-     * @param rootidx information about which roots fired (1 indicating fired, 0/-1 for not)
+     * @param rootidx information about which roots fired
+     * (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
@@ -601,8 +603,8 @@ class ReturnData: public ModelDimensions {
                         Model &model, ExpData const *edata);
 
     /**
-     * @brief Extracts event information for forward sensitivity analysis, expects that x_solver and
-     * sx_solver were set appropriately
+     * @brief Extracts event information for forward sensitivity analysis,
+     * expects that x_solver_ and sx_solver_ were set appropriately
      * @param ie index of event type
      * @param t event timepoint
      * @param model model that was used in forward solve
@@ -615,7 +617,7 @@ class ReturnData: public ModelDimensions {
      * @brief Updates contribution to likelihood from quadratures (xQB),
      * if preequilibration was run in adjoint mode
      * @param model model that was used for forward/backward simulation
-     * @param preeq Steadystateproblem for preequilibration
+     * @param preeq SteadystateProblem for preequilibration
      * @param xQB vector with quadratures from adjoint computation
      */
     void handleSx0Backward(const Model &model, SteadystateProblem const &preeq,

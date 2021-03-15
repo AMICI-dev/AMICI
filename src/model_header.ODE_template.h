@@ -560,18 +560,18 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     }
 
     /**
-     * @brief returns the amici version that was used to generate the model
-     * @return ver amici version string
+     * @brief returns the AMICI version that was used to generate the model
+     * @return AMICI version string
      */
-    virtual const std::string getAmiciVersion() const override {
+    virtual std::string getAmiciVersion() const override {
         return "TPL_AMICI_VERSION_STRING";
     }
 
     /**
-     & @brief returns the amici version that was used to generate the model
-     * @return commit amici git commit hash
+     * @brief returns the amici version that was used to generate the model
+     * @return AMICI git commit hash
      */
-    virtual const std::string getAmiciCommit() const override {
+    virtual std::string getAmiciCommit() const override {
         return "TPL_AMICI_COMMIT_STRING";
     }
 
