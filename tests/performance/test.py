@@ -5,6 +5,7 @@ import sys
 import petab
 import subprocess
 import os
+import re
 
 from amici.petab_import import import_model
 
@@ -12,7 +13,18 @@ from amici.petab_import import import_model
 def main():
     arg = sys.argv[1]
 
+    if '_' in arg and re.match(r'O[0-2]', arg.split("_")[-1]):
+        optim = arg.split("_")[-1]
+        os.environ['AMICI_CXXFLAGS'] = f'-{optim}'
+        suffix = f'_{optim}'
+        arg = '_'.join(arg.split("_")[:-1])
+    else:
+        suffix = ''
+
+    model_name = 'CS_Signalling_ERBB_RAS_AKT_petab' + suffix
+
     if arg == 'compilation':
+
         git_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT')
         if not os.path.exists(git_dir):
             subprocess.run([
@@ -21,23 +33,26 @@ def main():
             )
         os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT'))
 
-        pp = petab.Problem.from_yaml('FroehlichKes2018/PEtab/FroehlichKes2018.yaml')
+        pp = petab.Problem.from_yaml(
+            'FroehlichKes2018/PEtab/FroehlichKes2018.yaml'
+        )
         petab.lint_problem(pp)
         os.chdir(os.path.dirname(os.path.abspath(os.curdir)))
-        import_model(model_name='CS_Signalling_ERBB_RAS_AKT_petab',
+        import_model(model_name=model_name,
                      sbml_model=pp.sbml_model,
                      condition_table=pp.condition_df,
                      observable_table=pp.observable_df,
                      measurement_table=pp.measurement_df,
                      compile=False,
                      verbose=True)
-        os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT_petab'))
+        os.chdir(os.path.join(os.curdir,
+                              model_name))
 
         subprocess.run(['python', 'setup.py', 'install'])
 
         return
     else:
-        import CS_Signalling_ERBB_RAS_AKT_petab as model_module
+        model_module = amici.import_model_module(model_name, model_name)
         model = model_module.getModel()
         solver = model.getSolver()
         # TODO
