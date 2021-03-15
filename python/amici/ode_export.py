@@ -383,6 +383,9 @@ class ModelQuantity:
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
+
+        if name == '':
+            raise ValueError('name cannot be an empty string')
         self._name: str = name
 
         self._value: sp.Expr = cast_to_sym(value, 'value')
@@ -2872,6 +2875,8 @@ class ODEExporter:
             symbol_name = strip_pysb(symbol)
             if str(symbol) == '0':
                 continue
+            if str(symbol_name) == '':
+                raise ValueError(f'{name} contains a symbol called ""')
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )

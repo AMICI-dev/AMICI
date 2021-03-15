@@ -1022,7 +1022,7 @@ class SbmlImporter:
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
             event_id = event.getId()
-            if event_id is None:
+            if event_id is None or event_id == '':
                 event_id = f'event_{ievent}'
             event_sym = sp.Symbol(event_id)
 

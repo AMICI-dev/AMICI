@@ -263,8 +263,7 @@ def compile_model(path, test_id, model_dir):
                        generate_sensitivity_code=False)
 
     # settings
-    sys.path.insert(0, model_dir)
-    model_module = importlib.import_module(model_name)
+    model_module = amici.import_model_module(model_name, model_dir)
 
     model = model_module.getModel()
     solver = model.getSolver()
