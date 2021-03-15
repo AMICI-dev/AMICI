@@ -31,9 +31,24 @@ the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
 
-The following SBML test tags are supported
+The following SBML test suite tags are currently supported
 (i.e., at least one test case with the respective test passes;
 `tag descriptions <https://github.com/sbmlteam/sbml-test-suite/blob/master/docs/tags-documentation/all-tags.txt>`_):
+
+**Component tags:**
+
+* AssignmentRule
+* Compartment
+* CSymbolAvogadro
+* CSymbolTime
+* FunctionDefinition
+* InitialAssignment
+* Parameter
+* RateRule
+* Reaction
+* Species
+
+**Test tags:**
 
 * 0D-Compartment
 * Amount
@@ -65,8 +80,6 @@ for details and progress):
 
 - Events (currently Matlab-only) (`#757 <https://github.com/AMICI-dev/AMICI/issues/757>`_)
 - Algebraic rules (`#760 <https://github.com/AMICI-dev/AMICI/issues/760>`_)
-
-contributions are welcome.
 
 However, the following features are unlikely to be supported:
 
@@ -105,7 +118,7 @@ Importing plain ODEs
 
 The AMICI Python interface does not currently support direct import of ODEs.
 However, it is straightforward to encode them as RateRules in an SBML model.
-The `yaml2sbml <https://github.com/martamatos/yaml2sbml>`_ package may come in
+The `yaml2sbml <https://github.com/yaml2sbml-dev/yaml2sbml>`_ package may come in
 handy, as it facilitates generating SBML models from a YAML-based specification
 of an ODE model. Besides the SBML model it can also create
 `PEtab <https://github.com/PEtab-dev/PEtab>`_ files.
@@ -140,21 +153,27 @@ OpenMP support for parallelized simulation for multiple experimental conditions
 AMICI can be built with OpenMP support, which allows to parallelize model
 simulations for multiple experimental conditions.
 
-On Linux and OSX this is enabled by default. This can be verified using::
+On Linux and OSX this is enabled by default. This can be verified using:
 
-    import amici
-    amici.compiledWithOpenMP()
+.. code-block:: python
+
+   import amici
+   amici.compiledWithOpenMP()
 
 If not already enabled by default, you can enable OpenMP support by setting
 the environment variables ``AMICI_CXXFLAGS`` and ``AMICI_LDFLAGS`` to the
 correct OpenMP flags of your compiler and linker, respectively. This has to be
 done for both AMICI package installation *and* model compilation. When using
-``gcc`` on Linux, this would be::
+``gcc`` on Linux, this would be:
 
-    # on your shell:
-    AMICI_CXXFLAGS=-fopenmp AMICI_LDFLAGS=-fopenmp pip3 install amici
+.. code-block:: bash
 
-    # in python, before model compilation:
-    import os
-    os.environ['AMICI_CXXFLAGS'] = '-fopenmp'
-    os.environ['AMICI_LDFLAGS'] = '-fopenmp'
+   # on your shell:
+   AMICI_CXXFLAGS=-fopenmp AMICI_LDFLAGS=-fopenmp pip3 install amici
+
+.. code-block:: python
+
+   # in python, before model compilation:
+   import os
+   os.environ['AMICI_CXXFLAGS'] = '-fopenmp'
+   os.environ['AMICI_LDFLAGS'] = '-fopenmp'
