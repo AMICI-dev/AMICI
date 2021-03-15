@@ -875,7 +875,7 @@ This update comes with many improvements, bug fixes and several new features. Mo
 Bugfix release. This release also includes some changes that should improve the performance on the new R2016a release of MATLAB.
 
 
-## 0.2 (2016-03-17)
+## v0.2 (2016-03-17)
 
 This update comes with many improvements to the computation time for both compilation and simulation. Moreover several new features were included:
 
@@ -886,5 +886,4 @@ This update comes with many improvements to the computation time for both compil
 ## v0.1 (2015-11-05)
 
 This is the initial release of the toolbox
-
 
