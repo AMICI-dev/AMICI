@@ -82,7 +82,7 @@ jobs:
       run: >
         for opt in O0 O1 O2;
         do
-          check_time.sh install_model_{ \
+          check_time.sh install_model_${opt} \
             python3 CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_${opt}/setup.py install --user;
         done
 
