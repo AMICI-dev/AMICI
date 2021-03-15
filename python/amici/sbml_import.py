@@ -1006,7 +1006,7 @@ class SbmlImporter:
             Used in the event update vector for species that are not affected
             by the event.
             """
-            return sp.Float(0)
+            return sp.Symbol('AMICI_EMTPY_BOLUS')
 
         # Used to update species concentrations when an event affects a
         # compartment.
@@ -1110,6 +1110,8 @@ class SbmlImporter:
             for index in range(len(bolus)):
                 if bolus[index] != get_empty_bolus_value():
                     bolus[index] -= state_vector[index]
+                bolus[index] = bolus[index].subs(get_empty_bolus_value(),
+                                                 sp.Float(0.0))
 
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
@@ -1525,7 +1527,8 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't',
+                            'AMICI_EMPTY_BOLUS']
         for sym in reserved_symbols:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
