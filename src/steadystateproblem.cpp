@@ -68,17 +68,22 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     /* Check whether state sensis still need to be computed */
     if (getSensitivityFlag(model, solver, it, SteadyStateContext::newtonSensi))
     {
-        try {
-            /* this might still fail, if the Jacobian is singular and
-             simulation did not find a steady state */
-            newtonSolver->computeNewtonSensis(sx_);
-        } catch (NewtonFailure const &) {
-            /* No steady state could be inferred. Store simulation state */
-            storeSimulationState(model, solver->getSensitivityOrder() >=
-                                 SensitivityOrder::first);
-            throw AmiException("Steady state sensitivity computation failed due "
-                               "to unsuccessful factorization of RHS Jacobian");
+        if (numsteps_[0] > 0) {
+            try {
+                /* this might still fail, if the Jacobian is singular and
+                 simulation did not find a steady state */
+                newtonSolver->computeNewtonSensis(sx_);
+            } catch (NewtonFailure const &) {
+                /* No steady state could be inferred. Store simulation state */
+                storeSimulationState(model, solver->getSensitivityOrder() >=
+                                     SensitivityOrder::first);
+                throw AmiException("Steady state sensitivity computation failed due "
+                                   "to unsuccessful factorization of RHS Jacobian");
+            }
+        } else {
+            model->initialize(x_, dx_, sx_, sdx_, true);
         }
+
     }
 
     /* Get output of steady state solver, write it to x0 and reset time
@@ -388,7 +393,7 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
     /* Do we need to do the linear system solve to get forward sensitivities? */
     bool needForwardSensisNewton =
-        (needForwardSensisPreeq || needForwardSensisPosteq) && numsteps_[0] > 0;
+        (needForwardSensisPreeq || needForwardSensisPosteq);
 
     /* When we're creating a new solver object */
     bool needForwardSensiAtCreation = needForwardSensisPreeq &&
