@@ -509,3 +509,380 @@ Python
 - Fix dynamic override in PETab
 
 
+# v0.10.5 (2019-04-08)
+
+Bugfix release
+
+Doc
+- Update documentation of Windows installation
+
+C++
+- Fix missing source files in CMakeLists.txt (#658)
+- Set CMake policies to prevent warnings (Closes #676) (#677)
+- Start using gsl::span instead of raw pointers (#393) (#678) 
+
+Python
+- PySB parsing fix (#669)
+- Fix failure to propagate BLAS_LIBS contents (#665) 
+- Require setuptools at setup (#673) 
+- Updated PEtab import to allow for different noise models
+
+
+# v0.10.4 (2019-03-21)
+
+Features / improvements:
+
+* Implement ReturnData and ExpData wrappers as more efficient views (#657)
+* Add list of references using AMICI (#659)
+* Custom llh (normal/laplace, lin/log/log10) (#656)
+
+Bugfixes:
+
++ Speedup and fix travis build
+
+# v0.10.3 (2019-03-13)
+
+Features / improvements:
+
+- adds the option for early termination on integration failures for runAmiciSimulations
+- improve runtime of `SUNMatrixWrapper::mutliply`
+- expose finite difference routines in public API
+- enable parallel compilation of clib source files
+
+Bugfixes:
+
+- fixed symbolic processing for unreleased pysb features
+
+# v0.10.2 (2019-03-07)
+
+Features / improvements:
+
+- extended `ExpData` interface to allow for condition specific parameters, parameter scales, parameter lists, initial conditions and initial condition sensitivities.
+
+Bugfixes:
+
+- fixed output values of `ReturnData::x_ss` and `ReturnData::sx_ss`
+
+# v0.10.1 (2019-03-04)
+
+* travis-ci.com migration
+* fix problem with has{variable} functions
+* allow to import sbml model from string, not only file
+
+# v0.10.0 (2019-03-01)
+
+Features / improvements:
+
+- updated sundials to 4.1.0
+- updated SuiteSparse to 5.4.0
+- added generic implementations for symbolic expressions that were sparse matrix vector products
+
+Bugfixes:
+
+- fixed return value of `rz` when no data is provided.
+
+# v0.9.5 (2019-02-26)
+
+Features / improvements:
+
+- allow python installations without compilation of c++ extension
+- improvements to ExpData <-> pandas.DataFrame interface
+- allow generation of matlab models from python
+- implement CLI interface for PEtab
+- improve computation time for conservation laws from pysb import
+
+Bugfixes:
+
+- Fix sign in undamped Newton step.
+
+Maintenance:
+
+- use newer CI images 
+
+# v0.9.4 (2019-02-11)
+
+Minor fixes only:
+- fix(core) Get solver diagnostics for first(last) timepoint (#588) (Closes #586)
+- fix(ci) Fix autodeploy (Closes #589)
+
+# v0.9.3 (2019-02-07)
+
+**CRITICAL FIXES**
+- **fix(python) fix symbolic computations for adjoint (#583)**
+
+**Features**
+- feature(python) Check for matching AMICI versions when importing model (Closes #556). Set exact AMICI version as model package requirement.
+- feature(core) Add option to rethrow AMICI exception (Closes #552)
+- feature(python) Redirect C/C++ output in stdout is redirected (e.g. in ipython notebooks) (Closes #456)
+
+**Minor fixes**
+- fix(python) Fix doc and rename sys_pipes to something more meaningful
+- fix(ci) Fix premature exit of scripts/runNotebook.sh
+- fix(deploy) Update pyenv shims to find twine
+
+
+
+# v0.9.2 (2019-01-30)
+
+Bugfixes:
+
+- fixes a critical bug in the newton solver
+- fixes multiple bugs in sbml import for degenerate models, empty stoichiometry assignments and conversion factors
+- improved error messages for sbml import
+- #560 
+- #557 
+- #559 
+
+
+# v0.9.1 (2019-01-21)
+
+Features / improvements:
+
+- make pure steadystate results available as `rdata['x_ss']` and `rdata['sx_ss'] `
+- add option to specify integration tolerances for the adjoint problem via `atolB` and `rtolB`
+
+Bugfixes:
+
+- improved conservation law identification to also account for constant species.
+- fixed a bug where simulation results were written into results of the second newton solver attempt
+- fixed an openMP related warning
+
+Maintenance:
+
+- attempt to fix automatic deploy to pypi via travis
+
+# v0.9.0 (2019-01-18)
+
+Features / improvements:
+
+- Allow computation and application of conservation laws for pysb importet models. This enables use of NewtonSolver for preequilibration for models where it was previously not possible.
+- Use `klu_refactor` in the sparse Newton solver instead of always using `klu_factor` and only perform symbolic factorization once (#421)
+- Allow more detailed finiteness checks (#514)
+
+Bugfixes:
+ - #491 
+
+Maintenance:
+- Several improvements to travis log sizes and folding
+- Use default copy constructor for Model by implementing class wrappers for sundials matrix types (#516)
+- Reenable run of SBML testsuite
+
+
+# v0.8.2 (2019-01-07)
+
+Features / improvements:
+* Speedup symbolic processing for ODE generation in python
+
+Bugfixes:
+* Fix(python) Add missing deepcopy (introduced in 6847ba675f2088854db583199b8754aaa6e01576)
+* Fix(core) Prevent parameter scaling length mismatch (#488)
+* Fix(python) Set distutils dependency to current version to fix </usr/lib/python3.6/distutils/dist.py:261: UserWarning: Unknown distribution option: 'long_description_content_type'>
+* fix(python) add symlink to version.txt to be included in package
+
+Backwards-compatibility:
+* Replace 'newline' by literal to restore <R2016b compatibility (Fixes #493)
+
+Maintenance:
+* Remove obsolete swig library build via cmake and related file copying
+* Provide issue template for bug reports
+* Providing valid SBML document to import is not optional anymore
+* Update documentation and tests
+* Add python version check and raise required version to 3.6 to prevent cryptic error messages when encountering f-strings
+
+# v0.8.1 (2018-11-25)
+
+- [all] **critical** Fix long standing bugs in solving steadystate problems (including preequilibration) (#471)
+- [all] Fix AmiVector constructor from std::vector (#471)
+- [python] Reenable Solver and Model copy constructors
+- Update documentation
+
+
+# v0.8.0 (2018-11-25)
+
+- replaced symengine by sympy for symbolic processing in python *which fixes several critical bugs* that were due to bugs in symengine (#467)
+
+
+# v0.7.13 (2018-11-18)
+
+- fixes a critical bug in objective function computation for models compiled using `sbml2amici` and `pysb2amici` that was introduced in v0.7.12
+- fixes a critical bug in sensitivity computation when`model.reinitializeFixedParameterInitialStates` was set to true
+- readds the python interface to the ExpData copy constructor that was inadvertently removed in 0.7.12 and streamlines the respective convenience wrapper to provide access to the full range of constructors.
+
+# v0.7.12 (2018-11-17)
+
+- fixed a critical bug in `amici.constructEdataFromDataFrame`
+- enabled multithreaded simulation of multiple experiments (requires compilation with openMP)
+- modularized sbml import and added pysb import
+
+# v0.7.11 (2018-10-15)
+
+- [python] Added numpy and python wrappers that provide a more user friendly python API
+- [python] Enable import of SBML models with non-float assignment rules 
+- [python] Enable handling of exceptions in python
+- [python] Enable nativ python access to std::vector data-structures
+- [core] Provide an API for more fine-grained control over sensitivity tolerances and steady-state tolerances
+- [core] Provide an API to specify non-negative state variables (this feature is still preliminary)
+
+# v0.7.10 (2018-08-29)
+
+- Fixed python SBML import `log()` issues (#412)
+
+# v0.7.9 (2018-08-24)
+
+- fixes MATLAB compilation of models
+- adds option to perform steady state sensitivity analysis via FSA
+- condition dependent intitial conditions are now newly set after preequilibration is done
+
+# v0.7.8 (2018-08-19)
+
+- bugfixes for the ExpData interface
+- created build configuration that enables debugging of c++ extensions on os x
+- fixed python sbml import when stoichiometry is empty
+
+# v0.7.7 (2018-08-17)
+
+Fixes a couple of bugs just introduced in v0.7.6
+
+# v0.7.6 (2018-08-13)
+
+Important: **Use AMICI v0.7.7 due to https://github.com/ICB-DCM/AMICI/pull/403/commits/3a495d3db2fdbba70c2b0d52a3d4655c33c817a2**
+
+Bug fixes:
+- Python import: Fix log10 issues in observables (#382)
+- Matlab: Fix broken model compilation (#392)
+- Fixed simulation for models without observables (#390)
+- Fixed potential matlab memory leaks (#392)
+
+Breaking C++ API changes:
+- Revised ExpData interface (#388)
+
+# v0.7.5 (2018-07-30)
+
+Features/enhancements:
+- Add computation of residuals, residuals sensitivity, Fisher information matrix (#223)
+- More efficient conversion of std::vector to numpy ndarray (#375)
+- Allow specifying timepoints in ExpData (#370)
+
+Minor fixes:
+- Condition parameters in ExpData now only temporarily override Model parameters (#371)
+- Ensure non-negative states for Newton solver (#378)
+
+# v0.7.4 (2018-07-27)
+
+Features/enhancements:
+- Check SBML model validity (#343)
+- Allow per-parameter setting of amioptions::pscale from matlab interface (#350)
+- Documentation
+
+Major fixes:
+- Don't compile main.cpp into python model module which broke modules if amici was compiled without libhdf5 (#363)
+
+Minor fixes:
+- Fix compiler warnings (#353)
+- Plotting, SBML example mode, ...
+
+# v0.7.3 (2018-07-13)
+
+Features:
+- Added symbol names to python-wrapped models and make available via Model.getParameterNames(), model.getStateNames(), ...
+- Extended Python interface example
+
+Python package available via pypi: https://pypi.org/project/amici/0.7.3/
+
+# v0.7.2 (2018-07-03)
+
+Features:
+- Python package: more flexible HDF5 library localization
+- Extended CI: python tests, preequilibration tests, run in venv
+
+Major bugfixes:
+- Fix python sbml model import / compilation error (undefined function)
+- Fix model preequilibration 
+
+Minor fixes:
+- Various fixes for mingw compilation of python source distribution
+- Cmake compatibility with < 3.8 restored
+
+# v0.7.1 (2018-06-12)
+
+Features:
+- Allow specifying sigma-parameters from Python interface
+
+Major bugfixes:
+- Fix dsigma_y/dp and downstream sensitivity errors
+
+# v0.7.0 (2018-06-09)
+
+- Major revision of documentation
+- Improved Python interface
+- More comprehensive Python interface example
+- Fixed sensitivity computation in Python-generated models
+- Various other bug fixes
+
+WARNING:
+- For models with sigma-parameters and dsigma_y/dp != 0, dsigma_y/dp was computed incorrectly. This propagates to all dependent sensitivities. This applies also to some older releases and has been fixed in v0.7.1.
+
+# v0.6.0 (2018-05-22)
+
+Implement experimental support for python via swig.
+Python interface is now usable, but API will still receive some updates in the future.
+
+WARNING: 
+- There is a bug in sensitivity computation for  Python-generated models 
+- Matlab C++ compilation will fail due to undefined M_PI
+-> Please use v0.7.0
+
+# v0.5.0 (2018-03-15)
+
+Main new features are:
+
+- Reimplemented support for DAE equations
+- Added newton solver for steady state calculation and preequilibration
+- Better caching for recompilation of models
+- Blas support to  allow compilation of large models with many observables
+- Improved SBML support
+- Added c++ interface
+- Added support for second order adjoint computation
+
+- Rewrote large parts of the code as proper c++11 code to allow easier code maintanance
+- Substantially extended testing in continuous integration to assure code quality
+
+# Second_order_adjoint_and_hybrid_profile_calculation_submission (2018-01-29)
+
+
+
+# v0.4.0 (2017-05-15)
+
+* First citable version of AMICI (via zenodo integration).
+* Better support for standalone compilation
+* Improved SBML import scripts
+* General Code Cleanup
+
+# 0.3.0 (2016-09-05)
+
+This update comes with many improvements, bug fixes and several new features. Most notably:
+
+1) AMICI should now run on older versions of MATLAB (back to R2014a)
+2) AMICI now compiles using older versions of Visual Studio
+3) AMICI now also supports second order adjoint sensitivities (full (via the o2flag = 1 and as a vector product via o2flag = 2)
+4) AMICI now supports more SBML, SBML v2 and rate rules
+
+
+# 0.2.1 (2016-05-09)
+
+Bugfix release. This release also includes some changes that should improve the performance on the new R2016a release of MATLAB.
+
+
+# 0.2 (2016-03-17)
+
+This update comes with many improvements to the computation time for both compilation and simulation. Moreover several new features were included:
+
+1) Hessian Vector products for second order forward sensitivities
+2) Correct treatment of parameter/state dependent discontinuities for both forward and adjoint sensitivities
+
+
+# v0.1 (2015-11-05)
+
+This is the initial release of the toolbox
+
+
