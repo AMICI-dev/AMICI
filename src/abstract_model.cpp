@@ -2,13 +2,13 @@
 
 namespace amici {
 
-const std::string
+std::string
 AbstractModel::getAmiciVersion() const
 {
     throw AmiException("Version not set during code generation");
 }
 
-const std::string
+std::string
 AbstractModel::getAmiciCommit() const
 {
     throw AmiException("Commit not set during code generation");

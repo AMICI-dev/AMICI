@@ -26,7 +26,7 @@ Chen_MSB2009:
   note: benchmark collection reference ignores factor 1/2
 
 Crauste_CellSystems2017:
-  llh: 190.96398465243203
+  llh: -190.96521897435176
   note: benchmark collection only reports chi2 value, but llh value can be derived
 
 Elowitz_Nature2000:

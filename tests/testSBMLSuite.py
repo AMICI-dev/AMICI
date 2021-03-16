@@ -19,6 +19,7 @@ import os
 import re
 import shutil
 import sys
+from typing import Tuple, Set
 
 import amici
 import libsbml as sbml
@@ -79,6 +80,10 @@ def test_sbml_testsuite_case(test_number, result_path):
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
+        if rdata['status'] != amici.AMICI_SUCCESS and test_id in [
+            '00748', '00374', '00369'
+        ]:
+            raise amici.sbml_import.SBMLException('Simulation Failed')
 
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
@@ -259,11 +264,11 @@ def compile_model(path, test_id, model_dir):
         os.makedirs(model_dir)
 
     model_name = 'SBMLTest' + test_id
-    wrapper.sbml2amici(model_name, output_dir=model_dir)
+    wrapper.sbml2amici(model_name, output_dir=model_dir,
+                       generate_sensitivity_code=False)
 
     # settings
-    sys.path.insert(0, model_dir)
-    model_module = importlib.import_module(model_name)
+    model_module = amici.import_model_module(model_name, model_dir)
 
     model = model_module.getModel()
     solver = model.getSolver()
@@ -306,16 +311,28 @@ def format_test_id(test_id) -> str:
     return test_str
 
 
-def get_tags_for_test(test_id):
-    """Get sbml test suite tags for the given test ID"""
+def get_tags_for_test(test_id) -> Tuple[Set[str], Set[str]]:
+    """Get sbml test suite tags for the given test ID
+
+    Returns:
+        Tuple of set of strings for componentTags and testTags
+    """
 
     current_test_path = os.path.join(TEST_PATH, test_id)
     info_file = os.path.join(current_test_path, f'{test_id}-model.m')
     with open(info_file) as f:
+        component_tags = set()
+        test_tags = set()
         for line in f:
             if line.startswith('testTags:'):
-                res = set(re.split(r'[ ,:]', line[len('testTags:'):].strip()))
-                res.discard('')
-                return res
-    print(f"No testTags found for test case {test_id}.")
-    return set()
+                test_tags = set(
+                    re.split(r'[ ,:]', line[len('testTags:'):].strip()))
+                test_tags.discard('')
+            if line.startswith('componentTags:'):
+                component_tags = set(
+                    re.split(r'[ ,:]', line[len('componentTags:'):].strip()))
+                component_tags.discard('')
+            if test_tags and component_tags:
+                return component_tags, test_tags
+    print(f"No componentTags or testTags found for test case {test_id}.")
+    return component_tags, test_tags

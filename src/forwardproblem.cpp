@@ -157,9 +157,10 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         /* only check this in the first event fired, otherwise this will always
          * be true */
         if (t_ == *tlastroot) {
-            throw AmiException("AMICI is stuck in an event, as the initial"
-                               "step-size after the event is too small. To fix "
-                               "this, increase absolute and relative tolerances!");
+            throw AmiException("AMICI is stuck in an event, as the initial "
+                               "step-size after the event is too small. "
+                               "To fix this, increase absolute and relative "
+                               "tolerances!");
         }
         *tlastroot = t_;
     }
@@ -231,6 +232,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
     /* fire the secondary event */
     if (secondevent > 0) {
+        /* Secondary events may result in wrong forward sensitivities,
+         * if the secondary event has a bolus... */
+        if (solver->computingFSA())
+            solver->app->warning("AMICI:simulation",
+                                 "Secondary event was triggered. Depending on "
+                                 "the bolus of the secondary event, forward "
+                                 "sensitivities can be incorrect.");
         handleEvent(tlastroot, true);
     }
 

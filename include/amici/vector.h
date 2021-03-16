@@ -14,7 +14,7 @@ namespace amici {
 
 /** Since const N_Vector is not what we want */
 using const_N_Vector =
-    std::add_const<typename std::remove_pointer<N_Vector>::type>::type *;
+    std::add_const_t<typename std::remove_pointer_t<N_Vector>> *;
 
 inline const realtype* N_VGetArrayPointerConst(const_N_Vector x) {
     return N_VGetArrayPointer(const_cast<N_Vector>(x));

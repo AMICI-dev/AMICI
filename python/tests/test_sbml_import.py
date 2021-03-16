@@ -1,6 +1,7 @@
 """Tests related to amici.sbml_import"""
 
 import os
+import sys
 import re
 from urllib.request import urlopen
 import shutil
@@ -29,6 +30,10 @@ def simple_sbml_model():
     s1.setId('S1')
     s1.setCompartment('C1')
     model.addSpecies(s1)
+    p1 = model.createParameter()
+    p1.setId('p1')
+    p1.setValue(0.0)
+    model.addParameter(p1)
 
     return document, model
 
@@ -44,6 +49,32 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False)
+
+
+@pytest.mark.skipif(sys.platform in ['win32', 'cygwin'],
+                    reason="windows stinks")
+def test_nosensi(simple_sbml_model):
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(model_name="test",
+                                 output_dir=tmpdir,
+                                 observables=None,
+                                 compute_conservation_laws=False,
+                                 generate_sensitivity_code=False)
+
+        model_module = amici.import_model_module(module_name='test',
+                                                 module_path=tmpdir)
+
+        model = model_module.getModel()
+        model.setTimepoints(np.linspace(0, 60, 61))
+        solver = model.getSolver()
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        rdata = amici.runAmiciSimulation(model, solver)
+        assert rdata.status == amici.AMICI_ERROR
 
 
 def assert_fun(x):

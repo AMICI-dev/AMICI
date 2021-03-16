@@ -75,13 +75,21 @@ def pytest_sessionfinish(session, exitstatus):
 
 def write_passed_tags(passed_ids, out=sys.stdout):
     """Write tags of passed SBML semantic test cases"""
-    passed_tags = set()
+    passed_component_tags = set()
+    passed_test_tags = set()
+
     from testSBMLSuite import get_tags_for_test
     for test_id in passed_ids:
-        passed_tags |= get_tags_for_test(test_id)
+        cur_component_tags, cur_test_tags = get_tags_for_test(test_id)
+        passed_component_tags |= cur_component_tags
+        passed_test_tags |= cur_test_tags
 
-    out.write("At least one test with the following tags has passed:\n")
-    out.write('  ' + '\n  '.join(passed_tags))
+    out.write("\nAt least one test with the following component tags has "
+              "passed:\n")
+    out.write('  ' + '\n  '.join(sorted(passed_component_tags)))
+    out.write("\n\nAt least one test with the following test tags has "
+              "passed:\n")
+    out.write('  ' + '\n  '.join(sorted(passed_test_tags)))
 
 
 def pytest_runtest_logreport(report: "TestReport") -> None:

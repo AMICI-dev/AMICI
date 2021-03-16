@@ -477,26 +477,58 @@ void ReturnData::handleSx0Forward(const Model &model,
 void ReturnData::processSolver(Solver const &solver) {
 
     cpu_time = solver.getCpuTime();
-    if (!numsteps.empty())
-        numsteps = solver.getNumSteps();
-    if (!numrhsevals.empty())
-        numrhsevals = solver.getNumRhsEvals();
-    if (!numerrtestfails.empty())
-        numerrtestfails = solver.getNumErrTestFails();
-    if (!numnonlinsolvconvfails.empty())
-        numnonlinsolvconvfails = solver.getNumNonlinSolvConvFails();
-    if (!order.empty())
-        order = solver.getLastOrder();
+
+    const std::vector<int> *tmp;
+
+    if (!numsteps.empty()) {
+        tmp = &solver.getNumSteps();
+        // copy_n instead of assignment to ensure length `nt`
+        // (vector from solver may be shorter in case of integration errors)
+        std::copy_n(tmp->cbegin(), tmp->size(), numsteps.begin());
+    }
+
+    if (!numsteps.empty()) {
+        tmp = &solver.getNumRhsEvals();
+        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevals.begin());
+    }
+
+    if (!numerrtestfails.empty()) {
+        tmp = &solver.getNumErrTestFails();
+        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfails.begin());
+    }
+
+    if (!numnonlinsolvconvfails.empty()) {
+        tmp = &solver.getNumNonlinSolvConvFails();
+        std::copy_n(tmp->cbegin(), tmp->size(), numnonlinsolvconvfails.begin());
+    }
+
+    if (!order.empty()) {
+        tmp = &solver.getLastOrder();
+        std::copy_n(tmp->cbegin(), tmp->size(), order.begin());
+    }
 
     cpu_timeB = solver.getCpuTimeB();
-    if (!numstepsB.empty())
-        numstepsB = solver.getNumStepsB();
-    if (!numrhsevalsB.empty())
-        numrhsevalsB = solver.getNumRhsEvalsB();
-    if (!numerrtestfailsB.empty())
-        numerrtestfailsB = solver.getNumErrTestFailsB();
-    if (!numnonlinsolvconvfailsB.empty())
-        numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
+
+    if (!numstepsB.empty()) {
+        tmp = &solver.getNumStepsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numstepsB.begin());
+    }
+
+    if (!numrhsevalsB.empty()) {
+        tmp = &solver.getNumRhsEvalsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevalsB.begin());
+    }
+
+    if (!numerrtestfailsB.empty()) {
+        tmp = &solver.getNumErrTestFailsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfailsB.begin());
+    }
+
+    if (!numnonlinsolvconvfailsB.empty()) {
+        tmp = &solver.getNumNonlinSolvConvFailsB();
+        std::copy_n(tmp->cbegin(), tmp->size(),
+                    numnonlinsolvconvfailsB.begin());
+    }
 }
 
 void ReturnData::readSimulationState(SimulationState const &state,
@@ -805,17 +837,19 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
 
     /*
-     * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+0.5*log%282+*+pi+*+s%28u%2Cv%29%5E2%29+%2B+0.5+*+%28%28y%28u%2Cv%29+-+m%29%2Fs%28u%2Cv%29%29%5E2
-     * r = (m - y)
-     * d/du(d/(dv)(0.5 log(2 π s^2) + 0.5 ((y - m)/s)^2)) =
-     * (-s_du*y_dv*r + 2*s_dv*y_du*r - s_du_dv*r^2 -
-     *  222222222222   2222222222222   ***********
+     * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+log%28s%28u%2Cv%29%29+%2B+0.5+*+%28r%28u%2Cv%29%2Fs%28u%2Cv%29%29%5E2
+     * r = (y - m)
+     * r_du = y_du
+     * d/du(d/(dv)(log(s) + 0.5 (r/s)^2)) =
+     * -(2*y_du*s_dv)*r/s^3 - (2*y_dv*s_du)*r/s^3 + y_du_dv*r/s^2
+     * 22222222222222222222   2222222222222222222   #############
      *
-     *  s*y_du_dv*r + s_du_dv*s^2 + 2*s_dv*s_du*s + s*y_dv*y_du)/s^3 -
-     *  ###########   +++++++++++   -------------   11111111111
+     * + (y_dv*y_du)/s^2 + (3*s_dv*s_du)*r^2/s^4 - s_du_dv*r^2/s^3
+     *   111111111111111   333333333333333333333   ***************
      *
-     * (3*s_du*(-s_dv*r^2 - s*y_dv*r + s_dv*s^2))/s^4
-     *          333333333   22222222   --------
+     * - (s_dv*s_du)/s^2 + (s_du_dv)/s
+     *                     +++++++++++
+     *
      *
      * we compute this using fsres:
      * sres_u * sres_v = (y_du*s - s_du * r) * (y_dv*s - s_dv * r) / s^4
@@ -824,15 +858,35 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
      *
      * r should be on the same order as s. We keep 1/s^2 and drop 1/s terms.
      * drop:
-     * ********: r^2/s^3 term
-     * ########: r/s^2 term
+     * ********: r^2/s^3 term, typically zero anyways
+     * ########: r/s^2 term, requires second order sensitivities
      * ++++++++: 1/s term, typically zero anyways
      *
      * keep:
-     * ---------: accounts for .5(2*pi*sigma^2)
-     * 123123123: accounted for by sres*sres, but
-     * -3*(s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
-     * -2*s_du*s_dv*r^2/s^4 is missing from 3333
+     * 123123123: accounted for by sres*sres,
+     * but
+     * - (s_dv*s_du)/s^2 is unaccounted for and
+     * - (s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
+     * + 2*(s_du*s_dv)*r^2/s^4 is missing from 3333
+     *
+     * s_dv*y_du and s_du*y_dv are usually zero since we do not have parameters
+     * that affect both observables and sigmas. Accordingly, it is hard to know
+     * emprically whether these terms are important or not.
+     *
+     * This leaves us with
+     * + (s_du*s_dv)(2*r^2-s^2)/s^4
+     * which may be problematic, since this expression does not factorise and
+     * may thus introduce directions of negative curvature.
+     *
+     * For the least squares trick, where error residuals
+     * er = sqrt(log(s) + c), with sensitivity er_du = s_du/(2*s*er). This
+     * would yield terms (s_du*s_dv)*(s^2/(4*er^2))/s^4.
+     * These terms are guaranteed to yield positive curvature, but go to zero
+     * in the limit c -> Infty.
+     *
+     * Empirically, simply taking this limit and dropping all missing terms,
+     * works substantially better. This was evaluated using the fides optimizer
+     * on the Boehm2014 Benchmark example.
      */
 
     auto observedData = edata.getObservedDataPtr(it);
@@ -843,16 +897,17 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
         auto y = y_it.at(iy);
         auto m = observedData[iy];
         auto s = sigmay_it.at(iy);
+        // auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
+            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
             for (int jp = 0; jp < nplist; ++jp) {
                 auto dy_j = sy_it.at(iy + ny * jp);
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
-                FIM.at(ip + nplist * jp) +=
-                    amici::fsres(y, dy_i, m, s, ds_i) *
-                    amici::fsres(y, dy_j, m, s, ds_j)
-                    - ds_i * ds_j / pow(s, 2.0);
+                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
+                FIM.at(ip + nplist * jp) += sr_i*sr_j;
+                /*+ ds_i*ds_j*(2*pow(r/pow(s,2.0), 2.0) - 1/pow(s,2.0));*/
             }
         }
     }
