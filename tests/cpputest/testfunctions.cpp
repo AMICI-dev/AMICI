@@ -38,7 +38,7 @@ void simulateVerifyWrite(const std::string& path)
 
 void simulateVerifyWrite(const std::string &path, double atol, double rtol)
 {
-    simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, std::move(path), atol, rtol);
+    simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, atol, rtol);
 }
 
 void simulateWithDefaultOptions() {

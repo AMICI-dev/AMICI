@@ -26,7 +26,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 862 out of the 1780 (~48%) test cases** from
+Python-AMICI currently **passes 996 out of the 1780 (~56%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -41,6 +41,7 @@ The following SBML test suite tags are currently supported
 * Compartment
 * CSymbolAvogadro
 * CSymbolTime
+* EventNoDelay
 * FunctionDefinition
 * InitialAssignment
 * Parameter
@@ -59,6 +60,7 @@ The following SBML test suite tags are currently supported
 * Concentration
 * ConstantSpecies
 * ConversionFactors
+* EventT0Firing
 * HasOnlySubstanceUnits
 * InitialValueReassigned
 * L3v2MathML
@@ -78,7 +80,6 @@ In addition, we currently plan to add support for the following features
 (see corresponding `issues <https://github.com/AMICI-dev/AMICI/milestone/14>`_
 for details and progress):
 
-- Events (currently Matlab-only) (`#757 <https://github.com/AMICI-dev/AMICI/issues/757>`_)
 - Algebraic rules (`#760 <https://github.com/AMICI-dev/AMICI/issues/760>`_)
 
 However, the following features are unlikely to be supported:
@@ -87,6 +88,7 @@ However, the following features are unlikely to be supported:
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
 - `delay()` due to missing :term:`SUNDIALS` solver support
+- events with delays, events with non-persistent triggers
 
 Tutorials
 +++++++++

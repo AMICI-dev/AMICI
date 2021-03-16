@@ -189,6 +189,24 @@ functions = {
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *sx, const int ip, const int ie)'
     },
+    'deltax': {
+        'signature':
+            '(double *deltax, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ie, const realtype *xdot, const realtype *xdot_old)'
+    },
+    'ddeltaxdx': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'ddeltaxdt': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'ddeltaxdp': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
     'deltasx': {
         'signature':
             '(realtype *deltasx, const realtype t, const realtype *x, '
@@ -281,7 +299,13 @@ sparse_sensi_functions = [
 # list of event functions
 event_functions = [
     function for function in functions
-    if 'const int ie' in functions[function]['signature']
+    if 'const int ie' in functions[function]['signature'] and
+        'const int ip' not in functions[function]['signature']
+]
+event_sensi_functions = [
+    function for function in functions
+    if 'const int ie' in functions[function]['signature'] and
+       'const int ip' in functions[function]['signature']
 ]
 # list of multiobs functions
 multiobs_functions = [
@@ -359,6 +383,7 @@ class ModelQuantity:
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
+
         self._name: str = name
 
         self._value: sp.Expr = cast_to_sym(value, 'value')
@@ -734,6 +759,13 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._observable = event_observable
 
+    def __eq__(self, other):
+        """
+        Check equality of events at the level of trigger/root functions, as we
+        need to collect unique root functions for roots.cpp
+        """
+        return self.get_val() == other.get_val()
+
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
@@ -1028,14 +1060,14 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def transform_dxdt_to_concentration(specie_id, dxdt):
+        def transform_dxdt_to_concentration(species_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
             compartments with a constant volume, or a volume that is defined by
             an assignment or rate rule.
 
-            :param specie_id:
+            :param species_id:
                 The identifier of the species (generated in "sbml_import.py").
 
             :param dxdt:
@@ -1052,13 +1084,13 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            specie = si.symbols[SymbolId.SPECIES][specie_id]
+            species = si.symbols[SymbolId.SPECIES][species_id]
 
-            comp = specie['compartment']
-            x_index = specie['index']
+            comp = species['compartment']
+            x_index = species['index']
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
-                xdot = (dxdt - dv_dt * specie_id) / comp
+                xdot = (dxdt - dv_dt * species_id) / comp
                 dxdotdw_updates.extend(
                     (x_index, w_index, xdot.diff(r_flux))
                     for w_index, r_flux in enumerate(fluxes)
@@ -1079,8 +1111,8 @@ class ODEModel:
                 for var in comp_rate_vars:
                     dv_dt += \
                         v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
-                dv_dx = v.diff(specie_id)
-                xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
+                dv_dx = v.diff(species_id)
+                xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
                 dxdotdw_updates.extend(
                     (x_index, w_index, xdot.diff(r_flux))
                     for w_index, r_flux in enumerate(fluxes)
@@ -1104,19 +1136,19 @@ class ODEModel:
         # create dynamics without respecting conservation laws first
         dxdt = smart_multiply(si.stoichiometric_matrix,
                               MutableDenseMatrix(fluxes))
-        for ix, ((specie_id, specie), formula) in enumerate(zip(
+        for ix, ((species_id, species), formula) in enumerate(zip(
                 symbols[SymbolId.SPECIES].items(),
                 dxdt
         )):
-            assert ix == specie['index']  # check that no reordering occurred
+            assert ix == species['index']  # check that no reordering occurred
             # rate rules and amount species don't need to be updated
-            if 'dt' in specie:
+            if 'dt' in species:
                 continue
-            if specie['amount']:
-                specie['dt'] = formula
+            if species['amount']:
+                species['dt'] = formula
             else:
-                specie['dt'] = transform_dxdt_to_concentration(specie_id,
-                                                               formula)
+                species['dt'] = transform_dxdt_to_concentration(species_id,
+                                                                formula)
 
         # create all basic components of the ODE model and add them.
         for symbol_name in symbols:
@@ -1127,6 +1159,8 @@ class ODEModel:
                 args += ['dt', 'init']
             else:
                 args += ['value']
+            if symbol_name == SymbolId.EVENT:
+                args += ['state_update', 'event_observable']
 
             protos = [
                 {
@@ -1589,7 +1623,6 @@ class ODEModel:
             length = self.eq(name).shape[0]
         else:
             length = len(self.eq(name))
-
         self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
@@ -1627,7 +1660,7 @@ class ODEModel:
         """
 
         # Track all roots functions in the right hand side
-        roots = []
+        roots = copy.deepcopy(self._events)
         for state in self._states:
             state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
@@ -1636,6 +1669,10 @@ class ODEModel:
 
         # Now add the found roots to the model components
         for root in roots:
+            # skip roots of SBML events, as these have already been added
+            if root in self._events:
+                continue
+            # add roots of heaviside functions
             self.add_component(root)
 
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
@@ -1846,6 +1883,36 @@ class ODEModel:
                 + self.eq('drootdt')
             )
 
+        elif name == 'deltax':
+            # fill boluses for Heaviside functions, as empty state updates
+            # would cause problems when writing the function file later
+            event_eqs = []
+            for event in self._events:
+                if event._state_update is None:
+                    event_eqs.append(sp.zeros(self.num_states_solver(), 1))
+                else:
+                    event_eqs.append(event._state_update)
+
+            self._eqs[name] = event_eqs
+
+        elif name == 'ddeltaxdx':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], self.sym('x'))
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'ddeltaxdt':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], time_symbol)
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'ddeltaxdp':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], self.sym('p'))
+                for ie in range(self.num_events())
+            ]
+
         elif name == 'stau':
             self._eqs[name] = [
                 -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
@@ -1853,11 +1920,34 @@ class ODEModel:
             ]
 
         elif name == 'deltasx':
-            self._eqs[name] = [
-                smart_multiply((self.eq('xdot_old') - self.eq('xdot')),
-                               self.eq('stau')[ie])
-                for ie in range(self.num_events())
-            ]
+            event_eqs = []
+            for ie, event in enumerate(self._events):
+                if event._state_update is not None:
+                    # ====== chain rule for the state variables ===============
+                    # get xdot with expressions back-substituted
+                    tmp_eq = smart_multiply(
+                        (self.sym('xdot_old') - self.sym('xdot')),
+                        self.eq('stau')[ie])
+                    # construct an enhanced state sensitivity, which accounts
+                    # for the time point sensitivity as well
+                    tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
+                    tmp_dxdp += smart_multiply(self.sym('xdot'),
+                                               self.eq('stau')[ie])
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
+                                             tmp_dxdp)
+                    # ====== chain rule for the time point ====================
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                                             self.eq('stau')[ie])
+                    # ====== partial derivative for the parameters ============
+                    tmp_eq += self.eq('ddeltaxdp')[ie]
+                else:
+                    tmp_eq = smart_multiply(
+                        (self.eq('xdot_old') - self.eq('xdot')),
+                        self.eq('stau')[ie])
+
+                event_eqs.append(tmp_eq)
+
+            self._eqs[name] = event_eqs
 
         elif name == 'xdot_old':
             # force symbols
@@ -2783,6 +2873,8 @@ class ODEExporter:
             symbol_name = strip_pysb(symbol)
             if str(symbol) == '0':
                 continue
+            if str(symbol_name) == '':
+                raise ValueError(f'{name} contains a symbol called ""')
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )
@@ -3081,6 +3173,12 @@ class ODEExporter:
                     f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
+            cases = {ie: _get_sym_lines_array(equations[ie], function, 0)
+                     for ie in range(self.model.num_events())
+                     if not smart_is_zero_matrix(equations[ie])}
+            lines.extend(get_switch_statement('ie', cases, 1))
+
+        elif function in event_sensi_functions:
             outer_cases = {}
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []

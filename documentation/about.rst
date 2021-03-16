@@ -42,7 +42,6 @@ Features
 * Pre-equilibration and pre-simulation conditions
 * Support for
   `discrete events and logical operations <https://academic.oup.com/bioinformatics/article/33/7/1049/2769435>`_
-  (Matlab-only)
 
 Interfaces & workflow
 ======================
@@ -57,7 +56,8 @@ simulation.
 .. image:: gfx/amici_workflow.png
   :alt: AMICI workflow
 
-The functionality of the Python, Matlab and C++ interfaces slightly differ, as shown in the following table:
+The functionality of the Python, Matlab and C++ interfaces slightly differ,
+as shown in the following table:
 
 .. list-table::
    :header-rows: 1
@@ -96,8 +96,8 @@ The functionality of the Python, Matlab and C++ interfaces slightly differ, as s
      - no
      - yes
    * - Events
-     - no
-     - no
+     - yes
+     - yes
      - yes
    * - :term:`preequilibration`
      - yes

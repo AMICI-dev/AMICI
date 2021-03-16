@@ -24,8 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cases: ["1-600", "601-1200", "1201-1780"]
-
+        cases: ["1 - 250", "251 - 500", "501 - 750", "751 - 1000",
+                "1000-1250", "1251-1780"]
 
     steps:
     - uses: actions/checkout@v1

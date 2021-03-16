@@ -96,7 +96,7 @@ checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
 // clang-format off
 TEST_GROUP(dataSerialization){
     amici::CVodeSolver solver;
-    void setup() {
+    void setup() override {
         // set non-default values for all members
         solver.setAbsoluteTolerance(1e-4);
         solver.setRelativeTolerance(1e-5);
@@ -113,15 +113,12 @@ TEST_GROUP(dataSerialization){
         solver.setPreequilibration(true);
         solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
-        solver.setStabilityLimitFlag(0);
+        solver.setStabilityLimitFlag(false);
         solver.setLinearSolver(amici::LinearSolver::dense);
         solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
         solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
         solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
         solver.setReturnDataReportingMode(amici::RDataReporting::likelihood);
-    }
-
-    void teardown() {
     }
 };
 // clang-format on
