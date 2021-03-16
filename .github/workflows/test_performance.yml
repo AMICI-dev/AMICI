@@ -61,15 +61,13 @@ jobs:
     # install model package
     - name: Install test model
       run: |
-        check_time.sh install_model \
-          python3 python tests/performance/test.py compile
+        check_time.sh install_model tests/performance/test.py compile
 
     - name: Install test model
       run: >
         for opt in O0 O1 O2;
         do
-          check_time.sh install_model_${opt} \
-            python3 python tests/performance/test.py compile_${opt}
+          check_time.sh install_model_${opt} tests/performance/test.py compile_${opt}
         done
 
     # run simulations
