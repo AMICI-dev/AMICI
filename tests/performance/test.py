@@ -54,10 +54,9 @@ def main():
                              model_name),
                 model_dir
             )
-            shutil.rmtree(os.path.join(model_dir, 'build'))
 
         subprocess.run(['python', 'setup.py',
-                        'build_ext', f'--build-lib=.'],
+                        'build_ext', f'--build-lib=.', '--force'],
                        cwd=model_dir)
         return
     else:
