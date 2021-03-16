@@ -73,31 +73,47 @@ jobs:
         check_time.sh forward_simulation tests/performance/test.py  forward_simulation;
         for opt in O0 O1 O2;
         do
-          check_time.sh forward_simulation_${opt} tests/performance/test.py forward_simulation_${opt};
+          check_time.sh forward_simulation tests/performance/test.py forward_simulation_${opt};
         done
     - name: forward_sensitivities
       run: >
         check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities;
         for opt in O0 O1 O2;
         do
-          check_time.sh forward_sensitivities_${opt} tests/performance/test.py forward_sensitivities_${opt};
+          check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities_${opt};
         done
     - name: adjoint_sensitivities
       run: >
-        check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities
+        check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities;
         for opt in O0 O1 O2;
         do
-          check_time.sh adjoint_sensitivities_${opt} tests/performance/test.py adjoint_sensitivities_${opt};
+          check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities_${opt};
         done
     - name: forward_simulation_non_optimal_parameters
       run: |
-        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters
+        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters_${opt};
+        done
     - name: adjoint_sensitivities_non_optimal_parameters
       run: |
-        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters
+        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters_${opt};
+        done
     - name: forward_steadystate_sensitivities_non_optimal_parameters
       run: |
-        check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters
+        check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters_${opt};
+        done
     - name: adjoint_steadystate_sensitivities_non_optimal_parameters
       run: |
-        check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters
+        check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters_${opt};
+        done
