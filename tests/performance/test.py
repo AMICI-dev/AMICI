@@ -22,7 +22,8 @@ def main():
     else:
         suffix = ''
 
-    model_dir = 'CS_Signalling_ERBB_RAS_AKT_petab' + suffix
+    model_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT',
+                             'CS_Signalling_ERBB_RAS_AKT_petab' + suffix)
     model_name = 'CS_Signalling_ERBB_RAS_AKT_petab'
     if arg == 'import':
         git_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT')
@@ -44,18 +45,20 @@ def main():
                      measurement_table=pp.measurement_df,
                      compile=False,
                      verbose=True)
-        os.chdir(os.path.join(os.curdir,
-                              model_dir))
 
         return
     elif arg == 'compile':
-        if model_name != model_dir:
-            shutil.copytree(os.path.join(os.curdir, model_name),
-                            os.path.join(os.curdir, model_dir))
+        if model_name != os.path.basename(model_dir):
+            shutil.copytree(
+                os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT',
+                             model_name),
+                model_dir
+            )
+            shutil.rmtree(os.path.join(model_dir, 'build'))
 
-        os.chdir(os.path.join(os.curdir, model_dir))
-
-        subprocess.run(['python', 'setup.py', 'install'])
+        subprocess.run(['python', 'setup.py',
+                        'build_ext', f'--build-lib=.'],
+                       cwd=model_dir)
         return
     else:
         model_module = amici.import_model_module(model_name, model_dir)
