@@ -19,8 +19,13 @@ on:
 jobs:
   build:
     name: SBML Semantic Test Suite
-
     runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        cases: ["1 - 250", "251 - 500", "501 - 750", "751 - 1000",
+                "1000-1250", "1251-1780"]
 
     steps:
     - uses: actions/checkout@v1
@@ -31,7 +36,7 @@ jobs:
         sudo apt-get update \
           && sudo apt-get install -y swig4.0 libatlas-base-dev
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/installAmiciSource.sh
-    - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh
+    - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v1

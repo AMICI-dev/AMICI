@@ -193,6 +193,13 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  "AMICI simulation failed:\n%s\nError occurred in:\n%s",
                  ex.what(),
                  ex.getBacktrace());
+    } catch (std::exception const& ex) {
+        rdata->status = AMICI_ERROR;
+        if (rethrow)
+            throw;
+        warningF("AMICI:simulation",
+                 "AMICI simulation failed:\n%s\n",
+                 ex.what());
     }
 
     rdata->processSimulationObjects(

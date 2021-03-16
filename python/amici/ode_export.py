@@ -79,9 +79,9 @@ functions = {
             'const realtype *k, const realtype *y, const realtype *sigmay, '
             'const realtype *my)',
     },
-    'dJydsigmay': {
+    'dJydsigma': {
         'signature':
-            '(realtype *dJydsigmay, const int iy, const realtype *p, '
+            '(realtype *dJydsigma, const int iy, const realtype *p, '
             'const realtype *k, const realtype *y, const realtype *sigmay, '
             'const realtype *my)',
     },
@@ -190,6 +190,24 @@ functions = {
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *sx, const int ip, const int ie)'
     },
+    'deltax': {
+        'signature':
+            '(double *deltax, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ie, const realtype *xdot, const realtype *xdot_old)'
+    },
+    'ddeltaxdx': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'ddeltaxdt': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'ddeltaxdp': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
     'deltasx': {
         'signature':
             '(realtype *deltasx, const realtype t, const realtype *x, '
@@ -272,12 +290,23 @@ nobody_functions = [
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
-    and function != 'sxdot'
+]
+# list of sensitivity functions
+sparse_sensi_functions = [
+    function for function in functions
+    if 'const int ip' not in functions[function]['signature']
+    and function.endswith('dp') or function.endswith('dp_explicit')
 ]
 # list of event functions
 event_functions = [
     function for function in functions
-    if 'const int ie' in functions[function]['signature']
+    if 'const int ie' in functions[function]['signature'] and
+        'const int ip' not in functions[function]['signature']
+]
+event_sensi_functions = [
+    function for function in functions
+    if 'const int ie' in functions[function]['signature'] and
+       'const int ip' in functions[function]['signature']
 ]
 # list of multiobs functions
 multiobs_functions = [
@@ -355,6 +384,7 @@ class ModelQuantity:
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
+
         self._name: str = name
 
         self._value: sp.Expr = cast_to_sym(value, 'value')
@@ -730,6 +760,13 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._observable = event_observable
 
+    def __eq__(self, other):
+        """
+        Check equality of events at the level of trigger/root functions, as we
+        need to collect unique root functions for roots.cpp
+        """
+        return self.get_val() == other.get_val()
+
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
@@ -1024,14 +1061,14 @@ class ODEModel:
 
         dxdotdw_updates = []
 
-        def transform_dxdt_to_concentration(specie_id, dxdt):
+        def transform_dxdt_to_concentration(species_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
             species with respect to time, for species that reside in
             compartments with a constant volume, or a volume that is defined by
             an assignment or rate rule.
 
-            :param specie_id:
+            :param species_id:
                 The identifier of the species (generated in "sbml_import.py").
 
             :param dxdt:
@@ -1048,13 +1085,13 @@ class ODEModel:
             # species in (i) compartments with a rate rule, (ii) compartments
             # with an assignment rule, and (iii) compartments with a constant
             # volume, respectively.
-            specie = si.symbols[SymbolId.SPECIES][specie_id]
+            species = si.symbols[SymbolId.SPECIES][species_id]
 
-            comp = specie['compartment']
-            x_index = specie['index']
+            comp = species['compartment']
+            x_index = species['index']
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
-                xdot = (dxdt - dv_dt * specie_id) / comp
+                xdot = (dxdt - dv_dt * species_id) / comp
                 dxdotdw_updates.extend(
                     (x_index, w_index, xdot.diff(r_flux))
                     for w_index, r_flux in enumerate(fluxes)
@@ -1075,8 +1112,8 @@ class ODEModel:
                 for var in comp_rate_vars:
                     dv_dt += \
                         v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
-                dv_dx = v.diff(specie_id)
-                xdot = (dxdt - dv_dt * specie_id) / (dv_dx * specie_id + v)
+                dv_dx = v.diff(species_id)
+                xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
                 dxdotdw_updates.extend(
                     (x_index, w_index, xdot.diff(r_flux))
                     for w_index, r_flux in enumerate(fluxes)
@@ -1100,19 +1137,19 @@ class ODEModel:
         # create dynamics without respecting conservation laws first
         dxdt = smart_multiply(si.stoichiometric_matrix,
                               MutableDenseMatrix(fluxes))
-        for ix, ((specie_id, specie), formula) in enumerate(zip(
+        for ix, ((species_id, species), formula) in enumerate(zip(
                 symbols[SymbolId.SPECIES].items(),
                 dxdt
         )):
-            assert ix == specie['index']  # check that no reordering occurred
+            assert ix == species['index']  # check that no reordering occurred
             # rate rules and amount species don't need to be updated
-            if 'dt' in specie:
+            if 'dt' in species:
                 continue
-            if specie['amount']:
-                specie['dt'] = formula
+            if species['amount']:
+                species['dt'] = formula
             else:
-                specie['dt'] = transform_dxdt_to_concentration(specie_id,
-                                                               formula)
+                species['dt'] = transform_dxdt_to_concentration(species_id,
+                                                                formula)
 
         # create all basic components of the ODE model and add them.
         for symbol_name in symbols:
@@ -1123,6 +1160,8 @@ class ODEModel:
                 args += ['dt', 'init']
             else:
                 args += ['value']
+            if symbol_name == SymbolId.EVENT:
+                args += ['state_update', 'event_observable']
 
             protos = [
                 {
@@ -1381,7 +1420,7 @@ class ODEModel:
         else:
             return self._syms[name]
 
-    def sparsesym(self, name: str) -> List[str]:
+    def sparsesym(self, name: str, force_generate: bool = True) -> List[str]:
         """
         Returns (and constructs if necessary) the sparsified identifiers for
         a sparsified symbolic variable.
@@ -1389,15 +1428,18 @@ class ODEModel:
         :param name:
             name of the symbolic variable
 
+        :param force_generate:
+            whether the symbols should be generated if not available
+
         :return:
             linearized Matrix containing the symbolic identifiers
 
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
-        if name not in self._sparsesyms:
+        if name not in self._sparsesyms and force_generate:
             self._generate_sparse_symbol(name)
-        return self._sparsesyms[name]
+        return self._sparsesyms.get(name, [])
 
     def eq(self, name: str) -> sp.Matrix:
         """
@@ -1582,7 +1624,6 @@ class ODEModel:
             length = self.eq(name).shape[0]
         else:
             length = len(self.eq(name))
-
         self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
@@ -1620,7 +1661,7 @@ class ODEModel:
         """
 
         # Track all roots functions in the right hand side
-        roots = []
+        roots = copy.deepcopy(self._events)
         for state in self._states:
             state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
@@ -1629,6 +1670,10 @@ class ODEModel:
 
         # Now add the found roots to the model components
         for root in roots:
+            # skip roots of SBML events, as these have already been added
+            if root in self._events:
+                continue
+            # add roots of heaviside functions
             self.add_component(root)
 
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
@@ -1722,7 +1767,10 @@ class ODEModel:
             name of the symbolic variable
 
         """
-        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)', name)
+        # replacement ensures that we don't have to adapt name in abstract
+        # model and keep backwards compatibility with matlab
+        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)',
+                               name.replace('dJydsigma', 'dJydsigmay'))
         time_symbol = sp.Matrix([symbol_with_assumptions('t')])
 
         if name in self._equation_prototype:
@@ -1836,6 +1884,36 @@ class ODEModel:
                 + self.eq('drootdt')
             )
 
+        elif name == 'deltax':
+            # fill boluses for Heaviside functions, as empty state updates
+            # would cause problems when writing the function file later
+            event_eqs = []
+            for event in self._events:
+                if event._state_update is None:
+                    event_eqs.append(sp.zeros(self.num_states_solver(), 1))
+                else:
+                    event_eqs.append(event._state_update)
+
+            self._eqs[name] = event_eqs
+
+        elif name == 'ddeltaxdx':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], self.sym('x'))
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'ddeltaxdt':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], time_symbol)
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'ddeltaxdp':
+            self._eqs[name] = [
+                smart_jacobian(self.eq('deltax')[ie], self.sym('p'))
+                for ie in range(self.num_events())
+            ]
+
         elif name == 'stau':
             self._eqs[name] = [
                 -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
@@ -1843,18 +1921,41 @@ class ODEModel:
             ]
 
         elif name == 'deltasx':
-            self._eqs[name] = [
-                smart_multiply((self.eq('xdot_old') - self.eq('xdot')),
-                               self.eq('stau')[ie])
-                for ie in range(self.num_events())
-            ]
+            event_eqs = []
+            for ie, event in enumerate(self._events):
+                if event._state_update is not None:
+                    # ====== chain rule for the state variables ===============
+                    # get xdot with expressions back-substituted
+                    tmp_eq = smart_multiply(
+                        (self.sym('xdot_old') - self.sym('xdot')),
+                        self.eq('stau')[ie])
+                    # construct an enhanced state sensitivity, which accounts
+                    # for the time point sensitivity as well
+                    tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
+                    tmp_dxdp += smart_multiply(self.sym('xdot'),
+                                               self.eq('stau')[ie])
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
+                                             tmp_dxdp)
+                    # ====== chain rule for the time point ====================
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                                             self.eq('stau')[ie])
+                    # ====== partial derivative for the parameters ============
+                    tmp_eq += self.eq('ddeltaxdp')[ie]
+                else:
+                    tmp_eq = smart_multiply(
+                        (self.eq('xdot_old') - self.eq('xdot')),
+                        self.eq('stau')[ie])
+
+                event_eqs.append(tmp_eq)
+
+            self._eqs[name] = event_eqs
 
         elif name == 'xdot_old':
             # force symbols
             self._eqs[name] = self.sym(name)
 
         elif match_deriv:
-            self._derivative(match_deriv.group(1), match_deriv.group(2))
+            self._derivative(match_deriv.group(1), match_deriv.group(2), name)
 
         else:
             raise ValueError(f'Unknown equation {name}')
@@ -2528,6 +2629,9 @@ class ODEExporter:
     :ivar _build_hints:
         If the given model uses special functions, this set contains hints for
         model building.
+
+    :ivar generate_sensitivity_code:
+        Specifies whether code for sensitivity computation is to be generated
     """
 
     def __init__(
@@ -2537,7 +2641,8 @@ class ODEExporter:
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
-            allow_reinit_fixpar_initcond: Optional[bool] = True
+            allow_reinit_fixpar_initcond: Optional[bool] = True,
+            generate_sensitivity_code: Optional[bool] = True
     ):
         """
         Generate AMICI C++ files for the ODE provided to the constructor.
@@ -2562,6 +2667,9 @@ class ODEExporter:
 
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.ode_export.ODEExporter`
+
+        :param generate_sensitivity_code specifies whether code required for
+            sensitivity computation will be generated
         """
         set_log_level(logger, verbose)
 
@@ -2586,6 +2694,7 @@ class ODEExporter:
 
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
         self._build_hints = set()
+        self.generate_sensitivity_code: bool = generate_sensitivity_code
 
     @log_execution_time('generating cpp code', logger)
     def generate_model_code(self) -> None:
@@ -2626,15 +2735,29 @@ class ODEExporter:
         Create C++ code files for the model based on ODEExporter.model
         """
         for function in self.functions.keys():
+            if function in sensi_functions + sparse_sensi_functions and \
+                    not self.generate_sensitivity_code:
+                continue
+
             if 'dont_generate_body' not in \
                     self.functions[function].get('flags', []):
                 dec = log_execution_time(f'writing {function}.cpp', logger)
                 dec(self._write_function_file)(function)
-            if function in sparse_functions:
+            if function in sparse_functions \
+                    and 'body' in self.functions[function]:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')
 
         for name in self.model.sym_names():
+            # only generate for those that have nontrivial implementation,
+            # check for both basic variables (not in functions) and function
+            # computed values
+            if (name in self.functions and
+                'body' not in self.functions[name] and
+                name not in nobody_functions) or \
+               (name not in self.functions and
+                    len(self.model.sym(name)) == 0):
+                continue
             self._write_index_files(name)
 
         self._write_wrapfunctions_cpp()
@@ -2762,6 +2885,8 @@ class ODEExporter:
             symbol_name = strip_pysb(symbol)
             if str(symbol) == '0':
                 continue
+            if str(symbol_name) == '':
+                raise ValueError(f'{name} contains a symbol called ""')
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )
@@ -2805,13 +2930,33 @@ class ODEExporter:
 
         lines.append('')
 
-        for sym in self.model.sym_names():
-            # added |double for data
-            # added '[0]*' for initial conditions
-            if re.search(
-                    fr'const (realtype|double) \*{sym}[0]*[,)]+', signature
-            ) or (function == sym and function not in non_unique_id_symbols):
-                lines.append(f'#include "{self.model_name}_{sym}.h"')
+        # extract symbols that need definitions from signature
+        # don't add includes for files that won't be generated.
+        # Unfortunately we cannot check for `self.functions[sym]['body']`
+        # here since it may not have been generated yet.
+        for match in re.findall(
+                fr'const (realtype|double) \*([\w]+)[0]*[,\)]+', signature
+        ):
+            sym = match[1]
+            if sym not in self.model.sym_names():
+                continue
+
+            if sym in sparse_functions:
+                iszero = smart_is_zero_matrix(self.model.sparseeq(sym))
+            elif sym in self.functions:
+                iszero = smart_is_zero_matrix(self.model.eq(sym))
+            else:
+                iszero = len(self.model.sym(sym)) == 0
+
+            if iszero:
+                continue
+
+            lines.append(f'#include "{self.model_name}_{sym}.h"')
+
+        # include return symbols
+        if function in self.model.sym_names() and \
+                function not in non_unique_id_symbols:
+            lines.append(f'#include "{self.model_name}_{function}.h"')
 
         lines.extend([
             '',
@@ -2832,7 +2977,11 @@ class ODEExporter:
             # starting (^|\W) for the following match
             body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
-        self.functions[function]['body'] = body
+
+        if body:
+            self.functions[function]['body'] = body
+        else:
+            return
         lines += body
         lines.extend([
             '}',
@@ -3036,6 +3185,12 @@ class ODEExporter:
                     f'{_print_with_exception(formula)};')
 
         elif function in event_functions:
+            cases = {ie: _get_sym_lines_array(equations[ie], function, 0)
+                     for ie in range(self.model.num_events())
+                     if not smart_is_zero_matrix(equations[ie])}
+            lines.extend(get_switch_statement('ie', cases, 1))
+
+        elif function in event_sensi_functions:
             outer_cases = {}
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []
@@ -3124,12 +3279,16 @@ class ODEExporter:
             'NEVENT': str(self.model.num_events()),
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDP': str(len(self.model.sparsesym('dwdp'))),
+            'NDWDP': str(len(self.model.sparsesym(
+                'dwdp', force_generate=self.generate_sensitivity_code
+            ))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDWDW': str(len(self.model.sparsesym('dwdw'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
-                'dxdotdp_explicit'))),
+                'dxdotdp_explicit',
+                force_generate=self.generate_sensitivity_code
+            ))),
             'NDXDOTDX_EXPLICIT': str(len(self.model.sparsesym(
                 'dxdotdx_explicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
@@ -3174,11 +3333,39 @@ class ODEExporter:
                 if self.model._has_quadratic_nllh else 'false',
         }
 
-        for fun in [
-            'w', 'dwdp', 'dwdx', 'dwdw', 'x_rdata', 'x_solver', 'total_cl',
-            'dxdotdw', 'dxdotdp_explicit', 'dxdotdx_explicit',
-            'dJydy'
-        ]:
+        for fun, fundef in self.functions.items():
+            if fun in nobody_functions:
+                continue
+
+            if 'body' not in fundef:
+                tpl_data[f'{fun.upper()}_DEF'] = ''
+
+                if fun in sensi_functions + sparse_sensi_functions and \
+                        not self.generate_sensitivity_code:
+                    impl = ''
+                else:
+                    impl = get_model_override_implementation(
+                        fun, self.model_name, nobody=True
+                    )
+
+                tpl_data[f'{fun.upper()}_IMPL'] = impl
+
+                if fun in sparse_functions:
+                    for indexfield in ['colptrs', 'rowvals']:
+                        if fun in sparse_sensi_functions and \
+                                not self.generate_sensitivity_code:
+                            impl = ''
+                        else:
+                            impl = get_sunindex_override_implementation(
+                                fun, self.model_name, indexfield, nobody=True
+                            )
+                        tpl_data[f'{fun.upper()}_{indexfield.upper()}_DEF'] \
+                            = ''
+                        tpl_data[f'{fun.upper()}_{indexfield.upper()}_IMPL'] \
+                            = impl
+
+                continue
+
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
             tpl_data[f'{fun.upper()}_IMPL'] = \
@@ -3254,18 +3441,10 @@ class ODEExporter:
         Write CMake CMakeLists.txt file for this model.
         """
 
-        sources = [self.model_name + '_' + function + '.cpp '
-                   for function in self.functions.keys()
-                   if self.functions[function].get('body', None) is not None]
-
-        # add extra source files for sparse matrices
-        for function in sparse_functions:
-            sources.append(self.model_name + '_' + function
-                           + '_colptrs.cpp')
-            sources.append(self.model_name + '_' + function
-                           + '_rowvals.cpp ')
-
-        sources.append(f'{self.model_name}.cpp')
+        sources = [
+            f + ' ' for f in os.listdir(self.model_path)
+            if f.endswith('.cpp') and f != 'main.cpp'
+        ]
 
         template_data = {'MODELNAME': self.model_name,
                          'SOURCES': '\n'.join(sources),
@@ -3447,7 +3626,8 @@ def get_sunindex_extern_declaration(fun: str, name: str,
         f'(SUNMatrixWrapper &{indextype}{index_arg});'
 
 
-def get_model_override_implementation(fun: str, name: str) -> str:
+def get_model_override_implementation(fun: str, name: str,
+                                      nobody: bool = False) -> str:
     """
     Constructs amici::Model::* override implementation for a given function
 
@@ -3457,14 +3637,21 @@ def get_model_override_implementation(fun: str, name: str) -> str:
     :param name:
         model name
 
+    :param nobody:
+        whether the function has a nontrivial implementation
+
     :return:
         c++ function implementation string
 
     """
-    return \
-        'virtual void f{fun}{signature} override {{\n' \
-        '{ind8}{fun}_{name}{eval_signature};\n' \
-        '{ind4}}}\n'.format(
+    impl = 'virtual void f{fun}{signature} override {{'
+
+    if nobody:
+        impl += '}}\n'
+    else:
+        impl += '\n{ind8}{fun}_{name}{eval_signature};\n{ind4}}}\n'
+
+    return impl.format(
             ind4=' '*4,
             ind8=' '*8,
             fun=fun,
@@ -3475,7 +3662,8 @@ def get_model_override_implementation(fun: str, name: str) -> str:
 
 
 def get_sunindex_override_implementation(fun: str, name: str,
-                                         indextype: str) -> str:
+                                         indextype: str,
+                                         nobody: bool = False) -> str:
     """
     Constructs the amici::Model:: function implementation for an index
     function of a given function
@@ -3489,6 +3677,9 @@ def get_sunindex_override_implementation(fun: str, name: str,
     :param indextype:
         index function {'colptrs', 'rowvals'}
 
+    :param nobody:
+        whether the corresponding function has a nontrivial implementation
+
     :return:
         c++ function implementation string
 
@@ -3496,10 +3687,14 @@ def get_sunindex_override_implementation(fun: str, name: str,
     index_arg = ', int index' if fun in multiobs_functions else ''
     index_arg_eval = ', index' if fun in multiobs_functions else ''
 
-    return \
-        'virtual void f{fun}_{indextype}{signature} override {{\n' \
-        '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
-        '{ind4}}}\n'.format(
+    impl = 'virtual void f{fun}_{indextype}{signature} override {{'
+
+    if nobody:
+        impl += '}}\n'
+    else:
+        impl += '{ind8}{fun}_{indextype}_{name}{eval_signature};\n{ind4}}}\n'
+
+    return impl.format(
             ind4=' '*4,
             ind8=' '*8,
             fun=fun,
@@ -3535,10 +3730,11 @@ def remove_typedefs(signature: str) -> str:
         'const int ',
         'int ',
         'SUNMatrixContent_Sparse ',
+        'gsl::span<const int>'
     ]
 
     for typedef in typedefs:
-        signature = signature.replace(typedef, ' ')
+        signature = signature.replace(typedef, '')
 
     return signature
 
