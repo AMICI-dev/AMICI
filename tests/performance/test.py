@@ -6,6 +6,7 @@ import petab
 import subprocess
 import os
 import re
+import shutil
 
 from amici.petab_import import import_model
 
@@ -21,10 +22,9 @@ def main():
     else:
         suffix = ''
 
-    model_name = 'CS_Signalling_ERBB_RAS_AKT_petab' + suffix
-
-    if arg == 'compilation':
-
+    model_dir = 'CS_Signalling_ERBB_RAS_AKT_petab' + suffix
+    model_name = 'CS_Signalling_ERBB_RAS_AKT_petab'
+    if arg == 'import':
         git_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT')
         if not os.path.exists(git_dir):
             subprocess.run([
@@ -37,7 +37,6 @@ def main():
             'FroehlichKes2018/PEtab/FroehlichKes2018.yaml'
         )
         petab.lint_problem(pp)
-        os.chdir(os.path.dirname(os.path.abspath(os.curdir)))
         import_model(model_name=model_name,
                      sbml_model=pp.sbml_model,
                      condition_table=pp.condition_df,
@@ -46,13 +45,20 @@ def main():
                      compile=False,
                      verbose=True)
         os.chdir(os.path.join(os.curdir,
-                              model_name))
-
-        subprocess.run(['python', 'setup.py', 'install'])
+                              model_dir))
 
         return
+    elif arg == 'compile':
+        if model_name != model_dir:
+            shutil.copytree(os.path.join(os.curdir, model_name),
+                            os.path.join(os.curdir, model_dir))
+
+        os.chdir(os.path.join(os.curdir, model_dir))
+
+        subprocess.run(['python', 'setup.py', 'install'])
+        return
     else:
-        model_module = amici.import_model_module(model_name, model_name)
+        model_module = amici.import_model_module(model_name, model_dir)
         model = model_module.getModel()
         solver = model.getSolver()
         # TODO
