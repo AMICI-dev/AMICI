@@ -1,5 +1,38 @@
 # Changelog 
 
+## v0.11.14 (2021-03-16)
+
+New features:
+* **Python import now supports SBML Events** (#1443)
+* Implement support for compilation without sensitivities (#1454)
+
+Fixes:
+  * Issue #1446: Check whether constant parameters are valid targets (#1450)
+  * Issue #1422: Fix Steadystate solver failing if preequilibration starts in
+    steadystate (#1461)
+  * Issue #1401: Ensure diagnostics variables in ReturnData are always of
+    expected length (#1438, #1447)
+  * Fix FIM approximation for parameter dependent sigma (#1441)
+  * Fix invalid SBML in PEtab/PySB import (#1433)
+  * Fix: No context for inspect.getouterframes (#1432)
+
+Documentation:
+* Added this CHANGELOG
+* Added feature request issue template (#1437)
+* Updated reference list (#1430)
+* Overhauled experimental conditions notebook (#1460)
+
+CI:
+* Test Matlab interface on GHA  (#1451)
+* Include componentTags in SBML test suite output (#1462)
+* Split SBML semantic test suite into multiple jobs (#1452)
+* Fix Crauste ref val, fixes #1458 (#1459)
+
+Misc:
+* Various cleanup (#1465, #1448, #1455)
+* Micro-optimize SUNMatrixWrapper::transpose (#1439)
+* Remove constant triggers from roots in Heaviside (#1440)
+
 ## v0.11.13 (2021-02-20)
 
 Breaking changes:
