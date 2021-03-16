@@ -80,6 +80,10 @@ def test_sbml_testsuite_case(test_number, result_path):
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
+        if rdata['status'] != amici.AMICI_SUCCESS and test_id in [
+            '00748', '00374', '00369'
+        ]:
+            raise amici.sbml_import.SBMLException('Simulation Failed')
 
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
@@ -264,8 +268,7 @@ def compile_model(path, test_id, model_dir):
                        generate_sensitivity_code=False)
 
     # settings
-    sys.path.insert(0, model_dir)
-    model_module = importlib.import_module(model_name)
+    model_module = amici.import_model_module(model_name, model_dir)
 
     model = model_module.getModel()
     solver = model.getSolver()

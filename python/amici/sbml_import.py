@@ -345,6 +345,14 @@ class SbmlImporter:
             sbml.L3P_PARSE_LOG_AS_LN
         )
         self._process_sbml(constant_parameters)
+        if self.symbols.get(SymbolId.EVENT, False):
+            if compute_conservation_laws:
+                logger.warning(
+                    'Conservation laws are currently not supported for models '
+                    'with events, and will be turned off.'
+                )
+            compute_conservation_laws = False
+
         self._process_observables(observables, sigmas, noise_distributions)
         self._replace_compartments_with_volumes()
 
@@ -390,6 +398,7 @@ class SbmlImporter:
         self._process_rules()
         self._process_initial_assignments()
         self._process_species_references()
+        self._process_events()
 
     def check_support(self) -> None:
         """
@@ -400,9 +409,6 @@ class SbmlImporter:
         if hasattr(self.sbml, 'all_elements_from_plugins') \
                 and self.sbml.all_elements_from_plugins.getSize():
             raise SBMLException('SBML extensions are currently not supported!')
-
-        if self.sbml.getNumEvents():
-            raise SBMLException('Events are currently not supported!')
 
         if any([not rule.isAssignment() and not isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
@@ -419,11 +425,68 @@ class SbmlImporter:
                 ) for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Only assignment and rate rules are '
                                 'currently supported for compartments, '
-                                'species, and parameters! Error '
-                                f'occurred with rule: {rule.getVariable()}')
+                                'species, and parameters!')
 
         if any([r.getFast() for r in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
+
+        # Check events for unsupported functionality
+        self.check_event_support()
+
+    def check_event_support(self) -> None:
+        """
+        Check possible events in the model, as AMICI does currently not support
+
+        * delays in events
+        * priorities of events
+        * events fired at initial time
+
+        Furthermore, event triggers are optional (e.g., if an event is fired at
+        initial time, no trigger function is necessary).
+        In this case, warn that this event will have no effect.
+        """
+        for event in self.sbml.getListOfEvents():
+            event_id = event.getId()
+            # Check for delays in events
+            delay = event.getDelay()
+            if delay is not None:
+                try:
+                    delay_time = float(self._sympy_from_sbml_math(delay))
+                    if delay_time != 0:
+                        raise ValueError
+                # `TypeError` would be raised in the above `float(...)`
+                # if the delay is not a fixed time
+                except (TypeError, ValueError):
+                    raise SBMLException('Events with execution delays are '
+                                        'currently not supported in AMICI.')
+            # Check for priorities
+            if event.getPriority() is not None:
+                raise SBMLException(f'Event {event_id} has a priority '
+                                    'specified. This is currently not '
+                                    'supported in AMICI.')
+
+            # check trigger
+            trigger_sbml = event.getTrigger()
+            if trigger_sbml is None:
+                logger.warning(f'Event {event_id} trigger has no trigger, '
+                               'so will be skipped.')
+                continue
+            if trigger_sbml.getMath() is None:
+                logger.warning(f'Event {event_id} trigger has no trigger '
+                               'expression, so a dummy trigger will be set.')
+            if not trigger_sbml.getInitialValue():
+                # True: event not executed if triggered at time == 0
+                # (corresponding to AMICI default). Raise if set to False.
+                raise SBMLException(
+                    f'Event {event_id} has a trigger that has an initial '
+                    'value of False. This is currently not supported in AMICI.'
+                )
+
+            if not trigger_sbml.getPersistent():
+                raise SBMLException(
+                    f'Event {event_id} has a non-persistent trigger.'
+                    'This is currently not supported in AMICI.'
+                )
 
     @log_execution_time('gathering local SBML symbols', logger)
     def _gather_locals(self) -> None:
@@ -578,6 +641,7 @@ class SbmlImporter:
                 'index': len(self.symbols[SymbolId.SPECIES]),
             }
 
+        self._convert_event_assignment_parameter_targets_to_species()
         self._process_species_initial()
         self._process_rate_rules()
 
@@ -620,11 +684,10 @@ class SbmlImporter:
     @log_execution_time('processing SBML rate rules', logger)
     def _process_rate_rules(self):
         """
-        Process assignment and rate rules for species, compartments and
-        parameters. Compartments and parameters with rate rules are
-        implemented as species. Note that, in the case of species,
-        rate rules may describe the change in amount, not concentration,
-        of a species.
+        Process rate rules for species, compartments and parameters.
+        Compartments and parameters with rate rules are implemented as species.
+        Note that, in the case of species, rate rules may describe the change
+        in amount, not concentration, of a species.
         """
         rules = self.sbml.getListOfRules()
         # compartments with rules are replaced with constants in the relevant
@@ -883,6 +946,179 @@ class SbmlImporter:
         self.amici_time_symbol = amici_time_symbol
 
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
+
+    def _convert_event_assignment_parameter_targets_to_species(self):
+        """
+        Convert parameters that are targets of event assignments to species.
+
+        This is for the convenience of only implementing event assignments for
+        "species".
+        """
+        parameter_targets = \
+            _collect_event_assignment_parameter_targets(self.sbml)
+        for parameter_target in parameter_targets:
+            # Parameter rate rules already exist as species.
+            if parameter_target in self.symbols[SymbolId.SPECIES]:
+                continue
+            if parameter_target in self.parameter_assignment_rules:
+                raise SBMLException(
+                    'AMICI does not currently support models with SBML events '
+                    'that affect parameters that are also the target of '
+                    'assignment rules.'
+                )
+            parameter_def = None
+            for symbol_id in {SymbolId.PARAMETER, SymbolId.FIXED_PARAMETER}:
+                if parameter_target in self.symbols[symbol_id]:
+                    # `parameter_target` should only exist in one of the
+                    # `symbol_id` dictionaries.
+                    if parameter_def is not None:
+                        raise AssertionError(
+                            'Unexpected error. The parameter target of an '
+                            'event assignment was processed twice.'
+                        )
+                    parameter_def = \
+                        self.symbols[symbol_id].pop(parameter_target)
+            if parameter_def is None:
+                raise AssertionError(
+                    'Unexpected error. The parameter target of an event '
+                    'assignment could not be found.'
+                )
+            # Fixed parameters are added as species such that they can be
+            # targets of events.
+            self.symbols[SymbolId.SPECIES][parameter_target] = {
+                'name': parameter_def['name'],
+                'init': sp.Float(parameter_def['value']),
+                # 'compartment': None,  # can ignore for amounts
+                'constant': False,
+                'amount': True,
+                # 'conversion_factor': 1.0,  # can be ignored
+                'index': len(self.symbols[SymbolId.SPECIES]),
+                'dt': sp.Float(0),
+            }
+
+    @log_execution_time('processing SBML events', logger)
+    def _process_events(self) -> None:
+        """Process SBML events."""
+        events = self.sbml.getListOfEvents()
+
+        def get_empty_bolus_value() -> sp.Float:
+            """
+            Used in the event update vector for species that are not affected
+            by the event.
+            """
+            return sp.Symbol('AMICI_EMTPY_BOLUS')
+
+        # Used to update species concentrations when an event affects a
+        # compartment.
+        concentration_species_by_compartment = {
+            symbol_with_assumptions(c.getId()): []
+            for c in self.sbml.getListOfCompartments()
+        }
+        for species, species_def in self.symbols[SymbolId.SPECIES].items():
+            if (
+                    # Species is a concentration
+                    not species_def.get('amount', True) and
+                    # Species has a compartment
+                    'compartment' in species_def
+            ):
+                concentration_species_by_compartment[
+                    species_def['compartment']
+                ].append(species)
+
+        for ievent, event in enumerate(events):
+            # get the event id (which is optional unfortunately)
+            event_id = event.getId()
+            if event_id is None or event_id == '':
+                event_id = f'event_{ievent}'
+            event_sym = sp.Symbol(event_id)
+
+            # get and parse the trigger function
+            trigger_sbml = event.getTrigger()
+            trigger_sym = self._sympy_from_sbml_math(trigger_sbml)
+            trigger = _parse_event_trigger(trigger_sym)
+
+            # Currently, all event assignment targets must exist in
+            # self.symbols[SymbolId.SPECIES]
+            state_vector = list(self.symbols[SymbolId.SPECIES].keys())
+
+            # parse the boluses / event assignments
+            bolus = [get_empty_bolus_value() for _ in state_vector]
+            event_assignments = event.getListOfEventAssignments()
+            compartment_event_assignments = set()
+            for event_assignment in event_assignments:
+                variable_sym = \
+                    symbol_with_assumptions(event_assignment.getVariable())
+                if event_assignment.getMath() is None:
+                    # Ignore event assignments with no change in value.
+                    continue
+                formula = self._sympy_from_sbml_math(event_assignment)
+                try:
+                    # Try to find the species in the state vector.
+                    index = state_vector.index(variable_sym)
+                    bolus[index] = formula
+                except ValueError:
+                    raise SBMLException(
+                        'Could not process event assignment for '
+                        f'{str(variable_sym)}. AMICI currently only allows '
+                        'event assignments to species; parameters; or, '
+                        'compartments with rate rules, at the moment.'
+                    )
+                try:
+                    # Try working with the formula now to detect errors
+                    # here instead of at multiple points downstream.
+                    _ = formula - variable_sym
+                except TypeError:
+                    raise SBMLException(
+                        'Could not process event assignment for '
+                        f'{str(variable_sym)}. AMICI only allows symbolic '
+                        'expressions as event assignments.'
+                    )
+                if variable_sym in concentration_species_by_compartment:
+                    compartment_event_assignments.add(variable_sym)
+
+                for comp, assignment in \
+                        self.compartment_assignment_rules.items():
+                    if variable_sym not in assignment.free_symbols:
+                        continue
+                    compartment_event_assignments.add(comp)
+
+            # Update the concentration of species with concentration units
+            # in compartments that were affected by the event assignments.
+            for compartment_sym in compartment_event_assignments:
+                for species_sym in concentration_species_by_compartment[
+                        compartment_sym
+                ]:
+                    # If the species was not affected by an event assignment
+                    # then the old value should be updated.
+                    if (
+                            bolus[state_vector.index(species_sym)]
+                            == get_empty_bolus_value()
+                    ):
+                        species_value = species_sym
+                    # else the species was affected by an event assignment,
+                    # hence the updated value should be updated further.
+                    else:
+                        species_value = bolus[state_vector.index(species_sym)]
+                    # New species value is old amount / new volume.
+                    bolus[state_vector.index(species_sym)] = (
+                        species_value * compartment_sym / formula
+                    )
+
+            # Subtract the current species value from each species with an
+            # update, as the bolus will be added on to the current species
+            # value during simulation.
+            for index in range(len(bolus)):
+                if bolus[index] != get_empty_bolus_value():
+                    bolus[index] -= state_vector[index]
+                bolus[index] = bolus[index].subs(get_empty_bolus_value(),
+                                                 sp.Float(0.0))
+
+            self.symbols[SymbolId.EVENT][event_sym] = {
+                'name': event_id,
+                'value': trigger,
+                'state_update': sp.MutableDenseMatrix(bolus),
+                'event_observable': None,
+            }
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(
@@ -1244,7 +1480,8 @@ class SbmlImporter:
                     for k, v in self.symbols[symbol].items()
                 }
 
-            for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY]:
+            for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY,
+                           SymbolId.SIGMAY]:
                 if old not in self.symbols[symbol]:
                     continue
                 self.symbols[symbol][new] = self.symbols[symbol][old]
@@ -1252,11 +1489,18 @@ class SbmlImporter:
 
         # replace in values
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
-                       SymbolId.EXPRESSION]:
+                       SymbolId.EXPRESSION, SymbolId.EVENT]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
                 element['value'] = smart_subs(element['value'], old, new)
+
+        # replace in event state updates (boluses)
+        if self.symbols.get(SymbolId.EVENT, False):
+            for event in self.symbols[SymbolId.EVENT].values():
+                for index in range(len(event['state_update'])):
+                    event['state_update'][index] = \
+                        smart_subs(event['state_update'][index], old, new)
 
         if SymbolId.SPECIES in self.symbols:
             for species in self.symbols[SymbolId.SPECIES].values():
@@ -1283,7 +1527,8 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't']
+        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't',
+                            'AMICI_EMPTY_BOLUS']
         for sym in reserved_symbols:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
@@ -1556,7 +1801,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
     if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
-        
+
     elif toplevel and isinstance(sym, BooleanAtom):
         # Replace boolean constants by numbers so they can be differentiated
         #  must not replace in Piecewise function. Therefore, we only replace
@@ -1568,7 +1813,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 def _denest_piecewise(
         args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
-    ) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
+) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
     """
     Denest piecewise functions that contain piecewise as condition
 
@@ -1613,8 +1858,8 @@ def _denest_piecewise(
 
 def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     """
-    Piecewise functions cannot be transformed into C++ right away, but AMICI has
-    a special interface for Heaviside function, so we transform them
+    Piecewise functions cannot be transformed into C++ right away, but AMICI
+    has a special interface for Heaviside functions, so we transform them.
 
     :param args:
         symbolic expressions for arguments of the piecewise function
@@ -1633,14 +1878,14 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
         if trigger == sp.false:
             continue
 
-        tmp = _parse_trigger(trigger)
+        tmp = _parse_heaviside_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
         not_condition *= (1-tmp)
 
     return formula
 
 
-def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
+def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     Recursively translates a boolean trigger function into a real valued
     root function
@@ -1650,6 +1895,7 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
+        _check_unsupported_functions(root, 'sympy.Expression')
 
         # normalize such that we always implement <,
         # this ensures that we can correctly evaluate the condition if
@@ -1671,15 +1917,56 @@ def _parse_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return 1-sp.Mul(*[1-_parse_trigger(arg)
+        return 1-sp.Mul(*[1-_parse_heaviside_trigger(arg)
                         for arg in trigger.args])
 
     if isinstance(trigger, sp.And):
-        return sp.Mul(*[_parse_trigger(arg)
+        return sp.Mul(*[_parse_heaviside_trigger(arg)
                         for arg in trigger.args])
 
-    raise SBMLException('AMICI can not parse piecewise functions '
-                        f'with argument {trigger}.')
+    raise SBMLException(
+        'AMICI can not parse piecewise/event trigger functions with argument '
+        f'{trigger}.'
+    )
+
+
+def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
+    """
+    Recursively translates a boolean trigger function into a real valued
+    root function
+
+    :param trigger:
+    :return: real valued root function expression
+    """
+    # Events can be defined without trigger, i.e., the event will never fire.
+    # In this case, set a dummy trigger:
+    if trigger is None:
+        return sp.Float(1.0)
+    if trigger.is_Relational:
+        root = trigger.args[0] - trigger.args[1]
+        _check_unsupported_functions(root, 'sympy.Expression')
+
+        # convert relational expressions into trigger functions
+        if isinstance(trigger, sp.core.relational.LessThan) or \
+                isinstance(trigger, sp.core.relational.StrictLessThan):
+            # y < x or y <= x
+            return -root
+        if isinstance(trigger, sp.core.relational.GreaterThan) or \
+                isinstance(trigger, sp.core.relational.StrictGreaterThan):
+            # y >= x or y > x
+            return root
+
+    # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
+    if isinstance(trigger, sp.Or):
+        return sp.Max(*[_parse_event_trigger(arg) for arg in trigger.args])
+    # and(x,y): all out of {x,y} are > 0: sp.Min(x, y)
+    if isinstance(trigger, sp.And):
+        return sp.Min(*[_parse_event_trigger(arg) for arg in trigger.args])
+
+    raise SBMLException(
+        'AMICI can not parse piecewise/event trigger functions with argument '
+        f'{trigger}.'
+    )
 
 
 def _parse_logical_operators(math_str: Union[str, float, None]
@@ -1895,3 +2182,17 @@ def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     return re.sub(
         r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', math_str
     )
+
+
+def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
+    targets = set()
+    sbml_parameters = sbml_model.getListOfParameters()
+    sbml_parameter_ids = [p.getId() for p in sbml_parameters]
+    for event in sbml_model.getListOfEvents():
+        for event_assignment in event.getListOfEventAssignments():
+            target_id = event_assignment.getVariable()
+            if target_id in sbml_parameter_ids:
+                targets.add(_get_identifier_symbol(
+                    sbml_parameters[sbml_parameter_ids.index(target_id)]
+                ))
+    return targets

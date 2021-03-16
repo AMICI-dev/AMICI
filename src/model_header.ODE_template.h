@@ -62,6 +62,7 @@ TPL_SX0_FIXEDPARAMETERS_DEF
 TPL_XDOT_DEF
 TPL_Y_DEF
 TPL_STAU_DEF
+TPL_DELTAX_DEF
 TPL_DELTASX_DEF
 TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
@@ -228,21 +229,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_DELTASX_IMPL
 
-    /** model specific implementation of fdeltax
-     * @param deltax state update
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     * @param ie event index
-     * @param xdot new model right hand side
-     * @param xdot_old previous model right hand side
-     **/
-    virtual void fdeltax(realtype *deltax, const realtype t, const realtype *x,
-                         const realtype *p, const realtype *k,
-                         const realtype *h, const int ie, const realtype *xdot,
-                         const realtype *xdot_old) override {}
+    TPL_DELTAX_IMPL
 
     /** model specific implementation of fdeltaxB
      * @param deltaxB adjoint state update
