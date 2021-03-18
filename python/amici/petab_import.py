@@ -579,9 +579,9 @@ def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
 
     def unfloatable(x: str) -> bool:
         if isinstance(x, numbers.Number):
-            return True
-        if not isinstance(x, str):
             return False
+        if not isinstance(x, str):
+            return True
         try:
             [float(y) for y in x.split(';')]
             return False
