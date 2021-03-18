@@ -460,8 +460,8 @@ def import_model_sbml(
     sbml_model = sbml_importer.sbml
 
     if observable_df is not None:
-        observables, noise_distrs, sigmas = \
-            get_observation_model(observable_df)
+        observables, noise_distrs, sigmas, observable_df, measurement_table = \
+            get_observation_model(observable_df, measurement_table)
 
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
@@ -574,24 +574,56 @@ def import_model_sbml(
 import_model = import_model_sbml
 
 
-def get_observation_model(observable_df: pd.DataFrame
+def get_observation_model(observable_df: pd.DataFrame,
+                          measurement_df: pd.DataFrame,
                           ) -> Tuple[Dict[str, Dict[str, str]],
                                      Dict[str, str],
-                                     Dict[str, Union[str, float]]]:
+                                     Dict[str, Union[str, float]],
+                                     pd.DataFrame, pd.DataFrame]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
-    table in a format suitable for
+    table and measurement table in a format suitable for
     :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
 
     :param observable_df:
         PEtab observables table
 
+    :param measurement_df:
+        PEtab measurement table
+
     :return:
-        Tuple of dicts with observables, noise distributions, and sigmas.
+        Tuple of dicts with observables, noise distributions, and sigmas and
+        updated observable + measurement table
     """
 
     if observable_df is None:
-        return {}, {}, {}
+        return dict(), dict(), dict(), observable_df, measurement_df
+
+    new_measurement_dfs = []
+    new_observable_dfs = []
+    for (obs_id, obs_pars, noise_pars, cond_id, preeq_id), measurements in \
+            measurement_df.groupby([
+                petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
+                petab.NOISE_PARAMETERS, petab.SIMULATION_CONDITION_ID,
+                petab.PREEQUILIBRATION_CONDITION_ID
+            ], dropna=False):
+        replacement_id = \
+            f'{obs_id}_{obs_pars}_{noise_pars}_{cond_id}_{preeq_id}'
+        if replacement_id in observable_df.index:
+            raise RuntimeError('could not create synthetic observables since'
+                               f'{replacement_id} was already present in '
+                               f'observable table')
+        observable = observable_df.loc[obs_id]
+        observable[petab.OBSERVABLE_PARAMETERS] = obs_pars
+        observable[petab.NOISE_PARAMETERS] = noise_pars
+        measurements[petab.OBSERVABLE_ID] = replacement_id
+        measurements[petab.NOISE_PARAMETERS] = 'nan'
+        measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
+        new_measurement_dfs.append(measurements)
+        new_observable_dfs.append(observable)
+
+    observable_df = pd.concat(new_observable_dfs, axis=1).T
+    measurement_df = pd.concat(new_measurement_dfs)
 
     observables = {}
     sigmas = {}
@@ -614,7 +646,7 @@ def get_observation_model(observable_df: pd.DataFrame
 
     noise_distrs = petab_noise_distributions_to_amici(observable_df)
 
-    return observables, noise_distrs, sigmas
+    return observables, noise_distrs, sigmas, observable_df, measurement_df
 
 
 def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
