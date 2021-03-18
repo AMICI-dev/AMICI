@@ -6,8 +6,8 @@ Becker_Science2010:
   llh: -364.118614198023
 
 Beer_MolBioSystems2014:
-  llh: -58169.61485720315
-  note: benchmark collection reference parameters do not match petab, but reference llh has been confirmed for parameters reported there
+  llh: 58622.9145631413
+  note: benchmark collection reference parameters do not match petab, but reference llh has been confirmed for parameters reported there up to sign
 
 Boehm_JProteomeRes2014:
   llh: -138.22199693517703
