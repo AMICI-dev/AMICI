@@ -15,7 +15,7 @@ Elowitz_Nature2000
 Fujita_SciSignal2010
 Schwen_PONE2014
 Sneyd_PNAS2002
-Weber_BMC2015\
+Weber_BMC2015
 Zheng_PNAS2012"
 
 #
