@@ -574,6 +574,90 @@ def import_model_sbml(
 import_model = import_model_sbml
 
 
+def flatten_timepoint_specific_overrides(
+        observable_df: pd.DataFrame, measurement_df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    This function flattens out zny measurement specific specifications of
+    noise or observable parameters by creating synthetic observables for
+    every unique occurence.
+
+    :param observable_df:
+        PEtab observables table
+
+    :param measurement_df:
+        PEtab measurement table
+
+    :return:
+        updated observable + measurement table
+    """
+
+    def floatable(x: str):
+        try:
+            [float(x) for x in x.split(';')]
+            return True
+        except ValueError:
+            return False
+
+    nan_pat = r'^[nN]a[nN]$'
+
+    has_timepoint_noise_overrides, has_timepoint_observable_overrides = [
+        len([x for x in measurement_df[field].unique()
+             if isinstance(x, str) and not re.match(nan_pat, x)
+             and not floatable(x)]) > 0
+        if field in measurement_df else False
+        for field in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
+    ]
+
+    if not has_timepoint_noise_overrides and \
+            not has_timepoint_observable_overrides:
+        return observable_df, measurement_df
+
+    if petab.OBSERVABLE_PARAMETERS not in measurement_df:
+        measurement_df[petab.OBSERVABLE_PARAMETERS] = 'nan'
+
+    if petab.NOISE_PARAMETERS not in measurement_df:
+        measurement_df[petab.NOISE_PARAMETERS] = 'nan'
+
+    new_measurement_dfs = []
+    new_observable_dfs = []
+    for (obs_id, obs_pars, noise_pars), measurements in \
+            measurement_df.groupby([
+                petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
+                petab.NOISE_PARAMETERS,
+            ], dropna=False):
+        replacement_id = \
+            f'{obs_id}__{obs_pars.replace(";", "_")}__' \
+            f'{obs_pars.replace(";", "_")}'
+        logger.debug(f'Creating synthetic observable {obs_id} with '
+                     f'observable parameters {obs_pars} and noise '
+                     f'parameters {noise_pars}')
+        if replacement_id in observable_df.index:
+            raise RuntimeError('could not create synthetic observables '
+                               f'since {replacement_id} was already '
+                               'present in observable table')
+        observable = observable_df.loc[obs_id]
+        observable.name = replacement_id
+        for name, values, target in [
+            ('observableParameter', obs_pars, petab.OBSERVABLE_FORMULA),
+            ('noiseParameter', noise_pars, petab.NOISE_FORMULA)
+        ]:
+            if target not in observable:
+                continue
+            for ipar, par in enumerate(obs_pars.split(';')):
+                observable[target] = observable[target].replace(
+                    f'{name}{ipar + 1}_{obs_id}', par
+                )
+        measurements[petab.OBSERVABLE_ID] = replacement_id
+        measurements[petab.NOISE_PARAMETERS] = 'nan'
+        measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
+        new_measurement_dfs.append(measurements)
+        new_observable_dfs.append(observable)
+
+    return pd.concat(new_observable_dfs, axis=1).T, \
+           pd.concat(new_measurement_dfs)
+
+
 def get_observation_model(observable_df: pd.DataFrame,
                           measurement_df: pd.DataFrame,
                           ) -> Tuple[Dict[str, Dict[str, str]],
@@ -599,70 +683,14 @@ def get_observation_model(observable_df: pd.DataFrame,
     if observable_df is None:
         return dict(), dict(), dict(), observable_df, measurement_df
 
-    nan_pat = r'^[nN]a[nN]$'
-
-    def floatable(x: str):
-        try:
-            [float(x) for x in x.split(';')]
-            return True
-        except ValueError:
-            return False
-
-    has_timepoint_noise_overrides, has_timepoint_observable_overrides = [
-        len([x for x in measurement_df[field].unique()
-             if isinstance(x, str) and not re.match(nan_pat, x)
-             and not floatable(x)]) > 0
-        if field in measurement_df else False
-        for field in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
-    ]
-
-    if has_timepoint_noise_overrides or has_timepoint_observable_overrides:
-        if petab.OBSERVABLE_PARAMETERS not in measurement_df:
-            measurement_df[petab.OBSERVABLE_PARAMETERS] = 'nan'
-
-        if petab.NOISE_PARAMETERS not in measurement_df:
-            measurement_df[petab.NOISE_PARAMETERS] = 'nan'
-
-        new_measurement_dfs = []
-        new_observable_dfs = []
-        for (obs_id, obs_pars, noise_pars), measurements in \
-                measurement_df.groupby([
-                    petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
-                    petab.NOISE_PARAMETERS,
-                ], dropna=False):
-            replacement_id = \
-                f'{obs_id}__{obs_pars.replace(";", "_")}__' \
-                f'{obs_pars.replace(";", "_")}'
-            logger.debug(f'Creating synthetic observable {obs_id} with '
-                         f'observable parameters {obs_pars} and noise '
-                         f'parameters {noise_pars}')
-            if replacement_id in observable_df.index:
-                raise RuntimeError('could not create synthetic observables '
-                                   f'since {replacement_id} was already '
-                                   'present in observable table')
-            observable = observable_df.loc[obs_id]
-            for name, values, target in [
-                ('observableParameter', obs_pars, petab.OBSERVABLE_FORMULA),
-                ('noiseParameter', noise_pars, petab.NOISE_FORMULA)
-            ]:
-                if target not in observable:
-                    continue
-                for ipar, par in enumerate(obs_pars.split(';')):
-                    observable[target] = observable[target].replace(
-                        f'{name}{ipar+1}_{obs_id}', par
-                    )
-            measurements[petab.OBSERVABLE_ID] = replacement_id
-            measurements[petab.NOISE_PARAMETERS] = 'nan'
-            measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
-            new_measurement_dfs.append(measurements)
-            new_observable_dfs.append(observable)
-
-        observable_df = pd.concat(new_observable_dfs, axis=1).T
-        measurement_df = pd.concat(new_measurement_dfs)
+    observable_df, measurement_df = flatten_timepoint_specific_overrides(
+        observable_df, measurement_df
+    )
 
     observables = {}
     sigmas = {}
 
+    nan_pat = r'^[nN]a[nN]$'
     for _, observable in observable_df.iterrows():
         oid = observable.name
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
