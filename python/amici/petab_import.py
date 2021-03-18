@@ -610,14 +610,13 @@ def get_observation_model(observable_df: pd.DataFrame,
     if has_timepoint_noise_overrides or has_timepoint_observable_overrides:
         new_measurement_dfs = []
         new_observable_dfs = []
-        for (obs_id, obs_pars, noise_pars, cond_id, preeq_id), \
-            measurements in measurement_df.groupby([
+        for (obs_id, obs_pars, noise_pars), measurements in \
+                measurement_df.groupby([
                     petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
-                    petab.NOISE_PARAMETERS, petab.SIMULATION_CONDITION_ID,
-                    petab.PREEQUILIBRATION_CONDITION_ID
+                    petab.NOISE_PARAMETERS,
                 ], dropna=False):
             replacement_id = \
-                f'{obs_id}_{obs_pars}_{noise_pars}_{cond_id}_{preeq_id}'
+                f'{obs_id}_{obs_pars}_{noise_pars}'
             if replacement_id in observable_df.index:
                 raise RuntimeError('could not create synthetic observables '
                                    'since {replacement_id} was already '
