@@ -604,13 +604,13 @@ def get_observation_model(observable_df: pd.DataFrame,
     def isnanstr(x):
         return re.match(nan_pat, x) is not None
 
-    has_timepoint_noise_overrides = not measurement_df[
+    has_timepoint_noise_overrides = len(measurement_df[
         petab.NOISE_PARAMETERS
-    ].apply(isnanstr).all()
+    ].unique()) > 1
 
-    has_timepoint_observable_overrides = not measurement_df[
+    has_timepoint_observable_overrides = len(measurement_df[
         petab.OBSERVABLE_PARAMETERS
-    ].apply(isnanstr).all()
+    ].unique()) > 1
 
     if has_timepoint_noise_overrides or has_timepoint_observable_overrides:
         new_measurement_dfs = []
@@ -628,8 +628,6 @@ def get_observation_model(observable_df: pd.DataFrame,
                                    f'{replacement_id} was already present in '
                                    f'observable table')
             observable = observable_df.loc[obs_id]
-            observable[petab.OBSERVABLE_PARAMETERS] = obs_pars
-            observable[petab.NOISE_PARAMETERS] = noise_pars
             measurements[petab.OBSERVABLE_ID] = replacement_id
             new_measurement_dfs.append(measurements)
             new_observable_dfs.append(observable)
