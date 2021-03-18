@@ -576,23 +576,29 @@ import_model = import_model_sbml
 
 def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
 
-    def floatable(x: str):
+    def unfloatable(x: str) -> bool:
         try:
-            [float(x) for x in x.split(';')]
-            return True
-        except ValueError:
+            [float(y) for y in x.split(';')]
             return False
+        except (ValueError, TypeError):
+            return True
 
-    nan_pat = r'^[nN]a[nN]$'
+    df = measurement_df.copy()
 
-    has_timepoint_noise_overrides, has_timepoint_observable_overrides = [
-        len([x for x in measurement_df[field].unique()
-             if isinstance(x, str) and not re.match(nan_pat, x)
-             and not floatable(x)]) > 0
-        if field in measurement_df else False
-        for field in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
-    ]
-    return has_timepoint_noise_overrides or has_timepoint_observable_overrides
+    # ignore all numeric
+    for field in [petab.OBSERVABLE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]:
+        if field in df:
+            df = df[df[field].apply(unfloatable)]
+    groupvars = [petab.OBSERVABLE_ID] + \
+                [x for x in [petab.SIMULATION_CONDITION_ID,
+                             petab.PREEQUILIBRATION_CONDITION_ID]
+                 if x in df]
+
+    return len(df.groupby(
+        groupvars +
+        [x for x in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
+         if x in df], dropna=False
+    )) > len(df.groupby(groupvars, dropna=False))
 
 
 def get_observation_model(
