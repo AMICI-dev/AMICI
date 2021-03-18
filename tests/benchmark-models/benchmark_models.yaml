@@ -16,8 +16,7 @@ Borghans_BiophysChem1997:
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Brannmark_JBC2010:
-  llh: 283.778227541074
-  note: unchecked
+  llh: -141.889113770537
 
 #Bruno_JExpBio2016:    None
 
@@ -35,7 +34,6 @@ Elowitz_Nature2000:
 
 Fiedler_BMC2016:
   llh: 58.58390161681
-  note: benchmark collection reference ignores factor 1/2
 
 Fujita_SciSignal2010:
   llh: 53.08749124997969
