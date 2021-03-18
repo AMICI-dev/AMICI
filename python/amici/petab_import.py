@@ -626,8 +626,8 @@ def get_observation_model(
 
     if has_timepoint_specific_measurement_overrides(measurement_df):
         raise ValueError(
-            'AMICI does not support importing models with  invidual '
-            'overrides for noise or observable  parameters. Please apply '
+            'AMICI does not support importing models with individual '
+            'overrides for noise or observable parameters. Please apply '
             'flatten_timepoint_specific_overrides to the problem to flatten '
             'these specifications.')
 
