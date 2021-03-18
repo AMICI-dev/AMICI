@@ -34,7 +34,7 @@ Elowitz_Nature2000:
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10))) / 2
 
 Fiedler_BMC2016:
-  llh: -58.58390161681
+  llh: 58.58390161681
   note: benchmark collection reference ignores factor 1/2
 
 Fujita_SciSignal2010:
