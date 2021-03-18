@@ -15,7 +15,6 @@ import yaml
 from amici.logging import get_logger
 from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
                                    LLH, RDATAS)
-from amici.petab_import
 from petab.visualize import plot_petab_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
