@@ -575,7 +575,7 @@ def import_model_sbml(
 import_model = import_model_sbml
 
 
-def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
+def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame) -> bool:
 
     def unfloatable(x: str) -> bool:
         if isinstance(x, numbers.Number):
