@@ -601,9 +601,18 @@ def get_observation_model(observable_df: pd.DataFrame,
 
     nan_pat = r'^[nN]a[nN]$'
 
+    def floatable(x: str):
+        try:
+            float(x)
+            return True
+        except TypeError:
+            return False
+
     has_timepoint_noise_overrides, has_timepoint_observable_overrides = [
         len([x for x in measurement_df[field].unique()
-             if isinstance(x, str)]) > 1
+             if isinstance(x, str) and not re.match(nan_pat, x)
+             and not floatable(x)]) > 0
+        if field in measurement_df else False
         for field in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
     ]
 
@@ -616,10 +625,14 @@ def get_observation_model(observable_df: pd.DataFrame,
                     petab.NOISE_PARAMETERS,
                 ], dropna=False):
             replacement_id = \
-                f'{obs_id}_{obs_pars}_{noise_pars}'
+                f'{obs_id}__{obs_pars.replace(";", "_")}__' \
+                f'{obs_pars.replace(";", "_")}'
+            logger.debug(f'Creating synthetic observable {obs_id} with '
+                         f'observable parameters {obs_pars} and noise '
+                         f'parameters {noise_pars}')
             if replacement_id in observable_df.index:
                 raise RuntimeError('could not create synthetic observables '
-                                   'since {replacement_id} was already '
+                                   f'since {replacement_id} was already '
                                    'present in observable table')
             observable = observable_df.loc[obs_id]
             for name, values, target in [
