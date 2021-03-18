@@ -457,7 +457,7 @@ void ReturnData::handleSx0Backward(const Model &model,
     for (int ip = 0; ip < model.nplist(); ++ip) {
         llhS0[ip] = 0.0;
         for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
-            llhS0[ip] += xB[ix] * sx0preeq.at(ix, ip);
+            llhS0[ip] += xBpreeq[ix] * sx0preeq.at(ix, ip);
         }
     }
 }
