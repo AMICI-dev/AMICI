@@ -603,6 +603,9 @@ def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
                              petab.PREEQUILIBRATION_CONDITION_ID]
                  if x in df]
 
+# data frame has timepoint specific overrides if grouping by noise parameters
+#  and observable parameters in addition to observable, condition and preeq id
+#  yields more groups
     return len(df.groupby(
         groupvars +
         [x for x in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
