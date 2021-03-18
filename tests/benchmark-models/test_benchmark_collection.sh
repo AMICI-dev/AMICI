@@ -9,7 +9,6 @@
 models="
 Fiedler_BMC2016
 Brannmark_JBC2010
-Sobotta_Frontiers2017
 Isensee_JCB2018
 Boehm_JProteomeRes2014
 Borghans_BiophysChem1997
