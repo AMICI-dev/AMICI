@@ -282,12 +282,12 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
+        
+        /* Finalize by setting adjoint state to zero (its steady state) */
+        xB_.zero();
     } catch (NewtonFailure const &) {
         hasQuadrature_ = false;
     }
-
-    /* Finalize by setting adjoint state to zero (its steady state) */
-    xB_.zero();
 }
 
 void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
