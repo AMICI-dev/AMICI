@@ -7,6 +7,10 @@
 
 # Confirmed to be working
 models="
+Fiedler_BMC2016
+Brannmark_JBC2010
+Sobotta_Frontiers2017
+Isensee_JCB2018
 Boehm_JProteomeRes2014
 Borghans_BiophysChem1997
 Elowitz_Nature2000
@@ -35,12 +39,6 @@ Crauste_CellSystems2017"
 # Korkut_eLIFE2015
 # Perelson_Science1996
 # Bruno_JExpBio2016
-#
-# Timepoint-specific parameter overrides
-# Fiedler_BMC2016
-# Brannmark_JBC2010
-# Isensee_JCB2018
-# Sobotta_Frontiers2017
 #
 # yaml missing:
 # Casaletto_PNAS2019
