@@ -575,9 +575,27 @@ def import_model_sbml(
 import_model = import_model_sbml
 
 
-def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame) -> bool:
+def has_timepoint_specific_measurement_overrides(
+        measurement_df: pd.DataFrame) -> bool:
+    """
+    Checks whether the measurement table contains non-numeric time-point
+    specific overrides of noise or observable parameters
 
-    def unfloatable(x: str) -> bool:
+    :param measurement_df:
+        PEtab measurement table
+
+    :return:
+        whether timepoint specific overrides were found
+    """
+
+    def unfloatable(x: Union[str, numbers.Number]) -> bool:
+        """
+        Checks whether x can be transformed into a (list of) float(s)
+        :param x:
+            number or string containing numbers seperated by ;
+        :return:
+            True if conversion is not possible
+        """
         if isinstance(x, numbers.Number):
             return False
         if not isinstance(x, str):
@@ -588,9 +606,12 @@ def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame) -
         except (ValueError, TypeError):
             return True
 
+    if measurement_df is None:
+        return False
+
     df = measurement_df.copy()
 
-    # ignore all numeric
+    # ignore all numeric overrides
     for field in [petab.OBSERVABLE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]:
         if field in df:
             df = df[df[field].apply(unfloatable)]
@@ -603,9 +624,9 @@ def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame) -
                              petab.PREEQUILIBRATION_CONDITION_ID]
                  if x in df]
 
-# data frame has timepoint specific overrides if grouping by noise parameters
-#  and observable parameters in addition to observable, condition and preeq id
-#  yields more groups
+    # data frame has timepoint specific overrides if grouping by noise
+    # parameters and observable parameters in addition to observable,
+    # condition and preeq id yields more groups
     return len(df.groupby(
         groupvars +
         [x for x in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
@@ -634,21 +655,21 @@ def get_observation_model(
     """
 
     if observable_df is None:
-        return dict(), dict(), dict()
+        return {}, {}, {}
 
     if has_timepoint_specific_measurement_overrides(measurement_df):
         raise ValueError(
-            'AMICI does not support importing models with individual '
-            'overrides for noise or observable parameters. Please apply '
-            'flatten_timepoint_specific_overrides to the problem to flatten '
-            'these specifications.')
+            'AMICI does not support importing models with timepoint specific '
+            'overrides for noise or observable parameters. Please flatten '
+            'the problem and try again.'
+        )
 
     observables = {}
     sigmas = {}
 
     nan_pat = r'^[nN]a[nN]$'
     for _, observable in observable_df.iterrows():
-        oid = observable.name
+        oid = str(observable.name)
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
         name = re.sub(nan_pat, '', str(observable.get(OBSERVABLE_NAME, '')))
         formula_obs = re.sub(nan_pat, '', str(observable[OBSERVABLE_FORMULA]))
@@ -667,7 +688,8 @@ def get_observation_model(
     return observables, noise_distrs, sigmas
 
 
-def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
+def petab_noise_distributions_to_amici(observable_df: pd.DataFrame
+                                       ) -> Dict[str, str]:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
