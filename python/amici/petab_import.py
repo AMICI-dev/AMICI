@@ -589,6 +589,10 @@ def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
     for field in [petab.OBSERVABLE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]:
         if field in df:
             df = df[df[field].apply(unfloatable)]
+
+    if df.empty:
+        return False
+
     groupvars = [petab.OBSERVABLE_ID] + \
                 [x for x in [petab.SIMULATION_CONDITION_ID,
                              petab.PREEQUILIBRATION_CONDITION_ID]
