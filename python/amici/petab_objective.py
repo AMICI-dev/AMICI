@@ -21,8 +21,7 @@ from petab.C import *  # noqa: F403
 
 from . import AmiciModel, AmiciExpData
 from .logging import get_logger, log_execution_time
-from .petab_import import (PREEQ_INDICATOR_ID,
-                           flatten_timepoint_specific_overrides)
+from .petab_import import PREEQ_INDICATOR_ID
 from .parameter_mapping import (
     fill_in_parameters, ParameterMappingForCondition, ParameterMapping)
 
@@ -245,55 +244,31 @@ def create_parameter_mapping(
     :return:
         List of the parameter mappings.
     """
-    petab_problem_mod = copy.deepcopy(petab_problem)
-    petab_problem_mod.observable_df, petab_problem_mod.measurement_df = \
-        flatten_timepoint_specific_overrides(
-            petab_problem_mod.observable_df, petab_problem_mod.measurement_df
-        )
-    if len(petab_problem_mod.observable_df) != \
-            len(petab_problem.observable_df):
-        # timepoint specific overrides were flattened, check if we need to
-        # update parameters
-        output_pars = petab.observables.get_output_parameters(
-                observable_df=petab_problem_mod.observable_df,
-                sbml_model=petab_problem_mod.sbml_model
-        )
-        dynamic_pars = petab.sbml.get_model_parameters(
-            petab_problem_mod.sbml_model, with_values=True
-        )
-
-        petab_problem_mod.parameter_df.drop(
-            index=[par for par in petab_problem_mod.parameter_df.index
-                   if par not in output_pars and par not in dynamic_pars
-                   and not par in petab_problem.condition_df],
-            inplace=True
-        )
-
     if simulation_conditions is None:
         simulation_conditions = \
-            petab_problem_mod.get_simulation_conditions_from_measurement_df()
+            petab_problem.get_simulation_conditions_from_measurement_df()
 
     # Because AMICI globalizes all local parameters during model import,
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
-    if petab_problem_mod.sbml_document:
+    if petab_problem.sbml_document:
         converter_config = libsbml.SBMLLocalParameterConverter() \
             .getDefaultProperties()
-        petab_problem_mod.sbml_document.convert(converter_config)
+        petab_problem.sbml_document.convert(converter_config)
     else:
         logger.debug("No petab_problem.sbml_document is set. Cannot convert "
                      "SBML LocalParameters. If the model contains "
                      "LocalParameters, parameter mapping will fail.")
 
     prelim_parameter_mapping = \
-        petab_problem_mod.get_optimization_to_simulation_parameter_mapping(
+        petab_problem.get_optimization_to_simulation_parameter_mapping(
             warn_unmapped=False, scaled_parameters=scaled_parameters)
 
     parameter_mapping = ParameterMapping()
     for (_, condition), prelim_mapping_for_condition in \
             zip(simulation_conditions.iterrows(), prelim_parameter_mapping):
         mapping_for_condition = create_parameter_mapping_for_condition(
-            prelim_mapping_for_condition, condition, petab_problem_mod,
+            prelim_mapping_for_condition, condition, petab_problem,
             amici_model)
         parameter_mapping.append(mapping_for_condition)
 

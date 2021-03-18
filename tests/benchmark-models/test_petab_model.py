@@ -15,6 +15,7 @@ import yaml
 from amici.logging import get_logger
 from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
                                    LLH, RDATAS)
+from amici.petab_import import flatten_timepoint_specific_overrides
 from petab.visualize import plot_petab_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -75,6 +76,7 @@ def main():
 
     # load PEtab files
     problem = petab.Problem.from_yaml(args.yaml_file_name)
+    flatten_timepoint_specific_overrides(problem)
 
     # load model
     if args.model_directory:

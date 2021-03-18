@@ -460,7 +460,7 @@ def import_model_sbml(
     sbml_model = sbml_importer.sbml
 
     if observable_df is not None:
-        observables, noise_distrs, sigmas, observable_df, measurement_table = \
+        observables, noise_distrs, sigmas = \
             get_observation_model(observable_df, measurement_table)
 
     logger.info(f'Observables: {len(observables)}')
@@ -574,23 +574,7 @@ def import_model_sbml(
 import_model = import_model_sbml
 
 
-def flatten_timepoint_specific_overrides(
-        observable_df: pd.DataFrame, measurement_df: pd.DataFrame,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    This function flattens out zny measurement specific specifications of
-    noise or observable parameters by creating synthetic observables for
-    every unique occurence.
-
-    :param observable_df:
-        PEtab observables table
-
-    :param measurement_df:
-        PEtab measurement table
-
-    :return:
-        updated observable + measurement table
-    """
+def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
 
     def floatable(x: str):
         try:
@@ -608,35 +592,47 @@ def flatten_timepoint_specific_overrides(
         if field in measurement_df else False
         for field in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
     ]
+    return has_timepoint_noise_overrides or has_timepoint_observable_overrides
 
-    if not has_timepoint_noise_overrides and \
-            not has_timepoint_observable_overrides:
-        return observable_df, measurement_df
 
-    if petab.OBSERVABLE_PARAMETERS not in measurement_df:
-        measurement_df[petab.OBSERVABLE_PARAMETERS] = 'nan'
+def flatten_timepoint_specific_overrides(problem: petab.Problem):
+    """
+    This function flattens out any measurement specific specifications of
+    noise or observable parameters by creating synthetic observables for
+    every unique occurence.
 
-    if petab.NOISE_PARAMETERS not in measurement_df:
-        measurement_df[petab.NOISE_PARAMETERS] = 'nan'
+    :param problem:
+        PEtab problem
+    """
+    if not has_timepoint_specific_measurement_overrides(
+            problem.measurement_df
+    ):
+        return
+
+    if petab.OBSERVABLE_PARAMETERS not in problem.measurement_df:
+        problem.measurement_df[petab.OBSERVABLE_PARAMETERS] = 'nan'
+
+    if petab.NOISE_PARAMETERS not in problem.measurement_df:
+        problem.measurement_df[petab.NOISE_PARAMETERS] = 'nan'
 
     new_measurement_dfs = []
     new_observable_dfs = []
     for (obs_id, obs_pars, noise_pars), measurements in \
-            measurement_df.groupby([
+            problem.measurement_df.groupby([
                 petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
                 petab.NOISE_PARAMETERS,
             ], dropna=False):
         replacement_id = \
             f'{obs_id}__{obs_pars.replace(";", "_")}__' \
-            f'{obs_pars.replace(";", "_")}'
+            f'{noise_pars.replace(";", "_")}'
         logger.debug(f'Creating synthetic observable {obs_id} with '
                      f'observable parameters {obs_pars} and noise '
                      f'parameters {noise_pars}')
-        if replacement_id in observable_df.index:
+        if replacement_id in problem.observable_df.index:
             raise RuntimeError('could not create synthetic observables '
                                f'since {replacement_id} was already '
                                'present in observable table')
-        observable = observable_df.loc[obs_id]
+        observable = problem.observable_df.loc[obs_id]
         observable.name = replacement_id
         for name, values, target in [
             ('observableParameter', obs_pars, petab.OBSERVABLE_FORMULA),
@@ -649,21 +645,20 @@ def flatten_timepoint_specific_overrides(
                     f'{name}{ipar + 1}_{obs_id}', par
                 )
         measurements[petab.OBSERVABLE_ID] = replacement_id
-        measurements[petab.NOISE_PARAMETERS] = 'nan'
-        measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
+        measurements.drop(columns=[petab.NOISE_PARAMETERS,
+                                   petab.OBSERVABLE_PARAMETERS], inplace=True)
         new_measurement_dfs.append(measurements)
         new_observable_dfs.append(observable)
 
-    return pd.concat(new_observable_dfs, axis=1).T, \
-           pd.concat(new_measurement_dfs)
+    problem.observable_df = pd.concat(new_observable_dfs, axis=1).T
+    problem.observable_df.index.name = petab.OBSERVABLE_ID
+    problem.measurement_df = pd.concat(new_measurement_dfs)
 
 
-def get_observation_model(observable_df: pd.DataFrame,
-                          measurement_df: pd.DataFrame,
-                          ) -> Tuple[Dict[str, Dict[str, str]],
-                                     Dict[str, str],
-                                     Dict[str, Union[str, float]],
-                                     pd.DataFrame, pd.DataFrame]:
+def get_observation_model(
+        observable_df: pd.DataFrame, measurement_df: pd.DataFrame,
+) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str],
+           Dict[str, Union[str, float]]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
     table and measurement table in a format suitable for
@@ -681,11 +676,14 @@ def get_observation_model(observable_df: pd.DataFrame,
     """
 
     if observable_df is None:
-        return dict(), dict(), dict(), observable_df, measurement_df
+        return dict(), dict(), dict()
 
-    observable_df, measurement_df = flatten_timepoint_specific_overrides(
-        observable_df, measurement_df
-    )
+    if has_timepoint_specific_measurement_overrides(measurement_df):
+        raise ValueError(
+            'AMICI does not support importing models with  invidual '
+            'overrides for noise or observable  parameters. Please apply '
+            'flatten_timepoint_specific_overrides to the problem to flatten '
+            'these specifications.')
 
     observables = {}
     sigmas = {}
@@ -708,8 +706,7 @@ def get_observation_model(observable_df: pd.DataFrame,
 
     noise_distrs = petab_noise_distributions_to_amici(observable_df)
 
-    return observables, noise_distrs, sigmas, observable_df, measurement_df
-
+    return observables, noise_distrs, sigmas
 
 def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
     """
@@ -783,6 +780,10 @@ def parse_cli_args():
     parser.add_argument('--no-compile', action='store_false',
                         dest='compile',
                         help='Only generate model code, do not compile')
+    parser.add_argument('--flatten', dest='flatten', default=False,
+                        action='store_true',
+                        help='Flatten measurement specific overrides of '
+                             'observable and noise parameters')
 
     # Call with set of files
     parser.add_argument('-s', '--sbml', dest='sbml_file_name',
@@ -833,6 +834,9 @@ def main():
 
     # First check for valid PEtab
     petab.lint_problem(pp)
+
+    if args.flatten:
+        flatten_timepoint_specific_overrides(pp)
 
     import_model(model_name=args.model_name,
                  sbml_model=pp.sbml_model,
