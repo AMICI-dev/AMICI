@@ -12,6 +12,7 @@ import math
 import os
 import re
 import shutil
+import numbers
 import tempfile
 from _collections import OrderedDict
 from itertools import chain
@@ -577,6 +578,10 @@ import_model = import_model_sbml
 def has_timepoint_specific_measurement_overrides(measurement_df: pd.DataFrame):
 
     def unfloatable(x: str) -> bool:
+        if isinstance(x, numbers.Number):
+            return True
+        if not isinstance(x, str):
+            return False
         try:
             [float(y) for y in x.split(';')]
             return False
