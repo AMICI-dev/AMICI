@@ -101,9 +101,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
     clock_t starttime = clock();
     computeSteadyStateQuadrature(newtonSolver.get(), solver, model);
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-
-    /* Finalize by setting adjoint state to zero (its steady state) */
-    xB_.zero();
 }
 
 void SteadystateProblem::findSteadyState(Solver *solver,
@@ -288,6 +285,9 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
     } catch (NewtonFailure const &) {
         hasQuadrature_ = false;
     }
+
+    /* Finalize by setting adjoint state to zero (its steady state) */
+    xB_.zero();
 }
 
 void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,

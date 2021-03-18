@@ -248,7 +248,6 @@ class SteadystateProblem {
         return x_;
     };
 
-
     /**
      * @brief Returns state sensitivity at steadystate
      * @return sx
@@ -322,6 +321,12 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
+     * @brief Accessor for xB
+     * @return xB
+     */
+    AmiVector const& getAdjointState() const { return xB_; }
+
+    /**
      * @brief Accessor for xQB
      * @return xQB
      */
@@ -372,7 +377,7 @@ class SteadystateProblem {
     AmiVector xQ_;
     /** quadrature state vector */
     AmiVector xQB_;
-    /** quadrature state vector */
+    /** time-derivative of quadrature state vector */
     AmiVector xQBdot_;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */
