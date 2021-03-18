@@ -599,8 +599,20 @@ def get_observation_model(observable_df: pd.DataFrame,
     if observable_df is None:
         return dict(), dict(), dict(), observable_df, measurement_df
 
-    if len(measurement_df[petab.NOISE_PARAMETERS].unique()) > 1 or \
-            len(measurement_df[petab.OBSERVABLE_PARAMETERS].unique()) > 1:
+    nan_pat = r'^[nN]a[nN]$'
+
+    def isnanstr(x):
+        return re.match(nan_pat, x) is not None
+
+    has_timepoint_noise_overrides = not measurement_df[
+        petab.NOISE_PARAMETERS
+    ].apply(isnanstr).all()
+
+    has_timepoint_observable_overrides = not measurement_df[
+        petab.OBSERVABLE_PARAMETERS
+    ].apply(isnanstr).all()
+
+    if has_timepoint_noise_overrides or has_timepoint_observable_overrides:
         new_measurement_dfs = []
         new_observable_dfs = []
         for (obs_id, obs_pars, noise_pars, cond_id, preeq_id), \
@@ -619,8 +631,6 @@ def get_observation_model(observable_df: pd.DataFrame,
             observable[petab.OBSERVABLE_PARAMETERS] = obs_pars
             observable[petab.NOISE_PARAMETERS] = noise_pars
             measurements[petab.OBSERVABLE_ID] = replacement_id
-            measurements[petab.NOISE_PARAMETERS] = 'nan'
-            measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
             new_measurement_dfs.append(measurements)
             new_observable_dfs.append(observable)
 
@@ -633,10 +643,9 @@ def get_observation_model(observable_df: pd.DataFrame,
     for _, observable in observable_df.iterrows():
         oid = observable.name
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
-        pat = r'^[nN]a[nN]$'
-        name = re.sub(pat, '', str(observable.get(OBSERVABLE_NAME, '')))
-        formula_obs = re.sub(pat, '', str(observable[OBSERVABLE_FORMULA]))
-        formula_noise = re.sub(pat, '', str(observable[NOISE_FORMULA]))
+        name = re.sub(nan_pat, '', str(observable.get(OBSERVABLE_NAME, '')))
+        formula_obs = re.sub(nan_pat , '', str(observable[OBSERVABLE_FORMULA]))
+        formula_noise = re.sub(nan_pat, '', str(observable[NOISE_FORMULA]))
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
 
