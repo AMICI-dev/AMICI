@@ -599,31 +599,33 @@ def get_observation_model(observable_df: pd.DataFrame,
     if observable_df is None:
         return dict(), dict(), dict(), observable_df, measurement_df
 
-    new_measurement_dfs = []
-    new_observable_dfs = []
-    for (obs_id, obs_pars, noise_pars, cond_id, preeq_id), measurements in \
-            measurement_df.groupby([
-                petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
-                petab.NOISE_PARAMETERS, petab.SIMULATION_CONDITION_ID,
-                petab.PREEQUILIBRATION_CONDITION_ID
-            ], dropna=False):
-        replacement_id = \
-            f'{obs_id}_{obs_pars}_{noise_pars}_{cond_id}_{preeq_id}'
-        if replacement_id in observable_df.index:
-            raise RuntimeError('could not create synthetic observables since'
-                               f'{replacement_id} was already present in '
-                               f'observable table')
-        observable = observable_df.loc[obs_id]
-        observable[petab.OBSERVABLE_PARAMETERS] = obs_pars
-        observable[petab.NOISE_PARAMETERS] = noise_pars
-        measurements[petab.OBSERVABLE_ID] = replacement_id
-        measurements[petab.NOISE_PARAMETERS] = 'nan'
-        measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
-        new_measurement_dfs.append(measurements)
-        new_observable_dfs.append(observable)
+    if len(measurement_df[petab.NOISE_PARAMETERS].unique()) > 1 or \
+            len(measurement_df[petab.OBSERVABLE_PARAMETERS].unique()) > 1:
+        new_measurement_dfs = []
+        new_observable_dfs = []
+        for (obs_id, obs_pars, noise_pars, cond_id, preeq_id), \
+            measurements in measurement_df.groupby([
+                    petab.OBSERVABLE_ID, petab.OBSERVABLE_PARAMETERS,
+                    petab.NOISE_PARAMETERS, petab.SIMULATION_CONDITION_ID,
+                    petab.PREEQUILIBRATION_CONDITION_ID
+                ], dropna=False):
+            replacement_id = \
+                f'{obs_id}_{obs_pars}_{noise_pars}_{cond_id}_{preeq_id}'
+            if replacement_id in observable_df.index:
+                raise RuntimeError('could not create synthetic observables since'
+                                   f'{replacement_id} was already present in '
+                                   f'observable table')
+            observable = observable_df.loc[obs_id]
+            observable[petab.OBSERVABLE_PARAMETERS] = obs_pars
+            observable[petab.NOISE_PARAMETERS] = noise_pars
+            measurements[petab.OBSERVABLE_ID] = replacement_id
+            measurements[petab.NOISE_PARAMETERS] = 'nan'
+            measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
+            new_measurement_dfs.append(measurements)
+            new_observable_dfs.append(observable)
 
-    observable_df = pd.concat(new_observable_dfs, axis=1).T
-    measurement_df = pd.concat(new_measurement_dfs)
+        observable_df = pd.concat(new_observable_dfs, axis=1).T
+        measurement_df = pd.concat(new_measurement_dfs)
 
     observables = {}
     sigmas = {}
