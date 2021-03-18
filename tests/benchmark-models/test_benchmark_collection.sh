@@ -30,7 +30,6 @@ Zheng_PNAS2012"
 #
 # no reference value:
 # Alkan_SciSignal2018
-# Beer_MolBioSystems2014
 # Blasi_CellSystems2016
 # Hass_PONE2017
 # Korkut_eLIFE2015
