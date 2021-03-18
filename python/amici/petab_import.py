@@ -601,16 +601,11 @@ def get_observation_model(observable_df: pd.DataFrame,
 
     nan_pat = r'^[nN]a[nN]$'
 
-    def isnanstr(x):
-        return re.match(nan_pat, x) is not None
-
-    has_timepoint_noise_overrides = len(measurement_df[
-        petab.NOISE_PARAMETERS
-    ].unique()) > 1
-
-    has_timepoint_observable_overrides = len(measurement_df[
-        petab.OBSERVABLE_PARAMETERS
-    ].unique()) > 1
+    has_timepoint_noise_overrides, has_timepoint_observable_overrides = [
+        len([x for x in measurement_df[field].unique()
+             if isinstance(x, str)]) > 1
+        for field in [petab.NOISE_PARAMETERS, petab.OBSERVABLE_PARAMETERS]
+    ]
 
     if has_timepoint_noise_overrides or has_timepoint_observable_overrides:
         new_measurement_dfs = []
@@ -624,11 +619,21 @@ def get_observation_model(observable_df: pd.DataFrame,
             replacement_id = \
                 f'{obs_id}_{obs_pars}_{noise_pars}_{cond_id}_{preeq_id}'
             if replacement_id in observable_df.index:
-                raise RuntimeError('could not create synthetic observables since'
-                                   f'{replacement_id} was already present in '
-                                   f'observable table')
+                raise RuntimeError('could not create synthetic observables '
+                                   'since {replacement_id} was already '
+                                   'present in observable table')
             observable = observable_df.loc[obs_id]
+            for name, values, target in [
+                ('observableParameter', obs_pars, petab.OBSERVABLE_FORMULA),
+                ('noiseParameter', noise_pars, petab.NOISE_FORMULA)
+            ]:
+                for ipar, par in enumerate(obs_pars.split(';')):
+                    observable[target] = observable[target].replace(
+                        f'{name}{ipar+1}_{obs_id}', par
+                    )
             measurements[petab.OBSERVABLE_ID] = replacement_id
+            measurements[petab.NOISE_PARAMETERS] = 'nan'
+            measurements[petab.OBSERVABLE_PARAMETERS] = 'nan'
             new_measurement_dfs.append(measurements)
             new_observable_dfs.append(observable)
 
@@ -642,7 +647,7 @@ def get_observation_model(observable_df: pd.DataFrame,
         oid = observable.name
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
         name = re.sub(nan_pat, '', str(observable.get(OBSERVABLE_NAME, '')))
-        formula_obs = re.sub(nan_pat , '', str(observable[OBSERVABLE_FORMULA]))
+        formula_obs = re.sub(nan_pat, '', str(observable[OBSERVABLE_FORMULA]))
         formula_noise = re.sub(nan_pat, '', str(observable[NOISE_FORMULA]))
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
