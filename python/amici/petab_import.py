@@ -603,9 +603,9 @@ def get_observation_model(observable_df: pd.DataFrame,
 
     def floatable(x: str):
         try:
-            float(x)
+            [float(x) for x in x.split(';')]
             return True
-        except TypeError:
+        except ValueError:
             return False
 
     has_timepoint_noise_overrides, has_timepoint_observable_overrides = [
@@ -617,6 +617,12 @@ def get_observation_model(observable_df: pd.DataFrame,
     ]
 
     if has_timepoint_noise_overrides or has_timepoint_observable_overrides:
+        if petab.OBSERVABLE_PARAMETERS not in measurement_df:
+            measurement_df[petab.OBSERVABLE_PARAMETERS] = 'nan'
+
+        if petab.NOISE_PARAMETERS not in measurement_df:
+            measurement_df[petab.NOISE_PARAMETERS] = 'nan'
+
         new_measurement_dfs = []
         new_observable_dfs = []
         for (obs_id, obs_pars, noise_pars), measurements in \
@@ -639,6 +645,8 @@ def get_observation_model(observable_df: pd.DataFrame,
                 ('observableParameter', obs_pars, petab.OBSERVABLE_FORMULA),
                 ('noiseParameter', noise_pars, petab.NOISE_FORMULA)
             ]:
+                if target not in observable:
+                    continue
                 for ipar, par in enumerate(obs_pars.split(';')):
                     observable[target] = observable[target].replace(
                         f'{name}{ipar+1}_{obs_id}', par
