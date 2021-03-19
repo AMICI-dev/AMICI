@@ -442,22 +442,22 @@ void ReturnData::handleSx0Backward(const Model &model,
        and so is the scalar product. Instead of the scalar product, the
        quadratures xQB from preequilibration contribute to the gradient
        (see example notebook on equilibration for further documentation). */
-    auto xQBpreeq = preeq.getAdjointQuadrature();
+    const auto &xQBpreeq = preeq.getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
-        xQB[ip] += xQBpreeq[ip];
+        xQB[ip] += xQBpreeq.at(ip);
 
     /* Prefer explicit type declaration here, since this MUST be a reference
      * (for memory reasons), rather than passing this thing by value */
-    const AmiVectorArray &sx0preeq = preeq.getStateSensitivity();
+    const auto& sx0preeq = preeq.getStateSensitivity();
     const auto& xBpreeq = preeq.getAdjointState();
 
     /* Add the contribution for sx0 from preequilibration. If backward
      * preequilibration was done by simulation due to a singular Jacobian,
-     * xB is not necessarily 0 and we get a non-zero contribution here. */
+     * xB is not necessarily 0 and we may get a non-zero contribution here. */
     for (int ip = 0; ip < model.nplist(); ++ip) {
         llhS0[ip] = 0.0;
         for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
-            llhS0[ip] += xBpreeq[ix] * sx0preeq.at(ix, ip);
+            llhS0[ip] += xBpreeq.at(ix) * sx0preeq.at(ix, ip);
         }
     }
 }
