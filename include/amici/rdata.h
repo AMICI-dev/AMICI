@@ -618,10 +618,12 @@ class ReturnData: public ModelDimensions {
      * if preequilibration was run in adjoint mode
      * @param model model that was used for forward/backward simulation
      * @param preeq SteadystateProblem for preequilibration
+     * @param llhS0 contribution to likelihood for initial state sensitivities
+     * of preequilibration
      * @param xQB vector with quadratures from adjoint computation
      */
     void handleSx0Backward(const Model &model, SteadystateProblem const &preeq,
-                           AmiVector &xQB) const;
+                           std::vector<realtype> &llhS0, AmiVector &xQB) const;
 
     /**
      * @brief Updates contribution to likelihood for initial state sensitivities
