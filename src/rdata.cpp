@@ -449,7 +449,7 @@ void ReturnData::handleSx0Backward(const Model &model,
     /* Prefer explicit type declaration here, since this MUST be a reference
      * (for memory reasons), rather than passing this thing by value */
     const AmiVectorArray &sx0preeq = preeq.getStateSensitivity();
-    auto xBpreeq = preeq.getAdjointState();
+    const auto& xBpreeq = preeq.getAdjointState();
 
     /* Add the contribution for sx0 from preequilibration. If backward
      * preequilibration was done by simulation due to a singular Jacobian,
