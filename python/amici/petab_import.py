@@ -12,7 +12,6 @@ import math
 import os
 import re
 import shutil
-import numbers
 import tempfile
 from _collections import OrderedDict
 from itertools import chain
@@ -597,8 +596,7 @@ def get_observation_model(
         PEtab observables table
 
     :return:
-        Tuple of dicts with observables, noise distributions, and sigmas and
-        updated observable + measurement table
+        Tuple of dicts with observables, noise distributions, and sigmas.
     """
 
     if observable_df is None:
