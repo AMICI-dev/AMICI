@@ -460,9 +460,18 @@ def import_model_sbml(
     sbml_importer = amici.SbmlImporter(sbml_model)
     sbml_model = sbml_importer.sbml
 
+    if petab.lint.measurement_table_has_timepoint_specific_mappings(
+        measurement_table
+    ):
+        raise ValueError(
+            'AMICI does not support importing models with timepoint specific '
+            'mappings for noise or observable parameters. Please flatten '
+            'the problem and try again.'
+        )
+
     if observable_df is not None:
         observables, noise_distrs, sigmas = \
-            get_observation_model(observable_df, measurement_table)
+            get_observation_model(observable_df)
 
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
@@ -576,7 +585,7 @@ import_model = import_model_sbml
 
 
 def get_observation_model(
-        observable_df: pd.DataFrame, measurement_df: pd.DataFrame,
+        observable_df: pd.DataFrame,
 ) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str],
            Dict[str, Union[str, float]]]:
     """
@@ -587,9 +596,6 @@ def get_observation_model(
     :param observable_df:
         PEtab observables table
 
-    :param measurement_df:
-        PEtab measurement table
-
     :return:
         Tuple of dicts with observables, noise distributions, and sigmas and
         updated observable + measurement table
@@ -597,15 +603,6 @@ def get_observation_model(
 
     if observable_df is None:
         return {}, {}, {}
-
-    if petab.lint.measurement_table_has_timepoint_specific_mappings(
-        measurement_df
-    ):
-        raise ValueError(
-            'AMICI does not support importing models with timepoint specific '
-            'mappings for noise or observable parameters. Please flatten '
-            'the problem and try again.'
-        )
 
     observables = {}
     sigmas = {}
