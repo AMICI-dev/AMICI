@@ -459,8 +459,13 @@ def import_model_sbml(
     sbml_importer = amici.SbmlImporter(sbml_model)
     sbml_model = sbml_importer.sbml
 
+    allow_n_noise_pars = \
+        petab.lint.observable_table_has_nontrivial_noise_formula(
+            observable_df
+        )
     if petab.lint.measurement_table_has_timepoint_specific_mappings(
-        measurement_table
+        measurement_table,
+        allow_scalar_numeric_noise_parameters=allow_n_noise_pars
     ):
         raise ValueError(
             'AMICI does not support importing models with timepoint specific '
