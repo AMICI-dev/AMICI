@@ -414,7 +414,7 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xQB = bwd.getAdjointQuadrature();
 
     if (preeq && preeq->hasQuadrature()) {
-        handleSx0Backward(model, *preeq, xQB);
+        handleSx0Backward(model, *preeq, llhS0, xQB);
     } else {
         handleSx0Forward(model, llhS0, xB);
     }
@@ -433,6 +433,7 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
 
 void ReturnData::handleSx0Backward(const Model &model,
                                    SteadystateProblem const &preeq,
+                                   std::vector<realtype> &llhS0,
                                    AmiVector &xQB) const {
     /* If preequilibration is run in adjoint mode, the scalar product of sx0
        with its adjoint counterpart (see handleSx0Forward()) is not necessary:
@@ -441,9 +442,23 @@ void ReturnData::handleSx0Backward(const Model &model,
        and so is the scalar product. Instead of the scalar product, the
        quadratures xQB from preequilibration contribute to the gradient
        (see example notebook on equilibration for further documentation). */
-    auto xQBpreeq = preeq.getAdjointQuadrature();
+    const auto &xQBpreeq = preeq.getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
-        xQB[ip] += xQBpreeq[ip];
+        xQB[ip] += xQBpreeq.at(ip);
+
+    /* We really need references here, as sx0 can be large... */
+    const auto& sx0preeq = preeq.getStateSensitivity();
+    const auto& xBpreeq = preeq.getAdjointState();
+
+    /* Add the contribution for sx0 from preequilibration. If backward
+     * preequilibration was done by simulation due to a singular Jacobian,
+     * xB is not necessarily 0 and we may get a non-zero contribution here. */
+    for (int ip = 0; ip < model.nplist(); ++ip) {
+        llhS0[ip] = 0.0;
+        for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
+            llhS0[ip] += xBpreeq.at(ix) * sx0preeq.at(ix, ip);
+        }
+    }
 }
 
 void ReturnData::handleSx0Forward(const Model &model,
