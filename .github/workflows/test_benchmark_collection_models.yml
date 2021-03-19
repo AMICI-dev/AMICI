@@ -43,7 +43,7 @@ jobs:
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
     - name: Temp fix petab
       run: |
-        pip3 install git+https://github.com/PEtab-dev/libpetab-python@develop--upgrade
+        pip3 install git+https://github.com/PEtab-dev/libpetab-python@develop --upgrade
 
     # retrieve test models
     - name: Download and test benchmark collection
