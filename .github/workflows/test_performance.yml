@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - speedup_reaction_ids
+      - compile_without_optimization
 
   pull_request:
     branches:
@@ -50,12 +50,7 @@ jobs:
     # import test model
     - name: Import test model
       run: |
-        cd CS_Signalling_ERBB_RAS_AKT \
-          && check_time.sh \
-          petab_import amici_import_petab -v \
-            -n 'CS_Signalling_ERBB_RAS_AKT_petab' \
-            -y 'FroehlichKes2018/PEtab/FroehlichKes2018.yaml' \
-            --no-compile
+        check_time.sh petab_import python tests/performance/test.py import
 
     - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
       uses: actions/upload-artifact@v1
@@ -65,29 +60,60 @@ jobs:
 
     # install model package
     - name: Install test model
-      run: |
-        check_time.sh install_model \
-          python3 CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab/setup.py install --user
+      run: >
+        check_time.sh install_model tests/performance/test.py compile;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh install_model_${opt} tests/performance/test.py compile_${opt};
+        done
 
     # run simulations
     - name: forward_simulation
-      run: |
-        check_time.sh forward_simulation tests/performance/test.py forward_simulation
+      run: >
+        check_time.sh forward_simulation tests/performance/test.py  forward_simulation;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_simulation tests/performance/test.py forward_simulation_${opt};
+        done
     - name: forward_sensitivities
-      run: |
-        check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities
+      run: >
+        check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities_${opt};
+        done
     - name: adjoint_sensitivities
-      run: |
-        check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities
+      run: >
+        check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities_${opt};
+        done
     - name: forward_simulation_non_optimal_parameters
       run: |
-        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters
+        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters_${opt};
+        done
     - name: adjoint_sensitivities_non_optimal_parameters
       run: |
-        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters
+        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters_${opt};
+        done
     - name: forward_steadystate_sensitivities_non_optimal_parameters
       run: |
-        check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters
+        check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters_${opt};
+        done
     - name: adjoint_steadystate_sensitivities_non_optimal_parameters
       run: |
-        check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters
+        check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters_${opt};
+        done
