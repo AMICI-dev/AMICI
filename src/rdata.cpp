@@ -446,8 +446,7 @@ void ReturnData::handleSx0Backward(const Model &model,
     for (int ip = 0; ip < model.nplist(); ++ip)
         xQB[ip] += xQBpreeq.at(ip);
 
-    /* Prefer explicit type declaration here, since this MUST be a reference
-     * (for memory reasons), rather than passing this thing by value */
+    /* We really need references here, as sx0 can be large... */
     const auto& sx0preeq = preeq.getStateSensitivity();
     const auto& xBpreeq = preeq.getAdjointState();
 
