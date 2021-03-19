@@ -453,7 +453,7 @@ void ReturnData::handleSx0Backward(const Model &model,
 
     /* Add the contribution for sx0 from preequilibration. If backward
      * preequilibration was done by simulation due to a singular Jacobian,
-     * xB does not need to be 0 and we get a non-zero contribution here. */
+     * xB is not necessarily 0 and we get a non-zero contribution here. */
     for (int ip = 0; ip < model.nplist(); ++ip) {
         llhS0[ip] = 0.0;
         for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
