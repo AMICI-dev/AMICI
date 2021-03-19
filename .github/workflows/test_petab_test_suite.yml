@@ -51,7 +51,7 @@ jobs:
         run: |
           scripts/installAmiciSource.sh
       - name: Temp fix petab
-          run: |
+        run: |
             pip3 install git+https://github.com/PEtab-dev/libpetab-python@fix_timepoint_override_check --upgrade
 
       # retrieve test models
