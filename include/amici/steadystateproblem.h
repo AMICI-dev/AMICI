@@ -321,8 +321,8 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
-     * @brief Accessor for xB
-     * @return xB
+     * @brief Return the adjoint state
+     * @return xB adjoint state
      */
     AmiVector const& getAdjointState() const { return xB_; }
 
