@@ -65,4 +65,5 @@ jobs:
         source build/venv/bin/activate \
           && pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
+          && pip3 install git+https://github.com/PEtab-dev/libpetab-python@develop --upgrade
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
