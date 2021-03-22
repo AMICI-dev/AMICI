@@ -62,6 +62,8 @@ def _test_case(case, model_type):
         raise ValueError(f"Unsupported model_type: {model_type}")
 
     # compile amici model
+    if case == '0006':
+        petab.flatten_timepoint_specific_output_overrides(problem)
     model_output_dir = f'amici_models/model_{case}'
     model = import_petab_problem(
         problem, model_output_dir=model_output_dir,
