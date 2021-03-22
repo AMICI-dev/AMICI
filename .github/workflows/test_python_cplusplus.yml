@@ -78,7 +78,6 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-        && pip3 install git+https://github.com/PEtab-dev/libpetab-python@develop --upgrade
         && pip3 install coverage pytest pytest-cov \
         && pytest \
           --ignore-glob=*petab* \
