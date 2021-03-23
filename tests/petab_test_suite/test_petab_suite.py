@@ -85,7 +85,7 @@ def _test_case(case, model_type):
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
-    if case == '0006':
+    if case.startswith('0006'):
         # account for flattening
         gt_simulation_dfs[0].loc[:, petab.OBSERVABLE_ID] = ('obs_a__10__c0',
                                                             'obs_a__15__c0')
