@@ -57,12 +57,13 @@ def _test_case(case, model_type):
         case_dir = os.path.join(petabtests.PYSB_DIR, case)
         # import petab problem
         yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
-        problem = PysbPetabProblem.from_yaml(yaml_file)
+        problem = PysbPetabProblem.from_yaml(yaml_file,
+                                             flatten=case.startswith('0006'))
     else:
         raise ValueError(f"Unsupported model_type: {model_type}")
 
     # compile amici model
-    if case == '0006':
+    if case.startswith('0006') and model_type != "pysb":
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_output_dir = f'amici_models/model_{case}'
     model = import_petab_problem(
