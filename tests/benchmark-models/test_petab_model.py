@@ -75,6 +75,7 @@ def main():
 
     # load PEtab files
     problem = petab.Problem.from_yaml(args.yaml_file_name)
+    petab.flatten_timepoint_specific_output_overrides(problem)
 
     # load model
     if args.model_directory:
