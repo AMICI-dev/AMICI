@@ -1,6 +1,6 @@
 # Changelog 
 
-## v0.x.x
+## v0.X Series
 
 ### v0.11.14 (2021-03-16)
 
