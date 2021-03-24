@@ -16,8 +16,8 @@ jobs:
       # Username/token to use the GitHub API to trigger an action on the GitHub repository for the downstream
       # command-line interface and Docker image. Tokens can be generated at https://github.com/settings/tokens.
       # The token should have the scope `repo`
-      GH_ISSUE_USERNAME: ${{ secrets.GH_ISSUE_USERNAME }}
-      GH_ISSUE_TOKEN: ${{ secrets.GH_ISSUE_TOKEN }}
+      GH_ISSUE_USERNAME: ${{ secrets.BIOSIMULATORS_USERNAME }}
+      GH_ISSUE_TOKEN: ${{ secrets.BIOSIMULATORS_TOKEN }}
     steps:
       - name: Trigger GitHub action that will build and release the downstream command-line interface and Docker image
         run: |
