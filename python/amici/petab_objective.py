@@ -262,7 +262,12 @@ def create_parameter_mapping(
 
     prelim_parameter_mapping = \
         petab_problem.get_optimization_to_simulation_parameter_mapping(
-            warn_unmapped=False, scaled_parameters=scaled_parameters)
+            warn_unmapped=False, scaled_parameters=scaled_parameters,
+            allow_timepoint_specific_numeric_noise_parameters=
+            petab.lint.observable_table_has_nontrivial_noise_formula(
+                petab_problem.observable_df
+            )
+        )
 
     parameter_mapping = ParameterMapping()
     for (_, condition), prelim_mapping_for_condition in \
