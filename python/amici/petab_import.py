@@ -463,7 +463,8 @@ def import_model_sbml(
         petab.lint.observable_table_has_nontrivial_noise_formula(
             observable_df
         )
-    if petab.lint.measurement_table_has_timepoint_specific_mappings(
+    if measurement_table is not None and \
+            petab.lint.measurement_table_has_timepoint_specific_mappings(
         measurement_table,
         allow_scalar_numeric_noise_parameters=allow_n_noise_pars
     ):
