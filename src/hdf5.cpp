@@ -1,3 +1,12 @@
+/**
+ * Functions for HDF5 I/O
+ *
+ * NOTE: Use only `const char*` versions of any HDF5 functions, not the
+ * `std::string` version. On many systems, HDF5 libraries are still not compiled
+ * with C++11 support, but use the old C++03 ABI, which will lead to linking
+ * issues.
+ */
+
 #include "amici/hdf5.h"
 #include "amici/amici.h"
 
@@ -97,7 +106,7 @@ void createGroup(H5::H5File const& file,
 std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
                                                std::string const& hdf5Root,
                                                Model const& model) {
-    H5::H5File file(hdf5Filename, H5F_ACC_RDONLY);
+    H5::H5File file(hdf5Filename.c_str(), H5F_ACC_RDONLY);
 
     hsize_t m, n;
 
@@ -495,7 +504,7 @@ void createAndWriteInt1DDataset(H5::H5File const& file,
                                 gsl::span<const int> buffer) {
     hsize_t size = buffer.size();
     H5::DataSpace dataspace(1, &size);
-    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_INT,
+    auto dataset = file.createDataSet(datasetName.c_str(), H5::PredType::NATIVE_INT,
                                       dataspace);
     dataset.write(buffer.data(), H5::PredType::NATIVE_INT);
 }
@@ -505,7 +514,7 @@ void createAndWriteDouble1DDataset(const H5::H5File &file,
                                    gsl::span<const double> buffer) {
     hsize_t size = buffer.size();
     H5::DataSpace dataspace(1, &size);
-    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_DOUBLE,
+    auto dataset = file.createDataSet(datasetName.c_str(), H5::PredType::NATIVE_DOUBLE,
                                       dataspace);
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
 }
@@ -516,7 +525,7 @@ void createAndWriteDouble2DDataset(const H5::H5File &file,
                                    hsize_t n) {
     const hsize_t adims[] {m, n};
     H5::DataSpace dataspace(2, adims);
-    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_DOUBLE,
+    auto dataset = file.createDataSet(datasetName.c_str(), H5::PredType::NATIVE_DOUBLE,
                                       dataspace);
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
 }
@@ -527,7 +536,7 @@ void createAndWriteInt2DDataset(H5::H5File const& file,
                                 hsize_t n) {
     const hsize_t adims[] {m, n};
     H5::DataSpace dataspace(2, adims);
-    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_INT,
+    auto dataset = file.createDataSet(datasetName.c_str(), H5::PredType::NATIVE_INT,
                                       dataspace);
     dataset.write(buffer.data(), H5::PredType::NATIVE_INT);
 }
@@ -538,7 +547,7 @@ void createAndWriteDouble3DDataset(H5::H5File const& file,
                                    hsize_t n, hsize_t o) {
     const hsize_t adims[] {m, n, o};
     H5::DataSpace dataspace(3, adims);
-    auto dataset = file.createDataSet(datasetName, H5::PredType::NATIVE_DOUBLE,
+    auto dataset = file.createDataSet(datasetName.c_str(), H5::PredType::NATIVE_DOUBLE,
                                       dataspace);
     dataset.write(buffer.data(), H5::PredType::NATIVE_DOUBLE);
 }
@@ -871,14 +880,14 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
 
 void readSolverSettingsFromHDF5(const std::string &hdffile, Solver &solver,
                                 const std::string &datasetPath) {
-    H5::H5File file(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
+    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
     readSolverSettingsFromHDF5(file, solver, datasetPath);
 }
 
 void readModelDataFromHDF5(const std::string &hdffile, Model &model,
                            const std::string &datasetPath) {
-    H5::H5File file(hdffile, H5F_ACC_RDONLY, H5P_DEFAULT);
+    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
     readModelDataFromHDF5(file, model, datasetPath);
 }
@@ -958,12 +967,12 @@ H5::H5File createOrOpenForWriting(const std::string &hdf5filename)
 {
     AMICI_H5_SAVE_ERROR_HANDLER;
     try {
-        H5::H5File file(hdf5filename, H5F_ACC_RDWR);
+        H5::H5File file(hdf5filename.c_str(), H5F_ACC_RDWR);
         AMICI_H5_RESTORE_ERROR_HANDLER;
         return file;
     } catch(...) {
         AMICI_H5_RESTORE_ERROR_HANDLER;
-        return H5::H5File(hdf5filename, H5F_ACC_EXCL);
+        return H5::H5File(hdf5filename.c_str(), H5F_ACC_EXCL);
     }
 }
 
@@ -977,13 +986,13 @@ bool locationExists(const H5::H5File &file, const std::string &location)
 
 bool locationExists(const std::string &filename, const std::string &location)
 {
-    H5::H5File file(filename, H5F_ACC_RDONLY);
+    H5::H5File file(filename.c_str(), H5F_ACC_RDONLY);
     return locationExists(file, location);
 }
 
 std::vector<int> getIntDataset1D(const H5::H5File &file,
                                  std::string const& name) {
-    auto dataset = file.openDataSet(name);
+    auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
     int rank = dataspace.getSimpleExtentNdims();
@@ -1002,7 +1011,7 @@ std::vector<int> getIntDataset1D(const H5::H5File &file,
 std::vector<double> getDoubleDataset1D(const H5::H5File &file,
                                        const std::string &name)
 {
-    auto dataset = file.openDataSet(name);
+    auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
     int rank = dataspace.getSimpleExtentNdims();
@@ -1025,7 +1034,7 @@ std::vector<double> getDoubleDataset2D(const H5::H5File &file,
 {
     m = n = 0;
 
-    auto dataset = file.openDataSet(name);
+    auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
     int rank = dataspace.getSimpleExtentNdims();
@@ -1050,7 +1059,7 @@ std::vector<double> getDoubleDataset3D(const H5::H5File &file,
 {
     m = n = o = 0;
 
-    auto dataset = file.openDataSet(name);
+    auto dataset = file.openDataSet(name.c_str());
     auto dataspace = dataset.getSpace();
 
     int rank = dataspace.getSimpleExtentNdims();
