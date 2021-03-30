@@ -73,7 +73,7 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
 
     // write
     // delete destination group
-    H5::H5File in(hdffileOptions, H5F_ACC_RDONLY);
+    H5::H5File in(hdffileOptions.c_str(), H5F_ACC_RDONLY);
     auto out = amici::hdf5::createOrOpenForWriting(hdffilewrite);
     if(hdf5::locationExists(out, path))
         H5Ldelete(out.getId(), path.c_str(), H5P_DEFAULT);
@@ -169,7 +169,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     }
 
     // compare to saved data in hdf file
-    H5::H5File file(hdffile, H5F_ACC_RDONLY);
+    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY);
 
     hsize_t m, n;
 
