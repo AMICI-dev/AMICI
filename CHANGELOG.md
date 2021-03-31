@@ -2,7 +2,7 @@
 
 ## v0.X Series
 
-### v0.11.15 (2021-03-30)
+### v0.11.15 (2021-03-31)
 
 Fixes:
 * Fixed initial state sensitivities in adjoint preequilibration (#1468)
