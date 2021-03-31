@@ -459,6 +459,21 @@ def import_model_sbml(
     sbml_importer = amici.SbmlImporter(sbml_model)
     sbml_model = sbml_importer.sbml
 
+    allow_n_noise_pars = \
+        not petab.lint.observable_table_has_nontrivial_noise_formula(
+            observable_df
+        )
+    if measurement_table is not None and \
+            petab.lint.measurement_table_has_timepoint_specific_mappings(
+        measurement_table,
+        allow_scalar_numeric_noise_parameters=allow_n_noise_pars
+    ):
+        raise ValueError(
+            'AMICI does not support importing models with timepoint specific '
+            'mappings for noise or observable parameters. Please flatten '
+            'the problem and try again.'
+        )
+
     if observable_df is not None:
         observables, noise_distrs, sigmas = \
             get_observation_model(observable_df)
@@ -574,10 +589,10 @@ def import_model_sbml(
 import_model = import_model_sbml
 
 
-def get_observation_model(observable_df: pd.DataFrame
-                          ) -> Tuple[Dict[str, Dict[str, str]],
-                                     Dict[str, str],
-                                     Dict[str, Union[str, float]]]:
+def get_observation_model(
+        observable_df: pd.DataFrame,
+) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str],
+           Dict[str, Union[str, float]]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
     table in a format suitable for
@@ -596,13 +611,13 @@ def get_observation_model(observable_df: pd.DataFrame
     observables = {}
     sigmas = {}
 
+    nan_pat = r'^[nN]a[nN]$'
     for _, observable in observable_df.iterrows():
-        oid = observable.name
+        oid = str(observable.name)
         # need to sanitize due to https://github.com/PEtab-dev/PEtab/issues/447
-        pat = r'^[nN]a[nN]$'
-        name = re.sub(pat, '', str(observable.get(OBSERVABLE_NAME, '')))
-        formula_obs = re.sub(pat, '', str(observable[OBSERVABLE_FORMULA]))
-        formula_noise = re.sub(pat, '', str(observable[NOISE_FORMULA]))
+        name = re.sub(nan_pat, '', str(observable.get(OBSERVABLE_NAME, '')))
+        formula_obs = re.sub(nan_pat, '', str(observable[OBSERVABLE_FORMULA]))
+        formula_noise = re.sub(nan_pat, '', str(observable[NOISE_FORMULA]))
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
 
@@ -617,7 +632,8 @@ def get_observation_model(observable_df: pd.DataFrame
     return observables, noise_distrs, sigmas
 
 
-def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
+def petab_noise_distributions_to_amici(observable_df: pd.DataFrame
+                                       ) -> Dict[str, str]:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
@@ -689,6 +705,10 @@ def parse_cli_args():
     parser.add_argument('--no-compile', action='store_false',
                         dest='compile',
                         help='Only generate model code, do not compile')
+    parser.add_argument('--flatten', dest='flatten', default=False,
+                        action='store_true',
+                        help='Flatten measurement specific overrides of '
+                             'observable and noise parameters')
 
     # Call with set of files
     parser.add_argument('-s', '--sbml', dest='sbml_file_name',
@@ -739,6 +759,9 @@ def main():
 
     # First check for valid PEtab
     petab.lint_problem(pp)
+
+    if args.flatten:
+        petab.flatten_timepoint_specific_output_overrides(pp)
 
     import_model(model_name=args.model_name,
                  sbml_model=pp.sbml_model,

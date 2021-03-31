@@ -47,8 +47,10 @@ class PysbPetabProblem(petab.Problem):
         :param args: See :meth:`petab.Problem.__init__`
         :param kwargs: See :meth:`petab.Problem.__init__`
         """
-
+        flatten = kwargs.pop('flatten', False)
         super().__init__(*args, **kwargs)
+        if flatten:
+            petab.flatten_timepoint_specific_output_overrides(self)
 
         self.pysb_model: 'pysb.Model' = pysb_model
         self._add_observation_model()
@@ -108,17 +110,33 @@ class PysbPetabProblem(petab.Problem):
                    visualization_files: Union[str, Iterable[str]] = None,
                    observable_files: Union[str, Iterable[str]] = None,
                    pysb_model_file: str = None,
-                   ) -> 'PysbPetabProblem':
+                   flatten: bool = False) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables from files.
 
-        Arguments:
-            condition_file: PEtab condition table
-            measurement_file: PEtab measurement table
-            parameter_file: PEtab parameter table
-            visualization_files: PEtab visualization tables
-            observable_files: PEtab observables tables
-            pysb_model_file: PySB model file
+        :param condition_file:
+            PEtab condition table
+
+        :param measurement_file:
+            PEtab measurement table
+
+        :param parameter_file:
+            PEtab parameter table
+
+        :param visualization_files:
+            PEtab visualization tables
+
+        :param observable_files:
+            PEtab observables tables
+
+        :param pysb_model_file:
+            PySB model file
+
+        :param flatten:
+            Flatten the petab problem
+
+        :return:
+            Petab Problem
         """
 
         condition_df = measurement_df = parameter_df = visualization_df = None
@@ -152,18 +170,27 @@ class PysbPetabProblem(petab.Problem):
             measurement_df=measurement_df,
             parameter_df=parameter_df,
             observable_df=observable_df,
-            visualization_df=visualization_df)
+            visualization_df=visualization_df,
+            flatten=flatten
+        )
 
     @staticmethod
-    def from_yaml(yaml_config: Union[Dict, str]) -> 'PysbPetabProblem':
+    def from_yaml(yaml_config: Union[Dict, str],
+                  flatten: bool = False) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables as specified by YAML file.
 
         NOTE: The PySB model is currently expected in the YAML file under
         ``sbml_files``.
 
-        Arguments:
-            yaml_config: PEtab configuration as dictionary or YAML file name
+        :param yaml_config:
+            PEtab configuration as dictionary or YAML file name
+
+        :param flatten:
+            Flatten the petab problem
+
+        :return:
+            Petab Problem
         """
         from petab.yaml import (load_yaml, is_composite_problem,
                                 assert_single_condition_and_sbml_file)
@@ -210,7 +237,8 @@ class PysbPetabProblem(petab.Problem):
                 for f in problem0.get(VISUALIZATION_FILES, [])],
             observable_files=[
                 os.path.join(path_prefix, f)
-                for f in problem0.get(OBSERVABLE_FILES, [])]
+                for f in problem0.get(OBSERVABLE_FILES, [])],
+            flatten=flatten
         )
 
 

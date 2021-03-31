@@ -5,7 +5,9 @@ Bachmann_MSB2011:
 Becker_Science2010:
   llh: -364.118614198023
 
-#Beer_MolBioSystems2014    None
+Beer_MolBioSystems2014:
+  llh: 58622.9145631413
+  note: benchmark collection reference parameters do not match petab, but reference llh has been confirmed for parameters reported there up to sign
 
 Boehm_JProteomeRes2014:
   llh: -138.22199693517703
@@ -16,8 +18,7 @@ Borghans_BiophysChem1997:
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Brannmark_JBC2010:
-  llh: 283.778227541074
-  note: unchecked
+  llh: -141.889113770537
 
 #Bruno_JExpBio2016:    None
 
@@ -34,8 +35,7 @@ Elowitz_Nature2000:
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10))) / 2
 
 Fiedler_BMC2016:
-  llh: -117.16780323362
-  note: unchecked
+  llh: 58.58390161681
 
 Fujita_SciSignal2010:
   llh: 53.08749124997969
