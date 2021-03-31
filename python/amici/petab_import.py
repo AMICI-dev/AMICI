@@ -460,7 +460,7 @@ def import_model_sbml(
     sbml_model = sbml_importer.sbml
 
     allow_n_noise_pars = \
-        petab.lint.observable_table_has_nontrivial_noise_formula(
+        not petab.lint.observable_table_has_nontrivial_noise_formula(
             observable_df
         )
     if measurement_table is not None and \
