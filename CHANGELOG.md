@@ -2,6 +2,17 @@
 
 ## v0.X Series
 
+### v0.11.15 (2021-03-30)
+
+Fixes:
+* Fixed initial state sensitivities in adjoint preequilibration (#1468)
+* Fixed various model import / parameter mapping issues (#1469, #1473, #1475)
+
+New:
+* New AMICI releases will automatically trigger releases at
+  https://biosimulators.org/simulators/amici/latest
+* Transparent logo
+
 ### v0.11.14 (2021-03-16)
 
 New features:
