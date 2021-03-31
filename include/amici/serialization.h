@@ -290,16 +290,19 @@ char *serializeToChar(T const& data, int *size) {
 
 template <typename T>
 T deserializeFromChar(const char *buffer, int size) {
-    try {
-        ::boost::iostreams::basic_array_source<char> device(buffer, size);
-        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-            device);
-        ::boost::archive::binary_iarchive iar(s);
-        T data;
-        iar >> data;
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
 
+    bio::basic_array_source<char> device(buffer, size);
+    bio::stream<bio::basic_array_source<char>> s(device);
+
+    T data;
+
+    try {
+        ba::binary_iarchive iar(s);
+        iar >> data;
         return data;
-    } catch(::boost::archive::archive_exception const& e) {
+    } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from char failed: %s", e.what());
     }
 }
@@ -314,19 +317,20 @@ T deserializeFromChar(const char *buffer, int size) {
 
 template <typename T>
 std::string serializeToString(T const& data) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    std::string serialized;
+    bio::back_insert_device<std::string> inserter(serialized);
+    bio::stream<bio::back_insert_device<std::string>> os(inserter);
+
     try {
-        std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-        ::boost::iostreams::stream<
-            ::boost::iostreams::back_insert_device<std::string>>
-            s(inserter);
-        ::boost::archive::binary_oarchive oar(s);
+        ba::binary_oarchive oar(os);
 
         oar << data;
-        s.flush();
 
         return serialized;
-    } catch(::boost::archive::archive_exception const& e) {
+    } catch(ba::archive_exception const& e) {
         throw AmiException("Serialization to string failed: %s", e.what());
     }
 }
@@ -341,21 +345,22 @@ std::string serializeToString(T const& data) {
 
 template <typename T>
 std::vector<char> serializeToStdVec(T const& data) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    std::vector<char> buffer;
+    bio::stream<
+        bio::back_insert_device<
+            std::vector<char>>> os(buffer);
+
     try{
-        std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-        ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
-            s(inserter);
-        ::boost::archive::binary_oarchive oar(s);
+        ba::binary_oarchive oar(os);
 
         oar << data;
-        s.flush();
 
-        std::vector<char> buf(serialized.begin(), serialized.end());
-
-        return buf;
-    } catch(::boost::archive::archive_exception const& e) {
-        throw AmiException("Serialization to StdVec failed: %s", e.what());
+        return buffer;
+    } catch(ba::archive_exception const& e) {
+        throw AmiException("Serialization to std::vector failed: %s", e.what());
     }
 }
 
@@ -369,19 +374,22 @@ std::vector<char> serializeToStdVec(T const& data) {
 
 template <typename T>
 T deserializeFromString(std::string const& serialized) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    bio::basic_array_source<char> device(serialized.data(), serialized.size());
+    bio::stream<bio::basic_array_source<char>> os(device);
+    T deserialized;
+
     try{
-        ::boost::iostreams::basic_array_source<char> device(serialized.data(),
-                                                          serialized.size());
-        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-            device);
-        ::boost::archive::binary_iarchive iar(s);
-        T deserialized;
+        ba::binary_iarchive iar(os);
 
         iar >> deserialized;
 
         return deserialized;
-    } catch(::boost::archive::archive_exception const& e) {
-        throw AmiException("Deserialization from StdVec failed: %s", e.what());
+    } catch(ba::archive_exception const& e) {
+        throw AmiException("Deserialization from std::string failed: %s",
+                           e.what());
     }
 }
 
