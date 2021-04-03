@@ -107,19 +107,19 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # ----- compare simulations wo edata, sensi = 0, states ------------------
     # run simulations
     rdata_cl = get_results(model_with_cl)
-    assert rdata_cl['status'] == amici.AMICI_SUCCESS
+    assert rdata_cl.status == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl)
-    assert rdata['status'] == amici.AMICI_SUCCESS
+    assert rdata.status == amici.AMICI_SUCCESS
 
     # compare state trajectories
-    assert np.isclose(rdata['x'], rdata_cl['x']).all()
+    assert np.isclose(rdata.x, rdata_cl.x).all()
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
     # run simulations
     rdata_cl = get_results(model_with_cl, sensi_order=1)
-    assert rdata_cl['status'] == amici.AMICI_SUCCESS
+    assert rdata_cl.status == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl, sensi_order=1)
-    assert rdata['status'] == amici.AMICI_SUCCESS
+    assert rdata.status == amici.AMICI_SUCCESS
 
     # compare state trajectories
     for field in ['x', 'sx']:
@@ -133,13 +133,14 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # run simulations
     edata, _, _ = edata_fixture
     rdata_cl = get_results(model_with_cl, edata=edata)
-    assert rdata_cl['status'] == amici.AMICI_SUCCESS
-    # check that steady state computation succeeded by Newton in reduced model
-    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
+    assert rdata_cl.status == amici.AMICI_SUCCESS
+    # check that steady state computation succeeded by sim in reduced model
+    assert np.array_equal(rdata_cl.preeq_status, [0, 1, 0])
+
     rdata = get_results(model_without_cl, edata=edata)
-    assert rdata['status'] == amici.AMICI_SUCCESS
+    assert rdata.status == amici.AMICI_SUCCESS
     # check that steady state computation succeeded by Newton in reduced model
-    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
+    assert np.array_equal(rdata_cl.preeq_status, [1, 0, 0])
 
     # compare preequilibrated states
     for field in ['x', 'x_ss', 'llh']:
@@ -149,13 +150,14 @@ def test_compare_conservation_laws_sbml(edata_fixture):
 
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata, sensi_order=1)
-    assert rdata_cl['status'] == amici.AMICI_SUCCESS
-    rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
-    assert rdata['status'] == amici.AMICI_SUCCESS
+    assert rdata_cl.status == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
-    assert (rdata['preeq_status'] == np.array([0, 1, 0])).all()
+    assert np.array_equal(rdata_cl.preeq_status, [0, 1, 0])
+
+    rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
+    assert rdata.status == amici.AMICI_SUCCESS
     # check that steady state computation succeeded by Newton in reduced model
-    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
+    assert np.array_equal(rdata.preeq_status, [1, 0, 0])
 
     # compare state sensitivities with edata and preequilibration
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
@@ -169,7 +171,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
         rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
-        assert rdata['status'] == amici.AMICI_ERROR
+        assert rdata.status == amici.AMICI_ERROR
 
 
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
@@ -215,10 +217,12 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
             # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl.sllh, raa.sllh, 1e-5, 1e-5).all()
 
-            # this needs to fail due to incompatible
+            # this needs to fail due to incompatiblity in postequilibration
             raf = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.forward,
                               reinitialize_states=reinit)
 
             assert raf.status == amici.AMICI_ERROR
+            assert np.array_equal(raf.preeq_status, [-3, 1, 0])
+            assert np.array_equal(raf.posteq_status, [0, 0, 0])

@@ -91,10 +91,10 @@ def test_manual_preequilibration(preeq_fixture):
         assert rdata_preeq.status == amici.AMICI_SUCCESS
 
         # manual reinitialization + presimulation
-        x0 = rdata_preeq['x'][0, :]
+        x0 = rdata_preeq.x[0, :]
         x0[1] = edata_presim.fixedParameters[0]
         x0[2] = edata_presim.fixedParameters[1]
-        sx0 = rdata_preeq['sx'][0, :, :]
+        sx0 = rdata_preeq.sx[0, :, :]
         sx0[:, 1] = 0
         sx0[:, 2] = 0
         model.setInitialStates(x0)
@@ -103,10 +103,10 @@ def test_manual_preequilibration(preeq_fixture):
         assert rdata_presim.status == amici.AMICI_SUCCESS
 
         # manual reinitialization + simulation
-        x0 = rdata_presim['x'][0, :]
+        x0 = rdata_presim.x[0, :]
         x0[1] = edata_sim.fixedParameters[0]
         x0[2] = edata_sim.fixedParameters[1]
-        sx0 = rdata_presim['sx'][0, :, :]
+        sx0 = rdata_presim.sx[0, :, :]
         sx0[:, 1] = 0
         sx0[:, 2] = 0
         model.setInitialStates(x0)
@@ -136,8 +136,8 @@ def test_parameter_reordering(preeq_fixture):
 
         for ip, p_index in enumerate(plist):
             assert np.isclose(
-                rdata_ordered['sx'][:, p_index, :],
-                rdata_reordered['sx'][:, ip, :],
+                rdata_ordered.sx[:, p_index, :],
+                rdata_reordered.sx[:, ip, :],
                 1e-6, 1e-6
             ).all(), plist
 
@@ -196,8 +196,8 @@ def test_parameter_in_expdata(preeq_fixture):
     edata.sx0 = model.getInitialStateSensitivities()
 
     # perturb model initial states
-    model.setInitialStates(rdata['x_ss'] * 4)
-    model.setInitialStateSensitivities(rdata['sx_ss'].flatten() / 2)
+    model.setInitialStates(rdata.x_ss * 4)
+    model.setInitialStateSensitivities(rdata.sx_ss.flatten() / 2)
 
     # set ExpData plist
     edata.plist = model.getParameterList()
@@ -377,7 +377,7 @@ def test_newton_solver_equilibration(preeq_fixture):
         rdatas[equil_meth] = amici.runAmiciSimulation(model, solver, edata)
 
         # assert successful simulation
-        assert rdatas[equil_meth]['status'] == amici.AMICI_SUCCESS
+        assert rdatas[equil_meth].status == amici.AMICI_SUCCESS
 
     # assert correct results
     for variable in ['llh', 'sllh', 'sx0', 'sx_ss', 'x_ss']:
@@ -401,4 +401,4 @@ def test_newton_solver_equilibration(preeq_fixture):
     solver.setNewtonMaxLinearSteps(10)
     rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
 
-    assert rdata_spbcg['status'] == amici.AMICI_ERROR
+    assert rdata_spbcg.status == amici.AMICI_ERROR
