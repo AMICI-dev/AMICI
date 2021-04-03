@@ -215,9 +215,10 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
             # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl.sllh, raa.sllh, 1e-5, 1e-5).all()
 
+            # this needs to fail due to incompatible
             raf = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.forward,
                               reinitialize_states=reinit)
 
-            assert raf.status != amici.AMICI_SUCCESS
+            assert raf.status == amici.AMICI_ERROR

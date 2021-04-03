@@ -156,9 +156,17 @@ class SteadystateProblem {
      * @brief Checks whether the simulator needs to compute sensi via FSA
      * @param model model instance
      * @param solver solver instance
-     * @return true if correct, false otherwise
+     * @return true if computations is necessary, false otherwise
      */
     bool checkComputeFSASensis(const Model &model, const Solver &solver);
+    
+    /**
+     * @brief Checks whether newton or FSA sensis were computed
+     * @param model model instance
+     * @param solver solver instance
+     * @return true if sensis were computed, false otherwise
+     */
+    bool checkUseNewtonOrFSASensis(const Model &model, const Solver &solver);
 
     /**
      * @brief Computes the weighted root mean square of xdot

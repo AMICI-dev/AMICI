@@ -241,29 +241,42 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
 
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode.newtonOnly
+    )
+
     # preequilibration and presimulation with adjoints:
     # this needs to fail unless we remove presimulation
     solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
 
     rdata = amici.runAmiciSimulation(model, solver, edata)
-    assert rdata['status'] == amici.AMICI_ERROR
+    assert rdata.status == amici.AMICI_ERROR
+    assert np.array_equal(rdata.preeq_status, [-2, 1, 0])
+    assert np.array_equal(rdata.posteq_status, [0, 0, 0])
 
     # presimulation and postequilibration with adjoints:
     # this also needs to fail
     y = edata.getObservedData()
     stdy = edata.getObservedDataStdDev()
 
-    # add infty timepoint
+    # add infty timepoint for postequilibration
     ts = np.hstack([*edata.getTimepoints(), np.inf])
     edata.setTimepoints(sorted(ts))
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
-    edata.t_presim = 0
-    edata.fixedParametersPresimulation = ()
+
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    assert rdata.status == amici.AMICI_ERROR
+    assert np.array_equal(rdata.preeq_status, [-2, 1, 0])
+    assert np.array_equal(rdata.posteq_status, [0, 0, 0])
 
     # no presim any more, this should work
+    edata.t_presim = 0
+    edata.fixedParametersPresimulation = ()
     rdata = amici.runAmiciSimulation(model, solver, edata)
-    assert rdata['status'] == amici.AMICI_SUCCESS
+    assert rdata.status == amici.AMICI_SUCCESS
+    assert np.array_equal(rdata.preeq_status, [-2, 1, 0])
+    assert np.array_equal(rdata.posteq_status, [-2, 1, 0])
 
 
 def test_equilibration_methods_with_adjoints(preeq_fixture):
@@ -276,7 +289,7 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
     edata.t_presim = 0.0
     edata.fixedParametersPresimulation = ()
 
-    # add infty timepoint
+    # add infty timepoint for postequilibration
     y = edata.getObservedData()
     stdy = edata.getObservedDataStdDev()
     ts = np.hstack([*edata.getTimepoints(), np.inf])
@@ -296,13 +309,29 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
         equil_meth, sensi_meth = setting
         model.setSteadyStateSensitivityMode(equil_meth)
         solver.setSensitivityMethod(sensi_meth)
-        solver.setNewtonMaxSteps(0)
 
         # add rdatas
         rdatas[setting] = amici.runAmiciSimulation(model, solver, edata)
         # assert successful simulation
+        if (sensi_meth, equil_meth) == (
+            amici.SensitivityMethod.adjoint,
+            amici.SteadyStateSensitivityMode.simulationFSA
+        ):
+            assert rdatas[setting].status == amici.AMICI_ERROR
+            # preeq works since we use a seperate solver
+            assert np.array_equal(rdatas[setting].preeq_status, [0, 1, 0])
+            # posteq doesn't work since we would need to activate sensis in 
+            # the solver
+            assert np.array_equal(rdatas[setting].posteq_status, [0, 0, 0])
+        else:
+            assert rdatas[setting].status == amici.AMICI_SUCCESS
+            if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
+                target_status = [-2, 1, 0]
+            else:
+                target_status = [0, 1, 0]
+            assert np.array_equal(rdatas[setting].posteq_status, target_status)
+            assert np.array_equal(rdatas[setting].preeq_status, target_status)
 
-        assert rdatas[setting]['status'] == amici.AMICI_SUCCESS
 
     for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
@@ -341,10 +370,8 @@ def test_newton_solver_equilibration(preeq_fixture):
         sensi_meth = amici.SensitivityMethod.forward
         solver.setSensitivityMethod(sensi_meth)
         model.setSteadyStateSensitivityMode(equil_meth)
-        if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
-            solver.setNewtonMaxSteps(10)
-        else:
-            solver.setNewtonMaxSteps(0)
+        solver.setNewtonMaxSteps(10)
+
 
         # add rdatas
         rdatas[equil_meth] = amici.runAmiciSimulation(model, solver, edata)

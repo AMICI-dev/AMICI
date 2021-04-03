@@ -26,19 +26,30 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       sx_(model.nx_solver, model.nplist()), sdx_(model.nx_solver, model.nplist()),
       xB_(model.nJ * model.nx_solver), xQ_(model.nJ * model.nx_solver),
       xQB_(model.nplist()), xQBdot_(model.nplist()),
-      dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0) {
+      dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
+      steady_state_status_(3, SteadyStateStatus::not_run) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               max_steps_ = solver.getNewtonMaxSteps();
               numlinsteps_.resize(2 * max_steps_, 0);
           }
+          if (solver.getSensitivityOrder() == SensitivityOrder::none)
+              return;
           /* Check for compatibility of options */
           if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
-              solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint &&
-              solver.getSensitivityOrder() > SensitivityOrder::none)
+              solver.getSensitivityMethodPreequilibration()
+                  == SensitivityMethod::adjoint)
               throw AmiException("Preequilibration using adjoint sensitivities "
                                  "is not compatible with using forward "
                                  "sensitivities during simulation");
+          
+          if (solver.getSensitivityMethodPreequilibration()
+                  == SensitivityMethod::adjoint &&
+              model.getSteadyStateSensitivityMode() ==
+                  SteadyStateSensitivityMode::simulationFSA)
+              throw AmiException("Preequilibration using adjoint sensitivities "
+                                 "is not compatible with simulationFSA "
+                                 "sensitivity mode.");
       }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
@@ -53,6 +64,18 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         t_ = model->t0();
         solver->setup(t_, model, x_, dx_, sx_, sdx_);
     } else {
+        /* don't use checkUseFSASensis here, since steady_state_status_ checks
+           are meaningless at this point */
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            model->getSteadyStateSensitivityMode() ==
+                SteadyStateSensitivityMode::simulationFSA &&
+            solver->getSensitivityMethod() != SensitivityMethod::forward) {
+            storeSimulationState(model,
+                                 checkUseNewtonOrFSASensis(*model, *solver));
+            throw AmiException("Postequilibration sensitivity analysis using "
+                               "simulationFSA is not compatible with the "
+                               "employed simulation sensitivity mode.");
+        }
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
     }
@@ -82,8 +105,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, solver->getSensitivityOrder() >=
-                                SensitivityOrder::first);
+    storeSimulationState(model, checkUseNewtonOrFSASensis(*model, *solver));
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -106,7 +128,6 @@ void SteadystateProblem::findSteadyState(Solver *solver,
                                          NewtonSolver *newtonSolver,
                                          Model *model, int it) {
     /* First, try to run the Newton solver */
-    steady_state_status_.resize(3, SteadyStateStatus::not_run);
     if (checkNewtonAllowed(*model, *solver))
         findSteadyStateByNewtonsMethod(newtonSolver, model, false);
 
@@ -394,10 +415,17 @@ bool SteadystateProblem::checkComputeImplicitSensis(const Model &model,
     /* don't compute if user didn't allow computation or if FSA results
        available  */
     if (!checkNewtonAllowed(model, solver) || checkUseFSASensis(model, solver)
-        || solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint)
+        || solver.getSensitivityMethodPreequilibration()
+            == SensitivityMethod::adjoint)
         return false;
 
     return solver.getSensitivityOrder() >= SensitivityOrder::first;
+}
+
+bool SteadystateProblem::checkUseNewtonOrFSASensis(const Model &model,
+                                                   const Solver &solver) {
+    return checkUseFSASensis(model, solver) ||
+        checkComputeImplicitSensis(model,solver);
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
@@ -444,7 +472,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
             sx_ = solver->getStateSensitivity(t_);
             model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
             wrms_ = getWrmsNorm(
-                x_, xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
+                sx_[ip], xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
                 solver->getRelativeToleranceSteadyStateSensi(), ewt_);
             converged = wrms_ < RCONST(1.0);
         }
@@ -580,7 +608,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be computed
      by newtonSolver->computeNewtonSensis then */
-    if (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::newtonOnly) {
+    if (model->getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::newtonOnly) {
         solver->switchForwardSensisOff();
         sensitivityFlag = SensitivityMethod::none;
     }
