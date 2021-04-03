@@ -41,7 +41,7 @@ def generate_models():
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # Name of the model that will also be the name of the python module
-    model_name =  model_output_dir ='model_constant_species'
+    model_name = model_output_dir ='model_constant_species'
     model_name_cl = model_output_dir_cl = 'model_constant_species_cl'
 
     # Define constants, observables, sigmas
@@ -101,7 +101,7 @@ def get_results(model, edata=None, sensi_order=0,
 
 
 def test_compare_conservation_laws_sbml(edata_fixture):
-    # first, create the modek
+    # first, create the model
     model_with_cl, model_without_cl = generate_models()
 
     # ----- compare simulations wo edata, sensi = 0, states ------------------
@@ -134,12 +134,12 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     edata, _, _ = edata_fixture
     rdata_cl = get_results(model_with_cl, edata=edata)
     assert rdata_cl.status == amici.AMICI_SUCCESS
-    # check that steady state computation succeeded by sim in reduced model
-    assert np.array_equal(rdata_cl.preeq_status, [0, 1, 0])
+    # check that steady state computation succeeded by Newton in reduced model
+    assert np.array_equal(rdata_cl.preeq_status, [1, 0, 0])
 
     rdata = get_results(model_without_cl, edata=edata)
     assert rdata.status == amici.AMICI_SUCCESS
-    # check that steady state computation succeeded by Newton in reduced model
+    # check that steady state computation succeeded by Newton in full model
     assert np.array_equal(rdata_cl.preeq_status, [1, 0, 0])
 
     # compare preequilibrated states
@@ -151,13 +151,14 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata, sensi_order=1)
     assert rdata_cl.status == amici.AMICI_SUCCESS
-    # check that steady state computation succeeded only by sim in full model
-    assert np.array_equal(rdata_cl.preeq_status, [0, 1, 0])
+    # check that steady state computation succeeded by Newton in reduced
+    # model
+    assert np.array_equal(rdata_cl.preeq_status, [1, 0, 0])
 
     rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
     assert rdata.status == amici.AMICI_SUCCESS
-    # check that steady state computation succeeded by Newton in reduced model
-    assert np.array_equal(rdata.preeq_status, [1, 0, 0])
+    # check that steady state computation succeeded by sim in full model
+    assert np.array_equal(rdata.preeq_status, [0, 1, 0])
 
     # compare state sensitivities with edata and preequilibration
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
@@ -172,6 +173,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
         warnings.filterwarnings("ignore")
         rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
         assert rdata.status == amici.AMICI_ERROR
+        assert np.array_equal(rdata.preeq_status, [-3, 1, 0])
 
 
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
@@ -217,12 +219,12 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
             # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl.sllh, raa.sllh, 1e-5, 1e-5).all()
 
-            # this needs to fail due to incompatiblity in postequilibration
+            # this needs to fail due to incompatiblity
             raf = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.forward,
                               reinitialize_states=reinit)
 
             assert raf.status == amici.AMICI_ERROR
-            assert np.array_equal(raf.preeq_status, [-3, 1, 0])
+            assert np.array_equal(raf.preeq_status, [0, 0, 0])
             assert np.array_equal(raf.posteq_status, [0, 0, 0])
