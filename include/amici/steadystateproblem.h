@@ -128,17 +128,37 @@ class SteadystateProblem {
                           status) const;
 
     /**
-     * @brief Checks depending on the status of the Newton solver,
-     * solver settings, and the model, whether state sensitivities
-     * still need to be computed via a linear system solve or stored
-     * @param model pointer to the model object
-     * @param solver pointer to the solver object
-     * @param it integer with the index of the current time step
-     * @param context SteadyStateContext giving the situation for the flag
-     * @return flag telling how to process state sensitivities
+     * @brief Checks whether steadystate may be computed via Newton's method
+     * @param model model instance
+     * @param solver solver instance
+     * @return true if allowed, false otherwise
      */
-    bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
-                            SteadyStateContext context);
+    bool checkNewtonAllowed(const Model &model, const Solver &solver);
+    
+    /**
+     * @brief Checks whether the simulation solver or initialization provided sensitivities are correct
+     * @param model model instance
+     * @param solver solver instance
+     * @return true if correct, false otherwise
+     */
+    bool checkUseFSASensis(const Model &model, const Solver &solver);
+    
+    /**
+     * @brief Checks whether steadystate sensitivities need to be computed according to the implicit
+     * function theorem as solution to a linear system
+     * @param model model instance
+     * @param solver solver instance
+     * @return true if they need to be computed, false otherwise
+     */
+    bool checkComputeImplicitSensis(const Model &model, const Solver &solver);
+    
+    /**
+     * @brief Checks whether the simulator needs to compute sensi via FSA
+     * @param model model instance
+     * @param solver solver instance
+     * @return true if correct, false otherwise
+     */
+    bool checkComputeFSASensis(const Model &model, const Solver &solver);
 
     /**
      * @brief Computes the weighted root mean square of xdot

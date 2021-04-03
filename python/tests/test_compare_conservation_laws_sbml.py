@@ -125,7 +125,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     for field in ['x', 'sx']:
         assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
-    # ----- compare simulations wo edata, sensi = 0, states and sensis -------
+    # ----- compare simulations w edata, sensi = 0, states -------
     model_without_cl.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode.simulationFSA
     )
@@ -134,14 +134,18 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     edata, _, _ = edata_fixture
     rdata_cl = get_results(model_with_cl, edata=edata)
     assert rdata_cl['status'] == amici.AMICI_SUCCESS
+    # check that steady state computation succeeded by Newton in reduced model
+    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
     rdata = get_results(model_without_cl, edata=edata)
     assert rdata['status'] == amici.AMICI_SUCCESS
+    # check that steady state computation succeeded by Newton in reduced model
+    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
 
     # compare preequilibrated states
     for field in ['x', 'x_ss', 'llh']:
         assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
-    # ----- compare simulations wo edata, sensi = 1, states and sensis -------
+    # ----- compare simulations w edata, sensi = 1, states and sensis -------
 
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata, sensi_order=1)
@@ -149,7 +153,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
     assert rdata['status'] == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
-    assert (rdata['preeq_status'] == np.array([-3, 1, 0])).all()
+    assert (rdata['preeq_status'] == np.array([0, 1, 0])).all()
     # check that steady state computation succeeded by Newton in reduced model
     assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
 
@@ -157,8 +161,8 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
         assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
-    # ----- check failure st.st. sensi computation if run wo CLs -------------
-    # check failure of steady state senistivity computation if run wo CLs
+    # ----- check failure of sensi computation if run wo CLs -------------
+    # check failure of steady state sensitivity computation if run wo CLs
     model_without_cl.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode.newtonOnly
     )
@@ -198,9 +202,9 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                                  reinitialize_states=reinit)
 
             # assert all are close
-            assert np.isclose(rff_cl['sllh'], rfa_cl['sllh']).all()
-            assert np.isclose(rfa_cl['sllh'], raa_cl['sllh']).all()
-            assert np.isclose(raa_cl['sllh'], rff_cl['sllh']).all()
+            assert np.isclose(rff_cl.sllh, rfa_cl.sllh).all()
+            assert np.isclose(rfa_cl.sllh, raa_cl.sllh).all()
+            assert np.isclose(raa_cl.sllh, rff_cl.sllh).all()
 
     # --- compare fully adjoint approach to simulation with singular Jacobian ----
             raa = get_results(model, edata=edata, sensi_order=1,
@@ -209,4 +213,11 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                               reinitialize_states=reinit)
 
             # assert gradients are close (quadrature tolerances are laxer)
-            assert np.isclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5).all()
+            assert np.isclose(raa_cl.sllh, raa.sllh, 1e-5, 1e-5).all()
+
+            raf = get_results(model, edata=edata, sensi_order=1,
+                              sensi_meth=amici.SensitivityMethod.adjoint,
+                              sensi_meth_preeq=amici.SensitivityMethod.forward,
+                              reinitialize_states=reinit)
+
+            assert raf.status != amici.AMICI_SUCCESS

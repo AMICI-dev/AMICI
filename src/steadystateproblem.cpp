@@ -66,8 +66,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
-    if (getSensitivityFlag(model, solver, it, SteadyStateContext::newtonSensi))
-    {
+    if (checkComputeImplicitSensis(*model, *solver)) {
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
@@ -83,8 +82,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, getSensitivityFlag(model, solver, it,
-                         SteadyStateContext::sensiStorage));
+    storeSimulationState(model, solver->getSensitivityOrder() >=
+                                SensitivityOrder::first);
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -108,14 +107,15 @@ void SteadystateProblem::findSteadyState(Solver *solver,
                                          Model *model, int it) {
     /* First, try to run the Newton solver */
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    findSteadyStateByNewtonsMethod(newtonSolver, model, false);
+    if (checkNewtonAllowed(*model, *solver))
+        findSteadyStateByNewtonsMethod(newtonSolver, model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
     if (!checkSteadyStateSuccess())
         findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
-    if (!checkSteadyStateSuccess())
+    if (!checkSteadyStateSuccess() && checkNewtonAllowed(*model, *solver))
         findSteadyStateByNewtonsMethod(newtonSolver, model, true);
 
     /* Nothing worked, throw an as informative error as possible */
@@ -178,8 +178,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
     try {
         if (it < 0) {
             /* Preequilibration? -> Create a new CVode object for sim */
-            bool integrateSensis = getSensitivityFlag(model, solver, it,
-                                   SteadyStateContext::solverCreation);
+            bool integrateSensis = checkComputeFSASensis(*model, *solver);
             auto newtonSimSolver = createSteadystateSimSolver(solver, model,
                                                               integrateSensis,
                                                               false);
@@ -282,7 +281,6 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
-        
         /* Finalize by setting adjoint state to zero (its steady state) */
         xB_.zero();
     } catch (NewtonFailure const &) {
@@ -356,66 +354,50 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
     }
 }
 
-bool SteadystateProblem::getSensitivityFlag(const Model *model,
-                                            const Solver *solver,
-                                            int it, SteadyStateContext context) {
-    /* We need to check whether we need to compute forward sensitivities.
-       Depending on the situation (pre-/postequilibration) and the solver
-       settings, the logic may be involved and is handled here.
-       Most of these boolean operation could be simplified. However,
-       clarity is more important than brevity. */
+bool SteadystateProblem::checkNewtonAllowed(const Model &model,
+                                            const Solver &solver) {
+    /* only allowed if no sensis requested if sensi mode was not set to FSA */
+    return (solver.getSensitivityOrder() < SensitivityOrder::first) ||
+           model.getSteadyStateSensitivityMode() !=
+               SteadyStateSensitivityMode::simulationFSA;
+}
 
-    /* Are we running in preequilibration (and hence create)? */
-    bool preequilibration = (it == -1);
+bool SteadystateProblem::checkComputeFSASensis(const Model &model,
+                                               const Solver &solver) {
+    if (solver.getSensitivityOrder() < SensitivityOrder::first)
+        return false; /* no sensis requested */
 
-    /* Have we maybe already computed forward sensitivities? */
-    bool forwardSensisAlreadyComputed =
-        solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        steady_state_status_[1] == SteadyStateStatus::success &&
-        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
+    /* check if sensis via FSA requested */
+    return model.getSteadyStateSensitivityMode() ==
+           SteadyStateSensitivityMode::simulationFSA;
+}
 
-    bool simulationStartedInSteadystate =
-        steady_state_status_[0] == SteadyStateStatus::success &&
-        numsteps_[0] == 0;
+bool SteadystateProblem::checkUseFSASensis(const Model &model,
+                                           const Solver &solver) {
+    if (solver.getSensitivityOrder() < SensitivityOrder::first)
+        return false; /* no sensis requested */
 
-    /* Do we need forward sensis for postequilibration? */
-    bool needForwardSensisPosteq = !preequilibration &&
-        !forwardSensisAlreadyComputed &&
-        solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() == SensitivityMethod::forward;
+    if (steady_state_status_[0] == SteadyStateStatus::success &&
+        numsteps_[0] == 0)
+        return true; /* started in steadystate, use initialialization */
 
-    /* Do we need forward sensis for preequilibration? */
-    bool needForwardSensisPreeq = preequilibration &&
-        !forwardSensisAlreadyComputed &&
-        solver->getSensitivityMethodPreequilibration() == SensitivityMethod::forward &&
-        solver->getSensitivityOrder() >= SensitivityOrder::first;
+    if (steady_state_status_[1] == SteadyStateStatus::success &&
+        model.getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::simulationFSA)
+        return true; /* use results from findSteadyStateBySimulation */
 
-    /* Do we need to do the linear system solve to get forward sensitivities? */
-    bool needForwardSensisNewton =
-        (needForwardSensisPreeq || needForwardSensisPosteq) &&
-        !simulationStartedInSteadystate;
+    return false;
+}
 
-    /* When we're creating a new solver object */
-    bool needForwardSensiAtCreation = needForwardSensisPreeq &&
-        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
+bool SteadystateProblem::checkComputeImplicitSensis(const Model &model,
+                                                    const Solver &solver) {
+    /* don't compute if user didn't allow computation or if FSA results
+       available  */
+    if (!checkNewtonAllowed(model, solver) || checkUseFSASensis(model, solver)
+        || solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint)
+        return false;
 
-    /* Check if we need to store sensis */
-    switch (context) {
-        case SteadyStateContext::newtonSensi:
-            return needForwardSensisNewton;
-
-        case SteadyStateContext::sensiStorage:
-            return needForwardSensisNewton ||
-                forwardSensisAlreadyComputed ||
-                simulationStartedInSteadystate;
-
-        case SteadyStateContext::solverCreation:
-            return needForwardSensiAtCreation;
-
-        default:
-            throw AmiException("Requested invalid context in sensitivity "
-                               "processing during steady state computation");
-    }
+    return solver.getSensitivityOrder() >= SensitivityOrder::first;
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
@@ -593,8 +575,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
 
     /* Do we also have to check for convergence of sensitivities? */
     SensitivityMethod sensitivityFlag = SensitivityMethod::none;
-    if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-        solver->getSensitivityMethod() > SensitivityMethod::none)
+    if (checkComputeFSASensis(*model, *solver))
         sensitivityFlag = SensitivityMethod::forward;
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be computed
@@ -645,9 +626,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
         numstepsB_ = sim_steps;
     } else {
         numsteps_.at(1) = sim_steps;
-        if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-            model->getSteadyStateSensitivityMode() ==
-            SteadyStateSensitivityMode::simulationFSA)
+        if (checkComputeFSASensis(*model, *solver))
             sx_ = solver->getStateSensitivity(t_);
     }
 }
