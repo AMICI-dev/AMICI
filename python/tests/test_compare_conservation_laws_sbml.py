@@ -219,12 +219,17 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
             # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl.sllh, raa.sllh, 1e-5, 1e-5).all()
 
-            # this needs to fail due to incompatiblity
+            # this needs to fail due to failed RHS factorization
             raf = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.forward,
                               reinitialize_states=reinit)
 
             assert raf.status == amici.AMICI_ERROR
-            assert np.array_equal(raf.preeq_status, [0, 0, 0])
-            assert np.array_equal(raf.posteq_status, [0, 0, 0])
+            if edata.fixedParametersPreequilibration:
+                assert np.array_equal(raf.preeq_status, [-3, 1, 0])
+                assert np.array_equal(raf.posteq_status, [0, 0, 0])
+            else:
+                assert np.array_equal(raf.preeq_status, [0, 0, 0])
+                assert np.array_equal(raf.posteq_status, [-3, 1, 0])
+
