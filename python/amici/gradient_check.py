@@ -67,6 +67,7 @@ def check_finite_difference(x0: Sequence[float],
     og_sensitivity_order = solver.getSensitivityOrder()
     og_parameters = model.getParameters()
     og_plist = model.getParameterList()
+    og_eplist = edata.plist
 
     # sensitivity
     p = copy.deepcopy(x0)
@@ -74,6 +75,7 @@ def check_finite_difference(x0: Sequence[float],
 
     model.setParameters(p)
     model.setParameterList(plist)
+    edata.plist = plist
 
     # simulation with gradient
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
@@ -122,6 +124,7 @@ def check_finite_difference(x0: Sequence[float],
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
     model.setParameterList(og_plist)
+    edata.plist = og_eplist
 
 
 def check_derivatives(model: Model,
