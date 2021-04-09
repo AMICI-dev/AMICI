@@ -76,7 +76,8 @@ def check_finite_difference(x0: Sequence[float],
 
     model.setParameters(p)
     model.setParameterList(plist)
-    edata.plist = plist
+    if edata:
+        edata.plist = plist
 
     # simulation with gradient
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
