@@ -376,8 +376,12 @@ bool SteadystateProblem::checkComputeFSASensis(const Model &model,
         return false; /* no sensis requested */
 
     /* check if sensis via FSA requested */
-    return model.getSteadyStateSensitivityMode() ==
-           SteadyStateSensitivityMode::simulationFSA;
+    return (model.getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::simulationFSA) ||
+           ((model.getSteadyStateSensitivityMode() ==
+             SteadyStateSensitivityMode::mixed) &&
+            (solver.getSensitivityMethodPreequilibration()
+             == SensitivityMethod::forward));
 }
 
 bool SteadystateProblem::checkUseFSASensis(const Model &model,
@@ -390,8 +394,7 @@ bool SteadystateProblem::checkUseFSASensis(const Model &model,
         return true; /* started in steadystate, use initialialization */
 
     if (steady_state_status_[1] == SteadyStateStatus::success &&
-        model.getSteadyStateSensitivityMode() ==
-            SteadyStateSensitivityMode::simulationFSA)
+        checkComputeFSASensis(model, solver))
         return true; /* use results from findSteadyStateBySimulation */
 
     return false;

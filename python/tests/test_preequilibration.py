@@ -299,9 +299,11 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
 
     rdatas = {}
     equil_meths = [amici.SteadyStateSensitivityMode.newtonOnly,
-                   amici.SteadyStateSensitivityMode.simulationFSA]
+                   amici.SteadyStateSensitivityMode.simulationFSA,
+                   amici.SteadyStateSensitivityMode.mixed]
     sensi_meths = [amici.SensitivityMethod.forward,
-                   amici.SensitivityMethod.adjoint]
+                   amici.SensitivityMethod.adjoint,
+                   amici.SensitivityMethod.none]
     settings = itertools.product(equil_meths, sensi_meths)
 
     for setting in settings:
@@ -313,24 +315,41 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
         # add rdatas
         rdatas[setting] = amici.runAmiciSimulation(model, solver, edata)
         # assert successful simulation
-        if (sensi_meth, equil_meth) == (
-            amici.SensitivityMethod.adjoint,
-            amici.SteadyStateSensitivityMode.simulationFSA
-        ):
+        if (sensi_meth, equil_meth) in [
+            (amici.SensitivityMethod.adjoint,
+             amici.SteadyStateSensitivityMode.simulationFSA),
+            (amici.SensitivityMethod.none,
+             amici.SteadyStateSensitivityMode.simulationFSA),
+        ]:
             assert rdatas[setting].status == amici.AMICI_ERROR
             # preeq works since we use a seperate solver
-            assert np.array_equal(rdatas[setting].preeq_status, [0, 1, 0])
+            preeq_target_status = [0, 1, 0]
             # posteq doesn't work since we would need to activate sensis in 
             # the solver
-            assert np.array_equal(rdatas[setting].posteq_status, [0, -1, 0])
+            posteq_target_status = [0, -1, 0]
         else:
             assert rdatas[setting].status == amici.AMICI_SUCCESS
-            if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
-                target_status = [-2, 1, 0]
+            if equil_meth == amici.SteadyStateSensitivityMode.simulationFSA:
+                # only simulation is allowed to run
+                posteq_target_status = [0, 1, 0]
+                preeq_target_status = [0, 1, 0]
+            elif equil_meth == amici.SteadyStateSensitivityMode.mixed \
+                    and sensi_meth in [amici.SensitivityMethod.adjoint,
+                                       amici.SensitivityMethod.none]:
+                # during preequilibration we can use FSA since we create a
+                # separate solver, for posteq FSA is not allowed but
+                # second newton will succeed
+                posteq_target_status = [-2, -1, 1]
+                preeq_target_status = [-2, 1, 0]
             else:
-                target_status = [0, 1, 0]
-            assert np.array_equal(rdatas[setting].posteq_status, target_status)
-            assert np.array_equal(rdatas[setting].preeq_status, target_status)
+                # first newton fails so sensis are computed via FSA fallback
+                posteq_target_status = [-2, 1, 0]
+                preeq_target_status = [-2, 1, 0]
+
+        assert np.array_equal(rdatas[setting].posteq_status,
+                              posteq_target_status)
+        assert np.array_equal(rdatas[setting].preeq_status,
+                              preeq_target_status)
 
     for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
