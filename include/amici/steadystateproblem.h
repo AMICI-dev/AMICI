@@ -133,7 +133,7 @@ class SteadystateProblem {
      * @param solver solver instance
      * @return true if allowed, false otherwise
      */
-    bool checkNewtonAllowed(const Model &model, const Solver &solver);
+    bool checkNewtonAllowed(const Model &model, const Solver &solver) const;
     
     /**
      * @brief Checks whether FSA sensis provided by initialization or simulation solver can be used
@@ -141,7 +141,7 @@ class SteadystateProblem {
      * @param solver solver instance
      * @return true if correct, false otherwise
      */
-    bool checkUseFSASensis(const Model &model, const Solver &solver);
+    bool checkUseFSASensis(const Model &model, const Solver &solver) const;
     
     /**
      * @brief Checks whether steadystate sensitivities need to be computed according to the implicit
@@ -150,7 +150,8 @@ class SteadystateProblem {
      * @param solver solver instance
      * @return true if they need to be computed, false otherwise
      */
-    bool checkComputeImplicitSensis(const Model &model, const Solver &solver);
+    bool checkComputeImplicitSensis(const Model &model,
+                                    const Solver &solver) const;
     
     /**
      * @brief Checks whether the simulator needs to compute sensi via FSA
@@ -158,7 +159,7 @@ class SteadystateProblem {
      * @param solver solver instance
      * @return true if computations is necessary, false otherwise
      */
-    bool checkComputeFSASensis(const Model &model, const Solver &solver);
+    bool checkComputeFSASensis(const Model &model, const Solver &solver) const;
     
     /**
      * @brief Checks whether newton or FSA sensis were computed
@@ -166,7 +167,8 @@ class SteadystateProblem {
      * @param solver solver instance
      * @return true if sensis were computed, false otherwise
      */
-    bool checkUseNewtonOrFSASensis(const Model &model, const Solver &solver);
+    bool checkUseNewtonOrFSASensis(const Model &model,
+                                   const Solver &solver) const;
 
     /**
      * @brief Computes the weighted root mean square of xdot
