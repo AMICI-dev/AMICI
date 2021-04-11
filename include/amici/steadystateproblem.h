@@ -443,7 +443,9 @@ class SteadystateProblem {
     /** stores diagnostic information about execution success of the different
      * approaches [newton, simulation, newton] (length = 3)
      */
-    std::vector<SteadyStateStatus> steady_state_status_;
+    std::vector<SteadyStateStatus> steady_state_status_ {
+        std::vector<SteadyStateStatus>(3, SteadyStateStatus::not_run)
+    };
 };
 
 } // namespace amici

@@ -26,8 +26,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       sx_(model.nx_solver, model.nplist()), sdx_(model.nx_solver, model.nplist()),
       xB_(model.nJ * model.nx_solver), xQ_(model.nJ * model.nx_solver),
       xQB_(model.nplist()), xQBdot_(model.nplist()),
-      dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
-      steady_state_status_(3, SteadyStateStatus::not_run) {
+      dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               max_steps_ = solver.getNewtonMaxSteps();
