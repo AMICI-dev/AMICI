@@ -64,18 +64,6 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         t_ = model->t0();
         solver->setup(t_, model, x_, dx_, sx_, sdx_);
     } else {
-        /* don't use checkUseFSASensis here, since steady_state_status_ checks
-           are meaningless at this point */
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            model->getSteadyStateSensitivityMode() ==
-                SteadyStateSensitivityMode::simulationFSA &&
-            solver->getSensitivityMethod() != SensitivityMethod::forward) {
-            storeSimulationState(model,
-                                 checkUseNewtonOrFSASensis(*model, *solver));
-            throw AmiException("Postequilibration sensitivity analysis using "
-                               "simulationFSA is not compatible with the "
-                               "employed simulation sensitivity mode.");
-        }
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
     }
