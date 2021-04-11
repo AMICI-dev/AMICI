@@ -136,7 +136,7 @@ class SteadystateProblem {
     bool checkNewtonAllowed(const Model &model, const Solver &solver);
     
     /**
-     * @brief Checks whether the simulation solver or initialization provided sensitivities are correct
+     * @brief Checks whether FSA sensis provided by initialization or simulation solver can be used
      * @param model model instance
      * @param solver solver instance
      * @return true if correct, false otherwise
