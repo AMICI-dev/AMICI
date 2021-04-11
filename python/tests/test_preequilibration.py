@@ -322,7 +322,7 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
             assert np.array_equal(rdatas[setting].preeq_status, [0, 1, 0])
             # posteq doesn't work since we would need to activate sensis in 
             # the solver
-            assert np.array_equal(rdatas[setting].posteq_status, [0, 0, 0])
+            assert np.array_equal(rdatas[setting].posteq_status, [0, -1, 0])
         else:
             assert rdatas[setting].status == amici.AMICI_SUCCESS
             if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
@@ -331,7 +331,6 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
                 target_status = [0, 1, 0]
             assert np.array_equal(rdatas[setting].posteq_status, target_status)
             assert np.array_equal(rdatas[setting].preeq_status, target_status)
-
 
     for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
