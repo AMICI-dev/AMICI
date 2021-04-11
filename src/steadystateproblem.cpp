@@ -363,7 +363,7 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
 }
 
 bool SteadystateProblem::checkNewtonAllowed(const Model &model,
-                                            const Solver &solver) {
+                                            const Solver &solver) const {
     /* only allowed if no sensis requested if sensi mode was not set to FSA */
     return (solver.getSensitivityOrder() < SensitivityOrder::first) ||
            model.getSteadyStateSensitivityMode() !=
@@ -371,7 +371,7 @@ bool SteadystateProblem::checkNewtonAllowed(const Model &model,
 }
 
 bool SteadystateProblem::checkComputeFSASensis(const Model &model,
-                                               const Solver &solver) {
+                                               const Solver &solver) const {
     if (solver.getSensitivityOrder() < SensitivityOrder::first)
         return false; /* no sensis requested */
 
@@ -381,7 +381,7 @@ bool SteadystateProblem::checkComputeFSASensis(const Model &model,
 }
 
 bool SteadystateProblem::checkUseFSASensis(const Model &model,
-                                           const Solver &solver) {
+                                           const Solver &solver) const {
     if (solver.getSensitivityOrder() < SensitivityOrder::first)
         return false; /* no sensis requested */
 
@@ -398,7 +398,8 @@ bool SteadystateProblem::checkUseFSASensis(const Model &model,
 }
 
 bool SteadystateProblem::checkComputeImplicitSensis(const Model &model,
-                                                    const Solver &solver) {
+                                                    const Solver &solver) const
+{
     /* don't compute if user didn't allow computation or if FSA results
        available  */
     if (!checkNewtonAllowed(model, solver) || checkUseFSASensis(model, solver)
@@ -410,7 +411,7 @@ bool SteadystateProblem::checkComputeImplicitSensis(const Model &model,
 }
 
 bool SteadystateProblem::checkUseNewtonOrFSASensis(const Model &model,
-                                                   const Solver &solver) {
+                                                   const Solver &solver) const {
     return checkUseFSASensis(model, solver) ||
         checkComputeImplicitSensis(model,solver);
 }
