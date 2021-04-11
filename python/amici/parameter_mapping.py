@@ -238,9 +238,8 @@ def fill_in_parameters_for_condition(
 
     # plist
     plist = [
-        amici_model.getParameterIds().index(name)
-        for name, val in parameter_mapping.map_sim_var.items()
-        if not isinstance(val, numbers.Number)
+        ip for ip, par_id in enumerate(amici_model.getParameterIds())
+        if isinstance(parameter_mapping.map_sim_var[par_id], str)
     ]
 
     if parameters:
