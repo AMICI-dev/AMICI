@@ -304,20 +304,22 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
     sensi_meths = [amici.SensitivityMethod.forward,
                    amici.SensitivityMethod.adjoint,
                    amici.SensitivityMethod.none]
-    settings = itertools.product(equil_meths, sensi_meths)
+    preeq_sensi_meths = [amici.SensitivityMethod.forward,
+                         amici.SensitivityMethod.adjoint,
+                         amici.SensitivityMethod.none]
 
-    for setting in settings:
+    for setting in itertools.product(equil_meths, sensi_meths,
+                                     preeq_sensi_meths):
         # unpack, solver settings
-        equil_meth, sensi_meth = setting
+        equil_meth, sensi_meth, preeq_sensi_meth = setting
         model.setSteadyStateSensitivityMode(equil_meth)
         solver.setSensitivityMethod(sensi_meth)
+        solver.setSensitivityMethodPreequilibtration(preeq_sensi_meth)
 
         # add rdatas
         rdatas[setting] = amici.runAmiciSimulation(model, solver, edata)
         # assert successful simulation
         if (sensi_meth, equil_meth) in [
-            (amici.SensitivityMethod.adjoint,
-             amici.SteadyStateSensitivityMode.simulationFSA),
             (amici.SensitivityMethod.none,
              amici.SteadyStateSensitivityMode.simulationFSA),
         ]:
@@ -351,13 +353,15 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
         assert np.array_equal(rdatas[setting].preeq_status,
                               preeq_target_status)
 
-    for setting1, setting2 in itertools.product(settings, settings):
+    for rdata1, rdata2 in itertools.combinations(rdatas.values(), 2):
         # assert correctness of result
+        if rdata1.status == amici.AMICI_ERROR or \
+                rdata2.status == amici.AMICI_ERROR:
+            continue
+
         for variable in ['llh', 'sllh']:
             assert np.isclose(
-                rdatas[setting1][variable],
-                rdatas[setting2][variable],
-                1e-6, 1e-6
+                rdata1[variable], rdata2[variable], 1e-6, 1e-6
             ).all(), variable
 
 

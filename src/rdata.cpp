@@ -550,7 +550,7 @@ void ReturnData::readSimulationState(SimulationState const &state,
                                      Model &model) {
     x_solver_ = state.x;
     dx_solver_ = state.dx;
-    if (computingFSA() || state.t == model.t0())
+    if (state.sx.getLength())
         sx_solver_ = state.sx;
     t_ = state.t;
     model.setModelState(state.state);

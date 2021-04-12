@@ -144,9 +144,13 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     initializeLinearSolver(model);
     initializeNonLinearSolver();
-
+    
     if (sensi_ >= SensitivityOrder::first &&
-        sensi_meth_ > SensitivityMethod::none && model->nx_solver > 0) {
+        sensi_meth_ == SensitivityMethod::none)
+        throw AmiException("Cannot run forward sensitivity analysis without "
+                           " a sensitivity method set.");
+
+    if (sensi_ >= SensitivityOrder::first && model->nx_solver > 0) {
         auto plist = model->getParameterList();
         sensInit1(sx0, sdx0);
         if (sensi_meth_ == SensitivityMethod::forward && !plist.empty()) {

@@ -139,36 +139,57 @@ class SteadystateProblem {
      * @brief Checks whether FSA sensis provided by initialization or simulation solver can be used
      * @param model model instance
      * @param solver solver instance
+     * @param it integer with the index of the current time step
      * @return true if correct, false otherwise
      */
-    bool checkUseFSASensis(const Model &model, const Solver &solver) const;
+    bool checkUseFSASensis(const Model &model,
+                           const Solver &solver,
+                           const int it) const;
+    
+    /**
+     * @brief Checks whether settings are all compatible
+     * @param model model instance
+     * @param solver solver instance
+     * @param it integer with the index of the current time step
+     * @return true if correct, false otherwise
+     */
+    void checkSettingsCompatibility(const Model &model,
+                                    const Solver &solver,
+                                    const int it) const;
     
     /**
      * @brief Checks whether steadystate sensitivities need to be computed according to the implicit
      * function theorem as solution to a linear system
      * @param model model instance
      * @param solver solver instance
+     * @param it integer with the index of the current time step
      * @return true if they need to be computed, false otherwise
      */
     bool checkComputeImplicitSensis(const Model &model,
-                                    const Solver &solver) const;
+                                    const Solver &solver,
+                                    const int it) const;
     
     /**
      * @brief Checks whether the simulator needs to compute sensi via FSA
      * @param model model instance
      * @param solver solver instance
+     * @param it integer with the index of the current time step
      * @return true if computations is necessary, false otherwise
      */
-    bool checkComputeFSASensis(const Model &model, const Solver &solver) const;
+    bool checkComputeFSASensis(const Model &model,
+                               const Solver &solver,
+                               const int it) const;
     
     /**
      * @brief Checks whether newton or FSA sensis were computed
      * @param model model instance
      * @param solver solver instance
+     * @param it integer with the index of the current time step
      * @return true if sensis were computed, false otherwise
      */
     bool checkUseNewtonOrFSASensis(const Model &model,
-                                   const Solver &solver) const;
+                                   const Solver &solver,
+                                   const int it) const;
 
     /**
      * @brief Computes the weighted root mean square of xdot
