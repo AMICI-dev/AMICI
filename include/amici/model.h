@@ -642,6 +642,42 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
+    
+    /**
+     * @brief Sets the estimated lower boundary for sigma_y. When :meth:`setAddSigmaResiduals` is
+     * activated, this lower boundary must ensure that log(sigma) > min_sigma.
+     * @param min_sigma lower boundary
+     */
+    void setMinimumSigmaResiduals(float min_sigma) {
+        min_sigma_ = min_sigma;
+    }
+    
+    /**
+     * @brief Gets the specified estimated lower boundary for sigma_y.
+     * @return lower boundary
+     */
+    realtype getMinimumSigmaResiduals() const {
+        return min_sigma_;
+    }
+    
+    /**
+     * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
+     * If set to true, additional residuals of the form :math:`\sqrt{\sigma - C} will be added. This enables
+     * least-squares optimization for variables with Gaussian noise assumption and parameter dependent
+     * standard deviation sigma. The constant C can be set via :meth:`setMinimumSigmaResiduals`.
+     * @param sigma_res if true, additional residuals are added
+     */
+    void setAddSigmaResiduals(bool sigma_res) {
+        sigma_res_ = sigma_res;
+    }
+    
+    /**
+     * @brief Checks whether residuals should be added to account for parameter dependent sigma.
+     * @return sigma_res
+     */
+    bool getAddSigmaResiduals() const {
+        return sigma_res_;
+    }
 
     /**
      * @brief Get the list of parameters for which sensitivities are computed.
@@ -1704,6 +1740,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * checked for finiteness
      */
     bool always_check_finite_ {false};
+    
+    /** indicates whether sigma residuals are to be added for every  */
+    bool sigma_res_ {false};
+    
+    realtype min_sigma_ {50.0};
 
   private:
     /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */

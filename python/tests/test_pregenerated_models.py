@@ -3,15 +3,13 @@
 """Run simulations with Matlab-AMICI pre-generated models and verify using
 saved expectations."""
 
-import sys
 import h5py
 import amici
-import unittest
-import importlib
 import os
-import copy
 from amici.gradient_check import check_derivatives, check_results
 import pytest
+
+import numpy as np
 
 
 options_file = os.path.join(os.path.dirname(__file__), '..', '..',
@@ -147,6 +145,8 @@ def test_pregenerated_model(sub_test, case):
         with pytest.raises(RuntimeError):
             solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
 
+    chi2_ref = rdata.chi2
+
     # test likelihood mode
     solver.setReturnDataReportingMode(amici.RDataReporting.likelihood)
     rdata = amici.runAmiciSimulation(model, solver, edata)
@@ -154,6 +154,34 @@ def test_pregenerated_model(sub_test, case):
         rdata, expected_results[sub_test][case]['results'],
         fields=['t', 'llh', 'sllh', 's2llh', 'FIM'], **verify_simulation_opts
     )
+
+    # test sigma residuals
+
+    if model_name == 'model_jakstat_adjoint' and \
+            solver.getSensitivityMethod() != amici.SensitivityMethod.adjoint:
+        model.setAddSigmaResiduals(True)
+        solver.setReturnDataReportingMode(amici.RDataReporting.full)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+        # check whether activation changes chi2
+        assert chi2_ref != rdata.chi2
+
+        if edata and solver.getSensitivityMethod() and \
+                solver.getSensitivityOrder() and len(model.getParameterList()):
+            check_derivatives(model, solver, edata, assert_fun,
+                              **check_derivative_opts)
+
+        chi2_ref = rdata.chi2
+        res_ref = rdata.res
+
+        model.setMinimumSigmaResiduals(100)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+        # check whether changing the minimum changes res but not chi2
+        assert np.isclose(chi2_ref, rdata.chi2)
+        assert not np.allclose(res_ref, rdata.res)
+
+        model.setMinimumSigmaResiduals(-10)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+        assert np.isnan(rdata.chi2)
 
     with pytest.raises(RuntimeError):
         model.getParameterByName('thisParameterDoesNotExist')

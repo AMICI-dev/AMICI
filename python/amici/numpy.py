@@ -195,8 +195,10 @@ class ReturnDataView(SwigPtrView):
             'sllh': [rdata.nplist],
             's2llh': [rdata.np, rdata.nplist],
 
-            'res': [rdata.nt * rdata.nytrue],
-            'sres': [rdata.nt * rdata.nytrue, rdata.nplist],
+            'res': [rdata.nt * rdata.nytrue *
+                    (2 if rdata.sigma_res else 1)],
+            'sres': [rdata.nt * rdata.nytrue *
+                     (2 if rdata.sigma_res else 1), rdata.nplist],
             'FIM': [rdata.nplist, rdata.nplist],
 
             # diagnosis

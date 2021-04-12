@@ -53,6 +53,7 @@ class ReturnData: public ModelDimensions {
      * @param rdrm see amici::Solver::rdata_reporting
      * @param quadratic_llh whether model defines a quadratic nllh and
      * computing res, sres and FIM makes sense
+     * @param sigma_res indicates whether additional residuals are to be added for each sigma
      */
     ReturnData(std::vector<realtype> ts,
                ModelDimensions const& model_dimensions,
@@ -60,7 +61,8 @@ class ReturnData: public ModelDimensions {
                int newton_maxsteps,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
                SensitivityOrder sensi, SensitivityMethod sensi_meth,
-               RDataReporting rdrm, bool quadratic_llh);
+               RDataReporting rdrm, bool quadratic_llh, bool sigma_res,
+               realtype sigma_offset);
 
     /**
      * @brief constructor that uses information from model and solver to
@@ -372,9 +374,15 @@ class ReturnData: public ModelDimensions {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
                                                 unsigned int version);
+    
+    /** boolean indicating whether residuals for standard deviations have been added */
+    bool sigma_res;
 
   protected:
-
+    
+    /** offset for sigma_residuals */
+    realtype sigma_offset;
+    
     /** timepoint for model evaluation*/
     realtype t_;
 
@@ -517,8 +525,9 @@ class ReturnData: public ModelDimensions {
     /**
      * @brief Chi-squared function
      * @param it time index
+     * @param edata ExpData instance containing observable data
      */
-    void fchi2(int it);
+    void fchi2(int it, const ExpData &edata);
 
     /**
      * @brief Residual sensitivity function
