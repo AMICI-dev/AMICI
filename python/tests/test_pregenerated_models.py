@@ -13,7 +13,7 @@ import numpy as np
 
 
 options_file = os.path.join(os.path.dirname(__file__), '..', '..',
-                                     'tests', 'cpputest', 'testOptions.h5')
+                            'tests', 'cpputest', 'testOptions.h5')
 expected_results_file = os.path.join(os.path.dirname(__file__), '..', '..',
                                      'tests', 'cpputest', 'expectedResults.h5')
 expected_results = h5py.File(expected_results_file, 'r')

@@ -54,6 +54,7 @@ class ReturnData: public ModelDimensions {
      * @param quadratic_llh whether model defines a quadratic nllh and
      * computing res, sres and FIM makes sense
      * @param sigma_res indicates whether additional residuals are to be added for each sigma
+     * @param sigma_offset offset to ensure real-valuedness of sigma residuals
      */
     ReturnData(std::vector<realtype> ts,
                ModelDimensions const& model_dimensions,
