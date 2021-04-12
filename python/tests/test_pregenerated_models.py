@@ -181,6 +181,7 @@ def test_pregenerated_model(sub_test, case):
 
         model.setMinimumSigmaResiduals(-10)
         rdata = amici.runAmiciSimulation(model, solver, edata)
+        # check whether having a bad minimum results in nan chi2
         assert np.isnan(rdata.chi2)
 
     with pytest.raises(RuntimeError):

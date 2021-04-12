@@ -645,7 +645,7 @@ class Model : public AbstractModel, public ModelDimensions {
     
     /**
      * @brief Sets the estimated lower boundary for sigma_y. When :meth:`setAddSigmaResiduals` is
-     * activated, this lower boundary must ensure that log(sigma) > min_sigma.
+     * activated, this lower boundary must ensure that log(sigma) + min_sigma > 0.
      * @param min_sigma lower boundary
      */
     void setMinimumSigmaResiduals(float min_sigma) {
@@ -662,7 +662,7 @@ class Model : public AbstractModel, public ModelDimensions {
     
     /**
      * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
-     * If set to true, additional residuals of the form :math:`\sqrt{\sigma - C} will be added. This enables
+     * If set to true, additional residuals of the form :math:`\sqrt{log(\sigma) + C} will be added. This enables
      * least-squares optimization for variables with Gaussian noise assumption and parameter dependent
      * standard deviation sigma. The constant C can be set via :meth:`setMinimumSigmaResiduals`.
      * @param sigma_res if true, additional residuals are added
