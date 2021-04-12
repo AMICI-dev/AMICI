@@ -662,7 +662,7 @@ class Model : public AbstractModel, public ModelDimensions {
     
     /**
      * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
-     * If set to true, additional residuals of the form :math:`\sqrt{log(\sigma) + C}` will be added. This enables
+     * If set to true, additional residuals of the form `sqrt{log(\sigma) + C}` will be added. This enables
      * least-squares optimization for variables with Gaussian noise assumption and parameter dependent
      * standard deviation sigma. The constant C can be set via :meth:`setMinimumSigmaResiduals`.
      * @param sigma_res if true, additional residuals are added
@@ -1744,6 +1744,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /** indicates whether sigma residuals are to be added for every  */
     bool sigma_res_ {false};
     
+    /** offset to ensure positivity of sigma residuals, only has an effect when `sigma_res_` is `true`  */
     realtype min_sigma_ {50.0};
 
   private:
