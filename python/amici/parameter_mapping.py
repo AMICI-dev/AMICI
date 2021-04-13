@@ -236,11 +236,20 @@ def fill_in_parameters_for_condition(
     scales = [petab_to_amici_scale(scale_map_sim_var[par_id])
               for par_id in amici_model.getParameterIds()]
 
+    # plist
+    plist = [
+        ip for ip, par_id in enumerate(amici_model.getParameterIds())
+        if isinstance(parameter_mapping.map_sim_var[par_id], str)
+    ]
+
     if parameters:
         edata.parameters = parameters
 
     if scales:
         edata.pscale = amici.parameterScalingFromIntVector(scales)
+
+    if plist:
+        edata.plist = plist
 
     ##########################################################################
     # fixed parameters preequilibration

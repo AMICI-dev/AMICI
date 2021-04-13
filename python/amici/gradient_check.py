@@ -67,6 +67,8 @@ def check_finite_difference(x0: Sequence[float],
     og_sensitivity_order = solver.getSensitivityOrder()
     og_parameters = model.getParameters()
     og_plist = model.getParameterList()
+    if edata:
+        og_eplist = edata.plist
 
     # sensitivity
     p = copy.deepcopy(x0)
@@ -74,6 +76,8 @@ def check_finite_difference(x0: Sequence[float],
 
     model.setParameters(p)
     model.setParameterList(plist)
+    if edata:
+        edata.plist = plist
 
     # simulation with gradient
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
@@ -122,6 +126,8 @@ def check_finite_difference(x0: Sequence[float],
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
     model.setParameterList(og_plist)
+    if edata:
+        edata.plist = og_eplist
 
 
 def check_derivatives(model: Model,
@@ -190,18 +196,18 @@ def check_derivatives(model: Model,
 
     if 'ssigmay' in rdata.keys() \
             and rdata['ssigmay'] is not None \
-            and rdata['ssigmay'].any():
+            and rdata['ssigmay'].any() and not model.getAddSigmaResiduals():
         leastsquares_applicable = False
 
     if check_least_squares and leastsquares_applicable:
         fields += ['res', 'y']
 
         check_results(rdata, 'FIM',
-                      np.dot(rdata['sres'].transpose(), rdata['sres']),
+                      np.dot(rdata['sres'].T, rdata['sres']),
                       assert_fun,
                       1e-8, 1e-4)
         check_results(rdata, 'sllh',
-                      -np.dot(rdata['res'].transpose(), rdata['sres']),
+                      -np.dot(rdata['res'].T, rdata['sres']),
                       assert_fun,
                       1e-8, 1e-4)
     for ip, pval in enumerate(p):

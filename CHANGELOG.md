@@ -2,6 +2,15 @@
 
 ## v0.X Series
 
+### v0.11.16 (2021-04-13)
+
+Fixes:
+* Fixed serialization bug  (#1490)
+
+New:
+* Construction of condition specific plist for parameter mappings (#1487, #1488)
+* **Add support for error residuals** (#1489)
+
 ### v0.11.15 (2021-03-31)
 
 Fixes:
