@@ -299,12 +299,13 @@ T deserializeFromChar(const char *buffer, int size) {
     T data;
 
     try {
+        // archive must be destroyed BEFORE returning
         ba::binary_iarchive iar(s);
         iar >> data;
-        return data;
     } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from char failed: %s", e.what());
     }
+    return data;
 }
 
 /**
@@ -325,6 +326,7 @@ std::string serializeToString(T const& data) {
     bio::stream<bio::back_insert_device<std::string>> os(inserter);
 
     try {
+        // archive must be destroyed BEFORE returning
         ba::binary_oarchive oar(os);
         oar << data;
     } catch(ba::archive_exception const& e) {
@@ -383,7 +385,6 @@ T deserializeFromString(std::string const& serialized) {
     try{
         // archive must be destroyed BEFORE returning
         ba::binary_iarchive iar(os);
-
         iar >> deserialized;
     } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from std::string failed: %s",
