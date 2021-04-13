@@ -52,6 +52,9 @@ void archiveVector(Archive &ar, T **p, int size) {
  */
 template <class Archive>
 void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
+    static_assert (sizeof (amici::Solver) == 984,
+                  "Did you add/modify/remove members of amici::Solver without "
+                  "updating this function?");
     ar &s.sensi_;
     ar &s.atol_;
     ar &s.rtol_;
@@ -102,6 +105,10 @@ void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*
  */
 template <class Archive>
 void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
+    static_assert (sizeof (amici::Model) == 2688,
+                  "Did you add/modify/remove members of amici::Model without "
+                  "updating this function?");
+
     ar &dynamic_cast<amici::ModelDimensions&>(m);
     ar &m.simulation_parameters_;
     ar &m.o2mode;
@@ -126,6 +133,11 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
  */
 template <class Archive>
 void serialize(Archive &ar, amici::SimulationParameters &s, const unsigned int /*version*/) {
+    static_assert (sizeof (amici::SimulationParameters) == 288,
+                  "Did you add/modify/remove members of "
+                  "amici::SimulationParameters without updating this "
+                  "function?");
+
     ar &s.fixedParameters;
     ar &s.fixedParametersPreequilibration;
     ar &s.fixedParametersPresimulation;
@@ -148,6 +160,10 @@ void serialize(Archive &ar, amici::SimulationParameters &s, const unsigned int /
 
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
+    static_assert (sizeof (amici::ReturnData) == 1520,
+                  "Did you add/modify/remove members of amici::ReturnData "
+                  "without updating this function?");
+
     ar &dynamic_cast<amici::ModelDimensions&>(r);
     ar &r.nx;
     ar &r.nxtrue;
@@ -217,6 +233,10 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
 
 template <class Archive>
 void serialize(Archive &ar, amici::ModelDimensions &m, const unsigned int /*version*/) {
+    static_assert (sizeof (amici::ModelDimensions) == 112,
+                  "Did you add/modify/remove members of amici::ModelDimensions "
+                  "without updating this function?");
+
     ar &m.nx_rdata;
     ar &m.nxtrue_rdata;
     ar &m.nx_solver;
