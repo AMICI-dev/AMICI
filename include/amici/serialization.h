@@ -299,12 +299,13 @@ T deserializeFromChar(const char *buffer, int size) {
     T data;
 
     try {
+        // archive must be destroyed BEFORE returning
         ba::binary_iarchive iar(s);
         iar >> data;
-        return data;
     } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from char failed: %s", e.what());
     }
+    return data;
 }
 
 /**
@@ -325,14 +326,14 @@ std::string serializeToString(T const& data) {
     bio::stream<bio::back_insert_device<std::string>> os(inserter);
 
     try {
+        // archive must be destroyed BEFORE returning
         ba::binary_oarchive oar(os);
-
         oar << data;
-
-        return serialized;
     } catch(ba::archive_exception const& e) {
         throw AmiException("Serialization to string failed: %s", e.what());
     }
+
+    return serialized;
 }
 
 /**
@@ -354,14 +355,14 @@ std::vector<char> serializeToStdVec(T const& data) {
             std::vector<char>>> os(buffer);
 
     try{
+        // archive must be destroyed BEFORE returning
         ba::binary_oarchive oar(os);
-
         oar << data;
-
-        return buffer;
     } catch(ba::archive_exception const& e) {
         throw AmiException("Serialization to std::vector failed: %s", e.what());
     }
+
+    return buffer;
 }
 
 /**
@@ -382,15 +383,15 @@ T deserializeFromString(std::string const& serialized) {
     T deserialized;
 
     try{
+        // archive must be destroyed BEFORE returning
         ba::binary_iarchive iar(os);
-
         iar >> deserialized;
-
-        return deserialized;
     } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from std::string failed: %s",
                            e.what());
     }
+
+    return deserialized;
 }
 
 
