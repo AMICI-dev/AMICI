@@ -642,6 +642,45 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
+    
+    /**
+     * @brief Sets the estimated lower boundary for sigma_y. When :meth:`setAddSigmaResiduals` is
+     * activated, this lower boundary must ensure that log(sigma) + min_sigma > 0.
+     * @param min_sigma lower boundary
+     */
+    void setMinimumSigmaResiduals(double min_sigma) {
+        min_sigma_ = min_sigma;
+    }
+    
+    /**
+     * @brief Gets the specified estimated lower boundary for sigma_y.
+     * @return lower boundary
+     */
+    realtype getMinimumSigmaResiduals() const {
+        return min_sigma_;
+    }
+    
+    /**
+     * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
+     *
+     * If set to true, additional residuals of the form \f$ \sqrt{\log(\sigma) + C} \f$ will be added.
+     * This enables least-squares optimization for variables with Gaussian noise assumption and parameter
+     * dependent standard deviation sigma. The constant \f$ C \f$ can be set via
+     * :meth:`setMinimumSigmaResiduals`.
+     *
+     * @param sigma_res if true, additional residuals are added
+     */
+    void setAddSigmaResiduals(bool sigma_res) {
+        sigma_res_ = sigma_res;
+    }
+    
+    /**
+     * @brief Checks whether residuals should be added to account for parameter dependent sigma.
+     * @return sigma_res
+     */
+    bool getAddSigmaResiduals() const {
+        return sigma_res_;
+    }
 
     /**
      * @brief Get the list of parameters for which sensitivities are computed.
@@ -767,7 +806,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get sensitivity of time-resolved observables.
      *
-     * Total derivative \f$sy = dydx * sx + dydp\f$
+     * Total derivative \f$ sy = dydx * sx + dydp\f$
      * (only for forward sensitivities).
      * @param sy buffer (shape `ny` x `nplist`, row-major)
      * @param t Timpoint
@@ -801,7 +840,7 @@ class Model : public AbstractModel, public ModelDimensions {
                                        const int it, const ExpData *edata);
 
     /**
-     * @brief Add time-resolved measurement negative log-likelihood \f$Jy\f$.
+     * @brief Add time-resolved measurement negative log-likelihood \f$ Jy \f$.
      * @param Jy Buffer (shape 1)
      * @param it Timepoint index
      * @param x State variables
@@ -812,7 +851,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add sensitivity of time-resolved measurement negative log-likelihood
-     * \f$Jy\f$.
+     * \f$ Jy \f$.
      *
      * @param sllh First-order buffer (shape `nplist`)
      * @param s2llh Second-order buffer (shape `nJ - 1` x `nplist`, row-major)
@@ -829,7 +868,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add sensitivity of time-resolved measurement negative
-     * log-likelihood \f$Jy\f$.
+     * log-likelihood \f$ Jy \f$.
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
@@ -847,7 +886,7 @@ class Model : public AbstractModel, public ModelDimensions {
                                                   const ExpData &edata);
 
     /**
-     * @brief Get state sensitivity of the negative loglikelihood \f$Jy\f$,
+     * @brief Get state sensitivity of the negative loglikelihood \f$ Jy \f$,
      * partial derivative (to be used with adjoint sensitivities).
      *
      * @param dJydx Output buffer (shape `nJ` x `nx_solver`, row-major)
@@ -978,7 +1017,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add sensitivity of time-resolved measurement negative
-     * log-likelihood \f$Jy\f$.
+     * log-likelihood \f$ Jy \f$.
      *
      * Total derivative (to be used with forward sensitivities).
      *
@@ -1001,7 +1040,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Add sensitivity of time-resolved measurement negative
-     * log-likelihood \f$Jy\f$.
+     * log-likelihood \f$ Jy \f$.
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
@@ -1022,7 +1061,7 @@ class Model : public AbstractModel, public ModelDimensions {
                                              const ExpData &edata);
 
     /**
-     * @brief State sensitivity of the negative loglikelihood \f$Jz\f$.
+     * @brief State sensitivity of the negative loglikelihood \f$ Jz \f$.
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
@@ -1305,7 +1344,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void fy(realtype t, const AmiVector &x);
 
     /**
-     * @brief Compute partial derivative of observables \f$y\f$ w.r.t. model
+     * @brief Compute partial derivative of observables \f$ y \f$ w.r.t. model
      * parameters `p`.
      * @param t Current timepoint
      * @param x Current state
@@ -1313,7 +1352,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void fdydp(realtype t, const AmiVector &x);
 
     /**
-     * @brief Compute partial derivative of observables \f$y\f$ w.r.t. state
+     * @brief Compute partial derivative of observables \f$ y \f$ w.r.t. state
      * variables `x`.
      * @param t Current timepoint
      * @param x Current state
@@ -1336,7 +1375,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void fdsigmaydp(int it, const ExpData *edata);
 
     /**
-     * @brief Compute negative log-likelihood of measurements \f$y\f$.
+     * @brief Compute negative log-likelihood of measurements \f$ y \f$.
      *
      * @param Jy Variable to which llh will be added
      * @param it Timepoint index
@@ -1347,7 +1386,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute partial derivative of time-resolved measurement negative
-     * log-likelihood \f$Jy\f$.
+     * log-likelihood \f$ Jy \f$.
      * @param it timepoint index
      * @param x state variables
      * @param edata Pointer to experimental data
@@ -1365,7 +1404,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute sensitivity of time-resolved measurement negative
-     * log-likelihood \f$Jy\f$ w.r.t. parameters for the given timepoint.
+     * log-likelihood \f$ Jy \f$ w.r.t. parameters for the given timepoint.
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1374,7 +1413,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * \f$Jy\f$ w.r.t. state variables.
+     * \f$ Jy \f$ w.r.t. state variables.
      * @param it Timepoint index
      * @param x State variables
      * @param edata Pointer to experimental data instance
@@ -1428,7 +1467,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void fdrzdp(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Compute sensitivity of event-resolved measurements \f$rz\f$ w.r.t.
+     * @brief Compute sensitivity of event-resolved measurements \f$ rz \f$ w.r.t.
      * model states `x`.
      * @param ie Event index
      * @param t Current timepoint
@@ -1469,7 +1508,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute partial derivative of event measurement negative
-     * log-likelihood \f$Jz\f$.
+     * log-likelihood \f$ Jz \f$.
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1481,7 +1520,7 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Compute sensitivity of event measurement negative log-likelihood
-     * \f$Jz\f$ w.r.t. standard deviation sigmaz.
+     * \f$ Jz \f$ w.r.t. standard deviation sigmaz.
      * @param ie Event index
      * @param nroots Event index
      * @param t Current timepoint
@@ -1704,6 +1743,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * checked for finiteness
      */
     bool always_check_finite_ {false};
+    
+    /** indicates whether sigma residuals are to be added for every datapoint  */
+    bool sigma_res_ {false};
+    
+    /** offset to ensure positivity of sigma residuals, only has an effect when `sigma_res_` is `true`  */
+    realtype min_sigma_ {50.0};
 
   private:
     /** Sparse dwdp implicit temporary storage (shape `ndwdp`) */
