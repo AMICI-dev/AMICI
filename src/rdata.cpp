@@ -781,9 +781,8 @@ static realtype fres(realtype y, realtype my, realtype sigma_y) {
     return (y - my) / sigma_y;
 }
 
-static realtype fsres(realtype y, realtype sy, realtype my,
-                      realtype sigma_y, realtype ssigma_y) {
-    return (sy - ssigma_y * fres(y, my, sigma_y)) / sigma_y;
+static realtype fres_error(realtype sigma_y, realtype sigma_offset) {
+    return sqrt(log(sigma_y) + sigma_offset);
 }
 
 void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
@@ -804,8 +803,8 @@ void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
         res.at(iyt) = amici::fres(y_it.at(iy), observedData[iy],
                                   sigmay_it.at(iy));
         if (sigma_res)
-            res.at(iyt + nt * nytrue) = sqrt(
-                amici::fres(log(sigmay_it.at(iy)), -sigma_offset, 1.0));
+            res.at(iyt + nt * nytrue) = fres_error(sigmay_it.at(iy),
+                                                   sigma_offset);
     }
 }
 
@@ -820,6 +819,17 @@ void ReturnData::fchi2(const int it, const ExpData &edata) {
             chi2 += pow(res.at(iyt_true + nt * nytrue), 2) - sigma_offset;
     }
 }
+
+static realtype fsres(realtype y, realtype sy, realtype my,
+                      realtype sigma_y, realtype ssigma_y) {
+    return (sy - ssigma_y * fres(y, my, sigma_y)) / sigma_y;
+}
+
+static realtype fsres_error(realtype sigma_y, realtype ssigma_y,
+                            realtype sigma_offset) {
+    return 0.5 * ssigma_y / ( fres_error(sigma_y, sigma_offset) * sigma_y);
+}
+
 
 void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     if (sres.empty())
@@ -848,10 +858,9 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
                 int idx_res =
                     (iy + it * edata.nytrue() + edata.nytrue() * edata.nt()) *
                         nplist + ip;
-                sres.at(idx_res) =
-                    amici::fsres(log(sigmay_it.at(iy)),
-                                 ssigmay_it.at(iy + ny * ip) / sigmay_it.at(iy),
-                                 sigma_offset, 1.0, 0.0);
+                sres.at(idx_res) = amici::fsres_error(sigmay_it.at(iy),
+                                                      ssigmay_it.at(iy + ny * ip),
+                                                      sigma_offset);
             }
         }
     }
@@ -939,15 +948,14 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
             auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
             realtype sre_i;
             if (sigma_res)
-                sre_i = amici::fsres(log(s), ds_i/s, -sigma_offset, 1.0, 0.0);
+                sre_i = amici::fsres_error(s, ds_i, sigma_offset);
             for (int jp = 0; jp < nplist; ++jp) {
                 auto dy_j = sy_it.at(iy + ny * jp);
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
                 auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
                 FIM.at(ip + nplist * jp) += sr_i*sr_j;
                 if (sigma_res) {
-                    auto sre_j = amici::fsres(log(s), ds_j / s,
-                                              -sigma_offset, 1.0, 0.0);
+                    auto sre_j = amici::fsres_error(s, ds_j, sigma_offset);
                     FIM.at(ip + nplist * jp) += sre_i * sre_j;
                 }
                 /*+ ds_i*ds_j*(2*pow(r/pow(s,2.0), 2.0) - 1/pow(s,2.0));*/
