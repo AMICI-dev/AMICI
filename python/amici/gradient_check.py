@@ -196,18 +196,18 @@ def check_derivatives(model: Model,
 
     if 'ssigmay' in rdata.keys() \
             and rdata['ssigmay'] is not None \
-            and rdata['ssigmay'].any():
+            and rdata['ssigmay'].any() and not model.getAddSigmaResiduals():
         leastsquares_applicable = False
 
     if check_least_squares and leastsquares_applicable:
         fields += ['res', 'y']
 
         check_results(rdata, 'FIM',
-                      np.dot(rdata['sres'].transpose(), rdata['sres']),
+                      np.dot(rdata['sres'].T, rdata['sres']),
                       assert_fun,
                       1e-8, 1e-4)
         check_results(rdata, 'sllh',
-                      -np.dot(rdata['res'].transpose(), rdata['sres']),
+                      -np.dot(rdata['res'].T, rdata['sres']),
                       assert_fun,
                       1e-8, 1e-4)
     for ip, pval in enumerate(p):

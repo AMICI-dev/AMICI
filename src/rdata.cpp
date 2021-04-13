@@ -782,7 +782,7 @@ static realtype fres(realtype y, realtype my, realtype sigma_y) {
 }
 
 static realtype fres_error(realtype sigma_y, realtype sigma_offset) {
-    return sqrt(log(sigma_y) + sigma_offset);
+    return sqrt(2*log(sigma_y) + sigma_offset);
 }
 
 void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
@@ -827,7 +827,7 @@ static realtype fsres(realtype y, realtype sy, realtype my,
 
 static realtype fsres_error(realtype sigma_y, realtype ssigma_y,
                             realtype sigma_offset) {
-    return 0.5 * ssigma_y / ( fres_error(sigma_y, sigma_offset) * sigma_y);
+    return ssigma_y / ( fres_error(sigma_y, sigma_offset) * sigma_y);
 }
 
 
