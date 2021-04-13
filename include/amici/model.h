@@ -1742,7 +1742,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     bool always_check_finite_ {false};
     
-    /** indicates whether sigma residuals are to be added for every  */
+    /** indicates whether sigma residuals are to be added for every datapoint  */
     bool sigma_res_ {false};
     
     /** offset to ensure positivity of sigma residuals, only has an effect when `sigma_res_` is `true`  */
