@@ -185,7 +185,9 @@ bool operator==(const Model &a, const Model &b) {
            (a.state_.plist == b.state_.plist) && (a.x0data_ == b.x0data_) &&
            (a.sx0data_ == b.sx0data_) &&
            (a.nmaxevent_ == b.nmaxevent_) &&
-           (a.state_is_non_negative_ == b.state_is_non_negative_);
+           (a.state_is_non_negative_ == b.state_is_non_negative_) &&
+           (a.sigma_res_ == b.sigma_res_) &&
+           (a.min_sigma_ == b.min_sigma_);
 }
 
 bool operator==(const ModelDimensions &a, const ModelDimensions &b) {
