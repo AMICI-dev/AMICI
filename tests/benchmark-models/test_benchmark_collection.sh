@@ -91,7 +91,7 @@ for model in $models; do
   amici_model_dir=test_bmc/"${model}"
   mkdir -p "$amici_model_dir"
   cmd_import="amici_import_petab --verbose -y ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
-  cmd_run="$script_path/test_petab_model.py --verbose -y ${yaml} -d ${amici_model_dir} -m ${model} -c "
+  cmd_run="$script_path/test_petab_model.py --verbose -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
 
   printf '=%.0s' {1..40}
   printf "   %s   " "${model}"

@@ -86,7 +86,6 @@ def main():
     res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
         log_level=logging.DEBUG)
-
     rdatas = res[RDATAS]
     llh = res[LLH]
 
