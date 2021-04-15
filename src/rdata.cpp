@@ -946,7 +946,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
             auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
-            realtype sre_i;
+            realtype sre_i = 0.0;
             if (sigma_res)
                 sre_i = amici::fsres_error(s, ds_i, sigma_offset);
             for (int jp = 0; jp < nplist; ++jp) {

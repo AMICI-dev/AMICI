@@ -960,6 +960,17 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model,
             model.setUnscaledInitialStateSensitivities(sx0);
         }
     }
+    
+    if(attributeExists(file, datasetPath, "sigma_res")) {
+        auto sigma_res = getIntScalarAttribute(file, datasetPath, "sigma_res");
+        model.setAddSigmaResiduals(static_cast<bool>(sigma_res));
+    }
+    
+    if(attributeExists(file, datasetPath, "min_sigma")) {
+        auto min_sigma = getDoubleScalarAttribute(file, datasetPath,
+                                                  "min_sigma");
+        model.setMinimumSigmaResiduals(min_sigma);
+    }
 
 }
 
