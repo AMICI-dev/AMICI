@@ -86,8 +86,6 @@ done
 script_path=$(dirname "$BASH_SOURCE")
 script_path=$(cd "$script_path" && pwd)
 
-source ../../build/venv/bin/activate
-
 for model in $models; do
   yaml="${model_dir}"/"${model}"/"${model}".yaml
   amici_model_dir=test_bmc/"${model}"

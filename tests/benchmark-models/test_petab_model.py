@@ -87,35 +87,10 @@ def main():
     model_module = importlib.import_module(args.model_name)
     amici_model = model_module.getModel()
 
-    solver = amici_model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
-        solver=solver, log_level=logging.DEBUG
+        log_level=logging.DEBUG
     )
-
-    # check gradient
-    if args.grad:
-        def func(x):
-            solver.setSensitivityOrder(amici.SensitivityOrder.none)
-            amici_model.setParameters(x)
-            return simulate_petab(
-                petab_problem=problem, amici_model=amici_model,
-                solver=solver, log_level=logging.DEBUG,
-                problem_parameters=dict(zip(amici_model.getParameterNames(),
-                                            x))
-            )[LLH]
-
-        def grad(x):
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            return simulate_petab(
-                petab_problem=problem, amici_model=amici_model,
-                solver=solver, log_level=logging.DEBUG,
-                problem_parameters=dict(zip(amici_model.getParameterNames(),
-                                            x))
-            )[SLLH]
-
-        check_grad(func, grad, problem.x_nominal_scaled)
 
     rdatas = res[RDATAS]
     llh = res[LLH]
