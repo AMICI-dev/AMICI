@@ -765,10 +765,17 @@ def aggregate_sllh(
                 or rdata['sllh'] is None:
             return None
 
+        # account for plist
+        plist_par_id = [
+            par_id
+            for par_id, mapping in condition_par_map.map_sim_var.items()
+            if isinstance(mapping, str)
+        ]
+
         for model_par_id, problem_par_id in par_map_sim_var.items():
             if isinstance(problem_par_id, str):
                 model_par_idx = model_par_ids.index(model_par_id)
-                cur_par_sllh = rdata['sllh'][model_par_idx]
+                cur_par_sllh = rdata['sllh'][plist_par_id.index(model_par_id)]
                 try:
                     sllh[problem_par_id] += cur_par_sllh
                 except KeyError:
