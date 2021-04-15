@@ -12,12 +12,10 @@ import sys
 
 import petab
 import yaml
-import amici
 from amici.logging import get_logger
 from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
-                                   LLH, SLLH, RDATAS)
+                                   LLH, RDATAS)
 from petab.visualize import plot_petab_problem
-from scipy.optimize import check_grad
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
@@ -39,8 +37,6 @@ def parse_cli_args():
                         help='Compare to reference value')
     parser.add_argument('-p', '--plot', dest='plot', action='store_true',
                         help='Plot measurement and simulation results')
-    parser.add_argument('-g', '--grad', dest='grad', action='store_true',
-                        help='Check gradient computation')
 
     # PEtab problem
     parser.add_argument('-y', '--yaml', dest='yaml_file_name',
@@ -89,8 +85,7 @@ def main():
 
     res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
-        log_level=logging.DEBUG
-    )
+        log_level=logging.DEBUG)
 
     rdatas = res[RDATAS]
     llh = res[LLH]
