@@ -95,7 +95,7 @@ def main():
     )
 
     # check gradient
-    if args.gradient:
+    if args.grad:
         def func(x):
             solver.setSensitivityOrder(amici.SensitivityOrder.none)
             amici_model.setParameters(x)
