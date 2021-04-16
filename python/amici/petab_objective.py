@@ -139,9 +139,6 @@ def simulate_petab(
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
-    # Compute total sllh
-    sllh = aggregate_sllh(amici_model=amici_model, rdatas=rdatas,
-                          parameter_mapping=parameter_mapping)
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -151,7 +148,6 @@ def simulate_petab(
 
     return {
         LLH: llh,
-        SLLH: sllh,
         RDATAS: rdatas
     }
 
@@ -733,44 +729,3 @@ def rdatas_to_simulation_df(
                                   measurement_df=measurement_df)
 
     return df.rename(columns={MEASUREMENT: SIMULATION})
-
-
-def aggregate_sllh(
-        amici_model: AmiciModel,
-        rdatas: Sequence[amici.ReturnDataView],
-        parameter_mapping: Optional[ParameterMapping],
-) -> Union[None, Dict[str, float]]:
-    """
-    Aggregate likelihood gradient for all conditions, according to PEtab
-    parameter mapping.
-
-    :param amici_model:
-        AMICI model from which ``rdatas`` were obtained.
-    :param rdatas:
-        Simulation results.
-    :param parameter_mapping:
-        PEtab parameter mapping to condition-specific
-            simulation parameters
-
-    :return:
-        aggregated sllh
-    """
-    sllh = {}
-    model_par_ids = amici_model.getParameterIds()
-    for condition_par_map, rdata in \
-            zip(parameter_mapping, rdatas):
-        par_map_sim_var = condition_par_map.map_sim_var
-        if rdata['status'] != amici.AMICI_SUCCESS \
-                or 'sllh' not in rdata \
-                or rdata['sllh'] is None:
-            return None
-
-        for model_par_id, problem_par_id in par_map_sim_var.items():
-            if isinstance(problem_par_id, str):
-                model_par_idx = model_par_ids.index(model_par_id)
-                cur_par_sllh = rdata['sllh'][model_par_idx]
-                try:
-                    sllh[problem_par_id] += cur_par_sllh
-                except KeyError:
-                    sllh[problem_par_id] = cur_par_sllh
-    return sllh
