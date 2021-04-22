@@ -45,10 +45,6 @@ jobs:
       run: |
         scripts/installAmiciArchive.sh
 
-    - name: Test import
-      run: |
-        python -m amici
-
   sdist:
     name: sdist Install
 
