@@ -45,6 +45,10 @@ jobs:
       run: |
         scripts/installAmiciArchive.sh
 
+    - name: Test import
+      run: |
+        python -m amici
+
   sdist:
     name: sdist Install
 
@@ -75,4 +79,6 @@ jobs:
       run: |
         pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
 
-
+    - name: Test import
+      run: |
+        python -m amici
