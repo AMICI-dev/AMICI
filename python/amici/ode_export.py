@@ -1215,17 +1215,6 @@ class ODEModel:
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
-        # substitute 'w' expressions into event expressions now, to avoid
-        # rewriting '{model_name}_root.cpp' headers to include 'w.h'
-        w_sorted = toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
-        for index, event in enumerate(self._events):
-            self._events[index] = Event(
-                identifier=event.get_id(),
-                name=event.get_name(),
-                value=event.get_val().subs(w_sorted),
-                state_update=event._state_update,
-                event_observable=event._observable,
-            )
         self._has_quadratic_nllh = all(
             llh['dist'] in ['normal', 'lin-normal']
             for llh in si.symbols[SymbolId.LLHY].values()
@@ -1631,41 +1620,45 @@ class ODEModel:
         """
         Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
-        """
-        # Workaround to generate `'w'` before events, such that `'w'` can be
-        # replaced in events, to avoid adding `w` to the header of
-        # "{model_name}_stau.cpp".
-        if 'w' not in self._syms:
-            self._generate_symbol('w', from_sbml=from_sbml)
 
+        :param from_sbml:
+            whether the model is generated from SBML
+        """
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
-        self.parse_events()
+        self.parse_events(from_sbml=from_sbml)
 
         for var in self._variable_prototype:
-            # Part of the workaround described earlier in this method.
-            if var == 'w':
-                continue
             if var not in self._syms:
                 self._generate_symbol(var, from_sbml=from_sbml)
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
-    def parse_events(self) -> None:
+    def parse_events(self, from_sbml: bool) -> None:
         """
         This functions checks the right hand side for roots of Heaviside
         functions or events, collects the roots, removes redundant roots,
         and replaces the formulae of the found roots by identifiers of AMICI's
         Heaviside function implementation in the right hand side
-        """
 
+        :param from_sbml:
+            whether the model is generated from SBML
+        """
         # Track all roots functions in the right hand side
         roots = copy.deepcopy(self._events)
         for state in self._states:
-            state.set_dt(self._process_heavisides(state.get_dt(), roots))
+            state.set_dt(self._process_heavisides(
+                state.get_dt(),
+                roots,
+                from_sbml=from_sbml,
+            ))
 
         for expr in self._expressions:
-            expr.set_val(self._process_heavisides(expr.get_val(), roots))
+            expr.set_val(self._process_heavisides(
+                expr.get_val(),
+                roots,
+                from_sbml=from_sbml,
+            ))
 
         # Now add the found roots to the model components
         for root in roots:
@@ -2411,7 +2404,8 @@ class ODEModel:
 
     def _collect_heaviside_roots(
             self,
-            args: Sequence[sp.Expr]
+            args: Sequence[sp.Expr],
+            from_sbml: bool,
     ) -> List[sp.Expr]:
         """
         Recursively checks an expression for the occurrence of Heaviside
@@ -2419,6 +2413,8 @@ class ODEModel:
 
         :param args:
             args attribute of the expanded expression
+        :param from_sbml:
+            whether the model is generated from SBML
 
         :returns:
             root functions that were extracted from Heaviside function
@@ -2429,11 +2425,21 @@ class ODEModel:
             if arg.func == sp.Heaviside:
                 root_funs.append(arg.args[0])
             elif arg.has(sp.Heaviside):
-                root_funs.extend(self._collect_heaviside_roots(arg.args))
+                root_funs.extend(self._collect_heaviside_roots(
+                    arg.args,
+                    from_sbml=from_sbml,
+                ))
 
         # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting '{model_name}_stau.cpp' headers to include 'w.h'
-        w_sorted = toposort_symbols(dict(zip(self._syms['w'], self.eq('w'))))
+        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
+        # to include 'w.h'
+        w_sorted = toposort_symbols(dict(zip(
+            [
+                expr.get_id() if from_sbml else sp.Symbol(expr.get_name())
+                for expr in self._expressions
+            ],
+            [expr.get_val() for expr in self._expressions],
+        )))
         root_funs = [
             r.subs(w_sorted)
             for r in root_funs
@@ -2445,6 +2451,7 @@ class ODEModel:
             self,
             dxdt: sp.Expr,
             roots: List[Event],
+            from_sbml: bool,
     ) -> sp.Expr:
         """
         Parses the RHS of a state variable, checks for Heaviside functions,
@@ -2456,6 +2463,8 @@ class ODEModel:
             right hand side of state variable
         :param roots:
             list of known root functions with identifier
+        :param from_sbml:
+            whether the model is generated from SBML
 
         :returns:
             dxdt with Heaviside functions replaced by amici helper variables
@@ -2468,7 +2477,10 @@ class ODEModel:
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
+        tmp_roots_old = self._collect_heaviside_roots(
+            dt_expanded.args,
+            from_sbml=from_sbml,
+        )
         for tmp_old in tmp_roots_old:
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
