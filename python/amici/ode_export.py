@@ -1626,7 +1626,7 @@ class ODEModel:
         """
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
-        self.parse_events(from_sbml=from_sbml)
+        self.parse_events()
 
         for var in self._variable_prototype:
             if var not in self._syms:
@@ -1634,31 +1634,20 @@ class ODEModel:
 
         self._generate_symbol('x', from_sbml=from_sbml)
 
-    def parse_events(self, from_sbml: bool) -> None:
+    def parse_events(self) -> None:
         """
         This functions checks the right hand side for roots of Heaviside
         functions or events, collects the roots, removes redundant roots,
         and replaces the formulae of the found roots by identifiers of AMICI's
         Heaviside function implementation in the right hand side
-
-        :param from_sbml:
-            whether the model is generated from SBML
         """
         # Track all roots functions in the right hand side
         roots = copy.deepcopy(self._events)
         for state in self._states:
-            state.set_dt(self._process_heavisides(
-                state.get_dt(),
-                roots,
-                from_sbml=from_sbml,
-            ))
+            state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
         for expr in self._expressions:
-            expr.set_val(self._process_heavisides(
-                expr.get_val(),
-                roots,
-                from_sbml=from_sbml,
-            ))
+            expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
         # Now add the found roots to the model components
         for root in roots:
@@ -2405,7 +2394,6 @@ class ODEModel:
     def _collect_heaviside_roots(
             self,
             args: Sequence[sp.Expr],
-            from_sbml: bool,
     ) -> List[sp.Expr]:
         """
         Recursively checks an expression for the occurrence of Heaviside
@@ -2413,8 +2401,6 @@ class ODEModel:
 
         :param args:
             args attribute of the expanded expression
-        :param from_sbml:
-            whether the model is generated from SBML
 
         :returns:
             root functions that were extracted from Heaviside function
@@ -2425,19 +2411,13 @@ class ODEModel:
             if arg.func == sp.Heaviside:
                 root_funs.append(arg.args[0])
             elif arg.has(sp.Heaviside):
-                root_funs.extend(self._collect_heaviside_roots(
-                    arg.args,
-                    from_sbml=from_sbml,
-                ))
+                root_funs.extend(self._collect_heaviside_roots(arg.args))
 
         # substitute 'w' expressions into root expressions now, to avoid
         # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
         # to include 'w.h'
         w_sorted = toposort_symbols(dict(zip(
-            [
-                expr.get_id() if from_sbml else sp.Symbol(expr.get_name())
-                for expr in self._expressions
-            ],
+            [expr.get_id()  for expr in self._expressions],
             [expr.get_val() for expr in self._expressions],
         )))
         root_funs = [
@@ -2451,7 +2431,6 @@ class ODEModel:
             self,
             dxdt: sp.Expr,
             roots: List[Event],
-            from_sbml: bool,
     ) -> sp.Expr:
         """
         Parses the RHS of a state variable, checks for Heaviside functions,
@@ -2463,8 +2442,6 @@ class ODEModel:
             right hand side of state variable
         :param roots:
             list of known root functions with identifier
-        :param from_sbml:
-            whether the model is generated from SBML
 
         :returns:
             dxdt with Heaviside functions replaced by amici helper variables
@@ -2477,10 +2454,7 @@ class ODEModel:
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(
-            dt_expanded.args,
-            from_sbml=from_sbml,
-        )
+        tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
         for tmp_old in tmp_roots_old:
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
