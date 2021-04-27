@@ -1649,6 +1649,11 @@ class ODEModel:
         for expr in self._expressions:
             expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
+        # remove all possible Heavisides from roots, which may arise from
+        # the substitution of `'w'` in `_collect_heaviside_roots`
+        for root in roots:
+            root.set_val(self._process_heavisides(root.get_val(), roots))
+
         # Now add the found roots to the model components
         for root in roots:
             # skip roots of SBML events, as these have already been added
