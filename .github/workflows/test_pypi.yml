@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
-  push:
 
 jobs:
   pypi:
