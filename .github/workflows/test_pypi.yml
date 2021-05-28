@@ -34,8 +34,8 @@ jobs:
           if [[ ${{ matrix.os }} == macos* ]] ; then \
             brew install hdf5 swig gcc libomp
           fi
-
-      - run: pip3 install amici
+      - run: pip install --upgrade pip
+      - run: pip install -v amici
       - run: python -c "from amici import _amici; print(_amici)"
       # Requires 0.11.17
       # - run: python -m amici
