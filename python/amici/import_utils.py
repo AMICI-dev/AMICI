@@ -239,7 +239,7 @@ def toposort_symbols(symbols: SymbolDef,
     :return:
         ordered symbol definitions
     """
-    sorted_symbols = reversed(list(toposort({
+    sorted_symbols = toposort({
         identifier: {
             s for s in (
                 definition[field] if field is not None else definition
@@ -248,7 +248,7 @@ def toposort_symbols(symbols: SymbolDef,
         }
         for identifier, definition
         in symbols.items()
-    })))
+    })
     return {
         s: symbols[s]
         for symbol_group in sorted_symbols

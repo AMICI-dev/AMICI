@@ -1864,9 +1864,7 @@ class ODEModel:
             # following lines are only evaluated if a model has events
             w_sorted = \
                 toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
-            tmp_xdot = self._eqs['xdot'].copy()
-            for sub_sym, sub_eq in w_sorted.items():
-                tmp_xdot = tmp_xdot.subs({sub_sym: sub_eq})
+            tmp_xdot = smart_subs_dict(self._eqs['xdot'], w_sorted)
             self._eqs[name] = (
                 smart_multiply(self.eq('drootdx'), tmp_xdot)
                 + self.eq('drootdt')
