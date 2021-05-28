@@ -1,11 +1,14 @@
 # References
 
-List of publications using AMICI. Total number is 55.
+List of publications using AMICI. Total number is 57.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
 <h1 class="unnumbered" id="section">2021</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-Froehlich2021.05.20.445065">
+<p>Fröhlich, Fabian, and Peter K. Sorger. 2021. “Fides: Reliable Trust-Region Optimization for Parameter Estimation of Ordinary Differential Equation Models.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2021.05.20.445065">https://doi.org/10.1101/2021.05.20.445065</a>.</p>
+</div>
 <div id="ref-Gaspari2021">
 <p>Gaspari, Erika. 2021. “Model-Driven Design of Mycoplasma as a Vaccine Chassis.” PhD thesis, Wageningen: Wageningen University. <a href="https://doi.org/10.18174/539593">https://doi.org/10.18174/539593</a>.</p>
 </div>
@@ -26,6 +29,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-vanRosmalenSmi2021">
 <p>van Rosmalen, R. P., R. W. Smith, V. A. P. Martins dos Santos, C. Fleck, and M. Suarez-Diez. 2021. “Model Reduction of Genome-Scale Metabolic Models as a Basis for Targeted Kinetic Models.” <em>Metabolic Engineering</em> 64: 74–84. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008">https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008</a>.</p>
+</div>
+<div id="ref-VillaverdePat2021">
+<p>Villaverde, Alejandro F., Dilan Pathirana, Fabian Fröhlich, Jan Hasenauer, and Julio R. Banga. 2021. “A Protocol for Dynamic Model Calibration.” <a href="http://arxiv.org/abs/2105.12008">http://arxiv.org/abs/2105.12008</a>.</p>
 </div>
 </div>
 <h1 class="unnumbered" id="section">2020</h1>
