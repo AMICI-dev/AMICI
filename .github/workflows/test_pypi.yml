@@ -1,0 +1,46 @@
+name: PyPI installation
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
+
+jobs:
+  pypi:
+    name: PyPI installation
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        os: [ubuntu-20.04, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: apt
+        run: |
+          if [[ ${{ matrix.os }} == ubuntu* ]] ; then \
+            sudo apt-get update \
+            && sudo apt-get install -y \
+              g++ \
+              libatlas-base-dev \
+              libhdf5-serial-dev \
+              swig
+          fi
+
+      - name: homebrew
+        run: |
+          if [[ ${{ matrix.os }} == macos* ]] ; then \
+            brew install hdf5 swig gcc libomp
+          fi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip install --upgrade pip
+      - run: pip install -v amici
+      - run: python -c "from amici import _amici; print(_amici)"
+      # Requires 0.11.17
+      # - run: python -m amici
