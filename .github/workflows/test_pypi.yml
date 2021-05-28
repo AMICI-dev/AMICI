@@ -36,4 +36,6 @@ jobs:
           fi
 
       - run: pip3 install amici
-      - run: python -m amici
+      - run: python -c "from amici import _amici; print(_amici)"
+      # Requires 0.11.17
+      # - run: python -m amici
