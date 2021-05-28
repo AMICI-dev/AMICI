@@ -31,7 +31,7 @@ jobs:
 
       - name: homebrew
         run: |
-          [[ ${{ matrix.os }} == macos* ]] ; then \
+          if [[ ${{ matrix.os }} == macos* ]] ; then \
             brew install hdf5 swig gcc libomp
           fi
 
