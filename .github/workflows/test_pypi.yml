@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: apt
         run: |
-          if [[ ${{ matrix.os }} == ubuntu* ]] ; then
+          if [[ ${{ matrix.os }} == ubuntu* ]] ; then \
             sudo apt-get update \
             && sudo apt-get install -y \
               g++ \
@@ -31,7 +31,7 @@ jobs:
 
       - name: homebrew
         run: |
-          [[ ${{ matrix.os }} == macos* ]] ; then
+          [[ ${{ matrix.os }} == macos* ]] ; then \
             brew install hdf5 swig gcc libomp
           fi
 
