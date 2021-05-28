@@ -34,6 +34,12 @@ jobs:
           if [[ ${{ matrix.os }} == macos* ]] ; then \
             brew install hdf5 swig gcc libomp
           fi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - run: pip install --upgrade pip
       - run: pip install -v amici
       - run: python -c "from amici import _amici; print(_amici)"
