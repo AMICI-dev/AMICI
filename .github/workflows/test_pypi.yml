@@ -20,18 +20,20 @@ jobs:
     steps:
       - name: apt
         run: |
-          [[ ${{ matrix.os }} == ubuntu* ]] \
-            && sudo apt-get update \
+          if [[ ${{ matrix.os }} == ubuntu* ]] ; then
+            sudo apt-get update \
             && sudo apt-get install -y \
               g++ \
               libatlas-base-dev \
               libhdf5-serial-dev \
               swig
+          fi
 
       - name: homebrew
         run: |
-          [[ ${{ matrix.os }} == macos* ]] \
-            && brew install hdf5 swig gcc libomp
+          [[ ${{ matrix.os }} == macos* ]] ; then
+            brew install hdf5 swig gcc libomp
+          fi
 
       - run: pip3 install amici
       - run: python -m amici
