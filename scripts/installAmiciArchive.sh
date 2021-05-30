@@ -33,4 +33,8 @@ else
 fi
 
 pip install $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1)
+
+# verify import succeeds
+python -m amici
+
 deactivate
