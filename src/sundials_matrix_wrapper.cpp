@@ -573,9 +573,10 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
 
         for (sunindextype acol = 0; acol < nrows; acol++) { /* row counts */
             auto next_indexptr = get_indexptr(acol+1);
+            auto widx_offset = (acol/blocksize)*blocksize;
             for (sunindextype aidx = get_indexptr(acol);
                  aidx < next_indexptr; aidx++) {
-                sunindextype widx = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
+                sunindextype widx = widx_offset + get_indexval(aidx) % blocksize;
                 assert(widx >= 0 && widx < (sunindextype)w.size());
                 w_data[widx]++;
                 assert(w_data[widx] <= nrows);
@@ -587,11 +588,13 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
         for (sunindextype acol = 0; acol < nrows; acol++)
         {
             auto next_indexptr = get_indexptr(acol+1);
-
+            auto ccol_offset = (acol/blocksize)*blocksize;
+            auto crow_offset = acol % blocksize;
             for (sunindextype aidx = get_indexptr(acol); aidx < next_indexptr; aidx++)
             {
-                sunindextype ccol = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
-                sunindextype crow = (get_indexval(aidx)/blocksize)*blocksize + acol % blocksize;
+                auto indexval_aidx = get_indexval(aidx);
+                sunindextype ccol = ccol_offset + indexval_aidx % blocksize;
+                sunindextype crow = (indexval_aidx/blocksize)*blocksize + crow_offset;
                 assert(crow < nrows);
                 assert(ccol < columns());
                 assert(aidx < capacity());

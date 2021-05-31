@@ -218,7 +218,7 @@ class SUNMatrixWrapper {
      * @param idx data index
      * @return row (CSC) or column (CSR) for idx-th data entry
      */
-    sunindextype get_indexval(sunindextype idx) const {
+    inline sunindextype get_indexval(sunindextype idx) const {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(idx < capacity());
