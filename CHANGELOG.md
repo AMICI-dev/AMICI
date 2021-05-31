@@ -2,6 +2,24 @@
 
 ## v0.X Series
 
+### v0.11.17 (2021-05-30)
+
+Fixes:
+* Fix "maybe-uninitialized" compiler warning (#1495)
+* Fix substitution of expressions in `drootdt_total (#1512)
+* C++: Fix serialization and == operator (#1493)
+* C++: Avoid `w` in `root` and `stau` headers (refactor) (#1503)
+
+Documentation:
+* Updated OpenBLAS Windows installation instructions (#1496)
+* Updated how-to-cite to Bioinformatics paper (#1499)
+* Updated list of papers using AMICI (#1509)
+
+Other:
+* Remove sllh computation from `petab_objective.simulate_petab` (#1498)
+* Add __main__.py to Python package to provide info on AMICI installation
+  via `python -m amici` (#1500)
+
 ### v0.11.16 (2021-04-13)
 
 Fixes:

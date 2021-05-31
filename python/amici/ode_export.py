@@ -1215,17 +1215,6 @@ class ODEModel:
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
-        # substitute 'w' expressions into event expressions now, to avoid
-        # rewriting '{model_name}_root.cpp' headers to include 'w.h'
-        w_sorted = toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
-        for index, event in enumerate(self._events):
-            self._events[index] = Event(
-                identifier=event.get_id(),
-                name=event.get_name(),
-                value=event.get_val().subs(w_sorted),
-                state_update=event._state_update,
-                event_observable=event._observable,
-            )
         self._has_quadratic_nllh = all(
             llh['dist'] in ['normal', 'lin-normal']
             for llh in si.symbols[SymbolId.LLHY].values()
@@ -1631,21 +1620,15 @@ class ODEModel:
         """
         Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
-        """
-        # Workaround to generate `'w'` before events, such that `'w'` can be
-        # replaced in events, to avoid adding `w` to the header of
-        # "{model_name}_stau.cpp".
-        if 'w' not in self._syms:
-            self._generate_symbol('w', from_sbml=from_sbml)
 
+        :param from_sbml:
+            whether the model is generated from SBML
+        """
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
         self.parse_events()
 
         for var in self._variable_prototype:
-            # Part of the workaround described earlier in this method.
-            if var == 'w':
-                continue
             if var not in self._syms:
                 self._generate_symbol(var, from_sbml=from_sbml)
 
@@ -1658,7 +1641,6 @@ class ODEModel:
         and replaces the formulae of the found roots by identifiers of AMICI's
         Heaviside function implementation in the right hand side
         """
-
         # Track all roots functions in the right hand side
         roots = copy.deepcopy(self._events)
         for state in self._states:
@@ -1666,6 +1648,11 @@ class ODEModel:
 
         for expr in self._expressions:
             expr.set_val(self._process_heavisides(expr.get_val(), roots))
+
+        # remove all possible Heavisides from roots, which may arise from
+        # the substitution of `'w'` in `_collect_heaviside_roots`
+        for root in roots:
+            root.set_val(self._process_heavisides(root.get_val(), roots))
 
         # Now add the found roots to the model components
         for root in roots:
@@ -1877,7 +1864,7 @@ class ODEModel:
             # following lines are only evaluated if a model has events
             w_sorted = \
                 toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
-            tmp_xdot = self._eqs['xdot'].subs(w_sorted)
+            tmp_xdot = smart_subs_dict(self._eqs['xdot'], w_sorted)
             self._eqs[name] = (
                 smart_multiply(self.eq('drootdx'), tmp_xdot)
                 + self.eq('drootdt')
@@ -2411,7 +2398,7 @@ class ODEModel:
 
     def _collect_heaviside_roots(
             self,
-            args: Sequence[sp.Expr]
+            args: Sequence[sp.Expr],
     ) -> List[sp.Expr]:
         """
         Recursively checks an expression for the occurrence of Heaviside
@@ -2432,8 +2419,12 @@ class ODEModel:
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
         # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting '{model_name}_stau.cpp' headers to include 'w.h'
-        w_sorted = toposort_symbols(dict(zip(self._syms['w'], self.eq('w'))))
+        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
+        # to include 'w.h'
+        w_sorted = toposort_symbols(dict(zip(
+            [expr.get_id()  for expr in self._expressions],
+            [expr.get_val() for expr in self._expressions],
+        )))
         root_funs = [
             r.subs(w_sorted)
             for r in root_funs
