@@ -29,6 +29,7 @@ import re
 import sys
 from contextlib import suppress
 from typing import Optional, Union, Sequence, List
+from types import ModuleType as ModelModule
 
 
 def _get_amici_path():
@@ -142,7 +143,7 @@ if not _imported_from_setup():
             def getModel(self) -> amici.Model:
                 pass
     except ImportError:
-        from types import ModuleType as ModelModule
+        pass
 
 hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
 
