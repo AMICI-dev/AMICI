@@ -28,8 +28,8 @@ import os
 import re
 import sys
 from contextlib import suppress
-from typing import Optional, Union, Sequence, List
 from types import ModuleType as ModelModule
+from typing import Optional, Union, Sequence, List
 
 
 def _get_amici_path():
