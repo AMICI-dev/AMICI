@@ -28,8 +28,19 @@ import os
 import re
 import sys
 from contextlib import suppress
-from types import ModuleType
 from typing import Optional, Union, Sequence, List
+
+try:
+    # Requires Python>=3.8
+    from typing import Protocol
+
+    class ModelModule(Protocol):
+        """Enable static type checking for AMICI-generated model modules"""
+        def getModel(self) -> amici.Model:
+            pass
+
+except ImportError:
+    from types import ModuleType as ModelModule
 
 
 def _get_amici_path():
@@ -283,7 +294,7 @@ class add_path:
 
 
 def import_model_module(module_name: str,
-                        module_path: Optional[str] = None) -> ModuleType:
+                        module_path: Optional[str] = None) -> ModelModule:
     """
     Import Python module of an AMICI model
 
