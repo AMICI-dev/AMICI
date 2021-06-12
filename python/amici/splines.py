@@ -1047,7 +1047,7 @@ class AbstractSpline(ABC):
             raise TypeError('Rule must be an AssignmentRule!')
         if rule.isSetAnnotation():
             annotation = ET.fromstring(rule.getAnnotationString())
-            for child in annotation.getchildren():
+            for child in annotation:
                 if child.tag == f'{{{annotation_namespace}}}spline':
                     return child
         return None
@@ -1083,7 +1083,7 @@ class AbstractSpline(ABC):
             attributes[key] = value
 
         children = {}
-        for child in annotation.getchildren():
+        for child in annotation:
             if not child.tag.startswith(f'{{{annotation_namespace}}}'):
                 raise ValueError(
                     f'Unexpected node {child.tag} inside spline annotation!'
@@ -1096,7 +1096,7 @@ class AbstractSpline(ABC):
                     locals=locals,
                     expression_type='Rule'
                 )
-                for gc in child.getchildren()
+                for gc in child
             ]
             children[key] = value
 

@@ -790,7 +790,7 @@ class SbmlImporter:
             assert isinstance(annotation, str)
             if len(annotation) != 0:
                 annotation = ET.fromstring(annotation)
-                for child in annotation.getchildren():
+                for child in annotation:
                     if child.tag == f'{{{annotation_namespace}}}discard':
                         parameter_ids_to_remove.append(p.getIdAttribute())
         for pId in parameter_ids_to_remove:
