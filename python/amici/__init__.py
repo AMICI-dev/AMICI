@@ -28,7 +28,7 @@ import os
 import re
 import sys
 from contextlib import suppress
-from types import ModuleType
+from types import ModuleType as ModelModule
 from typing import Optional, Union, Sequence, List
 
 
@@ -133,6 +133,17 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
+
+    try:
+        # Requires Python>=3.8
+        from typing import Protocol
+
+        class ModelModule(Protocol):
+            """Enable Python static type checking for AMICI-generated model modules"""
+            def getModel(self) -> amici.Model:
+                pass
+    except ImportError:
+        pass
 
 hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
 
@@ -283,7 +294,7 @@ class add_path:
 
 
 def import_model_module(module_name: str,
-                        module_path: Optional[str] = None) -> ModuleType:
+                        module_path: Optional[str] = None) -> ModelModule:
     """
     Import Python module of an AMICI model
 
