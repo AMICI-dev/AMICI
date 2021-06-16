@@ -113,8 +113,8 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
 
 void CVodeSolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/,
                                   const AmiVector &/*dx0*/) const {
-    /* We need to set the steadystate rhs function. SUndials doesn't have this
-       in its public api, so we have to change it in the solver memory,
+    /* We need to set the steadystate rhs function. Sundials doesn't have this
+       in its public API, so we have to change it in the solver memory,
        as re-calling init would unset solver settings. */
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_f = fxBdot_ss;
@@ -416,7 +416,7 @@ void CVodeSolver::resetState(void *ami_mem, const_N_Vector y0) const {
     cv_mem->cv_next_q = 0;
 
     /* write updated state to Nordsieck history array  */
-    N_VScale(ONE, y0, cv_mem->cv_zn[0]);
+    N_VScale(ONE, const_cast<N_Vector>(y0), cv_mem->cv_zn[0]);
 }
 
 void CVodeSolver::reInitPostProcessF(const realtype tnext) const {
@@ -454,6 +454,11 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
 
     status = CVode(ami_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
 
+    if (status == CV_ROOT_RETURN)
+        throw CvodeException(status, "CVode returned a root after "
+            "reinitialization. The initial step-size after the event or "
+            "heaviside function is too small. To fix this, increase absolute "
+            "and relative tolerances!");
     if (status != CV_SUCCESS)
         throw CvodeException(status, "reInitPostProcess");
 
@@ -620,7 +625,8 @@ void CVodeSolver::quadInit(const AmiVector &xQ0) const {
     int status;
     xQ_.copy(xQ0);
     if (getQuadInitDone()) {
-        status = CVodeQuadReInit(solver_memory_.get(), xQ0.getNVector());
+        status = CVodeQuadReInit(solver_memory_.get(),
+                                 const_cast<N_Vector>(xQ0.getNVector()));
     } else {
         status = CVodeQuadInit(solver_memory_.get(), fqBdot_ss, xQ_.getNVector());
         setQuadInitDone();

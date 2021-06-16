@@ -1,24 +1,26 @@
 """
 PySB-PEtab Import
-------------
+-----------------
 Import a model in the PySB-adapted :mod:`petab`
 (https://github.com/PEtab-dev/PEtab) format into AMICI.
 """
 
 import logging
 import os
+from itertools import chain
 from typing import List, Dict, Union, Optional, Tuple, Iterable
 
 import libsbml
 import petab
+import pysb
 import sympy as sp
 from petab.C import (CONDITION_NAME, OBSERVABLE_TRANSFORMATION, LIN,
                      OBSERVABLE_FORMULA, NOISE_FORMULA, FORMAT_VERSION,
                      PARAMETER_FILE, SBML_FILES, CONDITION_FILES,
                      MEASUREMENT_FILES, VISUALIZATION_FILES, OBSERVABLE_FILES)
 
-from .logging import get_logger, log_execution_time, set_log_level
 from . import petab_import
+from .logging import get_logger, log_execution_time, set_log_level
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -42,11 +44,13 @@ class PysbPetabProblem(petab.Problem):
         Constructor
 
         :param pysb_model: PySB model instance for this PEtab problem
-        :param args: See petab.Problem.__init__
-        :param kwargs: See petab.Problem.__init__
+        :param args: See :meth:`petab.Problem.__init__`
+        :param kwargs: See :meth:`petab.Problem.__init__`
         """
-
+        flatten = kwargs.pop('flatten', False)
         super().__init__(*args, **kwargs)
+        if flatten:
+            petab.flatten_timepoint_specific_output_overrides(self)
 
         self.pysb_model: 'pysb.Model' = pysb_model
         self._add_observation_model()
@@ -63,8 +67,6 @@ class PysbPetabProblem(petab.Problem):
         """Extend PySB model by observation model as defined in the PEtab
         observables table"""
 
-        import pysb
-
         # add any required output parameters
         local_syms = {sp.Symbol.__str__(comp): comp for comp in
                       self.pysb_model.components if
@@ -74,7 +76,8 @@ class PysbPetabProblem(petab.Problem):
             sym = sp.sympify(formula, locals=local_syms)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
-                    p = pysb.Parameter(str(s), 1.0)
+                    p = pysb.Parameter(str(s), 1.0, _export=False)
+                    self.pysb_model.add_component(p)
                     local_syms[sp.Symbol.__str__(p)] = p
 
         # add observables and sigmas to pysb model
@@ -82,16 +85,13 @@ class PysbPetabProblem(petab.Problem):
                 in zip(self.observable_df.index,
                        self.observable_df[OBSERVABLE_FORMULA],
                        self.observable_df[NOISE_FORMULA]):
-            # No observableTransformation so far
-            if OBSERVABLE_TRANSFORMATION in self.observable_df:
-                trafo = self.observable_df.loc[observable_id,
-                                               OBSERVABLE_TRANSFORMATION]
-                if trafo and trafo != LIN:
-                    raise NotImplementedError(
-                        "Observable transformation currently unsupported "
-                        "for PySB models")
             obs_symbol = sp.sympify(observable_formula, locals=local_syms)
-            obs_expr = pysb.Expression(observable_id, obs_symbol)
+            if observable_id in self.pysb_model.expressions.keys():
+                obs_expr = self.pysb_model.expressions[observable_id]
+            else:
+                obs_expr = pysb.Expression(observable_id, obs_symbol,
+                                           _export=False)
+                self.pysb_model.add_component(obs_expr)
             local_syms[observable_id] = obs_expr
 
             sigma_id = f"{observable_id}_sigma"
@@ -99,7 +99,8 @@ class PysbPetabProblem(petab.Problem):
                 noise_formula,
                 locals=local_syms
             )
-            sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
+            sigma_expr = pysb.Expression(sigma_id, sigma_symbol, _export=False)
+            self.pysb_model.add_component(sigma_expr)
             local_syms[sigma_id] = sigma_expr
 
     @staticmethod
@@ -109,17 +110,33 @@ class PysbPetabProblem(petab.Problem):
                    visualization_files: Union[str, Iterable[str]] = None,
                    observable_files: Union[str, Iterable[str]] = None,
                    pysb_model_file: str = None,
-                   ) -> 'PysbPetabProblem':
+                   flatten: bool = False) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables from files.
 
-        Arguments:
-            condition_file: PEtab condition table
-            measurement_file: PEtab measurement table
-            parameter_file: PEtab parameter table
-            visualization_files: PEtab visualization tables
-            observable_files: PEtab observables tables
-            pysb_model_file: PySB model file
+        :param condition_file:
+            PEtab condition table
+
+        :param measurement_file:
+            PEtab measurement table
+
+        :param parameter_file:
+            PEtab parameter table
+
+        :param visualization_files:
+            PEtab visualization tables
+
+        :param observable_files:
+            PEtab observables tables
+
+        :param pysb_model_file:
+            PySB model file
+
+        :param flatten:
+            Flatten the petab problem
+
+        :return:
+            Petab Problem
         """
 
         condition_df = measurement_df = parameter_df = visualization_df = None
@@ -153,18 +170,27 @@ class PysbPetabProblem(petab.Problem):
             measurement_df=measurement_df,
             parameter_df=parameter_df,
             observable_df=observable_df,
-            visualization_df=visualization_df)
+            visualization_df=visualization_df,
+            flatten=flatten
+        )
 
     @staticmethod
-    def from_yaml(yaml_config: Union[Dict, str]) -> 'PysbPetabProblem':
+    def from_yaml(yaml_config: Union[Dict, str],
+                  flatten: bool = False) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables as specified by YAML file.
 
         NOTE: The PySB model is currently expected in the YAML file under
         ``sbml_files``.
 
-        Arguments:
-            yaml_config: PEtab configuration as dictionary or YAML file name
+        :param yaml_config:
+            PEtab configuration as dictionary or YAML file name
+
+        :param flatten:
+            Flatten the petab problem
+
+        :return:
+            Petab Problem
         """
         from petab.yaml import (load_yaml, is_composite_problem,
                                 assert_single_condition_and_sbml_file)
@@ -211,7 +237,8 @@ class PysbPetabProblem(petab.Problem):
                 for f in problem0.get(VISUALIZATION_FILES, [])],
             observable_files=[
                 os.path.join(path_prefix, f)
-                for f in problem0.get(OBSERVABLE_FILES, [])]
+                for f in problem0.get(OBSERVABLE_FILES, [])],
+            flatten=flatten
         )
 
 
@@ -237,17 +264,39 @@ def create_dummy_sbml(
     dummy_sbml_model.setExtentUnits("mole")
     dummy_sbml_model.setSubstanceUnits('mole')
 
-    for species in pysb_model.parameters:
+    # mandatory if there are species
+    c = dummy_sbml_model.createCompartment()
+    c.setId('dummy_compartment')
+    c.setConstant(False)
+
+    # parameters are required for parameter mapping
+    for parameter in pysb_model.parameters:
         p = dummy_sbml_model.createParameter()
-        p.setId(species.name)
+        p.setId(parameter.name)
         p.setConstant(True)
         p.setValue(0.0)
 
+    # noise parameters are required for every observable
     for observable_id in observable_ids:
         p = dummy_sbml_model.createParameter()
         p.setId(f"noiseParameter1_{observable_id}")
         p.setConstant(True)
         p.setValue(0.0)
+
+    # pysb observables and expressions are required in case they occur in
+    #  the observableFormula or noiseFormula.
+    #  as this code is only temporary and not performance-critical, we just add
+    #  all of them. we just need an sbml entity with the same ID. sbml species
+    #  seem to be the simplest, as parameters would interfere with parameter
+    #  mapping later on
+    for component in chain(pysb_model.expressions, pysb_model.observables):
+        s = dummy_sbml_model.createSpecies()
+        s.setId(component.name)
+        s.setInitialAmount(0.0)
+        s.setHasOnlySubstanceUnits(False)
+        s.setBoundaryCondition(False)
+        s.setCompartment('dummy_compartment')
+        s.setConstant(False)
 
     return document, dummy_sbml_model
 
@@ -287,7 +336,7 @@ def import_model_pysb(
     # For pysb, we only allow parameters in the condition table
     # those must be pysb model parameters (either natively, or output
     # parameters from measurement or condition table that have been added in
-    # PysbPetabProblem
+    # PysbPetabProblem)
     model_parameters = [p.name for p in pysb_model.parameters]
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:
@@ -312,9 +361,14 @@ def import_model_pysb(
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
+        noise_distrs = petab_import.petab_noise_distributions_to_amici(
+            observable_table)
+
+
     from amici.pysb_import import pysb2amici
     pysb2amici(pysb_model, model_output_dir, verbose=True,
                observables=observables,
                sigmas=sigmas,
                constant_parameters=constant_parameters,
+               noise_distributions=noise_distrs,
                **kwargs)

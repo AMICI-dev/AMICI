@@ -98,33 +98,16 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-
-            // copy explicit version
-            if (model_->ndxdotdp_explicit > 0) {
-                auto col = model_->dxdotdp_explicit.indexptrs();
-                auto row = model_->dxdotdp_explicit.indexvals();
-                auto data_ptr = model_->dxdotdp_explicit.data();
-                for (sunindextype iCol = col[model_->plist(ip)];
-                     iCol < col[model_->plist(ip) + 1]; ++iCol)
-                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
-            }
-
-            // copy implicit version
-            if (model_->ndxdotdp_implicit > 0) {
-                auto col = model_->dxdotdp_implicit.indexptrs();
-                auto row = model_->dxdotdp_implicit.indexvals();
-                auto data_ptr = model_->dxdotdp_implicit.data();
-                for (sunindextype iCol = col[model_->plist(ip)];
-                     iCol < col[model_->plist(ip) + 1]; ++iCol)
-                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
-            }
+            model_->get_dxdotdp_full().scatter(model_->plist(ip), -1.0, nullptr,
+                                               gsl::make_span(sx.getNVector(ip)),
+                                               0, nullptr, 0);
 
             solveLinearSystem(sx[ip]);
         }
     } else {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             for (int ix = 0; ix < model_->nx_solver; ix++)
-                sx.at(ix,ip) = -model_->dxdotdp.at(ix, ip);
+                sx.at(ix,ip) = -model_->get_dxdotdp().at(ix, ip);
 
             solveLinearSystem(sx[ip]);
         }
@@ -148,6 +131,7 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
 
 void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
@@ -157,6 +141,7 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
 
 void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
@@ -169,6 +154,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
     int status = SUNLinSolSolve_Dense(linsol_, Jtmp_.get(),
                                       rhs.getNVector(), rhs.getNVector(),
                                       0.0);
+    Jtmp_.refresh();
     // last argument is tolerance and does not have any influence on result
 
     if(status != AMICI_SUCCESS)
@@ -201,6 +187,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
 void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     /* Get sparse Jacobian */
     model_->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
@@ -211,6 +198,7 @@ void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
 void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     /* Get sparse Jacobian */
     model_->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+    Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
@@ -262,6 +250,7 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 
     // Get the Jacobian and its diagonal for preconditioning
     model_->fJ(*t_, 0.0, *x_, dx_, xdot_, ns_J_.get());
+    ns_J_.refresh();
     model_->fJDiag(*t_, ns_Jdiag_, 0.0, *x_, dx_);
 
     // Ensure positivity of entries in ns_Jdiag
@@ -284,7 +273,7 @@ void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
 
     // Get the Jacobian and its diagonal for preconditioning
     model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, ns_J_.get());
-
+    ns_J_.refresh();
     // Get the diagonal and ensure negativity of entries is ns_J. Note that diag(JB) = -diag(J).
     model_->fJDiag(*t_, ns_Jdiag_, 0.0, *x_, dx_);
 
@@ -307,16 +296,16 @@ void NewtonSolverIterative::solveLinearSystem(AmiVector &rhs) {
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
+void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
                                           AmiVector &ns_delta) {
     xdot_ = ns_delta;
     xdot_.minus();
 
     // Initialize for linear solve
-    ns_p_.reset();
-    ns_v_.reset();
-    ns_delta.reset();
-    ns_tmp_.reset();
+    ns_p_.zero();
+    ns_v_.zero();
+    ns_delta.zero();
+    ns_tmp_.zero();
     double rho = 1.0;
     double omega = 1.0;
     double alpha = 1.0;
@@ -340,7 +329,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         N_VLinearSum(1.0, ns_r_.getNVector(), beta, ns_p_.getNVector(), ns_p_.getNVector());
 
         // ns_v = J * ns_p
-        ns_v_.reset();
+        ns_v_.zero();
         ns_J_.multiply(ns_v_.getNVector(), ns_p_.getNVector());
         N_VDiv(ns_v_.getNVector(), ns_Jdiag_.getNVector(), ns_v_.getNVector());
 
@@ -354,7 +343,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         N_VLinearSum(1.0, ns_r_.getNVector(), -alpha, ns_v_.getNVector(), ns_s_.getNVector());
 
         // ns_t = J * ns_s
-        ns_t_.reset();
+        ns_t_.zero();
         ns_J_.multiply(ns_t_.getNVector(), ns_s_.getNVector());
         N_VDiv(ns_t_.getNVector(), ns_Jdiag_.getNVector(), ns_t_.getNVector());
 

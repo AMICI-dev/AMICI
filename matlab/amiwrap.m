@@ -4,7 +4,7 @@ function amiwrap( varargin )
     % Parameters:
     %  varargin:
     %  modelname: specifies the name of the model which will be later used for the naming of the simulation file @type string
-    %  symfun: specifies a function which executes model definition see @ref matlab_interface for details @type string.
+    %  symfun: specifies a function which executes model definition @type string.
     %  tdir: target directory where the simulation file should be placed @type string @default $AMICIDIR/models/modelname
     %  o2flag: boolean whether second order sensitivities should be enabled @type boolean @default false
     %
@@ -169,8 +169,10 @@ function amiwrap( varargin )
     % generate the matlab wrapper
     disp('Generating M code ...')
     if(o2flag)
+        model.generateRebuildM()
         model.generateM(modelo2);
     else
+        model.generateRebuildM()
         model.generateM([]);
     end
 

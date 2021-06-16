@@ -11,9 +11,12 @@ AMICI Python API
    amici.sbml_import
    amici.pysb_import
    amici.petab_import
-   amici.ode_export
+   amici.petab_import_pysb
    amici.petab_objective
+   amici.import_utils
+   amici.ode_export
    amici.plotting
    amici.pandas
    amici.logging
    amici.gradient_check
+   amici.parameter_mapping

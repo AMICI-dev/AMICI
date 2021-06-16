@@ -72,7 +72,7 @@ class Solver {
     /**
      * @brief runs a forward simulation until the specified timepoint
      *
-     * @param tout next timepooint
+     * @param tout next timepoint
      * @return status flag
      */
     int run(realtype tout) const;
@@ -80,7 +80,7 @@ class Solver {
     /**
      * @brief makes a single step in the simulation
      *
-     * @param tout next timepooint
+     * @param tout next timepoint
      * @return status flag
      */
     int step(realtype tout) const;
@@ -88,12 +88,12 @@ class Solver {
     /**
      * @brief runs a backward simulation until the specified timepoint
      *
-     * @param tout next timepooint
+     * @param tout next timepoint
      */
     void runB(realtype tout) const;
 
     /**
-     * @brief Initialises the ami memory object and applies specified options
+     * @brief Initializes the ami memory object and applies specified options
      * @param t0 initial timepoint
      * @param model pointer to the model instance
      * @param x0 initial states
@@ -107,7 +107,7 @@ class Solver {
                const AmiVectorArray &sdx0) const;
 
     /**
-     * @brief Initialises the AMI memory object for the backwards problem
+     * @brief Initializes the AMI memory object for the backwards problem
      * @param which index of the backward problem, will be set by this routine
      * @param tf final timepoint (initial timepoint for the bwd problem)
      * @param model pointer to the model instance
@@ -120,7 +120,7 @@ class Solver {
                 const AmiVector &dxB0, const AmiVector &xQB0) const;
 
     /**
-     * @brief Initialises the ami memory for quadrature computation
+     * @brief Initializes the ami memory for quadrature computation
      * @param t0 initial timepoint
      * @param model pointer to the model instance
      * @param x0 initial states
@@ -143,10 +143,10 @@ class Solver {
     void updateAndReinitStatesAndSensitivities(Model *model);
 
     /**
-     * getRootInfo extracts information which event occured
+     * getRootInfo extracts information which event occurred
      *
      * @param rootsfound array with flags indicating whether the respective
-     * event occured
+     * event occurred
      */
     virtual void getRootInfo(int *rootsfound) const = 0;
 
@@ -275,13 +275,13 @@ class Solver {
     void setNewtonDampingFactorLowerBound(double dampingFactorLowerBound);
 
     /**
-     * @brief Get sensitvity order
+     * @brief Get sensitivity order
      * @return sensitivity order
      */
     SensitivityOrder getSensitivityOrder() const;
 
     /**
-     * @brief Set the sensitvity order
+     * @brief Set the sensitivity order
      * @param sensi sensitivity order
      */
     void setSensitivityOrder(SensitivityOrder sensi);
@@ -464,7 +464,7 @@ class Solver {
 
     /**
      * @brief sets the maximum number of solver steps for the forward problem
-     * @param maxsteps maximum number of solver steps (non-negative number)
+     * @param maxsteps maximum number of solver steps (positive number)
      */
     void setMaxSteps(long int maxsteps);
 
@@ -477,7 +477,11 @@ class Solver {
 
     /**
      * @brief sets the maximum number of solver steps for the backward problem
+     *
      * @param maxsteps maximum number of solver steps (non-negative number)
+     *
+     * @note default behaviour (100 times the value for the forward problem) can
+     * be restored by passing maxsteps=0
      */
     void setMaxStepsBackwardProblem(long int maxsteps);
 
@@ -660,18 +664,18 @@ class Solver {
     const AmiVector &getQuadrature(realtype t) const;
 
     /**
-     * @brief Reinitializes the states in the solver after an event occurence
+     * @brief Reinitializes the states in the solver after an event occurrence
      *
      * @param t0 reinitialization timepoint
-     * @param yy0 inital state variables
+     * @param yy0 initial state variables
      * @param yp0 initial derivative state variables (DAE only)
      */
     virtual void reInit(realtype t0, const AmiVector &yy0,
                         const AmiVector &yp0) const = 0;
 
     /**
-     * @brief Reinitializes the state sensitivites in the solver after an
-     * event occurence
+     * @brief Reinitializes the state sensitivities in the solver after an
+     * event occurrence
      *
      * @param yyS0 new state sensitivity
      * @param ypS0 new derivative state sensitivities (DAE only)
@@ -680,13 +684,13 @@ class Solver {
                             const AmiVectorArray &ypS0) const = 0;
 
     /**
-     * @brief Switches off computation of  state sensitivites without
+     * @brief Switches off computation of  state sensitivities without
      * deallocating the memory for sensitivities
      */
     virtual void sensToggleOff() const = 0;
 
     /**
-     * @brief Reinitializes the adjoint states after an event occurence
+     * @brief Reinitializes the adjoint states after an event occurrence
      *
      * @param which identifier of the backwards problem
      * @param tB0 reinitialization timepoint
@@ -697,7 +701,7 @@ class Solver {
                          const AmiVector &ypB0) const = 0;
 
     /**
-     * @brief Reinitialize the adjoint states after an event occurence
+     * @brief Reinitialize the adjoint states after an event occurrence
      *
      * @param which identifier of the backwards problem
      * @param yQB0 new adjoint quadrature state
@@ -711,13 +715,13 @@ class Solver {
     realtype gett() const;
 
     /**
-     * @brief Reads out the cpu time needed for forward solve
+     * @brief Reads out the CPU time needed for forward solve
      * @return cpu_time
      */
     realtype getCpuTime() const;
 
     /**
-     * @brief Reads out the cpu time needed for bavkward solve
+     * @brief Reads out the CPU time needed for backward solve
      * @return cpu_timeB
      */
     realtype getCpuTimeB() const;
@@ -746,7 +750,7 @@ class Solver {
      */
     bool computingFSA() const {
         return getSensitivityOrder() >= SensitivityOrder::first &&
-        getSensitivityMethod() == SensitivityMethod::forward;
+        getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0;
     }
 
     /**
@@ -755,7 +759,7 @@ class Solver {
      */
     bool computingASA() const {
         return getSensitivityOrder() >= SensitivityOrder::first &&
-        getSensitivityMethod() == SensitivityMethod::adjoint;
+        getSensitivityMethod() == SensitivityMethod::adjoint && nplist() > 0;
     }
 
     /**
@@ -940,7 +944,7 @@ class Solver {
     virtual void getQuad(realtype &t) const = 0;
 
     /**
-     * @brief Initialises the states at the specified initial timepoint
+     * @brief Initializes the states at the specified initial timepoint
      *
      * @param t0 initial timepoint
      * @param x0 initial states
@@ -950,7 +954,7 @@ class Solver {
                       const AmiVector &dx0) const = 0;
 
     /**
-     * @brief Initialises the states at the specified initial timepoint
+     * @brief Initializes the states at the specified initial timepoint
      *
      * @param t0 initial timepoint
      * @param x0 initial states
@@ -960,15 +964,15 @@ class Solver {
                                  const AmiVector &dx0) const = 0;
 
     /**
-     * @brief initialises the forward sensitivities
-     * @param sx0 initial states semsitivities
+     * @brief Initializes the forward sensitivities
+     * @param sx0 initial states sensitivities
      * @param sdx0 initial derivative states sensitivities
      */
     virtual void sensInit1(const AmiVectorArray &sx0,
                            const AmiVectorArray &sdx0) const = 0;
 
     /**
-     * @brief Initialise the adjoint states at the specified final timepoint
+     * @brief Initialize the adjoint states at the specified final timepoint
      *
      * @param which identifier of the backwards problem
      * @param tf final timepoint
@@ -979,15 +983,15 @@ class Solver {
                        const AmiVector &dxB0) const = 0;
 
     /**
-     * @brief Initialise the quadrature states at the specified final timepoint
+     * @brief Initialize the quadrature states at the specified final timepoint
      *
      * @param which identifier of the backwards problem
-     * @param xQB0 intial adjoint quadrature state
+     * @param xQB0 initial adjoint quadrature state
      */
     virtual void qbinit(int which, const AmiVector &xQB0) const = 0;
 
     /**
-     * @brief Initialises the rootfinding for events
+     * @brief Initializes the rootfinding for events
      *
      * @param ne number of different events
      */
@@ -1072,7 +1076,7 @@ class Solver {
      * sensitivity variables
      *
      * @param rtol relative tolerances
-     * @param atol array of absolute tolerances for every sensitivy variable
+     * @param atol array of absolute tolerances for every sensitivity variable
      */
     virtual void setSensSStolerances(double rtol, const double *atol) const = 0;
 
@@ -1130,6 +1134,7 @@ class Solver {
      * problem
      *
      * @param mxsteps number of steps
+     * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
      */
     virtual void setMaxNumSteps(long int mxsteps) const = 0;
 
@@ -1139,6 +1144,7 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      * @param mxstepsB number of steps
+     * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
      */
     virtual void setMaxNumStepsB(int which, long int mxstepsB) const = 0;
 
@@ -1179,7 +1185,7 @@ class Solver {
      * @brief specifies the scaling and indexes for sensitivity
      * computation
      *
-     * @param p paramaters
+     * @param p parameters
      * @param pbar parameter scaling constants
      * @param plist parameter index list
      */
@@ -1452,7 +1458,7 @@ class Solver {
      * @param nx new number of state variables
      * @param nplist new number of sensitivity parameters
      * @param nquad new number of quadratures (only differs from nplist for
-     * higher order senisitivity computation)
+     * higher order sensitivity computation)
      */
     void resetMutableMemory(int nx, int nplist, int nquad) const;
 
@@ -1501,7 +1507,7 @@ class Solver {
     void applyQuadTolerances() const;
 
     /**
-     * @brief updates all senstivivity solver tolerances according to the
+     * @brief updates all sensitivity solver tolerances according to the
      * currently specified member variables
      */
     void applySensitivityTolerances() const;
@@ -1609,10 +1615,10 @@ class Solver {
     /** state derivative dummy (dimension: nx_solver) */
     mutable AmiVector dx_ {0};
 
-    /** state sensititivities interface variable (dimension: nx_solver x nplist)
+    /** state sensitivities interface variable (dimension: nx_solver x nplist)
      */
     mutable AmiVectorArray sx_ {0, 0};
-    /** state derivative sensititivities dummy (dimension: nx_solver x nplist)
+    /** state derivative sensitivities dummy (dimension: nx_solver x nplist)
      */
     mutable AmiVectorArray sdx_ {0, 0};
 
@@ -1638,6 +1644,18 @@ class Solver {
     mutable bool force_reinit_postprocess_B_ {false};
 
   private:
+
+    /**
+     * @brief applies total number of steps for next solver call
+     */
+    void apply_max_num_steps() const;
+
+    /**
+     * @brief applies total number of steps for next backwards solver call
+     */
+    void apply_max_num_steps_B() const;
+
+
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth_ {SensitivityMethod::forward};
 
@@ -1782,8 +1800,8 @@ bool operator==(const Solver &a, const Solver &b);
  * passes them to the specified output function
  *
  * @param error_code error identifier
- * @param module name of the module in which the error occured
- * @param function name of the function in which the error occured
+ * @param module name of the module in which the error occurred
+ * @param function name of the function in which the error occurred
  * @param msg error message
  * @param eh_data amici::Solver as void*
  */

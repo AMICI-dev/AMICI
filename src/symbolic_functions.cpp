@@ -46,7 +46,7 @@ double dirac(double x) {
 }
 
 double heaviside(double x) {
-    if (x <= 0.0) {
+    if (x < 0.0) {
         return 0.0;
     }
     return 1.0;
@@ -263,7 +263,7 @@ double Dspline_pos(int id, double t, int num, ...) {
     return uout;
 }
 
-double DDspline(int  id1, int  id2, double  t, int  num, ...) { return 0.0; }
+double DDspline(int  /*id1*/, int  /*id2*/, double  /*t*/, int  /*num*/, ...) { return 0.0; }
 
 double DDspline_pos(int id1, int id2, double t, int num, ...) {
 

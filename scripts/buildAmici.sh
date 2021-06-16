@@ -14,7 +14,8 @@ cd "${amici_build_dir}"
 
 cpputest_build_dir="${amici_path}/ThirdParty/cpputest-master/build/"
 
-if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]]; then
+if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]] || [[ $ENABLE_AMICI_DEBUGGING = TRUE ]];
+then
   # Running on CI server
   build_type="Debug"
 else
@@ -23,6 +24,7 @@ fi
 
 CppUTest_DIR=${cpputest_build_dir} \
   ${cmake} \
+    -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
     -DCMAKE_BUILD_TYPE=$build_type \
     -DPython3_EXECUTABLE="$(command -v python3)" ..
 

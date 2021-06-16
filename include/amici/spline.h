@@ -17,4 +17,4 @@ double sinteg(int n, double u, double x[], double y[], double b[], double c[],
 
 } // namespace amici
 
-#endif /* spline_h */
+#endif /* amici_spline_h */

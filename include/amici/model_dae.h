@@ -22,7 +22,7 @@ class IDASolver;
  *
  * The model does not contain any data, but represents the state
  * of the model at a specific time t. The states must not always be
- * in sync, but may be updated asynchroneously.
+ * in sync, but may be updated asynchronously.
  */
 class Model_DAE : public Model {
   public:
@@ -31,55 +31,25 @@ class Model_DAE : public Model {
 
     /**
      * @brief Constructor with model dimensions
-     * @param nx_rdata number of state variables
-     * @param nxtrue_rdata number of state variables of the non-augmented model
-     * @param nx_solver number of state variables with conservation laws applied
-     * @param nxtrue_solver number of state variables of the non-augmented model
-     with conservation laws applied
-     * @param nx_solver_reinit number of state variables with conservation laws
-     * subject to reinitialization
-     * @param ny number of observables
-     * @param nytrue number of observables of the non-augmented model
-     * @param nz number of event observables
-     * @param nztrue number of event observables of the non-augmented model
-     * @param ne number of events
-     * @param nJ number of objective functions
-     * @param nw number of repeating elements
-     * @param ndwdx number of nonzero elements in the x derivative of the
-     * repeating elements
-     * @param ndwdp number of nonzero elements in the p derivative of the
-     * repeating elements
-     * @param ndxdotdw number of nonzero elements dxdotdw
-     * @param ndJydy number of nonzero elements dJydy
-     * @param nnz number of nonzero elements in Jacobian
-     * @param ubw upper matrix bandwidth in the Jacobian
-     * @param lbw lower matrix bandwidth in the Jacobian
+     * @param model_dimensions Model dimensions
+     * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
-     * @param p parameters
-     * @param k constants
-     * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
-     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
-    Model_DAE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-              const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
-              const int nz, const int nztrue, const int ne, const int nJ,
-              const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
-              std::vector<int> ndJydy, const int nnz, const int ubw,
-              const int lbw, const SecondOrderMode o2mode,
-              std::vector<realtype> const &p, std::vector<realtype> const &k,
-              std::vector<int> const &plist, std::vector<realtype> const &idlist,
+    Model_DAE(const ModelDimensions &model_dimensions,
+              SimulationParameters simulation_parameters,
+              const SecondOrderMode o2mode,
+              std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
-              const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
-                nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
-                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
-            M_ = SUNMatrixWrapper(nx_solver, nx_solver);
-        }
+              const int ndxdotdp_explicit=0)
+        : Model(model_dimensions, simulation_parameters,
+                o2mode, idlist, z2event, pythonGenerated,
+                ndxdotdp_explicit) {
+        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+    }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
@@ -93,8 +63,8 @@ class Model_DAE : public Model {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
-            SUNMatrix J);
+    void fJ(realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
+            const_N_Vector xdot, SUNMatrix J);
 
     void fJB(const realtype t, realtype cj, const AmiVector &x,
              const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
@@ -110,8 +80,8 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param JB Matrix to which the Jacobian will be written
      **/
-    void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB,
-             N_Vector dxB, SUNMatrix JB);
+    void fJB(realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
+             const_N_Vector xB, const_N_Vector dxB, SUNMatrix JB);
 
     void fJSparse(realtype t, realtype cj, const AmiVector &x,
                   const AmiVector &dx, const AmiVector &xdot,
@@ -125,7 +95,7 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      * @param J Matrix to which the Jacobian will be written
      */
-    void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
+    void fJSparse(realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
                   SUNMatrix J);
 
     void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
@@ -143,8 +113,8 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param JB Matrix to which the Jacobian will be written
      */
-    void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                   N_Vector xB, N_Vector dxB, SUNMatrix JB);
+    void fJSparseB(realtype t, realtype cj, const_N_Vector x, const_N_Vector dx,
+                   const_N_Vector xB, const_N_Vector dxB, SUNMatrix JB);
 
     /**
      * @brief Diagonal of the Jacobian (for preconditioning)
@@ -172,8 +142,8 @@ class Model_DAE : public Model {
      * @param Jv Vector to which the Jacobian vector product will be
      * written
      **/
-    void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv,
-             realtype cj);
+    void fJv(realtype t, const_N_Vector x, const_N_Vector dx, const_N_Vector v,
+             N_Vector Jv, realtype cj);
 
     /**
      * @brief Matrix vector product of JB with a vector v (for iterative solvers)
@@ -183,13 +153,13 @@ class Model_DAE : public Model {
      * @param xB Vector with the adjoint states
      * @param dxB Vector with the adjoint derivative states
      * @param vB Vector with which the Jacobian is multiplied
-     * @param JvB Vector to which the Jacobian vector product will be
-     *written
+     * @param JvB Vector to which the Jacobian vector product will be written
      * @param cj scalar in Jacobian (inverse stepsize)
      **/
 
-    void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
-              N_Vector vB, N_Vector JvB, realtype cj);
+    void fJvB(realtype t, const_N_Vector x, const_N_Vector dx,
+              const_N_Vector xB, const_N_Vector dxB,
+              const_N_Vector vB, N_Vector JvB, realtype cj);
 
     void froot(realtype t, const AmiVector &x, const AmiVector &dx,
                gsl::span<realtype> root) override;
@@ -201,7 +171,7 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      * @param root array with root function values
      */
-    void froot(realtype t, N_Vector x, N_Vector dx, gsl::span<realtype> root);
+    void froot(realtype t, const_N_Vector x, const_N_Vector dx, gsl::span<realtype> root);
 
     void fxdot(realtype t, const AmiVector &x, const AmiVector &dx,
                AmiVector &xdot) override;
@@ -213,7 +183,7 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      * @param xdot Vector with the right hand side
      */
-    void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot);
+    void fxdot(realtype t, const_N_Vector x, const_N_Vector dx, N_Vector xdot);
 
     /**
      * @brief Right hand side of differential equation for adjoint state xB
@@ -224,8 +194,8 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
-                N_Vector xBdot);
+    void fxBdot(realtype t, const_N_Vector x, const_N_Vector dx,
+                const_N_Vector xB, const_N_Vector dxB, N_Vector xBdot);
 
     /**
      * @brief Right hand side of integral equation for quadrature states qB
@@ -236,7 +206,8 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
+    void fqBdot(realtype t, const_N_Vector x, const_N_Vector dx,
+                const_N_Vector xB, const_N_Vector dxB,
                 N_Vector qBdot);
 
     void fxBdot_ss(const realtype t, const AmiVector &xB,
@@ -249,7 +220,8 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot) const;
+    void fxBdot_ss(realtype t, const_N_Vector xB, const_N_Vector dxB,
+                   N_Vector xBdot) const;
 
     /**
      * @brief Implementation of fqBdot for steady state at the N_Vector level
@@ -258,7 +230,8 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot) const;
+    void fqBdot_ss(realtype t, const_N_Vector xB, const_N_Vector dxB,
+                   N_Vector qBdot) const;
 
     /**
      * @brief Sparse Jacobian function backward, steady state case
@@ -288,7 +261,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param dx Vector with the derivative states
      */
-    void fdxdotdp(realtype t, const N_Vector x, const N_Vector dx);
+    void fdxdotdp(realtype t, const const_N_Vector x, const const_N_Vector dx);
     void fdxdotdp(const realtype t, const AmiVector &x,
                   const AmiVector &dx) override {
         fdxdotdp(t, x.getNVector(), dx.getNVector());
@@ -307,58 +280,19 @@ class Model_DAE : public Model {
      * @param sdx Vector with the derivative state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx,
-                N_Vector sdx, N_Vector sxdot);
+    void fsxdot(realtype t, const_N_Vector x, const_N_Vector dx, int ip,
+                const_N_Vector sx, const_N_Vector sdx, N_Vector sxdot);
 
     /**
      * @brief Mass matrix for DAE systems
      * @param t timepoint
      * @param x Vector with the states
      */
-    void fM(realtype t, const N_Vector x);
+    void fM(realtype t, const_N_Vector x);
 
     std::unique_ptr<Solver> getSolver() override;
 
   protected:
-    /**
-     * @brief Model specific implementation for fJ
-     * @param J Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param dx Vector with the derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJ(realtype *J, realtype t, const realtype *x, const double *p,
-                    const double *k, const realtype *h, realtype cj,
-                    const realtype *dx, const realtype *w,
-                    const realtype *dwdx) = 0;
-
-    /**
-     * @brief Model specific implementation for fJB
-     * @param JB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param xB Vector with the adjoint states
-     * @param dx Vector with the derivative states
-     * @param dxB Vector with the adjoint derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJB(realtype *JB, realtype t, const realtype *x,
-                     const double *p, const double *k, const realtype *h,
-                     realtype cj, const realtype *xB, const realtype *dx,
-                     const realtype *dxB, const realtype *w,
-                     const realtype *dwdx);
-
     /**
      * @brief Model specific implementation for fJSparse
      * @param JSparse Matrix to which the Jacobian will be written
@@ -366,7 +300,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param cj scaling factor, inverse of the step size
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
@@ -378,75 +312,13 @@ class Model_DAE : public Model {
                           const realtype *w, const realtype *dwdx) = 0;
 
     /**
-     * @brief Model specific implementation for fJSparseB
-     * @param JSparseB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param xB Vector with the adjoint states
-     * @param dx Vector with the derivative states
-     * @param dxB Vector with the adjoint derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, const realtype t,
-                           const realtype *x, const double *p, const double *k,
-                           const realtype *h, const realtype cj,
-                           const realtype *xB, const realtype *dx,
-                           const realtype *dxB, const realtype *w,
-                           const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJDiag
-     * @param JDiag array to which the Jacobian diagonal will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param dx Vector with the derivative states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJDiag(realtype *JDiag, realtype t, const realtype *x,
-                        const realtype *p, const realtype *k, const realtype *h,
-                        realtype cj, const realtype *dx, const realtype *w,
-                        const realtype *dwdx);
-
-    /**
-     * @brief Model specific implementation for fJvB
-     * @param JvB Matrix vector product of JB with a vector v
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param cj scaling factor, inverse of the step size
-     * @param xB Vector with the adjoint states
-     * @param dx Vector with the derivative states
-     * @param dxB Vector with the adjoint derivative states
-     * @param vB Vector with which the Jacobian is multiplied
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJvB(realtype *JvB, realtype t, const realtype *x,
-                      const double *p, const double *k, const realtype *h,
-                      realtype cj, const realtype *xB, const realtype *dx,
-                      const realtype *dxB, const realtype *vB,
-                      const realtype *w, const realtype *dwdx);
-
-    /**
      * @brief Model specific implementation for froot
      * @param root values of the trigger function
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param dx Vector with the derivative states
      **/
     virtual void froot(realtype *root, realtype t, const realtype *x,
@@ -460,7 +332,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
@@ -475,7 +347,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param ip parameter index
      * @param dx Vector with the derivative states
      * @param w vector with helper variables

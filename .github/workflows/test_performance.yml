@@ -1,0 +1,119 @@
+name: Performance Test
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - compile_without_optimization
+
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Performance Test
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
+
+    # install dependencies
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y swig libatlas-base-dev
+    - run: pip3 install petab shyaml
+
+    - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+    - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
+
+    # install AMICI
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist \
+          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
+    - name: Install AMICI sdist
+      run: |
+        AMICI_PARALLEL_COMPILE=2 check_time.sh \
+            install_sdist pip3 install -v --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+
+    # retrieve test model
+    - run: git clone --depth 1 https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT
+
+    # import test model
+    - name: Import test model
+      run: |
+        check_time.sh petab_import python tests/performance/test.py import
+
+    - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
+      uses: actions/upload-artifact@v1
+      with:
+        name: CS_Signalling_ERBB_RAS_AKT
+        path: CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab
+
+    # install model package
+    - name: Install test model
+      run: >
+        check_time.sh install_model tests/performance/test.py compile;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh install_model_${opt} tests/performance/test.py compile_${opt};
+        done
+
+    # run simulations
+    - name: forward_simulation
+      run: >
+        check_time.sh forward_simulation tests/performance/test.py  forward_simulation;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_simulation tests/performance/test.py forward_simulation_${opt};
+        done
+    - name: forward_sensitivities
+      run: >
+        check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities_${opt};
+        done
+    - name: adjoint_sensitivities
+      run: >
+        check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities_${opt};
+        done
+    - name: forward_simulation_non_optimal_parameters
+      run: |
+        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters_${opt};
+        done
+    - name: adjoint_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters_${opt};
+        done
+    - name: forward_steadystate_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh forward_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py forward_steadystate_sensitivities_non_optimal_parameters_${opt};
+        done
+    - name: adjoint_steadystate_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters;
+        for opt in O0 O1 O2;
+        do
+          check_time.sh adjoint_steadystate_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_steadystate_sensitivities_non_optimal_parameters_${opt};
+        done

@@ -105,17 +105,20 @@
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
-              <minus/>
+              <plus/>
               <apply>
-                <times/>
-                <ci> __s0 </ci>
-                <ci> __s1 </ci>
-                <ci> kon_prot_drug </ci>
+                <minus/>
+                <apply>
+                  <times/>
+                  <ci> koff_prot_drug </ci>
+                  <ci> __s3 </ci>
+                </apply>
               </apply>
               <apply>
                 <times/>
-                <ci> __s3 </ci>
-                <ci> koff_prot_drug </ci>
+                <ci> kon_prot_drug </ci>
+                <ci> __s0 </ci>
+                <ci> __s1 </ci>
               </apply>
             </apply>
           </math>
@@ -133,9 +136,9 @@
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
+              <ci> kon_prot_kin </ci>
               <ci> __s0 </ci>
               <ci> __s2 </ci>
-              <ci> kon_prot_kin </ci>
             </apply>
           </math>
         </kineticLaw>
@@ -152,8 +155,8 @@
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> __s4 </ci>
               <ci> kphospho_prot_kin </ci>
+              <ci> __s4 </ci>
             </apply>
           </math>
         </kineticLaw>
@@ -169,8 +172,8 @@
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
               <times/>
-              <ci> __s5 </ci>
               <ci> kdephospho_prot </ci>
+              <ci> __s5 </ci>
             </apply>
           </math>
         </kineticLaw>

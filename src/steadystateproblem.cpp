@@ -56,8 +56,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
     }
-    
-    /* create a Newton solver obejct */
+
+    /* create a Newton solver object */
     auto newtonSolver = NewtonSolver::getSolver(&t_, &x_, *solver, model);
 
     /* Compute steady state and get the computation time */
@@ -76,7 +76,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
             /* No steady state could be inferred. Store simulation state */
             storeSimulationState(model, solver->getSensitivityOrder() >=
                                  SensitivityOrder::first);
-            throw AmiException("Steady state sensitvitiy computation failed due "
+            throw AmiException("Steady state sensitivity computation failed due "
                                "to unsuccessful factorization of RHS Jacobian");
         }
     }
@@ -101,9 +101,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
     clock_t starttime = clock();
     computeSteadyStateQuadrature(newtonSolver.get(), solver, model);
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-
-    /* Finalize by setting addjoint state to zero (its steady state) */
-    xB_.reset();
 }
 
 void SteadystateProblem::findSteadyState(Solver *solver,
@@ -231,9 +228,9 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
     }
 
     /* Will need to write quadratures: set to 0 */
-    xQ_.reset();
-    xQB_.reset();
-    xQBdot_.reset();
+    xQ_.zero();
+    xQB_.zero();
+    xQBdot_.zero();
 
     return true;
 }
@@ -241,7 +238,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
 void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
                                                       const Solver *solver,
                                                       Model *model) {
-    /* This routine computes the qudratures:
+    /* This routine computes the quadratures:
          xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
      As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
          xQB = Integral[ xB(x_ss, t, p) | dt ] * dxdot/dp(x_ss, t, p)
@@ -265,7 +262,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
 void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
                                                  Model *model) {
     /* Computes the integral over the adjoint state xB:
-     If the Jacobian has full rank, this has an anlytical solution, since
+     If the Jacobian has full rank, this has an analytical solution, since
      d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
      This linear ODE system with time-constant matrix has the solution
      xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
@@ -285,6 +282,9 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
+        
+        /* Finalize by setting adjoint state to zero (its steady state) */
+        xB_.zero();
     } catch (NewtonFailure const &) {
         hasQuadrature_ = false;
     }
@@ -298,13 +298,13 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
 
     /* set starting timepoint for the simulation solver */
     t_ = model->t0();
-    /* xQ was written in getQuadratureByLinSolve() -> reset */
-    xQ_.reset();
+    /* xQ was written in getQuadratureByLinSolve() -> set to zero */
+    xQ_.zero();
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
 
-    /* perform integration and qudrature */
+    /* perform integration and quadrature */
     try {
         runSteadystateSimulation(simSolver.get(), model, true);
         hasQuadrature_ = true;
@@ -374,6 +374,10 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
         steady_state_status_[1] == SteadyStateStatus::success &&
         model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
 
+    bool simulationStartedInSteadystate =
+        steady_state_status_[0] == SteadyStateStatus::success &&
+        numsteps_[0] == 0;
+
     /* Do we need forward sensis for postequilibration? */
     bool needForwardSensisPosteq = !preequilibration &&
         !forwardSensisAlreadyComputed &&
@@ -388,7 +392,8 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
     /* Do we need to do the linear system solve to get forward sensitivities? */
     bool needForwardSensisNewton =
-        needForwardSensisPreeq || needForwardSensisPosteq;
+        (needForwardSensisPreeq || needForwardSensisPosteq) &&
+        !simulationStartedInSteadystate;
 
     /* When we're creating a new solver object */
     bool needForwardSensiAtCreation = needForwardSensisPreeq &&
@@ -400,7 +405,9 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
             return needForwardSensisNewton;
 
         case SteadyStateContext::sensiStorage:
-            return needForwardSensisNewton || forwardSensisAlreadyComputed;
+            return needForwardSensisNewton ||
+                forwardSensisAlreadyComputed ||
+                simulationStartedInSteadystate;
 
         case SteadyStateContext::solverCreation:
             return needForwardSensiAtCreation;
@@ -418,11 +425,12 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          AmiVector &ewt) const {
     /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
        we need to pass ewt[QB], as xdot and xQBdot have different sizes */
-    N_VAbs(x.getNVector(), ewt.getNVector());
+    N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    return N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
+    return N_VWrmsNorm(const_cast<N_Vector>(xdot.getNVector()),
+                       ewt.getNVector());
 }
 
 bool SteadystateProblem::checkConvergence(const Solver *solver,
@@ -481,8 +489,11 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     double gamma = 1.0;
     bool compNewStep = true;
 
+    if (model->nx_solver == 0)
+        return;
+
     /* initialize output of linear solver for Newton step */
-    delta_.reset();
+    delta_.zero();
 
     model->fxdot(t_, x_, dx_, xdot_);
 
@@ -497,7 +508,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     bool converged = wrms_ < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->max_steps) {
 
-        /* If Newton steps are necessary, compute the inital search direction */
+        /* If Newton steps are necessary, compute the initial search direction */
         if (compNewStep) {
             try {
                 delta_ = xdot_;
@@ -572,6 +583,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
                                                   Model *model,
                                                   bool backward)
 {
+    if (model->nx_solver == 0)
+        return;
     /* Loop over steps and check for convergence
        NB: This function is used for forward and backward simulation, and may
        be called by workSteadyStateProblem and workSteadyStateBackwardProblem.
@@ -584,8 +597,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
         solver->getSensitivityMethod() > SensitivityMethod::none)
         sensitivityFlag = SensitivityMethod::forward;
     /* If flag for forward sensitivity computation by simulation is not set,
-     disable forward sensitivity integration. Sensitivities will be combputed
-     by newonSolver->computeNewtonSensis then */
+     disable forward sensitivity integration. Sensitivities will be computed
+     by newtonSolver->computeNewtonSensis then */
     if (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::newtonOnly) {
         solver->switchForwardSensisOff();
         sensitivityFlag = SensitivityMethod::none;
@@ -679,30 +692,26 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                         AmiVector &yQB) const {
     /* Compute the quadrature as the inner product: yQB = dxotdp * yQ */
 
-    /* reset first, as multiplication add to existing value */
-    yQB.reset();
+    /* set to zero first, as multiplication adds to existing value */
+    yQB.zero();
     /* multiply */
     if (model->pythonGenerated) {
         /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
         model->fdxdotdp(t_, x_, x_);
-
-        if (model->ndxdotdp_explicit > 0)
-            model->dxdotdp_explicit.multiply(yQB.getNVector(),
-                                             yQ.getNVector(), plist, true);
-        if (model->ndxdotdp_implicit > 0)
-            model->dxdotdp_implicit.multiply(yQB.getNVector(),
-                                             yQ.getNVector(), plist, true);
+        model->get_dxdotdp_full().multiply(yQB.getNVector(), yQ.getNVector(),
+                                           plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
-            yQB[ip] = N_VDotProd(yQ.getNVector(),
-                                 model->dxdotdp.getNVector(ip));
+            yQB[ip] = N_VDotProd(
+                const_cast<N_Vector>(yQ.getNVector()),
+                const_cast<N_Vector>(model->get_dxdotdp().getNVector(ip)));
     }
 }
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
-    xB_.reset();
+    xB_.zero();
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(

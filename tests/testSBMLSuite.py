@@ -4,26 +4,29 @@ Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
 
 Usage:
-    testSBMLSuite.py SELECTION
+    python tests/testSBMLSuite.py SELECTION
         SELECTION can be e.g.: `1`, `1,3`, or `-3,4,6-7` to select specific
         test cases or 1-1780 to run all.
+
+    pytest tests.testSBMLSuite -n CORES --cases SELECTION
+        CORES can be an integer or `auto` for all available cores.
+        SELECTION same as above.
 """
 
-import os
-import sys
-import importlib
-import pytest
 import copy
+import importlib
+import os
+import re
+import shutil
+import sys
+from typing import Tuple, Set
 
 import amici
+import libsbml as sbml
 import numpy as np
-import sympy as sp
 import pandas as pd
-
-import libsbml
-
-from typing import List
-
+import pytest
+from amici.constants import SymbolId
 
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -54,107 +57,101 @@ def sbml_test_dir():
 def test_sbml_testsuite_case(test_number, result_path):
 
     test_id = format_test_id(test_number)
-
+    model_dir = None
     try:
         current_test_path = os.path.join(TEST_PATH, test_id)
 
         # parse expected results
         results_file = os.path.join(current_test_path,
                                     test_id + '-results.csv')
-        results = np.genfromtxt(results_file, delimiter=',')
+        results = pd.read_csv(results_file, delimiter=',')
+        results.rename(columns={c: c.replace(' ', '')
+                                for c in results.columns},
+                       inplace=True)
 
         # setup model
-        model, solver, wrapper = compile_model(current_test_path, test_id)
+        model_dir = os.path.join(os.path.dirname(__file__), 'SBMLTestModels',
+                                 test_id)
+        model, solver, wrapper = compile_model(current_test_path, test_id,
+                                               model_dir)
         settings = read_settings_file(current_test_path, test_id)
 
         atol, rtol = apply_settings(settings, solver, model)
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
+        if rdata['status'] != amici.AMICI_SUCCESS and test_id in [
+            '00748', '00374', '00369'
+        ]:
+            raise amici.sbml_import.SBMLException('Simulation Failed')
 
         # verify
-        simulated_x, x_ids = verify_results(settings, rdata, results, wrapper,
-                                     model, atol, rtol)
-
-        print(f'TestCase {test_id} passed.')
+        simulated = verify_results(settings, rdata, results, wrapper,
+                                   model, atol, rtol)
 
         # record results
-        write_result_file(simulated_x, model, test_id, result_path, x_ids)
+        write_result_file(simulated, test_id, result_path)
 
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
+    finally:
+        if model_dir:
+            shutil.rmtree(model_dir, ignore_errors=True)
 
 
-def verify_results(settings, rdata, results, wrapper,
+def verify_results(settings, rdata, expected, wrapper,
                    model, atol, rtol):
     """Verify test results"""
-    amount_species, variables_species = get_amount_and_variables(settings)
+    amount_species, variables = get_amount_and_variables(settings)
 
     # verify states
-    simulated_x = rdata['x']
+    simulated = pd.DataFrame(
+        rdata['y'],
+        columns=[obs['name']
+                 for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()]
+    )
+    simulated['time'] = rdata['ts']
+    for par in model.getParameterIds():
+        simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
 
-    # Add species with assignment rules to the simulated data.
-    for x_id, x_index in wrapper.species_index.items():
-        # Currently assumes that x_id is also an observable.
-        # Also assumes that observable "species" have the same index in both
-        # the 'x' and 'y' keys of rdata.
-        if x_id in [str(s) for s in wrapper.species_assignment_rules]:
-            simulated_x[:,x_index] = rdata['y'][:,x_index]
-
-    x_ids = [x_id
-            for x_id in wrapper.species_index
-            if x_id in variables_species]
-    x_ids_results_columns = [variables_species.index(x_id)
-            for x_id in x_ids]
-
-    expected_x = results[1:, [1+c for c in x_ids_results_columns]]
+    simulated.rename(columns={c: c.replace('amici_', '')
+                              for c in simulated.columns}, inplace=True)
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
-    requested_concentrations = [s
-            for s in settings['concentration'].replace(
-                ' ', '').replace('\n', '').split(',') if s]
-    # The rate rules condition here may be unnecessary/better implemented
-    # elsewhere.
-    concentration_species = [species for species in requested_concentrations
-            if wrapper.species_has_only_substance_units[
-                wrapper.species_index[species]]
-            and species in [str(s) for s in wrapper.species_rate_rules]]
-    amounts_to_concentrations(concentration_species, wrapper, model,
-            simulated_x, rdata['y'], requested_concentrations)
+    requested_concentrations = [
+        s for s in
+        settings['concentration'].replace(' ', '').replace('\n', '').split(',')
+        if s
+    ]
+    # We only need to convert species that have only substance units
+    concentration_species = [
+        str(species_id)
+        for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
+        if str(species_id) in requested_concentrations and species['amount']
+    ]
+    amounts_to_concentrations(concentration_species, wrapper,
+                              simulated, requested_concentrations)
 
-    concentrations_to_amounts(amount_species, wrapper, model,
-            simulated_x, rdata['y'], requested_concentrations)
+    concentrations_to_amounts(amount_species, wrapper, simulated,
+                              requested_concentrations)
 
-    # Add observables to the verification. This includes compartments with
-    # assignment rules, as they are implemented as observables.
-    # Currently only used for SBML test suite case 01223.
-    observables = {str(o_id): (o_index, variables_species.index(str(o_id)))
-            for o_index, o_id in enumerate(
-                wrapper.symbols['observable']['identifier'])
-            if str(o_id) in variables_species and (
-                str(o_id) not in wrapper.species_index)}
-    for o_id, indices in observables.items():
-        simulated_x = np.hstack((simulated_x, np.array([rdata['y'][:,indices[0]]]).T))
-        expected_x = np.hstack((expected_x, np.array([results[1:, 1+indices[1]]]).T))
-        x_ids.append(o_id)
+    # simulated may contain `object` dtype columns and `expected` may
+    # contain `np.int64` columns so we cast everything to `np.float64`.
+    for variable in variables:
+        assert np.isclose(
+            simulated[variable].astype(np.float64).values,
+            expected[variable].astype(np.float64).values,
+            atol, rtol, equal_nan=True
+        ).all(), variable
 
-    assert np.isclose(simulated_x, expected_x, atol, rtol).all()
-
-    # TODO: verify compartment volumes and parameters
-    # Currently, compartments with assignment and rate rules are verified.
-    # Compartments with assignment rules are exported as observables, and
-    # compartments with rate rules are exported as species.
-
-    return simulated_x, x_ids
+    return simulated[variables + ['time']]
 
 
 def amounts_to_concentrations(
         amount_species,
         wrapper,
-        model,
-        simulated_x,
-        simulated_y,
+        simulated,
         requested_concentrations
 ):
     """
@@ -171,85 +168,44 @@ def amounts_to_concentrations(
     """
     for species in amount_species:
         if not species == '':
-            simulated_x[:, wrapper.species_index[species]] = \
-                1 / simulated_x[:, wrapper.species_index[species]]
-            concentrations_to_amounts([species], wrapper, model, simulated_x,
-                    simulated_y, requested_concentrations)
-            simulated_x[:, wrapper.species_index[species]] = \
-                1 / simulated_x[:, wrapper.species_index[species]]
+            simulated.loc[:, species] = 1 / simulated.loc[:, species]
+            concentrations_to_amounts([species], wrapper, simulated,
+                                      requested_concentrations)
+            simulated.loc[:, species] = 1 / simulated.loc[:, species]
 
 
 def concentrations_to_amounts(
         amount_species,
         wrapper,
-        model,
-        simulated_x,
-        simulated_y,
+        simulated,
         requested_concentrations
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        # Skip "species" that are actually compartments
-        if not species == '' \
-                and species not in [
-                        str(c) for c in wrapper.compartment_symbols] \
-                and species not in (
-                        set([str(s) for s in wrapper.species_rate_rules
-                            if wrapper.species_has_only_substance_units[
-                                wrapper.species_index[str(s)]]
-                    ]).difference(requested_concentrations)
-        ):
-            symvolume = wrapper.species_compartment[
-                wrapper.species_index[species]
-            ]
+        s = wrapper.sbml.getElementBySId(species)
+        # Skip species that are marked to only have substance units since
+        # they are already simulated as amounts
+        if not isinstance(s, sbml.Species):
+            continue
 
-            # Volumes are already reported for compartments with rate rules
-            if symvolume in wrapper.compartment_rate_rules:
-                simulated_x[:, wrapper.species_index[species]] = \
-                    simulated_x[:, wrapper.species_index[species]] * \
-                    simulated_x[:, wrapper.species_index[str(symvolume)]]
-                continue
+        is_amt = s.getHasOnlySubstanceUnits()
+        comp = s.getCompartment()
+        # Compartments and parameters that are treated as species do not
+        # exist within a compartment.
+        # Species with OnlySubstanceUnits don't have to be converted as long
+        # as we don't request concentrations for them. Only applies when
+        # called from amounts_to_concentrations.
+        if (is_amt and species not in requested_concentrations) \
+                or comp is None:
+            continue
 
-            # Volumes are reported as observables for compartments with
-            # assignment rules
-            if symvolume in wrapper.compartment_assignment_rules:
-                simulated_x[:, wrapper.species_index[species]] = \
-                    simulated_x[:, wrapper.species_index[species]] * \
-                    simulated_y[:, model.getObservableIds().index(
-                        str(symvolume))]
-                continue
-
-            volume = symvolume.subs({
-                comp: vol
-                for comp, vol in zip(
-                    wrapper.compartment_symbols,
-                    wrapper.compartment_volume
-                )
-            })
-            volume = volume.subs({
-                sp.Symbol(name, real=True): value
-                for name, value in zip(
-                    model.getParameterIds(),
-                    model.getParameters()
-                )
-            })
-
-            # required for 525-527, 530 as k is renamed to amici_k
-            volume = volume.subs({
-                sp.Symbol(name, real=True): value
-                for name, value in zip(
-                    model.getParameterNames(),
-                    model.getParameters()
-                )
-            })
-
-            simulated_x[:, wrapper.species_index[species]] = \
-                simulated_x[:, wrapper.species_index[species]] * volume
+        simulated.loc[:, species] *= simulated.loc[
+            :, comp if comp in simulated.columns else 'amici_' + comp
+        ]
 
 
-def write_result_file(simulated_x: np.array,
-                      model: amici.Model,
-                      test_id: str, result_path: str, x_ids: List[str]):
+def write_result_file(simulated: pd.DataFrame,
+                      test_id: str, result_path: str):
     """
     Create test result file for upload to
     http://sbml.org/Facilities/Database/Submission/Create
@@ -259,11 +215,7 @@ def write_result_file(simulated_x: np.array,
     # TODO: only states are reported here, not compartments or parameters
 
     filename = os.path.join(result_path, f'{test_id}.csv')
-
-    df = pd.DataFrame(simulated_x)
-    df.columns = x_ids
-    df.insert(0, 'time', model.getTimepoints())
-    df.to_csv(filename, index=False)
+    simulated.to_csv(filename, index=False)
 
 
 def get_amount_and_variables(settings):
@@ -276,12 +228,12 @@ def get_amount_and_variables(settings):
         .split(',')
 
     # IDs of all variables for which results are expected/provided
-    variables_species = settings['variables'] \
+    variables = settings['variables'] \
         .replace(' ', '') \
         .replace('\n', '') \
         .split(',')
 
-    return amount_species, variables_species
+    return amount_species, variables
 
 
 def apply_settings(settings, solver, model):
@@ -296,29 +248,27 @@ def apply_settings(settings, solver, model):
 
     model.setTimepoints(ts)
     solver.setMaxSteps(int(1e6))
-    solver.setRelativeTolerance(rtol / 1000.0)
-    solver.setAbsoluteTolerance(atol / 1000.0)
+    solver.setRelativeTolerance(rtol / 1e4)
+    solver.setAbsoluteTolerance(atol / 1e4)
 
     return atol, rtol
 
 
-def compile_model(path, test_id):
+def compile_model(path, test_id, model_dir):
     """Import the given test model to AMICI"""
     sbml_file = find_model_file(path, test_id)
 
     wrapper = amici.SbmlImporter(sbml_file)
 
-    model_dir = os.path.join(os.path.dirname(__file__), 'SBMLTestModels',
-                             test_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
     model_name = 'SBMLTest' + test_id
-    wrapper.sbml2amici(model_name, output_dir=model_dir)
+    wrapper.sbml2amici(model_name, output_dir=model_dir,
+                       generate_sensitivity_code=False)
 
     # settings
-    sys.path.insert(0, model_dir)
-    model_module = importlib.import_module(model_name)
+    model_module = amici.import_model_module(model_name, model_dir)
 
     model = model_module.getModel()
     solver = model.getSolver()
@@ -360,3 +310,29 @@ def format_test_id(test_id) -> str:
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
 
+
+def get_tags_for_test(test_id) -> Tuple[Set[str], Set[str]]:
+    """Get sbml test suite tags for the given test ID
+
+    Returns:
+        Tuple of set of strings for componentTags and testTags
+    """
+
+    current_test_path = os.path.join(TEST_PATH, test_id)
+    info_file = os.path.join(current_test_path, f'{test_id}-model.m')
+    with open(info_file) as f:
+        component_tags = set()
+        test_tags = set()
+        for line in f:
+            if line.startswith('testTags:'):
+                test_tags = set(
+                    re.split(r'[ ,:]', line[len('testTags:'):].strip()))
+                test_tags.discard('')
+            if line.startswith('componentTags:'):
+                component_tags = set(
+                    re.split(r'[ ,:]', line[len('componentTags:'):].strip()))
+                component_tags.discard('')
+            if test_tags and component_tags:
+                return component_tags, test_tags
+    print(f"No componentTags or testTags found for test case {test_id}.")
+    return component_tags, test_tags

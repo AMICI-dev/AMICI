@@ -6,7 +6,7 @@ The AMICI Python module provides functionality for importing SBML or PySB
 models and turning them into C++ Python extensions.
 
 :var amici_path:
-    absolute root path of the amici repository
+    absolute root path of the amici repository or Python package
 :var amiciSwigPath:
     absolute path of the amici swig directory
 :var amiciSrcPath:
@@ -28,7 +28,7 @@ import os
 import re
 import sys
 from contextlib import suppress
-from types import ModuleType
+from types import ModuleType as ModelModule
 from typing import Optional, Union, Sequence, List
 
 
@@ -72,7 +72,7 @@ def _imported_from_setup() -> bool:
     # we are not interested in)
     package_root = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
 
-    for frame in getouterframes(currentframe()):
+    for frame in getouterframes(currentframe(), context=0):
         # Need to compare the full path, in case a user tries to import AMICI
         # from a module `*setup.py`. Will still cause trouble if some package
         # requires the AMICI extension during its installation, but seems
@@ -105,6 +105,7 @@ has_clibs = any([os.path.isfile(os.path.join(amici_path, wrapper))
 AmiciModel = Union['amici.Model', 'amici.ModelPtr']
 AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
 AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
+AmiciReturnData = Union['amici.ReturnData', 'amici.ReturnDataPtr']
 AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
 
 # Get version number from file
@@ -133,7 +134,36 @@ if not _imported_from_setup():
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
 
+    try:
+        # Requires Python>=3.8
+        from typing import Protocol
+
+        class ModelModule(Protocol):
+            """Enable Python static type checking for AMICI-generated model modules"""
+            def getModel(self) -> amici.Model:
+                pass
+    except ImportError:
+        pass
+
 hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
+
+
+def _get_ptr(obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData]
+             ) -> Union['amici.Model', 'amici.ExpData', 'amici.Solver',
+                        'amici.ReturnData']:
+    """
+    Convenience wrapper that returns the smart pointer pointee, if applicable
+
+    :param obj:
+        Potential smart pointer
+
+    :returns:
+        Non-smart pointer
+    """
+    if isinstance(obj, (amici.ModelPtr, amici.ExpDataPtr, amici.SolverPtr,
+                        amici.ReturnDataPtr)):
+        return obj.get()
+    return obj
 
 
 def runAmiciSimulation(
@@ -159,11 +189,9 @@ def runAmiciSimulation(
         ReturnData object with simulation results
     """
 
-    if edata and isinstance(edata, amici.ExpDataPtr):
-        edata = edata.get()
-
     with capture_cstdout():
-        rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
+        rdata = amici.runAmiciSimulation(_get_ptr(solver), _get_ptr(edata),
+                                         _get_ptr(model))
     return numpy.ReturnDataView(rdata)
 
 
@@ -176,14 +204,14 @@ def ExpData(*args) -> 'amici.ExpData':
     :returns: ExpData Instance
     """
     if isinstance(args[0], ReturnDataView):
-        return amici.ExpData(args[0]['ptr'].get(), *args[1:])
-    elif isinstance(args[0], amici.ExpDataPtr):
+        return amici.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
+    elif isinstance(args[0], (amici.ExpData, amici.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed and you are glad this
         # wrapper did not break.
-        return amici.ExpData(args[0].get(), *args[1:])
-    elif isinstance(args[0], amici.ModelPtr):
-        return amici.ExpData(args[0].get())
+        return amici.ExpData(_get_ptr(args[0]), *args[1:])
+    elif isinstance(args[0], (amici.Model, amici.ModelPtr)):
+        return amici.ExpData(_get_ptr(args[0]))
     else:
         return amici.ExpData(*args)
 
@@ -209,9 +237,9 @@ def runAmiciSimulations(
     """
     with capture_cstdout():
         edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
-        rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
+        rdata_ptr_list = amici.runAmiciSimulations(_get_ptr(solver),
                                                    edata_ptr_vector,
-                                                   model.get(),
+                                                   _get_ptr(model),
                                                    failfast,
                                                    num_threads)
     return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
@@ -229,10 +257,7 @@ def readSolverSettingsFromHDF5(
     :param solver: Solver instance to which settings will be transferred
     :param location: location of solver settings in hdf5 file
     """
-    if isinstance(solver, amici.SolverPtr):
-        amici.readSolverSettingsFromHDF5(file, solver.get(), location)
-    else:
-        amici.readSolverSettingsFromHDF5(file, solver, location)
+    amici.readSolverSettingsFromHDF5(file, _get_ptr(solver), location)
 
 
 def writeSolverSettingsToHDF5(
@@ -248,10 +273,7 @@ def writeSolverSettingsToHDF5(
     :param solver: Solver instance from which settings will stored
     :param location: location of solver settings in hdf5 file
     """
-    if isinstance(solver, amici.SolverPtr):
-        amici.writeSolverSettingsToHDF5(solver.get(), file, location)
-    else:
-        amici.writeSolverSettingsToHDF5(solver, file, location)
+    amici.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
 
 
 class add_path:
@@ -272,7 +294,7 @@ class add_path:
 
 
 def import_model_module(module_name: str,
-                        module_path: Optional[str] = None) -> ModuleType:
+                        module_path: Optional[str] = None) -> ModelModule:
     """
     Import Python module of an AMICI model
 

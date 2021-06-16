@@ -37,12 +37,57 @@ using namespace amici;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
 %ignore initializeStates;
-%ignore dxdotdp;
-%ignore dxdotdp_implicit;
-%ignore dxdotdp_explicit;
 %ignore ModelState;
 %ignore getModelState;
 %ignore setModelState;
+%ignore fx0;
+%ignore fx0_fixedParameters;
+%ignore fsx0;
+%ignore fsx0_fixedParameters;
+%ignore get_dxdotdp;
+%ignore get_dxdotdp_full;
+%ignore checkFinite;
+%ignore fJrz;
+%ignore fJy;
+%ignore fJz;
+%ignore fdJrzdsigma;
+%ignore fdJrzdz;
+%ignore fdJzdsigma;
+%ignore fdJzdz;
+%ignore fdJydsigma;
+%ignore fdeltaqB;
+%ignore fdeltasx;
+%ignore fdeltax;
+%ignore fdeltaxB;
+%ignore fdrzdp;
+%ignore fdrzdx;
+%ignore fdsigmaydp;
+%ignore fdsigmazdp;
+%ignore fdydp;
+%ignore fdydx;
+%ignore fdzdp;
+%ignore fdzdx;
+%ignore frz;
+%ignore fsdx0;
+%ignore fsigmay;
+%ignore fsigmaz;
+%ignore fsrz;
+%ignore fstau;
+%ignore fsz;
+%ignore fw;
+%ignore fy;
+%ignore fz;
+%ignore updateHeaviside;
+%ignore updateHeavisideB;
+%ignore getEventSigma;
+%ignore getEventSigmaSensitivity;
+%ignore getObservableSigma;
+%ignore getObservableSigmaSensitivity;
+%ignore getUnobservedEventSensitivity;
+
+
+
+%newobject amici::Model::clone;
 
 // Process symbols in header
 %include "amici/model.h"

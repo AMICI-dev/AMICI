@@ -9,4 +9,4 @@ or [`help wanted`](https://github.com/AMICI-dev/AMICI/issues?q=is%3Aissue+is%3Ao
 For other ideas or questions, just post an issue.
 
 For code contributions, please read our
-[developer's guide](documentation/development.md) first.
+[developer's guide](https://amici.readthedocs.io/en/develop/development.html) first.

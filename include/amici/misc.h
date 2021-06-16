@@ -44,8 +44,8 @@ gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
  */
 
 template <class T>
-const gsl::span<const T> slice(const std::vector<T> &data,
-                               int index, unsigned size) {
+gsl::span<const T> slice(const std::vector<T> &data,
+                         int index, unsigned size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
@@ -177,8 +177,8 @@ std::string regexErrorToString(std::regex_constants::error_type err_type);
 std::string printfToString(const char *fmt, va_list ap);
 
 /**
- * @brief Generic implementation for a context manager, explicitely deletes copy and move operators for
- * derived classes
+ * @brief Generic implementation for a context manager, explicitly deletes copy
+ * and move operators for derived classes
  */
 class ContextManager{
   public:

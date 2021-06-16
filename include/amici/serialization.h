@@ -102,43 +102,44 @@ void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*
  */
 template <class Archive>
 void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
-    ar &m.nx_rdata;
-    ar &m.nxtrue_rdata;
-    ar &m.nx_solver;
-    ar &m.nxtrue_solver;
-    ar &m.nx_solver_reinit;
-    ar &m.ny;
-    ar &m.nytrue;
-    ar &m.nz;
-    ar &m.nztrue;
-    ar &m.ne;
-    ar &m.nw;
-    ar &m.ndwdx;
-    ar &m.ndwdp;
-    ar &m.ndxdotdw;
-    ar &m.nnz;
-    ar &m.nJ;
-    ar &m.ubw;
-    ar &m.lbw;
+    ar &dynamic_cast<amici::ModelDimensions&>(m);
+    ar &m.simulation_parameters_;
     ar &m.o2mode;
     ar &m.z2event_;
     ar &m.idlist;
     ar &m.state_.h;
     ar &m.state_.unscaledParameters;
-    ar &m.original_parameters_;
     ar &m.state_.fixedParameters;
-    ar &m.reinitialize_fixed_parameter_initial_states_;
     ar &m.state_.plist;
     ar &m.x0data_;
     ar &m.sx0data_;
-    ar &m.ts_;
     ar &m.nmaxevent_;
-    ar &m.pscale_;
-    ar &m.tstart_;
     ar &m.state_is_non_negative_;
     ar &m.pythonGenerated;
-    ar &m.ndxdotdp_explicit;
-    ar &m.ndxdotdp_implicit;
+    ar &m.min_sigma_;
+    ar &m.sigma_res_;
+}
+
+
+/**
+ * @brief Serialize amici::SimulationParameters to boost archive
+ * @param ar Archive
+ * @param s amici::SimulationParameters instance to serialize
+ */
+template <class Archive>
+void serialize(Archive &ar, amici::SimulationParameters &s, const unsigned int /*version*/) {
+    ar &s.fixedParameters;
+    ar &s.fixedParametersPreequilibration;
+    ar &s.fixedParametersPresimulation;
+    ar &s.parameters;
+    ar &s.x0;
+    ar &s.sx0;
+    ar &s.pscale;
+    ar &s.plist;
+    ar &s.ts_;
+    ar &s.tstart_;
+    ar &s.t_presim;
+    ar &s.reinitializeFixedParameterInitialStates;
 }
 
 /**
@@ -149,17 +150,9 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
 
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
-    ar &r.np;
-    ar &r.nk;
+    ar &dynamic_cast<amici::ModelDimensions&>(r);
     ar &r.nx;
-    ar &r.nx_solver;
     ar &r.nxtrue;
-    ar &r.ny;
-    ar &r.nytrue;
-    ar &r.nz;
-    ar &r.nztrue;
-    ar &r.ne;
-    ar &r.nJ;
     ar &r.nplist;
     ar &r.nmaxevent;
     ar &r.nt;
@@ -217,6 +210,38 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
     ar &r.status;
 }
 
+
+/**
+ * @brief Serialize amici::ModelDimensions to boost archive
+ * @param ar Archive
+ * @param m ModelDimensions instance to serialize
+ */
+
+template <class Archive>
+void serialize(Archive &ar, amici::ModelDimensions &m, const unsigned int /*version*/) {
+    ar &m.nx_rdata;
+    ar &m.nxtrue_rdata;
+    ar &m.nx_solver;
+    ar &m.nxtrue_solver;
+    ar &m.nx_solver_reinit;
+    ar &m.np;
+    ar &m.nk;
+    ar &m.ny;
+    ar &m.nytrue;
+    ar &m.nz;
+    ar &m.nztrue;
+    ar &m.ne;
+    ar &m.nw;
+    ar &m.ndwdx;
+    ar &m.ndwdp;
+    ar &m.ndwdw;
+    ar &m.ndxdotdw;
+    ar &m.ndJydy;
+    ar &m.nnz;
+    ar &m.nJ;
+    ar &m.ubw;
+    ar &m.lbw;
+}
 #endif
 } // namespace serialization
 } // namespace boost
@@ -267,18 +292,22 @@ char *serializeToChar(T const& data, int *size) {
 
 template <typename T>
 T deserializeFromChar(const char *buffer, int size) {
-    try {
-        ::boost::iostreams::basic_array_source<char> device(buffer, size);
-        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-            device);
-        ::boost::archive::binary_iarchive iar(s);
-        T data;
-        iar >> data;
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
 
-        return data;
-    } catch(::boost::archive::archive_exception const& e) {
+    bio::basic_array_source<char> device(buffer, size);
+    bio::stream<bio::basic_array_source<char>> s(device);
+
+    T data;
+
+    try {
+        // archive must be destroyed BEFORE returning
+        ba::binary_iarchive iar(s);
+        iar >> data;
+    } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from char failed: %s", e.what());
     }
+    return data;
 }
 
 /**
@@ -291,21 +320,22 @@ T deserializeFromChar(const char *buffer, int size) {
 
 template <typename T>
 std::string serializeToString(T const& data) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    std::string serialized;
+    bio::back_insert_device<std::string> inserter(serialized);
+    bio::stream<bio::back_insert_device<std::string>> os(inserter);
+
     try {
-        std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-        ::boost::iostreams::stream<
-            ::boost::iostreams::back_insert_device<std::string>>
-            s(inserter);
-        ::boost::archive::binary_oarchive oar(s);
-
+        // archive must be destroyed BEFORE returning
+        ba::binary_oarchive oar(os);
         oar << data;
-        s.flush();
-
-        return serialized;
-    } catch(::boost::archive::archive_exception const& e) {
+    } catch(ba::archive_exception const& e) {
         throw AmiException("Serialization to string failed: %s", e.what());
     }
+
+    return serialized;
 }
 
 /**
@@ -318,22 +348,23 @@ std::string serializeToString(T const& data) {
 
 template <typename T>
 std::vector<char> serializeToStdVec(T const& data) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    std::vector<char> buffer;
+    bio::stream<
+        bio::back_insert_device<
+            std::vector<char>>> os(buffer);
+
     try{
-        std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-        ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
-            s(inserter);
-        ::boost::archive::binary_oarchive oar(s);
-
+        // archive must be destroyed BEFORE returning
+        ba::binary_oarchive oar(os);
         oar << data;
-        s.flush();
-
-        std::vector<char> buf(serialized.begin(), serialized.end());
-
-        return buf;
-    } catch(::boost::archive::archive_exception const& e) {
-        throw AmiException("Serialization to StdVec failed: %s", e.what());
+    } catch(ba::archive_exception const& e) {
+        throw AmiException("Serialization to std::vector failed: %s", e.what());
     }
+
+    return buffer;
 }
 
 /**
@@ -346,20 +377,23 @@ std::vector<char> serializeToStdVec(T const& data) {
 
 template <typename T>
 T deserializeFromString(std::string const& serialized) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    bio::basic_array_source<char> device(serialized.data(), serialized.size());
+    bio::stream<bio::basic_array_source<char>> os(device);
+    T deserialized;
+
     try{
-        ::boost::iostreams::basic_array_source<char> device(serialized.data(),
-                                                          serialized.size());
-        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-            device);
-        ::boost::archive::binary_iarchive iar(s);
-        T deserialized;
-
+        // archive must be destroyed BEFORE returning
+        ba::binary_iarchive iar(os);
         iar >> deserialized;
-
-        return deserialized;
-    } catch(::boost::archive::archive_exception const& e) {
-        throw AmiException("Deserialization from StdVec failed: %s", e.what());
+    } catch(ba::archive_exception const& e) {
+        throw AmiException("Deserialization from std::string failed: %s",
+                           e.what());
     }
+
+    return deserialized;
 }
 
 

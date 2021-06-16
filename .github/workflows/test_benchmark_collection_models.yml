@@ -9,12 +9,13 @@ on:
     branches:
       - master
       - develop
+  workflow_dispatch:
 
 jobs:
   build:
     name: Benchmark Collection
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v1
@@ -26,19 +27,16 @@ jobs:
       run: |
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
-          
-    - name: pip
-      run: |
-        pip3 install --upgrade --user wheel \
-          && pip3 install --upgrade --user setuptools
+
     - run: pip3 install pytest shyaml
-    - run: |
-        echo ::add-path::${HOME}/.local/bin/
-        echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
+
+    - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
+    - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
+
     # install AMICI
     - name: Create AMICI sdist
       run: |
-        cd python/sdist && /usr/bin/python3 setup.py sdist
+        pip3 install build && cd python/sdist && python3 -m build --sdist
     - name: Install AMICI sdist
       run: |
         AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \

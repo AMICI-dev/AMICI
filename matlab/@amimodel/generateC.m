@@ -23,9 +23,6 @@ for ifun = this.funs
         if(strcmp(ifun{1},'JSparse'))
             bodyNotEmpty = any(this.fun.J.sym(:)~=0);
         end
-        if(strcmp(ifun{1},'JSparseB'))
-            bodyNotEmpty = any(this.fun.JB.sym(:)~=0);
-        end
 
         if(bodyNotEmpty)
             fprintf([ifun{1} ' | ']);
@@ -34,7 +31,7 @@ for ifun = this.funs
             fprintf(fid,'#include "amici/symbolic_functions.h"\n');
             fprintf(fid,'#include "amici/defines.h" //realtype definition\n');
 
-            if(ismember(ifun{1},{'JSparse','JSparseB'}))
+            if(ismember(ifun{1},{'JSparse'}))
                 fprintf(fid,'#include <sunmatrix/sunmatrix_sparse.h> //SUNMatrixContent_Sparse definition\n');
             end
 
@@ -54,14 +51,6 @@ for ifun = this.funs
                 end
                 for i = 1:length(this.colptrs)
                     fprintf(fid,['  JSparse->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrs(i)) ';\n']);
-                end
-            end
-            if(strcmp(ifun{1},'JSparseB'))
-                for i = 1:length(this.rowvalsB)
-                    fprintf(fid,['  JSparseB->indexvals[' num2str(i-1) '] = ' num2str(this.rowvalsB(i)) ';\n']);
-                end
-                for i = 1:length(this.colptrsB)
-                    fprintf(fid,['  JSparseB->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrsB(i)) ';\n']);
                 end
             end
 
@@ -159,47 +148,55 @@ end
 
 fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']);
 fprintf(fid,'public:\n');
-fprintf(fid,['    Model_' this.modelname '() : amici::' baseclass '(' num2str(this.nx) ',\n']);
-fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nx) ',\n']);
-fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
-fprintf(fid,['                    0,\n']);
-fprintf(fid,['                    ' num2str(this.ny) ',\n']);
-fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nz) ',\n']);
-fprintf(fid,['                    ' num2str(this.nztrue) ',\n']);
-fprintf(fid,['                    ' num2str(this.nevent) ',\n']);
-fprintf(fid,['                    ' num2str(this.ng) ',\n']);
-fprintf(fid,['                    ' num2str(this.nw) ',\n']);
-fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
-fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
-fprintf(fid,['                    0,\n']);
-fprintf(fid,['                    {},\n']);
-fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
-fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
-fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
+fprintf(fid,['    Model_' this.modelname '()\n']);
+fprintf(fid,['        : amici::' baseclass '(\n']);
+fprintf(fid,['              amici::ModelDimensions(\n']);
+fprintf(fid,['                  ' num2str(this.nx) ',\n']);
+fprintf(fid,['                  ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                  ' num2str(this.nx) ',\n']);
+fprintf(fid,['                  ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                  0,\n']);
+fprintf(fid,['                  ' num2str(this.np) ',\n']);
+fprintf(fid,['                  ' num2str(this.nk) ',\n']);
+fprintf(fid,['                  ' num2str(this.ny) ',\n']);
+fprintf(fid,['                  ' num2str(this.nytrue) ',\n']);
+fprintf(fid,['                  ' num2str(this.nz) ',\n']);
+fprintf(fid,['                  ' num2str(this.nztrue) ',\n']);
+fprintf(fid,['                  ' num2str(this.nevent) ',\n']);
+fprintf(fid,['                  ' num2str(this.ng) ',\n']);
+fprintf(fid,['                  ' num2str(this.nw) ',\n']);
+fprintf(fid,['                  ' num2str(this.ndwdx) ',\n']);
+fprintf(fid,['                  ' num2str(this.ndwdp) ',\n']);
+fprintf(fid,['                  0,\n']);
+fprintf(fid,['                  0,\n']);
+fprintf(fid,['                  {},\n']);
+fprintf(fid,['                  ' num2str(this.nnz) ',\n']);
+fprintf(fid,['                  ' num2str(this.ubw) ',\n']);
+fprintf(fid,['                  ' num2str(this.lbw) '\n']);
+fprintf(fid,['              ),\n']);
+fprintf(fid,['              amici::SimulationParameters(\n']);
+fprintf(fid,['                  std::vector<realtype>(' num2str(this.nk) ', 1.0),\n']);
+fprintf(fid,['                  std::vector<realtype>(' num2str(this.np) ', 1.0)\n']);
+fprintf(fid,['              ),\n']);
 switch(this.o2flag)
     case 1
-        fprintf(fid,'                    amici::SecondOrderMode::full,\n');
+        fprintf(fid,'              amici::SecondOrderMode::full,\n');
     case 2
-        fprintf(fid,'                    amici::SecondOrderMode::directional,\n');
+        fprintf(fid,'              amici::SecondOrderMode::directional,\n');
     otherwise
-        fprintf(fid,'                    amici::SecondOrderMode::none,\n');
+        fprintf(fid,'              amici::SecondOrderMode::none,\n');
 end
-fprintf(fid,['                    std::vector<realtype>(' num2str(this.np) ',1.0),\n']);
-fprintf(fid,['                    std::vector<realtype>(' num2str(this.nk) ',1.0),\n']);
-fprintf(fid,'                    std::vector<int>(),\n');
-initstr = num2str(transpose(double(this.id)), '%d, ');
-fprintf(fid,['                    std::vector<realtype>{' initstr(1:end-1) '},\n']);
+initstr = num2str(this.id, '%d, ');
+fprintf(fid,['              std::vector<realtype>{' initstr(1:end-1) '},\n']);
 initstr = num2str(transpose(this.z2event), '%d, ');
-fprintf(fid,['                    std::vector<int>{' initstr(1:end-1) '})\n']);
-fprintf(fid,['                    {};\n\n']);
-fprintf(fid,['    virtual amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
-fprintf(fid,['    const  std::string getAmiciCommit() const override { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
+fprintf(fid,['              std::vector<int>{' initstr(1:end-1) '})\n']);
+fprintf(fid,['              {};\n\n']);
+fprintf(fid,['    amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
+fprintf(fid,['    std::string getAmiciCommit() const override { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
 
 for ifun = this.funs
     cppFunctionName = strrep(ifun{1}, 'sigma_', 'sigma');
-    fprintf(fid,['    virtual void f' cppFunctionName this.fun.(ifun{1}).argstr ' override {\n']);
+    fprintf(fid,['    void f' cppFunctionName this.fun.(ifun{1}).argstr ' override {\n']);
     if(checkIfFunctionBodyIsNonEmpty(this,ifun{1}))
         fprintf(fid,['        ' cppFunctionName '_' this.modelname '' removeTypes(this.fun.(ifun{1}).argstr) ';\n']);
     end

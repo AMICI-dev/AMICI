@@ -41,8 +41,13 @@ endforeach(FLAG)
 
 # find dependencies
 include(GNUInstallDirs)
-find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
-set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+
+option(ENABLE_HDF5 "Build with HDF5 support?" ON)
+if(ENABLE_HDF5)
+    find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
+    set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+endif()
+
 set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse/")
 set(SUITESPARSE_INCLUDE_DIRS "${SUITESPARSE_DIR}/include" "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
 set(SUITESPARSE_LIBRARIES
@@ -123,7 +128,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/rdata.cpp
     ${CMAKE_SOURCE_DIR}/src/edata.cpp
     ${CMAKE_SOURCE_DIR}/src/exception.cpp
-    ${CMAKE_SOURCE_DIR}/src/hdf5.cpp
+    ${CMAKE_SOURCE_DIR}/src/simulation_parameters.cpp
     ${CMAKE_SOURCE_DIR}/src/spline.cpp
     ${CMAKE_SOURCE_DIR}/src/solver.cpp
     ${CMAKE_SOURCE_DIR}/src/solver_cvodes.cpp
@@ -131,6 +136,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/model.cpp
     ${CMAKE_SOURCE_DIR}/src/model_ode.cpp
     ${CMAKE_SOURCE_DIR}/src/model_dae.cpp
+    ${CMAKE_SOURCE_DIR}/src/model_state.cpp
     ${CMAKE_SOURCE_DIR}/src/newton_solver.cpp
     ${CMAKE_SOURCE_DIR}/src/forwardproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/steadystateproblem.cpp
@@ -140,6 +146,9 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     ${CMAKE_SOURCE_DIR}/src/vector.cpp
     )
+if(ENABLE_HDF5)
+    list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
+endif()
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 add_dependencies(${PROJECT_NAME} version)
@@ -210,7 +219,7 @@ endif()
 include(clang-tools)
 
 set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
-set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
+set(AUTHOR_EMAIL "Fabian_Froehlich@hms.harvard.edu")
 
 # <Export cmake configuration>
 install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
@@ -223,12 +232,13 @@ install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
 export(EXPORT AmiciTargets FILE AmiciTargets.cmake
     NAMESPACE Upstream::
     )
-configure_file(cmake/AmiciConfig.cmake
-    "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
-    @ONLY
-    )
 include(CMakePackageConfigHelpers)
 include(version)
+configure_package_config_file(
+    cmake/AmiciConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
+    INSTALL_DESTINATION "${LIB_INSTALL_DIR}/cmake/"
+    )
 write_basic_package_version_file(AmiciConfigVersion.cmake COMPATIBILITY ExactVersion)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake
@@ -256,7 +266,12 @@ endif()
 
 option(BUILD_TESTS "Build integration tests?" ON)
 if(BUILD_TESTS)
-    enable_testing()
+    if(ENABLE_HDF5)
+        enable_testing()
 
-    add_subdirectory(tests/cpputest)
+        add_subdirectory(tests/cpputest)
+    else()
+        message(WARNING "Cannot build tests with ENABLE_HDF5=OFF.")
+    endif()
+
 endif()

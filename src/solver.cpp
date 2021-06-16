@@ -36,32 +36,74 @@ Solver::Solver(const Solver &other)
       maxstepsB_(other.maxstepsB_), sensi_(other.sensi_)
 {}
 
+void Solver::apply_max_num_steps() const {
+    // set remaining steps, setMaxNumSteps only applies to a single call of solve
+    long int cursteps;
+    getNumSteps(solver_memory_.get(), &cursteps);
+    if (maxsteps_ <= cursteps)
+        throw AmiException("Reached maximum number of steps %ld before reaching "
+                           "tout at t=%g.", maxsteps_, t_);
+    setMaxNumSteps(maxsteps_ - cursteps);
+}
+
+void Solver::apply_max_num_steps_B() const {
+    // set remaining steps, setMaxNumSteps only applies to a single call of solve
+    long int curstepsB;
+    auto maxstepsB = (maxstepsB_ == 0) ? maxsteps_ * 100 : maxstepsB_;
+    for (int i_mem_b = 0; i_mem_b < (int)solver_memory_B_.size(); ++i_mem_b) {
+        if (solver_memory_B_.at(i_mem_b)) {
+            getNumSteps(solver_memory_B_.at(i_mem_b).get(), &curstepsB);
+            if (maxstepsB <= curstepsB)
+                throw AmiException("Reached maximum number of steps %ld before "
+                                   "reaching tout at t=%g in backward "
+                                   "problem %i.", maxstepsB_, t_, i_mem_b);
+            setMaxNumStepsB(i_mem_b, maxstepsB - curstepsB);
+        }
+    }
+}
+
 int Solver::run(const realtype tout) const {
     setStopTime(tout);
     clock_t starttime = clock();
-    int status;
-    if (getAdjInitDone()) {
-        status = solveF(tout, AMICI_NORMAL, &ncheckPtr_);
+    int status = AMICI_SUCCESS;
+
+    apply_max_num_steps();
+    if (nx() > 0) {
+        if (getAdjInitDone()) {
+            status = solveF(tout, AMICI_NORMAL, &ncheckPtr_);
+        } else {
+            status = solve(tout, AMICI_NORMAL);
+        }
     } else {
-        status = solve(tout, AMICI_NORMAL);
+        t_ = tout;
     }
     cpu_time_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     return status;
 }
 
 int Solver::step(const realtype tout) const {
-    int status;
-    if (getAdjInitDone()) {
-        status = solveF(tout, AMICI_ONE_STEP, &ncheckPtr_);
+    int status = AMICI_SUCCESS;
+
+    apply_max_num_steps();
+    if (nx() > 0) {
+        if (getAdjInitDone()) {
+            status = solveF(tout, AMICI_ONE_STEP, &ncheckPtr_);
+        } else {
+            status = solve(tout, AMICI_ONE_STEP);
+        }
     } else {
-        status = solve(tout, AMICI_ONE_STEP);
+        t_ = tout;
     }
     return status;
 }
 
 void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
-    solveB(tout, AMICI_NORMAL);
+
+    apply_max_num_steps_B();
+    if (nx() > 0) {
+        solveB(tout, AMICI_NORMAL);
+    }
     cpu_timeB_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     t_ = tout;
 }
@@ -92,12 +134,13 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     setErrHandlerFn();
     /* Attaches userdata */
     setUserData(model);
-    /* specify maximal number of steps */
-    setMaxNumSteps(maxsteps_);
     /* activates stability limit detection */
     setStabLimDet(stldet_);
 
     rootInit(model->ne);
+
+    if (nx() == 0)
+        return;
 
     initializeLinearSolver(model);
     initializeNonLinearSolver();
@@ -143,8 +186,8 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     /* Attach user data */
     setUserDataB(*which, model);
 
-    /* Number of maximal internal steps */
-    setMaxNumStepsB(*which, (maxstepsB_ == 0) ? maxsteps_ * 100 : maxstepsB_);
+    if (nx() == 0)
+        return;
 
     initializeLinearSolverB(model, *which);
     initializeNonLinearSolverB(*which);
@@ -174,7 +217,7 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
     if (linsol_ != LinearSolver::KLU)
         throw AmiException("Backward steady state computation via integration "
             "is currently only implemented for KLU linear solver");
-    /* Set Jacobian function and intialize values */
+    /* Set Jacobian function and initialize values */
     setSparseJacFn_ss();
     model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
@@ -524,7 +567,7 @@ void Solver::applyQuadTolerancesASA(const int which) const {
 
 void Solver::applyQuadTolerances() const {
     if (!getQuadInitDone())
-        throw AmiException("Quadratures were not intialized, the "
+        throw AmiException("Quadratures were not initialized, the "
                            "tolerances cannot be applied yet!");
 
     if (sensi_ < SensitivityOrder::first)
@@ -795,8 +838,8 @@ void Solver::setAbsoluteToleranceSteadyStateSensi(const double atol) {
 long int Solver::getMaxSteps() const { return maxsteps_; }
 
 void Solver::setMaxSteps(const long int maxsteps) {
-    if (maxsteps < 0)
-        throw AmiException("maxsteps must be a non-negative number");
+    if (maxsteps <= 0)
+        throw AmiException("maxsteps must be a positive number");
 
     maxsteps_ = maxsteps;
     if (getAdjInitDone())
@@ -810,9 +853,6 @@ void Solver::setMaxStepsBackwardProblem(const long int maxsteps) {
         throw AmiException("maxsteps must be a non-negative number");
 
     maxstepsB_ = maxsteps;
-    for (int iMem = 0; iMem < (int)solver_memory_B_.size(); ++iMem)
-        if (solver_memory_B_.at(iMem))
-            setMaxNumStepsB(iMem, maxstepsB_);
 }
 
 LinearMultistepMethod Solver::getLinearMultistepMethod() const { return lmm_; }
@@ -1092,7 +1132,7 @@ const AmiVector &Solver::getAdjointState(const int which,
             getDkyB(t, 0, which);
         }
     } else {
-        dky_.reset();
+        dky_.zero();
     }
     return dky_;
 }
@@ -1108,7 +1148,7 @@ const AmiVector &Solver::getAdjointDerivativeState(const int which,
             getDkyB(t, 1, which);
         }
     } else {
-        dky_.reset();
+        dky_.zero();
     }
     return dky_;
 }
@@ -1124,7 +1164,7 @@ const AmiVector &Solver::getAdjointQuadrature(const int which,
             getQuadDkyB(t, 0, which);
         }
     } else {
-        xQB_.reset();
+        xQB_.zero();
     }
     return xQB_;
 }
@@ -1139,7 +1179,7 @@ const AmiVector &Solver::getQuadrature(realtype t) const {
             getQuadDky(t, 0);
         }
     } else {
-        xQ_.reset();
+        xQ_.zero();
     }
     return xQ_;
 }

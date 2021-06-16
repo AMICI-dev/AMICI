@@ -1,17 +1,17 @@
 name: Installation
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   archive:
     name: Archive Install
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: apt
@@ -28,7 +28,7 @@ jobs:
     - name: Build suitesparse
       run: |
         scripts/buildSuiteSparse.sh
-     
+
     - name: Build sundials
       run: |
         scripts/buildSundials.sh
@@ -36,10 +36,6 @@ jobs:
     - name: Build cpputest
       run: |
         scripts/buildCpputest.sh
-
-    - name: pip
-      run: |
-        pip3 install numpy
 
     - name: Build AMICI
       run: |
@@ -52,13 +48,13 @@ jobs:
   sdist:
     name: sdist Install
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: apt
@@ -74,9 +70,11 @@ jobs:
     - name: Create AMICI sdist
       run: |
         scripts/buildSdist.sh
-    
+
     - name: Install python sdist
       run: |
         pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
-                
-        
+
+    - name: Test import
+      run: |
+        python -m amici

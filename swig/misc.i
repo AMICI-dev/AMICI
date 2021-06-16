@@ -3,6 +3,7 @@
 %ignore amici::printfToString;
 %ignore amici::regexErrorToString;
 %ignore amici::writeSlice;
+%ignore ContextManager;
 
 // Add necessary symbols to generated header
 %{

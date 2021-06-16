@@ -15,7 +15,9 @@ images/*
 stylesheets/*
 documentation/_build/*
 documentation/_exhale_cpp_api/*
-documentation/_doxyoutput/*
+documentation/_exhale_matlab_api/*
+documentation/_doxyoutput_amici_cpp/*
+documentation/_doxyoutput_amici_matlab/*
 sed-ml/*
 
 models/*
@@ -93,6 +95,8 @@ python/.idea/*
 matlab/mtoc/config/latexextras.sty-e
 matlab/mtoc/config/latexextras.sty
 matlab/mtoc/config/Doxyfile-e
+matlab/mtoc/Doxyfile
+matlab/mtoc/config/mtocpp_filter.sh
 
 cppcheck.txt
 coverage_py.xml
@@ -110,6 +114,7 @@ tests/test/*
 */tests/test_model_presimulation/*
 */tests/test_model_presimulation_pysb/*
 */tests/test_model_presimulation_sbml/*
+*/tests/test_model_units/*
 */tests/model_constant_species_cl/*
 */tests/model_constant_species/*
 */tests/test_likelihoods/*
@@ -141,13 +146,14 @@ tests/SBMLTestModels/
 tests/benchmark-models/test_bmc
 tests/petab_test_suite
 petab_test_suite
-/python/test/amici-SBMLTest*/
+*/tests/BIOMD0000000529/*
 
 python/examples/example_steadystate/model_steadystate_scaled/*
 python/examples/example_presimulation/model_presimulation/*
 python/examples/example_presimulation/model_presimulation_re/*
 python/examples/example_constant_species/model_constant_species_reduced/*
 python/examples/example_constant_species/model_constant_species/*
+python/tests/sbml_test_models/*
 
 python/sdist/amici.egg-info/*
 python/sdist/amici/version.txt
@@ -174,10 +180,17 @@ ThirdParty/SuiteSparse/share/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
-
+ThirdParty/ragel-*.tar.gz
 _untracked/
 
 documentation/generated/*
 
 # vim
 *.swp
+tests/performance/CS_Signalling_ERBB_RAS_AKT/
+tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*
+coverage_SBMLSuite.xml
+Benchmark-Models-PEtab/
+
+
+CS_Signalling_ERBB_RAS_AKT/

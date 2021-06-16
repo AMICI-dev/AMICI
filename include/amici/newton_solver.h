@@ -154,6 +154,8 @@ class NewtonSolverDense : public NewtonSolver {
 
     NewtonSolverDense(const NewtonSolverDense&) = delete;
 
+    NewtonSolverDense& operator=(const NewtonSolverDense& other) = delete;
+
     ~NewtonSolverDense() override;
 
     /**
@@ -211,6 +213,8 @@ class NewtonSolverSparse : public NewtonSolver {
     NewtonSolverSparse(realtype *t, AmiVector *x, Model *model);
 
     NewtonSolverSparse(const NewtonSolverSparse&) = delete;
+
+    NewtonSolverSparse& operator=(const NewtonSolverSparse& other) = delete;
 
     ~NewtonSolverSparse() override;
 

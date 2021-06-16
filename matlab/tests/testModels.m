@@ -4,24 +4,33 @@ function testModels()
     % disable specific warnings for these tests, some tests are supposed
     % to produce warnings
     warningreset = warning;
-    warning('off','AMICI:mex:simulation')
-    warning('off','AMICI:mex:CVODES:CVode:TOO_MUCH_WORK')
+    warning('off','AMICI:simulation')
+    warning('off','AMICI:CVODES:CVode:TOO_MUCH_WORK')
 
+    % second-order currently not supported via rebuild_*.m (GitHub Actions)
+    %  only via wrapTestModels
     ignoredTests = {'/model_jakstat_adjoint/sensiadjointemptysensind', ...
-                    '/model_jakstat_adjoint/sensiforwardemptysensind'};
+                    '/model_jakstat_adjoint/sensiforwardemptysensind', ...
+                    '/model_jakstat_adjoint/sensi2adjoint', ...
+                    '/model_jakstat_adjoint/sensi2forward', ...
+                    '/model_jakstat_adjoint/sensi2forwardlogparam', ...
+                    '/model_neuron/sensi2forward'};
 
+    model_dir = [fileparts(mfilename('fullpath')) '/../../models/'];
     cd(fileparts(mfilename('fullpath')))
     addpath(genpath('../../tests/cpputest'));
     addpath(genpath('../examples'));
     % wrapTestModels()
-    cd(fileparts(mfilename('fullpath')))
 
+    cd(fileparts(mfilename('fullpath')))
     hdf5file = fullfile(fileparts(mfilename('fullpath')), ...
         '../../tests/cpputest', 'expectedResults.h5');
-
+    
     info = h5info(hdf5file);
     for imodel = 1:length(info.Groups)
-        if(~isempty(regexp(info.Groups(imodel).Name(2:end),'^model_neuron')))
+        modelname = info.Groups(imodel).Name(2:end);
+      
+        if(~isempty(regexp(modelname,'^model_neuron')))
             model_atol = 1e-9;
             model_rtol = 1e-4;
         else
@@ -29,13 +38,25 @@ function testModels()
             model_rtol = 1e-5;
         end
         for itest = 1:length(info.Groups(imodel).Groups)
-            if(ismember(info.Groups(imodel).Groups(itest).Name, ignoredTests))
+            testname = info.Groups(imodel).Groups(itest).Name;
+            if(ismember(testname, ignoredTests))
                 continue
             end
+            
+            display(testname);
 
             [results,options,data,t,theta,kappa] = readDataFromHDF5(info.Groups(imodel).Groups(itest),hdf5file);
-            sol = getResults(info.Groups(imodel).Name(2:end),options,data,t,theta,kappa);
+            
+            % rebuild model
+            old_path = addpath([model_dir modelname]);
+            old_pwd = cd([model_dir modelname]);
+            rebuild = str2func(['rebuild_' modelname]);
+            rebuild();
+            cd(old_pwd);
+            
+            sol = getResults(modelname,options,data,t,theta,kappa);
             compareResults(sol,results);
+            path(old_path);
         end
     end
 

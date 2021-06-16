@@ -1,6 +1,9 @@
 """Tests related to amici.sbml_import"""
 
 import os
+import sys
+import re
+from urllib.request import urlopen
 import shutil
 from tempfile import TemporaryDirectory
 
@@ -27,6 +30,10 @@ def simple_sbml_model():
     s1.setId('S1')
     s1.setCompartment('C1')
     model.addSpecies(s1)
+    p1 = model.createParameter()
+    p1.setId('p1')
+    p1.setValue(0.0)
+    model.addParameter(p1)
 
     return document, model
 
@@ -42,6 +49,32 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False)
+
+
+@pytest.mark.skipif(sys.platform in ['win32', 'cygwin'],
+                    reason="windows stinks")
+def test_nosensi(simple_sbml_model):
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(model_name="test",
+                                 output_dir=tmpdir,
+                                 observables=None,
+                                 compute_conservation_laws=False,
+                                 generate_sensitivity_code=False)
+
+        model_module = amici.import_model_module(module_name='test',
+                                                 module_path=tmpdir)
+
+        model = model_module.getModel()
+        model.setTimepoints(np.linspace(0, 60, 61))
+        solver = model.getSolver()
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        rdata = amici.runAmiciSimulation(model, solver)
+        assert rdata.status == amici.AMICI_ERROR
 
 
 def assert_fun(x):
@@ -70,6 +103,25 @@ def model_steadystate_module():
         observables=observables,
         constant_parameters=['k0'],
         sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
+
+    model_module = amici.import_model_module(module_name=module_name,
+                                             module_path=outdir)
+    yield model_module
+
+    shutil.rmtree(outdir, ignore_errors=True)
+
+
+@pytest.fixture
+def model_units_module():
+    sbml_file = os.path.join(os.path.dirname(__file__), '..',
+                             'examples', 'example_units',
+                             'model_units.xml')
+    sbml_importer = amici.SbmlImporter(sbml_file)
+
+    outdir = 'test_model_units'
+    module_name = 'test_model_units'
+    sbml_importer.sbml2amici(model_name=module_name,
+                             output_dir=outdir)
 
     model_module = amici.import_model_module(module_name=module_name,
                                              module_path=outdir)
@@ -277,6 +329,60 @@ def test_likelihoods_error():
             constant_parameters=['k0'],
             noise_distributions=noise_distributions,
         )
+
+
+def test_units(model_units_module):
+    """
+    Test whether SBML import works for models using sbml:units annotations.
+    """
+    model = model_units_module.getModel()
+    model.setTimepoints(np.linspace(0, 1, 101))
+    solver = model.getSolver()
+
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata['status'] == amici.AMICI_SUCCESS
+
+
+@pytest.mark.skipif(os.name == 'nt',
+                    reason='Avoid `CERTIFICATE_VERIFY_FAILED` error')
+def test_sympy_exp_monkeypatch():
+    """
+    This model contains a removeable discontinuity at t=0 that requires
+    monkeypatching sympy.Pow._eval_derivative in order to be able to compute
+    non-nan sensitivities
+    """
+    url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
+          'filename=BIOMD0000000529_url.xml'
+    importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
+                                  from_file=False)
+    module_name = 'BIOMD0000000529'
+
+    with TemporaryDirectory() as outdir:
+        importer.sbml2amici(module_name, outdir)
+        model_module = amici.import_model_module(module_name=module_name,
+                                                 module_path=outdir)
+
+        model = model_module.getModel()
+        model.setTimepoints(np.linspace(0, 8, 250))
+        model.requireSensitivitiesForAllParameters()
+        model.setAlwaysCheckFinite(True)
+        model.setParameterScale(amici.parameterScalingFromIntVector([
+            amici.ParameterScaling.none
+            if re.match(r'n[0-9]+$', par_id)
+            else amici.ParameterScaling.log10
+            for par_id in model.getParameterIds()
+        ]))
+
+        solver = model.getSolver()
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+        rdata = amici.runAmiciSimulation(model, solver)
+
+        # print sensitivity-related results
+        assert rdata['status'] == amici.AMICI_SUCCESS
+        check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
+                          epsilon=1e-3)
 
 
 def normal_nllh(m, y, sigma):

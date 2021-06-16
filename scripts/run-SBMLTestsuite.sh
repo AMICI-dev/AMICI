@@ -26,5 +26,5 @@ if [[ -d "${RESULT_DIR}" ]]; then
 fi
 mkdir "${RESULT_DIR}"
 
-pytest ./tests/testSBMLSuite.py --cases="${args}" -s -n auto --cov=amici \
-  --cov-report=xml:"coverage_SBMLSuite.xml" --cov-append
+pytest ./tests/testSBMLSuite.py --cases="${args}" -rfsE -n auto \
+  --cov=amici --cov-report=xml:"coverage_SBMLSuite.xml" --cov-append

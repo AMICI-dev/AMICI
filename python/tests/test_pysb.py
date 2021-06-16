@@ -5,8 +5,8 @@ import logging
 import os
 import platform
 import shutil
-import sys
 import pytest
+
 pysb = pytest.importorskip("pysb")
 
 import amici
@@ -14,7 +14,10 @@ import numpy as np
 import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
+from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
+
+from amici.gradient_check import check_derivatives
 
 
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
@@ -95,7 +98,6 @@ custom_models = [
     'bngwiki_egfr_simple_deletemolecules',
 ]
 
-
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
     pysb = pytest.importorskip("pysb")
@@ -113,7 +115,6 @@ def test_compare_to_pysb_simulation(example):
                 return
 
             # load example
-
             pysb.SelfExporter.cleanup()  # reset pysb
             pysb.SelfExporter.do_export = True
 
@@ -124,7 +125,6 @@ def test_compare_to_pysb_simulation(example):
             pysb_model.name += '_amici'
 
             # pysb part
-
             tspan = np.linspace(0, 100, 101)
             sim = ScipyOdeSimulator(
                 pysb_model,
@@ -150,18 +150,19 @@ def test_compare_to_pysb_simulation(example):
                 pysb_model,
                 outdir,
                 verbose=logging.INFO,
-                compute_conservation_laws=compute_conservation_laws
+                compute_conservation_laws=compute_conservation_laws,
+                observables=list(pysb_model.observables.keys())
             )
-            sys.path.insert(0, outdir)
 
-            amici_model_module = importlib.import_module(pysb_model.name)
+            amici_model_module = amici.import_model_module(pysb_model.name,
+                                                           outdir)
 
             model_pysb = amici_model_module.getModel()
 
             model_pysb.setTimepoints(tspan)
 
             solver = model_pysb.getSolver()
-            solver.setMaxSteps(int(1e5))
+            solver.setMaxSteps(int(1e6))
             solver.setAbsoluteTolerance(atol)
             solver.setRelativeTolerance(rtol)
             rdata = amici.runAmiciSimulation(model_pysb, solver)
@@ -170,6 +171,30 @@ def test_compare_to_pysb_simulation(example):
 
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
+
+            if example not in ['fricker_2010_apoptosis', 'fixed_initial',
+                               'bngwiki_egfr_simple_deletemolecules']:
+                if example in ['tyson_oscillator', 'bax_pore_sequential',
+                               'bax_pore', 'kinase_cascade',
+                               'bngwiki_egfr_simple',
+                               'bngwiki_enzymatic_cycle_mm',
+                               'bngwiki_simple']:
+                    solver.setAbsoluteTolerance(1e-14)
+                    solver.setRelativeTolerance(1e-14)
+                    epsilon = 1e-4
+                else:
+                    solver.setAbsoluteTolerance(1e-10)
+                    solver.setRelativeTolerance(1e-10)
+                    epsilon = 1e-3
+                model_pysb.setParameterScale(parameterScalingFromIntVector([
+                    ParameterScaling.log10 if p > 0 else ParameterScaling.none
+                    for p in model_pysb.getParameters()
+                ]))
+                check_derivatives(model_pysb, solver,
+                                  epsilon=epsilon,
+                                  rtol=1e-2,
+                                  atol=1e-2,
+                                  skip_zero_pars=True)
 
             shutil.rmtree(outdir, ignore_errors=True)
 
@@ -200,3 +225,47 @@ def get_results(model, edata):
         amici.SteadyStateSensitivityMode.simulationFSA
     )
     return amici.runAmiciSimulation(model, solver, edata)
+
+
+def test_names_and_ids(pysb_example_presimulation_module):
+    model_pysb = pysb_example_presimulation_module.getModel()
+    expected = {
+        'ExpressionIds': (
+            '__s2',
+            '__s1',
+            '__s5',
+            'pPROT',
+            'tPROT',
+            'initProt',
+            'initDrug',
+            'initKin',
+            'pPROT_obs'),
+        'FixedParameterIds': ('DRUG_0', 'KIN_0'),
+        'FixedParameterNames': ('DRUG_0', 'KIN_0'),
+        'ObservableIds': ('pPROT_obs',),
+        'ObservableNames': ('pPROT_obs',),
+        'ParameterIds': (
+            'PROT_0',
+            'kon_prot_drug',
+            'koff_prot_drug',
+            'kon_prot_kin',
+            'kphospho_prot_kin',
+            'kdephospho_prot'
+        ),
+        'StateIds': ('__s0', '__s1', '__s2', '__s3', '__s4', '__s5'),
+        'StateNames': (
+            "PROT(kin=None, drug=None, phospho='u')",
+            'DRUG(bound=None)',
+            'KIN(bound=None)',
+            "DRUG(bound=1) % PROT(kin=None, drug=1, phospho='u')",
+            "KIN(bound=1) % PROT(kin=1, drug=None, phospho='u')",
+            "PROT(kin=None, drug=None, phospho='p')"
+        ),
+    }
+    # Names and IDs are the same here
+    expected['ExpressionNames'] = expected['ExpressionIds']
+    expected['ParameterNames'] = expected['ParameterIds']
+
+    for field_name, cur_expected in expected.items():
+        actual = getattr(model_pysb, f'get{field_name}')()
+        assert actual == cur_expected

@@ -9,6 +9,7 @@
 #include "amici/misc.h"
 
 #include <cstring>
+#include <cassert>
 
 namespace amici {
 
@@ -37,7 +38,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
         for (int it = 0; it < fwd.model->nt(); it++) {
             if (std::isinf(fwd.model->getTimepoint(it))) {
                 if (!posteq)
-                    throw AmiException("Model has non-finite timpoint but, "
+                    throw AmiException("Model has non-finite timepoint but, "
                                        "postequilibration did not run");
 
                 /* copy adjoint update to postequilibration */
@@ -47,7 +48,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                                  fwd.model->nx_solver * fwd.model->nJ));
 
                 /* If adjoint sensis were computed, copy also quadratures */
-                xQB_.reset();
+                xQB_.zero();
                 xQB_ = posteq->getEquilibrationQuadratures();
             }
         }
@@ -65,7 +66,7 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     int it = model_->nt() - 1;
-    /* If we have posteq, infty timepoints were already treated */
+    /* If we have posteq, infinity timepoints were already treated */
     for (int jt = model_->nt() - 1; jt >= 0; jt--)
         if (std::isinf(model_->getTimepoint(jt)))
             --it;
@@ -89,12 +90,13 @@ void BackwardProblem::workBackwardProblem() {
             }
 
             /* handle discontinuity */
-            if (tnext > model_->getTimepoint(it)) {
+            if (!discs_.empty() && tnext == discs_.back()) {
+                discs_.pop_back();
                 handleEventB();
             }
 
             /* handle data-point */
-            if (tnext == model_->getTimepoint(it)) {
+            if (it >=0 && tnext == model_->getTimepoint(it)) {
                 handleDataPointB(it);
                 it--;
             }
@@ -174,9 +176,18 @@ void BackwardProblem::handleDataPointB(const int it) {
 }
 
 realtype BackwardProblem::getTnext(const int it) {
-    if (discs_.size() > 0 && discs_.back() > model_->getTimepoint(it)) {
+    if (it < 0 && discs_.empty()) {
+        throw AmiException(
+            "No more timepoints (it=%d, ie=%d) available at %f. This should "
+            "not happen, please report a bug including this stacktrace at "
+            "https://github.com/AMICI-dev/AMICI/issues/new/choose",
+            it, discs_.size(), this->t_
+        );
+    }
+        
+    if (!discs_.empty() &&
+        (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();
-        discs_.pop_back();
         return tdisc;
     }
 

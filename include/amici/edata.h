@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/misc.h"
+#include "amici/simulation_parameters.h"
 
 #include <vector>
 
@@ -16,7 +17,7 @@ class ReturnData;
  * @brief ExpData carries all information about experimental or
  * condition-specific data
  */
-class ExpData {
+class ExpData : public SimulationParameters {
 
   public:
     /**
@@ -33,19 +34,19 @@ class ExpData {
     /**
      * @brief constructor that only initializes dimensions
      *
-     * @param nytrue
-     * @param nztrue
-     * @param nmaxevent
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
      */
     ExpData(int nytrue, int nztrue, int nmaxevent);
 
     /**
      * @brief constructor that initializes timepoints from vectors
      *
-     * @param nytrue               (dimension: scalar)
-     * @param nztrue               (dimension: scalar)
-     * @param nmaxevent            (dimension: scalar)
-     * @param ts                   (dimension: nt)
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
+     * @param ts Timepoints (dimension: nt)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts);
 
@@ -53,11 +54,11 @@ class ExpData {
      * @brief constructor that initializes timepoints and fixed parameters from
      * vectors
      *
-     * @param nytrue               (dimension: scalar)
-     * @param nztrue               (dimension: scalar)
-     * @param nmaxevent            (dimension: scalar)
-     * @param ts                   (dimension: nt)
-     * @param fixedParameters      (dimension: nk)
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
+     * @param ts Timepoints (dimension: nt)
+     * @param fixedParameters Model constants (dimension: nk)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
             std::vector<realtype> fixedParameters);
@@ -65,14 +66,17 @@ class ExpData {
     /**
      * @brief constructor that initializes timepoints and data from vectors
      *
-     * @param nytrue               (dimension: scalar)
-     * @param nztrue               (dimension: scalar)
-     * @param nmaxevent            (dimension: scalar)
-     * @param ts                   (dimension: nt)
-     * @param observedData         (dimension: nt x nytrue, row-major)
-     * @param observedDataStdDev   (dimension: nt x nytrue, row-major)
-     * @param observedEvents       (dimension: nmaxevent x nztrue, row-major)
-     * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
+     * @param nytrue Number of observables
+     * @param nztrue Number of event outputs
+     * @param nmaxevent Maximal number of events to track
+     * @param ts Timepoints (dimension: nt)
+     * @param observedData observed data (dimension: nt x nytrue, row-major)
+     * @param observedDataStdDev standard deviation of observed data
+     * (dimension: nt x nytrue, row-major)
+     * @param observedEvents observed events
+     * (dimension: nmaxevents x nztrue, row-major)
+     * @param observedEventsStdDev standard deviation of observed events/roots
+     * (dimension: nmaxevents x nztrue, row-major)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
             std::vector<realtype> const &observedData,
@@ -141,7 +145,7 @@ class ExpData {
     int nt() const;
 
     /**
-     * @brief set function that copies data from input to ExpData::ts
+     * @brief Set function that copies data from input to ExpData::ts
      *
      * @param ts timepoints
      */
@@ -174,7 +178,7 @@ class ExpData {
      * @brief set function that copies observed data for specific observable
      *
      * @param observedData observed data (dimension: nt)
-     * @param iy oberved data index
+     * @param iy observed data index
      */
     void setObservedData(const std::vector<realtype> &observedData, int iy);
 
@@ -306,11 +310,11 @@ class ExpData {
 
     /**
      * @brief get function that returns a pointer to observed data at ieth
-     * occurence
+     * occurrence
      *
-     * @param ie event occurence
+     * @param ie event occurrence
      *
-     * @return pointer to observed event data at ieth occurence
+     * @return pointer to observed event data at ieth occurrence
      */
     const realtype *getObservedEventsPtr(int ie) const;
 
@@ -372,66 +376,14 @@ class ExpData {
 
     /**
      * @brief get function that returns a pointer to standard deviation of
-     * observed event data at ieth occurence
+     * observed event data at ie-th occurrence
      *
-     * @param ie event occurence
+     * @param ie event occurrence
      *
-     * @return pointer to standard deviation of observed event data at ieth
-     * occurence
+     * @return pointer to standard deviation of observed event data at ie-th
+     * occurrence
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
-
-    /**
-     * @brief condition-specific fixed parameters of size Model::nk() or empty
-     */
-    std::vector<realtype> fixedParameters;
-    /**
-     * @brief condition-specific fixed parameters for pre-equilibration of size
-     * Model::nk() or empty. Overrides Solver::newton_preeq
-     */
-    std::vector<realtype> fixedParametersPreequilibration;
-    /**
-     * @brief condition-specific fixed parameters for pre-simulation of
-     * size Model::nk() or empty.
-     */
-    std::vector<realtype> fixedParametersPresimulation;
-
-    /**
-     * @brief condition-specific parameters of size Model::np() or empty
-     */
-    std::vector<realtype> parameters;
-    /**
-     * @brief condition-specific initial conditions of size Model::nx() or
-     * empty
-     */
-    std::vector<realtype> x0;
-    /**
-     * @brief condition-specific initial condition sensitivities of size
-     * Model::nx() * Model::nplist(), Model::nx() * ExpDataplist.size(), if
-     * ExpData::plist is not empty, or empty
-     */
-    std::vector<realtype> sx0;
-    /**
-     * @brief condition-specific parameter scales of size Model::np()
-     */
-    std::vector<ParameterScaling> pscale;
-    /**
-     * @brief condition-specific parameter list
-     */
-    std::vector<int> plist;
-
-    /**
-     * @brief duration of pre-simulation
-     * if this is > 0, presimualation will be performed from
-     * (model->t0 - t_presim) to model->t0 using the fixedParameters in
-     * fixedParametersPresimulation
-     */
-    realtype t_presim = 0;
-
-    /** flag indicating whether reinitialization of states depending on
-     *  fixed parameters is activated
-     */
-    bool reinitializeFixedParameterInitialStates = false;
 
   protected:
     /**
@@ -463,7 +415,7 @@ class ExpData {
      * @brief checker for dimensions of input observedEvents or
      * observedEventsStdDev
      *
-     * @param input vector input to be checkedjupyter_contrib_nbextensions
+     * @param input vector input to be checked
      * @param fieldname name of the input
      */
     void checkEventsDimension(std::vector<realtype> const &input,
@@ -475,14 +427,12 @@ class ExpData {
     /** @brief number of event observables */
     int nztrue_{0};
 
-    /** @brief maximal number of event occurences */
+    /** @brief maximal number of event occurrences */
     int nmaxevent_{0};
-
-    /** @brief observation timepoints (dimension: nt) */
-    std::vector<realtype> ts_;
 
     /** @brief observed data (dimension: nt x nytrue, row-major) */
     std::vector<realtype> observed_data_;
+
     /**
      * @brief standard deviation of observed data (dimension: nt x nytrue,
      * row-major)
@@ -493,6 +443,7 @@ class ExpData {
      * @brief observed events (dimension: nmaxevents x nztrue, row-major)
      */
     std::vector<realtype> observed_events_;
+
     /**
      * @brief standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
@@ -529,7 +480,7 @@ class ConditionContext : public ContextManager {
      *
      * @param model
      * @param edata
-     * @param fpc flag indicating which fixedParmeter from edata to apply
+     * @param fpc flag indicating which fixedParameter from edata to apply
      */
     explicit ConditionContext(
         Model *model, const ExpData *edata = nullptr,
@@ -545,7 +496,7 @@ class ConditionContext : public ContextManager {
      * backed-up in the constructor call.
      *
      * @param edata
-     * @param fpc flag indicating which fixedParmeter from edata to apply
+     * @param fpc flag indicating which fixedParameter from edata to apply
      */
     void applyCondition(const ExpData *edata,
                         FixedParameterContext fpc);
@@ -567,6 +518,7 @@ class ConditionContext : public ContextManager {
     std::vector<int> original_parameter_list_;
     std::vector<amici::ParameterScaling> original_scaling_;
     bool original_reinitialize_fixed_parameter_initial_states_;
+    std::vector<int> original_reinitialization_state_idxs;
 };
 
 } // namespace amici

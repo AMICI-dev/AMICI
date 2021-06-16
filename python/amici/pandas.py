@@ -87,7 +87,7 @@ def getDataObservablesAsDataFrame(
     # list of all column names using either ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for edata in edata_list:
         npdata = ExpDataView(edata)
@@ -200,7 +200,7 @@ def getSimulationStatesAsDataFrame(
     # get conditions and state column names by name or id
     cols = _get_state_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
@@ -259,7 +259,7 @@ def getResidualsAsDataFrame(model: amici.Model,
     # get all column names using names or ids
     cols = _get_observable_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for row in df_rdata.index:
         datadict = {
@@ -540,16 +540,16 @@ def constructEdataFromDataFrame(
     overwrite_presim = {}
     for par in list(_get_names_or_ids(model, 'FixedParameter', by_id=by_id)):
         if par + '_preeq' in condition.keys() \
-                and not math.isnan(condition[par + '_preeq']):
-            overwrite_preeq[par] = condition[par + '_preeq']
+                and not math.isnan(condition[par + '_preeq'].astype(float)):
+            overwrite_preeq[par] = condition[par + '_preeq'].astype(float)
         if par + '_presim' in condition.keys() \
-                and not math.isnan(condition[par + '_presim']):
-            overwrite_presim[par] = condition[par + '_presim']
+                and not math.isnan(condition[par + '_presim'].astype(float)):
+            overwrite_presim[par] = condition[par + '_presim'].astype(float)
 
     # fill in fixed parameters
     edata.fixedParameters = condition[
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)
-    ].values
+    ].astype(float).values
 
     # fill in preequilibration parameters
     if any([overwrite_preeq[key] != condition[key] for key in
@@ -596,7 +596,7 @@ def getEdataFromDataFrame(
         by_id: Optional[bool] = False
 ) -> List[amici.amici.ExpData]:
     """
-    Constructs a ExpData instance according to the provided Model and
+    Constructs a ExpData instances according to the provided Model and
     DataFrame.
 
     :param df:
@@ -642,7 +642,9 @@ def getEdataFromDataFrame(
         selected = np.ones((len(df),), dtype=bool)
         for par_label, par in row.iteritems():
             if math.isnan(par):
-                selected = selected & np.isnan(df[par_label].values)
+                selected = selected & np.isnan(
+                    df[par_label].astype(float).values
+                )
             else:
                 selected = selected & (df[par_label] == par)
         edata_df = df[selected]

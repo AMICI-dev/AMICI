@@ -8,12 +8,13 @@ on:
     branches:
       - develop
       - master
+  workflow_dispatch:
 
 jobs:
   doxygen:
     name: Test Doxygen
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
@@ -39,14 +40,14 @@ jobs:
   sphinx:
     name: Test Sphinx
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
 
-      - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-      - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
+      - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+      - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.2/install/bin/swig" >> $GITHUB_ENV
 
       - name: Build doxygen
         run: |
@@ -72,10 +73,6 @@ jobs:
       - name: Build swig
         run: |
           sudo scripts/downloadAndBuildSwig.sh
-
-      - name: pip
-        run: |
-          pip3 install setuptools
 
       - name: sphinx
         run: |

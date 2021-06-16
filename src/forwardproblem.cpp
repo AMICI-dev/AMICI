@@ -45,9 +45,6 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
 
 void ForwardProblem::workForwardProblem() {
     FinalStateStorer fss(this);
-    if(model->nx_solver == 0){
-        return;
-    }
 
     auto presimulate = edata && edata->t_presim > 0;
 
@@ -56,6 +53,8 @@ void ForwardProblem::workForwardProblem() {
         model->initialize(x_, dx_, sx_, sdx_,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
+    else if (model->ne)
+        model->initHeaviside(x_, dx_);
 
     /* compute initial time and setup solver for (pre-)simulation */
     auto t0 = model->t0();
@@ -70,6 +69,8 @@ void ForwardProblem::workForwardProblem() {
                                " is currently not implemented.");
         handlePresimulation();
         t_ = model->t0();
+        if (model->ne)
+            model->initHeaviside(x_, dx_);
     }
     /* when computing adjoint sensitivity analysis with presimulation,
      we need to store sx after the reinitialization after preequilibration
@@ -138,13 +139,13 @@ void ForwardProblem::handlePresimulation()
 
 
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
-    /* store heaviside information at event occurence */
+    /* store Heaviside information at event occurrence */
     model->froot(t_, x_, dx_, rootvals_);
 
-    /* store timepoint at which the event occured*/
+    /* store timepoint at which the event occurred*/
     discs_.push_back(t_);
 
-    /* extract and store which events occured */
+    /* extract and store which events occurred */
     if (!seflag) {
         solver->getRootInfo(roots_found_.data());
     }
@@ -156,9 +157,10 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         /* only check this in the first event fired, otherwise this will always
          * be true */
         if (t_ == *tlastroot) {
-            throw AmiException("AMICI is stuck in an event, as the initial"
-                               "step-size after the event is too small. To fix "
-                               "this, increase absolute and relative tolerances!");
+            throw AmiException("AMICI is stuck in an event, as the initial "
+                               "step-size after the event is too small. "
+                               "To fix this, increase absolute and relative "
+                               "tolerances!");
         }
         *tlastroot = t_;
     }
@@ -230,6 +232,13 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
     /* fire the secondary event */
     if (secondevent > 0) {
+        /* Secondary events may result in wrong forward sensitivities,
+         * if the secondary event has a bolus... */
+        if (solver->computingFSA())
+            solver->app->warning("AMICI:simulation",
+                                 "Secondary event was triggered. Depending on "
+                                 "the bolus of the secondary event, forward "
+                                 "sensitivities can be incorrect.");
         handleEvent(tlastroot, true);
     }
 

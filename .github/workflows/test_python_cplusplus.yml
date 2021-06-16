@@ -1,12 +1,12 @@
 name: C++/Python Tests
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
     name: Tests Ubuntu
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     env:
       ENABLE_GCOV_COVERAGE: "TRUE"
@@ -16,15 +16,15 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
     # sonar cloud
-    - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
-    - run: echo "::set-env name=SONAR_SCANNER_HOME::$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux"
-    - run: echo "::set-env name=SONAR_SCANNER_OPTS::-server"
-    - run: echo "::add-path::${SONAR_SCANNER_HOME}/bin"
-    - run: echo "::add-path::$HOME/.sonar/build-wrapper-linux-x86"
+    - run: echo "SONAR_SCANNER_VERSION=4.5.0.2216" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_HOME=${HOME}/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_OPTS=-server" >> $GITHUB_ENV
+    - run: echo "${SONAR_SCANNER_HOME}/bin" >> $GITHUB_PATH
+    - run: echo "${HOME}/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
 
     # TODO: add to ci image
     - name: Install sonarcloud tools
@@ -85,25 +85,33 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
+          
+    - name: example notebooks
+      run: |
+        scripts/runNotebook.sh python/examples/example_*/
+
+    - name: doc notebooks
+      run: |
+        scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
     - name: Codecov Python
       uses: codecov/codecov-action@v1
-      with:
+      with: 
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
-      
+
     - name: lcov
       run: |
         lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src \
+        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python3 --version | sed -E 's/.*([0-9]+\.[0-9]+)\..*/\1/')/amici/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
-      
+
     - name: Codecov CPP
       uses: codecov/codecov-action@v1
       with:
@@ -129,8 +137,8 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
@@ -140,15 +148,15 @@ jobs:
     - name: Build AMICI
       run: |
         scripts/buildAll.sh
-        
+
     - name: Install python package
       run: |
         scripts/installAmiciSource.sh
-        
+
     - name: cppcheck
       run: |
         scripts/run-cppcheck.sh
-        
+
     - name: Python tests
       run: |
         scripts/run-python-tests.sh

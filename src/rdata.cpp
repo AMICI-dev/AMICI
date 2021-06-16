@@ -11,50 +11,54 @@
 #include "amici/symbolic_functions.h"
 
 #include <cstring>
+#include <cmath>
 
 namespace amici {
 
 ReturnData::ReturnData(Solver const &solver, const Model &model)
-    : ReturnData(model.getTimepoints(), model.np(), model.nk(), model.nx_rdata,
-                 model.nx_solver, model.nxtrue_rdata, model.nx_solver_reinit,
-                 model.ny, model.nytrue, model.nz, model.nztrue, model.ne,
-                 model.nJ, model.nplist(), model.nMaxEvent(), model.nt(),
-                 solver.getNewtonMaxSteps(), model.nw,
+    : ReturnData(model.getTimepoints(),
+                 ModelDimensions(static_cast<ModelDimensions const&>(model)),
+                 model.nplist(), model.nMaxEvent(), model.nt(),
+                 solver.getNewtonMaxSteps(),
                  model.getParameterScale(), model.o2mode,
                  solver.getSensitivityOrder(), solver.getSensitivityMethod(),
-                 solver.getReturnDataReportingMode()) {}
+                 solver.getReturnDataReportingMode(), model.hasQuadraticLLH(),
+                 model.getAddSigmaResiduals(),
+                 model.getMinimumSigmaResiduals()) {}
 
-ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
-                       int nx_solver, int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz,
-                       int nztrue, int ne, int nJ, int nplist, int nmaxevent,
-                       int nt, int newton_maxsteps, int nw,
+ReturnData::ReturnData(std::vector<realtype> ts,
+                       ModelDimensions const& model_dimensions,
+                       int nplist, int nmaxevent,
+                       int nt, int newton_maxsteps,
                        std::vector<ParameterScaling> pscale,
                        SecondOrderMode o2mode, SensitivityOrder sensi,
-                       SensitivityMethod sensi_meth, RDataReporting rdrm)
-    : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver),
-      nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
-      nJ(nJ), nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
-      newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
-      o2mode(o2mode), sensi(sensi), sensi_meth(sensi_meth),
-      rdata_reporting(rdrm), x_solver_(nx_solver), sx_solver_(nx_solver, nplist),
-      x_rdata_(nx), sx_rdata_(nx, nplist), nroots_(ne) {
-
+                       SensitivityMethod sensi_meth, RDataReporting rdrm,
+                       bool quadratic_llh, bool sigma_res,
+                       realtype sigma_offset)
+    : ModelDimensions(model_dimensions), ts(std::move(ts)), nx(nx_rdata),
+      nxtrue(nxtrue_rdata), nplist(nplist),
+      nmaxevent(nmaxevent), nt(nt), newton_maxsteps(newton_maxsteps),
+      pscale(std::move(pscale)), o2mode(o2mode), sensi(sensi),
+      sensi_meth(sensi_meth), rdata_reporting(rdrm), sigma_res(sigma_res),
+      sigma_offset(sigma_offset), x_solver_(nx_solver),
+      sx_solver_(nx_solver, nplist), x_rdata_(nx), sx_rdata_(nx, nplist),
+      nroots_(ne) {
     switch (rdata_reporting) {
     case RDataReporting::full:
-        initializeFullReporting();
+        initializeFullReporting(quadratic_llh);
         break;
 
     case RDataReporting::residuals:
-        initializeResidualReporting();
+        initializeResidualReporting(quadratic_llh);
         break;
 
     case RDataReporting::likelihood:
-        initializeLikelihoodReporting();
+        initializeLikelihoodReporting(quadratic_llh);
         break;
     }
 }
 
-void ReturnData::initializeLikelihoodReporting() {
+void ReturnData::initializeLikelihoodReporting(bool enable_fim) {
     llh = getNaN();
     chi2 = getNaN();
     if (sensi >= SensitivityOrder::first) {
@@ -62,30 +66,33 @@ void ReturnData::initializeLikelihoodReporting() {
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
 
-        if (sensi_meth == SensitivityMethod::forward ||
-            sensi >= SensitivityOrder::second)
+        if ((sensi_meth == SensitivityMethod::forward ||
+            sensi >= SensitivityOrder::second) && enable_fim)
             FIM.resize(nplist * nplist, 0.0);
     }
 }
 
-void ReturnData::initializeResidualReporting() {
+void ReturnData::initializeResidualReporting(bool enable_res) {
     y.resize(nt * ny, 0.0);
     sigmay.resize(nt * ny, 0.0);
-    res.resize(nt * nytrue, 0.0);
+    if (enable_res)
+        res.resize((sigma_res ? 2 : 1) * nt * nytrue, 0.0);
+
     if ((sensi_meth == SensitivityMethod::forward &&
          sensi >= SensitivityOrder::first)
         || sensi >= SensitivityOrder::second) {
 
         sy.resize(nt * ny * nplist, 0.0);
         ssigmay.resize(nt * ny * nplist, 0.0);
-        sres.resize(nt * nytrue * nplist, 0.0);
+        if (enable_res)
+            sres.resize((sigma_res ? 2 : 1) * nt * nytrue * nplist, 0.0);
     }
 }
 
-void ReturnData::initializeFullReporting() {
+void ReturnData::initializeFullReporting(bool quadratic_llh) {
 
-    initializeLikelihoodReporting();
-    initializeResidualReporting();
+    initializeLikelihoodReporting(quadratic_llh);
+    initializeResidualReporting(quadratic_llh);
 
     xdot.resize(nx_solver, getNaN());
 
@@ -234,10 +241,10 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
                                        ExpData const *edata) {
     if (edata)
-        initializeObjectiveFunction();
+        initializeObjectiveFunction(model.hasQuadraticLLH());
 
     auto initialState = fwd.getInitialSimulationState();
-    if (initialState.x.getLength() == 0)
+    if (initialState.x.getLength() == 0 && model.nx_solver > 0)
         return; // if x wasn't set forward problem failed during initialization
     readSimulationState(initialState, model);
 
@@ -252,7 +259,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
             writeSlice(sx_rdata_[ip], slice(sx0, ip, nx));
     }
 
-    // process timpoint data
+    // process timepoint data
     realtype tf = fwd.getFinalTime();
     for (int it = 0; it < model.nt(); it++) {
         if (model.getTimepoint(it) <= tf) {
@@ -270,7 +277,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
         auto rootidx = fwd.getRootIndexes();
         for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
             readSimulationState(fwd.getSimulationStateEvent(iroot), model);
-            getEventOutput(iroot, t_, rootidx.at(iroot), model, edata);
+            getEventOutput(t_, rootidx.at(iroot), model, edata);
         }
     }
 }
@@ -291,7 +298,7 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
         if (!isNaN(llh))
             model.addObservableObjective(llh, it, x_solver_, *edata);
         fres(it, model, *edata);
-        fchi2(it);
+        fchi2(it, *edata);
     }
 
     if (sensi >= SensitivityOrder::first && nplist > 0) {
@@ -332,7 +339,7 @@ void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
     }
 }
 
-void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
+void ReturnData::getEventOutput(realtype t, std::vector<int> rootidx,
                                 Model &model, ExpData const *edata) {
 
     for (int ie = 0; ie < ne; ie++) {
@@ -367,7 +374,7 @@ void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
 
         if (sensi >= SensitivityOrder::first) {
             if (sensi_meth == SensitivityMethod::forward) {
-                getEventSensisFSA(iroot, ie, t, model, edata);
+                getEventSensisFSA(ie, t, model, edata);
             } else if (edata && !sllh.empty()) {
                 model.addPartialEventObjectiveSensitivity(
                     sllh, s2llh, ie, nroots_.at(ie), t, x_solver_, *edata);
@@ -377,7 +384,7 @@ void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
     }
 }
 
-void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
+void ReturnData::getEventSensisFSA(int ie, realtype t, Model &model,
                                    ExpData const *edata) {
     if (t == model.getTimepoint(nt - 1)) {
         // call from fillEvent at last timepoint
@@ -412,7 +419,7 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xQB = bwd.getAdjointQuadrature();
 
     if (preeq && preeq->hasQuadrature()) {
-        handleSx0Backward(model, *preeq, xQB);
+        handleSx0Backward(model, *preeq, llhS0, xQB);
     } else {
         handleSx0Forward(model, llhS0, xB);
     }
@@ -431,6 +438,7 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
 
 void ReturnData::handleSx0Backward(const Model &model,
                                    SteadystateProblem const &preeq,
+                                   std::vector<realtype> &llhS0,
                                    AmiVector &xQB) const {
     /* If preequilibration is run in adjoint mode, the scalar product of sx0
        with its adjoint counterpart (see handleSx0Forward()) is not necessary:
@@ -439,9 +447,23 @@ void ReturnData::handleSx0Backward(const Model &model,
        and so is the scalar product. Instead of the scalar product, the
        quadratures xQB from preequilibration contribute to the gradient
        (see example notebook on equilibration for further documentation). */
-    auto xQBpreeq = preeq.getAdjointQuadrature();
+    const auto &xQBpreeq = preeq.getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
-        xQB[ip] += xQBpreeq[ip];
+        xQB[ip] += xQBpreeq.at(ip);
+
+    /* We really need references here, as sx0 can be large... */
+    const auto& sx0preeq = preeq.getStateSensitivity();
+    const auto& xBpreeq = preeq.getAdjointState();
+
+    /* Add the contribution for sx0 from preequilibration. If backward
+     * preequilibration was done by simulation due to a singular Jacobian,
+     * xB is not necessarily 0 and we may get a non-zero contribution here. */
+    for (int ip = 0; ip < model.nplist(); ++ip) {
+        llhS0[ip] = 0.0;
+        for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
+            llhS0[ip] += xBpreeq.at(ix) * sx0preeq.at(ix, ip);
+        }
+    }
 }
 
 void ReturnData::handleSx0Forward(const Model &model,
@@ -475,26 +497,58 @@ void ReturnData::handleSx0Forward(const Model &model,
 void ReturnData::processSolver(Solver const &solver) {
 
     cpu_time = solver.getCpuTime();
-    if (!numsteps.empty())
-        numsteps = solver.getNumSteps();
-    if (!numrhsevals.empty())
-        numrhsevals = solver.getNumRhsEvals();
-    if (!numerrtestfails.empty())
-        numerrtestfails = solver.getNumErrTestFails();
-    if (!numnonlinsolvconvfails.empty())
-        numnonlinsolvconvfails = solver.getNumNonlinSolvConvFails();
-    if (!order.empty())
-        order = solver.getLastOrder();
+
+    const std::vector<int> *tmp;
+
+    if (!numsteps.empty()) {
+        tmp = &solver.getNumSteps();
+        // copy_n instead of assignment to ensure length `nt`
+        // (vector from solver may be shorter in case of integration errors)
+        std::copy_n(tmp->cbegin(), tmp->size(), numsteps.begin());
+    }
+
+    if (!numsteps.empty()) {
+        tmp = &solver.getNumRhsEvals();
+        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevals.begin());
+    }
+
+    if (!numerrtestfails.empty()) {
+        tmp = &solver.getNumErrTestFails();
+        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfails.begin());
+    }
+
+    if (!numnonlinsolvconvfails.empty()) {
+        tmp = &solver.getNumNonlinSolvConvFails();
+        std::copy_n(tmp->cbegin(), tmp->size(), numnonlinsolvconvfails.begin());
+    }
+
+    if (!order.empty()) {
+        tmp = &solver.getLastOrder();
+        std::copy_n(tmp->cbegin(), tmp->size(), order.begin());
+    }
 
     cpu_timeB = solver.getCpuTimeB();
-    if (!numstepsB.empty())
-        numstepsB = solver.getNumStepsB();
-    if (!numrhsevalsB.empty())
-        numrhsevalsB = solver.getNumRhsEvalsB();
-    if (!numerrtestfailsB.empty())
-        numerrtestfailsB = solver.getNumErrTestFailsB();
-    if (!numnonlinsolvconvfailsB.empty())
-        numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
+
+    if (!numstepsB.empty()) {
+        tmp = &solver.getNumStepsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numstepsB.begin());
+    }
+
+    if (!numrhsevalsB.empty()) {
+        tmp = &solver.getNumRhsEvalsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numrhsevalsB.begin());
+    }
+
+    if (!numerrtestfailsB.empty()) {
+        tmp = &solver.getNumErrTestFailsB();
+        std::copy_n(tmp->cbegin(), tmp->size(), numerrtestfailsB.begin());
+    }
+
+    if (!numnonlinsolvconvfailsB.empty()) {
+        tmp = &solver.getNumNonlinSolvConvFailsB();
+        std::copy_n(tmp->cbegin(), tmp->size(),
+                    numnonlinsolvconvfailsB.begin());
+    }
 }
 
 void ReturnData::readSimulationState(SimulationState const &state,
@@ -581,7 +635,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
     }
 
     if (sensi >= SensitivityOrder::first) {
-        // recover first order sensitivies from states for adjoint sensitivity
+        // recover first order sensitivities from states for adjoint sensitivity
         // analysis
         if (sensi == SensitivityOrder::second
             && o2mode == SecondOrderMode::full
@@ -615,9 +669,10 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
 
 
         if (!sres.empty())
-            for (int iyt = 0; iyt < nytrue * nt; ++iyt)
+            for (int ires = 0; ires < static_cast<int>(res.size()); ++ires)
                 for (int ip = 0; ip < nplist; ++ip)
-                    sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
+                    sres.at((ires * nplist + ip)) *= pcoefficient.at(ip);
+
 
         if(!FIM.empty())
             for (int ip = 0; ip < nplist; ++ip)
@@ -710,15 +765,15 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
     }
 }
 
-void ReturnData::initializeObjectiveFunction() {
+void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
     if (rdata_reporting == RDataReporting::likelihood ||
         rdata_reporting == RDataReporting::full) {
         llh = 0.0;
         std::fill(sllh.begin(), sllh.end(), 0.0);
         std::fill(s2llh.begin(), s2llh.end(), 0.0);
     }
-    if (rdata_reporting == RDataReporting::residuals ||
-        rdata_reporting == RDataReporting::full)
+    if ((rdata_reporting == RDataReporting::residuals ||
+         rdata_reporting == RDataReporting::full) && enable_chi2)
         chi2 = 0.0;
 }
 
@@ -726,12 +781,8 @@ static realtype fres(realtype y, realtype my, realtype sigma_y) {
     return (y - my) / sigma_y;
 }
 
-static realtype fsres(realtype y, realtype sy, realtype my,
-                      realtype sigma_y, realtype ssigma_y) {
-    double r = fres(sy, 0.0, sigma_y);
-    if (ssigma_y > 0)
-        r += fres(y, my, sigma_y * sigma_y / ssigma_y);
-    return r;
+static realtype fres_error(realtype sigma_y, realtype sigma_offset) {
+    return sqrt(2*log(sigma_y) + sigma_offset);
 }
 
 void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
@@ -751,18 +802,34 @@ void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
             continue;
         res.at(iyt) = amici::fres(y_it.at(iy), observedData[iy],
                                   sigmay_it.at(iy));
+        if (sigma_res)
+            res.at(iyt + nt * nytrue) = fres_error(sigmay_it.at(iy),
+                                                   sigma_offset);
     }
 }
 
-void ReturnData::fchi2(const int it) {
+void ReturnData::fchi2(const int it, const ExpData &edata) {
     if (res.empty() || isNaN(chi2))
         return;
 
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * nytrue;
         chi2 += pow(res.at(iyt_true), 2);
+        if (sigma_res && edata.isSetObservedData(it, iy))
+            chi2 += pow(res.at(iyt_true + nt * nytrue), 2) - sigma_offset;
     }
 }
+
+static realtype fsres(realtype y, realtype sy, realtype my,
+                      realtype sigma_y, realtype ssigma_y) {
+    return (sy - ssigma_y * fres(y, my, sigma_y)) / sigma_y;
+}
+
+static realtype fsres_error(realtype sigma_y, realtype ssigma_y,
+                            realtype sigma_offset) {
+    return ssigma_y / ( fres_error(sigma_y, sigma_offset) * sigma_y);
+}
+
 
 void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     if (sres.empty())
@@ -787,6 +854,14 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
             sres.at(idx) = amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
                                         observedData[iy], sigmay_it.at(iy),
                                         ssigmay_it.at(iy + ny * ip));
+            if (sigma_res) {
+                int idx_res =
+                    (iy + it * edata.nytrue() + edata.nytrue() * edata.nt()) *
+                        nplist + ip;
+                sres.at(idx_res) = amici::fsres_error(sigmay_it.at(iy),
+                                                      ssigmay_it.at(iy + ny * ip),
+                                                      sigma_offset);
+            }
         }
     }
 }
@@ -805,20 +880,85 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
 
+    /*
+     * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+log%28s%28u%2Cv%29%29+%2B+0.5+*+%28r%28u%2Cv%29%2Fs%28u%2Cv%29%29%5E2
+     * r = (y - m)
+     * r_du = y_du
+     * d/du(d/(dv)(log(s) + 0.5 (r/s)^2)) =
+     * -(2*y_du*s_dv)*r/s^3 - (2*y_dv*s_du)*r/s^3 + y_du_dv*r/s^2
+     * 22222222222222222222   2222222222222222222   #############
+     *
+     * + (y_dv*y_du)/s^2 + (3*s_dv*s_du)*r^2/s^4 - s_du_dv*r^2/s^3
+     *   111111111111111   333333333333333333333   ***************
+     *
+     * - (s_dv*s_du)/s^2 + (s_du_dv)/s
+     *                     +++++++++++
+     *
+     *
+     * we compute this using fsres:
+     * sres_u * sres_v = (y_du*s - s_du * r) * (y_dv*s - s_dv * r) / s^4
+     * = y_du*y_dv/s^2 - (y_du*s_dv + y_dv*s_du)*r/s^3 + s_du*s_dv*r^2/s^4
+     *   1111111111111   22222222222222222222222222222   33333333333333333
+     *
+     * r should be on the same order as s. We keep 1/s^2 and drop 1/s terms.
+     * drop:
+     * ********: r^2/s^3 term, typically zero anyways
+     * ########: r/s^2 term, requires second order sensitivities
+     * ++++++++: 1/s term, typically zero anyways
+     *
+     * keep:
+     * 123123123: accounted for by sres*sres,
+     * but
+     * - (s_dv*s_du)/s^2 is unaccounted for and
+     * - (s_dv*y_du + s_du*y_dv)*r/s^3 is missing from 2222 and
+     * + 2*(s_du*s_dv)*r^2/s^4 is missing from 3333
+     *
+     * s_dv*y_du and s_du*y_dv are usually zero since we do not have parameters
+     * that affect both observables and sigmas. Accordingly, it is hard to know
+     * emprically whether these terms are important or not.
+     *
+     * This leaves us with
+     * + (s_du*s_dv)(2*r^2-s^2)/s^4
+     * which may be problematic, since this expression does not factorise and
+     * may thus introduce directions of negative curvature.
+     *
+     * For the least squares trick, where error residuals
+     * er = sqrt(log(s) + c), with sensitivity er_du = s_du/(2*s*er). This
+     * would yield terms (s_du*s_dv)*(s^2/(4*er^2))/s^4.
+     * These terms are guaranteed to yield positive curvature, but go to zero
+     * in the limit c -> Infty.
+     *
+     * Empirically, simply taking this limit and dropping all missing terms,
+     * works substantially better. This was evaluated using the fides optimizer
+     * on the Boehm2014 Benchmark example.
+     */
+
     auto observedData = edata.getObservedDataPtr(it);
+
     for (int iy = 0; iy < nytrue; ++iy) {
         if (!edata.isSetObservedData(it, iy))
             continue;
+        auto y = y_it.at(iy);
+        auto m = observedData[iy];
+        auto s = sigmay_it.at(iy);
+        // auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
+            auto dy_i = sy_it.at(iy + ny * ip);
+            auto ds_i = ssigmay_it.at(iy + ny * ip);
+            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
+            realtype sre_i = 0.0;
+            if (sigma_res)
+                sre_i = amici::fsres_error(s, ds_i, sigma_offset);
             for (int jp = 0; jp < nplist; ++jp) {
-                FIM.at(ip + nplist * jp) +=
-                    amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
-                                 observedData[iy], sigmay_it.at(iy),
-                                 ssigmay_it.at(iy + ny * ip))
-                    *
-                    amici::fsres(y_it.at(iy), sy_it.at(iy + ny * jp),
-                                 observedData[iy], sigmay_it.at(iy),
-                                 ssigmay_it.at(iy + ny * jp));
+                auto dy_j = sy_it.at(iy + ny * jp);
+                auto ds_j = ssigmay_it.at(iy + ny * jp);
+                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
+                FIM.at(ip + nplist * jp) += sr_i*sr_j;
+                if (sigma_res) {
+                    auto sre_j = amici::fsres_error(s, ds_j, sigma_offset);
+                    FIM.at(ip + nplist * jp) += sre_i * sre_j;
+                }
+                /*+ ds_i*ds_j*(2*pow(r/pow(s,2.0), 2.0) - 1/pow(s,2.0));*/
             }
         }
     }

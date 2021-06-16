@@ -50,7 +50,8 @@ def _setup_logger(level: Optional[int] = logging.WARNING,
         Capture warnings from Python's warnings module if True (default)
 
     :return:
-        A logging.Logger object for AMICI logging. Note that other AMICI modules
+        A :class:`logging.Logger` object for AMICI logging. Note that other
+        AMICI modules
         should use a logger specific to their namespace instead by calling
         :func:`get_logger`.
     """
@@ -182,7 +183,7 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
             recursion_level = sum(
                 frame.function == 'wrapper_timer'
                 and frame.filename == __file__
-                for frame in getouterframes(currentframe())
+                for frame in getouterframes(currentframe(), context=0)
             )
 
             recursion = ''

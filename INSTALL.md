@@ -171,8 +171,8 @@ Then, follow these steps:
     + `C:\swigwin-3.0.12`
 * Install AMICI using:
 
-    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" \
-        --global-option="build_ext" --global-option="--compiler=mingw32" \
+    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" 
+        --global-option="build_ext" --global-option="--compiler=mingw32" 
         amici --no-cache-dir --verbose`
 
 Possible sources of errors:
@@ -212,7 +212,7 @@ We assume that Visual Studio (not to be confused with Visual Studio Code) is alr
 
 #### openBLAS
 
-To install open BLAS, download the following scripts from AMICI:
+Installation of AMICI using MSVC also requires installation of Basic Linear Algebra Subprograms (BLAS) and OpenBLAS version 0.3.12 is known to work. To install open BLAS, download the following scripts from AMICI:
 
 https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1
 https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd
@@ -221,7 +221,8 @@ The first script needs to be called in Powershell, and it needs to call `compile
 
     C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd
 
-so that it matches your directory structure.
+so that it matches your directory structure. It may also be necessary to modify line 3 of the second script (call to `vcvars64.bat`) in order to match your installation of MSVC.
+
 This will download openBLAS and compile it, creating
 
     C:\BLAS\lib\openblas.lib
@@ -229,15 +230,15 @@ This will download openBLAS and compile it, creating
 
 You will also need to define two environment variables:
 
-    BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"
-    BLAS_CFLAGS="/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"
+    BLAS_LIBS="/LIBPATH:C:/BLAS/lib openblas.lib"
+    BLAS_CFLAGS="/IC:/BLAS/OpenBLAS-0.3.12/OpenBLAS-0.3.12"
     
 One way to do that is to run a PowerShell script with the following commands:
 
-    [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-    [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)
-    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+    [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS-0.3.12/OpenBLAS-0.3.12", [System.EnvironmentVariableTarget]::User)
+    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS-0.3.12/OpenBLAS-0.3.12", [System.EnvironmentVariableTarget]::Process)
 
 The call ending in `Process` sets the environment variable in the current process, and it is no longer in effect in the next process. The call ending in `User` is permanent, and takes effect the next time the user logs on.
 

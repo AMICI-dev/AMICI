@@ -122,7 +122,7 @@ class SteadystateProblem {
     /**
      * @brief Assembles the error message to be thrown.
      * @param errorString const pointer to string with error message
-     * @param status Entry of steady_state_staus to be processed
+     * @param status Entry of steady_state_status to be processed
      */
     void writeErrorString(std::string *errorString, SteadyStateStatus
                           status) const;
@@ -135,7 +135,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param it integer with the index of the current time step
      * @param context SteadyStateContext giving the situation for the flag
-     * @return flag telling how to process state sensis
+     * @return flag telling how to process state sensitivities
      */
     bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
                             SteadyStateContext context);
@@ -248,7 +248,6 @@ class SteadystateProblem {
         return x_;
     };
 
-
     /**
      * @brief Returns state sensitivity at steadystate
      * @return sx
@@ -322,6 +321,12 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
+     * @brief Return the adjoint state
+     * @return xB adjoint state
+     */
+    AmiVector const& getAdjointState() const { return xB_; }
+
+    /**
      * @brief Accessor for xQB
      * @return xQB
      */
@@ -335,7 +340,7 @@ class SteadystateProblem {
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
-     * @return covergence of steady state solver
+     * @return convergence of steady state solver
      */
     bool checkSteadyStateSuccess() const;
 
@@ -348,9 +353,9 @@ class SteadystateProblem {
     AmiVector ewt_;
     /** error weights for backward quadratures, dimension nplist() */
     AmiVector ewtQB_;
-    /** container for relative error calcuation? */
+    /** container for relative error calculation? */
     AmiVector rel_x_newton_;
-    /** container for absolute error calcuation? */
+    /** container for absolute error calculation? */
     AmiVector x_newton_;
     /** state vector */
     AmiVector x_;
@@ -372,7 +377,7 @@ class SteadystateProblem {
     AmiVector xQ_;
     /** quadrature state vector */
     AmiVector xQB_;
-    /** quadrature state vector */
+    /** time-derivative of quadrature state vector */
     AmiVector xQBdot_;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */

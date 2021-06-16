@@ -33,14 +33,15 @@ Features
 * Access to and high customizability of :term:`CVODES` and :term:`IDAS` solver
 * Python, C++, Matlab interface
 * Sensitivity analysis
+
   * forward
   * steady state
   * adjoint
-  * first- and second-order
+  * first- and second-order (second-order Matlab-only)
+
 * Pre-equilibration and pre-simulation conditions
 * Support for
   `discrete events and logical operations <https://academic.oup.com/bioinformatics/article/33/7/1049/2769435>`_
-  (Matlab-only)
 
 Interfaces & workflow
 ======================
@@ -55,3 +56,54 @@ simulation.
 .. image:: gfx/amici_workflow.png
   :alt: AMICI workflow
 
+The functionality of the Python, Matlab and C++ interfaces slightly differ,
+as shown in the following table:
+
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+
+   * - Feature \\ Interface
+     - Python
+     - C++
+     - Matlab
+   * - :term:`SBML` import
+     - yes (:ref:`details <amici_python_sbml_support>`)
+     - no
+     - yes (<=R2017b)
+   * - :term:`PySB` import
+     - yes
+     - no
+     - no
+   * - :term:`DAE` import
+     - no
+     - no
+     - yes
+   * - Forward sensitivities
+     - yes
+     - yes
+     - yes
+   * - Adjoint sensitivities
+     - yes
+     - yes
+     - yes
+   * - Steadystate sensitivities
+     - yes
+     - yes
+     - yes
+   * - Second-order sensitivities
+     - no
+     - no
+     - yes
+   * - Events
+     - yes
+     - yes
+     - yes
+   * - :term:`preequilibration`
+     - yes
+     - yes
+     - yes
+   * - :term:`presimulation`
+     - yes
+     - yes
+     - no

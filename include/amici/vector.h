@@ -14,7 +14,11 @@ namespace amici {
 
 /** Since const N_Vector is not what we want */
 using const_N_Vector =
-    std::add_const<typename std::remove_pointer<N_Vector>::type *>::type;
+    std::add_const_t<typename std::remove_pointer_t<N_Vector>> *;
+
+inline const realtype* N_VGetArrayPointerConst(const_N_Vector x) {
+    return N_VGetArrayPointer(const_cast<N_Vector>(x));
+}
 
 /** AmiVector class provides a generic interface to the NVector_Serial struct */
 class AmiVector {
@@ -119,9 +123,9 @@ class AmiVector {
     int getLength() const;
 
     /**
-     * @brief resets the Vector by filling with zero values
+     * @brief fills vector with zero values
      */
-    void reset();
+    void zero();
 
     /**
      * @brief changes the sign of data elements
@@ -164,7 +168,7 @@ class AmiVector {
     /** main data storage */
     std::vector<realtype> vec_;
 
-    /** N_Vector, will be synchronised such that it points to data in vec */
+    /** N_Vector, will be synchronized such that it points to data in vec */
     N_Vector nvec_ {nullptr};
 
     /**
@@ -283,9 +287,9 @@ class AmiVectorArray {
     int getLength() const;
 
     /**
-     * @brief resets every AmiVector in AmiVectorArray
+     * @brief set every AmiVector in AmiVectorArray to zero
      */
-    void reset();
+    void zero();
 
     /**
      * @brief flattens the AmiVectorArray to a vector in row-major format
@@ -305,7 +309,7 @@ class AmiVectorArray {
     std::vector<AmiVector> vec_array_;
 
     /**
-     * N_Vector array, will be synchronised such that it points to
+     * N_Vector array, will be synchronized such that it points to
      * respective elements in the vec_array
      */
     std::vector<N_Vector> nvec_array_;

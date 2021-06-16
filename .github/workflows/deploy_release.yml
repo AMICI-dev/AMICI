@@ -5,53 +5,18 @@ on:
       - published
 
 jobs:
-  pages:
-    name: Deploy GH-Pages
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@master
-    - run: git fetch --prune --unshallow
-
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-          bison \
-          ragel \
-          graphviz \
-          texlive-latex-extra
-
-    - name: Build doxygen
-      run: |
-        sudo scripts/downloadAndBuildDoxygen.sh
-
-    - name: Run doxygen
-      run: |
-        scripts/run-doxygen.sh
-
-    - name: Deploy 🚀
-      uses: JamesIves/github-pages-deploy-action@3.5.7
-      with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: doc # The folder the action should deploy.
-
   pypi:
     name: Deploy PyPI
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 20
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig" >> $GITHUB_ENV
 
     - name: Build swig4
       run: |
@@ -68,3 +33,28 @@ jobs:
         password: ${{ secrets.pypi_password }}
         packages_dir: python/sdist/dist
 
+  bioSimulatorsUpdateCliAndDockerImage:
+    name: Release to BioSimulators
+    needs: pypi
+    runs-on: ubuntu-latest
+    env:
+      # Owner/repository-id for the GitHub repository for the downstream command-line interface and Docker image
+      DOWNSTREAM_REPOSITORY: biosimulators/Biosimulators_AMICI
+
+      # Username/token to use the GitHub API to trigger an action on the GitHub repository for the downstream
+      # command-line interface and Docker image. Tokens can be generated at https://github.com/settings/tokens.
+      # The token should have the scope `repo`
+      GH_ISSUE_USERNAME: ${{ secrets.BIOSIMULATORS_USERNAME }}
+      GH_ISSUE_TOKEN: ${{ secrets.BIOSIMULATORS_TOKEN }}
+    steps:
+      - name: Trigger GitHub action that will build and release the downstream command-line interface and Docker image
+        run: |
+          PACKAGE_VERSION="${GITHUB_REF/refs\/tags\/v/}"
+          WORKFLOW_FILE=ci.yml
+
+          curl \
+            -X POST \
+            -u ${GH_ISSUE_USERNAME}:${GH_ISSUE_TOKEN} \
+            -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/${DOWNSTREAM_REPOSITORY}/actions/workflows/${WORKFLOW_FILE}/dispatches \
+            -d "{\"ref\": \"dev\", \"inputs\": {\"simulatorVersion\": \"${PACKAGE_VERSION}\", \"simulatorVersionLatest\": \"true\"}}"

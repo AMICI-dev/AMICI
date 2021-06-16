@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
+<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left" alt="AMICI logo">
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
@@ -12,8 +12,8 @@ AMICI provides a multi-language (Python, C++, Matlab) interface for the
 (for algebraic differential equations). AMICI allows the user to read
 differential equation models specified as [SBML](http://sbml.org/)
 or [PySB](http://pysb.org/)
-and automatically compiles such models into `.mex` simulation files
-(Matlab), C++ executables or Python modules.
+and automatically compiles such models into Python modules, C++ libraries or
+Matlab `.mex` simulation files.
 
 In contrast to the (no longer maintained)
 [sundialsTB](https://computing.llnl.gov/projects/sundials/sundials-software)
@@ -31,24 +31,26 @@ constrained optimization problems.
 
 ## Current build status
 
-<a href="https://badge.fury.io/py/amici" alt="PyPI version">
-  <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/AMICI-dev/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/AMICI-dev/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg"></a>
-<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master" alt="SonarCloud">
-  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index"></a>
-<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
-  <img src="https://zenodo.org/badge/43677177.svg"></a>
-<a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
- <img src="https://readthedocs.org/projects/amici/badge/?version=latest"></a>
+<a href="https://badge.fury.io/py/amici">
+  <img src="https://badge.fury.io/py/amici.svg" alt="PyPI version"></a>
+<a href="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml">
+  <img src="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml/badge.svg" alt="PyPI installation"></a>
+<a href="https://travis-ci.com/AMICI-dev/AMICI">
+  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master" alt="Build Status"></a>
+<a href="https://codecov.io/gh/AMICI-dev/AMICI">
+  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg" alt="Code coverage"></a>
+<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master">
+  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index" alt="SonarCloud technical debt"></a>
+<a href="https://zenodo.org/badge/latestdoi/43677177">
+  <img src="https://zenodo.org/badge/43677177.svg" alt="Zenodo DOI"></a>
+<a href="https://amici.readthedocs.io/en/latest/?badge=latest">
+ <img src="https://readthedocs.org/projects/amici/badge/?version=latest" alt="ReadTheDocs status"></a>
 <a href="https://bestpractices.coreinfrastructure.org/projects/3780">
-  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge"></a>
+  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge" alt="coreinfrastructure bestpractices badge"></a>
 
 ## Features
 
-* SBML import (see details below)
+* SBML import
 * PySB import
 * Generation of C++ code for model simulation and sensitivity
   computation
@@ -79,27 +81,28 @@ is then used for model simulation.
 ## Getting started
 
 The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
-To install AMICI, first read the
-[installation instructions](http://amici-dev.github.io/AMICI/md__i_n_s_t_a_l_l.html).
+To install AMICI, first read the installation instructions for
+[Python](https://amici.readthedocs.io/en/latest/python_installation.html),
+[C++](https://amici.readthedocs.io/en/develop/cpp_installation.html) or
+[Matlab](https://amici.readthedocs.io/en/develop/matlab_installation.html).
 
 To get you started with Python-AMICI, the best way might be checking out this
-[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/python/examples/example_steadystate/ExampleSteadystate.ipynb).
+[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/documentation/GettingStarted.ipynb).
 
 To get started with Matlab-AMICI, various examples are available
 in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/examples).
 
-Comprehensive documentation on installation and usage of AMICI is available
-online for the [python](https://amici.readthedocs.io/en/latest/) and 
-[MATLAB/C++](http://amici-dev.github.io/AMICI/) interfaces.
+Comprehensive documentation is available at
+[https://amici.readthedocs.io/en/latest/](https://amici.readthedocs.io/en/latest/).
 
-Any [contributions](http://amici-dev.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
+Any [contributions](https://amici.readthedocs.io/en/develop/CONTRIBUTING.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
-### Getting help
+## Getting help
 
 In case of questions or problems with using AMICI, feel free to post an
-[issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
+[issue](https://github.com/AMICI-dev/AMICI/issues) on GitHub. We are trying to
 get back to you quickly.
 
 ## Projects using AMICI
@@ -126,15 +129,22 @@ If you used AMICI in your work, we are happy to include
 your project, please let us know via a Github issue.
 
 When using AMICI in your project, please cite
-* Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017).
-  Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.
-  Plos Computational Biology, 13(1), e1005331.
-  doi:[10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)
-and/or
-* Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017).
-  Parameter estimation for dynamical systems with discrete events and logical
-  operations. Bioinformatics, 33(7), 1049-1056.
-  doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
+* Fröhlich, F., Weindl, D., Schälte, Y., Pathirana, D., Paszkowski, Ł., Lines, G.T., Stapor, P. and Hasenauer, J., 2021.
+  AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models. Bioinformatics, btab227,
+  [DOI:10.1093/bioinformatics/btab227](https://doi.org/10.1093/bioinformatics/btab227).
+```
+@article{frohlich2020amici,
+  title={AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models},
+  author={Fr{\"o}hlich, Fabian and Weindl, Daniel and Sch{\"a}lte, Yannik and Pathirana, Dilan and Paszkowski, {\L}ukasz and Lines, Glenn Terje and Stapor, Paul and Hasenauer, Jan},
+  journal = {Bioinformatics},
+  year = {2021},
+  month = {04},
+  issn = {1367-4803},
+  doi = {10.1093/bioinformatics/btab227},
+  note = {btab227},
+  eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btab227/36866220/btab227.pdf},
+}
+```
   
 When presenting work that employs AMICI, feel free to use one of the icons in 
 [documentation/gfx/](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx),
@@ -143,31 +153,5 @@ which are available under a
 license:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75">
+  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75" alt="AMICI Logo">
 </p>
-
-## Status of SBML support in Python-AMICI
-
-Python-AMICI currently passes 696 out of the 1780 (~39%) test cases from
-the semantic
-[SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
-([current status](https://github.com/AMICI-dev/AMICI/actions)).
-
-In addition, we currently plan to add support for the following features
-(see corresponding issues for details and progress):
-
-- Events (currently Matlab-only)
-- Algebraic rules
-- Models without species
-
-contributions are welcome.
-
-However, the following features are unlikely to be supported:
-
-- SBML extensions
-- `factorial()`, `ceil()`, `floor()`, due to incompatibility with
-  symbolic sensitivity computations
-- initial assignments for parameters
-- `delay()` due to missing SUNDIALS solver support
-
-In addition to SBML, we also plan to implement support for the [Simulation Experiment Description Markup Language (SED-ML)](https://sed-ml.org/).

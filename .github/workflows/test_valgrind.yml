@@ -3,16 +3,18 @@ on:
   push:
     branches:
       - master
+      - feature_cpp_hierarchical_derivatives
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   build:
     name: Tests Valgrind
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
@@ -37,4 +39,12 @@ jobs:
 
     - name: C++ tests / Valgrind
       run: |
-        scripts/run-valgrind.sh
+        scripts/run-valgrind-cpp.sh
+
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
+
+    - name: Python tests / Valgrind
+      run: |
+        scripts/run-valgrind-py.sh

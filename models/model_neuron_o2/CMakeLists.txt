@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.3)
 
 if(POLICY CMP0060)
   cmake_policy(SET CMP0060 NEW)
@@ -32,11 +32,7 @@ message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_o2_J.cpp
-${MODEL_DIR}/model_neuron_o2_JB.cpp
-${MODEL_DIR}/model_neuron_o2_JDiag.cpp
-${MODEL_DIR}/model_neuron_o2_JSparse.cpp
-${MODEL_DIR}/model_neuron_o2_JSparseB.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_o2_JSparse.cpp
 ${MODEL_DIR}/model_neuron_o2_Jrz.cpp
 ${MODEL_DIR}/model_neuron_o2_Jy.cpp
 ${MODEL_DIR}/model_neuron_o2_Jz.cpp

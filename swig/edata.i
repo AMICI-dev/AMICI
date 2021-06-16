@@ -6,5 +6,7 @@
 using namespace amici;
 %}
 
+%ignore ConditionContext;
+
 // Process symbols in header
 %include "amici/edata.h"

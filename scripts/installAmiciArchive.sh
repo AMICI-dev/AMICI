@@ -32,6 +32,9 @@ else
     source ${AMICI_PATH}/build/venvArchive/bin/activate
 fi
 
-pip install --upgrade pip setuptools pkgconfig wheel
 pip install $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1)
+
+# verify import succeeds
+python -m amici
+
 deactivate

@@ -21,7 +21,7 @@ class ExampleNeuron(AmiciExample):
         self.modelOptions['pscale'] = 2
 
         self.solverOptions['atol'] = 1e-16
-        self.solverOptions['maxsteps'] = 1e45
+        self.solverOptions['maxsteps'] = 1e5
         self.solverOptions['nmaxevent'] = 22
         self.solverOptions['rtol'] = 1e-12
         self.solverOptions['sens_ind'] = []

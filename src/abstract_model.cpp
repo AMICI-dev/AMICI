@@ -2,13 +2,13 @@
 
 namespace amici {
 
-const std::string
+std::string
 AbstractModel::getAmiciVersion() const
 {
     throw AmiException("Version not set during code generation");
 }
 
-const std::string
+std::string
 AbstractModel::getAmiciCommit() const
 {
     throw AmiException("Commit not set during code generation");
@@ -20,7 +20,7 @@ AbstractModel::fx0(realtype* /*x0*/,
                    const realtype* /*p*/,
                    const realtype* /*k*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -35,7 +35,8 @@ void
 AbstractModel::fx0_fixedParameters(realtype* /*x0*/,
                                    const realtype /*t*/,
                                    const realtype* /*p*/,
-                                   const realtype* /*k*/)
+                                   const realtype* /*k*/,
+                                   gsl::span<const int> /*reinitialization_state_idxs*/)
 {
     // no-op default implementation
 }
@@ -46,7 +47,8 @@ AbstractModel::fsx0_fixedParameters(realtype* /*sx0*/,
                                     const realtype* /*x0*/,
                                     const realtype* /*p*/,
                                     const realtype* /*k*/,
-                                    const int /*ip*/)
+                                    const int /*ip*/,
+                                    gsl::span<const int> /*reinitialization_state_idxs*/)
 {
     // no-op default implementation
 }
@@ -59,7 +61,7 @@ AbstractModel::fsx0(realtype* /*sx0*/,
                     const realtype* /*k*/,
                     const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -81,7 +83,7 @@ AbstractModel::fstau(realtype* /*stau*/,
                      const int /*ip*/,
                      const int /*ie*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -95,7 +97,7 @@ AbstractModel::fy(realtype* /*y*/,
                   const realtype* /*h*/,
                   const realtype* /*w*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -111,7 +113,7 @@ AbstractModel::fdydp(realtype* /*dydp*/,
                      const realtype* /*w*/,
                      const realtype* /*dwdp*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -126,7 +128,7 @@ AbstractModel::fdydx(realtype* /*dydx*/,
                      const realtype* /*w*/,
                      const realtype* /*dwdx*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -140,7 +142,7 @@ AbstractModel::fz(realtype* /*z*/,
                   const realtype* /*k*/,
                   const realtype* /*h*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -156,7 +158,7 @@ AbstractModel::fsz(realtype* /*sz*/,
                    const realtype* /*sx*/,
                    const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -170,7 +172,7 @@ AbstractModel::frz(realtype* /*rz*/,
                    const realtype* /*k*/,
                    const realtype* /*h*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -186,7 +188,7 @@ AbstractModel::fsrz(realtype* /*srz*/,
                     const realtype* /*sx*/,
                     const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -201,7 +203,7 @@ AbstractModel::fdzdp(realtype* /*dzdp*/,
                      const realtype* /*h*/,
                      const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -215,7 +217,7 @@ AbstractModel::fdzdx(realtype* /*dzdx*/,
                      const realtype* /*k*/,
                      const realtype* /*h*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -230,7 +232,7 @@ AbstractModel::fdrzdp(realtype* /*drzdp*/,
                       const realtype* /*h*/,
                       const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -244,7 +246,7 @@ AbstractModel::fdrzdx(realtype* /*drzdx*/,
                       const realtype* /*k*/,
                       const realtype* /*h*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -260,7 +262,7 @@ AbstractModel::fdeltax(realtype* /*deltax*/,
                        const realtype* /*xdot*/,
                        const realtype* /*xdot_old*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -280,7 +282,7 @@ AbstractModel::fdeltasx(realtype* /*deltasx*/,
                         const realtype* /*sx*/,
                         const realtype* /*stau*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -297,7 +299,7 @@ AbstractModel::fdeltaxB(realtype* /*deltaxB*/,
                         const realtype* /*xdot_old*/,
                         const realtype* /*xB*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -315,7 +317,7 @@ AbstractModel::fdeltaqB(realtype* /*deltaqB*/,
                         const realtype* /*xdot_old*/,
                         const realtype* /*xB*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -326,7 +328,7 @@ AbstractModel::fsigmay(realtype* /*sigmay*/,
                        const realtype* /*p*/,
                        const realtype* /*k*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -338,7 +340,7 @@ AbstractModel::fdsigmaydp(realtype* /*dsigmaydp*/,
                           const realtype* /*k*/,
                           const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -349,7 +351,7 @@ AbstractModel::fsigmaz(realtype* /*sigmaz*/,
                        const realtype* /*p*/,
                        const realtype* /*k*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -361,7 +363,7 @@ AbstractModel::fdsigmazdp(realtype* /*dsigmazdp*/,
                           const realtype* /*k*/,
                           const int /*ip*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -375,7 +377,7 @@ AbstractModel::fJy(realtype* /*nllh*/,
                    const realtype* /*sigmay*/,
                    const realtype* /*my*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -389,7 +391,7 @@ AbstractModel::fJz(realtype* /*nllh*/,
                    const realtype* /*sigmaz*/,
                    const realtype* /*mz*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -402,7 +404,7 @@ AbstractModel::fJrz(realtype* /*nllh*/,
                     const realtype* /*z*/,
                     const realtype* /*sigmaz*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -416,7 +418,23 @@ AbstractModel::fdJydy(realtype* /*dJydy*/,
                       const realtype* /*sigmay*/,
                       const realtype* /*my*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void
+AbstractModel::fdJydy_colptrs(SUNMatrixWrapper &/*indexptrs*/,
+                              int /*index*/) {
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void
+AbstractModel::fdJydy_rowvals(SUNMatrixWrapper & /*indexptrs*/,
+                              int /*index*/) {
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -430,7 +448,7 @@ AbstractModel::fdJydsigma(realtype* /*dJydsigma*/,
                           const realtype* /*sigmay*/,
                           const realtype* /*my*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -444,7 +462,7 @@ AbstractModel::fdJzdz(realtype* /*dJzdz*/,
                       const realtype* /*sigmaz*/,
                       const realtype* /*mz*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -458,7 +476,7 @@ AbstractModel::fdJzdsigma(realtype* /*dJzdsigma*/,
                           const realtype* /*sigmaz*/,
                           const realtype* /*mz*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -471,7 +489,7 @@ AbstractModel::fdJrzdz(realtype* /*dJrzdz*/,
                        const realtype* /*rz*/,
                        const realtype* /*sigmaz*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -484,7 +502,7 @@ AbstractModel::fdJrzdsigma(realtype* /*dJrzdsigma*/,
                            const realtype* /*rz*/,
                            const realtype* /*sigmaz*/)
 {
-    throw AmiException("Requested functionality is not supported as (%s) is "
+    throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
 }
@@ -499,7 +517,9 @@ AbstractModel::fw(realtype* /*w*/,
                   const realtype* /*tcl*/,
                   const realtype* /*spl*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
@@ -515,19 +535,25 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*spl*/,
                      const realtype* /*sspl*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
-AbstractModel::fdwdp_colptrs(sunindextype* /*indexptrs*/)
+AbstractModel::fdwdp_colptrs(SUNMatrixWrapper &/*dwdp*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
-AbstractModel::fdwdp_rowvals(sunindextype* /*indexvals*/)
+AbstractModel::fdwdp_rowvals(SUNMatrixWrapper &/*dwdp*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
@@ -544,7 +570,9 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*sspl*/,
                      const int /*ip*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
@@ -558,19 +586,51 @@ AbstractModel::fdwdx(realtype* /*dwdx*/,
                      const realtype* /*tcl*/,
                      const realtype* /*spl*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
-AbstractModel::fdwdx_colptrs(sunindextype* /*indexptrs*/)
+AbstractModel::fdwdx_colptrs(SUNMatrixWrapper &/*dwdx*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
 }
 
 void
-AbstractModel::fdwdx_rowvals(sunindextype* /*indexvals*/)
+AbstractModel::fdwdx_rowvals(SUNMatrixWrapper &/*dwdx*/)
 {
-    // no-op default implementation
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void
+AbstractModel::fdwdw(realtype */*dwdw*/,
+                     realtype /*t*/,
+                     const realtype */*x*/,
+                     const realtype */*p*/,
+                     const realtype */*k*/,
+                     const realtype */*h*/,
+                     const realtype */*w*/,
+                     const realtype */*tcl*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdwdw_colptrs(SUNMatrixWrapper &/*dwdw*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdwdw_rowvals(SUNMatrixWrapper &/*dwdw*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__);
 }
 
 std::vector<HermiteSpline> 
