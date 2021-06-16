@@ -215,6 +215,21 @@ functions = {
             'const realtype *xdot, const realtype *xdot_old, '
             'const realtype *sx, const realtype *stau)'
     },
+    'deltaxB': {
+        'signature':
+            '(realtype *deltaxB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const int ip, const int ie, '
+            'const realtype *xdot, const realtype *xdot_old, '
+            'const realtype *xB)'
+    },
+    'fdeltaqB': {
+        'signature':
+            '(realtype *deltaxB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const int ie, const realtype *xdot, '
+            'const realtype *xdot_old, const realtype *xB)'
+    },
     'w': {
         'signature':
             '(realtype *w, const realtype t, const realtype *x, '
