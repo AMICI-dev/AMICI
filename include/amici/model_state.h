@@ -44,11 +44,8 @@ struct ModelState {
      */
     std::vector<int> plist;
 
-    /** temporary storage for splines */
-    mutable std::vector<realtype> spl_;
-
-    /** temporary storage for splines in the model */
-    mutable std::vector<HermiteSpline> splines_;
+    /** temporary storage for spline values */
+    std::vector<realtype> spl_;
 };
 
 
@@ -269,8 +266,8 @@ struct ModelStateDerived {
      */
     std::vector<realtype> deltaqB_;
 
-    /** temporary storage for sensitivities of splines */
-    mutable SUNMatrixWrapper sspl_;
+    /** temporary storage for sensitivity values of splines */
+    SUNMatrixWrapper sspl_;
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: `nx_solver`) */

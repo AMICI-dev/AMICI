@@ -246,16 +246,18 @@ void Model::initializeStates(AmiVector &x) {
 void Model::initializeSplines() {
     splines_ = fspline_constructors(state_.unscaledParameters.data(),
                                     state_.fixedParameters.data());
-    nspl = splines_.size();
-    spl_.resize(nspl, 0.0);
+    int nspl = splines_.size();
+    state_.spl_.resize(nspl, 0.0);
     for (int ispl = 0; ispl < nspl; ispl++)
         splines_[ispl].computeCoefficients();
 }
 
 void Model::initializeSplineSensitivities() {
-    sspl_ = SUNMatrixWrapper(nspl, nplist());
+    int nspl = splines_.size();
     int spline_offset = 0;
     int allnodes = 0;
+
+    derived_state_.sspl_ = SUNMatrixWrapper(nspl, nplist());
     for (int ispl = 0; ispl < nspl; ispl++)
         allnodes += splines_[ispl].n_nodes();
 
@@ -1375,7 +1377,6 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
 
-    realtype *sspl_data = sspl_.data();
     derived_state_.dydp_.assign(ny * nplist(), 0.0);
     fw(t, x.data());
     fdwdp(t, x.data());
@@ -1965,22 +1966,24 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
 void Model::fspl(const realtype t) {
     for (int ispl = 0; ispl < nspl; ispl++) {
         if (splines_[ispl].get_logarithmic_parametrization()) {
-            spl_[ispl] = std::exp(splines_[ispl].getValue(t));
+            state_.spl_[ispl] = std::exp(splines_[ispl].getValue(t));
         } else {
-            spl_[ispl] = splines_[ispl].getValue(t);
+            state_.spl_[ispl] = splines_[ispl].getValue(t);
         }
     }
 }
 
 void Model::fsspl(const realtype t) {
-    sspl_.reset();
-    realtype *sspl_data = sspl_.data();
+    derived_state_.sspl_.zero();
+    realtype *sspl_data = derived_state_.sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++) {
             if (splines_[ispl].get_logarithmic_parametrization()) {
-                sspl_data[ispl + nspl * ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
+                sspl_data[ispl + nspl * ip] =
+                    state_.spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
             } else {
-                sspl_data[ispl + nspl * ip] = splines_[ispl].getSensitivity(t, ip);
+                sspl_data[ispl + nspl * ip] =
+                    splines_[ispl].getSensitivity(t, ip);
             }
         }
     }
@@ -1991,7 +1994,7 @@ void Model::fw(const realtype t, const realtype *x) {
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
-       spl_.data());
+       state_.spl_.data());
 
     if (always_check_finite_) {
         app->checkFinite(derived_state_.w_, "w");
@@ -2015,7 +2018,8 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         fdwdp(dwdp_hierarchical_.at(0).data(), t, x,
               state_.unscaledParameters.data(), state_.fixedParameters.data(),
               state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-              state_.stotal_cl.data(), spl_.data(), sspl_.data());
+              state_.stotal_cl.data(), state_.spl_.data(),
+              derived_state_.sspl_.data());
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
@@ -2031,8 +2035,8 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         fdwdp(derived_state_.dwdp_.data(), t, x,
               state_.unscaledParameters.data(), state_.fixedParameters.data(),
               state_.h.data(), derived_state_.w_.data(),
-              state_.total_cl.data(), state_.stotal_cl.data(), spl_.data(),
-              sspl_.data());
+              state_.total_cl.data(), state_.stotal_cl.data(),
+              state_.spl_.data(), derived_state_.sspl_.data());
     }
 
     if (always_check_finite_) {
@@ -2057,7 +2061,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
         fdwdx(dwdx_hierarchical_.at(0).data(), t, x,
               state_.unscaledParameters.data(), state_.fixedParameters.data(),
               state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-              spl_.data());
+              state_.spl_.data());
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
              irecursion++) {
@@ -2074,7 +2078,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
               state_.unscaledParameters.data(),
               state_.fixedParameters.data(), state_.h.data(),
               derived_state_.w_.data(),
-              state_.total_cl.data(), spl_.data());
+              state_.total_cl.data(), state_.spl_.data());
     }
 
     if (always_check_finite_) {
