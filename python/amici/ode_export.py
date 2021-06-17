@@ -145,7 +145,7 @@ functions = {
     'dspline_slopesdp': {
         'signature':
             '(realtype *dspline_slopesdp, const realtype *p, const realtype *k)'
-    }
+    },
     'dwdw': {
         'signature':
             '(realtype *dwdw, const realtype t, const realtype *x, '
@@ -1082,17 +1082,20 @@ class ODEModel:
             imported SBML model
         """
 
+        # add splines as expressions to the model
+        # saved for later substituting into the fluxes
+        spline_subs = {}
+
         # HACK remove real=True assumptions from spline symbols
         #   must be done as the first thing because it modifies the SbmlImporter
-        for spl in si.splines:
+        for ispl, spl in enumerate(si.splines):
+            # TODO: I don't get what the following three lines are there for...
             old_sbmlId = spl.sbmlId
             new_sbmlId = sp.Symbol(spl.sbmlId.name)
             si._replace_in_all_expressions(old_sbmlId, new_sbmlId)
 
-        # add splines as expressions to the model
-        spline_subs = {}  # saved for later substituting into the fluxes
-        for spl in si.splines:
-            spline_expr = spl.odeModelSymbol(si)
+            # spline_expr = spl.odeModelSymbol(si)
+            spline_expr = sp.Symbol(f'spl_{ispl}')
             spline_subs[spl.sbmlId] = spline_expr
             self.add_component(Expression(
                 identifier=spl.sbmlId,
@@ -1927,8 +1930,7 @@ class ODEModel:
             self._derivative('xdot', 'x', name=name)
 
         elif name == 'dxdotdp_explicit':
-            # force symbols
-            self._eqs[name] = self.sym(name)
+            self._derivative('xdot', 'p', name=name)
 
         elif name == 'spl':
             self._eqs[name] = self.sym(name)
@@ -1936,10 +1938,6 @@ class ODEModel:
         elif name == 'sspl':
             # force symbols
             self._eqs[name] = self.sym(name)
-
-        elif name == 'dxdotdp_explicit':
-            self._derivative('xdot', 'p', name=name)
-
         elif name == 'spline_values':
             # force symbols
             self._eqs[name] = sp.Matrix([

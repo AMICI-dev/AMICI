@@ -606,10 +606,13 @@ def _check_unsupported_functions(sym: sp.Basic,
     if full_sym is None:
         full_sym = sym
 
-    unsupported_functions = [
+    unsupported_functions = (
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.function.UndefinedFunction
-    ]
+        sp.functions.sec, sp.functions.csc, sp.functions.cot,
+        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
+        sp.functions.acsch, sp.functions.acoth,
+        sp.Mod, sp.core.function.UndefinedFunction
+    )
 
     unsupp_fun_type = next(
         (

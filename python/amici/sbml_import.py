@@ -13,6 +13,7 @@ import math
 import warnings
 import logging
 import xml.etree.ElementTree as ET
+import itertools as itt
 import copy
 from typing import (
     Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
@@ -950,7 +951,7 @@ class SbmlImporter:
                 if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
                     annotation = AbstractSpline.getAnnotation(rule)
                     if annotation is not None:
-                        if sym_id not in self.symbols[SymbolId.PARAMETER].keys():
+                        if sbml_var not in self.sbml.getListOfParameters():
                             raise NotImplementedError(
                                 "Spline AssignmentRules are only supported for "
                                 "SBML parameters at the moment."
@@ -1620,7 +1621,7 @@ class SbmlImporter:
             )
             ele_name = var_or_math.element_name
         else:
-            math_string = var_or_math
+            math_string = str(var_or_math)
             ele_name = 'string'
         math_string = replace_logx(math_string)
         try:
@@ -1704,7 +1705,8 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        if a is None or self._sympy_from_sbml_math(a) is None:
+        if a is None or a.getFormula() == '' or \
+                self._sympy_from_sbml_math(a.getFormula()) is None:
             return False
 
         return True
