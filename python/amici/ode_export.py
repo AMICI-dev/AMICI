@@ -1921,6 +1921,18 @@ class ODEModel:
                 for ie in range(self.num_events())
             ]
 
+        elif name == 'dtaudx':
+            self._eqs[name] = [
+                -self.eq('drootdx')[ie, :] / self.eq('drootdt_total')[ie]
+                for ie in range(self.num_events())
+            ]
+
+        elif name == 'dtaudp':
+            self._eqs[name] = [
+                -self.eq('drootdp')[ie, :] / self.eq('drootdt_total')[ie]
+                for ie in range(self.num_events())
+            ]
+
         elif name == 'deltasx':
             event_eqs = []
             for ie, event in enumerate(self._events):
@@ -1946,9 +1958,25 @@ class ODEModel:
                     tmp_eq = smart_multiply(
                         (self.eq('xdot_old') - self.eq('xdot')),
                         self.eq('stau')[ie])
-
                 event_eqs.append(tmp_eq)
+            self._eqs[name] = event_eqs
 
+        elif name == 'deltaxB':
+            event_eqs = []
+            for ie, event in enumerate(self._events):
+                tmp_eq = smart_multiply(
+                    (self.eq('xdot_old') - self.eq('xdot')),
+                    self.eq('dtaudx')[ie])
+                event_eqs.append(tmp_eq)
+            self._eqs[name] = event_eqs
+
+        elif name == 'deltaqB':
+            event_eqs = []
+            for ie, event in enumerate(self._events):
+                tmp_eq = smart_multiply(
+                    (self.eq('xdot_old') - self.eq('xdot')),
+                    self.eq('dtaudp')[ie])
+                event_eqs.append(tmp_eq)
             self._eqs[name] = event_eqs
 
         elif name == 'xdot_old':
