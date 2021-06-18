@@ -5,6 +5,7 @@ from pathlib import Path
 
 from amici import (
     AmiciModel,
+    ExpData,
     import_model_module,
     runAmiciSimulation,
     SbmlImporter,
@@ -171,3 +172,42 @@ def check_trajectories_with_forward_sensitivities(
     rdata = runAmiciSimulation(amici_model, solver=solver)
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
     np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+
+
+def check_trajectories_with_adjoint_sensitivities(
+        amici_model: AmiciModel
+):
+    """
+    Check whether the AMICI simulation matches a known solution
+    (ideally an analytically calculated one).
+    """
+
+    # First compute a dummy experimental data to use adjoints
+    sigmay = .1
+    solver = amici_model.getSolver()
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-12)
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    edata = ExpData(rdata, sigmay, 0.)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = amici_model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    solver.setAbsoluteToleranceFSA(1e-15)
+    solver.setRelativeToleranceFSA(1e-13)
+    rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = amici_model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.adjoint)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-13)
+    solver.setAbsoluteToleranceFSA(1e-15)
+    solver.setRelativeToleranceFSA(1e-13)
+    rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+
+    np.testing.assert_almost_equal(rdata_fsa['sllh'], rdata_asa['sllh'], decimal=8)

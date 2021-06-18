@@ -8,6 +8,7 @@ from util import (
     create_amici_model,
     check_trajectories_without_sensitivities,
     check_trajectories_with_forward_sensitivities,
+    check_trajectories_with_adjoint_sensitivities
 )
 
 @pytest.fixture(params=[
@@ -67,6 +68,7 @@ def test_models(model):
     check_trajectories_with_forward_sensitivities(amici_model,
                                                   result_expected_x,
                                                   result_expected_sx)
+    check_trajectories_with_adjoint_sensitivities(amici_model)
 
 
 def get_model_definition(model_name):
