@@ -139,7 +139,7 @@ void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
 
     update_ptrs();
     capacity_ = NNZ;
-    assert((NNZ && columns() && rows()) ^ !matrix_);
+    assert((NNZ && columns() && rows()) || !matrix_);
 }
 
 void SUNMatrixWrapper::realloc() {
@@ -152,7 +152,7 @@ void SUNMatrixWrapper::realloc() {
 
     update_ptrs();
     capacity_ = num_nonzeros_;
-    assert(capacity() ^ !matrix_);
+    assert(capacity() || !matrix_);
 }
 
 sunindextype SUNMatrixWrapper::rows() const {
@@ -161,14 +161,6 @@ sunindextype SUNMatrixWrapper::rows() const {
             num_rows_ == SM_ROWS_S(matrix_) :
             num_rows_ == SM_ROWS_D(matrix_)));
     return num_rows_;
-}
-
-sunindextype SUNMatrixWrapper::columns() const {
-    assert(!matrix_ ||
-           (matrix_id() == SUNMATRIX_SPARSE ?
-            num_columns_ == SM_COLUMNS_S(matrix_) :
-            num_columns_ == SM_COLUMNS_D(matrix_)));
-    return num_columns_;
 }
 
 sunindextype SUNMatrixWrapper::num_indexptrs() const {
@@ -210,7 +202,8 @@ int SUNMatrixWrapper::sparsetype() const {
 
 void SUNMatrixWrapper::scale(realtype a) {
     if (matrix_) {
-        for (sunindextype idx = 0; idx < capacity(); ++idx)
+        auto cap = capacity();
+        for (sunindextype idx = 0; idx < cap; ++idx)
             data_[idx] *= a;
     }
 }
@@ -295,17 +288,37 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
         return;
 
     /* Carry out actual multiplication */
-    sunindextype idx;
+    auto c_ptr = c.data();
+    auto b_ptr = b.data();
+
     if (transpose) {
-        for (int icols = 0; icols < (int)cols.size(); ++icols)
-            for (idx = get_indexptr(cols.at(icols));
-                 idx < get_indexptr(cols.at(icols) + 1); ++idx)
-                c.at(icols) += get_data(idx) * b.at(get_indexval(idx));
+        auto cols_size = cols.size();
+        for (std::size_t icols = 0; icols < cols_size; ++icols) {
+            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
+            for (sunindextype idx = get_indexptr(cols.at(icols));
+                 idx < idx_next_col; ++idx) {
+
+                auto idx_val = get_indexval(idx);
+                assert(icols > 0 && icols < c.size());
+                assert(idx_val > 0 && idx_val < b.size());
+
+                c_ptr[icols] += get_data(idx) * b_ptr[idx_val];
+            }
+        }
     } else {
-        for (sunindextype icols = 0; icols < columns(); ++icols)
-            for (idx = get_indexptr(cols.at(icols));
-                 idx < get_indexptr(cols.at(icols)+1); ++idx)
-                c.at(get_indexval(idx)) += get_data(idx) * b.at(icols);
+        for (sunindextype icols = 0; icols < columns(); ++icols) {
+            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
+
+            for (sunindextype idx = get_indexptr(cols.at(icols));
+                 idx < idx_next_col; ++idx) {
+                auto idx_val = get_indexval(idx);
+
+                assert(icols > 0 && icols < b.size());
+                assert(idx_val > 0 && idx_val < c.size());
+
+                c_ptr[idx_val] += get_data(idx) * b_ptr[icols];
+            }
+        }
     }
 }
 

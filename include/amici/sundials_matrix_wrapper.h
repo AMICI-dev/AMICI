@@ -126,7 +126,13 @@ class SUNMatrixWrapper {
      * @brief Get the number of columns
      * @return number of columns
      */
-    sunindextype columns() const;
+    sunindextype columns() const {
+        assert(!matrix_ ||
+               (matrix_id() == SUNMATRIX_SPARSE ?
+                                                num_columns_ == SM_COLUMNS_S(matrix_) :
+                                                num_columns_ == SM_COLUMNS_D(matrix_)));
+        return num_columns_;
+    }
 
     /**
      * @brief Get the number of specified non-zero elements (sparse matrices only)
