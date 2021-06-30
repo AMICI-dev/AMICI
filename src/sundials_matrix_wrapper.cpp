@@ -155,13 +155,7 @@ void SUNMatrixWrapper::realloc() {
     assert(capacity() || !matrix_);
 }
 
-sunindextype SUNMatrixWrapper::rows() const {
-    assert(!matrix_ ||
-           (matrix_id() == SUNMATRIX_SPARSE ?
-            num_rows_ == SM_ROWS_S(matrix_) :
-            num_rows_ == SM_ROWS_D(matrix_)));
-    return num_rows_;
-}
+
 
 sunindextype SUNMatrixWrapper::num_indexptrs() const {
     assert(matrix_id() == SUNMATRIX_SPARSE);
@@ -438,7 +432,9 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
                         nnz);
         // no reallocation should happen here
         for (cidx = get_indexptr(ccol); cidx < nnz; cidx++) {
-            set_data(cidx, x.at(get_indexval(cidx))); // copy data to C
+            auto x_idx = get_indexval(cidx);
+            assert(x_idx >= 0 && x_idx < x.size());
+            set_data(cidx, x[x_idx]); // copy data to C
         }
     }
     set_indexptr(num_indexptrs(), nnz);
@@ -448,7 +444,11 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
 
 void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
     // matrix_ == nullptr is allowed on the first call
-    if (std::all_of(mats.begin(), mats.end(), [](const SUNMatrixWrapper &m){return !m.matrix_;}))
+    auto all_empty = std::all_of(mats.begin(), mats.end(),
+                                 [](const SUNMatrixWrapper &m){
+                                     return !m.matrix_;
+                                 });
+    if (all_empty)
         return;
 
     check_csc(this);
@@ -484,21 +484,21 @@ void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
 
     for (acol = 0; acol < columns(); acol++)
     {
-        set_indexptr(acol, nnz);                       /* column j of A starts here */
+        set_indexptr(acol, nnz); /* column j of A starts here */
         for (auto & mat : mats)
             nnz = mat.scatter(acol, 1.0, w.data(), gsl::make_span(x), acol+1,
                               this, nnz);
         // no reallocation should happen here
         for (aidx = get_indexptr(acol); aidx < nnz; aidx++) {
-            set_data(aidx, x.at(get_indexval(aidx))); // copy data to C
+            auto x_idx = get_indexval(aidx);
+            assert(x_idx >= 0 && x_idx < x.size());
+            set_data(aidx, x[x_idx]); // copy data to C
         }
     }
     set_indexptr(num_indexptrs(), nnz);
     if (capacity() == max_total_nonzero)
         realloc(); // resize if necessary
 }
-
-static const std::string scatter_name = "scatter";
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
                                        const realtype beta,

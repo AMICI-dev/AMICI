@@ -120,7 +120,13 @@ class SUNMatrixWrapper {
      * @brief Get the number of rows
      * @return number of rows
      */
-    sunindextype rows() const;
+    sunindextype rows() const {
+        assert(!matrix_ ||
+               (matrix_id() == SUNMATRIX_SPARSE ?
+                                                num_rows_ == SM_ROWS_S(matrix_) :
+                                                num_rows_ == SM_ROWS_D(matrix_)));
+        return num_rows_;
+    }
 
     /**
      * @brief Get the number of columns
@@ -224,7 +230,7 @@ class SUNMatrixWrapper {
      * @param idx data index
      * @return row (CSC) or column (CSR) for idx-th data entry
      */
-    inline sunindextype get_indexval(sunindextype idx) const {
+    sunindextype get_indexval(sunindextype idx) const {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
         assert(idx < capacity());
