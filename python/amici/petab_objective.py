@@ -17,6 +17,7 @@ import libsbml
 import numpy as np
 import pandas as pd
 import petab
+import sympy as sp
 from petab.C import *  # noqa: F403
 
 from . import AmiciModel, AmiciExpData
@@ -346,11 +347,21 @@ def create_parameter_mapping_for_condition(
             value = petab.to_float_if_float(
                 petab_problem.condition_df.loc[condition_id, species_id])
             if pd.isna(value):
-                value = float(
-                    get_species_initial(
-                        petab_problem.sbml_model.getSpecies(species_id)
-                    )
+                value = get_species_initial(
+                    petab_problem.sbml_model.getSpecies(species_id)
                 )
+                try:
+                    value = float(value)
+                except ValueError:
+                    if sp.nsimplify(value).is_Atom:
+                        # Get rid of multiplication with one
+                        value = sp.nsimplify(value)
+                    else:
+                        raise NotImplementedError(
+                            "Cannot handle non-trivial expressions for "
+                            f"species initial for {species_id}: {value}")
+                    # this should be a parameter ID
+                    value = str(value)
                 logger.debug(f'The species {species_id} has no initial value '
                              f'defined for the condition {condition_id} in '
                              'the PEtab conditions table. The initial value is '
