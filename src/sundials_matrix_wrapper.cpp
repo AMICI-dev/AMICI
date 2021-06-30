@@ -309,7 +309,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
                 auto idx_val = get_indexval(idx);
 
                 assert(icols > 0 && icols < b.size());
-                assert(idx_val > 0 && idx_val < c.size());
+                assert(idx_val > 0 && static_cast<std::size_t>(idx_val) < c.size());
 
                 c_ptr[idx_val] += get_data(idx) * b_ptr[icols];
             }
@@ -524,7 +524,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
     for (aidx = get_indexptr(acol); aidx < get_indexptr(acol+1); aidx++)
     {
         auto arow = get_indexval(aidx);          /* A(arow,acol) is nonzero */
-        assert(arow >= 0 && arow <= x.size());
+        assert(arow >= 0 && static_cast<std::size_t>(arow) <= x.size());
         if (w && w[arow] < mark) {
             w[arow] = mark;                      /* arow is new entry in C(:,*) */
             if (C)
