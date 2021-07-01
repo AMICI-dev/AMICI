@@ -352,7 +352,7 @@ def create_parameter_mapping_for_condition(
                 )
                 try:
                     value = float(value)
-                except ValueError:
+                except (ValueError, TypeError):
                     if sp.nsimplify(value).is_Atom:
                         # Get rid of multiplication with one
                         value = sp.nsimplify(value)
