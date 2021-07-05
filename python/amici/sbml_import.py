@@ -1880,7 +1880,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
 
         tmp = _parse_heaviside_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
-        not_condition *= (1-tmp)
+        not_condition *= (sp.Float(1.0) - tmp)
 
     return formula
 
@@ -1904,13 +1904,13 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
         # step with H(0) = 1
         if isinstance(trigger, sp.core.relational.StrictLessThan):
             # x < y => x - y < 0 => r < 0
-            return 1 - sp.Heaviside(root)
+            return sp.Float(1.0) - sp.Heaviside(root)
         if isinstance(trigger, sp.core.relational.LessThan):
             # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
             return sp.Heaviside(-root)
         if isinstance(trigger, sp.core.relational.StrictGreaterThan):
             # y > x => y - x < 0 => -r < 0
-            return 1 - sp.Heaviside(-root)
+            return sp.Float(1.0) - sp.Heaviside(-root)
         if isinstance(trigger, sp.core.relational.GreaterThan):
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
             return sp.Heaviside(root)

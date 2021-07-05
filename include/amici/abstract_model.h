@@ -522,6 +522,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param ip sensitivity index
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
@@ -529,7 +530,7 @@ class AbstractModel {
      */
     virtual void fdeltaqB(realtype *deltaqB, const realtype t,
                           const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h, int ie,
+                          const realtype *k, const realtype *h, int ip, int ie,
                           const realtype *xdot, const realtype *xdot_old,
                           const realtype *xB);
 

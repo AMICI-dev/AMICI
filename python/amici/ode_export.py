@@ -226,8 +226,8 @@ functions = {
         'signature':
             '(realtype *deltaqB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ie, const realtype *xdot, const realtype *xdot_old, '
-            'const realtype *xB)'
+            'const int ip, const int ie, const realtype *xdot, '
+            'const realtype *xdot_old, const realtype *xB)'
     },
     'w': {
         'signature':
@@ -1964,18 +1964,18 @@ class ODEModel:
             event_eqs = []
             for ie, event in enumerate(self._events):
                 tmp_eq = smart_multiply(
-                    (self.eq('xdot_old') - self.eq('xdot')),
+                    - (self.eq('xdot') - self.eq('xdot_old')),
                     self.eq('dtaudx')[ie])
-                event_eqs.append(smart_multiply(tmp_eq, self.sym('xB')))
+                event_eqs.append(smart_multiply(self.sym('xB').T, tmp_eq))
             self._eqs[name] = event_eqs
 
         elif name == 'deltaqB':
             event_eqs = []
             for ie, event in enumerate(self._events):
                 tmp_eq = smart_multiply(
-                    (self.eq('xdot_old') - self.eq('xdot')),
+                    - (self.eq('xdot') - self.eq('xdot_old')),
                     self.eq('dtaudp')[ie])
-                event_eqs.append(smart_multiply(tmp_eq.T, self.sym('xB')))
+                event_eqs.append(smart_multiply(self.sym('xB').T, tmp_eq))
             self._eqs[name] = event_eqs
 
         elif name == 'xdot_old':

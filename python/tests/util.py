@@ -1,5 +1,6 @@
 """Tests for SBML events, including piecewise expressions."""
 import libsbml
+import os
 import numpy as np
 from pathlib import Path
 
@@ -24,6 +25,7 @@ def create_amici_model(sbml_model, model_name) -> AmiciModel:
 
     sbml_importer = SbmlImporter(sbml_model)
     output_dir = sbml_test_models_output_dir / model_name
+    os.environ["ENABLE_AMICI_DEBUGGING"] = "TRUE"
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=str(output_dir)
@@ -206,8 +208,35 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.setSensitivityMethod(SensitivityMethod.adjoint)
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-13)
-    solver.setAbsoluteToleranceFSA(1e-15)
-    solver.setRelativeToleranceFSA(1e-13)
+    solver.setAbsoluteToleranceB(1e-15)
+    solver.setRelativeToleranceB(1e-13)
+    solver.setAbsoluteToleranceQuadratures(1e-15)
+    solver.setRelativeToleranceQuadratures(1e-9)
     rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
 
-    np.testing.assert_almost_equal(rdata_fsa['sllh'], rdata_asa['sllh'], decimal=8)
+    # Also test against finite differences
+    parameters = amici_model.getUnscaledParameters()
+    sllh_fd = []
+    for i_par, par in enumerate(parameters):
+        solver = amici_model.getSolver()
+        solver.setSensitivityOrder(SensitivityOrder.none)
+        solver.setSensitivityMethod(SensitivityMethod.none)
+        solver.setAbsoluteTolerance(1e-15)
+        solver.setRelativeTolerance(1e-13)
+        eps = 1e-5
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] += eps
+        amici_model.setParameters(tmp_par)
+        rdata_p = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] -= eps
+        amici_model.setParameters(tmp_par)
+        rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        sllh_fd.append((rdata_p['llh'] - rdata_m['llh']) / (2 * eps))
+
+    # test less strict in terms of absolute error, as the gradient are
+    # typically in the order of 1e3
+    np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
+                               rtol=1e-5, atol=1e-3)
+    np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
+                               rtol=1e-4, atol=1e-2)

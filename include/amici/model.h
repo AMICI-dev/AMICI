@@ -642,7 +642,7 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
-    
+
     /**
      * @brief Sets the estimated lower boundary for sigma_y. When :meth:`setAddSigmaResiduals` is
      * activated, this lower boundary must ensure that log(sigma) + min_sigma > 0.
@@ -651,7 +651,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void setMinimumSigmaResiduals(double min_sigma) {
         min_sigma_ = min_sigma;
     }
-    
+
     /**
      * @brief Gets the specified estimated lower boundary for sigma_y.
      * @return lower boundary
@@ -659,7 +659,7 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype getMinimumSigmaResiduals() const {
         return min_sigma_;
     }
-    
+
     /**
      * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
      *
@@ -673,7 +673,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void setAddSigmaResiduals(bool sigma_res) {
         sigma_res_ = sigma_res;
     }
-    
+
     /**
      * @brief Checks whether residuals should be added to account for parameter dependent sigma.
      * @return sigma_res
@@ -1144,7 +1144,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
      */
-    void addAdjointQuadratureEventUpdate(AmiVector xQB, const int ie,
+    void addAdjointQuadratureEventUpdate(AmiVector &xQB, const int ie,
                                          const realtype t, const AmiVector &x,
                                          const AmiVector &xB,
                                          const AmiVector &xdot,
@@ -1167,6 +1167,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * was found)
      */
     void updateHeavisideB(const int *rootsfound);
+
+    void updateHeavisideB_eventwise(const int *rootsfound, int ie);
 
     /**
      * @brief Check if the given array has only finite elements.
@@ -1743,10 +1745,10 @@ class Model : public AbstractModel, public ModelDimensions {
      * checked for finiteness
      */
     bool always_check_finite_ {false};
-    
+
     /** indicates whether sigma residuals are to be added for every datapoint  */
     bool sigma_res_ {false};
-    
+
     /** offset to ensure positivity of sigma residuals, only has an effect when `sigma_res_` is `true`  */
     realtype min_sigma_ {50.0};
 

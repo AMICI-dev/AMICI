@@ -135,6 +135,8 @@ void BackwardProblem::handleEventB() {
     auto xdot_old_disc = this->xdot_old_disc_.back();
     this->xdot_old_disc_.pop_back();
 
+    model_->updateHeavisideB(rootidx.data());
+
     for (int ie = 0; ie < model_->ne; ie++) {
 
         if (rootidx[ie] == 0) {
@@ -142,11 +144,11 @@ void BackwardProblem::handleEventB() {
         }
 
         model_->addAdjointQuadratureEventUpdate(xQB_, ie, t_, x_disc, xB_,
-                                               xdot_disc,
-                                               xdot_old_disc);
+                                                xdot_disc, xdot_old_disc);
         model_->addAdjointStateEventUpdate(xB_, ie, t_, x_disc,
-                                          xdot_disc,
-                                          xdot_old_disc);
+                                           xdot_disc, xdot_old_disc);
+
+        // model_->updateHeavisideB_eventwise(rootidx.data(), ie);
 
         if (model_->nz > 0) {
             for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
@@ -157,7 +159,6 @@ void BackwardProblem::handleEventB() {
                 }
             }
         }
-
         nroots_[ie]--;
     }
 
@@ -184,7 +185,7 @@ realtype BackwardProblem::getTnext(const int it) {
             it, discs_.size(), this->t_
         );
     }
-        
+
     if (!discs_.empty() &&
         (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();
