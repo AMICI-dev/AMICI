@@ -1,6 +1,7 @@
 """Functions for downloading/building/finding SWIG"""
 
 from typing import Tuple
+import ast
 import os
 import subprocess
 import re
@@ -77,3 +78,65 @@ def get_swig_version(swig_exe: str) -> Tuple:
                      result.stdout.decode('utf-8'))
 
     return tuple(int(x) for x in version.split('.'))
+
+
+class TypeHintFixer(ast.NodeTransformer):
+    """Replaces SWIG-generated C++ typehints by corresponding Python types"""
+
+    mapping = {
+        'void': None,
+        'std::unique_ptr< amici::Solver >': 'amici.Solver',
+        'amici::InternalSensitivityMethod': 'amici.InternalSensitivityMethod',
+        'amici::InterpolationType': 'amici.InterpolationType',
+        'amici::LinearMultistepMethod': 'amici.LinearMultistepMethod',
+        'amici::LinearSolver': 'amici.LinearSolver',
+        'amici::Model *': 'amici.Model',
+        'amici::Model const *': 'amici.Model',
+        'amici::NewtonDampingFactorMode': 'amici.NewtonDampingFactorMode',
+        'amici::NonlinearSolverIteration': 'amici.NonlinearSolverIteration',
+        'amici::RDataReporting': 'amici.RDataReporting',
+        'amici::SensitivityMethod': 'amici.SensitivityMethod',
+        'amici::SensitivityOrder': 'amici.SensitivityOrder',
+        'amici::Solver *': 'amici.Solver',
+        'amici::SteadyStateSensitivityMode': 'amici.SteadyStateSensitivityMode',
+        'amici::realtype': 'float',
+        'DoubleVector': 'numpy.ndarray',
+        'IntVector': 'List[int]',
+        'std::string': 'str',
+        'std::string const &': 'str',
+        'std::unique_ptr< amici::ExpData >': 'amici.ExpData',
+        'std::unique_ptr< amici::ReturnData >': 'amici.ReturnData',
+    }
+
+    def visit_FunctionDef(self, node):
+        # Has a return type annotation?
+        if node.returns:
+            node.returns.value = self._new_annot(node.returns.value)
+
+        # Has arguments?
+        if node.args.args:
+            for arg in node.args.args:
+                if not arg.annotation:
+                    continue
+                arg.annotation.value = self._new_annot(arg.annotation.value)
+        return node
+
+    def _new_annot(self, old_annot):
+        return self.mapping.get(old_annot, old_annot)
+
+
+def fix_typehints(infilename, outfilename):
+    """Change SWIG-generated C++ typehints to Python typehints"""
+
+    # file -> AST
+    with open(infilename, 'r') as f:
+        source = f.read()
+    parsed_source = ast.parse(source)
+
+    # Change AST
+    fixer = TypeHintFixer()
+    parsed_source = fixer.visit(parsed_source)
+
+    # AST -> file
+    with open(outfilename, 'w') as f:
+        f.write(ast.unparse(parsed_source))

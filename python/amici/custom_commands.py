@@ -1,6 +1,5 @@
 """Custom setuptools commands for AMICI installation"""
 
-import contextlib
 import glob
 import os
 import subprocess
@@ -8,6 +7,7 @@ import sys
 from shutil import copyfile
 from typing import Dict, List, Tuple
 
+from amici.swig import fix_typehints
 from amici.setuptools import generate_swig_interface_files
 from setuptools.command.build_clib import build_clib
 from setuptools.command.build_ext import build_ext
@@ -142,9 +142,11 @@ class AmiciDevelop(develop):
         log.debug("running AmiciDevelop")
 
         if not self.no_clibs:
+            swig_outdir = os.path.join(os.path.abspath(os.getcwd()), "amici")
             generate_swig_interface_files(
-                swig_outdir=os.path.join(os.path.abspath(os.getcwd()),
-                                         "amici"))
+                swig_outdir=swig_outdir)
+            swig_py_module_path = os.path.join(swig_outdir, 'amici.py')
+            fix_typehints(swig_py_module_path, swig_py_module_path)
             self.get_finalized_command('build_clib').run()
 
         develop.run(self)
@@ -326,3 +328,4 @@ def set_compiler_specific_extension_options(
         except AttributeError:
             # No compiler-specific options set
             pass
+
