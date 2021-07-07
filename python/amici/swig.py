@@ -127,6 +127,9 @@ class TypeHintFixer(ast.NodeTransformer):
 
 def fix_typehints(infilename, outfilename):
     """Change SWIG-generated C++ typehints to Python typehints"""
+    # Only available from Python3.9
+    if not getattr(ast, 'unparse', None):
+        return
 
     # file -> AST
     with open(infilename, 'r') as f:
