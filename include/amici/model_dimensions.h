@@ -148,12 +148,12 @@ struct ModelDimensions {
      */
     int ndwdw {0};
 
-    /** Number of nonzero elements in the \f$w\f$ derivative of \f$xdot\f$ */
+    /** Number of nonzero elements in the \f$ w \f$ derivative of \f$ xdot \f$ */
     int ndxdotdw {0};
 
     /**
-     * Number of nonzero elements in the \f$y\f$ derivative of
-     * \f$dJy\f$ (dimension `nytrue`)
+     * Number of nonzero elements in the \f$ y \f$ derivative of
+     * \f$ dJy \f$ (dimension `nytrue`)
      */
     std::vector<int> ndJydy;
 
