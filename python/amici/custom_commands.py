@@ -1,6 +1,5 @@
 """Custom setuptools commands for AMICI installation"""
 
-import contextlib
 import glob
 import os
 import subprocess
@@ -8,6 +7,7 @@ import sys
 from shutil import copyfile
 from typing import Dict, List, Tuple
 
+from amici.swig import fix_typehints
 from amici.setuptools import generate_swig_interface_files
 from setuptools.command.build_clib import build_clib
 from setuptools.command.build_ext import build_ext
@@ -142,9 +142,6 @@ class AmiciDevelop(develop):
         log.debug("running AmiciDevelop")
 
         if not self.no_clibs:
-            generate_swig_interface_files(
-                swig_outdir=os.path.join(os.path.abspath(os.getcwd()),
-                                         "amici"))
             self.get_finalized_command('build_clib').run()
 
         develop.run(self)
@@ -226,8 +223,11 @@ class AmiciBuildExt(build_ext):
                 log.info(f"copying {src} -> {dest}")
                 copyfile(src, dest)
 
-            generate_swig_interface_files(
-                swig_outdir=os.path.join(build_dir, 'amici'))
+            swig_outdir = os.path.join(os.path.abspath(build_dir), "amici")
+            generate_swig_interface_files(swig_outdir=swig_outdir)
+            swig_py_module_path = os.path.join(swig_outdir, 'amici.py')
+            log.debug("updating typehints")
+            fix_typehints(swig_py_module_path, swig_py_module_path)
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
@@ -326,3 +326,4 @@ def set_compiler_specific_extension_options(
         except AttributeError:
             # No compiler-specific options set
             pass
+
