@@ -49,7 +49,8 @@ def simulate_petab(
         edatas: List[AmiciExpData] = None,
         parameter_mapping: ParameterMapping = None,
         scaled_parameters: Optional[bool] = False,
-        log_level: int = logging.WARNING
+        log_level: int = logging.WARNING,
+        num_threads: int = 1,
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
 
@@ -78,6 +79,9 @@ def simulate_petab(
         are assumed to be in linear scale.
     :param log_level:
         Log level, see :mod:`amici.logging` module.
+    :param num_threads:
+        Number of threads to use for simulating multiple conditions
+        (only used if compiled with OpenMP).
 
     :return:
         Dictionary of
@@ -136,7 +140,8 @@ def simulate_petab(
         amici_model=amici_model)
 
     # Simulate
-    rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
+    rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas,
+                                       num_threads=num_threads)
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
