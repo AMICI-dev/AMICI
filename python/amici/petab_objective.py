@@ -81,7 +81,7 @@ def simulate_petab(
         Log level, see :mod:`amici.logging` module.
     :param num_threads:
         Number of threads to use for simulating multiple conditions
-        (only used if compiled with OpenMP)
+        (only used if compiled with OpenMP).
 
     :return:
         Dictionary of
