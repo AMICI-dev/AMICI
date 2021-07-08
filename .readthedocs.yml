@@ -26,4 +26,4 @@ python:
     - requirements: documentation/rtd_requirements.txt
 
 build:
-  image: latest
+  image: testing
