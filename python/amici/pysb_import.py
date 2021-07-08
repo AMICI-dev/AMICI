@@ -297,7 +297,7 @@ def _process_pysb_expressions(
         sigmas: Dict[str, str],
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
 ) -> None:
-    """
+    r"""
     Converts pysb expressions/observables into Observables (with
     corresponding standard deviation SigmaY and LogLikelihood) or
     Expressions and adds them to the ODEModel instance
@@ -306,8 +306,8 @@ def _process_pysb_expressions(
         pysb model
 
     :param observables:
-        list of names of :class`pysb.Expression`\\ s or
-        :class:`pysb.Observable`\\ s that are to be mapped to ODEModel
+        list of names of :class`pysb.Expression`\ s or
+        :class:`pysb.Observable`\ s that are to be mapped to ODEModel
         observables
 
     :param sigmas:
