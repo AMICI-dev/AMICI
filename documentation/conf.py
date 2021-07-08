@@ -298,7 +298,10 @@ exhale_projects_args = {
         "exhaleDoxygenStdin": "\n".join([
             "INPUT = ../include",
             "BUILTIN_STL_SUPPORT    = YES",
-            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
+            "EXCLUDE += ../include/amici/interface_matlab.h",
+            "EXCLUDE += ../include/amici/returndata_matlab.h",
+            "EXCLUDE += ../include/amici/spline.h",
         ]),
         "containmentFolder": "_exhale_cpp_api",
         "rootFileTitle": "AMICI C++ API",
