@@ -142,6 +142,7 @@ def pysb2amici(
         verbose=verbose,
         assume_pow_positivity=assume_pow_positivity,
         compiler=compiler,
+        generate_sensitivity_code=generate_sensitivity_code
     )
     exporter.set_name(model.name)
     exporter.set_paths(output_dir)
