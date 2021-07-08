@@ -51,7 +51,7 @@ def pysb2amici(
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
         generate_sensitivity_code: bool = True,
 ):
-    """
+    r"""
     Generate AMICI C++ files for the provided model.
 
     .. warning::
