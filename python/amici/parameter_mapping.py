@@ -93,9 +93,9 @@ class ParameterMappingForCondition:
 
 
 class ParameterMapping(Sequence):
-    """Parameter mapping for multiple conditions.
+    r"""Parameter mapping for multiple conditions.
 
-    This can be used like a list of :class:`ParameterMappingForCondition`\\ s.
+    This can be used like a list of :class:`ParameterMappingForCondition`\ s.
 
     :param parameter_mappings:
         List of parameter mappings for specific conditions.
