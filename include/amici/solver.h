@@ -491,6 +491,8 @@ class Solver {
 
     /**
      * @brief Check whether maximum integration time was exceeded
+     * @return True if the maximum integration time was exceeded,
+     * false otherwise.
      */
     bool timeExceeded() const;
 
