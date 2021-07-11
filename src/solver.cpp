@@ -133,7 +133,8 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     /* Set optional inputs */
     setErrHandlerFn();
     /* Attaches userdata */
-    setUserData(model);
+    user_data = std::make_pair(model, const_cast<Solver *>(this));
+    setUserData();
     /* activates stability limit detection */
     setStabLimDet(stldet_);
 
@@ -184,7 +185,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     binit(*which, tf, xB0, dxB0);
 
     /* Attach user data */
-    setUserDataB(*which, model);
+    setUserDataB(*which);
 
     if (nx() == 0)
         return;

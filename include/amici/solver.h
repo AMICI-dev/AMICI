@@ -47,6 +47,9 @@ namespace amici {
  */
 class Solver {
   public:
+    /** Type of what is passed to Sundials solvers as user_data */
+    using user_data_type = std::pair<Model*, Solver*>;
+
     Solver() = default;
 
     /**
@@ -1113,21 +1116,16 @@ class Solver {
     virtual void setErrHandlerFn() const = 0;
 
     /**
-     * @brief Attaches the user data instance (here this is a Model) to the
-     * forward problem
-     *
-     * @param model Model instance
+     * @brief Attaches the user data to the forward problem
      */
-    virtual void setUserData(Model *model) const = 0;
+    virtual void setUserData() const = 0;
 
     /**
-     * @brief attaches the user data instance (here this is a Model) to the
-     * backward problem
+     * @brief attaches the user data to the backward problem
      *
      * @param which identifier of the backwards problem
-     * @param model Model instance
      */
-    virtual void setUserDataB(int which, Model *model) const = 0;
+    virtual void setUserDataB(int which) const = 0;
 
     /**
      * @brief specifies the maximum number of steps for the forward
@@ -1518,6 +1516,9 @@ class Solver {
     /** pointer to solver memory block */
     mutable std::vector<std::unique_ptr<void, std::function<void(void *)>>>
         solver_memory_B_;
+
+    /** Sundials user_data */
+    mutable user_data_type user_data;
 
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */

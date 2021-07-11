@@ -349,14 +349,17 @@ void CVodeSolver::setErrHandlerFn() const {
         throw CvodeException(status, "CVodeSetErrHandlerFn");
 }
 
-void CVodeSolver::setUserData(Model *model) const {
-    int status = CVodeSetUserData(solver_memory_.get(), model);
+void CVodeSolver::setUserData() const {
+    int status = CVodeSetUserData(
+        solver_memory_.get(),
+        &user_data
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetUserData");
 }
 
-void CVodeSolver::setUserDataB(const int which, Model *model) const {
-    int status = CVodeSetUserDataB(solver_memory_.get(), which, model);
+void CVodeSolver::setUserDataB(const int which) const {
+    int status = CVodeSetUserDataB(solver_memory_.get(), which, &user_data);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetUserDataB");
 }
@@ -792,7 +795,10 @@ const Model *CVodeSolver::getModel() const {
         throw AmiException("Solver has not been allocated, information is not "
                            "available");
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
-    return static_cast<Model *>(cv_mem->cv_user_data);
+
+    auto typed_udata = static_cast<user_data_type *>(cv_mem->cv_user_data);
+    Expects(typed_udata);
+    return typed_udata->first;
 }
 
 
@@ -812,7 +818,11 @@ const Model *CVodeSolver::getModel() const {
 static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
                     void *user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/,
                     N_Vector /*tmp3*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJ(t, x, xdot, J);
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
@@ -835,7 +845,11 @@ static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
 static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                      SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                      N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJB(t, x, xB, xBdot, JB);
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
@@ -856,7 +870,11 @@ static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
 static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
                           SUNMatrix J, void *user_data, N_Vector /*tmp1*/,
                           N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJSparse(t, x, J);
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
@@ -878,7 +896,11 @@ static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
 static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                            SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                            N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJSparseB(t, x, xB, xBdot, JB);
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
@@ -886,9 +908,6 @@ static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
 
 /**
  * @brief J in banded form (for banded solvers)
- * @param N number of states
- * @param mupper upper matrix bandwidth
- * @param mlower lower matrix bandwidth
  * @param t timepoint
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
@@ -907,9 +926,6 @@ static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
 
 /**
  * @brief JB in banded form (for banded solvers)
- * @param NeqBdot number of states
- * @param mupper upper matrix bandwidth
- * @param mlower lower matrix bandwidth
  * @param t timepoint
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
@@ -942,7 +958,11 @@ static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  **/
 static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
         N_Vector /*xdot*/, void *user_data, N_Vector /*tmp*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJv(v, Jv, t, x);
     return model->checkFinite(gsl::make_span(Jv), "Jacobian");
 }
@@ -964,7 +984,11 @@ static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
 static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
          N_Vector xB, N_Vector /*xBdot*/, void *user_data,
          N_Vector /*tmpB*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJvB(vB, JvB, t, x, xB);
     return model->checkFinite(gsl::make_span(JvB), "Jacobian");
 }
@@ -980,7 +1004,11 @@ static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
  */
 static int froot(realtype t, N_Vector x, realtype *root,
                        void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
                               "root function");
@@ -996,7 +1024,10 @@ static int froot(realtype t, N_Vector x, realtype *root,
  * @return status flag indicating successful execution
  */
 static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
 
     if (t > 1e200 && !model->checkFinite(gsl::make_span(x), "fxdot")) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
@@ -1022,7 +1053,11 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
  */
 static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                         void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fxBdot(t, x, xB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "fxBdot");
 }
@@ -1039,7 +1074,11 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  */
 static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fqBdot(t, x, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 }
@@ -1056,7 +1095,11 @@ static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
  */
 static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
                      void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fxBdot_ss(t, xB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "fxBdot_ss");
 }
@@ -1073,7 +1116,11 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
  */
 static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
                      void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fqBdot_ss(t, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
 }
@@ -1093,7 +1140,11 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
 static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
                         SUNMatrix JB, void *user_data, N_Vector /*tmp1*/,
                         N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fJSparseB_ss(JB);
     return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
 }
@@ -1117,7 +1168,11 @@ static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
 static int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
                         int ip, N_Vector sx, N_Vector sxdot, void *user_data,
                         N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
-    auto model = static_cast<Model_ODE *>(user_data);
+    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    Expects(model);
+
     model->fsxdot(t, x, ip, sx, sxdot);
     return model->checkFinite(gsl::make_span(sxdot), "sxdot");
 }
