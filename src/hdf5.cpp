@@ -636,6 +636,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_rtol_sensi", &dbuffer, 1);
 
+    dbuffer = solver.getMaxTime();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "maxtime", &dbuffer, 1);
+
     ibuffer = static_cast<int>(solver.getMaxSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "maxsteps", &ibuffer, 1);
@@ -773,6 +777,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
         solver.setRelativeToleranceSteadyStateSensi(
                     getDoubleScalarAttribute(file, datasetPath,
                                              "ss_rtol_sensi"));
+    }
+
+    if(attributeExists(file, datasetPath, "maxtime")) {
+        solver.setMaxTime(
+            getDoubleScalarAttribute(file, datasetPath, "maxtime"));
     }
 
     if(attributeExists(file, datasetPath, "maxsteps")) {
@@ -960,12 +969,12 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model,
             model.setUnscaledInitialStateSensitivities(sx0);
         }
     }
-    
+
     if(attributeExists(file, datasetPath, "sigma_res")) {
         auto sigma_res = getIntScalarAttribute(file, datasetPath, "sigma_res");
         model.setAddSigmaResiduals(static_cast<bool>(sigma_res));
     }
-    
+
     if(attributeExists(file, datasetPath, "min_sigma")) {
         auto min_sigma = getDoubleScalarAttribute(file, datasetPath,
                                                   "min_sigma");

@@ -1039,6 +1039,12 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
     Expects(typed_udata);
     auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
     Expects(model);
+    auto solver = dynamic_cast<IDASolver *>(typed_udata->second);
+    Expects(model);
+
+    if(solver->timeExceeded()) {
+        throw IntegrationFailure(AMICI_MAX_TIME_EXCEEDED, t);
+    }
 
     if (t > 1e200 && !model->app->checkFinite(gsl::make_span(x), "fxdot")) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
@@ -1069,6 +1075,12 @@ int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     Expects(typed_udata);
     auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
     Expects(model);
+    auto solver = dynamic_cast<IDASolver *>(typed_udata->second);
+    Expects(model);
+
+    if(solver->timeExceeded()) {
+        throw IntegrationFailure(AMICI_MAX_TIME_EXCEEDED, t);
+    }
 
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "xBdot");

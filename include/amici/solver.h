@@ -10,6 +10,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <chrono>
 
 namespace amici {
 
@@ -470,6 +471,28 @@ class Solver {
      * @param maxsteps maximum number of solver steps (positive number)
      */
     void setMaxSteps(long int maxsteps);
+
+    /**
+     * @brief Returns the maximum time allowed for integration
+     * @return Time in seconds
+     */
+    double getMaxTime() const;
+
+    /**
+     * @brief Set the maximum time allowed for integration
+     * @param maxtime Time in seconds
+     */
+    void setMaxTime(double maxtime);
+
+    /**
+     * @brief Start timer for tracking integration time
+     */
+    void startTimer() const;
+
+    /**
+     * @brief Check whether maximum integration time was exceeded
+     */
+    bool timeExceeded() const;
 
     /**
      * @brief returns the maximum number of solver steps for the backward
@@ -1540,6 +1563,12 @@ class Solver {
 
     /** maximum number of allowed integration steps */
     long int maxsteps_ {10000};
+
+    /** Maximum wall-time for integration in seconds */
+    std::chrono::duration<double, std::ratio<1>> maxtime_ {std::chrono::duration<double>::max()};
+
+    /** Time at which solver timer was started */
+    mutable std::chrono::time_point<std::chrono::system_clock> starttime_;
 
     /** linear solver for the forward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_;

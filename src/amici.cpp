@@ -104,6 +104,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
+    solver.startTimer();
+
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
