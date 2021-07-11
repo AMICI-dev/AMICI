@@ -125,13 +125,13 @@ TEST(groupSteadystate, testMaxtime)
         NEW_OPTION_FILE, *solver, "/model_steadystate/nosensi/options");
 
     auto rdata = runAmiciSimulation(*solver, nullptr, *model);
-    CHECK_EQUAL(rdata->status, amici::AMICI_SUCCESS);
+    CHECK_EQUAL(amici::AMICI_SUCCESS, rdata->status);
 
     solver->setMaxTime(0.000001);
 
     // must throw
     rdata = runAmiciSimulation(*solver, nullptr, *model);
-    CHECK_EQUAL(rdata->status, amici::AMICI_MAX_TIME_EXCEEDED);
+    CHECK_EQUAL(amici::AMICI_MAX_TIME_EXCEEDED, rdata->status);
 }
 
 TEST(groupSteadystate, testInitialStatesNonEmpty)
