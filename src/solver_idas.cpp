@@ -1039,7 +1039,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
     Expects(typed_udata);
     auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
     Expects(model);
-    auto solver = dynamic_cast<IDASolver *>(typed_udata->second);
+    auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
     Expects(model);
 
     if(solver->timeExceeded()) {
@@ -1075,7 +1075,7 @@ int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     Expects(typed_udata);
     auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
     Expects(model);
-    auto solver = dynamic_cast<IDASolver *>(typed_udata->second);
+    auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
     Expects(model);
 
     if(solver->timeExceeded()) {

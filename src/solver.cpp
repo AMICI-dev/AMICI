@@ -134,7 +134,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     /* Set optional inputs */
     setErrHandlerFn();
     /* Attaches userdata */
-    user_data = std::make_pair(model, const_cast<Solver *>(this));
+    user_data = std::make_pair(model, this);
     setUserData();
     /* activates stability limit detection */
     setStabLimDet(stldet_);
