@@ -1032,7 +1032,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     Expects(model);
 
     if(solver->timeExceeded()) {
-        throw IntegrationFailure(AMICI_MAX_TIME_EXCEEDED, t);
+        return AMICI_MAX_TIME_EXCEEDED;
     }
 
     if (t > 1e200 && !model->checkFinite(gsl::make_span(x), "fxdot")) {
@@ -1067,7 +1067,7 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     Expects(model);
 
     if(solver->timeExceeded()) {
-        throw IntegrationFailureB(AMICI_MAX_TIME_EXCEEDED, t);
+        return AMICI_MAX_TIME_EXCEEDED;
     }
 
     model->fxBdot(t, x, xB, xBdot);
