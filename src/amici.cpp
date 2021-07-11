@@ -104,6 +104,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
+    solver.startTimer();
+
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
@@ -168,7 +170,11 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         rdata->status = AMICI_SUCCESS;
 
     } catch (amici::IntegrationFailure const& ex) {
-        rdata->status = ex.error_code;
+        if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+            rdata->status = AMICI_MAX_TIME_EXCEEDED;
+        } else {
+            rdata->status = ex.error_code;
+        }
         if (rethrow)
             throw;
         warningF("AMICI:simulation",
@@ -176,7 +182,11 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.time,
                  ex.what());
     } catch (amici::IntegrationFailureB const& ex) {
-        rdata->status = ex.error_code;
+        if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+            rdata->status = AMICI_MAX_TIME_EXCEEDED;
+        } else {
+            rdata->status = ex.error_code;
+        }
         if (rethrow)
             throw;
         warningF(
