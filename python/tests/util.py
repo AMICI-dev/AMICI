@@ -209,9 +209,9 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-13)
     solver.setAbsoluteToleranceB(1e-15)
-    solver.setRelativeToleranceB(1e-13)
+    solver.setRelativeToleranceB(1e-10)
     solver.setAbsoluteToleranceQuadratures(1e-15)
-    solver.setRelativeToleranceQuadratures(1e-9)
+    solver.setRelativeToleranceQuadratures(1e-8)
     rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
 
     # Also test against finite differences
@@ -236,7 +236,8 @@ def check_trajectories_with_adjoint_sensitivities(
 
     # test less strict in terms of absolute error, as the gradient are
     # typically in the order of 1e3
-    np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
-                               rtol=1e-5, atol=1e-3)
     np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
                                rtol=1e-4, atol=1e-2)
+    np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
+                               rtol=1e-5, atol=1e-3)
+

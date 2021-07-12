@@ -217,7 +217,6 @@ def model_definition_events_plus_heavisides():
     )
 
 
-
 def model_definition_nested_events():
     """Test model for state- and parameter-dependent heavisides.
 

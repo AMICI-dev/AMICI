@@ -148,8 +148,6 @@ void BackwardProblem::handleEventB() {
         model_->addAdjointStateEventUpdate(xB_, ie, t_, x_disc,
                                            xdot_disc, xdot_old_disc);
 
-        // model_->updateHeavisideB_eventwise(rootidx.data(), ie);
-
         if (model_->nz > 0) {
             for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
                 for (int iJ = 0; iJ < model_->nJ; ++iJ) {
