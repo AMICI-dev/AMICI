@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(groupNeuronO2, testSensitivity2)
+TEST(ExampleNeuronO2, Sensitivity2)
 {
     amici::simulateVerifyWrite(
       "/model_neuron/sensi2forward/", 10 * TEST_ATOL, 10 * TEST_RTOL);

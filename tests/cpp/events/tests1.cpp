@@ -5,17 +5,17 @@
 
 #include <gtest/gtest.h>
 
-TEST(groupEvents, testDefault)
+TEST(ExampleEvents, Default)
 {
     amici::simulateWithDefaultOptions();
 }
 
-TEST(groupEvents, testSimulation)
+TEST(ExampleEvents, Simulation)
 {
     amici::simulateVerifyWrite("/model_events/nosensi/");
 }
 
-TEST(groupEvents, testSensitivityForward)
+TEST(ExampleEvents, SensitivityForward)
 {
     amici::simulateVerifyWrite("/model_events/sensiforward/");
 }

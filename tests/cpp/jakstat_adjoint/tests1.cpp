@@ -5,39 +5,39 @@
 
 #include <gtest/gtest.h>
 
-TEST(groupJakstatAdjoint, testSimulation)
+TEST(ExampleJakstatAdjoint, Simulation)
 {
     amici::simulateVerifyWrite("/model_jakstat_adjoint/nosensi/");
 }
 
-TEST(groupJakstatAdjoint, testSensitivityForward)
+TEST(ExampleJakstatAdjoint, SensitivityForward)
 {
     amici::simulateVerifyWrite("/model_jakstat_adjoint/sensiforward/");
 }
 
-TEST(groupJakstatAdjoint, testSensitivityForwardLogParam)
+TEST(ExampleJakstatAdjoint, SensitivityForwardLogParam)
 {
     amici::simulateVerifyWrite("/model_jakstat_adjoint/sensiforwardlogparam/");
 }
 
-TEST(groupJakstatAdjoint, testSensitivityAdjoint)
+TEST(ExampleJakstatAdjoint, SensitivityAdjoint)
 {
     amici::simulateVerifyWrite("/model_jakstat_adjoint/sensiadjoint/");
 }
 
-TEST(groupJakstatAdjoint, testSensitivityForwardEmptySensInd)
+TEST(ExampleJakstatAdjoint, SensitivityForwardEmptySensInd)
 {
     amici::simulateVerifyWrite(
       "/model_jakstat_adjoint/sensiforwardemptysensind/");
 }
 
-TEST(groupJakstatAdjoint, testSensitivityAdjointEmptySensInd)
+TEST(ExampleJakstatAdjoint, SensitivityAdjointEmptySensInd)
 {
     amici::simulateVerifyWrite(
       "/model_jakstat_adjoint/sensiadjointemptysensind/");
 }
 
-TEST(groupJakstatAdjoint, DISABLED_testSensitivityAdjointUnusedNanOutputs)
+TEST(ExampleJakstatAdjoint, DISABLED_testSensitivityAdjointUnusedNanOutputs)
 {
     /* UN-IGNORE ONCE THIS MODEL HAS BEEN IMPORTED VIA PYTHON INTERFACE */
     auto model = amici::generic_model::getModel();
@@ -71,7 +71,7 @@ TEST(groupJakstatAdjoint, DISABLED_testSensitivityAdjointUnusedNanOutputs)
         ASSERT_FALSE(std::isnan(rdata->sllh[i]));
 }
 
-TEST(groupJakstatAdjoint, testSensitivityReplicates)
+TEST(ExampleJakstatAdjoint, SensitivityReplicates)
 {
     // Check that we can handle replicates correctly
 

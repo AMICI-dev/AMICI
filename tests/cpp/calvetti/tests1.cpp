@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(groupCalvetti, testSimulation)
+TEST(ExampleCalvetti, Simulation)
 {
     amici::simulateVerifyWrite("/model_calvetti/nosensi/");
 }

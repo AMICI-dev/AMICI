@@ -5,12 +5,12 @@
 
 #include <gtest/gtest.h>
 
-TEST(groupEvents, testSimulation)
+TEST(ExampleNestedEvents, Simulation)
 {
     amici::simulateVerifyWrite("/model_nested_events/nosensi/");
 }
 
-TEST(groupEvents, testSensitivityForward)
+TEST(ExampleNestedEvents, SensitivityForward)
 {
     amici::simulateVerifyWrite("/model_nested_events/sensiforward/");
 }

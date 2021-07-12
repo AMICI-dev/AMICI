@@ -5,12 +5,12 @@
 
 #include <gtest/gtest.h>
 
-TEST(groupSteadystate, testDefault)
+TEST(ExampleSteadystate, Default)
 {
     amici::simulateWithDefaultOptions();
 }
 
-TEST(groupSteadystate, testModelFromHDF5)
+TEST(ExampleSteadystate, ModelFromHDF5)
 {
     // Test reading some python-written options
     std::vector<double> pExp{ 1, 0.5, 0.4, 2, 0.1 };
@@ -33,7 +33,7 @@ TEST(groupSteadystate, testModelFromHDF5)
     }
 }
 
-TEST(groupSteadystate, testInequality)
+TEST(ExampleSteadystate, Inequality)
 {
     auto modelA = amici::generic_model::getModel();
     auto modelB = std::unique_ptr<amici::Model>(new amici::Model_Test());
@@ -41,7 +41,7 @@ TEST(groupSteadystate, testInequality)
     ASSERT_FALSE(*modelA == *modelB);
 }
 
-TEST(groupSteadystate, testCopyModel)
+TEST(ExampleSteadystate, CopyModel)
 {
     auto modelA = amici::generic_model::getModel();
     auto modelB = std::unique_ptr<amici::Model>(modelA->clone());
@@ -49,7 +49,7 @@ TEST(groupSteadystate, testCopyModel)
     ASSERT_EQ(*modelA, *modelB);
 }
 
-TEST(groupSteadystate, testCloneModel)
+TEST(ExampleSteadystate, CloneModel)
 {
     auto modelA = amici::generic_model::getModel();
     auto modelB = std::unique_ptr<amici::Model>(
@@ -58,7 +58,7 @@ TEST(groupSteadystate, testCloneModel)
     ASSERT_EQ(*modelA, *modelB);
 }
 
-TEST(groupSteadystate, testExpDataFromReturnData)
+TEST(ExampleSteadystate, ExpDataFromReturnData)
 {
     auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
@@ -73,7 +73,7 @@ TEST(groupSteadystate, testExpDataFromReturnData)
     runAmiciSimulation(*solver, &edata, *model);
 }
 
-TEST(groupSteadystate, testReuseSolver)
+TEST(ExampleSteadystate, ReuseSolver)
 {
     auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
@@ -87,7 +87,7 @@ TEST(groupSteadystate, testReuseSolver)
     runAmiciSimulation(*solver, nullptr, *model);
 }
 
-TEST(groupSteadystate, testRethrow)
+TEST(ExampleSteadystate, Rethrow)
 {
     auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
@@ -111,7 +111,7 @@ TEST(groupSteadystate, testRethrow)
 }
 
 
-TEST(groupSteadystate, testMaxtime)
+TEST(ExampleSteadystate, Maxtime)
 {
     auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
@@ -131,91 +131,91 @@ TEST(groupSteadystate, testMaxtime)
     ASSERT_EQ(amici::AMICI_MAX_TIME_EXCEEDED, rdata->status);
 }
 
-TEST(groupSteadystate, testInitialStatesNonEmpty)
+TEST(ExampleSteadystate, InitialStatesNonEmpty)
 {
     auto model = amici::generic_model::getModel();
     ASSERT_FALSE(model->getInitialStates().empty());
 }
 
-TEST(groupSteadystate, testInitialStateSensitivitiesNonEmpty)
+TEST(ExampleSteadystate, InitialStateSensitivitiesNonEmpty)
 {
     auto model = amici::generic_model::getModel();
     ASSERT_FALSE(model->getInitialStateSensitivities().empty());
 }
 
-TEST(groupSteadystate, testSimulation)
+TEST(ExampleSteadystate, Simulation)
 {
     amici::simulateVerifyWrite(
       "/model_steadystate/nosensi/", 100 * TEST_ATOL, 100 * TEST_RTOL);
 }
 
-TEST(groupSteadystate, testSensitivityForward)
+TEST(ExampleSteadystate, SensitivityForward)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiforward/");
 }
 
-TEST(groupSteadystate, testSensitivityForwardPlist)
+TEST(ExampleSteadystate, SensitivityForwardPlist)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiforwardplist/");
 }
 
-TEST(groupSteadystate, testSensitivityForwardErrorInt)
+TEST(ExampleSteadystate, SensitivityForwardErrorInt)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiforwarderrorint/");
 }
 
-TEST(groupSteadystate, testSensitivityForwardErrorNewt)
+TEST(ExampleSteadystate, SensitivityForwardErrorNewt)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiforwarderrornewt/");
 }
 
-TEST(groupSteadystate, testSensitivityForwardDense)
+TEST(ExampleSteadystate, SensitivityForwardDense)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiforwarddense/");
 }
 
-TEST(groupSteadystate, testSensitivityForwardSPBCG)
+TEST(ExampleSteadystate, SensitivityForwardSPBCG)
 {
     amici::simulateVerifyWrite(
       "/model_steadystate/nosensiSPBCG/", 10 * TEST_ATOL, 10 * TEST_RTOL);
 }
 
-TEST(groupSteadystate, testSensiFwdNewtonPreeq)
+TEST(ExampleSteadystate, SensiFwdNewtonPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensifwdnewtonpreeq/");
 }
 
-TEST(groupSteadystate, testSensiAdjNewtonPreeq)
+TEST(ExampleSteadystate, SensiAdjNewtonPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiadjnewtonpreeq/");
 }
 
-TEST(groupSteadystate, testSensiFwdSimPreeq)
+TEST(ExampleSteadystate, SensiFwdSimPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensifwdsimpreeq/");
 }
 
-TEST(groupSteadystate, testSensiFwdSimPreeqFSA)
+TEST(ExampleSteadystate, SensiFwdSimPreeqFSA)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensifwdsimpreeqFSA/");
 }
 
-TEST(groupSteadystate, testSensiAdjSimPreeq)
+TEST(ExampleSteadystate, SensiAdjSimPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiadjsimpreeq/");
 }
 
-TEST(groupSteadystate, testSensiAdjSimPreeqFSA)
+TEST(ExampleSteadystate, SensiAdjSimPreeqFSA)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiadjsimpreeqFSA/");
 }
 
-TEST(groupSteadystate, testSensiFwdByhandPreeq)
+TEST(ExampleSteadystate, SensiFwdByhandPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensifwdbyhandpreeq/");
 }
 
-TEST(groupSteadystate, testSensiAdjByhandPreeq)
+TEST(ExampleSteadystate, SensiAdjByhandPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensiadjbyhandpreeq/");
 }

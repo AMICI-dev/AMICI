@@ -6,12 +6,12 @@
 #include <gtest/gtest.h>
 
 
-TEST(groupDirac, testSimulation)
+TEST(ExampleDirac, Simulation)
 {
     amici::simulateVerifyWrite("/model_dirac/nosensi/");
 }
 
-TEST(groupDirac, testSensitivityForward)
+TEST(ExampleDirac, SensitivityForward)
 {
     amici::simulateVerifyWrite("/model_dirac/sensiforward/");
 }
