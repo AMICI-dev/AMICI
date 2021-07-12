@@ -1,7 +1,5 @@
 project(unittests)
 
-# cannot mix CppuTest new override togeter with Boost
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_OLD}")
 find_package(Boost COMPONENTS serialization)
 
 set(SRC_LIST
