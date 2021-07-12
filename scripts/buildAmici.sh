@@ -2,7 +2,8 @@
 #
 # Build libamici
 #
-set -e
+set -eou pipefail
+
 cmake=${CMAKE:-cmake}
 make=${MAKE:-make}
 
@@ -12,8 +13,6 @@ amici_build_dir="${amici_path}/build"
 mkdir -p "${amici_build_dir}"
 cd "${amici_build_dir}"
 
-cpputest_build_dir="${amici_path}/ThirdParty/cpputest-master/build/"
-
 if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]] || [[ $ENABLE_AMICI_DEBUGGING = TRUE ]];
 then
   # Running on CI server
@@ -22,11 +21,10 @@ else
   build_type="RelWithDebInfo"
 fi
 
-CppUTest_DIR=${cpputest_build_dir} \
-  ${cmake} \
-    -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
-    -DCMAKE_BUILD_TYPE=$build_type \
-    -DPython3_EXECUTABLE="$(command -v python3)" ..
+${cmake} \
+  -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
+  -DCMAKE_BUILD_TYPE=$build_type \
+  -DPython3_EXECUTABLE="$(command -v python3)" ..
 
 # build, with or without sonarcloud wrapper
 if [[ "$CI_SONARCLOUD" == "TRUE" ]]; then
