@@ -67,6 +67,10 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
+    - name: C++ tests
+      run: |
+        scripts/run-cpp-tests.sh
+
     - name: Install python package
       run: |
         scripts/installAmiciSource.sh
