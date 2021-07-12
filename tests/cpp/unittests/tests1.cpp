@@ -17,9 +17,9 @@
 namespace amici {
 namespace generic_model {
 
-std::unique_ptr<amici::Model> getModel()
+std::unique_ptr<Model> getModel()
 {
-    return std::make_unique<amici::Model_Test>();
+    return std::make_unique<Model_Test>();
 }
 
 } // namespace generic_model
@@ -42,11 +42,8 @@ testSolverGetterSetters(CVodeSolver solver,
                         double tol,
                         double badtol);
 
-class Model : public ::testing::Test {
+class ModelTest : public ::testing::Test {
   protected:
-    // void SetUp() override {}
-    // void TearDown() override {}
-
     int nx = 1, ny = 2, nz = 3, nmaxevent = 4;
     std::vector<realtype> p{ 1.0 };
     std::vector<realtype> k{ 0.5, 0.4, 0.7 };
@@ -86,52 +83,54 @@ class Model : public ::testing::Test {
 };
 
 
-TEST_F(Model, testScalingLin)
+TEST_F(ModelTest, LinScaledParameterIsNotTransformed)
 {
     model.setParameterScale(ParameterScaling::none);
 
     ASSERT_EQ(p[0], model.getParameters()[0]);
 }
 
-TEST_F(Model, testScalingLog)
+TEST_F(ModelTest, LogScaledParameterIsTransformed)
 {
     model.setParameterScale(ParameterScaling::ln);
 
     ASSERT_NEAR(std::log(p[0]), model.getParameters()[0], 1e-16);
 }
 
-TEST_F(Model, testScalingLog10)
+TEST_F(ModelTest, Log10ScaledParameterIsTransformed)
 {
     model.setParameterScale(ParameterScaling::log10);
 
     ASSERT_NEAR(std::log10(p[0]), model.getParameters()[0], 1e-16);
 }
 
-TEST_F(Model, testParameterScalingLengthMismatch)
+TEST_F(ModelTest, ParameterScaleTooShort)
 {
-    // too short
-    auto pscale =
-      std::vector<ParameterScaling>(p.size() - 1, ParameterScaling::log10);
+    std::vector<ParameterScaling> pscale(p.size() - 1,
+                                         ParameterScaling::log10);
     ASSERT_THROW(model.setParameterScale(pscale), AmiException);
 
-    // too long
-    pscale =
-      std::vector<ParameterScaling>(p.size() + 1, ParameterScaling::log10);
+}
+
+TEST_F(ModelTest, ParameterScaleTooLong)
+{
+    std::vector<ParameterScaling> pscale (p.size() + 1,
+                                         ParameterScaling::log10);
     ASSERT_THROW(model.setParameterScale(pscale), AmiException);
 }
 
-TEST_F(Model, testSetTimepoints){
+TEST_F(ModelTest, UnsortedTimepointsThrow){
     ASSERT_THROW(model.setTimepoints(std::vector<realtype>{ 0.0, 1.0, 0.5 }),
                  AmiException);
 }
 
-TEST_F(Model, testNameIdGetterSetter)
+TEST_F(ModelTest, ParameterNameIdGetterSetter)
 {
     model.setParameterById("p0", 3.0);
     ASSERT_NEAR(model.getParameterById("p0"), 3.0, 1e-16);
     ASSERT_THROW(model.getParameterById("p1"), AmiException);
     ASSERT_NEAR(
-      model.setParametersByIdRegex("p[\\d]+", 5.0), p.size(), 1e-16);
+        model.setParametersByIdRegex("p[\\d]+", 5.0), p.size(), 1e-16);
     for (const auto& ip : model.getParameters())
         ASSERT_NEAR(ip, 5.0, 1e-16);
     ASSERT_THROW(model.setParametersByIdRegex("k[\\d]+", 5.0), AmiException);
@@ -140,7 +139,7 @@ TEST_F(Model, testNameIdGetterSetter)
     ASSERT_NEAR(model.getParameterByName("p0"), 3.0, 1e-16);
     ASSERT_THROW(model.getParameterByName("p1"), AmiException);
     ASSERT_NEAR(
-      model.setParametersByNameRegex("p[\\d]+", 5.0), p.size(), 1e-16);
+        model.setParametersByNameRegex("p[\\d]+", 5.0), p.size(), 1e-16);
     for (const auto& ip : model.getParameters())
         ASSERT_NEAR(ip, 5.0, 1e-16);
     ASSERT_THROW(model.setParametersByNameRegex("k[\\d]+", 5.0), AmiException);
@@ -149,7 +148,7 @@ TEST_F(Model, testNameIdGetterSetter)
     ASSERT_NEAR(model.getFixedParameterById("k0"), 3.0, 1e-16);
     ASSERT_THROW(model.getFixedParameterById("k4"), AmiException);
     ASSERT_NEAR(
-      model.setFixedParametersByIdRegex("k[\\d]+", 5.0), k.size(), 1e-16);
+        model.setFixedParametersByIdRegex("k[\\d]+", 5.0), k.size(), 1e-16);
     for (const auto& ik : model.getFixedParameters())
         ASSERT_NEAR(ik, 5.0, 1e-16);
     ASSERT_THROW(model.setFixedParametersByIdRegex("p[\\d]+", 5.0), AmiException);
@@ -158,14 +157,14 @@ TEST_F(Model, testNameIdGetterSetter)
     ASSERT_NEAR(model.getFixedParameterByName("k0"), 3.0, 1e-16);
     ASSERT_THROW(model.getFixedParameterByName("k4"), AmiException);
     ASSERT_NEAR(
-      model.setFixedParametersByNameRegex("k[\\d]+", 5.0), k.size(), 1e-16);
+        model.setFixedParametersByNameRegex("k[\\d]+", 5.0), k.size(), 1e-16);
     for (const auto& ik : model.getFixedParameters())
         ASSERT_NEAR(ik, 5.0, 1e-16);
     ASSERT_THROW(model.setFixedParametersByNameRegex("p[\\d]+", 5.0),
                  AmiException);
 }
 
-TEST_F(Model, reinitializeFixedParameterInitialStates)
+TEST_F(ModelTest, ReinitializeFixedParameterInitialStates)
 {
     ASSERT_THROW(model.setReinitializeFixedParameterInitialStates(true),
                  AmiException);
@@ -175,88 +174,88 @@ TEST_F(Model, reinitializeFixedParameterInitialStates)
     AmiVectorArray sx(model.np(), nx);
 }
 
-TEST(SymbolicFunctions, testSign)
+TEST(SymbolicFunctionsTest, Sign)
 {
     ASSERT_EQ(-1, sign(-2));
     ASSERT_EQ(0, sign(0));
     ASSERT_EQ(1, sign(2));
 }
 
-TEST(SymbolicFunctions, testHeaviside)
+TEST(SymbolicFunctionsTest, Heaviside)
 {
     ASSERT_EQ(0, heaviside(-1));
     ASSERT_EQ(1, heaviside(0));
     ASSERT_EQ(1, heaviside(1));
 }
 
-TEST(symbolicFunctions, testMin)
+TEST(SymbolicFunctionsTest, Min)
 {
-    ASSERT_EQ(-1, amici::min(-1, 2, 0));
-    ASSERT_EQ(-2, amici::min(1, -2, 0));
-    ASSERT_TRUE(amici::isNaN(amici::min(amici::getNaN(), amici::getNaN(), 0)));
-    ASSERT_EQ(-1, amici::min(-1, amici::getNaN(), 0));
-    ASSERT_EQ(-1, amici::min(amici::getNaN(), -1, 0));
+    ASSERT_EQ(-1, min(-1, 2, 0));
+    ASSERT_EQ(-2, min(1, -2, 0));
+    ASSERT_TRUE(isNaN(min(getNaN(), getNaN(), 0)));
+    ASSERT_EQ(-1, min(-1, getNaN(), 0));
+    ASSERT_EQ(-1, min(getNaN(), -1, 0));
 }
 
-TEST(symbolicFunctions, testMax)
+TEST(SymbolicFunctionsTest, Max)
 {
-    ASSERT_EQ(2, amici::max(-1, 2, 0));
-    ASSERT_EQ(1, amici::max(1, -2, 0));
-    ASSERT_TRUE(amici::isNaN(amici::max(amici::getNaN(), amici::getNaN(), 0)));
-    ASSERT_EQ(-1, amici::max(-1, amici::getNaN(), 0));
-    ASSERT_EQ(-1, amici::max(amici::getNaN(), -1, 0));
+    ASSERT_EQ(2, max(-1, 2, 0));
+    ASSERT_EQ(1, max(1, -2, 0));
+    ASSERT_TRUE(isNaN(max(getNaN(), getNaN(), 0)));
+    ASSERT_EQ(-1, max(-1, getNaN(), 0));
+    ASSERT_EQ(-1, max(getNaN(), -1, 0));
 }
 
-TEST(symbolicFunctions, testDMin)
+TEST(SymbolicFunctionsTest, DMin)
 {
-    ASSERT_EQ(0, amici::Dmin(1, -1, -2, 0));
-    ASSERT_EQ(1, amici::Dmin(1, -1, 2, 0));
-    ASSERT_EQ(1, amici::Dmin(2, -1, -2, 0));
-    ASSERT_EQ(0, amici::Dmin(2, -1, 2, 0));
+    ASSERT_EQ(0, Dmin(1, -1, -2, 0));
+    ASSERT_EQ(1, Dmin(1, -1, 2, 0));
+    ASSERT_EQ(1, Dmin(2, -1, -2, 0));
+    ASSERT_EQ(0, Dmin(2, -1, 2, 0));
 }
 
-TEST(symbolicFunctions, testDMax)
+TEST(SymbolicFunctionsTest, DMax)
 {
-    ASSERT_EQ(1, amici::Dmax(1, -1, -2, 0));
-    ASSERT_EQ(0, amici::Dmax(1, -1, 2, 0));
-    ASSERT_EQ(0, amici::Dmax(2, -1, -2, 0));
-    ASSERT_EQ(1, amici::Dmax(2, -1, 2, 0));
+    ASSERT_EQ(1, Dmax(1, -1, -2, 0));
+    ASSERT_EQ(0, Dmax(1, -1, 2, 0));
+    ASSERT_EQ(0, Dmax(2, -1, -2, 0));
+    ASSERT_EQ(1, Dmax(2, -1, 2, 0));
 }
 
-TEST(symbolicFunctions, testpos_pow)
+TEST(SymbolicFunctionsTest, pos_pow)
 {
-    ASSERT_EQ(0, amici::pos_pow(-0.1, 3));
-    ASSERT_EQ(pow(0.1, 3), amici::pos_pow(0.1, 3));
+    ASSERT_EQ(0, pos_pow(-0.1, 3));
+    ASSERT_EQ(pow(0.1, 3), pos_pow(0.1, 3));
 }
 
-TEST(amiciSolver, testEquality)
+TEST(SolverTestBasic, Equality)
 {
     IDASolver i1, i2;
     CVodeSolver c1, c2;
 
-    ASSERT_TRUE(i1 == i2);
-    ASSERT_TRUE(c1 == c2);
+    ASSERT_EQ(i1, i2);
+    ASSERT_EQ(c1, c2);
     ASSERT_FALSE(i1 == c1);
 }
 
-TEST(amiciSolver, testClone)
+TEST(SolverTestBasic, Clone)
 {
     IDASolver i1;
-    auto i2 = std::unique_ptr<Solver>(i1.clone());
-    ASSERT_TRUE(i1 == *i2);
+    std::unique_ptr<Solver> i2(i1.clone());
+    ASSERT_EQ(i1, *i2);
 
     CVodeSolver c1;
-    auto c2 = std::unique_ptr<Solver>(c1.clone());
+    std::unique_ptr<Solver> c2(c1.clone());
     ASSERT_TRUE(c1 == *c2);
     ASSERT_FALSE(*i2 == *c2);
 }
 
-TEST(amiciSolverIdas, testConstructionDestruction)
+TEST(SolverIdasTest, DefaultConstructableAndNotLeaky)
 {
     IDASolver solver;
 }
 
-class edata : public ::testing::Test {
+class ExpDataTest : public ::testing::Test {
   protected:
     void SetUp() override {
         model->setTimepoints(timepoints);
@@ -268,111 +267,110 @@ class edata : public ::testing::Test {
     int nx = 1, ny = 2, nz = 3, nmaxevent = 4;
     std::vector<realtype> timepoints = { 1, 2, 3, 4 };
 
-    std::unique_ptr<amici::Model> model = amici::generic_model::getModel();
+    std::unique_ptr<Model> model = generic_model::getModel();
 
     Model_Test testModel = Model_Test(
-                ModelDimensions(
-                    nx,        // nx_rdata
-                    nx,        // nxtrue_rdata
-                    nx,        // nx_solver
-                    nx,        // nxtrue_solver
-                    0,         // nx_solver_reinit
-                    1,  // np
-                    3,  // nk
-                    ny,        // ny
-                    ny,        // nytrue
-                    nz,        // nz
-                    nz,        // nztrue
-                    nmaxevent, // ne
-                    0,         // nJ
-                    0,         // nw
-                    0,         // ndwdx
-                    0,         // ndwdp
-                    0,         // dwdw
-                    0,         // ndxdotdw
-                    {},         // ndJydy
-                    0,         // nnz
-                    0,         // ubw
-                    0          // lbw
-                    ),
-                SimulationParameters(
-                    std::vector<realtype>(3, 0.0),
-                    std::vector<realtype>(1, 0.0),
-                    std::vector<int>(2, 1)
-                ),
-                SecondOrderMode::none,
-                std::vector<realtype>(),
-                std::vector<int>());
+        ModelDimensions(
+            nx,        // nx_rdata
+            nx,        // nxtrue_rdata
+            nx,        // nx_solver
+            nx,        // nxtrue_solver
+            0,         // nx_solver_reinit
+            1,  // np
+            3,  // nk
+            ny,        // ny
+            ny,        // nytrue
+            nz,        // nz
+            nz,        // nztrue
+            nmaxevent, // ne
+            0,         // nJ
+            0,         // nw
+            0,         // ndwdx
+            0,         // ndwdp
+            0,         // dwdw
+            0,         // ndxdotdw
+            {},         // ndJydy
+            0,         // nnz
+            0,         // ubw
+            0          // lbw
+            ),
+        SimulationParameters(
+            std::vector<realtype>(3, 0.0),
+            std::vector<realtype>(1, 0.0),
+            std::vector<int>(2, 1)
+            ),
+        SecondOrderMode::none,
+        std::vector<realtype>(),
+        std::vector<int>());
 };
 
-TEST_F(edata, testConstructors1)
+TEST_F(ExpDataTest, DefaultConstructable)
 {
-    auto edata = ExpData();
-    ASSERT_TRUE(edata.nytrue() == 0);
-    ASSERT_TRUE(edata.nztrue() == 0);
-    ASSERT_TRUE(edata.nmaxevent() == 0);
+    ExpData edata{};
+    ASSERT_EQ(edata.nytrue(), 0);
+    ASSERT_EQ(edata.nztrue(), 0);
+    ASSERT_EQ(edata.nmaxevent(), 0);
 }
-TEST_F(edata, testConstructors2)
+TEST_F(ExpDataTest, ModelCtor)
 {
-    auto edata = ExpData(model->nytrue, model->nztrue, model->nMaxEvent());
-    ASSERT_TRUE(edata.nytrue() == model->nytrue);
-    ASSERT_TRUE(edata.nztrue() == model->nztrue);
-    ASSERT_TRUE(edata.nmaxevent() == model->nMaxEvent());
+    ExpData edata(model->nytrue, model->nztrue, model->nMaxEvent());
+    ASSERT_EQ(edata.nytrue(), model->nytrue);
+    ASSERT_EQ(edata.nztrue(), model->nztrue);
+    ASSERT_EQ(edata.nmaxevent(), model->nMaxEvent());
 }
 
-TEST_F(edata, testConstructors3)
+TEST_F(ExpDataTest, DimensionCtor)
 {
-    auto edata =
-      ExpData(model->nytrue, model->nztrue, model->nMaxEvent(), timepoints);
-    ASSERT_TRUE(edata.nytrue() == model->nytrue);
-    ASSERT_TRUE(edata.nztrue() == model->nztrue);
-    ASSERT_TRUE(edata.nmaxevent() == model->nMaxEvent());
-    ASSERT_TRUE(edata.nt() == model->nt());
+    ExpData edata(model->nytrue, model->nztrue, model->nMaxEvent(), timepoints);
+    ASSERT_EQ(edata.nytrue(), model->nytrue);
+    ASSERT_EQ(edata.nztrue(), model->nztrue);
+    ASSERT_EQ(edata.nmaxevent(), model->nMaxEvent());
+    ASSERT_EQ(edata.nt(), model->nt());
     checkEqualArray(
-      timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
+        timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
 }
 
-TEST_F(edata, testConstructors4)
+TEST_F(ExpDataTest, MeasurementCtor)
 {
     std::vector<realtype> y(ny * timepoints.size(), 0.0);
     std::vector<realtype> y_std(ny * timepoints.size(), 0.1);
     std::vector<realtype> z(nz * nmaxevent, 0.0);
     std::vector<realtype> z_std(nz * nmaxevent, 0.1);
 
-    auto edata = ExpData(testModel.nytrue,
-                         testModel.nztrue,
-                         testModel.nMaxEvent(),
-                         timepoints,
-                         y,
-                         y_std,
-                         z,
-                         z_std);
-    ASSERT_TRUE(edata.nytrue() == testModel.nytrue);
-    ASSERT_TRUE(edata.nztrue() == testModel.nztrue);
-    ASSERT_TRUE(edata.nmaxevent() == testModel.nMaxEvent());
-    ASSERT_TRUE(edata.nt() == testModel.nt());
+    ExpData edata(testModel.nytrue,
+                  testModel.nztrue,
+                  testModel.nMaxEvent(),
+                  timepoints,
+                  y,
+                  y_std,
+                  z,
+                  z_std);
+    ASSERT_EQ(edata.nytrue(), testModel.nytrue);
+    ASSERT_EQ(edata.nztrue(), testModel.nztrue);
+    ASSERT_EQ(edata.nmaxevent(), testModel.nMaxEvent());
+    ASSERT_EQ(edata.nt(), testModel.nt());
     checkEqualArray(
-      timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
+        timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
     checkEqualArray(
-      y, edata.getObservedData(), TEST_ATOL, TEST_RTOL, "observedData");
+        y, edata.getObservedData(), TEST_ATOL, TEST_RTOL, "observedData");
     checkEqualArray(y_std,
                     edata.getObservedDataStdDev(),
                     TEST_ATOL,
                     TEST_RTOL,
                     "observedDataStdDev");
     checkEqualArray(
-      z, edata.getObservedEvents(), TEST_ATOL, TEST_RTOL, "observedEvents");
+        z, edata.getObservedEvents(), TEST_ATOL, TEST_RTOL, "observedEvents");
     checkEqualArray(z_std,
                     edata.getObservedEventsStdDev(),
                     TEST_ATOL,
                     TEST_RTOL,
                     "observedEventsStdDev");
 
-    auto edata_copy = ExpData(edata);
-    ASSERT_TRUE(edata.nytrue() == edata_copy.nytrue());
-    ASSERT_TRUE(edata.nztrue() == edata_copy.nztrue());
-    ASSERT_TRUE(edata.nmaxevent() == edata_copy.nmaxevent());
-    ASSERT_TRUE(edata.nt() == edata_copy.nt());
+    ExpData edata_copy(edata);
+    ASSERT_EQ(edata.nytrue(), edata_copy.nytrue());
+    ASSERT_EQ(edata.nztrue(), edata_copy.nztrue());
+    ASSERT_EQ(edata.nmaxevent(), edata_copy.nmaxevent());
+    ASSERT_EQ(edata.nt(), edata_copy.nt());
     checkEqualArray(edata_copy.getTimepoints(),
                     edata.getTimepoints(),
                     TEST_ATOL,
@@ -400,14 +398,14 @@ TEST_F(edata, testConstructors4)
                     "observedEventsStdDev");
 }
 
-TEST_F(edata, testConstructors5)
+TEST_F(ExpDataTest, CopyConstructable)
 {
     testModel.setTimepoints(timepoints);
     auto edata = ExpData(testModel);
-    ASSERT_TRUE(edata.nytrue() == testModel.nytrue);
-    ASSERT_TRUE(edata.nztrue() == testModel.nztrue);
-    ASSERT_TRUE(edata.nmaxevent() == testModel.nMaxEvent());
-    ASSERT_TRUE(edata.nt() == testModel.nt());
+    ASSERT_EQ(edata.nytrue(), testModel.nytrue);
+    ASSERT_EQ(edata.nztrue(), testModel.nztrue);
+    ASSERT_EQ(edata.nmaxevent(), testModel.nMaxEvent());
+    ASSERT_EQ(edata.nt(), testModel.nt());
     checkEqualArray(testModel.getTimepoints(),
                     edata.getTimepoints(),
                     TEST_ATOL,
@@ -415,11 +413,9 @@ TEST_F(edata, testConstructors5)
                     "ts");
 }
 
-TEST_F(edata, testDimensionChecks)
+TEST_F(ExpDataTest, DimensionChecks)
 {
-
     std::vector<realtype> bad_std(ny, -0.1);
-
     std::vector<realtype> y(ny * timepoints.size(), 0.0);
     std::vector<realtype> y_std(ny * timepoints.size(), 0.1);
     std::vector<realtype> z(nz * nmaxevent, 0.0);
@@ -445,7 +441,7 @@ TEST_F(edata, testDimensionChecks)
                          z_std),
                  AmiException);
 
-    auto edata = ExpData(testModel);
+    ExpData edata(testModel);
 
     std::vector<realtype> bad_y(ny * timepoints.size() + 1, 0.0);
     std::vector<realtype> bad_y_std(ny * timepoints.size() + 1, 0.1);
@@ -475,9 +471,9 @@ TEST_F(edata, testDimensionChecks)
                  AmiException);
 }
 
-TEST_F(edata, testSettersGetters)
+TEST_F(ExpDataTest, SettersGetters)
 {
-    auto edata = ExpData(testModel);
+    ExpData edata(testModel);
 
     std::vector<realtype> y(ny * timepoints.size(), 0.0);
     std::vector<realtype> y_std(ny * timepoints.size(), 0.1);
@@ -486,7 +482,7 @@ TEST_F(edata, testSettersGetters)
 
     edata.setObservedData(y);
     checkEqualArray(
-      edata.getObservedData(), y, TEST_ATOL, TEST_RTOL, "ObservedData");
+        edata.getObservedData(), y, TEST_ATOL, TEST_RTOL, "ObservedData");
     edata.setObservedDataStdDev(y_std);
     checkEqualArray(edata.getObservedDataStdDev(),
                     y_std,
@@ -495,7 +491,7 @@ TEST_F(edata, testSettersGetters)
                     "ObservedDataStdDev");
     edata.setObservedEvents(z);
     checkEqualArray(
-      edata.getObservedEvents(), z, TEST_ATOL, TEST_RTOL, "ObservedEvents");
+        edata.getObservedEvents(), z, TEST_ATOL, TEST_RTOL, "ObservedEvents");
     edata.setObservedEventsStdDev(z_std);
     checkEqualArray(edata.getObservedEventsStdDev(),
                     z_std,
@@ -548,14 +544,14 @@ TEST_F(edata, testSettersGetters)
     ASSERT_TRUE(!edata.getObservedEventsStdDevPtr(0));
 
     checkEqualArray(
-      edata.getObservedData(), empty, TEST_ATOL, TEST_RTOL, "ObservedData");
+        edata.getObservedData(), empty, TEST_ATOL, TEST_RTOL, "ObservedData");
     checkEqualArray(edata.getObservedDataStdDev(),
                     empty,
                     TEST_ATOL,
                     TEST_RTOL,
                     "ObservedDataStdDev");
     checkEqualArray(
-      edata.getObservedEvents(), empty, TEST_ATOL, TEST_RTOL, "ObservedEvents");
+        edata.getObservedEvents(), empty, TEST_ATOL, TEST_RTOL, "ObservedEvents");
     checkEqualArray(edata.getObservedEventsStdDev(),
                     empty,
                     TEST_ATOL,
@@ -582,7 +578,7 @@ class SolverTest : public ::testing::Test {
     double tol, badtol;
     std::vector<realtype> timepoints = { 1, 2, 3, 4 };
 
-    std::unique_ptr<amici::Model> model = amici::generic_model::getModel();
+    std::unique_ptr<Model> model = generic_model::getModel();
     SensitivityMethod sensi_meth;
     SensitivityOrder sensi;
     int steps, badsteps;
@@ -592,43 +588,43 @@ class SolverTest : public ::testing::Test {
     InterpolationType interp;
 
     Model_Test testModel = Model_Test(
-                ModelDimensions(
-                    nx,        // nx_rdata
-                    nx,        // nxtrue_rdata
-                    nx,        // nx_solver
-                    nx,        // nxtrue_solver
-                    0,         // nx_solver_reinit
-                    1,         // np
-                    3,         // nk
-                    ny,        // ny
-                    ny,        // nytrue
-                    nz,        // nz
-                    nz,        // nztrue
-                    ne,        // ne
-                    0,         // nJ
-                    0,         // nw
-                    0,         // ndwdx
-                    0,         // ndwdp
-                    0,         // dwdw
-                    0,         // ndxdotdw
-                    {},         // ndJydy
-                    1,         // nnz
-                    0,         // ubw
-                    0         // lbw
-                    ),
-                SimulationParameters(
-                    std::vector<realtype>(3, 0.0),
-                    std::vector<realtype>(1, 0.0),
-                    std::vector<int>(2, 1)
-                ),
-                SecondOrderMode::none,
-                std::vector<realtype>(0, 0.0),
-                std::vector<int>());
+        ModelDimensions(
+            nx,        // nx_rdata
+            nx,        // nxtrue_rdata
+            nx,        // nx_solver
+            nx,        // nxtrue_solver
+            0,         // nx_solver_reinit
+            1,         // np
+            3,         // nk
+            ny,        // ny
+            ny,        // nytrue
+            nz,        // nz
+            nz,        // nztrue
+            ne,        // ne
+            0,         // nJ
+            0,         // nw
+            0,         // ndwdx
+            0,         // ndwdp
+            0,         // dwdw
+            0,         // ndxdotdw
+            {},         // ndJydy
+            1,         // nnz
+            0,         // ubw
+            0         // lbw
+            ),
+        SimulationParameters(
+            std::vector<realtype>(3, 0.0),
+            std::vector<realtype>(1, 0.0),
+            std::vector<int>(2, 1)
+            ),
+        SecondOrderMode::none,
+        std::vector<realtype>(0, 0.0),
+        std::vector<int>());
 
-            CVodeSolver solver = CVodeSolver();
+    CVodeSolver solver = CVodeSolver();
 };
 
-TEST_F(SolverTest, testSettersGettersNoSetup)
+TEST_F(SolverTest, SettersGettersNoSetup)
 {
     testSolverGetterSetters(solver,
                             sensi_meth,
@@ -643,15 +639,14 @@ TEST_F(SolverTest, testSettersGettersNoSetup)
                             badtol);
 }
 
-TEST_F(SolverTest, testSettersGettersWithSetup)
+TEST_F(SolverTest, SettersGettersWithSetup)
 {
 
     solver.setSensitivityMethod(sensi_meth);
     ASSERT_EQ(static_cast<int>(solver.getSensitivityMethod()),
-                static_cast<int>(sensi_meth));
+              static_cast<int>(sensi_meth));
 
-    auto rdata =
-      std::unique_ptr<ReturnData>(new ReturnData(solver, testModel));
+    auto rdata = std::make_unique<ReturnData>(solver, testModel);
     AmiVector x(nx), dx(nx);
     AmiVectorArray sx(nx, 1), sdx(nx, 1);
 
@@ -688,27 +683,27 @@ testSolverGetterSetters(CVodeSolver solver,
 
     solver.setSensitivityMethod(sensi_meth);
     ASSERT_EQ(static_cast<int>(solver.getSensitivityMethod()),
-                static_cast<int>(sensi_meth));
+              static_cast<int>(sensi_meth));
 
     solver.setSensitivityOrder(sensi);
     ASSERT_EQ(static_cast<int>(solver.getSensitivityOrder()),
-                static_cast<int>(sensi));
+              static_cast<int>(sensi));
 
     solver.setInternalSensitivityMethod(ism);
     ASSERT_EQ(static_cast<int>(solver.getInternalSensitivityMethod()),
-                static_cast<int>(ism));
+              static_cast<int>(ism));
 
     solver.setInterpolationType(interp);
     ASSERT_EQ(static_cast<int>(solver.getInterpolationType()),
-                static_cast<int>(interp));
+              static_cast<int>(interp));
 
     solver.setNonlinearSolverIteration(iter);
     ASSERT_EQ(static_cast<int>(solver.getNonlinearSolverIteration()),
-                static_cast<int>(iter));
+              static_cast<int>(iter));
 
     solver.setLinearMultistepMethod(lmm);
     ASSERT_EQ(static_cast<int>(solver.getLinearMultistepMethod()),
-                static_cast<int>(lmm));
+              static_cast<int>(lmm));
 
     solver.setPreequilibration(true);
     ASSERT_EQ(solver.getPreequilibration(), true);
@@ -764,7 +759,7 @@ class AmiVectorTest : public ::testing::Test {
     std::vector<double> vec3{ 4, 4, 2, 1 };
 };
 
-TEST_F(AmiVectorTest, vector)
+TEST_F(AmiVectorTest, Vector)
 {
     AmiVector av(vec1);
     N_Vector nvec = av.getNVector();
@@ -772,7 +767,7 @@ TEST_F(AmiVectorTest, vector)
         ASSERT_EQ(av.at(i), NV_Ith_S(nvec, i));
 }
 
-TEST_F(AmiVectorTest, vectorArray)
+TEST_F(AmiVectorTest, VectorArray)
 {
     AmiVectorArray ava(4, 3);
     AmiVector av1(vec1), av2(vec2), av3(vec3);
@@ -832,7 +827,7 @@ class SunMatrixWrapperTest : public ::testing::Test {
     std::vector<double> d{1.3753, 1.5084, 1.1655};
 };
 
-TEST_F(SunMatrixWrapperTest, sparse_multiply)
+TEST_F(SunMatrixWrapperTest, SparseMultiply)
 {
 
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
@@ -841,7 +836,7 @@ TEST_F(SunMatrixWrapperTest, sparse_multiply)
     checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
 }
 
-TEST_F(SunMatrixWrapperTest, sparse_multiply_empty)
+TEST_F(SunMatrixWrapperTest, SparseMultiplyEmpty)
 {
     // Ensure empty Matrix vector multiplication succeeds
     auto A_sparse = SUNMatrixWrapper(1, 1, 0, CSR_MAT);
@@ -855,20 +850,20 @@ TEST_F(SunMatrixWrapperTest, sparse_multiply_empty)
     ASSERT_TRUE(c[0] == 0.1);
 }
 
-TEST_F(SunMatrixWrapperTest, dense_multiply)
+TEST_F(SunMatrixWrapperTest, DenseMultiply)
 {
     auto c(a); //copy c
     A.multiply(c, b);
     checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
 }
 
-TEST_F(SunMatrixWrapperTest, multiply_throws)
+TEST_F(SunMatrixWrapperTest, StdVectorCtor)
 {
     auto b_amivector = AmiVector(b);
     auto a_amivector = AmiVector(a);
 }
 
-TEST_F(SunMatrixWrapperTest, transform_throws)
+TEST_F(SunMatrixWrapperTest, TransformThrows)
 {
     ASSERT_THROW(SUNMatrixWrapper(A, 0.0, 13), std::invalid_argument);
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
@@ -876,30 +871,30 @@ TEST_F(SunMatrixWrapperTest, transform_throws)
                  std::invalid_argument);
 }
 
-TEST_F(SunMatrixWrapperTest, block_transpose)
+TEST_F(SunMatrixWrapperTest, BlockTranspose)
 {
-    auto B_sparse = SUNMatrixWrapper(4, 4, 7, CSR_MAT);
+    SUNMatrixWrapper B_sparse(4, 4, 7, CSR_MAT);
     ASSERT_THROW(B.transpose(B_sparse, 1.0, 4), std::domain_error);
 
     B_sparse = SUNMatrixWrapper(4, 4, 7, CSC_MAT);
     B.transpose(B_sparse, -1.0, 2);
     for (int idx = 0; idx < 7; idx++) {
-        ASSERT_TRUE(SM_INDEXVALS_S(B.get())[idx]
-                   == SM_INDEXVALS_S(B_sparse.get())[idx]);
+        ASSERT_EQ(SM_INDEXVALS_S(B.get())[idx],
+                  SM_INDEXVALS_S(B_sparse.get())[idx]);
         if (idx == 1) {
-            ASSERT_TRUE(SM_DATA_S(B.get())[idx]
-                       == -SM_DATA_S(B_sparse.get())[3]);
+            ASSERT_EQ(SM_DATA_S(B.get())[idx],
+                      -SM_DATA_S(B_sparse.get())[3]);
         } else if (idx == 3) {
-            ASSERT_TRUE(SM_DATA_S(B.get())[idx]
-                       == -SM_DATA_S(B_sparse.get())[1]);
+            ASSERT_EQ(SM_DATA_S(B.get())[idx],
+                      -SM_DATA_S(B_sparse.get())[1]);
         } else {
-            ASSERT_TRUE(SM_DATA_S(B.get())[idx]
-                       == -SM_DATA_S(B_sparse.get())[idx]);
+            ASSERT_EQ(SM_DATA_S(B.get())[idx],
+                      -SM_DATA_S(B_sparse.get())[idx]);
         }
     }
     for (int icol = 0; icol <= 4; icol++)
-        ASSERT_TRUE(SM_INDEXPTRS_S(B.get())[icol]
-                   == SM_INDEXPTRS_S(B_sparse.get())[icol]);
+        ASSERT_EQ(SM_INDEXPTRS_S(B.get())[icol],
+                  SM_INDEXPTRS_S(B_sparse.get())[icol]);
 }
 
 } // namespace
