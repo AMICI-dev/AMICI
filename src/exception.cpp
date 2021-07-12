@@ -8,12 +8,18 @@
 
 namespace amici {
 
-AmiException::AmiException(const char *fmt, ...) {
+AmiException::AmiException()
+{
+    storeBacktrace(12);
+}
+
+AmiException::AmiException(const char *fmt, ...)
+    : AmiException()
+{
     va_list ap;
     va_start(ap, fmt);
-    vsnprintf(msg_.data(), msg_.size(), fmt, ap);
+    storeMessage(fmt, ap);
     va_end(ap);
-    storeBacktrace(12);
 }
 
 const char *AmiException::what() const noexcept {
@@ -27,6 +33,11 @@ const char *AmiException::getBacktrace() const {
 void AmiException::storeBacktrace(const int nMaxFrames) {
     snprintf(trace_.data(), trace_.size(), "%s",
              backtraceString(nMaxFrames).c_str());
+}
+
+void AmiException::storeMessage(const char *fmt, va_list argptr)
+{
+    vsnprintf(msg_.data(), msg_.size(), fmt, argptr);
 }
 
 CvodeException::CvodeException(const int error_code, const char *function) :
@@ -46,6 +57,14 @@ IntegrationFailureB::IntegrationFailureB(int code, realtype t) :
 NewtonFailure::NewtonFailure(int code, const char *function) :
     AmiException("NewtonSolver routine %s failed with error code %i",function,code) {
     error_code = code;
+}
+
+SetupFailure::SetupFailure(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    storeMessage(fmt, ap);
+    va_end(ap);
 }
 
 } // namespace amici

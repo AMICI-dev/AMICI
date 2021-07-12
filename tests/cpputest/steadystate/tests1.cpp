@@ -113,6 +113,27 @@ TEST(groupSteadystate, testRethrow)
                  runAmiciSimulation(*solver, nullptr, *model, true));
 }
 
+
+TEST(groupSteadystate, testMaxtime)
+{
+    auto model = amici::generic_model::getModel();
+    auto solver = model->getSolver();
+
+    amici::hdf5::readModelDataFromHDF5(
+        NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
+    amici::hdf5::readSolverSettingsFromHDF5(
+        NEW_OPTION_FILE, *solver, "/model_steadystate/nosensi/options");
+
+    auto rdata = runAmiciSimulation(*solver, nullptr, *model);
+    CHECK_EQUAL(amici::AMICI_SUCCESS, rdata->status);
+
+    solver->setMaxTime(0.000001);
+
+    // must throw
+    rdata = runAmiciSimulation(*solver, nullptr, *model);
+    CHECK_EQUAL(amici::AMICI_MAX_TIME_EXCEEDED, rdata->status);
+}
+
 TEST(groupSteadystate, testInitialStatesNonEmpty)
 {
     auto model = amici::generic_model::getModel();
