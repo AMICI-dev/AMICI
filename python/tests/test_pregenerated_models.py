@@ -13,8 +13,8 @@ import pytest
 from amici.gradient_check import check_derivatives, check_results
 
 cpp_test_dir = Path(__file__).parents[2] / 'tests' / 'cpp'
-options_file = cpp_test_dir / 'testOptions.h5'
-expected_results_file = cpp_test_dir / 'expectedResults.h5'
+options_file = str(cpp_test_dir / 'testOptions.h5')
+expected_results_file = str(cpp_test_dir / 'expectedResults.h5')
 expected_results = h5py.File(expected_results_file, 'r')
 
 model_cases = [(sub_test, case)
