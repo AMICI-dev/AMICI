@@ -36,7 +36,7 @@ TEST(ExampleSteadystate, ModelFromHDF5)
 TEST(ExampleSteadystate, Inequality)
 {
     auto modelA = amici::generic_model::getModel();
-    auto modelB = std::unique_ptr<amici::Model>(new amici::Model_Test());
+    auto modelB = std::make_unique<amici::Model_Test>();
 
     ASSERT_FALSE(*modelA == *modelB);
 }
@@ -52,8 +52,8 @@ TEST(ExampleSteadystate, CopyModel)
 TEST(ExampleSteadystate, CloneModel)
 {
     auto modelA = amici::generic_model::getModel();
-    auto modelB = std::unique_ptr<amici::Model>(
-      new amici::model_model_steadystate::Model_model_steadystate());
+    auto modelB = std::make_unique<
+        amici::model_model_steadystate::Model_model_steadystate>();
 
     ASSERT_EQ(*modelA, *modelB);
 }

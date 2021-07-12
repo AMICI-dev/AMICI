@@ -37,7 +37,7 @@ TEST(ExampleJakstatAdjoint, SensitivityAdjointEmptySensInd)
       "/model_jakstat_adjoint/sensiadjointemptysensind/");
 }
 
-TEST(ExampleJakstatAdjoint, DISABLED_testSensitivityAdjointUnusedNanOutputs)
+TEST(ExampleJakstatAdjoint, DISABLED_SensitivityAdjointUnusedNanOutputs)
 {
     /* UN-IGNORE ONCE THIS MODEL HAS BEEN IMPORTED VIA PYTHON INTERFACE */
     auto model = amici::generic_model::getModel();
