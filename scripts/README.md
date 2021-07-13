@@ -14,12 +14,7 @@ This directory contains a number of build, installation, and CI scripts.
 
    Download and build 
    [BioNetGen](https://www.csb.pitt.edu/Faculty/Faeder/?page_id=409) (required for some tests)
-
-* `buildCpputest.sh`
-
-   Download and build [CppUTest](https://cpputest.github.io/)
-   (required for C++ test suite)
-   
+  
 * `buildSuiteSparse.sh`
 
    Build [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html)
@@ -64,7 +59,7 @@ This directory contains a number of build, installation, and CI scripts.
 
   Run static code analysis
 
-* `run-cpputest.sh`
+* `run-cpp-tests.sh`
 
   Run C++ unit and integration tests
 
