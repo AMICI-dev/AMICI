@@ -131,7 +131,7 @@ def install_doxygen():
     assert os.path.islink(os.path.join(some_dir_on_path, 'doxygen'))
     res = subprocess.run(['which', 'doxygen'],
                          shell=True, check=True, capture_output=True)
-    print(res.stdout.decode())
+    print(res.stdout.decode(), res.stderr.decode())
     # verify it's available
     res = subprocess.run(['doxygen', '--version'],
                          shell=True, check=False, capture_output=True)

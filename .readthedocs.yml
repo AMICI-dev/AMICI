@@ -27,3 +27,5 @@ python:
 
 build:
   image: testing
+  apt_packages:
+    - libclang1-9
