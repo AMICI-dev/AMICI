@@ -113,6 +113,22 @@ def install_amici_deps_rtd():
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
 
 
+def install_doxygen():
+    """Get a more recent doxygen"""
+    version = '1.9.1'
+    cmd = (
+        f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
+        f"&& wget https://doxygen.nl/files/doxygen-{version}.linux.bin.tar.gz "
+        "&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
+    )
+    subprocess.run(cmd, shell=True, check=True)
+    os.environ['PATH'] = f'doxygen-{version}/bin:' + os.environ['PATH']
+
+    # verify it's available
+    res = subprocess.run(['doxygen', '--version'],
+                         shell=True, check=True, capture_output=True)
+    assert version in res.stdout.decode()
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -127,6 +143,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
+    install_doxygen()
 
 # Required for matlab doxygen processing
 install_mtocpp()
