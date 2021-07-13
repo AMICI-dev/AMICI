@@ -119,7 +119,7 @@ def install_doxygen():
     cmd = (
         f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
         f"&& wget https://doxygen.nl/files/doxygen-{version}.linux.bin.tar.gz "
-        "&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
+        f"&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
     )
     subprocess.run(cmd, shell=True, check=True)
     os.environ['PATH'] = f'doxygen-{version}/bin:' + os.environ['PATH']
