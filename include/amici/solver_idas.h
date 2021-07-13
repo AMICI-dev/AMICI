@@ -134,9 +134,9 @@ class IDASolver : public Solver {
 
     void setErrHandlerFn() const override;
 
-    void setUserData(Model *model) const override;
+    void setUserData() const override;
 
-    void setUserDataB(int which, Model *model) const override;
+    void setUserDataB(int which) const override;
 
     void setMaxNumSteps(long int mxsteps) const override;
 

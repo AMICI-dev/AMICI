@@ -9,6 +9,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
@@ -83,6 +84,24 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.cpu_time_;
     ar &s.cpu_timeB_;
     ar &s.rdata_mode_;
+    ar &s.maxtime_;
+}
+
+/**
+ * @brief Serialize std::chrono::duration to boost archive
+ * @param ar Archive
+ * @param d Duration
+ */
+template <class Archive, class Period, class Rep>
+void serialize(Archive &ar, std::chrono::duration<Period, Rep> &d, const unsigned int /*version*/) {
+    Period tmp_period;
+    if (Archive::is_loading::value) {
+        ar &tmp_period;
+        d = std::chrono::duration<Period, Rep>(tmp_period);
+    } else {
+        tmp_period = d.count();
+        ar &tmp_period;
+    }
 }
 
 /**

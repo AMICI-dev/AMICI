@@ -2,6 +2,30 @@
 
 ## v0.X Series
 
+### v0.11.18 (2021-07-12)
+
+New:
+* Allow specifying maximum integration time via
+  `amici::Solver::setMaxTime()` (#1530)
+* Py: Add `failfast` and `num_threads` argument to `simulate_petab`
+  (#1528, #1524)
+* Enable typehints / static type checking for AMICI-generated model modules
+  (#1514) (`amici.ModelModule`, available with Python>=3.8)
+
+Fixes:
+* Python: Fix unused argument `generate_sensitivity_code` in `pysb2amici`
+  (#1526)
+* Python: Fix C(++) stdout redirection which could have let to deadlocks in
+  exotic situations (#1529)
+* Py: Fixed deprecation warning (#1525)
+* Py: Proper typehints for SWIG interface (#1523), enabling better static type
+  checking and IDE integration (available with Python>=3.9)
+* C++: Fixed clang compiler warning (#1521)
+* C++: Fix inherited variadic ctor in exception class (#1520)
+* PEtab: More informative output for unhandled species overrides (#1519)
+* Return SbmlImporter from PEtab model import (#1517)
+
+
 ### v0.11.17 (2021-05-30)
 
 Fixes:
