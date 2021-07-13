@@ -28,4 +28,6 @@ python:
 build:
   image: testing
   apt_packages:
+    # for custom doxygen
+    - libclang-cpp9
     - libclang1-9
