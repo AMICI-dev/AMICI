@@ -116,17 +116,17 @@ def install_amici_deps_rtd():
 def install_doxygen():
     """Get a more recent doxygen"""
     version = '1.9.1'
+    doxygen_exe = os.path.join(amici_dir, 'ThirdParty',
+                               f'doxygen-{version}', 'bin', 'doxygen')
+    # to create a symlink to doxygen in a location that is already on PATH
+    some_dir_on_path = os.environ['PATH'].split(os.pathsep)[0]
     cmd = (
         f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
         f"&& wget https://doxygen.nl/files/doxygen-{version}.linux.bin.tar.gz "
         f"&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
+        f"&& ln -s {doxygen_exe} {some_dir_on_path}"
     )
     subprocess.run(cmd, shell=True, check=True)
-    doxygen_bin_dir = os.path.join(amici_dir, 'ThirdParty',
-                                   f'doxygen-{version}', 'bin')
-    assert os.path.exists(doxygen_bin_dir)
-    os.environ['PATH'] = f"{doxygen_bin_dir}:{os.environ['PATH']}"
-    print("Updated PATH:", os.environ['PATH'])
     # verify it's available
     res = subprocess.run(['doxygen', '--version'],
                          shell=True, check=True, capture_output=True)
