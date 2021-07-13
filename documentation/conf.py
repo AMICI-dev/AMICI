@@ -124,8 +124,9 @@ def install_doxygen():
     subprocess.run(cmd, shell=True, check=True)
     doxygen_bin_dir = os.path.join(amici_dir, 'ThirdParty',
                                    f'doxygen-{version}', 'bin')
+    assert os.path.exists(doxygen_bin_dir)
     os.environ['PATH'] = f"{doxygen_bin_dir}:{os.environ['PATH']}"
-
+    print("Updated PATH:", os.environ['PATH'])
     # verify it's available
     res = subprocess.run(['doxygen', '--version'],
                          shell=True, check=True, capture_output=True)
