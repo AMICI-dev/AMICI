@@ -69,6 +69,18 @@ class AbstractModel {
                         const AmiVector &sdx, AmiVector &sxdot) = 0;
 
     /**
+     * @brief Residual function of adjoint state
+     * @param t time
+     * @param x state
+     * @param dx time derivative of state (DAE only)
+     * @param xdot array to which values of the residual function will be
+     * written
+     */
+    virtual void fxBdot(realtype t, const AmiVector &x,
+                        const AmiVector &dx, const AmiVector &xB,
+                        const AmiVector &dxB, AmiVector &xBdot) = 0;
+
+    /**
      * @brief Residual function backward when running in steady state mode
      * @param t time
      * @param xB adjoint state
@@ -507,12 +519,13 @@ class AbstractModel {
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
      * @param xB current adjoint state
+     * @param xBdot right hand side of adjoint state
      */
     virtual void fdeltaxB(realtype *deltaxB, const realtype t,
                           const realtype *x, const realtype *p,
                           const realtype *k, const realtype *h, int ie,
                           const realtype *xdot, const realtype *xdot_old,
-                          const realtype *xB);
+                          const realtype *xB, const realtype *xBdot);
 
     /**
      * @brief Model-specific implementation of fdeltaqB
@@ -527,12 +540,13 @@ class AbstractModel {
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
      * @param xB adjoint state
+     * @param xBdot right hand side of adjoint state
      */
     virtual void fdeltaqB(realtype *deltaqB, const realtype t,
                           const realtype *x, const realtype *p,
                           const realtype *k, const realtype *h, int ip, int ie,
                           const realtype *xdot, const realtype *xdot_old,
-                          const realtype *xB);
+                          const realtype *xB, const realtype *xBdot);
 
     /**
      * @brief Model-specific implementation of fsigmay

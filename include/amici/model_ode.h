@@ -187,6 +187,10 @@ class Model_ODE : public Model {
      */
     void fxdot(realtype t, const_N_Vector x, N_Vector xdot);
 
+    void fxBdot(realtype t, const AmiVector &x, const AmiVector &dx,
+                const AmiVector &xB, const AmiVector &dxB,
+                AmiVector &xBdot) override;
+
     /**
      * @brief Implementation of fxBdot at the N_Vector level
      * @param t timepoint
@@ -194,7 +198,8 @@ class Model_ODE : public Model {
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot);
+    void fxBdot(realtype t, const_N_Vector x, const_N_Vector xB,
+                N_Vector xBdot);
 
     /**
      * @brief Implementation of fqBdot at the N_Vector level

@@ -191,9 +191,15 @@ void Model_DAE::fJvB(realtype t, const_N_Vector x, const_N_Vector dx,
     derived_state_.JB_.multiply(JvB, vB);
 }
 
+void Model_DAE::fxBdot(realtype t, const AmiVector &x,
+                       const AmiVector &dx, const AmiVector &xB,
+                       const AmiVector &dxB, AmiVector &xBdot) {
+    fxBdot(t, x.getNVector(), dx.getNVector(), xB.getNVector(),
+           dxB.getNVector(), xBdot.getNVector());
+}
+
 void Model_DAE::fxBdot(realtype t, const_N_Vector x, const_N_Vector dx,
-                       const_N_Vector xB,
-                       const_N_Vector dxB, N_Vector xBdot) {
+                       const_N_Vector xB, const_N_Vector dxB, N_Vector xBdot) {
     N_VConst(0.0, xBdot);
     fJSparseB(t, 1.0, x, dx, xB, dxB, derived_state_.JB_.get());
     derived_state_.JB_.refresh();

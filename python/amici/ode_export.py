@@ -220,14 +220,15 @@ functions = {
             '(realtype *deltaxB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ie, const realtype *xdot, const realtype *xdot_old, '
-            'const realtype *xB)'
+            'const realtype *xB, const realtype *xBdot)'
     },
     'deltaqB': {
         'signature':
             '(realtype *deltaqB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ip, const int ie, const realtype *xdot, '
-            'const realtype *xdot_old, const realtype *xB)'
+            'const realtype *xdot_old, const realtype *xB, '
+            'const realtype *xBdot)'
     },
     'w': {
         'signature':
@@ -1617,6 +1618,8 @@ class ODEModel:
             return
         elif name == 'xdot_old':
             length = len(self.eq('xdot'))
+        elif name == 'xBdot':
+            length = len(self.eq('xdot'))
         elif name in sparse_functions:
             self._generate_sparse_symbol(name)
             return
@@ -1884,6 +1887,19 @@ class ODEModel:
                 + self.eq('drootdt')
             )
 
+        elif name == 'sdrootdt_total':
+            self._eqs[name] = \
+                smart_jacobian(self.eq('drootdt_total'), self.sym('p')) + \
+                smart_multiply(smart_jacobian(self.eq('drootdt_total'),
+                                              self.sym('x')), self.sym('sx'))
+
+        elif name == 'dstaudt':
+            self._eqs[name] = [
+                - self.eq('sdrootdt_total')[ie, :] / self.eq('drootdt_total')[ie]
+                - self.eq('ddrootdtdt_total')[ie, :] / sp.Pow(self.eq('drootdt_total')[ie], sp.Integer(2))
+                for ie in range(self.num_events())
+            ]
+
         elif name == 'deltax':
             # fill boluses for Heaviside functions, as empty state updates
             # would cause problems when writing the function file later
@@ -1916,7 +1932,7 @@ class ODEModel:
 
         elif name == 'stau':
             self._eqs[name] = [
-                -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
+                self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
                 for ie in range(self.num_events())
             ]
 
@@ -1939,23 +1955,25 @@ class ODEModel:
                     # ====== chain rule for the state variables ===============
                     # get xdot with expressions back-substituted
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot_old') - self.sym('xdot')),
+                        (self.sym('xdot') - self.sym('xdot_old')),
                         self.eq('stau')[ie])
                     # construct an enhanced state sensitivity, which accounts
                     # for the time point sensitivity as well
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
                     tmp_dxdp += smart_multiply(self.sym('xdot_old'),
-                                               self.eq('stau')[ie])
+                                               - self.eq('stau')[ie])
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
                     # ====== chain rule for the time point ====================
-                    tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                    tmp_eq -= smart_multiply(self.eq('ddeltaxdt')[ie],
                                              self.eq('stau')[ie])
+                    #tmp_eq += smart_multiply(self.eq('deltax')[ie],
+                    #                         self.eq('dstaudt_total')[ie])
                     # ====== partial derivative for the parameters ============
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
                     tmp_eq = smart_multiply(
-                        (self.eq('xdot_old') - self.eq('xdot')),
+                        (self.sym('xdot') - self.sym('xdot_old')),
                         self.eq('stau')[ie])
                 event_eqs.append(tmp_eq)
             self._eqs[name] = event_eqs
@@ -1966,45 +1984,46 @@ class ODEModel:
                 if event._state_update is not None:
                     # ==== 1st group of terms : Heaviside functions ===========
                     tmp_eq = smart_multiply(
-                        sp.Float(1.) * (self.eq('xdot_old') - self.eq('xdot')),
-                        -self.eq('dtaudx')[ie])
+                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.eq('dtaudx')[ie])
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
-                    # Part 1a: explicit time dependence of event time point
-                    tmp_eq += smart_multiply(
-                        sp.Float(1.) * self.eq('deltax')[ie],
-                        self.eq('ddtaudxdt')[ie]
-                    )
-                    # Part 1b: implicit time dependence of event time point
-                    tmp_eq += smart_multiply(
-                        sp.Float(-1.) * self.eq('deltax')[ie],
-                        smart_multiply(self.sym('xdot').T,
-                                       self.eq('ddtaudxdx')[ie])
-                    ) # transpose? minus sign?
+#                    # Part 1a: explicit time dependence of event time point
+#                    tmp_eq += smart_multiply(
+#                        sp.Float(1.) * self.eq('deltax')[ie],
+#                        self.eq('ddtaudxdt')[ie]
+#                    )
+#                    # Part 1b: implicit time dependence of event time point
+#                    tmp_eq += smart_multiply(
+#                        sp.Float(1.) * self.eq('deltax')[ie],
+#                        smart_multiply(self.eq('xdot').T,
+#                                       self.eq('ddtaudxdx')[ie])
+#                    ) # transpose? minus sign?
                     # Part 2a: explicit time dependence of bolus function
-                    tmp_eq += smart_multiply(
-                        sp.Float(1.) * self.eq('ddeltaxdt')[ie],
-                        -self.eq('dtaudx')[ie]
-                    )
-                    # Part 2b: implicit time dependence of bolus function
-                    tmp_eq += smart_multiply(
-                        smart_multiply(sp.Float(-1.) * self.eq('ddeltaxdx')[ie],
-                                       self.eq('xdot')),
-                        -self.eq('dtaudx')[ie]
-                    ) # transpose? minus sign?
-                    # Part 3: time dependence of adjoint state
-                    tmp_eq += smart_multiply(
-                        smart_multiply(self.eq('dxdotdx'),
-                                       sp.Float(1.) * self.eq('deltax')[ie]),
+                    tmp_eq -= smart_multiply(
+                        self.eq('ddeltaxdt')[ie],
                         self.eq('dtaudx')[ie]
                     )
+                    # Part 2b: implicit time dependence of bolus function
+                    tmp_eq -= smart_multiply(
+                        smart_multiply(self.eq('ddeltaxdx')[ie],
+                                       self.sym('xdot')),
+                        self.eq('dtaudx')[ie]
+                    ) # transpose? minus sign?
+                    # Part 3: time dependence of adjoint state
+#                    tmp_eq += smart_multiply(
+#                        smart_multiply(self.eq('dxdotdx'),
+#                                       self.eq('deltax')[ie]),
+#                        self.eq('dtaudx')[ie]
+#                    )
                     # ==== 3rd group of terms : Dirac deltas ==================
-                    tmp_eq += self.eq('ddeltaxdx')[ie] # transpose? minus sign?
+                    tmp_eq += self.eq('ddeltaxdx')[ie]
+                    tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
                 else:
                     tmp_eq = smart_multiply(
-                        sp.Float(1.) * (self.eq('xdot_old') - self.eq('xdot')),
-                        -self.eq('dtaudx')[ie])
-                event_eqs.append(smart_multiply(self.sym('xB').T,
-                                                tmp_eq))
+                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.eq('dtaudx')[ie])
+                    tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
+                event_eqs.append(tmp_eq)
             self._eqs[name] = event_eqs
 
         elif name == 'deltaqB':
@@ -2013,43 +2032,43 @@ class ODEModel:
                 if event._state_update is not None:
                     # ==== 1st group of terms : Heaviside functions ===========
                     tmp_eq = smart_multiply(
-                        sp.Float(1.) * (self.eq('xdot_old') - self.eq('xdot')),
-                        -self.eq('dtaudp')[ie])
+                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.eq('dtaudp')[ie])
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
-                    # Part 1a: explicit time dependence of event time point
-                    tmp_eq += smart_multiply(
-                        sp.Float(1.) * self.eq('deltax')[ie],
-                        self.eq('ddtaudpdt')[ie]
-                    )
-                    # Part 1b: implicit time dependence of event time point
-                    tmp_eq += smart_multiply(
-                        sp.Float(1.) * self.eq('deltax')[ie],
-                        smart_multiply(self.sym('xdot').T,
-                                       self.eq('ddtaudpdx')[ie])
-                    )
+#                    # Part 1a: explicit time dependence of event time point
+#                    tmp_eq += smart_multiply(
+#                        sp.Float(1.) * self.eq('deltax')[ie],
+#                        self.eq('ddtaudpdt')[ie]
+#                    )
+#                    # Part 1b: implicit time dependence of event time point
+#                    tmp_eq += smart_multiply(
+#                        sp.Float(1.) * self.eq('deltax')[ie],
+#                        smart_multiply(self.eq('xdot').T,
+#                                       self.eq('ddtaudpdx')[ie])
+#                    )
                     # Part 2a: explicit time dependence of bolus function
-                    tmp_eq += smart_multiply(
-                        sp.Float(1.) * self.eq('ddeltaxdt')[ie],
-                        -self.eq('dtaudp')[ie]
-                    )
-                    # Part 2b: implicit time dependence of bolus function
-                    tmp_eq += smart_multiply(
-                        smart_multiply(sp.Float(1.) * self.eq('ddeltaxdx')[ie],
-                                       self.eq('xdot')),
-                        -self.eq('dtaudp')[ie]
-                    )
-                    # Part 3: time dependence of adjoint state
-                    tmp_eq += smart_multiply(
-                        smart_multiply(self.eq('dxdotdx'),
-                                       sp.Float(1.) * self.eq('deltax')[ie]),
+                    tmp_eq -= smart_multiply(
+                        self.eq('ddeltaxdt')[ie],
                         self.eq('dtaudp')[ie]
                     )
+                    # Part 2b: implicit time dependence of bolus function
+                    tmp_eq -= smart_multiply(
+                        smart_multiply(self.eq('ddeltaxdx')[ie],
+                                       self.sym('xdot')),
+                        self.eq('dtaudp')[ie]
+                    )
+                    # Part 3: time dependence of adjoint state
+#                    tmp_eq += smart_multiply(
+#                        smart_multiply(self.eq('dxdotdx'),
+#                                      self.eq('deltax')[ie]),
+#                        self.eq('dtaudp')[ie]
+#                    )
                     # ==== 3rd group of terms : Dirac deltas ==================
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
                     tmp_eq = smart_multiply(
-                        sp.Float(1.) * (self.eq('xdot_old') - self.eq('xdot')),
-                        -self.eq('dtaudp')[ie])
+                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.eq('dtaudp')[ie])
                 event_eqs.append(smart_multiply(self.sym('xB').T,
                                                 tmp_eq))
             self._eqs[name] = event_eqs
@@ -2090,6 +2109,10 @@ class ODEModel:
             ]
 
         elif name == 'xdot_old':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
+        elif name == 'xBdot':
             # force symbols
             self._eqs[name] = self.sym(name)
 

@@ -297,7 +297,8 @@ AbstractModel::fdeltaxB(realtype* /*deltaxB*/,
                         const int /*ie*/,
                         const realtype* /*xdot*/,
                         const realtype* /*xdot_old*/,
-                        const realtype* /*xB*/)
+                        const realtype* /*xB*/,
+                        const realtype* /*xBdot*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
@@ -315,7 +316,8 @@ AbstractModel::fdeltaqB(realtype* /*deltaqB*/,
                         const int /*ie*/,
                         const realtype* /*xdot*/,
                         const realtype* /*xdot_old*/,
-                        const realtype* /*xB*/)
+                        const realtype* /*xB*/,
+                        const realtype* /*xBdot*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",

@@ -23,6 +23,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
     dxB_(fwd.model->nx_solver),
     xQB_(fwd.model->nJ*fwd.model->nplist()),
     x_disc_(fwd.getStatesAtDiscontinuities()),
+    x_old_disc_(fwd.getStatesBeforeDiscontinuities()),
     xdot_disc_(fwd.getRHSAtDiscontinuities()),
     xdot_old_disc_(fwd.getRHSBeforeDiscontinuities()),
     sx0_(fwd.getStateSensitivity()),
@@ -129,13 +130,27 @@ void BackwardProblem::handleEventB() {
     auto x_disc = this->x_disc_.back();
     this->x_disc_.pop_back();
 
+    auto x_old_disc = this->x_old_disc_.back();
+    this->x_old_disc_.pop_back();
+
     auto xdot_disc = this->xdot_disc_.back();
     this->xdot_disc_.pop_back();
 
     auto xdot_old_disc = this->xdot_old_disc_.back();
     this->xdot_old_disc_.pop_back();
 
+    auto x_in_event = AmiVector(x_disc);
+    for (int iv = 0; iv < x_in_event.getLength(); iv++)
+        x_in_event[iv] = 0.5 * (x_disc.at(iv) + x_old_disc.at(iv));
+
+    auto xdot_in_event = AmiVector(xdot_disc);
+    for (int iv = 0; iv < xdot_in_event.getLength(); iv++)
+        xdot_in_event[iv] = 0.5 * (xdot_disc.at(iv) + xdot_old_disc.at(iv));
+
     model_->updateHeavisideB(rootidx.data());
+
+    auto xBdot_in_event = AmiVector(xB_.getLength());
+    model_->fxBdot(t_, x_in_event, x_in_event, xB_, xB_, xBdot_in_event);
 
     for (int ie = 0; ie < model_->ne; ie++) {
 
@@ -143,10 +158,12 @@ void BackwardProblem::handleEventB() {
             continue;
         }
 
-        model_->addAdjointQuadratureEventUpdate(xQB_, ie, t_, x_disc, xB_,
-                                                xdot_disc, xdot_old_disc);
-        model_->addAdjointStateEventUpdate(xB_, ie, t_, x_disc,
-                                           xdot_disc, xdot_old_disc);
+        model_->addAdjointQuadratureEventUpdate(xQB_, ie, t_, x_in_event, xB_,
+                                                xdot_in_event, xdot_old_disc,
+                                                xBdot_in_event);
+        model_->addAdjointStateEventUpdate(xB_, ie, t_, x_in_event,
+                                           xdot_in_event, xdot_old_disc,
+                                           xBdot_in_event);
 
         if (model_->nz > 0) {
             for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
@@ -159,7 +176,7 @@ void BackwardProblem::handleEventB() {
         }
         nroots_[ie]--;
     }
-
+    //model_->updateHeavisideB(rootidx.data());
     model_->updateHeavisideB(rootidx.data());
 }
 

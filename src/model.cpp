@@ -1112,7 +1112,8 @@ void Model::addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
 void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
                                        const realtype t, const AmiVector &x,
                                        const AmiVector &xdot,
-                                       const AmiVector &xdot_old) {
+                                       const AmiVector &xdot_old,
+                                       const AmiVector &xBdot) {
 
     derived_state_.deltaxB_.assign(nx_solver, 0.0);
 
@@ -1120,7 +1121,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
     fdeltaxB(derived_state_.deltaxB_.data(), t, x.data(),
              state_.unscaledParameters.data(),
              state_.fixedParameters.data(), state_.h.data(), ie, xdot.data(),
-             xdot_old.data(), xB.data());
+             xdot_old.data(), xB.data(), xBdot.data());
 
     if (always_check_finite_) {
         app->checkFinite(derived_state_.deltaxB_, "deltaxB");
@@ -1135,14 +1136,15 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
 
 void Model::addAdjointQuadratureEventUpdate(
     AmiVector &xQB, const int ie, const realtype t, const AmiVector &x,
-    const AmiVector &xB, const AmiVector &xdot, const AmiVector &xdot_old) {
+    const AmiVector &xB, const AmiVector &xdot, const AmiVector &xdot_old,
+    const AmiVector &xBdot) {
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
 
         fdeltaqB(derived_state_.deltaqB_.data(), t, x.data(),
                  state_.unscaledParameters.data(),
                  state_.fixedParameters.data(), state_.h.data(), ip, ie,
-                 xdot.data(), xdot_old.data(), xB.data());
+                 xdot.data(), xdot_old.data(), xB.data(), xBdot.data());
 
         for (int iJ = 0; iJ < nJ; ++iJ)
             xQB.at(iJ * nplist() + ip) += derived_state_.deltaqB_.at(iJ);
@@ -1161,7 +1163,7 @@ void Model::updateHeaviside(const std::vector<int> &rootsfound) {
 
 void Model::updateHeavisideB(const int *rootsfound) {
     for (int ie = 0; ie < ne; ie++) {
-        // state_.h.at(ie) -= 0.5 * rootsfound[ie];
+        // state_.h.at(ie) -= rootsfound[ie];
         state_.h.at(ie) -= 0.5 * rootsfound[ie];
     }
 }
