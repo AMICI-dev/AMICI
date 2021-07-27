@@ -1736,7 +1736,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * flag indicating whether steadystate sensitivities are to be computed
      * via FSA when steadyStateSimulation is used
      */
-    SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
+    SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::simulationFSA};
 
     /**
      * Indicates whether the result of every call to `Model::f*` should be
