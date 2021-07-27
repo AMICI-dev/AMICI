@@ -1163,8 +1163,7 @@ void Model::updateHeaviside(const std::vector<int> &rootsfound) {
 
 void Model::updateHeavisideB(const int *rootsfound) {
     for (int ie = 0; ie < ne; ie++) {
-        // state_.h.at(ie) -= rootsfound[ie];
-        state_.h.at(ie) -= 0.5 * rootsfound[ie];
+        state_.h.at(ie) -= rootsfound[ie];
     }
 }
 

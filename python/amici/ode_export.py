@@ -1967,8 +1967,6 @@ class ODEModel:
                     # ====== chain rule for the time point ====================
                     tmp_eq -= smart_multiply(self.eq('ddeltaxdt')[ie],
                                              self.eq('stau')[ie])
-                    #tmp_eq += smart_multiply(self.eq('deltax')[ie],
-                    #                         self.eq('dstaudt_total')[ie])
                     # ====== partial derivative for the parameters ============
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
@@ -1987,17 +1985,6 @@ class ODEModel:
                         (self.sym('xdot') - self.sym('xdot_old')),
                         self.eq('dtaudx')[ie])
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
-#                    # Part 1a: explicit time dependence of event time point
-#                    tmp_eq += smart_multiply(
-#                        sp.Float(1.) * self.eq('deltax')[ie],
-#                        self.eq('ddtaudxdt')[ie]
-#                    )
-#                    # Part 1b: implicit time dependence of event time point
-#                    tmp_eq += smart_multiply(
-#                        sp.Float(1.) * self.eq('deltax')[ie],
-#                        smart_multiply(self.eq('xdot').T,
-#                                       self.eq('ddtaudxdx')[ie])
-#                    ) # transpose? minus sign?
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         self.eq('ddeltaxdt')[ie],
@@ -2006,15 +1993,9 @@ class ODEModel:
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         smart_multiply(self.eq('ddeltaxdx')[ie],
-                                       self.sym('xdot')),
+                                       self.sym('xdot_old')),
                         self.eq('dtaudx')[ie]
                     ) # transpose? minus sign?
-                    # Part 3: time dependence of adjoint state
-#                    tmp_eq += smart_multiply(
-#                        smart_multiply(self.eq('dxdotdx'),
-#                                       self.eq('deltax')[ie]),
-#                        self.eq('dtaudx')[ie]
-#                    )
                     # ==== 3rd group of terms : Dirac deltas ==================
                     tmp_eq += self.eq('ddeltaxdx')[ie]
                     tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
@@ -2035,17 +2016,6 @@ class ODEModel:
                         (self.sym('xdot') - self.sym('xdot_old')),
                         self.eq('dtaudp')[ie])
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
-#                    # Part 1a: explicit time dependence of event time point
-#                    tmp_eq += smart_multiply(
-#                        sp.Float(1.) * self.eq('deltax')[ie],
-#                        self.eq('ddtaudpdt')[ie]
-#                    )
-#                    # Part 1b: implicit time dependence of event time point
-#                    tmp_eq += smart_multiply(
-#                        sp.Float(1.) * self.eq('deltax')[ie],
-#                        smart_multiply(self.eq('xdot').T,
-#                                       self.eq('ddtaudpdx')[ie])
-#                    )
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         self.eq('ddeltaxdt')[ie],
@@ -2054,15 +2024,9 @@ class ODEModel:
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
                         smart_multiply(self.eq('ddeltaxdx')[ie],
-                                       self.sym('xdot')),
+                                       self.sym('xdot_old')),
                         self.eq('dtaudp')[ie]
                     )
-                    # Part 3: time dependence of adjoint state
-#                    tmp_eq += smart_multiply(
-#                        smart_multiply(self.eq('dxdotdx'),
-#                                      self.eq('deltax')[ie]),
-#                        self.eq('dtaudp')[ie]
-#                    )
                     # ==== 3rd group of terms : Dirac deltas ==================
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
