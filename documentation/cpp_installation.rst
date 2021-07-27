@@ -24,8 +24,8 @@ To use AMICI from C++, run the
 
 .. code-block:: bash
 
-    ./scripts/buildSundials.sh
     ./scripts/buildSuitesparse.sh
+    ./scripts/buildSundials.sh
     ./scripts/buildAmici.sh
 
 script to build the AMICI library.
