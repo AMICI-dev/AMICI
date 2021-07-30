@@ -300,8 +300,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
             }
         }
     } else {
-        for (std::size_t icols = 0; icols < static_cast<std::size_t>(columns());
-             ++icols) {
+        auto num_cols = static_cast<std::size_t>(columns());
+        for (std::size_t icols = 0; icols < num_cols; ++icols) {
             auto idx_next_col = get_indexptr(cols.at(icols) + 1);
 
             for (sunindextype idx = get_indexptr(cols.at(icols));
