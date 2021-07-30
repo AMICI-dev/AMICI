@@ -9,6 +9,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
@@ -83,6 +84,24 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.cpu_time_;
     ar &s.cpu_timeB_;
     ar &s.rdata_mode_;
+    ar &s.maxtime_;
+}
+
+/**
+ * @brief Serialize std::chrono::duration to boost archive
+ * @param ar Archive
+ * @param d Duration
+ */
+template <class Archive, class Period, class Rep>
+void serialize(Archive &ar, std::chrono::duration<Period, Rep> &d, const unsigned int /*version*/) {
+    Period tmp_period;
+    if (Archive::is_loading::value) {
+        ar &tmp_period;
+        d = std::chrono::duration<Period, Rep>(tmp_period);
+    } else {
+        tmp_period = d.count();
+        ar &tmp_period;
+    }
 }
 
 /**
@@ -116,6 +135,8 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
     ar &m.nmaxevent_;
     ar &m.state_is_non_negative_;
     ar &m.pythonGenerated;
+    ar &m.min_sigma_;
+    ar &m.sigma_res_;
 }
 
 
@@ -290,18 +311,22 @@ char *serializeToChar(T const& data, int *size) {
 
 template <typename T>
 T deserializeFromChar(const char *buffer, int size) {
-    try {
-        ::boost::iostreams::basic_array_source<char> device(buffer, size);
-        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-            device);
-        ::boost::archive::binary_iarchive iar(s);
-        T data;
-        iar >> data;
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
 
-        return data;
-    } catch(::boost::archive::archive_exception const& e) {
+    bio::basic_array_source<char> device(buffer, size);
+    bio::stream<bio::basic_array_source<char>> s(device);
+
+    T data;
+
+    try {
+        // archive must be destroyed BEFORE returning
+        ba::binary_iarchive iar(s);
+        iar >> data;
+    } catch(ba::archive_exception const& e) {
         throw AmiException("Deserialization from char failed: %s", e.what());
     }
+    return data;
 }
 
 /**
@@ -314,21 +339,22 @@ T deserializeFromChar(const char *buffer, int size) {
 
 template <typename T>
 std::string serializeToString(T const& data) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    std::string serialized;
+    bio::back_insert_device<std::string> inserter(serialized);
+    bio::stream<bio::back_insert_device<std::string>> os(inserter);
+
     try {
-        std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-        ::boost::iostreams::stream<
-            ::boost::iostreams::back_insert_device<std::string>>
-            s(inserter);
-        ::boost::archive::binary_oarchive oar(s);
-
+        // archive must be destroyed BEFORE returning
+        ba::binary_oarchive oar(os);
         oar << data;
-        s.flush();
-
-        return serialized;
-    } catch(::boost::archive::archive_exception const& e) {
+    } catch(ba::archive_exception const& e) {
         throw AmiException("Serialization to string failed: %s", e.what());
     }
+
+    return serialized;
 }
 
 /**
@@ -341,22 +367,23 @@ std::string serializeToString(T const& data) {
 
 template <typename T>
 std::vector<char> serializeToStdVec(T const& data) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    std::vector<char> buffer;
+    bio::stream<
+        bio::back_insert_device<
+            std::vector<char>>> os(buffer);
+
     try{
-        std::string serialized;
-        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-        ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
-            s(inserter);
-        ::boost::archive::binary_oarchive oar(s);
-
+        // archive must be destroyed BEFORE returning
+        ba::binary_oarchive oar(os);
         oar << data;
-        s.flush();
-
-        std::vector<char> buf(serialized.begin(), serialized.end());
-
-        return buf;
-    } catch(::boost::archive::archive_exception const& e) {
-        throw AmiException("Serialization to StdVec failed: %s", e.what());
+    } catch(ba::archive_exception const& e) {
+        throw AmiException("Serialization to std::vector failed: %s", e.what());
     }
+
+    return buffer;
 }
 
 /**
@@ -369,20 +396,23 @@ std::vector<char> serializeToStdVec(T const& data) {
 
 template <typename T>
 T deserializeFromString(std::string const& serialized) {
+    namespace ba = ::boost::archive;
+    namespace bio = ::boost::iostreams;
+
+    bio::basic_array_source<char> device(serialized.data(), serialized.size());
+    bio::stream<bio::basic_array_source<char>> os(device);
+    T deserialized;
+
     try{
-        ::boost::iostreams::basic_array_source<char> device(serialized.data(),
-                                                          serialized.size());
-        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-            device);
-        ::boost::archive::binary_iarchive iar(s);
-        T deserialized;
-
+        // archive must be destroyed BEFORE returning
+        ba::binary_iarchive iar(os);
         iar >> deserialized;
-
-        return deserialized;
-    } catch(::boost::archive::archive_exception const& e) {
-        throw AmiException("Deserialization from StdVec failed: %s", e.what());
+    } catch(ba::archive_exception const& e) {
+        throw AmiException("Deserialization from std::string failed: %s",
+                           e.what());
     }
+
+    return deserialized;
 }
 
 

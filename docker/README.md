@@ -12,4 +12,4 @@ cd docker && docker build -t $USER/amici:latest .
 ## Published images
 
 AMICI docker images are regularly published to
-https://hub.docker.com/layers/dweindl/amici/.
+https://hub.docker.com/r/dweindl/amici.

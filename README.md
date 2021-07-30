@@ -33,6 +33,8 @@ constrained optimization problems.
 
 <a href="https://badge.fury.io/py/amici">
   <img src="https://badge.fury.io/py/amici.svg" alt="PyPI version"></a>
+<a href="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml">
+  <img src="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml/badge.svg" alt="PyPI installation"></a>
 <a href="https://travis-ci.com/AMICI-dev/AMICI">
   <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master" alt="Build Status"></a>
 <a href="https://codecov.io/gh/AMICI-dev/AMICI">
@@ -127,14 +129,20 @@ If you used AMICI in your work, we are happy to include
 your project, please let us know via a Github issue.
 
 When using AMICI in your project, please cite
-* Fröhlich, F., Weindl, D., Schälte, Y., Pathirana, D., Paszkowski, Ł., Lines, G.T., Stapor, P. and Hasenauer, J., 2020. 
-  AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models. arXiv preprint [arXiv:2012.09122](https://arxiv.org/abs/2012.09122).
+* Fröhlich, F., Weindl, D., Schälte, Y., Pathirana, D., Paszkowski, Ł., Lines, G.T., Stapor, P. and Hasenauer, J., 2021.
+  AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models. Bioinformatics, btab227,
+  [DOI:10.1093/bioinformatics/btab227](https://doi.org/10.1093/bioinformatics/btab227).
 ```
 @article{frohlich2020amici,
   title={AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models},
   author={Fr{\"o}hlich, Fabian and Weindl, Daniel and Sch{\"a}lte, Yannik and Pathirana, Dilan and Paszkowski, {\L}ukasz and Lines, Glenn Terje and Stapor, Paul and Hasenauer, Jan},
-  journal={arXiv preprint arXiv:2012.09122},
-  year={2020}
+  journal = {Bioinformatics},
+  year = {2021},
+  month = {04},
+  issn = {1367-4803},
+  doi = {10.1093/bioinformatics/btab227},
+  note = {btab227},
+  eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btab227/36866220/btab227.pdf},
 }
 ```
   

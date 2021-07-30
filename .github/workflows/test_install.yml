@@ -33,10 +33,6 @@ jobs:
       run: |
         scripts/buildSundials.sh
 
-    - name: Build cpputest
-      run: |
-        scripts/buildCpputest.sh
-
     - name: Build AMICI
       run: |
         scripts/buildAmici.sh
@@ -75,4 +71,6 @@ jobs:
       run: |
         pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
 
-
+    - name: Test import
+      run: |
+        python -m amici

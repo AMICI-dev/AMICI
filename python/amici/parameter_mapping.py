@@ -93,9 +93,9 @@ class ParameterMappingForCondition:
 
 
 class ParameterMapping(Sequence):
-    """Parameter mapping for multiple conditions.
+    r"""Parameter mapping for multiple conditions.
 
-    This can be used like a list of :class:`ParameterMappingForCondition`\\ s.
+    This can be used like a list of :class:`ParameterMappingForCondition`\ s.
 
     :param parameter_mappings:
         List of parameter mappings for specific conditions.
@@ -236,11 +236,20 @@ def fill_in_parameters_for_condition(
     scales = [petab_to_amici_scale(scale_map_sim_var[par_id])
               for par_id in amici_model.getParameterIds()]
 
+    # plist
+    plist = [
+        ip for ip, par_id in enumerate(amici_model.getParameterIds())
+        if isinstance(parameter_mapping.map_sim_var[par_id], str)
+    ]
+
     if parameters:
         edata.parameters = parameters
 
     if scales:
         edata.pscale = amici.parameterScalingFromIntVector(scales)
+
+    if plist:
+        edata.plist = plist
 
     ##########################################################################
     # fixed parameters preequilibration

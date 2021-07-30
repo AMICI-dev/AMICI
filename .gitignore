@@ -4,9 +4,9 @@ build/*
 build-debug/*
 build_xcode/*
 swig/python/build/*
-tests/cpputest/build/*
-tests/cpputest/build_xcode/*
-tests/cpputest/Testing/*
+tests/cpp/build/*
+tests/cpp/build_xcode/*
+tests/cpp/Testing/*
 
 doc-venv/*
 doc/*
@@ -136,8 +136,8 @@ tests/test/*
 */tests/fricker_2010_apoptosis_amici/*
 */tests/explicit_amici/*
 */tests/fixed_initial_amici/*
-tests/cpputest/writeResults.h5
-tests/cpputest/writeResults.h5.bak
+tests/cpp/writeResults.h5
+tests/cpp/writeResults.h5.bak
 tests/sbml-test-suite/*
 tests/sbml-test-suite/
 tests/sedml-test-suite/
@@ -171,7 +171,6 @@ AMICI_guide.pdf
 
 ThirdParty/bionetgen.tar.gz
 ThirdParty/BioNetGen-*
-ThirdParty/cpputest-master*
 ThirdParty/doxygen/*
 ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
@@ -193,3 +192,4 @@ coverage_SBMLSuite.xml
 Benchmark-Models-PEtab/
 
 
+CS_Signalling_ERBB_RAS_AKT/

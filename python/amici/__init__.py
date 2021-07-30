@@ -18,17 +18,14 @@ models and turning them into C++ Python extensions.
 :var has_clibs:
     boolean indicating if this is the full package with swig interface or
     the raw package without
-:var capture_cstdout:
-    context to redirect C/C++ stdout to python stdout if python stdout was
-    redirected (doing nothing if not redirected).
 """
 
 import importlib
 import os
 import re
 import sys
-from contextlib import suppress
-from types import ModuleType
+from contextlib import suppress, contextmanager
+from types import ModuleType as ModelModule
 from typing import Optional, Union, Sequence, List
 
 
@@ -84,14 +81,22 @@ def _imported_from_setup() -> bool:
     return False
 
 
-# redirect C/C++ stdout to python stdout if python stdout is redirected,
-# e.g. in ipython notebook
-capture_cstdout = suppress
-if sys.stdout != sys.__stdout__:
-    try:
-        from wurlitzer import sys_pipes as capture_cstdout
-    except ModuleNotFoundError:
-        pass
+try:
+    from wurlitzer import sys_pipes
+except ModuleNotFoundError:
+    sys_pipes = suppress
+
+
+@contextmanager
+def _capture_cstdout():
+    """Redirect C/C++ stdout to python stdout if python stdout is redirected,
+    e.g. in ipython notebook"""
+    if sys.stdout == sys.__stdout__:
+        yield
+    else:
+        with sys_pipes():
+            yield
+
 
 # Initialize AMICI paths
 amici_path = _get_amici_path()
@@ -133,6 +138,17 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
+
+    try:
+        # Requires Python>=3.8
+        from typing import Protocol
+
+        class ModelModule(Protocol):
+            """Enable Python static type checking for AMICI-generated model modules"""
+            def getModel(self) -> amici.Model:
+                pass
+    except ImportError:
+        pass
 
 hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
 
@@ -177,8 +193,7 @@ def runAmiciSimulation(
     :returns:
         ReturnData object with simulation results
     """
-
-    with capture_cstdout():
+    with _capture_cstdout():
         rdata = amici.runAmiciSimulation(_get_ptr(solver), _get_ptr(edata),
                                          _get_ptr(model))
     return numpy.ReturnDataView(rdata)
@@ -224,7 +239,7 @@ def runAmiciSimulations(
 
     :returns: list of simulation results
     """
-    with capture_cstdout():
+    with _capture_cstdout():
         edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
         rdata_ptr_list = amici.runAmiciSimulations(_get_ptr(solver),
                                                    edata_ptr_vector,
@@ -283,7 +298,7 @@ class add_path:
 
 
 def import_model_module(module_name: str,
-                        module_path: Optional[str] = None) -> ModuleType:
+                        module_path: Optional[str] = None) -> ModelModule:
     """
     Import Python module of an AMICI model
 
