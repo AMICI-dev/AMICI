@@ -3,19 +3,18 @@
 """Run simulations with Matlab-AMICI pre-generated models and verify using
 saved expectations."""
 
-import h5py
-import amici
 import os
-from amici.gradient_check import check_derivatives, check_results
-import pytest
+from pathlib import Path
 
+import amici
+import h5py
 import numpy as np
+import pytest
+from amici.gradient_check import check_derivatives, check_results
 
-
-options_file = os.path.join(os.path.dirname(__file__), '..', '..',
-                            'tests', 'cpputest', 'testOptions.h5')
-expected_results_file = os.path.join(os.path.dirname(__file__), '..', '..',
-                                     'tests', 'cpputest', 'expectedResults.h5')
+cpp_test_dir = Path(__file__).parents[2] / 'tests' / 'cpp'
+options_file = str(cpp_test_dir / 'testOptions.h5')
+expected_results_file = str(cpp_test_dir / 'expectedResults.h5')
 expected_results = h5py.File(expected_results_file, 'r')
 
 model_cases = [(sub_test, case)
@@ -43,10 +42,9 @@ def test_pregenerated_model(sub_test, case):
     else:
         model_name = sub_test
 
-    model_swig_folder = \
-        os.path.join(os.path.dirname(__file__), '..', '..', 'build', 'tests',
-                     'cpputest', f'external_{model_name}-prefix',
-                     'src', f'external_{model_name}-build', 'swig')
+    model_swig_folder = str(Path(__file__).parents[2] / 'build' / 'tests'
+                            / 'cpp' / f'external_{model_name}-prefix' / 'src'
+                            / f'external_{model_name}-build' / 'swig')
 
     test_model_module = amici.import_model_module(
         module_name=model_name, module_path=model_swig_folder)
@@ -64,7 +62,7 @@ def test_pregenerated_model(sub_test, case):
     edata = None
     if 'data' in expected_results[sub_test][case].keys():
         edata = amici.readSimulationExpData(
-            expected_results_file,
+            str(expected_results_file),
             f'/{sub_test}/{case}/data', model.get()
         )
     rdata = amici.runAmiciSimulation(model, solver,
