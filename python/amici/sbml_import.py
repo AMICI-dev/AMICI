@@ -2048,6 +2048,24 @@ def assignmentRules2observables(sbml_model: sbml.Model,
 
     return observables
 
+def _add_conservation_for_non_constant_species( 
+    ode_model: ODEModel,
+    conservation_laws: List[ConservationLaw]
+) -> List[int]:
+    """
+    Adds non-constant species to conservation laws 
+    Parameters
+    ----------
+    :param ode_model:
+        ODEModel object with basic definitions
+    :param conservation_laws:
+        List of already known conservation laws
+
+    :returns species_solver
+        List of species indices which remain later in the ODE solver
+    """
+    pass
+
 
 def _add_conservation_for_constant_species(
         ode_model: ODEModel,
