@@ -34,7 +34,7 @@ from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanAtom
-from scipy.lingalg import null_space
+from scipy.linalg import null_space
 
 
 class SBMLException(Exception):
@@ -1366,13 +1366,13 @@ class SbmlImporter:
         conservation_laws = []
 
         # So far, only conservation laws for constant species are supported
-        species_solver = _add_conservation_for_constant_species(
+        species_solver = _add_conservation_for_constant_species(self,
             ode_model, conservation_laws
         )
 
         # Non-constant species processed here
         species_solver = (list(set(self._add_conservation_for_non_constant_species
-            (ode_model, conservation_laws, self)) & set(species_solver)))
+            (ode_model, conservation_laws)) & set(species_solver)))
 
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must switched in this case
@@ -1411,7 +1411,9 @@ class SbmlImporter:
         """
 
         # get left null space of stioichiometric matrix
-        kernel = null_space(self.stoichiometric_matrix_transpose.transpose())
+        # Why does the following fail?
+        #kernel = null_space(self.stoichiometric_matrix.transpose())
+        kernel = [ [], [] ]
         # find conserved quantities in basis vectors of null space
         conserved_quantities = reduce(operator.add, [ [idx for idx, magnitude in enumerate(base) if magnitude > 0.0001] for base in kernel ])
 
@@ -1595,7 +1597,7 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: List[sbml.SBase, str]
+    def _sympy_from_sbml_math(self, var_or_math: sbml.SBase
                               ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
