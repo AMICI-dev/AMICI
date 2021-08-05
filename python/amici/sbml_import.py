@@ -6,6 +6,8 @@ in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
 
 
+import operator
+from functools import reduce
 import sympy as sp
 import libsbml as sbml
 import re
@@ -32,6 +34,7 @@ from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanAtom
+from scipy.lingalg import null_space
 
 
 class SBMLException(Exception):
@@ -1367,6 +1370,10 @@ class SbmlImporter:
             ode_model, conservation_laws
         )
 
+        # Non-constant species processed here
+        species_solver = (list(set(self._add_conservation_for_non_constant_species
+            (ode_model, conservation_laws, self)) & set(species_solver)))
+
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must switched in this case
         if len(species_solver) == 0:
@@ -1382,6 +1389,52 @@ class SbmlImporter:
             ode_model.add_conservation_law(**cl)
 
         return volume_updates_solver
+
+
+    def _add_conservation_for_non_constant_species(
+        self,
+        ode_model: ODEModel,
+        conservation_laws: List[ConservationLaw]
+    ) -> List[int]:
+        """
+        Adds non-constant species to conservation laws 
+        Parameters
+        ----------
+        :param ode_model:
+            ODEModel object with basic definitions
+
+        :param conservation_laws:
+            List of already known conservation laws
+
+        :returns species_solver
+            List of species indices which remain later in the ODE solver
+        """
+
+        # get left null space of stioichiometric matrix
+        kernel = null_space(self.stoichiometric_matrix_transpose.transpose())
+        # find conserved quantities in basis vectors of null space
+        conserved_quantities = reduce(operator.add, [ [idx for idx, magnitude in enumerate(base) if magnitude > 0.0001] for base in kernel ])
+
+        # iterate over species in the ODE model, mark conserved species for later removal from stochiometric matrix
+        species_solver = list(range(ode_model.num_states_rdata()))
+        for ix in reversed(range(ode_model.num_states_rdata())): 
+           if ix in conserved_quantities:
+            # dont use sym('x') here since conservation laws need to be
+            # added before symbols are generated
+            target_state = ode_model._states[ix].get_id()
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+            conservation_laws.append({
+                'state': target_state,
+                'total_abundance': total_abundance,
+                'state_expr': total_abundance,
+                'abundance_expr': target_state,
+            })
+            # mark species to delete from stoichiometric matrix as they are conserved quantities
+            species_solver.pop(ix)
+
+        # return a list of species which are not conserved and thus valid to be included
+        return species_solver
+
 
     def _reduce_stoichiometry(self, species_solver, volume_updates) -> List:
         """
@@ -1542,7 +1595,7 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
+    def _sympy_from_sbml_math(self, var_or_math: List[sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
@@ -2048,26 +2101,9 @@ def assignmentRules2observables(sbml_model: sbml.Model,
 
     return observables
 
-def _add_conservation_for_non_constant_species( 
-    ode_model: ODEModel,
-    conservation_laws: List[ConservationLaw]
-) -> List[int]:
-    """
-    Adds non-constant species to conservation laws 
-    Parameters
-    ----------
-    :param ode_model:
-        ODEModel object with basic definitions
-    :param conservation_laws:
-        List of already known conservation laws
-
-    :returns species_solver
-        List of species indices which remain later in the ODE solver
-    """
-    pass
-
 
 def _add_conservation_for_constant_species(
+        self,
         ode_model: ODEModel,
         conservation_laws: List[ConservationLaw]
 ) -> List[int]:
