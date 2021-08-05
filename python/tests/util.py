@@ -235,10 +235,12 @@ def check_trajectories_with_adjoint_sensitivities(
 
     # test less strict in terms of absolute error, as the gradient are
     # typically in the order of 1e3
-    np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
-                               rtol=1e-4, atol=1e-2)
     np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
-                               rtol=1e-4, atol=1e-2)
+                               rtol=1e-5, atol=1e-3)
+    np.testing.assert_allclose(sllh_fd, rdata_fsa['sllh'],
+                               rtol=1e-5, atol=1e-3)
+    np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
+                               rtol=1e-5, atol=1e-3)
     # try:
     #     np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
     #                                rtol=1e-5, atol=1e-3)
