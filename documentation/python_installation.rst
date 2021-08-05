@@ -404,7 +404,7 @@ Note that this might require to satify missing dependencies manually as
 specified by PEP 518 (Dependencies must already be installed if using the 
 no build isolation option) via 
 
-.. code-blocks:: bash
+.. code-block:: bash
 
    pip install --user dependency
 
