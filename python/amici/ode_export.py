@@ -1887,19 +1887,6 @@ class ODEModel:
                 + self.eq('drootdt')
             )
 
-        elif name == 'sdrootdt_total':
-            self._eqs[name] = \
-                smart_jacobian(self.eq('drootdt_total'), self.sym('p')) + \
-                smart_multiply(smart_jacobian(self.eq('drootdt_total'),
-                                              self.sym('x')), self.sym('sx'))
-
-        elif name == 'dstaudt':
-            self._eqs[name] = [
-                - self.eq('sdrootdt_total')[ie, :] / self.eq('drootdt_total')[ie]
-                - self.eq('ddrootdtdt_total')[ie, :] / sp.Pow(self.eq('drootdt_total')[ie], sp.Integer(2))
-                for ie in range(self.num_events())
-            ]
-
         elif name == 'deltax':
             # fill boluses for Heaviside functions, as empty state updates
             # would cause problems when writing the function file later
@@ -2036,41 +2023,6 @@ class ODEModel:
                 event_eqs.append(smart_multiply(self.sym('xB').T,
                                                 tmp_eq))
             self._eqs[name] = event_eqs
-
-        elif name == 'ddtaudxdx':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('dtaudx')[ie].T, self.sym('x')).T
-                for ie in range(self.num_events())
-            ]
-
-        elif name == 'ddtaudxdt':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('dtaudx')[ie].T, time_symbol).T
-                for ie in range(self.num_events())
-            ]
-
-        elif name == 'ddtaudpdx':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('dtaudp')[ie].T, self.sym('x')).T
-                for ie in range(self.num_events())
-            ]
-
-        elif name == 'ddtaudpdt':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('dtaudp')[ie].T, time_symbol).T
-                for ie in range(self.num_events())
-            ]
-
-        elif name == 'ddeltaxdt':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('deltax')[ie].T, time_symbol).T
-                for ie in range(self.num_events())
-            ]
-        elif name == 'ddeltaxdx':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('deltax')[ie].T, self.sym('x')).T
-                for ie in range(self.num_events())
-            ]
 
         elif name == 'xdot_old':
             # force symbols

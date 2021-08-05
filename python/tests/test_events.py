@@ -10,9 +10,13 @@ from util import (
     create_amici_model,
     check_trajectories_without_sensitivities,
     check_trajectories_with_forward_sensitivities,
+    check_trajectories_with_adjoint_sensitivities,
 )
 
 @pytest.fixture(params=[
+    'piecewise_plus_event_simple_case',
+    'piecewise_plus_event_semi_complicated',
+    'piecewise_plus_event_trigger_depends_on_state',
     'events_plus_heavisides',
     'nested_events',
 ])
@@ -51,6 +55,12 @@ def model(request):
 
 
 def get_model_definition(model_name):
+    if model_name == 'piecewise_plus_event_simple_case':
+       return model_definition_piecewise_plus_event_simple_case()
+    if model_name == 'piecewise_plus_event_semi_complicated':
+        return model_definition_piecewise_plus_event_semi_complicated()
+    if model_name == 'piecewise_plus_event_trigger_depends_on_state':
+        return model_definition_piecewise_plus_event_trigger_depends_on_state()
     if model_name == 'events_plus_heavisides':
        return model_definition_events_plus_heavisides()
     if model_name == 'nested_events':
@@ -314,6 +324,282 @@ def model_definition_nested_events():
             sx_p = x_pected(t, **perturbed_params)
             perturbed_params[ip] -= 2*eps
             sx_m = x_pected(t, **perturbed_params)
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
+
+
+def model_definition_piecewise_plus_event_simple_case():
+    """Test model for boolean operations in a piecewise condition.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    (alpha <= t and t < beta)
+        - { 0,    otherwise
+    """
+    # Model components
+    species = ['x_1']
+    initial_assignments = {'x_1': 'x_1_0'}
+    rate_rules = {
+        'x_1': (
+            'piecewise('
+                '1, '
+                    '(alpha < time && time < beta), '
+                '0'
+            ')'
+        )
+    }
+    parameters = {
+        'alpha': 2,
+        'beta': 3,
+        'gamma': 4.5,
+        'x_1_0': 1,
+    }
+    timepoints = np.linspace(0., 5., 100)# np.array((0.0, 4.0,))
+    events = {
+        'event_1': {
+            'trigger': 'time > alpha',
+            'target': 'x_1',
+            'assignment': 'gamma'
+        },
+        'event_2': {
+            'trigger': 'time > beta',
+            'target': 'x_1',
+            'assignment': 'x_1 + 2.5'
+        }
+    }
+
+    # Analytical solution
+    def x_pected(t, x_1_0, alpha, beta, gamma):
+        t_event_1 = alpha
+        t_event_2 = beta
+
+        if t < t_event_1:
+            x = x_1_0
+        elif t < t_event_2:
+            x = gamma + t - t_event_1
+        else:
+            x = gamma + t_event_2 - t_event_1 + 2.5
+
+        return np.array((x,))
+
+    def sx_pected(t, parameters):
+        # get sx, w.r.t. parameters, via finite differences
+        sx = []
+
+        for ip in parameters:
+            eps = 1e-6
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_pected(t, **perturbed_params))
+            perturbed_params[ip] -= 2*eps
+            sx_m = np.array(x_pected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
+
+
+def model_definition_piecewise_plus_event_semi_complicated():
+    """Test model for boolean operations in a piecewise condition, discrete
+    events and a non-vanishing quadrature for the adjoint state.
+
+    """
+    # Model components
+    species = ['x_1', 'x_2']
+    initial_assignments = {'x_1': 'x_1_0',
+                           'x_2': 'x_2_0'}
+    rate_rules = {
+        'x_1': (
+            'piecewise('
+                'delta * x_1, '
+                    '(alpha < time && time < beta), '
+                '- x_1'
+            ')'
+        ),
+        'x_2': (
+            '- eta * x_2'
+        ),
+    }
+    parameters = {
+        'alpha': 2,
+        'beta': 3,
+        'gamma': 4.5,
+        'x_1_0': 1,
+        'x_2_0': 5,
+        'delta': 2.5,
+        'eta': 1.4
+    }
+    timepoints = np.linspace(0., 5., 100)
+    events = {
+        'event_1': {
+            'trigger': 'time > alpha / 2',
+            'target': 'x_1',
+            'assignment': 'gamma'
+        },
+        'event_2': {
+            'trigger': 'time > beta',
+            'target': 'x_1',
+            'assignment': 'x_1 + x_2'
+        }
+    }
+
+    # Analytical solution
+    def x_pected(t, x_1_0, x_2_0, alpha, beta, gamma, delta, eta):
+        t_event_1 = alpha / 2
+        t_event_2 = beta
+        heaviside_1 = alpha
+
+        x_2 = x_2_0 * np.exp(- eta * t)
+
+        if t < t_event_1:
+            x_1 = x_1_0 * np.exp(- t)
+        elif t < heaviside_1:
+            x_1 = gamma * np.exp(- (t - t_event_1))
+        elif t < t_event_2:
+            x_1_heaviside_1 = gamma * np.exp(- (heaviside_1 - t_event_1))
+            x_1 = x_1_heaviside_1 * np.exp(delta * (t - heaviside_1))
+        else:
+            x_1_heaviside_1 = gamma * np.exp(- (heaviside_1 - t_event_1))
+            x_1_at_event_2 = x_1_heaviside_1 * \
+                             np.exp(delta * (t_event_2 - heaviside_1))
+            x_2_at_event_2 = x_2_0 * np.exp(- eta * t_event_2)
+            x1_after_event_2 = x_1_at_event_2 + x_2_at_event_2
+            x_1 = x1_after_event_2 * np.exp(- (t - t_event_2))
+
+        return np.array((x_1, x_2))
+
+    def sx_pected(t, parameters):
+        # get sx, w.r.t. parameters, via finite differences
+        sx = []
+
+        for ip in parameters:
+            eps = 1e-6
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_pected(t, **perturbed_params))
+            perturbed_params[ip] -= 2*eps
+            sx_m = np.array(x_pected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_pected,
+        sx_pected
+    )
+
+
+def model_definition_piecewise_plus_event_trigger_depends_on_state():
+    """Test model for boolean operations in a piecewise condition.
+
+    ODEs
+    ----
+    d/dt x_1:
+        - { 1,    (alpha <= t and t < beta)
+        - { 0,    otherwise
+    """
+    # Model components
+    species = ['x_1', 'x_2']
+    initial_assignments = {'x_1': 'x_1_0',
+                           'x_2': 'x_2_0'}
+    rate_rules = {
+        'x_1': (
+            'piecewise('
+                '1, '
+                    '(alpha < time && time < beta), '
+                '0'
+            ')'
+        ),
+        'x_2': (
+            '- x_2'
+        ),
+    }
+    parameters = {
+        'alpha': 2,
+        'beta': 3,
+        'gamma': 4.5,
+        'x_1_0': 1,
+        'x_2_0': 5,
+    }
+    timepoints = np.linspace(0., 5., 100)
+    events = {
+        'event_1': {
+            'trigger': 'x_1 > 1.4',
+            'target': 'x_1',
+            'assignment': 'x_1 + gamma'
+        },
+        'event_2': {
+            'trigger': 'time > beta',
+            'target': 'x_1',
+            'assignment': 'x_1 + x_2'
+        }
+    }
+
+    # Analytical solution
+    def x_pected(t, x_1_0, x_2_0, alpha, beta, gamma):
+
+        heaviside_1 = alpha
+        t_event_1 = alpha + 1.4 - x_1_0
+        t_event_2 = beta
+        # This should hold in order that the analytical solution is correct
+        assert heaviside_1 < t_event_1
+
+        # x_2 never gets perturbed
+        x_2 = x_2_0 * np.exp(- t)
+
+        if t < heaviside_1:
+            x_1 = x_1_0
+        elif t < t_event_1:
+            x_1 = (t - heaviside_1) + x_1_0
+        elif t < t_event_2:
+            x_1 = gamma + (t - heaviside_1) + x_1_0
+        else:
+            x_2_at_event_2 = x_2_0 * np.exp(- t_event_2)
+            x_1_at_event_2 = gamma + (t_event_2 - heaviside_1) + x_1_0
+            x_1 = x_1_at_event_2 + x_2_at_event_2
+
+        return np.array((x_1, x_2))
+
+    def sx_pected(t, parameters):
+        # get sx, w.r.t. parameters, via finite differences
+        sx = []
+
+        for ip in parameters:
+            eps = 1e-6
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_pected(t, **perturbed_params))
+            perturbed_params[ip] -= 2*eps
+            sx_m = np.array(x_pected(t, **perturbed_params))
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
