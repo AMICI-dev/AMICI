@@ -1187,6 +1187,8 @@ class ODEModel:
             dxdotdw_updates = si.process_conservation_laws(self,
                                                            dxdotdw_updates)
 
+        
+
         nx_solver = si.stoichiometric_matrix.shape[0]
         nw = len(self._expressions)
         ncl = nw - nr - nexpr
