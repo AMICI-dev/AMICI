@@ -1409,6 +1409,29 @@ class SbmlImporter:
         :returns species_solver
             List of species indices which remain later in the ODE solver
         """
+        def qsort(k, km, orders, pivots):
+            centre = 0
+            if k-km >= 1:
+                pivot = km+(k-km)//2
+                l = 0
+                p = k - km - 1
+                neworders = [None] * (k-km)
+                for i in range(km, k-1):
+                    if i != pivot:
+                        if (pivots[orders[i]]< pivots[orders][pivot]):
+                            neworders[l] = orders[i]
+                            l += 1
+                        else:
+                            neworders[l] = orders[i]
+                            p -= 1
+                neworders[p] = orders[pivot]
+                for i in range(km, k-1):
+                    orders[i] = neworders[i-km]
+                    centre = p + km
+                    qsort(k, centre+1, orders, pivots)
+                    qsort(centre, km, orders, pivots)
+
+                    
 
         # get left null space of stioichiometric matrix
         # Why does the following fail?
