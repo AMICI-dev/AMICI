@@ -155,6 +155,68 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
 	return kernelDim, matched, intKernelDim, intmatched
 
+def fill(stoichiometricMatrixAsList, matched_size, matched):
+	MIN = 1e-9
+	matrix = [ [] for _ in range(N) ]
+	matrix2 = [ [] for _ in range(N) ]
+
+	J = [ [] for _ in range(N) ]
+	J2 = [ [] for _ in range(N) ]
+
+	fields = [None]*N
+	i1 = 0
+	j1 = 0
+	dim = matched_size
+	for _, val in enumerate(stoichiometricMatrixAsList):
+		if val != 0:
+			prendo=dim
+			if dim > 0:
+				for i in range(0, dim):
+					if j1 == matched[i]:
+						prendo = i
+			if prendo < dim:
+				matrix[prendo].append(i1)
+				matrix2[prendo].append(val)		
+		j1 += 1
+		if j1 == N:
+			j1=0
+			i1 += 1
+
+	for i in range(0, dim):
+		for j in range(i, dim):
+			interactions = 0
+			if len(matrix[i]) > 0:
+				for po in range(0, len(matrix[i])):
+					if len(matrix[j]) > 0:
+						for pu in range(0, len(matrix[j])):
+							if matrix[i][po] == matrix[j][pu]:
+								interactions += matrix2[i][po]*matrix2[j][pu]
+
+				if j == 1:
+					fields[i] = interactions
+			else:
+				if abs(interactions) > MIN:
+					J[i].append(j)
+					J2[i].append(interactions)
+					J[j].append(i)
+					J2[j].append(interactions)
+
+def MonteCarlo():
+	""" TODO: Implement """
+	pass
+
+def Relaxation():
+	""" TODO: Implement """
+	pass
+
+def Reduce():
+	""" TODO: Implement """
+	pass
+
+def Output():
+	""" TODO: Implement """
+	pass
+
 if __name__ == "__main__":
 	print("Conserved moeties test case...")
 
@@ -168,12 +230,34 @@ if __name__ == "__main__":
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
 	else:
+		print("Kernel...")
 		kernelDim, engagedMetabolites, intKernelDim, conservedMoieties = kernel(S, N, M)
 		print(f"""There are {kernelDim} conservation laws, engaging, 
 		{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
 		moeities), engaging {len(conservedMoieties)} metabolites...""")
-		if kernelDim == intKernelDim:
-			print("done!")
-		else:
-			# TODO: Implement MC and relaxation from De Martino
-			pass
+
+		print("Filling...")
+		fill(S, len(engagedMetabolites), engagedMetabolites)
+
+		print("MonteCarlo...")
+		finish = 0
+		if intKernelDim == kernelDim:
+			finish = 1
+		timer = 0
+		while finish == 0:
+			yes, intKernelDim, kernelDim = MonteCarlo()
+			if intKernelDim == kernelDim:
+				finish = 1
+			if yes == 0:
+				timer += 1
+			if timer == max:
+				print("Relaxation...")
+				finish = Relaxation()
+				if finish == 1:
+					timer = 0
+
+		print("Reduce...")
+		Reduce()
+
+		print("Pretty print output...")
+		Output()
