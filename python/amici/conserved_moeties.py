@@ -21,6 +21,7 @@ def qsort(k, km, orders, pivots):
 			qsort(centre, km, orders, pivots)
 
 def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
+	""" Kernel calculation by Gaussian elimination"""
 	il=0
 	jl=0
 	N = numberOfMetabolites
@@ -102,14 +103,15 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	RSolutions = [ [] for _ in range(N)]
 	RSolutions2 = [ [] for _ in range(N)]
 	kernelDim = 0
-	for i in range(0, N-1):
+
+	for i in range(0, N):
 		ok = 1
 		if len(matrix[i]) > 0:
-			for j in range(0, len(matrix[i])-1):
+			for j in range(0, len(matrix[i])):
 				if matrix[i][j] < M:
 					ok = 0
 		if ok == 1 and len(matrix[i]) > 0:
-			for j in range(0, len(matrix[i])-1):
+			for j in range(0, len(matrix[i])):
 				RSolutions[kernelDim].append(matrix[i][j]-M)
 				RSolutions2[kernelDim].append(matrix2[i][j])
 			kernelDim += 1
@@ -156,6 +158,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	return kernelDim, matched, intKernelDim, intmatched
 
 def fill(stoichiometricMatrixAsList, matched_size, matched):
+	""" Interaction matrix construction """
 	MIN = 1e-9
 	matrix = [ [] for _ in range(N) ]
 	matrix2 = [ [] for _ in range(N) ]
@@ -201,6 +204,95 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 					J[j].append(i)
 					J2[j].append(interactions)
 
+def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
+	""" Check if the solution found with MontCarlo is linearly independent with respect to the previous one """
+	K = intkerneldim+1
+	MIN = 1e-9
+	MAX = 1e+9
+	matrix = [ [] for _ in range(K) ]
+	matrix2 = [ [] for _ in range(K) ]
+	for i in range(0, K-1):
+		for j in range(0, len(NSolutions[i])):
+			matrix[i].append(NSolutions[i][j])
+			matrix2[i].append(NSolutions2[i][j])
+	orders2 = [None] * len(matched)
+	pivots2 = [None] * len(matched)
+
+	for i in range(0, len(matched)):
+		orders2[i] = i
+		pivots2[i] = matched[i]
+
+	qsort(len(matched), 0, orders2, pivots2)
+	for i in range(0, len(matched)):
+		if vectors[orders2[i]] > MIN:
+			matrix[K-1].append(matched[orders2[i]])
+			matrix2[K-1].append(vectors[orders2[i]])
+
+	ok = 0
+	orders = [None] * K
+	for i in range(0, K):
+		orders[i] = i
+
+	pivots = [None] * K
+	for i in range(0, K):
+		if len(matrix[i]) > 0:
+			pivots[i] = matrix[i][0]
+		else:
+			pivots[i] = MAX
+
+	while ok == 0:
+		qsort(K, 0, orders, pivots)
+		for j in range(0, K-1):
+			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
+				min1=MAX
+				if len(matrix[orders[j]]) > 1:
+					for i in range(0, len(matrix[orders[j]])):
+						if abs(matrix2[orders[j]][0] / matrix2[orders[j]][i]) < min1:
+							min1 = abs(matrix2[orders[j]][0]/matrix2[orders[j]][i])
+				min2=MAX
+				if len(matrix[orders[j+1]]) > 1:
+					for i in range(0, len(matrix[orders[j+1]])):
+						if abs(matrix2[orders[j+1]][0]/matrix2[orders[j+1]][i]) < min2:
+							min2 = abs(matrix2[orders[j+1]][0] / matrix2[orders[j+1]][i])
+				if min2 > min1:
+					k2 = orders[j+1]
+					orders[j+1] = orders[j]
+					orders[j] = k2
+		ok = 1
+		for j in range(0, K-1):
+			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
+				k1 = orders[j+1]
+				k2 = orders[j]
+				colonna = [None] * N
+				for i in range(0, N):
+					colonna[i] = 0
+				g = matrix2[k2][0]/matrix2[k1][0]
+				for i in range(1, len(matrix[k1])):
+					colonna[matrix[k1][i]] = matrix2[k1][i]*g
+				for i in range(1, len(matrix[k2])):
+					colonna[matrix[k2][i]] -= matrix2[k2][i]
+
+				matrix[k1] = []
+				matrix2[k1] = []
+				for i in range(0, N):
+					if abs(colonna[i]) > MIN:
+						matrix[k1].append(i)
+						matrix2[k1].append(colonna[i])
+				ok = 0
+				if len(matrix[k1]) > 0:
+					pivots[k1] = matrix[k1][0]
+				else:
+					pivots[k1] = MAX
+		
+		K1 = 0
+		for i in range(0, K):
+			if len(matrix[i]) > 0:
+				K1 += 1
+		yes = 0
+		if (K == K1):
+			yes = 1
+		return yes
+
 def MonteCarlo():
 	""" TODO: Implement """
 	pass
@@ -220,44 +312,46 @@ def Output():
 if __name__ == "__main__":
 	print("Conserved moeties test case...")
 
-	# Hard-coded stoichiometric matrix as test case
-	S = [1, 0, 3, 4,
-		 1, 5, 1, 5, 
-		-10, 3, 1, 6]
-	N = 4 # number of metabolites (columns)
-	M = 3 # number of reactions (rows)
+	# Hard-coded stoichiometric matrix as test case containing _ONE_ conservative law (i.e. one conserved moiety)
+	S  = [ -1, 0, 0, 0, 0, 0,
+			1, -1, 1, 0, 0, 0,
+			0, 1, -1, -1, -1, -1,
+			0, 0, 0, 1, -1, 0,
+			0, 0, 0, 0, 0, 1]
+	N = 6 # number of metabolites (columns)
+	M = 5 # number of reactions (rows)
 
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
-	else:
-		print("Kernel...")
-		kernelDim, engagedMetabolites, intKernelDim, conservedMoieties = kernel(S, N, M)
-		print(f"""There are {kernelDim} conservation laws, engaging, 
-		{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
-		moeities), engaging {len(conservedMoieties)} metabolites...""")
 
-		print("Filling...")
-		fill(S, len(engagedMetabolites), engagedMetabolites)
+	print("Kernel...")
+	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties = kernel(S, N, M)
+	print(f"""There are {kernelDim} conservation laws, engaging, 
+	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
+	moeities), engaging {len(conservedMoieties)} metabolites...""")
 
-		print("MonteCarlo...")
-		finish = 0
+	print("Filling...")
+	fill(S, len(engagedMetabolites), engagedMetabolites)
+
+	print("MonteCarlo...")
+	finish = 0
+	if intKernelDim == kernelDim:
+		finish = 1
+	timer = 0
+	while finish == 0:
+		yes, intKernelDim, kernelDim = MonteCarlo()
 		if intKernelDim == kernelDim:
 			finish = 1
-		timer = 0
-		while finish == 0:
-			yes, intKernelDim, kernelDim = MonteCarlo()
-			if intKernelDim == kernelDim:
-				finish = 1
-			if yes == 0:
-				timer += 1
-			if timer == max:
-				print("Relaxation...")
-				finish = Relaxation()
-				if finish == 1:
-					timer = 0
+		if yes == 0:
+			timer += 1
+		if timer == max:
+			print("Relaxation...")
+			finish = Relaxation()
+			if finish == 1:
+				timer = 0
 
-		print("Reduce...")
-		Reduce()
+	print("Reduce...")
+	Reduce()
 
-		print("Pretty print output...")
-		Output()
+	print("Pretty print output...")
+	Output()
