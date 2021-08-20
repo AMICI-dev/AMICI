@@ -301,9 +301,47 @@ def Relaxation():
 	""" TODO: Implement """
 	pass
 
-def Reduce():
-	""" TODO: Implement """
-	pass
+def Reduce(intKernelDim, NSolutions, NSolutions2):
+	""" Reducing the solution found by MonteCarlo"""
+	K = intKernelDim
+	MIN = 1e-9
+	ok = 0
+	orders = [None] * K
+	for i in range(0, K):
+		orders[i] = i
+	pivots = [None] * K
+	for i in range(0, K):
+		pivots[i] = -len(NSolutions[i])
+	while True:
+		qsort(K, 0, orders, pivots)
+		ok = 1
+		for i in range(0, K):
+			for j in range(i+1, K):
+				k1 = orders[i]
+				k2 = orders[j]
+				colonna = [None] * N
+				for l in range(0, N):
+					colonna[l] = 0
+				ok1 = 1
+				for l in range(0, len(NSolutions[k1])):
+					colonna[NSolutions[k1][l]] = NSolutions2[k1][l]
+				for l in range(0, len(NSolutions[k2])):
+					colonna[NSolutions[k2][l]] -= NSolutions2[k2][l]
+					if colonna[NSolutions[k2][l]] < -MIN:
+						ok1 = 0
+					if ok1 == 1:
+						ok = 0
+						NSolutions[k1] = []
+						NSolutions[k2] = []
+						for l in range(0, N):
+							if abs(colonna[l]) > MIN:
+								NSolutions[k1].append(l)
+								NSolutions2[k1].append(colonna[l])
+						pivots[k1] = -len(NSolutions[k1])
+
+		if ok != 0:
+			break
+
 
 def Output():
 	""" TODO: Implement """
@@ -351,7 +389,7 @@ if __name__ == "__main__":
 				timer = 0
 
 	print("Reduce...")
-	Reduce()
+	# Reduce()
 
 	print("Pretty print output...")
 	Output()
