@@ -422,7 +422,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 					
 
 
-def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6):
+def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6, relaxation_step=1.9):
 	MIN = 1e-9
 	MAX = 1e9
 	matrix = [ [] for _ in range(N) ]
@@ -623,7 +623,7 @@ def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6):
 			if cmin >= 0:
 				ok = 1
 			else:
-				alpha = -1.9*cmin # Motzkin relaxation
+				alpha = -relaxation_step*cmin # Motzkin relaxation
 				fact = 0
 				for j in range(0, len(matrixb[min])):
 					fact += matrixb2[min][j]*matrixb2[min][j]
