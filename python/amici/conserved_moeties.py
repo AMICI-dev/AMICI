@@ -1,3 +1,6 @@
+import random
+import math
+
 def qsort(k, km, orders, pivots):
 	centre = 0
 	if k-km >= 1:
@@ -293,9 +296,123 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 			yes = 1
 		return yes
 
-def MonteCarlo():
-	""" TODO: Implement """
-	pass
+def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSolutions2, initT=1, coolrate=1e-3):
+	""" Montecarlo simulated annealing """
+	MIN = 1e-9
+	dim = len(matched)
+	num = [None] * dim
+	numtot = 0
+	for i in range(0, dim):
+		if (len(J[i])) > 0:
+			num[i] = 2*random.uniform(0, 1)
+		else: num[i] = 0
+		numtot += num[i]
+	
+	H = 0
+	for i in range(0, dim):
+		H += fields[i]*num[i]*num[i]
+		if len(J[i]) > 0:
+			for j in range(0, len([J[i]])):
+				H += J2[i][j] * num[i] * num[J[i][j]]
+
+	stop = 0
+	count = 0
+	T1 = initT
+	howmany = 0
+	e = math.exp(-1/T1)
+
+	while True:
+		en = int(random.uniform(0, 1) * dim)
+		while len(J[en]) == 0:
+			en = int(random.uniform(0,1)*dim)
+		p=1
+		if num[en] > 0 and math.random(0, 1) < 0.5:
+			p = -1
+		delta = fields[en] * num[en]
+		for i in range(0, len(J[en])):
+			delta += J2[en][i] * num[J[en][i]]
+		delta = 2*p*delta + fields[en]
+
+		if delta < 0 and math.random(0, 1) < math.pow(e, delta):
+			num[en] += p
+			numtot += p
+			H += delta
+
+		count += 1
+
+		if count % dim == 0:
+			T1 -= coolrate
+			if (T1 <= 0):
+				T1 = coolrate
+				e = math.exp(-1/T1)
+		
+		if count == int(dim/coolrate):
+			T1 = initT
+			e = math.exp(-1/T1)
+			count = 0
+			numtot = 0
+			for i in range(0, dim):
+				num[i] = 0
+			en = math.random(0, 1) * dim
+			while len(J[en]) > 0:
+				en = math.random(0, 1) * dim
+			num[en] = 1
+			numtot = 1
+			H = 0
+			for i in range(0, dim):
+				H += fields[i] * num[i] * num[i]
+				if len(J[i]) > 0:
+					for j in range(0, len(J[i])):
+						H += J2[i][j] * num[i] * num[J[i][j]]
+			howmany += 1
+
+		if (H < MIN and numtot > 0) or (howmany == 10*max):
+			stop = 1
+
+		if stop != 0:
+			break
+
+		yes = 0
+		if howmany < 10*max:
+			if len(intmatched) > 0:
+				yes = LinearDependence(num)
+			else:
+				yes = 1
+			if yes == 1:
+				orders2 = [None] * len(matched)
+				pivots2 = [None] * len(matched)
+				for i in range(0, len(matched)):
+					orders2[i] = i
+					pivots2[i] = matched[i]
+				qsort(len(matched), 0, orders2, pivots2)
+				for i in range(0, len(matched)):
+					if num[orders2[i]] > 0:
+						NSolutions[intkerneldim].append(matched[orders2[i]])
+						NSolutions2[intkerneldim].append(num[orders2[i]])
+				intkerneldim += 1
+				yes2  = LinearDependence(num)
+				# TODO: Adjust parameters of reduce
+				# Reduce()
+				min = 1000
+				for i in range(0, len(NSolutions[intkerneldim-1])):
+					if len(intmatched) == 0:
+						intmatched.append(NSolutions[intkerneldim-1][i])
+					else:
+						ok3 = 1
+						for k in range(0, len(intmatched)):
+							if (intmatched[k] == NSolutions[intkerneldim-1][i]):
+								ok3 = 0
+						if ok3 == 1:
+							intmatched.append(NSolutions[intkerneldim-1])
+					if NSolutions2[intkerneldim-1][i] < min:
+						min = NSolutions2[intkerneldim-1][i]
+				for i in range(0, len(NSolutions[intkerneldim-1])):
+					NSolutions2[intkerneldim-1][i] /= min
+		else:
+			yes = 0
+		return yes
+					
+
 
 def Relaxation():
 	""" TODO: Implement """
