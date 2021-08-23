@@ -3,8 +3,11 @@ import math
 import sys
 sys.setrecursionlimit(3000)
 
-# TODO: Add pysb tests for the functions below.
-# TODO: Verify implementation with test example from DeMartino paper
+# TODO: Add pysb tests for all the functions below
+# TODO: !!! Verify implementation with test example from DeMartino paper !!!
+# TODO: If tests succeed, make the code naively transpiled manually to Python 
+#       more idiomatic Python...
+# TODO: Documentation + Coding conventions for PYthon need to be applied
 
 def qsort(k, km, orders, pivots):
 	# TODO: Rewrite the quicksort
@@ -63,9 +66,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	pivots = [ matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(0, N)]
 
 	while ok == 0:
-		print("Qsort...")
 		qsort(N, 0, orders, pivots)
-		print("done!")
 		for j in range(0, N-1):
 			if pivots[orders[j+1]]==pivots[orders[j]] and pivots[orders[j]] != MAX:
 				min1 = 100000000
@@ -166,7 +167,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 			i2 += 1
 	intKernelDim=i2
 
-	return kernelDim, matched, intKernelDim, intmatched
+	return kernelDim, matched, intKernelDim, intmatched, NSolutions, NSolutions2
 
 def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 	""" Interaction matrix construction """
@@ -214,6 +215,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 					J2[i].append(interactions)
 					J[j].append(i)
 					J2[j].append(interactions)
+	return J, J2, fields
 
 def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 	""" Check if the solution found with MontCarlo is linearly independent with respect to the previous one """
@@ -383,7 +385,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 		yes = 0
 		if howmany < 10*max:
 			if len(intmatched) > 0:
-				yes = LinearDependence(num)
+				yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched)
 			else:
 				yes = 1
 			if yes == 1:
@@ -398,9 +400,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 						NSolutions[intkerneldim].append(matched[orders2[i]])
 						NSolutions2[intkerneldim].append(num[orders2[i]])
 				intkerneldim += 1
-				yes2  = LinearDependence(num)
-				# TODO: Adjust parameters of reduce
-				# Reduce()
+				yes2  = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched)
 				min = 1000
 				for i in range(0, len(NSolutions[intkerneldim-1])):
 					if len(intmatched) == 0:
@@ -418,7 +418,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 					NSolutions2[intkerneldim-1][i] /= min
 		else:
 			yes = 0
-		return yes
+		return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched
 					
 
 
@@ -642,7 +642,7 @@ def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6, 
 		return yes
 
 
-def Reduce(intKernelDim, NSolutions, NSolutions2):
+def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 	""" Reducing the solution found by MonteCarlo"""
 	K = intKernelDim
 	MIN = 1e-9
@@ -682,18 +682,26 @@ def Reduce(intKernelDim, NSolutions, NSolutions2):
 
 		if ok != 0:
 			break
+	return intKernelDim, kernelDim, NSolutions, NSolutions2
 
 def Input():
 	LoL = []
 	with open('matrix.dat', 'r') as f:
 		return [item for sl in [entry.strip().split('\t') for entry in f] for item in sl]
 
-def Output():
-	""" TODO: Implement """
-	pass
+def Output(intKernelDim, kernelDim, intmatched, NSolutions):
+	print(f"There are {intKernelDim} linearly independent conserved moieties, engaging {len(intmatched)} metabolites\n")
+	if intKernelDim == kernelDim:
+		print("They generate all the conservation laws")
+	else:
+		print(f"They don't generate all the conservation laws, {kernelDim-intKernelDim} of the mare not reducible to moeities")
+	for i in range(0, intKernelDim):
+		print(f"Moeity number {i+1} engages {len(NSolutions[i])} metabolites.")
 
 if __name__ == "__main__":
+	print("******************************")
 	print("Conserved moeties test case...")
+	print("******************************")
 
 	# Hard-coded stoichiometric matrix as test case containing _ONE_ conservative law (i.e. one conserved moiety)
 	S  = [ -1, 0, 0, 0, 0, 0,
@@ -712,36 +720,34 @@ if __name__ == "__main__":
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
 
-	print("Kernel...")
-	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties = kernel(S, N, M)
+	print("Kernel calculation of S...\n")
+	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(S, N, M)
 	print(f"""There are {kernelDim} conservation laws, engaging, 
 	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
-	moeities), engaging {len(conservedMoieties)} metabolites...""")
+	moeities), engaging {len(conservedMoieties)} metabolites...\n""")
 
-	print("Filling...")
-	fill(S, len(engagedMetabolites), engagedMetabolites, N)
+	print("Filling interaction matrix...\n")
+	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
 
-	print("MonteCarlo...")
 	finish = 0
 	if intKernelDim == kernelDim:
 		finish = 1
-	timer = 0
-	while finish == 0:
-		yes, intKernelDim, kernelDim = MonteCarlo()
-		if intKernelDim == kernelDim:
-			finish = 1
-		if yes == 0:
-			timer += 1
-		if timer == max:
-			print("Relaxation...")
-			finish = Relaxation()
-			if finish == 1:
-				timer = 0
+	else:
+		timer = 0
+		while finish == 0:
+			print("MonteCarlo...")
+			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2)
+			if intKernelDim == kernelDim:
+				finish = 1
+			if yes == 0:
+				timer += 1
+			if timer == max:
+				print("Relaxation...")
+				finish = Relaxation(S, conservedMoieties, M, N)
+				if finish == 1:
+					timer = 0
 
-	print("Reduce...")
-	# Reduce()
+		print("Reduce...")
+		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
 
-	# TODO: Finish stitching together the algorithmic parts from above
-
-	print("Pretty print output...")
-	Output()
+	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
