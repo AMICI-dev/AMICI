@@ -1,7 +1,13 @@
 import random
 import math
+import sys
+sys.setrecursionlimit(3000)
+
+# TODO: Add pysb tests for the functions below.
+# TODO: Verify implementation with test example from DeMartino paper
 
 def qsort(k, km, orders, pivots):
+	# TODO: Rewrite the quicksort
 	centre = 0
 	if k-km >= 1:
 		pivot = km+(k-km)//2
@@ -54,10 +60,12 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	
 	ok = 0
 	orders = [ i for i in range(0, N) ]
-	pivots = [  matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(0, N)]
+	pivots = [ matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(0, N)]
 
 	while ok == 0:
+		print("Qsort...")
 		qsort(N, 0, orders, pivots)
+		print("done!")
 		for j in range(0, N-1):
 			if pivots[orders[j+1]]==pivots[orders[j]] and pivots[orders[j]] != MAX:
 				min1 = 100000000
@@ -160,7 +168,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
 	return kernelDim, matched, intKernelDim, intmatched
 
-def fill(stoichiometricMatrixAsList, matched_size, matched):
+def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 	""" Interaction matrix construction """
 	MIN = 1e-9
 	matrix = [ [] for _ in range(N) ]
@@ -414,9 +422,225 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 					
 
 
-def Relaxation():
-	""" TODO: Implement """
-	pass
+def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6):
+	MIN = 1e-9
+	MAX = 1e9
+	matrix = [ [] for _ in range(N) ]
+	matrix2 = [ [] for _ in range(N) ]
+
+	i1 = 0
+	j1 = 0
+	K = len(intmatched)
+	for _, val in enumerate(stoichiometricMatrixAsList):
+		if val != 0:
+			prendo=K
+			if K > 0:
+				for i in range(0, K):
+					if j1 == intmatched[i]:
+						prendo = i
+			if prendo < K:
+				matrix[prendo].append(i1)
+				matrix2[prendo].append(val)		
+		j1 += 1
+		if j1 == N:
+			j1=0
+			i1 += 1
+
+	ok = 0
+
+	orders = [ i for i in range(0, N) ]
+	pivots = [ matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(0, N)]
+
+	while ok == 0:
+		qsort(K, 0, orders, pivots)
+		for j in range(0, K):
+			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
+				min1 = MAX
+				if len(matrix[orders[j]]) > 1:
+					for i in range(0, len(matrix[orders[j]])):
+						if abs(matrix2[orders[j]][0]/matrix2[orders[j]][i]) < min1:
+							min1 = matrix2[orders[j]][0]/matrix2[orders[j]][i]
+				min2 = MAX
+				if len(matrix[orders[j+1]]) > 1:
+					for i in range(0, len(matrix[orders[j]])):
+						if abs(matrix2[orders[j+1]][0]/matrix2[orders[j+1]][i]) < min2:
+							min2 = abs(matrix2[orders[j+1]][0]) / matrix2[orders[j+1]][i]
+				if min2 > min1:
+					k2 = orders[j+1]
+					orders[j+1] = orders[j]
+					orders[j] = k2
+		ok = 1
+		j = 0
+		for j in range(0, K):
+			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
+				k1 = orders[j+1]
+				k2 = orders[j]
+				colonna = [None] * M 
+				for i in range(0, M):
+					colonna[i] = 0
+				g = matrix2[k2][0]/matrix2[k1][0]
+				for i in range(1, len(matrix[k1])):
+					colonna[matrix[k1][i]] = matrix2[k1][i]*g
+				for i in range(1, len(matrix[k2])):
+					colonna[matrix[k2][i]] -= matrix2[k2][i]
+
+				matrix[k1] = []
+				matrix2[k1] = []
+				for i in range(0, M):
+					if abs(colonna[i]) > MIN:
+						matrix[k1].append(i)
+						matrix2[k1].append(colonna[i])
+				ok = 0
+				if len(matrix[orders[j+1]]) > 0:
+					pivots[orders[j+1]] = matrix[orders[j+1]][0]
+				else:
+					pivots[orders[j+1]] = MAX
+
+		for i in range(0, K):
+			if len(matrix[i]) > 0:
+				norm = matrix2[i][0]
+				for j in range(0, len(matrix[i])):
+					matrix2[i][j] /= norm
+
+		for k1 in reversed(range(0, K-1)):
+			k = orders[k1]
+			if len(matrix[k]) > 1:
+				for i in range(1, len(matrix[k])):
+					for j1 in range(k1+1, K):
+						j = orders[j1]
+						if len(matrix[j]) > 0:
+							if matrix[j][0] == matrix[k][i]:
+								rigak = [None] * M
+								for a in range(0, M):
+									rigak[a] = 0
+								for a in range(0, len(matrix[k])):
+									rigak[matrix[k]][a] = matrix2[k][a]
+								for a in range(0, len(matrix[j])):
+									rigak[matrix[j]][a] -= matrix2[j][a] * matrix2[k][i]
+								matrix = []
+								matrix2 = []
+								for a in range(0, M):
+									if rigak[a] != 0:
+										matrix[k].append(a)
+										matrix2[k].append(rigak[a])
+
+		indip = [None] * M
+		for i in range(0, M):
+			indip[i] = K+1
+		
+		for i in range(0, K):
+			if len(matrix[i]) > 0:
+				indip[matrix[i]][0] = i
+		
+		M1 = 0
+		for i in range(0, M):
+			if indip[i] == K+1:
+				indip[i] = K + M1
+				M1 += 1
+		
+		matrixAus = [ [] for _ in range(M1)]
+		matrixAus2 = [ [] for _ in range(M1)]
+		i1 = 0
+		for i in range(0, M):
+			if indip[i] >= K:
+				matrixAus[i1].append(i)
+				matrixAus2[i1].append(1)
+				i1 += 1
+			else:
+				t = indip[i]
+				if len(matrix[t]) > 1:
+					for k in range(1, len(matrix[t])):
+						quelo = indip[matrix[t]][k] - K
+						matrixAus[quelo].append(i)
+						matrixAus2[quelo].append(-matrix2[t][k])
+		
+		for i in range(0, K):
+			matrix[i] = []
+
+		N1 = N-K
+		matrix_aus = [ [] for _ in range(N1)]
+		matrix_aus2 = [ [] for _ in range(N1)]
+
+		k1 = 0
+		i1 = 0
+		j1 = 0
+		
+		for _, val in enumerate(stoichiometricMatrixAsList):
+			prendo = 1
+			if len(intmatched) > 0:
+				for i in range(0, len(intmatched)):
+					if j1 == intmatched[i]:
+						prendo -= 1
+			if val != 0:
+				if prendo == 1:
+					matrix_aus[k1].append(i1)
+					matrix_aus2[k2].append(val)
+			j1 += 1
+			k1 += prendo
+			if j1 == N:
+				j1 = 0
+				k1 = 0
+
+		matrixb = [ [] for _ in range(N1)]
+		matrixb2 = [ [] for _ in range(N1)]
+		for i in range(0, M1):
+			for j in range(0, N1):
+				prod = 0
+				if len(matrix_aus[j])*len(matrixAus[i]) > 0:
+					for ib in range(0, len(matrixAus[i])):
+						for jb in range(0, len(matrix_aus[j])):
+							if matrixAus[i][ib] == matrix_aus[j][jb]:
+								prod += matrixAus2[i][ib] * matrix_aus2[j][jb]
+					if abs(prod) > MIN:
+						matrixb[j].append(i)
+						matrixb2[j].append(prod)
+
+		print("Relaxation start...")
+		for i in range(0, M1):
+			matrixAus[i] = []
+			matrixAus2[i] = []
+
+		for i in range(0, N1):
+			matrix_aus[i] = []
+			matrix_aus2[i] = []
+
+		var = [None] * M1
+		for i in range(0, M1):
+			var[i] = MIN
+		ok = 0
+		time = 0
+		while True:
+			cmin = 1000
+			for j in range(0, N1):
+				constr = 0
+				if len(matrixb[j]) > 0:
+					for i in range(0, len(matrixb[j])):
+						constr += matrixb2[j][i] * var[matrixb][j][i]
+					if constr < cmin:
+						min = j
+						cmin = constr
+			time += 1
+			if cmin >= 0:
+				ok = 1
+			else:
+				alpha = -1.9*cmin # Motzkin relaxation
+				fact = 0
+				for j in range(0, len(matrixb[min])):
+					fact += matrixb2[min][j]*matrixb2[min][j]
+				alpha /= fact
+				if alpha < 1e-9 * MIN:
+					alpha = 1e-9 * MIN
+				for j in range(0, len(matrixb[min])):
+					var[matrixb[min][j]] += alpha * matrixb2[min][j]
+
+			if not (ok == 0 and time < relaxationmax):
+				break
+
+		yes = 0
+		if ok == 1:
+			yes = 1
+		return yes
+
 
 def Reduce(intKernelDim, NSolutions, NSolutions2):
 	""" Reducing the solution found by MonteCarlo"""
@@ -459,6 +683,10 @@ def Reduce(intKernelDim, NSolutions, NSolutions2):
 		if ok != 0:
 			break
 
+def Input():
+	LoL = []
+	with open('matrix.dat', 'r') as f:
+		return [item for sl in [entry.strip().split('\t') for entry in f] for item in sl]
 
 def Output():
 	""" TODO: Implement """
@@ -476,6 +704,11 @@ if __name__ == "__main__":
 	N = 6 # number of metabolites (columns)
 	M = 5 # number of reactions (rows)
 
+	# TODO: Need to reimplement qsort first
+	#S = Input()
+	#N = 1668
+	#M = 2381
+
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
 
@@ -486,7 +719,7 @@ if __name__ == "__main__":
 	moeities), engaging {len(conservedMoieties)} metabolites...""")
 
 	print("Filling...")
-	fill(S, len(engagedMetabolites), engagedMetabolites)
+	fill(S, len(engagedMetabolites), engagedMetabolites, N)
 
 	print("MonteCarlo...")
 	finish = 0
@@ -507,6 +740,8 @@ if __name__ == "__main__":
 
 	print("Reduce...")
 	# Reduce()
+
+	# TODO: Finish stitching together the algorithmic parts from above
 
 	print("Pretty print output...")
 	Output()
