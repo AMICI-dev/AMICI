@@ -174,8 +174,6 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
 def fill(stoichiometricMatrixAsList, matched_size, matched):
 	""" Interaction matrix construction """
-	print("N:")
-	print(N)
 	dim = matched_size
 	MIN = 1e-9
 	matrix = [ [] for _ in range(dim) ]
@@ -187,8 +185,6 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 	fields = [0]*N
 	i1 = 0
 	j1 = 0
-	print("dim:")
-	print(dim)
 	for _, val in enumerate(stoichiometricMatrixAsList):
 		if val != 0:
 			prendo=dim
@@ -221,10 +217,6 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 							J2[i].append(interactions)
 							J[j].append(i)
 							J2[j].append(interactions)
-	print("J:")
-	print(J)
-	print("J2:")
-	print(J2)
 	return J, J2, fields
 
 def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
@@ -778,7 +770,8 @@ if __name__ == "__main__":
 					timer = 0
 		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
 
-	for i in range(0, intKernelDim-2):
+	# Assert that each conserved moeity has the correct number of metabolites (last two moeities fluctuate in DeMartino C++ implementation, likewise our implementation fluctuates, thus excluding)
+	for i in range(0, intKernelDim-2): 
 		assert(len(NSolutions[i]) == knownValuesFromDeMartino[i])
 
 	print("".join(['*' for _ in range(0, 80)]))
