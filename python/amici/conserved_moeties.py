@@ -8,9 +8,9 @@ sys.setrecursionlimit(3000)
 # TODO: If tests succeed, make the code naively transpiled manually to Python 
 #       more idiomatic Python...
 # TODO: Documentation + Coding conventions for PYthon need to be applied
+# TODO: Rewrite the quicksort (recursive to iterative version)
 
 def qsort(k, km, orders, pivots):
-	# TODO: Rewrite the quicksort
 	centre = 0
 	if k-km >= 1:
 		pivot = km+(k-km)//2
@@ -28,9 +28,10 @@ def qsort(k, km, orders, pivots):
 		neworders[p] = orders[pivot]
 		for i in range(km, k):
 			orders[i] = neworders[i-km]
-			centre = p + km
-			qsort(k, centre+1, orders, pivots)
-			qsort(centre, km, orders, pivots)
+
+		centre = p + km
+		qsort(k, centre+1, orders, pivots)
+		qsort(centre, km, orders, pivots)
 
 def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	""" Kernel calculation by Gaussian elimination"""
@@ -132,6 +133,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 		matrix[i] = []
 		matrix2[i] = []
 
+	# TODO: Check very careful the indices len-1! (compare to c++ code)
 	i2 = 0
 	for i in range(0, kernelDim):
 		ok2 = 1
@@ -169,8 +171,9 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
 	return kernelDim, matched, intKernelDim, intmatched, NSolutions, NSolutions2
 
-def fill(stoichiometricMatrixAsList, matched_size, matched, N):
+def fill(stoichiometricMatrixAsList, matched_size, matched):
 	""" Interaction matrix construction """
+	N = matched_size
 	MIN = 1e-9
 	matrix = [ [] for _ in range(N) ]
 	matrix2 = [ [] for _ in range(N) ]
@@ -207,7 +210,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 							if matrix[i][po] == matrix[j][pu]:
 								interactions += matrix2[i][po]*matrix2[j][pu]
 
-				if j == 1:
+				if j == i:
 					fields[i] = interactions
 			else:
 				if abs(interactions) > MIN:
@@ -310,7 +313,8 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 	""" Montecarlo simulated annealing """
 	MIN = 1e-9
 	dim = len(matched)
-	num = [None] * dim
+	print(dim)
+	num = [0] * dim
 	numtot = 0
 	for i in range(0, dim):
 		if (len(J[i])) > 0:
@@ -320,6 +324,8 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 	
 	H = 0
 	for i in range(0, dim):
+		print(num[i])
+		print(fields[i])
 		H += fields[i]*num[i]*num[i]
 		if len(J[i]) > 0:
 			for j in range(0, len([J[i]])):
@@ -654,7 +660,7 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 	for i in range(0, K):
 		pivots[i] = -len(NSolutions[i])
 	while True:
-		qsort(K, 0, orders, pivots)
+		#qsort(K, 0, orders, pivots)
 		ok = 1
 		for i in range(0, K):
 			for j in range(i+1, K):
@@ -687,7 +693,8 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 def Input():
 	LoL = []
 	with open('matrix.dat', 'r') as f:
-		return [item for sl in [entry.strip().split('\t') for entry in f] for item in sl]
+		return [int(item) for sl in [entry.strip().split('\t') for entry in f] for item in sl]
+			
 
 def Output(intKernelDim, kernelDim, intmatched, NSolutions):
 	print(f"There are {intKernelDim} linearly independent conserved moieties, engaging {len(intmatched)} metabolites\n")
@@ -712,22 +719,29 @@ if __name__ == "__main__":
 	N = 6 # number of metabolites (columns)
 	M = 5 # number of reactions (rows)
 
-	# TODO: Need to reimplement qsort first
-	#S = Input()
-	#N = 1668
-	#M = 2381
+	S = Input()
+	N = 1668
+	M = 2381
 
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
 
+
 	print("Kernel calculation of S...\n")
+	# TODO: debug kernel as well -> number of metabolites does not yet match!
 	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(S, N, M)
 	print(f"""There are {kernelDim} conservation laws, engaging, 
-	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
-	moeities), engaging {len(conservedMoieties)} metabolites...\n""")
+	{engagedMetabolites} metabolites, {intKernelDim} are integers (conserved 
+	moeities), engaging {conservedMoieties} metabolites...\n""")
 
+	# There are 38 conservation laws, engaging 131 metabolites 
+	# 36 are integers (conserved moieties), engaging   128 metabolites (from C++)
+	assert(kernelDim == 38)
+	assert(intKernelDim == 36)
+
+	# TODO: Debug below...
 	print("Filling interaction matrix...\n")
-	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
+	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites)
 
 	finish = 0
 	if intKernelDim == kernelDim:
