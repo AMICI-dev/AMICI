@@ -138,21 +138,21 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	for i in range(0, kernelDim):
 		ok2 = 1
 		if (len(RSolutions[i])) > 0:
-			for j in range(0, len(RSolutions[i])-1):
+			for j in range(0, len(RSolutions[i])):
 				if RSolutions2[i][j]*RSolutions2[i][0] < 0:
 					ok2 = 0
 				if len(matched) == 0:
 					matched.append(RSolutions[i][j])
 				else:
 					ok3 = 1
-					for k in range(0, len(matched)-1):
+					for k in range(0, len(matched)):
 						if matched[k] == RSolutions[i][j]:
 							ok3 = 0
-						if ok3 == 1:
-							matched.append(RSolutions[i][j])
+					if ok3 == 1:
+						matched.append(RSolutions[i][j])
 		if ok2 == 1 and len(RSolutions[i]) > 0:
 			min = MAX
-			for j in range(0, len(RSolutions[i])-1):
+			for j in range(0, len(RSolutions[i])):
 				NSolutions[i2].append(RSolutions[i][j])
 				NSolutions2[i2].append(abs(RSolutions2[i][j]))
 				if min > abs(RSolutions2[i][j]):
@@ -164,6 +164,8 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 					for k in range(0, len(intmatched)-1):
 						if intmatched[k] == NSolutions[i2][j]:
 							ok3 = 0
+					if ok3 == 1:
+						intmatched.append(NSolutions[i2][j])
 			for j in range(0, len(NSolutions[i2])-1):
 				NSolutions2[i2][j] /= min
 			i2 += 1
@@ -731,15 +733,16 @@ if __name__ == "__main__":
 	# TODO: debug kernel as well -> number of metabolites does not yet match!
 	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(S, N, M)
 	print(f"""There are {kernelDim} conservation laws, engaging, 
-	{engagedMetabolites} metabolites, {intKernelDim} are integers (conserved 
-	moeities), engaging {conservedMoieties} metabolites...\n""")
+	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
+	moeities), engaging {len(conservedMoieties)} metabolites...\n""")
 
 	# There are 38 conservation laws, engaging 131 metabolites 
 	# 36 are integers (conserved moieties), engaging   128 metabolites (from C++)
 	assert(kernelDim == 38)
 	assert(intKernelDim == 36)
+	assert(len(engagedMetabolites) == 131)
+	assert(len(conservedMoieties) == 128)
 
-	# TODO: Debug below...
 	print("Filling interaction matrix...\n")
 	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites)
 
@@ -749,6 +752,7 @@ if __name__ == "__main__":
 	else:
 		timer = 0
 		while finish == 0:
+		    # TODO: Debug below...
 			print("MonteCarlo...")
 			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2)
 			if intKernelDim == kernelDim:
