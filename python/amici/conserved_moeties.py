@@ -237,7 +237,9 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 		orders2[i] = i
 		pivots2[i] = matched[i]
 
+	print("sort2...")
 	qsort(len(matched), 0, orders2, pivots2)
+	print("end")
 	for i in range(0, len(matched)):
 		if vectors[orders2[i]] > MIN:
 			matrix[K-1].append(matched[orders2[i]])
@@ -256,7 +258,9 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 			pivots[i] = MAX
 
 	while ok == 0:
+		print("sort3...")
 		qsort(K, 0, orders, pivots)
+		print("end")
 		for j in range(0, K-1):
 			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
 				min1=MAX
@@ -345,7 +349,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			delta += J2[en][i] * num[J[en][i]]
 		delta = 2*p*delta + fields[en]
 
-		if delta < 0 and random.uniform(0, 1) < math.pow(e, delta):
+		if delta < 0 or random.uniform(0, 1) < math.pow(e, delta):
 			num[en] += p
 			numtot += p
 			H += delta
@@ -396,7 +400,9 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			for i in range(0, len(matched)):
 				orders2[i] = i
 				pivots2[i] = matched[i]
+			print("sort...")
 			qsort(len(matched), 0, orders2, pivots2)
+			print("end")
 			for i in range(0, len(matched)):
 				if num[orders2[i]] > 0:
 					NSolutions[intkerneldim].append(matched[orders2[i]])
@@ -420,8 +426,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			for i in range(0, len(NSolutions[intkerneldim-1])):
 				NSolutions2[intkerneldim-1][i] /= min
 			print(f"Found linearly independent moiety, now there are {intkerneldim} engaging {len(intmatched)} metabolites")
-		else:
-			print("Found a moiety but it is linearly dependent... next.")
+		print("Found a moiety but it is linearly dependent... next.")
 	else:
 		yes = 0
 	return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched
@@ -691,6 +696,10 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 def Input():
 	with open('matrix.dat', 'r') as f:
 		return [int(item) for sl in [entry.strip().split('\t') for entry in f] for item in sl]
+
+def Names():
+	with open('metabolites.txt', 'r') as f:
+		return [entry for entry in f]
 			
 
 def Output(intKernelDim, kernelDim, intmatched, NSolutions):
@@ -700,8 +709,12 @@ def Output(intKernelDim, kernelDim, intmatched, NSolutions):
 	else:
 		print(f"They don't generate all the conservation laws, {kernelDim-intKernelDim} of the mare not reducible to moeities")
 
+	names = Names()
 	for i in range(0, intKernelDim):
 		print(f"Moeity number {i+1} engages {len(NSolutions[i])} metabolites.")
+		print(f"\t")
+		for j in range(0, len(NSolutions[i])):
+			print(f"{names[NSolutions[i][j]]} \t {NSolutions2[i][j]}")
 
 if __name__ == "__main__":
 	print("".join(['*' for _ in range(0, 80)]))
@@ -733,10 +746,10 @@ if __name__ == "__main__":
 
 	# There are 38 conservation laws, engaging 131 metabolites 
 	# 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
-	assert(kernelDim == 38)
-	assert(intKernelDim == 36)
-	assert(len(engagedMetabolites) == 131)
-	assert(len(conservedMoieties) == 128)
+	assert (kernelDim == 38), "Not all conservation laws found"
+	assert (intKernelDim == 36), "Not all conserved moiety laws found"
+	assert (len(engagedMetabolites) == 131), "Wrong number of engaged metabolites reported"
+	assert (len(conservedMoieties) == 128), "Wrong number of conserved moeities reported"
 
 	print("".join(['-' for _ in range(0, 80)]))
 	print("".join(['-' for _ in range(0, 80)]))
@@ -770,9 +783,9 @@ if __name__ == "__main__":
 					timer = 0
 		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
 
-	# Assert that each conserved moeity has the correct number of metabolites (last two moeities fluctuate in DeMartino C++ implementation, likewise our implementation fluctuates, thus excluding)
+	# Assert that each conserved moeity has the correct number of metabolites (TODO: last two moeities fluctuate in DeMartino C++ implementation, likewise our implementation fluctuates, thus excluding -> Figure out how to avoid this...)
 	for i in range(0, intKernelDim-2): 
-		assert(len(NSolutions[i]) == knownValuesFromDeMartino[i])
+		assert (len(NSolutions[i]) == knownValuesFromDeMartino[i]), f"Moeity #{i+1} failed for test case (De Martino et al.)"
 
 	print("".join(['*' for _ in range(0, 80)]))
 	print("Details about conserved moeities:")
