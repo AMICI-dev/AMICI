@@ -183,7 +183,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 	J = [ [] for _ in range(N) ]
 	J2 = [ [] for _ in range(N) ]
 
-	fields = [None]*N
+	fields = [0]*N
 	i1 = 0
 	j1 = 0
 	dim = matched_size
@@ -211,9 +211,8 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 						for pu in range(0, len(matrix[j])):
 							if matrix[i][po] == matrix[j][pu]:
 								interactions += matrix2[i][po]*matrix2[j][pu]
-
-				if j == i:
-					fields[i] = interactions
+						if j == i:
+							fields[i] = interactions
 			else:
 				if abs(interactions) > MIN:
 					J[i].append(j)
@@ -311,11 +310,10 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 			yes = 1
 		return yes
 
-def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSolutions2, initT=1, coolrate=1e-3):
+def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSolutions2, kerneldim, initT=1, coolrate=1e-3, maxIter=1):
 	""" Montecarlo simulated annealing """
 	MIN = 1e-9
 	dim = len(matched)
-	print(dim)
 	num = [0] * dim
 	numtot = 0
 	for i in range(0, dim):
@@ -326,8 +324,6 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 	
 	H = 0
 	for i in range(0, dim):
-		print(num[i])
-		print(fields[i])
 		H += fields[i]*num[i]*num[i]
 		if len(J[i]) > 0:
 			for j in range(0, len([J[i]])):
@@ -341,17 +337,17 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 
 	while True:
 		en = int(random.uniform(0, 1) * dim)
-		while len(J[en]) == 0:
-			en = int(random.uniform(0,1)*dim)
+		if len(J[en]) == 0: # TODO: bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+			en = int(random.uniform(0, 1)*dim)
 		p=1
-		if num[en] > 0 and math.random(0, 1) < 0.5:
+		if num[en] > 0 and random.uniform(0, 1) < 0.5:
 			p = -1
 		delta = fields[en] * num[en]
 		for i in range(0, len(J[en])):
 			delta += J2[en][i] * num[J[en][i]]
 		delta = 2*p*delta + fields[en]
 
-		if delta < 0 and math.random(0, 1) < math.pow(e, delta):
+		if delta < 0 and random.uniform(0, 1) < math.pow(e, delta):
 			num[en] += p
 			numtot += p
 			H += delta
@@ -371,9 +367,9 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			numtot = 0
 			for i in range(0, dim):
 				num[i] = 0
-			en = math.random(0, 1) * dim
-			while len(J[en]) > 0:
-				en = math.random(0, 1) * dim
+			en = int(random.uniform(0, 1) * dim)
+			if len(J[en]) > 0: # TODO: bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+				en = int(random.uniform(0, 1) * dim)
 			num[en] = 1
 			numtot = 1
 			H = 0
@@ -384,49 +380,54 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 						H += J2[i][j] * num[i] * num[J[i][j]]
 			howmany += 1
 
-		if (H < MIN and numtot > 0) or (howmany == 10*max):
+		if (H < MIN and numtot > 0) or (howmany == 10*maxIter):
 			stop = 1
 
 		if stop != 0:
 			break
 
-		yes = 0
-		if howmany < 10*max:
-			if len(intmatched) > 0:
-				yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched)
-			else:
-				yes = 1
-			if yes == 1:
-				orders2 = [None] * len(matched)
-				pivots2 = [None] * len(matched)
-				for i in range(0, len(matched)):
-					orders2[i] = i
-					pivots2[i] = matched[i]
-				qsort(len(matched), 0, orders2, pivots2)
-				for i in range(0, len(matched)):
-					if num[orders2[i]] > 0:
-						NSolutions[intkerneldim].append(matched[orders2[i]])
-						NSolutions2[intkerneldim].append(num[orders2[i]])
-				intkerneldim += 1
-				yes2  = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched)
-				min = 1000
-				for i in range(0, len(NSolutions[intkerneldim-1])):
-					if len(intmatched) == 0:
-						intmatched.append(NSolutions[intkerneldim-1][i])
-					else:
-						ok3 = 1
-						for k in range(0, len(intmatched)):
-							if (intmatched[k] == NSolutions[intkerneldim-1][i]):
-								ok3 = 0
-						if ok3 == 1:
-							intmatched.append(NSolutions[intkerneldim-1])
-					if NSolutions2[intkerneldim-1][i] < min:
-						min = NSolutions2[intkerneldim-1][i]
-				for i in range(0, len(NSolutions[intkerneldim-1])):
-					NSolutions2[intkerneldim-1][i] /= min
+	yes = 0
+	if howmany < 10*maxIter:
+		if len(intmatched) > 0:
+			yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched)
 		else:
-			yes = 0
-		return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched
+			yes = 1
+		if yes == 1:
+			orders2 = [None] * len(matched)
+			pivots2 = [None] * len(matched)
+			for i in range(0, len(matched)):
+				orders2[i] = i
+				pivots2[i] = matched[i]
+			qsort(len(matched), 0, orders2, pivots2)
+			for i in range(0, len(matched)):
+				if num[orders2[i]] > 0:
+					NSolutions[intkerneldim].append(matched[orders2[i]])
+					NSolutions2[intkerneldim].append(num[orders2[i]])
+			intkerneldim += 1
+			yes2  = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched) # TODO: yes2 never used, does LinearDependence have side effects?
+			print("Now reducing...")
+			intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(intkerneldim, kerneldim, NSolutions, NSolutions2)
+			print("done!")
+			min = 1000
+			for i in range(0, len(NSolutions[intkerneldim-1])):
+				if len(intmatched) == 0:
+					intmatched.append(NSolutions[intkerneldim-1][i])
+				else:
+					ok3 = 1
+					for k in range(0, len(intmatched)):
+						if (intmatched[k] == NSolutions[intkerneldim-1][i]):
+							ok3 = 0
+					if ok3 == 1:
+						intmatched.append(NSolutions[intkerneldim-1])
+				if NSolutions2[intkerneldim-1][i] < min:
+					min = NSolutions2[intkerneldim-1][i]
+			for i in range(0, len(NSolutions[intkerneldim-1])):
+				NSolutions2[intkerneldim-1][i] /= min
+			print(f"Found linearly indepedenent moiety, now there are {intkerneldim} engaging {len(intmatched)} metabolites")
+		print("Found a moiety but it is linearly depdenent")
+	else:
+		yes = 0
+	return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched
 					
 
 
@@ -662,9 +663,9 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 	for i in range(0, K):
 		pivots[i] = -len(NSolutions[i])
 	while True:
-		#qsort(K, 0, orders, pivots)
+		qsort(K, 0, orders, pivots)
 		ok = 1
-		for i in range(0, K):
+		for i in range(0, K-2):
 			for j in range(i+1, K):
 				k1 = orders[i]
 				k2 = orders[j]
@@ -678,22 +679,20 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 					colonna[NSolutions[k2][l]] -= NSolutions2[k2][l]
 					if colonna[NSolutions[k2][l]] < -MIN:
 						ok1 = 0
-					if ok1 == 1:
-						ok = 0
-						NSolutions[k1] = []
-						NSolutions[k2] = []
-						for l in range(0, N):
-							if abs(colonna[l]) > MIN:
-								NSolutions[k1].append(l)
-								NSolutions2[k1].append(colonna[l])
-						pivots[k1] = -len(NSolutions[k1])
-
+				if ok1 == 1:
+					ok = 0
+					NSolutions[k1] = []
+					NSolutions2[k1] = []
+					for l in range(0, N):
+						if abs(colonna[l]) > MIN:
+							NSolutions[k1].append(l)
+							NSolutions2[k1].append(colonna[l])
+					pivots[k1] = -len(NSolutions[k1])
 		if ok != 0:
 			break
 	return intKernelDim, kernelDim, NSolutions, NSolutions2
 
 def Input():
-	LoL = []
 	with open('matrix.dat', 'r') as f:
 		return [int(item) for sl in [entry.strip().split('\t') for entry in f] for item in sl]
 			
@@ -704,6 +703,7 @@ def Output(intKernelDim, kernelDim, intmatched, NSolutions):
 		print("They generate all the conservation laws")
 	else:
 		print(f"They don't generate all the conservation laws, {kernelDim-intKernelDim} of the mare not reducible to moeities")
+
 	for i in range(0, intKernelDim):
 		print(f"Moeity number {i+1} engages {len(NSolutions[i])} metabolites.")
 
@@ -728,7 +728,6 @@ if __name__ == "__main__":
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
 
-
 	print("Kernel calculation of S...\n")
 	# TODO: debug kernel as well -> number of metabolites does not yet match!
 	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(S, N, M)
@@ -737,7 +736,7 @@ if __name__ == "__main__":
 	moeities), engaging {len(conservedMoieties)} metabolites...\n""")
 
 	# There are 38 conservation laws, engaging 131 metabolites 
-	# 36 are integers (conserved moieties), engaging   128 metabolites (from C++)
+	# 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
 	assert(kernelDim == 38)
 	assert(intKernelDim == 36)
 	assert(len(engagedMetabolites) == 131)
@@ -752,9 +751,8 @@ if __name__ == "__main__":
 	else:
 		timer = 0
 		while finish == 0:
-		    # TODO: Debug below...
 			print("MonteCarlo...")
-			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2)
+			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim)
 			if intKernelDim == kernelDim:
 				finish = 1
 			if yes == 0:
@@ -764,8 +762,6 @@ if __name__ == "__main__":
 				finish = Relaxation(S, conservedMoieties, M, N)
 				if finish == 1:
 					timer = 0
-
-		print("Reduce...")
-		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
+		# intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
 
 	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
