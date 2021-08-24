@@ -174,10 +174,12 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
 def fill(stoichiometricMatrixAsList, matched_size, matched):
 	""" Interaction matrix construction """
-	N = matched_size
+	print("N:")
+	print(N)
+	dim = matched_size
 	MIN = 1e-9
-	matrix = [ [] for _ in range(N) ]
-	matrix2 = [ [] for _ in range(N) ]
+	matrix = [ [] for _ in range(dim) ]
+	matrix2 = [ [] for _ in range(dim) ]
 
 	J = [ [] for _ in range(N) ]
 	J2 = [ [] for _ in range(N) ]
@@ -185,7 +187,8 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 	fields = [0]*N
 	i1 = 0
 	j1 = 0
-	dim = matched_size
+	print("dim:")
+	print(dim)
 	for _, val in enumerate(stoichiometricMatrixAsList):
 		if val != 0:
 			prendo=dim
@@ -212,12 +215,16 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 								interactions += matrix2[i][po]*matrix2[j][pu]
 					if j == i:
 						fields[i] = interactions
-			else:
-				if abs(interactions) > MIN:
-					J[i].append(j)
-					J2[i].append(interactions)
-					J[j].append(i)
-					J2[j].append(interactions)
+					else:
+						if abs(interactions) > MIN:
+							J[i].append(j)
+							J2[i].append(interactions)
+							J[j].append(i)
+							J2[j].append(interactions)
+	print("J:")
+	print(J)
+	print("J2:")
+	print(J2)
 	return J, J2, fields
 
 def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
@@ -721,12 +728,12 @@ if __name__ == "__main__":
 	S = Input()
 	N = 1668
 	M = 2381
+	knownValuesFromDeMartino = [53] + [2] * 11 + [6] + [3] * 2 + [2] * 15 + [3] + [2] * 5 
 
 	if len(S) != N*M:
 		print("Stoichiometric matrix inconsistent")
 
 	print(f"Kernel calculation of S ({N} x {M})...\n")
-	# TODO: debug kernel as well -> number of metabolites does not yet match!
 	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(S, N, M)
 	print(f"""There are {kernelDim} conservation laws, engaging, 
 	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
@@ -746,6 +753,8 @@ if __name__ == "__main__":
 	print("Filling interaction matrix...\n")
 	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites)
 
+	print("after fill")
+
 	finish = 0
 	if intKernelDim == kernelDim:
 		finish = 1
@@ -755,7 +764,7 @@ if __name__ == "__main__":
 		maxIter = 10
 		while finish == 0:
 			# TODO: Sometimes MC runs into the wrong solution: Why?
-			print(f"MonteCarlo call #{counter} (maxIter: {maxIter}")
+			print(f"MonteCarlo call #{counter} (maxIter: {maxIter})")
 			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim)
 			counter += 1
 			if intKernelDim == kernelDim:
@@ -769,6 +778,8 @@ if __name__ == "__main__":
 					timer = 0
 		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
 
+	for i in range(0, intKernelDim-2):
+		assert(len(NSolutions[i]) == knownValuesFromDeMartino[i])
 
 	print("".join(['*' for _ in range(0, 80)]))
 	print("Details about conserved moeities:")
