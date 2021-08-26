@@ -4,13 +4,29 @@ import sys
 import time
 sys.setrecursionlimit(3000)
 
-# TODO: Verify DeMartino test case (MC solutions sometimes runs into wrong solution)
 # TODO: Add proper Pysb unit tests for the example and all algorithmic parts
+
 # TODO: Refactoring to more idiomatic Python code
+
 # TODO: Write proper Pydoc and apply coding conventions of the group
+
 # TODO: Rewrite quicksort algorithm (recursive) to more efficient iterative variant
 
+# TODO: Refactor to a class
+
 def qsort(k, km, orders, pivots):
+	""" 
+	Quicksort
+	
+	:param k:
+		k
+	:param km:
+		km
+	:param orders:
+		orders
+	:param pivots:
+		pivots
+	"""
 	centre = 0
 	if k-km >= 1:
 		pivot = km+int((k-km)/2) # was // 2 without int
@@ -34,7 +50,16 @@ def qsort(k, km, orders, pivots):
 		qsort(centre, km, orders, pivots)
 
 def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
-	""" Kernel calculation by Gaussian elimination"""
+	""" 
+	Kernel calculation by Gaussian elimination
+	
+	:param stoichiometricMatrixAsList:
+		the stoichiometric matrix as a list (reactions x metabolites)
+	:param numberOfMetabolites
+		total number of metabolites
+	:param numberOfReactions
+		total number of reactions
+	"""
 	il=0
 	jl=0
 	N = numberOfMetabolites
@@ -133,7 +158,6 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 		matrix[i] = []
 		matrix2[i] = []
 
-	# TODO: Check very careful the indices len-1! (compare to c++ code)
 	i2 = 0
 	for i in range(0, kernelDim):
 		ok2 = 1
@@ -174,7 +198,16 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 	return kernelDim, matched, intKernelDim, intmatched, NSolutions, NSolutions2
 
 def fill(stoichiometricMatrixAsList, matched_size, matched):
-	""" Interaction matrix construction """
+	""" 
+	Interaction matrix construction 
+	
+	:param stoichiometricMatrixAsList:
+		the stoichiometric matrix as a list
+	:param matched_size:
+		found MCLs in the matrix S
+	:param matched
+		actual found MCLs
+	"""
 	dim = matched_size
 	MIN = 1e-9
 	matrix = [ [] for _ in range(dim) ]
@@ -221,7 +254,21 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 	return J, J2, fields
 
 def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
-	""" Check if the solution found with MontCarlo is linearly independent with respect to the previous one """
+	""" 
+	Check if the solution found with MonterCarlo is linearly independent 
+	with respect to the previous found solution
+
+	:param vectors:
+		vectors
+	:param intkerneldim:
+		number of integer conservative laws
+	:param NSolutions:
+		NSolutions
+	:param NSolutions2:
+		NSolutions2
+	:param matched:
+		actual found MCLs
+	"""
 	K = intkerneldim+1
 	MIN = 1e-9
 	MAX = 1e+9
@@ -238,9 +285,7 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 		orders2[i] = i
 		pivots2[i] = matched[i]
 
-	print("sort2...")
 	qsort(len(matched), 0, orders2, pivots2)
-	print("end")
 	for i in range(0, len(matched)):
 		if vectors[orders2[i]] > MIN:
 			matrix[K-1].append(matched[orders2[i]])
@@ -259,9 +304,7 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 			pivots[i] = MAX
 
 	while ok == 0:
-		print("sort3...")
 		qsort(K, 0, orders, pivots)
-		print("end")
 		for j in range(0, K-1):
 			if (pivots[orders[j+1]] == pivots[orders[j]]) and (pivots[orders[j]] != MAX):
 				min1=MAX
@@ -314,7 +357,35 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 		return yes
 
 def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSolutions2, kerneldim, initT=1, coolrate=1e-3, maxIter=10):
-	""" Montecarlo simulated annealing """
+	"""
+	MonteCarlo simulated annealing 
+	
+	:param matched:
+		matched
+	:param J:
+		J
+	:param J2:
+		J2
+	:param fields:
+		fields
+	:param intmatched:
+		actual matched MCLs 
+	:param intkerneldim:
+		number of MCLs found in S
+	:param NSolutions:
+		NSolutions
+	:param NSolutions2:
+		NSolutions2
+	:param kerneldim:
+		kerneldim
+	:param initT:
+		initial temperature
+	:param coolrate:
+		cooling rate of simulated annealing
+	:param maxIter:
+		maximum number of MonteCarlo steps before changing to relaxation
+
+	"""
 	MIN = 1e-9
 	dim = len(matched)
 	num = [0] * dim
@@ -438,6 +509,22 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 
 
 def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6, relaxation_step=1.9):
+	""" 
+	Relaxation scheme for MonteCarlo final solution
+
+	:param stoichiometricMatrixAsList:
+		stoichiometric matrix as a list
+	:param intmatched:
+		intmatched
+	:param M:
+		number of metabolites
+	:param N:
+		number of reactions
+	:param relaxationmax:
+		maximum relaxation
+	:param relaxation_step:
+		relaxation step width
+	"""
 	MIN = 1e-9
 	MAX = 1e9
 	matrix = [ [] for _ in range(N) ]
@@ -657,7 +744,18 @@ def Relaxation(stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6, 
 
 
 def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
-	""" Reducing the solution found by MonteCarlo"""
+	""" 
+	Reducing the solution found by MonteCarlo
+	
+	:param intKernelDim:
+		number of found MCLs
+	:param kernelDim:
+		number of found conservative laws
+	:param NSolutions:
+		NSolutions
+	:Param NSolutions2:
+		NSolutions2
+	"""
 	K = intKernelDim
 	MIN = 1e-9
 	ok = 0
@@ -699,15 +797,28 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 	return intKernelDim, kernelDim, NSolutions, NSolutions2
 
 def Input():
+	""" Read input from test stoichiometric matrix """
 	with open('matrix.dat', 'r') as f:
 		return [int(item) for sl in [entry.strip().split('\t') for entry in f] for item in sl]
 
 def Names():
+	""" Get names of metabolites from list of metabolites example"""
 	with open('metabolites.txt', 'r') as f:
 		return [entry for entry in f]
 			
-
 def Output(intKernelDim, kernelDim, intmatched, NSolutions):
+	""" 
+	Output solution
+
+	:param intKernelDim:
+		intKernelDim
+	:param kernelDim:
+		kernelDim
+	:param intmatched:
+		intmatched
+	:param NSolutions:
+		NSolutions
+	"""
 	print(f"There are {intKernelDim} linearly independent conserved moieties, engaging {len(intmatched)} metabolites\n")
 	if intKernelDim == kernelDim:
 		print("They generate all the conservation laws")
@@ -722,6 +833,7 @@ def Output(intKernelDim, kernelDim, intmatched, NSolutions):
 			print(f"{names[NSolutions[i][j]]} \t {NSolutions2[i][j]}")
 
 if __name__ == "__main__":
+	""" Invoke test case and benchmarking for De Martino's publishes results for E-Coli network """
 	start = time.time()
 	print("".join(['*' for _ in range(0, 80)]))
 	print("Conserved moeties test cases")
