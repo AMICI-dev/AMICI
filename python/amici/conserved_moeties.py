@@ -1,6 +1,7 @@
 import random
 import math
 import sys
+import time
 sys.setrecursionlimit(3000)
 
 # TODO: Verify DeMartino test case (MC solutions sometimes runs into wrong solution)
@@ -12,7 +13,7 @@ sys.setrecursionlimit(3000)
 def qsort(k, km, orders, pivots):
 	centre = 0
 	if k-km >= 1:
-		pivot = km+(k-km)//2
+		pivot = km+int((k-km)/2) # was // 2 without int
 		l = 0
 		p = k - km - 1
 		neworders = [None] * (k-km)
@@ -160,12 +161,12 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 					intmatched.append(NSolutions[i2][j])
 				else:
 					ok3 = 1
-					for k in range(0, len(intmatched)-1):
+					for k in range(0, len(intmatched)):
 						if intmatched[k] == NSolutions[i2][j]:
 							ok3 = 0
 					if ok3 == 1:
 						intmatched.append(NSolutions[i2][j])
-			for j in range(0, len(NSolutions[i2])-1):
+			for j in range(0, len(NSolutions[i2])):
 				NSolutions2[i2][j] /= min
 			i2 += 1
 	intKernelDim=i2
@@ -197,7 +198,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 				matrix2[prendo].append(val)		
 		j1 += 1
 		if j1 == N:
-			j1=0
+			j1 = 0 
 			i1 += 1
 
 	for i in range(0, dim):
@@ -208,7 +209,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched):
 					if len(matrix[j]) > 0:
 						for pu in range(0, len(matrix[j])):
 							if matrix[i][po] == matrix[j][pu]:
-								interactions += matrix2[i][po]*matrix2[j][pu]
+								interactions += (matrix2[i][po]*matrix2[j][pu])
 					if j == i:
 						fields[i] = interactions
 					else:
@@ -243,7 +244,7 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 	for i in range(0, len(matched)):
 		if vectors[orders2[i]] > MIN:
 			matrix[K-1].append(matched[orders2[i]])
-			matrix2[K-1].append(vectors[orders2[i]])
+			matrix2[K-1].append(float(vectors[orders2[i]]))
 
 	ok = 0
 	orders = [None] * K
@@ -262,24 +263,24 @@ def LinearDependence(vectors, intkerneldim, NSolutions, NSolutions2, matched):
 		qsort(K, 0, orders, pivots)
 		print("end")
 		for j in range(0, K-1):
-			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
+			if (pivots[orders[j+1]] == pivots[orders[j]]) and (pivots[orders[j]] != MAX):
 				min1=MAX
 				if len(matrix[orders[j]]) > 1:
 					for i in range(0, len(matrix[orders[j]])):
-						if abs(matrix2[orders[j]][0] / matrix2[orders[j]][i]) < min1:
+						if (abs(matrix2[orders[j]][0] / matrix2[orders[j]][i])) < min1:
 							min1 = abs(matrix2[orders[j]][0]/matrix2[orders[j]][i])
 				min2=MAX
 				if len(matrix[orders[j+1]]) > 1:
 					for i in range(0, len(matrix[orders[j+1]])):
-						if abs(matrix2[orders[j+1]][0]/matrix2[orders[j+1]][i]) < min2:
+						if (abs(matrix2[orders[j+1]][0]/matrix2[orders[j+1]][i])) < min2:
 							min2 = abs(matrix2[orders[j+1]][0] / matrix2[orders[j+1]][i])
 				if min2 > min1:
 					k2 = orders[j+1]
 					orders[j+1] = orders[j]
 					orders[j] = k2
 		ok = 1
-		for j in range(0, K-1):
-			if pivots[orders[j+1]] == pivots[orders[j]] and pivots[orders[j]] != MAX:
+		for j in range(0, K-2):
+			if (pivots[orders[j+1]] == pivots[orders[j]]) and (pivots[orders[j]] != MAX):
 				k1 = orders[j+1]
 				k2 = orders[j]
 				colonna = [None] * N
@@ -320,8 +321,9 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 	numtot = 0
 	for i in range(0, dim):
 		if (len(J[i])) > 0:
-			num[i] = 2*random.uniform(0, 1)
-		else: num[i] = 0
+			num[i] = int(2*random.uniform(0, 1))
+		else: 
+			num[i] = 0
 		numtot += num[i]
 	
 	H = 0
@@ -356,13 +358,13 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 
 		count += 1
 
-		if count % dim == 0:
+		if count % int(dim) == 0:
 			T1 -= coolrate
 			if (T1 <= 0):
 				T1 = coolrate
 				e = math.exp(-1/T1)
 		
-		if count == int(dim/coolrate):
+		if count == int(float(dim)/coolrate):
 			T1 = initT
 			e = math.exp(-1/T1)
 			count = 0
@@ -382,7 +384,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 						H += J2[i][j] * num[i] * num[J[i][j]]
 			howmany += 1
 
-		if (H < MIN and numtot > 0) or (howmany == 10*maxIter):
+		if (H < MIN and numtot > 0) or (howmany == (10*maxIter)):
 			stop = 1
 
 		if stop != 0:
@@ -392,6 +394,7 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 	if howmany < 10*maxIter:
 		if len(intmatched) > 0:
 			yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched)
+			assert (yes == True), "Not true!"
 		else:
 			yes = 1
 		if yes == 1:
@@ -426,10 +429,11 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			for i in range(0, len(NSolutions[intkerneldim-1])):
 				NSolutions2[intkerneldim-1][i] /= min
 			print(f"Found linearly independent moiety, now there are {intkerneldim} engaging {len(intmatched)} metabolites")
-		print("Found a moiety but it is linearly dependent... next.")
+		else:
+			print("Found a moiety but it is linearly dependent... next.")
 	else:
 		yes = 0
-	return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched
+	return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched, intmatched
 					
 
 
@@ -663,6 +667,7 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 	pivots = [None] * K
 	for i in range(0, K):
 		pivots[i] = -len(NSolutions[i])
+
 	while True:
 		qsort(K, 0, orders, pivots)
 		ok = 1
@@ -717,6 +722,7 @@ def Output(intKernelDim, kernelDim, intmatched, NSolutions):
 			print(f"{names[NSolutions[i][j]]} \t {NSolutions2[i][j]}")
 
 if __name__ == "__main__":
+	start = time.time()
 	print("".join(['*' for _ in range(0, 80)]))
 	print("Conserved moeties test cases")
 	print("".join(['*' for _ in range(0, 80)]))
@@ -770,7 +776,9 @@ if __name__ == "__main__":
 		while finish == 0:
 			# TODO: Sometimes MC runs into the wrong solution: Why?
 			print(f"MonteCarlo call #{counter} (maxIter: {maxIter})")
-			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim)
+			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites, conservedMoieties = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim)
+			Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
+
 			counter += 1
 			if intKernelDim == kernelDim:
 				finish = 1
@@ -781,7 +789,13 @@ if __name__ == "__main__":
 				finish = Relaxation(S, conservedMoieties, M, N)
 				if finish == 1:
 					timer = 0
+		old=NSolutions
+		old2=NSolutions2
 		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
+		for i in range(0, len(old)):
+			assert(set(old[i]) == set(NSolutions[i]))
+			assert(set(old2[i]) == set(NSolutions2[i]))
+
 
 	# Assert that each conserved moeity has the correct number of metabolites (TODO: last two moeities fluctuate in DeMartino C++ implementation, likewise our implementation fluctuates, thus excluding -> Figure out how to avoid this...)
 	for i in range(0, intKernelDim-2): 
@@ -794,3 +808,6 @@ if __name__ == "__main__":
 	print("".join(['-' for _ in range(0, 80)]))
 	print("".join(['-' for _ in range(0, 80)]))
 	print("".join(['-' for _ in range(0, 80)]))
+	
+	end = time.time()
+	print(f"Execution time: {end-start} [s]")
