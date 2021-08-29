@@ -462,7 +462,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
             sx_ = solver->getStateSensitivity(t_);
             model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
             wrms_ = getWrmsNorm(
-                x_, xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
+                sx_[ip], xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
                 solver->getRelativeToleranceSteadyStateSensi(), ewt_);
             converged = wrms_ < RCONST(1.0);
         }
