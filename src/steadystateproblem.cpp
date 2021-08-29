@@ -488,6 +488,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     int ix = 0;
     double gamma = 1.0;
     bool compNewStep = true;
+    bool converged = false;
 
     if (model->nx_solver == 0)
         return;
@@ -503,9 +504,11 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     x_old_ = x_;
     xdot_old_ = xdot_;
 
-    wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
-                       newtonSolver->rtol_, ewt_);
-    bool converged = wrms_ < RCONST(1.0);
+    if (!newton_retry) {
+        wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
+                            newtonSolver->rtol_, ewt_);
+        converged = wrms_ < RCONST(1.0);
+    }
     while (!converged && i_newtonstep < newtonSolver->max_steps) {
 
         /* If Newton steps are necessary, compute the initial search direction */
