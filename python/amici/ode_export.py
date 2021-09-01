@@ -2618,7 +2618,8 @@ class ODEExporter:
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
             allow_reinit_fixpar_initcond: Optional[bool] = True,
-            generate_sensitivity_code: Optional[bool] = True
+            generate_sensitivity_code: Optional[bool] = True,
+            model_name: Optional[str] = 'model'
     ):
         """
         Generate AMICI C++ files for the ODE provided to the constructor.
@@ -2646,6 +2647,9 @@ class ODEExporter:
 
         :param generate_sensitivity_code specifies whether code required for
             sensitivity computation will be generated
+
+        :param model_name:
+            name of the model to be used during code generation
         """
         set_log_level(logger, verbose)
 
@@ -2653,10 +2657,10 @@ class ODEExporter:
         self.assume_pow_positivity: bool = assume_pow_positivity
         self.compiler: str = compiler
 
-        self.model_name: str = 'model'
         self.model_path: str = ''
         self.model_swig_path: str = ''
 
+        self.set_name(model_name)
         self.set_paths(outdir)
 
         # Signatures and properties of generated model functions (see
