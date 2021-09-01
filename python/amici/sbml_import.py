@@ -372,7 +372,6 @@ class SbmlImporter:
             generate_sensitivity_code=generate_sensitivity_code
         )
         exporter.set_name(model_name)
-        exporter.set_paths(output_dir)
         exporter.generate_model_code()
 
         if compile:
