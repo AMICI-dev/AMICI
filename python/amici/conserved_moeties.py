@@ -2,16 +2,13 @@ import random
 import math
 import sys
 import time
+
 sys.setrecursionlimit(3000)
 
 # TODO: Add proper Pysb unit tests for the example and all algorithmic parts
-
 # TODO: Refactoring to more idiomatic Python code
-
 # TODO: Write proper Pydoc and apply coding conventions of the group
-
 # TODO: Rewrite quicksort algorithm (recursive) to more efficient iterative variant
-
 # TODO: Refactor to a class
 
 def qsort(k, km, orders, pivots):
@@ -796,6 +793,21 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2):
 			break
 	return intKernelDim, kernelDim, NSolutions, NSolutions2
 
+def GetRemoteInput():
+	import urllib.request
+	import io
+	import gzip
+	response = urllib.request.urlopen(r'file:///home/stephan/Code/forks/AMICI/python/amici/test-ecoli.dat.gz')
+	data = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
+	return [int(item) for sl in [entry.decode('ascii').strip().split('\t') for entry in data.readlines()] for item in sl]
+
+def GetRemoteNames():
+	import urllib.request
+	import io
+	response = urllib.request.urlopen(r'http://chimera.roma1.infn.it/SYSBIO/test-ecoli-met.txt')
+	return [entry.decode('ascii') for entry in io.BytesIO(response.read())]
+
+
 def Input():
 	""" Read input from test stoichiometric matrix """
 	with open('matrix.dat', 'r') as f:
@@ -806,7 +818,7 @@ def Names():
 	with open('metabolites.txt', 'r') as f:
 		return [entry for entry in f]
 			
-def Output(intKernelDim, kernelDim, intmatched, NSolutions):
+def Output(intKernelDim, kernelDim, intmatched, NSolutions, IsRemoteFile=False):
 	""" 
 	Output solution
 
@@ -825,7 +837,7 @@ def Output(intKernelDim, kernelDim, intmatched, NSolutions):
 	else:
 		print(f"They don't generate all the conservation laws, {kernelDim-intKernelDim} of the mare not reducible to moeities")
 
-	names = Names()
+	names = IsRemoteFile and Names() or GetRemoteNames()
 	for i in range(0, intKernelDim):
 		print(f"Moeity number {i+1} engages {len(NSolutions[i])} metabolites.")
 		print(f"\t")
@@ -861,6 +873,9 @@ if __name__ == "__main__":
 	print(f"""There are {kernelDim} conservation laws, engaging, 
 	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
 	moeities), engaging {len(conservedMoieties)} metabolites...""")
+	print("Kernel calc")
+	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
+	print("Kernel calc")
 
 	# There are 38 conservation laws, engaging 131 metabolites 
 	# 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
