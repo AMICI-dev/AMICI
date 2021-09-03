@@ -10,6 +10,7 @@ sys.setrecursionlimit(3000)
 # TODO: Write proper Pydoc and apply coding conventions of the group
 # TODO: Rewrite quicksort algorithm (recursive) to more efficient iterative variant
 # TODO: Refactor to a class
+# TODO: print -> logger
 
 def qsort(k, km, orders, pivots):
 	""" 

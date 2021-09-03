@@ -1,7 +1,12 @@
 """ Tests for conservative laws / conserved moities """
 
 from amici.conserved_moeties import *
+from time import perf_counter
+from amici.logging import get_logger, log_execution_time
 
+logger = get_logger(__name__)
+
+@log_execution_time("Detecting moeity conservation laws", logger)
 def test_detect_cl():
 	S = GetRemoteInput()
 	N = 1668
@@ -9,16 +14,17 @@ def test_detect_cl():
 	knownValuesFromDeMartino = [53] + [2] * 11 + [6] + [3] * 2 + [2] * 15 + [3] + [2] * 5 
 
 	if len(S) != N*M:
-		print("Stoichiometric matrix inconsistent")
+		logger.debug("Stoichiometric matrix inconsistent")
 
-	print(f"Kernel calculation of S ({N} x {M})...\n")
+	start = perf_counter()
+	logger.debug(f"Kernel calculation of S ({N} x {M})...\n")
 	kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(S, N, M)
-	print(f"""There are {kernelDim} conservation laws, engaging, 
+	logger.debug(f"""There are {kernelDim} conservation laws, engaging, 
 	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
 	moeities), engaging {len(conservedMoieties)} metabolites...""")
-	print("Kernel calc")
+	logger.debug("Kernel calc")
 	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions, IsRemoteFile=False)
-	print("Kernel calc")
+	logger.debug("Kernel calc")
 
 	# There are 38 conservation laws, engaging 131 metabolites 
 	# 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
@@ -27,14 +33,14 @@ def test_detect_cl():
 	assert (len(engagedMetabolites) == 131), "Wrong number of engaged metabolites reported"
 	assert (len(conservedMoieties) == 128), "Wrong number of conserved moeities reported"
 
-	print("".join(['-' for _ in range(0, 80)]))
-	print("".join(['-' for _ in range(0, 80)]))
-	print("".join(['-' for _ in range(0, 80)]))
+	logger.debug("".join(['-' for _ in range(0, 80)]))
+	logger.debug("".join(['-' for _ in range(0, 80)]))
+	logger.debug("".join(['-' for _ in range(0, 80)]))
 
-	print("Filling interaction matrix...\n")
+	logger.debug("Filling interaction matrix...\n")
 	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites)
 
-	print("after fill")
+	logger.debug("after fill")
 
 	finish = 0
 	if intKernelDim == kernelDim:
@@ -44,7 +50,7 @@ def test_detect_cl():
 		counter = 1
 		maxIter = 10
 		while finish == 0:
-			print(f"MonteCarlo call #{counter} (maxIter: {maxIter})")
+			logger.debug(f"MonteCarlo call #{counter} (maxIter: {maxIter})")
 			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites, conservedMoieties = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim)
 			Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
 
@@ -54,7 +60,7 @@ def test_detect_cl():
 			if yes == 0:
 				timer += 1
 			if timer == max:
-				print("Relaxation...")
+				logger.debug("Relaxation...")
 				finish = Relaxation(S, conservedMoieties, M, N)
 				if finish == 1:
 					timer = 0
@@ -66,17 +72,28 @@ def test_detect_cl():
 			assert(set(old2[i]) == set(NSolutions2[i]))
 
 
-	# Assert that each conserved moeity has the correct number of metabolites (TODO: last two moeities fluctuate in DeMartino C++ implementation, likewise our implementation fluctuates, thus excluding -> Figure out how to avoid this...)
+	# Assert that each conserved moeity has the correct number of metabolites 
 	for i in range(0, intKernelDim-2): 
 		assert (len(NSolutions[i]) == knownValuesFromDeMartino[i]), f"Moeity #{i+1} failed for test case (De Martino et al.)"
 
-	print("".join(['*' for _ in range(0, 80)]))
-	print("Details about conserved moeities:")
-	print("".join(['*' for _ in range(0, 80)]))
+	logger.debug("".join(['*' for _ in range(0, 80)]))
+	logger.debug("Details about conserved moeities:")
+	logger.debug("".join(['*' for _ in range(0, 80)]))
 	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
-	print("".join(['-' for _ in range(0, 80)]))
-	print("".join(['-' for _ in range(0, 80)]))
-	print("".join(['-' for _ in range(0, 80)]))
+	logger.debug("".join(['-' for _ in range(0, 80)]))
+	logger.debug("".join(['-' for _ in range(0, 80)]))
+	logger.debug("".join(['-' for _ in range(0, 80)]))
 	
-	end = time.time()
-	print(f"Execution time: {end-start} [s]")
+	end = perf_counter()
+	logger.debug(f"Execution time: {end-start} [s]")
+	return end-start
+
+@log_execution_time("Detecting moeity conservation laws", logger)
+def test_cl_detect_execution_time():
+	""" Test execution time stays within a certain predefined bound """
+	numIterations = 100
+	thresholdForTimeout = 5
+	timings = [test_detect_cl() for _ in range(0, numIterations)]
+
+	for timing in timings:
+		assert timing < thresholdForTimeout
