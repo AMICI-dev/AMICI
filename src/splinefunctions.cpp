@@ -573,9 +573,9 @@ void HermiteSpline::computeFinalValue() {
     setFinalValue(finalValue);
 }
 
-void HermiteSpline::computeFinalSensitivity(int nplist, int spline_offset,
-                                            realtype *dspline_valuesdp,
-                                            realtype *dspline_slopesdp) {
+void HermiteSpline::computeFinalSensitivity(int nplist, int /*spline_offset*/,
+                                            realtype */*dspline_valuesdp*/,
+                                            realtype */*dspline_slopesdp*/) {
     /* We need to compute the final value of the spline, depending on its
      * boundary condition and the extrapolation option. */
     std::vector<realtype> finalSensitivity(nplist, 0);
