@@ -54,7 +54,7 @@ class AbstractSpline {
      */
     bool get_logarithmic_parametrization();
 
-    const int n_nodes() { return n_nodes_; }
+    int n_nodes() { return n_nodes_; }
 
   protected:
     std::vector<realtype> nodes_;
