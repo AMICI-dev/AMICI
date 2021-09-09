@@ -610,79 +610,79 @@ realtype HermiteSpline::getValue(const double t) {
     /* Are we past the last node? Extrapolate! */
     if (t > nodes_[n_nodes() - 1]) {
         switch (lastNodeEP_) {
-            case SplineExtrapolation::noExtrapolation:
-                throw AmiException("Trying to evaluate spline after last "
-                    "spline node, but spline has been specified not to allow "
-                    "extrapolation.");
+        case SplineExtrapolation::noExtrapolation:
+            throw AmiException("Trying to evaluate spline after last "
+                               "spline node, but spline has been specified not to allow "
+                               "extrapolation.");
 
-            case SplineExtrapolation::constant:
-                return coefficients_extrapolate[2];
+        case SplineExtrapolation::constant:
+            return coefficients_extrapolate[2];
 
-            case SplineExtrapolation::linear:
-                return coefficients_extrapolate[2] +
-                    t * coefficients_extrapolate[3];
+        case SplineExtrapolation::linear:
+            return coefficients_extrapolate[2] +
+                   t * coefficients_extrapolate[3];
 
-            case SplineExtrapolation::polynomial:
-                /* Evaluate last interpolation polynomial */
-                i_node = n_nodes() - 2;
-                len = nodes_[i_node + 1] - nodes_[i_node];
-                return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                          &(coefficients[i_node * 4]));
+        case SplineExtrapolation::polynomial:
+            /* Evaluate last interpolation polynomial */
+            i_node = n_nodes() - 2;
+            len = nodes_[i_node + 1] - nodes_[i_node];
+            return evaluatePolynomial((t - nodes_[i_node]) / len,
+                                      &(coefficients[i_node * 4]));
 
-            case SplineExtrapolation::periodic:
-                len = nodes_[n_nodes() - 1] - nodes_[0];
-                return getValue(nodes_[0] + std::fmod(t - nodes_[0], len));
+        case SplineExtrapolation::periodic:
+            len = nodes_[n_nodes() - 1] - nodes_[0];
+            return getValue(nodes_[0] + std::fmod(t - nodes_[0], len));
+        default:
+            throw AmiException("Unsupported SplineExtrapolation type");
         }
     }
 
     /* Are we before the first node? Extrapolate! */
-    else if (t < nodes_[0]) {
+    if (t < nodes_[0]) {
         switch (firstNodeEP_) {
-            case SplineExtrapolation::noExtrapolation:
-                throw AmiException("Trying to evaluate spline before first "
-                    "spline node, but spline has been specified not to allow "
-                    "extrapolation.");
+        case SplineExtrapolation::noExtrapolation:
+            throw AmiException("Trying to evaluate spline before first "
+                               "spline node, but spline has been specified not to allow "
+                               "extrapolation.");
 
-            case SplineExtrapolation::constant:
-                return coefficients_extrapolate[0];
+        case SplineExtrapolation::constant:
+            return coefficients_extrapolate[0];
 
-            case SplineExtrapolation::linear:
-                return coefficients_extrapolate[0] +
-                    t * coefficients_extrapolate[1];
+        case SplineExtrapolation::linear:
+            return coefficients_extrapolate[0] +
+                   t * coefficients_extrapolate[1];
 
-            case SplineExtrapolation::polynomial:
-                /* Evaluate last interpolation polynomial */
-                len = nodes_[1] - nodes_[0];
-                return evaluatePolynomial((t - nodes_[0]) / len,
-                                          &(coefficients[0]));
-
-            case SplineExtrapolation::periodic:
-                len = nodes_[n_nodes() - 1] - nodes_[0];
-                return getValue(nodes_[n_nodes() - 1] + std::fmod(t - nodes_[0], len));
-        }
-
-    }
-
-    else {
-        /* Get the spline interval which we need */
-        if (get_equidistant_spacing()) {
-            /* equidistant spacing: just compute the interval */
+        case SplineExtrapolation::polynomial:
+            /* Evaluate last interpolation polynomial */
             len = nodes_[1] - nodes_[0];
-            i_node = trunc((t - nodes_[0]) / len);
-        } else {
-            /* no equidistant spacing: we need to iterate */
-            i_node = 0;
-            while (nodes_[i_node + 1] < t) {
-                i_node++;
-            }
-            len = nodes_[i_node + 1] - nodes_[i_node];
-        }
+            return evaluatePolynomial((t - nodes_[0]) / len,
+                                      &(coefficients[0]));
 
-        /* Evaluate the interpolation polynomial */
-        return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                  &(coefficients[i_node * 4]));
+        case SplineExtrapolation::periodic:
+            len = nodes_[n_nodes() - 1] - nodes_[0];
+            return getValue(nodes_[n_nodes() - 1] + std::fmod(t - nodes_[0], len));
+        default:
+            throw AmiException("Unsupported SplineExtrapolation type");
+        }
     }
 
+    /* Get the spline interval which we need */
+    if (get_equidistant_spacing()) {
+        /* equidistant spacing: just compute the interval */
+        len = nodes_[1] - nodes_[0];
+        i_node = trunc((t - nodes_[0]) / len);
+    } else {
+        /* no equidistant spacing: we need to iterate */
+        i_node = 0;
+        while (nodes_[i_node + 1] < t) {
+            i_node++;
+        }
+        len = nodes_[i_node + 1] - nodes_[i_node];
+    }
+
+    /* Evaluate the interpolation polynomial */
+    return evaluatePolynomial((t - nodes_[i_node]) / len,
+                              &(coefficients[i_node * 4]));
 }
 
 realtype HermiteSpline::getSensitivity(const double t, const int ip) {
@@ -697,78 +697,83 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
     if (t > nodes_[n_nodes() - 1]) {
         /* Are we past the last node? Extrapolate! */
         switch (lastNodeEP_) {
-            case SplineExtrapolation::noExtrapolation:
-                throw AmiException("Trying to evaluate spline sensitivity "
-                    "after last spline node, but spline has been specified "
-                    "to not allow extrapolation.");
+        case SplineExtrapolation::noExtrapolation:
+            throw AmiException("Trying to evaluate spline sensitivity "
+                               "after last spline node, but spline has been specified "
+                               "to not allow extrapolation.");
 
-            case SplineExtrapolation::constant:
-                return coefficients_extrapolate_sensi[4 * ip + 2];
+        case SplineExtrapolation::constant:
+            return coefficients_extrapolate_sensi[4 * ip + 2];
 
-            case SplineExtrapolation::linear:
-                return coefficients_extrapolate_sensi[4 * ip + 2]
-                    + t * coefficients_extrapolate_sensi[4 * ip + 3];
+        case SplineExtrapolation::linear:
+            return coefficients_extrapolate_sensi[4 * ip + 2]
+                   + t * coefficients_extrapolate_sensi[4 * ip + 3];
 
-            case SplineExtrapolation::polynomial:
-                /* Evaluate last interpolation polynomial */
-                i_node = n_nodes() - 2;
-                len = nodes_[i_node + 1] - nodes_[i_node];
-                return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                  &(coefficients_sensi[ip * (n_nodes() - 1) * 4
-                                                       + i_node * 4]));
+        case SplineExtrapolation::polynomial:
+            /* Evaluate last interpolation polynomial */
+            i_node = n_nodes() - 2;
+            len = nodes_[i_node + 1] - nodes_[i_node];
+            return evaluatePolynomial((t - nodes_[i_node]) / len,
+                                      &(coefficients_sensi[ip * (n_nodes() - 1) * 4
+                                                           + i_node * 4]));
 
-            case SplineExtrapolation::periodic:
-                len = nodes_[n_nodes() - 1] - nodes_[0];
-                return getSensitivity(nodes_[0] + std::fmod(t - nodes_[0], len), ip);
+        case SplineExtrapolation::periodic:
+            len = nodes_[n_nodes() - 1] - nodes_[0];
+            return getSensitivity(nodes_[0] + std::fmod(t - nodes_[0], len), ip);
+        default:
+            throw AmiException("Unsupported SplineExtrapolation type");
         }
+    }
 
-    } else if (t < nodes_[0]) {
+    if (t < nodes_[0]) {
         /* Are we before the first node? Extrapolate! */
         switch (firstNodeEP_) {
-            case SplineExtrapolation::noExtrapolation:
-                throw AmiException("Trying to evaluate spline before first "
-                    "spline node, but spline has been specified to not allow "
-                    "extrapolation.");
+        case SplineExtrapolation::noExtrapolation:
+            throw AmiException("Trying to evaluate spline before first "
+                               "spline node, but spline has been specified to not allow "
+                               "extrapolation.");
 
-            case SplineExtrapolation::constant:
-                return coefficients_extrapolate_sensi[4 * ip + 0];
+        case SplineExtrapolation::constant:
+            return coefficients_extrapolate_sensi[4 * ip + 0];
 
-            case SplineExtrapolation::linear:
-                return coefficients_extrapolate_sensi[4 * ip + 0]
-                    + t * coefficients_extrapolate_sensi[4 * ip + 1];
+        case SplineExtrapolation::linear:
+            return coefficients_extrapolate_sensi[4 * ip + 0]
+                   + t * coefficients_extrapolate_sensi[4 * ip + 1];
 
-            case SplineExtrapolation::polynomial:
-                /* Evaluate last interpolation polynomial */
-                len = nodes_[1] - nodes_[0];
-                return evaluatePolynomial((t - nodes_[0]) / len,
-                    &(coefficients_sensi[ip * (n_nodes() - 1) * 4]));
-
-            case SplineExtrapolation::periodic:
-                len = nodes_[n_nodes() - 1] - nodes_[0];
-                return getSensitivity(nodes_[n_nodes() - 1] + std::fmod(t - nodes_[0], len), ip);
-        }
-
-    } else {
-        /* Get the spline interval which we need */
-        if (get_equidistant_spacing()) {
-            /* equidistant spacing: just compute the interval */
+        case SplineExtrapolation::polynomial:
+            /* Evaluate last interpolation polynomial */
             len = nodes_[1] - nodes_[0];
-            i_node = trunc((t - nodes_[0]) / len);
-        } else {
-            /* no equidistant spacing: we need to iterate */
-            i_node = 0;
-            while (nodes_[i_node + 1] < t) {
-                i_node++;
-            }
-            len = nodes_[i_node + 1] - nodes_[i_node];
-        }
+            return evaluatePolynomial((t - nodes_[0]) / len,
+                                      &(coefficients_sensi[ip * (n_nodes() - 1) * 4]));
 
-        /* Evaluate the interpolation polynomial */
-        return evaluatePolynomial(
-            (t - nodes_[i_node]) / len,
-            &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4])
-        );
+        case SplineExtrapolation::periodic:
+            len = nodes_[n_nodes() - 1] - nodes_[0];
+            return getSensitivity(nodes_[n_nodes() - 1] + std::fmod(t - nodes_[0], len), ip);
+        default:
+            throw AmiException("Unsupported SplineExtrapolation type");
+        }
     }
+
+    /* Get the spline interval which we need */
+    if (get_equidistant_spacing()) {
+        /* equidistant spacing: just compute the interval */
+        len = nodes_[1] - nodes_[0];
+        i_node = trunc((t - nodes_[0]) / len);
+    } else {
+        /* no equidistant spacing: we need to iterate */
+        i_node = 0;
+        while (nodes_[i_node + 1] < t) {
+            i_node++;
+        }
+        len = nodes_[i_node + 1] - nodes_[i_node];
+    }
+
+    /* Evaluate the interpolation polynomial */
+    return evaluatePolynomial(
+        (t - nodes_[i_node]) / len,
+        &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4])
+        );
+
 }
 
 } // namespace amici
