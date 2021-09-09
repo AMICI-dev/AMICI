@@ -155,7 +155,7 @@ class HermiteSpline : public AbstractSpline {
     void getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n_spline_coefficients,
                                 int spline_offset, realtype len, realtype len_m,
                                 realtype len_p, realtype *dnodesdp, realtype *dslopesdp,
-                                realtype *coeffs, realtype *coeffs_extrapol);
+                                realtype *coeffs);
 
     void handleInnerDerviatives();
 

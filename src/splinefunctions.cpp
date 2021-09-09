@@ -312,8 +312,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
             getCoeffsSensiLowlevel(ip, i_node, nplist, n_spline_coefficients,
                                    spline_offset, len, len_m, len_p,
                                    dspline_valuesdp, dspline_slopesdp,
-                                   coefficients_sensi.data(),
-                                   coefficients_extrapolate_sensi.data());
+                                   coefficients_sensi.data());
     }
 
     /* We need the coefficients for extrapolating beyond the spline domain */
@@ -451,8 +450,7 @@ void HermiteSpline::computeCoefficientsExtrapolationSensi(int nplist,
 void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n_spline_coefficients,
                                            int spline_offset, realtype len, realtype len_m,
                                            realtype len_p, realtype *dnodesdp,
-                                           realtype *dslopesdp, realtype *coeffs,
-                                           realtype *coeffs_extrapol) {
+                                           realtype *dslopesdp, realtype *coeffs) {
     /**
      * We're using the short hand notation for node values and slopes from
      * computeCoefficientsSensi() here. See this function for documentation.
