@@ -33,7 +33,7 @@ jobs:
         python -m pip install --upgrade pip \
           && pip install pytest petab \
           && choco install -y ninja \
-          && choco install -y swig --version=4.0.1
+          && choco install -y swig
 
     - name: Install OpenBLAS
       shell: powershell

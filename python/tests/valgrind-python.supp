@@ -79,6 +79,16 @@
    fun:__pyx_pw_5numpy_6random_13bit_generator_12BitGenerator_1__init__
 }
 
+{
+   numpy
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.?
+   ...
+   fun:gentype_generic_method
+}
+
 #
 # scipy
 #
