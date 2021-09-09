@@ -406,9 +406,20 @@ class SbmlImporter:
         Also ensures that the SBML contains at least one reaction, or rate
         rule, or assignment rule, to produce change in the system over time.
         """
-        if hasattr(self.sbml, 'all_elements_from_plugins') \
-                and self.sbml.all_elements_from_plugins.getSize():
-            raise SBMLException('SBML extensions are currently not supported!')
+
+        # Check for required but unsupported SBML extensions
+        for i_plugin in range(self.sbml.getNumPlugins()):
+            plugin = self.sbml.getPlugin(i_plugin)
+            if not plugin.getRequired():
+                # if not "required", this has no impact on model simulation,
+                #  and we can safely ignore it
+                continue
+            # Check if there are extension elements. If not, we can safely
+            #  ignore the enabled package
+            if plugin.getListOfAllElements():
+                raise SBMLException(
+                    f'Required SBML extension {plugin.getPackageName()} is '
+                    f'currently not supported!')
 
         if any([not rule.isAssignment() and not isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
