@@ -24,7 +24,12 @@ from . import AmiciModel, AmiciExpData
 from .logging import get_logger, log_execution_time
 from .petab_import import PREEQ_INDICATOR_ID
 from .parameter_mapping import (
-    fill_in_parameters, ParameterMappingForCondition, ParameterMapping)
+    fill_in_parameters,
+    scale_parameter,
+    unscale_parameter,
+    ParameterMappingForCondition,
+    ParameterMapping,
+)
 
 logger = get_logger(__name__)
 
@@ -150,6 +155,14 @@ def simulate_petab(
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
+    # Compute total sllh
+    sllh = aggregate_sllh(
+        amici_model=amici_model,
+        rdatas=rdatas,
+        parameter_mapping=parameter_mapping,
+        petab_scale=True,
+        petab_problem=petab_problem,
+    )
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -159,8 +172,103 @@ def simulate_petab(
 
     return {
         LLH: llh,
+        SLLH: sllh,
         RDATAS: rdatas
     }
+
+
+def aggregate_sllh(
+        amici_model: AmiciModel,
+        rdatas: Sequence[amici.ReturnDataView],
+        parameter_mapping: Optional[ParameterMapping],
+        petab_scale: bool = True,
+        petab_problem: petab.Problem = None,
+) -> Union[None, Dict[str, float]]:
+    """
+    Aggregate likelihood gradient for all conditions, according to PEtab
+    parameter mapping.
+    :param amici_model:
+        AMICI model from which ``rdatas`` were obtained.
+    :param rdatas:
+        Simulation results.
+    :param parameter_mapping:
+        PEtab parameter mapping to condition-specific
+            simulation parameters
+    :param petab_scale:
+        Return sensitivities on the PEtab parameter scales
+    :param petab_problem:
+        The PEtab problem that defines the parameter scales.
+    :return:
+        aggregated sllh
+    """
+    accumulated_sllh = {}
+    model_parameter_ids = amici_model.getParameterIds()
+
+    if petab_scale and petab_problem is None:
+        raise ValueError(
+            'Please provide a PEtab problem if scaled SLLH is desired, or set '
+            '`petab_scale==False`.'
+        )
+
+    # Check for issues in all condition simulation results.
+    for rdata in rdatas:
+        # Condition failed during simulation.
+        if rdata['status'] != amici.AMICI_SUCCESS:
+            return None
+        # Condition simulation result does not provide SLLH.
+        if rdata.get('sllh', None) is None:
+            return None
+
+    for condition_parameter_mapping, rdata in zip(parameter_mapping, rdatas):
+        for sllh_parameter_index, condition_parameter_sllh in \
+                enumerate(rdata['sllh']):
+            # Get PEtab parameter ID
+            model_parameter_index = amici_model.plist(sllh_parameter_index)
+            model_parameter_id = model_parameter_ids[model_parameter_index]
+            petab_parameter_id = (
+                condition_parameter_mapping
+                .map_sim_var[model_parameter_id]
+            )
+
+            # Skip fixed parameters (?)
+            if not isinstance(petab_parameter_id, str):
+                continue
+
+            # Initialize
+            if petab_parameter_id not in accumulated_sllh:
+                accumulated_sllh[petab_parameter_id] = 0
+
+            partial_parameter_sllh = condition_parameter_sllh
+            # Scale
+            if petab_scale:
+                # `ParameterMappingForCondition` objects provide the scale in
+                # terms of `petab.C` constants already, not AMICI equivalents.
+                model_parameter_scale = (
+                    condition_parameter_mapping
+                    .scale_map_sim_var[model_parameter_id]
+                )
+                petab_parameter_scale = (
+                    petab_problem
+                    .parameter_df
+                    .loc[petab_parameter_id, PARAMETER_SCALE]
+                )
+                # SLLH is (un)scaled here with methods that were written for
+                # parameters.
+                # First unscale w.r.t. model scale.
+                partial_parameter_sllh = unscale_parameter(
+                    partial_parameter_sllh,
+                    model_parameter_scale,
+                )
+                # Then scale w.r.t. PEtab scale.
+                partial_parameter_sllh = scale_parameter(
+                    partial_parameter_sllh,
+                    petab_parameter_scale,
+                )
+
+            # Accumulate
+            accumulated_sllh[petab_parameter_id] += partial_parameter_sllh
+
+    return accumulated_sllh
 
 
 def create_parameterized_edatas(
