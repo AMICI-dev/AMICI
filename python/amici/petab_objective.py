@@ -162,6 +162,7 @@ def simulate_petab(
         parameter_mapping=parameter_mapping,
         petab_scale=True,
         petab_problem=petab_problem,
+        edatas=edatas,
     )
 
     # Log results
@@ -181,6 +182,7 @@ def aggregate_sllh(
         amici_model: AmiciModel,
         rdatas: Sequence[amici.ReturnDataView],
         parameter_mapping: Optional[ParameterMapping],
+        edatas: List[AmiciExpData],
         petab_scale: bool = True,
         petab_problem: petab.Problem = None,
 ) -> Union[None, Dict[str, float]]:
@@ -194,6 +196,8 @@ def aggregate_sllh(
     :param parameter_mapping:
         PEtab parameter mapping to condition-specific
             simulation parameters
+    :param edatas:
+        Experimental data used for simulation.
     :param petab_scale:
         Return sensitivities on the PEtab parameter scales
     :param petab_problem:
@@ -219,11 +223,17 @@ def aggregate_sllh(
         if rdata.get('sllh', None) is None:
             return None
 
-    for condition_parameter_mapping, rdata in zip(parameter_mapping, rdatas):
+    for condition_parameter_mapping, edata, rdata in \
+            zip(parameter_mapping, edatas, rdatas):
         for sllh_parameter_index, condition_parameter_sllh in \
                 enumerate(rdata['sllh']):
             # Get PEtab parameter ID
-            model_parameter_index = amici_model.plist(sllh_parameter_index)
+            # Use ExpData if it provides a parameter list, else default to
+            # Model.
+            if edata.plist is not None:
+                model_parameter_index = edata.plist[sllh_parameter_index]
+            else:
+                model_parameter_index = amici_model.plist(sllh_parameter_index)
             model_parameter_id = model_parameter_ids[model_parameter_index]
             petab_parameter_id = (
                 condition_parameter_mapping
