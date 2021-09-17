@@ -5,7 +5,6 @@ import time
 
 sys.setrecursionlimit(3000)
 
-# TODO: Add proper Pysb unit tests for the example and all algorithmic parts
 # TODO: Refactoring to more idiomatic Python code
 # TODO: Write proper Pydoc and apply coding conventions of the group
 # TODO: Rewrite quicksort algorithm (recursive) to more efficient iterative variant
@@ -801,6 +800,7 @@ def GetRemoteInput():
 	response = urllib.request.urlopen(r'file:///home/stephan/Code/forks/AMICI/python/amici/test-ecoli.dat.gz')
 	data = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
 	return [int(item) for sl in [entry.decode('ascii').strip().split('\t') for entry in data.readlines()] for item in sl]
+	
 
 def GetRemoteNames():
 	import urllib.request

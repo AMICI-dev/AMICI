@@ -11,6 +11,7 @@ from functools import reduce
 import sympy as sp
 import libsbml as sbml
 import re
+import numpy as np
 import math
 import itertools as itt
 import warnings
@@ -19,6 +20,7 @@ import copy
 from typing import (
     Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
 )
+from amici.conserved_moeties import *
 
 from .import_utils import (
     smart_subs, smart_subs_dict, toposort_symbols,
@@ -1409,29 +1411,29 @@ class SbmlImporter:
         :returns species_solver
             List of species indices which remain later in the ODE solver
         """
-        # get left null space of stioichiometric matrix
-        # Why does the following fail?
-        #kernel = null_space(self.stoichiometric_matrix.transpose())
-        kernel = [ [], [] ]
-        # find conserved quantities in basis vectors of null space
-        conserved_quantities = reduce(operator.add, [ [idx for idx, magnitude in enumerate(base) if magnitude > 0.0001] for base in kernel ])
+        N, M = self.stoichiometric_matrix.shape
+        S = np.array(self.stoichiometric_matrix.tolist())
+        S = [float(entry) for row in S for entry in row]
+        kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, NSolutions, NSolutions2 = kernel(S, N, M)
 
         # iterate over species in the ODE model, mark conserved species for later removal from stochiometric matrix
         species_solver = list(range(ode_model.num_states_rdata()))
         for ix in reversed(range(ode_model.num_states_rdata())): 
-           if ix in conserved_quantities:
-            # dont use sym('x') here since conservation laws need to be
-            # added before symbols are generated
-            target_state = ode_model._states[ix].get_id()
-            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
-            conservation_laws.append({
-                'state': target_state,
-                'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
-            })
-            # mark species to delete from stoichiometric matrix as they are conserved quantities
-            species_solver.pop(ix)
+            for i in range(0, intKernelDim):
+                for j in range(0, len(NSolutions[i])):
+                    if NSolutions[i][j] == ix:
+                        # dont use sym('x') here since conservation laws need to be
+                        # added before symbols are generated
+                        target_state = ode_model._states[ix].get_id()
+                        total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+                        conservation_laws.append({
+                            'state': target_state,
+                            'total_abundance': total_abundance,
+                            'state_expr': total_abundance,
+                            'abundance_expr': target_state,
+                        })
+                        # mark species to delete from stoichiometric matrix as they are conserved quantities
+                        species_solver.pop(ix)
 
         # return a list of species which are not conserved and thus valid to be included
         return species_solver
