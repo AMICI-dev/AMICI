@@ -87,6 +87,9 @@ class SbmlImporter:
     :ivar flux_vector:
         reaction kinetic laws
 
+    :ivar flux_ids:
+        identifiers for elements of flux_vector
+
     :ivar _local_symbols:
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
@@ -849,6 +852,14 @@ class SbmlImporter:
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
         self.flux_vector = sp.zeros(nr, 1)
+        # Use reaction IDs as IDs for flux expressions (not that prior to SBML
+        #  level 3 version 2 the ID attribute was not mandatory and may be
+        #  unset)
+        self.flux_ids = [
+            f"flux_{reaction.getId()}" if reaction.isSetId()
+            else f"flux_r{reaction_idx}"
+            for reaction_idx, reaction in enumerate(reactions)
+        ]
 
         reaction_ids = [
             reaction.getId() for reaction in reactions
