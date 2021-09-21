@@ -2702,8 +2702,11 @@ class ODEExporter:
 
     def _prepare_model_folder(self) -> None:
         """
-        Remove all files from the model folder.
+        Create model directory or remove all files if the output directory
+        already exists.
         """
+        os.makedirs(self.model_path, exist_ok=True)
+
         for file in os.listdir(self.model_path):
             file_path = os.path.join(self.model_path, file)
             if os.path.isfile(file_path):
@@ -3489,10 +3492,6 @@ class ODEExporter:
 
         self.model_path = os.path.abspath(output_dir)
         self.model_swig_path = os.path.join(self.model_path, 'swig')
-
-        for directory in [self.model_path, self.model_swig_path]:
-            if not os.path.exists(directory):
-                os.makedirs(directory)
 
     def set_name(self, model_name: str) -> None:
         """
