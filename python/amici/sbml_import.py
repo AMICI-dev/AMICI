@@ -852,7 +852,7 @@ class SbmlImporter:
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
         self.flux_vector = sp.zeros(nr, 1)
-        # Use reaction IDs as IDs for flux expressions (not that prior to SBML
+        # Use reaction IDs as IDs for flux expressions (note that prior to SBML
         #  level 3 version 2 the ID attribute was not mandatory and may be
         #  unset)
         self.flux_ids = [
