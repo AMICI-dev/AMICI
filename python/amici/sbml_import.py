@@ -859,7 +859,7 @@ class SbmlImporter:
             f"flux_{reaction.getId()}" if reaction.isSetId()
             else f"flux_r{reaction_idx}"
             for reaction_idx, reaction in enumerate(reactions)
-        ]
+        ] or ['flux_r0']
 
         reaction_ids = [
             reaction.getId() for reaction in reactions
