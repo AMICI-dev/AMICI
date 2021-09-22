@@ -1417,6 +1417,7 @@ class SbmlImporter:
         kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, NSolutions, NSolutions2 = kernel(S, N, M)
 
         # iterate over species in the ODE model, mark conserved species for later removal from stochiometric matrix
+        species_to_be_removed = {}
         species_solver = list(range(ode_model.num_states_rdata()))
         for ix in reversed(range(ode_model.num_states_rdata())): 
             for i in range(0, intKernelDim):
@@ -1426,14 +1427,35 @@ class SbmlImporter:
                         # added before symbols are generated
                         target_state = ode_model._states[ix].get_id()
                         total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+                        
+                        # create SymPy expression describing the conservation law, note:
+                        """:math:`state_expression = -tcl_{target_state} + \sum_{i=1}^{n, j \ne i} state_{i}`"""
+                        listOfSymbols = []
+                        listOfCoefficients = []
+                        for index in range(len(NSolutions[i])):
+                            if index != j: 
+                                listOfSymbols.append(ode_model._states[index].get_id())
+                        for index in range(len(NSolutions2[i])):
+                            if index != j:
+                                listOfCoefficients.append(NSolutions2[i][j])
+                        # target state is a conserved quantity, thus we have:
+                        """:math:`\sum_{i}^{n} state_{i} = 0`"""
+                        state_expression = -target_state * NSolutions2[i][index]
+                        for i in range(len(listOfSymbols)):
+                            state_expression = state_expression + quantity[i] * listOfCoefficients[i]
+                        
                         conservation_laws.append({
                             'state': target_state,
                             'total_abundance': total_abundance,
-                            'state_expr': total_abundance,
-                            'abundance_expr': target_state,
+                            'state_expr': state_expression,
+                            'abundance_expr': state_expression
                         })
                         # mark species to delete from stoichiometric matrix as they are conserved quantities
-                        species_solver.pop(ix)
+                        species_to_be_removed.add(ix)
+
+        # finally remove species
+        for species in species_to_be_removed:
+            species_solver.pop(species)
 
         # return a list of species which are not conserved and thus valid to be included
         return species_solver
