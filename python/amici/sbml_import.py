@@ -1429,20 +1429,21 @@ class SbmlImporter:
                         total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
                         
                         # create SymPy expression describing the conservation law, note:
-                        """:math:`state_expression = -tcl_{target_state} + \sum_{i=1}^{n, j \ne i} state_{i}`"""
-                        listOfSymbols = []
+                        """:math:`state_expression = -tcl_{target_state} + \sum_{i=1}^{n, j \ne i} coeff_{i} \cdot state_{i}`"""
+                        listOfQuantities = []
                         listOfCoefficients = []
                         for index in range(len(NSolutions[i])):
                             if index != j: 
-                                listOfSymbols.append(ode_model._states[index].get_id())
+                                listOfQuantities.append(ode_model._states[index].get_id())
                         for index in range(len(NSolutions2[i])):
                             if index != j:
                                 listOfCoefficients.append(NSolutions2[i][j])
+
                         # target state is a conserved quantity, thus we have:
-                        """:math:`\sum_{i}^{n} state_{i} = 0`"""
+                        """:math:`\sum_{i}^{n} coeff_{i} \cdot state_{i} = 0`"""
                         state_expression = -target_state * NSolutions2[i][index]
-                        for i in range(len(listOfSymbols)):
-                            state_expression = state_expression + quantity[i] * listOfCoefficients[i]
+                        for i in range(len(listOfQuantities)):
+                            state_expression = state_expression + listOfQuantities[i] * listOfCoefficients[i]
                         
                         conservation_laws.append({
                             'state': target_state,
