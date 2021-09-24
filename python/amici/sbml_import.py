@@ -364,6 +364,7 @@ class SbmlImporter:
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
             ode_model,
+            model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
             assume_pow_positivity=assume_pow_positivity,
@@ -371,8 +372,6 @@ class SbmlImporter:
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
             generate_sensitivity_code=generate_sensitivity_code
         )
-        exporter.set_name(model_name)
-        exporter.set_paths(output_dir)
         exporter.generate_model_code()
 
         if compile:
