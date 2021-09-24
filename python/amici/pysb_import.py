@@ -139,13 +139,12 @@ def pysb2amici(
     exporter = ODEExporter(
         ode_model,
         outdir=output_dir,
+        model_name=model.name,
         verbose=verbose,
         assume_pow_positivity=assume_pow_positivity,
         compiler=compiler,
         generate_sensitivity_code=generate_sensitivity_code
     )
-    exporter.set_name(model.name)
-    exporter.set_paths(output_dir)
     exporter.generate_model_code()
 
     if compile:
