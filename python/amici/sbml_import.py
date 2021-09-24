@@ -96,6 +96,9 @@ class SbmlImporter:
     :ivar flux_vector:
         reaction kinetic laws
 
+    :ivar flux_ids:
+        identifiers for elements of flux_vector
+
     :ivar _local_symbols:
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
@@ -379,6 +382,7 @@ class SbmlImporter:
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
             ode_model,
+            model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
             assume_pow_positivity=assume_pow_positivity,
@@ -386,8 +390,6 @@ class SbmlImporter:
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
             generate_sensitivity_code=generate_sensitivity_code
         )
-        exporter.set_name(model_name)
-        exporter.set_paths(output_dir)
         exporter.generate_model_code()
 
         if compile:
@@ -886,6 +888,14 @@ class SbmlImporter:
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
         self.flux_vector = sp.zeros(nr, 1)
+        # Use reaction IDs as IDs for flux expressions (note that prior to SBML
+        #  level 3 version 2 the ID attribute was not mandatory and may be
+        #  unset)
+        self.flux_ids = [
+            f"flux_{reaction.getId()}" if reaction.isSetId()
+            else f"flux_r{reaction_idx}"
+            for reaction_idx, reaction in enumerate(reactions)
+        ] or ['flux_r0']
 
         reaction_ids = [
             reaction.getId() for reaction in reactions
