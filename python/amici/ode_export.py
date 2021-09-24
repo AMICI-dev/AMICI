@@ -1050,10 +1050,9 @@ class ODEModel:
         nexpr = len(symbols[SymbolId.EXPRESSION])
 
         # assemble fluxes and add them as expressions to the model
-        fluxes = []
-        for ir, flux in enumerate(si.flux_vector):
-            flux_id = generate_flux_symbol(ir)
-            fluxes.append(flux_id)
+        assert len(si.flux_ids) == len(si.flux_vector)
+        fluxes = [generate_flux_symbol(ir, name=flux_id)
+                  for ir, flux_id in enumerate(si.flux_ids)]
         nr = len(fluxes)
 
         # correct time derivatives for compartment changes
@@ -3878,7 +3877,10 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     return symbol_with_assumptions(f'm{observable_id}')
 
 
-def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
+def generate_flux_symbol(
+        reaction_index: int,
+        name: Optional[str] = None
+) -> sp.Symbol:
     """
     Generate identifier symbol for a reaction flux.
     This function will always return the same unique python object for a
@@ -3886,9 +3888,14 @@ def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
 
     :param reaction_index:
         index of the reaction to which the flux corresponds
+    :param name:
+        an optional identifier of the reaction to which the flux corresponds
     :return:
         identifier symbol
     """
+    if name is not None:
+        return symbol_with_assumptions(name)
+
     return symbol_with_assumptions(f'flux_r{reaction_index}')
 
 
