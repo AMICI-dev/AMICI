@@ -419,7 +419,10 @@ class SbmlImporter:
             # the "required" attribute is only available in SBML Level 3
             for i_plugin in range(self.sbml.getNumPlugins()):
                 plugin = self.sbml.getPlugin(i_plugin)
-                if not plugin.getRequired():
+                if plugin.getPackageName() in ('layout',):
+                    # 'layout' plugin does not have the 'required' attribute
+                    continue
+                if hasattr(plugin, 'getRequired') and not plugin.getRequired():
                     # if not "required", this has no impact on model
                     #  simulation, and we can safely ignore it
                     continue
