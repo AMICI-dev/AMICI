@@ -1051,10 +1051,9 @@ class ODEModel:
         nexpr = len(symbols[SymbolId.EXPRESSION])
 
         # assemble fluxes and add them as expressions to the model
-        fluxes = []
-        for ir, flux in enumerate(si.flux_vector):
-            flux_id = generate_flux_symbol(ir)
-            fluxes.append(flux_id)
+        assert len(si.flux_ids) == len(si.flux_vector)
+        fluxes = [generate_flux_symbol(ir, name=flux_id)
+                  for ir, flux_id in enumerate(si.flux_ids)]
         nr = len(fluxes)
 
         # correct time derivatives for compartment changes
@@ -2587,9 +2586,6 @@ class ODEExporter:
     :ivar model:
         ODE definition
 
-    :ivar outdir:
-        see :meth:`amici.ode_export.ODEExporter.set_paths`
-
     :ivar verbose:
         more verbose output if True
 
@@ -2633,7 +2629,8 @@ class ODEExporter:
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
             allow_reinit_fixpar_initcond: Optional[bool] = True,
-            generate_sensitivity_code: Optional[bool] = True
+            generate_sensitivity_code: Optional[bool] = True,
+            model_name: Optional[str] = 'model'
     ):
         """
         Generate AMICI C++ files for the ODE provided to the constructor.
@@ -2661,19 +2658,21 @@ class ODEExporter:
 
         :param generate_sensitivity_code specifies whether code required for
             sensitivity computation will be generated
+
+        :param model_name:
+            name of the model to be used during code generation
         """
         set_log_level(logger, verbose)
 
-        self.outdir: str = outdir
         self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
         self.assume_pow_positivity: bool = assume_pow_positivity
         self.compiler: str = compiler
 
-        self.model_name: str = 'model'
-        output_dir = os.path.join(os.getcwd(),
-                                  f'amici-{self.model_name}')
-        self.model_path: str = os.path.abspath(output_dir)
-        self.model_swig_path: str = os.path.join(self.model_path, 'swig')
+        self.model_path: str = ''
+        self.model_swig_path: str = ''
+
+        self.set_name(model_name)
+        self.set_paths(outdir)
 
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
@@ -2714,8 +2713,11 @@ class ODEExporter:
 
     def _prepare_model_folder(self) -> None:
         """
-        Remove all files from the model folder.
+        Create model directory or remove all files if the output directory
+        already exists.
         """
+        os.makedirs(self.model_path, exist_ok=True)
+
         for file in os.listdir(self.model_path):
             file_path = os.path.join(self.model_path, file)
             if os.path.isfile(file_path):
@@ -3484,21 +3486,23 @@ class ODEExporter:
             template_data
         )
 
-    def set_paths(self, output_dir: str) -> None:
+    def set_paths(self, output_dir: Optional[str] = None) -> None:
         """
         Set output paths for the model and create if necessary
 
         :param output_dir:
             relative or absolute path where the generated model
-            code is to be placed. will be created if does not exists.
+            code is to be placed. If ``None``, this will default to
+            `amici-{self.model_name}` in the current working directory.
+            will be created if does not exists.
 
         """
+        if output_dir is None:
+            output_dir = os.path.join(os.getcwd(),
+                                      f'amici-{self.model_name}')
+
         self.model_path = os.path.abspath(output_dir)
         self.model_swig_path = os.path.join(self.model_path, 'swig')
-
-        for directory in [self.model_path, self.model_swig_path]:
-            if not os.path.exists(directory):
-                os.makedirs(directory)
 
     def set_name(self, model_name: str) -> None:
         """
@@ -3885,7 +3889,10 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     return symbol_with_assumptions(f'm{observable_id}')
 
 
-def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
+def generate_flux_symbol(
+        reaction_index: int,
+        name: Optional[str] = None
+) -> sp.Symbol:
     """
     Generate identifier symbol for a reaction flux.
     This function will always return the same unique python object for a
@@ -3893,9 +3900,14 @@ def generate_flux_symbol(reaction_index: int) -> sp.Symbol:
 
     :param reaction_index:
         index of the reaction to which the flux corresponds
+    :param name:
+        an optional identifier of the reaction to which the flux corresponds
     :return:
         identifier symbol
     """
+    if name is not None:
+        return symbol_with_assumptions(name)
+
     return symbol_with_assumptions(f'flux_r{reaction_index}')
 
 
