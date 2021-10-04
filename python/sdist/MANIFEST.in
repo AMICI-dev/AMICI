@@ -9,6 +9,7 @@ include amici/src/hdf5.cpp
 include amici/swig/CMakeLists_model.cmake
 include setup_clibs.py
 include version.txt
+include LICENSE.md
 exclude amici/*.so
 exclude amici/*.dll
 
