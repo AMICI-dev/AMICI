@@ -1,31 +1,39 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-authors:
-- family-names: "Fröhlich"
-  given-names: "Fabian"
-  orcid: "https://orcid.org/0000-0002-5360-4292"
-- family-names: "Weindl"
-  given-names: "Daniel"
-  orcid: "https://orcid.org/0000-0001-9963-6057"
-- family-names: "Schälte"
-  given-names: "Yannik"
-  orcid: "https://orcid.org/0000-0003-1293-820X"
-- family-names: "Pathirna"
-  given-names: "Dilan"
-  orcid: "https://orcid.org/0000-0001-7000-2659"
-- family-names: "Paszkowski"
-  given-names: "Lukasz"
-- family-names: "Lines"
-  given-names "Glenn Terje"
-  orcid: "https://orcid.org/0000-0002-6294-1805"
-- family-names: "Stapor"
-  given-names "Paul"
-  orcid: "https://orcid.org/0000-0002-7567-3985"
-- family-names: "Hasenauer"
-  given-names: "Jan"
-  orcid: "https://orcid.org/0000-0002-4935-3312"
-title: "AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models"
+message: "If you use this software, please cite both the article from preferred-citation and the software itself."
+preferred-citation:
+   authors:
+      - family-names: "Fröhlich"
+        given-names: "Fabian"
+        orcid: "https://orcid.org/0000-0002-5360-4292"
+      - family-names: "Weindl"
+        given-names: "Daniel"
+        orcid: "https://orcid.org/0000-0001-9963-6057"
+      - family-names: "Schälte"
+        given-names: "Yannik"
+        orcid: "https://orcid.org/0000-0003-1293-820X"
+      - family-names: "Pathirna"
+        given-names: "Dilan"
+        orcid: "https://orcid.org/0000-0001-7000-2659"
+      - family-names: "Paszkowski"
+        given-names: "Lukasz"
+      - family-names: "Lines"
+        given-names "Glenn Terje"
+        orcid: "https://orcid.org/0000-0002-6294-1805"
+      - family-names: "Stapor"
+        given-names "Paul"
+        orcid: "https://orcid.org/0000-0002-7567-3985"
+      - family-names: "Hasenauer"
+        given-names: "Jan"
+        orcid: "https://orcid.org/0000-0002-4935-3312"
+   title: "AMICI: High-Performance Sensitivity Analysis for Large Ordinary Differential Equation Models"
+   type: article
+   doi: 10.1093/bioinformatics/btab227
+   journal: "Bioinformatics"
+   year: 2021
+   month: 4
+   start: 1
+   end: 1
 version: 0.11.18
-doi: 10.5281/zenodo.5091858
+doi: 10.5e281/zenodo.5091858
 date-released: 2021-07-12
 url: "https://github.com/AMICI-dev/AMICI
