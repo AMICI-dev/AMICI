@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=40.6.3",
+    "setuptools>=48",
     "wheel",
     # We pin numpy here to the lowest supported version to have
     # ABI-compatibility with the numpy version in the runtime environment.
