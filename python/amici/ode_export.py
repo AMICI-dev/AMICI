@@ -3464,8 +3464,6 @@ class ODEExporter:
                        template_data)
         apply_template(os.path.join(amiciModulePath, 'MANIFEST.template.in'),
                        os.path.join(self.model_path, 'MANIFEST.in'), {})
-        shutil.copy(os.path.join(amiciModulePath, 'pyproject.toml'),
-                    os.path.join(self.model_path, 'pyproject.toml'))
         # write __init__.py for the model module
         if not os.path.exists(os.path.join(self.model_path, self.model_name)):
             os.makedirs(os.path.join(self.model_path, self.model_name))
