@@ -13,7 +13,7 @@ This directory contains a number of build, installation, and CI scripts.
 * `buildBNGL.sh`
 
    Download and build 
-   [BioNetGen](https://www.csb.pitt.edu/Faculty/Faeder/?page_id=409) (required for some tests)
+   [BioNetGen](https://github.com/RuleWorld/bionetgen) (required for some tests)
   
 * `buildSuiteSparse.sh`
 
