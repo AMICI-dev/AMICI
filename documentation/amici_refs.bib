@@ -885,6 +885,67 @@ Targeted inhibition of oncogenic pathways can be highly effective in halting the
 	journal = {bioRxiv}
 }
 
+@Article{ErdemMut2021,
+  author       = {Erdem, Cemal and Mutsuddy, Arnab and Bensman, Ethan M. and Dodd, William B. and Saint-Antoine, Michael M. and Bouhaddou, Mehdi and Blake, Robert C. and Gross, Sean M. and Heiser, Laura M. and Alex Feltus, F. and Birtwistle, Marc R.},
+  journal      = {bioRxiv},
+  title        = {A Scalable, Open-Source Implementation of a Large-Scale Mechanistic Model for Single Cell Proliferation and Death Signaling},
+  year         = {2021},
+  abstract     = {Mechanistic models of how single cells respond to different perturbagens can help integrate disparate big data sets or predict response to varied drug combinations. However, the construction and simulation of such models have proved challenging. Our lab previously constructed one of the largest mechanistic models for single mammalian cell regulation of proliferation and death (774 species, 141 genes, 8 ligands, 2400 reactions). However, this, as many other large-scale models, was written using licensed software (MATLAB) with intricate programming structure, impeding alteration, expansion, and sharing. Here, we generated a new foundation for this model, which includes a python-based creation and simulation pipeline converting a few structured text files into an SBML-compatible format. This new open-source model (named SPARCED) is high-performance- and cloud-computing compatible and enables the study of virtual cell population responses at the single-cell level. We applied this new model to a subset of the LINCS MCF10A Data Cube, which observed that IFNγ acts as an anti-proliferative factor, but the reasons why were unknown. After expanding the SPARCED model with an IFNγ signaling module (to 950 species, 150 genes, 9 ligands, 2500 reactions), we ran stochastic single-cell simulations for two different putative crosstalk mechanisms and looked at the number of cycling cells in each case. Our model-based analysis suggested, and experiments support that these observations are better explained by IFNγ-induced SOCS1 expression sequestering activated EGF receptors, thereby downregulating AKT activity, as opposed to direct IFNγ-induced upregulation of p21 expression. This work forms a foundation for increased mechanistic model-based data integration on a single-cell level, an important building block for clinically predictive mechanistic models.Competing Interest StatementThe authors have declared no competing interest.},
+  doi          = {10.1101/2020.11.09.373407},
+  elocation-id = {2020.11.09.373407},
+  eprint       = {https://www.biorxiv.org/content/early/2021/07/15/2020.11.09.373407.full.pdf},
+  publisher    = {Cold Spring Harbor Laboratory},
+  url          = {https://www.biorxiv.org/content/early/2021/07/15/2020.11.09.373407},
+}
+
+@Article{BastBuc2021,
+  author   = {Lisa Bast and Michèle C. Buck and Judith S. Hecker and Robert A.J. Oostendorp and Katharina S. Götze and Carsten Marr},
+  journal  = {iScience},
+  title    = {Computational modeling of stem and progenitor cell kinetics identifies plausible hematopoietic lineage hierarchies},
+  year     = {2021},
+  issn     = {2589-0042},
+  number   = {2},
+  pages    = {102120},
+  volume   = {24},
+  abstract = {Summary
+Classically, hematopoietic stem cell (HSC) differentiation is assumed to occur via progenitor compartments of decreasing plasticity and increasing maturity in a specific, hierarchical manner. The classical hierarchy has been challenged in the past by alternative differentiation pathways. We abstracted experimental evidence into 10 differentiation hierarchies, each comprising 7 cell type compartments. By fitting ordinary differential equation models with realistic waiting time distributions to time-resolved data of differentiating HSCs from 10 healthy human donors, we identified plausible lineage hierarchies and rejected others. We found that, for most donors, the classical model of hematopoiesis is preferred. Surprisingly, multipotent lymphoid progenitor differentiation into granulocyte-monocyte progenitors is plausible in 90% of samples. An in silico analysis confirmed that, even for strong noise, the classical model can be identified robustly. Our computational approach infers differentiation hierarchies in a personalized fashion and can be used to gain insights into kinetic alterations of diseased hematopoiesis.},
+  doi      = {https://doi.org/10.1016/j.isci.2021.102120},
+  keywords = {stem cells research, in silico biology, systems biology},
+  url      = {https://www.sciencedirect.com/science/article/pii/S2589004221000882},
+}
+
+@Article{TomasoniPar2021,
+  author   = {Tomasoni, Danilo and Paris, Alessio and Giampiccolo, Stefano and Reali, Federico and Simoni, Giulia and Marchetti, Luca and Kaddi, Chanchala and Neves-Zaph, Susana and Priami, Corrado and Azer, Karim and Lombardo, Rosario},
+  journal  = {Communications Biology},
+  title    = {{QSPcc} reduces bottlenecks in computational model simulations},
+  year     = {2021},
+  issn     = {2399-3642},
+  number   = {1},
+  pages    = {1022},
+  volume   = {4},
+  abstract = {Mathematical models have grown in size and complexity becoming often computationally intractable. In sensitivity analysis and optimization phases, critical for tuning, validation and qualification, these models may be run thousands of times. Scientific programming languages popular for prototyping, such as MATLAB and R, can be a bottleneck in terms of performance. Here we show a compiler-based approach, designed to be universal at handling engineering and life sciences modeling styles, that automatically translates models into fast C code. At first QSPcc is demonstrated to be crucial in enabling the research on otherwise intractable Quantitative Systems Pharmacology models, such as in rare Lysosomal Storage Disorders. To demonstrate the full value in seamlessly accelerating, or enabling, the R&D efforts in natural sciences, we then benchmark QSPcc against 8 solutions on 24 real-world projects from different scientific fields. With speed-ups of 22000x peak, and 1605x arithmetic mean, our results show consistent superior performances.},
+  doi      = {10.1038/s42003-021-02553-9},
+  refid    = {Tomasoni2021},
+  url      = {https://doi.org/10.1038/s42003-021-02553-9},
+}
+
+@Misc{MaierHar2020,
+  author        = {Corinna Maier and Niklas Hartung and Charlotte Kloft and Wilhelm Huisinga and Jana de Wiljes},
+  title         = {Reinforcement learning and Bayesian data assimilation for model-informed precision dosing in oncology},
+  year          = {2020},
+  archiveprefix = {arXiv},
+  eprint        = {2006.01061},
+  primaryclass  = {stat.ML},
+}
+@phdthesis{Maier2021,
+  author      = {Corinna Maier},
+  title       = {Bayesian data assimilation and reinforcement learning for model-informed precision dosing in oncology},
+  type        = {doctoralthesis},
+  pages       = {x, 138},
+  school      = {Universit{\"a}t Potsdam},
+  doi       = {10.25932/publishup-51587},
+  year        = {2021},
+}
 @Comment{jabref-meta: databaseType:bibtex;}
 
 @Comment{jabref-meta: grouping:
