@@ -85,7 +85,3 @@ This directory contains a number of build, installation, and CI scripts.
 
   Run memory leak check using valgrind for all unit and integration tests.
   Assumes they have been built before in the default location. 
-
-* `travis_wrap.sh`
-
-  Wrapper script for Travis CI to enable output folding in Travis CI logs
