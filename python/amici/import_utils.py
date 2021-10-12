@@ -4,13 +4,44 @@
 from typing import Dict, Union, Optional, Callable
 
 import sympy as sp
+import enum
 from toposort import toposort
 
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 
+class ObservableTransformation(str, enum.Enum):
+    """
+    Different modes of observable transformation.
+    """
+    LOG10 = 'log10'
+    LOG = 'log'
+    LIN = 'lin'
+
+
+def noise_distribution_to_observable_transformation(
+    noise_distribution: Union[str, Callable]
+) -> ObservableTransformation:
+    """
+    Parse noise distribution string and extract observable transformation
+
+    :param noise_distribution:
+        see :func:`noise_distribution_to_cost_function`
+
+    :return:
+        observable transformation
+    """
+    if isinstance(noise_distribution, str):
+        if noise_distribution.startswith('log-'):
+            return ObservableTransformation.LOG
+        if noise_distribution.startswith('log10-'):
+            return ObservableTransformation.LOG10
+
+    return ObservableTransformation.LIN
+
+
 def noise_distribution_to_cost_function(
-        noise_distribution: str
+        noise_distribution: Union[str, Callable]
 ) -> Callable[[str], str]:
     """
     Parse noise distribution string to a cost function definition amici can
