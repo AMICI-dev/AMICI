@@ -11,7 +11,8 @@ from .ode_export import (
 )
 
 from .import_utils import (
-    noise_distribution_to_cost_function, _get_str_symbol_identifiers
+    noise_distribution_to_cost_function, _get_str_symbol_identifiers,
+    noise_distribution_to_observable_transformation
 )
 import logging
 from .logging import get_logger, log_execution_time, set_log_level
@@ -373,8 +374,12 @@ def _add_expression(
     )
 
     if name in observables:
+        noise_dist = noise_distributions.get(name, 'normal') \
+            if noise_distributions else 'normal'
+
         y = sp.Symbol(f'{name}')
-        obs = Observable(y, name, sym)
+        trafo = noise_distribution_to_observable_transformation(noise_dist)
+        obs = Observable(y, name, sym, transformation=trafo)
         ode_model.add_component(obs)
 
         sigma_name, sigma_value = _get_sigma_name_and_value(
@@ -384,8 +389,7 @@ def _add_expression(
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
-        noise_dist = noise_distributions.get(name, 'normal') \
-            if noise_distributions else 'normal'
+
         cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
         my = generate_measurement_symbol(obs.get_id())
         cost_fun_expr = sp.sympify(cost_fun_str,
