@@ -161,6 +161,7 @@ def enum(prefix):
     values = {k[len(prefix)+1:]:v for k,v in values.items()}
     return IntEnum(prefix, values)
 ParameterScaling = enum('ParameterScaling')
+ObservableScaling = enum('ObservableScaling')
 SecondOrderMode = enum('SecondOrderMode')
 SensitivityOrder = enum('SensitivityOrder')
 SensitivityMethod = enum('SensitivityMethod')
