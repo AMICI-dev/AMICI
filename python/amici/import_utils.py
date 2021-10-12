@@ -26,7 +26,7 @@ def noise_distribution_to_observable_transformation(
     Parse noise distribution string and extract observable transformation
 
     :param noise_distribution:
-        see :py:function:`noise_distribution_to_cost_function`
+        see :func:`noise_distribution_to_cost_function`
 
     :return:
         observable transformation
