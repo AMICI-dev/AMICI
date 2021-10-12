@@ -109,6 +109,7 @@ enum class ParameterScaling {
     log10
 };
 
+/** modes for observable scaling */
 enum class ObservableScaling {
     lin,
     log,

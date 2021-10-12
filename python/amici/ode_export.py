@@ -3320,12 +3320,12 @@ class ODEExporter:
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('y'),
             'OBSERVABLE_TRAFO_INITIALIZER_LIST':
-                '\n'.join([
+                '\n'.join(
                     f'ObservableScaling::{trafo}, // y[{idx}]'
                     for idx, trafo in enumerate(
                         self.model.get_observable_transformations()
                     )
-                ]),
+                ),
             'EXPRESSION_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('w'),
             'PARAMETER_IDS_INITIALIZER_LIST':

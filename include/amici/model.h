@@ -804,7 +804,7 @@ class Model : public AbstractModel, public ModelDimensions {
                        const AmiVector &x);
     
     /**
-     * @brief Get time-resolved observables.
+     * @brief Get scaling type for observable
      * @param iy observable index
      */
     virtual ObservableScaling getObservableScaling(int iy) const;
