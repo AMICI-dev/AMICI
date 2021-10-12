@@ -45,7 +45,8 @@ from . import (
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
-from .import_utils import smart_subs_dict, toposort_symbols
+from .import_utils import smart_subs_dict, toposort_symbols, \
+    ObservableTransformation
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -555,6 +556,10 @@ class Observable(ModelQuantity):
     :ivar _measurement_symbol:
         sympy symbol used in the objective function to represent
         measurements to this observable
+
+    :ivar trafo:
+        observable transformation, only applies when evaluating objective
+        function or residuals
     """
 
     _measurement_symbol: Union[sp.Symbol, None] = None
@@ -563,7 +568,8 @@ class Observable(ModelQuantity):
                  identifier: sp.Symbol,
                  name: str,
                  value: sp.Expr,
-                 measurement_symbol: Optional[sp.Symbol] = None):
+                 measurement_symbol: Optional[sp.Symbol] = None,
+                 transformation: Optional[ObservableTransformation] = 'lin'):
         """
         Create a new Observable instance.
 
@@ -575,9 +581,14 @@ class Observable(ModelQuantity):
 
         :param value:
             formula
+
+        :param transformation:
+            observable transformation, only applies when evaluating objective
+            function or residuals
         """
         super(Observable, self).__init__(identifier, name, value)
         self._measurement_symbol = measurement_symbol
+        self.trafo = transformation
 
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
@@ -1160,6 +1171,8 @@ class ODEModel:
                 args += ['value']
             if symbol_name == SymbolId.EVENT:
                 args += ['state_update', 'event_observable']
+            if symbol_name == SymbolId.OBSERVABLE:
+                args += ['transformation']
 
             protos = [
                 {
@@ -1215,7 +1228,8 @@ class ODEModel:
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
         self._has_quadratic_nllh = all(
-            llh['dist'] in ['normal', 'lin-normal']
+            llh['dist'] in ['normal', 'lin-normal', 'log-normal',
+                            'log10-normal']
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
@@ -1298,6 +1312,17 @@ class ODEModel:
         )
 
         self._states[ix].set_conservation_law(state_expr)
+
+
+    def get_observable_transformations(self) -> List[ObservableTransformation]:
+        """
+        List of observable transformations
+
+        :return:
+            list of transformations
+        """
+        return [obs.trafo for obs in self._observables]
+
 
     def num_states_rdata(self) -> int:
         """
@@ -3292,6 +3317,13 @@ class ODEExporter:
                 self._get_symbol_name_initializer_list('k'),
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('y'),
+            'OBSERVABLE_TRAFO_INITIALIZER_LIST':
+                '\n'.join(
+                    f'ObservableScaling::{trafo}, // y[{idx}]'
+                    for idx, trafo in enumerate(
+                        self.model.get_observable_transformations()
+                    )
+                ),
             'EXPRESSION_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('w'),
             'PARAMETER_IDS_INITIALIZER_LIST':
