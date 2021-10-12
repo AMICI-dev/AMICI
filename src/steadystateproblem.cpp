@@ -198,9 +198,15 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
                 steady_state_status_[1] = SteadyStateStatus::failed_too_long_simulation;
                 break;
             default:
+                model->app->warningF("AMICI:newton",
+                                     "AMICI newton method failed: %s\n",
+                                     ex.what());
                 steady_state_status_[1] = SteadyStateStatus::failed;
         }
-    } catch (AmiException const &) {
+    } catch (AmiException const &ex) {
+        model->app->warningF("AMICI:equilibration",
+                             "AMICI equilibration failed: %s\n",
+                             ex.what());
         steady_state_status_[1] = SteadyStateStatus::failed;
     }
 }
