@@ -236,7 +236,7 @@ def test_parameter_in_expdata(preeq_fixture):
 
 
 def test_raise_presimulation_with_adjoints(preeq_fixture):
-    """Test data replicates"""
+    """Test simulation failures with adjoin+presimulation"""
 
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
@@ -248,16 +248,15 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     rdata = amici.runAmiciSimulation(model, solver, edata)
     assert rdata['status'] == amici.AMICI_ERROR
 
-    # presimulation and postequilibration with adjoints:
-    # this also needs to fail
+    # add postequilibration
     y = edata.getObservedData()
     stdy = edata.getObservedDataStdDev()
-
-    # add infty timepoint
     ts = np.hstack([*edata.getTimepoints(), np.inf])
-    edata.setTimepoints(sorted(ts))
+    edata.setTimepoints(ts)
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
+
+    # remove presimulation
     edata.t_presim = 0
     edata.fixedParametersPresimulation = ()
 
@@ -267,7 +266,8 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
 
 
 def test_equilibration_methods_with_adjoints(preeq_fixture):
-    """Test data replicates"""
+    """Test different combinations of equilibration and simulation
+    sensitivity methods"""
 
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
