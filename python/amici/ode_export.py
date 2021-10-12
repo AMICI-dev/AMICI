@@ -30,7 +30,6 @@ from typing import (
     Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
     Set, Any
 )
-import petab
 from string import Template
 from sympy.printing import cxxcode
 from sympy.printing.cxx import _CXXCodePrinterBase
@@ -570,8 +569,7 @@ class Observable(ModelQuantity):
                  name: str,
                  value: sp.Expr,
                  measurement_symbol: Optional[sp.Symbol] = None,
-                 transformation: Optional[ObservableTransformation] =
-                 petab.LIN):
+                 transformation: Optional[ObservableTransformation] = 'lin'):
         """
         Create a new Observable instance.
 
