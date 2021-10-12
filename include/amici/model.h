@@ -806,6 +806,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get scaling type for observable
      * @param iy observable index
+     * @param return scaling type
      */
     virtual ObservableScaling getObservableScaling(int iy) const;
 
