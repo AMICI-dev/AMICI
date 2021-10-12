@@ -791,7 +791,7 @@ void Model::getObservable(gsl::span<realtype> y, const realtype t,
     writeSlice(derived_state_.y_, y);
 }
 
-ObservableScaling Model::getObservableScaling(int iy) const {
+ObservableScaling Model::getObservableScaling(int /*iy*/) const {
     return ObservableScaling::lin;
 }
 
