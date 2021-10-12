@@ -600,7 +600,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     /* Do we also have to check for convergence of sensitivities? */
     SensitivityMethod sensitivityFlag = SensitivityMethod::none;
     if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-        solver->getSensitivityMethod() > SensitivityMethod::none)
+        solver->getSensitivityMethod() == SensitivityMethod::forward)
         sensitivityFlag = SensitivityMethod::forward;
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be computed
