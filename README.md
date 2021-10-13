@@ -35,8 +35,6 @@ constrained optimization problems.
   <img src="https://badge.fury.io/py/amici.svg" alt="PyPI version"></a>
 <a href="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml">
   <img src="https://github.com/AMICI-dev/AMICI/actions/workflows/test_pypi.yml/badge.svg" alt="PyPI installation"></a>
-<a href="https://travis-ci.com/AMICI-dev/AMICI">
-  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master" alt="Build Status"></a>
 <a href="https://codecov.io/gh/AMICI-dev/AMICI">
   <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg" alt="Code coverage"></a>
 <a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master">
