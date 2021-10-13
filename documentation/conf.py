@@ -149,7 +149,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
-    install_doxygen()
+    # install_doxygen()
 
 # Required for matlab doxygen processing
 install_mtocpp()
