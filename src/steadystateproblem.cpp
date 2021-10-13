@@ -198,9 +198,15 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
                 steady_state_status_[1] = SteadyStateStatus::failed_too_long_simulation;
                 break;
             default:
+                model->app->warningF("AMICI:newton",
+                                     "AMICI newton method failed: %s\n",
+                                     ex.what());
                 steady_state_status_[1] = SteadyStateStatus::failed;
         }
-    } catch (AmiException const &) {
+    } catch (AmiException const &ex) {
+        model->app->warningF("AMICI:equilibration",
+                             "AMICI equilibration failed: %s\n",
+                             ex.what());
         steady_state_status_[1] = SteadyStateStatus::failed;
     }
 }
@@ -462,7 +468,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
             sx_ = solver->getStateSensitivity(t_);
             model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
             wrms_ = getWrmsNorm(
-                x_, xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
+                sx_[ip], xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
                 solver->getRelativeToleranceSteadyStateSensi(), ewt_);
             converged = wrms_ < RCONST(1.0);
         }
@@ -504,8 +510,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     xdot_old_ = xdot_;
 
     wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
-                       newtonSolver->rtol_, ewt_);
-    bool converged = wrms_ < RCONST(1.0);
+                        newtonSolver->rtol_, ewt_);
+    bool converged = newton_retry ? false : wrms_ < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->max_steps) {
 
         /* If Newton steps are necessary, compute the initial search direction */
@@ -594,7 +600,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     /* Do we also have to check for convergence of sensitivities? */
     SensitivityMethod sensitivityFlag = SensitivityMethod::none;
     if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-        solver->getSensitivityMethod() > SensitivityMethod::none)
+        solver->getSensitivityMethod() == SensitivityMethod::forward)
         sensitivityFlag = SensitivityMethod::forward;
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be computed

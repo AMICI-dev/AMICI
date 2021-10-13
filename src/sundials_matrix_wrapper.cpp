@@ -6,7 +6,6 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
-#include <assert.h>
 
 namespace amici {
 
@@ -140,7 +139,7 @@ void SUNMatrixWrapper::reallocate(sunindextype NNZ) {
 
     update_ptrs();
     capacity_ = NNZ;
-    assert((NNZ && columns() && rows()) ^ !matrix_);
+    assert((NNZ && columns() && rows()) || !matrix_);
 }
 
 void SUNMatrixWrapper::realloc() {
@@ -153,24 +152,10 @@ void SUNMatrixWrapper::realloc() {
 
     update_ptrs();
     capacity_ = num_nonzeros_;
-    assert(capacity() ^ !matrix_);
+    assert(capacity() || !matrix_);
 }
 
-sunindextype SUNMatrixWrapper::rows() const {
-    assert(!matrix_ ||
-           (matrix_id() == SUNMATRIX_SPARSE ?
-            num_rows_ == SM_ROWS_S(matrix_) :
-            num_rows_ == SM_ROWS_D(matrix_)));
-    return num_rows_;
-}
 
-sunindextype SUNMatrixWrapper::columns() const {
-    assert(!matrix_ ||
-           (matrix_id() == SUNMATRIX_SPARSE ?
-            num_columns_ == SM_COLUMNS_S(matrix_) :
-            num_columns_ == SM_COLUMNS_D(matrix_)));
-    return num_columns_;
-}
 
 sunindextype SUNMatrixWrapper::num_indexptrs() const {
     assert(matrix_id() == SUNMATRIX_SPARSE);
@@ -195,98 +180,12 @@ sunindextype SUNMatrixWrapper::num_nonzeros() const {
     return num_nonzeros_;
 }
 
-realtype SUNMatrixWrapper::get_data(sunindextype idx) const{
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(idx < capacity());
-    assert(SM_DATA_S(matrix_) == data_);
-    return data_[idx];
-};
-
-realtype SUNMatrixWrapper::get_data(sunindextype irow, sunindextype icol) const{
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_DENSE);
-    assert(irow < rows());
-    assert(icol < columns());
-    return SM_ELEMENT_D(matrix_, irow, icol);
-};
-
-
-void SUNMatrixWrapper::set_data(sunindextype idx, realtype data) {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(idx < capacity());
-    assert(SM_DATA_S(matrix_) == data_);
-    data_[idx] = data;
-}
-
-void SUNMatrixWrapper::set_data(sunindextype irow, sunindextype icol,
-                                realtype data) {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_DENSE);
-    assert(irow < rows());
-    assert(icol < columns());
-    SM_ELEMENT_D(matrix_, irow, icol) = data;
-}
-
 const realtype *SUNMatrixWrapper::data() const {
     return data_;
 }
 
 realtype *SUNMatrixWrapper::data() {
     return data_;
-}
-
-sunindextype SUNMatrixWrapper::get_indexval(sunindextype idx) const {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(idx < capacity());
-    assert(indexvals_ == SM_INDEXVALS_S(matrix_));
-    return indexvals_[idx];
-}
-
-void SUNMatrixWrapper::set_indexval(sunindextype idx, sunindextype val) {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(idx < capacity());
-    assert(indexvals_ == SM_INDEXVALS_S(matrix_));
-    indexvals_[idx] = val;
-}
-
-void SUNMatrixWrapper::set_indexvals(const gsl::span<const sunindextype> vals) {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(static_cast<sunindextype>(vals.size()) == capacity());
-    assert(indexvals_ == SM_INDEXVALS_S(matrix_));
-    std::copy_n(vals.begin(), capacity(), indexvals_);
-}
-
-sunindextype SUNMatrixWrapper::get_indexptr(sunindextype ptr_idx) const {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(ptr_idx <= num_indexptrs());
-    assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
-    return indexptrs_[ptr_idx];
-}
-
-void SUNMatrixWrapper::set_indexptr(sunindextype ptr_idx, sunindextype ptr) {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(ptr_idx <= num_indexptrs());
-    assert(ptr <= capacity());
-    assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
-    indexptrs_[ptr_idx] = ptr;
-    if (ptr_idx == num_indexptrs())
-        num_nonzeros_ = ptr;
-}
-
-void SUNMatrixWrapper::set_indexptrs(const gsl::span<const sunindextype> ptrs) {
-    assert(matrix_);
-    assert(matrix_id() == SUNMATRIX_SPARSE);
-    assert(static_cast<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
-    assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
-    std::copy_n(ptrs.begin(), num_indexptrs() + 1, indexptrs_);
-    num_nonzeros_ = indexptrs_[num_indexptrs()];
 }
 
 int SUNMatrixWrapper::sparsetype() const {
@@ -297,7 +196,8 @@ int SUNMatrixWrapper::sparsetype() const {
 
 void SUNMatrixWrapper::scale(realtype a) {
     if (matrix_) {
-        for (sunindextype idx = 0; idx < capacity(); ++idx)
+        auto cap = capacity();
+        for (sunindextype idx = 0; idx < cap; ++idx)
             data_[idx] *= a;
     }
 }
@@ -382,17 +282,38 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
         return;
 
     /* Carry out actual multiplication */
-    sunindextype idx;
+    auto c_ptr = c.data();
+    auto b_ptr = b.data();
+
     if (transpose) {
-        for (int icols = 0; icols < (int)cols.size(); ++icols)
-            for (idx = get_indexptr(cols.at(icols));
-                 idx < get_indexptr(cols.at(icols) + 1); ++idx)
-                c.at(icols) += get_data(idx) * b.at(get_indexval(idx));
+        auto cols_size = cols.size();
+        for (std::size_t icols = 0; icols < cols_size; ++icols) {
+            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
+            for (sunindextype idx = get_indexptr(cols.at(icols));
+                 idx < idx_next_col; ++idx) {
+
+                auto idx_val = get_indexval(idx);
+                assert(icols < c.size());
+                assert(static_cast<std::size_t>(idx_val) < b.size());
+
+                c_ptr[icols] += get_data(idx) * b_ptr[idx_val];
+            }
+        }
     } else {
-        for (sunindextype icols = 0; icols < columns(); ++icols)
-            for (idx = get_indexptr(cols.at(icols));
-                 idx < get_indexptr(cols.at(icols)+1); ++idx)
-                c.at(get_indexval(idx)) += get_data(idx) * b.at(icols);
+        auto num_cols = static_cast<std::size_t>(columns());
+        for (std::size_t icols = 0; icols < num_cols; ++icols) {
+            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
+
+            for (sunindextype idx = get_indexptr(cols.at(icols));
+                 idx < idx_next_col; ++idx) {
+                auto idx_val = get_indexval(idx);
+
+                assert(icols < b.size());
+                assert(static_cast<std::size_t>(idx_val) < c.size());
+
+                c_ptr[idx_val] += get_data(idx) * b_ptr[icols];
+            }
+        }
     }
 }
 
@@ -512,7 +433,9 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
                         nnz);
         // no reallocation should happen here
         for (cidx = get_indexptr(ccol); cidx < nnz; cidx++) {
-            set_data(cidx, x.at(get_indexval(cidx))); // copy data to C
+            auto x_idx = get_indexval(cidx);
+            assert(x_idx >= 0 && static_cast<std::size_t>(x_idx) < x.size());
+            set_data(cidx, x[x_idx]); // copy data to C
         }
     }
     set_indexptr(num_indexptrs(), nnz);
@@ -522,7 +445,11 @@ void SUNMatrixWrapper::sparse_add(const SUNMatrixWrapper &A, realtype alpha,
 
 void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
     // matrix_ == nullptr is allowed on the first call
-    if (std::all_of(mats.begin(), mats.end(), [](const SUNMatrixWrapper &m){return !m.matrix_;}))
+    auto all_empty = std::all_of(mats.begin(), mats.end(),
+                                 [](const SUNMatrixWrapper &m){
+                                     return !m.matrix_;
+                                 });
+    if (all_empty)
         return;
 
     check_csc(this);
@@ -558,21 +485,21 @@ void SUNMatrixWrapper::sparse_sum(const std::vector<SUNMatrixWrapper> &mats) {
 
     for (acol = 0; acol < columns(); acol++)
     {
-        set_indexptr(acol, nnz);                       /* column j of A starts here */
+        set_indexptr(acol, nnz); /* column j of A starts here */
         for (auto & mat : mats)
             nnz = mat.scatter(acol, 1.0, w.data(), gsl::make_span(x), acol+1,
                               this, nnz);
         // no reallocation should happen here
         for (aidx = get_indexptr(acol); aidx < nnz; aidx++) {
-            set_data(aidx, x.at(get_indexval(aidx))); // copy data to C
+            auto x_idx = get_indexval(aidx);
+            assert(x_idx >= 0 && static_cast<std::size_t>(x_idx) < x.size());
+            set_data(aidx, x[x_idx]); // copy data to C
         }
     }
     set_indexptr(num_indexptrs(), nnz);
     if (capacity() == max_total_nonzero)
         realloc(); // resize if necessary
 }
-
-static const std::string scatter_name = "scatter";
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
                                        const realtype beta,
@@ -597,13 +524,15 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
     for (aidx = get_indexptr(acol); aidx < get_indexptr(acol+1); aidx++)
     {
         auto arow = get_indexval(aidx);          /* A(arow,acol) is nonzero */
+        assert(arow >= 0 && static_cast<std::size_t>(arow) <= x.size());
         if (w && w[arow] < mark) {
             w[arow] = mark;                      /* arow is new entry in C(:,*) */
             if (C)
                 C->set_indexval(nnz++, arow);    /* add arow to pattern of C(:,*) */
-            x.at(arow) = beta * get_data(aidx);  /* x(arow) = beta*A(arow,acol) */
-        } else
-            x.at(arow) += beta * get_data(aidx); /* arow exists in C(:,*) already */
+            x[arow] = beta * get_data(aidx);  /* x(arow) = beta*A(arow,acol) */
+        } else {
+            x[arow] += beta * get_data(aidx); /* arow exists in C(:,*) already */
+        }
     }
     assert(!C || nnz <= C->capacity());
     return nnz;
@@ -612,10 +541,9 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
 // https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_cumsum.c
 /* p [0..n] = cumulative sum of c[0..n-1], and then copy p [0..n-1] into c */
 static void cumsum(gsl::span<sunindextype> p, std::vector<sunindextype> &c) {
-    sunindextype i;
     sunindextype nz = 0;
     assert(p.size() == c.size() + 1);
-    for (i = 0; i < static_cast<sunindextype>(c.size()); i++)
+    for (sunindextype i = 0; i < static_cast<sunindextype>(c.size()); i++)
     {
         p[i] = nz;
         nz += c[i];
@@ -652,45 +580,62 @@ void SUNMatrixWrapper::transpose(SUNMatrixWrapper &C, const realtype alpha,
 
     // see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_transpose.c
 
-    std::vector<sunindextype> w;
     auto nrows = rows();
+
     if (C_matrix_id == SUNMATRIX_SPARSE) {
-        w = std::vector<sunindextype>(columns());
+        std::vector<sunindextype> w(columns());
+        auto w_data = w.data();
+
         for (sunindextype acol = 0; acol < nrows; acol++) { /* row counts */
             auto next_indexptr = get_indexptr(acol+1);
+            auto widx_offset = (acol/blocksize)*blocksize;
             for (sunindextype aidx = get_indexptr(acol);
                  aidx < next_indexptr; aidx++) {
-                sunindextype widx = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
+                sunindextype widx = widx_offset + get_indexval(aidx) % blocksize;
                 assert(widx >= 0 && widx < (sunindextype)w.size());
-                w[widx]++;
-                assert(w[widx] <= nrows);
+                w_data[widx]++;
+                assert(w_data[widx] <= nrows);
             }
         }
         /* row pointers */
         cumsum(gsl::make_span(C.indexptrs_, C.columns()+1), w);
-    }
 
-    for (sunindextype acol = 0; acol < nrows; acol++)
-    {
-        auto next_indexptr = get_indexptr(acol+1);
-
-        for (sunindextype aidx = get_indexptr(acol); aidx < next_indexptr; aidx++)
+        for (sunindextype acol = 0; acol < nrows; acol++)
         {
-            sunindextype ccol = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
-            sunindextype crow = (get_indexval(aidx)/blocksize)*blocksize + acol % blocksize;
-            assert(crow < nrows);
-            assert(ccol < columns());
-            if (C_matrix_id == SUNMATRIX_SPARSE) {
+            auto next_indexptr = get_indexptr(acol+1);
+            auto ccol_offset = (acol/blocksize)*blocksize;
+            auto crow_offset = acol % blocksize;
+            for (sunindextype aidx = get_indexptr(acol); aidx < next_indexptr; aidx++)
+            {
+                auto indexval_aidx = get_indexval(aidx);
+                sunindextype ccol = ccol_offset + indexval_aidx % blocksize;
+                sunindextype crow = (indexval_aidx/blocksize)*blocksize + crow_offset;
+                assert(crow < nrows);
+                assert(ccol < columns());
                 assert(aidx < capacity());
                 assert(ccol >= 0 && ccol < (sunindextype)w.size());
-                sunindextype cidx = w[ccol]++;
+                sunindextype cidx = w_data[ccol]++;
                 C.set_indexval(cidx, crow);  /* place A(i,j) as entry C(j,i) */
                 C.set_data(cidx, alpha * get_data(aidx));
-            } else {
+            }
+        }
+    } else {
+
+        for (sunindextype acol = 0; acol < nrows; acol++)
+        {
+            auto next_indexptr = get_indexptr(acol+1);
+
+            for (sunindextype aidx = get_indexptr(acol); aidx < next_indexptr; aidx++)
+            {
+                sunindextype ccol = (acol/blocksize)*blocksize + get_indexval(aidx) % blocksize;
+                sunindextype crow = (get_indexval(aidx)/blocksize)*blocksize + acol % blocksize;
+                assert(crow < nrows);
+                assert(ccol < columns());
                 C.set_data(crow, ccol, alpha * get_data(aidx));
             }
         }
     }
+
 }
 
 void SUNMatrixWrapper::to_dense(SUNMatrixWrapper &D) const {

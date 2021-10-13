@@ -13,13 +13,8 @@ This directory contains a number of build, installation, and CI scripts.
 * `buildBNGL.sh`
 
    Download and build 
-   [BioNetGen](https://www.csb.pitt.edu/Faculty/Faeder/?page_id=409) (required for some tests)
-
-* `buildCpputest.sh`
-
-   Download and build [CppUTest](https://cpputest.github.io/)
-   (required for C++ test suite)
-   
+   [BioNetGen](https://github.com/RuleWorld/bionetgen) (required for some tests)
+  
 * `buildSuiteSparse.sh`
 
    Build [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html)
@@ -64,7 +59,7 @@ This directory contains a number of build, installation, and CI scripts.
 
   Run static code analysis
 
-* `run-cpputest.sh`
+* `run-cpp-tests.sh`
 
   Run C++ unit and integration tests
 
@@ -90,7 +85,3 @@ This directory contains a number of build, installation, and CI scripts.
 
   Run memory leak check using valgrind for all unit and integration tests.
   Assumes they have been built before in the default location. 
-
-* `travis_wrap.sh`
-
-  Wrapper script for Travis CI to enable output folding in Travis CI logs

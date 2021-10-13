@@ -15,7 +15,6 @@ from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
-from distutils import log
 
 # typehints
 Library = Tuple[str, Dict[str, List[str]]]
@@ -24,7 +23,7 @@ Library = Tuple[str, Dict[str, List[str]]]
 class AmiciInstall(install):
     """Custom install to handle extra arguments"""
 
-    log.debug("running AmiciInstall")
+    print("running AmiciInstall")
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
@@ -81,7 +80,7 @@ class AmiciBuildCLib(build_clib):
     """Custom build_clib"""
 
     def run(self):
-        log.debug("running AmiciBuildCLib")
+        print("running AmiciBuildCLib")
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
@@ -91,7 +90,7 @@ class AmiciBuildCLib(build_clib):
         build_clib.run(self)
 
     def build_libraries(self, libraries: List[Library]):
-        log.debug("running AmiciBuildCLib.build_libraries")
+        print("running AmiciBuildCLib.build_libraries")
 
         no_clibs = 'develop' in self.distribution.command_obj \
                    and self.get_finalized_command('develop').no_clibs
@@ -139,7 +138,7 @@ class AmiciDevelop(develop):
         develop.finalize_options(self)
 
     def run(self):
-        log.debug("running AmiciDevelop")
+        print("running AmiciDevelop")
 
         if not self.no_clibs:
             self.get_finalized_command('build_clib').run()
@@ -156,7 +155,7 @@ class AmiciInstallLib(install_lib):
         Returns:
 
         """
-        log.debug("running AmiciInstallLib")
+        print("running AmiciInstallLib")
 
         if 'ENABLE_AMICI_DEBUGGING' in os.environ \
                 and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
@@ -187,7 +186,7 @@ class AmiciBuildExt(build_ext):
         the wheel
         """
 
-        log.debug("running AmiciBuildExt")
+        print("running AmiciBuildExt")
 
         no_clibs = 'develop' in self.distribution.command_obj \
                    and self.get_finalized_command('develop').no_clibs
@@ -220,13 +219,13 @@ class AmiciBuildExt(build_ext):
                     f"Found unexpected number of files: {libfilenames}"
                 src = libfilenames[0]
                 dest = os.path.join(target_dir, os.path.basename(src))
-                log.info(f"copying {src} -> {dest}")
+                print(f"copying {src} -> {dest}")
                 copyfile(src, dest)
 
             swig_outdir = os.path.join(os.path.abspath(build_dir), "amici")
             generate_swig_interface_files(swig_outdir=swig_outdir)
             swig_py_module_path = os.path.join(swig_outdir, 'amici.py')
-            log.debug("updating typehints")
+            print("updating typehints")
             fix_typehints(swig_py_module_path, swig_py_module_path)
 
         # Always force recompilation. The way setuptools/distutils check for
@@ -244,7 +243,7 @@ class AmiciSDist(sdist):
     def run(self):
         """Setuptools entry-point"""
 
-        log.debug("running AmiciSDist")
+        print("running AmiciSDist")
 
         save_git_version()
 
@@ -266,7 +265,7 @@ def save_git_version():
                    '--always', '--tags']
             subprocess.run(cmd, stdout=f)
         except Exception as e:
-            log.warn(e)
+            print(e)
 
 
 def set_compiler_specific_library_options(
@@ -298,7 +297,7 @@ def set_compiler_specific_library_options(
         for field in ['cflags', 'sources', 'macros']:
             try:
                 lib[1][field] += lib[1][f'{field}_{compiler_type}']
-                log.info(f"Changed {field} for {lib[0]} with {compiler_type} "
+                print(f"Changed {field} for {lib[0]} with {compiler_type} "
                          f"to {lib[1][field]}")
             except KeyError:
                 # No compiler-specific options set
@@ -322,7 +321,7 @@ def set_compiler_specific_extension_options(
             new_value = getattr(ext, attr) + \
                         getattr(ext, f'{attr}_{compiler_type}')
             setattr(ext, attr, new_value)
-            log.info(f"Changed {attr} for {compiler_type} to {new_value}")
+            print(f"Changed {attr} for {compiler_type} to {new_value}")
         except AttributeError:
             # No compiler-specific options set
             pass

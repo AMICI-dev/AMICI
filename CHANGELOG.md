@@ -2,6 +2,26 @@
 
 ## v0.X Series
 
+### v0.11.19 (2021-10-13)
+
+New:
+* Added support for observable transformations (lin/log/log10) (#1567). Thereby supporting additional noise distributions in combination with least squares solvers.
+
+Fixes:
+* Fixed a bug when Newton sensitivity computation was activated despite specifying newton_steps == 0. The error occurs when simulation converges to a steadystate but simulation sensitivities are not converged according to convergence criteria. In that case simulation returned failure, but the newton rootfinding "finds" a steadystate even before the iteration check, leading to the erroneous computation of sensitivities via Newton/IFT. For singular jacobians this means the overall simulation still fails, but a different, more informative error message is displayed. (#1541)
+* Fixed a bug where argument "outdir" in ODEExporter.__init__ would not be used (#1543)
+
+Other:
+* Improve checking support for SBML extensions (#1546)
+* SBML import: Use more descriptive IDs for flux expressions (#1551)
+* Optimized SUNMatrixWrapper functions (#1538)
+* C++: Changed test suite from CppUTest to gtest (#1532)
+* Add CITATION.cff (#1559)
+* Updated documentation (#1563, #1554, #1536)
+* Removed distutils dependency (#1557)
+* Require sympy<1.9
+
+
 ### v0.11.18 (2021-07-12)
 
 New:
