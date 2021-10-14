@@ -440,3 +440,14 @@
    fun:dlopen_doit
    fun:_dl_catch_exception
 }
+
+{
+   Pandas
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyCode_NewWithPosOnlyArgs
+   fun:PyCode_New
+   obj:*site-packages/pandas/_libs/*.cpython-3*-x86_64-linux-gnu.so
+   ...
+}

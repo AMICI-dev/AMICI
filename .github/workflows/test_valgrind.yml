@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-      - feature_cpp_hierarchical_derivatives
+      - update_valgrind_supp
   pull_request:
     branches:
       - master
