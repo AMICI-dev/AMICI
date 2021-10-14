@@ -325,6 +325,10 @@ exhale_projects_args = {
             "EXCLUDE += ../include/amici/interface_matlab.h",
             "EXCLUDE += ../include/amici/returndata_matlab.h",
             "EXCLUDE += ../include/amici/spline.h",
+            # amici::log collides with amici::${some_enum}::log
+            #  potentially fixed in
+            #  https://github.com/svenevs/exhale/commit/c924df2e139a09fbacd07587779c55fd0ee4e00b
+            #  and can be un-excluded after the next exhale release
             "EXCLUDE += ../include/amici/symbolic_functions.h",
         ]),
         "containmentFolder": "_exhale_cpp_api",
