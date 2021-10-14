@@ -20,5 +20,9 @@ python:
 
 build:
   os: "ubuntu-20.04"
+  apt_packages:
+    # for custom doxygen
+    - libclang-cpp9
+    - libclang1-9
   tools:
     python: "3.8"
