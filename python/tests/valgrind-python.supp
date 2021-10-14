@@ -394,8 +394,6 @@
    ...
    fun:PyTuple_New
    ...
-   fun:_PyEval_EvalCodeWithName
-   fun:_PyFunction_Vectorcall
 }
 
 {
