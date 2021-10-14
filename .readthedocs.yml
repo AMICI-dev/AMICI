@@ -11,15 +11,9 @@ sphinx:
   configuration: documentation/conf.py
   fail_on_warning: True
 
-# Build documentation with MkDocs
-#mkdocs:
-#  configuration: mkdocs.yml
-
-# Optionally build your docs in additional formats such as PDF and ePub
 formats:
   - pdf
 
-# Optionally set the version of Python and requirements required to build your docs
 python:
   install:
     - requirements: documentation/rtd_requirements.txt

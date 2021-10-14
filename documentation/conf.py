@@ -325,6 +325,7 @@ exhale_projects_args = {
             "EXCLUDE += ../include/amici/interface_matlab.h",
             "EXCLUDE += ../include/amici/returndata_matlab.h",
             "EXCLUDE += ../include/amici/spline.h",
+            "EXCLUDE += ../include/amici/symbolic_functions.h",
         ]),
         "containmentFolder": "_exhale_cpp_api",
         "rootFileTitle": "AMICI C++ API",
