@@ -293,8 +293,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
                  idx < idx_next_col; ++idx) {
 
                 auto idx_val = get_indexval(idx);
-                assert(icols > 0 && icols < c.size());
-                assert(idx_val > 0 && static_cast<std::size_t>(idx_val) < b.size());
+                assert(icols < c.size());
+                assert(static_cast<std::size_t>(idx_val) < b.size());
 
                 c_ptr[icols] += get_data(idx) * b_ptr[idx_val];
             }
@@ -308,8 +308,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
                  idx < idx_next_col; ++idx) {
                 auto idx_val = get_indexval(idx);
 
-                assert(icols > 0 && icols < b.size());
-                assert(idx_val > 0 && static_cast<std::size_t>(idx_val) < c.size());
+                assert(icols < b.size());
+                assert(static_cast<std::size_t>(idx_val) < c.size());
 
                 c_ptr[idx_val] += get_data(idx) * b_ptr[icols];
             }
