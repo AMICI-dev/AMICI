@@ -20,7 +20,7 @@ Solver::Solver(AmiciApplication *app) : app(app)
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),
       interp_type_(other.interp_type_), maxsteps_(other.maxsteps_),
-      maxtime_(other.maxtime_),
+      maxtime_(other.maxtime_), starttime_(other.starttime_),
       sensi_meth_(other.sensi_meth_), sensi_meth_preeq_(other.sensi_meth_preeq_),
       stldet_(other.stldet_), ordering_(other.ordering_),
       newton_maxsteps_(other.newton_maxsteps_),
