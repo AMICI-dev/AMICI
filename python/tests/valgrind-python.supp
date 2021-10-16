@@ -391,9 +391,9 @@
    match-leak-kinds: definite
    fun:malloc
    obj:/usr/bin/python3.?
+   ...
    fun:PyTuple_New
-   fun:_PyEval_EvalCodeWithName
-   fun:_PyFunction_Vectorcall
+   ...
 }
 
 {
@@ -439,4 +439,14 @@
    fun:_dl_open
    fun:dlopen_doit
    fun:_dl_catch_exception
+}
+
+{
+   Pandas
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   obj:*site-packages/pandas/_libs/*.cpython-3*-x86_64-linux-gnu.so
+   ...
 }
