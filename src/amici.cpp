@@ -172,29 +172,44 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     } catch (amici::IntegrationFailure const& ex) {
         if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
+            if(rethrow)
+                throw;
+            warningF("AMICI:simulation",
+                     "AMICI forward simulation failed at t = %f: "
+                     "Maximum time exceeed.\n",
+                     ex.time);
         } else {
             rdata->status = ex.error_code;
+            if (rethrow)
+                throw;
+            warningF("AMICI:simulation",
+                     "AMICI forward simulation failed at t = %f:\n%s\n",
+                     ex.time,
+                     ex.what());
+
         }
-        if (rethrow)
-            throw;
-        warningF("AMICI:simulation",
-                 "AMICI forward simulation failed at t = %f:\n%s\n",
-                 ex.time,
-                 ex.what());
     } catch (amici::IntegrationFailureB const& ex) {
         if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
+            if (rethrow)
+                throw;
+            warningF(
+                "AMICI:simulation",
+                "AMICI backward simulation failed when trying to solve until "
+                "t = %f: Maximum time exceeed.\n",
+                ex.time);
+
         } else {
             rdata->status = ex.error_code;
+            if (rethrow)
+                throw;
+            warningF(
+                "AMICI:simulation",
+                "AMICI backward simulation failed when trying to solve until t = %f"
+                " (see message above):\n%s\n",
+                ex.time,
+                ex.what());
         }
-        if (rethrow)
-            throw;
-        warningF(
-          "AMICI:simulation",
-          "AMICI backward simulation failed when trying to solve until t = %f"
-          " (see message above):\n%s\n",
-          ex.time,
-          ex.what());
     } catch (amici::AmiException const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
