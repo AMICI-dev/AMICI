@@ -21,6 +21,10 @@ std::array<const char*, TPL_NY> observableNames = {
     TPL_OBSERVABLE_NAMES_INITIALIZER_LIST
 };
 
+std::array<const ObservableScaling, TPL_NY> observableScalings = {
+    TPL_OBSERVABLE_TRAFO_INITIALIZER_LIST
+};
+
 std::array<const char*, TPL_NW> expressionNames = {
     TPL_EXPRESSION_NAMES_INITIALIZER_LIST
 };
