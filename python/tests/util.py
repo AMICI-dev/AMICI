@@ -241,19 +241,3 @@ def check_trajectories_with_adjoint_sensitivities(
                                rtol=1e-5, atol=1e-3)
     np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
                                rtol=1e-5, atol=1e-3)
-    # try:
-    #     np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
-    #                                rtol=1e-5, atol=1e-3)
-    #     print('First test passed')
-    #     np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
-    #                                rtol=1e-5, atol=1e-3)
-    #     print("It worked great!")
-    # except:
-    #     print("No coincidence!")
-    #     print("Finite difference:")
-    #     print(list(sllh_fd))
-    #     print("Forward:")
-    #     print(list(rdata_fsa['sllh']))
-    #     print("Adjoints:")
-    #     print(list(rdata_asa['sllh']))
-
