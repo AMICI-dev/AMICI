@@ -1171,10 +1171,6 @@ void Model::updateHeavisideB(const int *rootsfound) {
     }
 }
 
-void Model::updateHeavisideB_eventwise(const int *rootsfound, int ie) {
-    state_.h.at(ie) -= rootsfound[ie];
-}
-
 int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
     auto result = app->checkFinite(array, fun);
 

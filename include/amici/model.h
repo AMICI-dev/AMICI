@@ -802,7 +802,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
-    
+
     /**
      * @brief Get scaling type for observable
      * @param iy observable index
@@ -1178,8 +1178,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * was found)
      */
     void updateHeavisideB(const int *rootsfound);
-
-    void updateHeavisideB_eventwise(const int *rootsfound, int ie);
 
     /**
      * @brief Check if the given array has only finite elements.
