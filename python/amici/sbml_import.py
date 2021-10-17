@@ -20,8 +20,8 @@ from typing import (
 
 from .import_utils import (
     smart_subs, smart_subs_dict, toposort_symbols,
-    _get_str_symbol_identifiers,
-    noise_distribution_to_cost_function
+    _get_str_symbol_identifiers, noise_distribution_to_cost_function,
+    noise_distribution_to_observable_transformation
 )
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol,
@@ -1209,7 +1209,11 @@ class SbmlImporter:
                     # former.
                     'value': self._sympy_from_sbml_math(
                         definition['formula']
-                    )
+                    ),
+                    'transformation':
+                        noise_distribution_to_observable_transformation(
+                            noise_distributions.get(obs, 'normal')
+                        )
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }

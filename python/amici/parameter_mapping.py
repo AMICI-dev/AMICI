@@ -202,6 +202,9 @@ def fill_in_parameters_for_condition(
         if model_par in problem_parameters:
             # user-provided
             return problem_parameters[model_par]
+        # prevent nan-propagation in derivative
+        if np.isnan(value):
+            return 0.0
         # constant value
         return value
 

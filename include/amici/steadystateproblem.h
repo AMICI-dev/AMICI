@@ -144,8 +144,8 @@ class SteadystateProblem {
      * @brief Computes the weighted root mean square of xdot
      * the weights are computed according to x:
      * w_i = 1 / ( rtol * x_i + atol )
-     * @param x current state
-     * @param xdot current rhs
+     * @param x current state (sx[ip] for sensitivities)
+     * @param xdot current rhs (sxdot[ip] for sensitivities)
      * @param atol absolute tolerance
      * @param rtol relative tolerance
      * @param ewt error weight vector

@@ -19,6 +19,7 @@ extern std::array<const char*, TPL_NP> parameterNames;
 extern std::array<const char*, TPL_NK> fixedParameterNames;
 extern std::array<const char*, TPL_NX_RDATA> stateNames;
 extern std::array<const char*, TPL_NY> observableNames;
+extern std::array<const ObservableScaling, TPL_NY> observableScalings;
 extern std::array<const char*, TPL_NW> expressionNames;
 extern std::array<const char*, TPL_NP> parameterIds;
 extern std::array<const char*, TPL_NK> fixedParameterIds;
@@ -532,6 +533,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     virtual bool hasQuadraticLLH() const override {
         return TPL_QUADRATIC_LLH;
+    }
+
+    virtual ObservableScaling getObservableScaling(int iy) const override {
+        return observableScalings.at(iy);
     }
 };
 

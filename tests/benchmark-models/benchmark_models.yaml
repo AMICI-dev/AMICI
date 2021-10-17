@@ -1,6 +1,6 @@
 Bachmann_MSB2011:
-  llh: -478.459689232875
-  note: unchecked
+  llh: 418.40573341425295
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Becker_Science2010:
   llh: -364.118614198023
@@ -20,7 +20,9 @@ Borghans_BiophysChem1997:
 Brannmark_JBC2010:
   llh: -141.889113770537
 
-#Bruno_JExpBio2016:    None
+Bruno_JExpBot2016:
+  llh: 46.688176988431806
+  note: benchmark collection only reports chi2 value, but llh value can be derived
 
 Chen_MSB2009:
   llh: -115700.1192629893
@@ -43,12 +45,11 @@ Fujita_SciSignal2010:
 # Hass_PONE2017    None
 
 Isensee_JCB2018:
-  llh: 7950.84181339651
-  note: unchecked
+  llh: -3949.375966548649
+  note: benchmark collection reference also includes prior valuation, tested based on agreement of chi2 values
 
 Lucarelli_CellSystems2018:
-  llh: 91.8885069265334
-  note: unchecked
+  llh: -1681.6059879426584
 
 Merkle_PCB2016:
   llh: -1388.59682706751
@@ -60,7 +61,7 @@ Raia_CancerResearch2011:
 
 Schwen_PONE2014:
   llh: -943.9992988598723
-  note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
+  note: benchmark collection reference value does not match, but model outputs do. maybe due to priors
 
 Sneyd_PNAS2002:
   llh: 319.79177818768756

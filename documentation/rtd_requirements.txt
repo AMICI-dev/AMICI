@@ -1,24 +1,23 @@
-sphinx==3.2.1
+sphinx==4.2.0
 mock>=4.0.1
 setuptools>=45.2.0
 pysb>=1.11.0
-matplotlib>=3.1.3
-pkgconfig>=1.5.1
-nbsphinx>=0.5.1
+matplotlib>=3.4.3
+pkgconfig>=1.5.5
+nbsphinx>=0.8.7
 recommonmark>=0.6.0
-sphinx_rtd_theme>=0.4.3
-petab>=0.1.5
+sphinx_rtd_theme>=1.0.0
+petab>=0.1.20
 sphinx-autodoc-typehints>=1.10.3
 git+https://github.com/readthedocs/sphinx-hoverxref@master
-prompt-toolkit<=3.0.0
-ipython>=7.17.0
-breathe==4.25.1
+ipython>=7.28.0
+breathe==4.31.0
 #exhale>=0.2.3
 git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#egg=exhale
 # Newer versions cause trouble with including notebooks:
 # sphinx.errors.SphinxParallelError: ImportError: cannot import name 'Application' from partially initialized module 'prompt_toolkit.application.application' (most likely due to a circular import)
 # https://github.com/svenevs/exhale/issues/27 https://github.com/mithro/sphinx-contrib-mithro/tree/master/sphinx-contrib-exhale-multiproject
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
-sphinxcontrib-matlabdomain
+sphinxcontrib-matlabdomain>=0.12.0
 sphinxcontrib-napoleon
-pygments==2.7.4
+pygments==2.10.0
