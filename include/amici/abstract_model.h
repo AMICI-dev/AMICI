@@ -73,7 +73,9 @@ class AbstractModel {
      * @param t time
      * @param x state
      * @param dx time derivative of state (DAE only)
-     * @param xdot array to which values of the residual function will be
+     * @param xB adjoint state
+     * @param dxB time derivative of adjoint state (DAE only)
+     * @param xBdot array to which values of the residual function will be
      * written
      */
     virtual void fxBdot(realtype t, const AmiVector &x,
