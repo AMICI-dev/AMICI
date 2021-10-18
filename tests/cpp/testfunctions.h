@@ -134,9 +134,9 @@ class Model_Test : public Model
         throw AmiException("not implemented");
     }
 
-    virtual void fxBdot(realtype /*t*/, const AmiVector &/*x*/,
-                        const AmiVector &/*dx*/, const AmiVector &/*xB*/,
-                        const AmiVector &/*dxB*/, AmiVector &/*xBdot*/) override {
+    void fxBdot(realtype /*t*/, const AmiVector &/*x*/,
+                const AmiVector &/*dx*/, const AmiVector &/*xB*/,
+                const AmiVector &/*dxB*/, AmiVector &/*xBdot*/) override {
         throw AmiException("not implemented");
     }
 

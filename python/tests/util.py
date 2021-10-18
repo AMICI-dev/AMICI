@@ -190,8 +190,6 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
     edata = ExpData(rdata, 1., 1.)
-    # tmp_data = [1.] * len(edata.getObservedData())
-    # edata.setObservedData(tmp_data)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
