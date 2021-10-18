@@ -9,7 +9,9 @@ requires = [
     # would be pinning the setup.py numpy requirement to the same version as
     # here, which we want to avoid.
     # cf. discussion at https://github.com/numpy/numpy/issues/5888
-    # These requirements are taken from the h5py package, we depend on.
+    # See also:
+    #  https://github.com/scipy/oldest-supported-numpy/blob/master/setup.cfg
+    #  https://github.com/h5py/h5py/blob/master/setup.py
     "numpy==1.14.5; python_version=='3.7'",
     "numpy==1.17.5; python_version=='3.8'",
     "numpy==1.19.3; python_version=='3.9'",
