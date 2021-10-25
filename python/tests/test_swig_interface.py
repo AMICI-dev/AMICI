@@ -179,7 +179,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     ])
 
 
-def test_unsaved_settings(pysb_example_presimulation_module):
+def test_unhandled_settings(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.getModel()
 
     not_handled = [
