@@ -295,7 +295,7 @@ model_instance_settings = [
 ]
 
 
-def getModelSettings(
+def get_model_settings(
         model: AmiciModel,
 ) -> Dict[str, Any]:
     """Get model settings that are set independently of the compiled model.
@@ -311,7 +311,7 @@ def getModelSettings(
     return settings
 
 
-def setModelSettings(
+def set_model_settings(
         model: AmiciModel,
         settings: Dict[str, Any],
 ) -> None:

@@ -137,7 +137,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         assert getattr(model0, getter)() == custom
 
     # The grouped getter method works.
-    custom_settings = amici.getModelSettings(model0)
+    custom_settings = amici.get_model_settings(model0)
     for name in model_instance_settings:
         assert custom_settings[name] == model_instance_settings[name][i_custom]
 
@@ -145,7 +145,7 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.getModel()
 
     # The new model has the default settings.
-    model_default_settings = amici.getModelSettings(model)
+    model_default_settings = amici.get_model_settings(model)
     for name in model_instance_settings:
         assert model_default_settings[name] == \
             model_instance_settings[name][i_default]
@@ -156,10 +156,10 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         for name, value in custom_settings.items()
         if model_instance_settings0[name] is not None
     }
-    amici.setModelSettings(model, custom_settings_not_none)
+    amici.set_model_settings(model, custom_settings_not_none)
     assert all([
         value == custom_settings_not_none[name]
-        for name, value in amici.getModelSettings(model).items()
+        for name, value in amici.get_model_settings(model).items()
         if name in custom_settings_not_none
     ])
 
