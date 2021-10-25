@@ -26,7 +26,7 @@ import re
 import sys
 from contextlib import suppress, contextmanager
 from types import ModuleType as ModelModule
-from typing import Optional, Union, Sequence, List
+from typing import Any, Dict, Optional, Union, Sequence, List
 
 
 def _get_amici_path():
@@ -278,6 +278,56 @@ def writeSolverSettingsToHDF5(
     :param location: location of solver settings in hdf5 file
     """
     amici.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
+
+
+model_instance_settings = [
+    'AddSigmaResiduals',
+    'AlwaysCheckFinite',
+    'InitialStates',
+    'InitialStateSensitivities',
+    'MinimumSigmaResiduals',
+    ('nMaxEvent', 'setNMaxEvent'),
+    'ReinitializationStateIdxs',
+    'ReinitializeFixedParameterInitialStates',
+    'StateIsNonNegative',
+    'SteadyStateSensitivityMode',
+    ('t0', 'setT0'),
+]
+
+
+def getModelSettings(
+        model: AmiciModel,
+) -> Dict[str, Any]:
+    """Get model settings that are set independently of the compiled model.
+
+    :param model: The AMICI model instance.
+
+    :returns: Keys are AMICI model attributes, values are attribute values.
+    """
+    settings = {}
+    for setting in model_instance_settings:
+        if isinstance(setting, tuple):
+            getter = setting[0]
+        else:
+            getter = f'get{setting}'
+        settings[setting] = getattr(model, getter)()
+    return settings
+
+
+def setModelSettings(
+        model: AmiciModel,
+        settings: Dict[str, Any],
+) -> None:
+    """Set model settings.
+
+    :param model: The AMICI model instance.
+    """
+    for setting, value in settings.items():
+        if isinstance(setting, tuple):
+            setter = setting[1]
+        else:
+            setter = f'set{setting}'
+        getattr(model, setter)(value)
 
 
 class add_path:
