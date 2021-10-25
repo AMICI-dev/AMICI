@@ -53,12 +53,13 @@ def test_copy_constructors(pysb_example_presimulation_module):
 # `None` values are skipped in `test_model_instance_settings`.
 # Keys are suffixes of `get[...]` and `set[...]` `amici.Model` methods.
 # If either the getter or setter is not named with this pattern, then the key
-# is a tuple where the first and second values are the getter and setter
+# is a tuple where the first and second elements are the getter and setter
 # methods, respectively.
 # Values are lists where the first element is the default value of the test
 # model, and the second value is some custom value.
+# Default values are based on `pysb_example_presimulation_module`.
 model_instance_settings0 = {
-    # ( setting name, default value, custom value )
+    # setting name: [default value, custom value]
     'AddSigmaResiduals': [
         False,
         True
@@ -67,6 +68,8 @@ model_instance_settings0 = {
         False,
         True,
     ],
+    # Skipped due to model dependency in `'InitialStates'`.
+    'FixedParameters': None,
     'InitialStates': [
         (10.0, 9.0, 1.0, 0.0, 0.0, 0.0),
         tuple([.1]*6),
@@ -83,6 +86,14 @@ model_instance_settings0 = {
         10,
         20,
     ],
+    'Parameters': [
+        (10.0, 0.1, 0.1, 0.1, 0.1, 0.1),
+        tuple([1.0] * 6)
+    ],
+    # Skipped due to interdependency with `'InitialStateSensitivities'`.
+    'ParameterList': None,
+    # Skipped due to interdependency with `'InitialStateSensitivities'`.
+    'ParameterScale': None,
     # Skipped due to interdependencies with
     # `'ReinitializeFixedParameterInitialStates'`.
     'ReinitializationStateIdxs': None,
@@ -98,6 +109,10 @@ model_instance_settings0 = {
     ('t0', 'setT0'): [
         0.0,
         1.0,
+    ],
+    'Timepoints': [
+        tuple(),
+        (1.0, 2.0, 3.0),
     ],
 }
 
@@ -162,6 +177,64 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         for name, value in amici.get_model_settings(model).items()
         if name in custom_settings_not_none
     ])
+
+
+def test_unsaved_settings(pysb_example_presimulation_module):
+    model = pysb_example_presimulation_module.getModel()
+
+    not_handled = [
+        'get',
+        'getAmiciCommit',
+        'getAmiciVersion',
+        'getExpressionIds',
+        'getExpressionNames',
+        'getFixedParameterById',
+        'getFixedParameterByName',
+        'getFixedParameterIds',
+        'getFixedParameterNames',
+        'getName',
+        'getObservableIds',
+        'getObservableNames',
+        'getObservableScaling',
+        'getParameterById',
+        'getParameterByName',
+        'getParameterIds',
+        'getParameterNames',
+        'getSolver',
+        'getStateIds',
+        'getStateNames',
+        'getTimepoint',
+        'getUnscaledParameters',
+        'setAllStatesNonNegative',
+        'setFixedParameterById',
+        'setFixedParameterByName',
+        'setFixedParametersByIdRegex',
+        'setFixedParametersByNameRegex',
+        'setParameterById',
+        'setParameterByName',
+        'setParametersByIdRegex',
+        'setParametersByNameRegex',
+        'setUnscaledInitialStateSensitivities',
+    ]
+
+    handled_but_untested_here_due_to_unusual_name = [
+        'nMaxEvent',
+        't0',
+    ]
+
+    handled = [
+        name
+        for names in amici.model_instance_settings
+        for name in (
+            names
+            if isinstance(names, tuple) else
+            (f'get{names}', f'set{names}')
+        )
+    ]
+
+    for attribute in dir(model):
+        if attribute[:3] in ['get', 'set'] and attribute not in not_handled:
+            assert attribute in handled, attribute
 
 
 def is_callable_but_not_getter(obj, attr):

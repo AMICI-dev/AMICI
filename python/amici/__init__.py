@@ -280,18 +280,27 @@ def writeSolverSettingsToHDF5(
     amici.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
 
 
+# Values are suffixes of `get[...]` and `set[...]` `amici.Model` methods.
+# If either the getter or setter is not named with this pattern, then the value
+# is a tuple where the first and second elements are the getter and setter
+# methods, respectively.
 model_instance_settings = [
     'AddSigmaResiduals',
     'AlwaysCheckFinite',
+    'FixedParameters',
     'InitialStates',
     'InitialStateSensitivities',
     'MinimumSigmaResiduals',
     ('nMaxEvent', 'setNMaxEvent'),
+    'Parameters',
+    'ParameterList',
+    'ParameterScale',  # getter returns a SWIG object
     'ReinitializationStateIdxs',
     'ReinitializeFixedParameterInitialStates',
     'StateIsNonNegative',
     'SteadyStateSensitivityMode',
     ('t0', 'setT0'),
+    'Timepoints',
 ]
 
 
@@ -308,6 +317,10 @@ def get_model_settings(
     for setting in model_instance_settings:
         getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
         settings[setting] = getattr(model, getter)()
+        # TODO `amici.Model.getParameterScale` returns a SWIG object instead
+        # of a Python list/tuple.
+        if setting == 'ParameterScale':
+            settings[setting] = tuple(settings[setting])
     return settings
 
 
