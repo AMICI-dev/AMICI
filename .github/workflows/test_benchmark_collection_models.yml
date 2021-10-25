@@ -10,6 +10,8 @@ on:
       - master
       - develop
   workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
 
 jobs:
   build:
