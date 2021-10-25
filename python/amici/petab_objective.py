@@ -230,7 +230,7 @@ def aggregate_sllh(
             # Get PEtab parameter ID
             # Use ExpData if it provides a parameter list, else default to
             # Model.
-            if edata.plist is not None:
+            if edata.plist is not None and edata.plist:
                 model_parameter_index = edata.plist[sllh_parameter_index]
             else:
                 model_parameter_index = amici_model.plist(sllh_parameter_index)

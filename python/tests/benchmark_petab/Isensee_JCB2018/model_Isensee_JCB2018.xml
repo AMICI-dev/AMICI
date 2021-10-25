@@ -1,0 +1,1360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model metaid="Isensee_JCB2018" id="Isensee_JCB2018" name="PKA_cycle">
+    <notes>
+      <body xmlns="http://www.w3.org/1999/xhtml">
+        <pre>PEtab implementation of the model from Isensee et al. (2018), The Journal of Cell Biology Jun 2018, 217 (6) 2167-2184</pre>
+      </body>
+    </notes>
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#Isensee_JCB2018">
+          <dc:creator>
+            <rdf:Bag>
+              <rdf:li rdf:parseType="Resource">
+                <vCard:N rdf:parseType="Resource">
+                  <vCard:Family>Isensee</vCard:Family>
+                  <vCard:Given>Joerg</vCard:Given>
+                </vCard:N>
+              </rdf:li>
+            </rdf:Bag>
+          </dc:creator>
+          <dcterms:created rdf:parseType="Resource">
+            <dcterms:W3CDTF>2019-11-29T09:41:48Z</dcterms:W3CDTF>
+          </dcterms:created>
+          <dcterms:modified rdf:parseType="Resource">
+            <dcterms:W3CDTF>2019-11-29T09:41:48Z</dcterms:W3CDTF>
+          </dcterms:modified>
+          <bqbiol:isDescribedBy>
+            <rdf:Bag>
+              <rdf:li rdf:resource="http://identifiers.org/doi/10.1083/jcb.201708053"/>
+            </rdf:Bag>
+          </bqbiol:isDescribedBy>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+    <listOfUnitDefinitions>
+      <unitDefinition metaid="time" id="time" name="time">
+        <listOfUnits>
+          <unit metaid="CDMT00162" kind="second" multiplier="60"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="substance" id="substance" name="substance">
+        <listOfUnits>
+          <unit metaid="CDMT00163" kind="mole"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="volume" id="volume" name="volume">
+        <listOfUnits>
+          <unit metaid="CDMT00164" kind="litre"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="area" id="area" name="area">
+        <listOfUnits>
+          <unit metaid="CDMT00165" kind="metre" exponent="2"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="length" id="length" name="length">
+        <listOfUnits>
+          <unit metaid="CDMT00166" kind="metre"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment metaid="default" id="default" size="1" units="volume"/>
+      <compartment metaid="cyt" id="cyt" name="cyt" size="1" units="volume" outside="default"/>
+      <compartment metaid="nuc" id="nuc" name="nuc" size="1" units="volume" outside="default"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species metaid="AC" id="AC" name="AC" compartment="cyt" initialConcentration="1"/>
+      <species metaid="pAC" id="pAC" name="pAC" compartment="cyt" initialConcentration="0"/>
+      <species metaid="AC_Fsk" id="AC_Fsk" name="AC:Fsk" compartment="cyt" initialConcentration="0"/>
+      <species metaid="pAC_Fsk" id="pAC_Fsk" name="pAC:Fsk" compartment="cyt" initialConcentration="0"/>
+      <species metaid="cAMP" id="cAMP" name="cAMP" compartment="cyt" initialConcentration="0.0575218758977949"/>
+      <species metaid="Csub" id="Csub" name="C" compartment="cyt" initialConcentration="0.192051405433538"/>
+      <species metaid="Csub_H89" id="Csub_H89" name="C:H89" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RII_C_2" id="RII_C_2" name="RII_2:C_2" compartment="cyt" initialConcentration="0.514562213223039"/>
+      <species metaid="RIIp_C_2" id="RIIp_C_2" name="pRII_2:C_2" compartment="cyt" initialConcentration="0.287974352643203"/>
+      <species metaid="RIIp_cAMP_C_2" id="RIIp_cAMP_C_2" name="pRII_2:C_2:cAMP_4" compartment="cyt" initialConcentration="0.00541202870022029"/>
+      <species metaid="RIIp_cAMP_2" id="RIIp_cAMP_2" name="pRII_2:cAMP_4" compartment="cyt" initialConcentration="0.000400416634006059"/>
+      <species metaid="Sp8_Br_cAMPS" id="Sp8_Br_cAMPS" name="Sp8-Br-cAMPS" compartment="cyt" initialConcentration="0"/>
+      <species metaid="Rp8_Br_cAMPS" id="Rp8_Br_cAMPS" name="Rp-8-Br-cAMPS" compartment="cyt" initialConcentration="0"/>
+      <species metaid="Rp8_pCPT_cAMPS" id="Rp8_pCPT_cAMPS" name="Rp-8-pCPT-cAMPS" compartment="cyt" initialConcentration="0"/>
+      <species metaid="Rp_cAMPS" id="Rp_cAMPS" name="Rp-cAMPS" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RIIp_Rp8_Br_cAMPS_C_2" id="RIIp_Rp8_Br_cAMPS_C_2" name="pRII_2:C_2:Rp-8-Br-cAMPS_4" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RIIp_Rp8_pCPT_cAMPS_C_2" id="RIIp_Rp8_pCPT_cAMPS_C_2" name="pRII_2:C_2:Rp-8-pCPT-cAMPS_4" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RIIp_Rp_cAMPS_C_2" id="RIIp_Rp_cAMPS_C_2" name="pRII_2:C_2:Rp-cAMPS_4" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RIIp_Sp8_Br_cAMPS_C_2" id="RIIp_Sp8_Br_cAMPS_C_2" name="pRII_2:C_2:Sp-8-Br-cAMPS_4" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RIIp_Sp8_Br_cAMPS_2" id="RIIp_Sp8_Br_cAMPS_2" name="pRII_2:Sp-8-Br-cAMPS_4" compartment="cyt" initialConcentration="0"/>
+      <species metaid="RIIp_2" id="RIIp_2" name="pRII_2" compartment="cyt" initialConcentration="0.133979505944916"/>
+      <species metaid="RII_2" id="RII_2" name="RII_2" compartment="cyt" initialConcentration="0.057671482854616"/>
+      <species metaid="IBMX" id="IBMX" name="IBMX" compartment="cyt" initialConcentration="0"/>
+      <species metaid="PDE" id="PDE" name="PDE" compartment="cyt" initialConcentration="1"/>
+      <species metaid="pPDE" id="pPDE" name="pPDE" compartment="cyt" initialConcentration="0"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter metaid="AC_total" id="AC_total" value="1"/>
+      <parameter metaid="KD_Fsk" id="KD_Fsk" value="14.2656743301721"/>
+      <parameter metaid="KD_H89" id="KD_H89" value="0.0480736009761681"/>
+      <parameter metaid="KD_IBMX" id="KD_IBMX" value="11.9768989891142"/>
+      <parameter metaid="KD_PDE_Csub" id="KD_PDE_Csub" value="0"/>
+      <parameter metaid="KD_cAMP" id="KD_cAMP" value="2.84986906175302"/>
+      <parameter metaid="PDE_total" id="PDE_total" value="1"/>
+      <parameter metaid="RII2_total" id="RII2_total" value="1"/>
+      <parameter metaid="kdeg_cAMP" id="kdeg_cAMP" value="1.00032978441703e-05"/>
+      <parameter metaid="kdeg_cAMP_free" id="kdeg_cAMP_free" value="7.35892283451732"/>
+      <parameter metaid="kdp_AC" id="kdp_AC" value="0"/>
+      <parameter metaid="kf_Fsk" id="kf_Fsk" value="999.991987450139"/>
+      <parameter metaid="kf_H89" id="kf_H89" value="0.000741493422675392"/>
+      <parameter metaid="kf_PDE_Csub" id="kf_PDE_Csub" value="0"/>
+      <parameter metaid="kf_RII_2__RII_C_2" id="kf_RII_2__RII_C_2" value="1.26077939273477"/>
+      <parameter metaid="kf_RII_C_2__RII_2" id="kf_RII_C_2__RII_2" value="0.0187262534054505"/>
+      <parameter metaid="kf_RII_C_2__RIIp_C_2" id="kf_RII_C_2__RIIp_C_2" value="0.0227841500487899"/>
+      <parameter metaid="kf_RIIp_2__RII_2" id="kf_RIIp_2__RII_2" value="0.0323066621451248"/>
+      <parameter metaid="kf_RIIp_C_2__RII_C_2" id="kf_RIIp_C_2__RII_C_2" value="0.0256808704479994"/>
+      <parameter metaid="kf_RIIp_cAMP_C_2__RIIp_2" id="kf_RIIp_cAMP_C_2__RIIp_2" value="0.104924782853171"/>
+      <parameter metaid="kf_cAMP" id="kf_cAMP" value="0.49762030092122"/>
+      <parameter metaid="ki_IBMX" id="ki_IBMX" value="999.99999996515"/>
+      <parameter metaid="ki_Rp8_Br_cAMPS_pAB" id="ki_Rp8_Br_cAMPS_pAB" value="6.39991617125844"/>
+      <parameter metaid="ki_Rp8_pCPT_cAMPS_pAB" id="ki_Rp8_pCPT_cAMPS_pAB" value="9.24294887100985"/>
+      <parameter metaid="ki_Rp_cAMPS_pAB" id="ki_Rp_cAMPS_pAB" value="0.0163472838984393"/>
+      <parameter metaid="ki_Sp8_Br_cAMPS_AM" id="ki_Sp8_Br_cAMPS_AM" value="0.131083036712545"/>
+      <parameter metaid="kp_AC" id="kp_AC" value="0"/>
+      <parameter metaid="ks_AC_cAMP" id="ks_AC_cAMP" value="0.423299046028554"/>
+      <parameter metaid="xi_AC_cAMP_Fsk" id="xi_AC_cAMP_Fsk" value="640.551657640036"/>
+      <parameter metaid="xi_KD_Rp8_Br_cAMPS" id="xi_KD_Rp8_Br_cAMPS" value="0.040150612333366"/>
+      <parameter metaid="xi_KD_Rp8_pCPT_cAMPS" id="xi_KD_Rp8_pCPT_cAMPS" value="0.194630402579553"/>
+      <parameter metaid="xi_KD_Rp_cAMPS" id="xi_KD_Rp_cAMPS" value="0.163369645426461"/>
+      <parameter metaid="xi_KD_Sp8_Br_cAMPS" id="xi_KD_Sp8_Br_cAMPS" value="0.222276461349335"/>
+      <parameter metaid="xi_b_Rp8_Br_cAMPS" id="xi_b_Rp8_Br_cAMPS" value="0.0408695544562406"/>
+      <parameter metaid="xi_b_Rp8_pCPT_cAMPS" id="xi_b_Rp8_pCPT_cAMPS" value="0.0268897774883765"/>
+      <parameter metaid="xi_b_Rp_cAMPS" id="xi_b_Rp_cAMPS" value="0.607960299288444"/>
+      <parameter metaid="xi_b_Sp8_Br_cAMPS" id="xi_b_Sp8_Br_cAMPS" value="21.7551956731725"/>
+      <parameter metaid="xi_i_Rp8_Br_cAMPS_pAB" id="xi_i_Rp8_Br_cAMPS_pAB" value="1"/>
+      <parameter metaid="xi_i_Rp8_pCPT_cAMPS_pAB" id="xi_i_Rp8_pCPT_cAMPS_pAB" value="1"/>
+      <parameter metaid="xi_i_Rp_cAMPS_pAB" id="xi_i_Rp_cAMPS_pAB" value="1"/>
+      <parameter metaid="xi_i_Sp8_Br_cAMPS_AM" id="xi_i_Sp8_Br_cAMPS_AM" value="1"/>
+      <parameter metaid="xi_kf_RII_2__RII_C_2" id="xi_kf_RII_2__RII_C_2" value="0.0189295042137343"/>
+      <parameter metaid="xi_kf_RII_C_2__RII_2" id="xi_kf_RII_C_2__RII_2" value="0.811223214879921"/>
+      <parameter metaid="xi_pAC" id="xi_pAC" value="1"/>
+      <parameter metaid="xi_pPDE" id="xi_pPDE" value="1"/>
+      <parameter metaid="Fsk" id="Fsk" value="10" units="time" constant="false"/>
+      <parameter metaid="IBMXex" id="IBMXex" value="0" constant="false"/>
+      <parameter metaid="H89" id="H89" value="0" constant="false"/>
+      <parameter metaid="Sp8_Br_cAMPS_AM" id="Sp8_Br_cAMPS_AM" value="0" constant="false"/>
+      <parameter metaid="Rp8_Br_cAMPS_pAB" id="Rp8_Br_cAMPS_pAB" value="0" constant="false"/>
+      <parameter metaid="Rp8_pCPT_cAMPS_pAB" id="Rp8_pCPT_cAMPS_pAB" value="0" constant="false"/>
+      <parameter metaid="Rp_cAMPS_pAB" id="Rp_cAMPS_pAB" value="0" constant="false"/>
+      <parameter metaid="fourABnOH" id="fourABnOH" value="0" constant="false"/>
+      <parameter metaid="Fsk_level" id="Fsk_level" value="0" units="substance"/>
+      <parameter metaid="Fsk_time" id="Fsk_time" value="0" units="time"/>
+      <parameter metaid="H89_level" id="H89_level" value="0" units="substance"/>
+      <parameter metaid="IBMX_level" id="IBMX_level" value="0" units="substance"/>
+      <parameter metaid="Rp8_Br_cAMPS_pAB_level" id="Rp8_Br_cAMPS_pAB_level" value="0" units="substance"/>
+      <parameter metaid="Rp8_Br_cAMPS_pAB_time" id="Rp8_Br_cAMPS_pAB_incubation_time" value="0" units="time"/>
+      <parameter metaid="H89_time" id="H89_time" value="0" units="time"/>
+      <parameter metaid="IBMX_time" id="IBMX_time" value="0" units="time"/>
+      <parameter metaid="Rp8_pCPT_cAMPS_pAB_level" id="Rp8_pCPT_cAMPS_pAB_level" value="0" units="substance"/>
+      <parameter metaid="Rp8_pCPT_cAMPS_pAB_time" id="Rp8_pCPT_cAMPS_pAB_incubation_time" value="0" units="time"/>
+      <parameter metaid="Rp_cAMPS_pAB_level" id="Rp_cAMPS_pAB_level" value="0" units="substance"/>
+      <parameter metaid="Rp_cAMPS_pAB_time" id="Rp_cAMPS_pAB_incubation_time" value="0" units="time"/>
+      <parameter metaid="Sp8_Br_cAMPS_AM_level" id="Sp8_Br_cAMPS_AM_level" value="0" units="substance"/>
+      <parameter metaid="Sp8_Br_cAMPS_AM_time" id="Sp8_Br_cAMPS_AM_time" value="0" units="time"/>
+      <parameter metaid="fourABnOH_level" id="fourABnOH_level" value="0" units="substance"/>
+      <parameter metaid="fourABnOH_time" id="fourABnOH_incubation_time" value="0" units="time"/>
+    </listOfParameters>
+    <listOfRules>
+      <assignmentRule metaid="CDMT00167" variable="Fsk">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> Fsk_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> Fsk_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00170" variable="H89">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> H89_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> H89_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00168" variable="IBMXex">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> IBMX_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> IBMX_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00172" variable="Rp8_Br_cAMPS_pAB">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> Rp8_Br_cAMPS_pAB_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> Rp8_Br_cAMPS_pAB_incubation_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00173" variable="Rp8_pCPT_cAMPS_pAB">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> Rp8_pCPT_cAMPS_pAB_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> Rp8_pCPT_cAMPS_pAB_incubation_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00174" variable="Rp_cAMPS_pAB">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> Rp_cAMPS_pAB_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> Rp_cAMPS_pAB_incubation_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00171" variable="Sp8_Br_cAMPS_AM">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> Sp8_Br_cAMPS_AM_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> Sp8_Br_cAMPS_AM_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule metaid="CDMT00175" variable="fourABnOH">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> fourABnOH_level </ci>
+            <piecewise>
+              <piece>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <lt/>
+                  <apply>
+                    <minus/>
+                    <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                    <ci> fourABnOH_incubation_time </ci>
+                  </apply>
+                  <cn type="integer"> 0 </cn>
+                </apply>
+              </piece>
+              <otherwise>
+                <cn type="integer"> 1 </cn>
+              </otherwise>
+            </piecewise>
+          </apply>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction metaid="v1_v_0" id="v1_v_0" name="v_0" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00002" species="Sp8_Br_cAMPS"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00003" species="Sp8_Br_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00004">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <minus/>
+                <ci> ki_Sp8_Br_cAMPS_AM </ci>
+              </apply>
+              <apply>
+                <minus/>
+                <ci> Sp8_Br_cAMPS </ci>
+                <apply>
+                  <times/>
+                  <ci> Sp8_Br_cAMPS_AM </ci>
+                  <ci> xi_i_Sp8_Br_cAMPS_AM </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v2_v_1" id="v2_v_1" name="v_1" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00006" species="Rp8_Br_cAMPS"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00007" species="Rp8_Br_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00008">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <minus/>
+                <ci> ki_Rp8_Br_cAMPS_pAB </ci>
+              </apply>
+              <apply>
+                <minus/>
+                <ci> Rp8_Br_cAMPS </ci>
+                <apply>
+                  <times/>
+                  <ci> Rp8_Br_cAMPS_pAB </ci>
+                  <ci> xi_i_Rp8_Br_cAMPS_pAB </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v3_v_2" id="v3_v_2" name="v_2" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00010" species="Rp8_pCPT_cAMPS"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00011" species="Rp8_pCPT_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00012">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <minus/>
+                <ci> ki_Rp8_pCPT_cAMPS_pAB </ci>
+              </apply>
+              <apply>
+                <minus/>
+                <ci> Rp8_pCPT_cAMPS </ci>
+                <apply>
+                  <times/>
+                  <ci> Rp8_pCPT_cAMPS_pAB </ci>
+                  <ci> xi_i_Rp8_pCPT_cAMPS_pAB </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v4_v_3" id="v4_v_3" name="v_3" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00014" species="Rp_cAMPS"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00015" species="Rp_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00016">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <minus/>
+                <ci> ki_Rp_cAMPS_pAB </ci>
+              </apply>
+              <apply>
+                <minus/>
+                <ci> Rp_cAMPS </ci>
+                <apply>
+                  <times/>
+                  <ci> Rp_cAMPS_pAB </ci>
+                  <ci> xi_i_Rp_cAMPS_pAB </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v5_v_4" id="v5_v_4" name="v_4" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00018" species="IBMX"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00019" species="IBMX"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00020">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <minus/>
+                <ci> ki_IBMX </ci>
+              </apply>
+              <apply>
+                <minus/>
+                <ci> IBMX </ci>
+                <ci> IBMXex </ci>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v6_v_5" id="v6_v_5" name="v_5" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00021" species="AC"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00022" species="AC_Fsk"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00023">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> AC </ci>
+              <ci> Fsk </ci>
+              <ci> kf_Fsk </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v7_v_6" id="v7_v_6" name="v_6" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00024" species="AC_Fsk"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00025" species="AC"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00026">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> AC_Fsk </ci>
+              <ci> KD_Fsk </ci>
+              <ci> kf_Fsk </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v8_v_7" id="v8_v_7" name="v_7" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00027" species="pAC"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00028" species="pAC_Fsk"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00029">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Fsk </ci>
+              <ci> kf_Fsk </ci>
+              <ci> pAC </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v9_v_8" id="v9_v_8" name="v_8" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00030" species="pAC_Fsk"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00031" species="pAC"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00032">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_Fsk </ci>
+              <ci> kf_Fsk </ci>
+              <ci> pAC_Fsk </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v10_v_9" id="v10_v_9" name="v_9" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00033" species="AC"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00034" species="pAC"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00035" species="Csub"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00036">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> AC </ci>
+              <ci> Csub </ci>
+              <ci> kp_AC </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v11_v_10" id="v11_v_10" name="v_10" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00037" species="AC_Fsk"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00038" species="pAC_Fsk"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00039" species="Csub"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00040">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> AC_Fsk </ci>
+              <ci> Csub </ci>
+              <ci> kp_AC </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v12_v_11" id="v12_v_11" name="v_11" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00041" species="pAC"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00042" species="AC"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00043">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> kdp_AC </ci>
+              <ci> pAC </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v13_v_12" id="v13_v_12" name="v_12" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00044" species="pAC_Fsk"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00045" species="AC_Fsk"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00046">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> kdp_AC </ci>
+              <ci> pAC_Fsk </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v14_v_13" id="v14_v_13" name="v_13" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00048" species="cAMP"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00049" species="AC"/>
+          <modifierSpeciesReference metaid="CDMT00050" species="pAC"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00051">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> ks_AC_cAMP </ci>
+              <apply>
+                <plus/>
+                <ci> AC </ci>
+                <apply>
+                  <times/>
+                  <ci> pAC </ci>
+                  <ci> xi_pAC </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v15_v_14" id="v15_v_14" name="v_14" reversible="false">
+        <listOfProducts>
+          <speciesReference metaid="CDMT00053" species="cAMP"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00054" species="AC_Fsk"/>
+          <modifierSpeciesReference metaid="CDMT00055" species="pAC_Fsk"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00056">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> ks_AC_cAMP </ci>
+              <ci> xi_AC_cAMP_Fsk </ci>
+              <apply>
+                <plus/>
+                <ci> AC_Fsk </ci>
+                <apply>
+                  <times/>
+                  <ci> pAC_Fsk </ci>
+                  <ci> xi_pAC </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v16_v_15" id="v16_v_15" name="v_15" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00057" species="cAMP"/>
+        </listOfReactants>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00059" species="IBMX"/>
+          <modifierSpeciesReference metaid="CDMT00060" species="PDE"/>
+          <modifierSpeciesReference metaid="CDMT00061" species="pPDE"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00062">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <divide/>
+                <apply>
+                  <times/>
+                  <ci> KD_IBMX </ci>
+                  <ci> cAMP </ci>
+                  <ci> kdeg_cAMP_free </ci>
+                  <apply>
+                    <plus/>
+                    <ci> PDE </ci>
+                    <apply>
+                      <times/>
+                      <ci> pPDE </ci>
+                      <ci> xi_pPDE </ci>
+                    </apply>
+                  </apply>
+                </apply>
+                <apply>
+                  <plus/>
+                  <ci> IBMX </ci>
+                  <ci> KD_IBMX </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v17_v_16" id="v17_v_16" name="v_16" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00063" species="RII_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00064" species="Csub"/>
+          <speciesReference metaid="CDMT00065" species="RII_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00066">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RII_C_2 </ci>
+              <ci> kf_RII_C_2__RII_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v18_v_17" id="v18_v_17" name="v_17" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00067" species="Csub"/>
+          <speciesReference metaid="CDMT00068" species="RII_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00069" species="RII_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00070">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Csub </ci>
+              <ci> RII_2 </ci>
+              <ci> kf_RII_2__RII_C_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v19_v_18" id="v19_v_18" name="v_18" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00071" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00072" species="Csub"/>
+          <speciesReference metaid="CDMT00073" species="RIIp_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00074">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> kf_RII_C_2__RII_2 </ci>
+              <ci> xi_kf_RII_C_2__RII_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v20_v_19" id="v20_v_19" name="v_19" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00075" species="Csub"/>
+          <speciesReference metaid="CDMT00076" species="RIIp_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00077" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00078">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Csub </ci>
+              <ci> RIIp_2 </ci>
+              <ci> kf_RII_2__RII_C_2 </ci>
+              <ci> xi_kf_RII_2__RII_C_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v21_v_20" id="v21_v_20" name="v_20" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00079" species="RIIp_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00080" species="RII_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00081">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_2 </ci>
+              <ci> kf_RIIp_2__RII_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v22_v_21" id="v22_v_21" name="v_21" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00082" species="RII_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00083" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00084">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RII_C_2 </ci>
+              <ci> kf_RII_C_2__RIIp_C_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v23_v_22" id="v23_v_22" name="v_22" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00085" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00086" species="RII_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00087">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> kf_RIIp_C_2__RII_C_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v24_v_23" id="v24_v_23" name="v_23" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00088" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00089" species="RIIp_cAMP_C_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00090" species="cAMP"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00091">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> cAMP </ci>
+              <ci> kf_cAMP </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v25_v_24" id="v25_v_24" name="v_24" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00092" species="RIIp_cAMP_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00093" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00094">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_cAMP_C_2 </ci>
+              <ci> kf_cAMP </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v26_v_25" id="v26_v_25" name="v_25" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00095" species="RIIp_cAMP_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00096" species="RIIp_C_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00097" species="IBMX"/>
+          <modifierSpeciesReference metaid="CDMT00098" species="PDE"/>
+          <modifierSpeciesReference metaid="CDMT00099" species="pPDE"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00100">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <divide/>
+                <apply>
+                  <times/>
+                  <ci> KD_IBMX </ci>
+                  <ci> RIIp_cAMP_C_2 </ci>
+                  <ci> kdeg_cAMP </ci>
+                  <apply>
+                    <plus/>
+                    <ci> PDE </ci>
+                    <apply>
+                      <times/>
+                      <ci> pPDE </ci>
+                      <ci> xi_pPDE </ci>
+                    </apply>
+                  </apply>
+                </apply>
+                <apply>
+                  <plus/>
+                  <ci> IBMX </ci>
+                  <ci> KD_IBMX </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v27_v_26" id="v27_v_26" name="v_26" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00101" species="RIIp_cAMP_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00102" species="Csub"/>
+          <speciesReference metaid="CDMT00103" species="RIIp_cAMP_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00104">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_cAMP_C_2 </ci>
+              <ci> kf_RIIp_cAMP_C_2__RIIp_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v28_v_27" id="v28_v_27" name="v_27" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00105" species="RIIp_cAMP_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00106" species="RIIp_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00107">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_cAMP_2 </ci>
+              <ci> kf_cAMP </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v29_v_28" id="v29_v_28" name="v_28" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00108" species="RIIp_cAMP_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00109" species="RIIp_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00110" species="IBMX"/>
+          <modifierSpeciesReference metaid="CDMT00111" species="PDE"/>
+          <modifierSpeciesReference metaid="CDMT00112" species="pPDE"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00113">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <divide/>
+                <apply>
+                  <times/>
+                  <ci> KD_IBMX </ci>
+                  <ci> RIIp_cAMP_2 </ci>
+                  <ci> kdeg_cAMP </ci>
+                  <apply>
+                    <plus/>
+                    <ci> PDE </ci>
+                    <apply>
+                      <times/>
+                      <ci> pPDE </ci>
+                      <ci> xi_pPDE </ci>
+                    </apply>
+                  </apply>
+                </apply>
+                <apply>
+                  <plus/>
+                  <ci> IBMX </ci>
+                  <ci> KD_IBMX </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v30_v_29" id="v30_v_29" name="v_29" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00114" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00115" species="RIIp_Rp8_Br_cAMPS_C_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00116" species="Rp8_Br_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00117">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> Rp8_Br_cAMPS </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Rp8_Br_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v31_v_30" id="v31_v_30" name="v_30" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00118" species="RIIp_Rp8_Br_cAMPS_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00119" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00120">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_Rp8_Br_cAMPS_C_2 </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Rp8_Br_cAMPS </ci>
+              <ci> xi_KD_Rp8_Br_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v32_v_31" id="v32_v_31" name="v_31" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00121" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00122" species="RIIp_Rp8_pCPT_cAMPS_C_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00123" species="Rp8_pCPT_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00124">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> Rp8_pCPT_cAMPS </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Rp8_pCPT_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v33_v_32" id="v33_v_32" name="v_32" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00125" species="RIIp_Rp8_pCPT_cAMPS_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00126" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00127">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_Rp8_pCPT_cAMPS_C_2 </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Rp8_pCPT_cAMPS </ci>
+              <ci> xi_KD_Rp8_pCPT_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v34_v_33" id="v34_v_33" name="v_33" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00128" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00129" species="RIIp_Rp_cAMPS_C_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00130" species="Rp_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00131">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> Rp_cAMPS </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Rp_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v35_v_34" id="v35_v_34" name="v_34" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00132" species="RIIp_Rp_cAMPS_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00133" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00134">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_Rp_cAMPS_C_2 </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Rp_cAMPS </ci>
+              <ci> xi_KD_Rp_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v36_v_35" id="v36_v_35" name="v_35" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00135" species="RIIp_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00136" species="RIIp_Sp8_Br_cAMPS_C_2"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00137" species="Sp8_Br_cAMPS"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00138">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_C_2 </ci>
+              <ci> Sp8_Br_cAMPS </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Sp8_Br_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v37_v_36" id="v37_v_36" name="v_36" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00139" species="RIIp_Sp8_Br_cAMPS_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00140" species="RIIp_C_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00141">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_Sp8_Br_cAMPS_C_2 </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Sp8_Br_cAMPS </ci>
+              <ci> xi_KD_Sp8_Br_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v38_v_37" id="v38_v_37" name="v_37" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00142" species="RIIp_Sp8_Br_cAMPS_C_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00143" species="Csub"/>
+          <speciesReference metaid="CDMT00144" species="RIIp_Sp8_Br_cAMPS_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00145">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> RIIp_Sp8_Br_cAMPS_C_2 </ci>
+              <ci> kf_RIIp_cAMP_C_2__RIIp_2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v39_v_38" id="v39_v_38" name="v_38" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00146" species="RIIp_Sp8_Br_cAMPS_2"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00147" species="RIIp_2"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00148">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_cAMP </ci>
+              <ci> RIIp_Sp8_Br_cAMPS_2 </ci>
+              <ci> kf_cAMP </ci>
+              <ci> xi_b_Sp8_Br_cAMPS </ci>
+              <ci> xi_KD_Sp8_Br_cAMPS </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v40_v_39" id="v40_v_39" name="v_39" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00149" species="Csub"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00150" species="Csub_H89"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00151">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Csub </ci>
+              <ci> H89 </ci>
+              <ci> kf_H89 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v41_v_40" id="v41_v_40" name="v_40" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00152" species="Csub_H89"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00153" species="Csub"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00154">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Csub_H89 </ci>
+              <ci> KD_H89 </ci>
+              <ci> kf_H89 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v42_v_41" id="v42_v_41" name="v_41" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00155" species="PDE"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00156" species="pPDE"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00157" species="Csub"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00158">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Csub </ci>
+              <ci> PDE </ci>
+              <ci> kf_PDE_Csub </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v43_v_42" id="v43_v_42" name="v_42" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00159" species="pPDE"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00160" species="PDE"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00161">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> KD_PDE_Csub </ci>
+              <ci> kf_PDE_Csub </ci>
+              <ci> pPDE </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

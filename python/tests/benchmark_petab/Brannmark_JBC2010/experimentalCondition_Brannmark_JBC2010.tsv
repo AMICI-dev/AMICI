@@ -1,0 +1,9 @@
+conditionId	conditionName	insulin_time_1	insulin_dose_1	insulin_time_2	insulin_dose_2
+Dose_0	insulin, 0 nM	0.000	0.000	0.000	0.000
+Dose_001	insulin, 0.01 nM	0.000	0.010	0.000	0.000
+Dose_01	insulin, 0.1 nM	0.000	0.100	0.000	0.000
+Dose_1	insulin, 1 nM	0.000	0.300	0.000	0.000
+Dose_3	insulin, 3 nM	0.000	1.000	0.000	0.000
+Dose_10	insulin, 10 nM	0.000	10.000	0.000	0.000
+Dose_100	insulin, 100 nM	0.000	100.000	0.000	0.000
+TwoSteps	2 steps	0.000	1.200	4.000	8.800

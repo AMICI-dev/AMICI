@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model metaid="arFramework3" id="Brannmark_JBC2010" name="model_Mif">
+    <notes>
+      <body xmlns="http://www.w3.org/1999/xhtml">
+        <pre>PEtab implementation of the model from Brannmark et al. (2010), THE JOURNAL OF BIOLOGICAL CHEMISTRY VOL. 285, NO. 26, pp. 20171–20179, </pre>
+      </body>
+    </notes>
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#arFramework3">
+          <dc:creator>
+            <rdf:Bag>
+              <rdf:li rdf:parseType="Resource">
+                <vCard:N rdf:parseType="Resource">
+                  <vCard:Family>Brannmark</vCard:Family>
+                  <vCard:Given>Cecilia</vCard:Given>
+                </vCard:N>
+              </rdf:li>
+            </rdf:Bag>
+          </dc:creator>
+          <dcterms:created rdf:parseType="Resource">
+            <dcterms:W3CDTF>2019-11-29T09:41:48Z</dcterms:W3CDTF>
+          </dcterms:created>
+          <dcterms:modified rdf:parseType="Resource">
+            <dcterms:W3CDTF>2019-11-29T09:41:48Z</dcterms:W3CDTF>
+          </dcterms:modified>
+          <bqbiol:isDescribedBy>
+            <rdf:Bag>
+              <rdf:li rdf:resource="http://identifiers.org/doi/10.1074/jbc.M110.106849"/>
+            </rdf:Bag>
+          </bqbiol:isDescribedBy>
+        </rdf:Description>
+      </rdf:RDF>
+    </annotation>
+    <listOfUnitDefinitions>
+      <unitDefinition metaid="time" id="time" name="time">
+        <listOfUnits>
+          <unit metaid="CDMT00038" kind="second" multiplier="60"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="substance" id="substance" name="substance">
+        <listOfUnits>
+          <unit metaid="CDMT00039" kind="mole"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="volume" id="volume" name="volume">
+        <listOfUnits>
+          <unit metaid="CDMT00040" kind="litre"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="area" id="area" name="area">
+        <listOfUnits>
+          <unit metaid="CDMT00041" kind="metre" exponent="2"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition metaid="length" id="length" name="length">
+        <listOfUnits>
+          <unit metaid="CDMT00042" kind="metre"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment metaid="default" id="default" size="1" units="volume"/>
+      <compartment metaid="cyt" id="cyt" name="cyt" size="1" units="volume" outside="default"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species metaid="IR" id="IR" name="IR" compartment="cyt" initialConcentration="9.94957642787569"/>
+      <species metaid="IRins" id="IRins" name="IRins" compartment="cyt" initialConcentration="0.0173972221725393"/>
+      <species metaid="IRp" id="IRp" name="IRp" compartment="cyt" initialConcentration="1.7629010620181e-09"/>
+      <species metaid="IRiP" id="IRiP" name="IRiP" compartment="cyt" initialConcentration="1.11590026152296e-05"/>
+      <species metaid="IRi" id="IRi" name="IRi" compartment="cyt" initialConcentration="0.0330151891862681"/>
+      <species metaid="IRS" id="IRS" name="IRS" compartment="cyt" initialConcentration="9.86699348701367"/>
+      <species metaid="IRSiP" id="IRSiP" name="IRSiP" compartment="cyt" initialConcentration="0.133006512986336"/>
+      <species metaid="X" id="X" name="X" compartment="cyt" initialConcentration="9.99984199487351"/>
+      <species metaid="Xp" id="Xp" name="Xp" compartment="cyt" initialConcentration="0.000158005126497888"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter metaid="k1a" id="k1a" value="0.177252330941141"/>
+      <parameter metaid="k1aBasic" id="k1aBasic" value="0.000394105679186913"/>
+      <parameter metaid="k1b" id="k1b" value="0.174529566448397"/>
+      <parameter metaid="k1c" id="k1c" value="0.050861851404055"/>
+      <parameter metaid="k1d" id="k1d" value="499999.999999974"/>
+      <parameter metaid="k1e" id="k1e" value="1.00000000000005e-06"/>
+      <parameter metaid="k1f" id="k1f" value="499999.990737798"/>
+      <parameter metaid="k1g" id="k1g" value="1931.1338834437"/>
+      <parameter metaid="k1r" id="k1r" value="0.0266983879216281"/>
+      <parameter metaid="k21" id="k21" value="2.13019897196189"/>
+      <parameter metaid="k22" id="k22" value="658.762927786248"/>
+      <parameter metaid="k3" id="k3" value="4.94369803061052e-05"/>
+      <parameter metaid="k_IRSiP_DosR" id="k_IRSiP_DosR" value="37.9636812744313"/>
+      <parameter metaid="km2" id="km2" value="1.16168060611079"/>
+      <parameter metaid="km3" id="km3" value="0.416147033419453"/>
+      <parameter metaid="insulin" id="insulin" value="0.3" constant="false"/>
+      <parameter metaid="insulin_time_1" id="insulin_time_1" value="0" units="time"/>
+      <parameter metaid="insulin_time_2" id="insulin_time_2" value="1000" units="time"/>
+      <parameter metaid="insulin_dose_1" id="insulin_dose_1" value="0.3" units="substance"/>
+      <parameter metaid="insulin_dose_2" id="insulin_dose_2" value="0" units="substance"/>
+    </listOfParameters>
+    <listOfRules>
+      <assignmentRule metaid="CDMT00043" variable="insulin">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <times/>
+              <ci> insulin_dose_1 </ci>
+              <piecewise>
+                <piece>
+                  <cn type="integer"> 0 </cn>
+                  <apply>
+                    <lt/>
+                    <apply>
+                      <minus/>
+                      <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                      <ci> insulin_time_1 </ci>
+                    </apply>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </piece>
+                <otherwise>
+                  <cn type="integer"> 1 </cn>
+                </otherwise>
+              </piecewise>
+            </apply>
+            <apply>
+              <times/>
+              <ci> insulin_dose_2 </ci>
+              <piecewise>
+                <piece>
+                  <cn type="integer"> 0 </cn>
+                  <apply>
+                    <lt/>
+                    <apply>
+                      <minus/>
+                      <csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>
+                      <ci> insulin_time_2 </ci>
+                    </apply>
+                    <cn type="integer"> 0 </cn>
+                  </apply>
+                </piece>
+                <otherwise>
+                  <cn type="integer"> 1 </cn>
+                </otherwise>
+              </piecewise>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction metaid="v1_v_0" id="v1_v_0" name="v_0" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00001" species="IR"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00002" species="IRins"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00003">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <apply>
+                <plus/>
+                <apply>
+                  <times/>
+                  <ci> IR </ci>
+                  <ci> k1aBasic </ci>
+                </apply>
+                <apply>
+                  <times/>
+                  <ci> IR </ci>
+                  <ci> insulin </ci>
+                  <ci> k1a </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v2_v_1" id="v2_v_1" name="v_1" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00004" species="IRins"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00005" species="IR"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00006">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRins </ci>
+              <ci> k1b </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v3_v_2" id="v3_v_2" name="v_2" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00007" species="IRins"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00008" species="IRp"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00009">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRins </ci>
+              <ci> k1c </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v4_v_3" id="v4_v_3" name="v_3" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00010" species="IRp"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00011" species="IRiP"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00012">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRp </ci>
+              <ci> k1d </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v5_v_4" id="v5_v_4" name="v_4" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00013" species="IRiP"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00014" species="IRi"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00015" species="Xp"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00016">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRiP </ci>
+              <apply>
+                <plus/>
+                <ci> k1e </ci>
+                <apply>
+                  <divide/>
+                  <apply>
+                    <times/>
+                    <ci> Xp </ci>
+                    <ci> k1f </ci>
+                  </apply>
+                  <apply>
+                    <plus/>
+                    <ci> Xp </ci>
+                    <cn type="integer"> 1 </cn>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v6_v_5" id="v6_v_5" name="v_5" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00017" species="IRp"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00018" species="IR"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00019">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRp </ci>
+              <ci> k1g </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v7_v_6" id="v7_v_6" name="v_6" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00020" species="IRi"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00021" species="IR"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00022">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRi </ci>
+              <ci> k1r </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v8_v_7" id="v8_v_7" name="v_7" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00023" species="IRS"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00024" species="IRSiP"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00025" species="IRiP"/>
+          <modifierSpeciesReference metaid="CDMT00026" species="IRp"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00027">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRS </ci>
+              <ci> k21 </ci>
+              <apply>
+                <plus/>
+                <ci> IRp </ci>
+                <apply>
+                  <times/>
+                  <ci> IRiP </ci>
+                  <ci> k22 </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v9_v_8" id="v9_v_8" name="v_8" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00028" species="IRSiP"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00029" species="IRS"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00030">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRSiP </ci>
+              <ci> km2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v10_v_9" id="v10_v_9" name="v_9" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00031" species="X"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00032" species="Xp"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference metaid="CDMT00033" species="IRSiP"/>
+        </listOfModifiers>
+        <kineticLaw metaid="CDMT00034">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> IRSiP </ci>
+              <ci> X </ci>
+              <ci> k3 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction metaid="v11_v_10" id="v11_v_10" name="v_10" reversible="false">
+        <listOfReactants>
+          <speciesReference metaid="CDMT00035" species="Xp"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference metaid="CDMT00036" species="X"/>
+        </listOfProducts>
+        <kineticLaw metaid="CDMT00037">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> cyt </ci>
+              <ci> Xp </ci>
+              <ci> km3 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

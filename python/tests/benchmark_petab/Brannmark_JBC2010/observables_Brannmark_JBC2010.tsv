@@ -1,0 +1,4 @@
+observableId	observableName	observableFormula	noiseFormula	observableTransformation	noiseDistribution
+IR1_P	IR1_P	observableParameter1_IR1_P * (IRp + IRiP)	noiseParameter1_IR1_P	lin	normal
+IRS1_P	IRS1_P	observableParameter1_IRS1_P * IRSiP	noiseParameter1_IRS1_P	lin	normal
+IRS1_P_DosR	IRS1_P_DosR	observableParameter1_IRS1_P_DosR  * IRSiP	noiseParameter1_IRS1_P_DosR	lin	normal

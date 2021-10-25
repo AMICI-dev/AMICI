@@ -1,0 +1,11 @@
+format_version: 1
+parameter_file: parameters_Zheng_PNAS2012.tsv
+problems:
+- condition_files:
+  - experimentalCondition_Zheng_PNAS2012.tsv
+  measurement_files:
+  - measurementData_Zheng_PNAS2012.tsv
+  observable_files:
+  - observables_Zheng_PNAS2012.tsv
+  sbml_files:
+  - model_Zheng_PNAS2012.xml

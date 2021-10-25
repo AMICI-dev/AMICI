@@ -1,0 +1,4 @@
+conditionId	conditionName	Ect_Expr_CERT_flag	Ect_Expr_PI4K3beta_flag	PdBu_dose	PdBu_time	kb_NB142_70_dose	kb_NB142_70_time
+model1_data1		0	0	0	0	0	0
+model1_data2		0	1	1	24	0	0
+model1_data3		1	0	0	0	10	24

@@ -1,0 +1,9 @@
+observableId	observableName	observableFormula	noiseFormula	observableTransformation	noiseDistribution
+yCERTpRN24		CERT * observableParameter1_yCERTpRN24 / (CERT + CERTERa + CERTTGNa)	noiseParameter1_yCERTpRN24	lin	normal
+yCERTt		CERT + CERTERa + CERTTGNa	noiseParameter1_yCERTt	lin	normal
+yPI4K3BpRN24		PI4K3Ba * observableParameter1_yPI4K3BpRN24 / (PI4K3B + PI4K3Ba)	noiseParameter1_yPI4K3BpRN24	lin	normal
+yPI4K3Bt		PI4K3B + PI4K3Ba	noiseParameter1_yPI4K3Bt	lin	normal
+yPKDpN0		PKDDAGa * observableParameter1_yPKDpN0	noiseParameter1_yPKDpN0	lin	normal
+yPKDpN24		PKDDAGa * observableParameter1_yPKDpN24	noiseParameter1_yPKDpN24	lin	normal
+yPKDpN25		PKDDAGa * observableParameter1_yPKDpN25	noiseParameter1_yPKDpN25	lin	normal
+yPKDt		PKD + PKDDAGa	noiseParameter1_yPKDt	lin	normal
