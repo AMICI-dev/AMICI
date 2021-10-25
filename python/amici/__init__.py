@@ -321,6 +321,8 @@ def setModelSettings(
     """Set model settings.
 
     :param model: The AMICI model instance.
+    :param settings: Keys are callable attributes (setters) of an AMICI model,
+        values are provided to the setters.
     """
     for setting, value in settings.items():
         if isinstance(setting, tuple):
