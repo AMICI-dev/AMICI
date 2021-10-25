@@ -50,6 +50,120 @@ def test_copy_constructors(pysb_example_presimulation_module):
                 f"{obj} - {attr}"
 
 
+# `None` values are skipped in `test_model_instance_settings`.
+# Keys are suffixes of `get[...]` and `set[...]` `amici.Model` methods.
+# If either the getter or setter is not named with this pattern, then the key
+# is a tuple where the first and second values are the getter and setter
+# methods, respectively.
+# Values are lists where the first element is the default value of the test
+# model, and the second value is some custom value.
+model_instance_settings0 = {
+    # ( setting name, default value, custom value )
+    'AddSigmaResiduals': [
+        False,
+        True
+    ],
+    'AlwaysCheckFinite': [
+        False,
+        True,
+    ],
+    'InitialStates': [
+        (10.0, 9.0, 1.0, 0.0, 0.0, 0.0),
+        tuple([.1]*6),
+    ],
+    'InitialStateSensitivities': [
+        tuple([1.0] + [0.0]*35),
+        tuple([.1]*36),
+    ],
+    'MinimumSigmaResiduals': [
+        50.0,
+        60.0,
+    ],
+    ('nMaxEvent', 'setNMaxEvent'): [
+        10,
+        20,
+    ],
+    # Skipped due to interdependencies with
+    # `'ReinitializeFixedParameterInitialStates'`.
+    'ReinitializationStateIdxs': None,
+    # Skipped due to interdependencies with `'ReinitializationStateIdxs'`.
+    'ReinitializeFixedParameterInitialStates': None,
+    # Skipped due to conservation laws in the test model
+    # `pysb_example_presimulation_module.getModel()`.
+    'StateIsNonNegative': None,
+    'SteadyStateSensitivityMode': [
+        0,
+        1,
+    ],
+    ('t0', 'setT0'): [
+        0.0,
+        1.0,
+    ],
+}
+
+
+def test_model_instance_settings(pysb_example_presimulation_module):
+    model0 = pysb_example_presimulation_module.getModel()
+
+    # Indexes of values in the `model_instance_settings0` dictionary.
+    i_default = 0
+    i_custom = 1
+
+    i_getter = 0
+    i_setter = 1
+
+    # All settings are tested.
+    assert set(model_instance_settings0) == set(amici.model_instance_settings)
+
+    # Skip settings with interdependencies.
+    model_instance_settings = \
+        {k: v for k, v in model_instance_settings0.items() if v is not None}
+
+    # All custom values are different to default values.
+    assert all([
+        default != custom
+        for name, (default, custom) in model_instance_settings.items()
+        if name != 'ReinitializeFixedParameterInitialStates'
+    ])
+
+    # All default values are as expected.
+    for name, (default, custom) in model_instance_settings.items():
+        getter = name[i_getter] if isinstance(name, tuple) else f'get{name}'
+        setter = name[i_setter] if isinstance(name, tuple) else f'set{name}'
+        # Default values are as expected.
+        assert getattr(model0, getter)() == default
+        # Custom value is set correctly.
+        getattr(model0, setter)(custom)
+        assert getattr(model0, getter)() == custom
+
+    # The grouped getter method works.
+    custom_settings = amici.getModelSettings(model0)
+    for name in model_instance_settings:
+        assert custom_settings[name] == model_instance_settings[name][i_custom]
+
+    # Create a new model for comparison.
+    model = pysb_example_presimulation_module.getModel()
+
+    # The new model has the default settings.
+    model_default_settings = amici.getModelSettings(model)
+    for name in model_instance_settings:
+        assert model_default_settings[name] == \
+            model_instance_settings[name][i_default]
+
+    # The grouped setter method works.
+    custom_settings_not_none = {
+        name: value
+        for name, value in custom_settings.items()
+        if model_instance_settings0[name] is not None
+    }
+    amici.setModelSettings(model, custom_settings_not_none)
+    assert all([
+        value == custom_settings_not_none[name]
+        for name, value in amici.getModelSettings(model).items()
+        if name in custom_settings_not_none
+    ])
+
+
 def is_callable_but_not_getter(obj, attr):
     if not callable(getattr(obj, attr)):
         return False

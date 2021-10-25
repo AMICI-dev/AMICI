@@ -306,10 +306,7 @@ def getModelSettings(
     """
     settings = {}
     for setting in model_instance_settings:
-        if isinstance(setting, tuple):
-            getter = setting[0]
-        else:
-            getter = f'get{setting}'
+        getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
         settings[setting] = getattr(model, getter)()
     return settings
 
@@ -325,10 +322,7 @@ def setModelSettings(
         values are provided to the setters.
     """
     for setting, value in settings.items():
-        if isinstance(setting, tuple):
-            setter = setting[1]
-        else:
-            setter = f'set{setting}'
+        setter = setting[1] if isinstance(setting, tuple) else f'set{setting}'
         getattr(model, setter)(value)
 
 
