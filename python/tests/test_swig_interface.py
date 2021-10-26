@@ -180,6 +180,16 @@ def test_model_instance_settings(pysb_example_presimulation_module):
 
 
 def test_unhandled_settings(pysb_example_presimulation_module):
+    """Detect possible getters and setters that are not yet handled.
+
+    Currently, only model attributes that begin with `'get'` and `'set'` are
+    tested.
+
+    The following getters/setters are untested here, due to unusual naming
+    (not prefixed by `'get'` or `'set'`).
+    - nMaxEvent
+    - t0
+    """
     model = pysb_example_presimulation_module.getModel()
 
     not_handled = [
@@ -215,11 +225,6 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         'setParametersByIdRegex',
         'setParametersByNameRegex',
         'setUnscaledInitialStateSensitivities',
-    ]
-
-    handled_but_untested_here_due_to_unusual_name = [
-        'nMaxEvent',
-        't0',
     ]
 
     handled = [
