@@ -6,18 +6,19 @@
 # benchmark collection model directory
 
 # Confirmed to be working
+# FIXME only test one model until sensitivities appear correct, to save compilation/simulation time
+#Beer_MolBioSystems2014
+#Boehm_JProteomeRes2014
+#Borghans_BiophysChem1997
+#Brannmark_JBC2010
+#Crauste_CellSystems2017
+#Elowitz_Nature2000
+#Fiedler_BMC2016
+#Fujita_SciSignal2010
+#Schwen_PONE2014
+#Sneyd_PNAS2002
+#Weber_BMC2015
 models="
-Beer_MolBioSystems2014
-Boehm_JProteomeRes2014
-Borghans_BiophysChem1997
-Brannmark_JBC2010
-Crauste_CellSystems2017
-Elowitz_Nature2000
-Fiedler_BMC2016
-Fujita_SciSignal2010
-Schwen_PONE2014
-Sneyd_PNAS2002
-Weber_BMC2015
 Zheng_PNAS2012"
 
 #
@@ -91,7 +92,7 @@ for model in $models; do
   amici_model_dir=test_bmc/"${model}"
   mkdir -p "$amici_model_dir"
   cmd_import="amici_import_petab --verbose -y ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
-  cmd_run="$script_path/test_petab_model.py --verbose -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
+  cmd_run="$script_path/test_petab_model.py --verbose -y ${yaml} -d ${amici_model_dir} -m ${model} -c -s"
 
   printf '=%.0s' {1..40}
   printf "   %s   " "${model}"
