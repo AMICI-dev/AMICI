@@ -5,8 +5,9 @@ Functionality related to the use of AMICI for simulation with PEtab's
 Simulator class.
 
 Use cases:
-* generate data for use with PEtab's plotting methods
-* generate synthetic data
+
+- generate data for use with PEtab's plotting methods
+- generate synthetic data
 """
 
 import inspect
