@@ -13,6 +13,7 @@ AMICI Python API
    amici.petab_import
    amici.petab_import_pysb
    amici.petab_objective
+   amici.petab_simulate
    amici.import_utils
    amici.ode_export
    amici.plotting
