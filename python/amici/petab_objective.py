@@ -109,12 +109,13 @@ def simulate_petab(
     if solver is None:
         solver = amici_model.getSolver()
 
-    # Get parameters
-    if problem_parameters is None:
-        # Use PEtab nominal values as default
-        problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
-                              petab_problem.parameter_df.itertuples()}
-        scaled_parameters = False
+    # Switch to scaled parameters.
+    problem_parameters = _default_scaled_parameters(
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        scaled_parameters=scaled_parameters,
+    )
+    scaled_parameters = True
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
@@ -160,7 +161,7 @@ def simulate_petab(
         amici_model=amici_model,
         rdatas=rdatas,
         parameter_mapping=parameter_mapping,
-        petab_scale=True,
+        petab_scale=scaled_parameters,
         petab_problem=petab_problem,
         edatas=edatas,
     )
@@ -868,3 +869,300 @@ def rdatas_to_simulation_df(
                                   measurement_df=measurement_df)
 
     return df.rename(columns={MEASUREMENT: SIMULATION})
+
+
+def check_grad_multi_eps(
+    *args,
+    multi_eps: Optional[List[float]] = None,
+    label: str = 'rel_err',
+    **kwargs,
+) -> pd.DataFrame:
+    """Compare gradient evaluation.
+
+    Based on the equivalent method in `pypesto.objective.ObjectiveBase`.
+
+    Equivalent to the `amici.petab_objective.check_grad` method, except
+    multiple finite difference step sizes are tested. The result contains the
+    lowest finite difference for each parameter, and the corresponding finite
+    difference step size.
+
+    See `amici.petab_objective.check_grad` method parameters for other
+    parameters.
+    :param multi_eps:
+        The finite difference step sizes to be tested.
+    :param label:
+        The label of the column that will be minimized for each parameter.
+        Valid options are the column labels of the dataframe returned by the
+        `amici.petab_objective.check_grad` method.
+
+    :return:
+        Gradient, finite difference approximations and error estimates, with
+        best epsilon indicated.
+    """
+    if 'eps' in kwargs:
+        raise KeyError(
+            'Please use the `multi_eps` (not the `eps`) argument with '
+            '`check_grad_multi_eps` to specify step sizes.'
+        )
+
+    if multi_eps is None:
+        multi_eps = {1e-1, 1e-3, 1e-5, 1e-7, 1e-9}
+
+    results = {}
+    for eps in multi_eps:
+        results[eps] = check_grad(*args, **kwargs, eps=eps)
+
+    # The combined result is, for each parameter, the gradient check from
+    # the step size (`eps`) that produced the smallest error (`label`).
+    combined_result = None
+    for eps, result in results.items():
+        result['eps'] = eps
+        if combined_result is None:
+            combined_result = result
+            continue
+        # Replace rows in `combined_result` with corresponding rows
+        # in `result` that have an improved value in column `label`.
+        mask_improvements = result[label] < combined_result[label]
+        combined_result.loc[mask_improvements, :] = \
+            result.loc[mask_improvements, :]
+
+    return combined_result
+
+
+def check_grad(
+    petab_problem: petab.Problem,
+    amici_model: amici.Model,
+    amici_solver: amici.Solver,
+    problem_parameters: Optional[Dict[str, float]] = None,
+    scaled_parameters: bool = False,
+    parameter_ids: Sequence[str] = None,
+    eps: float = 1e-5,
+    verbosity: int = 1,
+    detailed: bool = False,
+) -> pd.DataFrame:
+    """
+    Compare gradient evaluation.
+
+    Based on the equivalent method in `pypesto.objective.ObjectiveBase`.
+
+    Firstly approximate via finite differences, and secondly use the
+    objective gradient.
+
+    :param petab_problem:
+        The PEtab problem.
+    :param amici_model:
+        The model for the PEtab problem.
+    :param amici_solver:
+        The solver, setup to compute sensitivities.
+    :param problem_parameters:
+        Keys are PEtab parameter IDs, values are parameter values on the scale
+        defined in the PEtab parameter table. Defaults to the nominal values in
+        the PEtab parameter table.
+    :param scaled_parameters:
+        Whether `problem_parameters` are on the scale defined in the PEtab
+        parameter table.
+    :param parameter_ids:
+        IDs of parameters that will have gradients computed. Default: all
+        parameter IDs in `problem_parameters`.
+    :param eps:
+        Finite differences step size.
+    :param verbosity:
+        Level of verbosity for function output.
+        0: no output,
+        1: summary for all parameters,
+        2: summary for individual parameters.
+    :param detailed:
+        Toggle whether additional values are returned. Additional values
+        are function values, and the central difference weighted by the
+        difference in output from all methods (standard deviation and
+        mean).
+
+    :return:
+        Gradient, finite difference approximations and error estimates.
+    """
+    # Switch to scaled parameters.
+    problem_parameters = _default_scaled_parameters(
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        scaled_parameters=scaled_parameters,
+    )
+    scaled_parameters = True
+
+    if parameter_ids is None:
+        parameter_ids = list(problem_parameters)
+
+    def _simulate(
+        vector,
+        petab_problem=petab_problem,
+        amici_model=amici_model,
+        amici_solver=amici_solver,
+        sllh=False,
+    ):
+        _result = amici.petab_objective.simulate_petab(
+            petab_problem=petab_problem,
+            amici_model=amici_model,
+            solver=amici_solver,
+            problem_parameters=vector,
+            # If unscaled parameters are provided, they are scaled, so this is
+            # always true.
+            scaled_parameters=True,
+        )
+        if sllh:
+            return _result[LLH], _result[SLLH]
+        return _result[LLH]
+
+    # function value and objective gradient
+    fval, grad = _simulate(problem_parameters, sllh=True)
+
+    grad_list = []
+    fd_f_list = []
+    fd_b_list = []
+    fd_c_list = []
+    fd_err_list = []
+    abs_err_list = []
+    rel_err_list = []
+
+    if detailed:
+        fval_p_list = []
+        fval_m_list = []
+        std_check_list = []
+        mean_check_list = []
+
+    # loop over parameter IDs
+    for ix in parameter_ids:
+        # forward (plus) point
+        x_p = copy.deepcopy(problem_parameters)
+        x_p[ix] += eps
+        fval_p = _simulate(x_p)
+
+        # backward (minus) point
+        x_m = copy.deepcopy(problem_parameters)
+        x_m[ix] -= eps
+        fval_m = _simulate(x_m)
+
+        # finite differences
+        fd_f_ix = (fval_p - fval) / eps
+        fd_b_ix = (fval - fval_m) / eps
+        fd_c_ix = (fval_p - fval_m) / (2 * eps)
+
+        # gradient in direction ix
+        grad_ix = grad[ix]
+
+        # errors
+        fd_err_ix = abs(fd_f_ix - fd_b_ix)
+        abs_err_ix = abs(grad_ix - fd_c_ix)
+        rel_err_ix = abs(abs_err_ix / (fd_c_ix + eps))
+
+        if detailed:
+            std_check_ix = (grad_ix - fd_c_ix)/np.std([
+                fd_f_ix,
+                fd_b_ix,
+                fd_c_ix
+            ])
+            mean_check_ix = abs(grad_ix - fd_c_ix)/np.mean([
+                abs(fd_f_ix - fd_b_ix),
+                abs(fd_f_ix - fd_c_ix),
+                abs(fd_b_ix - fd_c_ix),
+            ])
+
+        # log for dimension ix
+        if verbosity > 1:
+            logger.info(
+                f'index:    {ix}\n'
+                f'grad:     {grad_ix}\n'
+                f'fd_f:     {fd_f_ix}\n'
+                f'fd_b:     {fd_b_ix}\n'
+                f'fd_c:     {fd_c_ix}\n'
+                f'fd_err:   {fd_err_ix}\n'
+                f'abs_err:  {abs_err_ix}\n'
+                f'rel_err:  {rel_err_ix}\n'
+            )
+
+        # append to lists
+        grad_list.append(grad_ix)
+        fd_f_list.append(fd_f_ix)
+        fd_b_list.append(fd_b_ix)
+        fd_c_list.append(fd_c_ix)
+        fd_err_list.append(np.mean(fd_err_ix))
+        abs_err_list.append(np.mean(abs_err_ix))
+        rel_err_list.append(np.mean(rel_err_ix))
+        if detailed:
+            fval_p_list.append(fval_p)
+            fval_m_list.append(fval_m)
+            std_check_list.append(std_check_ix)
+            mean_check_list.append(mean_check_ix)
+
+    # create data dictionary for dataframe
+    data = {
+        'grad': grad_list,
+        'fd_f': fd_f_list,
+        'fd_b': fd_b_list,
+        'fd_c': fd_c_list,
+        'fd_err': fd_err_list,
+        'abs_err': abs_err_list,
+        'rel_err': rel_err_list,
+    }
+
+    # update data dictionary if detailed output is requested
+    if detailed:
+        prefix_data = {
+            'fval': [fval]*len(parameter_ids),
+            'fval_p': fval_p_list,
+            'fval_m': fval_m_list,
+
+        }
+        std_str = '(grad-fd_c)/std({fd_f,fd_b,fd_c})'
+        mean_str = '|grad-fd_c|/mean(|fd_f-fd_b|,|fd_f-fd_c|,|fd_b-fd_c|)'
+        postfix_data = {
+            std_str: std_check_list,
+            mean_str: mean_check_list,
+        }
+        data = {**prefix_data, **data, **postfix_data}
+
+    # create dataframe
+    result = pd.DataFrame(
+        data=data,
+        index=parameter_ids,
+    )
+
+    # log full result
+    if verbosity > 0:
+        logger.info(result)
+
+    return result
+
+
+def _default_scaled_parameters(
+    petab_problem: petab.Problem,
+    problem_parameters: Optional[Dict[str, float]] = None,
+    scaled_parameters: bool = False,
+) -> Optional[Dict[str, float]]:
+    """
+    Helper method to handled an unscaled or unspecified parameter vector.
+
+    The parameter vector defaults to the nominal values in the PEtab
+    parameter table.
+
+    Unscaled parameter values are scaled.
+
+    :param petab_problem:
+        The PEtab problem.
+    :param problem_parameters:
+        Keys are PEtab parameter IDs, values are parameter values on the scale
+        defined in the PEtab parameter table. Defaults to the nominal values in
+        the PEtab parameter table.
+    :param scaled_parameters:
+        Whether `problem_parameters` are on the scale defined in the PEtab
+        parameter table.
+
+    :return:
+        The scaled parameter vector.
+    """
+    if problem_parameters is None:
+        problem_parameters = dict(zip(
+            petab_problem.x_ids,
+            petab_problem.x_nominal_scaled,
+        ))
+    elif not scaled_parameters:
+        problem_parameters = petab_problem.scale_parameters(problem_parameters)
+    return problem_parameters

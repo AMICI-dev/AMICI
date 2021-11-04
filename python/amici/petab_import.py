@@ -768,21 +768,14 @@ def main():
     if args.flatten:
         petab.flatten_timepoint_specific_output_overrides(pp)
 
-    # FIXME avoid recompilation when testing locally. remove when
-    #       PR issues are resolved.
-    import_petab_problem(
-        petab_problem=pp,
-        model_output_dir=args.model_output_dir,
-        model_name=args.model_name,
-    )
-    #import_model(model_name=args.model_name,
-    #             sbml_model=pp.sbml_model,
-    #             condition_table=pp.condition_df,
-    #             observable_table=pp.observable_df,
-    #             measurement_table=pp.measurement_df,
-    #             model_output_dir=args.model_output_dir,
-    #             compile=args.compile,
-    #             verbose=args.verbose)
+    import_model(model_name=args.model_name,
+                 sbml_model=pp.sbml_model,
+                 condition_table=pp.condition_df,
+                 observable_table=pp.observable_df,
+                 measurement_table=pp.measurement_df,
+                 model_output_dir=args.model_output_dir,
+                 compile=args.compile,
+                 verbose=args.verbose)
 
 
 if __name__ == '__main__':

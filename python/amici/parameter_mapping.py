@@ -209,13 +209,8 @@ def fill_in_parameters_for_condition(
                      for key, val in map_preeq_fix.items()}
     map_sim_fix = {key: _get_par(key, val)
                    for key, val in map_sim_fix.items()}
-
-    # FIXME
-    try:
-        map_sim_var = {key: _get_par(key, val)
-                       for key, val in map_sim_var.items()}
-    except Exception as e:
-        breakpoint()
+    map_sim_var = {key: _get_par(key, val)
+                   for key, val in map_sim_var.items()}
 
     # If necessary, (un)scale parameters
     if scaled_parameters:

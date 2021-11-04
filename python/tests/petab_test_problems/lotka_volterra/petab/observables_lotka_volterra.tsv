@@ -1,0 +1,2 @@
+observableId	observableFormula	noiseFormula	observableTransformation	noiseDistribution
+observable_prey	log10(prey)	noiseParameter1_observable_prey	lin	normal

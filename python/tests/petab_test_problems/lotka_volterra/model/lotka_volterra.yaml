@@ -1,0 +1,69 @@
+odes:
+    - stateId: prey
+      rightHandSide: alpha * prey - beta * prey * predator - departure_prey * prey * prey
+      initialValue: 2
+
+    - stateId: predator
+      rightHandSide: delta * prey * predator - gamma * predator + arrival_predator * prey
+      initialValue: 2
+
+parameters: 
+    - parameterId: alpha
+      nominalValue: 2
+      parameterScale: log10
+      lowerBound: 0.1
+      upperBound: 10
+      estimate: 1
+  
+    - parameterId: beta
+      nominalValue: 4
+      parameterScale: log10
+      estimate: 0
+
+    - parameterId: gamma
+      nominalValue: 3
+      parameterScale: log10
+      lowerBound: 0.1
+      upperBound: 10
+      estimate: 1
+     
+    - parameterId: delta
+      nominalValue: 3
+      parameterScale: log10
+      estimate: 0
+     
+    - parameterId: departure_prey
+      nominalValue: 3
+      parameterScale: log10
+      estimate: 0
+     
+    - parameterId: arrival_predator
+      nominalValue: 3
+      parameterScale: log10
+      estimate: 0
+
+observables:
+    - observableId: observable_prey
+      observableFormula: log10(prey)
+      observableTransformation: lin
+      noiseFormula: noiseParameter1_observable_prey
+      noiseDistribution: normal
+
+conditions:
+    - conditionId: weak_predator
+      beta: 2
+      delta: 3
+      departure_prey: 0
+      arrival_predator: 0
+
+    - conditionId: strong_predator
+      beta: 4
+      delta: 3
+      departure_prey: 0
+      arrival_predator: 0
+
+    - conditionId: no_interaction
+      beta: 0
+      delta: 0
+      departure_prey: 3
+      arrival_predator: 3
