@@ -39,4 +39,4 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     )
 
     assert (result.abs_err < ATOL).all()
-    assert (result.rel_err < ATOL).all()
+    assert (result.rel_err < RTOL).all()
