@@ -12,6 +12,9 @@ on:
 
   workflow_dispatch:
 
+  schedule:
+    - cron:  '48 4 * * *'
+
 jobs:
   build:
     name: Performance Test
