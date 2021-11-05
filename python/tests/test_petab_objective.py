@@ -17,7 +17,8 @@ RTOL: float = 1e-3
 @pytest.fixture
 def lotka_volterra() -> petab.Problem:
     return petab.Problem.from_yaml(str(
-        Path('petab_test_problems')
+        Path(__file__).parent
+        / 'petab_test_problems'
         / 'lotka_volterra'
         / 'petab'
         / 'problem.yaml'
