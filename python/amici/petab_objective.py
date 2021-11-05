@@ -60,6 +60,10 @@ def simulate_petab(
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
 
+    NB: supplied parameters are scaled internally, independently of
+        `scaled_parameters`, and corresponding sensitivities are similarly
+        scaled.
+
     :param petab_problem:
         PEtab problem to work on.
     :param amici_model:
@@ -190,6 +194,7 @@ def aggregate_sllh(
     """
     Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.
+
     :param amici_model:
         AMICI model from which ``rdatas`` were obtained.
     :param rdatas:
@@ -203,8 +208,9 @@ def aggregate_sllh(
         Return sensitivities on the PEtab parameter scales
     :param petab_problem:
         The PEtab problem that defines the parameter scales.
+
     :return:
-        aggregated sllh
+        Aggregated likelihood sensitivities.
     """
     accumulated_sllh = {}
     model_parameter_ids = amici_model.getParameterIds()
@@ -888,6 +894,7 @@ def check_grad_multi_eps(
 
     See `amici.petab_objective.check_grad` method parameters for other
     parameters.
+
     :param multi_eps:
         The finite difference step sizes to be tested.
     :param label:
