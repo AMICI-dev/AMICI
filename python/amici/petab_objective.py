@@ -218,7 +218,7 @@ def aggregate_sllh(
     if petab_scale and petab_problem is None:
         raise ValueError(
             'Please provide a PEtab problem if scaled SLLH is desired, or set '
-            '`petab_scale==False`.'
+            '`petab_scale=False`.'
         )
 
     # Check for issues in all condition simulation results.
@@ -255,6 +255,7 @@ def aggregate_sllh(
             if petab_parameter_id not in accumulated_sllh:
                 accumulated_sllh[petab_parameter_id] = 0
 
+            # rename for readability
             partial_parameter_sllh = condition_parameter_sllh
             # Scale
             if petab_scale:
@@ -1145,7 +1146,7 @@ def _default_scaled_parameters(
     scaled_parameters: bool = False,
 ) -> Optional[Dict[str, float]]:
     """
-    Helper method to handled an unscaled or unspecified parameter vector.
+    Helper method to handle an unscaled or unspecified parameter vector.
 
     The parameter vector defaults to the nominal values in the PEtab
     parameter table.
