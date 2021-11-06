@@ -60,9 +60,9 @@ def simulate_petab(
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
 
-    NB: supplied parameters are scaled internally, independently of
-        `scaled_parameters`, and corresponding sensitivities are similarly
-        scaled.
+    .. note::
+        Regardless of `scaled_parameters`, sensitivities are returned on the
+        scales defined in the PEtab parameters table.
 
     :param petab_problem:
         PEtab problem to work on.
@@ -161,14 +161,16 @@ def simulate_petab(
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
     # Compute total sllh
-    sllh = aggregate_sllh(
-        amici_model=amici_model,
-        rdatas=rdatas,
-        parameter_mapping=parameter_mapping,
-        petab_scale=scaled_parameters,
-        petab_problem=petab_problem,
-        edatas=edatas,
-    )
+    sllh = None
+    if solver.getSensitivityOrder() != amici.SensitivityOrder.none:
+        sllh = aggregate_sllh(
+            amici_model=amici_model,
+            rdatas=rdatas,
+            parameter_mapping=parameter_mapping,
+            petab_scale=scaled_parameters,
+            petab_problem=petab_problem,
+            edatas=edatas,
+        )
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -205,7 +207,8 @@ def aggregate_sllh(
     :param edatas:
         Experimental data used for simulation.
     :param petab_scale:
-        Return sensitivities on the PEtab parameter scales
+        Sensitivities are returned on PEtab scale if `True`, else AMICI model
+        scale.
     :param petab_problem:
         The PEtab problem that defines the parameter scales.
 
@@ -228,7 +231,10 @@ def aggregate_sllh(
             return None
         # Condition simulation result does not provide SLLH.
         if rdata.get('sllh', None) is None:
-            return None
+            raise ValueError(
+                'The sensitivities of the likelihood for a condition were '
+                'not computed.'
+            )
 
     for condition_parameter_mapping, edata, rdata in \
             zip(parameter_mapping, edatas, rdatas):
@@ -255,8 +261,6 @@ def aggregate_sllh(
             if petab_parameter_id not in accumulated_sllh:
                 accumulated_sllh[petab_parameter_id] = 0
 
-            # rename for readability
-            partial_parameter_sllh = condition_parameter_sllh
             # Scale
             if petab_scale:
                 # `ParameterMappingForCondition` objects provide the scale in
@@ -273,18 +277,18 @@ def aggregate_sllh(
                 # SLLH is (un)scaled here with methods that were written for
                 # parameters.
                 # First unscale w.r.t. model scale.
-                partial_parameter_sllh = unscale_parameter(
-                    partial_parameter_sllh,
+                condition_parameter_sllh = unscale_parameter(
+                    condition_parameter_sllh,
                     model_parameter_scale,
                 )
                 # Then scale w.r.t. PEtab scale.
-                partial_parameter_sllh = scale_parameter(
-                    partial_parameter_sllh,
+                condition_parameter_sllh = scale_parameter(
+                    condition_parameter_sllh,
                     petab_parameter_scale,
                 )
 
             # Accumulate
-            accumulated_sllh[petab_parameter_id] += partial_parameter_sllh
+            accumulated_sllh[petab_parameter_id] += condition_parameter_sllh
 
     return accumulated_sllh
 
