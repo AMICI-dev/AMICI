@@ -227,10 +227,10 @@ def aggregate_sllh(
     # Check for issues in all condition simulation results.
     for rdata in rdatas:
         # Condition failed during simulation.
-        if rdata['status'] != amici.AMICI_SUCCESS:
+        if rdata.status != amici.AMICI_SUCCESS:
             return None
         # Condition simulation result does not provide SLLH.
-        if rdata.get('sllh', None) is None:
+        if rdata.sllh is None:
             raise ValueError(
                 'The sensitivities of the likelihood for a condition were '
                 'not computed.'
@@ -239,11 +239,11 @@ def aggregate_sllh(
     for condition_parameter_mapping, edata, rdata in \
             zip(parameter_mapping, edatas, rdatas):
         for sllh_parameter_index, condition_parameter_sllh in \
-                enumerate(rdata['sllh']):
+                enumerate(rdata.sllh):
             # Get PEtab parameter ID
             # Use ExpData if it provides a parameter list, else default to
             # Model.
-            if edata.plist is not None and edata.plist:
+            if edata.plist:
                 model_parameter_index = edata.plist[sllh_parameter_index]
             else:
                 model_parameter_index = amici_model.plist(sllh_parameter_index)
