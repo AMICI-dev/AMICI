@@ -253,15 +253,11 @@ def aggregate_sllh(
                 .map_sim_var[model_parameter_id]
             )
 
-            # Skip fixed parameters (?)
-            if not isinstance(petab_parameter_id, str):
-                continue
-
             # Initialize
             if petab_parameter_id not in accumulated_sllh:
                 accumulated_sllh[petab_parameter_id] = 0
 
-            # Scale
+            # Check scale
             if petab_scale:
                 # `ParameterMappingForCondition` objects provide the scale in
                 # terms of `petab.C` constants already, not AMICI equivalents.
@@ -274,18 +270,13 @@ def aggregate_sllh(
                     .parameter_df
                     .loc[petab_parameter_id, PARAMETER_SCALE]
                 )
-                # SLLH is (un)scaled here with methods that were written for
-                # parameters.
-                # First unscale w.r.t. model scale.
-                condition_parameter_sllh = unscale_parameter(
-                    condition_parameter_sllh,
-                    model_parameter_scale,
-                )
-                # Then scale w.r.t. PEtab scale.
-                condition_parameter_sllh = scale_parameter(
-                    condition_parameter_sllh,
-                    petab_parameter_scale,
-                )
+                if model_parameter_scale != petab_parameter_scale:
+                    raise ValueError(
+                        f'The scale of the parameter `{petab_parameter_id}` '
+                        'differs between the AMICI model '
+                        f'({model_parameter_scale}) and the PEtab problem '
+                        f'({petab_parameter_scale}).'
+                    )
 
             # Accumulate
             accumulated_sllh[petab_parameter_id] += condition_parameter_sllh
