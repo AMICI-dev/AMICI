@@ -942,6 +942,7 @@ def check_grad(
     eps: float = 1e-5,
     verbosity: int = 1,
     detailed: bool = False,
+    ignore_missing_parameters: bool = False,
 ) -> pd.DataFrame:
     """
     Compare gradient evaluation.
@@ -979,6 +980,8 @@ def check_grad(
         are function values, and the central difference weighted by the
         difference in output from all methods (standard deviation and
         mean).
+    :param ignore_missing_parameters:
+        Whether to ignore a parameter that is missing from the gradients.
 
     :return:
         Gradient, finite difference approximations and error estimates.
@@ -1033,6 +1036,18 @@ def check_grad(
 
     # loop over parameter IDs
     for ix in parameter_ids:
+        if ix not in grad:
+            if not ignore_missing_parameters:
+                raise ValueError(
+                    f'A parameter ({ix}) is missing from the gradients. This '
+                    'may be because the parameter is fixed to a specific '
+                    'value in the PEtab parameters table. To suppress this '
+                    'error and use `np.nan` as the gradient,'
+                    'set `ignore_missing_parameters=True`.'
+                    #'check, set'skip the parameter in the gradient check, set '
+                    #'`ignore_missing_parameters=True`.'
+                )
+            grad[ix] = np.nan
         # forward (plus) point
         x_p = copy.deepcopy(problem_parameters)
         x_p[ix] += eps
