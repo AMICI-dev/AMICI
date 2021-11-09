@@ -1216,8 +1216,12 @@ class ODEModel:
         # matrix and then apply the necessary updates from
         # transform_dxdt_to_concentration
 
-        if not any(s in [e.get_id() for e in self._expressions]
-                   for s in si.stoichiometric_matrix.free_symbols):
+        expr_syms = {e.get_id() for e in self._expressions}
+        if not any(s in expr_syms
+                   for s in si.stoichiometric_matrix.free_symbols)\
+                and not any(
+                    any(s in expr_syms for s in state.get_free_symbols())
+                    for state in self._states):
             self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl + nexpr).row_join(
                 si.stoichiometric_matrix
             )
