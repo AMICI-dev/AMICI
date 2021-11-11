@@ -1067,9 +1067,6 @@ class ODEModel:
         nr = len(fluxes)
 
         # correct time derivatives for compartment changes
-
-        dxdotdw_updates = []
-
         def transform_dxdt_to_concentration(species_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
@@ -1101,10 +1098,6 @@ class ODEModel:
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
                 xdot = (dxdt - dv_dt * species_id) / comp
-                dxdotdw_updates.extend(
-                    (x_index, w_index, xdot.diff(r_flux))
-                    for w_index, r_flux in enumerate(fluxes)
-                )
                 return xdot
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
@@ -1123,23 +1116,12 @@ class ODEModel:
                         v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
                 dv_dx = v.diff(species_id)
                 xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
-                dxdotdw_updates.extend(
-                    (x_index, w_index, xdot.diff(r_flux))
-                    for w_index, r_flux in enumerate(fluxes)
-                )
                 return xdot
             else:
                 v = si.compartments[comp]
 
                 if v == 1.0:
                     return dxdt
-
-                dxdotdw_updates.extend(
-                    (x_index, w_index,
-                     si.stoichiometric_matrix[x_index, w_index] / v)
-                    for w_index in range(si.stoichiometric_matrix.shape[1])
-                    if si.stoichiometric_matrix[x_index, w_index] != 0
-                )
 
                 return dxdt / v
 
@@ -1196,38 +1178,11 @@ class ODEModel:
 
         # process conservation laws
         if compute_cls:
-            dxdotdw_updates = si.process_conservation_laws(self,
-                                                           dxdotdw_updates)
+            si.process_conservation_laws(self)
 
         nx_solver = si.stoichiometric_matrix.shape[0]
         nw = len(self._expressions)
         ncl = nw - nr - nexpr
-
-        # set derivatives of xdot, if applicable. We do this as we can save
-        # a substantial amount of computations by exploiting the structure
-        # of the right hand side.
-        # the tricky part is that the expressions w do not only contain the
-        # flux entries, but also assignment rules and conservation laws.
-        # assignment rules are added before the fluxes and
-        # _process_conservation_laws is called after the fluxes,
-        # but conservation law expressions are inserted at the beginning
-        # of the self.eq['w']. Accordingly we concatenate a zero matrix (for
-        # rule assignments and conservation laws) with the stoichiometric
-        # matrix and then apply the necessary updates from
-        # transform_dxdt_to_concentration
-
-        expr_syms = {e.get_id() for e in self._expressions}
-        if not any(s in expr_syms
-                   for s in si.stoichiometric_matrix.free_symbols)\
-                and not any(
-                    any(s in expr_syms for s in state.get_free_symbols())
-                    for state in self._states):
-            self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl + nexpr).row_join(
-                si.stoichiometric_matrix
-            )
-            for ix, iw, val in dxdotdw_updates:
-                # offset update according to concatenated zero matrix
-                self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
