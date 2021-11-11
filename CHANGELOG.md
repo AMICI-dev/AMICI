@@ -2,6 +2,23 @@
 
 ## v0.X Series
 
+### v0.11.20 (2021-11-12)
+
+New: 
+ * Changed parameter mappings such that unassigned values have non-nan default values. This fixes erroneous evaluation of `llh` as `NaN` in some situations (#1574)
+ * Added support for Python 3.10 (#1555)
+
+Fixes:
+ * Fixed a bug when simulation start time was not transferred when copying a solver instance (#1573)
+ * Fixed a bug which led to incorrect sensitivies for models with multiple assignment rules or rate rules (#1584)
+
+Other:
+ * Update CI and documentation settings (#1569, #1527, #1572, #1575, #1579, #1580, #1589, #1581)
+ * Extend set of validated benchmark models that is checked during CI (#1571, #1577)
+ * Fixed string formatting in derivative checks (#1585)
+ * Added helper methods to save and restore model instance-only settings (#1576)
+
+
 ### v0.11.19 (2021-10-13)
 
 New:
