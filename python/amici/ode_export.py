@@ -1058,13 +1058,11 @@ class ODEModel:
 
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
-        nexpr = len(symbols[SymbolId.EXPRESSION])
 
         # assemble fluxes and add them as expressions to the model
         assert len(si.flux_ids) == len(si.flux_vector)
         fluxes = [generate_flux_symbol(ir, name=flux_id)
                   for ir, flux_id in enumerate(si.flux_ids)]
-        nr = len(fluxes)
 
         # correct time derivatives for compartment changes
         def transform_dxdt_to_concentration(species_id, dxdt):
@@ -1178,8 +1176,6 @@ class ODEModel:
         # process conservation laws
         if compute_cls:
             si.process_conservation_laws(self)
-
-        nw = len(self._expressions)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
