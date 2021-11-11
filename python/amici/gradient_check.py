@@ -183,8 +183,6 @@ def check_derivatives(model: Model,
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     fields = []
-    if edata is not None:
-        fields.append('llh')
 
     if solver.getSensitivityMethod() == SensitivityMethod.forward and \
             solver.getSensitivityOrder() <= SensitivityOrder.first:
@@ -210,6 +208,10 @@ def check_derivatives(model: Model,
                       -np.dot(rdata['res'].T, rdata['sres']),
                       assert_fun,
                       1e-8, 1e-4)
+
+    if edata is not None:
+        fields.append('llh')
+
     for ip, pval in enumerate(p):
         if pval == 0.0 and skip_zero_pars:
             continue
@@ -257,10 +259,10 @@ def check_close(result: np.array,
     if not close.all():
         if ip is None:
             index_str = ''
-            check_type = 'Regression check  '
+            check_type = 'Regression check'
         else:
             index_str = f'at index ip={ip} '
-            check_type = 'FD check '
+            check_type = 'FD check'
         print(f'{check_type} failed for {field} {index_str}for '
               f'{close.size - close.sum()} indices:')
         adev = np.abs(result - expected)
