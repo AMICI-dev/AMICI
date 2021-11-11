@@ -1094,7 +1094,6 @@ class ODEModel:
             species = si.symbols[SymbolId.SPECIES][species_id]
 
             comp = species['compartment']
-            x_index = species['index']
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
                 xdot = (dxdt - dv_dt * species_id) / comp
@@ -1180,9 +1179,7 @@ class ODEModel:
         if compute_cls:
             si.process_conservation_laws(self)
 
-        nx_solver = si.stoichiometric_matrix.shape[0]
         nw = len(self._expressions)
-        ncl = nw - nr - nexpr
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
