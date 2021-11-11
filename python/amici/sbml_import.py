@@ -1380,16 +1380,12 @@ class SbmlImporter:
 
         return sym_math
 
-    def process_conservation_laws(self, ode_model, volume_updates) -> List:
+    def process_conservation_laws(self, ode_model) -> None:
         """
         Find conservation laws in reactions and species.
 
         :param ode_model:
             ODEModel object with basic definitions
-
-        :param volume_updates:
-            List with updates for the stoichiometric matrix accounting for
-            compartment volumes
 
         :returns volume_updates_solver:
             List (according to reduced stoichiometry) with updates for the
@@ -1409,42 +1405,12 @@ class SbmlImporter:
             species_solver = list(range(ode_model.num_states_rdata()))
 
         # prune out species from stoichiometry and
-        volume_updates_solver = self._reduce_stoichiometry(species_solver,
-                                                           volume_updates)
+        self.stoichiometric_matrix = \
+            self.stoichiometric_matrix[species_solver, :]
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
-
-        return volume_updates_solver
-
-    def _reduce_stoichiometry(self, species_solver, volume_updates) -> List:
-        """
-        Reduces the stoichiometry with respect to conserved quantities
-
-        :param species_solver:
-            List of species indices which remain later in the ODE solver
-
-        :param volume_updates:
-            List with updates for the stoichiometric matrix accounting for
-            compartment volumes
-
-        :returns volume_updates_solver:
-            List (according to reduced stoichiometry) with updates for the
-            stoichiometric matrix accounting for compartment volumes
-        """
-
-        # prune out constant species from stoichiometric matrix
-        self.stoichiometric_matrix = \
-            self.stoichiometric_matrix[species_solver, :]
-
-        # updates of stoichiometry (later dxdotdw in ode_exporter) must be
-        # corrected for conserved quantities:
-        volume_updates_solver = [(species_solver.index(ix), iw, val)
-                                 for (ix, iw, val) in volume_updates
-                                 if ix in species_solver]
-
-        return volume_updates_solver
 
     def _replace_compartments_with_volumes(self):
         """
