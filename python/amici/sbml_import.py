@@ -20,7 +20,10 @@ import copy
 from typing import (
     Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
 )
-from amici.conserved_moeties import *
+
+from .conserved_moeities import kernel
+
+#from amici.conserved_moeties import *
 
 from .import_utils import (
     smart_subs, smart_subs_dict, toposort_symbols,
