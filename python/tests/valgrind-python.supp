@@ -472,3 +472,15 @@
    obj:/usr/bin/python3.*
    ...
 }
+
+{
+   PyAST_CompileObject
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.*
+   ...
+   fun:PyAST_CompileObject
+   obj:/usr/bin/python3.*
+   ...
+}
