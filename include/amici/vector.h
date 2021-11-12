@@ -343,11 +343,14 @@ inline void linearSum(realtype a, AmiVector const& x, realtype b,
 }
 
 /**
- * @brief Negates all vector elements (in-place)
- * @param x Vector to operate on
+ * @brief Compute dot product of x and y
+ * @param x vector
+ * @param y vector
+ * @return dot product of x and y
  */
-inline void negate(AmiVector& x) {
-    std::transform(x.begin(), x.end(), x.begin(), std::negate<realtype>());
+inline realtype dotProd(AmiVector const& x, AmiVector const& y) {
+    return N_VDotProd(const_cast<N_Vector>(x.getNVector()),
+                      const_cast<N_Vector>(y.getNVector()));
 }
 
 } // namespace amici

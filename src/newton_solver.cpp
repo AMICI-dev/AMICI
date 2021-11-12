@@ -282,7 +282,7 @@ void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
     linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
     linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
-    negate(ns_Jdiag_);
+    ns_Jdiag_.minus();
 }
 
 /* ------------------------------------------------------------------------- */
@@ -315,11 +315,10 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
     N_VDiv(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
     ns_rt_ = ns_r_;
 
-    for (int i_linstep = 0; i_linstep < max_lin_steps_;
-         i_linstep++) {
+    for (int i_linstep = 0; i_linstep < max_lin_steps_; i_linstep++) {
         // Compute factors
         double rho1 = rho;
-        rho = N_VDotProd(ns_rt_.getNVector(), ns_r_.getNVector());
+        rho = dotProd(ns_rt_, ns_r_);
         double beta = rho * alpha / (rho1 * omega);
 
         // ns_p = ns_r + beta * (ns_p - omega * ns_v);
@@ -332,7 +331,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         N_VDiv(ns_v_.getNVector(), ns_Jdiag_.getNVector(), ns_v_.getNVector());
 
         // Compute factor
-        alpha = rho / N_VDotProd(ns_rt_.getNVector(), ns_v_.getNVector());
+        alpha = rho / dotProd(ns_rt_, ns_v_);
 
         // ns_h = ns_delta + alpha * ns_p;
         linearSum(1.0, ns_delta, alpha, ns_p_, ns_h_);
@@ -345,7 +344,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         N_VDiv(ns_t_.getNVector(), ns_Jdiag_.getNVector(), ns_t_.getNVector());
 
         // Compute factor
-        omega = N_VDotProd(ns_t_.getNVector(), ns_s_.getNVector()) / N_VDotProd(ns_t_.getNVector(), ns_t_.getNVector());
+        omega = dotProd(ns_t_, ns_s_) / dotProd(ns_t_, ns_t_);
 
         // ns_delta = ns_h + omega * ns_s;
         linearSum(1.0, ns_h_, omega, ns_s_, ns_delta);
@@ -354,7 +353,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
 
         // Compute the (unscaled) residual
         N_VProd(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
-        double res = sqrt(N_VDotProd(ns_r_.getNVector(), ns_r_.getNVector()));
+        double res = sqrt(dotProd(ns_r_, ns_r_));
 
         // Test convergence
         if (res < atol_) {
