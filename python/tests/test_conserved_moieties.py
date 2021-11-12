@@ -1,6 +1,6 @@
 """ Tests for conservative laws / conserved moities """
 
-from amici.conserved_moeties import *
+from amici.conserved_moieties import *
 from time import perf_counter
 from amici.logging import get_logger, log_execution_time
 
