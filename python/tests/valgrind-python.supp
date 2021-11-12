@@ -460,3 +460,15 @@
    obj:*/site-packages/scipy/*.cpython-3*-x86_64-linux-gnu.so
    ...
 }
+
+
+{
+   PyTuple_Pack
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.*
+   fun:PyTuple_Pack
+   obj:/usr/bin/python3.*
+   ...
+}
