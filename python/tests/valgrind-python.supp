@@ -450,3 +450,13 @@
    obj:*site-packages/pandas/_libs/*.cpython-3*-x86_64-linux-gnu.so
    ...
 }
+
+{
+   Scipy extensions
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   obj:*/site-packages/scipy/*.cpython-3*-x86_64-linux-gnu.so
+   ...
+}
