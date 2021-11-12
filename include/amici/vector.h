@@ -183,6 +183,13 @@ class AmiVector {
      */
     void copy(const AmiVector &other);
 
+    /**
+     * @brief Take absolute value (in-place)
+     */
+    void abs() {
+        N_VAbs(getNVector(), getNVector());
+    };
+
   private:
     /** main data storage */
     std::vector<realtype> vec_;

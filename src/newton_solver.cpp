@@ -255,7 +255,7 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 
     // Ensure positivity of entries in ns_Jdiag
     ns_p_.set(1.0);
-    N_VAbs(ns_Jdiag_.getNVector(), ns_Jdiag_.getNVector());
+    ns_Jdiag_.abs();
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
     linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
     linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
@@ -278,7 +278,7 @@ void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
     model_->fJDiag(*t_, ns_Jdiag_, 0.0, *x_, dx_);
 
     ns_p_.set(1.0);
-    N_VAbs(ns_Jdiag_.getNVector(), ns_Jdiag_.getNVector());
+    ns_Jdiag_.abs();
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
     linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
     linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
