@@ -288,7 +288,7 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
-        
+
         /* Finalize by setting adjoint state to zero (its steady state) */
         xB_.zero();
     } catch (NewtonFailure const &) {
@@ -526,8 +526,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         }
 
         /* Try a full, undamped Newton step */
-        N_VLinearSum(1.0, x_old_.getNVector(), gamma, delta_.getNVector(),
-                     x_.getNVector());
+        linearSum(1.0, x_old_, gamma, delta_, x_);
 
         /* Compute new xdot and residuals */
         model->fxdot(t_, x_, dx_, xdot_);

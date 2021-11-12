@@ -87,6 +87,18 @@ class AmiVector {
     AmiVector &operator=(AmiVector const &other);
 
     /**
+     * @brief Returns an iterator that points to the first element of the
+     * vector.
+     */
+    auto begin() { return vec_.begin(); }
+
+    /**
+     * @brief Returns an iterator that points to one after the last element of
+     * the vector.
+     */
+    auto end() { return vec_.end(); }
+
+    /**
      * @brief data accessor
      * @return pointer to data array
      */
@@ -314,6 +326,29 @@ class AmiVectorArray {
      */
     std::vector<N_Vector> nvec_array_;
 };
+
+/**
+ * @brief Computes z = a*x + b*y
+ * @param a coefficient for x
+ * @param x a vector
+ * @param b coefficient for y
+ * @param y another vector with same size as x
+ * @param z result vector of same size as x and y
+ */
+inline void linearSum(realtype a, AmiVector const& x, realtype b,
+               AmiVector const& y, AmiVector& z) {
+    N_VLinearSum(a, const_cast<N_Vector>(x.getNVector()),
+                 b, const_cast<N_Vector>(y.getNVector()),
+                 z.getNVector());
+}
+
+/**
+ * @brief Negates all vector elements (in-place)
+ * @param x Vector to operate on
+ */
+inline void negate(AmiVector& x) {
+    std::transform(x.begin(), x.end(), x.begin(), std::negate<realtype>());
+}
 
 } // namespace amici
 
