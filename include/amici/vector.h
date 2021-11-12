@@ -86,6 +86,13 @@ class AmiVector {
      */
     AmiVector &operator=(AmiVector const &other);
 
+    AmiVector &operator/=(AmiVector const& divisor) {
+        N_VDiv(getNVector(),
+               const_cast<N_Vector>(divisor.getNVector()),
+               getNVector());
+        return *this;
+    }
+
     /**
      * @brief Returns an iterator that points to the first element of the
      * vector.

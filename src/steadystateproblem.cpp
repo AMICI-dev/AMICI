@@ -708,9 +708,7 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                            plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
-            yQB[ip] = N_VDotProd(
-                const_cast<N_Vector>(yQ.getNVector()),
-                const_cast<N_Vector>(model->get_dxdotdp().getNVector(ip)));
+            yQB[ip] = dotProd(yQ, model->get_dxdotdp()[ip]);
     }
 }
 

@@ -312,7 +312,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
 
     // ns_r = xdot - ns_Jv;
     linearSum(-1.0, ns_Jv_, 1.0, xdot_, ns_r_);
-    N_VDiv(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
+    ns_r_ /= ns_Jdiag_;
     ns_rt_ = ns_r_;
 
     for (int i_linstep = 0; i_linstep < max_lin_steps_; i_linstep++) {
@@ -328,7 +328,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         // ns_v = J * ns_p
         ns_v_.zero();
         ns_J_.multiply(ns_v_.getNVector(), ns_p_.getNVector());
-        N_VDiv(ns_v_.getNVector(), ns_Jdiag_.getNVector(), ns_v_.getNVector());
+        ns_v_ /= ns_Jdiag_;
 
         // Compute factor
         alpha = rho / dotProd(ns_rt_, ns_v_);
@@ -341,7 +341,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         // ns_t = J * ns_s
         ns_t_.zero();
         ns_J_.multiply(ns_t_.getNVector(), ns_s_.getNVector());
-        N_VDiv(ns_t_.getNVector(), ns_Jdiag_.getNVector(), ns_t_.getNVector());
+        ns_t_ /= ns_Jdiag_;
 
         // Compute factor
         omega = dotProd(ns_t_, ns_s_) / dotProd(ns_t_, ns_t_);
@@ -365,7 +365,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         }
 
         // Scale back
-        N_VDiv(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
+        ns_r_ /= ns_Jdiag_;
     }
     throw NewtonFailure(AMICI_CONV_FAILURE, "linsolveSPBCG");
 }
