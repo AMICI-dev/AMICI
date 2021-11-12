@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 62.
+List of publications using AMICI. Total number is 64.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -8,6 +8,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-BastBuc2021">
 <p>Bast, Lisa, Michèle C. Buck, Judith S. Hecker, Robert A. J. Oostendorp, Katharina S. Götze, and Carsten Marr. 2021. “Computational Modeling of Stem and Progenitor Cell Kinetics Identifies Plausible Hematopoietic Lineage Hierarchies.” <em>iScience</em> 24 (2): 102120. <a href="https://doi.org/https://doi.org/10.1016/j.isci.2021.102120">https://doi.org/https://doi.org/10.1016/j.isci.2021.102120</a>.</p>
+</div>
+<div id="ref-Contento2021.10.01.21263052">
+<p>Contento, Lorenzo, Noemi Castelletti, Elba Raimúndez, Ronan Le Gleut, Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2021. “Integrative Modelling of Reported Case Numbers and Seroprevalence Reveals Time-Dependent Test Efficiency and Infection Rates.” <em>medRxiv</em>. <a href="https://doi.org/10.1101/2021.10.01.21263052">https://doi.org/10.1101/2021.10.01.21263052</a>.</p>
 </div>
 <div id="ref-ErdemMut2021">
 <p>Erdem, Cemal, Arnab Mutsuddy, Ethan M. Bensman, William B. Dodd, Michael M. Saint-Antoine, Mehdi Bouhaddou, Robert C. Blake, et al. 2021. “A Scalable, Open-Source Implementation of a Large-Scale Mechanistic Model for Single Cell Proliferation and Death Signaling.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.11.09.373407">https://doi.org/10.1101/2020.11.09.373407</a>.</p>
@@ -17,6 +20,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-Gaspari2021">
 <p>Gaspari, Erika. 2021. “Model-Driven Design of Mycoplasma as a Vaccine Chassis.” PhD thesis, Wageningen: Wageningen University. <a href="https://doi.org/10.18174/539593">https://doi.org/10.18174/539593</a>.</p>
+</div>
+<div id="ref-GudinaAli2021">
+<p>Gudina, Esayas Kebede, Solomon Ali, Eyob Girma, Addisu Gize, Birhanemeskel Tegene, Gadissa Bedada Hundie, Wondewosen Tsegaye Sime, et al. 2021. “Seroepidemiology and model-based prediction of SARS-CoV-2 in Ethiopia: longitudinal cohort study among front-line hospital workers and communities.” <em>The Lancet Global Health</em> 9 (11): e1517–e1527. <a href="https://doi.org/https://doi.org/10.1016/S2214-109X(21)00386-7">https://doi.org/https://doi.org/10.1016/S2214-109X(21)00386-7</a>.</p>
 </div>
 <div id="ref-Maier2021">
 <p>Maier, Corinna. 2021. “Bayesian Data Assimilation and Reinforcement Learning for Model-Informed Precision Dosing in Oncology.” Doctoralthesis, Universität Potsdam. <a href="https://doi.org/10.25932/publishup-51587">https://doi.org/10.25932/publishup-51587</a>.</p>
