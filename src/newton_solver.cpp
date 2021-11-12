@@ -2,9 +2,6 @@
 
 #include "amici/model.h"
 #include "amici/solver.h"
-#include "amici/steadystateproblem.h"
-#include "amici/forwardproblem.h"
-#include "amici/edata.h"
 
 #include "sunlinsol/sunlinsol_klu.h" // sparse solver
 #include "sunlinsol/sunlinsol_dense.h" // dense solver
