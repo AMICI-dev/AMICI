@@ -305,7 +305,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
     double omega = 1.0;
     double alpha = 1.0;
 
-    ns_J_.multiply(ns_Jv_.getNVector(), ns_delta.getNVector());
+    ns_J_.multiply(ns_Jv_, ns_delta);
 
     // ns_r = xdot - ns_Jv;
     linearSum(-1.0, ns_Jv_, 1.0, xdot_, ns_r_);
@@ -324,7 +324,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
 
         // ns_v = J * ns_p
         ns_v_.zero();
-        ns_J_.multiply(ns_v_.getNVector(), ns_p_.getNVector());
+        ns_J_.multiply(ns_v_, ns_p_);
         ns_v_ /= ns_Jdiag_;
 
         // Compute factor
@@ -337,7 +337,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
 
         // ns_t = J * ns_s
         ns_t_.zero();
-        ns_J_.multiply(ns_t_.getNVector(), ns_s_.getNVector());
+        ns_J_.multiply(ns_t_, ns_s_);
         ns_t_ /= ns_Jdiag_;
 
         // Compute factor
@@ -349,7 +349,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         linearSum(1.0, ns_s_, -omega, ns_t_, ns_r_);
 
         // Compute the (unscaled) residual
-        N_VProd(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
+        ns_r_ *= ns_Jdiag_;
         double res = sqrt(dotProd(ns_r_, ns_r_));
 
         // Test convergence

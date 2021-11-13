@@ -86,6 +86,23 @@ class AmiVector {
      */
     AmiVector &operator=(AmiVector const &other);
 
+    /**
+     * @brief operator *= (element-wise multiplication)
+     * @param divisor
+     * @return result
+     */
+    AmiVector &operator*=(AmiVector const& multiplier) {
+        N_VProd(getNVector(),
+               const_cast<N_Vector>(multiplier.getNVector()),
+               getNVector());
+        return *this;
+    }
+
+    /**
+     * @brief operator /= (element-wise division)
+     * @param divisor
+     * @return result
+     */
     AmiVector &operator/=(AmiVector const& divisor) {
         N_VDiv(getNVector(),
                const_cast<N_Vector>(divisor.getNVector()),
