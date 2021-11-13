@@ -113,12 +113,14 @@ class AmiVector {
     /**
      * @brief Returns an iterator that points to the first element of the
      * vector.
+     * @return iterator that points to the first element
      */
     auto begin() { return vec_.begin(); }
 
     /**
-     * @brief Returns an iterator that points to one after the last element of
-     * the vector.
+     * @brief Returns an iterator that points to one element after the last
+     * element of the vector.
+     * @return iterator that points to one element after the last element
      */
     auto end() { return vec_.end(); }
 
