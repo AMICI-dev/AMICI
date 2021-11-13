@@ -88,7 +88,7 @@ class AmiVector {
 
     /**
      * @brief operator *= (element-wise multiplication)
-     * @param divisor
+     * @param multiplier
      * @return result
      */
     AmiVector &operator*=(AmiVector const& multiplier) {
