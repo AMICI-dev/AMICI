@@ -255,7 +255,7 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     ns_Jdiag_.abs();
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
     linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
-    linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
+    ns_Jdiag_ *= ns_tmp_;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -278,7 +278,7 @@ void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
     ns_Jdiag_.abs();
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
     linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
-    linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
+    ns_Jdiag_ *= ns_tmp_;
     ns_Jdiag_.minus();
 }
 
