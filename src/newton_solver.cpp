@@ -2,9 +2,6 @@
 
 #include "amici/model.h"
 #include "amici/solver.h"
-#include "amici/steadystateproblem.h"
-#include "amici/forwardproblem.h"
-#include "amici/edata.h"
 
 #include "sunlinsol/sunlinsol_klu.h" // sparse solver
 #include "sunlinsol/sunlinsol_dense.h" // dense solver
@@ -255,10 +252,10 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 
     // Ensure positivity of entries in ns_Jdiag
     ns_p_.set(1.0);
-    N_VAbs(ns_Jdiag_.getNVector(), ns_Jdiag_.getNVector());
+    ns_Jdiag_.abs();
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
-    N_VLinearSum(-1.0, ns_tmp_.getNVector(), 1.0, ns_p_.getNVector(), ns_tmp_.getNVector());
-    N_VLinearSum(1.0, ns_Jdiag_.getNVector(), 1.0, ns_tmp_.getNVector(), ns_Jdiag_.getNVector());
+    linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
+    linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -278,13 +275,11 @@ void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
     model_->fJDiag(*t_, ns_Jdiag_, 0.0, *x_, dx_);
 
     ns_p_.set(1.0);
-    N_VAbs(ns_Jdiag_.getNVector(), ns_Jdiag_.getNVector());
+    ns_Jdiag_.abs();
     N_VCompare(1e-15, ns_Jdiag_.getNVector(), ns_tmp_.getNVector());
-    N_VLinearSum(-1.0, ns_tmp_.getNVector(), 1.0, ns_p_.getNVector(), ns_tmp_.getNVector());
-    N_VLinearSum(1.0, ns_Jdiag_.getNVector(), 1.0, ns_tmp_.getNVector(), ns_Jdiag_.getNVector());
-
-    std::transform(ns_Jdiag_.data(), ns_Jdiag_.data()+ns_Jdiag_.getLength(),
-                   ns_Jdiag_.data(), std::negate<realtype>());
+    linearSum(-1.0, ns_tmp_, 1.0, ns_p_, ns_tmp_);
+    linearSum(1.0, ns_Jdiag_, 1.0, ns_tmp_, ns_Jdiag_);
+    ns_Jdiag_.minus();
 }
 
 /* ------------------------------------------------------------------------- */
@@ -310,55 +305,52 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
     double omega = 1.0;
     double alpha = 1.0;
 
-    ns_J_.multiply(ns_Jv_.getNVector(), ns_delta.getNVector());
+    ns_J_.multiply(ns_Jv_, ns_delta);
 
     // ns_r = xdot - ns_Jv;
-    N_VLinearSum(-1.0, ns_Jv_.getNVector(), 1.0, xdot_.getNVector(), ns_r_.getNVector());
-    N_VDiv(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
+    linearSum(-1.0, ns_Jv_, 1.0, xdot_, ns_r_);
+    ns_r_ /= ns_Jdiag_;
     ns_rt_ = ns_r_;
 
-    for (int i_linstep = 0; i_linstep < max_lin_steps_;
-         i_linstep++) {
+    for (int i_linstep = 0; i_linstep < max_lin_steps_; i_linstep++) {
         // Compute factors
         double rho1 = rho;
-        rho = N_VDotProd(ns_rt_.getNVector(), ns_r_.getNVector());
+        rho = dotProd(ns_rt_, ns_r_);
         double beta = rho * alpha / (rho1 * omega);
 
         // ns_p = ns_r + beta * (ns_p - omega * ns_v);
-        N_VLinearSum(1.0, ns_p_.getNVector(), -omega, ns_v_.getNVector(), ns_p_.getNVector());
-        N_VLinearSum(1.0, ns_r_.getNVector(), beta, ns_p_.getNVector(), ns_p_.getNVector());
+        linearSum(1.0, ns_p_, -omega, ns_v_, ns_p_);
+        linearSum(1.0, ns_r_, beta, ns_p_, ns_p_);
 
         // ns_v = J * ns_p
         ns_v_.zero();
-        ns_J_.multiply(ns_v_.getNVector(), ns_p_.getNVector());
-        N_VDiv(ns_v_.getNVector(), ns_Jdiag_.getNVector(), ns_v_.getNVector());
+        ns_J_.multiply(ns_v_, ns_p_);
+        ns_v_ /= ns_Jdiag_;
 
         // Compute factor
-        alpha = rho / N_VDotProd(ns_rt_.getNVector(), ns_v_.getNVector());
+        alpha = rho / dotProd(ns_rt_, ns_v_);
 
         // ns_h = ns_delta + alpha * ns_p;
-        N_VLinearSum(1.0, ns_delta.getNVector(), alpha, ns_p_.getNVector(),
-                     ns_h_.getNVector());
+        linearSum(1.0, ns_delta, alpha, ns_p_, ns_h_);
         // ns_s = ns_r - alpha * ns_v;
-        N_VLinearSum(1.0, ns_r_.getNVector(), -alpha, ns_v_.getNVector(), ns_s_.getNVector());
+        linearSum(1.0, ns_r_, -alpha, ns_v_, ns_s_);
 
         // ns_t = J * ns_s
         ns_t_.zero();
-        ns_J_.multiply(ns_t_.getNVector(), ns_s_.getNVector());
-        N_VDiv(ns_t_.getNVector(), ns_Jdiag_.getNVector(), ns_t_.getNVector());
+        ns_J_.multiply(ns_t_, ns_s_);
+        ns_t_ /= ns_Jdiag_;
 
         // Compute factor
-        omega = N_VDotProd(ns_t_.getNVector(), ns_s_.getNVector()) / N_VDotProd(ns_t_.getNVector(), ns_t_.getNVector());
+        omega = dotProd(ns_t_, ns_s_) / dotProd(ns_t_, ns_t_);
 
         // ns_delta = ns_h + omega * ns_s;
-        N_VLinearSum(1.0, ns_h_.getNVector(), omega, ns_s_.getNVector(),
-                     ns_delta.getNVector());
+        linearSum(1.0, ns_h_, omega, ns_s_, ns_delta);
         // ns_r = ns_s - omega * ns_t;
-        N_VLinearSum(1.0, ns_s_.getNVector(), -omega, ns_t_.getNVector(), ns_r_.getNVector());
+        linearSum(1.0, ns_s_, -omega, ns_t_, ns_r_);
 
         // Compute the (unscaled) residual
-        N_VProd(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
-        double res = sqrt(N_VDotProd(ns_r_.getNVector(), ns_r_.getNVector()));
+        ns_r_ *= ns_Jdiag_;
+        double res = sqrt(dotProd(ns_r_, ns_r_));
 
         // Test convergence
         if (res < atol_) {
@@ -370,7 +362,7 @@ void NewtonSolverIterative::linsolveSPBCG(int /*ntry*/, int nnewt,
         }
 
         // Scale back
-        N_VDiv(ns_r_.getNVector(), ns_Jdiag_.getNVector(), ns_r_.getNVector());
+        ns_r_ /= ns_Jdiag_;
     }
     throw NewtonFailure(AMICI_CONV_FAILURE, "linsolveSPBCG");
 }
