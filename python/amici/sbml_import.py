@@ -1794,7 +1794,6 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
     elif sym.__class__.__name__ == 'piecewise' \
             or isinstance(sym,  sp.Piecewise):
-        # this is the native sympy piecewise
         if isinstance(sym,  sp.Piecewise):
             # this is sympy piecewise, can't be nested
             denested_args = args
