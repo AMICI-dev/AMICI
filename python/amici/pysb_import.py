@@ -9,14 +9,9 @@ from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
     Expression, LogLikelihood, generate_measurement_symbol
 )
-
-from .sbml_import import (
-    _parse_special_functions
-)
-
 from .import_utils import (
     noise_distribution_to_cost_function, _get_str_symbol_identifiers,
-    noise_distribution_to_observable_transformation
+    noise_distribution_to_observable_transformation, _parse_special_functions
 )
 import logging
 from .logging import get_logger, log_execution_time, set_log_level

@@ -7,6 +7,8 @@ import platform
 import shutil
 import pytest
 
+pysb = pytest.importorskip("pysb")
+
 import amici
 import numpy as np
 import sympy as sp
@@ -17,8 +19,6 @@ from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
-
-pysb = pytest.importorskip("pysb")
 
 
 def test_compare_to_sbml_import(pysb_example_presimulation_module,

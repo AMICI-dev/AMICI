@@ -15,13 +15,14 @@ import warnings
 import logging
 import copy
 from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
+    Dict, List, Callable, Any, Iterable, Union, Optional,
 )
 
 from .import_utils import (
     smart_subs, smart_subs_dict, toposort_symbols,
     _get_str_symbol_identifiers, noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation
+    noise_distribution_to_observable_transformation, _parse_special_functions,
+    _check_unsupported_functions,
 )
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol,
@@ -30,9 +31,6 @@ from .ode_export import (
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
-
-from sympy.logic.boolalg import BooleanAtom
-from sympy.functions.elementary.piecewise import ExprCondPair
 
 
 class SBMLException(Exception):
@@ -1584,9 +1582,9 @@ class SbmlImporter:
                                 f'{err}.')
 
         if isinstance(formula, sp.Expr):
-            formula = _parse_special_functions(formula)
-            _check_unsupported_functions(formula,
-                                         expression_type=ele_name)
+            formula = _parse_special_functions_sbml(formula)
+            _check_unsupported_functions_sbml(formula,
+                                              expression_type=ele_name)
         return formula
 
     def _get_element_initial_assignment(self,
@@ -1701,248 +1699,6 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         )
 
 
-def _check_unsupported_functions(sym: sp.Expr,
-                                 expression_type: str,
-                                 full_sym: Optional[sp.Expr] = None):
-    """
-    Recursively checks the symbolic expression for unsupported symbolic
-    functions
-
-    :param sym:
-        symbolic expressions
-
-    :param expression_type:
-        type of expression, only used when throwing errors
-
-    :param full sym:
-        outermost symbolic expression in recursive checks, only used for errors
-    """
-    if full_sym is None:
-        full_sym = sym
-
-    # note that sp.functions.factorial, sp.functions.ceiling,
-    # sp.functions.floor applied to numbers should be simplified out and
-    # thus pass this test
-    unsupported_functions = (
-        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.functions.sec, sp.functions.csc, sp.functions.cot,
-        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
-        sp.functions.acsch, sp.functions.acoth,
-        sp.Mod, sp.core.function.UndefinedFunction
-    )
-
-    if isinstance(sym.func, unsupported_functions) \
-            or isinstance(sym, unsupported_functions):
-        raise SBMLException(f'Encountered unsupported expression '
-                            f'"{sym.func}" of type '
-                            f'"{type(sym.func)}" as part of a '
-                            f'{expression_type}: "{full_sym}"!')
-    for arg in list(sym.args):
-        _check_unsupported_functions(arg, expression_type)
-
-
-def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
-    """
-    Recursively checks the symbolic expression for functions which have be
-    to parsed in a special way, such as piecewise functions
-
-    :param sym:
-        symbolic expressions
-
-    :param toplevel:
-        as this is called recursively, are we in the top level expression?
-    """
-    args = tuple(arg if arg.__class__.__name__ == 'piecewise'
-                 and sym.__class__.__name__ == 'piecewise'
-                 else _parse_special_functions(arg, False)
-                 for arg in sym.args)
-
-    fun_mappings = {
-        'times': sp.Mul,
-        'xor': sp.Xor,
-        'abs': sp.Abs,
-        'min': sp.Min,
-        'max': sp.Max,
-        'ceil': sp.functions.ceiling,
-        'floor': sp.functions.floor,
-        'factorial': sp.functions.factorial,
-        'arcsin': sp.functions.asin,
-        'arccos': sp.functions.acos,
-        'arctan': sp.functions.atan,
-        'arccot': sp.functions.acot,
-        'arcsec': sp.functions.asec,
-        'arccsc': sp.functions.acsc,
-        'arcsinh': sp.functions.asinh,
-        'arccosh': sp.functions.acosh,
-        'arctanh': sp.functions.atanh,
-        'arccoth': sp.functions.acoth,
-        'arcsech': sp.functions.asech,
-        'arccsch': sp.functions.acsch,
-    }
-
-    if sym.__class__.__name__ in fun_mappings:
-        # c++ doesnt like mixing int and double for arguments of those
-        # functions
-        if sym.__class__.__name__ in ['min', 'max']:
-            args = tuple([
-                sp.Float(arg) if arg.is_number else arg
-                for arg in sym.args
-            ])
-        else:
-            args = sym.args
-        return fun_mappings[sym.__class__.__name__](*args)
-
-    elif sym.__class__.__name__ == 'piecewise' \
-            or isinstance(sym,  sp.Piecewise):
-        if isinstance(sym,  sp.Piecewise):
-            # this is sympy piecewise, can't be nested
-            denested_args = args
-        else:
-            # this is sbml piecewise, can be nested
-            denested_args = _denest_piecewise(args)
-        return _parse_piecewise_to_heaviside(denested_args)
-
-    if sym.__class__.__name__ == 'plus' and not sym.args:
-        return sp.Float(0.0)
-
-    if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
-        sym._args = args
-
-    elif toplevel and isinstance(sym, BooleanAtom):
-        # Replace boolean constants by numbers so they can be differentiated
-        #  must not replace in Piecewise function. Therefore, we only replace
-        #  it the complete expression consists only of a Boolean value.
-        sym = sp.Float(int(bool(sym)))
-
-    return sym
-
-
-def _denest_piecewise(
-        args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
-) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
-    """
-    Denest piecewise functions that contain piecewise as condition
-
-    :param args:
-        Arguments to the piecewise function
-
-    :return:
-        Arguments where conditions no longer contain piecewise functions and
-        the conditional dependency is flattened out
-    """
-    args_out = []
-    for coeff, cond in grouper(args, 2, True):
-        # handling of this case is explicitely disabled in
-        # _parse_special_functions as keeping track of coeff/cond
-        # arguments is tricky. Simpler to just parse them out here
-        if coeff.__class__.__name__ == 'piecewise':
-            coeff = _parse_special_functions(coeff, False)
-
-        # we can have conditions that are piecewise function
-        # returning True or False
-        if cond.__class__.__name__ == 'piecewise':
-            # this keeps track of conditional that the previous
-            # piece was picked
-            previous_was_picked = sp.false
-            # recursively denest those first
-            for sub_coeff, sub_cond in grouper(
-                    _denest_piecewise(cond.args), 2, True
-            ):
-                # flatten the individual pieces
-                pick_this = sp.And(
-                    sp.Not(previous_was_picked), sub_cond
-                )
-                if sub_coeff == sp.true:
-                    args_out.extend([coeff, pick_this])
-                previous_was_picked = pick_this
-
-        else:
-            args_out.extend([coeff, cond])
-    # cut off last condition as that's the default
-    return tuple(args_out[:-1])
-
-
-def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
-    """
-    Piecewise functions cannot be transformed into C++ right away, but AMICI
-    has a special interface for Heaviside functions, so we transform them.
-
-    :param args:
-        symbolic expressions for arguments of the piecewise function
-    """
-    # how many condition-expression pairs will we have?
-    formula = sp.Float(0.0)
-    not_condition = sp.Float(1.0)
-
-    if all(isinstance(arg, ExprCondPair) for arg in args):
-        # sympy piecewise
-        grouped_args = args
-    else:
-        # smbl piecewise
-        grouped_args = grouper(args, 2, True)
-
-    for coeff, trigger in grouped_args:
-        if isinstance(coeff, BooleanAtom):
-            coeff = sp.Float(int(bool(coeff)))
-
-        if trigger == sp.true:
-            return formula + coeff * not_condition
-
-        if trigger == sp.false:
-            continue
-
-        tmp = _parse_heaviside_trigger(trigger)
-        formula += coeff * sp.simplify(not_condition * tmp)
-        not_condition *= (1-tmp)
-
-    return formula
-
-
-def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
-    """
-    Recursively translates a boolean trigger function into a real valued
-    root function
-
-    :param trigger:
-    :return: real valued root function expression
-    """
-    if trigger.is_Relational:
-        root = trigger.args[0] - trigger.args[1]
-        _check_unsupported_functions(root, 'sympy.Expression')
-
-        # normalize such that we always implement <,
-        # this ensures that we can correctly evaluate the condition if
-        # simulation starts at H(0). This is achieved by translating
-        # conditionals into Heaviside functions H that is implemented as unit
-        # step with H(0) = 1
-        if isinstance(trigger, sp.core.relational.StrictLessThan):
-            # x < y => x - y < 0 => r < 0
-            return 1 - sp.Heaviside(root)
-        if isinstance(trigger, sp.core.relational.LessThan):
-            # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
-            return sp.Heaviside(-root)
-        if isinstance(trigger, sp.core.relational.StrictGreaterThan):
-            # y > x => y - x < 0 => -r < 0
-            return 1 - sp.Heaviside(-root)
-        if isinstance(trigger, sp.core.relational.GreaterThan):
-            # y >= x => not(x < y) => not(x - y < 0) => not r < 0
-            return sp.Heaviside(root)
-
-    # or(x,y) = not(and(not(x),not(y))
-    if isinstance(trigger, sp.Or):
-        return 1-sp.Mul(*[1-_parse_heaviside_trigger(arg)
-                        for arg in trigger.args])
-
-    if isinstance(trigger, sp.And):
-        return sp.Mul(*[_parse_heaviside_trigger(arg)
-                        for arg in trigger.args])
-
-    raise SBMLException(
-        'AMICI can not parse piecewise/event trigger functions with argument '
-        f'{trigger}.'
-    )
-
-
 def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     Recursively translates a boolean trigger function into a real valued
@@ -1957,7 +1713,7 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         return sp.Float(1.0)
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
-        _check_unsupported_functions(root, 'sympy.Expression')
+        _check_unsupported_functions_sbml(root, 'sympy.Expression')
 
         # convert relational expressions into trigger functions
         if isinstance(trigger, sp.core.relational.LessThan) or \
@@ -2001,28 +1757,6 @@ def _parse_logical_operators(math_str: Union[str, float, None]
                             'operation.')
 
     return (math_str.replace('&&', '&')).replace('||', '|')
-
-
-def grouper(iterable: Iterable, n: int,
-            fillvalue: Any = None) -> Iterable[Tuple[Any]]:
-    """
-    Collect data into fixed-length chunks or blocks
-
-    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-
-    :param iterable:
-        any iterable
-
-    :param n:
-        chunk length
-
-    :param fillvalue:
-        padding for last chunk if length < n
-
-    :return: itertools.zip_longest of requested chunks
-    """
-    args = [iter(iterable)] * n
-    return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
 def assignmentRules2observables(sbml_model: sbml.Model,
@@ -2209,3 +1943,20 @@ def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
                     sbml_parameters[sbml_parameter_ids.index(target_id)]
                 ))
     return targets
+
+
+def _check_unsupported_functions_sbml(sym: sp.Expr,
+                                      expression_type: str,
+                                      full_sym: Optional[sp.Expr] = None):
+    try:
+        _check_unsupported_functions(sym, expression_type, full_sym)
+    except RuntimeError as err:
+        raise SBMLException(str(err))
+
+
+def _parse_special_functions_sbml(sym: sp.Expr,
+                                  toplevel: bool = True) -> sp.Expr:
+    try:
+        return _parse_special_functions(sym, toplevel)
+    except RuntimeError as err:
+        raise SBMLException(str(err))
