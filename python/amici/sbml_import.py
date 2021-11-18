@@ -32,6 +32,7 @@ from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanAtom
+from sympy.functions.elementary.piecewise import ExprCondPair
 
 
 class SBMLException(Exception):
@@ -1791,11 +1792,16 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
             args = sym.args
         return fun_mappings[sym.__class__.__name__](*args)
 
-    elif sym.__class__.__name__ == 'piecewise':
-        # We need to parse piecewise functions into Heavisides
-        return _parse_piecewise_to_heaviside(
-            _denest_piecewise(args)
-        )
+    elif sym.__class__.__name__ == 'piecewise' \
+            or isinstance(sym,  sp.Piecewise):
+        # this is the native sympy piecewise
+        if isinstance(sym,  sp.Piecewise):
+            # this is sympy piecewise, can't be nested
+            denested_args = args
+        else:
+            # this is sbml piecewise, can be nested
+            denested_args = _denest_piecewise(args)
+        return _parse_piecewise_to_heaviside(denested_args)
 
     if sym.__class__.__name__ == 'plus' and not sym.args:
         return sp.Float(0.0)
@@ -1869,7 +1875,14 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
     formula = sp.Float(0.0)
     not_condition = sp.Float(1.0)
 
-    for coeff, trigger in grouper(args, 2, True):
+    if all(isinstance(arg, ExprCondPair) for arg in args):
+        # sympy piecewise
+        grouped_args = args
+    else:
+        # smbl piecewise
+        grouped_args = grouper(args, 2, True)
+
+    for coeff, trigger in grouped_args:
         if isinstance(coeff, BooleanAtom):
             coeff = sp.Float(int(bool(coeff)))
 

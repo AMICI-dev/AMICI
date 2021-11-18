@@ -7,10 +7,9 @@ import platform
 import shutil
 import pytest
 
-pysb = pytest.importorskip("pysb")
-
 import amici
 import numpy as np
+import sympy as sp
 import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
@@ -18,6 +17,8 @@ from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
+
+pysb = pytest.importorskip("pysb")
 
 
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
@@ -98,9 +99,9 @@ custom_models = [
     'bngwiki_egfr_simple_deletemolecules',
 ]
 
+
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
-    pysb = pytest.importorskip("pysb")
 
     atol = 1e-8
     rtol = 1e-8
@@ -269,3 +270,30 @@ def test_names_and_ids(pysb_example_presimulation_module):
     for field_name, cur_expected in expected.items():
         actual = getattr(model_pysb, f'get{field_name}')()
         assert actual == cur_expected
+
+
+def test_heavyside_and_special_symbols():
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model('piecewise_test')
+    a = pysb.Monomer('A')
+    pysb.Initial(a(), pysb.Parameter('a0'))
+    pysb.Rule(
+        'deg',
+        a() >> None,
+        pysb.Expression(
+            'rate',
+            sp.Piecewise((1, pysb.Observable('a', a()) < 1),
+                         (0.0, True))
+        )
+    )
+
+    outdir = model.name
+    pysb2amici(model, outdir, verbose=True,
+               observables=['a'])
+
+    model_module = amici.import_model_module(module_name=model.name,
+                                             module_path=outdir)
+    amici_model = model_module.getModel()
+    assert amici_model.ne
