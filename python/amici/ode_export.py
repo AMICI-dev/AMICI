@@ -2027,9 +2027,10 @@ class ODEModel:
             nonzeros = np.asarray(
                 derivative.applyfunc(lambda x: int(not x.is_zero))
             ).astype(np.int64)
-            if max(nonzeros.shape):
-                while nonzeros.max():
-                    nonzeros = nonzeros.dot(nonzeros)
+            recursion = nonzeros.copy()
+            if max(recursion.shape):
+                while recursion.max():
+                    recursion = recursion.dot(nonzeros)
                     self._w_recursion_depth += 1
                     if self._w_recursion_depth > len(sym_eq):
                         raise RuntimeError(
