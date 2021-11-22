@@ -2,6 +2,21 @@
 
 ## v0.X Series
 
+### v0.11.21 (2021-11-21)
+
+Fixes:
+ * Fixed a bug in recursion depth computation for model expressions. This may
+   have resulted in incorrect sensitivities for models with expressions nested
+   more than 2 levels. (#1595)
+ * Fixed improper handling of Piecewise functions in PySB import which may have
+   produced incorrect simulation results. (#1594)
+ * Fixed changed googletest reference which broke the CMake-based build if
+   tests were enabled (#1592)
+
+New:
+ * It's now possible to build AMICI using Ninja (#1593)
+
+
 ### v0.11.20 (2021-11-12)
 
 New: 
