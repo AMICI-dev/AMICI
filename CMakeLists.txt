@@ -269,7 +269,7 @@ if(BUILD_TESTS)
     if(ENABLE_HDF5)
         enable_testing()
 
-        add_subdirectory(tests/cpputest)
+        add_subdirectory(tests/cpp)
     else()
         message(WARNING "Cannot build tests with ENABLE_HDF5=OFF.")
     endif()

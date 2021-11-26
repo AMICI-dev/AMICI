@@ -51,7 +51,7 @@ def pysb2amici(
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
         generate_sensitivity_code: bool = True,
 ):
-    """
+    r"""
     Generate AMICI C++ files for the provided model.
 
     .. warning::
@@ -139,12 +139,12 @@ def pysb2amici(
     exporter = ODEExporter(
         ode_model,
         outdir=output_dir,
+        model_name=model.name,
         verbose=verbose,
         assume_pow_positivity=assume_pow_positivity,
         compiler=compiler,
+        generate_sensitivity_code=generate_sensitivity_code
     )
-    exporter.set_name(model.name)
-    exporter.set_paths(output_dir)
     exporter.generate_model_code()
 
     if compile:
@@ -297,7 +297,7 @@ def _process_pysb_expressions(
         sigmas: Dict[str, str],
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
 ) -> None:
-    """
+    r"""
     Converts pysb expressions/observables into Observables (with
     corresponding standard deviation SigmaY and LogLikelihood) or
     Expressions and adds them to the ODEModel instance
@@ -306,8 +306,8 @@ def _process_pysb_expressions(
         pysb model
 
     :param observables:
-        list of names of :class`pysb.Expression`\\ s or
-        :class:`pysb.Observable`\\ s that are to be mapped to ODEModel
+        list of names of :class`pysb.Expression`\ s or
+        :class:`pysb.Observable`\ s that are to be mapped to ODEModel
         observables
 
     :param sigmas:

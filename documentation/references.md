@@ -1,16 +1,25 @@
 # References
 
-List of publications using AMICI. Total number is 57.
+List of publications using AMICI. Total number is 62.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
 <h1 class="unnumbered" id="section">2021</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-BastBuc2021">
+<p>Bast, Lisa, Michèle C. Buck, Judith S. Hecker, Robert A. J. Oostendorp, Katharina S. Götze, and Carsten Marr. 2021. “Computational Modeling of Stem and Progenitor Cell Kinetics Identifies Plausible Hematopoietic Lineage Hierarchies.” <em>iScience</em> 24 (2): 102120. <a href="https://doi.org/https://doi.org/10.1016/j.isci.2021.102120">https://doi.org/https://doi.org/10.1016/j.isci.2021.102120</a>.</p>
+</div>
+<div id="ref-ErdemMut2021">
+<p>Erdem, Cemal, Arnab Mutsuddy, Ethan M. Bensman, William B. Dodd, Michael M. Saint-Antoine, Mehdi Bouhaddou, Robert C. Blake, et al. 2021. “A Scalable, Open-Source Implementation of a Large-Scale Mechanistic Model for Single Cell Proliferation and Death Signaling.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.11.09.373407">https://doi.org/10.1101/2020.11.09.373407</a>.</p>
+</div>
 <div id="ref-Froehlich2021.05.20.445065">
 <p>Fröhlich, Fabian, and Peter K. Sorger. 2021. “Fides: Reliable Trust-Region Optimization for Parameter Estimation of Ordinary Differential Equation Models.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2021.05.20.445065">https://doi.org/10.1101/2021.05.20.445065</a>.</p>
 </div>
 <div id="ref-Gaspari2021">
 <p>Gaspari, Erika. 2021. “Model-Driven Design of Mycoplasma as a Vaccine Chassis.” PhD thesis, Wageningen: Wageningen University. <a href="https://doi.org/10.18174/539593">https://doi.org/10.18174/539593</a>.</p>
+</div>
+<div id="ref-Maier2021">
+<p>Maier, Corinna. 2021. “Bayesian Data Assimilation and Reinforcement Learning for Model-Informed Precision Dosing in Oncology.” Doctoralthesis, Universität Potsdam. <a href="https://doi.org/10.25932/publishup-51587">https://doi.org/10.25932/publishup-51587</a>.</p>
 </div>
 <div id="ref-RaimundezDud2021">
 <p>Raimúndez, Elba, Erika Dudkin, Jakob Vanhoefer, Emad Alamoudi, Simon Merkt, Lara Fuhrmann, Fan Bai, and Jan Hasenauer. 2021. “COVID-19 Outbreak in Wuhan Demonstrates the Limitations of Publicly Available Case Numbers for Epidemiological Modeling.” <em>Epidemics</em> 34: 100439. <a href="https://doi.org/https://doi.org/10.1016/j.epidem.2021.100439">https://doi.org/https://doi.org/10.1016/j.epidem.2021.100439</a>.</p>
@@ -24,8 +33,11 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="ref-StenPod2021">
 <p>Sten, Sebastian, Henrik Podéus, Nicolas Sundqvist, Fredrik Elinder, Maria Engström, and Gunnar Cedersund. 2021. “A Multi-Data Based Quantitative Model for the Neurovascular Coupling in the Brain.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2021.03.25.437053">https://doi.org/10.1101/2021.03.25.437053</a>.</p>
 </div>
+<div id="ref-TomasoniPar2021">
+<p>Tomasoni, Danilo, Alessio Paris, Stefano Giampiccolo, Federico Reali, Giulia Simoni, Luca Marchetti, Chanchala Kaddi, et al. 2021. “QSPcc Reduces Bottlenecks in Computational Model Simulations.” <em>Communications Biology</em> 4 (1): 1022. <a href="https://doi.org/10.1038/s42003-021-02553-9">https://doi.org/10.1038/s42003-021-02553-9</a>.</p>
+</div>
 <div id="ref-VanhoeferMat2021">
-<p>Vanhoefer, Jakob, Marta R. a. Matos, Dilan Pathirana, Yannik Schälte, and Jan Hasenauer. 2021. “Yaml2sbml: Human-Readable and -Writable Specification of Ode Models and Their Conversion to Sbml.” <em>Journal of Open Source Software</em> 6 (61): 3215. <a href="https://doi.org/10.21105/joss.03215">https://doi.org/10.21105/joss.03215</a>.</p>
+<p>Vanhoefer, Jakob, Marta R. A. Matos, Dilan Pathirana, Yannik Schälte, and Jan Hasenauer. 2021. “Yaml2sbml: Human-Readable and -Writable Specification of Ode Models and Their Conversion to Sbml.” <em>Journal of Open Source Software</em> 6 (61): 3215. <a href="https://doi.org/10.21105/joss.03215">https://doi.org/10.21105/joss.03215</a>.</p>
 </div>
 <div id="ref-vanRosmalenSmi2021">
 <p>van Rosmalen, R. P., R. W. Smith, V. A. P. Martins dos Santos, C. Fleck, and M. Suarez-Diez. 2021. “Model Reduction of Genome-Scale Metabolic Models as a Basis for Targeted Kinetic Models.” <em>Metabolic Engineering</em> 64: 74–84. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008">https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008</a>.</p>
@@ -47,6 +59,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-Kuritz2020.03.30.015909">
 <p>Kuritz, Karsten, Alain R Bonny, João Pedro Fonseca, and Frank Allgöwer. 2020. “PDE-Constrained Optimization for Estimating Population Dynamics over Cell Cycle from Static Single Cell Measurements.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.03.30.015909">https://doi.org/10.1101/2020.03.30.015909</a>.</p>
+</div>
+<div id="ref-MaierHar2020">
+<p>Maier, Corinna, Niklas Hartung, Charlotte Kloft, Wilhelm Huisinga, and Jana de Wiljes. 2020. “Reinforcement Learning and Bayesian Data Assimilation for Model-Informed Precision Dosing in Oncology.” <a href="http://arxiv.org/abs/2006.01061">http://arxiv.org/abs/2006.01061</a>.</p>
 </div>
 <div id="ref-Schaelte2020.01.30.927004">
 <p>Schälte, Yannik, and Jan Hasenauer. 2020. “Efficient Exact Inference for Dynamical Systems with Noisy Measurements Using Sequential Approximate Bayesian Computation.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.01.30.927004">https://doi.org/10.1101/2020.01.30.927004</a>.</p>

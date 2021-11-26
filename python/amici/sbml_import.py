@@ -96,6 +96,9 @@ class SbmlImporter:
     :ivar flux_vector:
         reaction kinetic laws
 
+    :ivar flux_ids:
+        identifiers for elements of flux_vector
+
     :ivar _local_symbols:
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
@@ -379,6 +382,7 @@ class SbmlImporter:
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
             ode_model,
+            model_name=model_name,
             outdir=output_dir,
             verbose=verbose,
             assume_pow_positivity=assume_pow_positivity,
@@ -386,8 +390,6 @@ class SbmlImporter:
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
             generate_sensitivity_code=generate_sensitivity_code
         )
-        exporter.set_name(model_name)
-        exporter.set_paths(output_dir)
         exporter.generate_model_code()
 
         if compile:
@@ -424,28 +426,49 @@ class SbmlImporter:
         Also ensures that the SBML contains at least one reaction, or rate
         rule, or assignment rule, to produce change in the system over time.
         """
-        if hasattr(self.sbml, 'all_elements_from_plugins') \
+
+        # Check for required but unsupported SBML extensions
+        if self.sbml_doc.getLevel() != 3 \
+                and hasattr(self.sbml, 'all_elements_from_plugins') \
                 and self.sbml.all_elements_from_plugins.getSize():
             raise SBMLException('SBML extensions are currently not supported!')
 
-        if any([not rule.isAssignment() and not isinstance(
+        if self.sbml_doc.getLevel() == 3:
+            # the "required" attribute is only available in SBML Level 3
+            for i_plugin in range(self.sbml.getNumPlugins()):
+                plugin = self.sbml.getPlugin(i_plugin)
+                if plugin.getPackageName() in ('layout',):
+                    # 'layout' plugin does not have the 'required' attribute
+                    continue
+                if hasattr(plugin, 'getRequired') and not plugin.getRequired():
+                    # if not "required", this has no impact on model
+                    #  simulation, and we can safely ignore it
+                    continue
+                # Check if there are extension elements. If not, we can safely
+                #  ignore the enabled package
+                if plugin.getListOfAllElements():
+                    raise SBMLException(
+                        f'Required SBML extension {plugin.getPackageName()} '
+                        f'is currently not supported!')
+
+        if any(not rule.isAssignment() and not isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
                     (sbml.Compartment, sbml.Species, sbml.Parameter)
-                ) for rule in self.sbml.getListOfRules()]):
+                ) for rule in self.sbml.getListOfRules()):
             raise SBMLException('Algebraic rules are currently not supported, '
                                 'and rate rules are only supported for '
                                 'species, compartments, and parameters.')
 
-        if any([not (rule.isAssignment() or rule.isRate())
+        if any(not (rule.isAssignment() or rule.isRate())
                 and isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
                     (sbml.Compartment, sbml.Species, sbml.Parameter)
-                ) for rule in self.sbml.getListOfRules()]):
+                ) for rule in self.sbml.getListOfRules()):
             raise SBMLException('Only assignment and rate rules are '
                                 'currently supported for compartments, '
                                 'species, and parameters!')
 
-        if any([r.getFast() for r in self.sbml.getListOfReactions()]):
+        if any(r.getFast() for r in self.sbml.getListOfReactions()):
             raise SBMLException('Fast reactions are currently not supported!')
 
         # Check events for unsupported functionality
@@ -886,6 +909,14 @@ class SbmlImporter:
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
         self.flux_vector = sp.zeros(nr, 1)
+        # Use reaction IDs as IDs for flux expressions (note that prior to SBML
+        #  level 3 version 2 the ID attribute was not mandatory and may be
+        #  unset)
+        self.flux_ids = [
+            f"flux_{reaction.getId()}" if reaction.isSetId()
+            else f"flux_r{reaction_idx}"
+            for reaction_idx, reaction in enumerate(reactions)
+        ] or ['flux_r0']
 
         reaction_ids = [
             reaction.getId() for reaction in reactions

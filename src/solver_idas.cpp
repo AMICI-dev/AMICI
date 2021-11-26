@@ -286,14 +286,14 @@ void IDASolver::setErrHandlerFn() const {
         throw IDAException(status, "IDASetErrHandlerFn");
 }
 
-void IDASolver::setUserData(Model *model) const {
-    int status = IDASetUserData(solver_memory_.get(), model);
+void IDASolver::setUserData() const {
+    int status = IDASetUserData(solver_memory_.get(), &user_data);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetUserData");
 }
 
-void IDASolver::setUserDataB(int which, Model *model) const {
-    int status = IDASetUserDataB(solver_memory_.get(), which, model);
+void IDASolver::setUserDataB(int which) const {
+    int status = IDASetUserDataB(solver_memory_.get(), which, &user_data);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetUserDataB");
 }
@@ -729,7 +729,10 @@ const Model *IDASolver::getModel() const {
         throw AmiException(
             "Solver has not been allocated, information is not available");
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
-    return static_cast<Model *>(ida_mem->ida_user_data);
+    auto user_data = static_cast<user_data_type *>(ida_mem->ida_user_data);
+    if(user_data)
+        return user_data->first;
+    return nullptr;
 }
 
 void IDASolver::setLinearSolver() const {
@@ -797,7 +800,7 @@ void IDASolver::setNonLinearSolverB(int which) const {
  * @param dx Vector with the derivative states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -806,15 +809,16 @@ void IDASolver::setNonLinearSolverB(int which) const {
 int fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
                   N_Vector xdot, SUNMatrix J, void *user_data,
                   N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
-
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
     model->fJ(t, cj, x, dx, xdot, J);
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
 
 /**
  * @brief Jacobian of xBdot with respect to adjoint state xB
- * @param NeqBdot number of adjoint state variables
  * @param t timepoint
  * @param cj scaling factor, inverse of the step size
  * @param x Vector with the states
@@ -833,8 +837,11 @@ int fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector xB, N_Vector dxB, N_Vector /*xBdot*/, SUNMatrix JB,
                    void *user_data, N_Vector /*tmp1B*/, N_Vector /*tmp2B*/,
                    N_Vector /*tmp3B*/) {
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
 
-    auto model = static_cast<Model_DAE *>(user_data);
     model->fJB(t, cj, x, dx, xB, dxB, JB);
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
@@ -847,7 +854,7 @@ int fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
  * @param dx Vector with the derivative states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -857,7 +864,11 @@ int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
                         N_Vector /*xdot*/, SUNMatrix J, void *user_data,
                         N_Vector /*tmp1*/, N_Vector /*tmp2*/,
                         N_Vector /*tmp3*/) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fJSparse(t, cj, x, dx, J);
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
@@ -872,7 +883,7 @@ int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
  * @param dxB Vector with the adjoint derivative states
  * @param xBdot Vector with the adjoint right hand side
  * @param JB Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1B temporary storage vector
  * @param tmp2B temporary storage vector
  * @param tmp3B temporary storage vector
@@ -882,23 +893,24 @@ int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                          N_Vector xB, N_Vector dxB, N_Vector /*xBdot*/,
                          SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                          N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
 /**
  * @brief J in banded form (for banded solvers)
- * @param N number of states
- * @param mupper upper matrix bandwidth
- * @param mlower lower matrix bandwidth
  * @param t timepoint
  * @param cj scalar in Jacobian (inverse stepsize)
  * @param x Vector with the states
  * @param dx Vector with the derivative states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -912,9 +924,6 @@ int fJBand(realtype t, realtype cj, N_Vector x, N_Vector dx,
 
 /**
  * @brief JB in banded form (for banded solvers)
- * @param NeqBdot number of states
- * @param mupper upper matrix bandwidth
- * @param mlower lower matrix bandwidth
  * @param t timepoint
  * @param cj scalar in Jacobian (inverse stepsize)
  * @param x Vector with the states
@@ -923,7 +932,7 @@ int fJBand(realtype t, realtype cj, N_Vector x, N_Vector dx,
  * @param dxB Vector with the adjoint derivative states
  * @param xBdot Vector with the adjoint right hand side
  * @param JB Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1B temporary storage vector
  * @param tmp2B temporary storage vector
  * @param tmp3B temporary storage vector
@@ -946,7 +955,7 @@ int fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
  * @param xdot Vector with the right hand side
  * @param v Vector with which the Jacobian is multiplied
  * @param Jv Vector to which the Jacobian vector product will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @return status flag indicating successful execution
@@ -955,7 +964,11 @@ int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector /*xdot*/,
                    N_Vector v, N_Vector Jv, realtype cj, void *user_data,
                    N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
 
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fJv(t, x, dx, v, Jv, cj);
     return model->checkFinite(gsl::make_span(Jv), "Jacobian");
 }
@@ -971,7 +984,7 @@ int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector /*xdot*/,
  * @param vB Vector with which the Jacobian is multiplied
  * @param JvB Vector to which the Jacobian vector product will be written
  * @param cj scalar in Jacobian (inverse stepsize)
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmpB1 temporary storage vector
  * @param tmpB2 temporary storage vector
  * @return status flag indicating successful execution
@@ -981,7 +994,11 @@ int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                     realtype cj, void *user_data, N_Vector /*tmpB1*/,
                     N_Vector /*tmpB2*/) {
 
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
     return model->checkFinite(gsl::make_span(JvB), "Jacobian");
 }
@@ -992,12 +1009,16 @@ int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
  * @param x Vector with the states
  * @param dx Vector with the derivative states
  * @param root array with root function values
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                      void *user_data) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->froot(t, x, dx, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
                               "root function");
@@ -1009,12 +1030,21 @@ int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
  * @param x Vector with the states
  * @param dx Vector with the derivative states
  * @param xdot Vector with the right hand side
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+    auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
+    Expects(model);
+
+    if(solver->timeExceeded()) {
+        return AMICI_MAX_TIME_EXCEEDED;
+    }
 
     if (t > 1e200 && !model->app->checkFinite(gsl::make_span(x), "fxdot")) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
@@ -1036,13 +1066,22 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
  * @param xB Vector with the adjoint states
  * @param dxB Vector with the adjoint derivative states
  * @param xBdot Vector with the adjoint right hand side
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
            N_Vector dxB, N_Vector xBdot, void *user_data) {
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+    auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
+    Expects(model);
 
-    auto model = static_cast<Model_DAE *>(user_data);
+    if(solver->timeExceeded()) {
+        return AMICI_MAX_TIME_EXCEEDED;
+    }
+
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "xBdot");
 }
@@ -1055,13 +1094,17 @@ int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
  * @param xB Vector with the adjoint states
  * @param dxB Vector with the adjoint derivative states
  * @param qBdot Vector with the adjoint quadrature right hand side
- * @param user_data pointer to temp data object @type Model_DAE
+ * @param user_data pointer to temp data object
  * @return status flag indicating successful execution
  */
 int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector qBdot, void *user_data) {
 
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 
@@ -1075,12 +1118,16 @@ int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
  * @param xB Vector with the adjoint states
  * @param dxB Vector with the adjoint derivative states
  * @param xBdot Vector with the adjoint right hand side
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 static int fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot,
                      void *user_data) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fxBdot_ss(t, xB, dxB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "xBdot_ss");
 }
@@ -1098,7 +1145,11 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot,
  */
 static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
                      void *user_data) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fqBdot_ss(t, xB, dxB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
 }
@@ -1111,7 +1162,7 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
  * @param dx Vector with the derivative states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -1121,7 +1172,11 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
                             N_Vector /*dx*/, N_Vector xBdot, SUNMatrix JB,
                             void *user_data, N_Vector /*tmp1*/,
                             N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
+
     model->fJSparseB_ss(JB);
     return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
 }
@@ -1136,7 +1191,7 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
  * @param sx Vector with the state sensitivities
  * @param sdx Vector with the derivative state sensitivities
  * @param sxdot Vector with the sensitivity right hand side
- * @param user_data object with user input @type Model_DAE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -1147,7 +1202,10 @@ int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector dx,
                       N_Vector *sxdot, void *user_data, N_Vector /*tmp1*/,
                       N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
 
-    auto model = static_cast<Model_DAE *>(user_data);
+    auto typed_udata = static_cast<IDASolver::user_data_type *>(user_data);
+    Expects(typed_udata);
+    auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
+    Expects(model);
 
     for (int ip = 0; ip < model->nplist(); ip++) {
         model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);

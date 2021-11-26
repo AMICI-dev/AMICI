@@ -20,6 +20,13 @@ public:
      * @param fmt error message with printf format
      * @param ... printf formatting variables
      */
+    AmiException();
+
+    /**
+     * @brief Constructor with printf style interface
+     * @param fmt error message with printf format
+     * @param ... printf formatting variables
+     */
     explicit AmiException(char const* fmt, ...);
 
     /**
@@ -39,6 +46,14 @@ public:
      * @param nMaxFrames number of frames to go back in stacktrace
      */
     void storeBacktrace(int nMaxFrames);
+
+  protected:
+    /**
+     * @brief Store the provided message
+     * @param fmt error message with printf format
+     * @param argptr pointer to variadic argument list
+     */
+    void storeMessage(const char *fmt, va_list argptr);
 
 private:
     std::array<char, 500> msg_;
@@ -131,7 +146,13 @@ class IntegrationFailureB : public AmiException  {
  */
 class SetupFailure : public AmiException {
   public:
-    using AmiException::AmiException;
+    /**
+     * @brief Constructor with printf style interface
+     * @param fmt error message with printf format
+     * @param ... printf formatting variables
+     */
+    explicit SetupFailure(char const* fmt, ...);
+
 };
 
 

@@ -69,7 +69,7 @@ jobs:
 
     - name: C++ tests
       run: |
-        scripts/run-cpputest.sh
+        scripts/run-cpp-tests.sh
 
     - name: Install python package
       run: |
@@ -85,7 +85,7 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
-          
+
     - name: example notebooks
       run: |
         scripts/runNotebook.sh python/examples/example_*/
@@ -96,7 +96,7 @@ jobs:
 
     - name: Codecov Python
       uses: codecov/codecov-action@v1
-      with: 
+      with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/coverage_py.xml
         flags: python
@@ -163,4 +163,4 @@ jobs:
 
     - name: C++ tests
       run: |
-        scripts/run-cpputest.sh
+        scripts/run-cpp-tests.sh

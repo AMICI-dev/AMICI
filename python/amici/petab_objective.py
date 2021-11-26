@@ -17,6 +17,7 @@ import libsbml
 import numpy as np
 import pandas as pd
 import petab
+import sympy as sp
 from petab.C import *  # noqa: F403
 
 from . import AmiciModel, AmiciExpData
@@ -48,7 +49,9 @@ def simulate_petab(
         edatas: List[AmiciExpData] = None,
         parameter_mapping: ParameterMapping = None,
         scaled_parameters: Optional[bool] = False,
-        log_level: int = logging.WARNING
+        log_level: int = logging.WARNING,
+        num_threads: int = 1,
+        failfast: bool = True,
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
 
@@ -77,6 +80,12 @@ def simulate_petab(
         are assumed to be in linear scale.
     :param log_level:
         Log level, see :mod:`amici.logging` module.
+    :param num_threads:
+        Number of threads to use for simulating multiple conditions
+        (only used if compiled with OpenMP).
+    :param failfast:
+        Returns as soon as an integration failure is encountered, skipping
+        any remaining simulations.
 
     :return:
         Dictionary of
@@ -135,7 +144,9 @@ def simulate_petab(
         amici_model=amici_model)
 
     # Simulate
-    rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
+    rdatas = amici.runAmiciSimulations(
+        amici_model, solver, edata_list=edatas,
+        num_threads=num_threads, failfast=failfast)
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
@@ -346,11 +357,21 @@ def create_parameter_mapping_for_condition(
             value = petab.to_float_if_float(
                 petab_problem.condition_df.loc[condition_id, species_id])
             if pd.isna(value):
-                value = float(
-                    get_species_initial(
-                        petab_problem.sbml_model.getSpecies(species_id)
-                    )
+                value = get_species_initial(
+                    petab_problem.sbml_model.getSpecies(species_id)
                 )
+                try:
+                    value = float(value)
+                except (ValueError, TypeError):
+                    if sp.nsimplify(value).is_Atom:
+                        # Get rid of multiplication with one
+                        value = sp.nsimplify(value)
+                    else:
+                        raise NotImplementedError(
+                            "Cannot handle non-trivial expressions for "
+                            f"species initial for {species_id}: {value}")
+                    # this should be a parameter ID
+                    value = str(value)
                 logger.debug(f'The species {species_id} has no initial value '
                              f'defined for the condition {condition_id} in '
                              'the PEtab conditions table. The initial value is '

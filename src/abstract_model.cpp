@@ -634,14 +634,14 @@ void AbstractModel::fdwdw_rowvals(SUNMatrixWrapper &/*dwdw*/) {
 }
 
 std::vector<HermiteSpline>
-AbstractModel::fspline_constructors(const realtype* /*p*/,
-                                    const realtype* /*k*/) {
+AbstractModel::fspline_constructors(const realtype */*p*/,
+                                    const realtype */*k*/) {
     // no-op default implementation
     return std::vector<HermiteSpline>();
 }
 
 void
-AbstractModel::fdspline_valuesdp(realtype* /*dspline_valuesdp*/,
+AbstractModel::fdspline_valuesdp(realtype */*dspline_valuesdp*/,
                                  const realtype* /*p*/,
                                  const realtype* /*k*/)
 {
@@ -649,7 +649,7 @@ AbstractModel::fdspline_valuesdp(realtype* /*dspline_valuesdp*/,
 }
 
 void
-AbstractModel::fdspline_slopesdp(realtype* /*dspline_slopesdp*/,
+AbstractModel::fdspline_slopesdp(realtype */*dspline_slopesdp*/,
                                  const realtype* /*p*/,
                                  const realtype* /*k*/)
 {

@@ -18,18 +18,18 @@ function testModels()
 
     model_dir = [fileparts(mfilename('fullpath')) '/../../models/'];
     cd(fileparts(mfilename('fullpath')))
-    addpath(genpath('../../tests/cpputest'));
+    addpath(genpath('../../tests/cpp'));
     addpath(genpath('../examples'));
     % wrapTestModels()
 
     cd(fileparts(mfilename('fullpath')))
     hdf5file = fullfile(fileparts(mfilename('fullpath')), ...
-        '../../tests/cpputest', 'expectedResults.h5');
-    
+        '../../tests/cpp', 'expectedResults.h5');
+
     info = h5info(hdf5file);
     for imodel = 1:length(info.Groups)
         modelname = info.Groups(imodel).Name(2:end);
-      
+
         if(~isempty(regexp(modelname,'^model_neuron')))
             model_atol = 1e-9;
             model_rtol = 1e-4;
@@ -42,18 +42,18 @@ function testModels()
             if(ismember(testname, ignoredTests))
                 continue
             end
-            
+
             display(testname);
 
             [results,options,data,t,theta,kappa] = readDataFromHDF5(info.Groups(imodel).Groups(itest),hdf5file);
-            
+
             % rebuild model
             old_path = addpath([model_dir modelname]);
             old_pwd = cd([model_dir modelname]);
             rebuild = str2func(['rebuild_' modelname]);
             rebuild();
             cd(old_pwd);
-            
+
             sol = getResults(modelname,options,data,t,theta,kappa);
             compareResults(sol,results);
             path(old_path);

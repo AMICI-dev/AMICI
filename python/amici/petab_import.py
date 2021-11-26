@@ -379,7 +379,7 @@ def import_model_sbml(
         verbose: Optional[Union[bool, int]] = True,
         allow_reinit_fixpar_initcond: bool = True,
         discard_annotations: bool = False,
-        **kwargs) -> None:
+        **kwargs) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
 
@@ -419,6 +419,9 @@ def import_model_sbml(
     :param kwargs:
         Additional keyword arguments to be passed to
         :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+
+    :return:
+        The created :class:`amici.sbml_import.SbmlImporter` instance.
     """
 
     set_log_level(logger, verbose)
@@ -589,6 +592,8 @@ def import_model_sbml(
         noise_distributions=noise_distrs,
         verbose=verbose,
         **kwargs)
+
+    return sbml_importer
 
 
 # for backwards compatibility
