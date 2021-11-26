@@ -679,7 +679,8 @@ def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
     return sym
 
 
-def _parse_logical_operators(math_str: str) -> Union[str, None]:
+def _parse_logical_operators(math_str: Union[str, float, None]
+                             ) -> Union[str, float, None]:
     """
     Parses a math string in order to replace logical operators by a form
     parsable for sympy
@@ -689,8 +690,8 @@ def _parse_logical_operators(math_str: str) -> Union[str, None]:
     :param math_str:
         parsed math_str
     """
-    if math_str is None:
-        return None
+    if not isinstance(math_str, str):
+        return math_str
 
     if ' xor(' in math_str or ' Xor(' in math_str:
         raise SBMLException('Xor is currently not supported as logical '

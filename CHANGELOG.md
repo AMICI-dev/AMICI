@@ -2,6 +2,58 @@
 
 ## v0.X Series
 
+### v0.11.21 (2021-11-21)
+
+Fixes:
+ * Fixed a bug in recursion depth computation for model expressions. This may
+   have resulted in incorrect sensitivities for models with expressions nested
+   more than 2 levels. (#1595)
+ * Fixed improper handling of Piecewise functions in PySB import which may have
+   produced incorrect simulation results. (#1594)
+ * Fixed changed googletest reference which broke the CMake-based build if
+   tests were enabled (#1592)
+
+New:
+ * It's now possible to build AMICI using Ninja (#1593)
+
+
+### v0.11.20 (2021-11-12)
+
+New: 
+ * Changed parameter mappings such that unassigned values have non-nan default values. This fixes erroneous evaluation of `llh` as `NaN` in some situations (#1574)
+ * Added support for Python 3.10 (#1555)
+
+Fixes:
+ * Fixed a bug when simulation start time was not transferred when copying a solver instance (#1573)
+ * Fixed a bug which led to incorrect sensitivies for models with multiple assignment rules or rate rules (#1584)
+
+Other:
+ * Update CI and documentation settings (#1569, #1527, #1572, #1575, #1579, #1580, #1589, #1581)
+ * Extend set of validated benchmark models that is checked during CI (#1571, #1577)
+ * Fixed string formatting in derivative checks (#1585)
+ * Added helper methods to save and restore model instance-only settings (#1576)
+
+
+### v0.11.19 (2021-10-13)
+
+New:
+* Added support for observable transformations (lin/log/log10) (#1567). Thereby supporting additional noise distributions in combination with least squares solvers.
+
+Fixes:
+* Fixed a bug when Newton sensitivity computation was activated despite specifying newton_steps == 0. The error occurs when simulation converges to a steadystate but simulation sensitivities are not converged according to convergence criteria. In that case simulation returned failure, but the newton rootfinding "finds" a steadystate even before the iteration check, leading to the erroneous computation of sensitivities via Newton/IFT. For singular jacobians this means the overall simulation still fails, but a different, more informative error message is displayed. (#1541)
+* Fixed a bug where argument "outdir" in ODEExporter.__init__ would not be used (#1543)
+
+Other:
+* Improve checking support for SBML extensions (#1546)
+* SBML import: Use more descriptive IDs for flux expressions (#1551)
+* Optimized SUNMatrixWrapper functions (#1538)
+* C++: Changed test suite from CppUTest to gtest (#1532)
+* Add CITATION.cff (#1559)
+* Updated documentation (#1563, #1554, #1536)
+* Removed distutils dependency (#1557)
+* Require sympy<1.9
+
+
 ### v0.11.18 (2021-07-12)
 
 New:

@@ -810,6 +810,13 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
+    
+    /**
+     * @brief Get scaling type for observable
+     * @param iy observable index
+     * @return scaling type
+     */
+    virtual ObservableScaling getObservableScaling(int iy) const;
 
     /**
      * @brief Get sensitivity of time-resolved observables.

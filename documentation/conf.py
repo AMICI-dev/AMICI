@@ -94,7 +94,7 @@ def install_amici_deps_rtd():
     cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
            "&& apt download libatlas-base-dev && mkdir libatlas-base-dev "
            "&& cd libatlas-base-dev "
-           "&& ar x ../libatlas-base-dev_3.10.3-5_amd64.deb "
+           "&& ar x ../libatlas-base-dev_3.10.3-8ubuntu7_amd64.deb "
            "&& tar -xJf data.tar.xz "
            f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h "
            )
@@ -113,6 +113,28 @@ def install_amici_deps_rtd():
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
 
 
+def install_doxygen():
+    """Get a more recent doxygen"""
+    version = '1.9.1'
+    doxygen_exe = os.path.join(amici_dir, 'ThirdParty',
+                               f'doxygen-{version}', 'bin', 'doxygen')
+    # to create a symlink to doxygen in a location that is already on PATH
+    some_dir_on_path = os.environ['PATH'].split(os.pathsep)[0]
+    cmd = (
+        f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
+        f"&& wget 'https://doxygen.nl/files/"
+        f"doxygen-{version}.linux.bin.tar.gz' "
+        f"&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
+        f"&& ln -s '{doxygen_exe}' '{some_dir_on_path}'"
+    )
+    subprocess.run(cmd, shell=True, check=True)
+    assert os.path.islink(os.path.join(some_dir_on_path, 'doxygen'))
+    # verify it's available
+    res = subprocess.run(['doxygen', '--version'],
+                         check=False, capture_output=True)
+    print(res.stdout.decode(), res.stderr.decode())
+    assert version in res.stdout.decode()
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -127,6 +149,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
+    install_doxygen()
 
 # Required for matlab doxygen processing
 install_mtocpp()
@@ -298,7 +321,15 @@ exhale_projects_args = {
         "exhaleDoxygenStdin": "\n".join([
             "INPUT = ../include",
             "BUILTIN_STL_SUPPORT    = YES",
-            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
+            "EXCLUDE += ../include/amici/interface_matlab.h",
+            "EXCLUDE += ../include/amici/returndata_matlab.h",
+            "EXCLUDE += ../include/amici/spline.h",
+            # amici::log collides with amici::${some_enum}::log
+            #  potentially fixed in
+            #  https://github.com/svenevs/exhale/commit/c924df2e139a09fbacd07587779c55fd0ee4e00b
+            #  and can be un-excluded after the next exhale release
+            "EXCLUDE += ../include/amici/symbolic_functions.h",
         ]),
         "containmentFolder": "_exhale_cpp_api",
         "rootFileTitle": "AMICI C++ API",

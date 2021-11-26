@@ -87,6 +87,44 @@ class AmiVector {
     AmiVector &operator=(AmiVector const &other);
 
     /**
+     * @brief operator *= (element-wise multiplication)
+     * @param multiplier multiplier
+     * @return result
+     */
+    AmiVector &operator*=(AmiVector const& multiplier) {
+        N_VProd(getNVector(),
+               const_cast<N_Vector>(multiplier.getNVector()),
+               getNVector());
+        return *this;
+    }
+
+    /**
+     * @brief operator /= (element-wise division)
+     * @param divisor divisor
+     * @return result
+     */
+    AmiVector &operator/=(AmiVector const& divisor) {
+        N_VDiv(getNVector(),
+               const_cast<N_Vector>(divisor.getNVector()),
+               getNVector());
+        return *this;
+    }
+
+    /**
+     * @brief Returns an iterator that points to the first element of the
+     * vector.
+     * @return iterator that points to the first element
+     */
+    auto begin() { return vec_.begin(); }
+
+    /**
+     * @brief Returns an iterator that points to one element after the last
+     * element of the vector.
+     * @return iterator that points to one element after the last element
+     */
+    auto end() { return vec_.end(); }
+
+    /**
      * @brief data accessor
      * @return pointer to data array
      */
@@ -163,6 +201,13 @@ class AmiVector {
      * @param other data source
      */
     void copy(const AmiVector &other);
+
+    /**
+     * @brief Take absolute value (in-place)
+     */
+    void abs() {
+        N_VAbs(getNVector(), getNVector());
+    };
 
   private:
     /** main data storage */
@@ -314,6 +359,32 @@ class AmiVectorArray {
      */
     std::vector<N_Vector> nvec_array_;
 };
+
+/**
+ * @brief Computes z = a*x + b*y
+ * @param a coefficient for x
+ * @param x a vector
+ * @param b coefficient for y
+ * @param y another vector with same size as x
+ * @param z result vector of same size as x and y
+ */
+inline void linearSum(realtype a, AmiVector const& x, realtype b,
+               AmiVector const& y, AmiVector& z) {
+    N_VLinearSum(a, const_cast<N_Vector>(x.getNVector()),
+                 b, const_cast<N_Vector>(y.getNVector()),
+                 z.getNVector());
+}
+
+/**
+ * @brief Compute dot product of x and y
+ * @param x vector
+ * @param y vector
+ * @return dot product of x and y
+ */
+inline realtype dotProd(AmiVector const& x, AmiVector const& y) {
+    return N_VDotProd(const_cast<N_Vector>(x.getNVector()),
+                      const_cast<N_Vector>(y.getNVector()));
+}
 
 } // namespace amici
 

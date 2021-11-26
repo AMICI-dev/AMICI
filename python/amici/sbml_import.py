@@ -16,13 +16,14 @@ import xml.etree.ElementTree as ET
 import itertools as itt
 import copy
 from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional, Tuple, Sequence
+    Dict, List, Callable, Any, Iterable, Union, Optional,
 )
 
 from .import_utils import (
     smart_subs, smart_subs_dict, toposort_symbols,
-    _get_str_symbol_identifiers,
-    noise_distribution_to_cost_function
+    _get_str_symbol_identifiers, noise_distribution_to_cost_function,
+    noise_distribution_to_observable_transformation, _parse_special_functions,
+    _check_unsupported_functions,
 )
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol,
@@ -39,8 +40,6 @@ from .sbml_utils import (
 )
 from .splines import AbstractSpline
 from . import has_clibs
-
-from sympy.logic.boolalg import BooleanAtom
 
 
 class SBMLException(Exception):
@@ -1266,7 +1265,11 @@ class SbmlImporter:
                     # former.
                     'value': self._sympy_from_sbml_math(
                         definition['formula']
-                    )
+                    ),
+                    'transformation':
+                        noise_distribution_to_observable_transformation(
+                            noise_distributions.get(obs, 'normal')
+                        )
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
@@ -1433,16 +1436,12 @@ class SbmlImporter:
 
         return sym_math
 
-    def process_conservation_laws(self, ode_model, volume_updates) -> List:
+    def process_conservation_laws(self, ode_model) -> None:
         """
         Find conservation laws in reactions and species.
 
         :param ode_model:
             ODEModel object with basic definitions
-
-        :param volume_updates:
-            List with updates for the stoichiometric matrix accounting for
-            compartment volumes
 
         :returns volume_updates_solver:
             List (according to reduced stoichiometry) with updates for the
@@ -1462,42 +1461,12 @@ class SbmlImporter:
             species_solver = list(range(ode_model.num_states_rdata()))
 
         # prune out species from stoichiometry and
-        volume_updates_solver = self._reduce_stoichiometry(species_solver,
-                                                           volume_updates)
+        self.stoichiometric_matrix = \
+            self.stoichiometric_matrix[species_solver, :]
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
-
-        return volume_updates_solver
-
-    def _reduce_stoichiometry(self, species_solver, volume_updates) -> List:
-        """
-        Reduces the stoichiometry with respect to conserved quantities
-
-        :param species_solver:
-            List of species indices which remain later in the ODE solver
-
-        :param volume_updates:
-            List with updates for the stoichiometric matrix accounting for
-            compartment volumes
-
-        :returns volume_updates_solver:
-            List (according to reduced stoichiometry) with updates for the
-            stoichiometric matrix accounting for compartment volumes
-        """
-
-        # prune out constant species from stoichiometric matrix
-        self.stoichiometric_matrix = \
-            self.stoichiometric_matrix[species_solver, :]
-
-        # updates of stoichiometry (later dxdotdw in ode_exporter) must be
-        # corrected for conserved quantities:
-        volume_updates_solver = [(species_solver.index(ix), iw, val)
-                                 for (ix, iw, val) in volume_updates
-                                 if ix in species_solver]
-
-        return volume_updates_solver
 
     def _replace_compartments_with_volumes(self):
         """
@@ -1674,9 +1643,9 @@ class SbmlImporter:
                                 f'{err}.')
 
         if isinstance(formula, sp.Expr):
-            formula = _parse_special_functions(formula)
-            _check_unsupported_functions(formula,
-                                         expression_type=ele_name)
+            formula = _parse_special_functions_sbml(formula)
+            _check_unsupported_functions_sbml(formula,
+                                              expression_type=ele_name)
         return formula
 
     def _get_element_initial_assignment(self,
@@ -1792,80 +1761,6 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         )
 
 
-def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
-    """
-    Piecewise functions cannot be transformed into C++ right away, but AMICI
-    has a special interface for Heaviside functions, so we transform them.
-
-    :param args:
-        symbolic expressions for arguments of the piecewise function
-    """
-    # how many condition-expression pairs will we have?
-    formula = sp.Float(0.0)
-    not_condition = sp.Float(1.0)
-
-    for coeff, trigger in grouper(args, 2, True):
-        if isinstance(coeff, BooleanAtom):
-            coeff = sp.Float(int(bool(coeff)))
-
-        if trigger == sp.true:
-            return formula + coeff * not_condition
-
-        if trigger == sp.false:
-            continue
-
-        tmp = _parse_heaviside_trigger(trigger)
-        formula += coeff * sp.simplify(not_condition * tmp)
-        not_condition *= (1-tmp)
-
-    return formula
-
-
-def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
-    """
-    Recursively translates a boolean trigger function into a real valued
-    root function
-
-    :param trigger:
-    :return: real valued root function expression
-    """
-    if trigger.is_Relational:
-        root = trigger.args[0] - trigger.args[1]
-        _check_unsupported_functions(root, 'sympy.Expression')
-
-        # normalize such that we always implement <,
-        # this ensures that we can correctly evaluate the condition if
-        # simulation starts at H(0). This is achieved by translating
-        # conditionals into Heaviside functions H that is implemented as unit
-        # step with H(0) = 1
-        if isinstance(trigger, sp.core.relational.StrictLessThan):
-            # x < y => x - y < 0 => r < 0
-            return 1 - sp.Heaviside(root)
-        if isinstance(trigger, sp.core.relational.LessThan):
-            # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
-            return sp.Heaviside(-root)
-        if isinstance(trigger, sp.core.relational.StrictGreaterThan):
-            # y > x => y - x < 0 => -r < 0
-            return 1 - sp.Heaviside(-root)
-        if isinstance(trigger, sp.core.relational.GreaterThan):
-            # y >= x => not(x < y) => not(x - y < 0) => not r < 0
-            return sp.Heaviside(root)
-
-    # or(x,y) = not(and(not(x),not(y))
-    if isinstance(trigger, sp.Or):
-        return 1-sp.Mul(*[1-_parse_heaviside_trigger(arg)
-                        for arg in trigger.args])
-
-    if isinstance(trigger, sp.And):
-        return sp.Mul(*[_parse_heaviside_trigger(arg)
-                        for arg in trigger.args])
-
-    raise SBMLException(
-        'AMICI can not parse piecewise/event trigger functions with argument '
-        f'{trigger}.'
-    )
-
-
 def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     Recursively translates a boolean trigger function into a real valued
@@ -1880,7 +1775,7 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         return sp.Float(1.0)
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
-        _check_unsupported_functions(root, 'sympy.Expression')
+        _check_unsupported_functions_sbml(root, 'sympy.Expression')
 
         # convert relational expressions into trigger functions
         if isinstance(trigger, sp.core.relational.LessThan) or \
@@ -2089,3 +1984,20 @@ def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
                     sbml_parameters[sbml_parameter_ids.index(target_id)]
                 ))
     return targets
+
+
+def _check_unsupported_functions_sbml(sym: sp.Expr,
+                                      expression_type: str,
+                                      full_sym: Optional[sp.Expr] = None):
+    try:
+        _check_unsupported_functions(sym, expression_type, full_sym)
+    except RuntimeError as err:
+        raise SBMLException(str(err))
+
+
+def _parse_special_functions_sbml(sym: sp.Expr,
+                                  toplevel: bool = True) -> sp.Expr:
+    try:
+        return _parse_special_functions(sym, toplevel)
+    except RuntimeError as err:
+        raise SBMLException(str(err))

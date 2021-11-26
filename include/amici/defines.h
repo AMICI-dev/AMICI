@@ -109,6 +109,13 @@ enum class ParameterScaling {
     log10
 };
 
+/** modes for observable scaling */
+enum class ObservableScaling {
+    lin,
+    log,
+    log10
+};
+
 /** modes for second order sensitivity analysis */
 enum class SecondOrderMode {
     none,

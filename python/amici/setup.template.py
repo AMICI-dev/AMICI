@@ -30,9 +30,9 @@ class ModelBuildExt(build_ext):
         #  except for Windows, where this seems to be incompatible with
         #  providing swig files. Not investigated further...
         if sys.platform != 'win32':
-            import distutils.ccompiler
+            import setuptools._distutils.ccompiler
             self.compiler.compile = compile_parallel.__get__(
-                self.compiler, distutils.ccompiler.CCompiler)
+                self.compiler, setuptools._distutils.ccompiler.CCompiler)
 
         build_ext.build_extension(self, ext)
 
@@ -64,7 +64,7 @@ def get_amici_libs() -> List[str]:
 
 
 def get_extension() -> Extension:
-    """Get distutils extension object for this AMICI model package"""
+    """Get setuptools extension object for this AMICI model package"""
 
     cxx_flags = []
     linker_flags = []

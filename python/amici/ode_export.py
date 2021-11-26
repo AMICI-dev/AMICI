@@ -47,7 +47,8 @@ from .logging import get_logger, log_execution_time, set_log_level
 from .splines import spline_user_functions, UniformGrid
 from .sbml_utils import sbml_time_symbol, amici_time_symbol
 from .constants import SymbolId
-from .import_utils import smart_subs_dict, toposort_symbols
+from .import_utils import smart_subs_dict, toposort_symbols, \
+    ObservableTransformation
 
 
 # Template for model simulation main.cpp file
@@ -592,6 +593,10 @@ class Observable(ModelQuantity):
     :ivar _measurement_symbol:
         sympy symbol used in the objective function to represent
         measurements to this observable
+
+    :ivar trafo:
+        observable transformation, only applies when evaluating objective
+        function or residuals
     """
 
     _measurement_symbol: Union[sp.Symbol, None] = None
@@ -600,7 +605,8 @@ class Observable(ModelQuantity):
                  identifier: sp.Symbol,
                  name: str,
                  value: sp.Expr,
-                 measurement_symbol: Optional[sp.Symbol] = None):
+                 measurement_symbol: Optional[sp.Symbol] = None,
+                 transformation: Optional[ObservableTransformation] = 'lin'):
         """
         Create a new Observable instance.
 
@@ -612,9 +618,14 @@ class Observable(ModelQuantity):
 
         :param value:
             formula
+
+        :param transformation:
+            observable transformation, only applies when evaluating objective
+            function or residuals
         """
         super(Observable, self).__init__(identifier, name, value)
         self._measurement_symbol = measurement_symbol
+        self.trafo = transformation
 
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
@@ -1104,21 +1115,16 @@ class ODEModel:
             ))
         nspl = len(si.splines)
         self.splines = si.splines
-        
+
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
-        nexpr = len(symbols[SymbolId.EXPRESSION])
 
         # assemble fluxes and add them as expressions to the model
         assert len(si.flux_ids) == len(si.flux_vector)
         fluxes = [generate_flux_symbol(ir, name=flux_id)
                   for ir, flux_id in enumerate(si.flux_ids)]
-        nr = len(fluxes)
 
         # correct time derivatives for compartment changes
-
-        dxdotdw_updates = []
-
         def transform_dxdt_to_concentration(species_id, dxdt):
             """
             Produces the appropriate expression for the first derivative of a
@@ -1146,14 +1152,9 @@ class ODEModel:
             species = si.symbols[SymbolId.SPECIES][species_id]
 
             comp = species['compartment']
-            x_index = species['index']
             if comp in si.symbols[SymbolId.SPECIES]:
                 dv_dt = si.symbols[SymbolId.SPECIES][comp]['dt']
                 xdot = (dxdt - dv_dt * species_id) / comp
-                dxdotdw_updates.extend(
-                    (x_index, w_index, xdot.diff(r_flux))
-                    for w_index, r_flux in enumerate(fluxes)
-                )
                 return xdot
             elif comp in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[comp]
@@ -1172,23 +1173,12 @@ class ODEModel:
                         v.diff(var) * si.symbols[SymbolId.SPECIES][var]['dt']
                 dv_dx = v.diff(species_id)
                 xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
-                dxdotdw_updates.extend(
-                    (x_index, w_index, xdot.diff(r_flux))
-                    for w_index, r_flux in enumerate(fluxes)
-                )
                 return xdot
             else:
                 v = si.compartments[comp]
 
                 if v == 1.0:
                     return dxdt
-
-                dxdotdw_updates.extend(
-                    (x_index, w_index,
-                     si.stoichiometric_matrix[x_index, w_index] / v)
-                    for w_index in range(si.stoichiometric_matrix.shape[1])
-                    if si.stoichiometric_matrix[x_index, w_index] != 0
-                )
 
                 return dxdt / v
 
@@ -1220,6 +1210,8 @@ class ODEModel:
                 args += ['value']
             if symbol_name == SymbolId.EVENT:
                 args += ['state_update', 'event_observable']
+            if symbol_name == SymbolId.OBSERVABLE:
+                args += ['transformation']
 
             protos = [
                 {
@@ -1245,39 +1237,13 @@ class ODEModel:
 
         # process conservation laws
         if compute_cls:
-            dxdotdw_updates = si.process_conservation_laws(self,
-                                                           dxdotdw_updates)
-
-        nx_solver = si.stoichiometric_matrix.shape[0]
-        nw = len(self._expressions)
-        ncl = nw - nr - nexpr - nspl
-
-        # set derivatives of xdot, if applicable. We do this as we can save
-        # a substantial amount of computations by exploiting the structure
-        # of the right hand side.
-        # the tricky part is that the expressions w do not only contain the
-        # flux entries, but also assignment rules and conservation laws.
-        # assignment rules are added before the fluxes and
-        # _process_conservation_laws is called after the fluxes,
-        # but conservation law expressions are inserted at the beginning
-        # of the self.eq['w']. Accordingly we concatenate a zero matrix (for
-        # rule assignments and conservation laws) with the stoichiometric
-        # matrix and then apply the necessary updates from
-        # transform_dxdt_to_concentration
-
-        if not any(s in [e.get_id() for e in self._expressions]
-                   for s in si.stoichiometric_matrix.free_symbols):
-            self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl + nexpr).row_join(
-                si.stoichiometric_matrix
-            )
-            for ix, iw, val in dxdotdw_updates:
-                # offset update according to concatenated zero matrix
-                self._eqs['dxdotdw'][ix, ncl + nexpr + iw] = val
+            si.process_conservation_laws(self)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
         self._has_quadratic_nllh = all(
-            llh['dist'] in ['normal', 'lin-normal']
+            llh['dist'] in ['normal', 'lin-normal', 'log-normal',
+                            'log10-normal']
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
@@ -1360,6 +1326,17 @@ class ODEModel:
         )
 
         self._states[ix].set_conservation_law(state_expr)
+
+
+    def get_observable_transformations(self) -> List[ObservableTransformation]:
+        """
+        List of observable transformations
+
+        :return:
+            list of transformations
+        """
+        return [obs.trafo for obs in self._observables]
+
 
     def num_states_rdata(self) -> int:
         """
@@ -2151,9 +2128,10 @@ class ODEModel:
             nonzeros = np.asarray(
                 derivative.applyfunc(lambda x: int(not x.is_zero))
             ).astype(np.int64)
-            if max(nonzeros.shape):
-                while nonzeros.max():
-                    nonzeros = nonzeros.dot(nonzeros)
+            recursion = nonzeros.copy()
+            if max(recursion.shape):
+                while recursion.max():
+                    recursion = recursion.dot(nonzeros)
                     self._w_recursion_depth += 1
                     if self._w_recursion_depth > len(sym_eq):
                         raise RuntimeError(
@@ -3507,6 +3485,13 @@ class ODEExporter:
                 self._get_symbol_name_initializer_list('k'),
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('y'),
+            'OBSERVABLE_TRAFO_INITIALIZER_LIST':
+                '\n'.join(
+                    f'ObservableScaling::{trafo}, // y[{idx}]'
+                    for idx, trafo in enumerate(
+                        self.model.get_observable_transformations()
+                    )
+                ),
             'EXPRESSION_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('w'),
             'PARAMETER_IDS_INITIALIZER_LIST':

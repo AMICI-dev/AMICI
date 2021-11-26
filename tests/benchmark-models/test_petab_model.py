@@ -82,10 +82,15 @@ def main():
         sys.path.insert(0, args.model_directory)
     model_module = importlib.import_module(args.model_name)
     amici_model = model_module.getModel()
+    amici_solver = amici_model.getSolver()
+
+    if args.model_name == "Isensee_JCB2018":
+        amici_solver.setAbsoluteTolerance(1e-12)
+        amici_solver.setRelativeTolerance(1e-12)
 
     res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
-        log_level=logging.DEBUG)
+        solver=amici_solver, log_level=logging.DEBUG)
     rdatas = res[RDATAS]
     llh = res[LLH]
 
