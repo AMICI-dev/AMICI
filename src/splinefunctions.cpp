@@ -312,8 +312,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
             getCoeffsSensiLowlevel(ip, i_node, nplist, n_spline_coefficients,
                                    spline_offset, len, len_m, len_p,
                                    dspline_valuesdp, dspline_slopesdp,
-                                   coefficients_sensi.data(),
-                                   coefficients_extrapolate_sensi.data());
+                                   coefficients_sensi.data());
     }
 
     /* We need the coefficients for extrapolating beyond the spline domain */
@@ -378,14 +377,22 @@ void HermiteSpline::computeCoefficientsExtrapolationSensi(int nplist,
                 } else {
                     throw AmiException("Some weird combination of spline boundary "
                         "condition, extrapolation and finite differecnces was "
-                        "passed which should bo ne allowed.");
+                        "passed which should not be allowed.");
                 }
                 break;
 
             default:
                 /* We don't need specific coefficients in the cases of:
-                 * noExtrapolation, polynomial, periodic*/
-                break;
+                 * noExtrapolation, polynomial, periodic
+                 *
+                 * TODO: But we need to set sm0 even here,
+                 *       otherwise its value is undefined!!!
+                 *       Until corrected, raise an exception
+                 */
+                throw AmiException(
+                  "Spline extrapolation sensitivity computation not supported yet "
+                  "for the following cases: noExtrapolation, polynomial, periodic"
+                );
         }
         /* Write them to the vector */
         coefficients_extrapolate_sensi[4 * ip] = sp0 - sm0 * nodes_[0];
@@ -432,14 +439,22 @@ void HermiteSpline::computeCoefficientsExtrapolationSensi(int nplist,
                 } else {
                     throw AmiException("Some weird combination of spline boundary "
                         "condition, extrapolation and finite differecnces was "
-                        "passed which should bo ne allowed.");
+                        "passed which should not be allowed.");
                 }
                 break;
 
             default:
                 /* We don't need specific coefficients in the cases of:
-                 * noExtrapolation, polynomial, periodic*/
-                break;
+                 * noExtrapolation, polynomial, periodic
+                 *
+                 * TODO: But we need to set sm_end even here,
+                 *       otherwise its value is undefined!!!
+                 *       Until corrected, raise an exception
+                 */
+                throw AmiException(
+                  "Spline extrapolation sensitivity computation not supported yet "
+                  "for the following cases: noExtrapolation, polynomial, periodic"
+                );
         }
         /* Write them to the vector */
         coefficients_extrapolate_sensi[4 * ip + 2] = sp_end -
@@ -451,8 +466,7 @@ void HermiteSpline::computeCoefficientsExtrapolationSensi(int nplist,
 void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n_spline_coefficients,
                                            int spline_offset, realtype len, realtype len_m,
                                            realtype len_p, realtype *dnodesdp,
-                                           realtype *dslopesdp, realtype *coeffs,
-                                           realtype *coeffs_extrapol) {
+                                           realtype *dslopesdp, realtype *coeffs) {
     /**
      * We're using the short hand notation for node values and slopes from
      * computeCoefficientsSensi() here. See this function for documentation.

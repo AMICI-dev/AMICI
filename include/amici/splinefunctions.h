@@ -54,7 +54,7 @@ class AbstractSpline {
      */
     bool get_logarithmic_parametrization();
 
-    const int n_nodes() { return n_nodes_; }
+    int n_nodes() const { return n_nodes_; }
 
   protected:
     std::vector<realtype> nodes_;
@@ -155,7 +155,7 @@ class HermiteSpline : public AbstractSpline {
     void getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n_spline_coefficients,
                                 int spline_offset, realtype len, realtype len_m,
                                 realtype len_p, realtype *dnodesdp, realtype *dslopesdp,
-                                realtype *coeffs, realtype *coeffs_extrapol);
+                                realtype *coeffs);
 
     void handleInnerDerviatives();
 
