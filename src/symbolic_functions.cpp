@@ -92,7 +92,7 @@ double heaviside(double x, double x0) {
     if (x < 0.0)
         return 0.0;
     if (x == 0.0)
-        return x0
+        return x0;
     return 1.0;
 }
 
