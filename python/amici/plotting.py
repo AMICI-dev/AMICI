@@ -45,7 +45,7 @@ def plotStateTrajectories(
             label = model.getStateIds()[ix]
         ax.plot(rdata['t'], rdata['x'][:, ix], label=label)
         ax.set_xlabel('$t$')
-        ax.set_ylabel('$x_i(t)$')
+        ax.set_ylabel('$x(t)$')
         ax.legend()
         ax.set_title('State trajectories')
 
