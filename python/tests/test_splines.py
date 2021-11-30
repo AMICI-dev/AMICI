@@ -1,11 +1,14 @@
 import os
 import tempfile
 import math
+import uuid
+
+from typing import Union, List
+
 import numpy as np
 import sympy as sp
 import pandas as pd
 
-# from contextlib import contextmanager
 from scipy.integrate import quad
 
 import libsbml
@@ -34,24 +37,24 @@ from amici.sbml_utils import (
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 
 
-# @contextmanager
-# def cd(path):
-#     cwd = os.getcwd()
-#     assert os.path.isabs(cwd)
-#     os.chdir(path)
-#     yield os.path.abspath(path)
-#     os.chdir(pwd)
-
-
+# callback for amici.gradient_check.check_*
 def assert_fun(x):
     assert x
 
 
-def evaluate_spline(spline, params, tt, **kwargs):
+def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
+    """
+    Evaluate the `AbstractSplin` `spline` at timepoints `tt`
+    for the parameters given in the dictionary `params`.
+    """
     return np.asarray([spline.evaluate(t).subs(params) for t in tt], **kwargs)
 
 
-def integrate_spline(spline, params, tt, initial_value=0, **kwargs):
+def integrate_spline(spline: AbstractSpline, params: dict, tt, initial_value=0, **kwargs):
+    """
+    Integrate the `AbstractSplin` `spline` at timepoints `tt`
+    for the parameters given in the dictionary `params`.
+    """
     ispline = [initial_value + spline.integrate(0, t) for t in tt]
     if params is not None:
         ispline = [x.subs(params) for x in ispline]
@@ -59,41 +62,40 @@ def integrate_spline(spline, params, tt, initial_value=0, **kwargs):
 
 
 def create_condition_table():
+    "Create a PEtab condition table."
     condition_df = pd.DataFrame({'conditionId' : ['condition1']})
     condition_df.set_index(['conditionId'], inplace=True)
     return condition_df
 
 
-def create_parameter_table(**kwargs):
-    if isinstance(kwargs['parameterId'], str):
-        kwargs['parameterId'] = [kwargs['parameterId']]
-    if 'parameterScale' not in kwargs.keys():
-        kwargs['parameterScale'] = 'lin'
-    if 'estimate' not in kwargs.keys():
-        kwargs['estimate'] = 1
-    parameter_df = pd.DataFrame(kwargs)
+def create_parameter_table(**columns):
+    "Create a PEtab parameter table."
+    if isinstance(columns['parameterId'], str):
+        columns['parameterId'] = [columns['parameterId']]
+    columns.setdefault('parameterScale', 'lin')
+    columns.setdefault('estimate', 1)
+    parameter_df = pd.DataFrame(columns)
     parameter_df.set_index(['parameterId'], inplace=True)
     return parameter_df
 
 
-def create_observable_table(**kwargs):
-    if isinstance(kwargs['observableId'], str):
-        kwargs['observableId'] = [kwargs['observableId']]
-    if 'observableTransformation' not in kwargs.keys():
-        kwargs['observableTransformation'] = 'lin'
-    if 'noiseDistribution' not in kwargs.keys():
-        kwargs['noiseDistribution'] = 'normal'
-    observable_df = pd.DataFrame(kwargs)
+def create_observable_table(**columns):
+    "Create a PEtab observable table."
+    if isinstance(columns['observableId'], str):
+        columns['observableId'] = [columns['observableId']]
+    columns.setdefault('observableTransformation', 'lin')
+    columns.setdefault('noiseDistribution', 'normal')
+    observable_df = pd.DataFrame(columns)
     observable_df.set_index(['observableId'], inplace=True)
     return observable_df
 
 
-def create_measurement_table(**kwargs):
-    if isinstance(kwargs['observableId'], str):
-        kwargs['observableId'] = [kwargs['observableId']]
-    if 'simulationConditionId' not in kwargs.keys():
-        kwargs['simulationConditionId'] = 'condition1'
-    return pd.DataFrame(kwargs)
+def create_measurement_table(**columns):
+    "Create a PEtab measurement table."
+    if isinstance(columns['observableId'], str):
+        columns['observableId'] = [columns['observableId']]
+    columns.setdefault('simulationConditionId', 'condition1')
+    return pd.DataFrame(columns)
 
 
 def species(i):
@@ -109,26 +111,63 @@ def species_to_index(name):
     return int(name[1:])
 
 
-def create_petab_problem(splines,
-                         params_true,
-                         initial_values,
-                         use_reactions=False,
-                         measure_upsample=6,
-                         sigma=1.0,
-                         Textrapolate=0.25,
-                         folder=None
-    ):
+def create_petab_problem(
+    splines: List[AbstractSpline],
+    params_true,
+    initial_values,
+    use_reactions=False,
+    measure_upsample=6,
+    sigma=1.0,
+    Textrapolate=0.25,
+    folder=None,
+    modelname = 'test_splines',
+):
+    """
+    Given a list of `AbstractSplines`, create a PEtab problem for the system of
+    ODEs given by `z_i(t)' = spline[i](t)`.
 
-    modelname = 'test_splines'
+    :param params_true:
+        parameter values used to compute the analytical solution of the ODE system
+        in order to fill the PEtab measurement table
+
+    :param initial_values:
+        initial values of the state variables
+
+    :param use_reactions:
+        whether the ODEs are encoded in the SBML model as reactions (inflows)
+        or rate rules
+
+    :param measure_upsample:
+        controls the number of time points at which synthetic measurements are
+        taken. The interval between subsequent time points is equal to the
+        smallest interval between subsequent spline nodes divided by `measure_upsample`
+
+    :param sigma:
+        standard deviation for additive Normal noise used to corrupt synthetic
+        measurements
+
+    :param Textrapolate:
+        factor controlling how long after the final spline node the simulation
+        should continue in order to test extrapolation methods.
+
+    :param folder:
+        if not `None`, save the PEtab problem to this folder
+
+    :param model_name:
+        name of the SBML model to be created
+    """
 
     for spline in splines:
-        assert spline.x == amici_time_symbol
+        if spline.x != amici_time_symbol:
+            raise Exception(
+                'the given splines must be evaluated at the simulation time'
+            )
 
     # Create SBML document
     doc, model = createSbmlModel(modelname)
     addCompartment(model, 'compartment')
-    for i in range(len(splines)):
-        splines[i].addToSbmlModel(model)
+    for (i, spline) in enumerate(splines):
+        spline.addToSbmlModel(model)
         addSpecies(model, species(i), initial_amount=initial_values[i])
         if use_reactions:
             addInflow(model, species(i), splines[i].sbmlId)
@@ -140,17 +179,24 @@ def create_petab_problem(splines,
         addParameter(model, spline.sbmlId, constant=False)
 
     # Compute simulation time
+    # Must cover all the intervals of definition for the splines,
+    # plus something extra for extrapolated or periodic splines
     T = 0
     for spline in splines:
         if spline.extrapolate[0] is None:
-            assert spline.xx[0] <= 0
+            if spline.xx[0] > 0:
+                raise Exception(
+                    'if no left-extrapolation is defined for a spline, '
+                    'its interval of definition should contain zero'
+                )
         if spline.extrapolate[1] is not None:
-            DT = (spline.xx[-1] - spline.xx[0]) * (Textrapolate if spline.extrapolate[1] != 'periodic' else 1 + Textrapolate)
+            f = Textrapolate if spline.extrapolate[1] != 'periodic' else 1 + Textrapolate
+            DT = f * (spline.xx[-1] - spline.xx[0])
         else:
             DT = 0
         T = max(T, spline.xx[-1] + DT)
 
-    # Compute measurements
+    # Compute synthetic measurements
     dt = min(np.diff(spline.xx).min() for spline in splines)
     dt /= measure_upsample
     n_obs = math.ceil(T / dt) + 1
@@ -163,23 +209,23 @@ def create_petab_problem(splines,
 
     # Create PEtab tables
     condition_df = create_condition_table()
-    _params = list(params_true.items())
+    _params = list(params_true.items()) # ensure that same parameter order is used for all columns
     parameter_df = create_parameter_table(
         parameterId = [p.name for (p, v) in _params],
         lowerBound = min(v for (p, v) in _params),
         upperBound = max(v for (p, v) in _params),
         nominalValue = [v for (p, v) in _params],
-        estimate = 1
+        estimate = 1,
     )
     observable_df = create_observable_table(
         observableId = [observable(i) for i in range(len(splines))],
         observableFormula = [species(i) for i in range(len(splines))],
-        noiseFormula = sigma if sigma > 0 else 1.0
+        noiseFormula = sigma if sigma > 0 else 1.0,
     )
     measurement_df = create_measurement_table(
         observableId = np.concatenate([len(tt_obs) * [observable(i)] for i in range(len(splines))]),
         time = len(splines) * list(tt_obs),
-        measurement = np.concatenate(zz_obs)
+        measurement = np.concatenate(zz_obs),
     )
 
     # Create and validate PEtab problem
@@ -189,7 +235,7 @@ def create_petab_problem(splines,
         condition_df = condition_df,
         measurement_df = measurement_df,
         parameter_df = parameter_df,
-        observable_df = observable_df
+        observable_df = observable_df,
     )
     if petab.lint_problem(problem):
         raise Exception('PEtab lint failed')
@@ -204,7 +250,7 @@ def create_petab_problem(splines,
             measurement_file=os.path.join(folder, f'{modelname}_measurements.tsv'),
             parameter_file=os.path.join(folder, f'{modelname}_parameters.tsv'),
             observable_file=os.path.join(folder, f'{modelname}_observables.tsv'),
-            yaml_file=os.path.join(folder, f'{modelname}.yaml')
+            yaml_file=os.path.join(folder, f'{modelname}.yaml'),
         )
         return os.path.join(folder, f'{modelname}.yaml'), T
 
@@ -212,34 +258,85 @@ def create_petab_problem(splines,
         return problem, T
 
 
-def simulate_splines(*args, folder=None, keep_temporary=False, **kwargs):
-    if folder is not None:
-        return _simulate_splines(folder, *args, **kwargs)
-    elif keep_temporary:
-        folder = tempfile.TemporaryDirectory().name
-        return _simulate_splines(folder, *args, **kwargs)
-    else:
-        with tempfile.TemporaryDirectory() as folder:
-            return _simulate_splines(folder, *args, **kwargs)
+def simulate_splines(
+    splines,
+    params_true,
+    initial_values=None,
+    *,
+    folder: Optional[str] = None,
+    keep_temporary: bool = False,
+    benchmark: Union[bool, int] = False,
+    rtol: float = 1e-12,
+    atol: float = 1e-12,
+    maxsteps: int = 500_000,
+    discard_annotations: bool = False,
+    use_adjoint: bool = False,
+    skip_sensitivity: bool = False,
+    **kwargs
+):
+    """
+    Create a PEtab problem using `create_petab_problem` and simulate it with AMICI.
 
+    :param splines:
+        passed to `create_petab_problem`
 
-def _default_initial_values(nsplines: int):
-    return np.zeros(nsplines)
+    :param params_true:
+        passed to `create_petab_problem`
 
+    :param initial_values:
+        passed to `create_petab_problem`
 
-def random_suffix(n):
-    chars = 'abcdefghijklmnopqrstuvwxyz'
-    chars += chars.upper()
-    chars += '0123456789'
-    chars = np.asarray(list(chars))
-    chars = chars[np.random.randint(0, len(chars), n)]
-    return ''.join(chars)
+    :param folder:
+        working directory (a temporary one is used if not specified)
 
+    :param keep_temporary:
+        whether to keep or delete temporary working directories on exit
 
-def _simulate_splines(folder, splines, params_true, initial_values=None, *, benchmark=False, rtol=1e-12, atol=1e-12, maxsteps=500_000, discard_annotations=False, use_adjoint=False, skip_sensitivity=False, **kwargs):
+    :param benchmark:
+        instead of returning the simulation data, run the simulation
+        `benchmark` times (defaults to `50` if `benchmark` is `True`)
+        and return execution times
+
+    :param rtol:
+        relative tolerance for AMICI solver
+
+    :param atol:
+        absolute tolerance for AMICI solver
+
+    :param maxsteps:
+        maximum number of steps for AMICI solver
+
+    :param discard_annotations:
+        whether to discard spline annotations,
+        forcing AMICI to read the spline as a piecewise assignment rule
+
+    :param use_adjoint:
+        whether to use adjoint sensitivity computation
+
+    :param skip_sensitivity:
+        whether to skip sensitivity computation
+
+    :param kwargs:
+        passed to `create_petab_problem`
+    """
+
+    # If no working directory is given, create a temporary one
+    if folder is None:
+        if keep_temporary:
+            folder = tempfile.TemporaryDirectory().name
+        else:
+            with tempfile.TemporaryDirectory() as folder:
+                return simulate_splines(
+                    folder, splines, params_true, initial_values, folder=folder,
+                    benchmark=benchmark, rtol=rtol, atol=atol,
+                    maxsteps=maxsteps, discard_annotations=discard_annotations,
+                    use_adjoint=use_adjoint, skip_sensitivity=skip_sensitivity,
+                    **kwargs
+                )
+
     # Default initial values
     if initial_values is None:
-        initial_values = _default_initial_values(len(splines))
+        initial_values = np.zeros(nsplines)
 
     # Create PEtab problem
     path, T = create_petab_problem(
@@ -253,8 +350,7 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, benc
         problem,
         discard_annotations=discard_annotations,
         model_output_dir=os.path.join(folder, 'amici_models'),
-        model_name='splinetest_' + random_suffix(6)
-                                   # to prevent module collisions
+        model_name='splinetest_' + uuid.uuid1().hex # to prevent module collisions
     )
 
     # Set solver options
@@ -270,13 +366,13 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, benc
             solver.setSensitivityMethod(amici.SensitivityMethod_forward)
 
     # Compute and set timepoints
-    # not working, will always be equal to the observation times
+    # NB not working, will always be equal to the observation times
     # n = max(len(spline.xx) for spline in splines) * simulate_upsample
     # tt = np.linspace(0, float(T), n)
     # model.setTimepoints(tt)
 
     # Create dictionary for parameter values
-    params_str = {p.name : v for p, v in params_true.items()}
+    params_str = {p.name: v for (p, v) in params_true.items()}
 
     if benchmark is False:
         # Simulate PEtab problem
@@ -289,7 +385,7 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, benc
         state_ids = model.getStateIds()
         param_ids = model.getParameterIds()
 
-        return llh, sllh, rdata, state_ids, param_ids
+        return initial_values, llh, sllh, rdata, state_ids, param_ids
 
     else:
         if benchmark is True:
@@ -310,34 +406,66 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, benc
         )
 
 
-def check_splines(splines,
-                  params_true,
-                  initial_values=None,
-                  *,
-                  discard_annotations=False,
-                  use_adjoint=False,
-                  skip_sensitivity=False,
-                  debug=False,
-                  llh_rtol=1e-8,
-                  sllh_atol=1e-8,
-                  x_rtol=1e-11,
-                  x_atol=1e-11,
-                  w_rtol=1e-11,
-                  w_atol=1e-11,
-                  sx_rtol=1e-10,
-                  sx_atol=1e-10,
-                  **kwargs
-    ):
+def check_splines(
+    splines,
+    params_true,
+    initial_values=None,
+    *,
+    assert_fun,
+    discard_annotations: bool = False,
+    use_adjoint: bool = False,
+    skip_sensitivity: bool = False,
+    debug: bool = False,
+    llh_rtol: float = 1e-8,
+    sllh_atol: float = 1e-8,
+    x_rtol: float = 1e-11,
+    x_atol: float = 1e-11,
+    w_rtol: float = 1e-11,
+    w_atol: float = 1e-11,
+    sx_rtol: float = 1e-10,
+    sx_atol: float = 1e-10,
+    **kwargs
+):
+    """
+    Create a PEtab problem using `create_petab_problem`,
+    simulate it with `simulate_splines`
+    and check it agains the analystical solution.
+
+    :param splines:
+        passed to `simulate_splines`
+
+    :param params_true:
+        passed to `simulate_splines`
+
+    :param initial_values:
+        passed to `simulate_splines`
+
+    :param assert_fun:
+        function to use for checks
+
+    :param discard_annotations:
+        whether to discard spline annotations,
+        forcing AMICI to read the spline as a piecewise assignment rule
+
+    :param use_adjoint:
+        whether to use adjoint sensitivity computation
+
+    :param skip_sensitivity:
+        whether to skip sensitivity computation
+
+    :param debug:
+        if not `False`, do not check and return results and ground truth instead.
+        If equal to `'print'`, in addition to the above print error values
+
+    :param kwargs:
+        passed to `simulate_splines`
+    """
 
     if isinstance(splines, AbstractSpline):
         splines = [splines]
 
-    # Default initial values
-    if initial_values is None:
-        initial_values = _default_initial_values(len(splines))
-
     # Simulate PEtab problem
-    llh, sllh, rdata, state_ids, param_ids = simulate_splines(
+    initial_values, llh, sllh, rdata, state_ids, param_ids = simulate_splines(
         splines, params_true, initial_values,
         discard_annotations=discard_annotations,
         skip_sensitivity=skip_sensitivity,
@@ -430,7 +558,7 @@ def check_splines(splines,
     llh_true = - 0.5 * rdata['y'].size * np.log(2*np.pi)
     llh_error_rel = abs(llh - llh_true) / abs(llh_true)
     if not debug:
-        assert llh_error_rel <= llh_rtol
+        assert_fun(llh_error_rel <= llh_rtol)
     elif debug == 'print':
         print(f'llh_error_rel = {llh_error_rel}')
 
@@ -442,7 +570,7 @@ def check_splines(splines,
         sllh = np.asarray([s for s in sllh.values()])
         sllh_err_abs = abs(sllh).max()
         if not debug:
-            assert sllh_err_abs <= sllh_atol
+            assert_fun(sllh_err_abs <= sllh_atol)
         elif debug == 'print':
             print(f'sllh_err_abs = {sllh_err_abs}')
 
@@ -461,6 +589,11 @@ def check_splines(splines,
 
 
 def check_splines_full(splines, params, tols, *args, **kwargs):
+    """
+    Check example PEtab problem with `check_splines`
+    both using adjoint and forward sensitivities
+    and also in the case in which the splines are read as piecewise functions.
+    """
     if isinstance(tols, dict):
         tols1 = tols2 = tols3 = tols
     else:
