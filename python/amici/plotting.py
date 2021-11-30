@@ -38,7 +38,7 @@ def plotStateTrajectories(
         state_indices = range(rdata['x'].shape[1])
     for ix in state_indices:
         if model is None:
-            label = f'$x_{{{ix}}}(t)$'
+            label = f'$x_{{{ix}}}$'
         elif model.getStateNames()[ix]:
             label = model.getStateNames()[ix]
         else:
