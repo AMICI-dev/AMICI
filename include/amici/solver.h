@@ -51,6 +51,9 @@ class Solver {
     /** Type of what is passed to Sundials solvers as user_data */
     using user_data_type = std::pair<Model *, Solver const*>;
 
+    /**
+     * @brief Default constructor
+     */
     Solver() = default;
 
     /**
