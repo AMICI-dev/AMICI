@@ -87,4 +87,4 @@ def plotObservableTrajectories(
         ax.set_xlabel('$t$')
         ax.set_ylabel('$y(t)$')
         ax.legend()
-        ax.set_title('Observables')
+        ax.set_title('Observable trajectories')
