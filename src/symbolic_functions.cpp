@@ -84,13 +84,15 @@ double dirac(double x) {
  * c implementation of matlab function heaviside
  *
  * @param x argument
- * @return if(x>0) then 1 else 0
+ * @param x0 value at x==0
+ * @return if(x>0) then 1 else if (x==0) then x0 else 0
  *
  */
-double heaviside(double x) {
-    if (x < 0.0) {
+double heaviside(double x, double x0) {
+    if (x < 0.0)
         return 0.0;
-    }
+    if (x == 0.0)
+        return x0
     return 1.0;
 }
 
