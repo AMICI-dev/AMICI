@@ -2036,7 +2036,6 @@ class ODEModel:
                         raise RuntimeError(
                             'dwdw is not nilpotent. Something, somewhere went '
                             'terribly wrong. Please file a bug report at '
-                            'terribly wrong. Please file a bug report at '
                             'https://github.com/AMICI-dev/AMICI/issues and '
                             'attach this model.'
                         )
