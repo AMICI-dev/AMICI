@@ -845,11 +845,9 @@ def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
     """
 
     if isinstance(x, sp.MutableDenseMatrix):
-        nonzero = any(xx.is_zero is not True for xx in x._mat)
-    else:
-        nonzero = x.nnz() > 0
+        return all(xx.is_zero is True for xx in x.flat())
 
-    return not nonzero
+    return x.nnz() == 0
 
 
 class ODEModel:
