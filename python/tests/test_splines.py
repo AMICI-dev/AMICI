@@ -3,7 +3,7 @@ import tempfile
 import math
 import uuid
 
-from typing import Union, List
+from typing import Union, List, Optional
 
 import numpy as np
 import sympy as sp
@@ -324,10 +324,11 @@ def simulate_splines(
     if folder is None:
         if keep_temporary:
             folder = tempfile.TemporaryDirectory().name
+            print(f"temporary folder is {folder}")
         else:
             with tempfile.TemporaryDirectory() as folder:
                 return simulate_splines(
-                    folder, splines, params_true, initial_values, folder=folder,
+                    splines, params_true, initial_values, folder=folder,
                     benchmark=benchmark, rtol=rtol, atol=atol,
                     maxsteps=maxsteps, discard_annotations=discard_annotations,
                     use_adjoint=use_adjoint, skip_sensitivity=skip_sensitivity,
@@ -336,7 +337,7 @@ def simulate_splines(
 
     # Default initial values
     if initial_values is None:
-        initial_values = np.zeros(nsplines)
+        initial_values = np.zeros(len(splines))
 
     # Create PEtab problem
     path, T = create_petab_problem(
@@ -588,7 +589,7 @@ def check_splines(
         )
 
 
-def check_splines_full(splines, params, tols, *args, **kwargs):
+def check_splines_full(splines, params, tols, *args, check_piecewise=True, **kwargs):
     """
     Check example PEtab problem with `check_splines`
     both using adjoint and forward sensitivities
@@ -599,20 +600,26 @@ def check_splines_full(splines, params, tols, *args, **kwargs):
     else:
         tols1, tols2, tols3 = tols
 
-    if isinstance(splines, AbstractSpline) and splines.extrapolate == ('periodic', 'periodic'):
-        contains_periodic = True
+    if isinstance(splines, AbstractSpline):
+        contains_periodic = (splines.extrapolate == ('periodic', 'periodic'))
     elif any(spline.extrapolate == ('periodic', 'periodic') for spline in splines):
         contains_periodic = True
     else:
         contains_periodic = False
 
-    if not contains_periodic:
+    if check_piecewise and not contains_periodic:
         check_splines(splines, params, *args, **kwargs, **tols1, discard_annotations=True, use_adjoint=False)
     check_splines(splines, params, *args, **kwargs, **tols2, discard_annotations=False, use_adjoint=False)
     check_splines(splines, params, *args, **kwargs, **tols3, discard_annotations=False, use_adjoint=True)
 
 
-def example_spline_1(idx: int = 0, offset: float = 0, scale: float = 1, num_nodes: int = 9, fixed_values=None):
+def example_spline_1(
+    idx: int = 0,
+    offset: float = 0,
+    scale: float = 1,
+    num_nodes: int = 9,
+    fixed_values=None, # a list of indices or 'all'
+):
     "A simple spline with no extrapolation."
 
     yy_true = np.asarray([0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0, 7.0, 7.5, 6.5, 4.0])
@@ -627,6 +634,10 @@ def example_spline_1(idx: int = 0, offset: float = 0, scale: float = 1, num_node
 
     if fixed_values is None:
         params = dict(zip(yy, yy_true))
+    elif fixed_values == 'all':
+        params = {}
+        for i in range(len(yy_true)):
+            yy[i] = yy_true[i]
     else:
         params = {}
         for i in range(len(yy_true)):
@@ -727,21 +738,25 @@ def example_splines_1():
     return splines, params, tols
 
 
-def test_CubicHermiteSpline():
+def test_CubicHermiteSpline(**kwargs):
     spline, params, tols = example_spline_1()
-    check_splines_full(spline, params, tols)
+    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
 
     # same as above, but with some fixed values
     spline, params, tols = example_spline_1(fixed_values=[0, 2])
-    check_splines_full(spline, params, tols)
+    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
+
+    # same as above, but with all values fixed
+    spline, params, tols = example_spline_1(fixed_values='all')
+    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
 
     spline, params, tols = example_spline_2()
-    check_splines_full(spline, params, tols)
+    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
 
 
-def test_multiple_splines():
+def test_multiple_splines(**kwargs):
     splines, params, tols = example_splines_1()
-    check_splines_full(splines, params, tols)
+    check_splines_full(splines, params, tols, assert_fun=assert_fun, **kwargs)
 
 
 def test_splines_evaluated_at_formula():
