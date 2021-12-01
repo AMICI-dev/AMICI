@@ -882,11 +882,9 @@ def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
     """
 
     if isinstance(x, sp.MutableDenseMatrix):
-        nonzero = any(xx.is_zero is not True for xx in x._mat)
-    else:
-        nonzero = x.nnz() > 0
+        return all(xx.is_zero is True for xx in x.flat())
 
-    return not nonzero
+    return x.nnz() == 0
 
 
 class ODEModel:
@@ -1704,7 +1702,7 @@ class ODEModel:
             expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
         # remove all possible Heavisides from roots, which may arise from
-        # the substitution of `'w'` in `_collect_heaviside_roots`
+        # the substitution of `'w'` in `_get_unique_root`
         for root in roots:
             root.set_val(self._process_heavisides(root.get_val(), roots))
 
@@ -2455,6 +2453,14 @@ class ODEModel:
             unique identifier for root, or `None` if the root is not
             time-dependent
         """
+        # substitute 'w' expressions into root expressions now, to avoid
+        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
+        # to include 'w.h'
+        w_sorted = toposort_symbols(dict(zip(
+            [expr.get_id() for expr in self._expressions],
+            [expr.get_val() for expr in self._expressions],
+        )))
+        root_found = root_found.subs(w_sorted)
 
         if not self._expr_is_time_dependent(root_found):
             return None
@@ -2495,18 +2501,6 @@ class ODEModel:
                 root_funs.append(arg.args[0])
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
-
-        # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
-        # to include 'w.h'
-        w_sorted = toposort_symbols(dict(zip(
-            [expr.get_id()  for expr in self._expressions],
-            [expr.get_val() for expr in self._expressions],
-        )))
-        root_funs = [
-            r.subs(w_sorted)
-            for r in root_funs
-        ]
 
         return root_funs
 

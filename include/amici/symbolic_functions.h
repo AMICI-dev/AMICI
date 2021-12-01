@@ -21,15 +21,7 @@ double log(double x);
  *
  */
 double dirac(double x);
-
-/**
- * c implementation of matlab function heaviside
- *
- * @param x argument
- * @return if(x>0) then 1 else 0
- *
- */
-double heaviside(double x);
+double heaviside(double x, double x0);
 
 /**
  * c implementation of matlab function min
