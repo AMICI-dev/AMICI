@@ -35,6 +35,7 @@ from abc import abstractmethod, ABC
 from itertools import count
 
 from sympy import cxxcode
+from sympy.core.parameters import evaluate
 
 from .sbml_utils import (
     sbml_time_symbol,
@@ -54,19 +55,6 @@ from .sbml_utils import (
 def sympify_noeval(x):
     with evaluate(False):
         return sp.sympify(x)
-
-
-# evaluate(False) is broken in sympy 1.8 so it will not be used
-# It is probably not dangerous in most use cases (x=time, xx=floats)
-# and only influences the fallback piecewise MathML formulas which may not be as "nice"
-SYMPY_VERSION = tuple(int(v) for v in sp.__version__.split('.'))
-if SYMPY_VERSION[0] <= 1 and SYMPY_VERSION[1] < 9:
-    import contextlib
-    @contextlib.contextmanager
-    def evaluate(switch):
-        yield
-else:
-    from sympy.core.parameters import evaluate
 
 
 ################################################################################
