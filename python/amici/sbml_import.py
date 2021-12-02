@@ -32,7 +32,6 @@ from .ode_export import (
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import (
-    setSbmlMath,
     annotation_namespace,
     _check_unsupported_functions,
     _parse_special_functions,
@@ -1621,7 +1620,7 @@ class SbmlImporter:
             )
             ele_name = var_or_math.element_name
         else:
-            math_string = str(var_or_math)
+            math_string = var_or_math
             ele_name = 'string'
         math_string = replace_logx(math_string)
         try:
@@ -1705,8 +1704,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        if a is None or a.getFormula() == '' or \
-                self._sympy_from_sbml_math(a.getFormula()) is None:
+        if a is None or self._sympy_from_sbml_math(a.getFormula()) is None:
             return False
 
         return True
