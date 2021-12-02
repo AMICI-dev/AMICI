@@ -2,6 +2,19 @@
 
 ## v0.X Series
 
+### v0.11.22 (2021-12-02)
+
+* **Require sympy>=1.9,pysb>=1.13.1** by @FFroehlich, @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1599
+* Fixed sympy deprecation warning by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1600
+* Updated Windows installation instructions for Python>=3.8 by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1597
+* Fixed plot labels by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1598
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.21...v0.11.22
+
 ### v0.11.21 (2021-11-21)
 
 Fixes:

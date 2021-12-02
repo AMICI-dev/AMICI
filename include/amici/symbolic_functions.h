@@ -5,7 +5,7 @@ namespace amici {
 
 double log(double x);
 double dirac(double x);
-double heaviside(double x);
+double heaviside(double x, double x0);
 
 double min(double a, double b, double c);
 double Dmin(int id, double a, double b, double c);
