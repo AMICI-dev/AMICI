@@ -378,9 +378,13 @@ def simulate_splines(
     if benchmark is False:
         # Simulate PEtab problem
         res = simulate_petab(problem, model, solver, params_str)
-        llh, sllh, rdatas = res[LLH], res[SLLH], res[RDATAS]
+        assert SLLH not in res.keys()
+        llh, rdatas = res[LLH], res[RDATAS]
         assert len(rdatas) == 1
+        llh = float(llh)
         rdata = rdatas[0]
+        assert SLLH in rdata.keys()
+        sllh = rdata[SLLH]
 
         # Return state/parameter ordering
         state_ids = model.getStateIds()
@@ -568,7 +572,6 @@ def check_splines(
     if not skip_sensitivity:
         if sllh_atol is None:
             sllh_atol = np.finfo(float).eps
-        sllh = np.asarray([s for s in sllh.values()])
         sllh_err_abs = abs(sllh).max()
         if not debug:
             assert_fun(sllh_err_abs <= sllh_atol)
