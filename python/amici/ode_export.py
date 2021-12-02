@@ -1111,7 +1111,6 @@ class ODEModel:
                 name=str(spl.sbmlId),
                 value=spline_expr
             ))
-        nspl = len(si.splines)
         self.splines = si.splines
 
         # get symbolic expression from SBML importers
