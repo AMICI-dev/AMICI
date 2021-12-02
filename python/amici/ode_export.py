@@ -2550,95 +2550,6 @@ class ODEModel:
         return dxdt
 
 
-def _print_with_exception(math: sp.Expr) -> str:
-    """
-    Generate C++ code for a symbolic expression
-
-    :param math:
-        symbolic expression
-
-    :return:
-        C++ code for the specified expression
-    """
-    # get list of custom replacements
-    user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
-
-    try:
-        # Required until https://github.com/sympy/sympy/pull/20558 is released
-        with _monkeypatched(_CXXCodePrinterBase, '_print_Max',
-                            _custom_print_max),\
-                _monkeypatched(_CXXCodePrinterBase, '_print_Min',
-                               _custom_print_min):
-            ret = cxxcode(math, standard='c++11',
-                          user_functions=user_functions)
-        ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
-        return ret
-    except TypeError as e:
-        raise ValueError(
-            f'Encountered unsupported function in expression "{math}": '
-            f'{e}!'
-        )
-
-
-def _get_sym_lines_array(equations: sp.Matrix,
-                         variable: str,
-                         indent_level: int) -> List[str]:
-    """
-    Generate C++ code for assigning symbolic terms in symbols to C++ array
-    `variable`.
-
-    :param equations:
-        vectors of symbolic expressions
-
-    :param variable:
-        name of the C++ array to assign to
-
-    :param indent_level:
-        indentation level (number of leading blanks)
-
-    :return:
-        C++ code as list of lines
-
-    """
-
-    return [' ' * indent_level + f'{variable}[{index}] = '
-                                 f'{_print_with_exception(math)};'
-            for index, math in enumerate(equations)
-            if not (math == 0 or math == 0.0)]
-
-
-def _get_sym_lines_symbols(symbols: sp.Matrix,
-                           equations: sp.Matrix,
-                           variable: str,
-                           indent_level: int) -> List[str]:
-    """
-    Generate C++ code for where array elements are directly replaced with
-    their corresponding macro symbol
-
-    :param symbols:
-        vectors of symbols that equations are assigned to
-
-    :param equations:
-        vectors of expressions
-
-    :param variable:
-        name of the C++ array to assign to, only used in comments
-
-    :param indent_level:
-        indentation level (number of leading blanks)
-
-    :return:
-        C++ code as list of lines
-
-    """
-
-    return [f'{" " * indent_level}{sym} = {_print_with_exception(math)};'
-            f'  // {variable}[{index}]'.replace('\n',
-                                                '\n' + ' ' * indent_level)
-            for index, (sym, math) in enumerate(zip(symbols, equations))
-            if not (math == 0 or math == 0.0)]
-
-
 class ODEExporter:
     """
     The ODEExporter class generates AMICI C++ files for ODE model as
@@ -3257,7 +3168,7 @@ class ODEExporter:
                             f'reinitialization_state_idxs.cend(), {index}) != '
                             'reinitialization_state_idxs.cend())',
                             f'    {function}[{index}] = '
-                            f'{_print_with_exception(formula)};'
+                            f'{self._print_with_exception(formula)};'
                         ])
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
@@ -3272,10 +3183,10 @@ class ODEExporter:
                     f'reinitialization_state_idxs.cend(), {index}) != '
                     'reinitialization_state_idxs.cend())\n        '
                     f'{function}[{index}] = '
-                    f'{_print_with_exception(formula)};')
+                    f'{self._print_with_exception(formula)};')
 
         elif function in event_functions:
-            cases = {ie: _get_sym_lines_array(equations[ie], function, 0)
+            cases = {ie: self._get_sym_lines_array(equations[ie], function, 0)
                      for ie in range(self.model.num_events())
                      if not smart_is_zero_matrix(equations[ie])}
             lines.extend(get_switch_statement('ie', cases, 1))
@@ -3285,7 +3196,7 @@ class ODEExporter:
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []
                 inner_cases = {
-                    ipar: _get_sym_lines_array(inner_equations[:, ipar],
+                    ipar: self._get_sym_lines_array(inner_equations[:, ipar],
                                                function, 0)
                     for ipar in range(self.model.num_par())
                     if not smart_is_zero_matrix(inner_equations[:, ipar])}
@@ -3295,7 +3206,7 @@ class ODEExporter:
             lines.extend(get_switch_statement('ie', outer_cases, 1))
 
         elif function in sensi_functions:
-            cases = {ipar: _get_sym_lines_array(equations[:, ipar], function,
+            cases = {ipar: self._get_sym_lines_array(equations[:, ipar], function,
                                                 0)
                      for ipar in range(self.model.num_par())
                      if not smart_is_zero_matrix(equations[:, ipar])}
@@ -3304,13 +3215,13 @@ class ODEExporter:
         elif function in multiobs_functions:
             if function == 'dJydy':
                 cases = {
-                    iobs: _get_sym_lines_array(equations[iobs], function, 0)
+                    iobs: self._get_sym_lines_array(equations[iobs], function, 0)
                     for iobs in range(self.model.num_obs())
                     if not smart_is_zero_matrix(equations[iobs])
                 }
             else:
                 cases = {
-                    iobs: _get_sym_lines_array(equations[:, iobs], function, 0)
+                    iobs: self._get_sym_lines_array(equations[:, iobs], function, 0)
                     for iobs in range(self.model.num_obs())
                     if not smart_is_zero_matrix(equations[:, iobs])
                 }
@@ -3322,10 +3233,10 @@ class ODEExporter:
                 symbols = self.model.sparsesym(function)
             else:
                 symbols = self.model.sym(function, stripped=True)
-            lines += _get_sym_lines_symbols(symbols, equations, function, 4)
+            lines += self._get_sym_lines_symbols(symbols, equations, function, 4)
 
         else:
-            lines += _get_sym_lines_array(equations, function, 4)
+            lines += self._get_sym_lines_array(equations, function, 4)
 
         return [line for line in lines if line]
 
@@ -3468,8 +3379,8 @@ class ODEExporter:
             'NK': str(self.model.num_const()),
             'O2MODE': 'amici::SecondOrderMode::none',
             # using cxxcode ensures proper handling of nan/inf
-            'PARAMETERS': _print_with_exception(self.model.val('p'))[1:-1],
-            'FIXED_PARAMETERS': _print_with_exception(self.model.val('k'))[
+            'PARAMETERS': self._print_with_exception(self.model.val('p'))[1:-1],
+            'FIXED_PARAMETERS': self._print_with_exception(self.model.val('k'))[
                                 1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('p'),
@@ -3720,11 +3631,13 @@ class ODEExporter:
             self._get_index('p')
         ))
         try:
-            ret = cxxcode(
-                math,
-                standard='c++11',
-                user_functions=user_functions
-            )
+            # Required until https://github.com/sympy/sympy/pull/20558 is released
+            with _monkeypatched(_CXXCodePrinterBase, '_print_Max',
+                                _custom_print_max),\
+                    _monkeypatched(_CXXCodePrinterBase, '_print_Min',
+                                   _custom_print_min):
+                ret = cxxcode(math, standard='c++11',
+                              user_functions=user_functions)
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except TypeError as e:
@@ -3733,16 +3646,16 @@ class ODEExporter:
                 f'{e}!'
             )
 
-    def _get_sym_lines(self,
-                       symbols: sp.Matrix,
-                       variable: str,
-                       indent_level: int) -> List[str]:
+    def _get_sym_lines_array(self,
+                             equations: sp.Matrix,
+                             variable: str,
+                             indent_level: int) -> List[str]:
         """
         Generate C++ code for assigning symbolic terms in symbols to C++ array
         `variable`.
 
-        :param symbols:
-            vectors of symbolic terms
+        :param equations:
+            vectors of symbolic expressions
 
         :param variable:
             name of the C++ array to assign to
@@ -3757,7 +3670,40 @@ class ODEExporter:
 
         return [' ' * indent_level + f'{variable}[{index}] = '
                                      f'{self._print_with_exception(math)};'
-                for index, math in enumerate(symbols)
+                for index, math in enumerate(equations)
+                if not (math == 0 or math == 0.0)]
+
+
+    def _get_sym_lines_symbols(self,
+                               symbols: sp.Matrix,
+                               equations: sp.Matrix,
+                               variable: str,
+                               indent_level: int) -> List[str]:
+        """
+        Generate C++ code for where array elements are directly replaced with
+        their corresponding macro symbol
+
+        :param symbols:
+            vectors of symbols that equations are assigned to
+
+        :param equations:
+            vectors of expressions
+
+        :param variable:
+            name of the C++ array to assign to, only used in comments
+
+        :param indent_level:
+            indentation level (number of leading blanks)
+
+        :return:
+            C++ code as list of lines
+
+        """
+
+        return [f'{" " * indent_level}{sym} = {self._print_with_exception(math)};'
+                f'  // {variable}[{index}]'.replace('\n',
+                                                    '\n' + ' ' * indent_level)
+                for index, (sym, math) in enumerate(zip(symbols, equations))
                 if not (math == 0 or math == 0.0)]
 
 
@@ -4072,8 +4018,8 @@ def csc_matrix(matrix: sp.Matrix,
 
             symbol_row_vals.append(row)
             idx += 1
-            symbol_name = f'd{_print_with_exception(rownames[row])}' \
-                          f'_d{_print_with_exception(colnames[col])}'
+            symbol_name = f"d{cxxcode(rownames[row], standard='c++11')}" \
+                          f"_d{cxxcode(colnames[col], standard='c++11')}"
             if identifier:
                 symbol_name += f'_{identifier}'
             symbol_list.append(symbol_name)
