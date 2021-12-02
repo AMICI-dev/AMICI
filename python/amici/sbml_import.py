@@ -1704,7 +1704,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        if a is None or self._sympy_from_sbml_math(a.getFormula()) is None:
+        if a is None or self._sympy_from_sbml_math(a) is None:
             return False
 
         return True
