@@ -2978,7 +2978,10 @@ class ODEExporter:
             body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
 
-        if body:
+        if body or 'spline' in function:
+            # NB spline functions need to be written even if their body is empty
+            #    (i.e. no splines are used) otherwise there are linking errors
+            #    when importing the Python module
             self.functions[function]['body'] = body
         else:
             return
