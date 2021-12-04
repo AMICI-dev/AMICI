@@ -44,7 +44,7 @@ from . import (
     sbml_import
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .splines import spline_user_functions, UniformGrid
+from . import splines
 from .sbml_utils import sbml_time_symbol, amici_time_symbol
 from .constants import SymbolId
 from .import_utils import smart_subs_dict, toposort_symbols, \
@@ -1099,16 +1099,16 @@ class ODEModel:
         #   must be done as the first thing because it modifies the SbmlImporter
         for ispl, spl in enumerate(si.splines):
             # TODO: I don't get what the following three lines are there for...
-            old_sbmlId = spl.sbmlId
-            new_sbmlId = sp.Symbol(spl.sbmlId.name)
+            old_sbmlId = spl.sbml_id
+            new_sbmlId = sp.Symbol(spl.sbml_id.name)
             si._replace_in_all_expressions(old_sbmlId, new_sbmlId)
 
             # spline_expr = spl.odeModelSymbol(si)
             spline_expr = sp.Symbol(f'spl_{ispl}')
-            spline_subs[spl.sbmlId] = spline_expr
+            spline_subs[spl.sbml_id] = spline_expr
             self.add_component(Expression(
-                identifier=spl.sbmlId,
-                name=str(spl.sbmlId),
+                identifier=spl.sbml_id,
+                name=str(spl.sbml_id),
                 value=spline_expr
             ))
         self.splines = si.splines
@@ -3247,7 +3247,7 @@ class ODEExporter:
         for ispl, spline in enumerate(self.model.splines):
             # create the vector with the node locations
             nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
-            if isinstance(spline.xx, UniformGrid):
+            if isinstance(spline.xx, splines.UniformGrid):
                 nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
             else:
                 nodes += ', '.join(str(x) for x in spline.xx) + '};'
@@ -3302,7 +3302,7 @@ class ODEExporter:
             else:
                 constr += 'false, '
 
-            if isinstance(spline.xx, UniformGrid):
+            if isinstance(spline.xx, splines.UniformGrid):
                 constr += 'true, '
             else:
                 constr += 'false, '
@@ -3628,7 +3628,7 @@ class ODEExporter:
         """
         # get list of custom replacements
         user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
-        user_functions.update(spline_user_functions(
+        user_functions.update(splines.spline_user_functions(
             self.model.splines,
             self._get_index('p')
         ))

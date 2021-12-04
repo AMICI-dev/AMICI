@@ -155,13 +155,13 @@ def create_petab_problem(
         spline.addToSbmlModel(model)
         addSpecies(model, species(i), initial_amount=initial_values[i])
         if use_reactions:
-            addInflow(model, species(i), splines[i].sbmlId)
+            addInflow(model, species(i), splines[i].sbml_id)
         else:
-            addRateRule(model, species(i), splines[i].sbmlId)
+            addRateRule(model, species(i), splines[i].sbml_id)
     for (parId, value) in params_true.items():
         addParameter(model, parId, value=value, constant=True)
     for spline in splines:
-        addParameter(model, spline.sbmlId, constant=False)
+        addParameter(model, spline.sbml_id, constant=False)
 
     # Compute simulation time
     # Must cover all the intervals of definition for the splines,
