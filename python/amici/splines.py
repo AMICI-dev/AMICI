@@ -42,7 +42,6 @@ from .sbml_utils import (
     sbmlMathML,
     annotation_namespace,
     getSbmlUnits,
-    hasParameter,
     addParameter,
     addAssignmentRule,
     SbmlException
@@ -942,7 +941,7 @@ class AbstractSpline(ABC):
 
         # Autoadd parameters
         if auto_add is True or auto_add == 'spline':
-            if not hasParameter(model, self.sbml_id):
+            if not model.getParameter(str(self.sbml_id)):
                 addParameter(model, self.sbml_id, constant=False,
                              units=y_units)
 
@@ -956,7 +955,7 @@ class AbstractSpline(ABC):
                 else:
                     x_nominal = len(self.xx) * [x_nominal]
                 for (_x, _val) in zip(self.xx, x_nominal):
-                    if _x.is_Symbol and not hasParameter(model, _x.name):
+                    if _x.is_Symbol and not model.getParameter(_x.name):
                         addParameter(model, _x.name, value=_val, units=x_units)
 
                 if isinstance(y_nominal, collections.abc.Sequence):
@@ -968,7 +967,7 @@ class AbstractSpline(ABC):
                 else:
                     y_nominal = len(self.yy) * [y_nominal]
                 for (_y, _val) in zip(self.yy, y_nominal):
-                    if _y.is_Symbol and not hasParameter(model, _y.name):
+                    if _y.is_Symbol and not model.getParameter(_y.name):
                         addParameter(model, _y.name, value=_val, units=y_units)
 
         elif auto_add is not False:

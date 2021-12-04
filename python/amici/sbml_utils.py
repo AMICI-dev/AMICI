@@ -65,20 +65,6 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
 
 ################################################################################
 
-
-
-def hasParameter(model: libsbml.Model, parameterId) -> bool:
-    """
-    Check whether a parameter with SBML ID `variableId` is present in the
-    SBML model `model`.
-    """
-    parameterId = str(parameterId)
-    for par in model.getListOfParameters():
-        if par.getIdAttribute() == parameterId:
-            return True
-    return False
-
-
 def hasRule(model: libsbml.Model, variableId) -> bool:
     """
     Check whether a SBML rule for quantity `variableId` is present in the
@@ -224,7 +210,7 @@ def addSpecies(
 
 
 def addParameter(
-        model,
+        model: libsbml.Model,
         parameterId,
         *,
         name: Union[bool, str, None] = None,
@@ -260,7 +246,7 @@ def addParameter(
     # Check whether a parameter with the same ID already exists
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
-    if hasParameter(model, parameterId):
+    if model.getParameter(parameterId):
         raise SbmlException(
             f'A parameter with ID {parameterId} has already been defined'
         )
