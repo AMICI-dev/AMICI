@@ -366,13 +366,14 @@ void HermiteSpline::computeCoefficientsExtrapolationSensi(int nplist,
 
                 } else if (!get_node_derivative_by_FD() &&
                            firstNodeBC_ == SplineBoundaryCondition::given) {
-                    sm0 = dspline_slopesdp[spline_offset + ip];
+                    // sm0 = dspline_slopesdp[spline_offset + ip];
                     throw AmiException("Natural boundary condition for "
                         "Hermite splines with linear extrapolation is "
                         "not yet implemented.");
 
                 } else if (!get_node_derivative_by_FD() &&
                            firstNodeBC_ == SplineBoundaryCondition::natural) {
+                    throw AmiException("Not implemented: sm0 is not set");
 
                 } else {
                     throw AmiException("Some weird combination of spline boundary "
