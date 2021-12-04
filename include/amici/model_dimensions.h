@@ -31,6 +31,7 @@ struct ModelDimensions {
      * @param nz Number of event observables
      * @param nztrue Number of event observables of the non-augmented model
      * @param ne Number of events
+     * @param ne Number of splines
      * @param nJ Number of objective functions
      * @param nw Number of repeating elements
      * @param ndwdx Number of nonzero elements in the `x` derivative of the
