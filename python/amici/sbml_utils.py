@@ -65,16 +65,6 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
 
 ################################################################################
 
-def hasSpecies(model: libsbml.Model, speciesId) -> bool:
-    """
-    Check whether a species with SBML ID `speciesId` is present in the
-    SBML model `model`.
-    """
-    speciesId = str(speciesId)
-    for sp in model.getListOfSpecies():
-        if sp.getIdAttribute() == speciesId:
-            return True
-    return False
 
 
 def hasParameter(model: libsbml.Model, parameterId) -> bool:
@@ -167,7 +157,7 @@ def addCompartment(
 
 
 def addSpecies(
-        model,
+        model: libsbml.Model,
         speciesId,
         *,
         compartmentId: Optional[str] = None,
@@ -204,7 +194,7 @@ def addSpecies(
     # Check whether a species with the same ID already exists
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., parameter) have the same ID
-    if hasSpecies(model, speciesId):
+    if model.getSpecies(speciesId):
         raise SbmlException(
             f'A species with ID {speciesId} has already been defined'
         )
