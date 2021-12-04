@@ -65,18 +65,6 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
 
 ################################################################################
 
-def hasRule(model: libsbml.Model, variableId) -> bool:
-    """
-    Check whether a SBML rule for quantity `variableId` is present in the
-    SBML model `model`.
-    """
-    variableId = str(variableId)
-    for rule in model.getListOfRules():
-        if rule.getVariable() == variableId:
-            return True
-    return False
-
-
 def hasRuleWithId(model: libsbml.Model, ruleId) -> bool:
     """
     Check whether a rule with SBML ID `ruleId` is present in the
@@ -298,7 +286,7 @@ def addAssignmentRule(
     # Check whether rules exists for this parameter or with the same name
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
-    if hasRule(model, variableId):
+    if model.getRuleByVariable(variableId):
         raise SbmlException(
             f'A rule for parameter {variableId} has already been defined.'
         )
@@ -349,7 +337,7 @@ def addRateRule(
     # Check whether rules exists for this parameter or with the same name
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
-    if hasRule(model, variableId):
+    if model.getRuleByVariable(variableId):
         raise SbmlException(
             f'A rule for parameter {variableId} has already been defined.'
         )
