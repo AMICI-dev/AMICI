@@ -250,6 +250,7 @@ void serialize(Archive &ar, amici::ModelDimensions &m, const unsigned int /*vers
     ar &m.nz;
     ar &m.nztrue;
     ar &m.ne;
+    ar &m.nspl;
     ar &m.nw;
     ar &m.ndwdx;
     ar &m.ndwdp;
