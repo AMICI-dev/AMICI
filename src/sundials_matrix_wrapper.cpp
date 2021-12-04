@@ -34,8 +34,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
         throw std::bad_alloc();
 
     finish_init();
-    assert(M == rows());
-    assert(N == columns());
+    assert(M == rows() || !matrix_);
+    assert(N == columns() || !matrix_);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype ubw,
