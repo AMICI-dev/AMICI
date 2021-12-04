@@ -100,6 +100,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                   TPL_NZ,                                  // nz
                   TPL_NZTRUE,                              // nztrue
                   TPL_NEVENT,                              // nevent
+                  TPL_NSPL,                                // nspl
                   TPL_NOBJECTIVE,                          // nobjective
                   TPL_NW,                                  // nw
                   TPL_NDWDX,                               // ndwdx

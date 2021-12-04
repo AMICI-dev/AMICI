@@ -163,6 +163,7 @@ fprintf(fid,['                  ' num2str(this.nytrue) ',\n']);
 fprintf(fid,['                  ' num2str(this.nz) ',\n']);
 fprintf(fid,['                  ' num2str(this.nztrue) ',\n']);
 fprintf(fid,['                  ' num2str(this.nevent) ',\n']);
+fprintf(fid,['                  0,\n']);
 fprintf(fid,['                  ' num2str(this.ng) ',\n']);
 fprintf(fid,['                  ' num2str(this.nw) ',\n']);
 fprintf(fid,['                  ' num2str(this.ndwdx) ',\n']);

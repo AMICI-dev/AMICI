@@ -3343,6 +3343,7 @@ class ODEExporter:
             'NZTRUE': '0',
             'NEVENT': str(self.model.num_events()),
             'NOBJECTIVE': '1',
+            'NSPL': str(len(self.model.splines)),
             'NW': str(len(self.model.sym('w'))),
             'NDWDP': str(len(self.model.sparsesym(
                 'dwdp', force_generate=self.generate_sensitivity_code
