@@ -41,10 +41,9 @@ from itertools import chain
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
-    sbml_import
+    sbml_import, splines
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from . import splines
 from .sbml_utils import sbml_time_symbol, amici_time_symbol
 from .constants import SymbolId
 from .import_utils import smart_subs_dict, toposort_symbols, \

@@ -2,6 +2,7 @@ import math
 import os
 import tempfile
 import uuid
+import pytest
 from typing import List, Optional, Union
 
 import numpy as np
@@ -34,7 +35,7 @@ def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
 
 def integrate_spline(
         spline: AbstractSpline, params: dict, tt, initial_value=0, **kwargs
-        ):
+):
     """
     Integrate the `AbstractSpline` `spline` at timepoints `tt`
     for the parameters given in the dictionary `params`.
@@ -45,14 +46,14 @@ def integrate_spline(
     return np.asarray(ispline, **kwargs)
 
 
-def create_condition_table():
+def create_condition_table() -> pd.DataFrame:
     """Create a PEtab condition table."""
     condition_df = pd.DataFrame({'conditionId': ['condition1']})
     condition_df.set_index(['conditionId'], inplace=True)
     return condition_df
 
 
-def create_parameter_table(**columns):
+def create_parameter_table(**columns) -> pd.DataFrame:
     """Create a PEtab parameter table."""
     if isinstance(columns['parameterId'], str):
         columns['parameterId'] = [columns['parameterId']]
@@ -63,7 +64,7 @@ def create_parameter_table(**columns):
     return parameter_df
 
 
-def create_observable_table(**columns):
+def create_observable_table(**columns) -> pd.DataFrame:
     """Create a PEtab observable table."""
     if isinstance(columns['observableId'], str):
         columns['observableId'] = [columns['observableId']]
@@ -74,7 +75,7 @@ def create_observable_table(**columns):
     return observable_df
 
 
-def create_measurement_table(**columns):
+def create_measurement_table(**columns) -> pd.DataFrame:
     """Create a PEtab measurement table."""
     if isinstance(columns['observableId'], str):
         columns['observableId'] = [columns['observableId']]
@@ -82,15 +83,15 @@ def create_measurement_table(**columns):
     return pd.DataFrame(columns)
 
 
-def species(i):
+def species(i) -> str:
     return f'z{i}'
 
 
-def observable(i):
+def observable(i) -> str:
     return f'{species(i)}_obs'
 
 
-def species_to_index(name):
+def species_to_index(name) -> int:
     assert name[0] == 'z'
     return int(name[1:])
 
@@ -339,8 +340,8 @@ def simulate_splines(
         problem,
         discard_annotations=discard_annotations,
         model_output_dir=os.path.join(folder, 'amici_models'),
-        model_name='splinetest_' + uuid.uuid1().hex
         # to prevent module collisions
+        model_name='splinetest_' + uuid.uuid1().hex
     )
 
     # Set solver options
@@ -349,11 +350,11 @@ def simulate_splines(
     solver.setAbsoluteTolerance(atol)
     solver.setMaxSteps(maxsteps)
     if not skip_sensitivity:
-        solver.setSensitivityOrder(amici.SensitivityOrder_first)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
         if use_adjoint:
-            solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
+            solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
         else:
-            solver.setSensitivityMethod(amici.SensitivityMethod_forward)
+            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
 
     # Compute and set timepoints
     # NB not working, will always be equal to the observation times
@@ -381,23 +382,22 @@ def simulate_splines(
 
         return initial_values, llh, sllh, rdata, state_ids, param_ids
 
-    else:
-        if benchmark is True:
-            benchmark = 50
-        import time
-        runtimes = []
-        for _ in range(int(benchmark)):
-            t0 = time.perf_counter()
-            simulate_petab(problem, model, solver, params_str)
-            t_elapsed = time.perf_counter() - t0
-            runtimes.append(t_elapsed)
-        return dict(
-            runtimes=runtimes,
-            mean=np.mean(runtimes),
-            median=np.median(runtimes),
-            min=min(runtimes),
-            max=max(runtimes),
-        )
+    if benchmark is True:
+        benchmark = 50
+    import time
+    runtimes = []
+    for _ in range(int(benchmark)):
+        t0 = time.perf_counter()
+        simulate_petab(problem, model, solver, params_str)
+        t_elapsed = time.perf_counter() - t0
+        runtimes.append(t_elapsed)
+    return dict(
+        runtimes=runtimes,
+        mean=np.mean(runtimes),
+        median=np.median(runtimes),
+        min=min(runtimes),
+        max=max(runtimes),
+    )
 
 
 def check_splines(
@@ -405,7 +405,7 @@ def check_splines(
         params_true,
         initial_values=None,
         *,
-        assert_fun,
+        assert_fun=assert_fun,
         discard_annotations: bool = False,
         use_adjoint: bool = False,
         skip_sensitivity: bool = False,
@@ -587,7 +587,7 @@ def check_splines(
 
 def check_splines_full(
         splines, params, tols, *args, check_piecewise=True, **kwargs
-        ):
+):
     """
     Check example PEtab problem with `check_splines`
     both using adjoint and forward sensitivities
@@ -630,9 +630,7 @@ def example_spline_1(
         assert 1 < num_nodes <= len(yy_true)
         yy_true = yy_true[:num_nodes]
     yy_true = scale * yy_true + offset
-
     xx = UniformGrid(0, 25, length=len(yy_true))
-
     yy = list(sp.symbols(f'y{idx}_0:{len(yy_true)}'))
 
     if fixed_values is None:
@@ -727,11 +725,13 @@ def example_splines_1():
     params.update(params2)
 
     keys = set().union(tols0.keys(), tols1.keys(), tols2.keys())
-    tols = {key: max(
-        tols0[key] if key in tols0.keys() else 0.0,
-        tols1[key] if key in tols1.keys() else 0.0,
-        tols2[key] if key in tols2.keys() else 0.0,
-    ) for key in keys}
+    tols = {
+        key: max(
+            tols0.get(key, 0.0),
+            tols1.get(key, 0.0),
+            tols2.get(key, 0.0),
+        ) for key in keys
+    }
     tols['llh_rtol'] = 1e-14
     tols['sllh_atol'] = 5e-8
     tols['sx_rtol'] = 1e-9
@@ -742,20 +742,16 @@ def example_splines_1():
     return splines, params, tols
 
 
-def test_CubicHermiteSpline(**kwargs):
-    spline, params, tols = example_spline_1()
-    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
-
-    # same as above, but with some fixed values
-    spline, params, tols = example_spline_1(fixed_values=[0, 2])
-    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
-
-    # same as above, but with all values fixed
-    spline, params, tols = example_spline_1(fixed_values='all')
-    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
-
-    spline, params, tols = example_spline_2()
-    check_splines_full(spline, params, tols, assert_fun=assert_fun, **kwargs)
+@pytest.mark.parametrize("spline,params,tols", [
+    pytest.param(*example_spline_1(), id="example_spline_1()"),
+    pytest.param(*example_spline_1(fixed_values=[0, 2]),
+                 id="example_spline_1(fixed_values=[0, 2])"),
+    pytest.param(*example_spline_1(fixed_values='all'),
+                 id="example_spline_1(fixed_values='all')"),
+    pytest.param(*example_spline_2(), id="example_spline_2()"),
+])
+def test_CubicHermiteSpline(spline, params, tols):
+    check_splines_full(spline, params, tols)
 
 
 def test_multiple_splines(**kwargs):

@@ -34,7 +34,6 @@ import libsbml
 from abc import abstractmethod, ABC
 from itertools import count
 from sympy.core.parameters import evaluate
-from .ode_export import SymbolId
 from .sbml_utils import (
     sbml_time_symbol,
     amici_time_symbol,
@@ -498,7 +497,7 @@ class AbstractSpline(ABC):
         for spline grid points, values, ... contain species symbols.
         """
         # TODO this is very much a draft
-
+        from .ode_export import SymbolId
         fixed_parameters = importer.symbols[SymbolId.FIXED_PARAMETER][
             'identifier']
         species = list(importer.symbols[SymbolId.SPECIES]['identifier'])
@@ -1177,6 +1176,7 @@ class AbstractSpline(ABC):
 
     def parameters(self, importer: SbmlImporter):
         """Returns the SBML parameters used by this spline"""
+        from .ode_export import SymbolId
         return self._parameters().intersection(
             set(importer.symbols[SymbolId.PARAMETER].keys())
         )
@@ -1423,7 +1423,7 @@ class CubicHermiteSpline(AbstractSpline):
         for spline grid points, values, ... contain species symbols.
         """
         # TODO this is very much a draft
-
+        from .ode_export import SymbolId
         species = list(importer.symbols[SymbolId.SPECIES]['identifier'])
         for d in self.dd:
             if len(d.free_symbols.intersection(species)) != 0:
