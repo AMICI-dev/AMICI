@@ -65,16 +65,6 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
 
 ################################################################################
 
-def hasRuleWithId(model: libsbml.Model, ruleId) -> bool:
-    """
-    Check whether a rule with SBML ID `ruleId` is present in the
-    SBML model `model`.
-    """
-    ruleId = str(ruleId)
-    for rule in model.getListOfRules():
-        if rule.getIdAttribute() == ruleId:
-            return True
-    return False
 
 def hasReaction(model: libsbml.Model, reactionId) -> bool:
     """
@@ -290,7 +280,7 @@ def addAssignmentRule(
         raise SbmlException(
             f'A rule for parameter {variableId} has already been defined.'
         )
-    if hasRuleWithId(model, ruleId):
+    if model.getRule(ruleId):
         raise SbmlException(
             f'A rule with SBML ID {ruleId} has already been defined.'
         )
@@ -341,7 +331,7 @@ def addRateRule(
         raise SbmlException(
             f'A rule for parameter {variableId} has already been defined.'
         )
-    if hasRuleWithId(model, ruleId):
+    if model.getRule(ruleId):
         raise SbmlException(
             f'A rule with SBML ID {ruleId} has already been defined.'
         )
