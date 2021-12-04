@@ -22,7 +22,7 @@ from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 
 
-################################################################################
+###############################################################################
 
 
 sbml_time_symbol = sp.Symbol('time', real=True)
@@ -37,7 +37,7 @@ class SbmlException(Exception):
     pass
 
 
-################################################################################
+###############################################################################
 
 
 def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
@@ -63,23 +63,7 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
     return doc, model
 
 
-################################################################################
-
-
-def hasReaction(model: libsbml.Model, reactionId) -> bool:
-    """
-    Check whether a reaction with SBML ID `reactionId` is present in the
-    SBML model `model`.
-    """
-    reactionId = str(reactionId)
-    for r in model.getListOfReactions():
-        if r.getIdAttribute() == reactionId:
-            return True
-    return False
-
-
-################################################################################
-
+###############################################################################
 
 def addCompartment(
         model,
@@ -351,7 +335,7 @@ def addInflow(model, speciesId, rate, *, reactionId: Optional[str] = None, rever
     if reactionId is None:
         reactionId = f'inflow_of_{speciesId}'
 
-    if hasReaction(model, reactionId):
+    if model.getReaction(reactionId):
         raise SbmlException(
             f'A reaction with SBML ID {reactionId} has already been defined.'
         )
@@ -371,7 +355,7 @@ def addInflow(model, speciesId, rate, *, reactionId: Optional[str] = None, rever
     return reaction
 
 
-################################################################################
+###############################################################################
 
 
 def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
@@ -406,7 +390,7 @@ def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
         return None
 
 
-################################################################################
+###############################################################################
 # SymPy to SBML MathML/AST conversion
 
 
@@ -502,7 +486,7 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
         )
 
 
-################################################################################
+###############################################################################
 # MathML to Sympy conversion
 
 
