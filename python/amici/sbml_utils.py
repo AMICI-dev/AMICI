@@ -371,24 +371,19 @@ def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
     """
     # TODO can the SBML unit inference machinery be used?
     x = sp.sympify(x)
-    if x.is_Symbol:
-        if x.name == 'time':
-            if model.isSetTimeUnits():
-                return model.getTimeUnits()
-            else:
-                return None
-        else:
-            par = model.getParameter(x.name)
-            if par is None:
-                return None
-            else:
-                units = par.getUnits()
-                if units == '':
-                    return None
-                else:
-                    return units
-    else:
+    if not x.is_Symbol:
         return None
+    if x.name == 'time':
+        if model.isSetTimeUnits():
+            return model.getTimeUnits()
+        return None
+    par = model.getParameter(x.name)
+    if par is None:
+        return None
+    units = par.getUnits()
+    if units == '':
+        return None
+    return units
 
 
 ###############################################################################
