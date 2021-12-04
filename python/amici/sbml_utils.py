@@ -5,10 +5,11 @@ This module provides helper functions for SBML files.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from .sbml_import import SbmlImporter
-    from typing import Optional, Union
+    from typing import Optional, Union, Iterable, Any
 
 import itertools as itt
 import xml.dom.minidom
@@ -44,18 +45,18 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
     """
     Helper for creating an empty SBML model.
 
-        :param modelId:
-        SBML ID of the new model.
+    :param modelId:
+    SBML ID of the new model.
 
-        :param level:
-        Level of the new SBML document.
+    :param level:
+    Level of the new SBML document.
 
-        :param size:
-        Version of the new SBML document.
+    :param version:
+    Version of the new SBML document.
 
-        :return:
-        a tuple containing the newly created `libsbml.SBMLDocument`
-        and `libsbml.Model`.
+    :return:
+    a tuple containing the newly created `libsbml.SBMLDocument`
+    and `libsbml.Model`.
     """
     doc = libsbml.SBMLDocument(level, version)
     model = doc.createModel()
@@ -116,24 +117,24 @@ def addSpecies(
     """
     Helper for adding a species to a SBML model.
 
-        :param model:
-        SBML model to which the species is to be added.
+    :param model:
+    SBML model to which the species is to be added.
 
-        :param speciesId:
-        SBML ID of the new species.
+    :param speciesId:
+    SBML ID of the new species.
 
-        :param compartmentId:
-        Compartment ID for the new species.
-        If there is only one compartment it can be auto-selected.
+    :param compartmentId:
+    Compartment ID for the new species.
+    If there is only one compartment it can be auto-selected.
 
-        :param initial_amount:
-        Initial amount of the new species.
+    :param initial_amount:
+    Initial amount of the new species.
 
-        :param units:
-        Units attribute for the new species.
+    :param units:
+    Units attribute for the new species.
 
-        :return:
-        the new species as a `libsbml.Species` object.
+    :return:
+    the new species as a `libsbml.Species` object.
     """
     speciesId = str(speciesId)
     if name is True:
@@ -183,23 +184,23 @@ def addParameter(
     """
     Helper for adding a parameter to a SBML model.
 
-        :param model:
-        SBML model to which the parameter is to be added.
+    :param model:
+    SBML model to which the parameter is to be added.
 
-        :param parameterId:
-        SBML ID of the new parameter.
+    :param parameterId:
+    SBML ID of the new parameter.
 
-        :param value:
-        Value attribute for the new parameter.
+    :param value:
+    Value attribute for the new parameter.
 
-        :param units:
-        Units attribute for the new parameter.
+    :param units:
+    Units attribute for the new parameter.
 
-        :param constant:
-        Constant attribute for the new parameter.
+    :param constant:
+    Constant attribute for the new parameter.
 
-        :return:
-        the new parameter as a `libsbml.Parameter` object.
+    :return:
+    the new parameter as a `libsbml.Parameter` object.
     """
     parameterId = str(parameterId)
     if name is True:
@@ -237,21 +238,21 @@ def addAssignmentRule(
     """
     Helper for adding an assignment rule to a SBML model.
 
-        :param model:
-        SBML model to which the assignment rule is to be added.
+    :param model:
+    SBML model to which the assignment rule is to be added.
 
-        :param variableId:
-        SBML ID of the quantity for which the assignment rule is to be added.
+    :param variableId:
+    SBML ID of the quantity for which the assignment rule is to be added.
 
-        :param formula:
-        Formula for the assignment rule (it will be sympified).
+    :param formula:
+    Formula for the assignment rule (it will be sympified).
 
-        :param ruleId:
-        SBML ID of the new assignment rule.
-        Defaults to `'assignment_' + variableId`.
+    :param ruleId:
+    SBML ID of the new assignment rule.
+    Defaults to `'assignment_' + variableId`.
 
-        :return:
-        the assignment rule as a `libsbml.AssignmentRule` object.
+    :return:
+    the assignment rule as a `libsbml.AssignmentRule` object.
     """
     variableId = str(variableId)
     if ruleId is None:
@@ -288,21 +289,21 @@ def addRateRule(
     """
     Helper for adding a rate rule to a SBML model.
 
-        :param model:
-        SBML model to which the rate rule is to be added.
+    :param model:
+    SBML model to which the rate rule is to be added.
 
-        :param variableId:
-        SBML ID of the quantity for which the rate rule is to be added.
+    :param variableId:
+    SBML ID of the quantity for which the rate rule is to be added.
 
-        :param formula:
-        Formula for the rate rule (it will be sympified).
+    :param formula:
+    Formula for the rate rule (it will be sympified).
 
-        :param ruleId:
-        SBML ID of the new rate rule.
-        Defaults to `'rate_' + variableId`.
+    :param ruleId:
+    SBML ID of the new rate rule.
+    Defaults to `'rate_' + variableId`.
 
-        :return:
-        the new rate rule as a `libsbml.RateRule` object.
+    :return:
+    the new rate rule as a `libsbml.RateRule` object.
     """
     variableId = str(variableId)
     if ruleId is None:
@@ -416,7 +417,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         mathml += super().doprint(expr)
         mathml += '</math>'
         mathml = mathml.replace(
-            f'<ci>time</ci>',
+            '<ci>time</ci>',
             '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
         )
         return pretty_xml(mathml) if pretty else mathml
@@ -546,7 +547,7 @@ def _check_unsupported_functions(sym: sp.Basic,
         None
     )
     if unsupp_fun_type:
-        raise SBMLException(f'Encountered unsupported expression '
+        raise SbmlException(f'Encountered unsupported expression '
                             f'"{sym.func}" of type '
                             f'"{unsupp_fun_type}" as part of a '
                             f'{expression_type}: "{full_sym}"!')
@@ -560,7 +561,7 @@ def _check_unsupported_functions(sym: sp.Basic,
             None
         )
         if unsupp_fun_type:
-            raise SBMLException(f'Encountered unsupported expression '
+            raise SbmlException(f'Encountered unsupported expression '
                                 f'"{fun}" of type '
                                 f'"{unsupp_fun_type}" as part of a '
                                 f'{expression_type}: "{full_sym}"!')
@@ -617,7 +618,7 @@ def _parse_logical_operators(math_str: Union[str, float, None]
         return math_str
 
     if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported as logical '
+        raise SbmlException('Xor is currently not supported as logical '
                             'operation.')
 
     return (math_str.replace('&&', '&')).replace('||', '|')
