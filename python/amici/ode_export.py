@@ -2463,13 +2463,7 @@ def _print_with_exception(math: sp.Expr) -> str:
     user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
 
     try:
-        # Required until https://github.com/sympy/sympy/pull/20558 is released
-        with _monkeypatched(_CXXCodePrinterBase, '_print_Max',
-                            _custom_print_max),\
-                _monkeypatched(_CXXCodePrinterBase, '_print_Min',
-                               _custom_print_min):
-            ret = cxxcode(math, standard='c++11',
-                          user_functions=user_functions)
+        ret = cxxcode(math, standard='c++11', user_functions=user_functions)
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
