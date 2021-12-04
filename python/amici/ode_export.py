@@ -3242,10 +3242,10 @@ class ODEExporter:
         return [line for line in lines if line]
 
     def _get_spline_constructors_body(self):
-        body = [f'\tstd::vector<HermiteSpline> splines;', '']
+        body = ['    std::vector<HermiteSpline> splines;', '']
         for ispl, spline in enumerate(self.model.splines):
             # create the vector with the node locations
-            nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
+            nodes = f'    std::vector<realtype> nodes{ispl} {{'
             if isinstance(spline.xx, splines.UniformGrid):
                 nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
             else:
@@ -3253,69 +3253,54 @@ class ODEExporter:
             body.append(nodes)
 
             # create the vector with the node values
-            vals = f'\tstd::vector<realtype> values{ispl} {{' + str(spline.yy[0])
+            vals = f'    std::vector<realtype> values{ispl} {{' + str(spline.yy[0])
             for iyy in spline.yy[1:]:
                 vals += ', ' + str(iyy)
             vals += '};'
             body.append(vals)
 
             # create the vector with the slopes
-            body.append(f'\tstd::vector<realtype> slopes{ispl};')
-            constr = f'\tHermiteSpline spline{ispl} = HermiteSpline('
-            constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
+            body.append(f'    std::vector<realtype> slopes{ispl};')
+            constr = (f'    HermiteSpline spline{ispl} = HermiteSpline('
+                      f'nodes{ispl}, values{ispl}, slopes{ispl}, ')
 
+            bc_to_cpp = {
+                None: 'SplineBoundaryCondition::given, ',
+                'zeroderivative': 'SplineBoundaryCondition::zeroDerivative, ',
+                'natural': 'SplineBoundaryCondition::natural, ',
+                'zeroderivative+natural':
+                    'SplineBoundaryCondition::naturalZeroDerivative, ',
+                'periodic': 'SplineBoundaryCondition::periodic, '
+            }
             for bc in spline.bc:
-                if bc is None:
-                    constr += 'SplineBoundaryCondition::given, '
-                elif bc == 'zeroderivative':
-                    constr += 'SplineBoundaryCondition::zeroDerivative, '
-                elif bc == 'natural':
-                    constr += 'SplineBoundaryCondition::natural, '
-                elif bc == 'zeroderivative+natural':
-                    constr += 'SplineBoundaryCondition::naturalZeroDerivative, '
-                elif bc == 'periodic':
-                    constr += 'SplineBoundaryCondition::periodic, '
-                else:
-                    raise ValueError(
-                        f'unknown bc {bc} found in spline object'
-                    )
-
+                try:
+                    constr += bc_to_cpp[bc]
+                except KeyError:
+                    raise ValueError(f"Unknown boundary condition '{bc}' "
+                                     "found in spline object")
+            extrapolate_to_cpp = {
+                None: 'SplineExtrapolation::noExtrapolation, ',
+                'polynomial': 'SplineExtrapolation::polynomial, ',
+                'constant': 'SplineExtrapolation::constant, ',
+                'linear': 'SplineExtrapolation::linear, ',
+                'periodic': 'SplineExtrapolation::periodic, ',
+            }
             for extr in spline.extrapolate:
-                if extr is None:
-                    constr += 'SplineExtrapolation::noExtrapolation, '
-                elif extr == 'polynomial':
-                    constr += 'SplineExtrapolation::polynomial, '
-                elif extr == 'constant':
-                    constr += 'SplineExtrapolation::constant, '
-                elif extr == 'linear':
-                    constr += 'SplineExtrapolation::linear, '
-                elif extr == 'periodic':
-                    constr += 'SplineExtrapolation::periodic, '
-                else:
-                    raise ValueError(
-                        f'unknown extrapolation {extr} found in spline object'
-                    )
+                try:
+                    constr += extrapolate_to_cpp[extr]
+                except KeyError:
+                    raise ValueError(f"Unknown extrapolation '{extr}' "
+                                     "found in spline object")
 
-            if spline.derivatives_by_fd:
-                constr += 'true, '
-            else:
-                constr += 'false, '
-
-            if isinstance(spline.xx, splines.UniformGrid):
-                constr += 'true, '
-            else:
-                constr += 'false, '
-
-            if spline.logarithmic_parametrization:
-                constr += 'true);'
-            else:
-                constr += 'false);'
-
+            constr += 'true, ' if spline.derivatives_by_fd else 'false, '
+            constr += 'true, ' if isinstance(spline.xx, splines.UniformGrid) \
+                else 'false, '
+            constr += 'true);' if spline.logarithmic_parametrization \
+                else 'false);'
             body.append(constr)
-            body.append(f'\tsplines.push_back(spline{ispl});')
-            body.append('')
+            body.append(f'    splines.push_back(spline{ispl});')
 
-        body.append('return splines;')
+        body.append('    return splines;')
         return body
 
     def _write_wrapfunctions_cpp(self) -> None:
