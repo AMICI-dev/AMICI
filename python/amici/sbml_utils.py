@@ -65,19 +65,6 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
 
 ################################################################################
 
-
-def hasCompartment(model: libsbml.Model, compartmentId) -> bool:
-    """
-    Check whether a compartment with SBML ID `compartmentId` is present in the
-    SBML model `model`.
-    """
-    compartmentId = str(compartmentId)
-    for cmp in model.getListOfCompartments():
-        if cmp.getId() == compartmentId:
-            return True
-    return False
-
-
 def hasSpecies(model: libsbml.Model, speciesId) -> bool:
     """
     Check whether a species with SBML ID `speciesId` is present in the
@@ -166,7 +153,7 @@ def addCompartment(
     # Check whether a compartment with the same ID already exists
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., parameter) have the same ID
-    if hasCompartment(model, compartmentId):
+    if model.getCompartment(compartmentId):
         raise SbmlException(
             f'A compartment with ID {compartmentId} has already been defined'
         )
@@ -230,10 +217,8 @@ def addSpecies(
                 'only if there is one and only one compartment.'
             )
         compartmentId = compartments[0].getId()
-    elif not hasCompartment(model, compartmentId):
-        raise SbmlException(
-            f'No compartment with ID {compartmentId}'
-        )
+    elif not model.getCompartment(compartmentId):
+        raise SbmlException(f'No compartment with ID {compartmentId}')
 
     sp = model.createSpecies()
     if sp.setIdAttribute(speciesId) != libsbml.LIBSBML_OPERATION_SUCCESS:
