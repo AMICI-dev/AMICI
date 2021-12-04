@@ -171,6 +171,7 @@ class SbmlImporter:
         self.species_assignment_rules: SymbolicFormula = {}
         self.parameter_assignment_rules: SymbolicFormula = {}
         self.initial_assignments: SymbolicFormula = {}
+        self.splines = []
 
         self._reset_symbols()
 
@@ -965,8 +966,6 @@ class SbmlImporter:
         """
         Process Rules defined in the SBML model.
         """
-        assert not hasattr(self, 'splines')
-        self.splines = []
         for rule in self.sbml.getListOfRules():
             # rate rules are processed in _process_species
             if rule.getTypeCode() == sbml.SBML_RATE_RULE:

@@ -1014,6 +1014,7 @@ class ODEModel:
         self._expressions: List[Expression] = []
         self._conservationlaws: List[ConservationLaw] = []
         self._events: List[Event] = []
+        self.splines = []
         self._symboldim_funs: Dict[str, Callable[[], int]] = {
             'sx': self.num_states_solver,
             'v': self.num_states_solver,
