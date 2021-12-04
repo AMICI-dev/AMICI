@@ -1,39 +1,21 @@
+import math
 import os
 import tempfile
-import math
 import uuid
-
-from typing import Union, List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
-import sympy as sp
 import pandas as pd
-
-from scipy.integrate import quad
-
-import libsbml
 import petab
-import amici
+import sympy as sp
 
+import amici
+from amici.gradient_check import check_results
 from amici.petab_import import import_petab_problem
-from amici.petab_objective import (
-    simulate_petab,
-    create_parameterized_edatas,
-    LLH,
-    SLLH,
-    RDATAS,
-)
-from amici.gradient_check import check_derivatives, check_close, check_results
-from amici.sbml_utils import (
-    amici_time_symbol,
-    createSbmlModel,
-    addCompartment,
-    addParameter,
-    addSpecies,
-    addRateRule,
-    addInflow,
-    setSbmlMath,
-)
+from amici.petab_objective import (LLH, RDATAS, SLLH, simulate_petab)
+from amici.sbml_utils import (addCompartment, addInflow, addParameter,
+                              addRateRule, addSpecies, amici_time_symbol,
+                              createSbmlModel)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 
 
@@ -44,7 +26,7 @@ def assert_fun(x):
 
 def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
     """
-    Evaluate the `AbstractSplin` `spline` at timepoints `tt`
+    Evaluate the `AbstractSpline` `spline` at timepoints `tt`
     for the parameters given in the dictionary `params`.
     """
     return np.asarray([spline.evaluate(t).subs(params) for t in tt], **kwargs)
@@ -54,7 +36,7 @@ def integrate_spline(
         spline: AbstractSpline, params: dict, tt, initial_value=0, **kwargs
         ):
     """
-    Integrate the `AbstractSplin` `spline` at timepoints `tt`
+    Integrate the `AbstractSpline` `spline` at timepoints `tt`
     for the parameters given in the dictionary `params`.
     """
     ispline = [initial_value + spline.integrate(0, t) for t in tt]
@@ -122,15 +104,15 @@ def create_petab_problem(
         sigma=1.0,
         Textrapolate=0.25,
         folder=None,
-        modelname='test_splines',
+        model_name='test_splines',
 ):
     """
     Given a list of `AbstractSplines`, create a PEtab problem for the system of
     ODEs given by `z_i(t)' = spline[i](t)`.
 
     :param params_true:
-        parameter values used to compute the analytical solution of the ODE system
-        in order to fill the PEtab measurement table
+        parameter values used to compute the analytical solution of the ODE
+        system in order to fill the PEtab measurement table
 
     :param initial_values:
         initial values of the state variables
@@ -142,7 +124,8 @@ def create_petab_problem(
     :param measure_upsample:
         controls the number of time points at which synthetic measurements are
         taken. The interval between subsequent time points is equal to the
-        smallest interval between subsequent spline nodes divided by `measure_upsample`
+        smallest interval between subsequent spline nodes divided by
+        `measure_upsample`
 
     :param sigma:
         standard deviation for additive Normal noise used to corrupt synthetic
@@ -166,7 +149,7 @@ def create_petab_problem(
             )
 
     # Create SBML document
-    doc, model = createSbmlModel(modelname)
+    doc, model = createSbmlModel(model_name)
     addCompartment(model, 'compartment')
     for (i, spline) in enumerate(splines):
         spline.addToSbmlModel(model)
@@ -211,8 +194,8 @@ def create_petab_problem(
 
     # Create PEtab tables
     condition_df = create_condition_table()
-    _params = list(
-        params_true.items())  # ensure that same parameter order is used for all columns
+    # ensure that same parameter order is used for all columns
+    _params = list(params_true.items())
     parameter_df = create_parameter_table(
         parameterId=[p.name for (p, v) in _params],
         lowerBound=min(v for (p, v) in _params),
@@ -250,16 +233,16 @@ def create_petab_problem(
     folder = os.path.abspath(folder)
     os.makedirs(folder, exist_ok=True)
     problem.to_files(
-        sbml_file=os.path.join(folder, f'{modelname}_model.xml'),
-        condition_file=os.path.join(folder, f'{modelname}_conditions.tsv'),
+        sbml_file=os.path.join(folder, f'{model_name}_model.xml'),
+        condition_file=os.path.join(folder, f'{model_name}_conditions.tsv'),
         measurement_file=os.path.join(folder,
-                                      f'{modelname}_measurements.tsv'),
-        parameter_file=os.path.join(folder, f'{modelname}_parameters.tsv'),
+                                      f'{model_name}_measurements.tsv'),
+        parameter_file=os.path.join(folder, f'{model_name}_parameters.tsv'),
         observable_file=os.path.join(folder,
-                                     f'{modelname}_observables.tsv'),
-        yaml_file=os.path.join(folder, f'{modelname}.yaml'),
+                                     f'{model_name}_observables.tsv'),
+        yaml_file=os.path.join(folder, f'{model_name}.yaml'),
     )
-    return os.path.join(folder, f'{modelname}.yaml'), T
+    return os.path.join(folder, f'{model_name}.yaml'), T
 
 
 def simulate_splines(
@@ -279,7 +262,8 @@ def simulate_splines(
         **kwargs
 ):
     """
-    Create a PEtab problem using `create_petab_problem` and simulate it with AMICI.
+    Create a PEtab problem using `create_petab_problem` and simulate it with
+    AMICI.
 
     :param splines:
         passed to `create_petab_problem`
@@ -439,7 +423,7 @@ def check_splines(
     """
     Create a PEtab problem using `create_petab_problem`,
     simulate it with `simulate_splines`
-    and check it agains the analystical solution.
+    and check it against the analytical solution.
 
     :param splines:
         passed to `simulate_splines`
@@ -464,8 +448,9 @@ def check_splines(
         whether to skip sensitivity computation
 
     :param debug:
-        if not `False`, do not check and return results and ground truth instead.
-        If equal to `'print'`, in addition to the above print error values
+        if not `False`, do not check and return results and ground truth
+        instead.
+        If equal to `'print'`, in addition to the above print error values.
 
     :param kwargs:
         passed to `simulate_splines`
