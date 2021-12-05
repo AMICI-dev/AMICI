@@ -183,9 +183,9 @@ TEST(SymbolicFunctionsTest, Sign)
 
 TEST(SymbolicFunctionsTest, Heaviside)
 {
-    ASSERT_EQ(0, heaviside(-1));
-    ASSERT_EQ(1, heaviside(0));
-    ASSERT_EQ(1, heaviside(1));
+    ASSERT_EQ(0, heaviside(-1, 0.5));
+    ASSERT_EQ(0.5, heaviside(0, 0.5));
+    ASSERT_EQ(1, heaviside(1, 0.5));
 }
 
 TEST(SymbolicFunctionsTest, Min)
