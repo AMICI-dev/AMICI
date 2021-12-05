@@ -22,19 +22,17 @@ from sympy.core.parameters import evaluate
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 
-
 ###############################################################################
 
 
 sbml_time_symbol = sp.Symbol('time', real=True)
 amici_time_symbol = sp.Symbol('t', real=True)
 
-
-annotation_namespace = 'http://github.com/AMICI-dev/AMICI'
+annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
 
 
 class SbmlException(Exception):
-    "Exception class for SBML-related errors."
+    """Exception class for SBML-related errors."""
     pass
 
 
@@ -71,21 +69,21 @@ def addCompartment(
         compartmentId,
         *,
         size: float = 1.0
-    ) -> libsbml.Species:
+) -> libsbml.Species:
     """
     Helper for adding a compartment to a SBML model.
 
-        :param model:
-        SBML model to which the compartment is to be added.
+    :param model:
+    SBML model to which the compartment is to be added.
 
-        :param compartmentId:
-        SBML ID of the new compartment.
+    :param compartmentId:
+    SBML ID of the new compartment.
 
-        :param size:
-        Size of the new compartment. Defaults to `1.0`.
+    :param size:
+    Size of the new compartment. Defaults to `1.0`.
 
-        :return:
-        the new compartment as a `libsbml.Compartment` object.
+    :return:
+    the new compartment as a `libsbml.Compartment` object.
     """
     compartmentId = str(compartmentId)
 
@@ -113,7 +111,7 @@ def addSpecies(
         name: Union[bool, str, None] = None,
         initial_amount: float = 0.0,
         units: Optional[str] = None
-    ) -> libsbml.Species:
+) -> libsbml.Species:
     """
     Helper for adding a species to a SBML model.
 
@@ -180,7 +178,7 @@ def addParameter(
         value: Optional[float] = None,
         units: Optional[str] = None,
         constant: Optional[bool] = None
-    ) -> libsbml.Parameter:
+) -> libsbml.Parameter:
     """
     Helper for adding a parameter to a SBML model.
 
@@ -234,7 +232,7 @@ def addAssignmentRule(
         variableId,
         formula,
         ruleId: Optional[str] = None
-    ) -> libsbml.AssignmentRule:
+) -> libsbml.AssignmentRule:
     """
     Helper for adding an assignment rule to a SBML model.
 
@@ -285,7 +283,7 @@ def addRateRule(
         variableId,
         formula,
         ruleId: Optional[str] = None
-    ) -> libsbml.RateRule:
+) -> libsbml.RateRule:
     """
     Helper for adding a rate rule to a SBML model.
 
@@ -331,7 +329,10 @@ def addRateRule(
     return rule
 
 
-def addInflow(model, speciesId, rate, *, reactionId: Optional[str] = None, reversible: bool = False):
+def addInflow(
+        model, speciesId, rate, *, reactionId: Optional[str] = None,
+        reversible: bool = False
+        ):
     speciesId = str(speciesId)
     if reactionId is None:
         reactionId = f'inflow_of_{speciesId}'
@@ -362,12 +363,13 @@ def addInflow(model, speciesId, rate, *, reactionId: Optional[str] = None, rever
 def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
     """
     Try to get the units for expression `x`.
-        :param model:
-        SBML model.
-        :param x:
-        Expression to get the units of.
-        :return:
-        A string if the units could be determined, otherwise `None`.
+
+    :param model:
+    SBML model.
+    :param x:
+    Expression to get the units of.
+    :return:
+    A string if the units could be determined, otherwise `None`.
     """
     # TODO can the SBML unit inference machinery be used?
     x = sp.sympify(x)
@@ -394,42 +396,48 @@ def pretty_xml(ugly_xml: str):
     dom = xml.dom.minidom.parseString(ugly_xml)
     pretty_xml = dom.toprettyxml()
     # We must delete the first line (xml header)
-    return pretty_xml[pretty_xml.index('\n')+1:]
+    return pretty_xml[pretty_xml.index('\n') + 1:]
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
+
     Differences from `sympy.MathMLContentPrinter`:
     1. underscores in symbol names are not converted to subscripts
     2. symbols with name 'time' are converted to the SBML time symbol
     """
+
     def _print_Symbol(self, sym):
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
+
     def doprint(self, expr, *, pretty: bool = False):
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
         mathml += super().doprint(expr)
         mathml += '</math>'
         mathml = mathml.replace(
             '<ci>time</ci>',
-            '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
+            '<csymbol encoding="text" definitionURL='
+            '"http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
         )
         return pretty_xml(mathml) if pretty else mathml
 
 
-def sbmlMathML(expr, *, replace_time: bool = False, pretty: bool = False, **settings) -> str:
+def sbmlMathML(
+        expr, *, replace_time: bool = False, pretty: bool = False, **settings
+        ) -> str:
     """
     Prints a SymPy expression to a MathML expression parsable by libSBML.
 
-        :param expr:
-            expression to be converted to MathML (will be sympified).
+    :param expr:
+        expression to be converted to MathML (will be sympified).
 
-        :param replace_time:
-            replace the AMICI time symbol with the SBML time symbol.
+    :param replace_time:
+        replace the AMICI time symbol with the SBML time symbol.
 
-        :param pretty:
-            prettify the resulting MathML.
+    :param pretty:
+        prettify the resulting MathML.
     """
     with evaluate(False):
         expr = sp.sympify(expr)
@@ -463,15 +471,15 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
     """
     Set the math attribute of a SBML node using a SymPy expression.
 
-        :param obj:
-            SBML node supporting `setMath` method.
+    :param obj:
+        SBML node supporting `setMath` method.
 
-        :param expr:
-            expression to which the math attribute of `obj` should be se to
-            (will be sympified).
+    :param expr:
+        expression to which the math attribute of `obj` should be se to
+        (will be sympified).
 
-        :param kwargs:
-            extra options for MathML conversion.
+    :param kwargs:
+        extra options for MathML conversion.
     """
     mathml = sbmlMathAST(expr, **kwargs)
     if obj.setMath(mathml) != libsbml.LIBSBML_OPERATION_SUCCESS:
@@ -486,7 +494,10 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
 # MathML to Sympy conversion
 
 
-def mathml2sympy(mathml: str, *, evaluate: bool = False, locals=None, expression_type=None):
+def mathml2sympy(
+        mathml: str, *, evaluate: bool = False, locals=None,
+        expression_type=None
+        ):
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise ValueError(
@@ -509,9 +520,11 @@ def mathml2sympy(mathml: str, *, evaluate: bool = False, locals=None, expression
     return expr
 
 
-def _check_unsupported_functions(sym: sp.Basic,
-                                 expression_type: str,
-                                 full_sym: sp.Basic = None):
+def _check_unsupported_functions(
+        sym: sp.Basic,
+        expression_type: str,
+        full_sym: sp.Basic = None
+        ):
     """
     Recursively checks the symbolic expression for unsupported symbolic
     functions
@@ -598,8 +611,9 @@ def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
     return sym
 
 
-def _parse_logical_operators(math_str: Union[str, float, None]
-                             ) -> Union[str, float, None]:
+def _parse_logical_operators(
+        math_str: Union[str, float, None]
+        ) -> Union[str, float, None]:
     """
     Parses a math string in order to replace logical operators by a form
     parsable for sympy
@@ -619,8 +633,10 @@ def _parse_logical_operators(math_str: Union[str, float, None]
     return (math_str.replace('&&', '&')).replace('||', '|')
 
 
-def grouper(iterable: Iterable, n: int,
-            fillvalue: Any = None) -> Iterable[Iterable]:
+def grouper(
+        iterable: Iterable, n: int,
+        fillvalue: Any = None
+        ) -> Iterable[Iterable]:
     """
     Collect data into fixed-length chunks or blocks
 

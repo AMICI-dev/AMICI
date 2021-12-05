@@ -253,7 +253,7 @@ class AbstractSpline(ABC):
         elif not isinstance(sbml_id, sp.Symbol):
             raise TypeError(
                 'sbml_id must be either a string or a SymPy symbol, '
-                f'got {sbml_id} instead!'
+                f'got {type(sbml_id)} instead!'
             )
 
         x = sympify_noeval(x)
