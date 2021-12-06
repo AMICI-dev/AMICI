@@ -249,7 +249,7 @@ void Model::initializeSplines() {
     int nspl = splines_.size();
     state_.spl_.resize(nspl, 0.0);
     for (int ispl = 0; ispl < nspl; ispl++)
-        splines_[ispl].computeCoefficients();
+        splines_[ispl].compute_coefficients();
 }
 
 void Model::initializeSplineSensitivities() {
@@ -271,8 +271,8 @@ void Model::initializeSplineSensitivities() {
     // QUESTION is it possible for plist != range(nplist) ?
     //          would that break computeCoefficientsSensi or not?
     for (int ispl = 0; ispl < nspl; ispl++) {
-        splines_[ispl].computeCoefficientsSensi(nplist(), spline_offset,
-            dspline_valuesdp.data(), dspline_slopesdp.data());
+        splines_[ispl].compute_coefficients_sensi(nplist(), spline_offset,
+            dspline_valuesdp, dspline_slopesdp);
         spline_offset += splines_[ispl].n_nodes() * nplist();
     }
 }
@@ -1970,9 +1970,9 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
 void Model::fspl(const realtype t) {
     for (int ispl = 0; ispl < nspl; ispl++) {
         if (splines_[ispl].get_logarithmic_parametrization()) {
-            state_.spl_[ispl] = std::exp(splines_[ispl].getValue(t));
+            state_.spl_[ispl] = std::exp(splines_[ispl].get_value(t));
         } else {
-            state_.spl_[ispl] = splines_[ispl].getValue(t);
+            state_.spl_[ispl] = splines_[ispl].get_value(t);
         }
     }
 }
@@ -1984,10 +1984,10 @@ void Model::fsspl(const realtype t) {
         for (int ispl = 0; ispl < nspl; ispl++) {
             if (splines_[ispl].get_logarithmic_parametrization()) {
                 sspl_data[ispl + nspl * ip] =
-                    state_.spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
+                    state_.spl_[ispl] * splines_[ispl].get_sensitivity(t, ip);
             } else {
                 sspl_data[ispl + nspl * ip] =
-                    splines_[ispl].getSensitivity(t, ip);
+                    splines_[ispl].get_sensitivity(t, ip);
             }
         }
     }

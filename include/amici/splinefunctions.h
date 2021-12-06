@@ -2,45 +2,54 @@
 #define AMICI_SPLINEFUNCTIONS_H
 
 #include "amici/defines.h"
+
 #include <vector>
+
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 
 class Model;
 /**
- * @brief The spline class is an AMICI-own implementation. Instances of this
- * class are created upon solver setup and the needed splines are set up
- * (e.g., interpolation of the nodes is performed).
+ * @brief AMICI spline base class.
+ *
+ * Instances of this class are created upon solver setup and the needed splines
+ * are set up (e.g., interpolation of the nodes is performed).
  * Upon call to a spline fuction, only the evaluation of the spline polynomial
  * is carried out.
  */
-class AbstractSpline {
+class AbstractSpline
+{
   public:
     /** default constructor */
     AbstractSpline() = default;
 
     /**
-     * @brief constructor
-     * @param model Model instance
+     * @brief AbstractSpline TODO
+     * @param nodes
+     * @param node_values
+     * @param equidistant_spacing
+     * @param logarithmic_parametrization
      */
     AbstractSpline(std::vector<realtype> nodes,
                    std::vector<realtype> node_values,
                    bool equidistant_spacing,
                    bool logarithmic_parametrization);
 
-    virtual ~AbstractSpline(){};
+    virtual ~AbstractSpline() = default;
 
-    virtual void computeCoefficients() = 0;
+    virtual void compute_coefficients() = 0;
 
-    virtual void computeCoefficientsSensi(int nplist, int spline_offset,
-                                          realtype *dnodesdp,
-                                          realtype *dslopesdp) = 0;
+    virtual void compute_coefficients_sensi(int nplist,
+                                            int spline_offset,
+                                            gsl::span<realtype> dnodesdp,
+                                            gsl::span<realtype> dslopesdp) = 0;
 
-    virtual realtype getValue(const realtype t) = 0;
+    virtual realtype get_value(const realtype t) = 0;
 
-    virtual realtype getSensitivity(const realtype t, const int ip) = 0;
+    virtual realtype get_sensitivity(const realtype t, const int ip) = 0;
 
-    virtual bool get_node_derivative_by_FD() = 0;
+    virtual bool get_node_derivative_by_fd() = 0;
 
     /**
      * @brief Accessor to equidistant_spacing_ member
@@ -69,27 +78,24 @@ class AbstractSpline {
 
     std::vector<realtype> coefficients_extrapolate_sensi;
 
-    virtual void computeFinalValue() = 0;
+    virtual void compute_final_value() = 0;
 
-    virtual void computeFinalSensitivity(int nplist, int spline_offset,
-                                         realtype *dspline_valuesdp,
-                                         realtype *dspline_slopesdp) = 0;
+    virtual void compute_final_sensitivity(
+      int nplist,
+      int spline_offset,
+      gsl::span<realtype> dspline_valuesdp,
+      gsl::span<realtype> dspline_slopesdp) = 0;
 
-    realtype getFinalValue();
+    realtype get_final_value();
 
-    void setFinalValue(realtype finalValue);
+    void set_final_value(realtype finalValue);
 
-    realtype getFinalSensitivity(const int ip);
+    realtype get_final_sensitivity(const int ip);
 
-    void setFinalSensitivity(std::vector<realtype> const finalSensitivity);
-
-  /*
-   * In order to have the main data members private, we need protected
-   * accessor macros.
-   * */
+    void set_final_sensitivity(std::vector<realtype> const finalSensitivity);
 
     /**
-     * @brief Switch equisitant spacing of spline nodes on or off
+     * @brief Switch equidistant spacing of spline nodes on or off
      * @param equidistant_spacing flag for equidistancy of spline nodes
      */
     void set_equidistant_spacing(bool equidistant_spacing);
@@ -102,9 +108,9 @@ class AbstractSpline {
     void set_logarithmic_parametrization(bool logarithmic_parametrization);
 
   private:
-    realtype finalValue_;
+    realtype final_value_;
 
-    std::vector<realtype> finalSensitivity_;
+    std::vector<realtype> final_sensitivity_;
 
     bool equidistant_spacing_ = false;
 
@@ -114,9 +120,8 @@ class AbstractSpline {
 
 }; // class SplineFunction
 
-
-
-class HermiteSpline : public AbstractSpline {
+class HermiteSpline : public AbstractSpline
+{
   public:
     HermiteSpline() = default;
 
@@ -133,55 +138,65 @@ class HermiteSpline : public AbstractSpline {
 
     ~HermiteSpline(){};
 
-    void computeCoefficients() override;
+    void compute_coefficients() override;
 
-    void computeCoefficientsSensi(int nplist, int spline_offset,
-                                  realtype *dnodesdp,
-                                  realtype *dslopesdp) override;
+    void compute_coefficients_sensi(int nplist,
+                                    int spline_offset,
+                                    gsl::span<realtype> dnodesdp,
+                                    gsl::span<realtype> dslopesdp) override;
 
-    realtype getValue(const double t) override;
+    realtype get_value(const double t) override;
 
-    realtype getSensitivity(const double t, const int ip) override;
+    realtype get_sensitivity(const double t, const int ip) override;
 
     /**
      * @brief Accessor to node_derivative_by_FD_ member
      * @return node_derivative_by_FD flag
      */
-    bool get_node_derivative_by_FD() override {
-        return node_derivative_by_FD_;
-    }
+    bool get_node_derivative_by_fd() override { return node_derivative_by_FD_; }
 
   private:
-    void getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n_spline_coefficients,
-                                int spline_offset, realtype len, realtype len_m,
-                                realtype len_p, realtype *dnodesdp, realtype *dslopesdp,
-                                realtype *coeffs);
+    void get_coeffs_sensi_lowlevel(int ip,
+                                   int i_node,
+                                   int nplist,
+                                   int n_spline_coefficients,
+                                   int spline_offset,
+                                   realtype len,
+                                   realtype len_m,
+                                   realtype len_p,
+                                   gsl::span<realtype> dnodesdp,
+                                   gsl::span<realtype> dslopesdp,
+                                   gsl::span<realtype> coeffs);
 
-    void handleInnerDerviatives();
+    void handle_inner_derviatives();
 
-    void handleBoundaryConditions();
+    void handle_boundary_conditions();
 
-    void computeCoefficientsExtrapolation();
+    void compute_coefficients_extrapolation();
 
-    void computeCoefficientsExtrapolationSensi(int nplist, int spline_offset,
-                                               realtype *dspline_valuesdp,
-                                               realtype *dspline_slopesdp);
+    void compute_coefficients_extrapolation_sensi(
+      int nplist,
+      int spline_offset,
+      gsl::span<realtype> dspline_valuesdp,
+      gsl::span<realtype> dspline_slopesdp);
 
-    void computeFinalValue() override;
+    void compute_final_value() override;
 
-    void computeFinalSensitivity(int nplist, int spline_offset,
-                                 realtype *dspline_valuesdp,
-                                 realtype *dspline_slopesdp) override;
+    void compute_final_sensitivity(
+      int nplist,
+      int spline_offset,
+      gsl::span<realtype> dspline_valuesdp,
+      gsl::span<realtype> dspline_slopesdp) override;
 
     std::vector<realtype> node_values_derivative_;
 
-    SplineBoundaryCondition firstNodeBC_ = SplineBoundaryCondition::given;
+    SplineBoundaryCondition first_bode_bc_ = SplineBoundaryCondition::given;
 
-    SplineBoundaryCondition lastNodeBC_ = SplineBoundaryCondition::given;
+    SplineBoundaryCondition last_node_bc_ = SplineBoundaryCondition::given;
 
-    SplineExtrapolation firstNodeEP_ = SplineExtrapolation::linear;
+    SplineExtrapolation first_node_ep_ = SplineExtrapolation::linear;
 
-    SplineExtrapolation lastNodeEP_ = SplineExtrapolation::linear;
+    SplineExtrapolation last_node_ep_ = SplineExtrapolation::linear;
 
     bool node_derivative_by_FD_ = false;
 
