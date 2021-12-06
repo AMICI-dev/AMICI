@@ -10,7 +10,7 @@ import amici
 import h5py
 import numpy as np
 import pytest
-from amici.gradient_check import check_derivatives, check_results
+from amici.gradient_check import check_derivatives, _check_results
 
 cpp_test_dir = Path(__file__).parents[2] / 'tests' / 'cpp'
 options_file = str(cpp_test_dir / 'testOptions.h5')
@@ -219,20 +219,20 @@ def verify_simulation_results(rdata, expected_results, fields=None,
                 if subfield not in subfields:
                     assert rdata[subfield] is None, field
                     continue
-                check_results(rdata, subfield,
-                              expected_results[field][subfield][()],
-                              atol=1e-8, rtol=1e-8)
+                _check_results(rdata, subfield,
+                               expected_results[field][subfield][()],
+                               atol=1e-8, rtol=1e-8)
         else:
             if field not in fields:
                 assert rdata[field] is None, field
                 continue
             if field == 's2llh':
-                check_results(rdata, field, expected_results[field][()],
-                              atol=1e-4, rtol=1e-3)
+                _check_results(rdata, field, expected_results[field][()],
+                               atol=1e-4, rtol=1e-3)
             else:
-                check_results(rdata, field, expected_results[field][()],
-                              atol=atol, rtol=rtol)
+                _check_results(rdata, field, expected_results[field][()],
+                               atol=atol, rtol=rtol)
 
     for attr in attrs:
-        check_results(rdata, attr, expected_results.attrs[attr],
-                      atol=atol, rtol=rtol)
+        _check_results(rdata, attr, expected_results.attrs[attr],
+                       atol=atol, rtol=rtol)
