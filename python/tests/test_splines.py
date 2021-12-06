@@ -1,16 +1,16 @@
 import math
 import os
+import sys
 import tempfile
 import uuid
-import pytest
 from typing import List, Optional, Union
 
+import amici
 import numpy as np
 import pandas as pd
 import petab
+import pytest
 import sympy as sp
-
-import amici
 from amici.gradient_check import check_results
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (LLH, RDATAS, SLLH, simulate_petab)
