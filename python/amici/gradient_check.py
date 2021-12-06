@@ -193,10 +193,10 @@ def check_derivatives(
     if check_least_squares and leastsquares_applicable:
         fields += ['res', 'y']
 
-        check_results(rdata, 'FIM', np.dot(rdata['sres'].T, rdata['sres']),
-                      atol=1e-8, rtol=1e-4)
-        check_results(rdata, 'sllh', -np.dot(rdata['res'].T, rdata['sres']),
-                      atol=1e-8, rtol=1e-4)
+        _check_results(rdata, 'FIM', np.dot(rdata['sres'].T, rdata['sres']),
+                       atol=1e-8, rtol=1e-4)
+        _check_results(rdata, 'sllh', -np.dot(rdata['res'].T, rdata['sres']),
+                       atol=1e-8, rtol=1e-4)
 
     if edata is not None:
         fields.append('llh')
@@ -237,7 +237,7 @@ def _check_close(
         relative tolerance for comparison
 
     :param ip:
-        parameter index
+        parameter index, for more informative output
 
     :param verbose:
         produce a more verbose error message in case of unmatched expectations
@@ -267,7 +267,7 @@ def _check_close(
     raise AssertionError("\n".join(lines))
 
 
-def check_results(
+def _check_results(
         rdata: ReturnData,
         field: str,
         expected: np.array,
@@ -300,4 +300,4 @@ def check_results(
         result = np.array(result)
 
     _check_close(result=result, expected=expected,
-                atol=atol, rtol=rtol, field=field)
+                 atol=atol, rtol=rtol, field=field)
