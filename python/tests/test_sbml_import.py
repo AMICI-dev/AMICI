@@ -77,10 +77,6 @@ def test_nosensi(simple_sbml_model):
         assert rdata.status == amici.AMICI_ERROR
 
 
-def assert_fun(x):
-    assert x
-
-
 @pytest.fixture
 def model_steadystate_module():
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
@@ -153,7 +149,7 @@ def test_presimulation(sbml_example_presimulation_module):
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
-    check_derivatives(model, solver, edata, assert_fun, epsilon=1e-4)
+    check_derivatives(model, solver, edata, epsilon=1e-4)
 
 
 def test_steadystate_simulation(model_steadystate_module):
@@ -199,7 +195,7 @@ def test_steadystate_simulation(model_steadystate_module):
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
-    check_derivatives(model, solver, edata[0], assert_fun, atol=1e-3,
+    check_derivatives(model, solver, edata[0], atol=1e-3,
                       rtol=1e-3, epsilon=1e-4)
 
     # Run some additional tests which need a working Model,
@@ -301,7 +297,7 @@ def test_likelihoods(model_test_likelihoods):
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
         check_derivatives(
-            model, solver, edata, assert_fun, atol=1e-2, rtol=1e-2,
+            model, solver, edata, atol=1e-2, rtol=1e-2,
             epsilon=1e-5, check_least_squares=False
         )
 
@@ -381,7 +377,7 @@ def test_sympy_exp_monkeypatch():
 
         # print sensitivity-related results
         assert rdata['status'] == amici.AMICI_SUCCESS
-        check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
+        check_derivatives(model, solver, None, atol=1e-2, rtol=1e-2,
                           epsilon=1e-3)
 
 
