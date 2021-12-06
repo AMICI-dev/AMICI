@@ -24,7 +24,7 @@ def check_finite_difference(
         atol: Optional[float] = 1e-4,
         rtol: Optional[float] = 1e-4,
         epsilon: Optional[float] = 1e-3
-        ) -> None:
+) -> None:
     """
     Checks the computed sensitivity based derivatives against a finite
     difference approximation.
