@@ -311,7 +311,10 @@ def simulate_splines(
 
     # If no working directory is given, create a temporary one
     if folder is None:
-        if keep_temporary:
+        if keep_temporary or sys.platform in ['win32', 'cygwin']:
+            # Windows fails to delete a temporary directory if an AMICI model
+            #  (or any other extension) was loaded from there. Therefore, don't
+            #  attempt to delete.
             folder = tempfile.TemporaryDirectory().name
             print(f"temporary folder is {folder}")
         else:
