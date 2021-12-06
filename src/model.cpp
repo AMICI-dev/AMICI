@@ -246,20 +246,19 @@ void Model::initializeStates(AmiVector &x) {
 void Model::initializeSplines() {
     splines_ = fspline_constructors(state_.unscaledParameters.data(),
                                     state_.fixedParameters.data());
-    int nspl = splines_.size();
-    state_.spl_.resize(nspl, 0.0);
-    for (int ispl = 0; ispl < nspl; ispl++)
-        splines_[ispl].compute_coefficients();
+    state_.spl_.resize(splines_.size(), 0.0);
+    for(auto spline: splines_) {
+        spline.compute_coefficients();
+    }
 }
 
 void Model::initializeSplineSensitivities() {
     int nspl = splines_.size();
-    int spline_offset = 0;
-    int allnodes = 0;
-
     derived_state_.sspl_ = SUNMatrixWrapper(nspl, nplist());
-    for (int ispl = 0; ispl < nspl; ispl++)
-        allnodes += splines_[ispl].n_nodes();
+    int allnodes = 0;
+    for(auto const& spline: splines_) {
+        allnodes += spline.n_nodes();
+    }
 
     std::vector<realtype> dspline_valuesdp (allnodes * nplist(), 0.0);
     std::vector<realtype> dspline_slopesdp (allnodes * nplist(), 0.0);
@@ -270,10 +269,11 @@ void Model::initializeSplineSensitivities() {
 
     // QUESTION is it possible for plist != range(nplist) ?
     //          would that break computeCoefficientsSensi or not?
-    for (int ispl = 0; ispl < nspl; ispl++) {
-        splines_[ispl].compute_coefficients_sensi(nplist(), spline_offset,
+    int spline_offset = 0;
+    for(auto spline: splines_) {
+        spline.compute_coefficients_sensi(nplist(), spline_offset,
             dspline_valuesdp, dspline_slopesdp);
-        spline_offset += splines_[ispl].n_nodes() * nplist();
+        spline_offset += spline.n_nodes() * nplist();
     }
 }
 
