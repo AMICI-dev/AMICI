@@ -11,18 +11,13 @@ import pandas as pd
 import petab
 import pytest
 import sympy as sp
-from amici.gradient_check import check_results
+from amici.gradient_check import _check_results
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (LLH, RDATAS, SLLH, simulate_petab)
 from amici.sbml_utils import (addCompartment, addInflow, addParameter,
                               addRateRule, addSpecies, amici_time_symbol,
                               createSbmlModel)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
-
-
-# callback for amici.gradient_check.check_*
-def assert_fun(x):
-    assert x
 
 
 def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
@@ -408,7 +403,6 @@ def check_splines(
         params_true,
         initial_values=None,
         *,
-        assert_fun=assert_fun,
         discard_annotations: bool = False,
         use_adjoint: bool = False,
         skip_sensitivity: bool = False,
@@ -436,9 +430,6 @@ def check_splines(
 
     :param initial_values:
         passed to `simulate_splines`
-
-    :param assert_fun:
-        function to use for checks
 
     :param discard_annotations:
         whether to discard spline annotations,
@@ -493,7 +484,7 @@ def check_splines(
     ]).transpose()
     x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
     if not debug:
-        check_results(rdata, 'x', x_true, assert_fun, x_atol, x_rtol)
+        _check_results(rdata, 'x', x_true, atol=x_atol, rtol=x_rtol)
     elif debug == 'print':
         x_err_abs = abs(rdata['x'] - x_true)
         x_err_rel = np.where(
@@ -515,7 +506,7 @@ def check_splines(
             for spline in splines
         ])
         if not debug:
-            check_results(rdata, 'w', w_true, assert_fun, w_atol, w_rtol)
+            _check_results(rdata, 'w', w_true, atol=w_atol, rtol=w_rtol)
         elif debug == 'print':
             w_err_abs = abs(rdata['w'] - w_true)
             w_err_rel = np.where(
@@ -542,7 +533,7 @@ def check_splines(
     if skip_sensitivity or use_adjoint:
         pass
     elif not debug:
-        check_results(rdata, 'sx', sx_true, assert_fun, sx_atol, sx_rtol)
+        _check_results(rdata, 'sx', sx_true, atol=sx_atol, rtol=sx_rtol)
     elif debug == 'print':
         sx_err_abs = abs(rdata['sx'] - sx_true)
         sx_err_rel = np.where(
@@ -559,7 +550,7 @@ def check_splines(
     llh_true = - 0.5 * rdata['y'].size * np.log(2 * np.pi)
     llh_error_rel = abs(llh - llh_true) / abs(llh_true)
     if not debug:
-        assert_fun(llh_error_rel <= llh_rtol)
+        assert llh_error_rel <= llh_rtol
     elif debug == 'print':
         print(f'llh_error_rel = {llh_error_rel}')
 
@@ -570,7 +561,7 @@ def check_splines(
             sllh_atol = np.finfo(float).eps
         sllh_err_abs = abs(sllh).max()
         if not debug:
-            assert_fun(sllh_err_abs <= sllh_atol)
+            assert sllh_err_abs <= sllh_atol
         elif debug == 'print':
             print(f'sllh_err_abs = {sllh_err_abs}')
 
@@ -759,7 +750,7 @@ def test_CubicHermiteSpline(spline, params, tols):
 
 def test_multiple_splines(**kwargs):
     splines, params, tols = example_splines_1()
-    check_splines_full(splines, params, tols, assert_fun=assert_fun, **kwargs)
+    check_splines_full(splines, params, tols, **kwargs)
 
 
 def test_splines_evaluated_at_formula():
