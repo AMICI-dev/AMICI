@@ -144,7 +144,8 @@ if not _imported_from_setup():
         from typing import Protocol
 
         class ModelModule(Protocol):
-            """Enable Python static type checking for AMICI-generated model modules"""
+            """Enable Python static type checking for AMICI-generated model
+            modules"""
             def getModel(self) -> amici.Model:
                 pass
     except ImportError:
