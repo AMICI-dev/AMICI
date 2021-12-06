@@ -221,19 +221,18 @@ HermiteSpline::compute_coefficients()
      * They are stored in the vector as
      * [d_0, c_0, b_0, a_0, d_1, c_1, ... , b_{n_nodes-1}, a_{n_nodes-1}] */
     coefficients.resize(4 * (n_nodes() - 1), 0.0);
-    realtype len;
 
     /* Compute the coefficients of the spline polynomials:
      * spline(t) = a * t**3 + b * t**2 + c * t + d
      *           = d + t * (c + t * (b + t * a))
      * with coefficients[4 * i_node + (0, 1, 2, 3)] = (d, c, b, a)
-     * */
+     */
 
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. Yes, we could save computation time
          * by exploiting equidistant spacing, but we're talking about <1k FLOPs
          * for sure, no matter what model. Screw it. */
-        len = nodes_[i_node + 1] - nodes_[i_node];
+        realtype len = nodes_[i_node + 1] - nodes_[i_node];
 
         /* Coefficients for cubic Hermite polynomials */
         coefficients[4 * i_node] = node_values_[i_node];
@@ -332,15 +331,14 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
      * means the following node (" + 1"), so "smk1" is the sensitivity of the
      * slope at node k + 1, w.r.t. to the current parameter (looping index).
      * */
-    realtype len, len_m, len_p;
 
     /* Parametric derivatives of splines are splines again.
      * We compute the coefficients for those polynomials now. */
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. */
-        len = nodes_[i_node + 1] - nodes_[i_node];
-        len_m = (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
-        len_p =
+        realtype len = nodes_[i_node + 1] - nodes_[i_node];
+        realtype len_m = (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
+        realtype len_p =
           (i_node < n_nodes() - 2) ? nodes_[i_node + 2] - nodes_[i_node] : len;
 
         /* As computing the coefficient is a mess, it's in another function */
@@ -384,13 +382,13 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
      * Those coefficients are stored as
      * [ D[b_first, p0], D[a_first, p0], D[b_last, p0], D[a_last, p0],
      *   D[b_first, p1], ... D[a_last, p{nplist-1}]
-     * ] */
+     * ]
+     */
     coefficients_extrapolate_sensi.resize(4 * nplist, 0.0);
 
-    realtype sp0;
     realtype sm0;
     for (int ip = 0; ip < nplist; ip++) {
-        sp0 = dspline_valuesdp[spline_offset + ip];
+        realtype sp0 = dspline_valuesdp[spline_offset + ip];
         switch (first_node_ep_) {
             /* This whole switch-case-if-else-if-thing could be moved
              * outside the loop, I know. Yet, it's at most some thousand
@@ -429,7 +427,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                 } else {
                     throw AmiException(
                       "Some weird combination of spline boundary "
-                      "condition, extrapolation and finite differecnces was "
+                      "condition, extrapolation and finite differences was "
                       "passed which should not be allowed.");
                 }
                 break;
@@ -452,10 +450,9 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
         coefficients_extrapolate_sensi[4 * ip + 1] = sm0;
     }
 
-    realtype sp_end;
     realtype sm_end;
     for (int ip = 0; ip < nplist; ip++) {
-        sp_end =
+        realtype sp_end =
           dspline_valuesdp[spline_offset + ip + (n_nodes() - 1) * nplist];
         switch (last_node_ep_) {
             /* This whole switch-case-if-else-if-thing could be moved
