@@ -3960,25 +3960,3 @@ def _custom_pow_eval_derivative(self, s):
         (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
         (part2, True)
     )
-
-
-def _custom_print_max(self, expr):
-    """
-    Custom Max printing function, see https://github.com/sympy/sympy/pull/20558
-    """
-    from sympy import Max
-    if len(expr.args) == 1:
-        return self._print(expr.args[0])
-    return "%smax(%s, %s)" % (self._ns, self._print(expr.args[0]),
-                              self._print(Max(*expr.args[1:])))
-
-
-def _custom_print_min(self, expr):
-    """
-    Custom Min printing function, see https://github.com/sympy/sympy/pull/20558
-    """
-    from sympy import Min
-    if len(expr.args) == 1:
-        return self._print(expr.args[0])
-    return "%smin(%s, %s)" % (self._ns, self._print(expr.args[0]),
-                              self._print(Min(*expr.args[1:])))
