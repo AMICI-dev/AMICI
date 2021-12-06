@@ -14,17 +14,12 @@ import copy
 from typing import Callable, Optional, List, Sequence
 
 
-def assert_fun(x):
-    assert x
-
-
 def check_finite_difference(x0: Sequence[float],
                             model: Model,
                             solver: Solver,
                             edata: ExpData,
                             ip: int,
                             fields: List[str],
-                            assert_fun: Callable,
                             atol: Optional[float] = 1e-4,
                             rtol: Optional[float] = 1e-4,
                             epsilon: Optional[float] = 1e-3) -> None:
@@ -49,10 +44,6 @@ def check_finite_difference(x0: Sequence[float],
 
     :param fields:
         rdata fields for which to check the gradient
-
-    :param assert_fun:
-        function that asserts the return values of comparison, enables
-        passing of custom assert function from testing frameworks
 
     :param atol:
         absolute tolerance for comparison
@@ -83,7 +74,8 @@ def check_finite_difference(x0: Sequence[float],
     if int(og_sensitivity_order) < int(SensitivityOrder.first):
         solver.setSensitivityOrder(SensitivityOrder.first)
     rdata = runAmiciSimulation(model, solver, edata)
-    assert_fun(rdata['status'] == AMICI_SUCCESS)
+    if rdata['status'] != AMICI_SUCCESS:
+        raise AssertionError(f"Simulation failed (status {rdata['status']}")
 
     # finite difference
     solver.setSensitivityOrder(SensitivityOrder.none)
@@ -101,12 +93,14 @@ def check_finite_difference(x0: Sequence[float],
     # forward:
     model.setParameters(pf)
     rdataf = runAmiciSimulation(model, solver, edata)
-    assert_fun(rdataf['status'] == AMICI_SUCCESS)
+    if rdataf['status'] != AMICI_SUCCESS:
+        raise AssertionError(f"Simulation failed (status {rdataf['status']}")
 
     # backward:
     model.setParameters(pb)
     rdatab = runAmiciSimulation(model, solver, edata)
-    assert_fun(rdatab['status'] == AMICI_SUCCESS)
+    if rdatab['status'] != AMICI_SUCCESS:
+        raise AssertionError(f"Simulation failed (status {rdatab['status']}")
 
     for field in fields:
         sensi_raw = rdata[f's{field}']
@@ -118,10 +112,9 @@ def check_finite_difference(x0: Sequence[float],
         elif len(sensi_raw.shape) == 3:
             sensi = sensi_raw[:, 0, :]
         else:
-            assert_fun(False)  # not implemented
-            return
+            raise NotImplementedError()
 
-        check_close(sensi, fd, assert_fun, atol, rtol, field, ip=ip)
+        check_close(sensi, fd, atol=atol, rtol=rtol, field=field, ip=ip)
 
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
@@ -133,7 +126,6 @@ def check_finite_difference(x0: Sequence[float],
 def check_derivatives(model: Model,
                       solver: Solver,
                       edata: Optional[ExpData] = None,
-                      assert_fun: Optional[Callable] = assert_fun,
                       atol: Optional[float] = 1e-4,
                       rtol: Optional[float] = 1e-4,
                       epsilon: Optional[float] = 1e-3,
@@ -150,10 +142,6 @@ def check_derivatives(model: Model,
 
     :param edata:
         exp data
-
-    :param assert_fun:
-        function that asserts the return values of comparison, enables
-        passing of custom assert function from testing frameworks
 
     :param atol:
         absolute tolerance for comparison
@@ -180,7 +168,8 @@ def check_derivatives(model: Model,
     rdata = runAmiciSimulation(model, solver, edata)
     solver.setSensitivityOrder(og_sens_order)
 
-    assert_fun(rdata['status'] == AMICI_SUCCESS)
+    if rdata['status'] != AMICI_SUCCESS:
+        raise AssertionError(f"Simulation failed (status {rdata['status']}")
 
     fields = []
 
@@ -200,14 +189,10 @@ def check_derivatives(model: Model,
     if check_least_squares and leastsquares_applicable:
         fields += ['res', 'y']
 
-        check_results(rdata, 'FIM',
-                      np.dot(rdata['sres'].T, rdata['sres']),
-                      assert_fun,
-                      1e-8, 1e-4)
-        check_results(rdata, 'sllh',
-                      -np.dot(rdata['res'].T, rdata['sres']),
-                      assert_fun,
-                      1e-8, 1e-4)
+        check_results(rdata, 'FIM', np.dot(rdata['sres'].T, rdata['sres']),
+                      atol=1e-8, rtol=1e-4)
+        check_results(rdata, 'sllh', -np.dot(rdata['res'].T, rdata['sres']),
+                      atol=1e-8, rtol=1e-4)
 
     if edata is not None:
         fields.append('llh')
@@ -216,17 +201,18 @@ def check_derivatives(model: Model,
         if pval == 0.0 and skip_zero_pars:
             continue
         check_finite_difference(p, model, solver, edata, ip, fields,
-                                assert_fun, atol=atol, rtol=rtol,
-                                epsilon=epsilon)
+                                atol=atol, rtol=rtol, epsilon=epsilon)
 
 
-def check_close(result: np.array,
-                expected: np.array,
-                assert_fun: Callable,
-                atol: float,
-                rtol: float,
-                field: str,
-                ip: Optional[int] = None) -> None:
+def check_close(
+        result: np.array,
+        expected: np.array,
+        atol: float,
+        rtol: float,
+        field: str,
+        ip: Optional[int] = None,
+        verbose: Optional[bool] = True,
+) -> None:
     """
     Compares computed values against expected values and provides rich
     output information.
@@ -240,10 +226,6 @@ def check_close(result: np.array,
     :param field:
         rdata field for which the gradient is checked, only for error reporting
 
-    :param assert_fun:
-        function that asserts the return values of comparison, enables
-        passing of custom assert function from testing frameworks
-
     :param atol:
         absolute tolerance for comparison
 
@@ -253,29 +235,37 @@ def check_close(result: np.array,
     :param ip:
         parameter index
 
+    :param verbose:
+        produce a more verbose error message in case of unmatched expectations
     """
     close = np.isclose(result, expected, atol=atol, rtol=rtol, equal_nan=True)
+    if close.all():
+        return
 
-    if not close.all():
-        if ip is None:
-            index_str = ''
-            check_type = 'Regression check'
-        else:
-            index_str = f'at index ip={ip} '
-            check_type = 'FD check'
-        print(f'{check_type} failed for {field} {index_str}for '
-              f'{close.size - close.sum()} indices:')
-        adev = np.abs(result - expected)
-        rdev = np.abs((result - expected)/(expected + atol))
-        print(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
+    if ip is None:
+        index_str = ''
+        check_type = 'Regression check'
+    else:
+        index_str = f'at index ip={ip} '
+        check_type = 'FD check'
 
-    assert_fun(close.all())
+    lines = [f'{check_type} failed for {field} {index_str}for '
+             f'{close.size - close.sum()} indices:']
+    if verbose:
+        for idx in np.argwhere(~close):
+            idx = tuple(idx)
+            lines.append(
+                f"\tat {idx}: Expected {expected[idx]}, got {result[idx]}")
+    adev = np.abs(result - expected)
+    rdev = np.abs((result - expected)/(expected + atol))
+    lines.append(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
+
+    raise AssertionError("\n".join(lines))
 
 
 def check_results(rdata: ReturnData,
                   field: str,
                   expected: np.array,
-                  assert_fun: Callable,
                   atol: float,
                   rtol: float) -> None:
     """
@@ -292,10 +282,6 @@ def check_results(rdata: ReturnData,
     :param expected:
         expected values
 
-    :param assert_fun:
-        function that asserts the return values of comparison, enables
-        passing of custom assert function from testing frameworks
-
     :param atol:
         absolute tolerance for comparison
 
@@ -307,4 +293,5 @@ def check_results(rdata: ReturnData,
     if type(result) is float:
         result = np.array(result)
 
-    check_close(result, expected, assert_fun, atol, rtol, field)
+    check_close(result=result, expected=expected,
+                atol=atol, rtol=rtol, field=field)
