@@ -3619,13 +3619,8 @@ class ODEExporter:
             self._get_index('p')
         ))
         try:
-            # Required until https://github.com/sympy/sympy/pull/20558 is released
-            with _monkeypatched(_CXXCodePrinterBase, '_print_Max',
-                                _custom_print_max),\
-                    _monkeypatched(_CXXCodePrinterBase, '_print_Min',
-                                   _custom_print_min):
-                ret = cxxcode(math, standard='c++11',
-                              user_functions=user_functions)
+            ret = cxxcode(math, standard='c++11',
+                          user_functions=user_functions)
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except TypeError as e:
@@ -4172,25 +4167,3 @@ def _custom_pow_eval_derivative(self, s):
         (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
         (part2, True)
     )
-
-
-def _custom_print_max(self, expr):
-    """
-    Custom Max printing function, see https://github.com/sympy/sympy/pull/20558
-    """
-    from sympy import Max
-    if len(expr.args) == 1:
-        return self._print(expr.args[0])
-    return "%smax(%s, %s)" % (self._ns, self._print(expr.args[0]),
-                              self._print(Max(*expr.args[1:])))
-
-
-def _custom_print_min(self, expr):
-    """
-    Custom Min printing function, see https://github.com/sympy/sympy/pull/20558
-    """
-    from sympy import Min
-    if len(expr.args) == 1:
-        return self._print(expr.args[0])
-    return "%smin(%s, %s)" % (self._ns, self._print(expr.args[0]),
-                              self._print(Min(*expr.args[1:])))
