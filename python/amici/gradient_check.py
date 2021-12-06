@@ -14,15 +14,17 @@ import copy
 from typing import Callable, Optional, List, Sequence
 
 
-def check_finite_difference(x0: Sequence[float],
-                            model: Model,
-                            solver: Solver,
-                            edata: ExpData,
-                            ip: int,
-                            fields: List[str],
-                            atol: Optional[float] = 1e-4,
-                            rtol: Optional[float] = 1e-4,
-                            epsilon: Optional[float] = 1e-3) -> None:
+def check_finite_difference(
+        x0: Sequence[float],
+        model: Model,
+        solver: Solver,
+        edata: ExpData,
+        ip: int,
+        fields: List[str],
+        atol: Optional[float] = 1e-4,
+        rtol: Optional[float] = 1e-4,
+        epsilon: Optional[float] = 1e-3
+        ) -> None:
     """
     Checks the computed sensitivity based derivatives against a finite
     difference approximation.
@@ -104,7 +106,7 @@ def check_finite_difference(x0: Sequence[float],
 
     for field in fields:
         sensi_raw = rdata[f's{field}']
-        fd = (rdataf[field]-rdatab[field])/(pf[ip] - pb[ip])
+        fd = (rdataf[field] - rdatab[field]) / (pf[ip] - pb[ip])
         if len(sensi_raw.shape) == 1:
             sensi = sensi_raw[0]
         elif len(sensi_raw.shape) == 2:
@@ -114,7 +116,7 @@ def check_finite_difference(x0: Sequence[float],
         else:
             raise NotImplementedError()
 
-        check_close(sensi, fd, atol=atol, rtol=rtol, field=field, ip=ip)
+        _check_close(sensi, fd, atol=atol, rtol=rtol, field=field, ip=ip)
 
     solver.setSensitivityOrder(og_sensitivity_order)
     model.setParameters(og_parameters)
@@ -123,14 +125,16 @@ def check_finite_difference(x0: Sequence[float],
         edata.plist = og_eplist
 
 
-def check_derivatives(model: Model,
-                      solver: Solver,
-                      edata: Optional[ExpData] = None,
-                      atol: Optional[float] = 1e-4,
-                      rtol: Optional[float] = 1e-4,
-                      epsilon: Optional[float] = 1e-3,
-                      check_least_squares: bool = True,
-                      skip_zero_pars: bool = False) -> None:
+def check_derivatives(
+        model: Model,
+        solver: Solver,
+        edata: Optional[ExpData] = None,
+        atol: Optional[float] = 1e-4,
+        rtol: Optional[float] = 1e-4,
+        epsilon: Optional[float] = 1e-3,
+        check_least_squares: bool = True,
+        skip_zero_pars: bool = False
+) -> None:
     """
     Finite differences check for likelihood gradient.
 
@@ -204,7 +208,7 @@ def check_derivatives(model: Model,
                                 atol=atol, rtol=rtol, epsilon=epsilon)
 
 
-def check_close(
+def _check_close(
         result: np.array,
         expected: np.array,
         atol: float,
@@ -257,17 +261,19 @@ def check_close(
             lines.append(
                 f"\tat {idx}: Expected {expected[idx]}, got {result[idx]}")
     adev = np.abs(result - expected)
-    rdev = np.abs((result - expected)/(expected + atol))
+    rdev = np.abs((result - expected) / (expected + atol))
     lines.append(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
 
     raise AssertionError("\n".join(lines))
 
 
-def check_results(rdata: ReturnData,
-                  field: str,
-                  expected: np.array,
-                  atol: float,
-                  rtol: float) -> None:
+def check_results(
+        rdata: ReturnData,
+        field: str,
+        expected: np.array,
+        atol: float,
+        rtol: float
+        ) -> None:
     """
     Checks whether rdata[field] agrees with expected according to provided
     tolerances.
@@ -293,5 +299,5 @@ def check_results(rdata: ReturnData,
     if type(result) is float:
         result = np.array(result)
 
-    check_close(result=result, expected=expected,
+    _check_close(result=result, expected=expected,
                 atol=atol, rtol=rtol, field=field)
