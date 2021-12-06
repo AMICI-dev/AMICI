@@ -21,3 +21,7 @@ AMICI Python API
    amici.logging
    amici.gradient_check
    amici.parameter_mapping
+   amici.cxxcodeprinter
+   amici.splines
+   amici.sbml_utils
+   amici.splines
