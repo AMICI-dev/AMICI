@@ -207,28 +207,26 @@ def test_interdependent_settings(pysb_example_presimulation_module):
         # 'StateIsNonNegative': None,
     }
 
-    ignored_settings = [
-        # Ignored due to conservation laws in the test model.
-        'StateIsNonNegative',
-    ]
-
     # Some values need to be transformed to be tested in Python
     # (e.g. SWIG objects). Default transformer is no transformation
     # (the identity function).
     getter_transformers = {
         setting: (lambda x: x)
-        for setting in expected_settings
+        for setting in original_settings
     }
     getter_transformers.update({
         # Convert from SWIG object.
         'ParameterScale': lambda x: list(x)
     })
 
-    default_settings = {
-        setting: setting_value
-        for setting, setting_value in amici.get_model_settings(model).items()
-        if setting not in ignored_settings
-    }
+    default_settings = amici.get_model_settings(model)
+    for original_setting, original_setting_value in original_settings.items():
+        test_value = getter_transformers[original_setting](
+            default_settings[original_setting],
+        )
+        # The original model is as expected (to ensure the test is still
+        # valid).
+        assert test_value == original_setting_value
 
     for setting, expected_value in expected_settings.items():
         input_settings = {setting: copy.deepcopy(expected_value)}
