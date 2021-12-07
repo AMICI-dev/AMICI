@@ -4,6 +4,7 @@
 #include "amici/exception.h"
 #include "amici/vector.h"
 #include <vector>
+#include <algorithm>    // std::min
 
 namespace amici {
 
@@ -770,6 +771,7 @@ HermiteSpline::get_value(const double t)
         /* equidistant spacing: just compute the interval */
         len = nodes_[1] - nodes_[0];
         i_node = trunc((t - nodes_[0]) / len);
+        i_node = std::min(i_node, n_nodes() - 2);
     } else {
         /* no equidistant spacing: we need to iterate */
         i_node = 0;
@@ -865,6 +867,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
         /* equidistant spacing: just compute the interval */
         len = nodes_[1] - nodes_[0];
         i_node = trunc((t - nodes_[0]) / len);
+        i_node = std::min(i_node, n_nodes() - 2);
     } else {
         /* no equidistant spacing: we need to iterate */
         i_node = 0;
