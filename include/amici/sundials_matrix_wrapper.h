@@ -8,6 +8,7 @@
 #include <gsl/gsl-lite.hpp>
 
 #include <vector>
+#include <algorithm>
 
 #include <assert.h>
 
