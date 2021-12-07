@@ -950,7 +950,7 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
                                 const realtype t, const AmiVector &x,
                                 const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        fsz(&sz.at(ip * nz), ie, t, x.data(), state_.unscaledParameters.data(),
+        fsz(&sz[ip * nz], ie, t, x.data(), state_.unscaledParameters.data(),
             state_.fixedParameters.data(), state_.h.data(), sx.data(ip),
             plist(ip));
     }
@@ -963,7 +963,7 @@ void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
     for (int iz = 0; iz < nz; ++iz)
         if (z2event_.at(iz) - 1 == ie)
             for (int ip = 0; ip < nplist(); ++ip)
-                sz.at(ip * nz + iz) = 0.0;
+                sz[ip * nz + iz] = 0.0;
 }
 
 void Model::getEventRegularization(gsl::span<realtype> rz, const int ie,
@@ -977,7 +977,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
                                               const AmiVector &x,
                                               const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        fsrz(&srz.at(ip * nz), ie, t, x.data(), state_.unscaledParameters.data(),
+        fsrz(&srz[ip * nz], ie, t, x.data(), state_.unscaledParameters.data(),
              state_.fixedParameters.data(), state_.h.data(), sx.data(ip),
              plist(ip));
     }
@@ -1319,7 +1319,7 @@ void Model::writeSliceEvent(gsl::span<const realtype> slice,
     checkBufferSize(buffer, z2event_.size());
     for (unsigned izt = 0; izt < z2event_.size(); ++izt)
         if (z2event_.at(izt) - 1 == ie)
-            buffer.at(izt) = slice.at(izt);
+            buffer[izt] = slice[izt];
 }
 
 void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
@@ -1330,7 +1330,7 @@ void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
     for (int ip = 0; ip < nplist(); ++ip)
         for (unsigned izt = 0; izt < z2event_.size(); ++izt)
             if (z2event_.at(izt) - 1 == ie)
-                buffer.at(ip * nztrue + izt) = slice.at(ip * nztrue + izt);
+                buffer[ip * nztrue + izt] = slice[ip * nztrue + izt];
 }
 
 void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
