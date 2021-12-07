@@ -247,7 +247,7 @@ void Model::initializeSplines() {
     splines_ = fspline_constructors(state_.unscaledParameters.data(),
                                     state_.fixedParameters.data());
     state_.spl_.resize(splines_.size(), 0.0);
-    for(auto spline: splines_) {
+    for(auto& spline: splines_) {
         spline.compute_coefficients();
     }
 }
@@ -270,7 +270,7 @@ void Model::initializeSplineSensitivities() {
     // QUESTION is it possible for plist != range(nplist) ?
     //          would that break computeCoefficientsSensi or not?
     int spline_offset = 0;
-    for(auto spline: splines_) {
+    for(auto& spline: splines_) {
         spline.compute_coefficients_sensi(nplist(), spline_offset,
             dspline_valuesdp, dspline_slopesdp);
         spline_offset += spline.n_nodes() * nplist();
