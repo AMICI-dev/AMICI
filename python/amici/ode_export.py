@@ -2911,6 +2911,7 @@ class ODEExporter:
             '',
             '#include <gsl/gsl-lite.hpp>',
             '#include <array>',
+            '#include <algorithm>',
         ]
         if function == 'spline_constructors':
             lines += ['#include "amici/splinefunctions.h"',
