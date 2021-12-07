@@ -243,7 +243,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
         }
         check_csc(this);
         for (sunindextype icol = 0; icol < columns(); ++icol) {
-            scatter(icol, b.at(icol) * alpha, nullptr, c, icol+1, nullptr, 0);
+            scatter(icol, b[icol] * alpha, nullptr, c, icol+1, nullptr, 0);
         }
         break;
     default:
@@ -288,8 +288,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     if (transpose) {
         auto cols_size = cols.size();
         for (std::size_t icols = 0; icols < cols_size; ++icols) {
-            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
-            for (sunindextype idx = get_indexptr(cols.at(icols));
+            auto idx_next_col = get_indexptr(cols[icols] + 1);
+            for (sunindextype idx = get_indexptr(cols[icols]);
                  idx < idx_next_col; ++idx) {
 
                 auto idx_val = get_indexval(idx);
@@ -302,9 +302,9 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     } else {
         auto num_cols = static_cast<std::size_t>(columns());
         for (std::size_t icols = 0; icols < num_cols; ++icols) {
-            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
+            auto idx_next_col = get_indexptr(cols[icols] + 1);
 
-            for (sunindextype idx = get_indexptr(cols.at(icols));
+            for (sunindextype idx = get_indexptr(cols[icols]);
                  idx < idx_next_col; ++idx) {
                 auto idx_val = get_indexval(idx);
 
