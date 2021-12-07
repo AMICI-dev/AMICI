@@ -3,6 +3,7 @@
 Test getters, setters, etc.
 """
 
+import copy
 import numbers
 
 import amici
@@ -177,6 +178,78 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         for name, value in amici.get_model_settings(model).items()
         if name in custom_settings_not_none
     ])
+
+
+def test_interdependent_settings(pysb_example_presimulation_module):
+    """Test settings that were not tested in `test_model_instance_settings`.
+
+    `StateIsNonNegative` is still skipped, due to conservation laws in the
+    test model.
+    """
+    model = pysb_example_presimulation_module.getModel()
+
+    original_settings = {
+        'FixedParameters': (9.0, 1.0),
+        'ParameterList': (0, 1, 2, 3, 4, 5),
+        'ParameterScale': [0, 0, 0, 0, 0, 0],
+        'ReinitializationStateIdxs': tuple(),
+        'ReinitializeFixedParameterInitialStates': False,
+        'StateIsNonNegative': (False, False, False),
+    }
+
+    expected_settings = {
+        'FixedParameters': (8.0, 2.0),
+        'ParameterList': (0, 1, 2, 3, 4),
+        'ParameterScale': [1, 0, 0, 0, 0, 0],
+        'ReinitializationStateIdxs': (0,),
+        'ReinitializeFixedParameterInitialStates': True,
+        # Skipped due to conservation laws in the test model.
+        # 'StateIsNonNegative': None,
+    }
+
+    ignored_settings = [
+        # Ignored due to conservation laws in the test model.
+        'StateIsNonNegative',
+    ]
+
+    # Some values need to be transformed to be tested in Python
+    # (e.g. SWIG objects). Default transformer is no transformation
+    # (the identity function).
+    getter_transformers = {
+        setting: (lambda x: x)
+        for setting in expected_settings
+    }
+    getter_transformers.update({
+        # Convert from SWIG object.
+        'ParameterScale': lambda x: list(x)
+    })
+
+    default_settings = {
+        setting: setting_value
+        for setting, setting_value in amici.get_model_settings(model).items()
+        if setting not in ignored_settings
+    }
+
+    for setting, expected_value in expected_settings.items():
+        input_settings = {setting: copy.deepcopy(expected_value)}
+
+        amici.set_model_settings(model, input_settings)
+        output_settings = amici.get_model_settings(model)
+        test_value = getter_transformers[setting](
+            output_settings[setting]
+        )
+        # The setter works.
+        assert test_value == expected_value
+
+        input_settings = {setting: output_settings[setting]}
+        amici.set_model_settings(model, input_settings)
+        output_settings = amici.get_model_settings(model)
+        test_value = getter_transformers[setting](
+            output_settings[setting]
+        )
+        # (round-trip) The output of the getter can be used as input to the
+        # setter, and does not change the value.
+        assert test_value == expected_value
 
 
 def test_unhandled_settings(pysb_example_presimulation_module):
