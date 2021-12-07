@@ -2781,6 +2781,7 @@ class ODEExporter:
             '',
             '#include <gsl/gsl-lite.hpp>',
             '#include <array>',
+            '#include <algorithm>',
         ]
 
         # function signature
