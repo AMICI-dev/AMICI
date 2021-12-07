@@ -8,15 +8,16 @@
 namespace amici {
 
 static realtype
-evaluatePolynomial(realtype x, realtype* coeff)
+evaluatePolynomial(realtype const x, gsl::span<const realtype> coeff)
 {
     /* Use Horner's method for numerical efficiency:
      * spline(t) = a * t**3 + b * t**2 + c * t + d
      *           = d + t * (c + t * (b + t * a))
      * with coeff[0, 1, 2, 3] = [d, c, b, a]
      */
-
-    return coeff[0] + x * (coeff[1] + x * (coeff[2] + x * coeff[3]));
+    assert(coeff.size() >= 4);
+    auto coeff_p = coeff.data();
+    return coeff_p[0] + x * (coeff_p[1] + x * (coeff_p[2] + x * coeff_p[3]));
 }
 
 AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
@@ -724,7 +725,7 @@ HermiteSpline::get_value(const double t)
                 i_node = n_nodes() - 2;
                 len = nodes_[i_node + 1] - nodes_[i_node];
                 return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                          &(coefficients[i_node * 4]));
+                                          gsl::make_span(coefficients).subspan(i_node * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -753,8 +754,7 @@ HermiteSpline::get_value(const double t)
             case SplineExtrapolation::polynomial:
                 /* Evaluate last interpolation polynomial */
                 len = nodes_[1] - nodes_[0];
-                return evaluatePolynomial((t - nodes_[0]) / len,
-                                          &(coefficients[0]));
+                return evaluatePolynomial((t - nodes_[0]) / len, coefficients);
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -781,7 +781,7 @@ HermiteSpline::get_value(const double t)
 
     /* Evaluate the interpolation polynomial */
     return evaluatePolynomial((t - nodes_[i_node]) / len,
-                              &(coefficients[i_node * 4]));
+                              gsl::make_span(coefficients).subspan(i_node * 4));
 }
 
 realtype
@@ -817,7 +817,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
                 len = nodes_[i_node + 1] - nodes_[i_node];
                 return evaluatePolynomial(
                   (t - nodes_[i_node]) / len,
-                  &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4]));
+                    gsl::make_span(coefficients_sensi).subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -849,7 +849,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
                 len = nodes_[1] - nodes_[0];
                 return evaluatePolynomial(
                   (t - nodes_[0]) / len,
-                  &(coefficients_sensi[ip * (n_nodes() - 1) * 4]));
+                    gsl::make_span(coefficients_sensi).subspan(ip * (n_nodes() - 1) * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -877,7 +877,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
     /* Evaluate the interpolation polynomial */
     return evaluatePolynomial(
       (t - nodes_[i_node]) / len,
-      &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4]));
+        gsl::make_span(coefficients_sensi).subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
 }
 
 } // namespace amici
