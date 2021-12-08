@@ -2934,7 +2934,7 @@ class ODEExporter:
             f'namespace model_{self.model_name} {{',
             '',
             f'{func_info.return_type} {function}_{self.model_name}'
-            f'({func_info.arguments}){{'
+            f'({func_info.arguments}) {{'
         ])
 
         # function body
@@ -3230,29 +3230,29 @@ class ODEExporter:
 
     def _get_spline_constructors_body(self):
         if not self.model.splines:
-            return ["return {};"]
+            return ["    return {};"]
 
-        body = ['    std::vector<HermiteSpline> splines;', '']
+        ind4 = ' ' * 4
+        ind8 = ' ' * 8
+
+        body = ["return {"]
         for ispl, spline in enumerate(self.model.splines):
-            # create the vector with the node locations
-            nodes = f'    std::vector<realtype> nodes{ispl} {{'
             if isinstance(spline.xx, splines.UniformGrid):
-                nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
+                nodes = f"{ind8}{{{spline.xx.start}, {spline.xx.stop}}}, "
             else:
-                nodes += ', '.join(str(x) for x in spline.xx) + '};'
-            body.append(nodes)
+                nodes = f"{ind8}{{{', '.join(map(str, spline.xx))}}}, "
 
-            # create the vector with the node values
-            vals = f'    std::vector<realtype> values{ispl} {{' + str(spline.yy[0])
-            for iyy in spline.yy[1:]:
-                vals += ', ' + str(iyy)
-            vals += '};'
-            body.append(vals)
+            # vector with the node values
+            values = f"{ind8}{{{', '.join(map(str, spline.yy))}}}, "
+            # vector with the slopes
+            slopes = f"{ind8}{{}},"
 
-            # create the vector with the slopes
-            body.append(f'    std::vector<realtype> slopes{ispl};')
-            constr = (f'    HermiteSpline spline{ispl} = HermiteSpline('
-                      f'nodes{ispl}, values{ispl}, slopes{ispl}, ')
+            body.extend([
+                f"{ind4}HermiteSpline(",
+                nodes,
+                values,
+                slopes,
+            ])
 
             bc_to_cpp = {
                 None: 'SplineBoundaryCondition::given, ',
@@ -3264,7 +3264,7 @@ class ODEExporter:
             }
             for bc in spline.bc:
                 try:
-                    constr += bc_to_cpp[bc]
+                    body.append(ind8 + bc_to_cpp[bc])
                 except KeyError:
                     raise ValueError(f"Unknown boundary condition '{bc}' "
                                      "found in spline object")
@@ -3277,21 +3277,21 @@ class ODEExporter:
             }
             for extr in spline.extrapolate:
                 try:
-                    constr += extrapolate_to_cpp[extr]
+                    body.append(ind8 + extrapolate_to_cpp[extr])
                 except KeyError:
                     raise ValueError(f"Unknown extrapolation '{extr}' "
                                      "found in spline object")
-
-            constr += 'true, ' if spline.derivatives_by_fd else 'false, '
-            constr += 'true, ' if isinstance(spline.xx, splines.UniformGrid) \
+            line = ind8
+            line += 'true, ' if spline.derivatives_by_fd else 'false, '
+            line += 'true, ' if isinstance(spline.xx, splines.UniformGrid) \
                 else 'false, '
-            constr += 'true);' if spline.logarithmic_parametrization \
-                else 'false);'
-            body.append(constr)
-            body.append(f'    splines.push_back(spline{ispl});')
+            line += 'true' if spline.logarithmic_parametrization \
+                else 'false'
+            body.append(line)
+            body.append(f"{ind4}),")
 
-        body.append('    return splines;')
-        return body
+        body.append('};')
+        return ['    ' + line for line in body]
 
     def _write_wrapfunctions_cpp(self) -> None:
         """
