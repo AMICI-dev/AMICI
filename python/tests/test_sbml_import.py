@@ -50,6 +50,7 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  observables=None,
                                  compute_conservation_laws=False)
 
+
 @pytest.mark.skipif(sys.platform in ['win32', 'cygwin'],
                     reason="windows stinks")
 def test_nosensi(simple_sbml_model):

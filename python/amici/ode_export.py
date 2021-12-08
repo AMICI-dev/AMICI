@@ -83,7 +83,7 @@ class _FunctionInfo:
     assume_pow_positivity: bool = False
     sparse: bool = False
     dont_generate_body: bool = False
-    body: Union[None, str] = None
+    body: str = ''
 
 
 # Information on a model-specific generated C++ function
@@ -1508,7 +1508,6 @@ class ODEModel:
 
         :return:
             list of names
-
         """
         if name not in self._names:
             self._generate_name(name)
@@ -2598,7 +2597,7 @@ class ODEExporter:
             if not func_info.dont_generate_body:
                 dec = log_execution_time(f'writing {func_name}.cpp', logger)
                 dec(self._write_function_file)(func_name)
-            if func_name in sparse_functions and func_info.body is not None:
+            if func_name in sparse_functions and func_info.body:
                 self._write_function_index(func_name, 'colptrs')
                 self._write_function_index(func_name, 'rowvals')
 
@@ -2607,10 +2606,10 @@ class ODEExporter:
             # check for both basic variables (not in functions) and function
             # computed values
             if (name in self.functions
-                and self.functions[name].body is None
-                and name not in nobody_functions) or \
-                    (name not in self.functions and
-                     len(self.model.sym(name)) == 0):
+                and not self.functions[name].body
+                and name not in nobody_functions) \
+                    or (name not in self.functions and
+                        len(self.model.sym(name)) == 0):
                 continue
             self._write_index_files(name)
 
@@ -3208,7 +3207,7 @@ class ODEExporter:
             if func_name in nobody_functions:
                 continue
 
-            if func_info.body is None:
+            if not func_info.body:
                 tpl_data[f'{func_name.upper()}_DEF'] = ''
 
                 if func_name in sensi_functions + sparse_sensi_functions and \
