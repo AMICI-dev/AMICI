@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Optional, Union
 
-from import_utils import grouper
+from import_utils import _parse_special_functions
 import xml.dom.minidom
 import libsbml
 import sympy as sp
@@ -575,40 +575,6 @@ def _check_unsupported_functions(
                                 f'{expression_type}: "{full_sym}"!')
         if fun is not sym:
             _check_unsupported_functions(fun, expression_type)
-
-
-def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
-    """
-    Recursively checks the symbolic expression for functions which have be
-    to parsed in a special way, such as piecewise functions
-
-    :param sym:
-        symbolic expressions
-
-    :param toplevel:
-        as this is called recursively, are we in the top level expression?
-    """
-    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
-
-    if sym.__class__.__name__ == 'abs':
-        return sp.Abs(sym._args[0])
-    elif sym.__class__.__name__ == 'xor':
-        return sp.Xor(*sym.args)
-    elif sym.__class__.__name__ == 'piecewise':
-        # how many condition-expression pairs will we have?
-        return sp.Piecewise(*grouper(args, 2, True))
-    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
-        sym._args = args
-    elif toplevel:
-        # Replace boolean constants by numbers so they can be differentiated
-        #  must not replace in Piecewise function. Therefore, we only replace
-        #  it the complete expression consists only of a Boolean value.
-        if isinstance(sym, spTrue):
-            sym = sp.Float(1.0)
-        elif isinstance(sym, spFalse):
-            sym = sp.Float(0.0)
-
-    return sym
 
 
 def _parse_logical_operators(
