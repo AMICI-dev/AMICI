@@ -2824,10 +2824,11 @@ class ODEExporter:
             body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
 
-        if body:
-            func_info.body = body
-        else:
+        if not body:
             return
+
+        self.functions[function].body = body
+
         lines += body
         lines.extend([
             '}',
@@ -2844,9 +2845,9 @@ class ODEExporter:
                 lines.insert(0, fun['include'])
 
         # if not body is None:
-        with open(os.path.join(
-                self.model_path, f'{self.model_name}_{function}.cpp'), 'w'
-        ) as fileout:
+        filename = os.path.join(self.model_path,
+                                f'{self.model_name}_{function}.cpp')
+        with open(filename, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _write_function_index(self, function: str, indextype: str) -> None:
