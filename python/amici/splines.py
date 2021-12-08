@@ -94,9 +94,9 @@ class UniformGrid(collections.abc.Sequence):
         if step is None:
             if length is None:
                 raise ValueError("One of step/length must be specified!")
-            elif not isinstance(length, Integral):
+            if not isinstance(length, Integral):
                 raise TypeError("Length must be an integer!")
-            elif length < 2:
+            if length < 2:
                 raise ValueError("Length must be at least 2!")
             step = (stop - start) / (length - 1)
         elif length is not None:
@@ -195,7 +195,7 @@ class AbstractSpline(ABC):
 
         :param xx:
             The points at which the spline values are known.
-            Currently they can only depend on constant parameters.
+            Currently, they can only depend on constant parameters.
             These points should be strictly increasing.
             This argument will be sympified.
 
@@ -227,7 +227,7 @@ class AbstractSpline(ABC):
             on both sides.
             Extrapolation methods supported:
             * `None` or `'no_extrapolation'`: no extrapolation should be
-              performed. An exception will be raise in the C++ code
+              performed. An exception will be raised in the C++ code
               if the spline is evaluated outside the base interval.
               In the fallback SBML symbolic expression
               `'polynomial'` extrapolation will be used.
@@ -291,14 +291,13 @@ class AbstractSpline(ABC):
                 'the first and last elements of yy must be equal!'
             )
 
-        self._sbml_id = sbml_id
+        self._sbml_id: sp.Symbol = sbml_id
         self._x = x
         self._xx = xx
         self._yy = yy
         self._bc = bc
         self._extrapolate = extrapolate
         self._logarithmic_parametrization = logarithmic_parametrization
-
         self._formula_cache = {}
 
     def _normalize_bc_and_extrapolate(self, bc, extrapolate):
@@ -559,8 +558,8 @@ class AbstractSpline(ABC):
 
     @abstractmethod
     def _poly_variable(self, x, i) -> sp.Basic:
-        # This function (and not poly_variable)
-        # should be implemented by the subclasses
+        """This function (and not poly_variable) should be implemented by the
+        subclasses"""
         raise NotImplementedError()
 
     @abstractmethod
@@ -669,7 +668,6 @@ class AbstractSpline(ABC):
             cache=True,
             **kwargs
     ) -> sp.Piecewise:
-
         # Cache formulas in the case they are reused
         if cache:
             if 'extrapolate' in kwargs.keys():
@@ -813,9 +811,7 @@ class AbstractSpline(ABC):
 
     @property
     def amiciAnnotation(self) -> str:
-        """
-        An SBML annotation describing the spline.
-        """
+        """An SBML annotation describing the spline."""
         annotation = f'<amici:spline xmlns:amici="{annotation_namespace}"'
         for (attr, value) in self._annotation_attributes().items():
             if isinstance(value, bool):
@@ -893,11 +889,11 @@ class AbstractSpline(ABC):
             auto_add: Union[bool, str] = False,
             x_nominal: Sequence[float] = None,
             y_nominal: Optional[Union[Sequence[float], float]] = None,
+            x_units: Optional[str] = None,
             y_units: Optional[str] = None,
-            x_units: Optional[str] = None
     ):
         """
-        Function add the spline to an SBML model using an assignment rule
+        Function to add the spline to an SBML model using an assignment rule
         with AMICI-specific annotations.
 
         :param model:
@@ -1096,13 +1092,13 @@ class AbstractSpline(ABC):
         del attributes['spline_method']
         kwargs = cls._fromAnnotation(attributes, children)
 
-        if len(attributes) != 0:
+        if attributes:
             raise ValueError(
                 'Unprocessed attributes in spline annotation!\n' +
                 str(attributes)
             )
 
-        if len(children) != 0:
+        if children:
             raise ValueError(
                 'Unprocessed children in spline annotation!\n' +
                 str(children)
@@ -1317,7 +1313,7 @@ class CubicHermiteSpline(AbstractSpline):
 
         :param xx:
             The points at which the spline values are known.
-            Currently they can only depend on constant parameters.
+            Currently, they can only depend on constant parameters.
             These points should be strictly increasing.
             This argument will be sympified.
 
