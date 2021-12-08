@@ -348,7 +348,7 @@ def var_in_function_signature(name: str, varname: str) -> bool:
     """
     return name in functions \
         and re.search(
-            rf'const (realtype|double) \*{varname}[0]*[,)]+',
+            rf'const (realtype|double) \*{varname}[0]*(,|$)+',
             functions[name].arguments
         )
 
