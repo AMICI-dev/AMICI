@@ -119,7 +119,7 @@ functions = {
         _FunctionInfo(
             'realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *dtcldp,'
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp, '
             'const realtype *spl, const realtype *sspl',
             assume_pow_positivity=True, sparse=True
         ),
@@ -141,11 +141,15 @@ functions = {
     'sspl':
         _FunctionInfo(generate_body=False),
     'spline_values':
-        _FunctionInfo('const realtype *p, const realtype *k',
-                      generate_body=False),
+        _FunctionInfo(
+            'const realtype *p, const realtype *k',
+            generate_body=False
+        ),
     'spline_slopes':
-        _FunctionInfo('(const realtype *p, const realtype *k',
-                      generate_body=False),
+        _FunctionInfo(
+            'const realtype *p, const realtype *k',
+            generate_body=False
+        ),
     'dspline_valuesdp':
         _FunctionInfo(
             'realtype *dspline_valuesdp, const realtype *p, const realtype *k'
@@ -2691,11 +2695,11 @@ class ODEExporter:
             if func_info.generate_body:
                 dec = log_execution_time(f'writing {func_name}.cpp', logger)
                 dec(self._write_function_file)(func_name)
+            elif func_name == 'spline_constructors':
+                self._write_function_file(func_name)
             if func_name in sparse_functions and func_info.body:
                 self._write_function_index(func_name, 'colptrs')
                 self._write_function_index(func_name, 'rowvals')
-            if func_name == 'spline_constructors':
-                self._write_function_file(func_name)
 
         for name in self.model.sym_names():
             # only generate for those that have nontrivial implementation,
