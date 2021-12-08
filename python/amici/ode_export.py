@@ -2780,11 +2780,10 @@ class ODEExporter:
         # don't add includes for files that won't be generated.
         # Unfortunately we cannot check for `self.functions[sym].body`
         # here since it may not have been generated yet.
-        for match in re.findall(
-                r'const (realtype|double) \*([\w]+)[0]*(,|$)+',
+        for sym in re.findall(
+                r'const (?:realtype|double) \*([\w]+)[0]*(?:,|$)',
                 func_info.arguments
         ):
-            sym = match[1]
             if sym not in self.model.sym_names():
                 continue
 
