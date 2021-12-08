@@ -2870,9 +2870,6 @@ class ODEExporter:
         :param function:
             name of the function to be written (see self.functions)
         """
-        if function in ("spline_constructors", "dspline_valuesdp", "dspline_slopesdp"):
-            print()
-
         # first generate the equations to make sure we have everything we
         # need in subsequent steps
         if function in sparse_functions:
@@ -3233,7 +3230,7 @@ class ODEExporter:
 
     def _get_spline_constructors_body(self):
         if not self.model.splines:
-            return ""
+            return ["return {};"]
 
         body = ['    std::vector<HermiteSpline> splines;', '']
         for ispl, spline in enumerate(self.model.splines):
@@ -3713,7 +3710,7 @@ def get_model_override_implementation(fun: str, name: str,
     if nobody:
         impl += '}}\n'
     else:
-        impl += '\n{ind8}{fun}_{name}({eval_signature});\n{ind4}}}\n'
+        impl += '\n{ind8}{returns}{fun}_{name}({eval_signature});\n{ind4}}}\n'
 
     func_info = functions[fun]
 
@@ -3724,7 +3721,8 @@ def get_model_override_implementation(fun: str, name: str,
         name=name,
         signature=func_info.arguments,
         eval_signature=remove_typedefs(func_info.arguments),
-        return_type=func_info.return_type
+        return_type=func_info.return_type,
+        returns='return ' if func_info.return_type != 'void' else ''
     )
 
 
