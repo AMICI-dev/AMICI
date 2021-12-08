@@ -133,7 +133,6 @@ functions = {
         _FunctionInfo(
             'const realtype *p, const realtype *k',
             return_type='std::vector<HermiteSpline>',
-            generate_body=False
         ),
     'spl':
         _FunctionInfo(generate_body=False),
@@ -2871,6 +2870,8 @@ class ODEExporter:
         :param function:
             name of the function to be written (see self.functions)
         """
+        if function in ("spline_constructors", "dspline_valuesdp", "dspline_slopesdp"):
+            print()
 
         # first generate the equations to make sure we have everything we
         # need in subsequent steps
@@ -2944,6 +2945,7 @@ class ODEExporter:
             body = self._get_spline_constructors_body()
         else:
             body = self._get_function_body(function, equations)
+
         if self.assume_pow_positivity and func_info.assume_pow_positivity:
             body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
@@ -2952,10 +2954,7 @@ class ODEExporter:
             body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
 
-        if not body and not 'spline' in function:
-            # NB spline functions need to be written even if their body is empty
-            #    (i.e. no splines are used) otherwise there are linking errors
-            #    when importing the Python module
+        if not body:
             return
 
         self.functions[function].body = body
@@ -2992,7 +2991,6 @@ class ODEExporter:
         :param indextype:
             type of index {'colptrs', 'rowvals'}
         """
-
         if indextype == 'colptrs':
             values = self.model.colptrs(function)
             setter = 'indexptrs'
@@ -3234,6 +3232,9 @@ class ODEExporter:
         return [line for line in lines if line]
 
     def _get_spline_constructors_body(self):
+        if not self.model.splines:
+            return ""
+
         body = ['    std::vector<HermiteSpline> splines;', '']
         for ispl, spline in enumerate(self.model.splines):
             # create the vector with the node locations
@@ -3757,7 +3758,8 @@ def get_sunindex_override_implementation(fun: str, name: str,
     if nobody:
         impl += '}}\n'
     else:
-        impl += '{ind8}{fun}_{indextype}_{name}({eval_signature});\n{ind4}}}\n'
+        impl += '\n{ind8}{fun}_{indextype}_{name}({eval_signature});'\
+                '\n{ind4}}}\n'
 
     return impl.format(
         ind4=' ' * 4,

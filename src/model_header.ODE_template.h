@@ -69,13 +69,9 @@ TPL_DELTASX_DEF
 TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
-
-extern std::vector<HermiteSpline> spline_constructors_TPL_MODELNAME(const realtype *p,
-                                                                    const realtype *k);
-extern void dspline_valuesdp_TPL_MODELNAME(realtype *dspline_valuesdp,
-                                           const realtype *p, const realtype *k);
-extern void dspline_slopesdp_TPL_MODELNAME(realtype *dspline_slopesdp,
-                                           const realtype *p, const realtype *k);
+TPL_SPLINE_CONSTRUCTORS_DEF
+TPL_DSPLINE_VALUESDP_DEF
+TPL_DSPLINE_SLOPESDP_DEF
 
 /**
  * @brief AMICI-generated model subclass.
@@ -305,21 +301,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_COLPTRS_IMPL
     TPL_DJYDY_ROWVALS_IMPL
 
-    virtual std::vector<HermiteSpline> fspline_constructors(const realtype *p,
-                                                            const realtype *k) override {
-        return spline_constructors_TPL_MODELNAME(p, k);
-    }
-
-    virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
-                                   const realtype *p,
-                                   const realtype *k) override {
-        dspline_valuesdp_TPL_MODELNAME(dspline_valuesdp, p, k);
-    }
-    virtual void fdspline_slopesdp(realtype *dspline_slopesdp,
-                                   const realtype *p,
-                                   const realtype *k) override {
-        dspline_valuesdp_TPL_MODELNAME(dspline_slopesdp, p, k);
-    }
+    TPL_SPLINE_CONSTRUCTORS_IMPL
+    TPL_DSPLINE_VALUESDP_IMPL
+    TPL_DSPLINE_SLOPESDP_IMPL
 
     TPL_DWDP_IMPL
     TPL_DWDP_COLPTRS_IMPL
@@ -469,7 +453,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_X_SOLVER_IMPL
 
     TPL_TOTAL_CL_IMPL
-
 
     std::string getName() const override {
         return "TPL_MODELNAME";
