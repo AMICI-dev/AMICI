@@ -73,8 +73,8 @@ class _FunctionInfo:
         specifies whether the result of this function will be stored in sparse
         format. sparse format means that the function will only return an
         array of nonzero values and not a full matrix.
-    :ivar dont_generate_body:
-        indicates that no model-specific implementation is to be generated
+    :ivar generate_body:
+        indicates whether a model-specific implementation is to be generated
     :ivar body:
         the actual function body. will be filled later
     """
@@ -82,7 +82,7 @@ class _FunctionInfo:
     return_type: str = 'void'
     assume_pow_positivity: bool = False
     sparse: bool = False
-    dont_generate_body: bool = False
+    generate_body: bool = True
     body: str = ''
 
 
@@ -182,16 +182,16 @@ functions = {
             'realtype *stau, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *sx, const int ip, const int ie',
-            dont_generate_body=True
+            generate_body=False
         ),
     'drootdt':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'drootdt_total':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'drootdp':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'drootdx':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'stau':
         _FunctionInfo(
             'realtype *stau, const realtype t, const realtype *x, '
@@ -205,11 +205,11 @@ functions = {
             'const int ie, const realtype *xdot, const realtype *xdot_old'
         ),
     'ddeltaxdx':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'ddeltaxdt':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'ddeltaxdp':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'deltasx':
         _FunctionInfo(
             'realtype *deltasx, const realtype t, const realtype *x, '
@@ -255,7 +255,7 @@ functions = {
             assume_pow_positivity=True
         ),
     'xdot_old':
-        _FunctionInfo(dont_generate_body=True),
+        _FunctionInfo(generate_body=False),
     'y':
         _FunctionInfo(
             'realtype *y, const realtype t, const realtype *x, '
@@ -281,7 +281,7 @@ sparse_functions = [
 # list of nobody functions
 nobody_functions = [
     func_name for func_name, func_info in functions.items()
-    if func_info.dont_generate_body
+    if not func_info.generate_body
 ]
 # list of sensitivity functions
 sensi_functions = [
@@ -2594,7 +2594,7 @@ class ODEExporter:
                     not self.generate_sensitivity_code:
                 continue
 
-            if not func_info.dont_generate_body:
+            if func_info.generate_body:
                 dec = log_execution_time(f'writing {func_name}.cpp', logger)
                 dec(self._write_function_file)(func_name)
             if func_name in sparse_functions and func_info.body:
