@@ -2721,10 +2721,9 @@ class ODEExporter:
         if name not in self.model.sym_names():
             raise ValueError(f'Unknown symbolic array: {name}')
 
-        if name in sparse_functions:
-            symbols = self.model.sparsesym(name)
-        else:
-            symbols = self.model.sym(name).T
+        symbols = self.model.sparsesym(name) if name in sparse_functions \
+            else self.model.sym(name).T
+
         # flatten multiobs
         if isinstance(next(iter(symbols), None), list):
             symbols = [symbol for obs in symbols for symbol in obs]
