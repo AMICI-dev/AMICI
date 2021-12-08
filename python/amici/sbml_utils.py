@@ -9,9 +9,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Optional, Union, Iterable, Any
+    from typing import Optional, Union
 
-import itertools as itt
+from import_utils import grouper
 import xml.dom.minidom
 import libsbml
 import sympy as sp
@@ -632,26 +632,3 @@ def _parse_logical_operators(
 
     return (math_str.replace('&&', '&')).replace('||', '|')
 
-
-def grouper(
-        iterable: Iterable, n: int,
-        fillvalue: Any = None
-        ) -> Iterable[Iterable]:
-    """
-    Collect data into fixed-length chunks or blocks
-
-    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-
-    :param iterable:
-        any iterable
-
-    :param n:
-        chunk length
-
-    :param fillvalue:
-        padding for last chunk if length < n
-
-    :return: itertools.zip_longest of requested chunks
-    """
-    args = [iter(iterable)] * n
-    return itt.zip_longest(*args, fillvalue=fillvalue)
