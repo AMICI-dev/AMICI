@@ -73,6 +73,10 @@ class _FunctionInfo:
         specifies whether the result of this function will be stored in sparse
         format. sparse format means that the function will only return an
         array of nonzero values and not a full matrix.
+    :ivar dont_generate_body:
+        indicates that no model-specific implementation is to be generated
+    :ivar body:
+        the actual function body. will be filled later
     """
     arguments: str = ''
     return_type: str = 'void'
