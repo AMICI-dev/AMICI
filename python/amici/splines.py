@@ -77,8 +77,8 @@ class UniformGrid(collections.abc.Sequence):
             length: Optional[Integral] = None,
             include_stop: bool = True
     ):
-        """
-        Create a new ``UniformGrid``.
+        """Create a new ``UniformGrid``.
+
         :param start:
             First point in the grid
         :param stop:
@@ -186,8 +186,7 @@ class AbstractSpline(ABC):
             extrapolate: BClike = None,
             logarithmic_parametrization: bool = False
     ):
-        """
-        Base constructor for ``AbstractSpline`` objects.
+        """Base constructor for ``AbstractSpline`` objects.
 
         :param sbml_id:
             The SBML ID of the parameter associated to the spline
@@ -214,13 +213,17 @@ class AbstractSpline(ABC):
             applied to both sides.
             Possible boundary conditions
             (allowed values depend on the ``AbstractSpline`` subclass):
-            * `None` or `'no_bc'`: boundary conditions are not needed
-              for this spline object;
-            * `'zeroderivative'`: first derivative set to zero;
-            * `'natural'`: second derivative set to zero;
-            * `'zeroderivative+natural'`: first and second derivatives
-              set to zero;
-            * `'periodic'`: periodic bc.
+
+            `None` or `'no_bc'`:
+                Boundary conditions are not needed for this spline object;
+            `'zeroderivative'`:
+                first derivative set to zero;
+            `'natural'`:
+                second derivative set to zero;
+            `'zeroderivative+natural'`:
+                first and second derivatives set to zero;
+            `'periodic'`:
+                periodic bc.
 
         :param extrapolate:
             Whether to extrapolate the spline outside the base interval
@@ -230,23 +233,28 @@ class AbstractSpline(ABC):
             If it is not a tuple, then the same extrapolation will be applied
             on both sides.
             Extrapolation methods supported:
-            * `None` or `'no_extrapolation'`: no extrapolation should be
-              performed. An exception will be raised in the C++ code
-              if the spline is evaluated outside the base interval.
-              In the fallback SBML symbolic expression
-              `'polynomial'` extrapolation will be used.
-            * `'polynomial'`: the cubic polynomial used in the nearest
-              spline segment will be used.
-            * `'constant'`: constant extrapolation will be used.
-              Requires `'zeroderivative'` boundary condition.
-              For splines which are continuous up to the second derivative,
-              it requires the stricter `'zeroderivative+natural'`
-              boundary condition.
-            * `'linear'`: linear extrapolation will be used.
-              For splines which are continuous up to the second derivative,
-              this requires the `'natural'` boundary condition.
-            * `'periodic'`: periodic extrapolation.
-              Requires `'periodic'` boundary conditions.
+
+            `None` or `'no_extrapolation'`:
+                no extrapolation should be performed. An exception will be
+                raised in the C++ code if the spline is evaluated outside the
+                base interval. In the fallback SBML symbolic expression
+                `'polynomial'` extrapolation will be used.
+            `'polynomial'`:
+                the cubic polynomial used in the nearest spline segment will be
+                used.
+            `'constant'`:
+                constant extrapolation will be used.
+                Requires `'zeroderivative'` boundary condition.
+                For splines which are continuous up to the second derivative,
+                it requires the stricter `'zeroderivative+natural'`
+                boundary condition.
+            `'linear'`:
+                linear extrapolation will be used.
+                For splines which are continuous up to the second derivative,
+                this requires the `'natural'` boundary condition.
+            `'periodic'`:
+                Periodic extrapolation. Requires `'periodic'` boundary
+                conditions.
 
         :param logarithmic_parametrization:
             Whether interpolation should be done in log-scale.
