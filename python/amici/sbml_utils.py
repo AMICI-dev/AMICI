@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 import sympy as sp
-
 if TYPE_CHECKING:
     from typing import Optional, Union, Tuple, Dict, Any
     SbmlID = Union[str, sp.Symbol]

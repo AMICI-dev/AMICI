@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .sbml_import import SbmlImporter
+    from . import sbml_import
     from typing import (
         Sequence,
         Union,
@@ -501,7 +501,7 @@ class AbstractSpline(ABC):
         """Spline method."""
         raise NotImplementedError()
 
-    def check_if_valid(self, importer: SbmlImporter) -> None:
+    def check_if_valid(self, importer: sbml_import.SbmlImporter) -> None:
         """
         Check if the spline described by this object can be correctly
         be implemented by AMICI. E.g., check whether the formulas
@@ -1203,7 +1203,7 @@ class AbstractSpline(ABC):
 
         return kwargs
 
-    def parameters(self, importer: SbmlImporter) -> Set[sp.Symbol]:
+    def parameters(self, importer: sbml_import.SbmlImporter) -> Set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
         from .ode_export import SymbolId
         return self._parameters().intersection(
@@ -1216,7 +1216,7 @@ class AbstractSpline(ABC):
             parameters.update(y.free_symbols)
         return parameters
 
-    def odeModelSymbol(self, importer: SbmlImporter) -> sp.Function:
+    def odeModelSymbol(self, importer: sbml_import.SbmlImporter) -> sp.Function:
         """
         Returns the `sympy` object to be used by
         :py:class:`amici.ode_export.ODEModel`.
@@ -1445,7 +1445,7 @@ class CubicHermiteSpline(AbstractSpline):
     def derivatives_by_fd(self) -> bool:
         return self._derivatives_by_fd
 
-    def check_if_valid(self, importer: SbmlImporter) -> None:
+    def check_if_valid(self, importer: sbml_import.SbmlImporter) -> None:
         """
         Check if the spline described by this object can be correctly
         be implemented by AMICI. E.g., check whether the formulas
