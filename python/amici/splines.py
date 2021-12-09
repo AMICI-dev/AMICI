@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         Any,
         List,
         Set,
+        Callable
     )
 
     BClike = Union[
