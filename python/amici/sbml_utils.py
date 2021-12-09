@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Optional, Union
 
-from import_utils import _parse_special_functions
+from .import_utils import _parse_special_functions
 import xml.dom.minidom
 import libsbml
 import sympy as sp
