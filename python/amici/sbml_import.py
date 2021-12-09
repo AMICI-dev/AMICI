@@ -33,7 +33,6 @@ from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import (
     annotation_namespace,
-    _check_unsupported_functions,
     _parse_logical_operators,
 )
 from .splines import AbstractSpline

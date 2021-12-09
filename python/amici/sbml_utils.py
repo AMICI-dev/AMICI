@@ -9,9 +9,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Optional, Union
+    from typing import Optional, Union, Tuple
+    SbmlID = Union[str, sp.Symbol]
 
-from .import_utils import _parse_special_functions
+from .import_utils import (
+    _parse_special_functions,
+    _check_unsupported_functions,
+)
 import xml.dom.minidom
 import libsbml
 import sympy as sp
@@ -36,7 +40,8 @@ class SbmlException(Exception):
 ###############################################################################
 
 
-def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
+def createSbmlModel(modelId: str, level: int = 2, version: int = 5) \
+        -> Tuple[libsbml.SBMLDocument, libsbml.Model]:
     """
     Helper for creating an empty SBML model.
 
@@ -62,10 +67,10 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5):
 ###############################################################################
 
 def addCompartment(
-        model,
-        compartmentId,
-        *,
-        size: float = 1.0
+    model: libsbml.Model,
+    compartmentId: SbmlID,
+    *,
+    size: float = 1.0,
 ) -> libsbml.Species:
     """
     Helper for adding a compartment to a SBML model.
@@ -101,13 +106,13 @@ def addCompartment(
 
 
 def addSpecies(
-        model: libsbml.Model,
-        speciesId,
-        *,
-        compartmentId: Optional[str] = None,
-        name: Union[bool, str, None] = None,
-        initial_amount: float = 0.0,
-        units: Optional[str] = None
+    model: libsbml.Model,
+    speciesId: SbmlID,
+    *,
+    compartmentId: Optional[str] = None,
+    name: Union[bool, str] = False,
+    initial_amount: float = 0.0,
+    units: Optional[str] = None,
 ) -> libsbml.Species:
     """
     Helper for adding a species to a SBML model.
@@ -168,13 +173,13 @@ def addSpecies(
 
 
 def addParameter(
-        model: libsbml.Model,
-        parameterId,
-        *,
-        name: Union[bool, str, None] = None,
-        value: Optional[float] = None,
-        units: Optional[str] = None,
-        constant: Optional[bool] = None
+    model: libsbml.Model,
+    parameterId: SbmlID,
+    *,
+    name: Union[bool, str] = False,
+    value: Optional[float] = None,
+    units: Optional[str] = None,
+    constant: Optional[bool] = None,
 ) -> libsbml.Parameter:
     """
     Helper for adding a parameter to a SBML model.
@@ -225,10 +230,10 @@ def addParameter(
 
 
 def addAssignmentRule(
-        model: libsbml.Model,
-        variableId,
-        formula,
-        ruleId: Optional[str] = None
+    model: libsbml.Model,
+    variableId: SbmlID,
+    formula,
+    ruleId: Optional[str] = None,
 ) -> libsbml.AssignmentRule:
     """
     Helper for adding an assignment rule to a SBML model.
@@ -276,10 +281,10 @@ def addAssignmentRule(
 
 
 def addRateRule(
-        model: libsbml.Model,
-        variableId,
-        formula,
-        ruleId: Optional[str] = None
+    model: libsbml.Model,
+    variableId: SbmlID,
+    formula,
+    ruleId: Optional[str] = None,
 ) -> libsbml.RateRule:
     """
     Helper for adding a rate rule to a SBML model.
@@ -327,9 +332,13 @@ def addRateRule(
 
 
 def addInflow(
-        model, speciesId, rate, *, reactionId: Optional[str] = None,
-        reversible: bool = False
-        ):
+    model: libsbml.Model,
+    speciesId: SbmlID,
+    rate,
+    *,
+    reactionId: Optional[str] = None,
+    reversible: bool = False,
+) -> libsbml.Reaction:
     speciesId = str(speciesId)
     if reactionId is None:
         reactionId = f'inflow_of_{speciesId}'
@@ -357,7 +366,8 @@ def addInflow(
 ###############################################################################
 
 
-def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
+def getSbmlUnits(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
+        -> Union[None, str]:
     """
     Try to get the units for expression `x`.
 
@@ -389,7 +399,7 @@ def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
 # SymPy to SBML MathML/AST conversion
 
 
-def pretty_xml(ugly_xml: str):
+def pretty_xml(ugly_xml: str) -> str:
     dom = xml.dom.minidom.parseString(ugly_xml)
     pretty_xml = dom.toprettyxml()
     # We must delete the first line (xml header)
@@ -404,12 +414,12 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
     2. symbols with name 'time' are converted to the SBML time symbol
     """
 
-    def _print_Symbol(self, sym):
+    def _print_Symbol(self, sym: sp.Symbol) -> xml.dom.minidom.Element:
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
 
-    def doprint(self, expr, *, pretty: bool = False):
+    def doprint(self, expr, *, pretty: bool = False) -> str:
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
         mathml += super().doprint(expr)
         mathml += '</math>'
@@ -422,8 +432,8 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
 
 
 def sbmlMathML(
-        expr, *, replace_time: bool = False, pretty: bool = False, **settings
-        ) -> str:
+    expr, *, replace_time: bool = False, pretty: bool = False, **settings
+) -> str:
     """
     Prints a SymPy expression to a MathML expression parsable by libSBML.
 
@@ -492,9 +502,12 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
 
 
 def mathml2sympy(
-        mathml: str, *, evaluate: bool = False, locals=None,
-        expression_type=None
-        ):
+    mathml: str,
+    *,
+    evaluate: bool = False,
+    locals: Optional[Dict[str, Any]] = None,
+    expression_type: str = 'mathml2sympy',
+) -> sp.Basic:
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise ValueError(
@@ -517,66 +530,9 @@ def mathml2sympy(
     return expr
 
 
-def _check_unsupported_functions(
-        sym: sp.Basic,
-        expression_type: str,
-        full_sym: sp.Basic = None
-        ):
-    """
-    Recursively checks the symbolic expression for unsupported symbolic
-    functions
-
-    :param sym:
-        symbolic expressions
-
-    :param expression_type:
-        type of expression, only used when throwing errors
-    """
-    if full_sym is None:
-        full_sym = sym
-
-    unsupported_functions = (
-        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.functions.sec, sp.functions.csc, sp.functions.cot,
-        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
-        sp.functions.acsch, sp.functions.acoth,
-        sp.Mod, sp.core.function.UndefinedFunction
-    )
-
-    unsupp_fun_type = next(
-        (
-            fun_type
-            for fun_type in unsupported_functions
-            if isinstance(sym.func, fun_type)
-        ),
-        None
-    )
-    if unsupp_fun_type:
-        raise SbmlException(f'Encountered unsupported expression '
-                            f'"{sym.func}" of type '
-                            f'"{unsupp_fun_type}" as part of a '
-                            f'{expression_type}: "{full_sym}"!')
-    for fun in list(sym._args) + [sym]:
-        unsupp_fun_type = next(
-            (
-                fun_type
-                for fun_type in unsupported_functions
-                if isinstance(fun, fun_type)
-            ),
-            None
-        )
-        if unsupp_fun_type:
-            raise SbmlException(f'Encountered unsupported expression '
-                                f'"{fun}" of type '
-                                f'"{unsupp_fun_type}" as part of a '
-                                f'{expression_type}: "{full_sym}"!')
-        if fun is not sym:
-            _check_unsupported_functions(fun, expression_type)
-
-
 def _parse_logical_operators(
-        math_str: Union[str, float, None]
-        ) -> Union[str, float, None]:
+    math_str: Union[str, float, None],
+) -> Union[str, float, None]:
     """
     Parses a math string in order to replace logical operators by a form
     parsable for sympy
@@ -594,4 +550,3 @@ def _parse_logical_operators(
                             'operation.')
 
     return (math_str.replace('&&', '&')).replace('||', '|')
-
