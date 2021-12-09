@@ -1,13 +1,9 @@
 import math
 import os
-import sys
-import tempfile
 import uuid
 from typing import List, Optional, Union
 
 import amici
-import numpy as np
-import pandas as pd
 import petab
 import pytest
 import sympy as sp
@@ -18,6 +14,10 @@ from amici.sbml_utils import (addCompartment, addInflow, addParameter,
                               addRateRule, addSpecies, amici_time_symbol,
                               createSbmlModel)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+
+import numpy as np
+import pandas as pd
 
 
 def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
@@ -303,17 +303,13 @@ def simulate_splines(
     :param kwargs:
         passed to `create_petab_problem`
     """
-
     # If no working directory is given, create a temporary one
     if folder is None:
-        if keep_temporary or sys.platform in ['win32', 'cygwin']:
-            # Windows fails to delete a temporary directory if an AMICI model
-            #  (or any other extension) was loaded from there. Therefore, don't
-            #  attempt to delete.
-            folder = tempfile.TemporaryDirectory().name
+        if keep_temporary:
+            folder = TemporaryDirectory().name
             print(f"temporary folder is {folder}")
         else:
-            with tempfile.TemporaryDirectory() as folder:
+            with TemporaryDirectory() as folder:
                 return simulate_splines(
                     splines, params_true, initial_values, folder=folder,
                     benchmark=benchmark, rtol=rtol, atol=atol,
