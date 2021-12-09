@@ -1,6 +1,6 @@
 """
 SBML Utilities
-------------
+--------------
 This module provides helper functions for SBML files.
 """
 
@@ -65,17 +65,17 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5) \
     Helper for creating an empty SBML model.
 
     :param modelId:
-    SBML ID of the new model.
+        SBML ID of the new model.
 
     :param level:
-    Level of the new SBML document.
+        Level of the new SBML document.
 
     :param version:
-    Version of the new SBML document.
+        Version of the new SBML document.
 
     :return:
-    a tuple containing the newly created `libsbml.SBMLDocument`
-    and `libsbml.Model`.
+        A tuple containing the newly created :py:class:`libsbml.SBMLDocument`
+        and :py:class:`libsbml.Model`.
     """
     doc = libsbml.SBMLDocument(level, version)
     model = doc.createModel()
@@ -95,16 +95,16 @@ def addCompartment(
     Helper for adding a compartment to a SBML model.
 
     :param model:
-    SBML model to which the compartment is to be added.
+        SBML model to which the compartment is to be added.
 
     :param compartmentId:
-    SBML ID of the new compartment.
+        SBML ID of the new compartment.
 
     :param size:
-    Size of the new compartment. Defaults to `1.0`.
+        Size of the new compartment. Defaults to `1.0`.
 
     :return:
-    the new compartment as a `libsbml.Compartment` object.
+        The new compartment as a :py:class:`libsbml.Compartment` object.
     """
     compartmentId = str(compartmentId)
 
@@ -137,23 +137,23 @@ def addSpecies(
     Helper for adding a species to a SBML model.
 
     :param model:
-    SBML model to which the species is to be added.
+        SBML model to which the species is to be added.
 
     :param speciesId:
-    SBML ID of the new species.
+        SBML ID of the new species.
 
     :param compartmentId:
-    Compartment ID for the new species.
-    If there is only one compartment it can be auto-selected.
+        Compartment ID for the new species.
+        If there is only one compartment it can be auto-selected.
 
     :param initial_amount:
-    Initial amount of the new species.
+        Initial amount of the new species.
 
     :param units:
-    Units attribute for the new species.
+        Units attribute for the new species.
 
     :return:
-    the new species as a `libsbml.Species` object.
+        The new species as a :py:class:`libsbml.Species` object.
     """
     speciesId = str(speciesId)
     if name is True:
@@ -206,22 +206,22 @@ def addParameter(
     Helper for adding a parameter to a SBML model.
 
     :param model:
-    SBML model to which the parameter is to be added.
+        SBML model to which the parameter is to be added.
 
     :param parameterId:
-    SBML ID of the new parameter.
+        SBML ID of the new parameter.
 
     :param value:
-    Value attribute for the new parameter.
+        Value attribute for the new parameter.
 
     :param units:
-    Units attribute for the new parameter.
+        Units attribute for the new parameter.
 
     :param constant:
-    Constant attribute for the new parameter.
+        Constant attribute for the new parameter.
 
     :return:
-    the new parameter as a `libsbml.Parameter` object.
+        The new parameter as a :py:class:`libsbml.Parameter` object.
     """
     parameterId = str(parameterId)
     if name is True:
@@ -260,20 +260,20 @@ def addAssignmentRule(
     Helper for adding an assignment rule to a SBML model.
 
     :param model:
-    SBML model to which the assignment rule is to be added.
+        SBML model to which the assignment rule is to be added.
 
     :param variableId:
-    SBML ID of the quantity for which the assignment rule is to be added.
+        SBML ID of the quantity for which the assignment rule is to be added.
 
     :param formula:
-    Formula for the assignment rule (it will be sympified).
+        Formula for the assignment rule (it will be sympified).
 
     :param ruleId:
-    SBML ID of the new assignment rule.
-    Defaults to `'assignment_' + variableId`.
+        SBML ID of the new assignment rule.
+        Defaults to `'assignment_' + variableId`.
 
     :return:
-    the assignment rule as a `libsbml.AssignmentRule` object.
+        The assignment rule as a :py:class:`libsbml.AssignmentRule` object.
     """
     variableId = str(variableId)
     if ruleId is None:
@@ -311,20 +311,20 @@ def addRateRule(
     Helper for adding a rate rule to a SBML model.
 
     :param model:
-    SBML model to which the rate rule is to be added.
+        SBML model to which the rate rule is to be added.
 
     :param variableId:
-    SBML ID of the quantity for which the rate rule is to be added.
+        SBML ID of the quantity for which the rate rule is to be added.
 
     :param formula:
-    Formula for the rate rule (it will be sympified).
+        Formula for the rate rule (it will be sympified).
 
     :param ruleId:
-    SBML ID of the new rate rule.
-    Defaults to `'rate_' + variableId`.
+        SBML ID of the new rate rule.
+        Defaults to `'rate_' + variableId`.
 
     :return:
-    the new rate rule as a `libsbml.RateRule` object.
+        The new rate rule as a :py:class:`libsbml.RateRule` object.
     """
     variableId = str(variableId)
     if ruleId is None:
@@ -389,15 +389,14 @@ def addInflow(
 
 def getSbmlUnits(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
         -> Union[None, str]:
-    """
-    Try to get the units for expression `x`.
+    """Try to get the units for expression `x`.
 
     :param model:
-    SBML model.
+        SBML model.
     :param x:
-    Expression to get the units of.
+        Expression to get the units of.
     :return:
-    A string if the units could be determined, otherwise `None`.
+        A string if the units could be determined, otherwise `None`.
     """
     # TODO can the SBML unit inference machinery be used?
     x = sp.sympify(x)
@@ -478,11 +477,11 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
     """
     Convert a SymPy expression to SBML math AST.
 
-        :param expr:
-            expression to be converted (will be sympified).
+    :param expr:
+        expression to be converted (will be sympified).
 
-        :param kwargs:
-            extra options for MathML conversion.
+    :param kwargs:
+        extra options for MathML conversion.
     """
     mathml = sbmlMathML(expr, **kwargs)
     ast = libsbml.readMathMLFromString(mathml)
