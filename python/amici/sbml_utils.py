@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     SbmlID = Union[str, sp.Symbol]
 
 from .import_utils import (
+    SBMLException,
     _parse_special_functions,
     _check_unsupported_functions,
 )
@@ -32,8 +33,19 @@ amici_time_symbol = sp.Symbol('t', real=True)
 annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
 
 
-class SbmlException(Exception):
-    """Exception class for SBML-related errors."""
+class SbmlInvalidIdSyntax(Exception):
+    pass
+
+
+class SbmlDuplicateComponentIdError(Exception):
+    pass
+
+
+class SbmlMissingComponentIdError(Exception):
+    pass
+
+
+class SbmlMathError(Exception):
     pass
 
 
@@ -93,13 +105,13 @@ def addCompartment(
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., parameter) have the same ID
     if model.getCompartment(compartmentId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A compartment with ID {compartmentId} has already been defined'
         )
 
     cmp = model.createCompartment()
     if cmp.setId(compartmentId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{compartmentId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{compartmentId} is not a valid SBML ID')
     cmp.setSize(size)
 
     return cmp
@@ -144,24 +156,26 @@ def addSpecies(
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., parameter) have the same ID
     if model.getSpecies(speciesId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A species with ID {speciesId} has already been defined'
         )
 
     if compartmentId is None:
         compartments = model.getListOfCompartments()
         if len(compartments) != 1:
-            raise SbmlException(
+            raise ValueError(
                 'Compartment auto-selection is possible '
                 'only if there is one and only one compartment.'
             )
         compartmentId = compartments[0].getId()
     elif not model.getCompartment(compartmentId):
-        raise SbmlException(f'No compartment with ID {compartmentId}')
+        raise SbmlMissingComponentIdError(
+            f'No compartment with ID {compartmentId}'
+        )
 
     sp = model.createSpecies()
     if sp.setIdAttribute(speciesId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{speciesId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{speciesId} is not a valid SBML ID')
     sp.setCompartment(compartmentId)
     sp.setInitialAmount(float(initial_amount))
     if units is not None:
@@ -210,13 +224,13 @@ def addParameter(
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
     if model.getParameter(parameterId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A parameter with ID {parameterId} has already been defined'
         )
 
     par = model.createParameter()
     if par.setIdAttribute(parameterId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{parameterId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{parameterId} is not a valid SBML ID')
     if units is not None:
         par.setUnits(str(units))
     if constant is not None:
@@ -262,19 +276,19 @@ def addAssignmentRule(
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
     if model.getRuleByVariable(variableId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A rule for parameter {variableId} has already been defined.'
         )
     if model.getRule(ruleId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A rule with SBML ID {ruleId} has already been defined.'
         )
 
     rule = model.createAssignmentRule()
     if rule.setVariable(variableId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{variableId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{variableId} is not a valid SBML ID')
     if rule.setIdAttribute(ruleId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{ruleId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{ruleId} is not a valid SBML ID')
     setSbmlMath(rule, formula)
 
     return rule
@@ -313,19 +327,19 @@ def addRateRule(
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
     if model.getRuleByVariable(variableId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A rule for parameter {variableId} has already been defined.'
         )
     if model.getRule(ruleId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A rule with SBML ID {ruleId} has already been defined.'
         )
 
     rule = model.createRateRule()
     if rule.setVariable(variableId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{variableId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{variableId} is not a valid SBML ID')
     if rule.setIdAttribute(ruleId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{ruleId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{ruleId} is not a valid SBML ID')
     setSbmlMath(rule, formula)
 
     return rule
@@ -344,13 +358,13 @@ def addInflow(
         reactionId = f'inflow_of_{speciesId}'
 
     if model.getReaction(reactionId):
-        raise SbmlException(
+        raise SbmlDuplicateComponentIdError(
             f'A reaction with SBML ID {reactionId} has already been defined.'
         )
 
     reaction = model.createReaction()
     if reaction.setId(reactionId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(f'{reactionId} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{reactionId} is not a valid SBML ID')
     reaction.setReversible(reversible)
 
     spr = reaction.createProduct()
@@ -466,7 +480,7 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
     mathml = sbmlMathML(expr, **kwargs)
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
-        raise SbmlException(
+        raise SbmlMathError(
             f'error while converting the following expression to SBML AST.\n'
             f'expression:\n{expr}\n'
             f'MathML:\n{pretty_xml(mathml)}'
@@ -490,7 +504,7 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
     """
     mathml = sbmlMathAST(expr, **kwargs)
     if obj.setMath(mathml) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlException(
+        raise SbmlMathError(
             f'Could not set math attribute of SBML object {obj}\n'
             f'expression:\n{expr}\n'
             f'MathML:\n{pretty_xml(mathml)}'
@@ -546,7 +560,7 @@ def _parse_logical_operators(
         return math_str
 
     if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SbmlException('Xor is currently not supported as logical '
+        raise SBMLException('Xor is currently not supported as logical '
                             'operation.')
 
     return (math_str.replace('&&', '&')).replace('||', '|')
