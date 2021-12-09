@@ -125,25 +125,27 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Clone this model instance.
      * @return A deep copy of this instance.
      */
-    virtual amici::Model *clone() const override {
+    amici::Model *clone() const override {
         return new Model_TPL_MODELNAME(*this);
     }
 
-    /** model specific implementation of fJrz
+    /**
+     * @brief model specific implementation of fJrz
      * @param nllh regularization for event measurements z
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
-     **/
-    virtual void fJrz(realtype *nllh, const int iz, const realtype *p,
-                      const realtype *k, const realtype *rz,
-                      const realtype *sigmaz) override {}
+     */
+    void fJrz(realtype *nllh, const int iz, const realtype *p,
+              const realtype *k, const realtype *rz,
+              const realtype *sigmaz) override {}
 
     TPL_JY_IMPL
 
-    /** model specific implementation of fJz
+    /**
+     * @brief model specific implementation of fJz
      * @param nllh negative log-likelihood for event measurements z
      * @param iz event output index
      * @param p parameter vector
@@ -151,12 +153,13 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurements at timepoint
-     **/
-    virtual void fJz(realtype *nllh, const int iz, const realtype *p,
-                     const realtype *k, const realtype *z,
-                     const realtype *sigmaz, const realtype *mz) override {}
+     */
+    void fJz(realtype *nllh, const int iz, const realtype *p,
+             const realtype *k, const realtype *z,
+             const realtype *sigmaz, const realtype *mz) override {}
 
-    /** model specific implementation of fdJrzdsigma
+    /**
+     * @brief model specific implementation of fdJrzdsigma
      * @param dJrzdsigma Sensitivity of event penalization Jrz w.r.t.
      * standard deviation sigmaz
      * @param iz event output index
@@ -164,27 +167,29 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param k constant vector
      * @param rz model root output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
-     **/
-    virtual void fdJrzdsigma(realtype *dJrzdsigma, const int iz,
-                             const realtype *p, const realtype *k,
-                             const realtype *rz,
-                             const realtype *sigmaz) override {}
+     */
+    void fdJrzdsigma(realtype *dJrzdsigma, const int iz,
+                     const realtype *p, const realtype *k,
+                     const realtype *rz,
+                     const realtype *sigmaz) override {}
 
-    /** model specific implementation of fdJrzdz
+    /**
+     * @brief model specific implementation of fdJrzdz
      * @param dJrzdz partial derivative of event penalization Jrz
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
      * @param rz model root output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
-     **/
-    virtual void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p,
-                         const realtype *k, const realtype *rz,
-                         const realtype *sigmaz) override {}
+     */
+    void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p,
+                 const realtype *k, const realtype *rz,
+                 const realtype *sigmaz) override {}
 
     TPL_DJYDSIGMA_IMPL
 
-    /** model specific implementation of fdJzdsigma
+    /**
+     * @brief model specific implementation of fdJzdsigma
      * @param dJzdsigma Sensitivity of event measurement
      * negative log-likelihood Jz w.r.t. standard deviation sigmaz
      * @param iz event output index
@@ -193,27 +198,29 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurement at timepoint
-     **/
-    virtual void fdJzdsigma(realtype *dJzdsigma, const int iz,
-                            const realtype *p, const realtype *k,
-                            const realtype *z, const realtype *sigmaz,
-                            const realtype *mz) override {}
+     */
+    void fdJzdsigma(realtype *dJzdsigma, const int iz,
+                    const realtype *p, const realtype *k,
+                    const realtype *z, const realtype *sigmaz,
+                    const realtype *mz) override {}
 
-    /** model specific implementation of fdJzdz
+    /**
+     * @brief model specific implementation of fdJzdz
      * @param dJzdz partial derivative of event measurement negative
-     *log-likelihood Jz
+     * log-likelihood Jz
      * @param iz event output index
      * @param p parameter vector
      * @param k constant vector
      * @param z model event output at timepoint
      * @param sigmaz event measurement standard deviation at timepoint
      * @param mz event measurement at timepoint
-     **/
-    virtual void fdJzdz(realtype *dJzdz, const int iz, const realtype *p,
-                        const realtype *k, const realtype *z,
-                        const realtype *sigmaz, const realtype *mz) override {}
+     */
+    void fdJzdz(realtype *dJzdz, const int iz, const realtype *p,
+                const realtype *k, const realtype *z,
+                const realtype *sigmaz, const realtype *mz) override {}
 
-    /** model specific implementation of fdeltasx
+    /**
+     * @brief model specific implementation of fdeltasx
      * @param deltaqB sensitivity update
      * @param t current time
      * @param x current state
@@ -225,19 +232,20 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
      * @param xB adjoint state
-     **/
-    virtual void fdeltaqB(realtype *deltaqB, const realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h, const int ip,
-                          const int ie, const realtype *xdot,
-                          const realtype *xdot_old,
-                          const realtype *xB) override {}
+     */
+    void fdeltaqB(realtype *deltaqB, const realtype t,
+                  const realtype *x, const realtype *p,
+                  const realtype *k, const realtype *h, const int ip,
+                  const int ie, const realtype *xdot,
+                  const realtype *xdot_old,
+                  const realtype *xB) override {}
 
     TPL_DELTASX_IMPL
 
     TPL_DELTAX_IMPL
 
-    /** model specific implementation of fdeltaxB
+    /**
+     * @brief model specific implementation of fdeltaxB
      * @param deltaxB adjoint state update
      * @param t current time
      * @param x current state
@@ -248,16 +256,17 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
      * @param xB current adjoint state
-     **/
-    virtual void fdeltaxB(realtype *deltaxB, const realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h, const int ie,
-                          const realtype *xdot, const realtype *xdot_old,
-                          const realtype *xB) override {}
+     */
+    void fdeltaxB(realtype *deltaxB, const realtype t,
+                  const realtype *x, const realtype *p,
+                  const realtype *k, const realtype *h, const int ie,
+                  const realtype *xdot, const realtype *xdot_old,
+                  const realtype *xB) override {}
 
-    /** model specific implementation of fdrzdp
+    /**
+     * @brief model specific implementation of fdrzdp
      * @param drzdp partial derivative of root output rz w.r.t. model parameters
-     *p
+     * p
      * @param ie event index
      * @param t current time
      * @param x current state
@@ -265,12 +274,13 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param k constant vector
      * @param h heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
-     **/
-    virtual void fdrzdp(realtype *drzdp, const int ie, const realtype t,
-                        const realtype *x, const realtype *p, const realtype *k,
-                        const realtype *h, const int ip) override {}
+     */
+    void fdrzdp(realtype *drzdp, const int ie, const realtype t,
+                const realtype *x, const realtype *p, const realtype *k,
+                const realtype *h, const int ip) override {}
 
-    /** model specific implementation of fdrzdx
+    /**
+     * @brief model specific implementation of fdrzdx
      * @param drzdx partial derivative of root output rz w.r.t. model states x
      * @param ie event index
      * @param t current time
@@ -278,24 +288,25 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param p parameter vector
      * @param k constant vector
      * @param h heaviside vector
-     **/
-    virtual void fdrzdx(realtype *drzdx, const int ie, const realtype t,
-                        const realtype *x, const realtype *p, const realtype *k,
-                        const realtype *h) override {}
+     */
+    void fdrzdx(realtype *drzdx, const int ie, const realtype t,
+                const realtype *x, const realtype *p, const realtype *k,
+                const realtype *h) override {}
 
     TPL_DSIGMAYDP_IMPL
 
-    /** model specific implementation of fsigmaz
+    /**
+     * @brief model specific implementation of fsigmaz
      * @param dsigmazdp partial derivative of standard deviation of event
-     *measurements
+     * measurements
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
      * @param ip sensitivity index
-     **/
-    virtual void fdsigmazdp(realtype *dsigmazdp, const realtype t,
-                            const realtype *p, const realtype *k,
-                            const int ip) override {}
+     */
+    void fdsigmazdp(realtype *dsigmazdp, const realtype t,
+                    const realtype *p, const realtype *k,
+                    const int ip) override {}
 
     TPL_DJYDY_IMPL
     TPL_DJYDY_COLPTRS_IMPL
@@ -333,9 +344,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_DYDP_IMPL
 
-    /** model specific implementation of fdzdp
+    /**
+     * @brief model specific implementation of fdzdp
      * @param dzdp partial derivative of event-resolved output z w.r.t. model
-     *parameters p
+     * parameters p
      * @param ie event index
      * @param t current time
      * @param x current state
@@ -343,53 +355,57 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param k constant vector
      * @param h heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
-     **/
-    virtual void fdzdp(realtype *dzdp, const int ie, const realtype t,
-                       const realtype *x, const realtype *p, const realtype *k,
-                       const realtype *h, const int ip) override {}
+     */
+    void fdzdp(realtype *dzdp, const int ie, const realtype t,
+               const realtype *x, const realtype *p, const realtype *k,
+               const realtype *h, const int ip) override {}
 
-    /** model specific implementation of fdzdx
+    /**
+     * @brief model specific implementation of fdzdx
      * @param dzdx partial derivative of event-resolved output z w.r.t. model
-     *states x
+     * states x
      * @param ie event index
      * @param t current time
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
      * @param h heaviside vector
-     **/
-    virtual void fdzdx(realtype *dzdx, const int ie, const realtype t,
-                       const realtype *x, const realtype *p, const realtype *k,
-                       const realtype *h) override {}
+     */
+    void fdzdx(realtype *dzdx, const int ie, const realtype t,
+               const realtype *x, const realtype *p, const realtype *k,
+               const realtype *h) override {}
 
     TPL_ROOT_IMPL
 
-    /** model specific implementation of frz
+    /**
+     * @brief model specific implementation of frz
      * @param rz value of root function at current timepoint (non-output events
-     *not included)
+     * not included)
      * @param ie event index
      * @param t current time
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
      * @param h heaviside vector
-     **/
-    virtual void frz(realtype *rz, const int ie, const realtype t,
-                     const realtype *x, const realtype *p, const realtype *k,
-                     const realtype *h) override {}
+     */
+    void frz(realtype *rz, const int ie, const realtype t,
+             const realtype *x, const realtype *p, const realtype *k,
+             const realtype *h) override {}
 
     TPL_SIGMAY_IMPL
 
-    /** model specific implementation of fsigmaz
+    /**
+     * @brief model specific implementation of fsigmaz
      * @param sigmaz standard deviation of event measurements
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
-     **/
-    virtual void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p,
-                         const realtype *k) override {}
+     */
+    void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p,
+                 const realtype *k) override {}
 
-    /** model specific implementation of fsrz
+    /**
+     * @brief model specific implementation of fsrz
      * @param srz Sensitivity of rz, total derivative
      * @param ie event index
      * @param t current time
@@ -399,17 +415,18 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param sx current state sensitivity
      * @param h heaviside vector
      * @param ip sensitivity index
-     **/
-    virtual void fsrz(realtype *srz, const int ie, const realtype t,
-                      const realtype *x, const realtype *p, const realtype *k,
-                      const realtype *h, const realtype *sx,
-                      const int ip) override {}
+     */
+    void fsrz(realtype *srz, const int ie, const realtype t,
+              const realtype *x, const realtype *p, const realtype *k,
+              const realtype *h, const realtype *sx,
+              const int ip) override {}
 
     TPL_STAU_IMPL
     TPL_SX0_IMPL
     TPL_SX0_FIXEDPARAMETERS_IMPL
 
-    /** model specific implementation of fsz
+    /**
+     * @brief model specific implementation of fsz
      * @param sz Sensitivity of rz, total derivative
      * @param ie event index
      * @param t current time
@@ -419,11 +436,11 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param h heaviside vector
      * @param sx current state sensitivity
      * @param ip sensitivity index
-     **/
-    virtual void fsz(realtype *sz, const int ie, const realtype t,
-                     const realtype *x, const realtype *p, const realtype *k,
-                     const realtype *h, const realtype *sx,
-                     const int ip) override {}
+     */
+    void fsz(realtype *sz, const int ie, const realtype t,
+             const realtype *x, const realtype *p, const realtype *k,
+             const realtype *h, const realtype *sx,
+             const int ip) override {}
 
     TPL_W_IMPL
 
@@ -435,7 +452,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_Y_IMPL
 
-    /** model specific implementation of fz
+    /**
+     * @brief model specific implementation of fz
      * @param z value of event output
      * @param ie event index
      * @param t current time
@@ -443,10 +461,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param p parameter vector
      * @param k constant vector
      * @param h heaviside vector
-     **/
-    virtual void fz(realtype *z, const int ie, const realtype t,
-                    const realtype *x, const realtype *p, const realtype *k,
-                    const realtype *h) override {}
+     */
+    void fz(realtype *z, const int ie, const realtype t,
+            const realtype *x, const realtype *p, const realtype *k,
+            const realtype *h) override {}
 
     TPL_X_RDATA_IMPL
 
@@ -462,7 +480,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get names of the model parameters
      * @return the names
      */
-    virtual std::vector<std::string> getParameterNames() const override {
+    std::vector<std::string> getParameterNames() const override {
         return std::vector<std::string>(parameterNames.begin(),
                                         parameterNames.end());
     }
@@ -471,7 +489,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get names of the model states
      * @return the names
      */
-    virtual std::vector<std::string> getStateNames() const override {
+    std::vector<std::string> getStateNames() const override {
         return std::vector<std::string>(stateNames.begin(), stateNames.end());
     }
 
@@ -479,7 +497,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    virtual std::vector<std::string> getFixedParameterNames() const override {
+    std::vector<std::string> getFixedParameterNames() const override {
         return std::vector<std::string>(fixedParameterNames.begin(),
                                         fixedParameterNames.end());
     }
@@ -488,7 +506,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get names of the observables
      * @return the names
      */
-    virtual std::vector<std::string> getObservableNames() const override {
+    std::vector<std::string> getObservableNames() const override {
         return std::vector<std::string>(observableNames.begin(),
                                         observableNames.end());
     }
@@ -497,7 +515,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get names of model expressions
      * @return Expression names
      */
-    virtual std::vector<std::string> getExpressionNames() const override {
+    std::vector<std::string> getExpressionNames() const override {
         return std::vector<std::string>(expressionNames.begin(),
                                         expressionNames.end());
     }
@@ -506,7 +524,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get ids of the model parameters
      * @return the ids
      */
-    virtual std::vector<std::string> getParameterIds() const override {
+    std::vector<std::string> getParameterIds() const override {
         return std::vector<std::string>(parameterIds.begin(),
                                         parameterIds.end());
     }
@@ -515,7 +533,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get ids of the model states
      * @return the ids
      */
-    virtual std::vector<std::string> getStateIds() const override {
+    std::vector<std::string> getStateIds() const override {
         return std::vector<std::string>(stateIds.begin(), stateIds.end());
     }
 
@@ -523,7 +541,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    virtual std::vector<std::string> getFixedParameterIds() const override {
+    std::vector<std::string> getFixedParameterIds() const override {
         return std::vector<std::string>(fixedParameterIds.begin(),
                                         fixedParameterIds.end());
     }
@@ -532,7 +550,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get ids of the observables
      * @return the ids
      */
-    virtual std::vector<std::string> getObservableIds() const override {
+    std::vector<std::string> getObservableIds() const override {
         return std::vector<std::string>(observableIds.begin(),
                                         observableIds.end());
     }
@@ -541,18 +559,18 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    virtual std::vector<std::string> getExpressionIds() const override {
+    std::vector<std::string> getExpressionIds() const override {
         return std::vector<std::string>(expressionIds.begin(),
                                         expressionIds.end());
     }
 
     /**
-     * @brief function indicating whether reinitialization of states depending on
-     fixed parameters is permissible
+     * @brief function indicating whether reinitialization of states depending
+     * on fixed parameters is permissible
      * @return flag indicating whether reinitialization of states depending on
-     fixed parameters is permissible
+     * fixed parameters is permissible
      */
-    virtual bool isFixedParameterStateReinitializationAllowed() const override {
+    bool isFixedParameterStateReinitializationAllowed() const override {
         return TPL_REINIT_FIXPAR_INITCOND;
     }
 
@@ -560,7 +578,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief returns the AMICI version that was used to generate the model
      * @return AMICI version string
      */
-    virtual std::string getAmiciVersion() const override {
+    std::string getAmiciVersion() const override {
         return "TPL_AMICI_VERSION_STRING";
     }
 
@@ -568,15 +586,15 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @brief returns the amici version that was used to generate the model
      * @return AMICI git commit hash
      */
-    virtual std::string getAmiciCommit() const override {
+    std::string getAmiciCommit() const override {
         return "TPL_AMICI_COMMIT_STRING";
     }
 
-    virtual bool hasQuadraticLLH() const override {
+    bool hasQuadraticLLH() const override {
         return TPL_QUADRATIC_LLH;
     }
 
-    virtual ObservableScaling getObservableScaling(int iy) const override {
+    ObservableScaling getObservableScaling(int iy) const override {
         return observableScalings.at(iy);
     }
 };
