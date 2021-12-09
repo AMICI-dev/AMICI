@@ -187,6 +187,9 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void initializeSplines();
 
+    /**
+     * @brief Initialization of spline sensitivity functions
+     */
     void initializeSplineSensitivities();
 
     /**
@@ -810,7 +813,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
-    
+
     /**
      * @brief Get scaling type for observable
      * @param iy observable index

@@ -752,7 +752,7 @@ class AbstractModel {
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
-                       const realtype *stcl, const realtype *spl, 
+                       const realtype *stcl, const realtype *spl,
                        const realtype *sspl);
 
     /**
@@ -778,12 +778,14 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
      * @param stcl sensitivities of total abundances for conservation laws
+     * @param spl spline value vector
+     * @param sspl sensitivities of spline values vector
      * @param ip sensitivity parameter index
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
-                       const realtype *stcl, const realtype *spl, 
+                       const realtype *stcl, const realtype *spl,
                        const realtype *sspl, int ip);
 
     /**
@@ -800,7 +802,7 @@ class AbstractModel {
      */
     virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w, const realtype *tcl, 
+                       const realtype *w, const realtype *tcl,
                        const realtype *spl);
 
     /**
@@ -847,7 +849,7 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constants vector
      */
-    virtual std::vector<HermiteSpline> fspline_constructors(const realtype *p, 
+    virtual std::vector<HermiteSpline> fspline_constructors(const realtype *p,
                                                             const realtype *k);
 
     /**
