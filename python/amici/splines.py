@@ -91,7 +91,7 @@ class UniformGrid(collections.abc.Sequence):
             Controls the behaviour when ``step`` is not ``None`` and
             ``stop - start`` is not an integer multiple of ``step``.
             If ``True`` (default), the actual endpoint of the grid will be
-            larger than ``stop``. Otherwise it will be smaller.
+            larger than ``stop``. Otherwise, it will be smaller.
         """
         start = sp.nsimplify(sp.sympify(start))
         stop = sp.nsimplify(sp.sympify(stop))
@@ -142,7 +142,7 @@ class UniformGrid(collections.abc.Sequence):
         """Distance between consecutive points."""
         if len(self._xx) > 1:
             return self._xx[1] - self._xx[0]
-        return sp.core.numbers.Zero
+        return sp.core.numbers.Zero()
 
     def __getitem__(self, i: Integral) -> sp.Basic:
         return self._xx[i]
@@ -345,7 +345,7 @@ class AbstractSpline(ABC):
                 'then the bc on the other side must be periodic too!'
             )
 
-        return tuple(bc)
+        return bc[0], bc[1]
 
     def _normalize_extrapolate(self, bc: NormalizedBC, extrapolate: BClike) \
             -> Tuple[NormalizedBC, NormalizedBC]:
@@ -444,7 +444,7 @@ class AbstractSpline(ABC):
                 '(in which case it will be periodic anyway).'
             )
 
-        return tuple(bc), tuple(extrapolate)
+        return (bc[0], bc[1]), (extrapolate[0], extrapolate[1])
 
     @property
     def sbml_id(self) -> sp.Symbol:
@@ -501,9 +501,8 @@ class AbstractSpline(ABC):
         """
         # TODO this is very much a draft
         from .ode_export import SymbolId
-        fixed_parameters = importer.symbols[SymbolId.FIXED_PARAMETER][
-            'identifier']
-        species = list(importer.symbols[SymbolId.SPECIES]['identifier'])
+        fixed_parameters: List[sp.Symbol] = list(importer.symbols[SymbolId.FIXED_PARAMETER].keys())
+        species: List[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES].keys())
 
         for x in self.xx:
             if not x.free_symbols.issubset(fixed_parameters):
@@ -515,13 +514,12 @@ class AbstractSpline(ABC):
             if y.free_symbols.intersection(species):
                 raise ValueError('yy should not depend on model species!')
 
-        fixed_parameters_values = importer.symbols[SymbolId.FIXED_PARAMETER][
-            'value']
+        fixed_parameters_values = [importer.symbols[SymbolId.FIXED_PARAMETER][fp]['value'] for fp in fixed_parameters]
         subs = dict(zip(fixed_parameters, fixed_parameters_values))
         xx_values = [sp.simplify(x.subs(subs)) for x in self.xx]
         for x in xx_values:
             assert x.is_Number
-        if not np.all(np.diff(xx) >= 0):
+        if not np.all(np.diff(xx_values) >= 0):
             raise ValueError('xx should be strictly increasing!')
 
     def poly(self, i: Integral, *, x=None) -> sp.Basic:
@@ -801,7 +799,6 @@ class AbstractSpline(ABC):
 
         formula = self._formula(x=x, cache=False, extrapolate=None)
 
-        T = self.period
         xA, xB = self.xx[0], self.xx[-1]
         k0, z0 = self._to_base_interval(x0, with_interval_number=True)
         k1, z1 = self._to_base_interval(x1, with_interval_number=True)
@@ -1040,7 +1037,7 @@ class AbstractSpline(ABC):
         return AbstractSpline.getAnnotation(rule) is not None
 
     @staticmethod
-    def getAnnotation(rule: libsbml.AssignmentRule) -> ET.Element:
+    def getAnnotation(rule: libsbml.AssignmentRule) -> Union[ET.Element, None]:
         """
         Extract AMICI spline annotation from an SBML assignment rule
         (given as a :py:class:`libsbml.AssignmentRule` object).
@@ -1448,7 +1445,7 @@ class CubicHermiteSpline(AbstractSpline):
         """
         # TODO this is very much a draft
         from .ode_export import SymbolId
-        species = list(importer.symbols[SymbolId.SPECIES]['identifier'])
+        species: List[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES].keys())
         for d in self.dd:
             if len(d.free_symbols.intersection(species)) != 0:
                 raise ValueError('dd should not depend on model species')
@@ -1465,13 +1462,13 @@ class CubicHermiteSpline(AbstractSpline):
             return self.dd[i] / self.yy[i]
         return self.dd[i]
 
-    def _poly_variable(self, x, i) -> sp.Basic:
+    def _poly_variable(self, x, i: Integral) -> sp.Basic:
         assert 0 <= i < len(self.xx) - 1
         dx = self.xx[i + 1] - self.xx[i]
         with evaluate(False):
             return (x - self.xx[i]) / dx
 
-    def _poly(self, t, i) -> sp.Basic:
+    def _poly(self, t, i: Integral) -> sp.Basic:
         """
         Return the symbolic expression for the spline restricted to the `i`-th
         interval as polynomial in the scaled variable `t`.

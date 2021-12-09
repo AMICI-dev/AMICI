@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     SbmlID = Union[str, sp.Symbol]
 
 from .import_utils import (
-    SBMLException,
     _parse_special_functions,
     _check_unsupported_functions,
 )
@@ -31,6 +30,10 @@ sbml_time_symbol = sp.Symbol('time', real=True)
 amici_time_symbol = sp.Symbol('t', real=True)
 
 annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
+
+
+class SBMLException(Exception):
+    pass
 
 
 class SbmlInvalidIdSyntax(Exception):

@@ -32,15 +32,12 @@ from .ode_export import (
 from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import (
+    SBMLException,
     annotation_namespace,
     _parse_logical_operators,
 )
 from .splines import AbstractSpline
 from . import has_clibs
-
-
-class SBMLException(Exception):
-    pass
 
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
