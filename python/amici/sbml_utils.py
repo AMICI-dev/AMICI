@@ -32,10 +32,6 @@ amici_time_symbol = sp.Symbol('t', real=True)
 annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
 
 
-class SBMLException(Exception):
-    pass
-
-
 class SbmlInvalidIdSyntax(Exception):
     pass
 
@@ -567,6 +563,7 @@ def _parse_logical_operators(
         return math_str
 
     if ' xor(' in math_str or ' Xor(' in math_str:
+        from .sbml_import import SBMLException
         raise SBMLException('Xor is currently not supported as logical '
                             'operation.')
 
