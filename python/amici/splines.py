@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         Any,
         List,
         Set,
+        Callable,
     )
 
     BClike = Union[
@@ -47,7 +48,7 @@ from .sbml_utils import (
     getSbmlUnits,
     addParameter,
     addAssignmentRule,
-    SbmlException
+    SbmlAnnotationError,
 )
 from numbers import Integral
 
@@ -993,7 +994,7 @@ class AbstractSpline(ABC):
         # Add annotation specifying spline method
         retcode = rule.setAnnotation(self.amiciAnnotation)
         if retcode != libsbml.LIBSBML_OPERATION_SUCCESS:
-            raise SbmlException('Could not set SBML annotation!')
+            raise SbmlAnnotationError('Could not set SBML annotation!')
 
         # Create additional assignment rule for periodic extrapolation
         # NB mod is not in the subset of MathML supported by SBML
@@ -1012,7 +1013,7 @@ class AbstractSpline(ABC):
                 f'<amici:discard xmlns:amici="{annotation_namespace}" />'
             )
             if retcode != libsbml.LIBSBML_OPERATION_SUCCESS:
-                raise SbmlException('Could not set SBML annotation!')
+                raise SbmlAnnotationError('Could not set SBML annotation!')
             addAssignmentRule(model, parameterId, formula)
 
     # def _replace_sbml_time_with_amici_time(self) -> None:

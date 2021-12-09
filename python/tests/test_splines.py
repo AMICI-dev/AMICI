@@ -753,5 +753,5 @@ def test_multiple_splines(**kwargs):
     check_splines_full(splines, params, tols, **kwargs)
 
 
-def test_splines_evaluated_at_formula():
-    raise NotImplementedError("Implement me!")
+# def test_splines_evaluated_at_formula():
+#     raise NotImplementedError("Implement me!")

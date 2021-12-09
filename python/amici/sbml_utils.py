@@ -7,9 +7,10 @@ This module provides helper functions for SBML files.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+import sympy as sp
 
 if TYPE_CHECKING:
-    from typing import Optional, Union, Tuple
+    from typing import Optional, Union, Tuple, Dict, Any
     SbmlID = Union[str, sp.Symbol]
 
 from .import_utils import (
@@ -19,7 +20,6 @@ from .import_utils import (
 )
 import xml.dom.minidom
 import libsbml
-import sympy as sp
 
 from sympy.printing.mathml import MathMLContentPrinter
 from sympy.core.parameters import evaluate
@@ -46,6 +46,10 @@ class SbmlMissingComponentIdError(Exception):
 
 
 class SbmlMathError(Exception):
+    pass
+
+
+class SbmlAnnotationError(Exception):
     pass
 
 
