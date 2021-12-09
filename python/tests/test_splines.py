@@ -194,8 +194,8 @@ def create_petab_problem(
     _params = list(params_true.items())
     parameter_df = create_parameter_table(
         parameterId=[p.name for (p, v) in _params],
-        lowerBound=min(v for (p, v) in _params),
-        upperBound=max(v for (p, v) in _params),
+        lowerBound=min(v for (p, v) in _params) if _params else [],
+        upperBound=max(v for (p, v) in _params) if _params else [],
         nominalValue=[v for (p, v) in _params],
         estimate=1,
     )
@@ -518,29 +518,32 @@ def check_splines(
         w_true = None
 
     # Check sensitivities
-    sx_by_state = [
-        x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
-        for i in range(x_true_sym.shape[1])
-    ]
-    sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
-    sx_true = np.concatenate([
-        sx[:, :, np.newaxis] for sx in sx_by_state
-    ], axis=2)
-    if skip_sensitivity or use_adjoint:
-        pass
-    elif not debug:
-        _check_results(rdata, 'sx', sx_true, atol=sx_atol, rtol=sx_rtol)
-    elif debug == 'print':
-        sx_err_abs = abs(rdata['sx'] - sx_true)
-        sx_err_rel = np.where(
-            sx_err_abs == 0,
-            0,
-            sx_err_abs / abs(sx_true)
-        )
-        print("sx_err_abs:")
-        print(np.squeeze(sx_err_abs))
-        print("sx_err_rel:")
-        print(np.squeeze(sx_err_rel))
+    if params_sorted:
+        sx_by_state = [
+            x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
+            for i in range(x_true_sym.shape[1])
+        ]
+        sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
+        sx_true = np.concatenate([
+            sx[:, :, np.newaxis] for sx in sx_by_state
+        ], axis=2)
+        if skip_sensitivity or use_adjoint:
+            pass
+        elif not debug:
+            _check_results(rdata, 'sx', sx_true, atol=sx_atol, rtol=sx_rtol)
+        elif debug == 'print':
+            sx_err_abs = abs(rdata['sx'] - sx_true)
+            sx_err_rel = np.where(
+                sx_err_abs == 0,
+                0,
+                sx_err_abs / abs(sx_true)
+            )
+            print("sx_err_abs:")
+            print(np.squeeze(sx_err_abs))
+            print("sx_err_rel:")
+            print(np.squeeze(sx_err_rel))
+    else:
+        assert rdata['sx'] is None
 
     # Check log-likelihood
     llh_true = - 0.5 * rdata['y'].size * np.log(2 * np.pi)
@@ -552,14 +555,17 @@ def check_splines(
 
     # Check log-likelihood sensitivities
     # (should be all zero, since we simulated with the true parameters)
-    if not skip_sensitivity:
-        if sllh_atol is None:
-            sllh_atol = np.finfo(float).eps
-        sllh_err_abs = abs(sllh).max()
-        if not debug:
-            assert sllh_err_abs <= sllh_atol
-        elif debug == 'print':
-            print(f'sllh_err_abs = {sllh_err_abs}')
+    if params_sorted:
+        if not skip_sensitivity:
+            if sllh_atol is None:
+                sllh_atol = np.finfo(float).eps
+            sllh_err_abs = abs(sllh).max()
+            if not debug:
+                assert sllh_err_abs <= sllh_atol
+            elif debug == 'print':
+                print(f'sllh_err_abs = {sllh_err_abs}')
+    else:
+        assert sllh is None
 
     if debug:
         return dict(
