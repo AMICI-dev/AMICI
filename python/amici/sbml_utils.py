@@ -19,9 +19,6 @@ import sympy as sp
 from sympy.printing.mathml import MathMLContentPrinter
 from sympy.core.parameters import evaluate
 
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
-
 ###############################################################################
 
 
