@@ -393,7 +393,8 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
     /* Beyond the spline nodes, we need to extrapolate using a * t + b.
      * Those coefficients are stored as
-     * [ D[b_first, p0], D[a_first, p0], D[b_last, p0], D[a_last, p0],
+     * [
+     *   D[b_first, p0], D[a_first, p0], D[b_last, p0], D[a_last, p0],
      *   D[b_first, p1], ... D[a_last, p{nplist-1}]
      * ]
      */
@@ -545,7 +546,8 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
                                          gsl::span<realtype> coeffs)
 {
     /* We're using the short hand notation for node values and slopes from
-     * computeCoefficientsSensi() here. See this function for documentation. */
+     * compute_coefficients_sensi() here. See this function for documentation.
+     */
     int node_offset = spline_offset + ip;
     int last = n_nodes() - 1;
     double spk = dnodesdp[node_offset + i_node * nplist];
