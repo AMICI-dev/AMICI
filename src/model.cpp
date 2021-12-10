@@ -244,7 +244,7 @@ void Model::initializeStates(AmiVector &x) {
 }
 
 void Model::initializeSplines() {
-    splines_ = fspline_constructors(state_.unscaledParameters.data(),
+    splines_ = fcreate_splines(state_.unscaledParameters.data(),
                                     state_.fixedParameters.data());
     state_.spl_.resize(splines_.size(), 0.0);
     for(auto& spline: splines_) {

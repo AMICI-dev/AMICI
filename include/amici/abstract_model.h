@@ -848,9 +848,10 @@ class AbstractModel {
      * @brief Model-specific implementation the spline constructors
      * @param p parameter vector
      * @param k constants vector
+     * @return Vector of splines used in the model
      */
-    virtual std::vector<HermiteSpline> fspline_constructors(const realtype *p,
-                                                            const realtype *k);
+    virtual std::vector<HermiteSpline> fcreate_splines(const realtype *p,
+                                                      const realtype *k);
 
     /**
      * @brief Model-specific implementation the parametric derivatives

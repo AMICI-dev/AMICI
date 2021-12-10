@@ -634,7 +634,7 @@ void AbstractModel::fdwdw_rowvals(SUNMatrixWrapper &/*dwdw*/) {
 }
 
 std::vector<HermiteSpline>
-AbstractModel::fspline_constructors(const realtype */*p*/,
+AbstractModel::fcreate_splines(const realtype */*p*/,
                                     const realtype */*k*/) {
     return std::vector<HermiteSpline>();
 }
