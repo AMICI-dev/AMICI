@@ -43,7 +43,7 @@ from .sbml_utils import (
     amici_time_symbol,
     pretty_xml,
     mathml2sympy,
-    sbmlMathML,
+    sbml_mathml,
     annotation_namespace,
     get_sbml_units,
     add_parameter,
@@ -880,20 +880,20 @@ class AbstractSpline(ABC):
 
         with evaluate(False):
             x = self.x.subs(amici_time_symbol, sbml_time_symbol)
-        children['spline_evaluation_point'] = sbmlMathML(x)
+        children['spline_evaluation_point'] = sbml_mathml(x)
 
         if isinstance(self.xx, UniformGrid):
             children['spline_uniform_grid'] = [
-                sbmlMathML(self.xx.start),
-                sbmlMathML(self.xx.stop),
-                sbmlMathML(self.xx.step),
+                sbml_mathml(self.xx.start),
+                sbml_mathml(self.xx.stop),
+                sbml_mathml(self.xx.step),
             ]
         else:
             for x in self.xx:
                 assert amici_time_symbol not in x.free_symbols
-            children['spline_grid'] = [sbmlMathML(x) for x in self.xx]
+            children['spline_grid'] = [sbml_mathml(x) for x in self.xx]
 
-        children['spline_values'] = [sbmlMathML(y) for y in self.yy]
+        children['spline_values'] = [sbml_mathml(y) for y in self.yy]
 
         return children
 
@@ -1501,7 +1501,7 @@ class CubicHermiteSpline(AbstractSpline):
     def _annotation_children(self) -> Dict[str, Union[str, List[str]]]:
         children = super()._annotation_children()
         if not self._derivatives_by_fd:
-            children['spline_derivatives'] = [sbmlMathML(d) for d in self.dd]
+            children['spline_derivatives'] = [sbml_mathml(d) for d in self.dd]
         return children
 
     def _parameters(self) -> Set[sp.Symbol]:
