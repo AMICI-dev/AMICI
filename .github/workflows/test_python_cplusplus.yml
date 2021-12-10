@@ -75,14 +75,6 @@ jobs:
       run: |
         scripts/installAmiciSource.sh
 
-    - name: Run sonar-scanner
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
-         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
-
     - name: Python tests
       run: |
         source build/venv/bin/activate \
@@ -127,6 +119,14 @@ jobs:
         file: ./coverage.info
         flags: cpp
         fail_ci_if_error: true
+
+    - name: Run sonar-scanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        sonar-scanner \
+         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
   osx:
     name: Tests OSX
