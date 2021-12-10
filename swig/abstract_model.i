@@ -62,6 +62,6 @@
 %ignore fx0_fixedParameters;
 %ignore fsx0;
 %ignore fsx0_fixedParameters;
-%ignore fspline_constructors;
+%ignore fcreate_splines;
 
 %include "amici/abstract_model.h"
