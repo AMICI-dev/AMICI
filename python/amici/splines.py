@@ -45,9 +45,9 @@ from .sbml_utils import (
     mathml2sympy,
     sbmlMathML,
     annotation_namespace,
-    getSbmlUnits,
-    addParameter,
-    addAssignmentRule,
+    get_sbml_units,
+    add_parameter,
+    add_assignment_rule,
     SbmlAnnotationError,
 )
 from numbers import Integral
@@ -939,22 +939,22 @@ class AbstractSpline(ABC):
 
         # Try to autodetermine units
         if x_units is None:
-            x_units = getSbmlUnits(model, x)
+            x_units = get_sbml_units(model, x)
             for _x in self.xx:
                 if x_units is not None:
                     break
-                x_units = getSbmlUnits(model, _x)
+                x_units = get_sbml_units(model, _x)
         if y_units is None:
             for _y in self.yy:
-                y_units = getSbmlUnits(model, _y)
+                y_units = get_sbml_units(model, _y)
                 if y_units is not None:
                     break
 
         # Autoadd parameters
         if auto_add is True or auto_add == 'spline':
             if not model.getParameter(str(self.sbml_id)):
-                addParameter(model, self.sbml_id, constant=False,
-                             units=y_units)
+                add_parameter(model, self.sbml_id, constant=False,
+                              units=y_units)
 
             if auto_add is True:
                 if isinstance(x_nominal, collections.abc.Sequence):
@@ -976,7 +976,7 @@ class AbstractSpline(ABC):
                     raise Exception('x_nominal must be a Sequence!')
                 for (_x, _val) in zip(self.xx, x_nominal):
                     if _x.is_Symbol and not model.getParameter(_x.name):
-                        addParameter(model, _x.name, value=_val, units=x_units)
+                        add_parameter(model, _x.name, value=_val, units=x_units)
 
                 if isinstance(y_nominal, collections.abc.Sequence):
                     if len(y_nominal) != len(self.yy):
@@ -988,13 +988,13 @@ class AbstractSpline(ABC):
                     y_nominal = len(self.yy) * [y_nominal]
                 for (_y, _val) in zip(self.yy, y_nominal):
                     if _y.is_Symbol and not model.getParameter(_y.name):
-                        addParameter(model, _y.name, value=_val, units=y_units)
+                        add_parameter(model, _y.name, value=_val, units=y_units)
 
         elif auto_add is not False:
             raise ValueError(f'Invalid value {auto_add} for auto_add!')
 
         # Create assignment rule for spline
-        rule = addAssignmentRule(model, self.sbml_id, self.mathmlFormula)
+        rule = add_assignment_rule(model, self.sbml_id, self.mathmlFormula)
 
         # Add annotation specifying spline method
         retcode = rule.setAnnotation(self.amiciAnnotation)
@@ -1011,7 +1011,7 @@ class AbstractSpline(ABC):
             k = sp.Piecewise((3, sp.cos(s) < 0), (1, True))
             formula = x0 + T * (sp.atan(sp.tan(s)) / (2 * sp.pi) + k / 4)
             assert amici_time_symbol not in formula.free_symbols
-            par = addParameter(
+            par = add_parameter(
                 model, parameterId, constant=False, units=x_units
             )
             retcode = par.setAnnotation(
@@ -1019,7 +1019,7 @@ class AbstractSpline(ABC):
             )
             if retcode != libsbml.LIBSBML_OPERATION_SUCCESS:
                 raise SbmlAnnotationError('Could not set SBML annotation!')
-            addAssignmentRule(model, parameterId, formula)
+            add_assignment_rule(model, parameterId, formula)
 
     # def _replace_sbml_time_with_amici_time(self) -> None:
     #     self._replace_in_all_expressions(

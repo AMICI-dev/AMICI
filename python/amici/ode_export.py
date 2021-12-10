@@ -2878,6 +2878,7 @@ class ODEExporter:
             # Not required. Will create empty function body.
             equations = sp.Matrix()
         elif function == 'spline_constructors':
+            # nothing to do
             pass
         else:
             equations = self.model.eq(function)
