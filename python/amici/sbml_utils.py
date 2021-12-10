@@ -1,7 +1,7 @@
 """
 SBML Utilities
 --------------
-This module provides helper functions for SBML files.
+This module provides helper functions for working with SBML.
 """
 
 from __future__ import annotations
@@ -60,8 +60,7 @@ class SbmlAnnotationError(Exception):
 
 def create_sbml_model(model_id: str, level: int = 2, version: int = 5) \
         -> Tuple[libsbml.SBMLDocument, libsbml.Model]:
-    """
-    Helper for creating an empty SBML model.
+    """Helper for creating an empty SBML model.
 
     :param model_id:
         SBML ID of the new model.
@@ -90,8 +89,7 @@ def add_compartment(
     *,
     size: float = 1.0,
 ) -> libsbml.Species:
-    """
-    Helper for adding a compartment to a SBML model.
+    """Helper for adding a compartment to a SBML model.
 
     :param model:
         SBML model to which the compartment is to be added.
@@ -132,8 +130,7 @@ def add_species(
     initial_amount: float = 0.0,
     units: Optional[str] = None,
 ) -> libsbml.Species:
-    """
-    Helper for adding a species to a SBML model.
+    """Helper for adding a species to a SBML model.
 
     :param model:
         SBML model to which the species is to be added.
@@ -201,8 +198,7 @@ def add_parameter(
     units: Optional[str] = None,
     constant: Optional[bool] = None,
 ) -> libsbml.Parameter:
-    """
-    Helper for adding a parameter to a SBML model.
+    """Helper for adding a parameter to a SBML model.
 
     :param model:
         SBML model to which the parameter is to be added.
@@ -258,8 +254,7 @@ def add_assignment_rule(
     formula,
     rule_id: Optional[str] = None,
 ) -> libsbml.AssignmentRule:
-    """
-    Helper for adding an assignment rule to a SBML model.
+    """Helper for adding an assignment rule to a SBML model.
 
     :param model:
         SBML model to which the assignment rule is to be added.
@@ -298,7 +293,7 @@ def add_assignment_rule(
         raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID')
     if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
         raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID')
-    setSbmlMath(rule, formula)
+    set_sbml_math(rule, formula)
 
     return rule
 
@@ -349,7 +344,7 @@ def add_rate_rule(
         raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID')
     if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
         raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID')
-    setSbmlMath(rule, formula)
+    set_sbml_math(rule, formula)
 
     return rule
 
@@ -381,7 +376,7 @@ def add_inflow(
 
     kl = reaction.createKineticLaw()
     compartment_id = model.getSpecies(species_id).getCompartment()
-    setSbmlMath(kl, sp.Symbol(compartment_id) * rate)
+    set_sbml_math(kl, sp.Symbol(compartment_id) * rate)
 
     return reaction
 
@@ -453,11 +448,10 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         return pretty_xml(mathml) if pretty else mathml
 
 
-def sbmlMathML(
+def sbml_mathml(
     expr, *, replace_time: bool = False, pretty: bool = False, **settings
 ) -> str:
-    """
-    Prints a SymPy expression to a MathML expression parsable by libSBML.
+    """Prints a SymPy expression to a MathML expression parsable by libSBML.
 
     :param expr:
         expression to be converted to MathML (will be sympified).
@@ -475,9 +469,8 @@ def sbmlMathML(
     return MathMLSbmlPrinter(settings).doprint(expr, pretty=pretty)
 
 
-def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
-    """
-    Convert a SymPy expression to SBML math AST.
+def sbml_math_ast(expr, **kwargs) -> libsbml.ASTNode:
+    """Convert a SymPy expression to SBML math AST.
 
     :param expr:
         expression to be converted (will be sympified).
@@ -485,7 +478,7 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
     :param kwargs:
         extra options for MathML conversion.
     """
-    mathml = sbmlMathML(expr, **kwargs)
+    mathml = sbml_mathml(expr, **kwargs)
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise SbmlMathError(
@@ -496,9 +489,8 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
     return ast
 
 
-def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
-    """
-    Set the math attribute of a SBML node using a SymPy expression.
+def set_sbml_math(obj: libsbml.SBase, expr, **kwargs) -> None:
+    """Set the math attribute of a SBML node using a SymPy expression.
 
     :param obj:
         SBML node supporting `setMath` method.
@@ -510,7 +502,7 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
     :param kwargs:
         extra options for MathML conversion.
     """
-    mathml = sbmlMathAST(expr, **kwargs)
+    mathml = sbml_math_ast(expr, **kwargs)
     if obj.setMath(mathml) != libsbml.LIBSBML_OPERATION_SUCCESS:
         raise SbmlMathError(
             f'Could not set math attribute of SBML object {obj}\n'

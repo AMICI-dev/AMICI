@@ -148,10 +148,11 @@ class AbstractSpline
      * @param nplist number of parameters
      * @param spline_offset offset of this spline inside `dnodesdp`
      * and `dslopesdp`
-     * @param dnodesdp derivatives of the spline values with respect to the
-     * parameters (for all splines in the model, not just this one)
-     * @param dslopesdp derivatives of the spline derivatives with respect
-     * to the parameters (for all splines in the model, not just this one)
+     * @param dspline_valuesdp derivatives of the spline values with respect to
+     * the parameters (for all splines in the model, not just this one)
+     * @param dspline_slopesdp derivatives of the spline derivatives with
+     * respect to the parameters (for all splines in the model, not just this
+     * one)
      */
     virtual void compute_final_sensitivity(
       int nplist,
@@ -279,7 +280,7 @@ class HermiteSpline : public AbstractSpline
      * by finite differences
      * @return boolean flag
      */
-    bool get_node_derivative_by_fd() { return node_derivative_by_FD_; }
+    bool get_node_derivative_by_fd() const { return node_derivative_by_FD_; }
 
   private:
     void get_coeffs_sensi_lowlevel(int ip,

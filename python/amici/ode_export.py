@@ -129,7 +129,7 @@ functions = {
             'const realtype *w, const realtype *tcl, const realtype *spl',
             assume_pow_positivity=True, sparse=True
         ),
-    'spline_constructors':
+    'create_splines':
         _FunctionInfo(
             'const realtype *p, const realtype *k',
             return_type='std::vector<HermiteSpline>',
@@ -1099,11 +1099,11 @@ class ODEModel:
         #   must be done as the first thing because it modifies the SbmlImporter
         for ispl, spl in enumerate(si.splines):
             # TODO: I don't get what the following three lines are there for...
-            old_sbmlId = spl.sbml_id
-            new_sbmlId = sp.Symbol(spl.sbml_id.name)
-            si._replace_in_all_expressions(old_sbmlId, new_sbmlId)
+            old_sbml_id = spl.sbml_id
+            new_sbml_id = sp.Symbol(spl.sbml_id.name)
+            si._replace_in_all_expressions(old_sbml_id, new_sbml_id)
 
-            spline_expr = spl.odeModelSymbol(si)
+            spline_expr = spl.ode_model_symbol(si)
             spline_subs[spl.sbml_id] = spline_expr
             self.add_component(Expression(
                 identifier=spl.sbml_id,
@@ -2692,8 +2692,6 @@ class ODEExporter:
             if func_info.generate_body:
                 dec = log_execution_time(f'writing {func_name}.cpp', logger)
                 dec(self._write_function_file)(func_name)
-            elif func_name == 'spline_constructors':
-                self._write_function_file(func_name)
             if func_name in sparse_functions and func_info.body:
                 self._write_function_index(func_name, 'colptrs')
                 self._write_function_index(func_name, 'rowvals')
@@ -2877,7 +2875,7 @@ class ODEExporter:
                 and function == 'sx0_fixedParameters':
             # Not required. Will create empty function body.
             equations = sp.Matrix()
-        elif function == 'spline_constructors':
+        elif function == 'create_splines':
             # nothing to do
             pass
         else:
@@ -2894,7 +2892,7 @@ class ODEExporter:
             '#include <algorithm>',
             ''
         ]
-        if function == 'spline_constructors':
+        if function == 'create_splines':
             lines += ['#include "amici/splinefunctions.h"',
                       '#include <vector>']
 
@@ -2938,8 +2936,8 @@ class ODEExporter:
         ])
 
         # function body
-        if function == 'spline_constructors':
-            body = self._get_spline_constructors_body()
+        if function == 'create_splines':
+            body = self._get_create_splines_body()
         else:
             body = self._get_function_body(function, equations)
 
@@ -3228,7 +3226,7 @@ class ODEExporter:
 
         return [line for line in lines if line]
 
-    def _get_spline_constructors_body(self):
+    def _get_create_splines_body(self):
         if not self.model.splines:
             return ["    return {};"]
 
