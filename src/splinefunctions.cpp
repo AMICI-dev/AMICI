@@ -3,6 +3,7 @@
 #include "amici/defines.h"
 #include "amici/exception.h"
 #include "amici/vector.h"
+
 #include <algorithm> // std::min
 #include <vector>
 #include <cmath>
@@ -10,9 +11,11 @@
 namespace amici {
 
 static realtype
-evaluatePolynomial(realtype const x, gsl::span<const realtype> coeff)
+evaluate_polynomial(realtype const x, gsl::span<const realtype> coeff)
 {
-    /* Use Horner's method for numerical efficiency:
+    /* Use Horner's method (https://en.wikipedia.org/wiki/Horner%27s_method)
+     * for numerical efficiency:
+     *
      * spline(t) = a * t**3 + b * t**2 + c * t + d
      *           = d + t * (c + t * (b + t * a))
      * with coeff[0, 1, 2, 3] = [d, c, b, a]
@@ -731,7 +734,7 @@ HermiteSpline::get_value(const double t) const
                 /* Evaluate last interpolation polynomial */
                 i_node = n_nodes() - 2;
                 len = nodes_[i_node + 1] - nodes_[i_node];
-                return evaluatePolynomial(
+                return evaluate_polynomial(
                   (t - nodes_[i_node]) / len,
                   gsl::make_span(coefficients).subspan(i_node * 4));
 
@@ -762,7 +765,7 @@ HermiteSpline::get_value(const double t) const
             case SplineExtrapolation::polynomial:
                 /* Evaluate last interpolation polynomial */
                 len = nodes_[1] - nodes_[0];
-                return evaluatePolynomial((t - nodes_[0]) / len, coefficients);
+                return evaluate_polynomial((t - nodes_[0]) / len, coefficients);
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -789,7 +792,7 @@ HermiteSpline::get_value(const double t) const
     }
 
     /* Evaluate the interpolation polynomial */
-    return evaluatePolynomial((t - nodes_[i_node]) / len,
+    return evaluate_polynomial((t - nodes_[i_node]) / len,
                               gsl::make_span(coefficients).subspan(i_node * 4));
 }
 
@@ -824,7 +827,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
                 /* Evaluate last interpolation polynomial */
                 i_node = n_nodes() - 2;
                 len = nodes_[i_node + 1] - nodes_[i_node];
-                return evaluatePolynomial(
+                return evaluate_polynomial(
                   (t - nodes_[i_node]) / len,
                   gsl::make_span(coefficients_sensi)
                     .subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
@@ -857,7 +860,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
             case SplineExtrapolation::polynomial:
                 /* Evaluate last interpolation polynomial */
                 len = nodes_[1] - nodes_[0];
-                return evaluatePolynomial((t - nodes_[0]) / len,
+                return evaluate_polynomial((t - nodes_[0]) / len,
                                           gsl::make_span(coefficients_sensi)
                                             .subspan(ip * (n_nodes() - 1) * 4));
 
@@ -886,7 +889,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
     }
 
     /* Evaluate the interpolation polynomial */
-    return evaluatePolynomial(
+    return evaluate_polynomial(
       (t - nodes_[i_node]) / len,
       gsl::make_span(coefficients_sensi)
         .subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
