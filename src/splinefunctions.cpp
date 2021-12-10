@@ -124,13 +124,13 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
 {
 
     /* We may have to compute the derivatives at the nodes */
-    handle_inner_derviatives();
+    handle_inner_derivatives();
     /* First and last node need to be handled separately */
     handle_boundary_conditions();
 }
 
 void
-HermiteSpline::handle_inner_derviatives()
+HermiteSpline::handle_inner_derivatives()
 {
     /* If values of the derivative at the nodes are to be computed by finite
      * differences, we have to fill up node_values_derivative_ */

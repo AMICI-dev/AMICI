@@ -15,7 +15,7 @@ class Model;
  *
  * Instances of this class are created upon solver setup and the needed splines
  * are set up (e.g., interpolation of the nodes is performed).
- * Upon call to a spline fuction, only the evaluation of the spline polynomial
+ * Upon call to a spline function, only the evaluation of the spline polynomial
  * is carried out.
  */
 class AbstractSpline
@@ -25,11 +25,17 @@ class AbstractSpline
     AbstractSpline() = default;
 
     /**
-     * @brief AbstractSpline TODO
-     * @param nodes
-     * @param node_values
-     * @param equidistant_spacing
-     * @param logarithmic_parametrization
+     * @brief Common constructor for `AbstractSpline` instances.
+     * @param nodes the nodes defining the position at which the value of
+     * the spline is known
+     * (if `equidistant_spacing` is true, it must contain only the first and
+     * the last node; the other nodes will be automatically inserted,
+     * assuming they are uniformly spaced)
+     * @param node_values the values assumed by the spline at the nodes
+     * @param equidistant_spacing whether equidistant nodes are to be computed
+     * @param logarithmic_parametrization if true, the spline interpolation
+     * will occur in log-space in order to ensure positivity of the interpolant
+     * (which strictly speaking will no longer be a spline)
      */
     AbstractSpline(std::vector<realtype> nodes,
                    std::vector<realtype> node_values,
@@ -38,60 +44,150 @@ class AbstractSpline
 
     virtual ~AbstractSpline() = default;
 
+    /**
+     * @brief Compute the coefficients for all polynomial segments of this spline
+     */
     virtual void compute_coefficients() = 0;
 
+    /**
+     * @brief Compute the coefficients for all polynomial segments of
+     * the derivatives of this spline with respect to the parameters
+     * @param nplist number of parameters
+     * @param spline_offset offset of this spline inside `dnodesdp`
+     * and `dslopesdp`
+     * @param dnodesdp derivatives of the spline values with respect to the
+     * parameters (for all splines in the model, not just this one)
+     * @param dslopesdp derivatives of the spline derivatives with respect
+     * to the parameters (for all splines in the model, not just this one)
+     */
     virtual void compute_coefficients_sensi(int nplist,
                                             int spline_offset,
                                             gsl::span<realtype> dnodesdp,
                                             gsl::span<realtype> dslopesdp) = 0;
 
+    /**
+     * @brief Get the value of this spline at a given point
+     * @param t point at which the spline is to be evaluated
+     * @return value of the spline at `t`
+     * @remark When the interpolation occurs in log-space,
+     * this value is not remapped to the original space.
+     */
     virtual realtype get_value(const realtype t) const = 0;
 
+    /**
+     * @brief Get the derivative of this spline with respect to a given
+     * parameter at a given point
+     * @param t point at which the sensitivity is to be evaluated
+     * @param ip index of the parameter
+     * @return sensitivity of the spline with respect to the `ip`th parameter
+     * at `t`
+     * @remark When the interpolation occurs in log-space,
+     * this value is not remapped to the original space.
+     */
     virtual realtype get_sensitivity(const realtype t, const int ip) = 0;
 
-    virtual bool get_node_derivative_by_fd() = 0;
-
     /**
-     * @brief Accessor to equidistant_spacing_ member
-     * @return equidistant_spacing flag
+     * @brief Whether nodes are uniformly spaced
+     * @return boolean flag
      */
     bool get_equidistant_spacing() const;
 
     /**
-     * @brief Accessor to logarithmic_parametrization_ member
-     * @return logarithmic_parametrization flag
+     * @brief Whether spline interpolation is carried out in log-space
+     * @return boolean flag
      */
     bool get_logarithmic_parametrization() const;
 
+    /**
+     * @brief The number of interpolation nodes for this spline
+     * @return number of nodes
+     */
     int n_nodes() const { return static_cast<int>(nodes_.size()); }
 
   protected:
+    /**
+     * @brief The nodes at which this spline is interpolated
+     */
     std::vector<realtype> nodes_;
 
+    /**
+     * @brief The values the spline assumes at the nodes
+     */
     std::vector<realtype> node_values_;
 
+    /**
+     * @brief Coefficients for each polynomial segment of the spline
+     */
     std::vector<realtype> coefficients;
 
+    /**
+     * @brief Polynomial coefficients for the extrapolating the spline values
+     */
     std::vector<realtype> coefficients_extrapolate;
 
+    /**
+     * @brief Coefficients for each polynomial segment of the sensitivities
+     * with respect to the parameters
+     */
     std::vector<realtype> coefficients_sensi;
 
+    /**
+     * @brief Polynomial coefficients for the extrapolating the sensitivities
+     */
     std::vector<realtype> coefficients_extrapolate_sensi;
 
+    /**
+     * @brief Compute the limit value of the spline
+     * as the evaluation point tends to positive infinity.
+     */
     virtual void compute_final_value() = 0;
 
+    /**
+     * @brief Compute the limit of the value of the sensitivity
+     * as the evaluation point tends to positive infinity.
+     * @param nplist number of parameters
+     * @param spline_offset offset of this spline inside `dnodesdp`
+     * and `dslopesdp`
+     * @param dnodesdp derivatives of the spline values with respect to the
+     * parameters (for all splines in the model, not just this one)
+     * @param dslopesdp derivatives of the spline derivatives with respect
+     * to the parameters (for all splines in the model, not just this one)
+     */
     virtual void compute_final_sensitivity(
       int nplist,
       int spline_offset,
       gsl::span<realtype> dspline_valuesdp,
       gsl::span<realtype> dspline_slopesdp) = 0;
 
+    /**
+     * @brief Get the limit value of the spline
+     * as the evaluation point tends to positive infinity.
+     * @return limit value
+     */
     realtype get_final_value() const;
 
+    /**
+     * @brief Set the limit value of the spline
+     * as the evaluation point tends to positive infinity.
+     * @param finalValue final value
+     */
     void set_final_value(realtype finalValue);
 
+    /**
+     * @brief Get the limit value of the sensitivity
+     * with respect to the given parameter
+     * as the evaluation point tends to positive infinity.
+     * @param ip parameter index
+     * @return limit value
+     */
     realtype get_final_sensitivity(const int ip) const;
 
+    /**
+     * @brief Set the limit value of the sensitivity
+     * as the evaluation point tends to positive infinity.
+     * @param finalSensitivity final value of the sensitivity
+     * for each parameter
+     */
     void set_final_sensitivity(std::vector<realtype> finalSensitivity);
 
     /**
@@ -118,11 +214,44 @@ class AbstractSpline
 
 }; // class SplineFunction
 
+/**
+ * @brief AMICI Hermite spline class.
+ *
+ * Instances of this class represent Hermite splines,
+ * which are uniquely determined by their nodes,
+ * the values at their nodes, the derivatives at their nodes
+ * (defaulting to finite difference approximations from the node values),
+ * boundary conditions and extrapolation conditions.
+ * Optionally, the spline can be defined in log-space in order
+ * to ensure positivity.
+ */
 class HermiteSpline : public AbstractSpline
 {
   public:
     HermiteSpline() = default;
 
+    /**
+     * @brief Construct a `HermiteSpline`.
+     * @param nodes the nodes defining the position at which the value of
+     * the spline is known
+     * (if `equidistant_spacing` is true, it must contain only the first and
+     * the last node; the other nodes will be automatically inserted,
+     * assuming they are uniformly spaced)
+     * @param node_values the values assumed by the spline at the nodes
+     * @param node_values_derivative the derivatives of the spline at the nodes
+     * (if `node_derivative_by_FD` is true, it will resized and filled with
+     * finite difference approximations computed from `node_values`)
+     * @param firstNodeBC boundary condition at the first node
+     * @param lastNodeBC boundary condition at the last node
+     * @param firstNodeExtrapol extrapolation method on the left side
+     * @param lastNodeExtrapol extrapolation method on the right side
+     * @param node_derivative_by_FD whether derivatives are to be computed by
+     * finite differences
+     * @param equidistant_spacing whether equidistant nodes are to be computed
+     * @param logarithmic_parametrization if true, the spline interpolation
+     * will occur in log-space in order to ensure positivity of the interpolant
+     * (which strictly speaking will no longer be a spline)
+     */
     HermiteSpline(std::vector<realtype> nodes,
                   std::vector<realtype> node_values,
                   std::vector<realtype> node_values_derivative,
@@ -146,10 +275,11 @@ class HermiteSpline : public AbstractSpline
     realtype get_sensitivity(const double t, const int ip) override;
 
     /**
-     * @brief Accessor to node_derivative_by_FD_ member
-     * @return node_derivative_by_FD flag
+     * @brief Whether derivatives of this spline are computed
+     * by finite differences
+     * @return boolean flag
      */
-    bool get_node_derivative_by_fd() override { return node_derivative_by_FD_; }
+    bool get_node_derivative_by_fd() { return node_derivative_by_FD_; }
 
   private:
     void get_coeffs_sensi_lowlevel(int ip,
@@ -164,7 +294,7 @@ class HermiteSpline : public AbstractSpline
                                    gsl::span<realtype> dslopesdp,
                                    gsl::span<realtype> coeffs);
 
-    void handle_inner_derviatives();
+    void handle_inner_derivatives();
 
     void handle_boundary_conditions();
 
@@ -200,4 +330,4 @@ class HermiteSpline : public AbstractSpline
 
 } // namespace amici
 
-#endif /* AMICI_SPLINEFUNCTION_H */
+#endif /* AMICI_SPLINEFUNCTIONS_H */
