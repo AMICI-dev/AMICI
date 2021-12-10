@@ -272,7 +272,8 @@ def _check_results(
         field: str,
         expected: np.array,
         atol: float,
-        rtol: float
+        rtol: float,
+        verbose: Optional[bool] = True,
         ) -> None:
     """
     Checks whether rdata[field] agrees with expected according to provided
@@ -293,6 +294,9 @@ def _check_results(
 
     :param rtol:
         relative tolerance for comparison
+
+    :param verbose:
+        produce a more verbose error message in case of unmatched expectations
     """
 
     result = rdata[field]
@@ -300,4 +304,4 @@ def _check_results(
         result = np.array(result)
 
     _check_close(result=result, expected=expected,
-                 atol=atol, rtol=rtol, field=field)
+                 atol=atol, rtol=rtol, field=field, verbose=verbose)

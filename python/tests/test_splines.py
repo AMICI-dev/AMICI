@@ -502,7 +502,11 @@ def check_splines(
             for spline in splines
         ])
         if not debug:
-            _check_results(rdata, 'w', w_true, atol=w_atol, rtol=w_rtol)
+            _check_results(
+                rdata, 'w', w_true,
+                atol=w_atol, rtol=w_rtol,
+                verbose=False
+            )
         elif debug == 'print':
             w_err_abs = abs(rdata['w'] - w_true)
             w_err_rel = np.where(
@@ -530,7 +534,11 @@ def check_splines(
         if skip_sensitivity or use_adjoint:
             pass
         elif not debug:
-            _check_results(rdata, 'sx', sx_true, atol=sx_atol, rtol=sx_rtol)
+            _check_results(
+                rdata, 'sx', sx_true,
+                atol=sx_atol, rtol=sx_rtol,
+                verbose=False
+            )
         elif debug == 'print':
             sx_err_abs = abs(rdata['sx'] - sx_true)
             sx_err_rel = np.where(
@@ -548,10 +556,10 @@ def check_splines(
     # Check log-likelihood
     llh_true = - 0.5 * rdata['y'].size * np.log(2 * np.pi)
     llh_error_rel = abs(llh - llh_true) / abs(llh_true)
+    if (llh_error_rel > llh_rtol and debug is not True) or debug == 'print':
+        print(f'llh_error_rel = {llh_error_rel}')
     if not debug:
         assert llh_error_rel <= llh_rtol
-    elif debug == 'print':
-        print(f'llh_error_rel = {llh_error_rel}')
 
     # Check log-likelihood sensitivities
     # (should be all zero, since we simulated with the true parameters)
@@ -560,10 +568,10 @@ def check_splines(
             if sllh_atol is None:
                 sllh_atol = np.finfo(float).eps
             sllh_err_abs = abs(sllh).max()
+            if (sllh_err_abs > sllh_atol and debug is not True) or debug == 'print':
+                print(f'sllh_err_abs = {sllh_err_abs}')
             if not debug:
                 assert sllh_err_abs <= sllh_atol
-            elif debug == 'print':
-                print(f'sllh_err_abs = {sllh_err_abs}')
     else:
         assert sllh is None
 
@@ -649,7 +657,11 @@ def example_spline_1(
         bc=None, extrapolate=None
     )
 
-    tols = dict(llh_rtol=1e-15)
+    tols = (
+        dict(llh_rtol=1e-15),
+        dict(llh_rtol=1e-15),
+        dict(llh_rtol=1e-15, sllh_atol=5e-8),
+    )
 
     return spline, params, tols
 
@@ -720,20 +732,41 @@ def example_splines_1():
     params.update(params1)
     params.update(params2)
 
-    keys = set().union(tols0.keys(), tols1.keys(), tols2.keys())
-    tols = {
-        key: max(
-            tols0.get(key, 0.0),
-            tols1.get(key, 0.0),
-            tols2.get(key, 0.0),
-        ) for key in keys
-    }
-    tols['llh_rtol'] = 1e-14
-    tols['sllh_atol'] = 5e-8
-    tols['sx_rtol'] = 1e-9
-    tols['sx_atol'] = 1e-10
-    tols['x_rtol'] = 1e-10
-    tols['x_atol'] = 1e-9
+    if isinstance(tols0, dict):
+        tols0 = (tols0, tols0, tols0)
+    if isinstance(tols0, dict):
+        tols1 = (tols1, tols1, tols1)
+    if isinstance(tols0, dict):
+        tols2 = (tols2, tols2, tols2)
+
+    tols = []
+    for (t0, t1, t2) in zip(tols0, tols1, tols2):
+        keys = set().union(t0.keys(), t1.keys(), t2.keys())
+        t = {
+            key: max(
+                t0.get(key, 0.0),
+                t1.get(key, 0.0),
+                t2.get(key, 0.0),
+            ) for key in keys
+        }
+        tols.append(t)
+
+    tols[0]['x_rtol']   = max(1e-10, tols[0].get('x_rtol', -np.inf))
+    tols[0]['x_atol']   = max(1e-9,  tols[0].get('x_atol', -np.inf))
+    tols[0]['sx_rtol']  = max(1e-9,  tols[0].get('llh_rtol', -np.inf))
+    tols[0]['sx_atol']  = max(1e-10, tols[0].get('sx_atol', -np.inf))
+    tols[0]['llh_rtol'] = max(5e-15, tols[0].get('llh_rtol', -np.inf))
+
+    tols[1]['x_rtol']   = max(1e-10, tols[1].get('x_rtol', -np.inf))
+    tols[1]['x_atol']   = max(1e-9,  tols[1].get('x_atol', -np.inf))
+    tols[1]['sx_rtol']  = max(1e-9,  tols[1].get('llh_rtol', -np.inf))
+    tols[1]['sx_atol']  = max(1e-10, tols[1].get('sx_atol', -np.inf))
+    tols[1]['llh_rtol'] = max(5e-15, tols[1].get('llh_rtol', -np.inf))
+
+    tols[2]['x_rtol']    = max(1e-10, tols[2].get('x_rtol', -np.inf))
+    tols[2]['x_atol']    = max(5e-8,  tols[2].get('x_atol', -np.inf))
+    tols[2]['llh_rtol']  = max(5e-15, tols[2].get('llh_rtol', -np.inf))
+    tols[2]['sllh_atol'] = max(1e-6,  tols[2].get('sllh_atol', -np.inf))
 
     return splines, params, tols
 
