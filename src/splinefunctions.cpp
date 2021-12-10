@@ -3,8 +3,8 @@
 #include "amici/defines.h"
 #include "amici/exception.h"
 #include "amici/vector.h"
+#include <algorithm> // std::min
 #include <vector>
-#include <algorithm>    // std::min
 
 namespace amici {
 
@@ -25,34 +25,35 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
                                std::vector<realtype> node_values,
                                bool equidistant_spacing,
                                bool logarithmic_parametrization)
-  : nodes_(nodes)
-  , node_values_(node_values)
+  : nodes_(std::move(nodes))
+  , node_values_(std::move(node_values))
   , equidistant_spacing_(equidistant_spacing)
   , logarithmic_parametrization_(logarithmic_parametrization)
 {
     /* we want to set the number of nodes */
-    n_nodes_ = node_values.size();
+    auto n_nodes_ = static_cast<int>(node_values_.size());
 
     /* In case we have equidistant spacing, compute node locations */
     if (equidistant_spacing_) {
-        if (nodes.size() != 2)
+        if (nodes_.size() != 2)
             throw AmiException("Splines with equidistant spacing need a nodes "
                                "vector with two elements (first/last node).");
-        realtype node_start = nodes[0];
-        realtype node_step = (nodes[1] - nodes[0]) / (n_nodes_ - 1);
+        realtype node_start = nodes_[0];
+        realtype node_step = (nodes_[1] - nodes_[0]) / (n_nodes_ - 1);
         nodes_.resize(n_nodes_);
-        nodes_[n_nodes_ - 1] = nodes[1];
+        nodes_[n_nodes_ - 1] = nodes_[1];
         for (int i_node = 0; i_node < n_nodes_ - 1; i_node++)
             nodes_[i_node] = node_start + i_node * node_step;
     }
 
-    if (logarithmic_parametrization_)
-        for (int iNode = 0; iNode < n_nodes_; iNode++)
-            node_values_[iNode] = std::log(node_values_[iNode]);
+    if (logarithmic_parametrization_) {
+        for (auto& node_value : node_values_)
+            node_value = std::log(node_value);
+    }
 }
 
 realtype
-AbstractSpline::get_final_value()
+AbstractSpline::get_final_value() const
 {
     return final_value_;
 }
@@ -64,20 +65,19 @@ AbstractSpline::set_final_value(realtype finalValue)
 }
 
 realtype
-AbstractSpline::get_final_sensitivity(const int ip)
+AbstractSpline::get_final_sensitivity(const int ip) const
 {
     return final_sensitivity_[ip];
 }
 
 void
-AbstractSpline::set_final_sensitivity(
-  std::vector<realtype> const finalSensitivity)
+AbstractSpline::set_final_sensitivity(std::vector<realtype> finalSensitivity)
 {
-    final_sensitivity_ = finalSensitivity;
+    final_sensitivity_ = std::move(finalSensitivity);
 }
 
 bool
-AbstractSpline::get_equidistant_spacing()
+AbstractSpline::get_equidistant_spacing() const
 {
     return equidistant_spacing_;
 }
@@ -89,7 +89,7 @@ AbstractSpline::set_equidistant_spacing(bool equidistant_spacing)
 }
 
 bool
-AbstractSpline::get_logarithmic_parametrization()
+AbstractSpline::get_logarithmic_parametrization() const
 {
     return logarithmic_parametrization_;
 }
@@ -179,6 +179,8 @@ HermiteSpline::handle_boundary_conditions()
                   (node_values_[1] - node_values_[last - 1]) /
                   (nodes_[1] - nodes_[0] + nodes_[last] - nodes_[last - 1]);
             break;
+        default:
+            throw AmiException("Invalid value for boundary condition.");
     }
 
     /* ...and the last node (1-sided FD). */
@@ -213,6 +215,8 @@ HermiteSpline::handle_boundary_conditions()
                   (node_values_[1] - node_values_[last - 1]) /
                   (nodes_[1] - nodes_[0] + nodes_[last] - nodes_[last - 1]);
             break;
+        default:
+            throw AmiException("Invalid value for boundary condition.");
     }
 }
 
@@ -314,32 +318,35 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
                                           gsl::span<realtype> dspline_valuesdp,
                                           gsl::span<realtype> dspline_slopesdp)
 {
-    /* Allocate space for the coefficients *
+    /*
+     * Allocate space for the coefficients
      * They are stored in the vector as
      * [ D[d_0, p0], D[c_0, p0], D[b_0, p0], D[a_0, p0], D[d_1, p0],
      *   ... ,
      *   D[b_{n_nodes-1}, p0], D[a_{n_nodes-1}, p0],
      *   D[d_0, p1], D[c_0, p1], ...
      *   ..., D[b_{n_nodes-1}, p{nplist-1}, D[a_{n_nodes-1}, p{nplist-1}]
-     * ] */
+     * ]
+     */
     int n_spline_coefficients = 4 * (n_nodes() - 1);
     coefficients_sensi.resize(n_spline_coefficients * nplist, 0.0);
 
-    /**
+    /*
      * We're using short hand notation for some node values or slopes, based on
      * the notation used on https://en.wikipedia.org/wiki/Cubic_Hermite_spline
      * In brief: "p" denotes the current (k-th) spline node value,
      * "m" its tangent or slope, "s" in front the sensitivity, "1" at the end
      * means the following node (" + 1"), so "smk1" is the sensitivity of the
      * slope at node k + 1, w.r.t. to the current parameter (looping index).
-     * */
+     */
 
     /* Parametric derivatives of splines are splines again.
      * We compute the coefficients for those polynomials now. */
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. */
         realtype len = nodes_[i_node + 1] - nodes_[i_node];
-        realtype len_m = (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
+        realtype len_m =
+          (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
         realtype len_p =
           (i_node < n_nodes() - 2) ? nodes_[i_node + 2] - nodes_[i_node] : len;
 
@@ -533,10 +540,8 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
                                          gsl::span<realtype> dslopesdp,
                                          gsl::span<realtype> coeffs)
 {
-    /**
-     * We're using the short hand notation for node values and slopes from
-     * computeCoefficientsSensi() here. See this function for documentation.
-     * */
+    /* We're using the short hand notation for node values and slopes from
+     * computeCoefficientsSensi() here. See this function for documentation. */
     int node_offset = spline_offset + ip;
     int last = n_nodes() - 1;
     double spk = dnodesdp[node_offset + i_node * nplist];
@@ -583,7 +588,7 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
                 smk1 = (dnodesdp[node_offset + nplist] - spk) /
                        (len + nodes_[1] - nodes_[0]);
             } else {
-                /* must be SplineBoundaryCondition::naturalZeroDerivative*/
+                // must be SplineBoundaryCondition::naturalZeroDerivative
                 throw AmiException(
                   "Natural boundary condition with zero "
                   "derivative is prohibited for Hermite splines.");
@@ -695,7 +700,7 @@ HermiteSpline::compute_final_sensitivity(
 }
 
 realtype
-HermiteSpline::get_value(const double t)
+HermiteSpline::get_value(const double t) const
 {
     /* Is this a steady state computation? */
     if (std::isinf(t))
@@ -725,8 +730,9 @@ HermiteSpline::get_value(const double t)
                 /* Evaluate last interpolation polynomial */
                 i_node = n_nodes() - 2;
                 len = nodes_[i_node + 1] - nodes_[i_node];
-                return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                          gsl::make_span(coefficients).subspan(i_node * 4));
+                return evaluatePolynomial(
+                  (t - nodes_[i_node]) / len,
+                  gsl::make_span(coefficients).subspan(i_node * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -819,7 +825,8 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
                 len = nodes_[i_node + 1] - nodes_[i_node];
                 return evaluatePolynomial(
                   (t - nodes_[i_node]) / len,
-                    gsl::make_span(coefficients_sensi).subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
+                  gsl::make_span(coefficients_sensi)
+                    .subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -849,9 +856,9 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
             case SplineExtrapolation::polynomial:
                 /* Evaluate last interpolation polynomial */
                 len = nodes_[1] - nodes_[0];
-                return evaluatePolynomial(
-                  (t - nodes_[0]) / len,
-                    gsl::make_span(coefficients_sensi).subspan(ip * (n_nodes() - 1) * 4));
+                return evaluatePolynomial((t - nodes_[0]) / len,
+                                          gsl::make_span(coefficients_sensi)
+                                            .subspan(ip * (n_nodes() - 1) * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
@@ -880,7 +887,8 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
     /* Evaluate the interpolation polynomial */
     return evaluatePolynomial(
       (t - nodes_[i_node]) / len,
-        gsl::make_span(coefficients_sensi).subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
+      gsl::make_span(coefficients_sensi)
+        .subspan(ip * (n_nodes() - 1) * 4 + i_node * 4));
 }
 
 } // namespace amici
