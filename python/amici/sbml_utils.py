@@ -58,12 +58,12 @@ class SbmlAnnotationError(Exception):
 ###############################################################################
 
 
-def createSbmlModel(modelId: str, level: int = 2, version: int = 5) \
+def create_sbml_model(model_id: str, level: int = 2, version: int = 5) \
         -> Tuple[libsbml.SBMLDocument, libsbml.Model]:
     """
     Helper for creating an empty SBML model.
 
-    :param modelId:
+    :param model_id:
         SBML ID of the new model.
 
     :param level:
@@ -78,15 +78,15 @@ def createSbmlModel(modelId: str, level: int = 2, version: int = 5) \
     """
     doc = libsbml.SBMLDocument(level, version)
     model = doc.createModel()
-    model.setId(modelId)
+    model.setId(model_id)
     return doc, model
 
 
 ###############################################################################
 
-def addCompartment(
+def add_compartment(
     model: libsbml.Model,
-    compartmentId: SbmlID,
+    compartment_id: SbmlID,
     *,
     size: float = 1.0,
 ) -> libsbml.Species:
@@ -96,7 +96,7 @@ def addCompartment(
     :param model:
         SBML model to which the compartment is to be added.
 
-    :param compartmentId:
+    :param compartment_id:
         SBML ID of the new compartment.
 
     :param size:
@@ -105,29 +105,29 @@ def addCompartment(
     :return:
         The new compartment as a :py:class:`libsbml.Compartment` object.
     """
-    compartmentId = str(compartmentId)
+    compartment_id = str(compartment_id)
 
     # Check whether a compartment with the same ID already exists
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., parameter) have the same ID
-    if model.getCompartment(compartmentId):
+    if model.getCompartment(compartment_id):
         raise SbmlDuplicateComponentIdError(
-            f'A compartment with ID {compartmentId} has already been defined'
+            f'A compartment with ID {compartment_id} has already been defined'
         )
 
     cmp = model.createCompartment()
-    if cmp.setId(compartmentId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{compartmentId} is not a valid SBML ID')
+    if cmp.setId(compartment_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{compartment_id} is not a valid SBML ID')
     cmp.setSize(size)
 
     return cmp
 
 
-def addSpecies(
+def add_species(
     model: libsbml.Model,
-    speciesId: SbmlID,
+    species_id: SbmlID,
     *,
-    compartmentId: Optional[str] = None,
+    compartment_id: Optional[str] = None,
     name: Union[bool, str] = False,
     initial_amount: float = 0.0,
     units: Optional[str] = None,
@@ -138,10 +138,10 @@ def addSpecies(
     :param model:
         SBML model to which the species is to be added.
 
-    :param speciesId:
+    :param species_id:
         SBML ID of the new species.
 
-    :param compartmentId:
+    :param compartment_id:
         Compartment ID for the new species.
         If there is only one compartment it can be auto-selected.
 
@@ -154,35 +154,35 @@ def addSpecies(
     :return:
         The new species as a :py:class:`libsbml.Species` object.
     """
-    speciesId = str(speciesId)
+    species_id = str(species_id)
     if name is True:
-        name = speciesId
+        name = species_id
 
     # Check whether a species with the same ID already exists
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., parameter) have the same ID
-    if model.getSpecies(speciesId):
+    if model.getSpecies(species_id):
         raise SbmlDuplicateComponentIdError(
-            f'A species with ID {speciesId} has already been defined'
+            f'A species with ID {species_id} has already been defined'
         )
 
-    if compartmentId is None:
+    if compartment_id is None:
         compartments = model.getListOfCompartments()
         if len(compartments) != 1:
             raise ValueError(
                 'Compartment auto-selection is possible '
                 'only if there is one and only one compartment.'
             )
-        compartmentId = compartments[0].getId()
-    elif not model.getCompartment(compartmentId):
+        compartment_id = compartments[0].getId()
+    elif not model.getCompartment(compartment_id):
         raise SbmlMissingComponentIdError(
-            f'No compartment with ID {compartmentId}'
+            f'No compartment with ID {compartment_id}'
         )
 
     sp = model.createSpecies()
-    if sp.setIdAttribute(speciesId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{speciesId} is not a valid SBML ID')
-    sp.setCompartment(compartmentId)
+    if sp.setIdAttribute(species_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{species_id} is not a valid SBML ID')
+    sp.setCompartment(compartment_id)
     sp.setInitialAmount(float(initial_amount))
     if units is not None:
         sp.setUnits(str(units))
@@ -192,9 +192,9 @@ def addSpecies(
     return sp
 
 
-def addParameter(
+def add_parameter(
     model: libsbml.Model,
-    parameterId: SbmlID,
+    parameter_id: SbmlID,
     *,
     name: Union[bool, str] = False,
     value: Optional[float] = None,
@@ -207,8 +207,11 @@ def addParameter(
     :param model:
         SBML model to which the parameter is to be added.
 
-    :param parameterId:
+    :param parameter_id:
         SBML ID of the new parameter.
+
+    :param name:
+        SBML name of the new parameter.
 
     :param value:
         Value attribute for the new parameter.
@@ -222,21 +225,21 @@ def addParameter(
     :return:
         The new parameter as a :py:class:`libsbml.Parameter` object.
     """
-    parameterId = str(parameterId)
+    parameter_id = str(parameter_id)
     if name is True:
-        name = parameterId
+        name = parameter_id
 
     # Check whether a parameter with the same ID already exists
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
-    if model.getParameter(parameterId):
+    if model.getParameter(parameter_id):
         raise SbmlDuplicateComponentIdError(
-            f'A parameter with ID {parameterId} has already been defined'
+            f'A parameter with ID {parameter_id} has already been defined'
         )
 
     par = model.createParameter()
-    if par.setIdAttribute(parameterId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{parameterId} is not a valid SBML ID')
+    if par.setIdAttribute(parameter_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{parameter_id} is not a valid SBML ID')
     if units is not None:
         par.setUnits(str(units))
     if constant is not None:
@@ -249,11 +252,11 @@ def addParameter(
     return par
 
 
-def addAssignmentRule(
+def add_assignment_rule(
     model: libsbml.Model,
-    variableId: SbmlID,
+    variable_id: SbmlID,
     formula,
-    ruleId: Optional[str] = None,
+    rule_id: Optional[str] = None,
 ) -> libsbml.AssignmentRule:
     """
     Helper for adding an assignment rule to a SBML model.
@@ -261,50 +264,50 @@ def addAssignmentRule(
     :param model:
         SBML model to which the assignment rule is to be added.
 
-    :param variableId:
+    :param variable_id:
         SBML ID of the quantity for which the assignment rule is to be added.
 
     :param formula:
         Formula for the assignment rule (it will be sympified).
 
-    :param ruleId:
+    :param rule_id:
         SBML ID of the new assignment rule.
         Defaults to `'assignment_' + variableId`.
 
     :return:
         The assignment rule as a :py:class:`libsbml.AssignmentRule` object.
     """
-    variableId = str(variableId)
-    if ruleId is None:
-        ruleId = 'assignment_' + variableId
+    variable_id = str(variable_id)
+    if rule_id is None:
+        rule_id = 'assignment_' + variable_id
 
     # Check whether rules exists for this parameter or with the same name
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
-    if model.getRuleByVariable(variableId):
+    if model.getRuleByVariable(variable_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule for parameter {variableId} has already been defined.'
+            f'A rule for parameter {variable_id} has already been defined.'
         )
-    if model.getRule(ruleId):
+    if model.getRule(rule_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule with SBML ID {ruleId} has already been defined.'
+            f'A rule with SBML ID {rule_id} has already been defined.'
         )
 
     rule = model.createAssignmentRule()
-    if rule.setVariable(variableId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{variableId} is not a valid SBML ID')
-    if rule.setIdAttribute(ruleId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{ruleId} is not a valid SBML ID')
+    if rule.setVariable(variable_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID')
+    if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID')
     setSbmlMath(rule, formula)
 
     return rule
 
 
-def addRateRule(
+def add_rate_rule(
     model: libsbml.Model,
-    variableId: SbmlID,
+    variable_id: SbmlID,
     formula,
-    ruleId: Optional[str] = None,
+    rule_id: Optional[str] = None,
 ) -> libsbml.RateRule:
     """
     Helper for adding a rate rule to a SBML model.
@@ -312,73 +315,73 @@ def addRateRule(
     :param model:
         SBML model to which the rate rule is to be added.
 
-    :param variableId:
+    :param variable_id:
         SBML ID of the quantity for which the rate rule is to be added.
 
     :param formula:
         Formula for the rate rule (it will be sympified).
 
-    :param ruleId:
+    :param rule_id:
         SBML ID of the new rate rule.
         Defaults to `'rate_' + variableId`.
 
     :return:
         The new rate rule as a :py:class:`libsbml.RateRule` object.
     """
-    variableId = str(variableId)
-    if ruleId is None:
-        ruleId = 'rate_' + variableId
+    variable_id = str(variable_id)
+    if rule_id is None:
+        rule_id = 'rate_' + variable_id
 
     # Check whether rules exists for this parameter or with the same name
     # TODO the resulting SBML may still be invalid
     #      if other types of objects (e.g., species) have the same ID
-    if model.getRuleByVariable(variableId):
+    if model.getRuleByVariable(variable_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule for parameter {variableId} has already been defined.'
+            f'A rule for parameter {variable_id} has already been defined.'
         )
-    if model.getRule(ruleId):
+    if model.getRule(rule_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule with SBML ID {ruleId} has already been defined.'
+            f'A rule with SBML ID {rule_id} has already been defined.'
         )
 
     rule = model.createRateRule()
-    if rule.setVariable(variableId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{variableId} is not a valid SBML ID')
-    if rule.setIdAttribute(ruleId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{ruleId} is not a valid SBML ID')
+    if rule.setVariable(variable_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID')
+    if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID')
     setSbmlMath(rule, formula)
 
     return rule
 
 
-def addInflow(
+def add_inflow(
     model: libsbml.Model,
-    speciesId: SbmlID,
+    species_id: SbmlID,
     rate,
     *,
-    reactionId: Optional[str] = None,
+    reaction_id: Optional[str] = None,
     reversible: bool = False,
 ) -> libsbml.Reaction:
-    speciesId = str(speciesId)
-    if reactionId is None:
-        reactionId = f'inflow_of_{speciesId}'
+    species_id = str(species_id)
+    if reaction_id is None:
+        reaction_id = f'inflow_of_{species_id}'
 
-    if model.getReaction(reactionId):
+    if model.getReaction(reaction_id):
         raise SbmlDuplicateComponentIdError(
-            f'A reaction with SBML ID {reactionId} has already been defined.'
+            f'A reaction with SBML ID {reaction_id} has already been defined.'
         )
 
     reaction = model.createReaction()
-    if reaction.setId(reactionId) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{reactionId} is not a valid SBML ID')
+    if reaction.setId(reaction_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlInvalidIdSyntax(f'{reaction_id} is not a valid SBML ID')
     reaction.setReversible(reversible)
 
     spr = reaction.createProduct()
-    spr.setSpecies(speciesId)
+    spr.setSpecies(species_id)
 
     kl = reaction.createKineticLaw()
-    compartmentId = model.getSpecies(speciesId).getCompartment()
-    setSbmlMath(kl, sp.Symbol(compartmentId) * rate)
+    compartment_id = model.getSpecies(species_id).getCompartment()
+    setSbmlMath(kl, sp.Symbol(compartment_id) * rate)
 
     return reaction
 
@@ -386,7 +389,7 @@ def addInflow(
 ###############################################################################
 
 
-def getSbmlUnits(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
+def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
         -> Union[None, str]:
     """Try to get the units for expression `x`.
 

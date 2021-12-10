@@ -10,9 +10,9 @@ import sympy as sp
 from amici.gradient_check import _check_results
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (LLH, RDATAS, SLLH, simulate_petab)
-from amici.sbml_utils import (addCompartment, addInflow, addParameter,
-                              addRateRule, addSpecies, amici_time_symbol,
-                              createSbmlModel)
+from amici.sbml_utils import (add_compartment, add_inflow, add_parameter,
+                              add_rate_rule, add_species, amici_time_symbol,
+                              create_sbml_model)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
@@ -145,19 +145,19 @@ def create_petab_problem(
             )
 
     # Create SBML document
-    doc, model = createSbmlModel(model_name)
-    addCompartment(model, 'compartment')
+    doc, model = create_sbml_model(model_name)
+    add_compartment(model, 'compartment')
     for (i, spline) in enumerate(splines):
         spline.addToSbmlModel(model)
-        addSpecies(model, species(i), initial_amount=initial_values[i])
+        add_species(model, species(i), initial_amount=initial_values[i])
         if use_reactions:
-            addInflow(model, species(i), splines[i].sbml_id)
+            add_inflow(model, species(i), splines[i].sbml_id)
         else:
-            addRateRule(model, species(i), splines[i].sbml_id)
+            add_rate_rule(model, species(i), splines[i].sbml_id)
     for (parId, value) in params_true.items():
-        addParameter(model, parId, value=value, constant=True)
+        add_parameter(model, parId, value=value, constant=True)
     for spline in splines:
-        addParameter(model, spline.sbml_id, constant=False)
+        add_parameter(model, spline.sbml_id, constant=False)
 
     # Compute simulation time
     # Must cover all the intervals of definition for the splines,
