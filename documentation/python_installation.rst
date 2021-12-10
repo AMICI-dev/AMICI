@@ -266,6 +266,18 @@ by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
 ``C:\Windows\System32``. The ``api-ms-win-crt-XXX-l1-1-0.dll`` are needed by
 ``openblas.dll`` and are part of the Windows Universal C Runtime.
 
+.. note::
+
+    Since Python 3.8, the library directory needs to be set as follows:
+
+    .. code-block:: python
+
+        import os
+        # directory containing `openblas.dll`
+        os.add_dll_directory("C:\\BLAS\\bin")
+        import amici
+
+    Adding it to ``PATH`` will not work.
 
 Further topics
 ++++++++++++++
@@ -375,6 +387,15 @@ install the latter locally, using:
 .. code-block:: bash
 
    conda install -c conda-forge openblas
+
+To make AMICI use openblas, set the following environment variable:
+
+.. code-block:: bash
+
+   export BLAS_LIBS=-lopenblas
+
+``BLAS_LIBS`` needs to be set during installation of the AMICI package, as
+well as during any future model import.
 
 To install AMICI, now run:
 
