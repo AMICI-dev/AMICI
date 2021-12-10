@@ -1072,10 +1072,10 @@ class AbstractSpline(ABC):
 
     @staticmethod
     def from_annotation(
-        sbmlId: sp.Symbol,
+        sbml_id: sp.Symbol,
         annotation: ET.Element,
         *,
-        locals: Dict[str, Any],
+        locals_: Dict[str, Any],
     ) -> AbstractSpline:
         """Create a spline object from a SBML annotation.
 
@@ -1115,7 +1115,7 @@ class AbstractSpline(ABC):
                 mathml2sympy(
                     ET.tostring(gc).decode(),
                     evaluate=False,
-                    locals=locals,
+                    locals=locals_,
                     expression_type='Rule'
                 )
                 for gc in child
@@ -1144,7 +1144,7 @@ class AbstractSpline(ABC):
                 str(children)
             )
 
-        return cls(sbmlId, **kwargs)
+        return cls(sbml_id, **kwargs)
 
     @classmethod
     def _from_annotation(

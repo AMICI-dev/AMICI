@@ -1099,9 +1099,9 @@ class ODEModel:
         #   must be done as the first thing because it modifies the SbmlImporter
         for ispl, spl in enumerate(si.splines):
             # TODO: I don't get what the following three lines are there for...
-            old_sbml_idmlId = spl.sbml_id
+            old_sbml_id = spl.sbml_id
             new_sbml_id = sp.Symbol(spl.sbml_id.name)
-            si._replace_in_all_expressions(old_sbml_idmlId, new_sbml_id)
+            si._replace_in_all_expressions(old_sbml_id, new_sbml_id)
 
             spline_expr = spl.ode_model_symbol(si)
             spline_subs[spl.sbml_id] = spline_expr

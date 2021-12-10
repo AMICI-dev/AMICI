@@ -827,11 +827,11 @@ class SbmlImporter:
                 for child in annotation:
                     if child.tag == f'{{{annotation_namespace}}}discard':
                         parameter_ids_to_remove.append(p.getIdAttribute())
-        for pId in parameter_ids_to_remove:
+        for parameter_id in parameter_ids_to_remove:
             # Remove corresponding rules
-            self.sbml.removeRuleByVariable(pId)
+            self.sbml.removeRuleByVariable(parameter_id)
             # Remove parameter
-            self.sbml.removeParameter(pId)
+            self.sbml.removeParameter(parameter_id)
 
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
@@ -981,7 +981,7 @@ class SbmlImporter:
                             )
                         self.splines.append(
                             AbstractSpline.from_annotation(
-                                sym_id, annotation, locals=self._local_symbols
+                                sym_id, annotation, locals_=self._local_symbols
                             )
                         )
                         continue
