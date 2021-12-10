@@ -164,7 +164,7 @@ class HermiteSpline : public AbstractSpline
                                    gsl::span<realtype> dslopesdp,
                                    gsl::span<realtype> coeffs);
 
-    void handle_inner_derviatives();
+    void handle_inner_derivatives();
 
     void handle_boundary_conditions();
 
