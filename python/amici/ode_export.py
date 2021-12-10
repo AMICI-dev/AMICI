@@ -2692,8 +2692,6 @@ class ODEExporter:
             if func_info.generate_body:
                 dec = log_execution_time(f'writing {func_name}.cpp', logger)
                 dec(self._write_function_file)(func_name)
-            elif func_name == 'create_splines':
-                self._write_function_file(func_name)
             if func_name in sparse_functions and func_info.body:
                 self._write_function_index(func_name, 'colptrs')
                 self._write_function_index(func_name, 'rowvals')
