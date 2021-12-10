@@ -654,20 +654,16 @@ HermiteSpline::compute_final_value()
             finalValue = -INFINITY;
         } else if (coefficients[last] > 0) {
             finalValue = INFINITY;
+        } else if (coefficients[last - 1] < 0) {
+            finalValue = -INFINITY;
+        } else if (coefficients[last - 1] > 0) {
+            finalValue = INFINITY;
+        } else if (coefficients[last - 2] < 0) {
+            finalValue = -INFINITY;
+        } else if (coefficients[last - 2] > 0) {
+            finalValue = INFINITY;
         } else {
-            if (coefficients[last - 1] < 0) {
-                finalValue = -INFINITY;
-            } else if (coefficients[last - 1] > 0) {
-                finalValue = INFINITY;
-            } else {
-                if (coefficients[last - 2] < 0) {
-                    finalValue = -INFINITY;
-                } else if (coefficients[last - 2] > 0) {
-                    finalValue = INFINITY;
-                } else {
-                    finalValue = coefficients[last - 3];
-                }
-            }
+            finalValue = coefficients[last - 3];
         }
     } else {
         /* Periodic: will not yield a steady state */
