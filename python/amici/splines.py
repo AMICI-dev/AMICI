@@ -971,7 +971,7 @@ class AbstractSpline(ABC):
                         )
                     for i in range(len(x_nominal) - 1):
                         if x[i] >= x[i+1]:
-                            raise Exception(
+                            raise ValueError(
                                 'x_nominal must be strictly increasing!'
                             )
                 elif x_nominal is None:
@@ -979,7 +979,7 @@ class AbstractSpline(ABC):
                 else:
                     # It makes no sense to give a single nominal value:
                     # grid values must all be different
-                    raise Exception('x_nominal must be a Sequence!')
+                    raise TypeError('x_nominal must be a Sequence!')
                 for (_x, _val) in zip(self.xx, x_nominal):
                     if _x.is_Symbol and not model.getParameter(_x.name):
                         add_parameter(model, _x.name, value=_val,

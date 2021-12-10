@@ -141,7 +141,7 @@ def create_petab_problem(
 
     for spline in splines:
         if spline.x != amici_time_symbol:
-            raise Exception(
+            raise ValueError(
                 'the given splines must be evaluated at the simulation time'
             )
 
@@ -166,7 +166,7 @@ def create_petab_problem(
     T = 0
     for spline in splines:
         if spline.extrapolate[0] is None and spline.xx[0] > 0:
-            raise Exception(
+            raise ValueError(
                 'if no left-extrapolation is defined for a spline, '
                 'its interval of definition should contain zero'
             )
@@ -222,7 +222,7 @@ def create_petab_problem(
         observable_df=observable_df,
     )
     if petab.lint_problem(problem):
-        raise Exception('PEtab lint failed')
+        raise RuntimeError('PEtab lint failed')
 
     # Write PEtab problem to disk
     if folder is None:
