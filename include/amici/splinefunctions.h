@@ -279,7 +279,7 @@ class HermiteSpline : public AbstractSpline
      * by finite differences
      * @return boolean flag
      */
-    bool get_node_derivative_by_fd() { return node_derivative_by_FD_; }
+    bool get_node_derivative_by_fd() const { return node_derivative_by_FD_; }
 
   private:
     void get_coeffs_sensi_lowlevel(int ip,

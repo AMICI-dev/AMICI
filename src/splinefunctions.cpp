@@ -5,6 +5,7 @@
 #include "amici/vector.h"
 #include <algorithm> // std::min
 #include <vector>
+#include <cmath>
 
 namespace amici {
 
@@ -111,11 +112,11 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              bool node_derivative_by_FD,
                              bool equidistant_spacing,
                              bool logarithmic_parametrization)
-  : AbstractSpline(nodes,
-                   node_values,
+  : AbstractSpline(std::move(nodes),
+                   std::move(node_values),
                    equidistant_spacing,
                    logarithmic_parametrization)
-  , node_values_derivative_(node_values_derivative)
+  , node_values_derivative_(std::move(node_values_derivative))
   , first_bode_bc_(firstNodeBC)
   , last_node_bc_(lastNodeBC)
   , first_node_ep_(firstNodeExtrapol)
@@ -776,7 +777,7 @@ HermiteSpline::get_value(const double t) const
     if (get_equidistant_spacing()) {
         /* equidistant spacing: just compute the interval */
         len = nodes_[1] - nodes_[0];
-        i_node = trunc((t - nodes_[0]) / len);
+        i_node = static_cast<int>(std::trunc((t - nodes_[0]) / len));
         i_node = std::min(i_node, n_nodes() - 2);
     } else {
         /* no equidistant spacing: we need to iterate */
@@ -873,7 +874,7 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
     if (get_equidistant_spacing()) {
         /* equidistant spacing: just compute the interval */
         len = nodes_[1] - nodes_[0];
-        i_node = trunc((t - nodes_[0]) / len);
+        i_node = static_cast<int>(std::trunc((t - nodes_[0]) / len));
         i_node = std::min(i_node, n_nodes() - 2);
     } else {
         /* no equidistant spacing: we need to iterate */
