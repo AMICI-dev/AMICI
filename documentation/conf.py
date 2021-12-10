@@ -7,18 +7,22 @@
 # http://www.sphinx-doc.org/en/stable/config
 
 import os
-import sys
 import re
-import mock
 import subprocess
+import sys
+import typing
 
-from sphinx.transforms.post_transforms import ReferencesResolver
-import exhale_multiproject_monkeypatch
-from exhale import configs as exhale_configs
 import exhale.deploy
+import exhale_multiproject_monkeypatch
+import mock
+from exhale import configs as exhale_configs
+from sphinx.transforms.post_transforms import ReferencesResolver
+
+# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+import pandas as pd
 
 # BEGIN Monkeypatch exhale
-exhale_multiproject_monkeypatch  # to avoid removal of unused import
+exhale_multiproject_monkeypatch, pd  # to avoid removal of unused import
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
 
 
@@ -155,6 +159,8 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
 install_mtocpp()
 
 # Install AMICI if not already present
+typing.TYPE_CHECKING = True
+
 try:
     import amici
 except ModuleNotFoundError:
@@ -171,6 +177,9 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
     import amici
+
+typing.TYPE_CHECKING = False
+
 
 # -- Project information -----------------------------------------------------
 # The short X.Y version
