@@ -253,8 +253,7 @@ void Model::initializeSplines() {
 }
 
 void Model::initializeSplineSensitivities() {
-    int nspl = splines_.size();
-    derived_state_.sspl_ = SUNMatrixWrapper(nspl, nplist());
+    derived_state_.sspl_ = SUNMatrixWrapper(splines_.size(), nplist());
     int allnodes = 0;
     for(auto const& spline: splines_) {
         allnodes += spline.n_nodes();

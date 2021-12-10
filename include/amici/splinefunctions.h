@@ -45,7 +45,7 @@ class AbstractSpline
                                             gsl::span<realtype> dnodesdp,
                                             gsl::span<realtype> dslopesdp) = 0;
 
-    virtual realtype get_value(const realtype t) = 0;
+    virtual realtype get_value(const realtype t) const = 0;
 
     virtual realtype get_sensitivity(const realtype t, const int ip) = 0;
 
@@ -55,15 +55,15 @@ class AbstractSpline
      * @brief Accessor to equidistant_spacing_ member
      * @return equidistant_spacing flag
      */
-    bool get_equidistant_spacing();
+    bool get_equidistant_spacing() const;
 
     /**
      * @brief Accessor to logarithmic_parametrization_ member
      * @return logarithmic_parametrization flag
      */
-    bool get_logarithmic_parametrization();
+    bool get_logarithmic_parametrization() const;
 
-    int n_nodes() const { return n_nodes_; }
+    int n_nodes() const { return static_cast<int>(nodes_.size()); }
 
   protected:
     std::vector<realtype> nodes_;
@@ -86,13 +86,13 @@ class AbstractSpline
       gsl::span<realtype> dspline_valuesdp,
       gsl::span<realtype> dspline_slopesdp) = 0;
 
-    realtype get_final_value();
+    realtype get_final_value() const;
 
     void set_final_value(realtype finalValue);
 
-    realtype get_final_sensitivity(const int ip);
+    realtype get_final_sensitivity(const int ip) const;
 
-    void set_final_sensitivity(std::vector<realtype> const finalSensitivity);
+    void set_final_sensitivity(std::vector<realtype> finalSensitivity);
 
     /**
      * @brief Switch equidistant spacing of spline nodes on or off
@@ -116,8 +116,6 @@ class AbstractSpline
 
     bool logarithmic_parametrization_ = false;
 
-    int n_nodes_;
-
 }; // class SplineFunction
 
 class HermiteSpline : public AbstractSpline
@@ -136,8 +134,6 @@ class HermiteSpline : public AbstractSpline
                   bool equidistant_spacing,
                   bool logarithmic_parametrization);
 
-    ~HermiteSpline(){};
-
     void compute_coefficients() override;
 
     void compute_coefficients_sensi(int nplist,
@@ -145,7 +141,7 @@ class HermiteSpline : public AbstractSpline
                                     gsl::span<realtype> dnodesdp,
                                     gsl::span<realtype> dslopesdp) override;
 
-    realtype get_value(const double t) override;
+    realtype get_value(const double t) const override;
 
     realtype get_sensitivity(const double t, const int ip) override;
 
