@@ -1,7 +1,7 @@
 import math
 import os
 import uuid
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 import amici
 import petab
@@ -29,7 +29,8 @@ def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
 
 
 def integrate_spline(
-        spline: AbstractSpline, params: dict, tt, initial_value=0, **kwargs
+        spline: AbstractSpline, params: Union[Dict, None], tt, initial_value=0,
+        **kwargs
 ):
     """
     Integrate the `AbstractSpline` `spline` at timepoints `tt`
@@ -148,7 +149,7 @@ def create_petab_problem(
     doc, model = create_sbml_model(model_name)
     add_compartment(model, 'compartment')
     for (i, spline) in enumerate(splines):
-        spline.addToSbmlModel(model)
+        spline.add_to_sbml_model(model)
         add_species(model, species(i), initial_amount=initial_values[i])
         if use_reactions:
             add_inflow(model, species(i), splines[i].sbml_id)
@@ -402,7 +403,7 @@ def check_splines(
         discard_annotations: bool = False,
         use_adjoint: bool = False,
         skip_sensitivity: bool = False,
-        debug: bool = False,
+        debug: Union[bool, str] = False,
         llh_rtol: float = 1e-8,
         sllh_atol: float = 1e-8,
         x_rtol: float = 1e-11,

@@ -1103,7 +1103,7 @@ class ODEModel:
             new_sbmlId = sp.Symbol(spl.sbml_id.name)
             si._replace_in_all_expressions(old_sbmlId, new_sbmlId)
 
-            spline_expr = spl.odeModelSymbol(si)
+            spline_expr = spl.ode_model_symbol(si)
             spline_subs[spl.sbml_id] = spline_expr
             self.add_component(Expression(
                 identifier=spl.sbml_id,

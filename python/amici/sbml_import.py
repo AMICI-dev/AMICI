@@ -972,7 +972,7 @@ class SbmlImporter:
             # Check whether this rule is a spline rule.
             if not self._discard_annotations:
                 if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                    annotation = AbstractSpline.getAnnotation(rule)
+                    annotation = AbstractSpline.get_annotation(rule)
                     if annotation is not None:
                         if sbml_var not in self.sbml.getListOfParameters():
                             raise NotImplementedError(
@@ -980,7 +980,7 @@ class SbmlImporter:
                                 "SBML parameters at the moment."
                             )
                         self.splines.append(
-                            AbstractSpline.fromAnnotation(
+                            AbstractSpline.from_annotation(
                                 sym_id, annotation, locals=self._local_symbols
                             )
                         )
