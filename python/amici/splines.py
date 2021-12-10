@@ -1189,7 +1189,7 @@ class AbstractSpline(ABC):
         x = children.pop('spline_evaluation_point')
         if len(x) != 1:
             raise ValueError(
-                "Ill-formatted spline annotation 'spline_evaluation_point' " +
+                "Ill-formatted spline annotation 'spline_evaluation_point' "
                 "(more than one children is present)!"
             )
         kwargs['x'] = x[0]
@@ -1408,7 +1408,7 @@ class CubicHermiteSpline(AbstractSpline):
                              "CubicHermiteSplines!")
 
         if dd is None:
-            dd = finite_differences(xx, yy, bc)
+            dd = _finite_differences(xx, yy, bc)
             self._derivatives_by_fd = True
         else:
             dd = np.asarray([sympify_noeval(d) for d in dd])
@@ -1556,12 +1556,12 @@ class CubicHermiteSpline(AbstractSpline):
         return s + ' [' + ', '.join(cmps) + ']'
 
 
-def finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) \
+def _finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) \
         -> np.ndarray:
     dd = []
 
     if bc[0] == 'periodic':
-        fd = centered_fd(yy[-2], yy[0], yy[1], xx[-1] - xx[-2], xx[1] - xx[0])
+        fd = _centered_fd(yy[-2], yy[0], yy[1], xx[-1] - xx[-2], xx[1] - xx[0])
     elif bc[0] == 'zeroderivative':
         fd = sp.Integer(0)
     elif bc[0] == 'natural':
@@ -1570,15 +1570,15 @@ def finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) \
                 'At least 3 nodes are needed '
                 'for computing finite differences with natural bc!'
             )
-        fd = natural_fd(yy[0], xx[1] - xx[0], yy[1], xx[2] - xx[1], yy[2])
+        fd = _natural_fd(yy[0], xx[1] - xx[0], yy[1], xx[2] - xx[1], yy[2])
     else:
-        fd = onesided_fd(yy[0], yy[1], xx[1] - xx[0])
+        fd = _onesided_fd(yy[0], yy[1], xx[1] - xx[0])
     dd.append(fd)
 
     for i in range(1, len(xx) - 1):
         dd.append(
-            centered_fd(yy[i - 1], yy[i], yy[i + 1], xx[i] - xx[i - 1],
-                        xx[i + 1] - xx[i])
+            _centered_fd(yy[i - 1], yy[i], yy[i + 1], xx[i] - xx[i - 1],
+                         xx[i + 1] - xx[i])
         )
 
     if bc[1] == 'periodic':
@@ -1591,20 +1591,20 @@ def finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) \
                 'At least 3 nodes are needed '
                 'for computing finite differences with natural bc!'
             )
-        fd = natural_fd(yy[-1], xx[-2] - xx[-1], yy[-2], xx[-3] - xx[-2],
-                        yy[-3])
+        fd = _natural_fd(yy[-1], xx[-2] - xx[-1], yy[-2], xx[-3] - xx[-2],
+                         yy[-3])
     else:
-        fd = onesided_fd(yy[-2], yy[-1], xx[-1] - xx[-2])
+        fd = _onesided_fd(yy[-2], yy[-1], xx[-1] - xx[-2])
     dd.append(fd)
 
     return np.asarray(dd)
 
 
-def onesided_fd(y0: sp.Expr, y1: sp.Expr, h: sp.Expr) -> sp.Basic:
+def _onesided_fd(y0: sp.Expr, y1: sp.Expr, h: sp.Expr) -> sp.Basic:
     return sp.Mul(1 / h, y1 - y0, evaluate=False)
 
 
-def centered_fd(
+def _centered_fd(
     ym1: sp.Expr,
     y0: sp.Expr,
     yp1: sp.Expr,
@@ -1617,7 +1617,7 @@ def centered_fd(
         return ((yp1 - y0) / hp + (y0 - ym1) / hm) / 2
 
 
-def natural_fd(
+def _natural_fd(
     y0: sp.Expr,
     dx1: sp.Expr,
     y1: sp.Expr,
