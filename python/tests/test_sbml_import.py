@@ -4,14 +4,14 @@ import re
 import shutil
 from urllib.request import urlopen
 
-import amici
 import libsbml
+import numpy as np
 import pytest
+
+import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-
-import numpy as np
 
 
 @pytest.fixture
@@ -48,6 +48,10 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False)
+        # Ensure import succeeds (no missing symbols)
+        module_module = amici.import_model_module("test", tmpdir)
+        assert hasattr(module_module, 'getModel')
+
         # Ensure import succeeds (no missing symbols)
         module_module = amici.import_model_module("test", tmpdir)
         assert hasattr(module_module, 'getModel')

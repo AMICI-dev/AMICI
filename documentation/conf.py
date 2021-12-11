@@ -21,8 +21,9 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
 import pandas as pd
 
-# BEGIN Monkeypatch exhale
 exhale_multiproject_monkeypatch, pd  # to avoid removal of unused import
+
+# BEGIN Monkeypatch exhale
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
 
 
@@ -37,7 +38,7 @@ def my_exhale_generate_doxygen(doxygen_input):
                                    'build', 'mtocpp_post')
         subprocess.run([mtocpp_post, doxy_xml_dir])
 
-    # let exhale do it's job
+    # let exhale do its job
     exhale_generate_doxygen(doxygen_input)
 
 
@@ -49,7 +50,8 @@ exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
 from breathe.renderer.sphinxrenderer import \
     DomainDirectiveFactory as breathe_DomainDirectiveFactory
 
-old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+old_breathe_DomainDirectiveFactory_create = \
+    breathe_DomainDirectiveFactory.create
 
 
 def my_breathe_DomainDirectiveFactory_create(domain: str, args):
@@ -64,7 +66,8 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     return cls(domain + ':' + name, *args[1:])
 
 
-breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+breathe_DomainDirectiveFactory.create = \
+    my_breathe_DomainDirectiveFactory_create
 
 
 # END Monkeypatch breathe
@@ -139,12 +142,12 @@ def install_doxygen():
     print(res.stdout.decode(), res.stderr.decode())
     assert version in res.stdout.decode()
 
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 
 amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -592,8 +595,8 @@ def fix_typehints(sig: str) -> str:
     sig = re.sub(r' &$', r'', sig)
 
     # turn gsl_spans and pointers int Iterables
-    sig = re.sub(r'([\w\.]+) \*', r'Iterable[\1]', sig)
-    sig = re.sub(r'gsl::span< ([\w\.]+) >', r'Iterable[\1]', sig)
+    sig = re.sub(r'([\w.]+) \*', r'Iterable[\1]', sig)
+    sig = re.sub(r'gsl::span< ([\w.]+) >', r'Iterable[\1]', sig)
 
     # fix garbled output
     sig = sig.replace(' >', '')
