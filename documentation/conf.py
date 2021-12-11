@@ -7,18 +7,23 @@
 # http://www.sphinx-doc.org/en/stable/config
 
 import os
-import sys
 import re
-import mock
 import subprocess
+import sys
+import typing
 
-from sphinx.transforms.post_transforms import ReferencesResolver
-import exhale_multiproject_monkeypatch
-from exhale import configs as exhale_configs
 import exhale.deploy
+import exhale_multiproject_monkeypatch
+import mock
+from exhale import configs as exhale_configs
+from sphinx.transforms.post_transforms import ReferencesResolver
+
+# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+import pandas as pd
+
+exhale_multiproject_monkeypatch, pd  # to avoid removal of unused import
 
 # BEGIN Monkeypatch exhale
-exhale_multiproject_monkeypatch  # to avoid removal of unused import
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
 
 
@@ -33,7 +38,7 @@ def my_exhale_generate_doxygen(doxygen_input):
                                    'build', 'mtocpp_post')
         subprocess.run([mtocpp_post, doxy_xml_dir])
 
-    # let exhale do it's job
+    # let exhale do its job
     exhale_generate_doxygen(doxygen_input)
 
 
@@ -45,7 +50,8 @@ exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
 from breathe.renderer.sphinxrenderer import \
     DomainDirectiveFactory as breathe_DomainDirectiveFactory
 
-old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+old_breathe_DomainDirectiveFactory_create = \
+    breathe_DomainDirectiveFactory.create
 
 
 def my_breathe_DomainDirectiveFactory_create(domain: str, args):
@@ -60,7 +66,8 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     return cls(domain + ':' + name, *args[1:])
 
 
-breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+breathe_DomainDirectiveFactory.create = \
+    my_breathe_DomainDirectiveFactory_create
 
 
 # END Monkeypatch breathe
@@ -135,12 +142,12 @@ def install_doxygen():
     print(res.stdout.decode(), res.stderr.decode())
     assert version in res.stdout.decode()
 
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 
 amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -155,6 +162,8 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
 install_mtocpp()
 
 # Install AMICI if not already present
+typing.TYPE_CHECKING = True
+
 try:
     import amici
 except ModuleNotFoundError:
@@ -171,6 +180,9 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
     import amici
+
+typing.TYPE_CHECKING = False
+
 
 # -- Project information -----------------------------------------------------
 # The short X.Y version
@@ -583,8 +595,8 @@ def fix_typehints(sig: str) -> str:
     sig = re.sub(r' &$', r'', sig)
 
     # turn gsl_spans and pointers int Iterables
-    sig = re.sub(r'([\w\.]+) \*', r'Iterable[\1]', sig)
-    sig = re.sub(r'gsl::span< ([\w\.]+) >', r'Iterable[\1]', sig)
+    sig = re.sub(r'([\w.]+) \*', r'Iterable[\1]', sig)
+    sig = re.sub(r'gsl::span< ([\w.]+) >', r'Iterable[\1]', sig)
 
     # fix garbled output
     sig = sig.replace(' >', '')
