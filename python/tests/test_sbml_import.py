@@ -1,18 +1,17 @@
 """Tests related to amici.sbml_import"""
-
 import os
-import sys
 import re
-from urllib.request import urlopen
 import shutil
-from tempfile import TemporaryDirectory
+from urllib.request import urlopen
 
-import amici
 import libsbml
 import numpy as np
 import pytest
+
+import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 
 @pytest.fixture
@@ -50,9 +49,11 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  observables=None,
                                  compute_conservation_laws=False)
 
+        # Ensure import succeeds (no missing symbols)
+        module_module = amici.import_model_module("test", tmpdir)
+        assert hasattr(module_module, 'getModel')
 
-@pytest.mark.skipif(sys.platform in ['win32', 'cygwin'],
-                    reason="windows stinks")
+
 def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
