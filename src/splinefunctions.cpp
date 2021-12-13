@@ -5,8 +5,8 @@
 #include "amici/vector.h"
 
 #include <algorithm> // std::min
-#include <vector>
 #include <cmath>
+#include <vector>
 
 namespace amici {
 
@@ -34,6 +34,11 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
   , equidistant_spacing_(equidistant_spacing)
   , logarithmic_parametrization_(logarithmic_parametrization)
 {
+    if(node_values_.size() != nodes_.size()) {
+        throw std::invalid_argument(
+            "Number of nodes and number of node_values do not match.");
+    }
+
     /* we want to set the number of nodes */
     auto n_nodes_ = static_cast<int>(node_values_.size());
 
@@ -126,8 +131,11 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
   , last_node_ep_(lastNodeExtrapol)
   , node_derivative_by_FD_(node_derivative_by_FD)
 {
-
-    // TODO: Validate arguments
+    if (not node_derivative_by_FD_ and
+        node_values_derivative_.size() != nodes_.size()) {
+        throw std::invalid_argument(
+          "Size of node_values_derivative does not match number of nodes.");
+    }
 
     /* We may have to compute the derivatives at the nodes */
     handle_inner_derivatives();
@@ -792,8 +800,9 @@ HermiteSpline::get_value(const double t) const
     }
 
     /* Evaluate the interpolation polynomial */
-    return evaluate_polynomial((t - nodes_[i_node]) / len,
-                              gsl::make_span(coefficients).subspan(i_node * 4));
+    return evaluate_polynomial(
+      (t - nodes_[i_node]) / len,
+      gsl::make_span(coefficients).subspan(i_node * 4));
 }
 
 realtype
@@ -860,9 +869,10 @@ HermiteSpline::get_sensitivity(const double t, const int ip)
             case SplineExtrapolation::polynomial:
                 /* Evaluate last interpolation polynomial */
                 len = nodes_[1] - nodes_[0];
-                return evaluate_polynomial((t - nodes_[0]) / len,
-                                          gsl::make_span(coefficients_sensi)
-                                            .subspan(ip * (n_nodes() - 1) * 4));
+                return evaluate_polynomial(
+                  (t - nodes_[0]) / len,
+                  gsl::make_span(coefficients_sensi)
+                    .subspan(ip * (n_nodes() - 1) * 4));
 
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
