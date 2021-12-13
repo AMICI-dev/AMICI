@@ -127,6 +127,8 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
   , node_derivative_by_FD_(node_derivative_by_FD)
 {
 
+    // TODO: Validate arguments
+
     /* We may have to compute the derivatives at the nodes */
     handle_inner_derivatives();
     /* First and last node need to be handled separately */

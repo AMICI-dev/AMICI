@@ -5,6 +5,7 @@ find_package(Boost COMPONENTS serialization)
 set(SRC_LIST
     testMisc.cpp
     testExpData.cpp
+    testSplines.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
