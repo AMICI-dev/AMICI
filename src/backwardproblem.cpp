@@ -184,7 +184,7 @@ realtype BackwardProblem::getTnext(const int it) {
             it, discs_.size(), this->t_
         );
     }
-        
+
     if (!discs_.empty() &&
         (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();
