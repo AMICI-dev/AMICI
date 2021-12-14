@@ -242,13 +242,14 @@ def _process_pysb_species(pysb_model: pysb.Model,
 
     for ix, specie in enumerate(pysb_model.species):
         init = sp.sympify('0.0')
-        for ic in pysb_model.odes.model.initial_conditions:
-            if pysb.pattern.match_complex_pattern(ic[0], specie, exact=True):
+        for ic in pysb_model.odes.model.initials:
+            if pysb.pattern.match_complex_pattern(
+                    ic.pattern, specie, exact=True):
                 # we don't want to allow expressions in initial conditions
-                if ic[1] in pysb_model.expressions:
-                    init = pysb_model.expressions[ic[1].name].expand_expr()
+                if ic.value in pysb_model.expressions:
+                    init = pysb_model.expressions[ic.value.name].expand_expr()
                 else:
-                    init = ic[1]
+                    init = ic.value
 
         ode_model.add_component(
             State(
