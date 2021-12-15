@@ -194,6 +194,10 @@ def test_steadystate_simulation(model_steadystate_module):
                       df_obs[list(model.getObservableIds())].values).all()
     amici.getResidualsAsDataFrame(model, edata, rdata)
 
+    df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
+    assert np.isclose(rdata[0]['w'],
+                      df_expr[list(model.getExpressionIds())].values).all()
+
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
     check_derivatives(model, solver, edata[0], atol=1e-3,
