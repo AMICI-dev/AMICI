@@ -11,6 +11,7 @@
 void
 checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
 {
+    ASSERT_EQ(r.id, s.id);
     ASSERT_EQ(r.np, s.np);
     ASSERT_EQ(r.nk, s.nk);
     ASSERT_EQ(r.nx, s.nx);
@@ -227,7 +228,7 @@ TEST(ReturnDataSerializationTest, ToString)
         std::vector<int>(nz, 0));
 
     amici::ReturnData r(solver, m);
-
+    r.id = "some_id";
     std::string serialized = amici::serializeToString(r);
 
     checkReturnDataEqual(
