@@ -127,13 +127,7 @@ if not _imported_from_setup():
 
         # These module require the swig interface and other dependencies
         from .numpy import ReturnDataView, ExpDataView
-        from .pandas import (
-            getEdataFromDataFrame,
-            getDataObservablesAsDataFrame,
-            getSimulationObservablesAsDataFrame,
-            getSimulationStatesAsDataFrame,
-            getResidualsAsDataFrame
-        )
+        from .pandas import *
 
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables

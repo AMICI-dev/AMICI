@@ -14,6 +14,15 @@ from typing import List, Union, Optional, Dict, SupportsFloat
 from .numpy import ExpDataView
 import amici
 
+__all__ = [
+    'get_expressions_as_dataframe',
+    'getEdataFromDataFrame',
+    'getDataObservablesAsDataFrame',
+    'getSimulationObservablesAsDataFrame',
+    'getSimulationStatesAsDataFrame',
+    'getResidualsAsDataFrame'
+]
+
 ExpDatas = Union[
     List[amici.amici.ExpData], List[amici.ExpDataPtr],
     amici.amici.ExpData, amici.ExpDataPtr
