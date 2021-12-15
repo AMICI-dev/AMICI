@@ -160,7 +160,11 @@ def test_steadystate_simulation(model_steadystate_module):
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     rdata = amici.runAmiciSimulation(model, solver)
     edata = [amici.ExpData(rdata, 1, 0)]
+    edata[0].id = "some condition ID"
     rdata = amici.runAmiciSimulations(model, solver, edata)
+
+    assert rdata[0].status == amici.AMICI_SUCCESS
+    assert rdata[0].id == edata[0].id
 
     # check roundtripping of DataFrame conversion
     df_edata = amici.getDataObservablesAsDataFrame(model, edata)

@@ -48,6 +48,9 @@ class SwigPtrView(collections.abc.Mapping):
         if item in self._cache:
             return self._cache[item]
 
+        if item == 'id':
+            return getattr(self._swigptr, item)
+
         if item not in self._field_names:
             self.__missing__(item)
 
