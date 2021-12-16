@@ -34,10 +34,6 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
   , equidistant_spacing_(equidistant_spacing)
   , logarithmic_parametrization_(logarithmic_parametrization)
 {
-    if(node_values_.size() != nodes_.size()) {
-        throw std::invalid_argument(
-            "Number of nodes and number of node_values do not match.");
-    }
 
     /* we want to set the number of nodes */
     auto n_nodes_ = static_cast<int>(node_values_.size());
@@ -53,6 +49,10 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
         nodes_[n_nodes_ - 1] = nodes_[1];
         for (int i_node = 0; i_node < n_nodes_ - 1; i_node++)
             nodes_[i_node] = node_start + i_node * node_step;
+    }
+    else if (nodes_.size() != n_nodes_) {
+        throw std::invalid_argument(
+            "Number of nodes and number of node_values do not match.");
     }
 
     if (logarithmic_parametrization_) {
