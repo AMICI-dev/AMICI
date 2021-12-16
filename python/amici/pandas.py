@@ -377,6 +377,7 @@ def _fill_conditions_dict(datadict: Dict[str, float],
         dictionary with filled condition parameters.
 
     """
+    datadict['condition_id'] = edata.id
     datadict['t_presim'] = edata.t_presim
 
     for i_par, par in enumerate(
@@ -416,7 +417,7 @@ def _get_extended_observable_cols(model: AmiciModel,
         column names as list.
     """
     return \
-        ['time', 'datatype', 't_presim'] + \
+        ['condition_id', 'time', 'datatype', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
@@ -443,7 +444,7 @@ def _get_observable_cols(model: AmiciModel,
         column names as list.
     """
     return \
-        ['time', 't_presim'] + \
+        ['condition_id', 'time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
          _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
@@ -468,7 +469,7 @@ def _get_state_cols(model: AmiciModel,
         column names as list.
     """
     return \
-        ['time', 't_presim'] + \
+        ['condition_id', 'time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
@@ -491,7 +492,7 @@ def _get_expression_cols(model: AmiciModel, by_id: bool) -> List[str]:
         column names as list.
     """
     return \
-        ['time', 't_presim'] + \
+        ['condition_id', 'time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
