@@ -1029,11 +1029,6 @@ class AbstractSpline(ABC):
                 raise SbmlAnnotationError('Could not set SBML annotation!')
             add_assignment_rule(model, parameter_id, formula)
 
-    # def _replace_sbml_time_with_amici_time(self) -> None:
-    #     self._replace_in_all_expressions(
-    #         sbml_time_symbol, amici_time_symbol
-    #     )
-
     def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol) \
             -> None:
         if self.sbml_id == old:
