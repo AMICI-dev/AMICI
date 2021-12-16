@@ -528,7 +528,9 @@ def create_edata_for_condition(
 
     # create an ExpData object
     edata = amici.ExpData(amici_model)
-
+    edata.id = condition[SIMULATION_CONDITION_ID]
+    if condition.get(PREEQUILIBRATION_CONDITION_ID):
+        edata.id += "+" + condition.get(PREEQUILIBRATION_CONDITION_ID)
     ##########################################################################
     # enable initial parameters reinitialization
     species_in_condition_table = [

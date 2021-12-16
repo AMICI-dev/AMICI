@@ -98,7 +98,9 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
             observed_events_.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
             observed_data_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
         }
-        }
+    }
+
+    id = rdata.id;
 }
 
 void ExpData::setTimepoints(const std::vector<realtype> &ts) {

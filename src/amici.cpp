@@ -112,6 +112,9 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
     std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
                                                                      model);
+    if(edata) {
+        rdata->id = edata->id;
+    }
 
     std::unique_ptr<SteadystateProblem> preeq {};
     std::unique_ptr<ForwardProblem> fwd {};
