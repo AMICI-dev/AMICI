@@ -307,7 +307,7 @@ AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
             warningF("AMICI:NaN",
                      "AMICI encountered a NaN value at index %i/%i in %s!",
                      idx,
-                     (int)array.size()-1,
+                     (int)array.size(),
                      fun);
             return AMICI_RECOVERABLE_ERROR;
         }
@@ -315,7 +315,7 @@ AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
             warningF("AMICI:Inf",
                      "AMICI encountered an Inf value at index %i/%i in %s!",
                      idx,
-                     (int)array.size()-1,
+                     (int)array.size(),
                      fun);
             return AMICI_RECOVERABLE_ERROR;
         }
