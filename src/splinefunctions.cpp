@@ -50,7 +50,7 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
         for (int i_node = 0; i_node < n_nodes_ - 1; i_node++)
             nodes_[i_node] = node_start + i_node * node_step;
     }
-    else if (nodes_.size() != n_nodes_) {
+    else if (nodes_.size() != node_values_.size()) {
         throw std::invalid_argument(
             "Number of nodes and number of node_values do not match.");
     }
