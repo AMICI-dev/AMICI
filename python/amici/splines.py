@@ -554,7 +554,7 @@ class AbstractSpline(ABC):
 
         # Compute polynomial in Horner form for the scaled variable
         t = sp.Dummy('t')
-        poly = sp.poly(self._poly(t, i), wrt=t)
+        poly = sp.poly(self._poly(t, i).expand(), wrt=t, domain=sp.RR)
         poly = sp.horner(poly)
 
         # Replace scaled variable with its value,
