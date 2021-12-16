@@ -170,6 +170,7 @@ void serialize(Archive &ar, amici::SimulationParameters &s, const unsigned int /
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
     ar &dynamic_cast<amici::ModelDimensions&>(r);
+    ar &r.id;
     ar &r.nx;
     ar &r.nxtrue;
     ar &r.nplist;
