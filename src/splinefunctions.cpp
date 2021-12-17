@@ -808,6 +808,8 @@ HermiteSpline::get_value(const double t) const
         while (nodes_[i_node + 1] < t) {
             i_node++;
         }
+        if (t == nodes_[i_node + 1])
+            return node_values_[i_node + 1]; // make it exact on nodes
         len = nodes_[i_node + 1] - nodes_[i_node];
     }
 
