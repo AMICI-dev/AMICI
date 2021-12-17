@@ -19,7 +19,7 @@ void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, do
     }
 }
 
-TEST(Splines, Spline1)
+TEST(Splines, SplineUniform)
 {
     // Uniform grid
     HermiteSpline spline({ 0.0, 1.0 },
@@ -47,7 +47,7 @@ TEST(Splines, Spline1)
     test_spline_values(spline, expectations);
 }
 
-TEST(Splines, Spline2)
+TEST(Splines, SplineNonUniform)
 {
     // Non-uniform grid
     HermiteSpline spline({ 0.0, 0.1, 0.5, 1.0 },
@@ -71,6 +71,36 @@ TEST(Splines, Spline2)
         {0.50, 0.5},
         {0.75, 0.6015625},
         {1.00, 1.0},
+    };
+    test_spline_values(spline, expectations);
+}
+
+TEST(Splines, SplineExplicit)
+{
+    // Derivatives are given explicitly
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 0.0, 2.0, 0.5,  1.0, 0.75 },
+                         { 1.0, 0.0, 0.1, -0.1, 0.0  },
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::constant,
+                         SplineExtrapolation::constant,
+                         false,  // node_derivative_by_FD
+                         true,   // equidistant_spacing
+                         false); // logarithmic_parametrization
+
+    spline.compute_coefficients();
+    std::vector<std::tuple<double, double>> expectations = {
+        // t, expected value
+        {0.0, 0.0},
+        {0.2, 1.8000000000000003},
+        {0.25, 2.0},
+        {0.4, 1.0243999999999998},
+        {0.5, 0.5},
+        {0.6, 0.6819999999999999},
+        {0.75, 1.0},
+        {0.8, 0.9707999999999999},
+        {1.0, 0.75},
     };
     test_spline_values(spline, expectations);
 }
