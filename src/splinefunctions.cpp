@@ -150,10 +150,22 @@ HermiteSpline::handle_inner_derivatives()
      * differences, we have to fill up node_values_derivative_ */
     if (node_derivative_by_FD_) {
         node_values_derivative_.resize(n_nodes(), 0.0);
-        for (int i_node = 1; i_node < n_nodes() - 1; i_node++)
-            node_values_derivative_[i_node] =
-              (node_values_[i_node + 1] - node_values_[i_node - 1]) /
-              (nodes_[i_node + 1] - nodes_[i_node - 1]);
+        if (equidistant_spacing_) {
+            realtype hx2 = 2 * (nodes_[1] - nodes_[0]);
+            for (int i_node = 1; i_node < n_nodes() - 1; i_node++)
+              node_values_derivative_[i_node] =
+                (node_values_[i_node + 1] - node_values_[i_node - 1]) / hx2;
+        } else {
+            for (int i_node = 1; i_node < n_nodes() - 1; i_node++) {
+              realtype dleft =
+                (node_values_[i_node] - node_values_[i_node - 1]) /
+                (nodes_[i_node] - nodes_[i_node - 1]);
+              realtype dright =
+                (node_values_[i_node + 1] - node_values_[i_node]) /
+                (nodes_[i_node + 1] - nodes_[i_node]);
+              node_values_derivative_[i_node] = (dleft + dright) / 2;
+            }
+        }
     }
 }
 
