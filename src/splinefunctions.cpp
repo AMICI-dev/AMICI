@@ -125,7 +125,7 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                    equidistant_spacing,
                    logarithmic_parametrization)
   , node_values_derivative_(std::move(node_values_derivative))
-  , first_bode_bc_(firstNodeBC)
+  , first_node_bc_(firstNodeBC)
   , last_node_bc_(lastNodeBC)
   , first_node_ep_(firstNodeExtrapol)
   , last_node_ep_(lastNodeExtrapol)
@@ -163,7 +163,7 @@ HermiteSpline::handle_boundary_conditions()
     int last = n_nodes() - 1;
 
     /* We have to take special care of the first node */
-    switch (first_bode_bc_) {
+    switch (first_node_bc_) {
         case SplineBoundaryCondition::given:
             if (node_derivative_by_FD_)
                 /* 1-sided FD */
@@ -424,20 +424,20 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
             case SplineExtrapolation::linear:
                 if (get_node_derivative_by_fd() &&
-                    first_bode_bc_ == SplineBoundaryCondition::given) {
+                    first_node_bc_ == SplineBoundaryCondition::given) {
                     sm0 =
                       (dspline_valuesdp[spline_offset + ip + nplist] - sp0) /
                       (nodes_[1] - nodes_[0]);
 
                 } else if (get_node_derivative_by_fd() &&
-                           first_bode_bc_ == SplineBoundaryCondition::natural) {
+                           first_node_bc_ == SplineBoundaryCondition::natural) {
                     throw AmiException(
                       "Natural boundary condition for "
                       "Hermite splines with linear extrapolation is "
                       "not yet implemented.");
 
                 } else if (!get_node_derivative_by_fd() &&
-                           first_bode_bc_ == SplineBoundaryCondition::given) {
+                           first_node_bc_ == SplineBoundaryCondition::given) {
                     // sm0 = dspline_slopesdp[spline_offset + ip];
                     throw AmiException(
                       "Natural boundary condition for "
@@ -445,7 +445,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                       "not yet implemented.");
 
                 } else if (!get_node_derivative_by_fd() &&
-                           first_bode_bc_ == SplineBoundaryCondition::natural) {
+                           first_node_bc_ == SplineBoundaryCondition::natural) {
                     throw AmiException("Not implemented: sm0 is not set");
 
                 } else {
@@ -570,14 +570,14 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
     if (get_node_derivative_by_fd()) {
         if (i_node == 0) {
             /* Are we at the fist node? What's the boundary condition? */
-            if (first_bode_bc_ == SplineBoundaryCondition::zeroDerivative) {
+            if (first_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
                 smk = 0;
-            } else if (first_bode_bc_ == SplineBoundaryCondition::given) {
+            } else if (first_node_bc_ == SplineBoundaryCondition::given) {
                 smk = (spk1 - spk) / len;
-            } else if (first_bode_bc_ == SplineBoundaryCondition::natural) {
+            } else if (first_node_bc_ == SplineBoundaryCondition::natural) {
                 throw AmiException("Natural boundary condition for Hermite "
                                    "splines is not yet implemented.");
-            } else if (first_bode_bc_ == SplineBoundaryCondition::periodic) {
+            } else if (first_node_bc_ == SplineBoundaryCondition::periodic) {
                 smk = (spk1 - dnodesdp[node_offset + (last - 1) * nplist]) /
                       (len + nodes_[last] - nodes_[last - 1]);
             } else {
@@ -624,7 +624,7 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
 
         /* For the nodes at the boundary, we have to take care of the bc */
         if (i_node == 0 &&
-            first_bode_bc_ == SplineBoundaryCondition::zeroDerivative)
+            first_node_bc_ == SplineBoundaryCondition::zeroDerivative)
             smk = 0;
         if (i_node == n_nodes() - 2 &&
             last_node_bc_ == SplineBoundaryCondition::zeroDerivative)
