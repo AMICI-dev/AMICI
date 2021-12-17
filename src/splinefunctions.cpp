@@ -54,35 +54,79 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
         throw std::invalid_argument(
             "Number of nodes and number of node_values do not match.");
     }
+}
 
-    if (logarithmic_parametrization_) {
-        for (auto& node_value : node_values_)
-            node_value = std::log(node_value);
-    }
+realtype AbstractSpline::get_value(const realtype t) const
+{
+    auto y = get_value_scaled(t);
+    return logarithmic_parametrization_ ? std::exp(y) : y;
+}
+
+realtype
+AbstractSpline::get_sensitivity(const realtype t, const int ip) const
+{
+    auto s = get_sensitivity_scaled(t, ip);
+    return logarithmic_parametrization_ ? s * get_value(t) : s;
+}
+
+realtype
+AbstractSpline::get_sensitivity(const realtype t, const int ip, const realtype value) const
+{
+    auto s = get_sensitivity_scaled(t, ip);
+    return logarithmic_parametrization_ ? s * value : s;
+}
+
+realtype AbstractSpline::get_node_value(const int i) const
+{
+    return node_values_[i];
+}
+
+realtype AbstractSpline::get_node_value_scaled(const int i) const
+{
+    // TODO It could be precomputed and stored in the object.
+    //      Not sure if its worth the effort.
+    if (logarithmic_parametrization_)
+      return std::log(node_values_[i]);
+    else
+      return node_values_[i];
+}
+
+realtype
+AbstractSpline::get_final_value_scaled() const
+{
+    return final_value_scaled_;
 }
 
 realtype
 AbstractSpline::get_final_value() const
 {
-    return final_value_;
+    auto y = get_final_value_scaled();
+    return logarithmic_parametrization_ ? std::exp(y) : y;
 }
 
 void
-AbstractSpline::set_final_value(realtype finalValue)
+AbstractSpline::set_final_value_scaled(realtype finalValue)
 {
-    final_value_ = finalValue;
+    final_value_scaled_ = finalValue;
+}
+
+realtype
+AbstractSpline::get_final_sensitivity_scaled(const int ip) const
+{
+    return final_sensitivity_scaled_[ip];
 }
 
 realtype
 AbstractSpline::get_final_sensitivity(const int ip) const
 {
-    return final_sensitivity_[ip];
+    auto s = get_final_sensitivity_scaled(ip);
+    return logarithmic_parametrization_ ? s * get_final_value() : s;
 }
 
 void
-AbstractSpline::set_final_sensitivity(std::vector<realtype> finalSensitivity)
+AbstractSpline::set_final_sensitivity_scaled(std::vector<realtype> finalSensitivity)
 {
-    final_sensitivity_ = std::move(finalSensitivity);
+    final_sensitivity_scaled_ = std::move(finalSensitivity);
 }
 
 bool
@@ -91,23 +135,10 @@ AbstractSpline::get_equidistant_spacing() const
     return equidistant_spacing_;
 }
 
-void
-AbstractSpline::set_equidistant_spacing(bool equidistant_spacing)
-{
-    equidistant_spacing_ = equidistant_spacing;
-}
-
 bool
 AbstractSpline::get_logarithmic_parametrization() const
 {
     return logarithmic_parametrization_;
-}
-
-void
-AbstractSpline::set_logarithmic_parametrization(
-  bool logarithmic_parametrization)
-{
-    logarithmic_parametrization_ = logarithmic_parametrization;
 }
 
 HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
@@ -246,6 +277,21 @@ HermiteSpline::handle_boundary_conditions()
     }
 }
 
+realtype HermiteSpline::get_node_derivative(const int i) const
+{
+    return node_values_derivative_[i];
+}
+
+realtype HermiteSpline::get_node_derivative_scaled(const int i) const
+{
+    // TODO It could be precomputed and stored in the object.
+    //      Not sure if its worth the effort.
+    if (get_logarithmic_parametrization())
+      return node_values_derivative_[i] / node_values_[i];
+    else
+      return node_values_derivative_[i];
+}
+
 void
 HermiteSpline::compute_coefficients()
 {
@@ -267,17 +313,18 @@ HermiteSpline::compute_coefficients()
         realtype len = nodes_[i_node + 1] - nodes_[i_node];
 
         /* Coefficients for cubic Hermite polynomials */
-        coefficients[4 * i_node] = node_values_[i_node];
-        coefficients[4 * i_node + 1] = len * node_values_derivative_[i_node];
+        coefficients[4 * i_node] = get_node_value_scaled(i_node);
+        coefficients[4 * i_node + 1] = len * get_node_derivative_scaled(i_node);
         coefficients[4 * i_node + 2] =
-          -3 * node_values_[i_node] -
-          2 * len * node_values_derivative_[i_node] +
-          3 * node_values_[i_node + 1] -
-          len * node_values_derivative_[i_node + 1];
+          -3 * get_node_value_scaled(i_node) -
+          2 * len * get_node_derivative_scaled(i_node) +
+          3 * get_node_value_scaled(i_node + 1) -
+          len * get_node_derivative_scaled(i_node + 1);
         coefficients[4 * i_node + 3] =
-          2 * node_values_[i_node] + len * node_values_derivative_[i_node] -
-          2 * node_values_[i_node + 1] +
-          len * node_values_derivative_[i_node + 1];
+          2 * get_node_value_scaled(i_node) +
+          len * get_node_derivative_scaled(i_node) -
+          2 * get_node_value_scaled(i_node + 1) +
+          len * get_node_derivative_scaled(i_node + 1);
     }
 
     /* Take care of coefficients for extrapolation */
@@ -304,14 +351,14 @@ HermiteSpline::compute_coefficients_extrapolation()
      * Those coefficients are stored as [b_first, a_first, b_last, a_last] */
     switch (first_node_ep_) {
         case SplineExtrapolation::constant:
-            coefficients_extrapolate[0] = node_values_[0];
+            coefficients_extrapolate[0] = get_node_value_scaled(0);
             coefficients_extrapolate[1] = 0;
             break;
 
         case SplineExtrapolation::linear:
             coefficients_extrapolate[0] =
-              node_values_[0] - nodes_[0] * node_values_derivative_[0];
-            coefficients_extrapolate[1] = node_values_derivative_[0];
+              get_node_value_scaled(0) - nodes_[0] * get_node_derivative_scaled(0);
+            coefficients_extrapolate[1] = get_node_derivative_scaled(0);
             break;
 
         default:
@@ -321,14 +368,14 @@ HermiteSpline::compute_coefficients_extrapolation()
     }
     switch (last_node_ep_) {
         case SplineExtrapolation::constant:
-            coefficients_extrapolate[2] = node_values_[last];
+            coefficients_extrapolate[2] = get_node_value_scaled(last);
             coefficients_extrapolate[3] = 0;
             break;
 
         case SplineExtrapolation::linear:
             coefficients_extrapolate[2] =
-              node_values_[last] - nodes_[last] * node_values_derivative_[last];
-            coefficients_extrapolate[3] = node_values_derivative_[last];
+              get_node_value_scaled(last) - nodes_[last] * get_node_derivative_scaled(last);
+            coefficients_extrapolate[3] = get_node_derivative_scaled(last);
             break;
 
         default:
@@ -572,10 +619,10 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
      */
     int node_offset = spline_offset + ip;
     int last = n_nodes() - 1;
-    double spk = dnodesdp[node_offset + i_node * nplist];
-    double spk1 = dnodesdp[node_offset + (i_node + 1) * nplist];
-    double smk;
-    double smk1;
+    realtype spk = dnodesdp[node_offset + i_node * nplist];
+    realtype spk1 = dnodesdp[node_offset + (i_node + 1) * nplist];
+    realtype smk;
+    realtype smk1;
 
     /* Get sensitivities of slopes. Depending on finite differences are used
      * or not, this may be a bit cumbersome now... */
@@ -691,7 +738,7 @@ HermiteSpline::compute_final_value()
         /* Periodic: will not yield a steady state */
         finalValue = NAN;
     }
-    set_final_value(finalValue);
+    set_final_value_scaled(finalValue);
 }
 
 void
@@ -720,15 +767,15 @@ HermiteSpline::compute_final_sensitivity(
         /* Periodic: will not yield a steady state */
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     }
-    set_final_sensitivity(finalSensitivity);
+    set_final_sensitivity_scaled(finalSensitivity);
 }
 
 realtype
-HermiteSpline::get_value(const double t) const
+HermiteSpline::get_value_scaled(const realtype t) const
 {
     /* Is this a steady state computation? */
     if (std::isinf(t))
-        return get_final_value();
+        return get_final_value_scaled();
 
     /* Compute the spline value */
     int i_node;
@@ -809,7 +856,7 @@ HermiteSpline::get_value(const double t) const
             i_node++;
         }
         if (t == nodes_[i_node + 1])
-            return node_values_[i_node + 1]; // make it exact on nodes
+            return get_node_value_scaled(i_node + 1); // make it exact on nodes
         len = nodes_[i_node + 1] - nodes_[i_node];
     }
 
@@ -820,11 +867,11 @@ HermiteSpline::get_value(const double t) const
 }
 
 realtype
-HermiteSpline::get_sensitivity(const double t, const int ip)
+HermiteSpline::get_sensitivity_scaled(const realtype t, const int ip) const
 {
     /* Is this a steady state computation? */
     if (std::isinf(t))
-        return get_final_sensitivity(ip);
+        return get_final_sensitivity_scaled(ip);
 
     /* Compute the parametric derivative of the spline value */
     int i_node;

@@ -1967,28 +1967,17 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
 }
 
 void Model::fspl(const realtype t) {
-    for (int ispl = 0; ispl < nspl; ispl++) {
-        if (splines_[ispl].get_logarithmic_parametrization()) {
-            state_.spl_[ispl] = std::exp(splines_[ispl].get_value(t));
-        } else {
-            state_.spl_[ispl] = splines_[ispl].get_value(t);
-        }
-    }
+    for (int ispl = 0; ispl < nspl; ispl++)
+        state_.spl_[ispl] = splines_[ispl].get_value(t);
 }
 
 void Model::fsspl(const realtype t) {
     derived_state_.sspl_.zero();
     realtype *sspl_data = derived_state_.sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
-        for (int ispl = 0; ispl < nspl; ispl++) {
-            if (splines_[ispl].get_logarithmic_parametrization()) {
-                sspl_data[ispl + nspl * ip] =
-                    state_.spl_[ispl] * splines_[ispl].get_sensitivity(t, ip);
-            } else {
-                sspl_data[ispl + nspl * ip] =
-                    splines_[ispl].get_sensitivity(t, ip);
-            }
-        }
+        for (int ispl = 0; ispl < nspl; ispl++)
+            sspl_data[ispl + nspl * ip] =
+                splines_[ispl].get_sensitivity(t, ip, state_.spl_[ispl]);
     }
 }
 

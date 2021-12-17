@@ -69,10 +69,31 @@ class AbstractSpline
      * @brief Get the value of this spline at a given point
      * @param t point at which the spline is to be evaluated
      * @return value of the spline at `t`
-     * @remark When the interpolation occurs in log-space,
-     * this value is not remapped to the original space.
      */
-    virtual realtype get_value(const realtype t) const = 0;
+    realtype get_value(const realtype t) const;
+
+    /**
+     * @brief Get the value of this spline at a given point
+     * in the scale in which interpolation is carried out (e.g., log-scale)
+     * @param t point at which the spline is to be evaluated
+     * @return scaled value of the spline at `t`
+     */
+    virtual realtype get_value_scaled(const realtype t) const = 0;
+
+    /**
+     * @brief Get the value of this spline at a given node
+     * @param i index of the node at which the spline is to be evaluated
+     * @return value of the spline at the `i`-th node
+     */
+    realtype get_node_value(const int i) const;
+
+    /**
+     * @brief Get the value of this spline at a given node
+     * in the scale in which interpolation is carried out (e.g., log-scale)
+     * @param i index of the node at which the spline is to be evaluated
+     * @return scaled value of the spline at the `i`-th node
+     */
+    realtype get_node_value_scaled(const int i) const;
 
     /**
      * @brief Get the derivative of this spline with respect to a given
@@ -81,10 +102,32 @@ class AbstractSpline
      * @param ip index of the parameter
      * @return sensitivity of the spline with respect to the `ip`th parameter
      * at `t`
-     * @remark When the interpolation occurs in log-space,
-     * this value is not remapped to the original space.
      */
-    virtual realtype get_sensitivity(const realtype t, const int ip) = 0;
+    realtype get_sensitivity(const realtype t, const int ip) const;
+
+    /**
+     * @brief Get the derivative of this spline with respect to a given
+     * parameter at a given point
+     * @param t point at which the sensitivity is to be evaluated
+     * @param ip index of the parameter
+     * @param value value of the spline at the given time point.
+     *        It is used e.g. when interpolation is carried out in log-space.
+     *        If omitted it will be computed.
+     * @return sensitivity of the spline with respect to the `ip`th parameter
+     * at `t`
+     */
+    realtype get_sensitivity(const realtype t, const int ip, const realtype value) const;
+
+    /**
+     * @brief Get the derivative of this spline with respect to a given
+     * parameter at a given point
+     * in the scale in which interpolation is carried out (e.g., log-scale)
+     * @param t point at which the sensitivity is to be evaluated
+     * @param ip index of the parameter
+     * @return scaled sensitivity of the spline with respect to the `ip`th parameter
+     * at `t`
+     */
+    virtual realtype get_sensitivity_scaled(const realtype t, const int ip) const = 0;
 
     /**
      * @brief Whether nodes are uniformly spaced
@@ -168,11 +211,20 @@ class AbstractSpline
     realtype get_final_value() const;
 
     /**
+     * @brief Get the limit value of the spline
+     * (in the scale in which interpolation is carried out)
+     * as the evaluation point tends to positive infinity.
+     * @return limit value
+     */
+    realtype get_final_value_scaled() const;
+
+    /**
      * @brief Set the limit value of the spline
+     * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
      * @param finalValue final value
      */
-    void set_final_value(realtype finalValue);
+    void set_final_value_scaled(realtype finalValue);
 
     /**
      * @brief Get the limit value of the sensitivity
@@ -184,30 +236,28 @@ class AbstractSpline
     realtype get_final_sensitivity(const int ip) const;
 
     /**
+     * @brief Get the limit value of the sensitivity
+     * with respect to the given parameter
+     * (in the scale in which interpolation is carried out)
+     * as the evaluation point tends to positive infinity.
+     * @param ip parameter index
+     * @return limit value
+     */
+    realtype get_final_sensitivity_scaled(const int ip) const;
+
+    /**
      * @brief Set the limit value of the sensitivity
+     * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
      * @param finalSensitivity final value of the sensitivity
      * for each parameter
      */
-    void set_final_sensitivity(std::vector<realtype> finalSensitivity);
-
-    /**
-     * @brief Switch equidistant spacing of spline nodes on or off
-     * @param equidistant_spacing flag for equidistancy of spline nodes
-     */
-    void set_equidistant_spacing(bool equidistant_spacing);
-
-    /**
-     * @brief Switch enforced positivity by logarithmic parametrization
-     * on or off
-     * @param logarithmic_parametrization flag for logarithmic parametrization
-     */
-    void set_logarithmic_parametrization(bool logarithmic_parametrization);
+    void set_final_sensitivity_scaled(std::vector<realtype> finalSensitivity);
 
   private:
-    realtype final_value_;
+    realtype final_value_scaled_;
 
-    std::vector<realtype> final_sensitivity_;
+    std::vector<realtype> final_sensitivity_scaled_;
 
     bool equidistant_spacing_ = false;
 
@@ -271,9 +321,24 @@ class HermiteSpline : public AbstractSpline
                                     gsl::span<realtype> dnodesdp,
                                     gsl::span<realtype> dslopesdp) override;
 
-    realtype get_value(const double t) const override;
+    realtype get_value_scaled(const realtype t) const override;
 
-    realtype get_sensitivity(const double t, const int ip) override;
+    /**
+     * @brief Get the derivative of the spline at a given node
+     * @param i index of the node at which the spline is to be evaluated
+     * @return value of the derivative at the `i`-th node
+     */
+    realtype get_node_derivative(const int i) const;
+
+    /**
+     * @brief Get the derivative of the spline at a given node
+     * in the scale in which interpolation is carried out (e.g., log-scale)
+     * @param i index of the node at which the spline is to be evaluated
+     * @return scaled value of the derivative at the `i`-th node
+     */
+    realtype get_node_derivative_scaled(const int i) const;
+
+    realtype get_sensitivity_scaled(const realtype t, const int ip) const override;
 
     /**
      * @brief Whether derivatives of this spline are computed
