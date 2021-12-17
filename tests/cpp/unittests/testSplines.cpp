@@ -2,9 +2,11 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <tuple>
 #include <vector>
 
+using std::exp;
 using amici::HermiteSpline;
 using amici::SplineBoundaryCondition;
 using amici::SplineExtrapolation;
@@ -101,6 +103,37 @@ TEST(Splines, SplineExplicit)
         {0.75, 1.0},
         {0.8, 0.9707999999999999},
         {1.0, 0.75},
+    };
+    test_spline_values(spline, expectations);
+}
+
+TEST(Splines, SplineLogarithmic)
+{
+    // Logarithmic parametrization
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 0.2, 2.0, 0.5, 1.0, 0.75 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::constant,
+                         SplineExtrapolation::constant,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         true); // logarithmic_parametrization
+    // log-space values [-1.60943791, 0.69314718, -0.69314718, 0, -0.28768207]
+    // log-space derivatives [36, 0.3, -4, 0.5, -1.33333333]
+    spline.compute_coefficients();
+    std::vector<std::tuple<double, double>> expectations = {
+        // t, expected value
+        {0.0,  0.2},
+        {0.2,  2.07939779651678},
+        {0.25, 2.0},
+        {0.4,  0.947459046694449},
+        {0.5,  0.5},
+        {0.6,  0.545987404053269},
+        {0.75, 1.0},
+        {0.8,  0.996753014029391},
+        {1.0,  0.75},
     };
     test_spline_values(spline, expectations);
 }
