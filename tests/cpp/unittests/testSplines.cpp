@@ -37,13 +37,13 @@ TEST(Splines, test_spline)
       spline.compute_coefficients();
       std::vector<std::tuple<double, double>> expectations = {
           // t, expected value
-          {0.00, 0.0},
-          {0.25, 1.74609375},
-          {1/3,  2},
-          {0.50, 1.3437499999999996},
-          {2/3,  0.5},
-          {0.75, 0.484375},
-          {1.00, 1.0},
+          {0.00,  0.0},
+          {0.25,  1.74609375},
+          {1.0/3, 2.0},
+          {0.50,  1.3437499999999996},
+          {2.0/3, 0.5},
+          {0.75,  0.484375},
+          {1.00,  1.0},
       };
       test_spline_values(spline, expectations);
     }
