@@ -131,7 +131,7 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
   , last_node_ep_(lastNodeExtrapol)
   , node_derivative_by_FD_(node_derivative_by_FD)
 {
-    if (not node_derivative_by_FD_ and
+    if (!node_derivative_by_FD_ &&
         node_values_derivative_.size() != nodes_.size()) {
         throw std::invalid_argument(
           "Size of node_values_derivative does not match number of nodes.");
