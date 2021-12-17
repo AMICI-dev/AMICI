@@ -23,16 +23,16 @@ TEST(Splines, test_spline)
 {
     {
       // Uniform grid
-      HermiteSpline spline({ 0, 1 },
-                         { 0, 2, 0.5, 1.0 },
-                         {},
-                         SplineBoundaryCondition::given,
-                         SplineBoundaryCondition::given,
-                         SplineExtrapolation::constant,
-                         SplineExtrapolation::constant,
-                         true,   // node_derivative_by_FD
-                         true,  // equidistant_spacing
-                         false); // logarithmic_parametrization
+      HermiteSpline spline({ 0.0, 1.0 },
+                           { 0.0, 2.0, 0.5, 1.0 },
+                           {},
+                           SplineBoundaryCondition::given,
+                           SplineBoundaryCondition::given,
+                           SplineExtrapolation::constant,
+                           SplineExtrapolation::constant,
+                           true,   // node_derivative_by_FD
+                           true,  // equidistant_spacing
+                           false); // logarithmic_parametrization
 
       spline.compute_coefficients();
       std::vector<std::tuple<double, double>> expectations = {
@@ -50,16 +50,16 @@ TEST(Splines, test_spline)
 
     {
       // Non-uniform grid
-      HermiteSpline spline({ 0, 0.1, 0.5, 1 },
-                         { 0, 2, 0.5, 1.0 },
-                         {},
-                         SplineBoundaryCondition::given,
-                         SplineBoundaryCondition::given,
-                         SplineExtrapolation::constant,
-                         SplineExtrapolation::constant,
-                         true,   // node_derivative_by_FD
-                         false,  // equidistant_spacing
-                         false); // logarithmic_parametrization
+      HermiteSpline spline({ 0.0, 0.1, 0.5, 1.0 },
+                           { 0.0, 2.0, 0.5, 1.0 },
+                           {},
+                           SplineBoundaryCondition::given,
+                           SplineBoundaryCondition::given,
+                           SplineExtrapolation::constant,
+                           SplineExtrapolation::constant,
+                           true,   // node_derivative_by_FD
+                           false,  // equidistant_spacing
+                           false); // logarithmic_parametrization
 
       spline.compute_coefficients();
       std::vector<std::tuple<double, double>> expectations = {
