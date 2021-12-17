@@ -11,6 +11,8 @@ using amici::HermiteSpline;
 using amici::SplineBoundaryCondition;
 using amici::SplineExtrapolation;
 
+#define ASSERT_APPROX(x, x0, rtol) ASSERT_LT(std::abs(((x) - (x0))/(x0)), rtol)
+
 void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations)
 {
     for (auto expected : expectations) {
@@ -18,6 +20,16 @@ void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, do
         double expected_value;
         std::tie(time, expected_value) = expected;
         ASSERT_DOUBLE_EQ(spline.get_value(time), expected_value);
+    }
+}
+
+void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations, const double rtol)
+{
+    for (auto expected : expectations) {
+        double time;
+        double expected_value;
+        std::tie(time, expected_value) = expected;
+        ASSERT_APPROX(spline.get_value(time), expected_value, rtol);
     }
 }
 
@@ -135,5 +147,5 @@ TEST(Splines, SplineLogarithmic)
         {0.8,  0.996753014029391},
         {1.0,  0.75},
     };
-    test_spline_values(spline, expectations);
+    test_spline_values(spline, expectations, 1e-14);
 }
