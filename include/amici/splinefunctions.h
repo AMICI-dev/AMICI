@@ -317,7 +317,7 @@ class HermiteSpline : public AbstractSpline
 
     std::vector<realtype> node_values_derivative_;
 
-    SplineBoundaryCondition first_bode_bc_ = SplineBoundaryCondition::given;
+    SplineBoundaryCondition first_node_bc_ = SplineBoundaryCondition::given;
 
     SplineBoundaryCondition last_node_bc_ = SplineBoundaryCondition::given;
 
