@@ -136,9 +136,6 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
     model.setSteadyStateSensitivityMode(
         SteadyStateSensitivityMode_simulationFSA)
 
-    def assert_true(x):
-        assert x
-
     for edata in create_parameterized_edatas(
             amici_model=model, petab_problem=problem,
             problem_parameters=problem_parameters):
@@ -147,7 +144,7 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
         model.setParameterScale(edata.pscale)
         edata.parameters = []
         edata.pscale = amici.parameterScalingFromIntVector([])
-        amici_check_derivatives(model, solver, edata, assert_true)
+        amici_check_derivatives(model, solver, edata)
 
 
 def run():

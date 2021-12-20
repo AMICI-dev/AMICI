@@ -10,7 +10,7 @@ import amici
 import h5py
 import numpy as np
 import pytest
-from amici.gradient_check import check_derivatives, check_results
+from amici.gradient_check import check_derivatives, _check_results
 
 cpp_test_dir = Path(__file__).parents[2] / 'tests' / 'cpp'
 options_file = str(cpp_test_dir / 'testOptions.h5')
@@ -20,10 +20,6 @@ expected_results = h5py.File(expected_results_file, 'r')
 model_cases = [(sub_test, case)
                for sub_test in expected_results.keys()
                for case in list(expected_results[sub_test].keys())]
-
-
-def assert_fun(x):
-    assert x
 
 
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
@@ -81,8 +77,7 @@ def test_pregenerated_model(sub_test, case):
             and len(model.getParameterList()) \
             and not model_name.startswith('model_neuron') \
             and not case.endswith('byhandpreeq'):
-        check_derivatives(model, solver, edata, assert_fun,
-                          **check_derivative_opts)
+        check_derivatives(model, solver, edata, **check_derivative_opts)
 
     verify_simulation_opts = dict()
 
@@ -165,8 +160,7 @@ def test_pregenerated_model(sub_test, case):
 
         if edata and solver.getSensitivityMethod() and \
                 solver.getSensitivityOrder() and len(model.getParameterList()):
-            check_derivatives(model, solver, edata, assert_fun,
-                              **check_derivative_opts)
+            check_derivatives(model, solver, edata, **check_derivative_opts)
 
         chi2_ref = rdata.chi2
         res_ref = rdata.res
@@ -225,20 +219,20 @@ def verify_simulation_results(rdata, expected_results, fields=None,
                 if subfield not in subfields:
                     assert rdata[subfield] is None, field
                     continue
-                check_results(rdata, subfield,
-                              expected_results[field][subfield][()],
-                              assert_fun, 1e-8, 1e-8)
+                _check_results(rdata, subfield,
+                               expected_results[field][subfield][()],
+                               atol=1e-8, rtol=1e-8)
         else:
             if field not in fields:
                 assert rdata[field] is None, field
                 continue
             if field == 's2llh':
-                check_results(rdata, field, expected_results[field][()],
-                              assert_fun, 1e-4, 1e-3)
+                _check_results(rdata, field, expected_results[field][()],
+                               atol=1e-4, rtol=1e-3)
             else:
-                check_results(rdata, field, expected_results[field][()],
-                              assert_fun, atol, rtol)
+                _check_results(rdata, field, expected_results[field][()],
+                               atol=atol, rtol=rtol)
 
     for attr in attrs:
-        check_results(rdata, attr, expected_results.attrs[attr], assert_fun,
-                      atol, rtol)
+        _check_results(rdata, attr, expected_results.attrs[attr],
+                       atol=atol, rtol=rtol)

@@ -1,18 +1,17 @@
 """Tests related to amici.sbml_import"""
-
 import os
-import sys
 import re
-from urllib.request import urlopen
 import shutil
-from tempfile import TemporaryDirectory
+from urllib.request import urlopen
 
-import amici
 import libsbml
 import numpy as np
 import pytest
+
+import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 
 @pytest.fixture
@@ -50,9 +49,11 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  observables=None,
                                  compute_conservation_laws=False)
 
+        # Ensure import succeeds (no missing symbols)
+        module_module = amici.import_model_module("test", tmpdir)
+        assert hasattr(module_module, 'getModel')
 
-@pytest.mark.skipif(sys.platform in ['win32', 'cygwin'],
-                    reason="windows stinks")
+
 def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
@@ -75,10 +76,6 @@ def test_nosensi(simple_sbml_model):
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
         rdata = amici.runAmiciSimulation(model, solver)
         assert rdata.status == amici.AMICI_ERROR
-
-
-def assert_fun(x):
-    assert x
 
 
 @pytest.fixture
@@ -153,7 +150,7 @@ def test_presimulation(sbml_example_presimulation_module):
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
-    check_derivatives(model, solver, edata, assert_fun, epsilon=1e-4)
+    check_derivatives(model, solver, edata, epsilon=1e-4)
 
 
 def test_steadystate_simulation(model_steadystate_module):
@@ -163,7 +160,11 @@ def test_steadystate_simulation(model_steadystate_module):
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     rdata = amici.runAmiciSimulation(model, solver)
     edata = [amici.ExpData(rdata, 1, 0)]
+    edata[0].id = "some condition ID"
     rdata = amici.runAmiciSimulations(model, solver, edata)
+
+    assert rdata[0].status == amici.AMICI_SUCCESS
+    assert rdata[0].id == edata[0].id
 
     # check roundtripping of DataFrame conversion
     df_edata = amici.getDataObservablesAsDataFrame(model, edata)
@@ -197,9 +198,13 @@ def test_steadystate_simulation(model_steadystate_module):
                       df_obs[list(model.getObservableIds())].values).all()
     amici.getResidualsAsDataFrame(model, edata, rdata)
 
+    df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
+    assert np.isclose(rdata[0]['w'],
+                      df_expr[list(model.getExpressionIds())].values).all()
+
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
-    check_derivatives(model, solver, edata[0], assert_fun, atol=1e-3,
+    check_derivatives(model, solver, edata[0], atol=1e-3,
                       rtol=1e-3, epsilon=1e-4)
 
     # Run some additional tests which need a working Model,
@@ -301,7 +306,7 @@ def test_likelihoods(model_test_likelihoods):
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
         check_derivatives(
-            model, solver, edata, assert_fun, atol=1e-2, rtol=1e-2,
+            model, solver, edata, atol=1e-2, rtol=1e-2,
             epsilon=1e-5, check_least_squares=False
         )
 
@@ -381,7 +386,7 @@ def test_sympy_exp_monkeypatch():
 
         # print sensitivity-related results
         assert rdata['status'] == amici.AMICI_SUCCESS
-        check_derivatives(model, solver, None, assert_fun, atol=1e-2, rtol=1e-2,
+        check_derivatives(model, solver, None, atol=1e-2, rtol=1e-2,
                           epsilon=1e-3)
 
 

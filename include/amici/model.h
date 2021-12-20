@@ -642,7 +642,7 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
-    
+
     /**
      * @brief Sets the estimated lower boundary for sigma_y. When :meth:`setAddSigmaResiduals` is
      * activated, this lower boundary must ensure that log(sigma) + min_sigma > 0.
@@ -651,7 +651,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void setMinimumSigmaResiduals(double min_sigma) {
         min_sigma_ = min_sigma;
     }
-    
+
     /**
      * @brief Gets the specified estimated lower boundary for sigma_y.
      * @return lower boundary
@@ -659,7 +659,7 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype getMinimumSigmaResiduals() const {
         return min_sigma_;
     }
-    
+
     /**
      * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
      *
@@ -673,7 +673,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void setAddSigmaResiduals(bool sigma_res) {
         sigma_res_ = sigma_res;
     }
-    
+
     /**
      * @brief Checks whether residuals should be added to account for parameter dependent sigma.
      * @return sigma_res
@@ -802,7 +802,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
-    
+
     /**
      * @brief Get scaling type for observable
      * @param iy observable index
@@ -1750,10 +1750,10 @@ class Model : public AbstractModel, public ModelDimensions {
      * checked for finiteness
      */
     bool always_check_finite_ {false};
-    
+
     /** indicates whether sigma residuals are to be added for every datapoint  */
     bool sigma_res_ {false};
-    
+
     /** offset to ensure positivity of sigma residuals, only has an effect when `sigma_res_` is `true`  */
     realtype min_sigma_ {50.0};
 

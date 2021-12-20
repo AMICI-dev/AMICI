@@ -127,13 +127,7 @@ if not _imported_from_setup():
 
         # These module require the swig interface and other dependencies
         from .numpy import ReturnDataView, ExpDataView
-        from .pandas import (
-            getEdataFromDataFrame,
-            getDataObservablesAsDataFrame,
-            getSimulationObservablesAsDataFrame,
-            getSimulationStatesAsDataFrame,
-            getResidualsAsDataFrame
-        )
+        from .pandas import *
 
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
@@ -144,7 +138,8 @@ if not _imported_from_setup():
         from typing import Protocol
 
         class ModelModule(Protocol):
-            """Enable Python static type checking for AMICI-generated model modules"""
+            """Enable Python static type checking for AMICI-generated model
+            modules"""
             def getModel(self) -> amici.Model:
                 pass
     except ImportError:

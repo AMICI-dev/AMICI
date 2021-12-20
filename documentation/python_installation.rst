@@ -388,6 +388,15 @@ install the latter locally, using:
 
    conda install -c conda-forge openblas
 
+To make AMICI use openblas, set the following environment variable:
+
+.. code-block:: bash
+
+   export BLAS_LIBS=-lopenblas
+
+``BLAS_LIBS`` needs to be set during installation of the AMICI package, as
+well as during any future model import.
+
 To install AMICI, now run:
 
 .. code-block:: bash
