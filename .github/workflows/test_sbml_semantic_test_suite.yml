@@ -29,7 +29,7 @@ jobs:
                 "1000-1250", "1251-1780"]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@master
       with:
         fetch-depth: 1
     - name: apt
