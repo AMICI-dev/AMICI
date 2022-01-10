@@ -92,6 +92,10 @@ class ReturnData: public ModelDimensions {
                                   SteadystateProblem const *posteq,
                                   Model &model, Solver const &solver,
                                   ExpData const *edata);
+    /**
+     * @brief Arbitrary (not necessarily unique) identifier.
+     */
+    std::string id;
 
     /**
      * timepoints (shape `nt`)

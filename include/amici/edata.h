@@ -385,6 +385,11 @@ class ExpData : public SimulationParameters {
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
 
+    /**
+     * @brief Arbitrary (not necessarily unique) identifier.
+     */
+    std::string id;
+
   protected:
     /**
      * @brief resizes observedData, observedDataStdDev, observedEvents and
