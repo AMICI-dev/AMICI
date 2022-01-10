@@ -122,7 +122,7 @@ def install_amici_deps_rtd():
 
 def install_doxygen():
     """Get a more recent doxygen"""
-    version = '1.9.1'
+    version = '1.9.3'
     doxygen_exe = os.path.join(amici_dir, 'ThirdParty',
                                f'doxygen-{version}', 'bin', 'doxygen')
     # to create a symlink to doxygen in a location that is already on PATH
