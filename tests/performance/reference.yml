@@ -1,5 +1,5 @@
 # Reference wall times (seconds) with some buffer
-create_sdist: 5
+create_sdist: 10
 install_sdist: 150
 petab_import: 2100
 install_model: 120
