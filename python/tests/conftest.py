@@ -5,8 +5,14 @@ import os
 import shutil
 import sys
 
-import amici
 import pytest
+
+if sys.platform == 'win32':
+    # GitHub actions OpenBLAS location
+    #  directory needs to be added explicitly in Python>=3.8
+    os.add_dll_directory(r"C:\BLAS\OpenBLAS-0.3.12\OpenBLAS-0.3.12\lib")
+
+import amici
 
 
 @pytest.fixture(scope="session")
