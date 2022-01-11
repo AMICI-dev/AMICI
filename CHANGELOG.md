@@ -26,6 +26,8 @@ Fixes:
 * Fixed wrong array size in warnings by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1624
  
+NOTE: AMICI 0.11.23 requires numpy<1.22.0 
+
 **Full Changelog**:
 https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
 
