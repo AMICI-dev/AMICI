@@ -225,11 +225,41 @@
 }
 
 {
-   siphash24
+   _Py_HashBytes
    Memcheck:Cond
-   fun:siphash24
-   fun:pysiphash
+   ...
    fun:_Py_HashBytes
+   ...
+}
+
+{
+   PyDict_SetItem
+   Memcheck:Cond
+   fun:PyDict_SetItem
+   ...
+}
+
+{
+   PyDict_SetItem
+   Memcheck:Value8
+   ...
+   fun:PyDict_SetItem
+   ...
+}
+
+{
+   tuplehash
+   Memcheck:Cond
+   fun:tuplehash
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   ...
+   fun:_PyUnicodeWriter_WriteSubstring
+   fun:do_markup
+   ...
 }
 
 {
