@@ -233,6 +233,14 @@
 }
 
 {
+   _Py_HashBytes
+   Memcheck:Value8
+   ...
+   fun:_Py_HashBytes
+   ...
+}
+
+{
    PyDict_SetItem
    Memcheck:Cond
    fun:PyDict_SetItem
@@ -326,6 +334,23 @@
    other
    Memcheck:Cond
    ...
+   fun:PyUnicode_Append
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:PyUnicode_Append
+   ...
+}
+
+
+{
+   other
+   Memcheck:Cond
+   ...
    fun:_PyUnicodeWriter_Finish
    ...
 }
@@ -369,7 +394,7 @@
    other
    Memcheck:Cond
    fun:memmove
-   obj:/usr/bin/python3.?
+   fun:unicode_concatenate
    ...
 }
 
@@ -583,7 +608,14 @@
 }
 
 {
-   PyDict_SetDefault
+   other
+   Memcheck:Cond
+   fun:PyDict_SetDefault
+   ...
+}
+
+{
+   unicode_eq
    Memcheck:Cond
    fun:bcmp
    fun:unicode_eq
