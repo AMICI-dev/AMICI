@@ -810,11 +810,11 @@ void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
         int iyt = iy + it * edata.nytrue();
         if (!edata.isSetObservedData(it, iy))
             continue;
-        
+
         res.at(iyt) = amici::fres(y_it.at(iy), observedData[iy],
                                   sigmay_it.at(iy),
                                   model.getObservableScaling(iy));
-        
+
         if (sigma_res)
             res.at(iyt + nt * nytrue) = fres_error(sigmay_it.at(iy),
                                                    sigma_offset);
@@ -874,7 +874,7 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
             int idx = (iy + it * edata.nytrue()) * nplist + ip;
-            
+
             sres.at(idx) = amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
                                         observedData[iy], sigmay_it.at(iy),
                                         ssigmay_it.at(iy + ny * ip),

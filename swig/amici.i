@@ -131,8 +131,18 @@ std::vector<amici::ParameterScaling> parameterScalingFromIntVector(std::vector<i
 }
 }; // namespace amici
 %}
+%extend amici::Model {
+    void setParameterScale(std::vector<int> const& intVec) {
+        std::vector<amici::ParameterScaling> result(intVec.size());
+        for (int i = 0; i < (int) result.size(); ++i) {
+            result[i] = static_cast<amici::ParameterScaling>(intVec[i]);
+        }
+        $self->setParameterScale(result);
+    }
+}
 namespace amici {
     std::vector<amici::ParameterScaling> parameterScalingFromIntVector(std::vector<int> const& intVec);
+    void Model::setParameterScale(std::vector<int> const& intVec);
 }
 %template(ParameterScalingVector) std::vector<amici::ParameterScaling>;
 
