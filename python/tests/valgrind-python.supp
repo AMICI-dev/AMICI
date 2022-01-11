@@ -204,6 +204,17 @@
 
 {
    other
+   Memcheck:Value8
+   ...
+   fun:PyBytes_Repr
+   fun:PyObject_Str
+   ...
+   fun:PyObject_Format
+   ...
+}
+
+{
+   other
    Memcheck:Cond
    ...
    fun:PyBytes_Repr
@@ -222,8 +233,17 @@
 }
 
 {
+   _PyUnicodeWriter_WriteSubstring
+   Memcheck:Value8
+   fun:memmove
+   fun:_PyUnicodeWriter_WriteSubstring
+   fun:do_markup
+}
+
+{
    sre_match
    Memcheck:Cond
+   ...
    fun:sre_ucs1_match
    fun:sre_match
    ...
@@ -232,7 +252,7 @@
 {
    sre_ucs1_count
    Memcheck:Value8
-   fun:sre_ucs1_count
+   ...
    fun:sre_ucs1_match
    fun:sre_match
 }
@@ -327,7 +347,7 @@
    other
    Memcheck:Value8
    fun:memmove
-   obj:/usr/bin/python3.?
+   fun:unicode_concatenate
    ...
 }
 
@@ -536,7 +556,7 @@
    PyDict_SetDefault
    Memcheck:Cond
    fun:bcmp
-   obj:/usr/bin/python3.*
+   fun:unicode_eq
    ...
 }
 
