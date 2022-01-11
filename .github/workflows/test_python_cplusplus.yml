@@ -12,7 +12,16 @@ jobs:
       ENABLE_GCOV_COVERAGE: "TRUE"
       CI_SONARCLOUD: "TRUE"
 
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
@@ -133,7 +142,16 @@ jobs:
 
     runs-on: macos-latest
 
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
