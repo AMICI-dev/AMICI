@@ -484,3 +484,39 @@
    obj:/usr/bin/python3.*
    ...
 }
+
+{
+   PyDict_SetDefault
+   Memcheck:Cond
+   fun:bcmp
+   obj:/usr/bin/python3.*
+   ...
+}
+
+{
+   PyUnicode_Contains
+   Memcheck:Cond
+   fun:memchr
+   fun:PyUnicode_Contains
+   ...
+}
+
+{
+   _Py_write
+   Memcheck:Param
+   write(buf)
+   fun:__libc_write
+   fun:write
+   fun:_Py_write
+   obj:/usr/bin/python3.*
+}
+
+{
+   _PyObject_GC_New
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_New
+   ...
+   obj:/usr/bin/python3.*
+}
