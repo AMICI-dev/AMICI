@@ -246,7 +246,7 @@ def fill_in_parameters_for_condition(
     ]
 
     if parameters:
-        edata.parameters = parameters
+        edata.parameters = np.asarray(parameters, dtype=float)
 
     if scales:
         edata.pscale = amici.parameterScalingFromIntVector(scales)
