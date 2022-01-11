@@ -172,7 +172,7 @@
    Memcheck:Cond
    fun:PyUnicode_Decode
    fun:PyUnicode_FromEncodedObject
-   obj:/usr/bin/python3.?
+   ...
 }
 
 {
@@ -208,7 +208,6 @@
    ...
    fun:PyBytes_Repr
    fun:PyObject_Str
-   obj:/usr/bin/python3.?
    ...
    fun:PyObject_Format
    ...
@@ -308,6 +307,23 @@
    obj:/usr/bin/python3.?
    fun:_PyObject_CallMethodIdObjArgs
    obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   dict_get_impl
+   Memcheck:Cond
+   ...
+   fun:dict_get_impl
+   fun:dict_get
+   ...
+}
+
+{
+   lookdict
+   Memcheck:Value8
+   ...
+   fun:lookdict
    ...
 }
 
