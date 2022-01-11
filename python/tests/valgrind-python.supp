@@ -214,6 +214,37 @@
 }
 
 {
+   siphash24
+   Memcheck:Cond
+   fun:siphash24
+   fun:pysiphash
+   fun:_Py_HashBytes
+}
+
+{
+   sre_match
+   Memcheck:Cond
+   fun:sre_ucs1_match
+   fun:sre_match
+   ...
+}
+
+{
+   sre_ucs1_count
+   Memcheck:Value8
+   fun:sre_ucs1_count
+   fun:sre_ucs1_match
+   fun:sre_match
+}
+
+{
+   PyUnicode_Splitlines
+   Memcheck:Cond
+   fun:asciilib_splitlines
+   fun:PyUnicode_Splitlines
+}
+
+{
    other
    Memcheck:Value8
    ...
