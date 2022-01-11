@@ -609,8 +609,26 @@
 
 {
    other
-   Memcheck:Cond
+   Memcheck:Value8
+   ...
    fun:PyDict_SetDefault
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:PyDict_SetDefault
+   ...
+}
+
+{
+   _PyObject_GC_Alloc
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
    ...
 }
 
