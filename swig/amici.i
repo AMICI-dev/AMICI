@@ -189,6 +189,15 @@ RDataReporting = enum('RDataReporting')
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
 
+%pythonbegin %{
+import sys
+import os
+
+if sys.platform == 'win32' and (dll_dir := os.environ.get("AMICI_DLL_DIRS", "")):
+    map(os.add_dll_directory, dll_dir.split(os.pathsep))
+%}
+
+
 // add module docstring and import additional types for typehints
 %pythonbegin %{
 """

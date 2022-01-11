@@ -268,7 +268,7 @@ by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
 
 .. note::
 
-    Since Python 3.8, the library directory needs to be set as follows:
+    Since Python 3.8, the library directory needs to be set either from Python:
 
     .. code-block:: python
 
@@ -277,7 +277,7 @@ by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
         os.add_dll_directory("C:\\BLAS\\bin")
         import amici
 
-    Adding it to ``PATH`` will not work.
+    or via the environment variable ``AMICI_DLL_DIRS``.
 
 Further topics
 ++++++++++++++
