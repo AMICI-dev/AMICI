@@ -7,7 +7,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-SchmuckerFar2022">
-<p>Schmucker, Gabriele AND Faeder, Robin AND Farina. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
+<p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
 </div>
 <div id="ref-StaporSch2022">
 <p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Simon Merkt, Dilan Pathirana, Bodo M. H. Lange, Daniel Weindl, and Jan Hasenauer. 2022. “Mini-batch optimization enables training of ODE models on large-scale datasets.” <em>Nature Communications</em> 13 (1): 34. <a href="https://doi.org/10.1038/s41467-021-27374-6">https://doi.org/10.1038/s41467-021-27374-6</a>.</p>
