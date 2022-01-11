@@ -194,7 +194,7 @@ import sys
 import os
 
 if sys.platform == 'win32' and (dll_dirs := os.environ.get("AMICI_DLL_DIRS", "")):
-    print(dll_dirs.split(os.pathsep))
+    os.add_dll_directory(os.path.dirname(__file__))
     map(os.add_dll_directory, dll_dirs.split(os.pathsep))
 
 %}
