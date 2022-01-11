@@ -2,6 +2,33 @@
 
 ## v0.X Series
 
+### v0.11.23 (2022-01-11)
+
+Features:
+* Added overload for Model::setParameterScale with vector<int> by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1614
+* Removed assert_fun argument from gradient checking, improve output 
+  by @dweindl, @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1609
+* Added get_expressions_as_dataframe by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1621
+* Added `id` field to ExpData and ReturnData by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1622
+* Included condition id in dataframes by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1623
+
+Fixes:
+* C++: Fixed SUNMatrixWrapper ctor for size 0 matrices by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1608
+* Python: Handle TemporaryDirectory cleanup failures on Windows by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1617
+* Python: pysb.Model.initial_conditions throws a DeprecationWarning by 
+  @PaulJonasJost in https://github.com/AMICI-dev/AMICI/pull/1620
+* Fixed wrong array size in warnings by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1624
+ 
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
+
 ### v0.11.22 (2021-12-02)
 
 * **Require sympy>=1.9,pysb>=1.13.1** by @FFroehlich, @dweindl
