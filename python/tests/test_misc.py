@@ -2,14 +2,15 @@
 
 import os
 import subprocess
-from tempfile import TemporaryDirectory
 
-import amici
-from amici.ode_export import smart_subs_dict
 import libsbml
 import pytest
 import sympy as sp
-from amici.ode_export import _monkeypatched, _custom_pow_eval_derivative
+
+import amici
+from amici.ode_export import _custom_pow_eval_derivative, _monkeypatched, \
+    smart_subs_dict
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 
 def test_parameter_scaling_from_int_vector():
@@ -109,7 +110,7 @@ def test_smart_subs_dict():
     assert sp.simplify(result_default - expected_default).is_zero
     assert sp.simplify(result_reverse - expected_reverse).is_zero
 
-    
+
 def test_monkeypatch():
     t = sp.Symbol('t')
     n = sp.Symbol('n')

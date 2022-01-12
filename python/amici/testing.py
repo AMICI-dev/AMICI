@@ -17,3 +17,8 @@ class TemporaryDirectoryWinSafe(TemporaryDirectory):
         except PermissionError as e:
             if sys.platform not in {'win32', 'cygwin'}:
                 raise e
+        except NotADirectoryError:
+            # Ignore exception on Windows for pyd files:
+            #  NotADirectoryError: [WinError 267] The directory name is
+            #  invalid: '....pyd'
+            pass
