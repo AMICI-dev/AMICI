@@ -4,6 +4,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliar
 cmake -G "Ninja" ^
     -DBUILD_DOUBLE=1 ^
     -DBUILD_SHARED_LIBS=ON ^
+    -DMSVC_STATIC_CRT=ON ^
     -DCMAKE_INSTALL_PREFIX:PATH="C:\BLAS\OpenBLAS-%1\OpenBLAS-%1\out\install\x64-Release" ^
     -DCMAKE_C_COMPILER:FILEPATH=cl ^
     -DCMAKE_BUILD_TYPE=Release ^
