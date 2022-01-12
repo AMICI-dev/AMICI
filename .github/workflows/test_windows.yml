@@ -63,4 +63,4 @@ jobs:
 
 
     - name: Run Python tests
-      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
+      run: dtrace -c python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
