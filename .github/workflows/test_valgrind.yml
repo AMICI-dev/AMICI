@@ -50,6 +50,11 @@ jobs:
       run: |
         scripts/run-valgrind-cpp.sh
 
+    - name: numpy<1.22.0
+      # until funny valgrind+h5py+numpy1.22.0 issues are resolved
+      run: |
+        pip3 install "numpy<1.22.0"
+
     - name: Install python package
       run: |
         scripts/installAmiciSource.sh
