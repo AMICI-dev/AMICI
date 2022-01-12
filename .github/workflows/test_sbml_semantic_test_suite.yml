@@ -27,8 +27,14 @@ jobs:
       matrix:
         cases: ["1 - 250", "251 - 500", "501 - 750", "751 - 1000",
                 "1000-1250", "1251-1780"]
+        python-version: [ 3.8 ]
 
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
       with:
         fetch-depth: 1

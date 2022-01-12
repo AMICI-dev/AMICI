@@ -8,7 +8,7 @@ Short guide
 
 Installation of the AMICI Python package has the following prerequisites:
 
-* Python>=3.7
+* Python>=3.8
 * :term:`SWIG`>=3.0
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
