@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ 3.9 ]
+        python-version: [ "3.10" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -58,8 +58,8 @@ jobs:
       shell: bash
       run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
-    - name: Dumpbin
-      run: dumpbin /DEPENDENTS "C:\hostedtoolcache\windows\Python\3.9.9\x64\lib\site-packages\amici\_amici.cp39-win_amd64.pyd"
+#    - name: Dumpbin
+#      run: dumpbin /DEPENDENTS "C:\hostedtoolcache\windows\Python\3.9.9\x64\lib\site-packages\amici\_amici.cp39-win_amd64.pyd"
 
     - name: Run Python tests
       run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
