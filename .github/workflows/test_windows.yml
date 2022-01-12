@@ -61,5 +61,8 @@ jobs:
 #    - name: Dumpbin
 #      run: dumpbin /DEPENDENTS "C:\hostedtoolcache\windows\Python\3.9.9\x64\lib\site-packages\amici\_amici.cp39-win_amd64.pyd"
 
+    - run: python -m amici
+    - run: python -c "import amici"
+
     - name: Run Python tests
       run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
