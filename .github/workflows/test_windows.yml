@@ -64,4 +64,4 @@ jobs:
 
     - name: Run Python tests
       run: |
-        "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
+        C:\"Program Files (x86)"\"Microsoft Visual Studio"\2017\BuildTools\VC\Auxiliary\Build\vcvars64.bat && python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
