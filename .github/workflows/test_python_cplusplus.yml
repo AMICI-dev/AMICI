@@ -175,6 +175,10 @@ jobs:
       run: |
         scripts/run-cppcheck.sh
 
+    - name: dbg
+      run: |
+        which python && python --version && command -v python3 && echo $(dirname $(dirname $(which python))) 
+
     - name: Python tests
       run: |
         scripts/run-python-tests.sh

@@ -25,7 +25,9 @@ fi
 ${cmake} \
   -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
   -DCMAKE_BUILD_TYPE=$build_type \
-  -DPython3_EXECUTABLE="$(command -v python3)" ..
+  -DPython3_EXECUTABLE="$(command -v python3)" \
+  -DPython3_ROOT_DIR=$(dirname $(dirname $(command -v python3))) \
+  ..
 
 # build, with or without sonarcloud wrapper
 if [ "${CI_SONARCLOUD:-}" = "TRUE" ]; then
