@@ -59,7 +59,7 @@ jobs:
       run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
     - name: Dumpbin
-      run: dumpbin /DEPENDENTS "C:\hostedtoolcache\windows\Python\3.8.10\x64\lib\site-packages\amici\_amici.cp38-win_amd64.pyd"
+      run: dumpbin /DEPENDENTS "C:\hostedtoolcache\windows\Python\3.9.9\x64\lib\site-packages\amici\_amici.cp39-win_amd64.pyd"
 
 
     - name: Run Python tests
