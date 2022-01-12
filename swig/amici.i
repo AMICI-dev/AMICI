@@ -193,13 +193,13 @@ RDataReporting = enum('RDataReporting')
 import sys
 import os
 
-if sys.platform == 'win32' and (dll_dirs := os.environ.get("AMICI_DLL_DIRS", "")):
+if sys.platform == 'win32':
     def add_dll_directory(x):
         print("Adding", x)
         os.add_dll_directory(x)
     add_dll_directory(os.path.dirname(__file__))
-    list(map(add_dll_directory, dll_dirs.split(os.pathsep)))
-    list(map(add_dll_directory, os.environ.get("PATH", "").split(os.pathsep))
+    for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
+        add_dll_directory(dll_dir)
 
 %}
 
