@@ -194,14 +194,8 @@ import sys
 import os
 
 if sys.platform == 'win32':
-    def add_dll_directory(x):
-        if os.path.isdir(x):
-            print("Adding", x)
-            os.add_dll_directory(x)
-        else:
-            print("Skipping", x)
     for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
-        add_dll_directory(dll_dir)
+        os.add_dll_directory(dll_dir)
 
 %}
 
