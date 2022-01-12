@@ -10,7 +10,7 @@ jobs:
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       openBLAS_version: "0.3.19"
-      AMICI_DLL_DIRS: "C:\\BLAS\\bin"
+      AMICI_DLL_DIRS: "C:\\BLAS\\bin;C:\Program Files (x86)\Windows Kits\10\lib\10.0.22000.0\ucrt\x64"
 
     strategy:
       matrix:
