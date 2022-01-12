@@ -1,5 +1,5 @@
 Write-Host 'script installOpenBLAS.ps1 started'
-$version = '0.3.12'
+$version = '0.3.19'
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force # create directory
 # Enforce stronger cryptography
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
