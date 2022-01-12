@@ -200,7 +200,6 @@ if sys.platform == 'win32':
             os.add_dll_directory(x)
         else:
             print("Skipping", x)
-    add_dll_directory(os.path.dirname(__file__))
     for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
         add_dll_directory(dll_dir)
 
