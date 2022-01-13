@@ -510,6 +510,11 @@ std::vector<std::string> Model::getStateNames() const {
     return std::vector<std::string>();
 }
 
+std::vector<std::string> Model::getStateNamesSolver() const {
+    return std::vector<std::string>();
+}
+
+
 bool Model::hasFixedParameterNames() const {
     return nk() == 0 || !getFixedParameterNames().empty();
 }
@@ -547,6 +552,10 @@ bool Model::hasStateIds() const {
 }
 
 std::vector<std::string> Model::getStateIds() const {
+    return std::vector<std::string>();
+}
+
+std::vector<std::string> Model::getStateIdsSolver() const {
     return std::vector<std::string>();
 }
 
