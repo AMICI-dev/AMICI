@@ -467,6 +467,12 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual std::vector<std::string> getStateNames() const;
 
     /**
+     * @brief Get names of the solver states.
+     * @return State names
+     */
+    virtual std::vector<std::string> getStateNamesSolver() const;
+
+    /**
      * @brief Report whether the model has fixed parameter names set.
      * @return Boolean indicating whether fixed parameter names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
@@ -527,9 +533,15 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the model states.
-     * @return Sate IDs
+     * @return State IDs
      */
     virtual std::vector<std::string> getStateIds() const;
+
+    /**
+     * @brief Get IDs of the solver states.
+     * @return State IDs
+     */
+    virtual std::vector<std::string> getStateIdsSolver() const;
 
     /**
      * @brief Report whether the model has fixed parameter IDs set.

@@ -4,8 +4,20 @@ List of publications using AMICI. Total number is 64.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
+<h1 class="unnumbered" id="section">2022</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-SchmuckerFar2022">
+<p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
+</div>
+<div id="ref-StaporSch2022">
+<p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Simon Merkt, Dilan Pathirana, Bodo M. H. Lange, Daniel Weindl, and Jan Hasenauer. 2022. “Mini-batch optimization enables training of ODE models on large-scale datasets.” <em>Nature Communications</em> 13 (1): 34. <a href="https://doi.org/10.1038/s41467-021-27374-6">https://doi.org/10.1038/s41467-021-27374-6</a>.</p>
+</div>
+</div>
 <h1 class="unnumbered" id="section">2021</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-AdlungSta2021">
+<p>Adlung, Lorenz, Paul Stapor, Christian Tönsing, Leonard Schmiester, Luisa E. Schwarzmüller, Lena Postawa, Dantong Wang, et al. 2021. “Cell-to-Cell Variability in Jak2/Stat5 Pathway Components and Cytoplasmic Volumes Defines Survival Threshold in Erythroid Progenitor Cells.” <em>Cell Reports</em> 36 (6): 109507. <a href="https://doi.org/https://doi.org/10.1016/j.celrep.2021.109507">https://doi.org/https://doi.org/10.1016/j.celrep.2021.109507</a>.</p>
+</div>
 <div id="ref-BastBuc2021">
 <p>Bast, Lisa, Michèle C. Buck, Judith S. Hecker, Robert A. J. Oostendorp, Katharina S. Götze, and Carsten Marr. 2021. “Computational Modeling of Stem and Progenitor Cell Kinetics Identifies Plausible Hematopoietic Lineage Hierarchies.” <em>iScience</em> 24 (2): 102120. <a href="https://doi.org/https://doi.org/10.1016/j.isci.2021.102120">https://doi.org/https://doi.org/10.1016/j.isci.2021.102120</a>.</p>
 </div>
@@ -49,7 +61,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>van Rosmalen, R. P., R. W. Smith, V. A. P. Martins dos Santos, C. Fleck, and M. Suarez-Diez. 2021. “Model Reduction of Genome-Scale Metabolic Models as a Basis for Targeted Kinetic Models.” <em>Metabolic Engineering</em> 64: 74–84. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008">https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008</a>.</p>
 </div>
 <div id="ref-VillaverdePat2021">
-<p>Villaverde, Alejandro F., Dilan Pathirana, Fabian Fröhlich, Jan Hasenauer, and Julio R. Banga. 2021. “A Protocol for Dynamic Model Calibration.” <a href="http://arxiv.org/abs/2105.12008">http://arxiv.org/abs/2105.12008</a>.</p>
+<p>Villaverde, Alejandro F, Dilan Pathirana, Fabian Fröhlich, Jan Hasenauer, and Julio R Banga. 2021. “A protocol for dynamic model calibration.” <em>Briefings in Bioinformatics</em>, October. <a href="https://doi.org/10.1093/bib/bbab387">https://doi.org/10.1093/bib/bbab387</a>.</p>
 </div>
 </div>
 <h1 class="unnumbered" id="section">2020</h1>
@@ -69,17 +81,14 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="ref-MaierHar2020">
 <p>Maier, Corinna, Niklas Hartung, Charlotte Kloft, Wilhelm Huisinga, and Jana de Wiljes. 2020. “Reinforcement Learning and Bayesian Data Assimilation for Model-Informed Precision Dosing in Oncology.” <a href="http://arxiv.org/abs/2006.01061">http://arxiv.org/abs/2006.01061</a>.</p>
 </div>
-<div id="ref-Schaelte2020.01.30.927004">
-<p>Schälte, Yannik, and Jan Hasenauer. 2020. “Efficient Exact Inference for Dynamical Systems with Noisy Measurements Using Sequential Approximate Bayesian Computation.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.01.30.927004">https://doi.org/10.1101/2020.01.30.927004</a>.</p>
+<div id="ref-SchaelteHas2020">
+<p>Schälte, Yannik, and Jan Hasenauer. 2020. “Efficient exact inference for dynamical systems with noisy measurements using sequential approximate Bayesian computation.” <em>Bioinformatics</em> 36 (July): i551–i559. <a href="https://doi.org/10.1093/bioinformatics/btaa397">https://doi.org/10.1093/bioinformatics/btaa397</a>.</p>
 </div>
 <div id="ref-SchmiesterWei2020">
 <p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2020. “Parameterization of Mechanistic Models from Qualitative Data Using an Efficient Optimal Scaling Approach.” <em>Journal of Mathematical Biology</em>, July. <a href="https://doi.org/10.1007/s00285-020-01522-w">https://doi.org/10.1007/s00285-020-01522-w</a>.</p>
 </div>
-<div id="ref-Schmucker2020.07.05.184960">
-<p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2020. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.07.05.184960">https://doi.org/10.1101/2020.07.05.184960</a>.</p>
-</div>
-<div id="ref-Schuh2020.05.28.110684">
-<p>Schuh, Lea, Carolin Loos, Daniil Pokrovsky, Axel Imhof, Ralph Rupp, and Carsten Marr. 2020. “Computational Modeling Reveals Cell-Cycle Dependent Kinetics of H4k20 Methylation States During Xenopus Embryogenesis.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.05.28.110684">https://doi.org/10.1101/2020.05.28.110684</a>.</p>
+<div id="ref-SchuhLoo2020">
+<p>Schuh, Lea, Carolin Loos, Daniil Pokrovsky, Axel Imhof, Ralph A. W. Rupp, and Carsten Marr. 2020. “H4K20 Methylation Is Differently Regulated by Dilution and Demethylation in Proliferating and Cell-Cycle-Arrested Xenopus Embryos.” <em>Cell Systems</em> 11 (6): 653–662.e8. <a href="https://doi.org/10.1016/j.cels.2020.11.003">https://doi.org/10.1016/j.cels.2020.11.003</a>.</p>
 </div>
 <div id="ref-Sten2020">
 <p>Sten, Sebastian. 2020. “Mathematical Modeling of Neurovascular Coupling.” Linköping University Medical Dissertations. PhD thesis, Linköping UniversityLinköping UniversityLinköping University, Division of Diagnostics; Specialist Medicine, Faculty of Medicine; Health Sciences, Center for Medical Image Science; Visualization (CMIV); Linköping University, Division of Diagnostics; Specialist Medicine. <a href="https://doi.org/10.3384/diss.diva-167806">https://doi.org/10.3384/diss.diva-167806</a>.</p>
@@ -93,9 +102,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <h1 class="unnumbered" id="section">2019</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
-<div id="ref-AdlungSta2019">
-<p>Adlung, Lorenz, Paul Stapor, Christian Tönsing, Leonard Schmiester, Luisa E. Schwarzmüller, Dantong Wang, Jens Timmer, Ursula Klingmüller, Jan Hasenauer, and Marcel Schilling. 2019. “Cell-to-Cell Variability in Jak2/Stat5 Pathway Components and Cytoplasmic Volumes Define Survival Threshold in Erythroid Progenitor Cells.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/866871">https://doi.org/10.1101/866871</a>.</p>
-</div>
 <div id="ref-DharmarajanKal2019">
 <p>Dharmarajan, Lekshmi, Hans-Michael Kaltenbach, Fabian Rudolf, and Joerg Stelling. 2019. “A Simple and Flexible Computational Framework for Inferring Sources of Heterogeneity from Single-Cell Dynamics.” <em>Cell Systems</em> 8 (1): 15–26.e11. <a href="https://doi.org/10.1016/j.cels.2018.12.007">https://doi.org/10.1016/j.cels.2018.12.007</a>.</p>
 </div>
@@ -119,9 +125,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-SchmiesterSch2019">
 <p>Schmiester, Leonard, Yannik Schälte, Fabian Fröhlich, Jan Hasenauer, and Daniel Weindl. 2019. “Efficient parameterization of large-scale dynamic models based on relative measurements.” <em>Bioinformatics</em>, July. <a href="https://doi.org/10.1093/bioinformatics/btz581">https://doi.org/10.1093/bioinformatics/btz581</a>.</p>
-</div>
-<div id="ref-StaporSch2019">
-<p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Bodo Lange, Daniel Weindl, and Jan Hasenauer. 2019. “Mini-Batch Optimization Enables Training of Ode Models on Large-Scale Datasets.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/859884">https://doi.org/10.1101/859884</a>.</p>
 </div>
 <div id="ref-LinesPas2019">
 <p>Terje Lines, Glenn, Łukasz Paszkowski, Leonard Schmiester, Daniel Weindl, Paul Stapor, and Jan Hasenauer. 2019. “Efficient Computation of Steady States in Large-Scale Ode Models of Biochemical Reaction Networks.” <em>IFAC-PapersOnLine</em> 52 (26): 32–37. <a href="https://doi.org/10.1016/j.ifacol.2019.12.232">https://doi.org/10.1016/j.ifacol.2019.12.232</a>.</p>

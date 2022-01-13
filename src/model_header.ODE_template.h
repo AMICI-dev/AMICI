@@ -27,6 +27,7 @@ extern std::array<const char*, TPL_NK> fixedParameterIds;
 extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 extern std::array<const char*, TPL_NW> expressionIds;
+extern std::array<int, TPL_NX_SOLVER> stateIdxsSolver;
 
 TPL_JY_DEF
 TPL_DJYDSIGMA_DEF
@@ -494,6 +495,19 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     }
 
     /**
+     * @brief Get names of the solver states
+     * @return the names
+     */
+    std::vector<std::string> getStateNamesSolver() const override {
+        std::vector<std::string> result;
+        result.reserve(stateIdxsSolver.size());
+        for(auto idx: stateIdxsSolver) {
+            result.push_back(stateNames[idx]);
+        }
+        return result;
+    }
+
+    /**
      * @brief Get names of the fixed model parameters
      * @return the names
      */
@@ -535,6 +549,19 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      */
     std::vector<std::string> getStateIds() const override {
         return std::vector<std::string>(stateIds.begin(), stateIds.end());
+    }
+
+    /**
+     * @brief Get ids of the solver states
+     * @return the ids
+     */
+    std::vector<std::string> getStateIdsSolver() const override {
+        std::vector<std::string> result;
+        result.reserve(stateIdxsSolver.size());
+        for(auto idx: stateIdxsSolver) {
+            result.push_back(stateIds[idx]);
+        }
+        return result;
     }
 
     /**

@@ -21,7 +21,16 @@ jobs:
     env:
       ENABLE_GCOV_COVERAGE: TRUE
 
+    strategy:
+      matrix:
+        python-version: [3.8]
+
     steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - uses: actions/checkout@master
         with:
           fetch-depth: 20

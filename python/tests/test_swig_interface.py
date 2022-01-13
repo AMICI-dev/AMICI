@@ -284,6 +284,8 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         'getSolver',
         'getStateIds',
         'getStateNames',
+        'getStateIdsSolver',
+        'getStateNamesSolver',
         'getTimepoint',
         'getUnscaledParameters',
         'setAllStatesNonNegative',

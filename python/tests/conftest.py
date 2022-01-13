@@ -5,8 +5,9 @@ import os
 import shutil
 import sys
 
-import amici
 import pytest
+
+import amici
 
 
 @pytest.fixture(scope="session")

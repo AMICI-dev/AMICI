@@ -66,7 +66,7 @@ def generate_models():
                              compute_conservation_laws=False)
 
     # load both models
-    model_without_cl_module = amici.import_model_module(model_name, 
+    model_without_cl_module = amici.import_model_module(model_name,
         module_path=os.path.abspath(model_name))
     model_with_cl_module = amici.import_model_module(model_name_cl,
         module_path=os.path.abspath(model_name_cl))
@@ -101,8 +101,15 @@ def get_results(model, edata=None, sensi_order=0,
 
 
 def test_compare_conservation_laws_sbml(edata_fixture):
-    # first, create the modek
+    # first, create the model
     model_with_cl, model_without_cl = generate_models()
+
+    assert model_with_cl.ncl() > 0
+    assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
+    assert model_with_cl.nx_solver < model_without_cl.nx_solver
+    assert len(model_with_cl.getStateIdsSolver()) == model_with_cl.nx_solver
+    assert len(model_without_cl.getStateIdsSolver()) \
+           == model_without_cl.nx_solver
 
     # ----- compare simulations wo edata, sensi = 0, states ------------------
     # run simulations
@@ -170,7 +177,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
 
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
     # get both models
-    model_module = amici.import_model_module('model_constant_species', 
+    model_module = amici.import_model_module('model_constant_species',
         module_path=os.path.abspath('model_constant_species'))
     model = model_module.getModel()
     model_module_cl = amici.import_model_module('model_constant_species_cl',
