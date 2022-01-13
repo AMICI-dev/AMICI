@@ -522,13 +522,13 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the model states.
-     * @return Sate IDs
+     * @return State IDs
      */
     virtual std::vector<std::string> getStateIds() const;
 
     /**
      * @brief Get IDs of the solver states.
-     * @return Sate IDs
+     * @return State IDs
      */
     virtual std::vector<std::string> getStateIdsSolver() const;
 
