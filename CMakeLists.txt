@@ -144,6 +144,38 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     ${CMAKE_SOURCE_DIR}/src/vector.cpp
+    ${CMAKE_SOURCE_DIR}/include/amici/abstract_model.h
+    ${CMAKE_SOURCE_DIR}/include/amici/amici.h
+    ${CMAKE_SOURCE_DIR}/include/amici/backwardproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/cblas.h
+    ${CMAKE_SOURCE_DIR}/include/amici/defines.h
+    ${CMAKE_SOURCE_DIR}/include/amici/edata.h
+    ${CMAKE_SOURCE_DIR}/include/amici/exception.h
+    ${CMAKE_SOURCE_DIR}/include/amici/forwardproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/hdf5.h
+    ${CMAKE_SOURCE_DIR}/include/amici/interface_matlab.h
+    ${CMAKE_SOURCE_DIR}/include/amici/misc.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_dae.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_dimensions.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_ode.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_state.h
+    ${CMAKE_SOURCE_DIR}/include/amici/newton_solver.h
+    ${CMAKE_SOURCE_DIR}/include/amici/rdata.h
+    ${CMAKE_SOURCE_DIR}/include/amici/returndata_matlab.h
+    ${CMAKE_SOURCE_DIR}/include/amici/serialization.h
+    ${CMAKE_SOURCE_DIR}/include/amici/simulation_parameters.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver_cvodes.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver_idas.h
+    ${CMAKE_SOURCE_DIR}/include/amici/spline.h
+    ${CMAKE_SOURCE_DIR}/include/amici/steadystateproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/sundials_linsol_wrapper.h
+    ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
+    ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
+    ${CMAKE_SOURCE_DIR}/include/amici/time_course.h
+    ${CMAKE_SOURCE_DIR}/include/amici/vector.h
+
     )
 if(ENABLE_HDF5)
     list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
