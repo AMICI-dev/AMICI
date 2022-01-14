@@ -173,9 +173,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/include/amici/sundials_linsol_wrapper.h
     ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
     ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
-    ${CMAKE_SOURCE_DIR}/include/amici/time_course.h
     ${CMAKE_SOURCE_DIR}/include/amici/vector.h
-
     )
 if(ENABLE_HDF5)
     list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
