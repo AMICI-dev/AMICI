@@ -3,14 +3,11 @@ import math
 import sys
 import time
 
+from .logging import get_logger
 sys.setrecursionlimit(3000)
 
-# TODO: Refactoring to more idiomatic Python code
-# TODO: Write proper Pydoc and apply coding conventions of the group
-# TODO: Rewrite quicksort algorithm (recursive) to more efficient iterative variant
-# TODO: Refactor to a class
-# TODO: print -> logger
-
+# TODO: Apply PEP8 coding conventions to the whole code
+# TODO: Rewrite quicksort algorithm (recursive -> iterative) for efficiency
 def qsort(k, km, orders, pivots):
 	""" 
 	Quicksort
@@ -409,7 +406,8 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 
 	while True:
 		en = int(random.uniform(0, 1) * dim)
-		if len(J[en]) == 0: # TODO: bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+		# Note: Bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+		if len(J[en]) == 0: 
 			en = int(random.uniform(0, 1)*dim)
 		p=1
 		if num[en] > 0 and random.uniform(0, 1) < 0.5:
@@ -440,7 +438,8 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			for i in range(0, dim):
 				num[i] = 0
 			en = int(random.uniform(0, 1) * dim)
-			if len(J[en]) > 0: # TODO: bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+			# Note: bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+			if len(J[en]) > 0: 
 				en = int(random.uniform(0, 1) * dim)
 			num[en] = 1
 			numtot = 1
@@ -471,15 +470,14 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 			for i in range(0, len(matched)):
 				orders2[i] = i
 				pivots2[i] = matched[i]
-			print("sort...")
 			qsort(len(matched), 0, orders2, pivots2)
-			print("end")
 			for i in range(0, len(matched)):
 				if num[orders2[i]] > 0:
 					NSolutions[intkerneldim].append(matched[orders2[i]])
 					NSolutions2[intkerneldim].append(num[orders2[i]])
 			intkerneldim += 1
-			yes2  = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched) # TODO: yes2 never used, does LinearDependence have side effects?
+			# FIXME: yes2 never used, does LinearDependence have side effects?
+			yes2  = LinearDependence(num, intkerneldim, NSolutions, NSolutions2, matched) 
 			intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(intkerneldim, kerneldim, NSolutions, NSolutions2)
 			min = 1000
 			for i in range(0, len(NSolutions[intkerneldim-1])):
@@ -496,9 +494,9 @@ def MonteCarlo(matched, J, J2, fields, intmatched, intkerneldim, NSolutions, NSo
 					min = NSolutions2[intkerneldim-1][i]
 			for i in range(0, len(NSolutions[intkerneldim-1])):
 				NSolutions2[intkerneldim-1][i] /= min
-			print(f"Found linearly independent moiety, now there are {intkerneldim} engaging {len(intmatched)} metabolites")
+			get_logger().info(f"Found linearly independent moiety, now there are {intkerneldim} engaging {len(intmatched)} metabolites")
 		else:
-			print("Found a moiety but it is linearly dependent... next.")
+			get_logger().info("Found a moiety but it is linearly dependent... next.")
 	else:
 		yes = 0
 	return yes, intkerneldim, kernelDim, NSolutions, NSolutions2, matched, intmatched
