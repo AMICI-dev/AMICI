@@ -609,8 +609,8 @@ std::vector<bool> const &Model::getStateIsNonNegative() const {
 }
 
 void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
-    auto any_state_non_negative = std::any_of(state_is_non_negative_.begin(),
-                                              state_is_non_negative_.end(),
+    auto any_state_non_negative = std::any_of(nonNegative.begin(),
+                                              nonNegative.end(),
                                               [](bool x) { return x; });
 
     if (any_state_non_negative && nx_solver != nx_rdata) {
