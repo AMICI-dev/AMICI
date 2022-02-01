@@ -21,7 +21,16 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    strategy:
+      matrix:
+        python-version: [3.8]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
       with:
         fetch-depth: 20
@@ -31,7 +40,7 @@ jobs:
       run: |
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
-    - run: pip3 install petab shyaml
+    - run: pip3 install petab shyaml build
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
     - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
@@ -40,7 +49,8 @@ jobs:
     - name: Create AMICI sdist
       run: |
         cd python/sdist \
-          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
+          && check_time.sh create_sdist python3 -m build --sdist
+
     - name: Install AMICI sdist
       run: |
         AMICI_PARALLEL_COMPILE=2 check_time.sh \

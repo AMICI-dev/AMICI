@@ -16,7 +16,15 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    strategy:
+      matrix:
+        python-version: [3.8]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
     - uses: actions/checkout@master
     - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
     - name: Publish to Registry
