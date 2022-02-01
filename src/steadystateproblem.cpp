@@ -284,7 +284,7 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         /* compute integral over xB and write to xQ */
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xQ_);
-        /* Compute the quadrature as the inner product xQ * dxotdp */
+        /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
@@ -695,7 +695,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                         AmiVector &yQB) const {
-    /* Compute the quadrature as the inner product: yQB = dxotdp * yQ */
+    /* Compute the quadrature as the inner product: yQB = dxdotdp * yQ */
 
     /* set to zero first, as multiplication adds to existing value */
     yQB.zero();
