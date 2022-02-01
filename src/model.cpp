@@ -609,7 +609,11 @@ std::vector<bool> const &Model::getStateIsNonNegative() const {
 }
 
 void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
-    if (nx_solver != nx_rdata) {
+    auto any_state_non_negative = std::any_of(state_is_non_negative_.begin(),
+                                              state_is_non_negative_.end(),
+                                              [](bool x) { return x; });
+
+    if (any_state_non_negative && nx_solver != nx_rdata) {
         throw AmiException("Non-negative states are not supported with"
                            " conservation laws enabled");
     }
@@ -619,9 +623,7 @@ void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
                            state_is_non_negative_.size(), nx_rdata);
     }
     state_is_non_negative_ = nonNegative;
-    any_state_non_negative_ =
-        std::any_of(state_is_non_negative_.begin(), state_is_non_negative_.end(),
-                    [](bool x) { return x; });
+    any_state_non_negative_ = any_state_non_negative;
 }
 
 void Model::setAllStatesNonNegative() {
