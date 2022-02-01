@@ -356,7 +356,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ == 'plus' and not sym.args:
         return sp.Float(0.0)
 
-    if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+    if isinstance(sym, (sp.Function, sp.Mul, sp.Add, sp.Pow)):
         sym._args = args
 
     elif toplevel and isinstance(sym, BooleanAtom):
