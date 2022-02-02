@@ -2123,7 +2123,10 @@ const_N_Vector Model::computeX_pos(const_N_Vector x) {
 }
 
 const realtype *Model::computeX_pos(AmiVector const& x) {
-    computeX_pos(x.getNVector());
+    if (any_state_non_negative_) {
+        computeX_pos(x.getNVector());
+        return derived_state_.x_pos_tmp_.data();
+    }
     return x.data();
 }
 
