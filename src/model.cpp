@@ -1086,9 +1086,11 @@ void Model::addStateEventUpdate(AmiVector &x, const int ie, const realtype t,
                                 const AmiVector &xdot_old) {
     
     derived_state_.deltax_.assign(nx_solver, 0.0);
+    
+    std::copy_n(computeX_pos(x), nx_solver, x.data());
 
     // compute update
-    fdeltax(derived_state_.deltax_.data(), t, computeX_pos(x),
+    fdeltax(derived_state_.deltax_.data(), t, x.data(),
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), ie, xdot.data(), xdot_old.data());
 
