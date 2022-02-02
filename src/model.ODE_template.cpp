@@ -49,6 +49,10 @@ std::array<const char*, TPL_NW> expressionIds = {
     TPL_EXPRESSION_IDS_INITIALIZER_LIST
 };
 
+std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
+    TPL_STATE_IDXS_SOLVER_INITIALIZER_LIST
+};
+
 } // namespace model_TPL_MODELNAME
 
 } // namespace amici

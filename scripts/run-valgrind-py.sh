@@ -14,5 +14,8 @@ cd "${amici_path}"/python/tests
 source "${amici_path}"/build/venv/bin/activate
 pip install scipy h5py pytest
 
+# until funny valgrind+h5py+numpy1.22.0 issues are resolved
+pip install "numpy<1.22.0"
+
 # PEtab tests are run separately
 PYTHONMALLOC=malloc valgrind --suppressions=valgrind-python.supp --show-leak-kinds=definite --errors-for-leak-kinds=definite --error-exitcode=1 --leak-check=full --gen-suppressions=all -v python -m pytest -vv --ignore-glob=*petab*
