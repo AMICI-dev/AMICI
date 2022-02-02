@@ -2129,8 +2129,6 @@ const std::vector<realtype> Model::computeX_pos(AmiVector const& x) const {
     return x_pos_v;
 }
 
-
-
 void Model::setReinitializationStateIdxs(std::vector<int> const& idxs)
 {
     for(auto idx: idxs) {
