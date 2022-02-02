@@ -262,7 +262,7 @@
 }
 
 {
-   <insert_a_suppression_name_here>
+   _PyUnicodeWriter_WriteSubstring
    Memcheck:Cond
    ...
    fun:_PyUnicodeWriter_WriteSubstring
@@ -447,9 +447,7 @@
    other
    Memcheck:Cond
    ...
-   obj:/usr/bin/python3.?
    fun:PyDict_SetItem
-   obj:/usr/bin/python3.?
    ...
 }
 
