@@ -209,7 +209,7 @@ TEST(Splines, SplineUniformLinearExtrapolation)
     spline.compute_coefficients();
     std::vector<std::tuple<double, double>> expectations = {
         // t, expected value
-        {-2.00  -12.0},
+        {-2.00, -12.0},
         {-1.00,  -6.0},
         { 0.00,   0.0},
         { 0.25,   1.74609375},
@@ -241,7 +241,7 @@ TEST(Splines, SplineUniformPolynomialExtrapolation)
     spline.compute_coefficients();
     std::vector<std::tuple<double, double>> expectations = {
         // t, expected value
-        {-2.00   429.0},
+        {-2.00,  429.0},
         {-1.00,   57.0},
         { 0.00,    0.0},
         { 0.25,    1.74609375},
@@ -273,7 +273,7 @@ TEST(Splines, SplineUniformPeriodicExtrapolation)
     spline.compute_coefficients();
     std::vector<std::tuple<double, double>> expectations = {
         // t, expected value
-        {-4/3      0.5},
+        {-4/3,     0.5},
         {-0.50,    1.2812499999999996},
         { 0.00,    1.0},
         { 0.25,    1.9140625},
