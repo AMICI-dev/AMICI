@@ -10,6 +10,7 @@ using std::exp;
 using amici::HermiteSpline;
 using amici::SplineBoundaryCondition;
 using amici::SplineExtrapolation;
+using amici::AmiException;
 
 #define ASSERT_APPROX(x, x0, rtol) ASSERT_LT(std::abs(((x) - (x0))/(x0)), rtol)
 
@@ -41,8 +42,8 @@ TEST(Splines, SplineUniform)
                          {},
                          SplineBoundaryCondition::given,
                          SplineBoundaryCondition::given,
-                         SplineExtrapolation::constant,
-                         SplineExtrapolation::constant,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
                          true,   // node_derivative_by_FD
                          true,  // equidistant_spacing
                          false); // logarithmic_parametrization
@@ -59,6 +60,8 @@ TEST(Splines, SplineUniform)
         {1.00,  1.0},
     };
     test_spline_values(spline, expectations);
+    ASSERT_THROW(spline.get_value(-0.05), AmiException);
+    ASSERT_THROW(spline.get_value(1.05), AmiException);
 }
 
 TEST(Splines, SplineNonUniform)
@@ -69,8 +72,8 @@ TEST(Splines, SplineNonUniform)
                          {},
                          SplineBoundaryCondition::given,
                          SplineBoundaryCondition::given,
-                         SplineExtrapolation::constant,
-                         SplineExtrapolation::constant,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
                          true,   // node_derivative_by_FD
                          false,  // equidistant_spacing
                          false); // logarithmic_parametrization
@@ -87,6 +90,8 @@ TEST(Splines, SplineNonUniform)
         {1.00, 1.0},
     };
     test_spline_values(spline, expectations);
+    ASSERT_THROW(spline.get_value(-0.05), AmiException);
+    ASSERT_THROW(spline.get_value(1.05), AmiException);
 }
 
 TEST(Splines, SplineExplicit)
@@ -97,8 +102,8 @@ TEST(Splines, SplineExplicit)
                          { 1.0, 0.0, 0.1, -0.1, 0.0  },
                          SplineBoundaryCondition::given,
                          SplineBoundaryCondition::given,
-                         SplineExtrapolation::constant,
-                         SplineExtrapolation::constant,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
                          false,  // node_derivative_by_FD
                          true,   // equidistant_spacing
                          false); // logarithmic_parametrization
@@ -117,6 +122,8 @@ TEST(Splines, SplineExplicit)
         {1.0, 0.75},
     };
     test_spline_values(spline, expectations);
+    ASSERT_THROW(spline.get_value(-0.05), AmiException);
+    ASSERT_THROW(spline.get_value(1.05), AmiException);
 }
 
 TEST(Splines, SplineLogarithmic)
@@ -127,8 +134,8 @@ TEST(Splines, SplineLogarithmic)
                          {},
                          SplineBoundaryCondition::given,
                          SplineBoundaryCondition::given,
-                         SplineExtrapolation::constant,
-                         SplineExtrapolation::constant,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
                          true,  // node_derivative_by_FD
                          true,  // equidistant_spacing
                          true); // logarithmic_parametrization
@@ -148,4 +155,6 @@ TEST(Splines, SplineLogarithmic)
         {1.0,  0.75},
     };
     test_spline_values(spline, expectations, 1e-14);
+    ASSERT_THROW(spline.get_value(-0.05), AmiException);
+    ASSERT_THROW(spline.get_value(1.05), AmiException);
 }
