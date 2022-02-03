@@ -1,3 +1,4 @@
+#include <amici/exception.h>
 #include <amici/splinefunctions.h>
 
 #include <gtest/gtest.h>
