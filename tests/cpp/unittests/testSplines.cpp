@@ -273,7 +273,7 @@ TEST(Splines, SplineUniformPeriodicExtrapolation)
     spline.compute_coefficients();
     std::vector<std::tuple<double, double>> expectations = {
         // t, expected value
-        {-4/3,     0.5},
+        {-4.0/3,   0.5},
         {-0.50,    1.2812499999999996},
         { 0.00,    1.0},
         { 0.25,    1.9140625},
@@ -317,5 +317,5 @@ TEST(Splines, SplineNonUniformPeriodicExtrapolation)
         { 1.50, 0.5},
         { 2.05, 1.5296875},
     };
-    test_spline_values(spline, expectations);
+    test_spline_values(spline, expectations, 1e-14);
 }
