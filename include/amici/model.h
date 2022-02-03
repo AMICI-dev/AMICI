@@ -1746,6 +1746,21 @@ class Model : public AbstractModel, public ModelDimensions {
      * stateIsNonNegative
      */
     const_N_Vector computeX_pos(const_N_Vector x);
+    
+    /**
+     * @brief Compute non-negative state vector.
+     *
+     * Compute non-negative state vector according to stateIsNonNegative.
+     * If anyStateNonNegative is set to `false`, i.e., all entries in
+     * stateIsNonNegative are `false`, this function directly returns `x`,
+     * otherwise all entries of x are copied in to `amici::Model::x_pos_tmp_`
+     * and negative values are replaced by `0` where applicable.
+     *
+     * @param x State vector possibly containing negative values
+     * @return State vector with negative values replaced by `0` according to
+     * stateIsNonNegative
+     */
+    const realtype *computeX_pos(AmiVector const& x);
 
     /** All variables necessary for function evaluation */
     ModelState state_;
