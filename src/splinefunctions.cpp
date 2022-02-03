@@ -205,6 +205,13 @@ HermiteSpline::handle_boundary_conditions()
 {
     int last = n_nodes() - 1;
 
+    if ( (first_node_bc_ == SplineBoundaryCondition::periodic ||
+          last_node_bc_ == SplineBoundaryCondition::periodic) &&
+         first_node_bc_ != last_node_bc_ )
+         throw AmiException(
+           "If one of the boundary conditions is periodic, "
+           "the other one must be periodic too");
+
     /* We have to take special care of the first node */
     switch (first_node_bc_) {
         case SplineBoundaryCondition::given:
@@ -231,10 +238,21 @@ HermiteSpline::handle_boundary_conditions()
               "derivative is not allowed for Hermite splines.");
 
         case SplineBoundaryCondition::periodic:
-            if (node_derivative_by_FD_)
-                node_values_derivative_[0] =
-                  (node_values_[1] - node_values_[last - 1]) /
-                  (nodes_[1] - nodes_[0] + nodes_[last] - nodes_[last - 1]);
+            if (node_derivative_by_FD_) {
+              if (get_equidistant_spacing()) {
+                  realtype hx2 = 2 * (nodes_[1] - nodes_[0]);
+                  node_values_derivative_[0] =
+                      (node_values_[1] - node_values_[last - 1]) / hx2;
+              } else {
+                  realtype dleft =
+                    (node_values_[last] - node_values_[last - 1]) /
+                    (nodes_[last] - nodes_[last - 1]);
+                  realtype dright =
+                    (node_values_[1] - node_values_[0]) /
+                    (nodes_[1] - nodes_[0]);
+                  node_values_derivative_[0] = (dleft + dright) / 2;
+              }
+            }
             break;
         default:
             throw AmiException("Invalid value for boundary condition.");
@@ -268,9 +286,8 @@ HermiteSpline::handle_boundary_conditions()
 
         case SplineBoundaryCondition::periodic:
             if (node_derivative_by_FD_)
-                node_values_derivative_[last] =
-                  (node_values_[1] - node_values_[last - 1]) /
-                  (nodes_[1] - nodes_[0] + nodes_[last] - nodes_[last - 1]);
+                // if one bc is periodic, the other is periodic too
+                node_values_derivative_[last] = node_values_derivative_[0];
             break;
         default:
             throw AmiException("Invalid value for boundary condition.");
