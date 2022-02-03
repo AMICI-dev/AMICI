@@ -82,6 +82,9 @@ import_array();
 %template(IntVector) std::vector<int>;
 %template(BoolVector) std::vector<bool>;
 %template(StringVector) std::vector<std::string>;
+%feature("docstring") std::map<std::string, double>
+"Swig-Generated class templating :class:`Dict`
+[:class:`str`, :class:`float`] to facilitate interfacing with C++ bindings.";
 %template(StringDoubleMap) std::map<std::string, double>;
 
 // Let numpy access std::vector
@@ -172,6 +175,11 @@ using namespace amici;
 // Convert integer values to enum class
 // defeats the purpose of enum class, but didn't find a better way to allow for
 // vectors of enum class types in python
+%feature("docstring") parameterScalingFromIntVector
+"Swig-Generated class, which, in contrast to other Vector
+classes, does not allow for simple interoperability with common
+Python types, but must be created using
+:func:`amici.amici.parameterScalingFromIntVector`";
 %{
 namespace amici {
 std::vector<amici::ParameterScaling> parameterScalingFromIntVector(std::vector<int> const& intVec) {
@@ -200,6 +208,8 @@ namespace amici {
 
 
 // Add function to check if amici was compiled with OpenMP
+%feature("docstring") compiledWithOpenMP
+    "AMICI extension was compiled with OpenMP?";
 %{
 namespace amici {
 /** AMICI extension was compiled with OpenMP? */
