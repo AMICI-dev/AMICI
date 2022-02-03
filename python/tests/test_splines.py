@@ -772,21 +772,21 @@ def example_splines_1():
     return splines, params, tols
 
 
-@pytest.mark.parametrize("spline,params,tols", [
-    pytest.param(*example_spline_1(), id="example_spline_1()"),
-    pytest.param(*example_spline_1(fixed_values=[0, 2]),
-                 id="example_spline_1(fixed_values=[0, 2])"),
-    pytest.param(*example_spline_1(fixed_values='all'),
-                 id="example_spline_1(fixed_values='all')"),
-    pytest.param(*example_spline_2(), id="example_spline_2()"),
-])
-def test_CubicHermiteSpline(spline, params, tols):
-    check_splines_full(spline, params, tols)
-
-
-def test_multiple_splines(**kwargs):
-    splines, params, tols = example_splines_1()
-    check_splines_full(splines, params, tols, **kwargs)
+# @pytest.mark.parametrize("spline,params,tols", [
+#     pytest.param(*example_spline_1(), id="example_spline_1()"),
+#     pytest.param(*example_spline_1(fixed_values=[0, 2]),
+#                  id="example_spline_1(fixed_values=[0, 2])"),
+#     pytest.param(*example_spline_1(fixed_values='all'),
+#                  id="example_spline_1(fixed_values='all')"),
+#     pytest.param(*example_spline_2(), id="example_spline_2()"),
+# ])
+# def test_CubicHermiteSpline(spline, params, tols):
+#     check_splines_full(spline, params, tols)
+#
+#
+# def test_multiple_splines(**kwargs):
+#     splines, params, tols = example_splines_1()
+#     check_splines_full(splines, params, tols, **kwargs)
 
 
 # def test_splines_evaluated_at_formula():
