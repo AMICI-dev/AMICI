@@ -261,8 +261,8 @@ TEST(Splines, SplineUniformPeriodicExtrapolation)
     HermiteSpline spline({ 0.0, 1.0 },
                          { 1.0, 2.0, 0.5, 1.0 },
                          {},
-                         SplineBoundaryCondition::given,
-                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::periodic,
+                         SplineBoundaryCondition::periodic,
                          SplineExtrapolation::periodic,
                          SplineExtrapolation::periodic,
                          true,   // node_derivative_by_FD
@@ -293,8 +293,8 @@ TEST(Splines, SplineNonUniformPeriodicExtrapolation)
     HermiteSpline spline({ 0.0, 0.1, 0.5, 1.0 },
                          { 1.0, 2.0, 0.5, 1.0 },
                          {},
-                         SplineBoundaryCondition::given,
-                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::periodic,
+                         SplineBoundaryCondition::periodic,
                          SplineExtrapolation::periodic,
                          SplineExtrapolation::periodic,
                          true,   // node_derivative_by_FD
