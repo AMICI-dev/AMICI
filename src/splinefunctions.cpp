@@ -518,15 +518,11 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
             default:
                 /* We don't need specific coefficients in the cases of:
                  * noExtrapolation, polynomial, periodic
-                 *
-                 * TODO: But we need to set sm0 even here,
-                 *       otherwise its value is undefined!!!
-                 *       Until corrected, raise an exception
+                 * NB the corresponding values in coefficients_extrapolate_sensi
+                 *    will never be accessed, so it's safe to leave them
+                 *    undefined.
                  */
-                throw AmiException("Spline extrapolation sensitivity "
-                                   "computation not supported yet "
-                                   "for the following cases: noExtrapolation, "
-                                   "polynomial, periodic");
+                continue;
         }
         /* Write them to the vector */
         coefficients_extrapolate_sensi[4 * ip] = sp0 - sm0 * nodes_[0];
@@ -584,15 +580,11 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
             default:
                 /* We don't need specific coefficients in the cases of:
                  * noExtrapolation, polynomial, periodic
-                 *
-                 * TODO: But we need to set sm_end even here,
-                 *       otherwise its value is undefined!!!
-                 *       Until corrected, raise an exception
+                 * NB the corresponding values in coefficients_extrapolate_sensi
+                 *    will never be accessed, so it's safe to leave them
+                 *    undefined.
                  */
-                throw AmiException("Spline extrapolation sensitivity "
-                                   "computation not supported yet "
-                                   "for the following cases: noExtrapolation, "
-                                   "polynomial, periodic");
+                continue;
         }
         /* Write them to the vector */
         coefficients_extrapolate_sensi[4 * ip + 2] =
