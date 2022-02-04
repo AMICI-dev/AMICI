@@ -1,4 +1,56 @@
-%module amici
+%define DOCSTRING
+"""
+Core C++ bindings
+-----------------
+This module encompasses the complete public C++ API of AMICI, which was
+exposed via swig. All functions listed here are directly accessible in the
+main amici package, i.e., :py:class:`amici.amici.ExpData` is available as
+``amici.ExpData``.
+Usage of functions and classes from the base ``amici`` package is
+generally recommended as they often include convenience wrappers that avoid
+common pitfalls when accessing C++ types from python and implement some
+nonstandard type conversions.
+"""
+%enddef
+%module (docstring=DOCSTRING) amici
+
+// typemaps for docstrings
+%typemap(doctype) std::unique_ptr< amici::ExpData >::pointer "ExpData";
+%typemap(doctype) std::unique_ptr< amici::Solver > "SolverPtr";
+%typemap(doctype) std::vector< amici::realtype,std::allocator< amici::realtype > > "DoubleVector";
+%typemap(doctype) std::vector< double,std::allocator< double > > "DoubleVector";
+%typemap(doctype) std::vector< int,std::allocator< int > > "IntVector";
+%typemap(doctype) std::vector< amici::ParameterScaling,std::allocator< amici::ParameterScaling > > "ParameterScalingVector";
+%typemap(doctype) std::vector< std::string,std::allocator< std::string > > "StringVector";
+%typemap(doctype) std::vector< bool,std::allocator< bool > > "BoolVector";
+%typemap(doctype) std::map< std::string,amici::realtype,std::less< std::string >, std::allocator< std::pair< std::string const,amici::realtype > > > "StringDoubleMap";
+%typemap(doctype) std::vector< amici::ExpData *,std::allocator< amici::ExpData * > > "ExpDataPtrVector";
+%typemap(doctype) std::vector< std::unique_ptr< amici::ReturnData >,std::allocator< std::unique_ptr< amici::ReturnData > > > "Iterable[ReturnData]";
+%typemap(doctype) void "None";
+%typemap(doctype) std::unique_ptr< amici::Solver > "amici.Solver";
+%typemap(doctype) amici::InternalSensitivityMethod "amici.InternalSensitivityMethod";
+%typemap(doctype) amici::InterpolationType "amici.InterpolationType";
+%typemap(doctype) amici::LinearMultistepMethod "amici.LinearMultistepMethod";
+%typemap(doctype) amici::LinearSolver "amici.LinearSolver";
+%typemap(doctype) amici::Model * "amici.Model";
+%typemap(doctype) amici::Model const * "amici.Model";
+%typemap(doctype) amici::NewtonDampingFactorMode "amici.NewtonDampingFactorMode";
+%typemap(doctype) amici::NonlinearSolverIteration "amici.NonlinearSolverIteration";
+%typemap(doctype) amici::RDataReporting "amici.RDataReporting";
+%typemap(doctype) amici::SensitivityMethod "amici.SensitivityMethod";
+%typemap(doctype) amici::SensitivityOrder "amici.SensitivityOrder";
+%typemap(doctype) amici::Solver * "amici.Solver";
+%typemap(doctype) amici::SteadyStateSensitivityMode "amici.SteadyStateSensitivityMode";
+%typemap(doctype) amici::realtype "float";
+%typemap(doctype) DoubleVector "numpy.ndarray";
+%typemap(doctype) IntVector "List[int]";
+%typemap(doctype) std::pair< size_t,size_t > "Tuple[int, int]";
+%typemap(doctype) std::string "str";
+%typemap(doctype) std::string const & "str";
+%typemap(doctype) std::unique_ptr< amici::ExpData >   "amici.ExpData";
+%typemap(doctype) std::unique_ptr< amici::ReturnData > "amici.ReturnData";
+%typemap(doctype) size_t "int";
+
 
 %include <exception.i>
 %exception {
@@ -30,6 +82,9 @@ import_array();
 %template(IntVector) std::vector<int>;
 %template(BoolVector) std::vector<bool>;
 %template(StringVector) std::vector<std::string>;
+%feature("docstring") std::map<std::string, double>
+"Swig-Generated class templating :class:`Dict`
+[:class:`str`, :class:`float`] to facilitate interfacing with C++ bindings.";
 %template(StringDoubleMap) std::map<std::string, double>;
 
 // Let numpy access std::vector
@@ -120,6 +175,11 @@ using namespace amici;
 // Convert integer values to enum class
 // defeats the purpose of enum class, but didn't find a better way to allow for
 // vectors of enum class types in python
+%feature("docstring") parameterScalingFromIntVector
+"Swig-Generated class, which, in contrast to other Vector
+classes, does not allow for simple interoperability with common
+Python types, but must be created using
+:func:`amici.amici.parameterScalingFromIntVector`";
 %{
 namespace amici {
 std::vector<amici::ParameterScaling> parameterScalingFromIntVector(std::vector<int> const& intVec) {
@@ -148,6 +208,8 @@ namespace amici {
 
 
 // Add function to check if amici was compiled with OpenMP
+%feature("docstring") compiledWithOpenMP
+    "AMICI extension was compiled with OpenMP?";
 %{
 namespace amici {
 /** AMICI extension was compiled with OpenMP? */
@@ -189,6 +251,7 @@ RDataReporting = enum('RDataReporting')
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
 
+// Handle AMICI_DLL_DIRS environment variable
 %pythonbegin %{
 import sys
 import os
@@ -199,21 +262,10 @@ if sys.platform == 'win32':
 
 %}
 
-
-// add module docstring and import additional types for typehints
+// import additional types for typehints
 %pythonbegin %{
-"""
-Core C++ bindings
------------------
-This module encompasses the complete public C++ API of AMICI, which was
-exposed via swig. All functions listed here are directly accessible in the
-main amici package, i.e., :py:class:`amici.amici.ExpData` is available as
-``amici.ExpData``.
-Usage of functions and classes from the base ``amici`` package is
-generally recommended as they often include convenience wrappers that avoid
-common pitfalls when accessing C++ types from python and implement some
-nonstandard type conversions.
-"""
-
-from typing import Iterable
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Iterable, List, Tuple
+    import numpy
 %}
