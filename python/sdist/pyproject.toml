@@ -2,6 +2,12 @@
 requires = [
     "setuptools>=40.6.3",
     "wheel",
+    # oldest-supported-numpy helps us to pin numpy here to the lowest supported
+    # version to have ABI-compatibility with the numpy version in the runtime
+    # environment. The undesirable alternative would be pinning the setup.py
+    # numpy requirement to the same version as here, which we want to avoid.
+    # cf. discussion at https://github.com/numpy/numpy/issues/5888
+    # (https://github.com/scipy/oldest-supported-numpy/)
     "oldest-supported-numpy",
 ]
 build-backend = "setuptools.build_meta"
