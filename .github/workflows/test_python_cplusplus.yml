@@ -29,7 +29,7 @@ jobs:
     - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     # sonar cloud
-    - run: echo "SONAR_SCANNER_VERSION=4.6.1.2450" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_VERSION=4.6.2.2472" >> $GITHUB_ENV
     - run: echo "SONAR_SCANNER_HOME=${HOME}/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux" >> $GITHUB_ENV
     - run: echo "SONAR_SCANNER_OPTS=-server" >> $GITHUB_ENV
     - run: echo "${SONAR_SCANNER_HOME}/bin" >> $GITHUB_PATH
