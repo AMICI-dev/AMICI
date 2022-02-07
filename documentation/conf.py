@@ -514,23 +514,6 @@ def process_docstring(app, what, name, obj, options, lines):
         )
         return
 
-    if name == 'amici.amici.StringDoubleMap':
-        lines.append(
-            'Swig-Generated class templating :class:`Dict` '
-            '[:class:`str`, :class:`float`] to  facilitate'
-            ' interfacing with C++ bindings.'
-        )
-        return
-
-    if name == 'amici.amici.ParameterScalingVector':
-        lines.append(
-            'Swig-Generated class, which, in contrast to other Vector '
-            'classes, does not allow for simple interoperability with common '
-            'python types, but must be created using '
-            ':func:`amici.amici.parameterScalingFromIntVector`'
-        )
-        return
-
     if len(name.split('.')) == 3 and name.split('.')[2] in \
             ['ExpDataPtr', 'ReturnDataPtr', 'ModelPtr', 'SolverPtr']:
         cname = name.split('.')[2]
