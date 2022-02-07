@@ -23,7 +23,7 @@ else
 fi
 
 ${cmake} \
-  -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
+  -DAMICI_CXX_OPTIONS="-Wall;-Wextra;-Werror" \
   -DCMAKE_BUILD_TYPE=$build_type \
   -DPython3_EXECUTABLE="$(command -v python3)" ..
 
