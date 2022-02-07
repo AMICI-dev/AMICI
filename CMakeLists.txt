@@ -23,7 +23,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(ENABLE_SWIG ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
