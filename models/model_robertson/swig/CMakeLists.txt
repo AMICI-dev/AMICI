@@ -32,12 +32,12 @@ set_source_files_properties(${PROJECT_NAME}.i PROPERTIES CPLUSPLUS ON)
 get_target_property(AMICI_INCLUDE_DIRS Upstream::amici INTERFACE_INCLUDE_DIRECTORIES)
 include_directories(${AMICI_INCLUDE_DIRS} ..)
 
-swig_add_library(${PROJECT_NAME}
+swig_add_library(${SWIG_LIBRARY_NAME}
     TYPE MODULE
     LANGUAGE python
     SOURCES ${PROJECT_NAME}.i)
 
-swig_link_libraries(${PROJECT_NAME}
+swig_link_libraries(${SWIG_LIBRARY_NAME}
     ${Python3_LIBRARIES}
     model)
 
