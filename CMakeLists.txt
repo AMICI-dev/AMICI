@@ -179,6 +179,8 @@ if(ENABLE_HDF5)
 endif()
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
+set(AMICI_CXX_OPTIONS "" CACHE STRING "C++ options for libamici (semicolon-separated)")
+target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
 add_dependencies(${PROJECT_NAME} version)
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
