@@ -158,3 +158,4 @@ Further topics
    Organization of the documentation <README>
    code_review_guide
    CI
+   debugging
