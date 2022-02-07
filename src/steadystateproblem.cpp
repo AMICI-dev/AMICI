@@ -8,6 +8,7 @@
 #include "amici/backwardproblem.h"
 #include "amici/newton_solver.h"
 #include "amici/misc.h"
+#include <iostream>
 
 #include <cmath>
 #include <cstring>
@@ -530,7 +531,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
         /* Compute new xdot and residuals */
         model->fxdot(t_, x_, dx_, xdot_);
-        realtype wrms_tmp = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
+        realtype wrms_tmp = getWrmsNorm(x_, xdot_, newtonSolver->atol_,
                                         newtonSolver->rtol_, ewt_);
 
         if (wrms_tmp < wrms_) {
@@ -555,7 +556,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 }
                 if (recheck_convergence) {
                   model->fxdot(t_, x_, dx_, xdot_);
-                  wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
+                  wrms_ = getWrmsNorm(x_, xdot_, newtonSolver->atol_,
                                      newtonSolver->rtol_, ewt_);
                   converged = wrms_ < RCONST(1.0);
                 }
