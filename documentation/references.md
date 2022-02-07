@@ -16,10 +16,10 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2021</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-AdlungSta2021">
-<p>Adlung, Lorenz, Paul Stapor, Christian Tönsing, Leonard Schmiester, Luisa E. Schwarzmüller, Lena Postawa, Dantong Wang, et al. 2021. “Cell-to-Cell Variability in Jak2/Stat5 Pathway Components and Cytoplasmic Volumes Defines Survival Threshold in Erythroid Progenitor Cells.” <em>Cell Reports</em> 36 (6): 109507. <a href="https://doi.org/https://doi.org/10.1016/j.celrep.2021.109507">https://doi.org/https://doi.org/10.1016/j.celrep.2021.109507</a>.</p>
+<p>Adlung, Lorenz, Paul Stapor, Christian Tönsing, Leonard Schmiester, Luisa E. Schwarzmüller, Lena Postawa, Dantong Wang, et al. 2021. “Cell-to-Cell Variability in Jak2/Stat5 Pathway Components and Cytoplasmic Volumes Defines Survival Threshold in Erythroid Progenitor Cells.” <em>Cell Reports</em> 36 (6): 109507. <a href="https://doi.org/10.1016/j.celrep.2021.109507">https://doi.org/10.1016/j.celrep.2021.109507</a>.</p>
 </div>
 <div id="ref-BastBuc2021">
-<p>Bast, Lisa, Michèle C. Buck, Judith S. Hecker, Robert A. J. Oostendorp, Katharina S. Götze, and Carsten Marr. 2021. “Computational Modeling of Stem and Progenitor Cell Kinetics Identifies Plausible Hematopoietic Lineage Hierarchies.” <em>iScience</em> 24 (2): 102120. <a href="https://doi.org/https://doi.org/10.1016/j.isci.2021.102120">https://doi.org/https://doi.org/10.1016/j.isci.2021.102120</a>.</p>
+<p>Bast, Lisa, Michèle C. Buck, Judith S. Hecker, Robert A. J. Oostendorp, Katharina S. Götze, and Carsten Marr. 2021. “Computational Modeling of Stem and Progenitor Cell Kinetics Identifies Plausible Hematopoietic Lineage Hierarchies.” <em>iScience</em> 24 (2): 102120. <a href="https://doi.org/10.1016/j.isci.2021.102120">https://doi.org/10.1016/j.isci.2021.102120</a>.</p>
 </div>
 <div id="ref-Contento2021.10.01.21263052">
 <p>Contento, Lorenzo, Noemi Castelletti, Elba Raimúndez, Ronan Le Gleut, Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2021. “Integrative Modelling of Reported Case Numbers and Seroprevalence Reveals Time-Dependent Test Efficiency and Infection Rates.” <em>medRxiv</em>. <a href="https://doi.org/10.1101/2021.10.01.21263052">https://doi.org/10.1101/2021.10.01.21263052</a>.</p>
@@ -34,13 +34,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Gaspari, Erika. 2021. “Model-Driven Design of Mycoplasma as a Vaccine Chassis.” PhD thesis, Wageningen: Wageningen University. <a href="https://doi.org/10.18174/539593">https://doi.org/10.18174/539593</a>.</p>
 </div>
 <div id="ref-GudinaAli2021">
-<p>Gudina, Esayas Kebede, Solomon Ali, Eyob Girma, Addisu Gize, Birhanemeskel Tegene, Gadissa Bedada Hundie, Wondewosen Tsegaye Sime, et al. 2021. “Seroepidemiology and model-based prediction of SARS-CoV-2 in Ethiopia: longitudinal cohort study among front-line hospital workers and communities.” <em>The Lancet Global Health</em> 9 (11): e1517–e1527. <a href="https://doi.org/https://doi.org/10.1016/S2214-109X(21)00386-7">https://doi.org/https://doi.org/10.1016/S2214-109X(21)00386-7</a>.</p>
+<p>Gudina, Esayas Kebede, Solomon Ali, Eyob Girma, Addisu Gize, Birhanemeskel Tegene, Gadissa Bedada Hundie, Wondewosen Tsegaye Sime, et al. 2021. “Seroepidemiology and model-based prediction of SARS-CoV-2 in Ethiopia: longitudinal cohort study among front-line hospital workers and communities.” <em>The Lancet Global Health</em> 9 (11): e1517–e1527. <a href="https://doi.org/10.1016/S2214-109X(21)00386-7">https://doi.org/10.1016/S2214-109X(21)00386-7</a>.</p>
 </div>
 <div id="ref-Maier2021">
 <p>Maier, Corinna. 2021. “Bayesian Data Assimilation and Reinforcement Learning for Model-Informed Precision Dosing in Oncology.” Doctoralthesis, Universität Potsdam. <a href="https://doi.org/10.25932/publishup-51587">https://doi.org/10.25932/publishup-51587</a>.</p>
 </div>
 <div id="ref-RaimundezDud2021">
-<p>Raimúndez, Elba, Erika Dudkin, Jakob Vanhoefer, Emad Alamoudi, Simon Merkt, Lara Fuhrmann, Fan Bai, and Jan Hasenauer. 2021. “COVID-19 Outbreak in Wuhan Demonstrates the Limitations of Publicly Available Case Numbers for Epidemiological Modeling.” <em>Epidemics</em> 34: 100439. <a href="https://doi.org/https://doi.org/10.1016/j.epidem.2021.100439">https://doi.org/https://doi.org/10.1016/j.epidem.2021.100439</a>.</p>
+<p>Raimúndez, Elba, Erika Dudkin, Jakob Vanhoefer, Emad Alamoudi, Simon Merkt, Lara Fuhrmann, Fan Bai, and Jan Hasenauer. 2021. “COVID-19 Outbreak in Wuhan Demonstrates the Limitations of Publicly Available Case Numbers for Epidemiological Modeling.” <em>Epidemics</em> 34: 100439. <a href="https://doi.org/10.1016/j.epidem.2021.100439">https://doi.org/10.1016/j.epidem.2021.100439</a>.</p>
 </div>
 <div id="ref-Schmiester2021.02.06.430039">
 <p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2021. “Efficient Gradient-Based Parameter Estimation for Dynamic Models Using Qualitative Data.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2021.02.06.430039">https://doi.org/10.1101/2021.02.06.430039</a>.</p>
@@ -58,7 +58,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Vanhoefer, Jakob, Marta R. A. Matos, Dilan Pathirana, Yannik Schälte, and Jan Hasenauer. 2021. “Yaml2sbml: Human-Readable and -Writable Specification of Ode Models and Their Conversion to Sbml.” <em>Journal of Open Source Software</em> 6 (61): 3215. <a href="https://doi.org/10.21105/joss.03215">https://doi.org/10.21105/joss.03215</a>.</p>
 </div>
 <div id="ref-vanRosmalenSmi2021">
-<p>van Rosmalen, R. P., R. W. Smith, V. A. P. Martins dos Santos, C. Fleck, and M. Suarez-Diez. 2021. “Model Reduction of Genome-Scale Metabolic Models as a Basis for Targeted Kinetic Models.” <em>Metabolic Engineering</em> 64: 74–84. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008">https://doi.org/https://doi.org/10.1016/j.ymben.2021.01.008</a>.</p>
+<p>van Rosmalen, R. P., R. W. Smith, V. A. P. Martins dos Santos, C. Fleck, and M. Suarez-Diez. 2021. “Model Reduction of Genome-Scale Metabolic Models as a Basis for Targeted Kinetic Models.” <em>Metabolic Engineering</em> 64: 74–84. <a href="https://doi.org/10.1016/j.ymben.2021.01.008">https://doi.org/10.1016/j.ymben.2021.01.008</a>.</p>
 </div>
 <div id="ref-VillaverdePat2021">
 <p>Villaverde, Alejandro F, Dilan Pathirana, Fabian Fröhlich, Jan Hasenauer, and Julio R Banga. 2021. “A protocol for dynamic model calibration.” <em>Briefings in Bioinformatics</em>, October. <a href="https://doi.org/10.1093/bib/bbab387">https://doi.org/10.1093/bib/bbab387</a>.</p>
@@ -73,7 +73,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Erdem, Cemal, Ethan M. Bensman, Arnab Mutsuddy, Michael M. Saint-Antoine, Mehdi Bouhaddou, Robert C. Blake, Will Dodd, et al. 2020. “A Simple and Efficient Pipeline for Construction, Merging, Expansion, and Simulation of Large-Scale, Single-Cell Mechanistic Models.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.11.09.373407">https://doi.org/10.1101/2020.11.09.373407</a>.</p>
 </div>
 <div id="ref-GerosaChi2020">
-<p>Gerosa, Luca, Christopher Chidley, Fabian Fröhlich, Gabriela Sanchez, Sang Kyun Lim, Jeremy Muhlich, Jia-Yun Chen, et al. 2020. “Receptor-Driven Erk Pulses Reconfigure Mapk Signaling and Enable Persistence of Drug-Adapted Braf-Mutant Melanoma Cells.” <em>Cell Systems</em>. <a href="https://doi.org/https://doi.org/10.1016/j.cels.2020.10.002">https://doi.org/https://doi.org/10.1016/j.cels.2020.10.002</a>.</p>
+<p>Gerosa, Luca, Christopher Chidley, Fabian Fröhlich, Gabriela Sanchez, Sang Kyun Lim, Jeremy Muhlich, Jia-Yun Chen, et al. 2020. “Receptor-Driven Erk Pulses Reconfigure Mapk Signaling and Enable Persistence of Drug-Adapted Braf-Mutant Melanoma Cells.” <em>Cell Systems</em>. <a href="https://doi.org/10.1016/j.cels.2020.10.002">https://doi.org/10.1016/j.cels.2020.10.002</a>.</p>
 </div>
 <div id="ref-Kuritz2020.03.30.015909">
 <p>Kuritz, Karsten, Alain R Bonny, João Pedro Fonseca, and Frank Allgöwer. 2020. “PDE-Constrained Optimization for Estimating Population Dynamics over Cell Cycle from Static Single Cell Measurements.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2020.03.30.015909">https://doi.org/10.1101/2020.03.30.015909</a>.</p>
@@ -94,7 +94,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Sten, Sebastian. 2020. “Mathematical Modeling of Neurovascular Coupling.” Linköping University Medical Dissertations. PhD thesis, Linköping UniversityLinköping UniversityLinköping University, Division of Diagnostics; Specialist Medicine, Faculty of Medicine; Health Sciences, Center for Medical Image Science; Visualization (CMIV); Linköping University, Division of Diagnostics; Specialist Medicine. <a href="https://doi.org/10.3384/diss.diva-167806">https://doi.org/10.3384/diss.diva-167806</a>.</p>
 </div>
 <div id="ref-StenEli2020">
-<p>Sten, Sebastian, Fredrik Elinder, Gunnar Cedersund, and Maria Engström. 2020. “A Quantitative Analysis of Cell-Specific Contributions and the Role of Anesthetics to the Neurovascular Coupling.” <em>NeuroImage</em> 215: 116827. <a href="https://doi.org/https://doi.org/10.1016/j.neuroimage.2020.116827">https://doi.org/https://doi.org/10.1016/j.neuroimage.2020.116827</a>.</p>
+<p>Sten, Sebastian, Fredrik Elinder, Gunnar Cedersund, and Maria Engström. 2020. “A Quantitative Analysis of Cell-Specific Contributions and the Role of Anesthetics to the Neurovascular Coupling.” <em>NeuroImage</em> 215: 116827. <a href="https://doi.org/10.1016/j.neuroimage.2020.116827">https://doi.org/10.1016/j.neuroimage.2020.116827</a>.</p>
 </div>
 <div id="ref-TsipaPit2020">
 <p>Tsipa, Argyro, Jake Alan Pitt, Julio R. Banga, and Athanasios Mantalaris. 2020. “A Dual-Parameter Identification Approach for Data-Based Predictive Modeling of Hybrid Gene Regulatory Network-Growth Kinetics in Pseudomonas Putida Mt-2.” <em>Bioprocess and Biosystems Engineering</em> 43 (9): 1671–88. <a href="https://doi.org/10.1007/s00449-020-02360-2">https://doi.org/10.1007/s00449-020-02360-2</a>.</p>
@@ -163,7 +163,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Loos, Carolin, Katharina Moeller, Fabian Fröhlich, Tim Hucho, and Jan Hasenauer. 2018. “A Hierarchical, Data-Driven Approach to Modeling Single-Cell Populations Predicts Latent Causes of Cell-to-Cell Variability.” <em>Cell Systems</em> 6 (5): 593–603. <a href="https://doi.org/10.1016/j.cels.2018.04.008">https://doi.org/10.1016/j.cels.2018.04.008</a>.</p>
 </div>
 <div id="ref-PittGom2018">
-<p>Pitt, Jake Alan, Lucian Gomoescu, Constantinos C. Pantelides, Benoît Chachuat, and Julio R. Banga. 2018. “Critical Assessment of Parameter Estimation Methods in Models of Biological Oscillators.” <em>IFAC-PapersOnLine</em> 51 (19): 72–75. <a href="https://doi.org/https://doi.org/10.1016/j.ifacol.2018.09.040">https://doi.org/https://doi.org/10.1016/j.ifacol.2018.09.040</a>.</p>
+<p>Pitt, Jake Alan, Lucian Gomoescu, Constantinos C. Pantelides, Benoît Chachuat, and Julio R. Banga. 2018. “Critical Assessment of Parameter Estimation Methods in Models of Biological Oscillators.” <em>IFAC-PapersOnLine</em> 51 (19): 72–75. <a href="https://doi.org/10.1016/j.ifacol.2018.09.040">https://doi.org/10.1016/j.ifacol.2018.09.040</a>.</p>
 </div>
 <div id="ref-SchaelteSta2018">
 <p>Schälte, Y., P. Stapor, and J. Hasenauer. 2018. “Evaluation of Derivative-Free Optimizers for Parameter Estimation in Systems Biology.” <em>FAC-PapersOnLine</em> 51 (19): 98–101. <a href="https://doi.org/10.1016/j.ifacol.2018.09.025">https://doi.org/10.1016/j.ifacol.2018.09.025</a>.</p>

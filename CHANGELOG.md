@@ -2,6 +2,29 @@
 
 ## v0.X Series
 
+### v0.11.24 (2022-02-01)
+
+Features:
+* Introduced environment variable `AMICI_DLL_DIRS` to control DLL directories
+  on Windows (useful for setting BLAS library directory, as required by
+  Python>=3.8) by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1637
+* Dropped Python3.7 support by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1635
+* Include header files in CMake targets for better IDE integration by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1639
+
+Fixes:
+* Fixed an issue in PEtab import where all-integer parameters would previously
+  result in a TypeError by @stephanmg in
+  https://github.com/AMICI-dev/AMICI/pull/1634
+* Fixed tempdir deletion issues for test suite on Windows by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1636
+* Added functions to provide state IDs/names for x_solver by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1638
+* Fixed docs on RTD by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1643
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.23...v0.11.24
+
 ### v0.11.23 (2022-01-11)
 
 Features:
