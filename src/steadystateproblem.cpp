@@ -8,7 +8,6 @@
 #include "amici/backwardproblem.h"
 #include "amici/newton_solver.h"
 #include "amici/misc.h"
-#include <iostream>
 
 #include <cmath>
 #include <cstring>
