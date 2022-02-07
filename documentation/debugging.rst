@@ -57,7 +57,7 @@ argument.
 For many users, it may be more convenient to use gdb via some graphical user
 interface as provided by various C++ IDEs.
 
-.. note:
+.. note::
 
     For better debugging experience, but at the cost of runtime performance,
     consider building the amici and model extension with environment variable
