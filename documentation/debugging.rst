@@ -29,6 +29,10 @@ shortcut is possible, assuming you are using a development installation
     # rebuild the model, from within the model package directory:
     python setup.py build_ext --force --build-lib .
 
+Note: Be careful when working interactively, Python may not pick up any changes
+in already imported modules. The safest is to start a new Python process after
+any changes.
+
 
 Using a proper debugger
 -----------------------
