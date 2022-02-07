@@ -37,4 +37,29 @@ any changes.
 Using a proper debugger
 -----------------------
 
-TODO
+Debugging with with [gdb](https://www.sourceware.org/gdb/) is most convenient
+with a minimal reproducible example that is directly invoked from gdb.
+For example:
+
+.. code-block:: shell
+
+    # start gdb
+    gdb --args python -m pytest ../tests/test_sbml_import.py::test_nosensi
+
+    # inside gdb, set a meaningful breakpoint and launch:
+    break amici::runAmiciSimulation
+    run
+    # ... (see one of the many gdb tutorials)
+
+Alternative, gdb can attach to a running process by passing the ``--pid``
+argument.
+
+For many users, it may be more convenient to use gdb via some graphical user
+interface as provided by various C++ IDEs.
+
+.. note:
+
+    For better debugging experience, but at the cost of runtime performance,
+    consider building the amici and model extension with environment variable
+    ``ENABLE_AMICI_DEBUGGING=TRUE``. This will include debugging symbols and
+    disable compiler optimizations.
