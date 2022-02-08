@@ -93,7 +93,7 @@ pysb_models = [
     'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
     'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
     'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
-    'fixed_initial',
+    'fixed_initial', 'localfunc'
 ]
 custom_models = [
     'bngwiki_egfr_simple_deletemolecules',
