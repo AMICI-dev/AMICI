@@ -795,7 +795,7 @@ def GetRemoteInput():
 	import urllib.request
 	import io
 	import gzip
-	response = urllib.request.urlopen(r'file:///Users/stephangrein/Downloads/test-ecoli.dat.gz')
+	response = urllib.request.urlopen(r'http://chimera.roma1.infn.it/SYSBIO/test-ecoli.dat.gz')
 	data = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
 	return [int(item) for sl in [entry.decode('ascii').strip().split('\t') for entry in data.readlines()] for item in sl]
 	
