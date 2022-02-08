@@ -3,9 +3,6 @@
 #
 cmake_minimum_required(VERSION 3.3)
 
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif(POLICY CMP0077)
