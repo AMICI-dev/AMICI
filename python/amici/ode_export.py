@@ -3284,6 +3284,14 @@ class ODEExporter:
                 self._get_symbol_id_initializer_list('y'),
             'EXPRESSION_IDS_INITIALIZER_LIST':
                 self._get_symbol_id_initializer_list('w'),
+            'STATE_IDXS_SOLVER_INITIALIZER_LIST':
+                ', '.join(
+                    [
+                        str(idx)
+                        for idx, state in enumerate(self.model._states)
+                        if state._conservation_law is None
+                    ]
+                ),
             'REINIT_FIXPAR_INITCOND':
                 'true' if self.allow_reinit_fixpar_initcond else
                 'false',

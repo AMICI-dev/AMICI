@@ -2,6 +2,58 @@
 
 ## v0.X Series
 
+### v0.11.24 (2022-02-01)
+
+Features:
+* Introduced environment variable `AMICI_DLL_DIRS` to control DLL directories
+  on Windows (useful for setting BLAS library directory, as required by
+  Python>=3.8) by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1637
+* Dropped Python3.7 support by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1635
+* Include header files in CMake targets for better IDE integration by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1639
+
+Fixes:
+* Fixed an issue in PEtab import where all-integer parameters would previously
+  result in a TypeError by @stephanmg in
+  https://github.com/AMICI-dev/AMICI/pull/1634
+* Fixed tempdir deletion issues for test suite on Windows by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1636
+* Added functions to provide state IDs/names for x_solver by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1638
+* Fixed docs on RTD by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1643
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.23...v0.11.24
+
+### v0.11.23 (2022-01-11)
+
+Features:
+* Added overload for Model::setParameterScale with vector<int> by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1614
+* Removed assert_fun argument from gradient checking, improve output 
+  by @dweindl, @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1609
+* Added get_expressions_as_dataframe by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1621
+* Added `id` field to ExpData and ReturnData by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1622
+* Included condition id in dataframes by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1623
+
+Fixes:
+* C++: Fixed SUNMatrixWrapper ctor for size 0 matrices by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1608
+* Python: Handle TemporaryDirectory cleanup failures on Windows by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1617
+* Python: pysb.Model.initial_conditions throws a DeprecationWarning by 
+  @PaulJonasJost in https://github.com/AMICI-dev/AMICI/pull/1620
+* Fixed wrong array size in warnings by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1624
+ 
+NOTE: AMICI 0.11.23 requires numpy<1.22.0 
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
+
 ### v0.11.22 (2021-12-02)
 
 * **Require sympy>=1.9,pysb>=1.13.1** by @FFroehlich, @dweindl

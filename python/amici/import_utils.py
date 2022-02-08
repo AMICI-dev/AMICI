@@ -335,12 +335,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         # c++ doesnt like mixing int and double for arguments of those
         # functions
         if sym.__class__.__name__ in ['min', 'max']:
-            args = tuple([
-                sp.Float(arg) if arg.is_number else arg
-                for arg in sym.args
-            ])
-        else:
-            args = sym.args
+            args = tuple(sp.Float(arg) if arg.is_number else arg
+                         for arg in args)
         return fun_mappings[sym.__class__.__name__](*args)
 
     elif sym.__class__.__name__ == 'piecewise' \
@@ -356,7 +352,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ == 'plus' and not sym.args:
         return sp.Float(0.0)
 
-    if isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+    if isinstance(sym, (sp.Function, sp.Mul, sp.Add, sp.Pow)):
         sym._args = args
 
     elif toplevel and isinstance(sym, BooleanAtom):
