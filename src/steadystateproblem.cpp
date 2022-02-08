@@ -20,7 +20,6 @@ namespace amici {
 
 SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
-      rel_x_newton_(model.nx_solver), x_newton_(model.nx_solver),
       x_(model.nx_solver), x_old_(model.nx_solver), dx_(model.nx_solver),
       xdot_(model.nx_solver), xdot_old_(model.nx_solver),
       sx_(model.nx_solver, model.nplist()), sdx_(model.nx_solver, model.nplist()),
@@ -505,11 +504,10 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
-    x_newton_ = x_;
     x_old_ = x_;
     xdot_old_ = xdot_;
 
-    wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
+    wrms_ = getWrmsNorm(x_, xdot_, newtonSolver->atol_,
                         newtonSolver->rtol_, ewt_);
     bool converged = newton_retry ? false : wrms_ < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->max_steps) {
