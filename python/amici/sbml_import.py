@@ -1392,10 +1392,6 @@ class SbmlImporter:
 
         :param ode_model:
             ODEModel object with basic definitions
-
-        :returns volume_updates_solver:
-            List (according to reduced stoichiometry) with updates for the
-            stoichiometric matrix accounting for compartment volumes
         """
         conservation_laws = []
 
@@ -1422,9 +1418,6 @@ class SbmlImporter:
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
 
-        return volume_updates_solver
-
-
     def _add_conservation_for_non_constant_species(
         self,
         ode_model: ODEModel,
@@ -1449,7 +1442,7 @@ class SbmlImporter:
         kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, NSolutions, NSolutions2 = kernel(S, N, M)
 
         # iterate over species in the ODE model, mark conserved species for later removal from stochiometric matrix
-        species_to_be_removed = {}
+        species_to_be_removed = set()
         species_solver = list(range(ode_model.num_states_rdata()))
         for ix in reversed(range(ode_model.num_states_rdata())): 
             for i in range(0, intKernelDim):
@@ -1487,8 +1480,7 @@ class SbmlImporter:
                         species_to_be_removed.add(ix)
 
         # finally remove species
-        for species in species_to_be_removed:
-            species_solver.pop(species)
+        species_solver = [ix for ix in species_solver if ix not in species_to_be_removed]
 
         # return a list of species which are not conserved and thus valid to be included
         return species_solver

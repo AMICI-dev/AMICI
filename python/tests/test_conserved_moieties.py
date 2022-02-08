@@ -23,7 +23,7 @@ def test_detect_cl():
 	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
 	moeities), engaging {len(conservedMoieties)} metabolites...""")
 	logger.debug("Kernel calc")
-	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions, IsRemoteFile=False)
+	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions, NSolutions2, IsRemoteFile=False)
 	logger.debug("Kernel calc")
 
 	# There are 38 conservation laws, engaging 131 metabolites 
@@ -38,7 +38,7 @@ def test_detect_cl():
 	logger.debug("".join(['-' for _ in range(0, 80)]))
 
 	logger.debug("Filling interaction matrix...\n")
-	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites)
+	J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
 
 	logger.debug("after fill")
 
@@ -51,8 +51,8 @@ def test_detect_cl():
 		maxIter = 10
 		while finish == 0:
 			logger.debug(f"MonteCarlo call #{counter} (maxIter: {maxIter})")
-			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites, conservedMoieties = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim)
-			Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
+			yes, intKernelDim, kernelDim, NSolutions, NSolutions2, engagedMetabolites, conservedMoieties = MonteCarlo(engagedMetabolites, J, J2, fields, conservedMoieties, intKernelDim, NSolutions, NSolutions2, kernelDim, N)
+			Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions, NSolutions2)
 
 			counter += 1
 			if intKernelDim == kernelDim:
@@ -66,7 +66,7 @@ def test_detect_cl():
 					timer = 0
 		old=NSolutions
 		old2=NSolutions2
-		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2)
+		intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N)
 		for i in range(0, len(old)):
 			assert(set(old[i]) == set(NSolutions[i]))
 			assert(set(old2[i]) == set(NSolutions2[i]))
@@ -79,7 +79,7 @@ def test_detect_cl():
 	logger.debug("".join(['*' for _ in range(0, 80)]))
 	logger.debug("Details about conserved moeities:")
 	logger.debug("".join(['*' for _ in range(0, 80)]))
-	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions)
+	Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions, NSolutions2)
 	logger.debug("".join(['-' for _ in range(0, 80)]))
 	logger.debug("".join(['-' for _ in range(0, 80)]))
 	logger.debug("".join(['-' for _ in range(0, 80)]))
@@ -91,7 +91,7 @@ def test_detect_cl():
 @log_execution_time("Detecting moeity conservation laws", logger)
 def test_cl_detect_execution_time():
 	""" Test execution time stays within a certain predefined bound """
-	numIterations = 100
+	numIterations = 2
 	thresholdForTimeout = 5
 	timings = [test_detect_cl() for _ in range(0, numIterations)]
 
