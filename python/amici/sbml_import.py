@@ -1447,6 +1447,9 @@ class SbmlImporter:
         for ix in reversed(range(ode_model.num_states_rdata())): 
             for i in range(0, intKernelDim):
                 for j in range(0, len(NSolutions[i])):
+                    if (len(NSolutions[i]) == 0):
+                        # nothing to reduce
+                        continue
                     if NSolutions[i][j] == ix:
                         # dont use sym('x') here since conservation laws need to be
                         # added before symbols are generated
