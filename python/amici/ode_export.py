@@ -2498,8 +2498,9 @@ class ODEExporter:
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.ode_export.ODEExporter`
 
-        :param generate_sensitivity_code specifies whether code required for
-            sensitivity computation will be generated
+        :param generate_sensitivity_code:
+            specifies whether code required for sensitivity computation will be
+            generated
 
         :param model_name:
             name of the model to be used during code generation
