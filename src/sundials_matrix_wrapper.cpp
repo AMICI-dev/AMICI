@@ -34,8 +34,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype N)
         throw std::bad_alloc();
 
     finish_init();
-    assert(M == rows());
-    assert(N == columns());
+    assert(M == rows() || !matrix_);
+    assert(N == columns() || !matrix_);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(sunindextype M, sunindextype ubw,
@@ -243,7 +243,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
         }
         check_csc(this);
         for (sunindextype icol = 0; icol < columns(); ++icol) {
-            scatter(icol, b.at(icol) * alpha, nullptr, c, icol+1, nullptr, 0);
+            scatter(icol, b[icol] * alpha, nullptr, c, icol+1, nullptr, 0);
         }
         break;
     default:
@@ -288,13 +288,13 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     if (transpose) {
         auto cols_size = cols.size();
         for (std::size_t icols = 0; icols < cols_size; ++icols) {
-            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
-            for (sunindextype idx = get_indexptr(cols.at(icols));
+            auto idx_next_col = get_indexptr(cols[icols] + 1);
+            for (sunindextype idx = get_indexptr(cols[icols]);
                  idx < idx_next_col; ++idx) {
 
                 auto idx_val = get_indexval(idx);
-                assert(icols > 0 && icols < c.size());
-                assert(idx_val > 0 && static_cast<std::size_t>(idx_val) < b.size());
+                assert(icols < c.size());
+                assert(static_cast<std::size_t>(idx_val) < b.size());
 
                 c_ptr[icols] += get_data(idx) * b_ptr[idx_val];
             }
@@ -302,14 +302,14 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     } else {
         auto num_cols = static_cast<std::size_t>(columns());
         for (std::size_t icols = 0; icols < num_cols; ++icols) {
-            auto idx_next_col = get_indexptr(cols.at(icols) + 1);
+            auto idx_next_col = get_indexptr(cols[icols] + 1);
 
-            for (sunindextype idx = get_indexptr(cols.at(icols));
+            for (sunindextype idx = get_indexptr(cols[icols]);
                  idx < idx_next_col; ++idx) {
                 auto idx_val = get_indexval(idx);
 
-                assert(icols > 0 && icols < b.size());
-                assert(idx_val > 0 && static_cast<std::size_t>(idx_val) < c.size());
+                assert(icols < b.size());
+                assert(static_cast<std::size_t>(idx_val) < c.size());
 
                 c_ptr[idx_val] += get_data(idx) * b_ptr[icols];
             }

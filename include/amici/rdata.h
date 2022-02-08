@@ -92,6 +92,10 @@ class ReturnData: public ModelDimensions {
                                   SteadystateProblem const *posteq,
                                   Model &model, Solver const &solver,
                                   ExpData const *edata);
+    /**
+     * @brief Arbitrary (not necessarily unique) identifier.
+     */
+    std::string id;
 
     /**
      * timepoints (shape `nt`)
@@ -375,15 +379,15 @@ class ReturnData: public ModelDimensions {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
                                                 unsigned int version);
-    
+
     /** boolean indicating whether residuals for standard deviations have been added */
     bool sigma_res;
 
   protected:
-    
+
     /** offset for sigma_residuals */
     realtype sigma_offset;
-    
+
     /** timepoint for model evaluation*/
     realtype t_;
 

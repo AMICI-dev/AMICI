@@ -79,6 +79,12 @@ include(ExternalProject)
 
 foreach(MODEL IN ITEMS ${TEST_MODELS})
     # Build model
+    string(CONCAT MODEL_LIBRARY_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/external_model_${MODEL}-prefix/src/"
+        "external_model_${MODEL}-build/")
+    string(CONCAT MODEL_LIBRARY
+        "${MODEL_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}model_${MODEL}"
+        "${CMAKE_STATIC_LIBRARY_SUFFIX}")
     ExternalProject_Add(external_model_${MODEL}
         PREFIX            ""
         SOURCE_DIR        "${CMAKE_SOURCE_DIR}/models/model_${MODEL}/"
@@ -86,6 +92,7 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
         TEST_COMMAND      ""
         BUILD_ALWAYS      1
         DEPENDS amici
+        BUILD_BYPRODUCTS  "${MODEL_LIBRARY}"
         )
     # Rebuild if amici files are updated
     ExternalProject_Add_StepDependencies(external_model_${MODEL} build amici)
@@ -97,8 +104,7 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
         PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES
         "${CMAKE_SOURCE_DIR}/models/model_${MODEL}/"
-        IMPORTED_LOCATION
-        "${CMAKE_CURRENT_BINARY_DIR}/external_model_${MODEL}-prefix/src/external_model_${MODEL}-build/${CMAKE_STATIC_LIBRARY_PREFIX}model_${MODEL}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        IMPORTED_LOCATION "${MODEL_LIBRARY}"
         )
     # Build tests for this model
     add_subdirectory(${MODEL})

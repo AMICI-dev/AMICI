@@ -1,6 +1,7 @@
 #include "amici/vector.h"
 
 #include <functional>
+#include <algorithm>
 
 namespace amici {
 

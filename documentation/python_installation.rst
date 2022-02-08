@@ -8,7 +8,7 @@ Short guide
 
 Installation of the AMICI Python package has the following prerequisites:
 
-* Python>=3.7
+* Python>=3.8
 * :term:`SWIG`>=3.0
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
@@ -205,16 +205,16 @@ You will also need to define two environment variables:
 .. code-block:: text
 
    BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"
-   BLAS_CFLAGS="/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"
+   BLAS_CFLAGS="/IC:/BLAS/OpenBLAS-0.3.12/OpenBLAS-0.3.12"
 
 One way to do that is to run a PowerShell script with the following commands:
 
 .. code-block:: text
 
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
-   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS-0.3.12/OpenBLAS-0.3.12", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS-0.3.12/OpenBLAS-0.3.12", [System.EnvironmentVariableTarget]::Process)
 
 The call ending in ``Process`` sets the environment variable in the current
 process, and it is no longer in effect in the next process. The call ending in
@@ -266,6 +266,18 @@ by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
 ``C:\Windows\System32``. The ``api-ms-win-crt-XXX-l1-1-0.dll`` are needed by
 ``openblas.dll`` and are part of the Windows Universal C Runtime.
 
+.. note::
+
+    Since Python 3.8, the library directory needs to be set either from Python:
+
+    .. code-block:: python
+
+        import os
+        # directory containing `openblas.dll`
+        os.add_dll_directory("C:\\BLAS\\bin")
+        import amici
+
+    or via the environment variable ``AMICI_DLL_DIRS``.
 
 Further topics
 ++++++++++++++
@@ -375,6 +387,15 @@ install the latter locally, using:
 .. code-block:: bash
 
    conda install -c conda-forge openblas
+
+To make AMICI use openblas, set the following environment variable:
+
+.. code-block:: bash
+
+   export BLAS_LIBS=-lopenblas
+
+``BLAS_LIBS`` needs to be set during installation of the AMICI package, as
+well as during any future model import.
 
 To install AMICI, now run:
 

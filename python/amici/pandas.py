@@ -1,7 +1,7 @@
 """
 Pandas Wrappers
 ---------------
-This modules contains convenience wrappers that allow for easy interconversion
+This module contains convenience wrappers that allow for easy interconversion
 between C++ objects from :mod:`amici.amici` and pandas DataFrames
 """
 
@@ -13,6 +13,15 @@ import copy
 from typing import List, Union, Optional, Dict, SupportsFloat
 from .numpy import ExpDataView
 import amici
+
+__all__ = [
+    'get_expressions_as_dataframe',
+    'getEdataFromDataFrame',
+    'getDataObservablesAsDataFrame',
+    'getSimulationObservablesAsDataFrame',
+    'getSimulationStatesAsDataFrame',
+    'getResidualsAsDataFrame'
+]
 
 ExpDatas = Union[
     List[amici.amici.ExpData], List[amici.ExpDataPtr],
@@ -136,8 +145,8 @@ def getSimulationObservablesAsDataFrame(
         descriptive names.
 
     :return:
-        pandas DataFrame with conditions/timepoints as rows and state
-        variables as columns.
+        pandas DataFrame with conditions/timepoints as rows and observables as
+        columns.
     """
     edata_list = _process_edata_list(edata_list)
     rdata_list = _process_rdata_list(rdata_list)
@@ -145,7 +154,7 @@ def getSimulationObservablesAsDataFrame(
     # list of all column names using either names or ids
     cols = _get_extended_observable_cols(model, by_id=by_id)
 
-    # aggregate recrods
+    # aggregate records
     dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
@@ -174,7 +183,7 @@ def getSimulationStatesAsDataFrame(
         rdata_list: ReturnDatas,
         by_id: Optional[bool] = False) -> pd.DataFrame:
     """
-    Compute model residuals according to lists of ReturnData and ExpData.
+    Get model state according to lists of ReturnData and ExpData.
 
     :param model:
         Model instance.
@@ -191,8 +200,8 @@ def getSimulationStatesAsDataFrame(
         If True, ids are used as identifiers, otherwise the possibly more
         descriptive names.
 
-    :return: pandas DataFrame with conditions/timpoints as rows and
-        observables as columns.
+    :return: pandas DataFrame with conditions/timepoints as rows and
+        state variables as columns.
     """
     edata_list = _process_edata_list(edata_list)
     rdata_list = _process_rdata_list(rdata_list)
@@ -222,12 +231,67 @@ def getSimulationStatesAsDataFrame(
     return pd.DataFrame.from_records(dicts, columns=cols)
 
 
+def get_expressions_as_dataframe(
+        model: amici.Model,
+        edata_list: ExpDatas,
+        rdata_list: ReturnDatas,
+        by_id: Optional[bool] = False) -> pd.DataFrame:
+    """
+    Get values of model expressions from lists of ReturnData as DataFrame.
+
+    :param model:
+        Model instance.
+
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+
+    :param rdata_list:
+        list of ReturnData instances corresponding to ExpData.
+        May also be a single ReturnData instance.
+
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return: pandas DataFrame with conditions/timepoints as rows and
+        model expressions as columns.
+    """
+    edata_list = _process_edata_list(edata_list)
+    rdata_list = _process_rdata_list(rdata_list)
+
+    # get conditions and state column names by name or id
+    cols = _get_expression_cols(model, by_id=by_id)
+
+    # aggregate records
+    dicts = []
+    for edata, rdata in zip(edata_list, rdata_list):
+        for i_time, timepoint in enumerate(rdata['t']):
+            datadict = {
+                'time': timepoint,
+            }
+
+            # append expressions
+            for i_expr, expr in enumerate(
+                    _get_names_or_ids(model, 'Expression', by_id=by_id)):
+                datadict[expr] = rdata['w'][i_time, i_expr]
+
+            # use data to fill condition columns
+            _fill_conditions_dict(datadict, model, edata, by_id=by_id)
+
+            # append to dataframe
+            dicts.append(datadict)
+
+    return pd.DataFrame.from_records(dicts, columns=cols)
+
+
 def getResidualsAsDataFrame(model: amici.Model,
                             edata_list: ExpDatas,
                             rdata_list: ReturnDatas,
                             by_id: Optional[bool] = False) -> pd.DataFrame:
     """
-    Convert a list of ExpData to pandas DataFrame.
+    Convert a list of ReturnData and ExpData to pandas DataFrame with
+    residuals.
 
     :param model:
         Model instance.
@@ -245,7 +309,7 @@ def getResidualsAsDataFrame(model: amici.Model,
             descriptive names.
 
     :return:
-        pandas DataFrame with conditions and observables.
+        pandas DataFrame with conditions and residuals.
     """
     edata_list = _process_edata_list(edata_list)
     rdata_list = _process_rdata_list(rdata_list)
@@ -313,6 +377,7 @@ def _fill_conditions_dict(datadict: Dict[str, float],
         dictionary with filled condition parameters.
 
     """
+    datadict['condition_id'] = edata.id
     datadict['t_presim'] = edata.t_presim
 
     for i_par, par in enumerate(
@@ -352,7 +417,7 @@ def _get_extended_observable_cols(model: AmiciModel,
         column names as list.
     """
     return \
-        ['time', 'datatype', 't_presim'] + \
+        ['condition_id', 'time', 'datatype', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
@@ -379,7 +444,7 @@ def _get_observable_cols(model: AmiciModel,
         column names as list.
     """
     return \
-        ['time', 't_presim'] + \
+        ['condition_id', 'time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
          _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
@@ -404,13 +469,36 @@ def _get_state_cols(model: AmiciModel,
         column names as list.
     """
     return \
-        ['time', 't_presim'] + \
+        ['condition_id', 'time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
         [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         [name + '_presim' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         _get_names_or_ids(model, 'State', by_id=by_id)
+
+
+def _get_expression_cols(model: AmiciModel, by_id: bool) -> List[str]:
+    """Construction helper for expression dataframe headers.
+
+    :param model:
+        Model instance.
+
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
+        column names as list.
+    """
+    return \
+        ['condition_id', 'time', 't_presim'] + \
+        _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
+        [name + '_preeq' for name in
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
+        [name + '_presim' for name in
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
+        _get_names_or_ids(model, 'Expression', by_id=by_id)
 
 
 def _get_names_or_ids(model: AmiciModel,
@@ -434,7 +522,9 @@ def _get_names_or_ids(model: AmiciModel,
         column names as list.
     """
     # check whether variable type permitted
-    variable_options = ['Parameter', 'FixedParameter', 'Observable', 'State']
+    variable_options = [
+        'Parameter', 'FixedParameter', 'Observable', 'State', 'Expression'
+    ]
     if variable not in variable_options:
         raise ValueError('Variable must be in ' + str(variable_options))
 
@@ -486,9 +576,6 @@ def _get_specialized_fixed_parameters(
 
     :return:
         overwritten FixedParameter as list.
-
-    Raises:
-
     """
     cond = copy.deepcopy(condition)
     for field in overwrite:
@@ -553,11 +640,11 @@ def constructEdataFromDataFrame(
 
     # fill in preequilibration parameters
     if any([overwrite_preeq[key] != condition[key] for key in
-            overwrite_preeq.keys()]):
+            overwrite_preeq]):
         edata.fixedParametersPreequilibration = \
             _get_specialized_fixed_parameters(
                 model, condition, overwrite_preeq, by_id=by_id)
-    elif len(overwrite_preeq.keys()):
+    elif len(overwrite_preeq):
         edata.fixedParametersPreequilibration = copy.deepcopy(
             edata.fixedParameters
         )

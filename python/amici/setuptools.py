@@ -9,7 +9,6 @@ import sys
 import shlex
 import subprocess
 
-from distutils import log
 from .swig import find_swig, get_swig_version
 
 try:
@@ -143,7 +142,7 @@ def get_hdf5_config() -> PackageInfo:
         hdf5_include_dir_found = os.path.isfile(
             os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
         if hdf5_include_dir_found:
-            log.info('hdf5.h found in %s' % hdf5_include_dir_hint)
+            print(f"hdf5.h found in {hdf5_include_dir_hint}")
             h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
             break
 
@@ -153,7 +152,7 @@ def get_hdf5_config() -> PackageInfo:
             hdf5_library_dir_found = os.path.isfile(
                 os.path.join(hdf5_library_dir_hint, lib_filename))
             if hdf5_library_dir_found:
-                log.info(f'{lib_filename} found in {hdf5_library_dir_hint}')
+                print(f'{lib_filename} found in {hdf5_library_dir_hint}')
                 h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
                 break
         if hdf5_library_dir_found:
@@ -192,8 +191,8 @@ def add_coverage_flags_if_required(cxx_flags: List[str],
     """
     if 'ENABLE_GCOV_COVERAGE' in os.environ and \
             os.environ['ENABLE_GCOV_COVERAGE'].upper() == 'TRUE':
-        log.info("ENABLE_GCOV_COVERAGE was set to TRUE."
-                 " Building AMICI with coverage symbols.")
+        print("ENABLE_GCOV_COVERAGE was set to TRUE."
+              " Building AMICI with coverage symbols.")
         cxx_flags.extend(['-g', '-O0', '--coverage'])
         linker_flags.extend(['--coverage', '-g'])
 
@@ -212,8 +211,8 @@ def add_debug_flags_if_required(cxx_flags: List[str],
     """
     if 'ENABLE_AMICI_DEBUGGING' in os.environ \
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
-        log.info("ENABLE_AMICI_DEBUGGING was set to TRUE."
-                 " Building AMICI with debug symbols.")
+        print("ENABLE_AMICI_DEBUGGING was set to TRUE."
+              " Building AMICI with debug symbols.")
         cxx_flags.extend(['-g', '-O0', '-UNDEBUG'])
         linker_flags.extend(['-g'])
 
@@ -237,7 +236,7 @@ def generate_swig_interface_files(swig_outdir: str = None,
         f'-Iamici{os.sep}include',
     ]
 
-    log.info(f"Found SWIG version {swig_version}")
+    print(f"Found SWIG version {swig_version}")
 
     # Are HDF5 includes available to generate the wrapper?
     if with_hdf5 is None:
@@ -258,7 +257,7 @@ def generate_swig_interface_files(swig_outdir: str = None,
                 '-o', os.path.join("amici", "amici_wrap.cxx"),
                 os.path.join("amici", "swig", "amici.i")]
 
-    log.info(f"Running SWIG: {' '.join(swig_cmd)}")
+    print(f"Running SWIG: {' '.join(swig_cmd)}")
     sp = subprocess.run(swig_cmd, stdout=subprocess.PIPE,
                         stderr=sys.stdout.buffer)
     if not sp.returncode == 0:
@@ -271,15 +270,15 @@ def add_openmp_flags(cxx_flags: List, ldflags: List) -> None:
 
     # Enable OpenMP support for Linux / OSX:
     if sys.platform == 'linux':
-        log.info("Adding OpenMP flags...")
+        print("Adding OpenMP flags...")
         cxx_flags.insert(0, "-fopenmp")
         ldflags.insert(0, "-fopenmp")
     elif sys.platform == 'darwin':
         if os.path.exists('/usr/local/lib/libomp.a'):
-            log.info("Adding OpenMP flags...")
+            print("Adding OpenMP flags...")
             cxx_flags[0:0] = ["-Xpreprocessor", "-fopenmp"]
             ldflags[0:0] = ["-Xpreprocessor", "-fopenmp", "-lomp"]
         else:
-            log.info("Not adding OpenMP flags, because /usr/local/lib/libomp.a"
-                     " does not exist. To enable, run `brew install libomp` "
-                     "or add flags manually.")
+            print("Not adding OpenMP flags, because /usr/local/lib/libomp.a"
+                  " does not exist. To enable, run `brew install libomp` "
+                  "or add flags manually.")

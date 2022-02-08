@@ -9,6 +9,8 @@ on:
       - develop
       - master
   workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
 
 jobs:
   doxygen:
@@ -16,7 +18,16 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    strategy:
+      matrix:
+        python-version: [3.8]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
@@ -42,7 +53,16 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+
     steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
 
@@ -52,12 +72,6 @@ jobs:
       - name: Build doxygen
         run: |
           sudo scripts/downloadAndBuildDoxygen.sh
-
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          # Semantic version range syntax or exact version of a Python version
-          python-version: '3.8'
 
       # install amici dependencies
       - name: apt

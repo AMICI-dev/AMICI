@@ -456,6 +456,12 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual std::vector<std::string> getStateNames() const;
 
     /**
+     * @brief Get names of the solver states.
+     * @return State names
+     */
+    virtual std::vector<std::string> getStateNamesSolver() const;
+
+    /**
      * @brief Report whether the model has fixed parameter names set.
      * @return Boolean indicating whether fixed parameter names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
@@ -516,9 +522,15 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the model states.
-     * @return Sate IDs
+     * @return State IDs
      */
     virtual std::vector<std::string> getStateIds() const;
+
+    /**
+     * @brief Get IDs of the solver states.
+     * @return State IDs
+     */
+    virtual std::vector<std::string> getStateIdsSolver() const;
 
     /**
      * @brief Report whether the model has fixed parameter IDs set.
@@ -642,7 +654,7 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
-    
+
     /**
      * @brief Sets the estimated lower boundary for sigma_y. When :meth:`setAddSigmaResiduals` is
      * activated, this lower boundary must ensure that log(sigma) + min_sigma > 0.
@@ -651,7 +663,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void setMinimumSigmaResiduals(double min_sigma) {
         min_sigma_ = min_sigma;
     }
-    
+
     /**
      * @brief Gets the specified estimated lower boundary for sigma_y.
      * @return lower boundary
@@ -659,7 +671,7 @@ class Model : public AbstractModel, public ModelDimensions {
     realtype getMinimumSigmaResiduals() const {
         return min_sigma_;
     }
-    
+
     /**
      * @brief Specifies whether residuals should be added to account for parameter dependent sigma.
      *
@@ -673,7 +685,7 @@ class Model : public AbstractModel, public ModelDimensions {
     void setAddSigmaResiduals(bool sigma_res) {
         sigma_res_ = sigma_res;
     }
-    
+
     /**
      * @brief Checks whether residuals should be added to account for parameter dependent sigma.
      * @return sigma_res
@@ -802,6 +814,13 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
+
+    /**
+     * @brief Get scaling type for observable
+     * @param iy observable index
+     * @return scaling type
+     */
+    virtual ObservableScaling getObservableScaling(int iy) const;
 
     /**
      * @brief Get sensitivity of time-resolved observables.
@@ -1704,6 +1723,21 @@ class Model : public AbstractModel, public ModelDimensions {
      * stateIsNonNegative
      */
     const_N_Vector computeX_pos(const_N_Vector x);
+    
+    /**
+     * @brief Compute non-negative state vector.
+     *
+     * Compute non-negative state vector according to stateIsNonNegative.
+     * If anyStateNonNegative is set to `false`, i.e., all entries in
+     * stateIsNonNegative are `false`, this function directly returns `x`,
+     * otherwise all entries of x are copied in to `amici::Model::x_pos_tmp_`
+     * and negative values are replaced by `0` where applicable.
+     *
+     * @param x State vector possibly containing negative values
+     * @return State vector with negative values replaced by `0` according to
+     * stateIsNonNegative
+     */
+    const realtype *computeX_pos(AmiVector const& x);
 
     /** All variables necessary for function evaluation */
     ModelState state_;
@@ -1743,10 +1777,10 @@ class Model : public AbstractModel, public ModelDimensions {
      * checked for finiteness
      */
     bool always_check_finite_ {false};
-    
+
     /** indicates whether sigma residuals are to be added for every datapoint  */
     bool sigma_res_ {false};
-    
+
     /** offset to ensure positivity of sigma residuals, only has an effect when `sigma_res_` is `true`  */
     realtype min_sigma_ {50.0};
 

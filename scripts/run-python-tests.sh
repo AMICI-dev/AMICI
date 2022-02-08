@@ -8,7 +8,7 @@ set -e
 
 # check for presence of BioNetGen package
 if [[ -z "${BNGPATH}" ]]; then
-    export BNGPATH=${amici_path}/ThirdParty/BioNetGen-2.5.2
+    export BNGPATH=${amici_path}/ThirdParty/BioNetGen-2.7.0
 fi
 
 # required packages for testing

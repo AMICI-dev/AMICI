@@ -8,6 +8,7 @@
 #include <gsl/gsl-lite.hpp>
 
 #include <vector>
+#include <algorithm>
 
 #include <assert.h>
 
@@ -324,6 +325,17 @@ class SUNMatrixWrapper {
      * @param alpha scalar coefficient for matrix
      */
     void multiply(N_Vector c, const_N_Vector b, realtype alpha = 1.0) const;
+
+    /**
+     * @brief AmiVector interface for multiply
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     * @param alpha scalar coefficient for matrix
+     */
+    void multiply(AmiVector& c, AmiVector const& b, realtype alpha = 1.0) const {
+        multiply(c.getNVector(), b.getNVector(), alpha);
+    }
+
 
     /**
      * @brief Perform matrix vector multiplication c += alpha * A*b

@@ -14,10 +14,6 @@ import pytest
 from amici.gradient_check import check_derivatives
 
 
-def assert_fun(x):
-    assert x
-
-
 @pytest.fixture
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
@@ -104,7 +100,7 @@ def test_special_likelihoods(model_special_likelihoods):
         solver.setSensitivityMethod(sensi_method)
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
         check_derivatives(
-            model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
+            model, solver, edata, atol=1e-1, rtol=1e-1,
             check_least_squares=False)
 
     # Test for m > y, i.e. in region with 0 density

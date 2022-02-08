@@ -1,15 +1,16 @@
 """Miscellaneous AMICI Python interface tests"""
 
-import amici
 import sympy as sp
+from amici.cxxcodeprinter import AmiciCxxCodePrinter
 
 
 def test_csc_matrix():
     """Test sparse CSC matrix creation"""
+    printer = AmiciCxxCodePrinter()
     matrix = sp.Matrix([[1, 0], [2, 3]])
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = amici.ode_export.csc_matrix(matrix, rownames=['a1', 'a2'],
-                                      colnames=['b1', 'b2'])
+        = printer.csc_matrix(matrix, rownames=['a1', 'a2'],
+                             colnames=['b1', 'b2'])
 
     assert symbol_col_ptrs == [0, 2, 3]
     assert symbol_row_vals == [0, 1, 1]
@@ -20,9 +21,10 @@ def test_csc_matrix():
 
 def test_csc_matrix_empty():
     """Test sparse CSC matrix creation for empty matrix"""
+    printer = AmiciCxxCodePrinter()
     matrix = sp.Matrix()
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = amici.ode_export.csc_matrix(matrix, rownames=[], colnames=[])
+        = printer.csc_matrix(matrix, rownames=[], colnames=[])
 
     assert symbol_col_ptrs == []
     assert symbol_row_vals == []
@@ -33,10 +35,10 @@ def test_csc_matrix_empty():
 
 def test_csc_matrix_vector():
     """Test sparse CSC matrix creation from matrix slice"""
-
+    printer = AmiciCxxCodePrinter()
     matrix = sp.Matrix([[1, 0], [2, 3]])
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = amici.ode_export.csc_matrix(
+        = printer.csc_matrix(
             matrix[:, 0], colnames=[sp.Symbol('b')],
             rownames=[sp.Symbol('a1'),  sp.Symbol('a2')]
         )
@@ -49,7 +51,7 @@ def test_csc_matrix_vector():
 
     # Test continuation of numbering of symbols
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = amici.ode_export.csc_matrix(
+        = printer.csc_matrix(
             matrix[:, 1], colnames=[sp.Symbol('b')],
             rownames=[sp.Symbol('a1'), sp.Symbol('a2')], identifier=1
         )
