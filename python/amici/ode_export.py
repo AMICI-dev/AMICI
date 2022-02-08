@@ -1224,7 +1224,7 @@ class ODEModel:
                              abundance_expr: sp.Expr) -> None:
         """
         Adds a new conservation law to the model. A conservation law is defined
-        by the conserved quantity :math:`T = sum_i(a_i * x_i)`, where
+        by the conserved quantity :math:`T = \sum_i(a_i * x_i)`, where
         :math:`a_i` are coefficients and :math:`x_i` are different state
         variables.
 
@@ -1238,13 +1238,13 @@ class ODEModel:
         :param state_expr:
             symbolic algebraic formula that replaces the state. This is
             used to compute the numeric value of ``state`` during simulations.
-            :math:`x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j`
+            :math:`x_j = T/a_j - \sum_{i≠j}(a_i * x_i)/a_j`
 
         :param abundance_expr:
             symbolic algebraic formula that computes the value of the
             conserved quantity. This is used to update the numeric value for
             ``total_abundance`` after (re-)initialization.
-            :math:`T/a_j = sum_i≠j(a_i * x_i)/a_j + x_j`
+            :math:`T/a_j = \sum_{i≠j}(a_i * x_i)/a_j + x_j`
         """
         try:
             ix = [
