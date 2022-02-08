@@ -609,6 +609,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     if (backward)
         sensitivityFlag = SensitivityMethod::adjoint;
 
+    /* If run after Newton's method checks again if it converged */
     bool converged = checkConvergence(solver, model, sensitivityFlag);
     int sim_steps = 0;
 
