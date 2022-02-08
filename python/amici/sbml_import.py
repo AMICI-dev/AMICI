@@ -1401,8 +1401,8 @@ class SbmlImporter:
         )
 
         # Non-constant species processed here
-        species_solver = (list(set(self._add_conservation_for_non_constant_species
-            (ode_model, conservation_laws)) & set(species_solver)))
+        #species_solver = (list(set(self._add_conservation_for_non_constant_species
+        #    (ode_model, conservation_laws)) & set(species_solver)))
 
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must switched in this case
