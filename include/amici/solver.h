@@ -632,7 +632,7 @@ class Solver {
                        AmiVectorArray &sx, AmiVector &xQ) const;
 
     /**
-     * @brief write solution from forward simulation
+     * @brief write solution from backward simulation
      * @param t time
      * @param xB adjoint state
      * @param dxB adjoint derivative state

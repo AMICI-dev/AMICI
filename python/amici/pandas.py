@@ -302,11 +302,11 @@ def getResidualsAsDataFrame(model: amici.Model,
 
     :param rdata_list:
         list of ReturnData instances corresponding to ExpData. May also be a
-         single ReturnData instance.
+        single ReturnData instance.
 
     :param by_id: bool, optional (default = False)
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
 
     :return:
         pandas DataFrame with conditions and residuals.
@@ -609,8 +609,8 @@ def constructEdataFromDataFrame(
 
     :param by_id:
         Indicate whether in the arguments, column headers are based on ids or
-         names. This should correspond to the way `df` and `condition` was
-         created in the first place.
+        names. This should correspond to the way `df` and `condition` was
+        created in the first place.
 
     :return:
         ExpData instance.

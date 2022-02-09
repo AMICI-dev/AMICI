@@ -3,9 +3,6 @@
 #
 cmake_minimum_required(VERSION 3.3)
 
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif(POLICY CMP0077)
@@ -26,7 +23,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(ENABLE_SWIG ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
@@ -180,6 +176,8 @@ if(ENABLE_HDF5)
 endif()
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
+set(AMICI_CXX_OPTIONS "" CACHE STRING "C++ options for libamici (semicolon-separated)")
+target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
 add_dependencies(${PROJECT_NAME} version)
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
