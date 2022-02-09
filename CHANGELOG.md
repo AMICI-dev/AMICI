@@ -2,6 +2,30 @@
 
 ## v0.X Series
 
+### v0.11.25 (2022-02-09)
+
+* Fixed a bug
+  where `Model::setStateIsNonNegative(Model::getStateIsNonNegative())` would
+  raise an exception in case conservation laws were enabled - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1648
+* Fixed a bug where `Model::setStateIsNonNegative` would be ignored in certain
+  model expressions - by @FFroehlich
+  in https://github.com/AMICI-dev/AMICI/pull/1650
+* Fixed a bug where special function parsing inside `min()` and `max()` would
+  not be parsed correctly - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1655
+* Fixed a numpy dependency issues for Mac+ARM systems - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1657
+* Fixed convergence check in Newton method - by @plakrisenko
+  in https://github.com/AMICI-dev/AMICI/pull/1663
+* Add `AMICI_CXX_OPTIONS` to pass libamici-specific compiler options during
+  CMake-based builds - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1664
+* Fixed various warnings and updated documentation - by @dweindl
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.24...v0.11.25
+
 ### v0.11.24 (2022-02-01)
 
 Features:
