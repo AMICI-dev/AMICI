@@ -1,5 +1,5 @@
-import random
 import math
+import random
 import sys
 import time
 

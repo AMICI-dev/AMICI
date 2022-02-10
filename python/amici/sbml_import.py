@@ -5,37 +5,33 @@ This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
 
-
-import operator
-from functools import reduce
-import sympy as sp
-import libsbml as sbml
-import re
-import numpy as np
-import math
-import itertools as itt
-import warnings
-import logging
 import copy
-from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional,
-)
+import itertools as itt
+import logging
+import math
+import re
+import warnings
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
+import libsbml as sbml
+import numpy as np
+import sympy as sp
+
+from . import has_clibs
 from .conserved_moieties import kernel
-
-from .import_utils import (
-    smart_subs, smart_subs_dict, toposort_symbols,
-    _get_str_symbol_identifiers, noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation, _parse_special_functions,
-    _check_unsupported_functions,
-)
+from .constants import SymbolId
+from .import_utils import (_check_unsupported_functions,
+                           _get_str_symbol_identifiers,
+                           _parse_special_functions,
+                           noise_distribution_to_cost_function,
+                           noise_distribution_to_observable_transformation,
+                           smart_subs, smart_subs_dict, toposort_symbols)
+from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol,
     symbol_with_assumptions
 )
-from .constants import SymbolId
-from .logging import get_logger, log_execution_time, set_log_level
-from . import has_clibs
+
 
 class SBMLException(Exception):
     pass
@@ -1393,7 +1389,7 @@ class SbmlImporter:
         conservation_laws = []
 
         # So far, only conservation laws for constant species are supported
-        species_solver = _add_conservation_for_constant_species(self,
+        species_solver = _add_conservation_for_constant_species(
             ode_model, conservation_laws
         )
 
@@ -1608,7 +1604,7 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: sbml.SBase
+    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
@@ -1863,7 +1859,6 @@ def assignmentRules2observables(sbml_model: sbml.Model,
 
 
 def _add_conservation_for_constant_species(
-        self,
         ode_model: ODEModel,
         conservation_laws: List[ConservationLaw]
 ) -> List[int]:
