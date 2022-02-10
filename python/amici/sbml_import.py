@@ -1401,8 +1401,9 @@ class SbmlImporter:
         )
 
         # Non-constant species processed here
-        #species_solver = (list(set(self._add_conservation_for_non_constant_species
-        #    (ode_model, conservation_laws)) & set(species_solver)))
+        species_solver = (list(set(self._add_conservation_for_non_constant_species
+            (ode_model, conservation_laws)) & set(species_solver)))
+        pprint(conservation_laws)
 
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must switched in this case
@@ -1441,46 +1442,37 @@ class SbmlImporter:
         S = [float(entry) for row in S for entry in row]
         kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, NSolutions, NSolutions2 = kernel(S, N, M)
 
-        # iterate over species in the ODE model, mark conserved species for later removal from stochiometric matrix
+        # iterate over species in the ODE model, mark conserved species for
+        # later removal from stochiometric matrix
         species_to_be_removed = set()
         species_solver = list(range(ode_model.num_states_rdata()))
-        for ix in reversed(range(ode_model.num_states_rdata())): 
-            for i in range(0, intKernelDim):
-                for j in range(0, len(NSolutions[i])):
-                    if (len(NSolutions[i]) == 0):
-                        # nothing to reduce
-                        continue
-                    if NSolutions[i][j] == ix:
-                        # dont use sym('x') here since conservation laws need to be
-                        # added before symbols are generated
-                        target_state = ode_model._states[ix].get_id()
-                        total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
-                        
-                        # create SymPy expression describing the conservation law, note:
-                        """:math:`state_expression = -tcl_{target_state} + \sum_{i=1}^{n, j \ne i} coeff_{i} \cdot state_{i}`"""
-                        listOfQuantities = []
-                        listOfCoefficients = []
-                        for index in range(len(NSolutions[i])):
-                            if index != j: 
-                                listOfQuantities.append(ode_model._states[index].get_id())
-                        for index in range(len(NSolutions2[i])):
-                            if index != j:
-                                listOfCoefficients.append(NSolutions2[i][j])
+        for state_idxs, coefficients in zip(NSolutions, NSolutions2):
+            if not state_idxs:
+                # why even return those?
+                continue
+            for coeff, state_idx in zip(coefficients, state_idxs):
+                if state_idx not in species_to_be_removed:
+                    break
+                assert state_idx not in species_to_be_removed
 
-                        # target state is a conserved quantity, thus we have:
-                        """:math:`\sum_{i}^{n} coeff_{i} \cdot state_{i} = 0`"""
-                        state_expression = -target_state * NSolutions2[i][index]
-                        for i in range(len(listOfQuantities)):
-                            state_expression = state_expression + listOfQuantities[i] * listOfCoefficients[i]
-                        
-                        conservation_laws.append({
-                            'state': target_state,
-                            'total_abundance': total_abundance,
-                            'state_expr': state_expression,
-                            'abundance_expr': state_expression
-                        })
-                        # mark species to delete from stoichiometric matrix as they are conserved quantities
-                        species_to_be_removed.add(ix)
+                target_state = ode_model._states[state_idx].get_id()
+                total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+
+                # \sum coeff * state
+                linear_sum = sp.Sum(*[
+                    ode_model._states[i_state].get_id() * coeff
+                    for i_state, coeff in zip(state_idx, coefficients)
+                ])
+
+                conservation_laws.append({
+                    'state': target_state,
+                    'total_abundance': total_abundance,
+                    'state_expr':
+                        (total_abundance - (linear_sum - target_state * coeff))
+                        / coeff,
+                    'abundance_expr': linear_sum / coeff
+                })
+                species_to_be_removed.add(state_idx)
 
         # finally remove species
         species_solver = [ix for ix in species_solver if ix not in species_to_be_removed]
