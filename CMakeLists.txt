@@ -3,9 +3,6 @@
 #
 cmake_minimum_required(VERSION 3.3)
 
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif(POLICY CMP0077)
@@ -26,7 +23,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(ENABLE_SWIG ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
@@ -144,12 +140,44 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     ${CMAKE_SOURCE_DIR}/src/vector.cpp
+    ${CMAKE_SOURCE_DIR}/include/amici/abstract_model.h
+    ${CMAKE_SOURCE_DIR}/include/amici/amici.h
+    ${CMAKE_SOURCE_DIR}/include/amici/backwardproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/cblas.h
+    ${CMAKE_SOURCE_DIR}/include/amici/defines.h
+    ${CMAKE_SOURCE_DIR}/include/amici/edata.h
+    ${CMAKE_SOURCE_DIR}/include/amici/exception.h
+    ${CMAKE_SOURCE_DIR}/include/amici/forwardproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/hdf5.h
+    ${CMAKE_SOURCE_DIR}/include/amici/interface_matlab.h
+    ${CMAKE_SOURCE_DIR}/include/amici/misc.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_dae.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_dimensions.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_ode.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_state.h
+    ${CMAKE_SOURCE_DIR}/include/amici/newton_solver.h
+    ${CMAKE_SOURCE_DIR}/include/amici/rdata.h
+    ${CMAKE_SOURCE_DIR}/include/amici/returndata_matlab.h
+    ${CMAKE_SOURCE_DIR}/include/amici/serialization.h
+    ${CMAKE_SOURCE_DIR}/include/amici/simulation_parameters.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver_cvodes.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver_idas.h
+    ${CMAKE_SOURCE_DIR}/include/amici/spline.h
+    ${CMAKE_SOURCE_DIR}/include/amici/steadystateproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/sundials_linsol_wrapper.h
+    ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
+    ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
+    ${CMAKE_SOURCE_DIR}/include/amici/vector.h
     )
 if(ENABLE_HDF5)
     list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
 endif()
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
+set(AMICI_CXX_OPTIONS "" CACHE STRING "C++ options for libamici (semicolon-separated)")
+target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
 add_dependencies(${PROJECT_NAME} version)
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
@@ -268,7 +296,7 @@ if(BUILD_TESTS)
     if(ENABLE_HDF5)
         enable_testing()
 
-        add_subdirectory(tests/cpputest)
+        add_subdirectory(tests/cpp)
     else()
         message(WARNING "Cannot build tests with ENABLE_HDF5=OFF.")
     endif()

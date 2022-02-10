@@ -190,8 +190,6 @@ def check_trajectories_with_adjoint_sensitivities(
     solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
     edata = ExpData(rdata, 1., 1.)
-    # tmp_data = [1.] * len(edata.getObservedData())
-    # edata.setObservedData(tmp_data)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
@@ -241,19 +239,3 @@ def check_trajectories_with_adjoint_sensitivities(
                                rtol=1e-5, atol=1e-3)
     np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
                                rtol=1e-5, atol=1e-3)
-    # try:
-    #     np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
-    #                                rtol=1e-5, atol=1e-3)
-    #     print('First test passed')
-    #     np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
-    #                                rtol=1e-5, atol=1e-3)
-    #     print("It worked great!")
-    # except:
-    #     print("No coincidence!")
-    #     print("Finite difference:")
-    #     print(list(sllh_fd))
-    #     print("Forward:")
-    #     print(list(rdata_fsa['sllh']))
-    #     print("Adjoints:")
-    #     print(list(rdata_asa['sllh']))
-

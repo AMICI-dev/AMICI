@@ -20,7 +20,6 @@ namespace amici {
 
 SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
-      rel_x_newton_(model.nx_solver), x_newton_(model.nx_solver),
       x_(model.nx_solver), x_old_(model.nx_solver), dx_(model.nx_solver),
       xdot_(model.nx_solver), xdot_old_(model.nx_solver),
       sx_(model.nx_solver, model.nplist()), sdx_(model.nx_solver, model.nplist()),
@@ -198,9 +197,15 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
                 steady_state_status_[1] = SteadyStateStatus::failed_too_long_simulation;
                 break;
             default:
+                model->app->warningF("AMICI:newton",
+                                     "AMICI newton method failed: %s\n",
+                                     ex.what());
                 steady_state_status_[1] = SteadyStateStatus::failed;
         }
-    } catch (AmiException const &) {
+    } catch (AmiException const &ex) {
+        model->app->warningF("AMICI:equilibration",
+                             "AMICI equilibration failed: %s\n",
+                             ex.what());
         steady_state_status_[1] = SteadyStateStatus::failed;
     }
 }
@@ -278,11 +283,11 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         /* compute integral over xB and write to xQ */
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xQ_);
-        /* Compute the quadrature as the inner product xQ * dxotdp */
+        /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
-        
+
         /* Finalize by setting adjoint state to zero (its steady state) */
         xB_.zero();
     } catch (NewtonFailure const &) {
@@ -462,7 +467,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
             sx_ = solver->getStateSensitivity(t_);
             model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
             wrms_ = getWrmsNorm(
-                x_, xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
+                sx_[ip], xdot_, solver->getAbsoluteToleranceSteadyStateSensi(),
                 solver->getRelativeToleranceSteadyStateSensi(), ewt_);
             converged = wrms_ < RCONST(1.0);
         }
@@ -499,13 +504,12 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
-    x_newton_ = x_;
     x_old_ = x_;
     xdot_old_ = xdot_;
 
-    wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
-                       newtonSolver->rtol_, ewt_);
-    bool converged = wrms_ < RCONST(1.0);
+    wrms_ = getWrmsNorm(x_, xdot_, newtonSolver->atol_,
+                        newtonSolver->rtol_, ewt_);
+    bool converged = newton_retry ? false : wrms_ < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->max_steps) {
 
         /* If Newton steps are necessary, compute the initial search direction */
@@ -520,12 +524,11 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         }
 
         /* Try a full, undamped Newton step */
-        N_VLinearSum(1.0, x_old_.getNVector(), gamma, delta_.getNVector(),
-                     x_.getNVector());
+        linearSum(1.0, x_old_, gamma, delta_, x_);
 
         /* Compute new xdot and residuals */
         model->fxdot(t_, x_, dx_, xdot_);
-        realtype wrms_tmp = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
+        realtype wrms_tmp = getWrmsNorm(x_, xdot_, newtonSolver->atol_,
                                         newtonSolver->rtol_, ewt_);
 
         if (wrms_tmp < wrms_) {
@@ -550,7 +553,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 }
                 if (recheck_convergence) {
                   model->fxdot(t_, x_, dx_, xdot_);
-                  wrms_ = getWrmsNorm(x_newton_, xdot_, newtonSolver->atol_,
+                  wrms_ = getWrmsNorm(x_, xdot_, newtonSolver->atol_,
                                      newtonSolver->rtol_, ewt_);
                   converged = wrms_ < RCONST(1.0);
                 }
@@ -594,7 +597,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     /* Do we also have to check for convergence of sensitivities? */
     SensitivityMethod sensitivityFlag = SensitivityMethod::none;
     if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-        solver->getSensitivityMethod() > SensitivityMethod::none)
+        solver->getSensitivityMethod() == SensitivityMethod::forward)
         sensitivityFlag = SensitivityMethod::forward;
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be computed
@@ -606,6 +609,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     if (backward)
         sensitivityFlag = SensitivityMethod::adjoint;
 
+    /* If run after Newton's method checks again if it converged */
     bool converged = checkConvergence(solver, model, sensitivityFlag);
     int sim_steps = 0;
 
@@ -690,7 +694,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                         AmiVector &yQB) const {
-    /* Compute the quadrature as the inner product: yQB = dxotdp * yQ */
+    /* Compute the quadrature as the inner product: yQB = dxdotdp * yQ */
 
     /* set to zero first, as multiplication adds to existing value */
     yQB.zero();
@@ -703,9 +707,7 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
                                            plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
-            yQB[ip] = N_VDotProd(
-                const_cast<N_Vector>(yQ.getNVector()),
-                const_cast<N_Vector>(model->get_dxdotdp().getNVector(ip)));
+            yQB[ip] = dotProd(yQ, model->get_dxdotdp()[ip]);
     }
 }
 

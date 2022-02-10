@@ -60,7 +60,7 @@ process described below:
    (our CI pipeline will do this for you)
 
 -  When adding new functionality, please also provide test cases (see
-   ``tests/cpputest/`` and
+   ``tests/cpp/`` and
    `documentation/CI.md <documentation/CI.md>`__)
 
 -  Write meaningful commit messages
@@ -68,10 +68,10 @@ process described below:
 -  Run all tests to ensure nothing was broken (`more
    details <documentation/CI.md>`__)
 
-   -  Run ``scripts/buildAll.sh && scripts/run-cpputest.sh``.
+   -  Run ``scripts/buildAll.sh && scripts/run-cpp-tests.sh``.
 
    -  If you made changes to the Matlab or C++ code and have a Matlab
-      license, please also run ``tests/cpputest/wrapTestModels.m`` and
+      license, please also run ``tests/cpp/wrapTestModels.m`` and
       ``tests/testModels.m``
 
    -  If you made changes to the Python or C++ code, run
@@ -158,3 +158,4 @@ Further topics
    Organization of the documentation <README>
    code_review_guide
    CI
+   debugging

@@ -68,12 +68,14 @@ constexpr int AMICI_TOO_MUCH_WORK=            -1;
 constexpr int AMICI_TOO_MUCH_ACC=             -2;
 constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
+constexpr int AMICI_RHSFUNC_FAIL=             -8;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
 constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
 constexpr int AMICI_SINGULAR_JACOBIAN=      -809;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
+constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
 constexpr int AMICI_SUCCESS=                   0;
 constexpr int AMICI_DATA_RETURN=               1;
 constexpr int AMICI_ROOT_RETURN=               2;
@@ -104,6 +106,13 @@ enum class BLASTranspose {
 enum class ParameterScaling {
     none,
     ln,
+    log10
+};
+
+/** modes for observable scaling */
+enum class ObservableScaling {
+    lin,
+    log,
     log10
 };
 

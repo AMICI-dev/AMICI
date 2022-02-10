@@ -104,12 +104,17 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
+    solver.startTimer();
+
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
 
     std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
                                                                      model);
+    if(edata) {
+        rdata->id = edata->id;
+    }
 
     std::unique_ptr<SteadystateProblem> preeq {};
     std::unique_ptr<ForwardProblem> fwd {};
@@ -168,23 +173,46 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         rdata->status = AMICI_SUCCESS;
 
     } catch (amici::IntegrationFailure const& ex) {
-        rdata->status = ex.error_code;
-        if (rethrow)
-            throw;
-        warningF("AMICI:simulation",
-                 "AMICI forward simulation failed at t = %f:\n%s\n",
-                 ex.time,
-                 ex.what());
+        if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+            rdata->status = AMICI_MAX_TIME_EXCEEDED;
+            if(rethrow)
+                throw;
+            warningF("AMICI:simulation",
+                     "AMICI forward simulation failed at t = %f: "
+                     "Maximum time exceeed.\n",
+                     ex.time);
+        } else {
+            rdata->status = ex.error_code;
+            if (rethrow)
+                throw;
+            warningF("AMICI:simulation",
+                     "AMICI forward simulation failed at t = %f:\n%s\n",
+                     ex.time,
+                     ex.what());
+
+        }
     } catch (amici::IntegrationFailureB const& ex) {
-        rdata->status = ex.error_code;
-        if (rethrow)
-            throw;
-        warningF(
-          "AMICI:simulation",
-          "AMICI backward simulation failed when trying to solve until t = %f"
-          " (see message above):\n%s\n",
-          ex.time,
-          ex.what());
+        if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+            rdata->status = AMICI_MAX_TIME_EXCEEDED;
+            if (rethrow)
+                throw;
+            warningF(
+                "AMICI:simulation",
+                "AMICI backward simulation failed when trying to solve until "
+                "t = %f: Maximum time exceeed.\n",
+                ex.time);
+
+        } else {
+            rdata->status = ex.error_code;
+            if (rethrow)
+                throw;
+            warningF(
+                "AMICI:simulation",
+                "AMICI backward simulation failed when trying to solve until t = %f"
+                " (see message above):\n%s\n",
+                ex.time,
+                ex.what());
+        }
     } catch (amici::AmiException const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
@@ -277,18 +305,14 @@ AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
     for (int idx = 0; idx < (int)array.size(); idx++) {
         if (isNaN(array[idx])) {
             warningF("AMICI:NaN",
-                     "AMICI encountered a NaN value at index %i/%i in %s!",
-                     idx,
-                     (int)array.size()-1,
-                     fun);
+                     "AMICI encountered a NaN value for %s[%i]!",
+                     fun, idx);
             return AMICI_RECOVERABLE_ERROR;
         }
         if (isInf(array[idx])) {
             warningF("AMICI:Inf",
-                     "AMICI encountered an Inf value at index %i/%i in %s!",
-                     idx,
-                     (int)array.size()-1,
-                     fun);
+                     "AMICI encountered an Inf value for %s[%i]!",
+                     fun, idx);
             return AMICI_RECOVERABLE_ERROR;
         }
     }

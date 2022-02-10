@@ -7,18 +7,23 @@
 # http://www.sphinx-doc.org/en/stable/config
 
 import os
-import sys
 import re
-import mock
 import subprocess
+import sys
+import typing
 
-from sphinx.transforms.post_transforms import ReferencesResolver
-import exhale_multiproject_monkeypatch
-from exhale import configs as exhale_configs
 import exhale.deploy
+import exhale_multiproject_monkeypatch
+import mock
+from exhale import configs as exhale_configs
+from sphinx.transforms.post_transforms import ReferencesResolver
+
+# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+import pandas as pd
+
+exhale_multiproject_monkeypatch, pd  # to avoid removal of unused import
 
 # BEGIN Monkeypatch exhale
-exhale_multiproject_monkeypatch  # to avoid removal of unused import
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
 
 
@@ -33,7 +38,7 @@ def my_exhale_generate_doxygen(doxygen_input):
                                    'build', 'mtocpp_post')
         subprocess.run([mtocpp_post, doxy_xml_dir])
 
-    # let exhale do it's job
+    # let exhale do its job
     exhale_generate_doxygen(doxygen_input)
 
 
@@ -45,7 +50,8 @@ exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
 from breathe.renderer.sphinxrenderer import \
     DomainDirectiveFactory as breathe_DomainDirectiveFactory
 
-old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+old_breathe_DomainDirectiveFactory_create = \
+    breathe_DomainDirectiveFactory.create
 
 
 def my_breathe_DomainDirectiveFactory_create(domain: str, args):
@@ -60,7 +66,8 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     return cls(domain + ':' + name, *args[1:])
 
 
-breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+breathe_DomainDirectiveFactory.create = \
+    my_breathe_DomainDirectiveFactory_create
 
 
 # END Monkeypatch breathe
@@ -94,7 +101,7 @@ def install_amici_deps_rtd():
     cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
            "&& apt download libatlas-base-dev && mkdir libatlas-base-dev "
            "&& cd libatlas-base-dev "
-           "&& ar x ../libatlas-base-dev_3.10.3-5_amd64.deb "
+           "&& ar x ../libatlas-base-dev_3.10.3-8ubuntu7_amd64.deb "
            "&& tar -xJf data.tar.xz "
            f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h "
            )
@@ -113,12 +120,34 @@ def install_amici_deps_rtd():
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
 
 
+def install_doxygen():
+    """Get a more recent doxygen"""
+    version = '1.9.3'
+    doxygen_exe = os.path.join(amici_dir, 'ThirdParty',
+                               f'doxygen-{version}', 'bin', 'doxygen')
+    # to create a symlink to doxygen in a location that is already on PATH
+    some_dir_on_path = os.environ['PATH'].split(os.pathsep)[0]
+    cmd = (
+        f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
+        f"&& wget 'https://www.doxygen.nl/files/"
+        f"doxygen-{version}.linux.bin.tar.gz' "
+        f"&& tar -xzf doxygen-{version}.linux.bin.tar.gz "
+        f"&& ln -sf '{doxygen_exe}' '{some_dir_on_path}'"
+    )
+    subprocess.run(cmd, shell=True, check=True)
+    assert os.path.islink(os.path.join(some_dir_on_path, 'doxygen'))
+    # verify it's available
+    res = subprocess.run(['doxygen', '--version'],
+                         check=False, capture_output=True)
+    print(res.stdout.decode(), res.stderr.decode())
+    assert version in res.stdout.decode()
+
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 
 amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -127,11 +156,14 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
+    install_doxygen()
 
 # Required for matlab doxygen processing
 install_mtocpp()
 
 # Install AMICI if not already present
+typing.TYPE_CHECKING = True
+
 try:
     import amici
 except ModuleNotFoundError:
@@ -148,6 +180,9 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
     import amici
+
+typing.TYPE_CHECKING = False
+
 
 # -- Project information -----------------------------------------------------
 # The short X.Y version
@@ -298,7 +333,15 @@ exhale_projects_args = {
         "exhaleDoxygenStdin": "\n".join([
             "INPUT = ../include",
             "BUILTIN_STL_SUPPORT    = YES",
-            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
+            "EXCLUDE += ../include/amici/interface_matlab.h",
+            "EXCLUDE += ../include/amici/returndata_matlab.h",
+            "EXCLUDE += ../include/amici/spline.h",
+            # amici::log collides with amici::${some_enum}::log
+            #  potentially fixed in
+            #  https://github.com/svenevs/exhale/commit/c924df2e139a09fbacd07587779c55fd0ee4e00b
+            #  and can be un-excluded after the next exhale release
+            "EXCLUDE += ../include/amici/symbolic_functions.h",
         ]),
         "containmentFolder": "_exhale_cpp_api",
         "rootFileTitle": "AMICI C++ API",
@@ -471,23 +514,6 @@ def process_docstring(app, what, name, obj, options, lines):
         )
         return
 
-    if name == 'amici.amici.StringDoubleMap':
-        lines.append(
-            'Swig-Generated class templating :class:`Dict` '
-            '[:class:`str`, :class:`float`] to  facilitate'
-            ' interfacing with C++ bindings.'
-        )
-        return
-
-    if name == 'amici.amici.ParameterScalingVector':
-        lines.append(
-            'Swig-Generated class, which, in contrast to other Vector '
-            'classes, does not allow for simple interoperability with common '
-            'python types, but must be created using '
-            ':func:`amici.amici.parameterScalingFromIntVector`'
-        )
-        return
-
     if len(name.split('.')) == 3 and name.split('.')[2] in \
             ['ExpDataPtr', 'ReturnDataPtr', 'ModelPtr', 'SolverPtr']:
         cname = name.split('.')[2]
@@ -552,8 +578,8 @@ def fix_typehints(sig: str) -> str:
     sig = re.sub(r' &$', r'', sig)
 
     # turn gsl_spans and pointers int Iterables
-    sig = re.sub(r'([\w\.]+) \*', r'Iterable[\1]', sig)
-    sig = re.sub(r'gsl::span< ([\w\.]+) >', r'Iterable[\1]', sig)
+    sig = re.sub(r'([\w.]+) \*', r'Iterable[\1]', sig)
+    sig = re.sub(r'gsl::span< ([\w.]+) >', r'Iterable[\1]', sig)
 
     # fix garbled output
     sig = sig.replace(' >', '')

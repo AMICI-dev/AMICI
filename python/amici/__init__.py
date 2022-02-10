@@ -18,18 +18,15 @@ models and turning them into C++ Python extensions.
 :var has_clibs:
     boolean indicating if this is the full package with swig interface or
     the raw package without
-:var capture_cstdout:
-    context to redirect C/C++ stdout to python stdout if python stdout was
-    redirected (doing nothing if not redirected).
 """
 
 import importlib
 import os
 import re
 import sys
-from contextlib import suppress
+from contextlib import suppress, contextmanager
 from types import ModuleType as ModelModule
-from typing import Optional, Union, Sequence, List
+from typing import Any, Dict, Optional, Union, Sequence, List
 
 
 def _get_amici_path():
@@ -84,14 +81,22 @@ def _imported_from_setup() -> bool:
     return False
 
 
-# redirect C/C++ stdout to python stdout if python stdout is redirected,
-# e.g. in ipython notebook
-capture_cstdout = suppress
-if sys.stdout != sys.__stdout__:
-    try:
-        from wurlitzer import sys_pipes as capture_cstdout
-    except ModuleNotFoundError:
-        pass
+try:
+    from wurlitzer import sys_pipes
+except ModuleNotFoundError:
+    sys_pipes = suppress
+
+
+@contextmanager
+def _capture_cstdout():
+    """Redirect C/C++ stdout to python stdout if python stdout is redirected,
+    e.g. in ipython notebook"""
+    if sys.stdout == sys.__stdout__:
+        yield
+    else:
+        with sys_pipes():
+            yield
+
 
 # Initialize AMICI paths
 amici_path = _get_amici_path()
@@ -122,13 +127,7 @@ if not _imported_from_setup():
 
         # These module require the swig interface and other dependencies
         from .numpy import ReturnDataView, ExpDataView
-        from .pandas import (
-            getEdataFromDataFrame,
-            getDataObservablesAsDataFrame,
-            getSimulationObservablesAsDataFrame,
-            getSimulationStatesAsDataFrame,
-            getResidualsAsDataFrame
-        )
+        from .pandas import *
 
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
@@ -139,7 +138,8 @@ if not _imported_from_setup():
         from typing import Protocol
 
         class ModelModule(Protocol):
-            """Enable Python static type checking for AMICI-generated model modules"""
+            """Enable Python static type checking for AMICI-generated model
+            modules"""
             def getModel(self) -> amici.Model:
                 pass
     except ImportError:
@@ -188,8 +188,7 @@ def runAmiciSimulation(
     :returns:
         ReturnData object with simulation results
     """
-
-    with capture_cstdout():
+    with _capture_cstdout():
         rdata = amici.runAmiciSimulation(_get_ptr(solver), _get_ptr(edata),
                                          _get_ptr(model))
     return numpy.ReturnDataView(rdata)
@@ -235,7 +234,7 @@ def runAmiciSimulations(
 
     :returns: list of simulation results
     """
-    with capture_cstdout():
+    with _capture_cstdout():
         edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
         rdata_ptr_list = amici.runAmiciSimulations(_get_ptr(solver),
                                                    edata_ptr_vector,
@@ -274,6 +273,65 @@ def writeSolverSettingsToHDF5(
     :param location: location of solver settings in hdf5 file
     """
     amici.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
+
+
+# Values are suffixes of `get[...]` and `set[...]` `amici.Model` methods.
+# If either the getter or setter is not named with this pattern, then the value
+# is a tuple where the first and second elements are the getter and setter
+# methods, respectively.
+model_instance_settings = [
+    'AddSigmaResiduals',
+    'AlwaysCheckFinite',
+    'FixedParameters',
+    'InitialStates',
+    'InitialStateSensitivities',
+    'MinimumSigmaResiduals',
+    ('nMaxEvent', 'setNMaxEvent'),
+    'Parameters',
+    'ParameterList',
+    'ParameterScale',  # getter returns a SWIG object
+    'ReinitializationStateIdxs',
+    'ReinitializeFixedParameterInitialStates',
+    'StateIsNonNegative',
+    'SteadyStateSensitivityMode',
+    ('t0', 'setT0'),
+    'Timepoints',
+]
+
+
+def get_model_settings(
+        model: AmiciModel,
+) -> Dict[str, Any]:
+    """Get model settings that are set independently of the compiled model.
+
+    :param model: The AMICI model instance.
+
+    :returns: Keys are AMICI model attributes, values are attribute values.
+    """
+    settings = {}
+    for setting in model_instance_settings:
+        getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
+        settings[setting] = getattr(model, getter)()
+        # TODO `amici.Model.getParameterScale` returns a SWIG object instead
+        # of a Python list/tuple.
+        if setting == 'ParameterScale':
+            settings[setting] = tuple(settings[setting])
+    return settings
+
+
+def set_model_settings(
+        model: AmiciModel,
+        settings: Dict[str, Any],
+) -> None:
+    """Set model settings.
+
+    :param model: The AMICI model instance.
+    :param settings: Keys are callable attributes (setters) of an AMICI model,
+        values are provided to the setters.
+    """
+    for setting, value in settings.items():
+        setter = setting[1] if isinstance(setting, tuple) else f'set{setting}'
+        getattr(model, setter)(value)
 
 
 class add_path:

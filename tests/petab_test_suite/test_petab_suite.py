@@ -108,14 +108,9 @@ def _test_case(case, model_type):
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"Simulations: match = {simulations_match}")
 
-    # FIXME case 7 fails due to #963
-    if case not in ['0007', '0016']:
-        check_derivatives(problem, model)
+    check_derivatives(problem, model)
 
-    # FIXME case 7 fails due to #963
-    if not all([llhs_match, simulations_match]) \
-            or (not chi2s_match and case not in ['0007', '0016']):
-        # chi2s_match ignored until fixed in amici
+    if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
         raise AssertionError(f"Case {case}: Test results do not match "
                              "expectations")
@@ -141,9 +136,6 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
     model.setSteadyStateSensitivityMode(
         SteadyStateSensitivityMode_simulationFSA)
 
-    def assert_true(x):
-        assert x
-
     for edata in create_parameterized_edatas(
             amici_model=model, petab_problem=problem,
             problem_parameters=problem_parameters):
@@ -152,7 +144,7 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
         model.setParameterScale(edata.pscale)
         edata.parameters = []
         edata.pscale = amici.parameterScalingFromIntVector([])
-        amici_check_derivatives(model, solver, edata, assert_true)
+        amici_check_derivatives(model, solver, edata)
 
 
 def run():

@@ -456,6 +456,12 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual std::vector<std::string> getStateNames() const;
 
     /**
+     * @brief Get names of the solver states.
+     * @return State names
+     */
+    virtual std::vector<std::string> getStateNamesSolver() const;
+
+    /**
      * @brief Report whether the model has fixed parameter names set.
      * @return Boolean indicating whether fixed parameter names were set. Also
      * returns `true` if the number of corresponding variables is just zero.
@@ -516,9 +522,15 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Get IDs of the model states.
-     * @return Sate IDs
+     * @return State IDs
      */
     virtual std::vector<std::string> getStateIds() const;
+
+    /**
+     * @brief Get IDs of the solver states.
+     * @return State IDs
+     */
+    virtual std::vector<std::string> getStateIdsSolver() const;
 
     /**
      * @brief Report whether the model has fixed parameter IDs set.
@@ -802,6 +814,13 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
+
+    /**
+     * @brief Get scaling type for observable
+     * @param iy observable index
+     * @return scaling type
+     */
+    virtual ObservableScaling getObservableScaling(int iy) const;
 
     /**
      * @brief Get sensitivity of time-resolved observables.
@@ -1171,8 +1190,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * was found)
      */
     void updateHeavisideB(const int *rootsfound);
-
-    void updateHeavisideB_eventwise(const int *rootsfound, int ie);
 
     /**
      * @brief Check if the given array has only finite elements.
@@ -1710,6 +1727,21 @@ class Model : public AbstractModel, public ModelDimensions {
      * stateIsNonNegative
      */
     const_N_Vector computeX_pos(const_N_Vector x);
+    
+    /**
+     * @brief Compute non-negative state vector.
+     *
+     * Compute non-negative state vector according to stateIsNonNegative.
+     * If anyStateNonNegative is set to `false`, i.e., all entries in
+     * stateIsNonNegative are `false`, this function directly returns `x`,
+     * otherwise all entries of x are copied in to `amici::Model::x_pos_tmp_`
+     * and negative values are replaced by `0` where applicable.
+     *
+     * @param x State vector possibly containing negative values
+     * @return State vector with negative values replaced by `0` according to
+     * stateIsNonNegative
+     */
+    const realtype *computeX_pos(AmiVector const& x);
 
     /** All variables necessary for function evaluation */
     ModelState state_;

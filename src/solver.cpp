@@ -20,6 +20,7 @@ Solver::Solver(AmiciApplication *app) : app(app)
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),
       interp_type_(other.interp_type_), maxsteps_(other.maxsteps_),
+      maxtime_(other.maxtime_), starttime_(other.starttime_),
       sensi_meth_(other.sensi_meth_), sensi_meth_preeq_(other.sensi_meth_preeq_),
       stldet_(other.stldet_), ordering_(other.ordering_),
       newton_maxsteps_(other.newton_maxsteps_),
@@ -133,7 +134,8 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     /* Set optional inputs */
     setErrHandlerFn();
     /* Attaches userdata */
-    setUserData(model);
+    user_data = std::make_pair(model, this);
+    setUserData();
     /* activates stability limit detection */
     setStabLimDet(stldet_);
 
@@ -184,7 +186,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     binit(*which, tf, xB0, dxB0);
 
     /* Attach user data */
-    setUserDataB(*which, model);
+    setUserDataB(*which);
 
     if (nx() == 0)
         return;
@@ -495,6 +497,7 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.linsol_ == b.linsol_) && (a.atol_ == b.atol_) && (a.rtol_ == b.rtol_) &&
            (a.maxsteps_ == b.maxsteps_) && (a.maxstepsB_ == b.maxstepsB_) &&
            (a.quad_atol_ == b.quad_atol_) && (a.quad_rtol_ == b.quad_rtol_) &&
+           (a.maxtime_ == b.maxtime_) &&
            (a.getAbsoluteToleranceSteadyState() ==
             b.getAbsoluteToleranceSteadyState()) &&
            (a.getRelativeToleranceSteadyState() ==
@@ -836,6 +839,23 @@ void Solver::setAbsoluteToleranceSteadyStateSensi(const double atol) {
 }
 
 long int Solver::getMaxSteps() const { return maxsteps_; }
+
+double Solver::getMaxTime() const { return maxtime_.count(); }
+
+void Solver::setMaxTime(double maxtime)
+{
+    maxtime_ = std::chrono::duration<double>(maxtime);
+}
+
+void Solver::startTimer() const
+{
+    starttime_ = std::chrono::system_clock::now();
+}
+
+bool Solver::timeExceeded() const
+{
+    return std::chrono::system_clock::now() - starttime_ > maxtime_;
+}
 
 void Solver::setMaxSteps(const long int maxsteps) {
     if (maxsteps <= 0)

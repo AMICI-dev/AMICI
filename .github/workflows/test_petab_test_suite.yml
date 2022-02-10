@@ -21,7 +21,16 @@ jobs:
     env:
       ENABLE_GCOV_COVERAGE: TRUE
 
+    strategy:
+      matrix:
+        python-version: [3.8]
+
     steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - uses: actions/checkout@master
         with:
           fetch-depth: 20
@@ -44,7 +53,7 @@ jobs:
       - run: |
           echo "${HOME}/.local/bin/" >> $GITHUB_PATH
           echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
-          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
+          echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
       # install AMICI
       - name: Install python package

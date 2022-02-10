@@ -12,15 +12,24 @@ jobs:
       ENABLE_GCOV_COVERAGE: "TRUE"
       CI_SONARCLOUD: "TRUE"
 
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     # sonar cloud
-    - run: echo "SONAR_SCANNER_VERSION=4.5.0.2216" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_VERSION=4.6.2.2472" >> $GITHUB_ENV
     - run: echo "SONAR_SCANNER_HOME=${HOME}/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux" >> $GITHUB_ENV
     - run: echo "SONAR_SCANNER_OPTS=-server" >> $GITHUB_ENV
     - run: echo "${SONAR_SCANNER_HOME}/bin" >> $GITHUB_PATH
@@ -29,7 +38,7 @@ jobs:
     # TODO: add to ci image
     - name: Install sonarcloud tools
       run: |
-        sudo apt install nodejs curl unzip \
+        sudo apt-get install nodejs curl unzip \
         && curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip \
           https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip \
         && unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/ \
@@ -69,7 +78,7 @@ jobs:
 
     - name: C++ tests
       run: |
-        scripts/run-cpputest.sh
+        scripts/run-cpp-tests.sh
 
     - name: Install python package
       run: |
@@ -85,7 +94,7 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
-          
+
     - name: example notebooks
       run: |
         scripts/runNotebook.sh python/examples/example_*/
@@ -96,7 +105,7 @@ jobs:
 
     - name: Codecov Python
       uses: codecov/codecov-action@v1
-      with: 
+      with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/coverage_py.xml
         flags: python
@@ -138,7 +147,7 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
@@ -163,4 +172,4 @@ jobs:
 
     - name: C++ tests
       run: |
-        scripts/run-cpputest.sh
+        scripts/run-cpp-tests.sh

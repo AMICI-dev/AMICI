@@ -18,7 +18,7 @@ tests are integrated with CMake, see `make help` in the build directory.
 ## C++ unit and integration tests
 
 To run C++ tests, build AMICI with `make` or `scripts/buildAll.sh`,
-then run `scripts/run-cpputest.sh`.
+then run `scripts/run-cpp-tests.sh`.
 
 
 ## Python unit and integration tests
@@ -58,7 +58,7 @@ To execute the Matlab test suite, run `tests/testModels.m`.
 
 Many of our integration tests are model simulations. The simulation results
 obtained from the Python and C++ are compared to results saved in an HDF5 file
-(`tests/cpputest/expectedResults.h5`).
+(`tests/cpp/expectedResults.h5`).
 Settings and data for the test simulations are also specified in this file.
 
 **Note:** The C++ code for the models is included in the repository under 
@@ -73,7 +73,7 @@ the Matlab model import routines change.
 
 This is done with
   
-    tests/cpputest/wrapTestModels.m
+    tests/cpp/wrapTestModels.m
 
 **Note:** This is currently only possible from Matlab < R2018a. This should
 change as soon as 1) all second-order sensitivity code is ported to C++/Python,
@@ -84,13 +84,13 @@ for Python.
 ### Regenerating expected results
 
 To update test results, run `make test` in the build directory,
-replace `tests/cpputest/expectedResults.h5` by 
-`tests/cpputest/writeResults.h5.bak` 
+replace `tests/cpp/expectedResults.h5` by 
+`tests/cpp/writeResults.h5.bak` 
 [ONLY DO THIS AFTER TRIPLE CHECKING CORRECTNESS OF RESULTS]
 Before replacing the test results, confirm that only expected datasets have
 changed, e.g. using 
 
-    h5diff -v --relative 1e-8 tests/cpputest/expectedResults.h5 tests/cpputest/writeResults.h5.bak | less
+    h5diff -v --relative 1e-8 tests/cpp/expectedResults.h5 tests/cpp/writeResults.h5.bak | less
 
 
 ## Adding/Updating tests

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from typing import Optional, Iterable
 
+
 def plotStateTrajectories(
         rdata: ReturnDataView,
         state_indices: Optional[Iterable[int]] = None,
@@ -27,7 +28,7 @@ def plotStateTrajectories(
 
     :param ax:
         matplotlib Axes instance to plot into
-    
+
     :param model:
         amici model instance
     """
@@ -37,18 +38,18 @@ def plotStateTrajectories(
         state_indices = range(rdata['x'].shape[1])
     for ix in state_indices:
         if model is None:
-            label = f'x_{ix}'
-        elif model.getStateNames()[ix] != '':
+            label = f'$x_{{{ix}}}$'
+        elif model.getStateNames()[ix]:
             label = model.getStateNames()[ix]
         else:
             label = model.getStateIds()[ix]
-        ax.plot(rdata['t'], rdata['x'][:, ix], label = label)
-        ax.set_xlabel('$t$ (s)')
-        ax.set_ylabel('$x_i(t)$ (mmol/ml)')
+        ax.plot(rdata['t'], rdata['x'][:, ix], label=label)
+        ax.set_xlabel('$t$')
+        ax.set_ylabel('$x(t)$')
         ax.legend()
         ax.set_title('State trajectories')
-    
-    
+
+
 def plotObservableTrajectories(
         rdata: ReturnDataView,
         observable_indices: Optional[Iterable[int]] = None,
@@ -77,13 +78,13 @@ def plotObservableTrajectories(
         observable_indices = range(rdata['y'].shape[1])
     for iy in observable_indices:
         if model is None:
-            label = f'y_{iy}'
-        elif model.getObservableNames()[iy] != '':
+            label = f'$y_{{{iy}}}$'
+        elif model.getObservableNames()[iy]:
             label = model.getObservableNames()[iy]
         else:
             label = model.getObservableIds()[iy]
-        ax.plot(rdata['t'], rdata['y'][:, iy], label = label)
-        ax.set_xlabel('$t$ (s)')
-        ax.set_ylabel('$y_i(t)$ (AU)')
+        ax.plot(rdata['t'], rdata['y'][:, iy], label=label)
+        ax.set_xlabel('$t$')
+        ax.set_ylabel('$y(t)$')
         ax.legend()
-        ax.set_title('Observables')
+        ax.set_title('Observable trajectories')

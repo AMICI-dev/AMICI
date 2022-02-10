@@ -93,9 +93,9 @@ class ParameterMappingForCondition:
 
 
 class ParameterMapping(Sequence):
-    """Parameter mapping for multiple conditions.
+    r"""Parameter mapping for multiple conditions.
 
-    This can be used like a list of :class:`ParameterMappingForCondition`\\ s.
+    This can be used like a list of :class:`ParameterMappingForCondition`\ s.
 
     :param parameter_mappings:
         List of parameter mappings for specific conditions.
@@ -202,6 +202,9 @@ def fill_in_parameters_for_condition(
         if model_par in problem_parameters:
             # user-provided
             return problem_parameters[model_par]
+        # prevent nan-propagation in derivative
+        if np.isnan(value):
+            return 0.0
         # constant value
         return value
 
@@ -243,7 +246,7 @@ def fill_in_parameters_for_condition(
     ]
 
     if parameters:
-        edata.parameters = parameters
+        edata.parameters = np.asarray(parameters, dtype=float)
 
     if scales:
         edata.pscale = amici.parameterScalingFromIntVector(scales)

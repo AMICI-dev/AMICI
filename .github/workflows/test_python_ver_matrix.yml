@@ -22,23 +22,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9, '3.10']
         experimental: [false]
-# Temporarily disabled because the respective jobs somehow runs infinitely
-#        include:
-#          - python-version:  3.10.0-alpha.5
-#            experimental: true
 
     steps:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.5.2" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@master
       with:
         fetch-depth: 20
 

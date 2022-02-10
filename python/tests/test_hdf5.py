@@ -21,6 +21,9 @@ def _modify_solver_attrs(solver):
             cval = 0
         elif attr == 'setReturnDataReportingMode':
             cval = amici.RDataReporting.likelihood
+        elif attr == 'setMaxTime':
+            # default value is the maximum, must not add to that
+            cval = random.random()
         elif isinstance(val, int):
             cval = val + 1
         else:

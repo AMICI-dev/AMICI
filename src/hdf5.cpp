@@ -112,6 +112,10 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
 
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
 
+    if(attributeExists(file, hdf5Root, "id")) {
+        edata->id = getStringAttribute(file, hdf5Root, "id");
+    }
+
     if (model.ny * model.nt() > 0) {
         if(locationExists(file,  hdf5Root + "/Y")) {
             auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
@@ -192,6 +196,10 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file,
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
 
+    H5LTset_attribute_string(file.getId(), hdf5Location.c_str(), "id",
+                             edata.id.c_str());
+
+
     if (edata.nt())
         createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
                                       edata.getTimepoints());
@@ -244,6 +252,9 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
 
     if (!rdata.ts.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/t", rdata.ts);
+
+    H5LTset_attribute_string(file.getId(), hdf5Location.c_str(), "id",
+                             rdata.id.c_str());
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "llh", &rdata.llh, 1);
@@ -461,6 +472,34 @@ void writeReturnData(ReturnData const& rdata,
     writeReturnData(rdata, file, hdf5Location);
 }
 
+std::string getStringAttribute(H5::H5File const& file,
+                               std::string const& optionsObject,
+                               std::string const& attributeName) {
+    hsize_t dims;
+    H5T_class_t type_class;
+    size_t type_size;
+    auto status = H5LTget_attribute_info(file.getId(), optionsObject.c_str(),
+                                         attributeName.c_str(), &dims,
+                                         &type_class,&type_size);
+    if(status < 0) {
+        throw AmiException("Could get info for attribute %s for object %s.",
+                           attributeName.c_str(), optionsObject.c_str());
+    }
+    std::vector<char> value(type_size);
+    status = H5LTget_attribute_string(file.getId(), optionsObject.c_str(),
+                                      attributeName.c_str(), value.data());
+
+#ifdef AMI_HDF5_H_DEBUG
+    printf("%s: %s\n", attributeName.c_str(), value.data());
+#endif
+
+    if(status < 0)
+        throw AmiException("Attribute %s not found for object %s.",
+                           attributeName.c_str(), optionsObject.c_str());
+
+    return std::string(value.data());
+}
+
 double getDoubleScalarAttribute(H5::H5File const& file,
                                 std::string const& optionsObject,
                                 std::string const& attributeName) {
@@ -636,6 +675,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_rtol_sensi", &dbuffer, 1);
 
+    dbuffer = solver.getMaxTime();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "maxtime", &dbuffer, 1);
+
     ibuffer = static_cast<int>(solver.getMaxSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "maxsteps", &ibuffer, 1);
@@ -773,6 +816,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
         solver.setRelativeToleranceSteadyStateSensi(
                     getDoubleScalarAttribute(file, datasetPath,
                                              "ss_rtol_sensi"));
+    }
+
+    if(attributeExists(file, datasetPath, "maxtime")) {
+        solver.setMaxTime(
+            getDoubleScalarAttribute(file, datasetPath, "maxtime"));
     }
 
     if(attributeExists(file, datasetPath, "maxsteps")) {
@@ -960,12 +1008,12 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model,
             model.setUnscaledInitialStateSensitivities(sx0);
         }
     }
-    
+
     if(attributeExists(file, datasetPath, "sigma_res")) {
         auto sigma_res = getIntScalarAttribute(file, datasetPath, "sigma_res");
         model.setAddSigmaResiduals(static_cast<bool>(sigma_res));
     }
-    
+
     if(attributeExists(file, datasetPath, "min_sigma")) {
         auto min_sigma = getDoubleScalarAttribute(file, datasetPath,
                                                   "min_sigma");

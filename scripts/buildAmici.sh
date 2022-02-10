@@ -2,7 +2,8 @@
 #
 # Build libamici
 #
-set -e
+set -eou pipefail
+
 cmake=${CMAKE:-cmake}
 make=${MAKE:-make}
 
@@ -12,28 +13,26 @@ amici_build_dir="${amici_path}/build"
 mkdir -p "${amici_build_dir}"
 cd "${amici_build_dir}"
 
-cpputest_build_dir="${amici_path}/ThirdParty/cpputest-master/build/"
-
-if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]] || [[ $ENABLE_AMICI_DEBUGGING = TRUE ]];
-then
+if [ "${TRAVIS:-}" = true ] ||
+  [ "${GITHUB_ACTIONS:-}" = true ] ||
+  [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
   # Running on CI server
   build_type="Debug"
 else
   build_type="RelWithDebInfo"
 fi
 
-CppUTest_DIR=${cpputest_build_dir} \
-  ${cmake} \
-    -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror" \
-    -DCMAKE_BUILD_TYPE=$build_type \
-    -DPython3_EXECUTABLE="$(command -v python3)" ..
+${cmake} \
+  -DAMICI_CXX_OPTIONS="-Wall;-Wextra;-Werror" \
+  -DCMAKE_BUILD_TYPE=$build_type \
+  -DPython3_EXECUTABLE="$(command -v python3)" ..
 
 # build, with or without sonarcloud wrapper
-if [[ "$CI_SONARCLOUD" == "TRUE" ]]; then
+if [ "${CI_SONARCLOUD:-}" = "TRUE" ]; then
   build-wrapper-linux-x86-64 \
     --out-dir "${amici_path}/bw-output" \
     cmake --build . --parallel
-elif [[ "$TRAVIS" == "true" ]]; then
+elif [ "${TRAVIS:-}" = "true" ]; then
   cmake --build .
   ${make} python-sdist
 else

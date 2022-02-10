@@ -10,6 +10,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <chrono>
 
 namespace amici {
 
@@ -47,6 +48,12 @@ namespace amici {
  */
 class Solver {
   public:
+    /** Type of what is passed to Sundials solvers as user_data */
+    using user_data_type = std::pair<Model *, Solver const*>;
+
+    /**
+     * @brief Default constructor
+     */
     Solver() = default;
 
     /**
@@ -469,6 +476,30 @@ class Solver {
     void setMaxSteps(long int maxsteps);
 
     /**
+     * @brief Returns the maximum time allowed for integration
+     * @return Time in seconds
+     */
+    double getMaxTime() const;
+
+    /**
+     * @brief Set the maximum time allowed for integration
+     * @param maxtime Time in seconds
+     */
+    void setMaxTime(double maxtime);
+
+    /**
+     * @brief Start timer for tracking integration time
+     */
+    void startTimer() const;
+
+    /**
+     * @brief Check whether maximum integration time was exceeded
+     * @return True if the maximum integration time was exceeded,
+     * false otherwise.
+     */
+    bool timeExceeded() const;
+
+    /**
      * @brief returns the maximum number of solver steps for the backward
      * problem
      * @return maximum number of solver steps
@@ -601,7 +632,7 @@ class Solver {
                        AmiVectorArray &sx, AmiVector &xQ) const;
 
     /**
-     * @brief write solution from forward simulation
+     * @brief write solution from backward simulation
      * @param t time
      * @param xB adjoint state
      * @param dxB adjoint derivative state
@@ -1113,21 +1144,16 @@ class Solver {
     virtual void setErrHandlerFn() const = 0;
 
     /**
-     * @brief Attaches the user data instance (here this is a Model) to the
-     * forward problem
-     *
-     * @param model Model instance
+     * @brief Attaches the user data to the forward problem
      */
-    virtual void setUserData(Model *model) const = 0;
+    virtual void setUserData() const = 0;
 
     /**
-     * @brief attaches the user data instance (here this is a Model) to the
-     * backward problem
+     * @brief attaches the user data to the backward problem
      *
      * @param which identifier of the backwards problem
-     * @param model Model instance
      */
-    virtual void setUserDataB(int which, Model *model) const = 0;
+    virtual void setUserDataB(int which) const = 0;
 
     /**
      * @brief specifies the maximum number of steps for the forward
@@ -1519,6 +1545,9 @@ class Solver {
     mutable std::vector<std::unique_ptr<void, std::function<void(void *)>>>
         solver_memory_B_;
 
+    /** Sundials user_data */
+    mutable user_data_type user_data;
+
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
     InternalSensitivityMethod ism_ {InternalSensitivityMethod::simultaneous};
@@ -1539,6 +1568,12 @@ class Solver {
 
     /** maximum number of allowed integration steps */
     long int maxsteps_ {10000};
+
+    /** Maximum wall-time for integration in seconds */
+    std::chrono::duration<double, std::ratio<1>> maxtime_ {std::chrono::duration<double>::max()};
+
+    /** Time at which solver timer was started */
+    mutable std::chrono::time_point<std::chrono::system_clock> starttime_;
 
     /** linear solver for the forward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_;

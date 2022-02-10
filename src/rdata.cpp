@@ -777,8 +777,18 @@ void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
         chi2 = 0.0;
 }
 
-static realtype fres(realtype y, realtype my, realtype sigma_y) {
-    return (y - my) / sigma_y;
+static realtype fres(realtype y, realtype my, realtype sigma_y,
+                     ObservableScaling scale) {
+    switch (scale) {
+        case amici::ObservableScaling::lin:
+            return (y - my) / sigma_y;
+        case amici::ObservableScaling::log:
+            return (std::log(y) - std::log(my)) / sigma_y;
+        case amici::ObservableScaling::log10:
+            return (std::log10(y) - std::log10(my)) / sigma_y;
+        default:
+            throw std::invalid_argument("only lin, log, log10 allowed.");
+    }
 }
 
 static realtype fres_error(realtype sigma_y, realtype sigma_offset) {
@@ -800,8 +810,11 @@ void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
         int iyt = iy + it * edata.nytrue();
         if (!edata.isSetObservedData(it, iy))
             continue;
+
         res.at(iyt) = amici::fres(y_it.at(iy), observedData[iy],
-                                  sigmay_it.at(iy));
+                                  sigmay_it.at(iy),
+                                  model.getObservableScaling(iy));
+
         if (sigma_res)
             res.at(iyt + nt * nytrue) = fres_error(sigmay_it.at(iy),
                                                    sigma_offset);
@@ -821,10 +834,20 @@ void ReturnData::fchi2(const int it, const ExpData &edata) {
 }
 
 static realtype fsres(realtype y, realtype sy, realtype my,
-                      realtype sigma_y, realtype ssigma_y) {
-    return (sy - ssigma_y * fres(y, my, sigma_y)) / sigma_y;
+                      realtype sigma_y, realtype ssigma_y,
+                      ObservableScaling scale) {
+    auto res = fres(y, my, sigma_y, scale);
+    switch (scale) {
+        case amici::ObservableScaling::lin:
+            return (sy - ssigma_y * res) / sigma_y;
+        case amici::ObservableScaling::log:
+            return (sy / y - ssigma_y * res) / sigma_y;
+        case amici::ObservableScaling::log10:
+            return (sy / (y * std::log(10)) - ssigma_y * res) / sigma_y;
+        default:
+            throw std::invalid_argument("only lin, log, log10 allowed.");
+    }
 }
-
 static realtype fsres_error(realtype sigma_y, realtype ssigma_y,
                             realtype sigma_offset) {
     return ssigma_y / ( fres_error(sigma_y, sigma_offset) * sigma_y);
@@ -851,9 +874,12 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
             int idx = (iy + it * edata.nytrue()) * nplist + ip;
+
             sres.at(idx) = amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
                                         observedData[iy], sigmay_it.at(iy),
-                                        ssigmay_it.at(iy + ny * ip));
+                                        ssigmay_it.at(iy + ny * ip),
+                                        model.getObservableScaling(iy));
+
             if (sigma_res) {
                 int idx_res =
                     (iy + it * edata.nytrue() + edata.nytrue() * edata.nt()) *
@@ -941,18 +967,19 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
         auto y = y_it.at(iy);
         auto m = observedData[iy];
         auto s = sigmay_it.at(iy);
+        auto os = model.getObservableScaling(iy);
         // auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
-            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
+            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i, os);
             realtype sre_i = 0.0;
             if (sigma_res)
                 sre_i = amici::fsres_error(s, ds_i, sigma_offset);
             for (int jp = 0; jp < nplist; ++jp) {
                 auto dy_j = sy_it.at(iy + ny * jp);
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
-                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
+                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j, os);
                 FIM.at(ip + nplist * jp) += sr_i*sr_j;
                 if (sigma_res) {
                     auto sre_j = amici::fsres_error(s, ds_j, sigma_offset);

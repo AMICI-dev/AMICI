@@ -10,6 +10,8 @@ on:
       - master
       - develop
   workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
 
 jobs:
   build:
@@ -17,8 +19,17 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+
     steps:
-    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@master
       with:
         fetch-depth: 20
 

@@ -9,9 +9,9 @@ from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
     Expression, LogLikelihood, generate_measurement_symbol
 )
-
 from .import_utils import (
-    noise_distribution_to_cost_function, _get_str_symbol_identifiers
+    noise_distribution_to_cost_function, _get_str_symbol_identifiers,
+    noise_distribution_to_observable_transformation, _parse_special_functions
 )
 import logging
 from .logging import get_logger, log_execution_time, set_log_level
@@ -51,7 +51,7 @@ def pysb2amici(
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
         generate_sensitivity_code: bool = True,
 ):
-    """
+    r"""
     Generate AMICI C++ files for the provided model.
 
     .. warning::
@@ -139,12 +139,12 @@ def pysb2amici(
     exporter = ODEExporter(
         ode_model,
         outdir=output_dir,
+        model_name=model.name,
         verbose=verbose,
         assume_pow_positivity=assume_pow_positivity,
         compiler=compiler,
+        generate_sensitivity_code=generate_sensitivity_code
     )
-    exporter.set_name(model.name)
-    exporter.set_paths(output_dir)
     exporter.generate_model_code()
 
     if compile:
@@ -217,7 +217,7 @@ def ode_model_from_pysb_importer(
     _process_pysb_expressions(model, ode, observables, sigmas,
                               noise_distributions)
     ode._has_quadratic_nllh = not noise_distributions or all(
-        noise_distr in ['normal', 'lin-normal']
+        noise_distr in ['normal', 'lin-normal', 'log-normal', 'log10-normal']
         for noise_distr in noise_distributions.values()
     )
 
@@ -242,13 +242,14 @@ def _process_pysb_species(pysb_model: pysb.Model,
 
     for ix, specie in enumerate(pysb_model.species):
         init = sp.sympify('0.0')
-        for ic in pysb_model.odes.model.initial_conditions:
-            if pysb.pattern.match_complex_pattern(ic[0], specie, exact=True):
+        for ic in pysb_model.odes.model.initials:
+            if pysb.pattern.match_complex_pattern(
+                    ic.pattern, specie, exact=True):
                 # we don't want to allow expressions in initial conditions
-                if ic[1] in pysb_model.expressions:
-                    init = pysb_model.expressions[ic[1].name].expand_expr()
+                if ic.value in pysb_model.expressions:
+                    init = pysb_model.expressions[ic.value.name].expand_expr()
                 else:
-                    init = ic[1]
+                    init = ic.value
 
         ode_model.add_component(
             State(
@@ -297,7 +298,7 @@ def _process_pysb_expressions(
         sigmas: Dict[str, str],
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
 ) -> None:
-    """
+    r"""
     Converts pysb expressions/observables into Observables (with
     corresponding standard deviation SigmaY and LogLikelihood) or
     Expressions and adds them to the ODEModel instance
@@ -306,8 +307,8 @@ def _process_pysb_expressions(
         pysb model
 
     :param observables:
-        list of names of :class`pysb.Expression`\\ s or
-        :class:`pysb.Observable`\\ s that are to be mapped to ODEModel
+        list of names of :class`pysb.Expression`\ s or
+        :class:`pysb.Observable`\ s that are to be mapped to ODEModel
         observables
 
     :param sigmas:
@@ -369,12 +370,16 @@ def _add_expression(
         see :py:func:`_process_pysb_expressions`
     """
     ode_model.add_component(
-        Expression(sym, name, expr)
+        Expression(sym, name, _parse_special_functions(expr))
     )
 
     if name in observables:
+        noise_dist = noise_distributions.get(name, 'normal') \
+            if noise_distributions else 'normal'
+
         y = sp.Symbol(f'{name}')
-        obs = Observable(y, name, sym)
+        trafo = noise_distribution_to_observable_transformation(noise_dist)
+        obs = Observable(y, name, sym, transformation=trafo)
         ode_model.add_component(obs)
 
         sigma_name, sigma_value = _get_sigma_name_and_value(
@@ -384,8 +389,7 @@ def _add_expression(
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
-        noise_dist = noise_distributions.get(name, 'normal') \
-            if noise_distributions else 'normal'
+
         cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
         my = generate_measurement_symbol(obs.get_id())
         cost_fun_expr = sp.sympify(cost_fun_str,

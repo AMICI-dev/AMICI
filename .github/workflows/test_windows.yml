@@ -9,9 +9,19 @@ jobs:
 
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
-      openBLAS_version: "0.3.12"
+      openBLAS_version: "0.3.19"
+      AMICI_DLL_DIRS: "C:\\BLAS\\bin"
+
+    strategy:
+      matrix:
+        python-version: [ "3.8" ]
 
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
@@ -33,7 +43,7 @@ jobs:
         python -m pip install --upgrade pip \
           && pip install pytest petab \
           && choco install -y ninja \
-          && choco install -y swig --version=4.0.1
+          && choco install -y swig
 
     - name: Install OpenBLAS
       shell: powershell
@@ -47,6 +57,8 @@ jobs:
       working-directory: python/sdist
       shell: bash
       run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
+
+    - run: python -m amici
 
     - name: Run Python tests
       run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
