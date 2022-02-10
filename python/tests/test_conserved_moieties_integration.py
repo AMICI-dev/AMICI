@@ -1,6 +1,6 @@
 import os
 import unittest
-
+import petab
 import libsbml
 import numpy as np
 
@@ -12,7 +12,10 @@ class MyTest(unittest.TestCase):
         super(MyTest, self).__init__(*args, **kwargs)
         self.model_setup = {}
         # SBML model we want to import
-        sbml_file = '/home/stephan/Code/pyPESTO/doc/example/tmp/benchmark-models/Benchmark-Models/Blasi_CellSystems2016/model_Blasi_CellSystems2016.xml'
+        sbml_reader, sbml_document, sbml_model = petab.get_sbml_model(
+            "https://raw.githubusercontent.com/Benchmarking-Initiative/"
+            "Benchmark-Models-PEtab/master/Benchmark-Models/"
+            "Blasi_CellSystems2016/model_Blasi_CellSystems2016.xml")
 
         # Name of the models that will also be the name of the python module
         model_name = 'model_Blasi_CellSystems2016'
@@ -20,11 +23,7 @@ class MyTest(unittest.TestCase):
         # Directories to which the generated model code is written
         model_output_dir = model_name
         model_reduced_output_dir = model_reduced_name
-
-        # Read the model and give some output
-        sbml_reader = libsbml.SBMLReader()
-        sbml_doc = sbml_reader.readSBML(sbml_file)
-        sbml_model = sbml_doc.getModel()
+        print(sbml_model)
 
         for reaction in sbml_model.getListOfReactions():
             reactants = ' + '.join(['%s %s' % (
@@ -69,8 +68,12 @@ class MyTest(unittest.TestCase):
         # import the model
         # Create an SbmlImporter instance for our SBML model
         import amici
-        sbml_file = '/home/stephan/Code/pyPESTO/doc/example/tmp/benchmark-models/Benchmark-Models/Blasi_CellSystems2016/model_Blasi_CellSystems2016.xml'
-        sbml_importer = amici.SbmlImporter(sbml_file)
+
+        sbml_reader, sbml_document, sbml_model = petab.get_sbml_model(
+            "https://raw.githubusercontent.com/Benchmarking-Initiative/"
+            "Benchmark-Models-PEtab/master/Benchmark-Models/"
+            "Blasi_CellSystems2016/model_Blasi_CellSystems2016.xml")
+        sbml_importer = amici.SbmlImporter(sbml_model)
         sbml_importer.sbml2amici(self.model_setup["model_reduced_name"],
                                  self.model_setup["model_reduced_output_dir"],
                                  observables=self.model_setup["observables"],
