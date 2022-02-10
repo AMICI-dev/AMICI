@@ -37,9 +37,6 @@ from .constants import SymbolId
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
-from sympy.logic.boolalg import BooleanAtom
-from scipy.linalg import null_space
-
 class SBMLException(Exception):
     pass
 
@@ -1425,7 +1422,7 @@ class SbmlImporter:
         conservation_laws: List[ConservationLaw]
     ) -> List[int]:
         """
-        Adds non-constant species to conservation laws 
+        Adds non-constant species to conservation laws
         Parameters
         ----------
         :param ode_model:
