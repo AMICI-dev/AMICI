@@ -1,15 +1,11 @@
-import libsbml
-import importlib
-import amici
 import os
-import sys
-import numpy as np
-import matplotlib.pyplot as plt
-import petab
 import unittest
-import pytest
 
-#from petab.petab_util import folder_base
+import libsbml
+import numpy as np
+
+
+# from petab.petab_util import folder_base
 
 class MyTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -31,14 +27,19 @@ class MyTest(unittest.TestCase):
         sbml_model = sbml_doc.getModel()
 
         for reaction in sbml_model.getListOfReactions():
-            reactants = ' + '.join(['%s %s'%(int(r.getStoichiometry()) if r.getStoichiometry() > 1 else '', r.getSpecies()) for r in reaction.getListOfReactants()])
-            products  = ' + '.join(['%s %s'%(int(r.getStoichiometry()) if r.getStoichiometry() > 1 else '', r.getSpecies()) for r in reaction.getListOfProducts()])
+            reactants = ' + '.join(['%s %s' % (
+            int(r.getStoichiometry()) if r.getStoichiometry() > 1 else '',
+            r.getSpecies()) for r in reaction.getListOfReactants()])
+            products = ' + '.join(['%s %s' % (
+            int(r.getStoichiometry()) if r.getStoichiometry() > 1 else '',
+            r.getSpecies()) for r in reaction.getListOfProducts()])
             reversible = '<' if reaction.getReversible() else ''
             print('%3s: %10s %1s->%10s\t\t[%s]' % (reaction.getId(),
-                                reactants,
-                                reversible,
-                                products,
-                                libsbml.formulaToL3String(reaction.getKineticLaw().getMath())))
+                                                   reactants,
+                                                   reversible,
+                                                   products,
+                                                   libsbml.formulaToL3String(
+                                                       reaction.getKineticLaw().getMath())))
 
         # specify observables and constant parameters
         constantParameters = ['d']
@@ -56,14 +57,13 @@ class MyTest(unittest.TestCase):
                   'observable_k12': 0.1,
                   'observable_k12k16': 0.1,
                   'observable_k16': 0.1,
-                  'observable_k5': 0.1}  
-        
-        self.model_setup = { "model_reduced_name" : model_reduced_name, 
-                 "model_reduced_output_dir" : model_reduced_output_dir, 
-                 "constantParameters" : constantParameters, 
-                 "sigmas" : sigmas, 
-                 "observables" : observables }
-                
+                  'observable_k5': 0.1}
+
+        self.model_setup = {"model_reduced_name": model_reduced_name,
+                            "model_reduced_output_dir": model_reduced_output_dir,
+                            "constantParameters": constantParameters,
+                            "sigmas": sigmas,
+                            "observables": observables}
 
     def helper(self):
         # import the model
@@ -74,19 +74,25 @@ class MyTest(unittest.TestCase):
         sbml_importer.sbml2amici(self.model_setup["model_reduced_name"],
                                  self.model_setup["model_reduced_output_dir"],
                                  observables=self.model_setup["observables"],
-                                 constantParameters =self.model_setup["constantParameters"],
+                                 constantParameters=self.model_setup[
+                                     "constantParameters"],
                                  sigmas=self.model_setup["sigmas"],
-                                 compute_conservation_laws=self.model_setup["compute_conservation_laws"])
+                                 compute_conservation_laws=self.model_setup[
+                                     "compute_conservation_laws"])
 
         sbml_importer.sbml2amici(self.model_setup["model_reduced_name"],
                                  self.model_setup["model_reduced_output_dir"],
                                  observables=self.model_setup["observables"],
-                                 constantParameters =self.model_setup["constantParameters"],
+                                 constantParameters=self.model_setup[
+                                     "constantParameters"],
                                  sigmas=self.model_setup["sigmas"],
-                                 compute_conservation_laws=self.model_setup["compute_conservation_laws"])
+                                 compute_conservation_laws=self.model_setup[
+                                     "compute_conservation_laws"])
 
         # import the models and run some test simulations
-        model_reduced_module = amici.import_model_module(self.model_setup['model_reduced_name'], os.path.abspath(self.model_setup['model_reduced_output_dir']))
+        model_reduced_module = amici.import_model_module(
+            self.model_setup['model_reduced_name'],
+            os.path.abspath(self.model_setup['model_reduced_output_dir']))
         model_reduced = model_reduced_module.getModel()
 
         # simulate model with conservation laws
@@ -103,7 +109,7 @@ class MyTest(unittest.TestCase):
         solver.setMaxSteps(1000)
         rdata = amici.runAmiciSimulation(model_reduced, solver)
 
-        #np.set_printoptions(threshold=8, edgeitems=2)
+        # np.set_printoptions(threshold=8, edgeitems=2)
         for key, value in rdata.items():
             print('%12s: ' % key, value)
 
@@ -114,11 +120,13 @@ class MyTest(unittest.TestCase):
         self.model_setup['compute_conservation_laws'] = False
         rdata = self.helper()
         status = int(rdata["status"])
-        self.assertEqual(status, 0, "Newton solver required to fail for singular Jacobian")
+        self.assertEqual(status, 0,
+                         "Newton solver required to fail for singular Jacobian")
 
     def test_success(self):
         """ With computing conservation laws and removing them the test should always succeed """
         self.model_setup['compute_conservation_laws'] = True
         rdata = self.helper()
         status = int(rdata["status"])
-        self.assertEqual(status, 1, "Newton solver still fails due to singular Jacobian")
+        self.assertEqual(status, 1,
+                         "Newton solver still fails due to singular Jacobian")
