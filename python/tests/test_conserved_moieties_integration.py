@@ -5,8 +5,6 @@ import libsbml
 import numpy as np
 
 
-# from petab.petab_util import folder_base
-
 class MyTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(MyTest, self).__init__(*args, **kwargs)
@@ -119,7 +117,8 @@ class MyTest(unittest.TestCase):
         return rdata
 
     def test_fail(self):
-        """ Without computing conservation laws and removing them the test should always fail """
+        """Without computing conservation laws and removing them the test
+        should always fail"""
         self.model_setup['compute_conservation_laws'] = False
         rdata = self.helper()
         status = int(rdata["status"])
@@ -127,7 +126,8 @@ class MyTest(unittest.TestCase):
                          "Newton solver required to fail for singular Jacobian")
 
     def test_success(self):
-        """ With computing conservation laws and removing them the test should always succeed """
+        """With computing conservation laws and removing them the test
+        should always succeed"""
         self.model_setup['compute_conservation_laws'] = True
         rdata = self.helper()
         status = int(rdata["status"])

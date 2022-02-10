@@ -1,12 +1,12 @@
 """Tests for conservation laws / conserved moieties"""
 
+import time
 from time import perf_counter
 
 from amici.conserved_moieties import *
 from amici.logging import get_logger, log_execution_time
 
 logger = get_logger(__name__)
-
 
 
 def GetRemoteInput():
@@ -39,7 +39,7 @@ def Input():
 def Names():
     """ Get names of metabolites from list of metabolites example"""
     with open('metabolites.txt', 'r') as f:
-        return [entry for entry in f]
+        return list(f)
 
 
 def Output(
@@ -109,9 +109,9 @@ def test_detect_cl():
     assert len(conservedMoieties) == 128, \
         "Wrong number of conserved moieties reported"
 
-    logger.debug("".join(['-' for _ in range(0, 80)]))
-    logger.debug("".join(['-' for _ in range(0, 80)]))
-    logger.debug("".join(['-' for _ in range(0, 80)]))
+    logger.debug("-" * 80)
+    logger.debug("-" * 80)
+    logger.debug("-" * 80)
 
     logger.debug("Filling interaction matrix...\n")
     J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
@@ -150,7 +150,7 @@ def test_detect_cl():
                                                                   NSolutions,
                                                                   NSolutions2,
                                                                   N)
-        for i in range(0, len(old)):
+        for i in range(len(old)):
             assert (set(old[i]) == set(NSolutions[i]))
             assert (set(old2[i]) == set(NSolutions2[i]))
 
@@ -159,14 +159,14 @@ def test_detect_cl():
         assert (len(NSolutions[i]) == knownValuesFromDeMartino[
             i]), f"Moiety #{i + 1} failed for test case (De Martino et al.)"
 
-    logger.debug("".join(['*' for _ in range(0, 80)]))
+    logger.debug("*" * 80)
     logger.debug("Details about conserved moieties:")
-    logger.debug("".join(['*' for _ in range(0, 80)]))
+    logger.debug("*" * 80)
     Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions,
            NSolutions2)
-    logger.debug("".join(['-' for _ in range(0, 80)]))
-    logger.debug("".join(['-' for _ in range(0, 80)]))
-    logger.debug("".join(['-' for _ in range(0, 80)]))
+    logger.debug("-" * 80)
+    logger.debug("-" * 80)
+    logger.debug("-" * 80)
 
     end = perf_counter()
     logger.debug(f"Execution time: {end - start} [s]")
@@ -179,7 +179,7 @@ def test_cl_detect_execution_time():
     """ Test execution time stays within a certain predefined bound """
     numIterations = 2
     thresholdForTimeout = 5
-    timings = [test_detect_cl() for _ in range(0, numIterations)]
+    timings = [test_detect_cl() for _ in range(numIterations)]
 
     for timing in timings:
         assert timing < thresholdForTimeout
@@ -189,9 +189,9 @@ def test_some_other_test():
     """Invoke test case and benchmarking for De Martino's published results
     for E. coli network"""
     start = time.time()
-    print("".join(['*' for _ in range(0, 80)]))
+    print("*" * 80)
     print("Conserved moieties test cases")
-    print("".join(['*' for _ in range(0, 80)]))
+    print("*" * 80)
 
     # Hard-coded stoichiometric matrix as test case containing _ONE_
     # conservative law (i.e. one conserved moiety)
@@ -230,11 +230,11 @@ def test_some_other_test():
     assert (
             len(engagedMetabolites) == 131), "Wrong number of engaged metabolites reported"
     assert (
-            len(conservedMoieties) == 128), "Wrong number of conserved moeities reported"
+            len(conservedMoieties) == 128), "Wrong number of conserved moieties reported"
 
-    print("".join(['-' for _ in range(0, 80)]))
-    print("".join(['-' for _ in range(0, 80)]))
-    print("".join(['-' for _ in range(0, 80)]))
+    print("-" * 80)
+    print("-" * 80)
+    print("-" * 80)
 
     print("Filling interaction matrix...\n")
     J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
@@ -275,7 +275,7 @@ def test_some_other_test():
                                                                   NSolutions,
                                                                   NSolutions2,
                                                                   N)
-        for i in range(0, len(old)):
+        for i in range(len(old)):
             assert (set(old[i]) == set(NSolutions[i]))
             assert (set(old2[i]) == set(NSolutions2[i]))
 
@@ -283,18 +283,18 @@ def test_some_other_test():
     # (TODO: last two moeities fluctuate in DeMartino C++ implementation,
     #  likewise our implementation fluctuates, thus excluding
     #  -> Figure out how to avoid this...)
-    for i in range(0, intKernelDim - 2):
+    for i in range(intKernelDim - 2):
         assert (len(NSolutions[i]) == knownValuesFromDeMartino[
-            i]), f"Moeity #{i + 1} failed for test case (De Martino et al.)"
+            i]), f"Moiety #{i + 1} failed for test case (De Martino et al.)"
 
-    print("".join(['*' for _ in range(0, 80)]))
-    print("Details about conserved moeities:")
-    print("".join(['*' for _ in range(0, 80)]))
+    print("*" * 80)
+    print("Details about conserved moieties:")
+    print("*" * 80)
     Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions,
            NSolutions2)
-    print("".join(['-' for _ in range(0, 80)]))
-    print("".join(['-' for _ in range(0, 80)]))
-    print("".join(['-' for _ in range(0, 80)]))
+    print("-" * 80)
+    print("-" * 80)
+    print("-" * 80)
 
     end = time.time()
     print(f"Execution time: {end - start} [s]")

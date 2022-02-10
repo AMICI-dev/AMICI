@@ -1,7 +1,6 @@
 import math
 import random
 import sys
-import time
 
 from .logging import get_logger
 
@@ -263,7 +262,7 @@ def LinearDependence(
         vectors, intkerneldim, NSolutions, NSolutions2, matched, N
         ):
     """
-    Check if the solution found with MonterCarlo is linearly independent
+    Check if the solution found with MonteCarlo is linearly independent
     with respect to the previous found solution
 
     :param vectors:
@@ -402,7 +401,6 @@ def MonteCarlo(
         cooling rate of simulated annealing
     :param maxIter:
         maximum number of MonteCarlo steps before changing to relaxation
-
     """
     MIN = 1e-9
     dim = len(matched)
@@ -430,7 +428,8 @@ def MonteCarlo(
 
     while True:
         en = int(random.uniform(0, 1) * dim)
-        # Note: Bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+        # Note: Bug in original c++ code (while loop without any side effect
+        # changed to if statement to prevent infinite loop)
         if len(J[en]) == 0:
             en = int(random.uniform(0, 1) * dim)
         p = 1
@@ -462,7 +461,8 @@ def MonteCarlo(
             for i in range(0, dim):
                 num[i] = 0
             en = int(random.uniform(0, 1) * dim)
-            # Note: bug in original c++ code (while loop without any side effect changed to if statement to prevent infinite loop)
+            # Note: bug in original c++ code (while loop without any side
+            #  effect changed to if statement to prevent infinite loop)
             if len(J[en]) > 0:
                 en = int(random.uniform(0, 1) * dim)
             num[en] = 1
@@ -522,13 +522,15 @@ def MonteCarlo(
             for i in range(0, len(NSolutions[intkerneldim - 1])):
                 NSolutions2[intkerneldim - 1][i] /= min
             get_logger().info(
-                f"Found linearly independent moiety, now there are {intkerneldim} engaging {len(intmatched)} metabolites")
+                f"Found linearly independent moiety, now there are "
+                f"{intkerneldim} engaging {len(intmatched)} metabolites")
         else:
             get_logger().info(
                 "Found a moiety but it is linearly dependent... next.")
     else:
         yes = 0
-    return yes, intkerneldim, kerneldim, NSolutions, NSolutions2, matched, intmatched
+    return (yes, intkerneldim, kerneldim, NSolutions, NSolutions2, matched,
+            intmatched)
 
 
 def Relaxation(
@@ -828,4 +830,3 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
         if ok != 0:
             break
     return intKernelDim, kernelDim, NSolutions, NSolutions2
-
