@@ -408,27 +408,6 @@ installation is done completely anew.
 
 Now, you are ready to use AMICI in the virtual environment.
 
-In case you desire not to use AMICI in a virtual environment, you can install
-via
-
-.. code-block:: bash
-
-    pip install --user --no-build-isolation -e python/sdist
-
-after running
-
-.. code-block:: bash
-
-   scripts/buildAll.sh
-
-Note that this might require to satify missing dependencies manually as
-specified by PEP 518 (Dependencies must already be installed if using the 
-no build isolation option) via 
-
-.. code-block:: bash
-
-   pip install --user dependency
-
 .. note::
 
    **Anaconda on Mac**
