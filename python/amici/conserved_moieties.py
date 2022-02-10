@@ -879,31 +879,34 @@ def Output(
     :param NSolutions:
         NSolutions
     """
-    print(
-        f"There are {intKernelDim} linearly independent conserved moieties, engaging {len(intmatched)} metabolites\n")
+    print(f"There are {intKernelDim} linearly independent conserved moieties, "
+          f"engaging {len(intmatched)} metabolites\n")
     if intKernelDim == kernelDim:
         print("They generate all the conservation laws")
     else:
-        print(
-            f"They don't generate all the conservation laws, {kernelDim - intKernelDim} of the mare not reducible to moeities")
+        print(f"They don't generate all the conservation laws, "
+              f"{kernelDim - intKernelDim} of them are not reducible to "
+              "moeities")
 
     names = IsRemoteFile and Names() or GetRemoteNames()
-    for i in range(0, intKernelDim):
-        print(
-            f"Moeity number {i + 1} engages {len(NSolutions[i])} metabolites.")
-        print(f"\t")
-        for j in range(0, len(NSolutions[i])):
+    for i in range(intKernelDim):
+        print(f"Moiety number {i + 1} engages {len(NSolutions[i])} "
+              "metabolites.")
+        print('\t')
+        for j in range(len(NSolutions[i])):
             print(f"{names[NSolutions[i][j]]} \t {NSolutions2[i][j]}")
 
 
 if __name__ == "__main__":
-    """ Invoke test case and benchmarking for De Martino's publishes results for E-Coli network """
+    """Invoke test case and benchmarking for De Martino's published results 
+    for E. coli network"""
     start = time.time()
     print("".join(['*' for _ in range(0, 80)]))
-    print("Conserved moeties test cases")
+    print("Conserved moieties test cases")
     print("".join(['*' for _ in range(0, 80)]))
 
-    # Hard-coded stoichiometric matrix as test case containing _ONE_ conservative law (i.e. one conserved moiety)
+    # Hard-coded stoichiometric matrix as test case containing _ONE_
+    # conservative law (i.e. one conserved moiety)
     S = [-1, 0, 0, 0, 0, 0,
          1, -1, 1, 0, 0, 0,
          0, 1, -1, -1, -1, -1,
@@ -922,8 +925,8 @@ if __name__ == "__main__":
         print("Stoichiometric matrix inconsistent")
 
     print(f"Kernel calculation of S ({N} x {M})...\n")
-    kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, NSolutions, NSolutions2 = kernel(
-        S, N, M)
+    kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, \
+    NSolutions, NSolutions2 = kernel(S, N, M)
     print(f"""There are {kernelDim} conservation laws, engaging, 
 	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
 	moeities), engaging {len(conservedMoieties)} metabolites...""")
