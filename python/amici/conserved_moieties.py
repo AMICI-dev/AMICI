@@ -10,6 +10,7 @@ from .logging import get_logger
 sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
+
 def qsort(
         k: int,
         km: int,
@@ -56,15 +57,15 @@ def qsort(
 
 
 def kernel(
-    stoichiometric_list: Sequence[Number],
-    num_species: int,
-    num_reactions: int
+        stoichiometric_list: Sequence[Number],
+        num_species: int,
+        num_reactions: int
 ) -> Tuple[Number, List[int], int, List[int],
            List[List[int]], List[List[Number]]]:
     """
     Kernel (left nullspace of :math:`S`) calculation by Gaussian elimination
 
-    To compute the left nullspace of the stoichiometric matrix :math:`S`, 
+    To compute the left nullspace of the stoichiometric matrix :math:`S`,
     a Gaussian elimination method with partial scaled pivoting is used to deal
     effectively with a possibly ill-conditioned stoichiometric matrix :math:`S`.
 
@@ -80,8 +81,8 @@ def kernel(
     :param num_reactions:
         total number of reactions in the reaction network
     :returns:
-        kernel dimension, MCLs, integer kernel dimension, interger MCLs and
-        indices to metabolites and reactions in the preceeding order as a tuple
+        kernel dimension, MCLs, integer kernel dimension, integer MCLs and
+        indices to metabolites and reactions in the preceding order as a tuple
     """
     il = 0
     jl = 0
@@ -286,7 +287,7 @@ def fill(
                         for pu in range(len(matrix[j])):
                             if matrix[i][po] == matrix[j][pu]:
                                 interactions += (
-                                            matrix2[i][po] * matrix2[j][pu])
+                                        matrix2[i][po] * matrix2[j][pu])
                     if j == i:
                         fields[i] = interactions
                     elif abs(interactions) > MIN:
@@ -402,16 +403,17 @@ def MonteCarlo(
         J,
         J2,
         fields,
-        intmatched,
-        intkerneldim,
+        intmatched: Sequence[int],
+        intkerneldim: int,
         NSolutions: Sequence[Sequence[int]],
         NSolutions2: Sequence[Sequence[Number]],
-        kerneldim,
+        kerneldim: int,
         num_rows: int,
         initial_temperature: Number = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
-        ):
+) -> Tuple[int, int, int, Sequence[Sequence[int]],
+           Sequence[Sequence[Number]], Sequence[int], Sequence[int]]:
     """MonteCarlo simulated annealing for finding integer MCLs
 
     Finding integer solutions for the MCLs by Monte Carlo, see step (b) in
@@ -445,6 +447,8 @@ def MonteCarlo(
         status of MC iteration, number of integer MCLs, number of MCLs,
         metabolites and reaction indices, MCLs and integer MCLs as a tuple
     """
+    # TODO: doc: what does value of status indicate
+
     MIN = 1e-9
     dim = len(matched)
     num = [int(2 * random.uniform(0, 1)) if len(J[i]) > 0 else 0
@@ -531,7 +535,7 @@ def MonteCarlo(
                     NSolutions2[intkerneldim].append(num[orders2[i]])
             intkerneldim += 1
             LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
-                             matched, num_rows) # side-effects on num vector
+                             matched, num_rows)  # side-effects on num vector
             intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(
                 intkerneldim, kerneldim, NSolutions, NSolutions2, num_rows)
             min = 1000
@@ -563,7 +567,7 @@ def MonteCarlo(
 
 def Relaxation(
         stoichiometric_list: Sequence[Number],
-        intmatched:  int,
+        intmatched: Sequence[int],
         M: int,
         N: int,
         relaxation_max: Number = 1e6,
@@ -812,12 +816,12 @@ def Relaxation(
 
 
 def Reduce(
-        intKernelDim,
-        kernelDim,
+        intKernelDim: int,
+        kernelDim: int,
         NSolutions: Sequence[Sequence[int]],
         NSolutions2: Sequence[Sequence[Number]],
-        N
-) -> Tuple[Any, Any, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
+        N: int
+) -> Tuple[int, int, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
     """Reducing the solution which has been found by the Monte Carlo process
 
     In case of superpositions of independent MCLs one can reduce by
