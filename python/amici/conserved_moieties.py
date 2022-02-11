@@ -246,25 +246,23 @@ def kernel(
             for j in range(len(RSolutions[i])):
                 if RSolutions2[i][j] * RSolutions2[i][0] < 0:
                     ok2 = 0
-                if len(matched) == 0:
-                    matched.append(RSolutions[i][j])
-                elif all(cur_matched != RSolutions[i][j]
-                         for cur_matched in matched):
+                if len(matched) == 0 \
+                        or all(cur_matched != RSolutions[i][j]
+                               for cur_matched in matched):
                     matched.append(RSolutions[i][j])
         if ok2 == 1 and len(RSolutions[i]) > 0:
-            min = MAX
+            min_value = MAX
             for j in range(len(RSolutions[i])):
                 cls_species_idxs[i2].append(RSolutions[i][j])
                 cls_coefficients[i2].append(abs(RSolutions2[i][j]))
-                if min > abs(RSolutions2[i][j]):
-                    min = abs(RSolutions2[i][j])
-                if len(int_matched) == 0:
-                    int_matched.append(cls_species_idxs[i2][j])
-                elif all(cur_int_matched != cls_species_idxs[i2][j]
-                         for cur_int_matched in int_matched):
+                if min_value > abs(RSolutions2[i][j]):
+                    min_value = abs(RSolutions2[i][j])
+                if len(int_matched) == 0 \
+                        or all(cur_int_matched != cls_species_idxs[i2][j]
+                               for cur_int_matched in int_matched):
                     int_matched.append(cls_species_idxs[i2][j])
             for j in range(len(cls_species_idxs[i2])):
-                cls_coefficients[i2][j] /= min
+                cls_coefficients[i2][j] /= min_value
             i2 += 1
     int_kernel_dim = i2
 
@@ -577,19 +575,18 @@ def monte_carlo(
             _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
                                    cls_coefficients, matched, num_rows)
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
-            min = 1000
+            min_value = 1000
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-                if len(int_matched) == 0:
-                    int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
-                elif all(cur_int_matched
-                         != cls_species_idxs[int_kernel_dim - 1][i]
-                         for cur_int_matched in int_matched):
+                if len(int_matched) == 0 \
+                        or all(cur_int_matched
+                               != cls_species_idxs[int_kernel_dim - 1][i]
+                               for cur_int_matched in int_matched):
                     int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
 
-                if cls_coefficients[int_kernel_dim - 1][i] < min:
-                    min = cls_coefficients[int_kernel_dim - 1][i]
+                if cls_coefficients[int_kernel_dim - 1][i] < min_value:
+                    min_value = cls_coefficients[int_kernel_dim - 1][i]
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-                cls_coefficients[int_kernel_dim - 1][i] /= min
+                cls_coefficients[int_kernel_dim - 1][i] /= min_value
             logger.debug(
                 f"Found linearly independent moiety, now there are "
                 f"{int_kernel_dim} engaging {len(int_matched)} species")
