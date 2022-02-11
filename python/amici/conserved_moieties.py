@@ -304,7 +304,7 @@ def LinearDependence(
         NSolutions2: Sequence[Sequence[Number]],
         matched: Sequence[int],
         num_rows: int
-        ):
+) -> bool:
     """Check for linear dependence between MCLs
 
     Check if the solutions found with Monte Carlo are linearly independent
@@ -553,7 +553,7 @@ def MonteCarlo(
 def Relaxation(
         stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6,
         relaxation_step=1.9
-        ):
+) -> bool:
     """Relaxation scheme for Monte Carlo final solution
 
     Checking for completeness using Motzkin's theorem. See Step (c) in
