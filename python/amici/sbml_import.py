@@ -1397,7 +1397,8 @@ class SbmlImporter:
             (ode_model, conservation_laws)) & set(species_solver))
 
         # Check, whether species_solver is empty now. As currently, AMICI
-        # cannot handle ODEs without species, CLs must switched in this case
+        # cannot handle ODEs without species, CLs must be switched off in this
+        # case
         if len(species_solver) == 0:
             conservation_laws = []
             species_solver = list(range(ode_model.num_states_rdata()))
@@ -1417,6 +1418,7 @@ class SbmlImporter:
     ) -> List[int]:
         """
         Adds non-constant species to conservation laws
+
         Parameters
         ----------
         :param ode_model:
@@ -1425,7 +1427,7 @@ class SbmlImporter:
         :param conservation_laws:
             List of already known conservation laws
 
-        :returns species_solver
+        :returns:
             List of species indices which remain later in the ODE solver
         """
         species_solver = list(range(ode_model.num_states_rdata()))
@@ -1444,42 +1446,46 @@ class SbmlImporter:
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape)
 
-        # iterate over species in the ODE model, mark conserved species for
-        # later removal from stoichiometric matrix
+        # iterate over list of conservation laws, create symbolic expressions,
+        # and mark replaced species for removal from stoichiometric matrix
         species_to_be_removed = set()
         for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
+            assert len(state_idxs) == len(coefficients)
             if not state_idxs:
-                # why even return those?
+                # TODO why even return those?
                 continue
-            for coeff, state_idx in zip(coefficients, state_idxs):
-                if state_idx not in species_to_be_removed:
+            # choose a state that is not subject to removal
+            # TODO is this necessary or can we just take the first one?
+            target_state_idx = None
+            target_state_coeff = None
+            for target_state_coeff, target_state_idx \
+                    in zip(coefficients, state_idxs):
+                if target_state_idx not in species_to_be_removed:
                     break
-                assert state_idx not in species_to_be_removed
+            assert target_state_idx not in species_to_be_removed
 
-                target_state = ode_model._states[state_idx].get_id()
-                total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+            target_state = ode_model._states[target_state_idx].get_id()
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
 
-                # \sum coeff * state
-                linear_sum = sp.Sum(*[
-                    ode_model._states[i_state].get_id() * coeff
-                    for i_state, coeff in zip(state_idxs, coefficients)
-                ])
+            # \sum coeff * state
+            weighted_sum = sp.Add(*[
+                ode_model._states[i_state].get_id() * coeff
+                for i_state, coeff in zip(state_idxs, coefficients)
+            ])
 
-                conservation_laws.append({
-                    'state': target_state,
-                    'total_abundance': total_abundance,
-                    'state_expr':
-                        (total_abundance - (linear_sum - target_state * coeff))
-                        / coeff,
-                    'abundance_expr': linear_sum / coeff
-                })
-                species_to_be_removed.add(state_idx)
+            conservation_laws.append({
+                'state': target_state,
+                'total_abundance': total_abundance,
+                'state_expr':
+                    (total_abundance - (weighted_sum
+                                        - target_state * target_state_coeff))
+                    / target_state_coeff,
+                'abundance_expr': weighted_sum / target_state_coeff
+            })
+            species_to_be_removed.add(target_state_idx)
 
-        # finally remove species
-        species_solver = [ix for ix in species_solver if ix not in species_to_be_removed]
-
-        # return a list of species which are not conserved and thus valid to be included
-        return species_solver
+        # list of species that are not determined by conservation laws
+        return [ix for ix in species_solver if ix not in species_to_be_removed]
 
 
     def _replace_compartments_with_volumes(self):
