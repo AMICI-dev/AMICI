@@ -3,6 +3,8 @@
 import time
 from time import perf_counter
 
+import numpy as np
+
 from amici.conserved_moieties import *
 from amici.logging import get_logger, log_execution_time
 
@@ -174,15 +176,19 @@ def test_detect_cl():
     return end - start
 
 
-@log_execution_time("Detecting moeity conservation laws", logger)
+@log_execution_time("Detecting moiety conservation laws", logger)
 def test_cl_detect_execution_time():
-    """ Test execution time stays within a certain predefined bound """
-    numIterations = 2
-    thresholdForTimeout = 5
-    timings = [test_detect_cl() for _ in range(numIterations)]
+    """Test execution time stays within a certain predefined bound"""
+    max_tries = 3
+    # <5s on modern hardware, but leave some slack
+    max_time_seconds = 10
+    runtime = np.Inf
 
-    for timing in timings:
-        assert timing < thresholdForTimeout
+    for _ in range(max_tries):
+        runtime = test_detect_cl()
+        if runtime < max_time_seconds:
+            break
+    assert runtime < max_time_seconds, "Took too long"
 
 
 def test_some_other_test():
