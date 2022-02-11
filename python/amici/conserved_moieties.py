@@ -7,7 +7,6 @@ from typing import List, Tuple
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
-
 logger = get_logger(__name__, logging.ERROR)
 
 def qsort(k, km, orders, pivots):
@@ -27,7 +26,7 @@ def qsort(k, km, orders, pivots):
     """
     centre = 0
     if k - km >= 1:
-        pivot = km + int((k - km) / 2)  # was // 2 without int
+        pivot = km + int((k - km) / 2)  
         l = 0
         p = k - km - 1
         neworders = [None] * (k - km)
@@ -55,23 +54,22 @@ def kernel(
 ) -> Tuple[Number, List[int], int, List[int],
            List[List[int]], List[List[Number]]]:
     """
-    Kernel calculation by Gaussian elimination
+    Kernel (left nullspace of S) calculation by Gaussian elimination
 
-    To compute the left kernel of the stoichiometrix matrix, a Gaussian 
+    To compute the left nullspace of the stoichiometrix matrix S, a Gaussian 
     elimination method with partial scaled pivoting is used to deal 
-    effectively with a possibly ill-conditioned stoichiometric matrix
+    effectively with a possibly ill-conditioned stoichiometric matrix S.
 
     Note that this is the Python reimplementation of the algorithm proposed
     by De Martino et al. (2014) https://doi.org/10.1371/journal.pone.0100750
     and thus a direct adaption of the original implementation in C/C++.
 
-
     :param stoichiometricMatrixAsList:
         the stoichiometric matrix as a list (reactions x metabolites)
     :param numberOfMetabolites
-        total number of metabolites
+        total number of metabolites in the reaction network
     :param numberOfReactions
-        total number of reactions
+        total number of reactions in the reaction network
     """
     il = 0
     jl = 0
@@ -225,12 +223,12 @@ def kernel(
 def fill(stoichiometricMatrixAsList, matched_size, matched, N):
     """Construct interaction matrix 
 
-    Construct the interaction matrix out of the given stoichiometrix matrix
+    Construct the interaction matrix out of the given stoichiometrix matrix S
 
     :param stoichiometricMatrixAsList:
-        the stoichiometric matrix as a list
+        the stoichiometric matrix given as a flat list
     :param matched_size:
-        number of found independent moeity conservation laws (MCL)
+        number of found and independent moeity conservation laws (MCL)
     :param matched
         actual found MCLs
     """
@@ -283,19 +281,19 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 def LinearDependence(
         vectors, intkerneldim, NSolutions, NSolutions2, matched, N
         ):
-    """Check for linear dependence
+    """Check for linear dependence between MCLs
 
-    Check if the solution found with Monte Carlo is linearly independent
-    with respect to the previous found solution
+    Check if the solutions found with Monte Carlo are linearly independent
+    with respect to the previous found solution for all MCLs involved
 
     :param vectors:
-        vectors
+        found basis
     :param intkerneldim:
         number of integer conservative laws
     :param NSolutions:
-        NSolutions
+        NSolutions contains the species involved in the the MCL
     :param NSolutions2:
-        NSolutions2
+        NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
         actual found MCLs
     """
@@ -532,15 +530,15 @@ def Relaxation(
     De Martino (2014) and the Eqs. 14-16 in the corresponding publication
 
     :param stoichiometricMatrixAsList:
-        stoichiometric matrix as a list
+        stoichiometric matrix as a flat list
     :param intmatched:
         intmatched
     :param M:
-        number of metabolites
+        number of metabolites in reaction network
     :param N:
-        number of reactions
+        number of reactions in reaction network
     :param relaxationmax:
-        maximum relaxation
+        maximum relaxation step
     :param relaxation_step:
         relaxation step width
     """
@@ -778,9 +776,9 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
     :param kernelDim:
         number of found conservative laws
     :param NSolutions:
-        NSolutions
-    :Param NSolutions2:
-        NSolutions2
+        NSolutions contains the species involved in the the MCL
+    :param NSolutions2:
+        NSolutions2 contains the corresponding coefficients in the MCL
     """
     K = intKernelDim
     MIN = 1e-9
