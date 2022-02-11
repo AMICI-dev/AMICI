@@ -11,6 +11,60 @@ sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
 
+def compute_moiety_conservation_laws(
+        stoichiometric_list: Sequence[Number],
+        num_species: int,
+        num_reactions: int
+) -> Tuple[List[List[int]], List[List[Number]]]:
+    """Compute moiety conservation laws.
+
+    According to the algorithm proposed by De Martino et al. (2014)
+    https://doi.org/10.1371/journal.pone.0100750
+
+    :param stoichiometric_list:
+        the stoichiometric matrix as a list (species x reactions,
+        row-major ordering)
+    :param num_species:
+        total number of species in the reaction network
+    :param num_reactions:
+        total number of reactions in the reaction network
+    :returns:
+        Integer MCLs as list of lists of indices of involved species and
+        list of lists of corresponding coefficients.
+    """
+    # compute semi-positive conservation laws
+    kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
+        cls_species_idxs, cls_coefficients = kernel(
+        stoichiometric_list, num_species, num_reactions)
+
+    # construct interaction matrix
+    J, J2, fields = fill(stoichiometric_list, engaged_species, num_species)
+
+    done = (int_kernel_dim == kernel_dim)
+    timer = 0
+    # maximum number of montecarlo search before starting relaxation
+    max_num_monte_carlo = 10
+    while not done:
+        yes, int_kernel_dim, engaged_species, conserved_moieties = monte_carlo(
+            engaged_species, J, J2, fields, conserved_moieties,
+            int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
+            max_iter=max_num_monte_carlo
+        )
+        done = (int_kernel_dim == kernel_dim)
+        if yes:
+            timer += 1
+        else:
+            timer = 0
+
+        if timer == max_num_monte_carlo:
+            done = relax(stoichiometric_list, conserved_moieties,
+                         num_reactions, num_species)
+            if not done:
+                timer = 0
+    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    return cls_species_idxs, cls_coefficients
+
+
 def _qsort(
         k: int,
         km: int,
@@ -82,7 +136,7 @@ def kernel(
         total number of reactions in the reaction network
     :returns:
         kernel dimension, MCLs, integer kernel dimension, integer MCLs and
-        indices to metabolites and reactions in the preceding order as a tuple
+        indices to species and reactions in the preceding order as a tuple
     """
     il = 0
     jl = 0

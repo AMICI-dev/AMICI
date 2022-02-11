@@ -14,11 +14,10 @@ import warnings
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
 import libsbml as sbml
-import numpy as np
 import sympy as sp
 
 from . import has_clibs
-from .conserved_moieties import kernel
+from .conserved_moieties import compute_moiety_conservation_laws
 from .constants import SymbolId
 from .import_utils import (_check_unsupported_functions,
                            _get_str_symbol_identifiers,
@@ -1431,7 +1430,6 @@ class SbmlImporter:
         """
         species_solver = list(range(ode_model.num_states_rdata()))
 
-        N, M = self.stoichiometric_matrix.shape
         try:
             stoichiometric_list = [
                 float(entry) for entry in self.stoichiometric_matrix.flat()
@@ -1443,8 +1441,8 @@ class SbmlImporter:
                           "Skipping.")
             return species_solver
 
-        kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, \
-        cls_state_idxs, cls_coefficients = kernel(stoichiometric_list, N, M)
+        cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
+            stoichiometric_list, *self.stoichiometric_matrix.shape)
 
         # iterate over species in the ODE model, mark conserved species for
         # later removal from stoichiometric matrix
