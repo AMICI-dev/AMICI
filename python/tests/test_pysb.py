@@ -109,12 +109,6 @@ def test_compare_to_pysb_simulation(example):
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(os.path.join(os.path.dirname(__file__), '..',
                                          'tests', 'pysb_test_models')):
-
-            if example == 'earm_1_3' \
-                    and platform.sys.version_info[0] == 3 \
-                    and platform.sys.version_info[1] < 7:
-                return
-
             # load example
             pysb.SelfExporter.cleanup()  # reset pysb
             pysb.SelfExporter.do_export = True
