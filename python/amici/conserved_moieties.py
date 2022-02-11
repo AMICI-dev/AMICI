@@ -203,7 +203,7 @@ def kernel(
             i2 += 1
     intKernelDim = i2
 
-    assert intKernelDim < kernelDim
+    assert intKernelDim <= kernelDim
     assert len(NSolutions) == len(NSolutions2), \
         "Inconsistent number of conserved quantities in coefficients and " \
         "species"
