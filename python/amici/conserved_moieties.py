@@ -3,7 +3,7 @@ import math
 import random
 import sys
 from numbers import Number
-from typing import List, Tuple, Sequence, Any
+from typing import List, Tuple, Sequence, MutableSequence
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
@@ -12,7 +12,7 @@ logger = get_logger(__name__, logging.ERROR)
 def qsort(
         k: int,
         km: int,
-        orders: Sequence[int],
+        orders: MutableSequence[int],
         pivots: Sequence[int]
 ) -> None:
     """Quicksort
@@ -236,7 +236,7 @@ def fill(
         matched: Sequence[int],
         num_rows: int
         # TODO:
-) -> Tuple[Any, Any, Any]:
+) -> Tuple[List[List[int]], List[List[int]], List[int]]:
     """Construct interaction matrix
 
     Construct the interaction matrix out of the given stoichiometric matrix
@@ -298,7 +298,12 @@ def fill(
 
 
 def LinearDependence(
-        vectors, intkerneldim, NSolutions, NSolutions2, matched, N
+        vectors: Sequence[Number],
+        int_kernel_dim: int,
+        NSolutions: Sequence[Sequence[int]],
+        NSolutions2: Sequence[Sequence[Number]],
+        matched: Sequence[int],
+        num_rows: int
         ):
     """Check for linear dependence between MCLs
 
@@ -307,7 +312,7 @@ def LinearDependence(
 
     :param vectors:
         found basis
-    :param intkerneldim:
+    :param int_kernel_dim:
         number of integer conservative laws
     :param NSolutions:
         NSolutions contains the species involved in the MCL
@@ -315,10 +320,12 @@ def LinearDependence(
         NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
         actual found MCLs
+    :param num_rows:
+        number of rows in :math:`S`
     :returns:
         boolean indicating linear dependence (true) or not (false)
     """
-    K = intkerneldim + 1
+    K = int_kernel_dim + 1
     MIN = 1e-9
     MAX = 1e+9
     matrix = [[] for _ in range(K)]
@@ -369,8 +376,8 @@ def LinearDependence(
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                colonna = [None] * N
-                for i in range(N):
+                colonna = [None] * num_rows
+                for i in range(num_rows):
                     colonna[i] = 0
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
@@ -380,7 +387,7 @@ def LinearDependence(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(N):
+                for i in range(num_rows):
                     if abs(colonna[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
