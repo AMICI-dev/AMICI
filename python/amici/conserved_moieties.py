@@ -11,7 +11,7 @@ sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
 
-def qsort(
+def _qsort(
         k: int,
         km: int,
         orders: MutableSequence[int],
@@ -52,8 +52,8 @@ def qsort(
         orders[i] = neworders[i - km]
 
     centre = p + km
-    qsort(k, centre + 1, orders, pivots)
-    qsort(centre, km, orders, pivots)
+    _qsort(k, centre + 1, orders, pivots)
+    _qsort(centre, km, orders, pivots)
 
 
 def kernel(
@@ -116,7 +116,7 @@ def kernel(
 
     done = False
     while not done:
-        qsort(N, 0, orders, pivots)
+        _qsort(N, 0, orders, pivots)
         for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
@@ -287,7 +287,7 @@ def fill(
     return J, J2, fields
 
 
-def is_linearly_dependent(
+def _is_linearly_dependent(
         vectors: Sequence[Number],
         int_kernel_dim: int,
         cls_species_idxs: Sequence[Sequence[int]],
@@ -328,7 +328,7 @@ def is_linearly_dependent(
     orders2 = list(range(len(matched)))
     pivots2 = matched[:]
 
-    qsort(len(matched), 0, orders2, pivots2)
+    _qsort(len(matched), 0, orders2, pivots2)
     for i in range(len(matched)):
         if vectors[orders2[i]] > MIN:
             matrix[K - 1].append(matched[orders2[i]])
@@ -340,7 +340,7 @@ def is_linearly_dependent(
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
     while ok == 0:
-        qsort(K, 0, orders, pivots)
+        _qsort(K, 0, orders, pivots)
         for j in range(K - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 min1 = MAX
@@ -505,23 +505,23 @@ def monte_carlo(
 
     if howmany < 10 * max_iter:
         if len(int_matched) > 0:
-            yes = is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
-                                        cls_coefficients, matched, num_rows)
+            yes = _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
+                                         cls_coefficients, matched, num_rows)
             assert yes, "Not true!"
         else:
             yes = True
         if yes:
             orders2 = list(range(len(matched)))
             pivots2 = matched[:]
-            qsort(len(matched), 0, orders2, pivots2)
+            _qsort(len(matched), 0, orders2, pivots2)
             for i in range(len(matched)):
                 if num[orders2[i]] > 0:
                     cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
                     cls_coefficients[int_kernel_dim].append(num[orders2[i]])
             int_kernel_dim += 1
             # side-effects on num vector
-            is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
-                                  cls_coefficients, matched, num_rows)
+            _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
+                                   cls_coefficients, matched, num_rows)
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
             min = 1000
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
@@ -604,7 +604,7 @@ def relax(
 
     done = False
     while not done:
-        qsort(K, 0, orders, pivots)
+        _qsort(K, 0, orders, pivots)
         for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
@@ -817,7 +817,7 @@ def reduce(
     pivots = [-len(cls_species_idxs[i]) for i in range(K)]
 
     while True:
-        qsort(K, 0, orders, pivots)
+        _qsort(K, 0, orders, pivots)
         ok = True
         for i in range(K - 2):
             for j in range(i + 1, K):
