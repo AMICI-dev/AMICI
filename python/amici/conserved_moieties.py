@@ -1,13 +1,14 @@
 import math
 import random
 import sys
+from numbers import Number
+from typing import Any, List, Tuple
 
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
 
 
-# TODO: Apply PEP8 coding conventions to the whole code
 # TODO: Rewrite quicksort algorithm (recursive -> iterative) for efficiency
 def qsort(k, km, orders, pivots):
     """
@@ -45,7 +46,12 @@ def qsort(k, km, orders, pivots):
         qsort(centre, km, orders, pivots)
 
 
-def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
+def kernel(
+        stoichiometricMatrixAsList: List[Number],
+        numberOfMetabolites: int,
+        numberOfReactions: int
+) -> Tuple[Number, List[int], int, List[int],
+           List[List[int]], List[List[Number]]]:
     """
     Kernel calculation by Gaussian elimination
 
@@ -79,22 +85,22 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
             jl = 0
             il += 1
 
-    for i in range(0, N):
+    for i in range(N):
         matrix[i].append(M + i)
         matrix2[i].append(1)
 
     ok = 0
-    orders = [i for i in range(0, N)]
-    pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(0, N)]
+    orders = [i for i in range(N)]
+    pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
 
     while ok == 0:
         qsort(N, 0, orders, pivots)
-        for j in range(0, N - 1):
+        for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
                 orders[j]] != MAX:
                 min1 = 100000000
                 if len(matrix[orders[j]]) > 1:
-                    for i in range(0, len(matrix[orders[j]])):
+                    for i in range(len(matrix[orders[j]])):
                         if abs(matrix2[orders[j]][0] / matrix2[orders[j]][
                             i]) < min1:
                             min1 = abs(
@@ -102,7 +108,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
                 min2 = 100000000
                 if len(matrix[orders[j + 1]]) > 1:
-                    for i in range(0, len(matrix[orders[j + 1]])):
+                    for i in range(len(matrix[orders[j + 1]])):
                         if abs(matrix2[orders[j + 1]][0] /
                                matrix2[orders[j + 1]][i]) < min2:
                             min2 = abs(matrix2[orders[j + 1]][0] /
@@ -114,9 +120,9 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
                     orders[j] = k2
         ok = 1
 
-        for j in range(0, N - 1):
-            if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
-                orders[j]] != MAX:
+        for j in range(N - 1):
+            if pivots[orders[j + 1]] == pivots[orders[j]] \
+                    and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
                 colonna = [0 for _ in range(N + M)]
@@ -129,7 +135,7 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(0, N + M):
+                for i in range(N + M):
                     if abs(colonna[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
@@ -144,41 +150,41 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
     RSolutions2 = [[] for _ in range(N)]
     kernelDim = 0
 
-    for i in range(0, N):
+    for i in range(N):
         ok = 1
         if len(matrix[i]) > 0:
-            for j in range(0, len(matrix[i])):
+            for j in range(len(matrix[i])):
                 if matrix[i][j] < M:
                     ok = 0
         if ok == 1 and len(matrix[i]) > 0:
-            for j in range(0, len(matrix[i])):
+            for j in range(len(matrix[i])):
                 RSolutions[kernelDim].append(matrix[i][j] - M)
                 RSolutions2[kernelDim].append(matrix2[i][j])
             kernelDim += 1
 
-    for i in range(0, N):
+    for i in range(N):
         matrix[i] = []
         matrix2[i] = []
 
     i2 = 0
-    for i in range(0, kernelDim):
+    for i in range(kernelDim):
         ok2 = 1
         if (len(RSolutions[i])) > 0:
-            for j in range(0, len(RSolutions[i])):
+            for j in range(len(RSolutions[i])):
                 if RSolutions2[i][j] * RSolutions2[i][0] < 0:
                     ok2 = 0
                 if len(matched) == 0:
                     matched.append(RSolutions[i][j])
                 else:
                     ok3 = 1
-                    for k in range(0, len(matched)):
+                    for k in range(len(matched)):
                         if matched[k] == RSolutions[i][j]:
                             ok3 = 0
                     if ok3 == 1:
                         matched.append(RSolutions[i][j])
         if ok2 == 1 and len(RSolutions[i]) > 0:
             min = MAX
-            for j in range(0, len(RSolutions[i])):
+            for j in range(len(RSolutions[i])):
                 NSolutions[i2].append(RSolutions[i][j])
                 NSolutions2[i2].append(abs(RSolutions2[i][j]))
                 if min > abs(RSolutions2[i][j]):
@@ -187,17 +193,22 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
                     intmatched.append(NSolutions[i2][j])
                 else:
                     ok3 = 1
-                    for k in range(0, len(intmatched)):
+                    for k in range(len(intmatched)):
                         if intmatched[k] == NSolutions[i2][j]:
                             ok3 = 0
                     if ok3 == 1:
                         intmatched.append(NSolutions[i2][j])
-            for j in range(0, len(NSolutions[i2])):
+            for j in range(len(NSolutions[i2])):
                 NSolutions2[i2][j] /= min
             i2 += 1
     intKernelDim = i2
 
-    return kernelDim, matched, intKernelDim, intmatched, NSolutions, NSolutions2
+    assert intKernelDim < kernelDim
+    assert len(NSolutions) == len(NSolutions2), \
+        "Inconsistent number of conserved quantities in coefficients and " \
+        "species"
+    return (kernelDim, matched, intKernelDim, intmatched, NSolutions,
+            NSolutions2)
 
 
 def fill(stoichiometricMatrixAsList, matched_size, matched, N):
@@ -226,7 +237,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
         if val != 0:
             prendo = dim
             if dim > 0:
-                for i in range(0, dim):
+                for i in range(dim):
                     if j1 == matched[i]:
                         prendo = i
             if prendo < dim:
@@ -237,13 +248,13 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
             j1 = 0
             i1 += 1
 
-    for i in range(0, dim):
+    for i in range(dim):
         for j in range(i, dim):
             interactions = 0
             if len(matrix[i]) > 0:
-                for po in range(0, len(matrix[i])):
+                for po in range(len(matrix[i])):
                     if len(matrix[j]) > 0:
-                        for pu in range(0, len(matrix[j])):
+                        for pu in range(len(matrix[j])):
                             if matrix[i][po] == matrix[j][pu]:
                                 interactions += (
                                             matrix2[i][po] * matrix2[j][pu])
@@ -281,50 +292,40 @@ def LinearDependence(
     MAX = 1e+9
     matrix = [[] for _ in range(K)]
     matrix2 = [[] for _ in range(K)]
-    for i in range(0, K - 1):
-        for j in range(0, len(NSolutions[i])):
+    for i in range(K - 1):
+        for j in range(len(NSolutions[i])):
             matrix[i].append(NSolutions[i][j])
             matrix2[i].append(NSolutions2[i][j])
-    orders2 = [None] * len(matched)
-    pivots2 = [None] * len(matched)
 
-    for i in range(0, len(matched)):
-        orders2[i] = i
-        pivots2[i] = matched[i]
+    orders2 = list(range(len(matched)))
+    pivots2 = matched[:]
 
     qsort(len(matched), 0, orders2, pivots2)
-    for i in range(0, len(matched)):
+    for i in range(len(matched)):
         if vectors[orders2[i]] > MIN:
             matrix[K - 1].append(matched[orders2[i]])
             matrix2[K - 1].append(float(vectors[orders2[i]]))
 
     ok = 0
-    orders = [None] * K
-    for i in range(0, K):
-        orders[i] = i
+    orders = list(range(K))
 
-    pivots = [None] * K
-    for i in range(0, K):
-        if len(matrix[i]) > 0:
-            pivots[i] = matrix[i][0]
-        else:
-            pivots[i] = MAX
+    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
     while ok == 0:
         qsort(K, 0, orders, pivots)
-        for j in range(0, K - 1):
+        for j in range(K - 1):
             if (pivots[orders[j + 1]] == pivots[orders[j]]) and (
                     pivots[orders[j]] != MAX):
                 min1 = MAX
                 if len(matrix[orders[j]]) > 1:
-                    for i in range(0, len(matrix[orders[j]])):
+                    for i in range(len(matrix[orders[j]])):
                         if (abs(matrix2[orders[j]][0] / matrix2[orders[j]][
                             i])) < min1:
                             min1 = abs(
                                 matrix2[orders[j]][0] / matrix2[orders[j]][i])
                 min2 = MAX
                 if len(matrix[orders[j + 1]]) > 1:
-                    for i in range(0, len(matrix[orders[j + 1]])):
+                    for i in range(len(matrix[orders[j + 1]])):
                         if (abs(matrix2[orders[j + 1]][0] /
                                 matrix2[orders[j + 1]][i])) < min2:
                             min2 = abs(matrix2[orders[j + 1]][0] /
@@ -334,13 +335,13 @@ def LinearDependence(
                     orders[j + 1] = orders[j]
                     orders[j] = k2
         ok = 1
-        for j in range(0, K - 2):
+        for j in range(K - 2):
             if (pivots[orders[j + 1]] == pivots[orders[j]]) and (
                     pivots[orders[j]] != MAX):
                 k1 = orders[j + 1]
                 k2 = orders[j]
                 colonna = [None] * N
-                for i in range(0, N):
+                for i in range(N):
                     colonna[i] = 0
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
@@ -350,7 +351,7 @@ def LinearDependence(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(0, N):
+                for i in range(N):
                     if abs(colonna[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
@@ -360,13 +361,8 @@ def LinearDependence(
                 else:
                     pivots[k1] = MAX
 
-        K1 = 0
-        for i in range(0, K):
-            if len(matrix[i]) > 0:
-                K1 += 1
-        yes = 0
-        if (K == K1):
-            yes = 1
+        K1 = sum(len(matrix[i]) > 0 for i in range(K))
+        yes = int(K == K1)
         return yes
 
 
@@ -406,7 +402,7 @@ def MonteCarlo(
     dim = len(matched)
     num = [0] * dim
     numtot = 0
-    for i in range(0, dim):
+    for i in range(dim):
         if (len(J[i])) > 0:
             num[i] = int(2 * random.uniform(0, 1))
         else:
@@ -414,10 +410,10 @@ def MonteCarlo(
         numtot += num[i]
 
     H = 0
-    for i in range(0, dim):
+    for i in range(dim):
         H += fields[i] * num[i] * num[i]
         if len(J[i]) > 0:
-            for j in range(0, len([J[i]])):
+            for j in range(len([J[i]])):
                 H += J2[i][j] * num[i] * num[J[i][j]]
 
     stop = 0
@@ -436,7 +432,7 @@ def MonteCarlo(
         if num[en] > 0 and random.uniform(0, 1) < 0.5:
             p = -1
         delta = fields[en] * num[en]
-        for i in range(0, len(J[en])):
+        for i in range(len(J[en])):
             delta += J2[en][i] * num[J[en][i]]
         delta = 2 * p * delta + fields[en]
 
@@ -457,8 +453,7 @@ def MonteCarlo(
             T1 = initT
             e = math.exp(-1 / T1)
             count = 0
-            numtot = 0
-            for i in range(0, dim):
+            for i in range(dim):
                 num[i] = 0
             en = int(random.uniform(0, 1) * dim)
             # Note: bug in original c++ code (while loop without any side
@@ -468,10 +463,10 @@ def MonteCarlo(
             num[en] = 1
             numtot = 1
             H = 0
-            for i in range(0, dim):
+            for i in range(dim):
                 H += fields[i] * num[i] * num[i]
                 if len(J[i]) > 0:
-                    for j in range(0, len(J[i])):
+                    for j in range(len(J[i])):
                         H += J2[i][j] * num[i] * num[J[i][j]]
             howmany += 1
 
@@ -481,22 +476,21 @@ def MonteCarlo(
         if stop != 0:
             break
 
-    yes = 0
     if howmany < 10 * maxIter:
         if len(intmatched) > 0:
             yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
                                    matched, N)
-            assert (yes == True), "Not true!"
+            assert yes, "Not true!"
         else:
             yes = 1
         if yes == 1:
             orders2 = [None] * len(matched)
             pivots2 = [None] * len(matched)
-            for i in range(0, len(matched)):
+            for i in range(len(matched)):
                 orders2[i] = i
                 pivots2[i] = matched[i]
             qsort(len(matched), 0, orders2, pivots2)
-            for i in range(0, len(matched)):
+            for i in range(len(matched)):
                 if num[orders2[i]] > 0:
                     NSolutions[intkerneldim].append(matched[orders2[i]])
                     NSolutions2[intkerneldim].append(num[orders2[i]])
@@ -507,19 +501,19 @@ def MonteCarlo(
             intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(
                 intkerneldim, kerneldim, NSolutions, NSolutions2, N)
             min = 1000
-            for i in range(0, len(NSolutions[intkerneldim - 1])):
+            for i in range(len(NSolutions[intkerneldim - 1])):
                 if len(intmatched) == 0:
                     intmatched.append(NSolutions[intkerneldim - 1][i])
                 else:
                     ok3 = 1
-                    for k in range(0, len(intmatched)):
+                    for k in range(len(intmatched)):
                         if (intmatched[k] == NSolutions[intkerneldim - 1][i]):
                             ok3 = 0
                     if ok3 == 1:
                         intmatched.append(NSolutions[intkerneldim - 1][i])
                 if NSolutions2[intkerneldim - 1][i] < min:
                     min = NSolutions2[intkerneldim - 1][i]
-            for i in range(0, len(NSolutions[intkerneldim - 1])):
+            for i in range(len(NSolutions[intkerneldim - 1])):
                 NSolutions2[intkerneldim - 1][i] /= min
             get_logger().info(
                 f"Found linearly independent moiety, now there are "
@@ -565,7 +559,7 @@ def Relaxation(
         if val != 0:
             prendo = K
             if K > 0:
-                for i in range(0, K):
+                for i in range(K):
                     if j1 == intmatched[i]:
                         prendo = i
             if prendo < K:
@@ -578,24 +572,24 @@ def Relaxation(
 
     ok = 0
 
-    orders = [i for i in range(0, N)]
-    pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(0, N)]
+    orders = [i for i in range(N)]
+    pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
 
     while ok == 0:
         qsort(K, 0, orders, pivots)
-        for j in range(0, K):
+        for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
                 orders[j]] != MAX:
                 min1 = MAX
                 if len(matrix[orders[j]]) > 1:
-                    for i in range(0, len(matrix[orders[j]])):
+                    for i in range(len(matrix[orders[j]])):
                         if abs(matrix2[orders[j]][0] / matrix2[orders[j]][
                             i]) < min1:
                             min1 = matrix2[orders[j]][0] / matrix2[orders[j]][
                                 i]
                 min2 = MAX
                 if len(matrix[orders[j + 1]]) > 1:
-                    for i in range(0, len(matrix[orders[j]])):
+                    for i in range(len(matrix[orders[j]])):
                         if abs(matrix2[orders[j + 1]][0] /
                                matrix2[orders[j + 1]][i]) < min2:
                             min2 = abs(matrix2[orders[j + 1]][0]) / \
@@ -606,13 +600,13 @@ def Relaxation(
                     orders[j] = k2
         ok = 1
         j = 0
-        for j in range(0, K):
+        for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
                 orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
                 colonna = [None] * M
-                for i in range(0, M):
+                for i in range(M):
                     colonna[i] = 0
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
@@ -622,7 +616,7 @@ def Relaxation(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(0, M):
+                for i in range(M):
                     if abs(colonna[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
@@ -632,13 +626,13 @@ def Relaxation(
                 else:
                     pivots[orders[j + 1]] = MAX
 
-        for i in range(0, K):
+        for i in range(K):
             if len(matrix[i]) > 0:
                 norm = matrix2[i][0]
-                for j in range(0, len(matrix[i])):
+                for j in range(len(matrix[i])):
                     matrix2[i][j] /= norm
 
-        for k1 in reversed(range(0, K - 1)):
+        for k1 in reversed(range(K - 1)):
             k = orders[k1]
             if len(matrix[k]) > 1:
                 for i in range(1, len(matrix[k])):
@@ -647,30 +641,30 @@ def Relaxation(
                         if len(matrix[j]) > 0:
                             if matrix[j][0] == matrix[k][i]:
                                 rigak = [None] * M
-                                for a in range(0, M):
+                                for a in range(M):
                                     rigak[a] = 0
-                                for a in range(0, len(matrix[k])):
+                                for a in range(len(matrix[k])):
                                     rigak[matrix[k]][a] = matrix2[k][a]
-                                for a in range(0, len(matrix[j])):
+                                for a in range(len(matrix[j])):
                                     rigak[matrix[j]][a] -= matrix2[j][a] * \
                                                            matrix2[k][i]
                                 matrix = []
                                 matrix2 = []
-                                for a in range(0, M):
+                                for a in range(M):
                                     if rigak[a] != 0:
                                         matrix[k].append(a)
                                         matrix2[k].append(rigak[a])
 
         indip = [None] * M
-        for i in range(0, M):
+        for i in range(M):
             indip[i] = K + 1
 
-        for i in range(0, K):
+        for i in range(K):
             if len(matrix[i]) > 0:
                 indip[matrix[i]][0] = i
 
         M1 = 0
-        for i in range(0, M):
+        for i in range(M):
             if indip[i] == K + 1:
                 indip[i] = K + M1
                 M1 += 1
@@ -678,7 +672,7 @@ def Relaxation(
         matrixAus = [[] for _ in range(M1)]
         matrixAus2 = [[] for _ in range(M1)]
         i1 = 0
-        for i in range(0, M):
+        for i in range(M):
             if indip[i] >= K:
                 matrixAus[i1].append(i)
                 matrixAus2[i1].append(1)
@@ -691,7 +685,7 @@ def Relaxation(
                         matrixAus[quelo].append(i)
                         matrixAus2[quelo].append(-matrix2[t][k])
 
-        for i in range(0, K):
+        for i in range(K):
             matrix[i] = []
 
         N1 = N - K
@@ -705,7 +699,7 @@ def Relaxation(
         for _, val in enumerate(stoichiometricMatrixAsList):
             prendo = 1
             if len(intmatched) > 0:
-                for i in range(0, len(intmatched)):
+                for i in range(len(intmatched)):
                     if j1 == intmatched[i]:
                         prendo -= 1
             if val != 0:
@@ -720,37 +714,37 @@ def Relaxation(
 
         matrixb = [[] for _ in range(N1)]
         matrixb2 = [[] for _ in range(N1)]
-        for i in range(0, M1):
-            for j in range(0, N1):
+        for i in range(M1):
+            for j in range(N1):
                 prod = 0
                 if len(matrix_aus[j]) * len(matrixAus[i]) > 0:
-                    for ib in range(0, len(matrixAus[i])):
-                        for jb in range(0, len(matrix_aus[j])):
+                    for ib in range(len(matrixAus[i])):
+                        for jb in range(len(matrix_aus[j])):
                             if matrixAus[i][ib] == matrix_aus[j][jb]:
                                 prod += matrixAus2[i][ib] * matrix_aus2[j][jb]
                     if abs(prod) > MIN:
                         matrixb[j].append(i)
                         matrixb2[j].append(prod)
 
-        for i in range(0, M1):
+        for i in range(M1):
             matrixAus[i] = []
             matrixAus2[i] = []
 
-        for i in range(0, N1):
+        for i in range(N1):
             matrix_aus[i] = []
             matrix_aus2[i] = []
 
         var = [None] * M1
-        for i in range(0, M1):
+        for i in range(M1):
             var[i] = MIN
         ok = 0
         time = 0
         while True:
             cmin = 1000
-            for j in range(0, N1):
+            for j in range(N1):
                 constr = 0
                 if len(matrixb[j]) > 0:
-                    for i in range(0, len(matrixb[j])):
+                    for i in range(len(matrixb[j])):
                         constr += matrixb2[j][i] * var[matrixb][j][i]
                     if constr < cmin:
                         min = j
@@ -761,12 +755,12 @@ def Relaxation(
             else:
                 alpha = -relaxation_step * cmin  # Motzkin relaxation
                 fact = 0
-                for j in range(0, len(matrixb[min])):
+                for j in range(len(matrixb[min])):
                     fact += matrixb2[min][j] * matrixb2[min][j]
                 alpha /= fact
                 if alpha < 1e-9 * MIN:
                     alpha = 1e-9 * MIN
-                for j in range(0, len(matrixb[min])):
+                for j in range(len(matrixb[min])):
                     var[matrixb[min][j]] += alpha * matrixb2[min][j]
 
             if not (ok == 0 and time < relaxationmax):
@@ -795,26 +789,26 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
     MIN = 1e-9
     ok = 0
     orders = [None] * K
-    for i in range(0, K):
+    for i in range(K):
         orders[i] = i
     pivots = [None] * K
-    for i in range(0, K):
+    for i in range(K):
         pivots[i] = -len(NSolutions[i])
 
     while True:
         qsort(K, 0, orders, pivots)
         ok = 1
-        for i in range(0, K - 2):
+        for i in range(K - 2):
             for j in range(i + 1, K):
                 k1 = orders[i]
                 k2 = orders[j]
                 colonna = [None] * N
-                for l in range(0, N):
+                for l in range(N):
                     colonna[l] = 0
                 ok1 = 1
-                for l in range(0, len(NSolutions[k1])):
+                for l in range(len(NSolutions[k1])):
                     colonna[NSolutions[k1][l]] = NSolutions2[k1][l]
-                for l in range(0, len(NSolutions[k2])):
+                for l in range(len(NSolutions[k2])):
                     colonna[NSolutions[k2][l]] -= NSolutions2[k2][l]
                     if colonna[NSolutions[k2][l]] < -MIN:
                         ok1 = 0
@@ -822,7 +816,7 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
                     ok = 0
                     NSolutions[k1] = []
                     NSolutions2[k1] = []
-                    for l in range(0, N):
+                    for l in range(N):
                         if abs(colonna[l]) > MIN:
                             NSolutions[k1].append(l)
                             NSolutions2[k1].append(colonna[l])
