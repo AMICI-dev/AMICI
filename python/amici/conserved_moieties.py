@@ -1,26 +1,24 @@
 import math
 import random
 import sys
-
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
 
-
-# TODO: Apply PEP8 coding conventions to the whole code
-# TODO: Rewrite quicksort algorithm (recursive -> iterative) for efficiency
 def qsort(k, km, orders, pivots):
-    """
-    Quicksort
+    """Quicksort
+
+    Recursive implementation of the quicksort algorithm
+    FIXME: Rewrite into an iterative algorithm with pivoting strategy
 
     :param k:
-        k
+        number of elements to sort
     :param km:
-        km
+        current center element
     :param orders:
-        orders
+        ordering of the elements
     :param pivots:
-        pivots
+        corresponding pivot elements from scaled partial pivoting strategy
     """
     centre = 0
     if k - km >= 1:
@@ -46,8 +44,15 @@ def qsort(k, km, orders, pivots):
 
 
 def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
-    """
-    Kernel calculation by Gaussian elimination
+    """Kernel calculation by Gaussian elimination
+
+    To compute the left kernel of the stoichiometrix matrix, a Gaussian 
+    elimination method with partial scaled pivoting is used to deal 
+    effectively with a possibly ill-conditioned stoichiometric matrix
+
+    Note that this is the Python reimplementation of the algorithm proposed
+    by De Martino et al. (2014) https://doi.org/10.1371/journal.pone.0100750
+    and thus a direct adaption of the original implementation in C/C++.
 
     :param stoichiometricMatrixAsList:
         the stoichiometric matrix as a list (reactions x metabolites)
@@ -201,13 +206,14 @@ def kernel(stoichiometricMatrixAsList, numberOfMetabolites, numberOfReactions):
 
 
 def fill(stoichiometricMatrixAsList, matched_size, matched, N):
-    """
-    Interaction matrix construction
+    """Construct interaction matrix 
+
+    Construct the interaction matrix out of the given stoichiometrix matrix
 
     :param stoichiometricMatrixAsList:
         the stoichiometric matrix as a list
     :param matched_size:
-        found MCLs in the matrix S
+        number of found independent moeity conservation laws (MCL)
     :param matched
         actual found MCLs
     """
@@ -261,8 +267,9 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 def LinearDependence(
         vectors, intkerneldim, NSolutions, NSolutions2, matched, N
         ):
-    """
-    Check if the solution found with MonteCarlo is linearly independent
+    """Check for linear dependence
+
+    Check if the solution found with Monte Carlo is linearly independent
     with respect to the previous found solution
 
     :param vectors:
@@ -374,8 +381,10 @@ def MonteCarlo(
         matched, J, J2, fields, intmatched, intkerneldim, NSolutions,
         NSolutions2, kerneldim, N, initT=1, coolrate=1e-3, maxIter=10
         ):
-    """
-    MonteCarlo simulated annealing
+    """MonteCarlo simulated annealing for finding integer MCLs
+
+    Finding integer solutions for the MCLs by Monte Carlo, see step (b) in
+    the De Martino (2014) paper and Eqs. 11-13 in the publication
 
     :param matched:
         matched
@@ -537,8 +546,10 @@ def Relaxation(
         stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6,
         relaxation_step=1.9
         ):
-    """
-    Relaxation scheme for MonteCarlo final solution
+    """Relaxation scheme for Monte Carlo final solution
+
+    Checking for completeness using Motzkin's theorem. See Step (c) in 
+    De Martino (2014) and the Eqs. 14-16 in the corresponding publication
 
     :param stoichiometricMatrixAsList:
         stoichiometric matrix as a list
@@ -779,8 +790,11 @@ def Relaxation(
 
 
 def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
-    """
-    Reducing the solution found by MonteCarlo
+    """Reducing the solution which has been found by the Monte Carlo process
+
+    In case of superpositions of independent MCLs one can reduce by
+    iteratively subtracting the other independenet MCLs, taking care
+    to maintain then non-negativity constraint, see Eq. 13 in De Martino (2014)
 
     :param intKernelDim:
         number of found MCLs
