@@ -111,7 +111,7 @@ def test_detect_cl(data_demartino2014, quiet=False):
             if not quiet:
                 print(f"Monte Carlo call #{counter} (maxIter: {maxIter})")
             yes, intKernelDim, kernelDim, NSolutions, NSolutions2, \
-            engagedMetabolites, conservedMoieties = MonteCarlo(
+            engagedMetabolites, conservedMoieties = monte_carlo(
                 engagedMetabolites, J, J2, fields, conservedMoieties,
                 intKernelDim, NSolutions, NSolutions2, kernelDim, N)
             if not quiet:
@@ -126,12 +126,12 @@ def test_detect_cl(data_demartino2014, quiet=False):
             if timer == max:
                 if not quiet:
                     print("Relaxation...")
-                finish = Relaxation(S, conservedMoieties, M, N)
+                finish = relax(S, conservedMoieties, M, N)
                 if finish == 1:
                     timer = 0
         old = NSolutions
         old2 = NSolutions2
-        intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim,
+        intKernelDim, kernelDim, NSolutions, NSolutions2 = reduce(intKernelDim,
                                                                   kernelDim,
                                                                   NSolutions,
                                                                   NSolutions2,

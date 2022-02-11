@@ -820,7 +820,7 @@ def reduce(
         kernelDim: int,
         NSolutions: Sequence[Sequence[int]],
         NSolutions2: Sequence[Sequence[Number]],
-        N: int
+        num_rows: int
 ) -> Tuple[int, int, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
     """Reducing the solution which has been found by the Monte Carlo process
 
@@ -836,26 +836,23 @@ def reduce(
         NSolutions contains the species involved in the MCL
     :param NSolutions2:
         NSolutions2 contains the corresponding coefficients in the MCL
+    :param num_rows:
+        number of rows in :math:`S`
     """
     K = intKernelDim
     MIN = 1e-9
-    ok = 0
-    orders = [None] * K
-    for i in range(K):
-        orders[i] = i
-    pivots = [None] * K
-    for i in range(K):
-        pivots[i] = -len(NSolutions[i])
+    orders = list(range(K))
+    pivots = [-len(NSolutions[i]) for i in range(K)]
 
     while True:
         qsort(K, 0, orders, pivots)
-        ok = 1
+        ok = True
         for i in range(K - 2):
             for j in range(i + 1, K):
                 k1 = orders[i]
                 k2 = orders[j]
-                colonna = [None] * N
-                for l in range(N):
+                colonna = [None] * num_rows
+                for l in range(num_rows):
                     colonna[l] = 0
                 ok1 = 1
                 for l in range(len(NSolutions[k1])):
@@ -865,14 +862,14 @@ def reduce(
                     if colonna[NSolutions[k2][l]] < -MIN:
                         ok1 = 0
                 if ok1 == 1:
-                    ok = 0
+                    ok = False
                     NSolutions[k1] = []
                     NSolutions2[k1] = []
-                    for l in range(N):
+                    for l in range(num_rows):
                         if abs(colonna[l]) > MIN:
                             NSolutions[k1].append(l)
                             NSolutions2[k1].append(colonna[l])
                     pivots[k1] = -len(NSolutions[k1])
-        if ok != 0:
+        if ok:
             break
     return intKernelDim, kernelDim, NSolutions, NSolutions2
