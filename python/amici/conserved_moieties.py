@@ -398,8 +398,7 @@ def monte_carlo(
         initial_temperature: float = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
-) -> Tuple[bool, int, int, Sequence[Sequence[int]],
-           Sequence[Sequence[Number]], Sequence[int], Sequence[int]]:
+) -> Tuple[bool, int, Sequence[int], Sequence[int]]:
     """MonteCarlo simulated annealing for finding integer MCLs
 
     Finding integer solutions for the MCLs by Monte Carlo, see step (b) in
@@ -418,9 +417,9 @@ def monte_carlo(
     :param int_kernel_dim:
         number of MCLs found in :math:`S`
     :param cls_species_idxs:
-        NSolutions
+        Modified in-place.
     :param cls_coefficients:
-        NSolutions2
+        Modified in-place.
     :param initial_temperature:
         initial temperature
     :param cool_rate:
@@ -544,7 +543,7 @@ def monte_carlo(
                 "Found a moiety but it is linearly dependent... next.")
     else:
         yes = False
-    return yes, int_kernel_dim, cls_species_idxs, cls_coefficients, matched, int_matched
+    return yes, int_kernel_dim, matched, int_matched
 
 
 def relax(

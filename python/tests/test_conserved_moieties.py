@@ -86,11 +86,11 @@ def test_detect_cl(data_demartino2014, quiet=False):
 
     start = perf_counter()
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
-    NSolutions, NSolutions2 = kernel(S, N, M)
+        cls_species_idxs, cls_coefficients = kernel(S, N, M)
 
     if not quiet:
-        output(int_kernel_dim, kernel_dim, engaged_species, NSolutions,
-               NSolutions2, row_names)
+        output(int_kernel_dim, kernel_dim, engaged_species, cls_species_idxs,
+               cls_coefficients, row_names)
 
     # There are 38 conservation laws, engaging 131 metabolites
     # 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
@@ -106,18 +106,17 @@ def test_detect_cl(data_demartino2014, quiet=False):
     if int_kernel_dim != kernel_dim:
         timer = 0
         counter = 1
-        maxIter = 10
         finish = 0
         while finish == 0:
             if not quiet:
-                print(f"Monte Carlo call #{counter} (maxIter: {maxIter})")
-            yes, int_kernel_dim, NSolutions, NSolutions2, \
-            engaged_species, conserved_moieties = monte_carlo(
-                engaged_species, J, J2, fields, conserved_moieties,
-                int_kernel_dim, NSolutions, NSolutions2, N)
+                print(f"Monte Carlo call #{counter}")
+            yes, int_kernel_dim, engaged_species, conserved_moieties = \
+                monte_carlo(engaged_species, J, J2, fields, conserved_moieties,
+                            int_kernel_dim, cls_species_idxs, cls_coefficients,
+                            num_rows=N)
             if not quiet:
-                output(int_kernel_dim, kernel_dim, engaged_species, NSolutions,
-                       NSolutions2, row_names)
+                output(int_kernel_dim, kernel_dim, engaged_species,
+                       cls_species_idxs, cls_coefficients, row_names)
 
             counter += 1
             if int_kernel_dim == kernel_dim:
@@ -130,21 +129,22 @@ def test_detect_cl(data_demartino2014, quiet=False):
                 finish = relax(S, conserved_moieties, M, N)
                 if finish == 1:
                     timer = 0
-        old = NSolutions
-        old2 = NSolutions2
-        reduce(int_kernel_dim, NSolutions, NSolutions2, N)
+        old = cls_species_idxs
+        old2 = cls_coefficients
+        reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, N)
+        # TODO what is tested here? should have been deep-copied?!
         for i in range(len(old)):
-            assert (set(old[i]) == set(NSolutions[i]))
-            assert (set(old2[i]) == set(NSolutions2[i]))
+            assert (set(old[i]) == set(cls_species_idxs[i]))
+            assert (set(old2[i]) == set(cls_coefficients[i]))
 
     # Assert that each conserved moiety has the correct number of metabolites
     for i in range(int_kernel_dim - 2):
-        assert (len(NSolutions[i]) == expected_num_species[i]), \
+        assert (len(cls_species_idxs[i]) == expected_num_species[i]), \
             f"Moiety #{i + 1} failed for test case (De Martino et al.)"
 
     if not quiet:
-        output(int_kernel_dim, kernel_dim, engaged_species, NSolutions,
-               NSolutions2, row_names)
+        output(int_kernel_dim, kernel_dim, engaged_species, cls_species_idxs,
+               cls_coefficients, row_names)
 
     runtime = perf_counter() - start
     if not quiet:
