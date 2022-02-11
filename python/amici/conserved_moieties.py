@@ -298,7 +298,7 @@ def fill(
     return J, J2, fields
 
 
-def LinearDependence(
+def is_linearly_dependent(
         vectors: Sequence[Number],
         int_kernel_dim: int,
         NSolutions: Sequence[Sequence[int]],
@@ -398,7 +398,7 @@ def LinearDependence(
     return int(K == K1)
 
 
-def MonteCarlo(
+def monte_carlo(
         matched,
         J,
         J2,
@@ -520,8 +520,8 @@ def MonteCarlo(
 
     if howmany < 10 * max_iter:
         if len(intmatched) > 0:
-            yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
-                                   matched, num_rows)
+            yes = is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
+                                        matched, num_rows)
             assert yes, "Not true!"
         else:
             yes = 1
@@ -534,9 +534,9 @@ def MonteCarlo(
                     NSolutions[intkerneldim].append(matched[orders2[i]])
                     NSolutions2[intkerneldim].append(num[orders2[i]])
             intkerneldim += 1
-            LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
-                             matched, num_rows)  # side-effects on num vector
-            intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(
+            is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
+                                  matched, num_rows)  # side-effects on num vector
+            intkerneldim, kerneldim, NSolutions, NSolutions2 = reduce(
                 intkerneldim, kerneldim, NSolutions, NSolutions2, num_rows)
             min = 1000
             for i in range(len(NSolutions[intkerneldim - 1])):
@@ -565,7 +565,7 @@ def MonteCarlo(
             intmatched)
 
 
-def Relaxation(
+def relax(
         stoichiometric_list: Sequence[Number],
         intmatched: Sequence[int],
         M: int,
@@ -815,7 +815,7 @@ def Relaxation(
     return False
 
 
-def Reduce(
+def reduce(
         intKernelDim: int,
         kernelDim: int,
         NSolutions: Sequence[Sequence[int]],
