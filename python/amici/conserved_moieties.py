@@ -9,6 +9,7 @@ from .logging import get_logger
 sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
+
 def qsort(k, km, orders, pivots):
     """Quicksort
 
@@ -24,15 +25,14 @@ def qsort(k, km, orders, pivots):
     :param pivots:
         corresponding pivot elements from scaled partial pivoting strategy
     """
-    centre = 0
     if k - km >= 1:
-        pivot = km + int((k - km) / 2)  
+        pivot = km + int((k - km) / 2)
         l = 0
         p = k - km - 1
         neworders = [None] * (k - km)
         for i in range(km, k):
             if i != pivot:
-                if (pivots[orders[i]] < pivots[orders[pivot]]):
+                if pivots[orders[i]] < pivots[orders[pivot]]:
                     neworders[l] = orders[i]
                     l += 1
                 else:
@@ -56,8 +56,8 @@ def kernel(
     """
     Kernel (left nullspace of S) calculation by Gaussian elimination
 
-    To compute the left nullspace of the stoichiometrix matrix S, a Gaussian 
-    elimination method with partial scaled pivoting is used to deal 
+    To compute the left nullspace of the stoichiometrix matrix S, a Gaussian
+    elimination method with partial scaled pivoting is used to deal
     effectively with a possibly ill-conditioned stoichiometric matrix S.
 
     Note that this is the Python reimplementation of the algorithm proposed
@@ -105,13 +105,13 @@ def kernel(
     while ok == 0:
         qsort(N, 0, orders, pivots)
         for j in range(N - 1):
-            if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
-                orders[j]] != MAX:
+            if pivots[orders[j + 1]] == pivots[orders[j]] \
+                    and pivots[orders[j]] != MAX:
                 min1 = 100000000
                 if len(matrix[orders[j]]) > 1:
                     for i in range(len(matrix[orders[j]])):
-                        if abs(matrix2[orders[j]][0] / matrix2[orders[j]][
-                            i]) < min1:
+                        if abs(matrix2[orders[j]][0]
+                               / matrix2[orders[j]][i]) < min1:
                             min1 = abs(
                                 matrix2[orders[j]][0] / matrix2[orders[j]][i])
 
@@ -221,7 +221,7 @@ def kernel(
 
 
 def fill(stoichiometricMatrixAsList, matched_size, matched, N):
-    """Construct interaction matrix 
+    """Construct interaction matrix
 
     Construct the interaction matrix out of the given stoichiometrix matrix S
 
@@ -291,7 +291,7 @@ def LinearDependence(
     :param intkerneldim:
         number of integer conservative laws
     :param NSolutions:
-        NSolutions contains the species involved in the the MCL
+        NSolutions contains the species involved in the MCL
     :param NSolutions2:
         NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
@@ -328,10 +328,10 @@ def LinearDependence(
                 min1 = MAX
                 if len(matrix[orders[j]]) > 1:
                     for i in range(len(matrix[orders[j]])):
-                        if (abs(matrix2[orders[j]][0] / matrix2[orders[j]][
-                            i])) < min1:
-                            min1 = abs(
-                                matrix2[orders[j]][0] / matrix2[orders[j]][i])
+                        if (abs(matrix2[orders[j]][0]
+                                / matrix2[orders[j]][i])) < min1:
+                            min1 = abs(matrix2[orders[j]][0]
+                                       / matrix2[orders[j]][i])
                 min2 = MAX
                 if len(matrix[orders[j + 1]]) > 1:
                     for i in range(len(matrix[orders[j + 1]])):
@@ -500,7 +500,7 @@ def MonteCarlo(
                 else:
                     ok3 = 1
                     for k in range(len(intmatched)):
-                        if (intmatched[k] == NSolutions[intkerneldim - 1][i]):
+                        if intmatched[k] == NSolutions[intkerneldim - 1][i]:
                             ok3 = 0
                     if ok3 == 1:
                         intmatched.append(NSolutions[intkerneldim - 1][i])
@@ -526,7 +526,7 @@ def Relaxation(
         ):
     """Relaxation scheme for Monte Carlo final solution
 
-    Checking for completeness using Motzkin's theorem. See Step (c) in 
+    Checking for completeness using Motzkin's theorem. See Step (c) in
     De Martino (2014) and the Eqs. 14-16 in the corresponding publication
 
     :param stoichiometricMatrixAsList:
@@ -572,30 +572,30 @@ def Relaxation(
     while not done:
         qsort(K, 0, orders, pivots)
         for j in range(K):
-            if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
-                orders[j]] != MAX:
+            if pivots[orders[j + 1]] == pivots[orders[j]] \
+                    and pivots[orders[j]] != MAX:
                 min1 = MAX
                 if len(matrix[orders[j]]) > 1:
                     for i in range(len(matrix[orders[j]])):
-                        if abs(matrix2[orders[j]][0] / matrix2[orders[j]][
-                            i]) < min1:
-                            min1 = matrix2[orders[j]][0] / matrix2[orders[j]][
-                                i]
+                        if abs(matrix2[orders[j]][0]
+                               / matrix2[orders[j]][i]) < min1:
+                            min1 = matrix2[orders[j]][0] \
+                                   / matrix2[orders[j]][i]
                 min2 = MAX
                 if len(matrix[orders[j + 1]]) > 1:
                     for i in range(len(matrix[orders[j]])):
                         if abs(matrix2[orders[j + 1]][0] /
                                matrix2[orders[j + 1]][i]) < min2:
-                            min2 = abs(matrix2[orders[j + 1]][0]) / \
-                                   matrix2[orders[j + 1]][i]
+                            min2 = abs(matrix2[orders[j + 1]][0]) \
+                                   / matrix2[orders[j + 1]][i]
                 if min2 > min1:
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
         done = True
         for j in range(K):
-            if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
-                orders[j]] != MAX:
+            if pivots[orders[j + 1]] == pivots[orders[j]] \
+                    and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
                 colonna = [None] * M
@@ -768,7 +768,7 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
     """Reducing the solution which has been found by the Monte Carlo process
 
     In case of superpositions of independent MCLs one can reduce by
-    iteratively subtracting the other independenet MCLs, taking care
+    iteratively subtracting the other independent MCLs, taking care
     to maintain then non-negativity constraint, see Eq. 13 in De Martino (2014)
 
     :param intKernelDim:
@@ -776,7 +776,7 @@ def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
     :param kernelDim:
         number of found conservative laws
     :param NSolutions:
-        NSolutions contains the species involved in the the MCL
+        NSolutions contains the species involved in the MCL
     :param NSolutions2:
         NSolutions2 contains the corresponding coefficients in the MCL
     """
