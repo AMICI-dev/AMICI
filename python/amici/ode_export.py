@@ -6,7 +6,7 @@ generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by
 :py:func:`amici.pysb_import.pysb2amici`,
 :py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
-:py:func:`amici.petab_import.import_model`
+:py:func:`amici.petab_import.import_model`.
 """
 import sympy as sp
 import numpy as np
@@ -435,7 +435,7 @@ class ModelQuantity:
 class State(ModelQuantity):
     """
     A State variable defines an entity that evolves with time according to
-    the provided time derivative, abbreviated by `x`
+    the provided time derivative, abbreviated by ``x``.
 
     :ivar _conservation_law:
         algebraic formula that allows computation of this
@@ -456,7 +456,7 @@ class State(ModelQuantity):
                  dt: sp.Expr):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
-        by dt
+        by ``dt``
 
         :param identifier:
             unique identifier of the state
@@ -477,9 +477,10 @@ class State(ModelQuantity):
     def set_conservation_law(self,
                              law: sp.Expr) -> None:
         """
-        Sets the conservation law of a state. If the a conservation law
-        is set, the respective state will be replaced by an algebraic
-        formula according to the respective conservation law.
+        Sets the conservation law of a state.
+
+        If a conservation law is set, the respective state will be replaced by
+        an algebraic formula according to the respective conservation law.
 
         :param law:
             linear sum of states that if added to this state remain
@@ -548,7 +549,7 @@ class ConservationLaw(ModelQuantity):
 class Observable(ModelQuantity):
     """
     An Observable links model simulations to experimental measurements,
-    abbreviated by `y`
+    abbreviated by ``y``.
 
     :ivar _measurement_symbol:
         sympy symbol used in the objective function to represent
@@ -600,7 +601,7 @@ class SigmaY(ModelQuantity):
     """
     A Standard Deviation SigmaY rescales the distance between simulations
     and measurements when computing residuals or objective functions,
-    abbreviated by `sigmay`
+    abbreviated by ``sigmay``.
     """
     def __init__(self,
                  identifier: sp.Symbol,
@@ -624,10 +625,10 @@ class SigmaY(ModelQuantity):
 
 class Expression(ModelQuantity):
     """
-    An Expressions is a recurring elements in symbolic formulas. Specifying
+    An Expression is a recurring elements in symbolic formulas. Specifying
     this may yield more compact expression which may lead to substantially
-    shorter model compilation times, but may also reduce model simulation time,
-    abbreviated by `w`
+    shorter model compilation times, but may also reduce model simulation time.
+    Abbreviated by ``w``.
     """
     def __init__(self,
                  identifier: sp.Symbol,
@@ -651,7 +652,7 @@ class Expression(ModelQuantity):
 class Parameter(ModelQuantity):
     """
     A Parameter is a free variable in the model with respect to which
-    sensitivities may be computed, abbreviated by `p`
+    sensitivities may be computed, abbreviated by ``p``.
     """
 
     def __init__(self,
@@ -677,7 +678,7 @@ class Parameter(ModelQuantity):
 class Constant(ModelQuantity):
     """
     A Constant is a fixed variable in the model with respect to which
-    sensitivities cannot be computed, abbreviated by `k`
+    sensitivities cannot be computed, abbreviated by ``k``.
     """
 
     def __init__(self,
@@ -704,7 +705,7 @@ class LogLikelihood(ModelQuantity):
     A LogLikelihood defines the distance between measurements and
     experiments for a particular observable. The final LogLikelihood value
     in the simulation will be the sum of all specified LogLikelihood
-    instances evaluated at all timepoints, abbreviated by `Jy`
+    instances evaluated at all timepoints, abbreviated by ``Jy``.
     """
 
     def __init__(self,
@@ -719,7 +720,7 @@ class LogLikelihood(ModelQuantity):
 
         :param name:
             individual name of the LogLikelihood (does not need to be
-             unique)
+            unique)
 
         :param value:
             formula
@@ -731,9 +732,9 @@ class Event(ModelQuantity):
     """
     An Event defines either a SBML event or a root of the argument of a
     Heaviside function. The Heaviside functions will be tracked via the
-    vector `h` during simulation and are needed to inform the ODE solver about
-    a discontinuity in either the right hand side or the states themselves,
-    causing a reinitialization of the solver.
+    vector ``h`` during simulation and are needed to inform the ODE solver
+    about a discontinuity in either the right-hand side or the states
+    themselves, causing a reinitialization of the solver.
     """
 
     def __init__(self,
@@ -770,7 +771,7 @@ class Event(ModelQuantity):
     def __eq__(self, other):
         """
         Check equality of events at the level of trigger/root functions, as we
-        need to collect unique root functions for roots.cpp
+        need to collect unique root functions for ``roots.cpp``
         """
         return self.get_val() == other.get_val()
 
@@ -850,9 +851,9 @@ def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
 class ODEModel:
     """
     Defines an Ordinary Differential Equation as set of ModelQuantities.
-    This class provides general purpose interfaces to ompute arbitrary
+    This class provides general purpose interfaces to compute arbitrary
     symbolic derivatives that are necessary for model simulation or
-    sensitivity computation
+    sensitivity computation.
 
     :ivar _states:
         list of state variables
@@ -909,11 +910,11 @@ class ODEModel:
 
     :ivar _colptrs:
         carries column pointers for sparsified variables. See
-        SUNMatrixContent_Sparse definition in <sunmatrix/sunmatrix_sparse.h>
+        SUNMatrixContent_Sparse definition in ``sunmatrix/sunmatrix_sparse.h``
 
     :ivar _rowvals:
         carries row values for sparsified variables. See
-        SUNMatrixContent_Sparse definition in <sunmatrix/sunmatrix_sparse.h>
+        SUNMatrixContent_Sparse definition in ``sunmatrix/sunmatrix_sparse.h``
 
     :ivar _equation_prototype:
         defines the attribute from which an equation should be generated via
@@ -1053,8 +1054,7 @@ class ODEModel:
     ) -> None:
         """
         Imports a model specification from a
-        :class:`amici.sbml_import.SbmlImporter`
-        instance.
+        :class:`amici.sbml_import.SbmlImporter` instance.
 
         :param si:
             imported SBML model
@@ -1222,28 +1222,29 @@ class ODEModel:
                              total_abundance: sp.Symbol,
                              state_expr: sp.Expr,
                              abundance_expr: sp.Expr) -> None:
-        """
+        r"""
         Adds a new conservation law to the model. A conservation law is defined
-        by the conserved quantity T = sum_i(a_i * x_i), where a_i are
-        coefficients and x_i are different state variables.
+        by the conserved quantity :math:`T = \sum_i(a_i * x_i)`, where
+        :math:`a_i` are coefficients and :math:`x_i` are different state
+        variables.
 
         :param state:
             symbolic identifier of the state that should be replaced by
-            the conservation law (x_j)
+            the conservation law (:math:`x_j`)
 
         :param total_abundance:
-            symbolic identifier of the total abundance (T/a_j)
+            symbolic identifier of the total abundance (:math:`T/a_j`)
 
         :param state_expr:
-            symbolic algebraic formula that replaces the the state. This is
-            used to compute the numeric value of of `state` during simulations.
-            x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
+            symbolic algebraic formula that replaces the state. This is
+            used to compute the numeric value of ``state`` during simulations.
+            :math:`x_j = T/a_j - \sum_{i≠j}(a_i * x_i)/a_j`
 
         :param abundance_expr:
             symbolic algebraic formula that computes the value of the
             conserved quantity. This is used to update the numeric value for
-            `total_abundance` after (re-)initialization.
-            T/a_j = sum_i≠j(a_i * x_i)/a_j + x_j
+            ``total_abundance`` after (re-)initialization.
+            :math:`T/a_j = \sum_{i≠j}(a_i * x_i)/a_j + x_j`
         """
         try:
             ix = [
@@ -1401,7 +1402,6 @@ class ODEModel:
 
         :return:
             linearized Matrix containing the symbolic identifiers
-
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
@@ -1436,7 +1436,6 @@ class ODEModel:
 
         :return:
             linearized matrix containing the symbolic formulas
-
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
@@ -1455,7 +1454,6 @@ class ODEModel:
 
         :return:
             list containing the column pointers
-
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
@@ -1474,7 +1472,6 @@ class ODEModel:
 
         :return:
             list containing the row values
-
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
@@ -1492,7 +1489,6 @@ class ODEModel:
 
         :return:
             list containing the numeric values
-
         """
         if name not in self._vals:
             self._generate_value(name)
@@ -1515,7 +1511,7 @@ class ODEModel:
 
     def free_symbols(self) -> Set[sp.Basic]:
         """
-        Returns list of free symbols that appear in ODE rhs and initial
+        Returns list of free symbols that appear in ODE RHS and initial
         conditions.
         """
         return set(chain.from_iterable(
@@ -1529,7 +1525,6 @@ class ODEModel:
 
         :param name:
             name of the symbolic variable
-
         """
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
@@ -1598,7 +1593,7 @@ class ODEModel:
     def generate_basic_variables(self, *, from_sbml: bool = False) -> None:
         """
         Generates the symbolic identifiers for all variables in
-        ODEModel.variable_prototype
+        ``ODEModel._variable_prototype``
 
         :param from_sbml:
             whether the model is generated from SBML
@@ -1615,12 +1610,12 @@ class ODEModel:
 
     def parse_events(self) -> None:
         """
-        This functions checks the right hand side for roots of Heaviside
+        This function checks the right-hand side for roots of Heaviside
         functions or events, collects the roots, removes redundant roots,
         and replaces the formulae of the found roots by identifiers of AMICI's
-        Heaviside function implementation in the right hand side
+        Heaviside function implementation in the right-hand side
         """
-        # Track all roots functions in the right hand side
+        # Track all roots functions in the right-hand side
         roots = copy.deepcopy(self._events)
         for state in self._states:
             state.set_dt(self._process_heavisides(state.get_dt(), roots))
@@ -1652,7 +1647,6 @@ class ODEModel:
         :return:
             list of counts for the states ordered according to the provided
             indices
-
         """
         free_symbols_dt = list(itertools.chain.from_iterable(
             [
@@ -1685,7 +1679,6 @@ class ODEModel:
 
         :param name:
             name of the symbolic variable
-
         """
         matrix = self.eq(name)
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
@@ -1725,11 +1718,10 @@ class ODEModel:
 
     def _compute_equation(self, name: str) -> None:
         """
-        computes the symbolic formula for a symbolic variable
+        Computes the symbolic formula for a symbolic variable
 
         :param name:
             name of the symbolic variable
-
         """
         # replacement ensures that we don't have to adapt name in abstract
         # model and keep backwards compatibility with matlab
@@ -1837,7 +1829,7 @@ class ODEModel:
             self._eqs[name] = smart_jacobian(self.eq('root'), time_symbol)
 
         elif name == 'drootdt_total':
-            # backsubstitution of optimized right hand side terms into RHS
+            # backsubstitution of optimized right-hand side terms into RHS
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
             w_sorted = \
@@ -1948,10 +1940,8 @@ class ODEModel:
         """
         Returns a list of names of generated symbolic variables
 
-
         :return:
             list of names
-
         """
         return list(self._syms.keys())
 
@@ -1967,7 +1957,7 @@ class ODEModel:
             with respect to which the derivatives are to be computed
 
         :param name:
-            name of resulting symbolic variable, default is d{eq}d{var}
+            name of resulting symbolic variable, default is ``d{eq}d{var}``
         """
         if not name:
             name = f'd{eq}d{var}'
@@ -2065,18 +2055,17 @@ class ODEModel:
 
         :param var:
             name of the symbolic variable that defines the identifiers
-            whith respect to which the derivatives are to be computed
+            with respect to which the derivatives are to be computed
 
         :param dydx_name:
             defines the name of the symbolic variable that
-            defines the derivative of the `eq` with respect to `chainvar`,
-            default is d{eq}d{chainvar}
+            defines the derivative of the ``eq`` with respect to ``chainvar``,
+            default is ``d{eq}d{chainvar}``
 
         :param dxdz_name:
             defines the name of the symbolic variable that
-            defines the derivative of the `chainvar` with respect to `var`,
+            defines the derivative of the ``chainvar`` with respect to ``var``,
             default is d{chainvar}d{var}
-
         """
         # compute total derivative according to chainrule
         # Dydz = dydx*dxdz + dydz
@@ -2096,7 +2085,7 @@ class ODEModel:
 
             dydx = self.sym_or_eq(name, dydx_name)
             dxdz = self.sym_or_eq(name, dxdz_name)
-            # Save time for for large models if one multiplicand is zero,
+            # Save time for large models if one multiplicand is zero,
             # which is not checked for by sympy
             if not smart_is_zero_matrix(dydx) and not \
                     smart_is_zero_matrix(dxdz):
@@ -2122,7 +2111,6 @@ class ODEModel:
         :return:
             the variable symbols if the variable is part of the signature and
             the variable equations otherwise.
-
         """
         # dwdx and dwdp will be dynamically computed and their ordering
         # within a column may differ from the initialization of symbols here,
@@ -2141,7 +2129,7 @@ class ODEModel:
         Creates a new symbolic variable according to a multiplication
 
         :param name:
-            name of resulting symbolic variable, default is d{eq}d{var}
+            name of resulting symbolic variable, default is ``d{eq}d{var}``
 
         :param x:
             name of the symbolic variable that defines the first factor
@@ -2155,8 +2143,6 @@ class ODEModel:
 
         :param sign:
             defines the sign of the product, should be +1 or -1
-
-
         """
         if sign not in [-1, 1]:
             raise TypeError(f'sign must be +1 or -1, was {sign}')
@@ -2182,7 +2168,6 @@ class ODEModel:
 
         :param component:
             name of the attribute
-
         """
         self._eqs[name] = sp.Matrix(
             [comp.get_val() for comp in getattr(self, component)]
@@ -2207,7 +2192,6 @@ class ODEModel:
 
         :param name:
             name of resulting symbolic variable
-
         """
         if name in self._value_prototype:
             component = self._value_prototype[name]
@@ -2224,7 +2208,6 @@ class ODEModel:
 
         :param name:
             name of resulting symbolic variable
-
         """
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
@@ -2247,7 +2230,6 @@ class ODEModel:
         :return:
             boolean indicating if any of the initial condition free
             variables is contained in the model constants
-
         """
         ic = self._states[ix].get_val()
         if not isinstance(ic, sp.Basic):
@@ -2267,7 +2249,6 @@ class ODEModel:
 
         :return:
             boolean indicating if conservation_law is not None
-
         """
         return self._states[ix]._conservation_law is not None
 
@@ -2280,7 +2261,6 @@ class ODEModel:
 
         :return:
             boolean indicating if constant over time
-
         """
         return self._states[ix].get_dt() == 0.0
 
@@ -2295,7 +2275,6 @@ class ODEModel:
 
         :return:
             boolean indicating if conservation_law is not None
-
         """
         state_set = set(self.sym('x_rdata'))
         n_species = len(state_set.intersection(tcl.get_val().free_symbols))
@@ -2341,7 +2320,7 @@ class ODEModel:
             list of already known root functions with identifier
 
         :returns:
-            unique identifier for root, or `None` if the root is not
+            unique identifier for root, or ``None`` if the root is not
             time-dependent
         """
         # substitute 'w' expressions into root expressions now, to avoid
@@ -2407,7 +2386,7 @@ class ODEModel:
         updated based on SUNDIALS root tracking.
 
         :param dxdt:
-            right hand side of state variable
+            right-hand side of state variable
         :param roots:
             list of known root functions with identifier
 
@@ -2457,8 +2436,8 @@ class ODEExporter:
         used to avoid problems with state variables that may become negative
         due to numerical errors
 
-        compiler: distutils/setuptools compiler selection to build the
-        python extension
+    :ivar compiler:
+        distutils/setuptools compiler selection to build the Python extension
 
     :ivar functions:
         carries C++ function signatures and other specifications
@@ -2505,8 +2484,8 @@ class ODEExporter:
             see :meth:`amici.ode_export.ODEExporter.set_paths`
 
         :param verbose:
-            verbosity level for logging, True/False default to
-            logging.Error/logging.DEBUG
+            verbosity level for logging, ``True``/``False`` default to
+            :data:`logging.Error`/:data:`logging.DEBUG`
 
         :param assume_pow_positivity:
             if set to true, a special pow function is
@@ -2519,8 +2498,9 @@ class ODEExporter:
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.ode_export.ODEExporter`
 
-        :param generate_sensitivity_code specifies whether code required for
-            sensitivity computation will be generated
+        :param generate_sensitivity_code:
+            specifies whether code required for sensitivity computation will be
+            generated
 
         :param model_name:
             name of the model to be used during code generation
@@ -2553,8 +2533,6 @@ class ODEExporter:
         """
         Generates the native C++ code for the loaded model and a Matlab
         script that can be run to compile a mex file from the C++ code
-
-
         """
         with _monkeypatched(sp.Pow, '_eval_derivative',
                             _custom_pow_eval_derivative):
@@ -2567,8 +2545,6 @@ class ODEExporter:
     def compile_model(self) -> None:
         """
         Compiles the generated code it into a simulatable module
-
-
         """
         self._compile_c_code(compiler=self.compiler,
                              verbose=self.verbose)
@@ -2587,7 +2563,8 @@ class ODEExporter:
 
     def _generate_c_code(self) -> None:
         """
-        Create C++ code files for the model based on ODEExporter.model
+        Create C++ code files for the model based on
+        :attribute:`ODEExporter.model`.
         """
         for func_name, func_info in self.functions.items():
             if func_name in sensi_functions + sparse_sensi_functions and \
@@ -2635,9 +2612,7 @@ class ODEExporter:
         :param compiler:
             distutils/setuptools compiler selection to build the python
             extension
-
         """
-
         # setup.py assumes it is run from within the model directory
         module_dir = self.model_path
         script_args = [sys.executable, os.path.join(module_dir, 'setup.py')]
@@ -2714,9 +2689,8 @@ class ODEExporter:
         Write index file for a symbolic array.
 
         :param name:
-            key in self.model._syms for which the respective file should
+            key in ``self.model._syms`` for which the respective file should
             be written
-
         """
         if name not in self.model.sym_names():
             raise ValueError(f'Unknown symbolic array: {name}')
@@ -2744,10 +2718,10 @@ class ODEExporter:
     def _write_function_file(self, function: str) -> None:
         """
         Generate equations and write the C++ code for the function
-        `function`.
+        ``function``.
 
         :param function:
-            name of the function to be written (see self.functions)
+            name of the function to be written (see ``self.functions``)
         """
 
         # first generate the equations to make sure we have everything we
@@ -2851,10 +2825,10 @@ class ODEExporter:
     def _write_function_index(self, function: str, indextype: str) -> None:
         """
         Generate equations and write the C++ code for the function
-        `function`.
+        ``function``.
 
         :param function:
-            name of the function to be written (see self.functions)
+            name of the function to be written (see ``self.functions``)
 
         :param indextype:
             type of index {'colptrs', 'rowvals'}
@@ -2947,10 +2921,10 @@ class ODEExporter:
             equations: sp.Matrix
     ) -> List[str]:
         """
-        Generate C++ code for body of function `function`.
+        Generate C++ code for body of function ``function``.
 
         :param function:
-            name of the function to be written (see self.functions)
+            name of the function to be written (see ``self.functions``)
 
         :param equations:
             symbolic definition of the function body
@@ -3101,7 +3075,7 @@ class ODEExporter:
 
     def _write_wrapfunctions_cpp(self) -> None:
         """
-        Write model-specific 'wrapper' file (wrapfunctions.cpp).
+        Write model-specific 'wrapper' file (``wrapfunctions.cpp``).
         """
         template_data = {'MODELNAME': self.model_name}
         apply_template(
@@ -3112,7 +3086,7 @@ class ODEExporter:
 
     def _write_wrapfunctions_header(self) -> None:
         """
-        Write model-specific header file (wrapfunctions.h).
+        Write model-specific header file (``wrapfunctions.h``).
         """
         template_data = {'MODELNAME': str(self.model_name)}
         apply_template(
@@ -3283,7 +3257,7 @@ class ODEExporter:
         model entity
 
         :param name:
-            any key present in self.model._syms
+            any key present in ``self.model._syms``
 
         :return:
             Template initializer list of names
@@ -3301,7 +3275,7 @@ class ODEExporter:
         entity
 
         :param name:
-            any key present in self.model._syms
+            any key present in ``self.model._syms``
 
         :return:
             Template initializer list of ids
@@ -3314,10 +3288,7 @@ class ODEExporter:
         )
 
     def _write_c_make_file(self):
-        """
-        Write CMake CMakeLists.txt file for this model.
-        """
-
+        """Write CMake ``CMakeLists.txt`` file for this model."""
         sources = [
             f + ' ' for f in os.listdir(self.model_path)
             if f.endswith('.cpp') and f != 'main.cpp'
@@ -3333,9 +3304,7 @@ class ODEExporter:
         )
 
     def _write_swig_files(self) -> None:
-        """
-        Write SWIG interface files for this model.
-        """
+        """Write SWIG interface files for this model."""
         if not os.path.exists(self.model_swig_path):
             os.makedirs(self.model_swig_path)
         template_data = {'MODELNAME': self.model_name}
@@ -3349,7 +3318,7 @@ class ODEExporter:
 
     def _write_module_setup(self) -> None:
         """
-        Create a distutils setup.py file for compile the model module.
+        Create a setuptools ``setup.py`` file for compile the model module.
         """
 
         template_data = {'MODELNAME': self.model_name,
@@ -3377,7 +3346,7 @@ class ODEExporter:
         :param output_dir:
             relative or absolute path where the generated model
             code is to be placed. If ``None``, this will default to
-            `amici-{self.model_name}` in the current working directory.
+            ``amici-{self.model_name}`` in the current working directory.
             will be created if it does not exist.
 
         """
@@ -3395,7 +3364,6 @@ class ODEExporter:
         :param model_name:
             name of the model (may only contain upper and lower case letters,
             digits and underscores, and must not start with a digit)
-
         """
         if not is_valid_identifier(model_name):
             raise ValueError(
@@ -3408,11 +3376,11 @@ class ODEExporter:
 
 class TemplateAmici(Template):
     """
-    Template format used in AMICI (see string.template for more details).
+    Template format used in AMICI (see :class:`string.Template` for more
+    details).
 
     :cvar delimiter:
         delimiter that identifies template variables
-
     """
     delimiter = 'TPL_'
 
@@ -3471,7 +3439,7 @@ def get_function_extern_declaration(fun: str, name: str) -> str:
         model name
 
     :return:
-        c++ function definition string
+        C++ function definition string
     """
     f = functions[fun]
     return f'extern {f.return_type} {fun}_{name}({f.arguments});'
@@ -3493,7 +3461,7 @@ def get_sunindex_extern_declaration(fun: str, name: str,
         index function {'colptrs', 'rowvals'}
 
     :return:
-        c++ function declaration string
+        C++ function declaration string
     """
     index_arg = ', int index' if fun in multiobs_functions else ''
     return \
@@ -3504,7 +3472,7 @@ def get_sunindex_extern_declaration(fun: str, name: str,
 def get_model_override_implementation(fun: str, name: str,
                                       nobody: bool = False) -> str:
     """
-    Constructs amici::Model::* override implementation for a given function
+    Constructs ``amici::Model::*`` override implementation for a given function
 
     :param fun:
         function name
@@ -3516,7 +3484,7 @@ def get_model_override_implementation(fun: str, name: str,
         whether the function has a nontrivial implementation
 
     :return:
-        c++ function implementation string
+        C++ function implementation string
     """
     impl = '{return_type} f{fun}({signature}) override {{'
 
@@ -3542,7 +3510,7 @@ def get_sunindex_override_implementation(fun: str, name: str,
                                          indextype: str,
                                          nobody: bool = False) -> str:
     """
-    Constructs the amici::Model:: function implementation for an index
+    Constructs the ``amici::Model`` function implementation for an index
     function of a given function
 
     :param fun:
@@ -3558,7 +3526,7 @@ def get_sunindex_override_implementation(fun: str, name: str,
         whether the corresponding function has a nontrivial implementation
 
     :return:
-        c++ function implementation string
+        C++ function implementation string
     """
     index_arg = ', int index' if fun in multiobs_functions else ''
     index_arg_eval = ', index' if fun in multiobs_functions else ''
@@ -3684,7 +3652,7 @@ def symbol_with_assumptions(name: str):
 def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                 input_name: str) -> sp.Expr:
     """
-    Typecasts the value to sympy.Float if possible, and ensures the
+    Typecasts the value to :py:class:`sympy.Float` if possible, and ensures the
     value is a symbolic expression.
 
     :param value:
@@ -3733,8 +3701,8 @@ def _monkeypatched(obj: object, name: str, patch: Any):
 def _custom_pow_eval_derivative(self, s):
     """
     Custom Pow derivative that removes a removable singularity for
-    self.base == 0 and self.base.diff(s) == 0. This function is intended to
-    be monkeypatched into sp.Pow._eval_derivative.
+    ``self.base == 0`` and ``self.base.diff(s) == 0``. This function is
+    intended to be monkeypatched into :py:method:`sympy.Pow._eval_derivative`.
 
     :param self:
         sp.Pow class

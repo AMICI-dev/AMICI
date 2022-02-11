@@ -353,10 +353,6 @@ class SteadystateProblem {
     AmiVector ewt_;
     /** error weights for backward quadratures, dimension nplist() */
     AmiVector ewtQB_;
-    /** container for relative error calculation? */
-    AmiVector rel_x_newton_;
-    /** container for absolute error calculation? */
-    AmiVector x_newton_;
     /** state vector */
     AmiVector x_;
     /** old state vector */
