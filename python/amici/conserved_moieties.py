@@ -3,7 +3,7 @@ import math
 import random
 import sys
 from numbers import Number
-from typing import List, Tuple, Sequence
+from typing import List, Tuple, Sequence, Any
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
@@ -228,30 +228,39 @@ def kernel(
             NSolutions2)
 
 
-def fill(stoichiometricMatrixAsList, matched_size, matched, N):
+def fill(
+        stoichiometric_list: Sequence[Number],
+        matched_size: int,
+        matched: Sequence[int],
+        num_rows: int
+        # TODO:
+) -> Tuple[Any, Any, Any]:
     """Construct interaction matrix
 
-    Construct the interaction matrix out of the given stoichiometrix matrix S
+    Construct the interaction matrix out of the given stoichiometric matrix
+    :math:`S`.
 
-    :param stoichiometricMatrixAsList:
+    :param stoichiometric_list:
         the stoichiometric matrix given as a flat list
     :param matched_size:
-        number of found and independent moeity conservation laws (MCL)
-    :param matched
+        number of found and independent moiety conservation laws (MCL)
+    :param matched:
         actual found MCLs
+    :param num_rows:
+        number of rows in :math:`S`
     """
     dim = matched_size
     MIN = 1e-9
     matrix = [[] for _ in range(dim)]
     matrix2 = [[] for _ in range(dim)]
 
-    J = [[] for _ in range(N)]
-    J2 = [[] for _ in range(N)]
+    J = [[] for _ in range(num_rows)]
+    J2 = [[] for _ in range(num_rows)]
 
-    fields = [0] * N
+    fields = [0] * num_rows
     i1 = 0
     j1 = 0
-    for val in stoichiometricMatrixAsList:
+    for val in stoichiometric_list:
         if val != 0:
             prendo = dim
             if dim > 0:
@@ -262,7 +271,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
                 matrix[prendo].append(i1)
                 matrix2[prendo].append(val)
         j1 += 1
-        if j1 == N:
+        if j1 == num_rows:
             j1 = 0
             i1 += 1
 
