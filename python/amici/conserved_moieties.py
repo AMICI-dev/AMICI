@@ -365,8 +365,8 @@ def LinearDependence(
                         matrix2[k1].append(colonna[i])
                 ok = 0
                 pivots[k1] = matrix[k1][0] if len(matrix[k1]) > 0 else MAX
-        K1 = sum(len(matrix[i]) > 0 for i in range(K))
-        return int(K == K1)
+    K1 = sum(len(matrix[i]) > 0 for i in range(K))
+    return int(K == K1)
 
 
 def MonteCarlo(
