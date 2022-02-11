@@ -230,7 +230,6 @@ def kernel(
 
 def fill(
         stoichiometric_list: Sequence[Number],
-        matched_size: int,
         matched: Sequence[int],
         num_rows: int
         # TODO:
@@ -242,14 +241,12 @@ def fill(
 
     :param stoichiometric_list:
         the stoichiometric matrix given as a flat list
-    :param matched_size:
-        number of found and independent moiety conservation laws (MCL)
     :param matched:
-        actual found MCLs
+        found and independent moiety conservation laws (MCL)
     :param num_rows:
         number of rows in :math:`S`
     """
-    dim = matched_size
+    dim = len(matched)
     MIN = 1e-9
     matrix = [[] for _ in range(dim)]
     matrix2 = [[] for _ in range(dim)]

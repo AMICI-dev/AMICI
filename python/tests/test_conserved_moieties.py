@@ -100,7 +100,7 @@ def test_detect_cl(data_demartino2014, quiet=False):
     assert len(conservedMoieties) == 128, \
         "Wrong number of conserved moieties reported"
 
-    J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
+    J, J2, fields = fill(S, engagedMetabolites, N)
 
     if intKernelDim != kernelDim:
         timer = 0
