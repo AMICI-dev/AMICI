@@ -3,9 +3,8 @@ import math
 import random
 import sys
 from numbers import Number
-from typing import List, Tuple
+from typing import List, Tuple, Sequence
 from .logging import get_logger
-from collections.abc import Sequence
 
 sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
@@ -57,15 +56,15 @@ def qsort(
 
 
 def kernel(
-    stoichiometricMatrixAsList: List[Number],
-    numberOfMetabolites: int,
-    numberOfReactions: int
+    stoichiometric_list: Sequence[Number],
+    num_species: int,
+    num_reactions: int
 ) -> Tuple[Number, List[int], int, List[int],
            List[List[int]], List[List[Number]]]:
     """
     Kernel (left nullspace of S) calculation by Gaussian elimination
 
-    To compute the left nullspace of the stoichiometrix matrix S, a Gaussian
+    To compute the left nullspace of the stoichiometric matrix S, a Gaussian
     elimination method with partial scaled pivoting is used to deal
     effectively with a possibly ill-conditioned stoichiometric matrix S.
 
@@ -73,17 +72,18 @@ def kernel(
     by De Martino et al. (2014) https://doi.org/10.1371/journal.pone.0100750
     and thus a direct adaption of the original implementation in C/C++.
 
-    :param stoichiometricMatrixAsList:
-        the stoichiometric matrix as a list (reactions x metabolites)
-    :param numberOfMetabolites
-        total number of metabolites in the reaction network
-    :param numberOfReactions
+    :param stoichiometric_list:
+        the stoichiometric matrix as a list (species x reactions,
+        row-major ordering)
+    :param num_species
+        total number of species in the reaction network
+    :param num_reactions
         total number of reactions in the reaction network
     """
     il = 0
     jl = 0
-    N = numberOfMetabolites
-    M = numberOfReactions
+    N = num_species
+    M = num_reactions
     MAX = 1e9
     MIN = 1e-9
 
@@ -94,7 +94,7 @@ def kernel(
     NSolutions = [[] for _ in range(N)]
     NSolutions2 = [[] for _ in range(N)]
 
-    for _, val in enumerate(stoichiometricMatrixAsList):
+    for _, val in enumerate(stoichiometric_list):
         if val != 0:
             matrix[jl].append(il)
             matrix2[jl].append(val)
