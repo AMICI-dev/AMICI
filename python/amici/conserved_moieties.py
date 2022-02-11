@@ -62,11 +62,11 @@ def kernel(
 ) -> Tuple[Number, List[int], int, List[int],
            List[List[int]], List[List[Number]]]:
     """
-    Kernel (left nullspace of S) calculation by Gaussian elimination
+    Kernel (left nullspace of :math:`S`) calculation by Gaussian elimination
 
-    To compute the left nullspace of the stoichiometric matrix S, a Gaussian
-    elimination method with partial scaled pivoting is used to deal
-    effectively with a possibly ill-conditioned stoichiometric matrix S.
+    To compute the left nullspace of the stoichiometric matrix :math:`S`, 
+    a Gaussian elimination method with partial scaled pivoting is used to deal
+    effectively with a possibly ill-conditioned stoichiometric matrix :math:`S`.
 
     Note that this is the Python reimplementation of the algorithm proposed
     by De Martino et al. (2014) https://doi.org/10.1371/journal.pone.0100750
@@ -428,7 +428,7 @@ def MonteCarlo(
     :param intmatched:
         actual matched MCLs
     :param intkerneldim:
-        number of MCLs found in S
+        number of MCLs found in :math:`S`
     :param NSolutions:
         NSolutions
     :param NSolutions2:
@@ -575,7 +575,7 @@ def Relaxation(
     De Martino (2014) and the Eqs. 14-16 in the corresponding publication
 
     :param stoichiometric_list:
-        stoichiometric matrix as a flat list
+        stoichiometric matrix :math:`S` as a flat list
     :param intmatched:
         intmatched
     :param M:
