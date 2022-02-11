@@ -1463,7 +1463,7 @@ class SbmlImporter:
                 # \sum coeff * state
                 linear_sum = sp.Sum(*[
                     ode_model._states[i_state].get_id() * coeff
-                    for i_state, coeff in zip(state_idx, coefficients)
+                    for i_state, coeff in zip(state_idxs, coefficients)
                 ])
 
                 conservation_laws.append({
