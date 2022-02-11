@@ -74,10 +74,13 @@ def kernel(
     :param stoichiometric_list:
         the stoichiometric matrix as a list (species x reactions,
         row-major ordering)
-    :param num_species
+    :param num_species:
         total number of species in the reaction network
-    :param num_reactions
+    :param num_reactions:
         total number of reactions in the reaction network
+    :returns:
+        kernel dimension, MCLs, integer kernel dimension, interger MCLs and
+        indices to metabolites and reactions in the preceeding order as a tuple
     """
     il = 0
     jl = 0
@@ -245,6 +248,8 @@ def fill(
         found and independent moiety conservation laws (MCL)
     :param num_rows:
         number of rows in :math:`S`
+    :returns:
+        interactions of metabolites and reactions, and matrix of interaction
     """
     dim = len(matched)
     MIN = 1e-9
@@ -310,6 +315,8 @@ def LinearDependence(
         NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
         actual found MCLs
+    :returns:
+        boolean indicating linear dependence (true) or not (false)
     """
     K = intkerneldim + 1
     MIN = 1e-9
@@ -416,6 +423,9 @@ def MonteCarlo(
         cooling rate of simulated annealing
     :param maxIter:
         maximum number of MonteCarlo steps before changing to relaxation
+    :returns:
+        status of MC iteration, number of integer MCLs, number of MCLs,
+        metabolites and reaction indices, MCLs and integer MCLs as a tuple
     """
     MIN = 1e-9
     dim = len(matched)
@@ -438,7 +448,7 @@ def MonteCarlo(
     while True:
         en = int(random.uniform(0, 1) * dim)
         # Note: Bug in original c++ code (while loop without any side effect
-        # changed to if statement to prevent infinite loop)
+        # changed to if statement to prevent a possibly infinite loop)
         if len(J[en]) == 0:
             en = int(random.uniform(0, 1) * dim)
         p = 1
@@ -469,8 +479,8 @@ def MonteCarlo(
             for i in range(dim):
                 num[i] = 0
             en = int(random.uniform(0, 1) * dim)
-            # Note: bug in original c++ code (while loop without any side
-            #  effect changed to if statement to prevent infinite loop)
+            # Note: Bug in original c++ code (while loop without any side effect
+            # changed to if statement to prevent a possibly infinite loop)
             if len(J[en]):
                 en = int(random.uniform(0, 1) * dim)
             num[en] = 1
@@ -554,6 +564,8 @@ def Relaxation(
         maximum relaxation step
     :param relaxation_step:
         relaxation step width
+    :returns:
+        boolean indicating if relaxation has succeded (true) or not (false)
     """
     MIN = 1e-9
     MAX = 1e9
