@@ -80,6 +80,8 @@ def Output(
 
 @log_execution_time("Detecting conservation laws", logger)
 def test_detect_cl():
+    """Invoke test case and benchmarking for De Martino's published results
+    for E. coli network"""
     S = GetRemoteInput()
     N = 1668
     M = 2381
@@ -190,117 +192,3 @@ def test_cl_detect_execution_time():
             break
     assert runtime < max_time_seconds, "Took too long"
 
-
-def test_some_other_test():
-    """Invoke test case and benchmarking for De Martino's published results
-    for E. coli network"""
-    start = time.time()
-    print("*" * 80)
-    print("Conserved moieties test cases")
-    print("*" * 80)
-
-    # Hard-coded stoichiometric matrix as test case containing _ONE_
-    # conservative law (i.e. one conserved moiety)
-    S = [-1, 0, 0, 0, 0, 0,
-         1, -1, 1, 0, 0, 0,
-         0, 1, -1, -1, -1, -1,
-         0, 0, 0, 1, -1, 0,
-         0, 0, 0, 0, 0, 1]
-    N = 6  # number of metabolites (columns)
-    M = 5  # number of reactions (rows)
-
-    S = Input()
-    N = 1668
-    M = 2381
-    knownValuesFromDeMartino = [53] + [2] * 11 + [6] + [3] * 2 + [2] * 15 + [
-        3] + [2] * 5
-
-    if len(S) != N * M:
-        print("Stoichiometric matrix inconsistent")
-
-    print(f"Kernel calculation of S ({N} x {M})...\n")
-    kernelDim, engagedMetabolites, intKernelDim, conservedMoieties, \
-    NSolutions, NSolutions2 = kernel(S, N, M)
-    print(f"""There are {kernelDim} conservation laws, engaging, 
-    	{len(engagedMetabolites)} metabolites, {intKernelDim} are integers (conserved 
-    	moeities), engaging {len(conservedMoieties)} metabolites...""")
-    print("Kernel calc")
-    Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions,
-           NSolutions2)
-    print("Kernel calc")
-
-    # There are 38 conservation laws, engaging 131 metabolites
-    # 36 are integers (conserved moieties), engaging 128 metabolites (from C++)
-    assert (kernelDim == 38), "Not all conservation laws found"
-    assert (intKernelDim == 36), "Not all conserved moiety laws found"
-    assert (
-            len(engagedMetabolites) == 131), "Wrong number of engaged metabolites reported"
-    assert (
-            len(conservedMoieties) == 128), "Wrong number of conserved moieties reported"
-
-    print("-" * 80)
-    print("-" * 80)
-    print("-" * 80)
-
-    print("Filling interaction matrix...\n")
-    J, J2, fields = fill(S, len(engagedMetabolites), engagedMetabolites, N)
-
-    print("after fill")
-
-    finish = 0
-    if intKernelDim == kernelDim:
-        finish = 1
-    else:
-        timer = 0
-        counter = 1
-        maxIter = 10
-        while finish == 0:
-            # TODO: Sometimes MC runs into the wrong solution: Why?
-            print(f"MonteCarlo call #{counter} (maxIter: {maxIter})")
-            yes, intKernelDim, kernelDim, NSolutions, NSolutions2, \
-            engagedMetabolites, conservedMoieties = MonteCarlo(
-                engagedMetabolites, J, J2, fields, conservedMoieties,
-                intKernelDim, NSolutions, NSolutions2, kernelDim, N)
-            Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions,
-                   NSolutions2)
-
-            counter += 1
-            if intKernelDim == kernelDim:
-                finish = 1
-            if yes == 0:
-                timer += 1
-            if timer == max:
-                print("Relaxation...")
-                finish = Relaxation(S, conservedMoieties, M, N)
-                if finish == 1:
-                    timer = 0
-        old = NSolutions
-        old2 = NSolutions2
-        intKernelDim, kernelDim, NSolutions, NSolutions2 = Reduce(intKernelDim,
-                                                                  kernelDim,
-                                                                  NSolutions,
-                                                                  NSolutions2,
-                                                                  N)
-        for i in range(len(old)):
-            assert (set(old[i]) == set(NSolutions[i]))
-            assert (set(old2[i]) == set(NSolutions2[i]))
-
-    # Assert that each conserved moiety has the correct number of metabolites
-    # (TODO: last two moeities fluctuate in DeMartino C++ implementation,
-    #  likewise our implementation fluctuates, thus excluding
-    #  -> Figure out how to avoid this...)
-    for i in range(intKernelDim - 2):
-        assert (len(NSolutions[i]) == knownValuesFromDeMartino[
-            i]), f"Moiety #{i + 1} failed for test case (De Martino et al.)"
-
-    print("*" * 80)
-    print("Details about conserved moieties:")
-    print("*" * 80)
-    Output(intKernelDim, kernelDim, engagedMetabolites, NSolutions,
-           NSolutions2)
-    print("-" * 80)
-    print("-" * 80)
-    print("-" * 80)
-
-    end = time.time()
-    print(f"Execution time: {end - start} [s]")
