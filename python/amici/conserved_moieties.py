@@ -1,12 +1,15 @@
+import logging
 import math
 import random
 import sys
 from numbers import Number
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
+
+logger = get_logger(__name__, logging.ERROR)
 
 
 # TODO: Rewrite quicksort algorithm (recursive -> iterative) for efficiency
@@ -233,7 +236,7 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
     fields = [0] * N
     i1 = 0
     j1 = 0
-    for _, val in enumerate(stoichiometricMatrixAsList):
+    for val in stoichiometricMatrixAsList:
         if val != 0:
             prendo = dim
             if dim > 0:
@@ -250,9 +253,9 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
 
     for i in range(dim):
         for j in range(i, dim):
-            interactions = 0
             if len(matrix[i]) > 0:
                 for po in range(len(matrix[i])):
+                    interactions = 0
                     if len(matrix[j]) > 0:
                         for pu in range(len(matrix[j])):
                             if matrix[i][po] == matrix[j][pu]:
@@ -260,12 +263,11 @@ def fill(stoichiometricMatrixAsList, matched_size, matched, N):
                                             matrix2[i][po] * matrix2[j][pu])
                     if j == i:
                         fields[i] = interactions
-                    else:
-                        if abs(interactions) > MIN:
-                            J[i].append(j)
-                            J2[i].append(interactions)
-                            J[j].append(i)
-                            J2[j].append(interactions)
+                    elif abs(interactions) > MIN:
+                        J[i].append(j)
+                        J2[i].append(interactions)
+                        J[j].append(i)
+                        J2[j].append(interactions)
     return J, J2, fields
 
 
@@ -314,8 +316,7 @@ def LinearDependence(
     while ok == 0:
         qsort(K, 0, orders, pivots)
         for j in range(K - 1):
-            if (pivots[orders[j + 1]] == pivots[orders[j]]) and (
-                    pivots[orders[j]] != MAX):
+            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 min1 = MAX
                 if len(matrix[orders[j]]) > 1:
                     for i in range(len(matrix[orders[j]])):
@@ -336,8 +337,7 @@ def LinearDependence(
                     orders[j] = k2
         ok = 1
         for j in range(K - 2):
-            if (pivots[orders[j + 1]] == pivots[orders[j]]) and (
-                    pivots[orders[j]] != MAX):
+            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
                 colonna = [None] * N
@@ -356,14 +356,9 @@ def LinearDependence(
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
                 ok = 0
-                if len(matrix[k1]) > 0:
-                    pivots[k1] = matrix[k1][0]
-                else:
-                    pivots[k1] = MAX
-
+                pivots[k1] = matrix[k1][0] if len(matrix[k1]) > 0 else MAX
         K1 = sum(len(matrix[i]) > 0 for i in range(K))
-        yes = int(K == K1)
-        return yes
+        return int(K == K1)
 
 
 def MonteCarlo(
@@ -400,23 +395,17 @@ def MonteCarlo(
     """
     MIN = 1e-9
     dim = len(matched)
-    num = [0] * dim
-    numtot = 0
-    for i in range(dim):
-        if (len(J[i])) > 0:
-            num[i] = int(2 * random.uniform(0, 1))
-        else:
-            num[i] = 0
-        numtot += num[i]
+    num = [int(2 * random.uniform(0, 1)) if len(J[i]) > 0 else 0
+           for i in range(dim)]
+    numtot = sum(num)
 
     H = 0
     for i in range(dim):
         H += fields[i] * num[i] * num[i]
-        if len(J[i]) > 0:
+        if len(J[i]):
             for j in range(len([J[i]])):
                 H += J2[i][j] * num[i] * num[J[i][j]]
 
-    stop = 0
     count = 0
     T1 = initT
     howmany = 0
@@ -445,7 +434,7 @@ def MonteCarlo(
 
         if count % int(dim) == 0:
             T1 -= coolrate
-            if (T1 <= 0):
+            if T1 <= 0:
                 T1 = coolrate
                 e = math.exp(-1 / T1)
 
@@ -458,7 +447,7 @@ def MonteCarlo(
             en = int(random.uniform(0, 1) * dim)
             # Note: bug in original c++ code (while loop without any side
             #  effect changed to if statement to prevent infinite loop)
-            if len(J[en]) > 0:
+            if len(J[en]):
                 en = int(random.uniform(0, 1) * dim)
             num[en] = 1
             numtot = 1
@@ -471,9 +460,6 @@ def MonteCarlo(
             howmany += 1
 
         if (H < MIN and numtot > 0) or (howmany == (10 * maxIter)):
-            stop = 1
-
-        if stop != 0:
             break
 
     if howmany < 10 * maxIter:
@@ -484,11 +470,8 @@ def MonteCarlo(
         else:
             yes = 1
         if yes == 1:
-            orders2 = [None] * len(matched)
-            pivots2 = [None] * len(matched)
-            for i in range(len(matched)):
-                orders2[i] = i
-                pivots2[i] = matched[i]
+            orders2 = list(range(len(matched)))
+            pivots2 = matched[:]
             qsort(len(matched), 0, orders2, pivots2)
             for i in range(len(matched)):
                 if num[orders2[i]] > 0:
@@ -515,11 +498,11 @@ def MonteCarlo(
                     min = NSolutions2[intkerneldim - 1][i]
             for i in range(len(NSolutions[intkerneldim - 1])):
                 NSolutions2[intkerneldim - 1][i] /= min
-            get_logger().info(
+            logger.debug(
                 f"Found linearly independent moiety, now there are "
-                f"{intkerneldim} engaging {len(intmatched)} metabolites")
+                f"{intkerneldim} engaging {len(intmatched)} species")
         else:
-            get_logger().info(
+            logger.debug(
                 "Found a moiety but it is linearly dependent... next.")
     else:
         yes = 0
@@ -570,12 +553,11 @@ def Relaxation(
             j1 = 0
             i1 += 1
 
-    ok = 0
-
     orders = [i for i in range(N)]
     pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
 
-    while ok == 0:
+    done = False
+    while not done:
         qsort(K, 0, orders, pivots)
         for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
@@ -598,8 +580,7 @@ def Relaxation(
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
-        ok = 1
-        j = 0
+        done = True
         for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] and pivots[
                 orders[j]] != MAX:
@@ -620,7 +601,7 @@ def Relaxation(
                     if abs(colonna[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
-                ok = 0
+                done = False
                 if len(matrix[orders[j + 1]]) > 0:
                     pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
                 else:
@@ -737,7 +718,7 @@ def Relaxation(
         var = [None] * M1
         for i in range(M1):
             var[i] = MIN
-        ok = 0
+        done = False
         time = 0
         while True:
             cmin = 1000
@@ -751,7 +732,7 @@ def Relaxation(
                         cmin = constr
             time += 1
             if cmin >= 0:
-                ok = 1
+                done = True
             else:
                 alpha = -relaxation_step * cmin  # Motzkin relaxation
                 fact = 0
@@ -763,13 +744,12 @@ def Relaxation(
                 for j in range(len(matrixb[min])):
                     var[matrixb[min][j]] += alpha * matrixb2[min][j]
 
-            if not (ok == 0 and time < relaxationmax):
+            if done or time >= relaxationmax:
                 break
 
-        yes = 0
-        if ok == 1:
-            yes = 1
-        return yes
+        if done:
+            return True
+    return False
 
 
 def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
