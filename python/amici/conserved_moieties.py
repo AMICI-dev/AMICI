@@ -5,12 +5,18 @@ import sys
 from numbers import Number
 from typing import List, Tuple
 from .logging import get_logger
+from collections.abc import Sequence
 
 sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
 
-def qsort(k, km, orders, pivots):
+def qsort(
+        k: int,
+        km: int,
+        orders: Sequence[int],
+        pivots: Sequence[int]
+) -> None:
     """Quicksort
 
     Recursive implementation of the quicksort algorithm
@@ -25,26 +31,29 @@ def qsort(k, km, orders, pivots):
     :param pivots:
         corresponding pivot elements from scaled partial pivoting strategy
     """
-    if k - km >= 1:
-        pivot = km + int((k - km) / 2)
-        l = 0
-        p = k - km - 1
-        neworders = [None] * (k - km)
-        for i in range(km, k):
-            if i != pivot:
-                if pivots[orders[i]] < pivots[orders[pivot]]:
-                    neworders[l] = orders[i]
-                    l += 1
-                else:
-                    neworders[p] = orders[i]
-                    p -= 1
-        neworders[p] = orders[pivot]
-        for i in range(km, k):
-            orders[i] = neworders[i - km]
+    if k - km < 1:
+        # nothing to do
+        return
 
-        centre = p + km
-        qsort(k, centre + 1, orders, pivots)
-        qsort(centre, km, orders, pivots)
+    pivot = km + int((k - km) / 2)
+    l = 0
+    p = k - km - 1
+    neworders = [None] * (k - km)
+    for i in range(km, k):
+        if i != pivot:
+            if pivots[orders[i]] < pivots[orders[pivot]]:
+                neworders[l] = orders[i]
+                l += 1
+            else:
+                neworders[p] = orders[i]
+                p -= 1
+    neworders[p] = orders[pivot]
+    for i in range(km, k):
+        orders[i] = neworders[i - km]
+
+    centre = p + km
+    qsort(k, centre + 1, orders, pivots)
+    qsort(centre, km, orders, pivots)
 
 
 def kernel(
