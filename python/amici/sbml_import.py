@@ -1432,9 +1432,10 @@ class SbmlImporter:
         species_solver = list(range(ode_model.num_states_rdata()))
 
         N, M = self.stoichiometric_matrix.shape
-        S = np.array(self.stoichiometric_matrix.tolist())
         try:
-            S = [float(entry) for row in S for entry in row]
+            stoichiometric_list = [
+                float(entry) for entry in self.stoichiometric_matrix.flat()
+            ]
         except TypeError:
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
@@ -1443,12 +1444,12 @@ class SbmlImporter:
             return species_solver
 
         kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, \
-        NSolutions, NSolutions2 = kernel(S, N, M)
+        cls_state_idxs, cls_coefficients = kernel(stoichiometric_list, N, M)
 
         # iterate over species in the ODE model, mark conserved species for
         # later removal from stoichiometric matrix
         species_to_be_removed = set()
-        for state_idxs, coefficients in zip(NSolutions, NSolutions2):
+        for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
             if not state_idxs:
                 # why even return those?
                 continue
