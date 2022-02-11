@@ -111,11 +111,11 @@ def kernel(
         matrix[i].append(M + i)
         matrix2[i].append(1)
 
-    ok = 0
     orders = list(range(N))
     pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
 
-    while ok == 0:
+    done = False
+    while not done:
         qsort(N, 0, orders, pivots)
         for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
@@ -140,7 +140,7 @@ def kernel(
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
-        ok = 1
+        done = 1
 
         for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
@@ -162,7 +162,7 @@ def kernel(
                         matrix[k1].append(i)
                         matrix2[k1].append(colonna[i])
 
-                ok = 0
+                done = 0
                 if len(matrix[orders[j + 1]]) > 0:
                     pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
                 else:
@@ -173,20 +173,17 @@ def kernel(
     kernel_dim = 0
 
     for i in range(N):
-        ok = 1
-        if len(matrix[i]) > 0:
+        done = True
+        if len(matrix[i]):
             for j in range(len(matrix[i])):
                 if matrix[i][j] < M:
-                    ok = 0
-        if ok == 1 and len(matrix[i]) > 0:
+                    done = False
+                    break
+        if done and len(matrix[i]):
             for j in range(len(matrix[i])):
                 RSolutions[kernel_dim].append(matrix[i][j] - M)
                 RSolutions2[kernel_dim].append(matrix2[i][j])
             kernel_dim += 1
-
-    for i in range(N):
-        matrix[i] = []
-        matrix2[i] = []
 
     i2 = 0
     for i in range(kernel_dim):
@@ -393,7 +390,7 @@ def is_linearly_dependent(
                 ok = 0
                 pivots[k1] = matrix[k1][0] if len(matrix[k1]) > 0 else MAX
     K1 = sum(len(matrix[i]) > 0 for i in range(K))
-    return int(K == K1)
+    return K == K1
 
 
 def monte_carlo(
@@ -406,10 +403,10 @@ def monte_carlo(
         cls_species_idxs: Sequence[Sequence[int]],
         cls_coefficients: Sequence[Sequence[Number]],
         num_rows: int,
-        initial_temperature: Number = 1,
+        initial_temperature: float = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
-) -> Tuple[int, int, int, Sequence[Sequence[int]],
+) -> Tuple[bool, int, int, Sequence[Sequence[int]],
            Sequence[Sequence[Number]], Sequence[int], Sequence[int]]:
     """MonteCarlo simulated annealing for finding integer MCLs
 
@@ -516,12 +513,12 @@ def monte_carlo(
 
     if howmany < 10 * max_iter:
         if len(int_matched) > 0:
-            yes = is_linearly_dependent(num, int_kernel_dim, cls_species_idxs, cls_coefficients,
-                                        matched, num_rows)
+            yes = is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
+                                        cls_coefficients, matched, num_rows)
             assert yes, "Not true!"
         else:
-            yes = 1
-        if yes == 1:
+            yes = True
+        if yes:
             orders2 = list(range(len(matched)))
             pivots2 = matched[:]
             qsort(len(matched), 0, orders2, pivots2)
@@ -530,8 +527,9 @@ def monte_carlo(
                     cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
                     cls_coefficients[int_kernel_dim].append(num[orders2[i]])
             int_kernel_dim += 1
-            is_linearly_dependent(num, int_kernel_dim, cls_species_idxs, cls_coefficients,
-                                  matched, num_rows)  # side-effects on num vector
+            # side-effects on num vector
+            is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
+                                  cls_coefficients, matched, num_rows)
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
             min = 1000
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
@@ -555,7 +553,7 @@ def monte_carlo(
             logger.debug(
                 "Found a moiety but it is linearly dependent... next.")
     else:
-        yes = 0
+        yes = False
     return yes, int_kernel_dim, cls_species_idxs, cls_coefficients, matched, int_matched
 
 
@@ -564,8 +562,8 @@ def relax(
         int_matched: Sequence[int],
         M: int,
         N: int,
-        relaxation_max: Number = 1e6,
-        relaxation_step: Number = 1.9
+        relaxation_max: float = 1e6,
+        relaxation_step: float = 1.9
 ) -> bool:
     """Relaxation scheme for Monte Carlo final solution
 
