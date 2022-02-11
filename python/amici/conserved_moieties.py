@@ -147,20 +147,20 @@ def kernel(
                     and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                colonna = [0 for _ in range(N + M)]
+                column = [0 for _ in range(N + M)]
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
-                    colonna[matrix[k1][i]] = matrix2[k1][i] * g
+                    column[matrix[k1][i]] = matrix2[k1][i] * g
 
                 for i in range(1, len(matrix[k2])):
-                    colonna[matrix[k2][i]] -= matrix2[k2][i]
+                    column[matrix[k2][i]] -= matrix2[k2][i]
 
                 matrix[k1] = []
                 matrix2[k1] = []
                 for i in range(N + M):
-                    if abs(colonna[i]) > MIN:
+                    if abs(column[i]) > MIN:
                         matrix[k1].append(i)
-                        matrix2[k1].append(colonna[i])
+                        matrix2[k1].append(column[i])
 
                 done = 0
                 if len(matrix[orders[j + 1]]) > 0:
@@ -194,13 +194,9 @@ def kernel(
                     ok2 = 0
                 if len(matched) == 0:
                     matched.append(RSolutions[i][j])
-                else:
-                    ok3 = 1
-                    for k in range(len(matched)):
-                        if matched[k] == RSolutions[i][j]:
-                            ok3 = 0
-                    if ok3 == 1:
-                        matched.append(RSolutions[i][j])
+                elif all(cur_matched != RSolutions[i][j]
+                         for cur_matched in matched):
+                    matched.append(RSolutions[i][j])
         if ok2 == 1 and len(RSolutions[i]) > 0:
             min = MAX
             for j in range(len(RSolutions[i])):
@@ -210,13 +206,9 @@ def kernel(
                     min = abs(RSolutions2[i][j])
                 if len(int_matched) == 0:
                     int_matched.append(cls_species_idxs[i2][j])
-                else:
-                    ok3 = 1
-                    for k in range(len(int_matched)):
-                        if int_matched[k] == cls_species_idxs[i2][j]:
-                            ok3 = 0
-                    if ok3 == 1:
-                        int_matched.append(cls_species_idxs[i2][j])
+                elif all(cur_int_matched != cls_species_idxs[i2][j]
+                         for cur_int_matched in int_matched):
+                    int_matched.append(cls_species_idxs[i2][j])
             for j in range(len(cls_species_idxs[i2])):
                 cls_coefficients[i2][j] /= min
             i2 += 1
@@ -535,13 +527,11 @@ def monte_carlo(
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
                 if len(int_matched) == 0:
                     int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
-                else:
-                    ok3 = 1
-                    for k in range(len(int_matched)):
-                        if int_matched[k] == cls_species_idxs[int_kernel_dim - 1][i]:
-                            ok3 = 0
-                    if ok3 == 1:
-                        int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+                elif all(cur_int_matched
+                         != cls_species_idxs[int_kernel_dim - 1][i]
+                         for cur_int_matched in int_matched):
+                    int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+
                 if cls_coefficients[int_kernel_dim - 1][i] < min:
                     min = cls_coefficients[int_kernel_dim - 1][i]
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
@@ -673,18 +663,18 @@ def relax(
                         j = orders[j1]
                         if len(matrix[j]) > 0:
                             if matrix[j][0] == matrix[k][i]:
-                                rigak = [0] * M
+                                row_k = [0] * M
                                 for a in range(len(matrix[k])):
-                                    rigak[matrix[k]][a] = matrix2[k][a]
+                                    row_k[matrix[k]][a] = matrix2[k][a]
                                 for a in range(len(matrix[j])):
-                                    rigak[matrix[j]][a] -= matrix2[j][a] * \
+                                    row_k[matrix[j]][a] -= matrix2[j][a] * \
                                                            matrix2[k][i]
                                 matrix = []
                                 matrix2 = []
                                 for a in range(M):
-                                    if rigak[a] != 0:
+                                    if row_k[a] != 0:
                                         matrix[k].append(a)
-                                        matrix2[k].append(rigak[a])
+                                        matrix2[k].append(row_k[a])
 
         indip = [K + 1] * M
 
