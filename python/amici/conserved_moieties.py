@@ -3,7 +3,7 @@ import math
 import random
 import sys
 from numbers import Number
-from typing import Any, List, MutableSequence, Sequence, Tuple
+from typing import List, MutableSequence, Sequence, Tuple
 
 from .logging import get_logger
 
@@ -851,24 +851,22 @@ def reduce(
             for j in range(i + 1, K):
                 k1 = orders[i]
                 k2 = orders[j]
-                colonna = [None] * num_rows
-                for l in range(num_rows):
-                    colonna[l] = 0
-                ok1 = 1
-                for l in range(len(NSolutions[k1])):
-                    colonna[NSolutions[k1][l]] = NSolutions2[k1][l]
-                for l in range(len(NSolutions[k2])):
-                    colonna[NSolutions[k2][l]] -= NSolutions2[k2][l]
-                    if colonna[NSolutions[k2][l]] < -MIN:
-                        ok1 = 0
-                if ok1 == 1:
+                column = [0] * num_rows
+                ok1 = True
+                for species_idx, coefficient in zip(NSolutions[k1], NSolutions2[k1]):
+                    column[species_idx] = coefficient
+                for species_idx, coefficient in zip(NSolutions[k2], NSolutions2[k2]):
+                    column[species_idx] -= coefficient
+                    if column[species_idx] < -MIN:
+                        ok1 = False
+                if ok1:
                     ok = False
                     NSolutions[k1] = []
                     NSolutions2[k1] = []
                     for l in range(num_rows):
-                        if abs(colonna[l]) > MIN:
+                        if abs(column[l]) > MIN:
                             NSolutions[k1].append(l)
-                            NSolutions2[k1].append(colonna[l])
+                            NSolutions2[k1].append(column[l])
                     pivots[k1] = -len(NSolutions[k1])
         if ok:
             break
