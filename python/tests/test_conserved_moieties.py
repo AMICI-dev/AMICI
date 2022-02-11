@@ -111,10 +111,10 @@ def test_detect_cl(data_demartino2014, quiet=False):
         while finish == 0:
             if not quiet:
                 print(f"Monte Carlo call #{counter} (maxIter: {maxIter})")
-            yes, int_kernel_dim, kernel_dim, NSolutions, NSolutions2, \
+            yes, int_kernel_dim, NSolutions, NSolutions2, \
             engaged_species, conserved_moieties = monte_carlo(
                 engaged_species, J, J2, fields, conserved_moieties,
-                int_kernel_dim, NSolutions, NSolutions2, kernel_dim, N)
+                int_kernel_dim, NSolutions, NSolutions2, N)
             if not quiet:
                 output(int_kernel_dim, kernel_dim, engaged_species, NSolutions,
                        NSolutions2, row_names)

@@ -94,9 +94,9 @@ def kernel(
     matrix = [[] for _ in range(N)]
     matrix2 = [[] for _ in range(N)]
     matched = []
-    intmatched = []
-    NSolutions = [[] for _ in range(N)]
-    NSolutions2 = [[] for _ in range(N)]
+    int_matched = []
+    cls_species_idxs = [[] for _ in range(N)]
+    cls_coefficients = [[] for _ in range(N)]
 
     for _, val in enumerate(stoichiometric_list):
         if val != 0:
@@ -112,7 +112,7 @@ def kernel(
         matrix2[i].append(1)
 
     ok = 0
-    orders = [i for i in range(N)]
+    orders = list(range(N))
     pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
 
     while ok == 0:
@@ -170,7 +170,7 @@ def kernel(
 
     RSolutions = [[] for _ in range(N)]
     RSolutions2 = [[] for _ in range(N)]
-    kernelDim = 0
+    kernel_dim = 0
 
     for i in range(N):
         ok = 1
@@ -180,16 +180,16 @@ def kernel(
                     ok = 0
         if ok == 1 and len(matrix[i]) > 0:
             for j in range(len(matrix[i])):
-                RSolutions[kernelDim].append(matrix[i][j] - M)
-                RSolutions2[kernelDim].append(matrix2[i][j])
-            kernelDim += 1
+                RSolutions[kernel_dim].append(matrix[i][j] - M)
+                RSolutions2[kernel_dim].append(matrix2[i][j])
+            kernel_dim += 1
 
     for i in range(N):
         matrix[i] = []
         matrix2[i] = []
 
     i2 = 0
-    for i in range(kernelDim):
+    for i in range(kernel_dim):
         ok2 = 1
         if (len(RSolutions[i])) > 0:
             for j in range(len(RSolutions[i])):
@@ -207,30 +207,30 @@ def kernel(
         if ok2 == 1 and len(RSolutions[i]) > 0:
             min = MAX
             for j in range(len(RSolutions[i])):
-                NSolutions[i2].append(RSolutions[i][j])
-                NSolutions2[i2].append(abs(RSolutions2[i][j]))
+                cls_species_idxs[i2].append(RSolutions[i][j])
+                cls_coefficients[i2].append(abs(RSolutions2[i][j]))
                 if min > abs(RSolutions2[i][j]):
                     min = abs(RSolutions2[i][j])
-                if len(intmatched) == 0:
-                    intmatched.append(NSolutions[i2][j])
+                if len(int_matched) == 0:
+                    int_matched.append(cls_species_idxs[i2][j])
                 else:
                     ok3 = 1
-                    for k in range(len(intmatched)):
-                        if intmatched[k] == NSolutions[i2][j]:
+                    for k in range(len(int_matched)):
+                        if int_matched[k] == cls_species_idxs[i2][j]:
                             ok3 = 0
                     if ok3 == 1:
-                        intmatched.append(NSolutions[i2][j])
-            for j in range(len(NSolutions[i2])):
-                NSolutions2[i2][j] /= min
+                        int_matched.append(cls_species_idxs[i2][j])
+            for j in range(len(cls_species_idxs[i2])):
+                cls_coefficients[i2][j] /= min
             i2 += 1
-    intKernelDim = i2
+    int_kernel_dim = i2
 
-    assert intKernelDim <= kernelDim
-    assert len(NSolutions) == len(NSolutions2), \
+    assert int_kernel_dim <= kernel_dim
+    assert len(cls_species_idxs) == len(cls_coefficients), \
         "Inconsistent number of conserved quantities in coefficients and " \
         "species"
-    return (kernelDim, matched, intKernelDim, intmatched, NSolutions,
-            NSolutions2)
+    return (kernel_dim, matched, int_kernel_dim, int_matched, cls_species_idxs,
+            cls_coefficients)
 
 
 def fill(
@@ -301,8 +301,8 @@ def fill(
 def is_linearly_dependent(
         vectors: Sequence[Number],
         int_kernel_dim: int,
-        NSolutions: Sequence[Sequence[int]],
-        NSolutions2: Sequence[Sequence[Number]],
+        cls_species_idxs: Sequence[Sequence[int]],
+        cls_coefficients: Sequence[Sequence[Number]],
         matched: Sequence[int],
         num_rows: int
 ) -> bool:
@@ -315,9 +315,9 @@ def is_linearly_dependent(
         found basis
     :param int_kernel_dim:
         number of integer conservative laws
-    :param NSolutions:
+    :param cls_species_idxs:
         NSolutions contains the species involved in the MCL
-    :param NSolutions2:
+    :param cls_coefficients:
         NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
         actual found MCLs
@@ -332,9 +332,9 @@ def is_linearly_dependent(
     matrix = [[] for _ in range(K)]
     matrix2 = [[] for _ in range(K)]
     for i in range(K - 1):
-        for j in range(len(NSolutions[i])):
-            matrix[i].append(NSolutions[i][j])
-            matrix2[i].append(NSolutions2[i][j])
+        for j in range(len(cls_species_idxs[i])):
+            matrix[i].append(cls_species_idxs[i][j])
+            matrix2[i].append(cls_coefficients[i][j])
 
     orders2 = list(range(len(matched)))
     pivots2 = matched[:]
@@ -401,11 +401,10 @@ def monte_carlo(
         J,
         J2,
         fields,
-        intmatched: Sequence[int],
-        intkerneldim: int,
-        NSolutions: Sequence[Sequence[int]],
-        NSolutions2: Sequence[Sequence[Number]],
-        kerneldim: int,
+        int_matched: Sequence[int],
+        int_kernel_dim: int,
+        cls_species_idxs: Sequence[Sequence[int]],
+        cls_coefficients: Sequence[Sequence[Number]],
         num_rows: int,
         initial_temperature: Number = 1,
         cool_rate: float = 1e-3,
@@ -425,16 +424,14 @@ def monte_carlo(
         J2
     :param fields:
         fields
-    :param intmatched:
+    :param int_matched:
         actual matched MCLs
-    :param intkerneldim:
+    :param int_kernel_dim:
         number of MCLs found in :math:`S`
-    :param NSolutions:
+    :param cls_species_idxs:
         NSolutions
-    :param NSolutions2:
+    :param cls_coefficients:
         NSolutions2
-    :param kerneldim:
-        kerneldim
     :param initial_temperature:
         initial temperature
     :param cool_rate:
@@ -518,8 +515,8 @@ def monte_carlo(
             break
 
     if howmany < 10 * max_iter:
-        if len(intmatched) > 0:
-            yes = is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
+        if len(int_matched) > 0:
+            yes = is_linearly_dependent(num, int_kernel_dim, cls_species_idxs, cls_coefficients,
                                         matched, num_rows)
             assert yes, "Not true!"
         else:
@@ -530,37 +527,36 @@ def monte_carlo(
             qsort(len(matched), 0, orders2, pivots2)
             for i in range(len(matched)):
                 if num[orders2[i]] > 0:
-                    NSolutions[intkerneldim].append(matched[orders2[i]])
-                    NSolutions2[intkerneldim].append(num[orders2[i]])
-            intkerneldim += 1
-            is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
+                    cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
+                    cls_coefficients[int_kernel_dim].append(num[orders2[i]])
+            int_kernel_dim += 1
+            is_linearly_dependent(num, int_kernel_dim, cls_species_idxs, cls_coefficients,
                                   matched, num_rows)  # side-effects on num vector
-            reduce(intkerneldim, NSolutions, NSolutions2, num_rows)
+            reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
             min = 1000
-            for i in range(len(NSolutions[intkerneldim - 1])):
-                if len(intmatched) == 0:
-                    intmatched.append(NSolutions[intkerneldim - 1][i])
+            for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+                if len(int_matched) == 0:
+                    int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
                 else:
                     ok3 = 1
-                    for k in range(len(intmatched)):
-                        if intmatched[k] == NSolutions[intkerneldim - 1][i]:
+                    for k in range(len(int_matched)):
+                        if int_matched[k] == cls_species_idxs[int_kernel_dim - 1][i]:
                             ok3 = 0
                     if ok3 == 1:
-                        intmatched.append(NSolutions[intkerneldim - 1][i])
-                if NSolutions2[intkerneldim - 1][i] < min:
-                    min = NSolutions2[intkerneldim - 1][i]
-            for i in range(len(NSolutions[intkerneldim - 1])):
-                NSolutions2[intkerneldim - 1][i] /= min
+                        int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+                if cls_coefficients[int_kernel_dim - 1][i] < min:
+                    min = cls_coefficients[int_kernel_dim - 1][i]
+            for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+                cls_coefficients[int_kernel_dim - 1][i] /= min
             logger.debug(
                 f"Found linearly independent moiety, now there are "
-                f"{intkerneldim} engaging {len(intmatched)} species")
+                f"{int_kernel_dim} engaging {len(int_matched)} species")
         else:
             logger.debug(
                 "Found a moiety but it is linearly dependent... next.")
     else:
         yes = 0
-    return (yes, intkerneldim, kerneldim, NSolutions, NSolutions2, matched,
-            intmatched)
+    return yes, int_kernel_dim, cls_species_idxs, cls_coefficients, matched, int_matched
 
 
 def relax(
