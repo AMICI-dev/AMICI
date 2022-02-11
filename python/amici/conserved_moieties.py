@@ -3,7 +3,8 @@ import math
 import random
 import sys
 from numbers import Number
-from typing import List, Tuple, Sequence, MutableSequence
+from typing import Any, List, MutableSequence, Sequence, Tuple
+
 from .logging import get_logger
 
 sys.setrecursionlimit(3000)
@@ -235,7 +236,6 @@ def fill(
         stoichiometric_list: Sequence[Number],
         matched: Sequence[int],
         num_rows: int
-        # TODO:
 ) -> Tuple[List[List[int]], List[List[int]], List[int]]:
     """Construct interaction matrix
 
@@ -398,8 +398,19 @@ def LinearDependence(
 
 
 def MonteCarlo(
-        matched, J, J2, fields, intmatched, intkerneldim, NSolutions,
-        NSolutions2, kerneldim, N, initT=1, coolrate=1e-3, maxIter=10
+        matched,
+        J,
+        J2,
+        fields,
+        intmatched,
+        intkerneldim,
+        NSolutions: Sequence[Sequence[int]],
+        NSolutions2: Sequence[Sequence[Number]],
+        kerneldim,
+        num_rows: int,
+        initial_temperature: Number = 1,
+        cool_rate: float = 1e-3,
+        max_iter: int = 10
         ):
     """MonteCarlo simulated annealing for finding integer MCLs
 
@@ -424,11 +435,11 @@ def MonteCarlo(
         NSolutions2
     :param kerneldim:
         kerneldim
-    :param initT:
+    :param initial_temperature:
         initial temperature
-    :param coolrate:
+    :param cool_rate:
         cooling rate of simulated annealing
-    :param maxIter:
+    :param max_iter:
         maximum number of MonteCarlo steps before changing to relaxation
     :returns:
         status of MC iteration, number of integer MCLs, number of MCLs,
@@ -448,7 +459,7 @@ def MonteCarlo(
                 H += J2[i][j] * num[i] * num[J[i][j]]
 
     count = 0
-    T1 = initT
+    T1 = initial_temperature
     howmany = 0
     e = math.exp(-1 / T1)
 
@@ -474,13 +485,13 @@ def MonteCarlo(
         count += 1
 
         if count % int(dim) == 0:
-            T1 -= coolrate
+            T1 -= cool_rate
             if T1 <= 0:
-                T1 = coolrate
+                T1 = cool_rate
                 e = math.exp(-1 / T1)
 
-        if count == int(float(dim) / coolrate):
-            T1 = initT
+        if count == int(float(dim) / cool_rate):
+            T1 = initial_temperature
             e = math.exp(-1 / T1)
             count = 0
             for i in range(dim):
@@ -500,13 +511,13 @@ def MonteCarlo(
                         H += J2[i][j] * num[i] * num[J[i][j]]
             howmany += 1
 
-        if (H < MIN and numtot > 0) or (howmany == (10 * maxIter)):
+        if (H < MIN and numtot > 0) or (howmany == (10 * max_iter)):
             break
 
-    if howmany < 10 * maxIter:
+    if howmany < 10 * max_iter:
         if len(intmatched) > 0:
             yes = LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
-                                   matched, N)
+                                   matched, num_rows)
             assert yes, "Not true!"
         else:
             yes = 1
@@ -520,9 +531,9 @@ def MonteCarlo(
                     NSolutions2[intkerneldim].append(num[orders2[i]])
             intkerneldim += 1
             LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
-                                    matched, N) # side-effects on num vector
+                             matched, num_rows) # side-effects on num vector
             intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(
-                intkerneldim, kerneldim, NSolutions, NSolutions2, N)
+                intkerneldim, kerneldim, NSolutions, NSolutions2, num_rows)
             min = 1000
             for i in range(len(NSolutions[intkerneldim - 1])):
                 if len(intmatched) == 0:
@@ -551,28 +562,32 @@ def MonteCarlo(
 
 
 def Relaxation(
-        stoichiometricMatrixAsList, intmatched, M, N, relaxationmax=1e6,
-        relaxation_step=1.9
+        stoichiometric_list: Sequence[Number],
+        intmatched:  int,
+        M: int,
+        N: int,
+        relaxation_max: Number = 1e6,
+        relaxation_step: Number = 1.9
 ) -> bool:
     """Relaxation scheme for Monte Carlo final solution
 
     Checking for completeness using Motzkin's theorem. See Step (c) in
     De Martino (2014) and the Eqs. 14-16 in the corresponding publication
 
-    :param stoichiometricMatrixAsList:
+    :param stoichiometric_list:
         stoichiometric matrix as a flat list
     :param intmatched:
         intmatched
     :param M:
-        number of metabolites in reaction network
+        number of species in reaction network
     :param N:
         number of reactions in reaction network
-    :param relaxationmax:
+    :param relaxation_max:
         maximum relaxation step
     :param relaxation_step:
         relaxation step width
     :returns:
-        boolean indicating if relaxation has succeded (true) or not (false)
+        boolean indicating if relaxation has succeeded (true) or not (false)
     """
     MIN = 1e-9
     MAX = 1e9
@@ -582,7 +597,7 @@ def Relaxation(
     i1 = 0
     j1 = 0
     K = len(intmatched)
-    for _, val in enumerate(stoichiometricMatrixAsList):
+    for _, val in enumerate(stoichiometric_list):
         if val != 0:
             prendo = K
             if K > 0:
@@ -721,7 +736,7 @@ def Relaxation(
         i1 = 0
         j1 = 0
 
-        for _, val in enumerate(stoichiometricMatrixAsList):
+        for _, val in enumerate(stoichiometric_list):
             prendo = 1
             if len(intmatched) > 0:
                 for i in range(len(intmatched)):
@@ -788,7 +803,7 @@ def Relaxation(
                 for j in range(len(matrixb[min])):
                     var[matrixb[min][j]] += alpha * matrixb2[min][j]
 
-            if done or time >= relaxationmax:
+            if done or time >= relaxation_max:
                 break
 
         if done:
@@ -796,7 +811,13 @@ def Relaxation(
     return False
 
 
-def Reduce(intKernelDim, kernelDim, NSolutions, NSolutions2, N):
+def Reduce(
+        intKernelDim,
+        kernelDim,
+        NSolutions: Sequence[Sequence[int]],
+        NSolutions2: Sequence[Sequence[Number]],
+        N
+) -> Tuple[Any, Any, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
     """Reducing the solution which has been found by the Monte Carlo process
 
     In case of superpositions of independent MCLs one can reduce by
