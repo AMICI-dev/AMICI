@@ -9,7 +9,6 @@ from .logging import get_logger
 sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
-
 def qsort(
         k: int,
         km: int,
@@ -19,7 +18,7 @@ def qsort(
     """Quicksort
 
     Recursive implementation of the quicksort algorithm
-    FIXME: Rewrite into an iterative algorithm with pivoting strategy
+    TODO: Rewrite into an iterative algorithm with pivoting strategy
 
     :param k:
         number of elements to sort
@@ -497,9 +496,8 @@ def MonteCarlo(
                     NSolutions[intkerneldim].append(matched[orders2[i]])
                     NSolutions2[intkerneldim].append(num[orders2[i]])
             intkerneldim += 1
-            # FIXME: yes2 never used, does LinearDependence have side effects?
-            yes2 = LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
-                                    matched, N)
+            LinearDependence(num, intkerneldim, NSolutions, NSolutions2,
+                                    matched, N) # side-effects on num vector
             intkerneldim, kerneldim, NSolutions, NSolutions2 = Reduce(
                 intkerneldim, kerneldim, NSolutions, NSolutions2, N)
             min = 1000
