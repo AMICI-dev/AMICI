@@ -536,7 +536,7 @@ def monte_carlo(
             intkerneldim += 1
             is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
                                   matched, num_rows)  # side-effects on num vector
-            intkerneldim, kerneldim, NSolutions, NSolutions2 = reduce(
+            kerneldim, NSolutions, NSolutions2 = reduce(
                 intkerneldim, kerneldim, NSolutions, NSolutions2, num_rows)
             min = 1000
             for i in range(len(NSolutions[intkerneldim - 1])):
@@ -816,19 +816,19 @@ def relax(
 
 
 def reduce(
-        intKernelDim: int,
+        int_kernel_dim: int,
         kernelDim: int,
         NSolutions: Sequence[Sequence[int]],
         NSolutions2: Sequence[Sequence[Number]],
         num_rows: int
-) -> Tuple[int, int, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
+) -> Tuple[int, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
     """Reducing the solution which has been found by the Monte Carlo process
 
     In case of superpositions of independent MCLs one can reduce by
     iteratively subtracting the other independent MCLs, taking care
     to maintain then non-negativity constraint, see Eq. 13 in De Martino (2014)
 
-    :param intKernelDim:
+    :param int_kernel_dim:
         number of found MCLs
     :param kernelDim:
         number of found conservative laws
@@ -839,7 +839,7 @@ def reduce(
     :param num_rows:
         number of rows in :math:`S`
     """
-    K = intKernelDim
+    K = int_kernel_dim
     MIN = 1e-9
     orders = list(range(K))
     pivots = [-len(NSolutions[i]) for i in range(K)]
@@ -870,4 +870,4 @@ def reduce(
                     pivots[k1] = -len(NSolutions[k1])
         if ok:
             break
-    return intKernelDim, kernelDim, NSolutions, NSolutions2
+    return kernelDim, NSolutions, NSolutions2
