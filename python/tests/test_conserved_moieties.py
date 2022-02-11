@@ -85,6 +85,7 @@ def test_detect_cl(data_demartino2014, quiet=False):
     assert len(S) == N * M, "Unexpected dimension of stoichiometric matrix"
 
     start = perf_counter()
+    # TODO: remove redundancy with compute_moiety_conservation_laws()
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
         cls_species_idxs, cls_coefficients = kernel(S, N, M)
 

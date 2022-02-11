@@ -560,7 +560,8 @@ def monte_carlo(
         if len(int_matched) > 0:
             yes = _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
                                          cls_coefficients, matched, num_rows)
-            assert yes, "Not true!"
+            # TODO ???
+            # assert yes, "Not true!"
         else:
             yes = True
         if yes:
