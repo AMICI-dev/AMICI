@@ -21,3 +21,4 @@ AMICI Python API
    amici.logging
    amici.gradient_check
    amici.parameter_mapping
+   amici.conserved_moieties
