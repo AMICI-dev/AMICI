@@ -1222,7 +1222,7 @@ class ODEModel:
                              total_abundance: sp.Symbol,
                              state_expr: sp.Expr,
                              abundance_expr: sp.Expr) -> None:
-        """
+        r"""
         Adds a new conservation law to the model. A conservation law is defined
         by the conserved quantity :math:`T = \sum_i(a_i * x_i)`, where
         :math:`a_i` are coefficients and :math:`x_i` are different state

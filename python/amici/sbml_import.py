@@ -1442,10 +1442,11 @@ class SbmlImporter:
                           "Skipping.")
             return species_solver
 
-        kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, NSolutions, NSolutions2 = kernel(S, N, M)
+        kernelDim, engagedMetabolites, intKernelDim, conservedMoeities, \
+        NSolutions, NSolutions2 = kernel(S, N, M)
 
         # iterate over species in the ODE model, mark conserved species for
-        # later removal from stochiometric matrix
+        # later removal from stoichiometric matrix
         species_to_be_removed = set()
         for state_idxs, coefficients in zip(NSolutions, NSolutions2):
             if not state_idxs:
