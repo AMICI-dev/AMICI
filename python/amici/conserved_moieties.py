@@ -536,8 +536,8 @@ def monte_carlo(
             intkerneldim += 1
             is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
                                   matched, num_rows)  # side-effects on num vector
-            kerneldim, NSolutions, NSolutions2 = reduce(
-                intkerneldim, kerneldim, NSolutions, NSolutions2, num_rows)
+            NSolutions, NSolutions2 = reduce(intkerneldim, NSolutions,
+                                             NSolutions2, num_rows)
             min = 1000
             for i in range(len(NSolutions[intkerneldim - 1])):
                 if len(intmatched) == 0:
@@ -643,28 +643,24 @@ def relax(
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
-        done = True
         for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                colonna = [None] * M
-                for i in range(M):
-                    colonna[i] = 0
+                column = [0] * M
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
-                    colonna[matrix[k1][i]] = matrix2[k1][i] * g
+                    column[matrix[k1][i]] = matrix2[k1][i] * g
                 for i in range(1, len(matrix[k2])):
-                    colonna[matrix[k2][i]] -= matrix2[k2][i]
+                    column[matrix[k2][i]] -= matrix2[k2][i]
 
                 matrix[k1] = []
                 matrix2[k1] = []
                 for i in range(M):
-                    if abs(colonna[i]) > MIN:
+                    if abs(column[i]) > MIN:
                         matrix[k1].append(i)
-                        matrix2[k1].append(colonna[i])
-                done = False
+                        matrix2[k1].append(column[i])
                 if len(matrix[orders[j + 1]]) > 0:
                     pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
                 else:
@@ -684,9 +680,7 @@ def relax(
                         j = orders[j1]
                         if len(matrix[j]) > 0:
                             if matrix[j][0] == matrix[k][i]:
-                                rigak = [None] * M
-                                for a in range(M):
-                                    rigak[a] = 0
+                                rigak = [0] * M
                                 for a in range(len(matrix[k])):
                                     rigak[matrix[k]][a] = matrix2[k][a]
                                 for a in range(len(matrix[j])):
@@ -699,9 +693,7 @@ def relax(
                                         matrix[k].append(a)
                                         matrix2[k].append(rigak[a])
 
-        indip = [None] * M
-        for i in range(M):
-            indip[i] = K + 1
+        indip = [K + 1] * M
 
         for i in range(K):
             if len(matrix[i]) > 0:
@@ -778,9 +770,7 @@ def relax(
             matrix_aus[i] = []
             matrix_aus2[i] = []
 
-        var = [None] * M1
-        for i in range(M1):
-            var[i] = MIN
+        var = [MIN] * M1
         done = False
         time = 0
         while True:
@@ -817,11 +807,10 @@ def relax(
 
 def reduce(
         int_kernel_dim: int,
-        kernelDim: int,
         NSolutions: Sequence[Sequence[int]],
         NSolutions2: Sequence[Sequence[Number]],
         num_rows: int
-) -> Tuple[int, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
+) -> Tuple[Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
     """Reducing the solution which has been found by the Monte Carlo process
 
     In case of superpositions of independent MCLs one can reduce by
@@ -830,8 +819,6 @@ def reduce(
 
     :param int_kernel_dim:
         number of found MCLs
-    :param kernelDim:
-        number of found conservative laws
     :param NSolutions:
         NSolutions contains the species involved in the MCL
     :param NSolutions2:
@@ -870,4 +857,4 @@ def reduce(
                     pivots[k1] = -len(NSolutions[k1])
         if ok:
             break
-    return kernelDim, NSolutions, NSolutions2
+    return NSolutions, NSolutions2

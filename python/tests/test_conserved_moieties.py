@@ -132,11 +132,10 @@ def test_detect_cl(data_demartino2014, quiet=False):
                     timer = 0
         old = NSolutions
         old2 = NSolutions2
-        kernel_dim, NSolutions, NSolutions2 = reduce(int_kernel_dim,
-                                                     kernel_dim,
-                                                     NSolutions,
-                                                     NSolutions2,
-                                                     N)
+        NSolutions, NSolutions2 = reduce(int_kernel_dim,
+                                         NSolutions,
+                                         NSolutions2,
+                                         N)
         for i in range(len(old)):
             assert (set(old[i]) == set(NSolutions[i]))
             assert (set(old2[i]) == set(NSolutions2[i]))
