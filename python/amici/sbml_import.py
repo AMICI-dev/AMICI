@@ -1436,7 +1436,7 @@ class SbmlImporter:
 
         try:
             stoichiometric_list = [
-                float(entry) for entry in self.stoichiometric_matrix.flat()
+                float(entry) for entry in self.stoichiometric_matrix.T.flat()
             ]
         except TypeError:
             warnings.warn("Conservation laws for non-constant species in "
