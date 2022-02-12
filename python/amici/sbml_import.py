@@ -1489,13 +1489,17 @@ class SbmlImporter:
                 'state': target_state,
                 'total_abundance': total_abundance,
                 'state_expr':
-                    ((total_abundance - (weighted_sum
+                    (total_abundance - (weighted_sum
                                         - target_state * target_state_coeff))
-                    / target_state_coeff).subs(replacements),
+                    / target_state_coeff,
                 'abundance_expr': weighted_sum / target_state_coeff
             })
             species_to_be_removed.add(target_state_idx)
 
+        replacements = {cl['state']: cl['total_abundance']
+                        for cl in conservation_laws }
+        for cl in conservation_laws:
+            cl['state_expr'] = cl['state_expr'].subs(replacements)
         # list of species that are not determined by conservation laws
         return [ix for ix in species_solver if ix not in species_to_be_removed]
 
