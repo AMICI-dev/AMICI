@@ -1471,9 +1471,10 @@ class SbmlImporter:
                     target_state = ode_model._states[target_state_idx].get_id()
                     if target_state not in replacements:
                         break
-            assert target_state_idx not in species_to_be_removed
-            assert target_state not in replacements
-
+            if target_state_idx in species_to_be_removed or target_state in replacements:
+                # should not happen?
+                # raise AssertionError()
+                continue
             target_state = ode_model._states[target_state_idx].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
 
