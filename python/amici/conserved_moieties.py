@@ -23,7 +23,7 @@ def compute_moiety_conservation_laws(
 
     :param stoichiometric_list:
         the stoichiometric matrix as a list (species x reactions,
-        row-major ordering)
+        col-major ordering)
     :param num_species:
         total number of species in the reaction network
     :param num_reactions:
@@ -129,7 +129,7 @@ def kernel(
 
     :param stoichiometric_list:
         the stoichiometric matrix as a list (species x reactions,
-        row-major ordering)
+        col-major ordering)
     :param num_species:
         total number of species in the reaction network
     :param num_reactions:
@@ -438,10 +438,10 @@ def _is_linearly_dependent(
 
 
 def monte_carlo(
-        matched,
-        J,
-        J2,
-        fields,
+        matched: Sequence[int],
+        J: Sequence[Sequence[int]],
+        J2: Sequence[Sequence[float]],
+        fields: Sequence[float],
         int_matched: Sequence[int],
         int_kernel_dim: int,
         cls_species_idxs: Sequence[Sequence[int]],
@@ -486,13 +486,13 @@ def monte_carlo(
 
     MIN = 1e-9
     dim = len(matched)
-    num = [int(2 * random.uniform(0, 1)) if len(J[i]) > 0 else 0
+    num = [int(2 * random.uniform(0, 1)) if len(J[i]) else 0
            for i in range(dim)]
     numtot = sum(num)
 
     H = 0
     for i in range(dim):
-        H += fields[i] * num[i] * num[i]
+        H += fields[i] * num[i]**2
         if len(J[i]):
             for j in range(len([J[i]])):
                 H += J2[i][j] * num[i] * num[J[i][j]]
@@ -521,35 +521,35 @@ def monte_carlo(
 
         count += 1
 
-        if count % int(dim) == 0:
+        if count % dim == 0:
             T1 -= cool_rate
             if T1 <= 0:
                 T1 = cool_rate
                 e = math.exp(-1 / T1)
 
-        if count == int(float(dim) / cool_rate):
+        if count == int(dim / cool_rate):
             T1 = initial_temperature
             e = math.exp(-1 / T1)
             count = 0
-            for i in range(dim):
-                num[i] = 0
+            num = [0] * dim
             en = int(random.uniform(0, 1) * dim)
             # Note: Bug in original c++ code (while loop without any side
             #  effect changed to if statement to prevent a possibly infinite
             #  loop)
-            if len(J[en]):
+            # TODO don't think so
+            while not len(J[en]):
                 en = int(random.uniform(0, 1) * dim)
             num[en] = 1
             numtot = 1
             H = 0
             for i in range(dim):
-                H += fields[i] * num[i] * num[i]
-                if len(J[i]) > 0:
+                H += fields[i] * num[i] ** 2
+                if len(J[i]):
                     for j in range(len(J[i])):
                         H += J2[i][j] * num[i] * num[J[i][j]]
             howmany += 1
 
-        if (H < MIN and numtot > 0) or (howmany == (10 * max_iter)):
+        if (H < MIN and numtot > 0) or (howmany == 10 * max_iter):
             break
 
     if howmany < 10 * max_iter:
@@ -559,6 +559,7 @@ def monte_carlo(
             # TODO ???
         else:
             yes = True
+
         if yes:
             orders2 = list(range(len(matched)))
             pivots2 = matched[:]
