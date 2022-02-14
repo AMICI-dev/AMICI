@@ -17,22 +17,44 @@ using amici::AmiException;
 
 void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations)
 {
-    for (auto expected : expectations) {
-        double time;
-        double expected_value;
-        std::tie(time, expected_value) = expected;
-        ASSERT_DOUBLE_EQ(spline.get_value(time), expected_value);
-    }
+  for (auto expected : expectations) {
+    double time;
+    double expected_value;
+    std::tie(time, expected_value) = expected;
+    ASSERT_DOUBLE_EQ(spline.get_value(time), expected_value);
+  }
 }
 
 void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations, const double rtol)
 {
-    for (auto expected : expectations) {
-        double time;
-        double expected_value;
-        std::tie(time, expected_value) = expected;
-        ASSERT_APPROX(spline.get_value(time), expected_value, rtol);
-    }
+  for (auto expected : expectations) {
+    double time;
+    double expected_value;
+    std::tie(time, expected_value) = expected;
+    ASSERT_APPROX(spline.get_value(time), expected_value, rtol);
+  }
+}
+
+void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<double, std::vector<double>>> &expectations)
+{
+  for (auto expected : expectations) {
+    double time;
+    std::vector<double> expected_values;
+    std::tie(time, expected_values) = expected;
+    for (int ip = 0; ip < expected_values.size(); ip++)
+      ASSERT_DOUBLE_EQ(spline.get_sensitivity(time, ip), expected_values[ip]);
+  }
+}
+
+void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<double, std::vector<double>>> &expectations, const double rtol)
+{
+  for (auto expected : expectations) {
+    double time;
+    std::vector<double> expected_values;
+    std::tie(time, expected_values) = expected;
+    for (int ip = 0; ip < expected_values.size(); ip++)
+      ASSERT_APPROX(spline.get_sensitivity(time, ip), expected_values[ip], rtol);
+  }
 }
 
 TEST(Splines, SplineUniform)
@@ -318,4 +340,42 @@ TEST(Splines, SplineNonUniformPeriodicExtrapolation)
         { 2.05, 1.5296875},
     };
     test_spline_values(spline, expectations, 1e-14);
+}
+
+TEST(Splines, SplineUniformSensitivity)
+{
+    // Uniform grid
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 4.5 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
+                         true,   // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    std::vector<std::tuple<double, std::vector<double>>> expectations = {
+        // t, expected values of sensitivities
+        {0.00,  {3.0,       1.0,      0.0}},
+        {0.25,  {0.539062,  0.179688, 4.45312}},
+        {1.0/3, {0.0,       0.0,      5.0}},
+        {0.50,  {0.1875,   -0.125,    2.625}},
+        {2.0/3, {0.0,       0.0,      0.0}},
+        {0.75,  {-1.07812,  0.179688, 0.1875}},
+        {1.00,  {-6.0,      1.0,      3.0}},
+    };
+    test_spline_sensitivities(spline, expectations);
+    ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
+    ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
