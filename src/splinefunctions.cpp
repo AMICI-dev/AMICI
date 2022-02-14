@@ -408,6 +408,16 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
                                           gsl::span<realtype> dspline_valuesdp,
                                           gsl::span<realtype> dspline_slopesdp)
 {
+    // If slopes are computed by finite differences,
+    // we need to autocompute the slope sensitivities
+    if (node_derivative_by_FD_){
+      assert(dspline_valuesdp.size() == dspline_slopesdp.size());
+      for (int ip = 0; ip < nplist; ip++)
+        compute_slope_sensitivities_by_fd(
+          nplist, spline_offset, ip, dspline_valuesdp, dspline_slopesdp
+        );
+    }
+
     /*
      * Allocate space for the coefficients
      * They are stored in the vector as
@@ -448,8 +458,6 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
                                       n_spline_coefficients,
                                       spline_offset,
                                       len,
-                                      len_m,
-                                      len_p,
                                       dspline_valuesdp,
                                       dspline_slopesdp,
                                       coefficients_sensi);
@@ -458,6 +466,122 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
     /* We need the coefficients for extrapolating beyond the spline domain */
     compute_coefficients_extrapolation_sensi(
       nplist, spline_offset, dspline_valuesdp, dspline_slopesdp);
+}
+
+void
+HermiteSpline::compute_slope_sensitivities_by_fd(
+  int nplist,
+  int spline_offset,
+  int ip,
+  gsl::span<realtype> dvaluesdp,
+  gsl::span<realtype> dslopesdp
+)
+{
+    int last = n_nodes() - 1;
+    int node_offset = spline_offset + ip;
+
+    // TODO should we check that dvaluesdp satisfies the bc?
+
+#ifdef DVALUESDP
+#error "Preprocessor macro DVALUESDP already defined?!"
+#else
+#define DVALUESDP(i_node) dvaluesdp[node_offset + (i_node) * nplist]
+#endif
+#ifdef DSLOPESDP
+#error "Preprocessor macro DSLOPESDP already defined?!"
+#else
+#define DSLOPESDP(i_node) dslopesdp[node_offset + (i_node) * nplist]
+#endif
+
+    // Left boundary (first node)
+    switch (first_node_bc_) {
+        case SplineBoundaryCondition::given:
+            DSLOPESDP(0) =
+              (DVALUESDP(1) - DVALUESDP(0)) / (nodes_[1] - nodes_[0]);
+            break;
+
+        case SplineBoundaryCondition::zeroDerivative:
+            DSLOPESDP(0) = 0;
+            break;
+
+        case SplineBoundaryCondition::natural:
+            throw AmiException(
+              "Natural boundary condition for Hermite "
+              "splines is not implemented yet."
+            );
+
+        case SplineBoundaryCondition::periodic:
+            if (get_equidistant_spacing()) {
+                realtype hx2 = 2 * (nodes_[1] - nodes_[0]);
+                DSLOPESDP(0) =
+                    (DVALUESDP(1) - DVALUESDP(last - 1)) / hx2;
+            } else {
+                realtype dleft =
+                  (DVALUESDP(last) - DVALUESDP(last - 1)) /
+                  (nodes_[last] - nodes_[last - 1]);
+                realtype dright =
+                  (DVALUESDP(1) - DVALUESDP(0)) /
+                  (nodes_[1] - nodes_[0]);
+                DSLOPESDP(0) = (dleft + dright) / 2;
+            }
+            break;
+
+        default:
+            throw AmiException("Unexpected value for boundary condition.");
+    }
+
+    // Inner nodes
+    if (get_equidistant_spacing()) {
+        realtype hx2 = 2 * (nodes_[1] - nodes_[0]);
+        for (int i_node = 1; i_node < n_nodes() - 1; i_node++)
+          DSLOPESDP(i_node) =
+            (DVALUESDP(i_node + 1) - DVALUESDP(i_node - 1)) / hx2;
+    } else {
+        for (int i_node = 1; i_node < n_nodes() - 1; i_node++) {
+          realtype dleft =
+            (DVALUESDP(i_node) - DVALUESDP(i_node - 1)) /
+            (nodes_[i_node] - nodes_[i_node - 1]);
+          realtype dright =
+            (DVALUESDP(i_node + 1) - DVALUESDP(i_node)) /
+            (nodes_[i_node + 1] - nodes_[i_node]);
+          DSLOPESDP(i_node) = (dleft + dright) / 2;
+        }
+    }
+
+    // Right boundary (last nodes)
+    switch (last_node_bc_) {
+        case SplineBoundaryCondition::given:
+            DSLOPESDP(last) =
+                  (DVALUESDP(last) - DVALUESDP(last - 1)) /
+                  (nodes_[last] - nodes_[last - 1]);
+            break;
+
+        case SplineBoundaryCondition::zeroDerivative:
+            DSLOPESDP(last) = 0;
+            break;
+
+        case SplineBoundaryCondition::natural:
+            throw AmiException(
+              "Natural boundary condition for Hermite "
+              "splines is not implemented yet."
+            );
+
+        case SplineBoundaryCondition::naturalZeroDerivative:
+            throw AmiException(
+              "Natural boundary condition with zero "
+              "derivative is not allowed for Hermite splines.");
+
+        case SplineBoundaryCondition::periodic:
+            // if one bc is periodic, the other is periodic too
+            DSLOPESDP(last) = DSLOPESDP(0);
+            break;
+
+        default:
+            throw AmiException("Unexpected value for boundary condition.");
+    }
+
+#undef DVALUESDP
+#undef DSLOPESDP
 }
 
 void
@@ -617,8 +741,6 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
                                          int n_spline_coefficients,
                                          int spline_offset,
                                          realtype len,
-                                         realtype len_m,
-                                         realtype len_p,
                                          gsl::span<realtype> dnodesdp,
                                          gsl::span<realtype> dslopesdp,
                                          gsl::span<realtype> coeffs)
@@ -627,77 +749,21 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
      * compute_coefficients_sensi() here. See this function for documentation.
      */
     int node_offset = spline_offset + ip;
-    int last = n_nodes() - 1;
     realtype spk = dnodesdp[node_offset + i_node * nplist];
     realtype spk1 = dnodesdp[node_offset + (i_node + 1) * nplist];
-    realtype smk;
-    realtype smk1;
+    realtype smk = dslopesdp[node_offset + i_node * nplist];
+    realtype smk1 = dslopesdp[node_offset + (i_node + 1) * nplist];
 
-    /* Get sensitivities of slopes. Depending on finite differences are used
-     * or not, this may be a bit cumbersome now... */
-    if (get_node_derivative_by_fd()) {
-        if (i_node == 0) {
-            /* Are we at the fist node? What's the boundary condition? */
-            if (first_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
-                smk = 0;
-            } else if (first_node_bc_ == SplineBoundaryCondition::given) {
-                smk = (spk1 - spk) / len;
-            } else if (first_node_bc_ == SplineBoundaryCondition::natural) {
-                throw AmiException("Natural boundary condition for Hermite "
-                                   "splines is not yet implemented.");
-            } else if (first_node_bc_ == SplineBoundaryCondition::periodic) {
-                smk = (spk1 - dnodesdp[node_offset + (last - 1) * nplist]) /
-                      (len + nodes_[last] - nodes_[last - 1]);
-            } else {
-                /* must be SplineBoundaryCondition::naturalZeroDerivative*/
-                throw AmiException(
-                  "Natural boundary condition with zero "
-                  "derivative is prohibited for Hermite splines.");
-            }
-            smk1 =
-              (dnodesdp[node_offset + (i_node + 2) * nplist] - spk) / len_p;
-
-        } else if (i_node == n_nodes() - 2) {
-            /* Are we at the last node? What's the boundary condition? */
-            smk =
-              (spk1 - dnodesdp[node_offset + (i_node - 1) * nplist]) / len_m;
-            if (last_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
-                smk1 = 0;
-            } else if (last_node_bc_ == SplineBoundaryCondition::given) {
-                smk1 = (spk1 - spk) / len;
-            } else if (last_node_bc_ == SplineBoundaryCondition::natural) {
-                throw AmiException("Natural boundary condition for Hermite "
-                                   "splines is not yet implemented.");
-            } else if (last_node_bc_ == SplineBoundaryCondition::periodic) {
-                smk1 = (dnodesdp[node_offset + nplist] - spk) /
-                       (len + nodes_[1] - nodes_[0]);
-            } else {
-                // must be SplineBoundaryCondition::naturalZeroDerivative
-                throw AmiException(
-                  "Natural boundary condition with zero "
-                  "derivative is prohibited for Hermite splines.");
-            }
-
-        } else {
-            /* We're somewhere in between. That's fine. */
-            smk =
-              (spk1 - dnodesdp[node_offset + (i_node - 1) * nplist]) / len_m;
-            smk1 =
-              (dnodesdp[node_offset + (i_node + 2) * nplist] - spk) / len_p;
-        }
-    } else {
-        /* The slopes are explicitly given, easiest case... */
-        smk = dslopesdp[node_offset + i_node * nplist];
-        smk1 = dslopesdp[node_offset + (i_node + 1) * nplist];
-
-        /* For the nodes at the boundary, we have to take care of the bc */
-        if (i_node == 0 &&
-            first_node_bc_ == SplineBoundaryCondition::zeroDerivative)
-            smk = 0;
-        if (i_node == n_nodes() - 2 &&
-            last_node_bc_ == SplineBoundaryCondition::zeroDerivative)
-            smk1 = 0;
-    }
+    /* For the nodes at the boundary, we have to take care of the bc
+     * TODO Should we enforce that the given dsplopesdp satisfy the BC?
+     *      If so, this check would no longer be needed (here, that is).
+    */
+    if (i_node == 0 &&
+        first_node_bc_ == SplineBoundaryCondition::zeroDerivative)
+        smk = 0;
+    if (i_node == n_nodes() - 2 &&
+        last_node_bc_ == SplineBoundaryCondition::zeroDerivative)
+        smk1 = 0;
 
     /* Compute the actual coefficients */
     coeffs[ip * n_spline_coefficients + 4 * i_node] = spk;

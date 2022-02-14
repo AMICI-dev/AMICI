@@ -348,14 +348,20 @@ class HermiteSpline : public AbstractSpline
     bool get_node_derivative_by_fd() const { return node_derivative_by_FD_; }
 
   private:
+    void compute_slope_sensitivities_by_fd(
+      int nplist,
+      int spline_offset,
+      int ip,
+      gsl::span<realtype> dvaluesdp,
+      gsl::span<realtype> dslopesdp
+    );
+
     void get_coeffs_sensi_lowlevel(int ip,
                                    int i_node,
                                    int nplist,
                                    int n_spline_coefficients,
                                    int spline_offset,
                                    realtype len,
-                                   realtype len_m,
-                                   realtype len_p,
                                    gsl::span<realtype> dnodesdp,
                                    gsl::span<realtype> dslopesdp,
                                    gsl::span<realtype> coeffs);
