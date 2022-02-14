@@ -321,21 +321,21 @@ def fill(
 
     for i in range(dim):
         for j in range(i, dim):
-            if len(matrix[i]) > 0:
+            interactions = 0
+            if len(matrix[i]):
                 for po in range(len(matrix[i])):
-                    interactions = 0
-                    if len(matrix[j]) > 0:
+                    if len(matrix[j]):
                         for pu in range(len(matrix[j])):
                             if matrix[i][po] == matrix[j][pu]:
                                 interactions += (
                                         matrix2[i][po] * matrix2[j][pu])
-                    if j == i:
-                        fields[i] = interactions
-                    elif abs(interactions) > MIN:
-                        J[i].append(j)
-                        J2[i].append(interactions)
-                        J[j].append(i)
-                        J2[j].append(interactions)
+            if j == i:
+                fields[i] = interactions
+            elif abs(interactions) > MIN:
+                J[i].append(j)
+                J2[i].append(interactions)
+                J[j].append(i)
+                J2[j].append(interactions)
     return J, J2, fields
 
 
