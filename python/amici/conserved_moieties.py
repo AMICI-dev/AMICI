@@ -77,7 +77,7 @@ def compute_moiety_conservation_laws(
 def _qsort(
         k: int,
         km: int,
-        orders: MutableSequence[int],
+        order: MutableSequence[int],
         pivots: Sequence[int]
 ) -> None:
     """Quicksort
@@ -89,7 +89,7 @@ def _qsort(
         number of elements to sort
     :param km:
         current center element
-    :param orders:
+    :param order:
         ordering of the elements
     :param pivots:
         corresponding pivot elements from scaled partial pivoting strategy
@@ -101,22 +101,22 @@ def _qsort(
     pivot = km + int((k - km) / 2)
     l = 0
     p = k - km - 1
-    neworders = [None] * (k - km)
+    new_order = [None] * (k - km)
     for i in range(km, k):
         if i != pivot:
-            if pivots[orders[i]] < pivots[orders[pivot]]:
-                neworders[l] = orders[i]
+            if pivots[order[i]] < pivots[order[pivot]]:
+                new_order[l] = order[i]
                 l += 1
             else:
-                neworders[p] = orders[i]
+                new_order[p] = order[i]
                 p -= 1
-    neworders[p] = orders[pivot]
+    new_order[p] = order[pivot]
     for i in range(km, k):
-        orders[i] = neworders[i - km]
+        order[i] = new_order[i - km]
 
     centre = p + km
-    _qsort(k, centre + 1, orders, pivots)
-    _qsort(centre, km, orders, pivots)
+    _qsort(k, centre + 1, order, pivots)
+    _qsort(centre, km, order, pivots)
 
 
 def kernel(
@@ -147,13 +147,11 @@ def kernel(
         kernel dimension, MCLs, integer kernel dimension, integer MCLs and
         indices to species and reactions in the preceding order as a tuple
     """
-    N = num_species
-    M = num_reactions
     MAX = 1e9
     MIN = 1e-9
 
-    matrix = [[] for _ in range(N)]
-    matrix2 = [[] for _ in range(N)]
+    matrix = [[] for _ in range(num_species)]
+    matrix2 = [[] for _ in range(num_species)]
 
     i1 = 0
     j1 = 0
@@ -162,20 +160,21 @@ def kernel(
             matrix[j1].append(i1)
             matrix2[j1].append(val)
         j1 += 1
-        if j1 == N:
+        if j1 == num_species:
             j1 = 0
             i1 += 1
-    for i in range(N):
-        matrix[i].append(M + i)
+    for i in range(num_species):
+        matrix[i].append(num_reactions + i)
         matrix2[i].append(1)
 
-    orders = list(range(N))
-    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(N)]
+    orders = list(range(num_species))
+    pivots = [matrix[i][0] if len(matrix[i]) else MAX
+              for i in range(num_species)]
 
     done = False
     while not done:
-        _qsort(N, 0, orders, pivots)
-        for j in range(N - 1):
+        _qsort(num_species, 0, orders, pivots)
+        for j in range(num_species - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 min1 = 100000000
                 if len(matrix[orders[j]]) > 1:
@@ -195,11 +194,11 @@ def kernel(
                     orders[j] = k2
         done = True
 
-        for j in range(N - 1):
+        for j in range(num_species - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                column = [0] * (N + M)
+                column = [0] * (num_species + num_reactions)
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
@@ -209,7 +208,7 @@ def kernel(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(N + M):
+                for i in range(num_species + num_reactions):
                     if abs(column[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
@@ -220,28 +219,28 @@ def kernel(
                 else:
                     pivots[orders[j + 1]] = MAX
 
-    RSolutions = [[] for _ in range(N)]
-    RSolutions2 = [[] for _ in range(N)]
+    RSolutions = [[] for _ in range(num_species)]
+    RSolutions2 = [[] for _ in range(num_species)]
     kernel_dim = 0
 
-    for i in range(N):
+    for i in range(num_species):
         done = True
         if len(matrix[i]):
             for j in range(len(matrix[i])):
-                if matrix[i][j] < M:
+                if matrix[i][j] < num_reactions:
                     done = False
                     break
         if done and len(matrix[i]):
             for j in range(len(matrix[i])):
-                RSolutions[kernel_dim].append(matrix[i][j] - M)
+                RSolutions[kernel_dim].append(matrix[i][j] - num_reactions)
                 RSolutions2[kernel_dim].append(matrix2[i][j])
             kernel_dim += 1
     del matrix, matrix2
 
     matched = []
     int_matched = []
-    cls_species_idxs = [[] for _ in range(N)]
-    cls_coefficients = [[] for _ in range(N)]
+    cls_species_idxs = [[] for _ in range(num_species)]
+    cls_coefficients = [[] for _ in range(num_species)]
 
     i2 = 0
     for i in range(kernel_dim):
@@ -592,8 +591,8 @@ def monte_carlo(
 def relax(
         stoichiometric_list: Sequence[Number],
         int_matched: Sequence[int],
-        M: int,
-        N: int,
+        num_reactions: int,
+        num_species: int,
         relaxation_max: float = 1e6,
         relaxation_step: float = 1.9
 ) -> bool:
@@ -606,10 +605,10 @@ def relax(
         stoichiometric matrix :math:`S` as a flat list (column-major ordering)
     :param int_matched:
         intmatched
-    :param M:
-        number of species in reaction network
-    :param N:
+    :param num_reactions:
         number of reactions in reaction network
+    :param num_species:
+        number of species in reaction network
     :param relaxation_max:
         maximum relaxation step
     :param relaxation_step:
@@ -638,7 +637,7 @@ def relax(
                 matrix[prendo].append(i1)
                 matrix2[prendo].append(val)
         j1 += 1
-        if j1 == N:
+        if j1 == num_species:
             j1 = 0
             i1 += 1
 
@@ -672,7 +671,7 @@ def relax(
                     and pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
-                column = [0] * M
+                column = [0] * num_reactions
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
@@ -681,7 +680,7 @@ def relax(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(M):
+                for i in range(num_reactions):
                     if abs(column[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
@@ -699,32 +698,34 @@ def relax(
 
     for k1 in reversed(range(K - 1)):
         k = order[k1]
-        if len(matrix[k]) > 1:
-            for i in range(1, len(matrix[k])):
-                for j1 in range(k1 + 1, K):
-                    j = order[j1]
-                    if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
-                        continue
+        if len(matrix[k]) <= 1:
+            continue
 
-                    row_k = [0] * M
-                    for a in range(len(matrix[k])):
-                        row_k[matrix[k][a]] = matrix2[k][a]
-                    for a in range(len(matrix[j])):
-                        row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
-                    matrix[k] = []
-                    matrix2[k] = []
-                    for a in range(M):
-                        if row_k[a] != 0:
-                            matrix[k].append(a)
-                            matrix2[k].append(row_k[a])
+        for i in range(1, len(matrix[k])):
+            for j1 in range(k1 + 1, K):
+                j = order[j1]
+                if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
+                    continue
 
-    indip = [K + 1] * M
+                row_k = [0] * num_reactions
+                for a in range(len(matrix[k])):
+                    row_k[matrix[k][a]] = matrix2[k][a]
+                for a in range(len(matrix[j])):
+                    row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
+                matrix[k] = []
+                matrix2[k] = []
+                for a in range(num_reactions):
+                    if row_k[a] != 0:
+                        matrix[k].append(a)
+                        matrix2[k].append(row_k[a])
+
+    indip = [K + 1] * num_reactions
     for i in range(K):
         if len(matrix[i]):
             indip[matrix[i]][0] = i
 
     M1 = 0
-    for i in range(M):
+    for i in range(num_reactions):
         if indip[i] == K + 1:
             indip[i] = K + M1
             M1 += 1
@@ -732,7 +733,7 @@ def relax(
     matrixAus = [[] for _ in range(M1)]
     matrixAus2 = [[] for _ in range(M1)]
     i1 = 0
-    for i in range(M):
+    for i in range(num_reactions):
         if indip[i] >= K:
             matrixAus[i1].append(i)
             matrixAus2[i1].append(1)
@@ -748,7 +749,7 @@ def relax(
     for i in range(K):
         matrix[i] = []
 
-    N1 = N - K
+    N1 = num_species - K
     matrix_aus = [[] for _ in range(N1)]
     matrix_aus2 = [[] for _ in range(N1)]
 
@@ -767,7 +768,7 @@ def relax(
             matrix_aus2[k1].append(val)
         j1 += 1
         k1 += prendo
-        if j1 == N:
+        if j1 == num_species:
             j1 = 0
             k1 = 0
             i1 += 1
