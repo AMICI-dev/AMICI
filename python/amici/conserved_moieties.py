@@ -444,7 +444,7 @@ def monte_carlo(
         int_kernel_dim: int,
         cls_species_idxs: Sequence[Sequence[int]],
         cls_coefficients: Sequence[Sequence[Number]],
-        num_rows: int,
+        num_species: int,
         initial_temperature: float = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
@@ -549,8 +549,9 @@ def monte_carlo(
     if howmany < 10 * max_iter:
         # founds MCLS? need to check for linear independence
         if len(int_matched) > 0:
-            yes = _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
-                                         cls_coefficients, matched, num_rows)
+            yes = _is_linearly_dependent(
+                num, int_kernel_dim, cls_species_idxs,
+                cls_coefficients, matched, num_species)
         else:
             yes = True
 
@@ -564,7 +565,8 @@ def monte_carlo(
                     cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
                     cls_coefficients[int_kernel_dim].append(num[orders2[i]])
             int_kernel_dim += 1
-            reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
+            reduce(int_kernel_dim, cls_species_idxs, cls_coefficients,
+                   num_species)
             min_value = 1000
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
                 if len(int_matched) == 0 \
@@ -706,7 +708,6 @@ def relax(
                 j = order[j1]
                 if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
                     continue
-
                 row_k = [0] * num_reactions
                 for a in range(len(matrix[k])):
                     row_k[matrix[k][a]] = matrix2[k][a]
@@ -829,7 +830,7 @@ def reduce(
         int_kernel_dim: int,
         cls_species_idxs: MutableSequence[MutableSequence[int]],
         cls_coefficients: MutableSequence[MutableSequence[Number]],
-        num_rows: int
+        num_species: int
 ) -> None:
     """Reducing the solution which has been found by the Monte Carlo process
 
@@ -845,8 +846,8 @@ def reduce(
     :param cls_coefficients:
         Coefficients for each of the species involved in each of the
         conservation laws. Modified in-place.
-    :param num_rows:
-        number of rows in :math:`S`
+    :param num_species:
+        number of species / rows in :math:`S`
     """
     K = int_kernel_dim
     MIN = 1e-9
@@ -861,7 +862,7 @@ def reduce(
             for j in range(i + 1, K):
                 k1 = order[i]
                 k2 = order[j]
-                column = [0] * num_rows
+                column = [0] * num_species
                 ok1 = True
                 for species_idx, coefficient \
                         in zip(cls_species_idxs[k1], cls_coefficients[k1]):
@@ -875,7 +876,7 @@ def reduce(
                     done = False
                     cls_species_idxs[k1] = []
                     cls_coefficients[k1] = []
-                    for i in range(num_rows):
+                    for i in range(num_species):
                         if abs(column[i]) > MIN:
                             cls_species_idxs[k1].append(i)
                             cls_coefficients[k1].append(column[i])
