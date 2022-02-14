@@ -662,7 +662,7 @@ def relax(
                                    / matrix2[order[j]][i]
                 min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
-                    for i in range(len(matrix[order[j]])):
+                    for i in range(len(matrix[order[j + 1]])):
                         if abs(matrix2[order[j + 1]][0] /
                                matrix2[order[j + 1]][i]) < min2:
                             min2 = abs(matrix2[order[j + 1]][0]) \
