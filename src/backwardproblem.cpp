@@ -31,7 +31,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
     root_idx_(fwd.getRootIndexes()),
     dJydx_(fwd.getDJydx()),
     dJzdx_(fwd.getDJzdx()) {
-        /* complement dJydx from postequilibration. This should overwrite
+        /* complement dJydx from postequilibration. This shouldn't overwrite
          * anything but only fill in previously 0 values, as only non-inf
          * timepoints are filled from fwd.
          */

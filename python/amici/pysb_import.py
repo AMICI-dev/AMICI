@@ -325,7 +325,20 @@ def _process_pysb_expressions(
     # they are ordered according to their dependency and we can
     # evaluate them sequentially without reordering. Important to make
     # sure that observables are processed first though.
-    for expr in pysb_model.expressions:
+
+    # we use _constant and _dynamic functions to get access to derived
+    # expressions that are otherwise only accessible as private attribute
+    for expr in pysb_model.expressions_constant(include_derived=True)\
+            | pysb_model.expressions_dynamic(include_derived=True):
+        if any(
+            isinstance(symbol, pysb.Tag)
+            for symbol in expr.expand_expr().free_symbols
+        ):
+            # we only need explicit instantiations of expressions with tags,
+            # which are defined in the derived expressions. The abstract
+            # expressions are not needed and lead to compilation errors so
+            # we skip them.
+            continue
         _add_expression(expr, expr.name, expr.expr,
                         pysb_model, ode_model, observables, sigmas,
                         noise_distributions)
