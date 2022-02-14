@@ -102,9 +102,9 @@ def test_detect_cl(data_demartino2014, quiet=False):
     assert len(conserved_moieties) == 128, \
         "Wrong number of conserved moieties reported"
 
-    J, J2, fields = fill(S, engaged_species, N)
-
     if int_kernel_dim != kernel_dim:
+        J, J2, fields = fill(S, engaged_species, N)
+
         timer = 0
         counter = 1
         finish = 0
@@ -132,13 +132,13 @@ def test_detect_cl(data_demartino2014, quiet=False):
                     print("Relaxation...")
                 finish = relax(S, conserved_moieties, M, N)
                 timer = 0
-        old = cls_species_idxs
-        old2 = cls_coefficients
-        reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, N)
-        # TODO what is tested here? should have been deep-copied?!
-        for i in range(len(old)):
-            assert (set(old[i]) == set(cls_species_idxs[i]))
-            assert (set(old2[i]) == set(cls_coefficients[i]))
+    old = cls_species_idxs
+    old2 = cls_coefficients
+    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, N)
+    # TODO what is tested here? should have been deep-copied?!
+    for i in range(len(old)):
+        assert (set(old[i]) == set(cls_species_idxs[i]))
+        assert (set(old2[i]) == set(cls_coefficients[i]))
 
     # Assert that each conserved moiety has the correct number of metabolites
     for i in range(int_kernel_dim - 2):

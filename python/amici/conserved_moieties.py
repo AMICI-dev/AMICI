@@ -37,30 +37,40 @@ def compute_moiety_conservation_laws(
         cls_species_idxs, cls_coefficients = kernel(
         stoichiometric_list, num_species, num_reactions)
 
-    # construct interaction matrix
-    J, J2, fields = fill(stoichiometric_list, engaged_species, num_species)
-
+    print(cls_species_idxs)
+    print(cls_coefficients)
     done = (int_kernel_dim == kernel_dim)
-    timer = 0
-    # maximum number of montecarlo search before starting relaxation
-    max_num_monte_carlo = 10
-    while not done:
-        yes, int_kernel_dim, conserved_moieties = monte_carlo(
-            engaged_species, J, J2, fields, conserved_moieties,
-            int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
-            max_iter=max_num_monte_carlo
-        )
-        done = (int_kernel_dim == kernel_dim)
-        if yes:
-            timer = 0
-        else:
-            timer += 1
 
-        if timer == max_num_monte_carlo:
-            done = relax(stoichiometric_list, conserved_moieties,
-                         num_reactions, num_species)
-            timer = 0
+    if not done:
+        # construct interaction matrix
+        J, J2, fields = fill(stoichiometric_list, engaged_species, num_species)
+
+        timer = 0
+        # maximum number of montecarlo search before starting relaxation
+        max_num_monte_carlo = 10
+        while not done:
+            yes, int_kernel_dim, conserved_moieties = monte_carlo(
+                engaged_species, J, J2, fields, conserved_moieties,
+                int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
+                max_iter=max_num_monte_carlo
+            )
+            print(cls_species_idxs)
+            print(cls_coefficients)
+
+            done = (int_kernel_dim == kernel_dim)
+            if yes:
+                timer = 0
+            else:
+                timer += 1
+
+            if timer == max_num_monte_carlo:
+                done = relax(stoichiometric_list, conserved_moieties,
+                             num_reactions, num_species)
+                timer = 0
     reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    print(cls_species_idxs)
+    print(cls_coefficients)
+
     return cls_species_idxs, cls_coefficients
 
 
