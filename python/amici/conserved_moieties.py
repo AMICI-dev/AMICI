@@ -504,9 +504,7 @@ def monte_carlo(
 
     while True:
         en = int(random.uniform(0, 1) * dim)
-        # Note: Bug in original c++ code (while loop without any side effect
-        # changed to if statement to prevent a possibly infinite loop)
-        if len(J[en]) == 0:
+        while len(J[en]) == 0:
             en = int(random.uniform(0, 1) * dim)
         p = 1
         if num[en] > 0 and random.uniform(0, 1) < 0.5:
@@ -559,7 +557,6 @@ def monte_carlo(
             yes = _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
                                          cls_coefficients, matched, num_rows)
             # TODO ???
-            # assert yes, "Not true!"
         else:
             yes = True
         if yes:
