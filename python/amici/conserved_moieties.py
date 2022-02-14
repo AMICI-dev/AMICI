@@ -693,20 +693,20 @@ def relax(
             for i in range(1, len(matrix[k])):
                 for j1 in range(k1 + 1, K):
                     j = order[j1]
-                    if len(matrix[j]):
-                        if matrix[j][0] == matrix[k][i]:
-                            row_k = [0] * M
-                            for a in range(len(matrix[k])):
-                                row_k[matrix[k]][a] = matrix2[k][a]
-                            for a in range(len(matrix[j])):
-                                row_k[matrix[j]][a] -= matrix2[j][a] * \
-                                                       matrix2[k][i]
-                            matrix[k] = []
-                            matrix2[k] = []
-                            for a in range(M):
-                                if row_k[a] != 0:
-                                    matrix[k].append(a)
-                                    matrix2[k].append(row_k[a])
+                    if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
+                        continue
+
+                    row_k = [0] * M
+                    for a in range(len(matrix[k])):
+                        row_k[matrix[k]][a] = matrix2[k][a]
+                    for a in range(len(matrix[j])):
+                        row_k[matrix[j]][a] -= matrix2[j][a] * matrix2[k][i]
+                    matrix[k] = []
+                    matrix2[k] = []
+                    for a in range(M):
+                        if row_k[a] != 0:
+                            matrix[k].append(a)
+                            matrix2[k].append(row_k[a])
 
     indip = [K + 1] * M
     for i in range(K):
@@ -802,12 +802,9 @@ def relax(
             done = True
         else:
             alpha = -relaxation_step * cmin  # Motzkin relaxation
-            fact = 0
-            for j in range(len(matrixb[cmin_idx])):
-                fact += matrixb2[cmin_idx][j] ** 2
+            fact = sum(val ** 2 for val in matrixb2[cmin_idx])
             alpha /= fact
-            if alpha < 1e-9 * MIN:
-                alpha = 1e-9 * MIN
+            alpha = max(1e-9 * MIN, alpha)
             for j in range(len(matrixb[cmin_idx])):
                 var[matrixb[cmin_idx][j]] += alpha * matrixb2[cmin_idx][j]
 
