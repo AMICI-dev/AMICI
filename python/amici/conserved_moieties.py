@@ -325,11 +325,9 @@ def fill(
         for j in range(i, dim):
             interactions = 0
             for po in range(len(matrix[i])):
-                if not len(matrix[j]):
-                    continue
                 for pu in range(len(matrix[j])):
                     if matrix[i][po] == matrix[j][pu]:
-                        interactions += (matrix2[i][po] * matrix2[j][pu])
+                        interactions += matrix2[i][po] * matrix2[j][pu]
             if j == i:
                 fields[i] = interactions
             elif abs(interactions) > MIN:
@@ -385,7 +383,7 @@ def _is_linearly_dependent(
     for i in range(len(matched)):
         if vector[order2[i]] > MIN:
             matrix[K - 1].append(matched[order2[i]])
-            matrix2[K - 1].append(float(vector[order2[i]]))
+            matrix2[K - 1].append(vector[order2[i]])
 
     order = list(range(K))
 
@@ -538,9 +536,9 @@ def monte_carlo(
             H = 0
             for i in range(dim):
                 H += fields[i] * num[i] ** 2
-                if len(J[i]):
-                    for j in range(len(J[i])):
-                        H += J2[i][j] * num[i] * num[J[i][j]]
+
+                for j in range(len(J[i])):
+                    H += J2[i][j] * num[i] * num[J[i][j]]
             howmany += 1
 
         if (H < MIN and numtot > 0) or (howmany == 10 * max_iter):
@@ -645,7 +643,7 @@ def relax(
 
     # reducing the stoichiometric matrix of conserved moieties to row echelon
     # form by Gaussian elimination
-    order = [i for i in range(K)]
+    order = list(range(K))
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
     done = False
     while not done:
@@ -669,8 +667,7 @@ def relax(
                     order[j] = k2
         done = True
         for j in range(K - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] \
-                    and pivots[order[j]] != MAX:
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
                 column = [0] * num_reactions
@@ -682,10 +679,10 @@ def relax(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(num_reactions):
-                    if abs(column[i]) > MIN:
-                        matrix[k1].append(i)
-                        matrix2[k1].append(column[i])
+                for col_idx, col_val in column:
+                    if abs(col_val) > MIN:
+                        matrix[k1].append(col_idx)
+                        matrix2[k1].append(col_val)
                 done = False
                 if len(matrix[order[j + 1]]):
                     pivots[order[j + 1]] = matrix[order[j + 1]][0]
@@ -708,6 +705,7 @@ def relax(
                 j = order[j1]
                 if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
                     continue
+
                 row_k = [0] * num_reactions
                 for a in range(len(matrix[k])):
                     row_k[matrix[k][a]] = matrix2[k][a]
@@ -715,10 +713,10 @@ def relax(
                     row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
                 matrix[k] = []
                 matrix2[k] = []
-                for a in range(num_reactions):
-                    if row_k[a] != 0:
-                        matrix[k].append(a)
-                        matrix2[k].append(row_k[a])
+                for row_idx, row_val in row_k:
+                    if row_val != 0:
+                        matrix[k].append(row_idx)
+                        matrix2[k].append(row_val)
 
     indip = [K + 1] * num_reactions
     for i in range(K):
@@ -746,9 +744,7 @@ def relax(
                     quelo = indip[matrix[t][k]] - K
                     matrixAus[quelo].append(i)
                     matrixAus2[quelo].append(-matrix2[t][k])
-
-    for i in range(K):
-        matrix[i] = []
+    del matrix
 
     N1 = num_species - K
     matrix_aus = [[] for _ in range(N1)]
@@ -758,12 +754,11 @@ def relax(
     i1 = 0
     j1 = 0
 
-    for _, val in enumerate(stoichiometric_list):
+    for val in stoichiometric_list:
         prendo = 1
-        if len(int_matched):
-            for i in range(len(int_matched)):
-                if j1 == int_matched[i]:
-                    prendo -= 1
+        for i in range(len(int_matched)):
+            if j1 == int_matched[i]:
+                prendo -= 1
         if val != 0 and prendo == 1:
             matrix_aus[k1].append(i1)
             matrix_aus2[k1].append(val)
@@ -778,8 +773,8 @@ def relax(
     matrixb2 = [[] for _ in range(N1)]
     for i in range(M1):
         for j in range(N1):
-            prod = 0
             if len(matrix_aus[j]) * len(matrixAus[i]):
+                prod = 0
                 for ib in range(len(matrixAus[i])):
                     for jb in range(len(matrix_aus[j])):
                         if matrixAus[i][ib] == matrix_aus[j][jb]:
@@ -787,14 +782,7 @@ def relax(
                 if abs(prod) > MIN:
                     matrixb[j].append(i)
                     matrixb2[j].append(prod)
-
-    for i in range(M1):
-        matrixAus[i] = []
-        matrixAus2[i] = []
-
-    for i in range(N1):
-        matrix_aus[i] = []
-        matrix_aus2[i] = []
+    del matrixAus, matrixAus2, matrix_aus, matrix_aus2
 
     var = [MIN] * M1
     done = False
