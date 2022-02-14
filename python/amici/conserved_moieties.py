@@ -876,8 +876,8 @@ def reduce(
                     done = False
                     cls_species_idxs[k1] = []
                     cls_coefficients[k1] = []
-                    for i in range(num_species):
-                        if abs(column[i]) > MIN:
-                            cls_species_idxs[k1].append(i)
-                            cls_coefficients[k1].append(column[i])
+                    for col_idx, col_val in enumerate(column):
+                        if abs(col_val) > MIN:
+                            cls_species_idxs[k1].append(col_idx)
+                            cls_coefficients[k1].append(col_val)
                     pivots[k1] = -len(cls_species_idxs[k1])
