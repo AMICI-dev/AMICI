@@ -743,7 +743,7 @@ def relax(
             t = indip[i]
             if len(matrix[t]) > 1:
                 for k in range(1, len(matrix[t])):
-                    quelo = indip[matrix[t]][k] - K
+                    quelo = indip[matrix[t][k]] - K
                     matrixAus[quelo].append(i)
                     matrixAus2[quelo].append(-matrix2[t][k])
 
