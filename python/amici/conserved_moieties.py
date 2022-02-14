@@ -346,7 +346,7 @@ def _is_linearly_dependent(
         cls_species_idxs: Sequence[Sequence[int]],
         cls_coefficients: Sequence[Sequence[Number]],
         matched: Sequence[int],
-        num_rows: int
+        num_species: int
 ) -> bool:
     """Check for linear dependence between MCLs
 
@@ -363,7 +363,7 @@ def _is_linearly_dependent(
         NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
         actual found MCLs
-    :param num_rows:
+    :param num_species:
         number of rows in :math:`S`
     :returns:
         boolean indicating linear dependence (true) or not (false)
@@ -416,7 +416,7 @@ def _is_linearly_dependent(
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
-                column = [0] * num_rows
+                column = [0] * num_species
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
@@ -425,7 +425,7 @@ def _is_linearly_dependent(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(num_rows):
+                for i in range(num_species):
                     if abs(column[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
@@ -440,10 +440,10 @@ def monte_carlo(
         J: Sequence[Sequence[int]],
         J2: Sequence[Sequence[float]],
         fields: Sequence[float],
-        int_matched: Sequence[int],
+        int_matched: MutableSequence[int],
         int_kernel_dim: int,
-        cls_species_idxs: Sequence[Sequence[int]],
-        cls_coefficients: Sequence[Sequence[Number]],
+        cls_species_idxs: MutableSequence[MutableSequence[int]],
+        cls_coefficients: MutableSequence[MutableSequence[float]],
         num_species: int,
         initial_temperature: float = 1,
         cool_rate: float = 1e-3,
@@ -502,7 +502,7 @@ def monte_carlo(
 
     while True:
         en = int(random.uniform(0, 1) * dim)
-        while len(J[en]) == 0:
+        while not len(J[en]):
             en = int(random.uniform(0, 1) * dim)
         p = 1
         if num[en] > 0 and random.uniform(0, 1) < 0.5:
@@ -548,7 +548,7 @@ def monte_carlo(
 
     if howmany < 10 * max_iter:
         # founds MCLS? need to check for linear independence
-        if len(int_matched) > 0:
+        if len(int_matched):
             yes = _is_linearly_dependent(
                 num, int_kernel_dim, cls_species_idxs,
                 cls_coefficients, matched, num_species)
