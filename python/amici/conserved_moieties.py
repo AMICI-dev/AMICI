@@ -795,7 +795,7 @@ def relax(
                 for i in range(len(matrixb[j])):
                     constr += matrixb2[j][i] * var[matrixb][j][i]
                 if constr < cmin:
-                    min = j
+                    cmin_idx = j
                     cmin = constr
         time += 1
         if cmin >= 0:
@@ -803,13 +803,13 @@ def relax(
         else:
             alpha = -relaxation_step * cmin  # Motzkin relaxation
             fact = 0
-            for j in range(len(matrixb[min])):
-                fact += matrixb2[min][j] ** 2
+            for j in range(len(matrixb[cmin_idx])):
+                fact += matrixb2[cmin_idx][j] ** 2
             alpha /= fact
             if alpha < 1e-9 * MIN:
                 alpha = 1e-9 * MIN
-            for j in range(len(matrixb[min])):
-                var[matrixb[min][j]] += alpha * matrixb2[min][j]
+            for j in range(len(matrixb[cmin_idx])):
+                var[matrixb[cmin_idx][j]] += alpha * matrixb2[cmin_idx][j]
 
         if done or time >= relaxation_max:
             break
