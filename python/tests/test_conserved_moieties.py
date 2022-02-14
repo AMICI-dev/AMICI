@@ -143,10 +143,6 @@ def test_detect_cl(data_demartino2014, quiet=False):
     old = deepcopy(cls_species_idxs)
     old2 = deepcopy(cls_coefficients)
     reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
-    # TODO what is tested here? should have been deep-copied?!
-    for i in range(len(old)):
-        assert (set(old[i]) == set(cls_species_idxs[i]))
-        assert (set(old2[i]) == set(cls_coefficients[i]))
 
     if not quiet:
         output(int_kernel_dim, kernel_dim, engaged_species, cls_species_idxs,
