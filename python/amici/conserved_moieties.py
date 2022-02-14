@@ -3,7 +3,7 @@ import math
 import random
 import sys
 from numbers import Number
-from typing import Any, List, MutableSequence, Sequence, Tuple
+from typing import List, MutableSequence, Sequence, Tuple
 
 from .logging import get_logger
 
@@ -11,7 +11,61 @@ sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
 
 
-def qsort(
+def compute_moiety_conservation_laws(
+        stoichiometric_list: Sequence[Number],
+        num_species: int,
+        num_reactions: int
+) -> Tuple[List[List[int]], List[List[Number]]]:
+    """Compute moiety conservation laws.
+
+    According to the algorithm proposed by De Martino et al. (2014)
+    https://doi.org/10.1371/journal.pone.0100750
+
+    :param stoichiometric_list:
+        the stoichiometric matrix as a list (species x reactions,
+        row-major ordering)
+    :param num_species:
+        total number of species in the reaction network
+    :param num_reactions:
+        total number of reactions in the reaction network
+    :returns:
+        Integer MCLs as list of lists of indices of involved species and
+        list of lists of corresponding coefficients.
+    """
+    # compute semi-positive conservation laws
+    kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
+        cls_species_idxs, cls_coefficients = kernel(
+        stoichiometric_list, num_species, num_reactions)
+
+    # construct interaction matrix
+    J, J2, fields = fill(stoichiometric_list, engaged_species, num_species)
+
+    done = (int_kernel_dim == kernel_dim)
+    timer = 0
+    # maximum number of montecarlo search before starting relaxation
+    max_num_monte_carlo = 10
+    while not done:
+        yes, int_kernel_dim, engaged_species, conserved_moieties = monte_carlo(
+            engaged_species, J, J2, fields, conserved_moieties,
+            int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
+            max_iter=max_num_monte_carlo
+        )
+        done = (int_kernel_dim == kernel_dim)
+        if yes:
+            timer += 1
+        else:
+            timer = 0
+
+        if timer == max_num_monte_carlo:
+            done = relax(stoichiometric_list, conserved_moieties,
+                         num_reactions, num_species)
+            if not done:
+                timer = 0
+    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    return cls_species_idxs, cls_coefficients
+
+
+def _qsort(
         k: int,
         km: int,
         orders: MutableSequence[int],
@@ -52,8 +106,8 @@ def qsort(
         orders[i] = neworders[i - km]
 
     centre = p + km
-    qsort(k, centre + 1, orders, pivots)
-    qsort(centre, km, orders, pivots)
+    _qsort(k, centre + 1, orders, pivots)
+    _qsort(centre, km, orders, pivots)
 
 
 def kernel(
@@ -82,7 +136,7 @@ def kernel(
         total number of reactions in the reaction network
     :returns:
         kernel dimension, MCLs, integer kernel dimension, integer MCLs and
-        indices to metabolites and reactions in the preceding order as a tuple
+        indices to species and reactions in the preceding order as a tuple
     """
     il = 0
     jl = 0
@@ -94,9 +148,9 @@ def kernel(
     matrix = [[] for _ in range(N)]
     matrix2 = [[] for _ in range(N)]
     matched = []
-    intmatched = []
-    NSolutions = [[] for _ in range(N)]
-    NSolutions2 = [[] for _ in range(N)]
+    int_matched = []
+    cls_species_idxs = [[] for _ in range(N)]
+    cls_coefficients = [[] for _ in range(N)]
 
     for _, val in enumerate(stoichiometric_list):
         if val != 0:
@@ -111,12 +165,12 @@ def kernel(
         matrix[i].append(M + i)
         matrix2[i].append(1)
 
-    ok = 0
-    orders = [i for i in range(N)]
+    orders = list(range(N))
     pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
 
-    while ok == 0:
-        qsort(N, 0, orders, pivots)
+    done = False
+    while not done:
+        _qsort(N, 0, orders, pivots)
         for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
@@ -140,29 +194,29 @@ def kernel(
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
-        ok = 1
+        done = 1
 
         for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                colonna = [0 for _ in range(N + M)]
+                column = [0 for _ in range(N + M)]
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
-                    colonna[matrix[k1][i]] = matrix2[k1][i] * g
+                    column[matrix[k1][i]] = matrix2[k1][i] * g
 
                 for i in range(1, len(matrix[k2])):
-                    colonna[matrix[k2][i]] -= matrix2[k2][i]
+                    column[matrix[k2][i]] -= matrix2[k2][i]
 
                 matrix[k1] = []
                 matrix2[k1] = []
                 for i in range(N + M):
-                    if abs(colonna[i]) > MIN:
+                    if abs(column[i]) > MIN:
                         matrix[k1].append(i)
-                        matrix2[k1].append(colonna[i])
+                        matrix2[k1].append(column[i])
 
-                ok = 0
+                done = 0
                 if len(matrix[orders[j + 1]]) > 0:
                     pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
                 else:
@@ -170,67 +224,54 @@ def kernel(
 
     RSolutions = [[] for _ in range(N)]
     RSolutions2 = [[] for _ in range(N)]
-    kernelDim = 0
+    kernel_dim = 0
 
     for i in range(N):
-        ok = 1
-        if len(matrix[i]) > 0:
+        done = True
+        if len(matrix[i]):
             for j in range(len(matrix[i])):
                 if matrix[i][j] < M:
-                    ok = 0
-        if ok == 1 and len(matrix[i]) > 0:
+                    done = False
+                    break
+        if done and len(matrix[i]):
             for j in range(len(matrix[i])):
-                RSolutions[kernelDim].append(matrix[i][j] - M)
-                RSolutions2[kernelDim].append(matrix2[i][j])
-            kernelDim += 1
-
-    for i in range(N):
-        matrix[i] = []
-        matrix2[i] = []
+                RSolutions[kernel_dim].append(matrix[i][j] - M)
+                RSolutions2[kernel_dim].append(matrix2[i][j])
+            kernel_dim += 1
 
     i2 = 0
-    for i in range(kernelDim):
+    for i in range(kernel_dim):
         ok2 = 1
         if (len(RSolutions[i])) > 0:
             for j in range(len(RSolutions[i])):
                 if RSolutions2[i][j] * RSolutions2[i][0] < 0:
                     ok2 = 0
-                if len(matched) == 0:
+                if len(matched) == 0 \
+                        or all(cur_matched != RSolutions[i][j]
+                               for cur_matched in matched):
                     matched.append(RSolutions[i][j])
-                else:
-                    ok3 = 1
-                    for k in range(len(matched)):
-                        if matched[k] == RSolutions[i][j]:
-                            ok3 = 0
-                    if ok3 == 1:
-                        matched.append(RSolutions[i][j])
         if ok2 == 1 and len(RSolutions[i]) > 0:
-            min = MAX
+            min_value = MAX
             for j in range(len(RSolutions[i])):
-                NSolutions[i2].append(RSolutions[i][j])
-                NSolutions2[i2].append(abs(RSolutions2[i][j]))
-                if min > abs(RSolutions2[i][j]):
-                    min = abs(RSolutions2[i][j])
-                if len(intmatched) == 0:
-                    intmatched.append(NSolutions[i2][j])
-                else:
-                    ok3 = 1
-                    for k in range(len(intmatched)):
-                        if intmatched[k] == NSolutions[i2][j]:
-                            ok3 = 0
-                    if ok3 == 1:
-                        intmatched.append(NSolutions[i2][j])
-            for j in range(len(NSolutions[i2])):
-                NSolutions2[i2][j] /= min
+                cls_species_idxs[i2].append(RSolutions[i][j])
+                cls_coefficients[i2].append(abs(RSolutions2[i][j]))
+                if min_value > abs(RSolutions2[i][j]):
+                    min_value = abs(RSolutions2[i][j])
+                if len(int_matched) == 0 \
+                        or all(cur_int_matched != cls_species_idxs[i2][j]
+                               for cur_int_matched in int_matched):
+                    int_matched.append(cls_species_idxs[i2][j])
+            for j in range(len(cls_species_idxs[i2])):
+                cls_coefficients[i2][j] /= min_value
             i2 += 1
-    intKernelDim = i2
+    int_kernel_dim = i2
 
-    assert intKernelDim <= kernelDim
-    assert len(NSolutions) == len(NSolutions2), \
+    assert int_kernel_dim <= kernel_dim
+    assert len(cls_species_idxs) == len(cls_coefficients), \
         "Inconsistent number of conserved quantities in coefficients and " \
         "species"
-    return (kernelDim, matched, intKernelDim, intmatched, NSolutions,
-            NSolutions2)
+    return (kernel_dim, matched, int_kernel_dim, int_matched, cls_species_idxs,
+            cls_coefficients)
 
 
 def fill(
@@ -298,11 +339,11 @@ def fill(
     return J, J2, fields
 
 
-def is_linearly_dependent(
+def _is_linearly_dependent(
         vectors: Sequence[Number],
         int_kernel_dim: int,
-        NSolutions: Sequence[Sequence[int]],
-        NSolutions2: Sequence[Sequence[Number]],
+        cls_species_idxs: Sequence[Sequence[int]],
+        cls_coefficients: Sequence[Sequence[Number]],
         matched: Sequence[int],
         num_rows: int
 ) -> bool:
@@ -315,9 +356,9 @@ def is_linearly_dependent(
         found basis
     :param int_kernel_dim:
         number of integer conservative laws
-    :param NSolutions:
+    :param cls_species_idxs:
         NSolutions contains the species involved in the MCL
-    :param NSolutions2:
+    :param cls_coefficients:
         NSolutions2 contains the corresponding coefficients in the MCL
     :param matched:
         actual found MCLs
@@ -332,14 +373,14 @@ def is_linearly_dependent(
     matrix = [[] for _ in range(K)]
     matrix2 = [[] for _ in range(K)]
     for i in range(K - 1):
-        for j in range(len(NSolutions[i])):
-            matrix[i].append(NSolutions[i][j])
-            matrix2[i].append(NSolutions2[i][j])
+        for j in range(len(cls_species_idxs[i])):
+            matrix[i].append(cls_species_idxs[i][j])
+            matrix2[i].append(cls_coefficients[i][j])
 
     orders2 = list(range(len(matched)))
     pivots2 = matched[:]
 
-    qsort(len(matched), 0, orders2, pivots2)
+    _qsort(len(matched), 0, orders2, pivots2)
     for i in range(len(matched)):
         if vectors[orders2[i]] > MIN:
             matrix[K - 1].append(matched[orders2[i]])
@@ -351,7 +392,7 @@ def is_linearly_dependent(
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
     while ok == 0:
-        qsort(K, 0, orders, pivots)
+        _qsort(K, 0, orders, pivots)
         for j in range(K - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 min1 = MAX
@@ -377,25 +418,23 @@ def is_linearly_dependent(
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                colonna = [None] * num_rows
-                for i in range(num_rows):
-                    colonna[i] = 0
+                column = [0] * num_rows
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
-                    colonna[matrix[k1][i]] = matrix2[k1][i] * g
+                    column[matrix[k1][i]] = matrix2[k1][i] * g
                 for i in range(1, len(matrix[k2])):
-                    colonna[matrix[k2][i]] -= matrix2[k2][i]
+                    column[matrix[k2][i]] -= matrix2[k2][i]
 
                 matrix[k1] = []
                 matrix2[k1] = []
                 for i in range(num_rows):
-                    if abs(colonna[i]) > MIN:
+                    if abs(column[i]) > MIN:
                         matrix[k1].append(i)
-                        matrix2[k1].append(colonna[i])
+                        matrix2[k1].append(column[i])
                 ok = 0
                 pivots[k1] = matrix[k1][0] if len(matrix[k1]) > 0 else MAX
     K1 = sum(len(matrix[i]) > 0 for i in range(K))
-    return int(K == K1)
+    return K == K1
 
 
 def monte_carlo(
@@ -403,17 +442,15 @@ def monte_carlo(
         J,
         J2,
         fields,
-        intmatched: Sequence[int],
-        intkerneldim: int,
-        NSolutions: Sequence[Sequence[int]],
-        NSolutions2: Sequence[Sequence[Number]],
-        kerneldim: int,
+        int_matched: Sequence[int],
+        int_kernel_dim: int,
+        cls_species_idxs: Sequence[Sequence[int]],
+        cls_coefficients: Sequence[Sequence[Number]],
         num_rows: int,
-        initial_temperature: Number = 1,
+        initial_temperature: float = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
-) -> Tuple[int, int, int, Sequence[Sequence[int]],
-           Sequence[Sequence[Number]], Sequence[int], Sequence[int]]:
+) -> Tuple[bool, int, Sequence[int], Sequence[int]]:
     """MonteCarlo simulated annealing for finding integer MCLs
 
     Finding integer solutions for the MCLs by Monte Carlo, see step (b) in
@@ -427,16 +464,14 @@ def monte_carlo(
         J2
     :param fields:
         fields
-    :param intmatched:
+    :param int_matched:
         actual matched MCLs
-    :param intkerneldim:
+    :param int_kernel_dim:
         number of MCLs found in :math:`S`
-    :param NSolutions:
-        NSolutions
-    :param NSolutions2:
-        NSolutions2
-    :param kerneldim:
-        kerneldim
+    :param cls_species_idxs:
+        Modified in-place.
+    :param cls_coefficients:
+        Modified in-place.
     :param initial_temperature:
         initial temperature
     :param cool_rate:
@@ -501,8 +536,9 @@ def monte_carlo(
             for i in range(dim):
                 num[i] = 0
             en = int(random.uniform(0, 1) * dim)
-            # Note: Bug in original c++ code (while loop without any side effect
-            # changed to if statement to prevent a possibly infinite loop)
+            # Note: Bug in original c++ code (while loop without any side
+            #  effect changed to if statement to prevent a possibly infinite
+            #  loop)
             if len(J[en]):
                 en = int(random.uniform(0, 1) * dim)
             num[en] = 1
@@ -519,59 +555,56 @@ def monte_carlo(
             break
 
     if howmany < 10 * max_iter:
-        if len(intmatched) > 0:
-            yes = is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
-                                        matched, num_rows)
-            assert yes, "Not true!"
+        if len(int_matched) > 0:
+            yes = _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
+                                         cls_coefficients, matched, num_rows)
+            # TODO ???
+            # assert yes, "Not true!"
         else:
-            yes = 1
-        if yes == 1:
+            yes = True
+        if yes:
             orders2 = list(range(len(matched)))
             pivots2 = matched[:]
-            qsort(len(matched), 0, orders2, pivots2)
+            _qsort(len(matched), 0, orders2, pivots2)
             for i in range(len(matched)):
                 if num[orders2[i]] > 0:
-                    NSolutions[intkerneldim].append(matched[orders2[i]])
-                    NSolutions2[intkerneldim].append(num[orders2[i]])
-            intkerneldim += 1
-            is_linearly_dependent(num, intkerneldim, NSolutions, NSolutions2,
-                                  matched, num_rows)  # side-effects on num vector
-            intkerneldim, kerneldim, NSolutions, NSolutions2 = reduce(
-                intkerneldim, kerneldim, NSolutions, NSolutions2, num_rows)
-            min = 1000
-            for i in range(len(NSolutions[intkerneldim - 1])):
-                if len(intmatched) == 0:
-                    intmatched.append(NSolutions[intkerneldim - 1][i])
-                else:
-                    ok3 = 1
-                    for k in range(len(intmatched)):
-                        if intmatched[k] == NSolutions[intkerneldim - 1][i]:
-                            ok3 = 0
-                    if ok3 == 1:
-                        intmatched.append(NSolutions[intkerneldim - 1][i])
-                if NSolutions2[intkerneldim - 1][i] < min:
-                    min = NSolutions2[intkerneldim - 1][i]
-            for i in range(len(NSolutions[intkerneldim - 1])):
-                NSolutions2[intkerneldim - 1][i] /= min
+                    cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
+                    cls_coefficients[int_kernel_dim].append(num[orders2[i]])
+            int_kernel_dim += 1
+            # side-effects on num vector
+            _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
+                                   cls_coefficients, matched, num_rows)
+            reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
+            min_value = 1000
+            for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+                if len(int_matched) == 0 \
+                        or all(cur_int_matched
+                               != cls_species_idxs[int_kernel_dim - 1][i]
+                               for cur_int_matched in int_matched):
+                    int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+
+                if cls_coefficients[int_kernel_dim - 1][i] < min_value:
+                    min_value = cls_coefficients[int_kernel_dim - 1][i]
+            for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+                cls_coefficients[int_kernel_dim - 1][i] /= min_value
             logger.debug(
                 f"Found linearly independent moiety, now there are "
-                f"{intkerneldim} engaging {len(intmatched)} species")
+                f"{int_kernel_dim} engaging {len(int_matched)} species")
         else:
             logger.debug(
                 "Found a moiety but it is linearly dependent... next.")
     else:
-        yes = 0
-    return (yes, intkerneldim, kerneldim, NSolutions, NSolutions2, matched,
-            intmatched)
+        yes = False
+    return yes, int_kernel_dim, matched, int_matched
 
 
 def relax(
         stoichiometric_list: Sequence[Number],
-        intmatched: Sequence[int],
+        int_matched: Sequence[int],
         M: int,
         N: int,
-        relaxation_max: Number = 1e6,
-        relaxation_step: Number = 1.9
+        relaxation_max: float = 1e6,
+        relaxation_step: float = 1.9
 ) -> bool:
     """Relaxation scheme for Monte Carlo final solution
 
@@ -580,7 +613,7 @@ def relax(
 
     :param stoichiometric_list:
         stoichiometric matrix :math:`S` as a flat list
-    :param intmatched:
+    :param int_matched:
         intmatched
     :param M:
         number of species in reaction network
@@ -591,7 +624,8 @@ def relax(
     :param relaxation_step:
         relaxation step width
     :returns:
-        boolean indicating if relaxation has succeeded (true) or not (false)
+        boolean indicating if relaxation has succeeded (``True` ) or not
+        (``False``)
     """
     MIN = 1e-9
     MAX = 1e9
@@ -600,13 +634,13 @@ def relax(
 
     i1 = 0
     j1 = 0
-    K = len(intmatched)
+    K = len(int_matched)
     for _, val in enumerate(stoichiometric_list):
         if val != 0:
             prendo = K
             if K > 0:
                 for i in range(K):
-                    if j1 == intmatched[i]:
+                    if j1 == int_matched[i]:
                         prendo = i
             if prendo < K:
                 matrix[prendo].append(i1)
@@ -621,7 +655,7 @@ def relax(
 
     done = False
     while not done:
-        qsort(K, 0, orders, pivots)
+        _qsort(K, 0, orders, pivots)
         for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
@@ -643,28 +677,24 @@ def relax(
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
-        done = True
         for j in range(K):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                colonna = [None] * M
-                for i in range(M):
-                    colonna[i] = 0
+                column = [0] * M
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
-                    colonna[matrix[k1][i]] = matrix2[k1][i] * g
+                    column[matrix[k1][i]] = matrix2[k1][i] * g
                 for i in range(1, len(matrix[k2])):
-                    colonna[matrix[k2][i]] -= matrix2[k2][i]
+                    column[matrix[k2][i]] -= matrix2[k2][i]
 
                 matrix[k1] = []
                 matrix2[k1] = []
                 for i in range(M):
-                    if abs(colonna[i]) > MIN:
+                    if abs(column[i]) > MIN:
                         matrix[k1].append(i)
-                        matrix2[k1].append(colonna[i])
-                done = False
+                        matrix2[k1].append(column[i])
                 if len(matrix[orders[j + 1]]) > 0:
                     pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
                 else:
@@ -684,24 +714,20 @@ def relax(
                         j = orders[j1]
                         if len(matrix[j]) > 0:
                             if matrix[j][0] == matrix[k][i]:
-                                rigak = [None] * M
-                                for a in range(M):
-                                    rigak[a] = 0
+                                row_k = [0] * M
                                 for a in range(len(matrix[k])):
-                                    rigak[matrix[k]][a] = matrix2[k][a]
+                                    row_k[matrix[k]][a] = matrix2[k][a]
                                 for a in range(len(matrix[j])):
-                                    rigak[matrix[j]][a] -= matrix2[j][a] * \
+                                    row_k[matrix[j]][a] -= matrix2[j][a] * \
                                                            matrix2[k][i]
                                 matrix = []
                                 matrix2 = []
                                 for a in range(M):
-                                    if rigak[a] != 0:
+                                    if row_k[a] != 0:
                                         matrix[k].append(a)
-                                        matrix2[k].append(rigak[a])
+                                        matrix2[k].append(row_k[a])
 
-        indip = [None] * M
-        for i in range(M):
-            indip[i] = K + 1
+        indip = [K + 1] * M
 
         for i in range(K):
             if len(matrix[i]) > 0:
@@ -742,9 +768,9 @@ def relax(
 
         for _, val in enumerate(stoichiometric_list):
             prendo = 1
-            if len(intmatched) > 0:
-                for i in range(len(intmatched)):
-                    if j1 == intmatched[i]:
+            if len(int_matched) > 0:
+                for i in range(len(int_matched)):
+                    if j1 == int_matched[i]:
                         prendo -= 1
             if val != 0:
                 if prendo == 1:
@@ -778,9 +804,7 @@ def relax(
             matrix_aus[i] = []
             matrix_aus2[i] = []
 
-        var = [None] * M1
-        for i in range(M1):
-            var[i] = MIN
+        var = [MIN] * M1
         done = False
         time = 0
         while True:
@@ -816,63 +840,58 @@ def relax(
 
 
 def reduce(
-        intKernelDim: int,
-        kernelDim: int,
-        NSolutions: Sequence[Sequence[int]],
-        NSolutions2: Sequence[Sequence[Number]],
-        N: int
-) -> Tuple[int, int, Sequence[Sequence[int]], Sequence[Sequence[Number]]]:
+        int_kernel_dim: int,
+        cls_species_idxs: MutableSequence[MutableSequence[int]],
+        cls_coefficients: MutableSequence[MutableSequence[Number]],
+        num_rows: int
+) -> None:
     """Reducing the solution which has been found by the Monte Carlo process
 
     In case of superpositions of independent MCLs one can reduce by
     iteratively subtracting the other independent MCLs, taking care
     to maintain then non-negativity constraint, see Eq. 13 in De Martino (2014)
 
-    :param intKernelDim:
+    :param int_kernel_dim:
         number of found MCLs
-    :param kernelDim:
-        number of found conservative laws
-    :param NSolutions:
-        NSolutions contains the species involved in the MCL
-    :param NSolutions2:
-        NSolutions2 contains the corresponding coefficients in the MCL
+    :param cls_species_idxs:
+        Species indices involved in each of the conservation laws.
+        Modified in-place.
+    :param cls_coefficients:
+        Coefficients for each of the species involved in each of the
+        conservation laws. Modified in-place.
+    :param num_rows:
+        number of rows in :math:`S`
     """
-    K = intKernelDim
+    K = int_kernel_dim
     MIN = 1e-9
-    ok = 0
-    orders = [None] * K
-    for i in range(K):
-        orders[i] = i
-    pivots = [None] * K
-    for i in range(K):
-        pivots[i] = -len(NSolutions[i])
+    orders = list(range(K))
+    pivots = [-len(cls_species_idxs[i]) for i in range(K)]
 
     while True:
-        qsort(K, 0, orders, pivots)
-        ok = 1
+        _qsort(K, 0, orders, pivots)
+        ok = True
         for i in range(K - 2):
             for j in range(i + 1, K):
                 k1 = orders[i]
                 k2 = orders[j]
-                colonna = [None] * N
-                for l in range(N):
-                    colonna[l] = 0
-                ok1 = 1
-                for l in range(len(NSolutions[k1])):
-                    colonna[NSolutions[k1][l]] = NSolutions2[k1][l]
-                for l in range(len(NSolutions[k2])):
-                    colonna[NSolutions[k2][l]] -= NSolutions2[k2][l]
-                    if colonna[NSolutions[k2][l]] < -MIN:
-                        ok1 = 0
-                if ok1 == 1:
-                    ok = 0
-                    NSolutions[k1] = []
-                    NSolutions2[k1] = []
-                    for l in range(N):
-                        if abs(colonna[l]) > MIN:
-                            NSolutions[k1].append(l)
-                            NSolutions2[k1].append(colonna[l])
-                    pivots[k1] = -len(NSolutions[k1])
-        if ok != 0:
+                column = [0] * num_rows
+                ok1 = True
+                for species_idx, coefficient \
+                        in zip(cls_species_idxs[k1], cls_coefficients[k1]):
+                    column[species_idx] = coefficient
+                for species_idx, coefficient \
+                        in zip(cls_species_idxs[k2], cls_coefficients[k2]):
+                    column[species_idx] -= coefficient
+                    if column[species_idx] < -MIN:
+                        ok1 = False
+                if ok1:
+                    ok = False
+                    cls_species_idxs[k1] = []
+                    cls_coefficients[k1] = []
+                    for l in range(num_rows):
+                        if abs(column[l]) > MIN:
+                            cls_species_idxs[k1].append(l)
+                            cls_coefficients[k1].append(column[l])
+                    pivots[k1] = -len(cls_species_idxs[k1])
+        if ok:
             break
-    return intKernelDim, kernelDim, NSolutions, NSolutions2
