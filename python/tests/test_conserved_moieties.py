@@ -108,13 +108,14 @@ def test_detect_cl(data_demartino2014, quiet=False):
         timer = 0
         counter = 1
         finish = 0
+        max_num_monte_carlo = 10
         while finish == 0:
             if not quiet:
                 print(f"Monte Carlo call #{counter}")
             yes, int_kernel_dim, engaged_species, conserved_moieties = \
                 monte_carlo(engaged_species, J, J2, fields, conserved_moieties,
                             int_kernel_dim, cls_species_idxs, cls_coefficients,
-                            num_rows=N)
+                            num_rows=N, max_iter=max_num_monte_carlo)
             if not quiet:
                 output(int_kernel_dim, kernel_dim, engaged_species,
                        cls_species_idxs, cls_coefficients, row_names)
@@ -124,12 +125,13 @@ def test_detect_cl(data_demartino2014, quiet=False):
                 finish = 1
             if yes == 0:
                 timer += 1
-            if timer == max:
+            else:
+                timer = 0
+            if timer == max_num_monte_carlo:
                 if not quiet:
                     print("Relaxation...")
                 finish = relax(S, conserved_moieties, M, N)
-                if finish == 1:
-                    timer = 0
+                timer = 0
         old = cls_species_idxs
         old2 = cls_coefficients
         reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, N)
