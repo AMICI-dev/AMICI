@@ -393,7 +393,7 @@ def _is_linearly_dependent(
 
     while ok == 0:
         _qsort(K, 0, orders, pivots)
-        for j in range(K - 1):
+        for j in range(K - 2):
             if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 min1 = MAX
                 if len(matrix[orders[j]]) > 1:
