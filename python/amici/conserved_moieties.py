@@ -571,10 +571,6 @@ def monte_carlo(
                     cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
                     cls_coefficients[int_kernel_dim].append(num[orders2[i]])
             int_kernel_dim += 1
-            # side-effects on num vector
-            # TODO really?
-            _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
-                                   cls_coefficients, matched, num_rows)
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
             min_value = 1000
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
