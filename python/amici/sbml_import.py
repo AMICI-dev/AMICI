@@ -4,7 +4,7 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
-
+from copy import deepcopy
 import copy
 import itertools as itt
 import logging
@@ -1433,7 +1433,10 @@ class SbmlImporter:
             List of species indices which remain later in the ODE solver
         """
         species_solver = list(range(ode_model.num_states_rdata()))
-
+        from pprint import pprint
+        pprint(ode_model._states)
+        pprint(self.stoichiometric_matrix)
+        #raise ValueError()
         try:
             stoichiometric_list = [
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
