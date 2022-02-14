@@ -445,10 +445,6 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. */
         realtype len = nodes_[i_node + 1] - nodes_[i_node];
-        realtype len_m =
-          (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
-        realtype len_p =
-          (i_node < n_nodes() - 2) ? nodes_[i_node + 2] - nodes_[i_node] : len;
 
         /* As computing the coefficient is a mess, it's in another function */
         for (int ip = 0; ip < nplist; ip++)
