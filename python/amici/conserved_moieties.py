@@ -276,7 +276,7 @@ def kernel(
 def fill(
         stoichiometric_list: Sequence[Number],
         matched: Sequence[int],
-        num_rows: int
+        num_species: int
 ) -> Tuple[List[List[int]], List[List[int]], List[int]]:
     """Construct interaction matrix
 
@@ -287,7 +287,7 @@ def fill(
         the stoichiometric matrix given as a flat list
     :param matched:
         found and independent moiety conservation laws (MCL)
-    :param num_rows:
+    :param num_species:
         number of rows in :math:`S`
     :returns:
         interactions of metabolites and reactions, and matrix of interaction
@@ -297,10 +297,10 @@ def fill(
     matrix = [[] for _ in range(dim)]
     matrix2 = [[] for _ in range(dim)]
 
-    J = [[] for _ in range(num_rows)]
-    J2 = [[] for _ in range(num_rows)]
+    J = [[] for _ in range(num_species)]
+    J2 = [[] for _ in range(num_species)]
 
-    fields = [0] * num_rows
+    fields = [0] * num_species
     i1 = 0
     j1 = 0
     for val in stoichiometric_list:
@@ -314,20 +314,19 @@ def fill(
                 matrix[prendo].append(i1)
                 matrix2[prendo].append(val)
         j1 += 1
-        if j1 == num_rows:
+        if j1 == num_species:
             j1 = 0
             i1 += 1
 
     for i in range(dim):
         for j in range(i, dim):
             interactions = 0
-            if len(matrix[i]):
-                for po in range(len(matrix[i])):
-                    if len(matrix[j]):
-                        for pu in range(len(matrix[j])):
-                            if matrix[i][po] == matrix[j][pu]:
-                                interactions += (
-                                        matrix2[i][po] * matrix2[j][pu])
+            for po in range(len(matrix[i])):
+                if not len(matrix[j]):
+                    continue
+                for pu in range(len(matrix[j])):
+                    if matrix[i][po] == matrix[j][pu]:
+                        interactions += (matrix2[i][po] * matrix2[j][pu])
             if j == i:
                 fields[i] = interactions
             elif abs(interactions) > MIN:
@@ -880,10 +879,10 @@ def reduce(
                     ok = False
                     cls_species_idxs[k1] = []
                     cls_coefficients[k1] = []
-                    for l in range(num_rows):
-                        if abs(column[l]) > MIN:
-                            cls_species_idxs[k1].append(l)
-                            cls_coefficients[k1].append(column[l])
+                    for i in range(num_rows):
+                        if abs(column[i]) > MIN:
+                            cls_species_idxs[k1].append(i)
+                            cls_coefficients[k1].append(column[i])
                     pivots[k1] = -len(cls_species_idxs[k1])
         if ok:
             break
