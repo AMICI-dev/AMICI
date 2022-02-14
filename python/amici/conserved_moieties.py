@@ -859,9 +859,10 @@ def reduce(
     order = list(range(K))
     pivots = [-len(cls_species_idxs[i]) for i in range(K)]
 
-    while True:
+    done = False
+    while not done:
         _qsort(K, 0, order, pivots)
-        ok = True
+        done = True
         for i in range(K - 1):
             for j in range(i + 1, K):
                 k1 = order[i]
@@ -877,7 +878,7 @@ def reduce(
                     if column[species_idx] < -MIN:
                         ok1 = False
                 if ok1:
-                    ok = False
+                    done = False
                     cls_species_idxs[k1] = []
                     cls_coefficients[k1] = []
                     for i in range(num_rows):
@@ -885,5 +886,3 @@ def reduce(
                             cls_species_idxs[k1].append(i)
                             cls_coefficients[k1].append(column[i])
                     pivots[k1] = -len(cls_species_idxs[k1])
-        if ok:
-            break
