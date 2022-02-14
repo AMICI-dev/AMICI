@@ -45,7 +45,7 @@ def compute_moiety_conservation_laws(
     # maximum number of montecarlo search before starting relaxation
     max_num_monte_carlo = 10
     while not done:
-        yes, int_kernel_dim, engaged_species, conserved_moieties = monte_carlo(
+        yes, int_kernel_dim, conserved_moieties = monte_carlo(
             engaged_species, J, J2, fields, conserved_moieties,
             int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
             max_iter=max_num_monte_carlo
@@ -137,8 +137,6 @@ def kernel(
         kernel dimension, MCLs, integer kernel dimension, integer MCLs and
         indices to species and reactions in the preceding order as a tuple
     """
-    il = 0
-    jl = 0
     N = num_species
     M = num_reactions
     MAX = 1e9
@@ -146,26 +144,23 @@ def kernel(
 
     matrix = [[] for _ in range(N)]
     matrix2 = [[] for _ in range(N)]
-    matched = []
-    int_matched = []
-    cls_species_idxs = [[] for _ in range(N)]
-    cls_coefficients = [[] for _ in range(N)]
 
-    for _, val in enumerate(stoichiometric_list):
+    i1 = 0
+    j1 = 0
+    for val in stoichiometric_list:
         if val != 0:
-            matrix[jl].append(il)
-            matrix2[jl].append(val)
-        jl += 1
-        if jl == N:
-            jl = 0
-            il += 1
-
+            matrix[j1].append(i1)
+            matrix2[j1].append(val)
+        j1 += 1
+        if j1 == N:
+            j1 = 0
+            i1 += 1
     for i in range(N):
         matrix[i].append(M + i)
         matrix2[i].append(1)
 
     orders = list(range(N))
-    pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
+    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(N)]
 
     done = False
     while not done:
@@ -193,14 +188,14 @@ def kernel(
                     k2 = orders[j + 1]
                     orders[j + 1] = orders[j]
                     orders[j] = k2
-        done = 1
+        done = True
 
         for j in range(N - 1):
             if pivots[orders[j + 1]] == pivots[orders[j]] \
                     and pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
-                column = [0 for _ in range(N + M)]
+                column = [0] * (N + M)
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
@@ -215,7 +210,7 @@ def kernel(
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
 
-                done = 0
+                done = False
                 if len(matrix[orders[j + 1]]) > 0:
                     pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
                 else:
@@ -237,11 +232,17 @@ def kernel(
                 RSolutions[kernel_dim].append(matrix[i][j] - M)
                 RSolutions2[kernel_dim].append(matrix2[i][j])
             kernel_dim += 1
+    del matrix, matrix2
+
+    matched = []
+    int_matched = []
+    cls_species_idxs = [[] for _ in range(N)]
+    cls_coefficients = [[] for _ in range(N)]
 
     i2 = 0
     for i in range(kernel_dim):
         ok2 = 1
-        if (len(RSolutions[i])) > 0:
+        if len(RSolutions[i]):
             for j in range(len(RSolutions[i])):
                 if RSolutions2[i][j] * RSolutions2[i][0] < 0:
                     ok2 = 0
@@ -249,7 +250,7 @@ def kernel(
                         or all(cur_matched != RSolutions[i][j]
                                for cur_matched in matched):
                     matched.append(RSolutions[i][j])
-        if ok2 == 1 and len(RSolutions[i]) > 0:
+        if ok2 == 1 and len(RSolutions[i]):
             min_value = MAX
             for j in range(len(RSolutions[i])):
                 cls_species_idxs[i2].append(RSolutions[i][j])
@@ -449,7 +450,7 @@ def monte_carlo(
         initial_temperature: float = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
-) -> Tuple[bool, int, Sequence[int], Sequence[int]]:
+) -> Tuple[bool, int, Sequence[int]]:
     """MonteCarlo simulated annealing for finding integer MCLs
 
     Finding integer solutions for the MCLs by Monte Carlo, see step (b) in
@@ -586,7 +587,7 @@ def monte_carlo(
                 "Found a moiety but it is linearly dependent... next.")
     else:
         yes = False
-    return yes, int_kernel_dim, matched, int_matched
+    return yes, int_kernel_dim, int_matched
 
 
 def relax(
@@ -661,7 +662,7 @@ def relax(
                                    / matrix2[order[j]][i]
                 min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
-                    for i in range(len(matrix[order[j]])):
+                    for i in range(len(matrix[order[j + 1]])):
                         if abs(matrix2[order[j + 1]][0] /
                                matrix2[order[j + 1]][i]) < min2:
                             min2 = abs(matrix2[order[j + 1]][0]) \
@@ -859,9 +860,10 @@ def reduce(
     order = list(range(K))
     pivots = [-len(cls_species_idxs[i]) for i in range(K)]
 
-    while True:
+    done = False
+    while not done:
         _qsort(K, 0, order, pivots)
-        ok = True
+        done = True
         for i in range(K - 1):
             for j in range(i + 1, K):
                 k1 = order[i]
@@ -877,7 +879,7 @@ def reduce(
                     if column[species_idx] < -MIN:
                         ok1 = False
                 if ok1:
-                    ok = False
+                    done = False
                     cls_species_idxs[k1] = []
                     cls_coefficients[k1] = []
                     for i in range(num_rows):
@@ -885,5 +887,3 @@ def reduce(
                             cls_species_idxs[k1].append(i)
                             cls_coefficients[k1].append(column[i])
                     pivots[k1] = -len(cls_species_idxs[k1])
-        if ok:
-            break
