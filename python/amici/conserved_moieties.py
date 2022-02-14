@@ -620,12 +620,12 @@ def relax(
     """
     MIN = 1e-9
     MAX = 1e9
-    matrix = [[] for _ in range(N)]
-    matrix2 = [[] for _ in range(N)]
-
     i1 = 0
     j1 = 0
     K = len(int_matched)
+    matrix = [[] for _ in range(K)]
+    matrix2 = [[] for _ in range(K)]
+
     for _, val in enumerate(stoichiometric_list):
         if val != 0:
             prendo = K
@@ -641,38 +641,41 @@ def relax(
             j1 = 0
             i1 += 1
 
-    orders = [i for i in range(N)]
-    pivots = [matrix[i][0] if len(matrix[i]) > 0 else MAX for i in range(N)]
+    order = [i for i in range(K)]
+    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
+    # reducing the stoichiometric matrix of conserved moieties to row echelon
+    # form by Gaussian elimination
     done = False
     while not done:
-        _qsort(K, 0, orders, pivots)
-        for j in range(K):
-            if pivots[orders[j + 1]] == pivots[orders[j]] \
-                    and pivots[orders[j]] != MAX:
+        _qsort(K, 0, order, pivots)
+        for j in range(K - 1):
+            if pivots[order[j + 1]] == pivots[order[j]] \
+                    and pivots[order[j]] != MAX:
                 min1 = MAX
-                if len(matrix[orders[j]]) > 1:
-                    for i in range(len(matrix[orders[j]])):
-                        if abs(matrix2[orders[j]][0]
-                               / matrix2[orders[j]][i]) < min1:
-                            min1 = matrix2[orders[j]][0] \
-                                   / matrix2[orders[j]][i]
+                if len(matrix[order[j]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        if abs(matrix2[order[j]][0]
+                               / matrix2[order[j]][i]) < min1:
+                            min1 = matrix2[order[j]][0] \
+                                   / matrix2[order[j]][i]
                 min2 = MAX
-                if len(matrix[orders[j + 1]]) > 1:
-                    for i in range(len(matrix[orders[j]])):
-                        if abs(matrix2[orders[j + 1]][0] /
-                               matrix2[orders[j + 1]][i]) < min2:
-                            min2 = abs(matrix2[orders[j + 1]][0]) \
-                                   / matrix2[orders[j + 1]][i]
+                if len(matrix[order[j + 1]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        if abs(matrix2[order[j + 1]][0] /
+                               matrix2[order[j + 1]][i]) < min2:
+                            min2 = abs(matrix2[order[j + 1]][0]) \
+                                   / matrix2[order[j + 1]][i]
                 if min2 > min1:
-                    k2 = orders[j + 1]
-                    orders[j + 1] = orders[j]
-                    orders[j] = k2
-        for j in range(K):
-            if pivots[orders[j + 1]] == pivots[orders[j]] \
-                    and pivots[orders[j]] != MAX:
-                k1 = orders[j + 1]
-                k2 = orders[j]
+                    k2 = order[j + 1]
+                    order[j + 1] = order[j]
+                    order[j] = k2
+        done = True
+        for j in range(K - 1):
+            if pivots[order[j + 1]] == pivots[order[j]] \
+                    and pivots[order[j]] != MAX:
+                k1 = order[j + 1]
+                k2 = order[j]
                 column = [0] * M
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
@@ -686,148 +689,146 @@ def relax(
                     if abs(column[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
-                if len(matrix[orders[j + 1]]) > 0:
-                    pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
+                done = False
+                if len(matrix[order[j + 1]]):
+                    pivots[order[j + 1]] = matrix[order[j + 1]][0]
                 else:
-                    pivots[orders[j + 1]] = MAX
+                    pivots[order[j + 1]] = MAX
 
-        for i in range(K):
-            if len(matrix[i]) > 0:
-                norm = matrix2[i][0]
-                for j in range(len(matrix[i])):
-                    matrix2[i][j] /= norm
+    for i in range(K):
+        if len(matrix[i]) > 0:
+            norm = matrix2[i][0]
+            for j in range(len(matrix[i])):
+                matrix2[i][j] /= norm
 
-        for k1 in reversed(range(K - 1)):
-            k = orders[k1]
-            if len(matrix[k]) > 1:
-                for i in range(1, len(matrix[k])):
-                    for j1 in range(k1 + 1, K):
-                        j = orders[j1]
-                        if len(matrix[j]) > 0:
-                            if matrix[j][0] == matrix[k][i]:
-                                row_k = [0] * M
-                                for a in range(len(matrix[k])):
-                                    row_k[matrix[k]][a] = matrix2[k][a]
-                                for a in range(len(matrix[j])):
-                                    row_k[matrix[j]][a] -= matrix2[j][a] * \
-                                                           matrix2[k][i]
-                                matrix = []
-                                matrix2 = []
-                                for a in range(M):
-                                    if row_k[a] != 0:
-                                        matrix[k].append(a)
-                                        matrix2[k].append(row_k[a])
+    for k1 in reversed(range(K - 1)):
+        k = order[k1]
+        if len(matrix[k]) > 1:
+            for i in range(1, len(matrix[k])):
+                for j1 in range(k1 + 1, K):
+                    j = order[j1]
+                    if len(matrix[j]):
+                        if matrix[j][0] == matrix[k][i]:
+                            row_k = [0] * M
+                            for a in range(len(matrix[k])):
+                                row_k[matrix[k]][a] = matrix2[k][a]
+                            for a in range(len(matrix[j])):
+                                row_k[matrix[j]][a] -= matrix2[j][a] * \
+                                                       matrix2[k][i]
+                            matrix[k] = []
+                            matrix2[k] = []
+                            for a in range(M):
+                                if row_k[a] != 0:
+                                    matrix[k].append(a)
+                                    matrix2[k].append(row_k[a])
 
-        indip = [K + 1] * M
+    indip = [K + 1] * M
+    for i in range(K):
+        if len(matrix[i]):
+            indip[matrix[i]][0] = i
 
-        for i in range(K):
-            if len(matrix[i]) > 0:
-                indip[matrix[i]][0] = i
+    M1 = 0
+    for i in range(M):
+        if indip[i] == K + 1:
+            indip[i] = K + M1
+            M1 += 1
 
-        M1 = 0
-        for i in range(M):
-            if indip[i] == K + 1:
-                indip[i] = K + M1
-                M1 += 1
+    matrixAus = [[] for _ in range(M1)]
+    matrixAus2 = [[] for _ in range(M1)]
+    i1 = 0
+    for i in range(M):
+        if indip[i] >= K:
+            matrixAus[i1].append(i)
+            matrixAus2[i1].append(1)
+            i1 += 1
+        else:
+            t = indip[i]
+            if len(matrix[t]) > 1:
+                for k in range(1, len(matrix[t])):
+                    quelo = indip[matrix[t]][k] - K
+                    matrixAus[quelo].append(i)
+                    matrixAus2[quelo].append(-matrix2[t][k])
 
-        matrixAus = [[] for _ in range(M1)]
-        matrixAus2 = [[] for _ in range(M1)]
-        i1 = 0
-        for i in range(M):
-            if indip[i] >= K:
-                matrixAus[i1].append(i)
-                matrixAus2[i1].append(1)
-                i1 += 1
-            else:
-                t = indip[i]
-                if len(matrix[t]) > 1:
-                    for k in range(1, len(matrix[t])):
-                        quelo = indip[matrix[t]][k] - K
-                        matrixAus[quelo].append(i)
-                        matrixAus2[quelo].append(-matrix2[t][k])
+    for i in range(K):
+        matrix[i] = []
 
-        for i in range(K):
-            matrix[i] = []
+    N1 = N - K
+    matrix_aus = [[] for _ in range(N1)]
+    matrix_aus2 = [[] for _ in range(N1)]
 
-        N1 = N - K
-        matrix_aus = [[] for _ in range(N1)]
-        matrix_aus2 = [[] for _ in range(N1)]
+    k1 = 0
+    i1 = 0
+    j1 = 0
 
-        k1 = 0
-        i1 = 0
-        j1 = 0
+    for _, val in enumerate(stoichiometric_list):
+        prendo = 1
+        if len(int_matched):
+            for i in range(len(int_matched)):
+                if j1 == int_matched[i]:
+                    prendo -= 1
+        if val != 0 and prendo == 1:
+            matrix_aus[k1].append(i1)
+            matrix_aus2[k1].append(val)
+        j1 += 1
+        k1 += prendo
+        if j1 == N:
+            j1 = 0
+            k1 = 0
+            i1 += 1
 
-        for _, val in enumerate(stoichiometric_list):
-            prendo = 1
-            if len(int_matched) > 0:
-                for i in range(len(int_matched)):
-                    if j1 == int_matched[i]:
-                        prendo -= 1
-            if val != 0:
-                if prendo == 1:
-                    matrix_aus[k1].append(i1)
-                    matrix_aus2[k2].append(val)
-            j1 += 1
-            k1 += prendo
-            if j1 == N:
-                j1 = 0
-                k1 = 0
+    matrixb = [[] for _ in range(N1)]
+    matrixb2 = [[] for _ in range(N1)]
+    for i in range(M1):
+        for j in range(N1):
+            prod = 0
+            if len(matrix_aus[j]) * len(matrixAus[i]):
+                for ib in range(len(matrixAus[i])):
+                    for jb in range(len(matrix_aus[j])):
+                        if matrixAus[i][ib] == matrix_aus[j][jb]:
+                            prod += matrixAus2[i][ib] * matrix_aus2[j][jb]
+                if abs(prod) > MIN:
+                    matrixb[j].append(i)
+                    matrixb2[j].append(prod)
 
-        matrixb = [[] for _ in range(N1)]
-        matrixb2 = [[] for _ in range(N1)]
-        for i in range(M1):
-            for j in range(N1):
-                prod = 0
-                if len(matrix_aus[j]) * len(matrixAus[i]) > 0:
-                    for ib in range(len(matrixAus[i])):
-                        for jb in range(len(matrix_aus[j])):
-                            if matrixAus[i][ib] == matrix_aus[j][jb]:
-                                prod += matrixAus2[i][ib] * matrix_aus2[j][jb]
-                    if abs(prod) > MIN:
-                        matrixb[j].append(i)
-                        matrixb2[j].append(prod)
+    for i in range(M1):
+        matrixAus[i] = []
+        matrixAus2[i] = []
 
-        for i in range(M1):
-            matrixAus[i] = []
-            matrixAus2[i] = []
+    for i in range(N1):
+        matrix_aus[i] = []
+        matrix_aus2[i] = []
 
-        for i in range(N1):
-            matrix_aus[i] = []
-            matrix_aus2[i] = []
+    var = [MIN] * M1
+    done = False
+    time = 0
+    while True:
+        cmin = 1000
+        for j in range(N1):
+            constr = 0
+            if len(matrixb[j]):
+                for i in range(len(matrixb[j])):
+                    constr += matrixb2[j][i] * var[matrixb][j][i]
+                if constr < cmin:
+                    min = j
+                    cmin = constr
+        time += 1
+        if cmin >= 0:
+            done = True
+        else:
+            alpha = -relaxation_step * cmin  # Motzkin relaxation
+            fact = 0
+            for j in range(len(matrixb[min])):
+                fact += matrixb2[min][j] ** 2
+            alpha /= fact
+            if alpha < 1e-9 * MIN:
+                alpha = 1e-9 * MIN
+            for j in range(len(matrixb[min])):
+                var[matrixb[min][j]] += alpha * matrixb2[min][j]
 
-        var = [MIN] * M1
-        done = False
-        time = 0
-        while True:
-            cmin = 1000
-            for j in range(N1):
-                constr = 0
-                if len(matrixb[j]) > 0:
-                    for i in range(len(matrixb[j])):
-                        constr += matrixb2[j][i] * var[matrixb][j][i]
-                    if constr < cmin:
-                        min = j
-                        cmin = constr
-            time += 1
-            if cmin >= 0:
-                done = True
-            else:
-                alpha = -relaxation_step * cmin  # Motzkin relaxation
-                fact = 0
-                for j in range(len(matrixb[min])):
-                    fact += matrixb2[min][j] * matrixb2[min][j]
-                alpha /= fact
-                if alpha < 1e-9 * MIN:
-                    alpha = 1e-9 * MIN
-                for j in range(len(matrixb[min])):
-                    var[matrixb[min][j]] += alpha * matrixb2[min][j]
+        if done or time >= relaxation_max:
+            break
 
-            if done or time >= relaxation_max:
-                break
-
-        if done:
-            return True
-    return False
+    return done
 
 
 def reduce(
