@@ -75,19 +75,21 @@ def output(
 def test_detect_cl(data_demartino2014, quiet=False):
     """Invoke test case and benchmarking for De Martino's published results
     for E. coli network"""
-    S, row_names = data_demartino2014
-    N = 1668
-    M = 2381
-    # Expected number of metabolites per conservation law
+    stoichiometric_list, row_names = data_demartino2014
+    num_species = 1668
+    num_reactions = 2381
+    # Expected number of metabolites per conservation law found after kernel()
     expected_num_species = \
         [53] + [2] * 11 + [6] + [3] * 2 + [2] * 15 + [3] + [2] * 5
 
-    assert len(S) == N * M, "Unexpected dimension of stoichiometric matrix"
+    assert len(stoichiometric_list) == num_species * num_reactions,\
+        "Unexpected dimension of stoichiometric matrix"
 
     start = perf_counter()
     # TODO: remove redundancy with compute_moiety_conservation_laws()
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
-        cls_species_idxs, cls_coefficients = kernel(S, N, M)
+        cls_species_idxs, cls_coefficients = kernel(
+        stoichiometric_list, num_species, num_reactions)
 
     if not quiet:
         output(int_kernel_dim, kernel_dim, engaged_species, cls_species_idxs,
@@ -102,8 +104,13 @@ def test_detect_cl(data_demartino2014, quiet=False):
     assert len(conserved_moieties) == 128, \
         "Wrong number of conserved moieties reported"
 
+    # Assert that each conserved moiety has the correct number of metabolites
+    for i in range(int_kernel_dim - 2):
+        assert (len(cls_species_idxs[i]) == expected_num_species[i]), \
+            f"Moiety #{i + 1} failed for test case (De Martino et al.)"
+
     if int_kernel_dim != kernel_dim:
-        J, J2, fields = fill(S, engaged_species, N)
+        J, J2, fields = fill(stoichiometric_list, engaged_species, num_species)
 
         timer = 0
         counter = 1
@@ -115,7 +122,7 @@ def test_detect_cl(data_demartino2014, quiet=False):
             yes, int_kernel_dim, conserved_moieties = \
                 monte_carlo(engaged_species, J, J2, fields, conserved_moieties,
                             int_kernel_dim, cls_species_idxs, cls_coefficients,
-                            num_rows=N, max_iter=max_num_monte_carlo)
+                            num_species=num_species, max_iter=max_num_monte_carlo)
             if not quiet:
                 output(int_kernel_dim, kernel_dim, engaged_species,
                        cls_species_idxs, cls_coefficients, row_names)
@@ -130,20 +137,16 @@ def test_detect_cl(data_demartino2014, quiet=False):
             if timer == max_num_monte_carlo:
                 if not quiet:
                     print("Relaxation...")
-                finish = relax(S, conserved_moieties, M, N)
+                finish = relax(stoichiometric_list, conserved_moieties, num_reactions, num_species)
                 timer = 0
-    old = cls_species_idxs
-    old2 = cls_coefficients
-    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, N)
+    from copy import deepcopy
+    old = deepcopy(cls_species_idxs)
+    old2 = deepcopy(cls_coefficients)
+    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
     # TODO what is tested here? should have been deep-copied?!
     for i in range(len(old)):
         assert (set(old[i]) == set(cls_species_idxs[i]))
         assert (set(old2[i]) == set(cls_coefficients[i]))
-
-    # Assert that each conserved moiety has the correct number of metabolites
-    for i in range(int_kernel_dim - 2):
-        assert (len(cls_species_idxs[i]) == expected_num_species[i]), \
-            f"Moiety #{i + 1} failed for test case (De Martino et al.)"
 
     if not quiet:
         output(int_kernel_dim, kernel_dim, engaged_species, cls_species_idxs,
