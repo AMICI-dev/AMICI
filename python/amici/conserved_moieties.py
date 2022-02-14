@@ -59,8 +59,7 @@ def compute_moiety_conservation_laws(
         if timer == max_num_monte_carlo:
             done = relax(stoichiometric_list, conserved_moieties,
                          num_reactions, num_species)
-            if not done:
-                timer = 0
+            timer = 0
     reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
     return cls_species_idxs, cls_coefficients
 
