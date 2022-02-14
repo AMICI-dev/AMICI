@@ -698,9 +698,9 @@ def relax(
 
                     row_k = [0] * M
                     for a in range(len(matrix[k])):
-                        row_k[matrix[k]][a] = matrix2[k][a]
+                        row_k[matrix[k][a]] = matrix2[k][a]
                     for a in range(len(matrix[j])):
-                        row_k[matrix[j]][a] -= matrix2[j][a] * matrix2[k][i]
+                        row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
                     matrix[k] = []
                     matrix2[k] = []
                     for a in range(M):
