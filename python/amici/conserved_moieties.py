@@ -535,10 +535,6 @@ def monte_carlo(
             count = 0
             num = [0] * dim
             en = int(random.uniform(0, 1) * dim)
-            # Note: Bug in original c++ code (while loop without any side
-            #  effect changed to if statement to prevent a possibly infinite
-            #  loop)
-            # TODO don't think so
             while not len(J[en]):
                 en = int(random.uniform(0, 1) * dim)
             num[en] = 1
@@ -555,13 +551,14 @@ def monte_carlo(
             break
 
     if howmany < 10 * max_iter:
+        # founds MCLS? need to check for linear independence
         if len(int_matched) > 0:
             yes = _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
                                          cls_coefficients, matched, num_rows)
-            # TODO ???
         else:
             yes = True
 
+        # reduce by MC procedure
         if yes:
             orders2 = list(range(len(matched)))
             pivots2 = matched[:]
