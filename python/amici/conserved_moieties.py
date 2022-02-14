@@ -410,12 +410,12 @@ def _is_linearly_dependent(
                             min2 = abs(matrix2[order[j + 1]][0] /
                                        matrix2[order[j + 1]][i])
                 if min2 > min1:
-                    #
+                    # swap
                     k2 = order[j + 1]
                     order[j + 1] = order[j]
                     order[j] = k2
         ok = True
-        for j in range(K - 2):
+        for j in range(K - 1):
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
