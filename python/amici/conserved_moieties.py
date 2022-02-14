@@ -340,7 +340,7 @@ def fill(
 
 
 def _is_linearly_dependent(
-        vectors: Sequence[Number],
+        vector: Sequence[Number],
         int_kernel_dim: int,
         cls_species_idxs: Sequence[Sequence[int]],
         cls_coefficients: Sequence[Sequence[Number]],
@@ -352,7 +352,7 @@ def _is_linearly_dependent(
     Check if the solutions found with Monte Carlo are linearly independent
     with respect to the previous found solution for all MCLs involved
 
-    :param vectors:
+    :param vector:
         found basis
     :param int_kernel_dim:
         number of integer conservative laws
@@ -377,47 +377,48 @@ def _is_linearly_dependent(
             matrix[i].append(cls_species_idxs[i][j])
             matrix2[i].append(cls_coefficients[i][j])
 
-    orders2 = list(range(len(matched)))
+    order2 = list(range(len(matched)))
     pivots2 = matched[:]
 
-    _qsort(len(matched), 0, orders2, pivots2)
+    _qsort(len(matched), 0, order2, pivots2)
     for i in range(len(matched)):
-        if vectors[orders2[i]] > MIN:
-            matrix[K - 1].append(matched[orders2[i]])
-            matrix2[K - 1].append(float(vectors[orders2[i]]))
+        if vector[order2[i]] > MIN:
+            matrix[K - 1].append(matched[order2[i]])
+            matrix2[K - 1].append(float(vector[order2[i]]))
 
-    ok = 0
-    orders = list(range(K))
+    order = list(range(K))
 
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
-    while ok == 0:
-        _qsort(K, 0, orders, pivots)
-        for j in range(K - 2):
-            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
+    ok = False
+    while not ok:
+        _qsort(K, 0, order, pivots)
+        for j in range(K - 1):
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 min1 = MAX
-                if len(matrix[orders[j]]) > 1:
-                    for i in range(len(matrix[orders[j]])):
-                        if (abs(matrix2[orders[j]][0]
-                                / matrix2[orders[j]][i])) < min1:
-                            min1 = abs(matrix2[orders[j]][0]
-                                       / matrix2[orders[j]][i])
+                if len(matrix[order[j]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        if (abs(matrix2[order[j]][0]
+                                / matrix2[order[j]][i])) < min1:
+                            min1 = abs(matrix2[order[j]][0]
+                                       / matrix2[order[j]][i])
                 min2 = MAX
-                if len(matrix[orders[j + 1]]) > 1:
-                    for i in range(len(matrix[orders[j + 1]])):
-                        if (abs(matrix2[orders[j + 1]][0] /
-                                matrix2[orders[j + 1]][i])) < min2:
-                            min2 = abs(matrix2[orders[j + 1]][0] /
-                                       matrix2[orders[j + 1]][i])
+                if len(matrix[order[j + 1]]) > 1:
+                    for i in range(len(matrix[order[j + 1]])):
+                        if (abs(matrix2[order[j + 1]][0] /
+                                matrix2[order[j + 1]][i])) < min2:
+                            min2 = abs(matrix2[order[j + 1]][0] /
+                                       matrix2[order[j + 1]][i])
                 if min2 > min1:
-                    k2 = orders[j + 1]
-                    orders[j + 1] = orders[j]
-                    orders[j] = k2
-        ok = 1
+                    #
+                    k2 = order[j + 1]
+                    order[j + 1] = order[j]
+                    order[j] = k2
+        ok = True
         for j in range(K - 2):
-            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
-                k1 = orders[j + 1]
-                k2 = orders[j]
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+                k1 = order[j + 1]
+                k2 = order[j]
                 column = [0] * num_rows
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
@@ -431,7 +432,7 @@ def _is_linearly_dependent(
                     if abs(column[i]) > MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
-                ok = 0
+                ok = False
                 pivots[k1] = matrix[k1][0] if len(matrix[k1]) > 0 else MAX
     K1 = sum(len(matrix[i]) > 0 for i in range(K))
     return K == K1
@@ -482,6 +483,7 @@ def monte_carlo(
         status of MC iteration, number of integer MCLs, number of MCLs,
         metabolites and reaction indices, MCLs and integer MCLs as a tuple
     """
+    assert len(matched) == len(fields) == len(J) == len(J2)
     # TODO: doc: what does value of status indicate
 
     MIN = 1e-9
@@ -570,6 +572,7 @@ def monte_carlo(
                     cls_coefficients[int_kernel_dim].append(num[orders2[i]])
             int_kernel_dim += 1
             # side-effects on num vector
+            # TODO really?
             _is_linearly_dependent(num, int_kernel_dim, cls_species_idxs,
                                    cls_coefficients, matched, num_rows)
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_rows)
