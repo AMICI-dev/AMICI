@@ -523,7 +523,7 @@ def monte_carlo(
             T1 -= cool_rate
             if T1 <= 0:
                 T1 = cool_rate
-                e = math.exp(-1 / T1)
+            e = math.exp(-1 / T1)
 
         if count == int(dim / cool_rate):
             T1 = initial_temperature
