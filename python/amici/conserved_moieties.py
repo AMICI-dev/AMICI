@@ -805,7 +805,7 @@ def relax(
             constr = 0
             if len(matrixb[j]):
                 for i in range(len(matrixb[j])):
-                    constr += matrixb2[j][i] * var[matrixb][j][i]
+                    constr += matrixb2[j][i] * var[matrixb[j][i]]
                 if constr < cmin:
                     cmin_idx = j
                     cmin = constr
