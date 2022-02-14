@@ -52,9 +52,9 @@ def compute_moiety_conservation_laws(
         )
         done = (int_kernel_dim == kernel_dim)
         if yes:
-            timer += 1
-        else:
             timer = 0
+        else:
+            timer += 1
 
         if timer == max_num_monte_carlo:
             done = relax(stoichiometric_list, conserved_moieties,
