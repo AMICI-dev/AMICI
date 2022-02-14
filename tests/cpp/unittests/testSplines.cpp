@@ -41,7 +41,7 @@ void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<dou
     double time;
     std::vector<double> expected_values;
     std::tie(time, expected_values) = expected;
-    for (int ip = 0; ip < expected_values.size(); ip++)
+    for (std::vector<double>::size_type ip = 0; ip < expected_values.size(); ip++)
       ASSERT_DOUBLE_EQ(spline.get_sensitivity(time, ip), expected_values[ip]);
   }
 }
@@ -52,7 +52,7 @@ void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<dou
     double time;
     std::vector<double> expected_values;
     std::tie(time, expected_values) = expected;
-    for (int ip = 0; ip < expected_values.size(); ip++)
+    for (std::vector<double>::size_type ip = 0; ip < expected_values.size(); ip++)
       ASSERT_APPROX(spline.get_sensitivity(time, ip), expected_values[ip], rtol);
   }
 }
