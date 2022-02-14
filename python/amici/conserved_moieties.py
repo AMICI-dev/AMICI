@@ -166,23 +166,18 @@ def kernel(
     while not done:
         _qsort(N, 0, orders, pivots)
         for j in range(N - 1):
-            if pivots[orders[j + 1]] == pivots[orders[j]] \
-                    and pivots[orders[j]] != MAX:
+            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 min1 = 100000000
                 if len(matrix[orders[j]]) > 1:
                     for i in range(len(matrix[orders[j]])):
-                        if abs(matrix2[orders[j]][0]
-                               / matrix2[orders[j]][i]) < min1:
-                            min1 = abs(
-                                matrix2[orders[j]][0] / matrix2[orders[j]][i])
+                        min1 = min(min1, abs(matrix2[orders[j]][0]
+                                             / matrix2[orders[j]][i]))
 
                 min2 = 100000000
                 if len(matrix[orders[j + 1]]) > 1:
                     for i in range(len(matrix[orders[j + 1]])):
-                        if abs(matrix2[orders[j + 1]][0] /
-                               matrix2[orders[j + 1]][i]) < min2:
-                            min2 = abs(matrix2[orders[j + 1]][0] /
-                                       matrix2[orders[j + 1]][i])
+                        min2 = min(min2, abs(matrix2[orders[j + 1]][0]
+                                             / matrix2[orders[j + 1]][i]))
 
                 if min2 > min1:
                     k2 = orders[j + 1]
@@ -191,8 +186,7 @@ def kernel(
         done = True
 
         for j in range(N - 1):
-            if pivots[orders[j + 1]] == pivots[orders[j]] \
-                    and pivots[orders[j]] != MAX:
+            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
                 k1 = orders[j + 1]
                 k2 = orders[j]
                 column = [0] * (N + M)
@@ -255,8 +249,7 @@ def kernel(
             for j in range(len(RSolutions[i])):
                 cls_species_idxs[i2].append(RSolutions[i][j])
                 cls_coefficients[i2].append(abs(RSolutions2[i][j]))
-                if min_value > abs(RSolutions2[i][j]):
-                    min_value = abs(RSolutions2[i][j])
+                min_value = min(min_value, abs(RSolutions2[i][j]))
                 if len(int_matched) == 0 \
                         or all(cur_int_matched != cls_species_idxs[i2][j]
                                for cur_int_matched in int_matched):
@@ -397,17 +390,13 @@ def _is_linearly_dependent(
                 min1 = MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
-                        if (abs(matrix2[order[j]][0]
-                                / matrix2[order[j]][i])) < min1:
-                            min1 = abs(matrix2[order[j]][0]
-                                       / matrix2[order[j]][i])
+                        min1 = min(min1, abs(matrix2[order[j]][0]
+                                             / matrix2[order[j]][i]))
                 min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
-                        if (abs(matrix2[order[j + 1]][0] /
-                                matrix2[order[j + 1]][i])) < min2:
-                            min2 = abs(matrix2[order[j + 1]][0] /
-                                       matrix2[order[j + 1]][i])
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]
+                                             / matrix2[order[j + 1]][i]))
                 if min2 > min1:
                     # swap
                     k2 = order[j + 1]
@@ -575,8 +564,8 @@ def monte_carlo(
                                for cur_int_matched in int_matched):
                     int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
 
-                if cls_coefficients[int_kernel_dim - 1][i] < min_value:
-                    min_value = cls_coefficients[int_kernel_dim - 1][i]
+                min_value = min(min_value,
+                                cls_coefficients[int_kernel_dim - 1][i])
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
                 cls_coefficients[int_kernel_dim - 1][i] /= min_value
             logger.debug(
@@ -604,7 +593,7 @@ def relax(
     De Martino (2014) and the Eqs. 14-16 in the corresponding publication
 
     :param stoichiometric_list:
-        stoichiometric matrix :math:`S` as a flat list
+        stoichiometric matrix :math:`S` as a flat list (column-major ordering)
     :param int_matched:
         intmatched
     :param M:
@@ -621,13 +610,14 @@ def relax(
     """
     MIN = 1e-9
     MAX = 1e9
+
     i1 = 0
     j1 = 0
     K = len(int_matched)
     matrix = [[] for _ in range(K)]
     matrix2 = [[] for _ in range(K)]
 
-    for _, val in enumerate(stoichiometric_list):
+    for val in stoichiometric_list:
         if val != 0:
             prendo = K
             if K > 0:
@@ -642,11 +632,10 @@ def relax(
             j1 = 0
             i1 += 1
 
-    order = [i for i in range(K)]
-    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
-
     # reducing the stoichiometric matrix of conserved moieties to row echelon
     # form by Gaussian elimination
+    order = [i for i in range(K)]
+    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
     done = False
     while not done:
         _qsort(K, 0, order, pivots)
@@ -656,17 +645,13 @@ def relax(
                 min1 = MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
-                        if abs(matrix2[order[j]][0]
-                               / matrix2[order[j]][i]) < min1:
-                            min1 = matrix2[order[j]][0] \
-                                   / matrix2[order[j]][i]
+                        min1 = min(min1, abs(matrix2[order[j]][0]
+                               / matrix2[order[j]][i]))
                 min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
-                        if abs(matrix2[order[j + 1]][0] /
-                               matrix2[order[j + 1]][i]) < min2:
-                            min2 = abs(matrix2[order[j + 1]][0]) \
-                                   / matrix2[order[j + 1]][i]
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]) \
+                                       / matrix2[order[j + 1]][i])
                 if min2 > min1:
                     k2 = order[j + 1]
                     order[j + 1] = order[j]
