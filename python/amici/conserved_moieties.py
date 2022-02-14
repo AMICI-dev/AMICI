@@ -483,7 +483,6 @@ def monte_carlo(
         status of MC iteration, number of integer MCLs, number of MCLs,
         metabolites and reaction indices, MCLs and integer MCLs as a tuple
     """
-    assert len(matched) == len(fields) == len(J) == len(J2)
     # TODO: doc: what does value of status indicate
 
     MIN = 1e-9
