@@ -433,7 +433,7 @@ def _is_linearly_dependent(
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
                 ok = False
-                pivots[k1] = matrix[k1][0] if len(matrix[k1]) > 0 else MAX
+                pivots[k1] = matrix[k1][0] if len(matrix[k1]) else MAX
     K1 = sum(len(matrix[i]) > 0 for i in range(K))
     return K == K1
 
@@ -865,16 +865,16 @@ def reduce(
     """
     K = int_kernel_dim
     MIN = 1e-9
-    orders = list(range(K))
+    order = list(range(K))
     pivots = [-len(cls_species_idxs[i]) for i in range(K)]
 
     while True:
-        _qsort(K, 0, orders, pivots)
+        _qsort(K, 0, order, pivots)
         ok = True
-        for i in range(K - 2):
+        for i in range(K - 1):
             for j in range(i + 1, K):
-                k1 = orders[i]
-                k2 = orders[j]
+                k1 = order[i]
+                k2 = order[j]
                 column = [0] * num_rows
                 ok1 = True
                 for species_idx, coefficient \
