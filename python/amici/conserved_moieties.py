@@ -45,7 +45,7 @@ def compute_moiety_conservation_laws(
     # maximum number of montecarlo search before starting relaxation
     max_num_monte_carlo = 10
     while not done:
-        yes, int_kernel_dim, engaged_species, conserved_moieties = monte_carlo(
+        yes, int_kernel_dim, conserved_moieties = monte_carlo(
             engaged_species, J, J2, fields, conserved_moieties,
             int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
             max_iter=max_num_monte_carlo
@@ -450,7 +450,7 @@ def monte_carlo(
         initial_temperature: float = 1,
         cool_rate: float = 1e-3,
         max_iter: int = 10
-) -> Tuple[bool, int, Sequence[int], Sequence[int]]:
+) -> Tuple[bool, int, Sequence[int]]:
     """MonteCarlo simulated annealing for finding integer MCLs
 
     Finding integer solutions for the MCLs by Monte Carlo, see step (b) in
@@ -587,7 +587,7 @@ def monte_carlo(
                 "Found a moiety but it is linearly dependent... next.")
     else:
         yes = False
-    return yes, int_kernel_dim, matched, int_matched
+    return yes, int_kernel_dim, int_matched
 
 
 def relax(

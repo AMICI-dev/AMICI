@@ -112,7 +112,7 @@ def test_detect_cl(data_demartino2014, quiet=False):
         while finish == 0:
             if not quiet:
                 print(f"Monte Carlo call #{counter}")
-            yes, int_kernel_dim, engaged_species, conserved_moieties = \
+            yes, int_kernel_dim, conserved_moieties = \
                 monte_carlo(engaged_species, J, J2, fields, conserved_moieties,
                             int_kernel_dim, cls_species_idxs, cls_coefficients,
                             num_rows=N, max_iter=max_num_monte_carlo)
