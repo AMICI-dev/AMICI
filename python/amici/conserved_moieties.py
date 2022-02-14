@@ -723,7 +723,7 @@ def relax(
     indip = [K + 1] * num_reactions
     for i in range(K):
         if len(matrix[i]):
-            indip[matrix[i]][0] = i
+            indip[matrix[i][0]] = i
 
     M1 = 0
     for i in range(num_reactions):
