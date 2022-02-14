@@ -13,7 +13,7 @@ using amici::SplineBoundaryCondition;
 using amici::SplineExtrapolation;
 using amici::AmiException;
 
-#define ASSERT_APPROX(x, x0, rtol) ASSERT_LT(std::abs(((x) - (x0))/(x0)), rtol)
+#define ASSERT_APPROX(x, x0, rtol, atol) ASSERT_LT(std::abs((x) - (x0)), (atol) + (rtol) * std::abs(x0))
 
 void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations)
 {
@@ -25,13 +25,13 @@ void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, do
   }
 }
 
-void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations, const double rtol)
+void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations, const double rtol, const double atol)
 {
   for (auto expected : expectations) {
     double time;
     double expected_value;
     std::tie(time, expected_value) = expected;
-    ASSERT_APPROX(spline.get_value(time), expected_value, rtol);
+    ASSERT_APPROX(spline.get_value(time), expected_value, rtol, atol);
   }
 }
 
@@ -46,14 +46,14 @@ void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<dou
   }
 }
 
-void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<double, std::vector<double>>> &expectations, const double rtol)
+void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<double, std::vector<double>>> &expectations, const double rtol, const double atol)
 {
   for (auto expected : expectations) {
     double time;
     std::vector<double> expected_values;
     std::tie(time, expected_values) = expected;
     for (std::vector<double>::size_type ip = 0; ip < expected_values.size(); ip++)
-      ASSERT_APPROX(spline.get_sensitivity(time, ip), expected_values[ip], rtol);
+      ASSERT_APPROX(spline.get_sensitivity(time, ip), expected_values[ip], rtol, atol);
   }
 }
 
@@ -177,7 +177,7 @@ TEST(Splines, SplineLogarithmic)
         {0.8,  0.996753014029391},
         {1.0,  0.75},
     };
-    test_spline_values(spline, expectations, 1e-14);
+    test_spline_values(spline, expectations, 1e-14, 0.0);
     ASSERT_THROW(spline.get_value(-0.05), AmiException);
     ASSERT_THROW(spline.get_value(1.05), AmiException);
 }
@@ -339,7 +339,7 @@ TEST(Splines, SplineNonUniformPeriodicExtrapolation)
         { 1.50, 0.5},
         { 2.05, 1.5296875},
     };
-    test_spline_values(spline, expectations, 1e-14);
+    test_spline_values(spline, expectations, 1e-14, 0.0);
 }
 
 TEST(Splines, SplineUniformSensitivity)
@@ -375,7 +375,7 @@ TEST(Splines, SplineUniformSensitivity)
         {0.75,  {-1.07812,  0.179688, 0.1875}},
         {1.00,  {-6.0,      1.0,      3.0}},
     };
-    test_spline_sensitivities(spline, expectations);
+    test_spline_sensitivities(spline, expectations, 1e-6, 0.0);
     ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
     ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
