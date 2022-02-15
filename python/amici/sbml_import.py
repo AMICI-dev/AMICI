@@ -1488,21 +1488,16 @@ class SbmlImporter:
                     or target_state in eliminated_states:
                 continue
 
-            target_state = ode_model._states[target_state_idx].get_id()
-            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
-            target_compartment = self.symbols[SymbolId.SPECIES][
-                target_state]['compartment']
-
             state_ids = [ode_model._states[i_state].get_id()
                          for i_state in state_idxs]
-            compartment_size = [
+            compartment_sizes = [
                 self.compartments[
                     self.symbols[SymbolId.SPECIES][state_id]['compartment']]
                 if not self.symbols[SymbolId.SPECIES][state_id]['amount']
                 else 1
                 for state_id in state_ids
             ]
-            if any(x.free_symbols for x in compartment_size):
+            if any(x.free_symbols for x in compartment_sizes):
                 # see SBML semantic test suite, case 783 for an example
                 warnings.warn(
                     "Conservation laws for non-constant species in "
@@ -1510,11 +1505,14 @@ class SbmlImporter:
                     "currently supported and will be turned off.")
                 return species_solver
 
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+            target_compartment = compartment_sizes[target_state_idx]
+
             # \sum coeff * state * volume
             abundance_expr = sp.Add(*[
                 state_id * coeff * compartment
                 for state_id, coeff, compartment
-                in zip(state_ids, coefficients, compartment_size)
+                in zip(state_ids, coefficients, compartment_sizes)
             ])
 
             new_conservation_laws.append({
