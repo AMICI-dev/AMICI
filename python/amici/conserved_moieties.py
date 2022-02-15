@@ -2,7 +2,6 @@ import logging
 import math
 import random
 import sys
-from numbers import Number
 from typing import List, MutableSequence, Sequence, Tuple
 
 from .logging import get_logger
@@ -12,10 +11,10 @@ logger = get_logger(__name__, logging.ERROR)
 
 
 def compute_moiety_conservation_laws(
-        stoichiometric_list: Sequence[Number],
+        stoichiometric_list: Sequence[float],
         num_species: int,
         num_reactions: int
-) -> Tuple[List[List[int]], List[List[Number]]]:
+) -> Tuple[List[List[int]], List[List[float]]]:
     """Compute moiety conservation laws.
 
     According to the algorithm proposed by De Martino et al. (2014)
@@ -35,7 +34,7 @@ def compute_moiety_conservation_laws(
     # compute semi-positive conservation laws
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
         cls_species_idxs, cls_coefficients = kernel(
-        stoichiometric_list, num_species, num_reactions)
+            stoichiometric_list, num_species, num_reactions)
 
     print(cls_species_idxs)
     print(cls_coefficients)
@@ -51,8 +50,8 @@ def compute_moiety_conservation_laws(
         while not done:
             yes, int_kernel_dim, conserved_moieties = monte_carlo(
                 engaged_species, J, J2, fields, conserved_moieties,
-                int_kernel_dim, cls_species_idxs, cls_coefficients, num_species,
-                max_iter=max_num_monte_carlo
+                int_kernel_dim, cls_species_idxs, cls_coefficients,
+                num_species, max_iter=max_num_monte_carlo
             )
             print(cls_species_idxs)
             print(cls_coefficients)
@@ -120,17 +119,18 @@ def _qsort(
 
 
 def kernel(
-        stoichiometric_list: Sequence[Number],
+        stoichiometric_list: Sequence[float],
         num_species: int,
         num_reactions: int
-) -> Tuple[Number, List[int], int, List[int],
-           List[List[int]], List[List[Number]]]:
+) -> Tuple[float, List[int], int, List[int],
+           List[List[int]], List[List[float]]]:
     """
     Kernel (left nullspace of :math:`S`) calculation by Gaussian elimination
 
     To compute the left nullspace of the stoichiometric matrix :math:`S`,
     a Gaussian elimination method with partial scaled pivoting is used to deal
-    effectively with a possibly ill-conditioned stoichiometric matrix :math:`S`.
+    effectively with a possibly ill-conditioned stoichiometric matrix
+    :math:`S`.
 
     Note that this is the Python reimplementation of the algorithm proposed
     by De Martino et al. (2014) https://doi.org/10.1371/journal.pone.0100750
@@ -150,8 +150,8 @@ def kernel(
     MAX = 1e9
     MIN = 1e-9
 
-    matrix = [[] for _ in range(num_species)]
-    matrix2 = [[] for _ in range(num_species)]
+    matrix: List[List[int]] = [[] for _ in range(num_species)]
+    matrix2: List[List[float]] = [[] for _ in range(num_species)]
 
     i1 = 0
     j1 = 0
@@ -167,7 +167,7 @@ def kernel(
         matrix[i].append(num_reactions + i)
         matrix2[i].append(1)
 
-    orders = list(range(num_species))
+    orders: List[int] = list(range(num_species))
     pivots = [matrix[i][0] if len(matrix[i]) else MAX
               for i in range(num_species)]
 
@@ -249,9 +249,9 @@ def kernel(
             for j in range(len(RSolutions[i])):
                 if RSolutions2[i][j] * RSolutions2[i][0] < 0:
                     ok2 = 0
-                if len(matched) == 0 \
-                        or all(cur_matched != RSolutions[i][j]
-                               for cur_matched in matched):
+                if not matched or all(
+                    cur_matched != RSolutions[i][j] for cur_matched in matched
+                ):
                     matched.append(RSolutions[i][j])
         if ok2 == 1 and len(RSolutions[i]):
             min_value = MAX
@@ -259,9 +259,10 @@ def kernel(
                 cls_species_idxs[i2].append(RSolutions[i][j])
                 cls_coefficients[i2].append(abs(RSolutions2[i][j]))
                 min_value = min(min_value, abs(RSolutions2[i][j]))
-                if len(int_matched) == 0 \
-                        or all(cur_int_matched != cls_species_idxs[i2][j]
-                               for cur_int_matched in int_matched):
+                if not int_matched or all(
+                    cur_int_matched != cls_species_idxs[i2][j]
+                    for cur_int_matched in int_matched
+                ):
                     int_matched.append(cls_species_idxs[i2][j])
             for j in range(len(cls_species_idxs[i2])):
                 cls_coefficients[i2][j] /= min_value
@@ -277,7 +278,7 @@ def kernel(
 
 
 def fill(
-        stoichiometric_list: Sequence[Number],
+        stoichiometric_list: Sequence[float],
         matched: Sequence[int],
         num_species: int
 ) -> Tuple[List[List[int]], List[List[int]], List[int]]:
@@ -339,10 +340,10 @@ def fill(
 
 
 def _is_linearly_dependent(
-        vector: Sequence[Number],
+        vector: Sequence[float],
         int_kernel_dim: int,
         cls_species_idxs: Sequence[Sequence[int]],
-        cls_coefficients: Sequence[Sequence[Number]],
+        cls_coefficients: Sequence[Sequence[float]],
         matched: Sequence[int],
         num_species: int
 ) -> bool:
@@ -369,8 +370,8 @@ def _is_linearly_dependent(
     K = int_kernel_dim + 1
     MIN = 1e-9
     MAX = 1e+9
-    matrix = [[] for _ in range(K)]
-    matrix2 = [[] for _ in range(K)]
+    matrix: List[List[int]] = [[] for _ in range(K)]
+    matrix2: List[List[float]] = [[] for _ in range(K)]
     for i in range(K - 1):
         for j in range(len(cls_species_idxs[i])):
             matrix[i].append(cls_species_idxs[i][j])
@@ -489,9 +490,8 @@ def monte_carlo(
     H = 0
     for i in range(dim):
         H += fields[i] * num[i]**2
-        if len(J[i]):
-            for j in range(len([J[i]])):
-                H += J2[i][j] * num[i] * num[J[i][j]]
+        for j in range(len([J[i]])):
+            H += J2[i][j] * num[i] * num[J[i][j]]
 
     count = 0
     T1 = initial_temperature
@@ -560,7 +560,8 @@ def monte_carlo(
             _qsort(len(matched), 0, orders2, pivots2)
             for i in range(len(matched)):
                 if num[orders2[i]] > 0:
-                    cls_species_idxs[int_kernel_dim].append(matched[orders2[i]])
+                    cls_species_idxs[int_kernel_dim].append(
+                        matched[orders2[i]])
                     cls_coefficients[int_kernel_dim].append(num[orders2[i]])
             int_kernel_dim += 1
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients,
@@ -589,7 +590,7 @@ def monte_carlo(
 
 
 def relax(
-        stoichiometric_list: Sequence[Number],
+        stoichiometric_list: Sequence[float],
         int_matched: Sequence[int],
         num_reactions: int,
         num_species: int,
@@ -623,8 +624,8 @@ def relax(
     i1 = 0
     j1 = 0
     K = len(int_matched)
-    matrix = [[] for _ in range(K)]
-    matrix2 = [[] for _ in range(K)]
+    matrix: List[List[int]] = [[] for _ in range(K)]
+    matrix2: List[List[float]] = [[] for _ in range(K)]
 
     for val in stoichiometric_list:
         if val != 0:
@@ -655,7 +656,7 @@ def relax(
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(min1, abs(matrix2[order[j]][0]
-                               / matrix2[order[j]][i]))
+                                             / matrix2[order[j]][i]))
                 min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
@@ -787,6 +788,7 @@ def relax(
     var = [MIN] * M1
     done = False
     time = 0
+    cmin_idx = 0
     while True:
         cmin = 1000
         for j in range(N1):
@@ -817,7 +819,7 @@ def relax(
 def reduce(
         int_kernel_dim: int,
         cls_species_idxs: MutableSequence[MutableSequence[int]],
-        cls_coefficients: MutableSequence[MutableSequence[Number]],
+        cls_coefficients: MutableSequence[MutableSequence[float]],
         num_species: int
 ) -> None:
     """Reducing the solution which has been found by the Monte Carlo process
