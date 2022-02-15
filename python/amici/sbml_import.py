@@ -1447,16 +1447,16 @@ class SbmlImporter:
         except TypeError:
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
-                          "coefficients are not currently supported. "
-                          "Skipping.")
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
             return species_solver
 
         if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
                for rule in self.sbml.getListOfRules()):
             # see SBML semantic test suite, case 33 for an example
             warnings.warn("Conservation laws for non-constant species in "
-                          "models with RateRules are not currently supported. "
-                          "Skipping.")
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
             return species_solver
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
@@ -1495,17 +1495,26 @@ class SbmlImporter:
 
             state_ids = [ode_model._states[i_state].get_id()
                          for i_state in state_idxs]
-            compartment_ids = [
-                self.symbols[SymbolId.SPECIES][state_id]['compartment']
+            compartment_size = [
+                self.compartments[
+                    self.symbols[SymbolId.SPECIES][state_id]['compartment']]
                 if not self.symbols[SymbolId.SPECIES][state_id]['amount']
                 else 1
                 for state_id in state_ids
             ]
+            if any(x.free_symbols for x in compartment_size):
+                # see SBML semantic test suite, case 783 for an example
+                warnings.warn(
+                    "Conservation laws for non-constant species in "
+                    "compartments with parameter-dependent size are not "
+                    "currently supported and will be turned off.")
+                return species_solver
+
             # \sum coeff * state * volume
             abundance_expr = sp.Add(*[
                 state_id * coeff * compartment
                 for state_id, coeff, compartment
-                in zip(state_ids, coefficients, compartment_ids)
+                in zip(state_ids, coefficients, compartment_size)
             ])
 
             new_conservation_laws.append({
@@ -1538,11 +1547,6 @@ class SbmlImporter:
         for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
                                                sorted_state_exprs)
-            # replace compartments by volumes
-            for comp, vol in self.compartments.items():
-                cl['state_expr'] = smart_subs(cl['state_expr'], comp, vol)
-                cl['abundance_expr'] = smart_subs(cl['abundance_expr'],
-                                                  comp, vol)
 
         conservation_laws.extend(new_conservation_laws)
 
