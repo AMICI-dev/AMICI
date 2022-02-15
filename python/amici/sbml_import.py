@@ -4,13 +4,13 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
-from copy import deepcopy
 import copy
 import itertools as itt
 import logging
 import math
 import re
 import warnings
+from numbers import Number
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
 import libsbml as sbml
@@ -1498,7 +1498,9 @@ class SbmlImporter:
                 else 1
                 for state_id in state_ids
             ]
-            if any(x.free_symbols for x in compartment_sizes):
+            # TODO: shouldnt those all be sympy objects?
+            if any(False if isinstance(x, Number) else x.free_symbols
+                   for x in compartment_sizes):
                 # see SBML semantic test suite, case 783 for an example
                 warnings.warn(
                     "Conservation laws for non-constant species in "
