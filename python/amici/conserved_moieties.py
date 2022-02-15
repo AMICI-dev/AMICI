@@ -491,7 +491,7 @@ def monte_carlo(
     H = 0
     for i in range(dim):
         H += fields[i] * num[i] ** 2
-        for j in range(len([J[i]])):
+        for j in range(len(J[i])):
             H += J2[i][j] * num[i] * num[J[i][j]]
 
     count = 0
