@@ -1475,16 +1475,17 @@ class SbmlImporter:
 
             # choose a state that is not already subject to removal
             # TODO is this necessary or can we just take the first one?
-            target_state_idx = None
-            target_state_coeff = None
+            target_state_cl_idx = None
+            target_state_model_idx = None
             target_state = None
-            for target_state_coeff, target_state_idx \
-                    in zip(coefficients, state_idxs):
-                if target_state_idx not in species_to_be_removed:
-                    target_state = ode_model._states[target_state_idx].get_id()
+            for target_state_cl_idx, target_state_model_idx \
+                    in enumerate(state_idxs):
+                if target_state_model_idx not in species_to_be_removed:
+                    target_state = \
+                        ode_model._states[target_state_model_idx].get_id()
                     if target_state not in eliminated_states:
                         break
-            if target_state_idx in species_to_be_removed \
+            if target_state_model_idx in species_to_be_removed \
                     or target_state in eliminated_states:
                 continue
 
@@ -1506,7 +1507,8 @@ class SbmlImporter:
                 return species_solver
 
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
-            target_compartment = compartment_sizes[target_state_idx]
+            target_compartment = compartment_sizes[target_state_cl_idx]
+            target_state_coeff = coefficients[target_state_cl_idx]
 
             # \sum coeff * state * volume
             abundance_expr = sp.Add(*[
@@ -1525,7 +1527,7 @@ class SbmlImporter:
                     / target_state_coeff / target_compartment,
                 'abundance_expr': abundance_expr
             })
-            species_to_be_removed.add(target_state_idx)
+            species_to_be_removed.add(target_state_model_idx)
 
         # replace eliminated states by their state expressions, taking care of
         #  any (non-cyclic) dependencies
