@@ -1481,7 +1481,6 @@ class SbmlImporter:
             target_state = None
             for target_state_coeff, target_state_idx \
                     in zip(coefficients, state_idxs):
-                # TODO: need to consider also those from constant species
                 if target_state_idx not in species_to_be_removed:
                     target_state = ode_model._states[target_state_idx].get_id()
                     if target_state not in replacements:
@@ -1493,9 +1492,12 @@ class SbmlImporter:
             target_state = ode_model._states[target_state_idx].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
 
-            # \sum coeff * state
+            target_compartment = self.symbols[SymbolId.SPECIES][ode_model._states[target_state_idx]._identifier]['compartment']
+            # \sum coeff * state * volume
+            # TODO need to handle amounts ?!
             abundance_expr = sp.Add(*[
                 ode_model._states[i_state].get_id() * coeff
+                * self.symbols[SymbolId.SPECIES][ode_model._states[i_state]._identifier]['compartment']
                 for i_state, coeff in zip(state_idxs, coefficients)
             ])
 
@@ -1504,8 +1506,8 @@ class SbmlImporter:
                 'total_abundance': total_abundance,
                 'state_expr':
                     (total_abundance - (abundance_expr
-                                        - target_state * target_state_coeff))
-                    / target_state_coeff,
+                                        - target_state * target_compartment * target_state_coeff))
+                    / target_state_coeff / target_compartment,
                 'abundance_expr': abundance_expr
             })
             species_to_be_removed.add(target_state_idx)
@@ -1528,6 +1530,15 @@ class SbmlImporter:
         for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
                                                sorted_state_exprs)
+
+
+        # TODO cleanup
+        for comp, vol in self.compartments.items():
+            for cl in new_conservation_laws:
+                cl['state_expr'] = smart_subs(cl['state_expr'],
+                                                   comp, vol)
+                cl['abundance_expr'] = smart_subs(cl['abundance_expr'],
+                                                   comp, vol)
 
         conservation_laws.extend(new_conservation_laws)
 
