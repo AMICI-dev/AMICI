@@ -2,6 +2,7 @@
 import os
 from time import perf_counter
 
+import sympy as sp
 import numpy as np
 import pytest
 
@@ -158,7 +159,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     Only one has to succeed."""
     max_tries = 3
     # <5s on modern hardware, but leave some slack
-    max_time_seconds = 25 if "GITHUB_ACTIONS" in os.environ else 10
+    max_time_seconds = 30 if "GITHUB_ACTIONS" in os.environ else 10
 
     runtime = np.Inf
 
@@ -167,3 +168,25 @@ def test_cl_detect_execution_time(data_demartino2014):
         if runtime < max_time_seconds:
             break
     assert runtime < max_time_seconds, "Took too long"
+
+
+def test_detect_conservation_laws():
+    """Test a simple example, ensure the conservation laws are identified
+     reliably. Requires the Monte Carlo to identify all."""
+    stoichiometric_matrix = sp.Matrix([
+        [-1.0, 1.0],
+        [-1.0, 1.0],
+        [1.0, -1.0],
+        [1.0, -1.0]]
+    )
+    stoichiometric_list = [
+        float(entry) for entry in stoichiometric_matrix.T.flat()
+    ]
+
+    for _ in range(100):
+        cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
+            stoichiometric_list, *stoichiometric_matrix.shape)
+
+        assert cls_state_idxs in ([[0, 3], [1, 2], [1, 3], []],
+                                  [[0, 3], [1, 2], [0, 2], []])
+        assert cls_coefficients == [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], []]

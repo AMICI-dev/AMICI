@@ -24,7 +24,8 @@ from .import_utils import (_check_unsupported_functions,
                            _parse_special_functions,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols)
+                           smart_subs, smart_subs_dict, toposort_symbols,
+                           CircularDependencyError)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, generate_measurement_symbol,
@@ -1436,7 +1437,7 @@ class SbmlImporter:
         from pprint import pprint
         pprint(ode_model._states)
         pprint(self.stoichiometric_matrix)
-        #raise ValueError()
+
         try:
             stoichiometric_list = [
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
@@ -1445,6 +1446,14 @@ class SbmlImporter:
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
                           "coefficients are not currently supported. "
+                          "Skipping.")
+            return species_solver
+
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported. "
                           "Skipping.")
             return species_solver
 
@@ -1457,6 +1466,8 @@ class SbmlImporter:
         # iterate over list of conservation laws, create symbolic expressions,
         # and mark replaced species for removal from stoichiometric matrix
         species_to_be_removed = set()
+        # keep new conservation laws separate until we know everything worked
+        new_conservation_laws = []
         for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
             assert len(state_idxs) == len(coefficients)
             if not state_idxs:
@@ -1481,14 +1492,13 @@ class SbmlImporter:
             target_state = ode_model._states[target_state_idx].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
 
-            # TODO: need to replace target states from constant species CLs
             # \sum coeff * state
             abundance_expr = sp.Add(*[
                 ode_model._states[i_state].get_id() * coeff
                 for i_state, coeff in zip(state_idxs, coefficients)
             ])
 
-            conservation_laws.append({
+            new_conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
                 'state_expr':
@@ -1499,10 +1509,27 @@ class SbmlImporter:
             })
             species_to_be_removed.add(target_state_idx)
 
-        replacements = {cl['state']: cl['total_abundance']
-                        for cl in conservation_laws }
+        # replace eliminated states by their state expressions, taking care of
+        #  any (non-cyclic) dependencies
+        state_exprs = {
+            cl['state']: cl['state_expr']
+            for cl in itt.chain(conservation_laws, new_conservation_laws)
+        }
+        try:
+            sorted_state_exprs = toposort_symbols(state_exprs)
+        except CircularDependencyError as e:
+            # see SBML semantic test suite, case 18 for an example
+            warnings.warn("Circular dependency detected in conservation laws. "
+                          "Skipping conservation laws for non-constant "
+                          f"species. Error was: {e}.")
+            return species_solver
+
         for cl in conservation_laws:
-            cl['state_expr'] = cl['state_expr'].subs(replacements)
+            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
+                                               sorted_state_exprs)
+
+        conservation_laws.extend(new_conservation_laws)
+
         # list of species that are not determined by conservation laws
         return [ix for ix in species_solver if ix not in species_to_be_removed]
 
