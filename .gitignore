@@ -136,6 +136,7 @@ tests/test/*
 */tests/fricker_2010_apoptosis_amici/*
 */tests/explicit_amici/*
 */tests/fixed_initial_amici/*
+*/tests/localfunc_amici/*
 tests/cpp/writeResults.h5
 tests/cpp/writeResults.h5.bak
 tests/sbml-test-suite/*
