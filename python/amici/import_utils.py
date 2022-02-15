@@ -1,18 +1,36 @@
 """Miscellaneous functions related to model import, independent of any specific
  model format"""
-
-from typing import (
-    Dict, Union, Optional, Callable, Sequence, Tuple, Iterable, Any
-)
-import sympy as sp
 import enum
 import itertools as itt
+import sys
+from typing import (Any, Callable, Dict, Iterable, Optional, Sequence, Tuple,
+                    Union)
 
-from toposort import toposort
-from sympy.logic.boolalg import BooleanAtom
+import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.logic.boolalg import BooleanAtom
+from toposort import toposort
 
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
+
+
+# Monkey-patch toposort CircularDependencyError to handle non-sortable objects
+class CircularDependencyError(ValueError):
+    def __init__(self, data):
+        # Sort the data just to make the output consistent, for use in
+        #  error messages.  That's convenient for doctests.
+        s = "Circular dependencies exist among these items: {{{}}}".format(
+            ", ".join(
+                "{!r}:{!r}".format(key, value) for key, value in sorted(
+                    {str(k): v for k, v in data.items()}.items())
+            )
+        )
+        super(CircularDependencyError, self).__init__(s)
+        self.data = data
+
+
+setattr(sys.modules["toposort"],  "CircularDependencyError",
+        CircularDependencyError)
 
 
 class ObservableTransformation(str, enum.Enum):
