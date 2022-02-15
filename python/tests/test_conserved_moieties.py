@@ -183,10 +183,22 @@ def test_detect_conservation_laws():
         float(entry) for entry in stoichiometric_matrix.T.flat()
     ]
 
-    for _ in range(100):
+    num_tries = 1000
+    found_all_n_times = 0
+    for _ in range(num_tries):
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *stoichiometric_matrix.shape)
 
         assert cls_state_idxs in ([[0, 3], [1, 2], [1, 3], []],
-                                  [[0, 3], [1, 2], [0, 2], []])
-        assert cls_coefficients == [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], []]
+                                  [[0, 3], [1, 2], [0, 2], []],
+                                  # should happen rarely
+                                  [[0, 3], [1, 2], [], []])
+        assert cls_coefficients in ([[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], []],
+                                    [[1.0, 1.0], [1.0, 1.0], [], []])
+
+        num_cls_found = sum(len(x) > 0 for x in cls_state_idxs)
+        if num_cls_found == 3:
+            found_all_n_times += 1
+    # sometimes we don't find all conservation laws, but this should be rare
+    assert found_all_n_times / num_tries > 0.99
+
