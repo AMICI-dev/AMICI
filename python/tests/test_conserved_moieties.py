@@ -139,9 +139,6 @@ def test_detect_cl(data_demartino2014, quiet=False):
                     print("Relaxation...")
                 finish = relax(stoichiometric_list, conserved_moieties, num_reactions, num_species)
                 timer = 0
-    from copy import deepcopy
-    old = deepcopy(cls_species_idxs)
-    old2 = deepcopy(cls_coefficients)
     reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
 
     if not quiet:

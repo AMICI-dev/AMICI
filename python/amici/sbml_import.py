@@ -4,7 +4,7 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
-
+from copy import deepcopy
 import copy
 import itertools as itt
 import logging
@@ -1433,7 +1433,10 @@ class SbmlImporter:
             List of species indices which remain later in the ODE solver
         """
         species_solver = list(range(ode_model.num_states_rdata()))
-
+        from pprint import pprint
+        pprint(ode_model._states)
+        pprint(self.stoichiometric_matrix)
+        #raise ValueError()
         try:
             stoichiometric_list = [
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
@@ -1480,7 +1483,7 @@ class SbmlImporter:
 
             # TODO: need to replace target states from constant species CLs
             # \sum coeff * state
-            weighted_sum = sp.Add(*[
+            abundance_expr = sp.Add(*[
                 ode_model._states[i_state].get_id() * coeff
                 for i_state, coeff in zip(state_idxs, coefficients)
             ])
@@ -1489,10 +1492,10 @@ class SbmlImporter:
                 'state': target_state,
                 'total_abundance': total_abundance,
                 'state_expr':
-                    (total_abundance - (weighted_sum
+                    (total_abundance - (abundance_expr
                                         - target_state * target_state_coeff))
                     / target_state_coeff,
-                'abundance_expr': weighted_sum / target_state_coeff
+                'abundance_expr': abundance_expr
             })
             species_to_be_removed.add(target_state_idx)
 
