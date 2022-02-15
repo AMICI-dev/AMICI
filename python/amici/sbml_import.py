@@ -1499,7 +1499,7 @@ class SbmlImporter:
             })
             species_to_be_removed.add(target_state_idx)
 
-        replacements = {cl['state']: cl['total_abundance']
+        replacements = {cl['state']: cl['state_expr']
                         for cl in conservation_laws }
         for cl in conservation_laws:
             cl['state_expr'] = cl['state_expr'].subs(replacements)
