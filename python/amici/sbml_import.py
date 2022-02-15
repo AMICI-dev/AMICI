@@ -1524,7 +1524,7 @@ class SbmlImporter:
                           f"species. Error was: {e}.")
             return species_solver
 
-        for cl in conservation_laws:
+        for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
                                                sorted_state_exprs)
 
