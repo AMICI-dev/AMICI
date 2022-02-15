@@ -1449,6 +1449,14 @@ class SbmlImporter:
                           "Skipping.")
             return species_solver
 
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported. "
+                          "Skipping.")
+            return species_solver
+
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape)
 
