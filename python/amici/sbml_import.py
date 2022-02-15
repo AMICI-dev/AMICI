@@ -1483,7 +1483,7 @@ class SbmlImporter:
 
             # TODO: need to replace target states from constant species CLs
             # \sum coeff * state
-            weighted_sum = sp.Add(*[
+            abundance_expr = sp.Add(*[
                 ode_model._states[i_state].get_id() * coeff
                 for i_state, coeff in zip(state_idxs, coefficients)
             ])
@@ -1492,10 +1492,10 @@ class SbmlImporter:
                 'state': target_state,
                 'total_abundance': total_abundance,
                 'state_expr':
-                    (total_abundance - (weighted_sum
+                    (total_abundance - (abundance_expr
                                         - target_state * target_state_coeff))
                     / target_state_coeff,
-                'abundance_expr': weighted_sum / target_state_coeff
+                'abundance_expr': abundance_expr
             })
             species_to_be_removed.add(target_state_idx)
 
