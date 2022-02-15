@@ -33,8 +33,8 @@ def compute_moiety_conservation_laws(
     """
     # compute semi-positive conservation laws
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
-        cls_species_idxs, cls_coefficients = kernel(
-            stoichiometric_list, num_species, num_reactions)
+    cls_species_idxs, cls_coefficients = kernel(
+        stoichiometric_list, num_species, num_reactions)
 
     print(cls_species_idxs)
     print(cls_coefficients)
@@ -100,7 +100,7 @@ def _qsort(
     pivot = km + int((k - km) / 2)
     l = 0
     p = k - km - 1
-    new_order = [None] * (k - km)
+    new_order = [0] * (k - km)
     for i in range(km, k):
         if i != pivot:
             if pivots[order[i]] < pivots[order[pivot]]:
@@ -250,7 +250,8 @@ def kernel(
                 if RSolutions2[i][j] * RSolutions2[i][0] < 0:
                     ok2 = 0
                 if not matched or all(
-                    cur_matched != RSolutions[i][j] for cur_matched in matched
+                        cur_matched != RSolutions[i][j] for cur_matched in
+                        matched
                 ):
                     matched.append(RSolutions[i][j])
         if ok2 == 1 and len(RSolutions[i]):
@@ -260,8 +261,8 @@ def kernel(
                 cls_coefficients[i2].append(abs(RSolutions2[i][j]))
                 min_value = min(min_value, abs(RSolutions2[i][j]))
                 if not int_matched or all(
-                    cur_int_matched != cls_species_idxs[i2][j]
-                    for cur_int_matched in int_matched
+                        cur_int_matched != cls_species_idxs[i2][j]
+                        for cur_int_matched in int_matched
                 ):
                     int_matched.append(cls_species_idxs[i2][j])
             for j in range(len(cls_species_idxs[i2])):
@@ -370,6 +371,7 @@ def _is_linearly_dependent(
     K = int_kernel_dim + 1
     MIN = 1e-9
     MAX = 1e+9
+    # TODO simplify - copy + []
     matrix: List[List[int]] = [[] for _ in range(K)]
     matrix2: List[List[float]] = [[] for _ in range(K)]
     for i in range(K - 1):
@@ -379,15 +381,14 @@ def _is_linearly_dependent(
 
     order2 = list(range(len(matched)))
     pivots2 = matched[:]
-
     _qsort(len(matched), 0, order2, pivots2)
+
     for i in range(len(matched)):
         if vector[order2[i]] > MIN:
             matrix[K - 1].append(matched[order2[i]])
             matrix2[K - 1].append(vector[order2[i]])
 
     order = list(range(K))
-
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
     ok = False
@@ -489,22 +490,20 @@ def monte_carlo(
 
     H = 0
     for i in range(dim):
-        H += fields[i] * num[i]**2
+        H += fields[i] * num[i] ** 2
         for j in range(len([J[i]])):
             H += J2[i][j] * num[i] * num[J[i][j]]
 
     count = 0
-    T1 = initial_temperature
     howmany = 0
+    T1 = initial_temperature
     e = math.exp(-1 / T1)
-
     while True:
         en = int(random.uniform(0, 1) * dim)
         while not len(J[en]):
             en = int(random.uniform(0, 1) * dim)
-        p = 1
-        if num[en] > 0 and random.uniform(0, 1) < 0.5:
-            p = -1
+
+        p = -1 if num[en] > 0 and random.uniform(0, 1) < 0.5 else 1
         delta = fields[en] * num[en]
         for i in range(len(J[en])):
             delta += J2[en][i] * num[J[en][i]]
@@ -516,7 +515,6 @@ def monte_carlo(
             H += delta
 
         count += 1
-
         if count % dim == 0:
             T1 -= cool_rate
             if T1 <= 0:
@@ -524,19 +522,19 @@ def monte_carlo(
             e = math.exp(-1 / T1)
 
         if count == dim // cool_rate:
+            count = 0
             T1 = initial_temperature
             e = math.exp(-1 / T1)
-            count = 0
-            num = [0] * dim
             en = int(random.uniform(0, 1) * dim)
             while not len(J[en]):
                 en = int(random.uniform(0, 1) * dim)
+            num = [0] * dim
             num[en] = 1
             numtot = 1
+
             H = 0
             for i in range(dim):
                 H += fields[i] * num[i] ** 2
-
                 for j in range(len(J[i])):
                     H += J2[i][j] * num[i] * num[J[i][j]]
             howmany += 1
@@ -555,20 +553,20 @@ def monte_carlo(
 
         # reduce by MC procedure
         if yes:
-            orders2 = list(range(len(matched)))
+            order2 = list(range(len(matched)))
             pivots2 = matched[:]
-            _qsort(len(matched), 0, orders2, pivots2)
+            _qsort(len(matched), 0, order2, pivots2)
             for i in range(len(matched)):
-                if num[orders2[i]] > 0:
+                if num[order2[i]] > 0:
                     cls_species_idxs[int_kernel_dim].append(
-                        matched[orders2[i]])
-                    cls_coefficients[int_kernel_dim].append(num[orders2[i]])
+                        matched[order2[i]])
+                    cls_coefficients[int_kernel_dim].append(num[order2[i]])
             int_kernel_dim += 1
             reduce(int_kernel_dim, cls_species_idxs, cls_coefficients,
                    num_species)
             min_value = 1000
             for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-                if len(int_matched) == 0 \
+                if not len(int_matched) \
                         or all(cur_int_matched
                                != cls_species_idxs[int_kernel_dim - 1][i]
                                for cur_int_matched in int_matched):
@@ -650,8 +648,7 @@ def relax(
     while not done:
         _qsort(K, 0, order, pivots)
         for j in range(K - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] \
-                    and pivots[order[j]] != MAX:
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 min1 = MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
@@ -663,6 +660,7 @@ def relax(
                         min2 = min(min2, abs(matrix2[order[j + 1]][0]
                                              / matrix2[order[j + 1]][i]))
                 if min2 > min1:
+                    # swap
                     k2 = order[j + 1]
                     order[j + 1] = order[j]
                     order[j] = k2
@@ -691,7 +689,7 @@ def relax(
                     pivots[order[j + 1]] = MAX
 
     for i in range(K):
-        if len(matrix[i]) > 0:
+        if len(matrix[i]):
             norm = matrix2[i][0]
             for j in range(len(matrix[i])):
                 matrix2[i][j] /= norm
@@ -723,7 +721,6 @@ def relax(
     for i in range(K):
         if len(matrix[i]):
             indip[matrix[i][0]] = i
-
     M1 = 0
     for i in range(num_reactions):
         if indip[i] == K + 1:
@@ -750,11 +747,9 @@ def relax(
     N1 = num_species - K
     matrix_aus = [[] for _ in range(N1)]
     matrix_aus2 = [[] for _ in range(N1)]
-
     k1 = 0
     i1 = 0
     j1 = 0
-
     for val in stoichiometric_list:
         prendo = 1
         for i in range(len(int_matched)):
@@ -786,7 +781,6 @@ def relax(
     del matrixAus, matrixAus2, matrix_aus, matrix_aus2
 
     var = [MIN] * M1
-    done = False
     time = 0
     cmin_idx = 0
     while True:
@@ -799,18 +793,21 @@ def relax(
                 if constr < cmin:
                     cmin_idx = j
                     cmin = constr
-        time += 1
         if cmin >= 0:
-            done = True
-        else:
-            alpha = -relaxation_step * cmin  # Motzkin relaxation
-            fact = sum(val ** 2 for val in matrixb2[cmin_idx])
-            alpha /= fact
-            alpha = max(1e-9 * MIN, alpha)
-            for j in range(len(matrixb[cmin_idx])):
-                var[matrixb[cmin_idx][j]] += alpha * matrixb2[cmin_idx][j]
+            # constraints satisfied
+            break
 
-        if done or time >= relaxation_max:
+        # Motzkin relaxation
+        alpha = -relaxation_step * cmin
+        fact = sum(val ** 2 for val in matrixb2[cmin_idx])
+        alpha /= fact
+        alpha = max(1e-9 * MIN, alpha)
+        for j in range(len(matrixb[cmin_idx])):
+            var[matrixb[cmin_idx][j]] += alpha * matrixb2[cmin_idx][j]
+
+        time += 1
+        if time >= relaxation_max:
+            # timeout
             break
 
     return done
