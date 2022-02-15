@@ -70,7 +70,7 @@ def compute_moiety_conservation_laws(
     print(cls_species_idxs)
     print(cls_coefficients)
 
-    return cls_species_idxs, cls_coefficients
+    return cls_species_idxs[:int_kernel_dim], cls_coefficients[:int_kernel_dim]
 
 
 def _qsort(

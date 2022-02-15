@@ -1434,6 +1434,7 @@ class SbmlImporter:
         :returns:
             List of species indices which remain later in the ODE solver
         """
+        # indices of retained species
         species_solver = list(range(ode_model.num_states_rdata()))
         from pprint import pprint
         pprint(ode_model._states)
@@ -1461,8 +1462,8 @@ class SbmlImporter:
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape)
 
-        replacements = {cl['state']: cl['total_abundance']
-                        for cl in conservation_laws }
+        # previously removed constant species
+        eliminated_states = {cl['state'] for cl in conservation_laws}
 
         # iterate over list of conservation laws, create symbolic expressions,
         # and mark replaced species for removal from stoichiometric matrix
@@ -1471,10 +1472,8 @@ class SbmlImporter:
         new_conservation_laws = []
         for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
             assert len(state_idxs) == len(coefficients)
-            if not state_idxs:
-                # TODO why even return those?
-                continue
-            # choose a state that is not subject to removal
+
+            # choose a state that is not already subject to removal
             # TODO is this necessary or can we just take the first one?
             target_state_idx = None
             target_state_coeff = None
@@ -1483,22 +1482,30 @@ class SbmlImporter:
                     in zip(coefficients, state_idxs):
                 if target_state_idx not in species_to_be_removed:
                     target_state = ode_model._states[target_state_idx].get_id()
-                    if target_state not in replacements:
+                    if target_state not in eliminated_states:
                         break
-            if target_state_idx in species_to_be_removed or target_state in replacements:
-                # should not happen?
-                # raise AssertionError()
+            if target_state_idx in species_to_be_removed \
+                    or target_state in eliminated_states:
                 continue
+
             target_state = ode_model._states[target_state_idx].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+            target_compartment = self.symbols[SymbolId.SPECIES][
+                target_state]['compartment']
 
-            target_compartment = self.symbols[SymbolId.SPECIES][ode_model._states[target_state_idx]._identifier]['compartment']
+            state_ids = [ode_model._states[i_state].get_id()
+                         for i_state in state_idxs]
+            compartment_ids = [
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']
+                if not self.symbols[SymbolId.SPECIES][state_id]['amount']
+                else 1
+                for state_id in state_ids
+            ]
             # \sum coeff * state * volume
-            # TODO need to handle amounts ?!
             abundance_expr = sp.Add(*[
-                ode_model._states[i_state].get_id() * coeff
-                * self.symbols[SymbolId.SPECIES][ode_model._states[i_state]._identifier]['compartment']
-                for i_state, coeff in zip(state_idxs, coefficients)
+                state_id * coeff * compartment
+                for state_id, coeff, compartment
+                in zip(state_ids, coefficients, compartment_ids)
             ])
 
             new_conservation_laws.append({
@@ -1506,7 +1513,8 @@ class SbmlImporter:
                 'total_abundance': total_abundance,
                 'state_expr':
                     (total_abundance - (abundance_expr
-                                        - target_state * target_compartment * target_state_coeff))
+                                        - target_state * target_compartment
+                                        * target_state_coeff))
                     / target_state_coeff / target_compartment,
                 'abundance_expr': abundance_expr
             })
@@ -1530,21 +1538,16 @@ class SbmlImporter:
         for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
                                                sorted_state_exprs)
-
-
-        # TODO cleanup
-        for comp, vol in self.compartments.items():
-            for cl in new_conservation_laws:
-                cl['state_expr'] = smart_subs(cl['state_expr'],
-                                                   comp, vol)
+            # replace compartments by volumes
+            for comp, vol in self.compartments.items():
+                cl['state_expr'] = smart_subs(cl['state_expr'], comp, vol)
                 cl['abundance_expr'] = smart_subs(cl['abundance_expr'],
-                                                   comp, vol)
+                                                  comp, vol)
 
         conservation_laws.extend(new_conservation_laws)
 
         # list of species that are not determined by conservation laws
         return [ix for ix in species_solver if ix not in species_to_be_removed]
-
 
     def _replace_compartments_with_volumes(self):
         """
