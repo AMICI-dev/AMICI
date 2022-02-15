@@ -695,9 +695,12 @@ def relax(
         if len(matrix[k]) <= 1:
             continue
 
-        for i in range(1, len(matrix[k])):
+        i = 0
+        while i < len(matrix[k]):
             for j1 in range(k1 + 1, K):
                 j = order[j1]
+                print("matrix[j]", matrix[j])
+                print("matrix[k]", matrix[k], i)
                 if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
                     continue
 
@@ -712,6 +715,7 @@ def relax(
                     if row_val != 0:
                         matrix[k].append(row_idx)
                         matrix2[k].append(row_val)
+            i += 1
 
     indip = [K + 1] * num_reactions
     for i in range(K):
