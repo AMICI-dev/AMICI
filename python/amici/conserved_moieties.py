@@ -167,37 +167,38 @@ def kernel(
         matrix[i].append(num_reactions + i)
         matrix2[i].append(1)
 
-    orders: List[int] = list(range(num_species))
+    order: List[int] = list(range(num_species))
     pivots = [matrix[i][0] if len(matrix[i]) else MAX
               for i in range(num_species)]
 
     done = False
     while not done:
-        _qsort(num_species, 0, orders, pivots)
+        _qsort(num_species, 0, order, pivots)
         for j in range(num_species - 1):
-            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 min1 = 100000000
-                if len(matrix[orders[j]]) > 1:
-                    for i in range(len(matrix[orders[j]])):
-                        min1 = min(min1, abs(matrix2[orders[j]][0]
-                                             / matrix2[orders[j]][i]))
+                if len(matrix[order[j]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        min1 = min(min1, abs(matrix2[order[j]][0]
+                                             / matrix2[order[j]][i]))
 
                 min2 = 100000000
-                if len(matrix[orders[j + 1]]) > 1:
-                    for i in range(len(matrix[orders[j + 1]])):
-                        min2 = min(min2, abs(matrix2[orders[j + 1]][0]
-                                             / matrix2[orders[j + 1]][i]))
+                if len(matrix[order[j + 1]]) > 1:
+                    for i in range(len(matrix[order[j + 1]])):
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]
+                                             / matrix2[order[j + 1]][i]))
 
                 if min2 > min1:
-                    k2 = orders[j + 1]
-                    orders[j + 1] = orders[j]
-                    orders[j] = k2
+                    # swap
+                    k2 = order[j + 1]
+                    order[j + 1] = order[j]
+                    order[j] = k2
         done = True
 
         for j in range(num_species - 1):
-            if pivots[orders[j + 1]] == pivots[orders[j]] != MAX:
-                k1 = orders[j + 1]
-                k2 = orders[j]
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+                k1 = order[j + 1]
+                k2 = order[j]
                 column = [0] * (num_species + num_reactions)
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
@@ -208,28 +209,24 @@ def kernel(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for i in range(num_species + num_reactions):
-                    if abs(column[i]) > MIN:
-                        matrix[k1].append(i)
-                        matrix2[k1].append(column[i])
+                for col_idx, col_val in enumerate(column):
+                    if abs(col_val) > MIN:
+                        matrix[k1].append(col_idx)
+                        matrix2[k1].append(col_val)
 
                 done = False
-                if len(matrix[orders[j + 1]]) > 0:
-                    pivots[orders[j + 1]] = matrix[orders[j + 1]][0]
+                if len(matrix[order[j + 1]]):
+                    pivots[order[j + 1]] = matrix[order[j + 1]][0]
                 else:
-                    pivots[orders[j + 1]] = MAX
+                    pivots[order[j + 1]] = MAX
 
     RSolutions = [[] for _ in range(num_species)]
     RSolutions2 = [[] for _ in range(num_species)]
     kernel_dim = 0
 
     for i in range(num_species):
-        done = True
-        if len(matrix[i]):
-            for j in range(len(matrix[i])):
-                if matrix[i][j] < num_reactions:
-                    done = False
-                    break
+        done = all(matrix[i][j] >= num_reactions
+                   for j in range(len(matrix[i])))
         if done and len(matrix[i]):
             for j in range(len(matrix[i])):
                 RSolutions[kernel_dim].append(matrix[i][j] - num_reactions)
@@ -244,17 +241,16 @@ def kernel(
 
     i2 = 0
     for i in range(kernel_dim):
-        ok2 = 1
-        if len(RSolutions[i]):
-            for j in range(len(RSolutions[i])):
-                if RSolutions2[i][j] * RSolutions2[i][0] < 0:
-                    ok2 = 0
-                if not matched or all(
-                        cur_matched != RSolutions[i][j] for cur_matched in
-                        matched
-                ):
-                    matched.append(RSolutions[i][j])
-        if ok2 == 1 and len(RSolutions[i]):
+        ok2 = True
+        for j in range(len(RSolutions[i])):
+            if RSolutions2[i][j] * RSolutions2[i][0] < 0:
+                ok2 = False
+            if not matched or all(
+                    cur_matched != RSolutions[i][j] for cur_matched in
+                    matched
+            ):
+                matched.append(RSolutions[i][j])
+        if ok2 and len(RSolutions[i]):
             min_value = MAX
             for j in range(len(RSolutions[i])):
                 cls_species_idxs[i2].append(RSolutions[i][j])
