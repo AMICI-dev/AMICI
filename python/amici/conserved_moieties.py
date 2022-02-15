@@ -678,7 +678,7 @@ def relax(
 
                 matrix[k1] = []
                 matrix2[k1] = []
-                for col_idx, col_val in column:
+                for col_idx, col_val in enumerate(column):
                     if abs(col_val) > MIN:
                         matrix[k1].append(col_idx)
                         matrix2[k1].append(col_val)
@@ -712,7 +712,7 @@ def relax(
                     row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
                 matrix[k] = []
                 matrix2[k] = []
-                for row_idx, row_val in row_k:
+                for row_idx, row_val in enumerate(row_k):
                     if row_val != 0:
                         matrix[k].append(row_idx)
                         matrix2[k].append(row_val)
