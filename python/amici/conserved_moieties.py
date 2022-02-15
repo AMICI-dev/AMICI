@@ -659,8 +659,8 @@ def relax(
                 min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
-                        min2 = min(min2, abs(matrix2[order[j + 1]][0]) \
-                                       / matrix2[order[j + 1]][i])
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]
+                                             / matrix2[order[j + 1]][i]))
                 if min2 > min1:
                     k2 = order[j + 1]
                     order[j + 1] = order[j]
