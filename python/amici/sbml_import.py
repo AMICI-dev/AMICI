@@ -1481,7 +1481,6 @@ class SbmlImporter:
             target_state = ode_model._states[target_state_idx].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
 
-            # TODO: need to replace target states from constant species CLs
             # \sum coeff * state
             abundance_expr = sp.Add(*[
                 ode_model._states[i_state].get_id() * coeff
@@ -1499,10 +1498,15 @@ class SbmlImporter:
             })
             species_to_be_removed.add(target_state_idx)
 
-        replacements = {cl['state']: cl['state_expr']
-                        for cl in conservation_laws }
+        # replace eliminated states by their state expressions, taking care of
+        #  any (non-cyclic) dependencies
+        state_exprs = {cl['state']: cl['state_expr']
+                       for cl in conservation_laws}
+        sorted_state_exprs = toposort_symbols(state_exprs)
         for cl in conservation_laws:
-            cl['state_expr'] = cl['state_expr'].subs(replacements)
+            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
+                                               sorted_state_exprs)
+
         # list of species that are not determined by conservation laws
         return [ix for ix in species_solver if ix not in species_to_be_removed]
 
