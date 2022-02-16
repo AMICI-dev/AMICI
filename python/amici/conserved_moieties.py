@@ -470,14 +470,12 @@ def _monte_carlo(
     :returns:
         status of MC iteration, number of integer MCLs, number of MCLs,
         metabolites and reaction indices, MCLs and integer MCLs as a tuple
-        
+
         status indicates if the currently found moiety by the Monte Carlo
         process is linearly dependent (False) or linearly independent (True)
         in case of linear dependence, the current Monte Carlo cycle can be
         considered otherwise the algorithm retries Monte Carlo up to max_iter
     """
-    # TODO: doc: what does value of status indicate
-
     dim = len(matched)
     num = [int(2 * random.uniform(0, 1)) if len(J[i]) else 0
            for i in range(dim)]
