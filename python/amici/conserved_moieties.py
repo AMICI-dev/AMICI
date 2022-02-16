@@ -40,7 +40,7 @@ def compute_moiety_conservation_laws(
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
     cls_species_idxs, cls_coefficients = kernel(
         stoichiometric_list, num_species, num_reactions)
-    # if the number of integer MCLs equals total MCLS no MC relaxation 
+    # if the number of integer MCLs equals total MCLS no MC relaxation
     done = (int_kernel_dim == kernel_dim)
 
     if not done:
@@ -149,16 +149,16 @@ def kernel(
     matrix: List[List[int]] = [[] for _ in range(num_species)]
     matrix2: List[List[float]] = [[] for _ in range(num_species)]
 
-    i1 = 0
-    j1 = 0
+    i_reaction = 0
+    i_species = 0
     for val in stoichiometric_list:
         if val != 0:
-            matrix[j1].append(i1)
-            matrix2[j1].append(val)
-        j1 += 1
-        if j1 == num_species:
-            j1 = 0
-            i1 += 1
+            matrix[i_species].append(i_reaction)
+            matrix2[i_species].append(val)
+        i_species += 1
+        if i_species == num_species:
+            i_species = 0
+            i_reaction += 1
     for i in range(num_species):
         matrix[i].append(num_reactions + i)
         matrix2[i].append(1)
@@ -291,31 +291,29 @@ def fill(
     """
     dim = len(matched)
     MIN = 1e-9
+
+    # for each entry in the stoichiometric matrix save interaction
+    i_reaction = 0
+    i_species = 0
     matrix = [[] for _ in range(dim)]
     matrix2 = [[] for _ in range(dim)]
+    for val in stoichiometric_list:
+        if val != 0:
+            take = dim
+            for matched_idx, matched_val in enumerate(matched):
+                if i_species == matched_val:
+                    take = matched_idx
+            if take < dim:
+                matrix[take].append(i_reaction)
+                matrix2[take].append(val)
+        i_species += 1
+        if i_species == num_species:
+            i_species = 0
+            i_reaction += 1
 
     J = [[] for _ in range(num_species)]
     J2 = [[] for _ in range(num_species)]
-
     fields = [0] * num_species
-    i1 = 0
-    j1 = 0
-    # for each entry in the stoichiometrix matrix save interaction
-    for val in stoichiometric_list:
-        if val != 0:
-            prendo = dim
-            if dim > 0:
-                for i in range(dim):
-                    if j1 == matched[i]:
-                        prendo = i
-            if prendo < dim:
-                matrix[prendo].append(i1)
-                matrix2[prendo].append(val)
-        j1 += 1
-        if j1 == num_species:
-            j1 = 0
-            i1 += 1
-
     for i in range(dim):
         for j in range(i, dim):
             interactions = 0
