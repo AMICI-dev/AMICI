@@ -8,9 +8,9 @@ import copy
 import itertools as itt
 import logging
 import math
+import os
 import re
 import warnings
-from numbers import Number
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
 import libsbml as sbml
@@ -1389,14 +1389,16 @@ class SbmlImporter:
         """
         conservation_laws = []
 
-        # So far, only conservation laws for constant species are supported
+        # Create conservation laws for constant species
         species_solver = _add_conservation_for_constant_species(
             ode_model, conservation_laws
         )
         # Non-constant species processed here
-        species_solver = list(set(
-            self._add_conservation_for_non_constant_species(
-                ode_model, conservation_laws)) & set(species_solver))
+        if "AMICI_EXPERIMENTAL_SBML_NONCONST_CLS" in os.environ \
+                or "GITHUB_ACTIONS" in os.environ:
+            species_solver = list(set(
+                self._add_conservation_for_non_constant_species(
+                    ode_model, conservation_laws)) & set(species_solver))
 
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must be switched off in this
