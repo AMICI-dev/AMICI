@@ -1394,8 +1394,9 @@ class SbmlImporter:
             ode_model, conservation_laws
         )
         # Non-constant species processed here
-        species_solver = list(set(self._add_conservation_for_non_constant_species
-            (ode_model, conservation_laws)) & set(species_solver))
+        species_solver = list(set(
+            self._add_conservation_for_non_constant_species(
+                ode_model, conservation_laws)) & set(species_solver))
 
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must be switched off in this
@@ -1470,7 +1471,7 @@ class SbmlImporter:
             # choose a state that is not already subject to removal
             try:
                 target_state_cl_idx = next(filter(
-                    lambda x: state_ids[x] not in species_to_be_removed,
+                    lambda x: state_ids[x] not in eliminated_state_ids,
                     state_idxs)
                 )
             except StopIteration:
@@ -1478,7 +1479,8 @@ class SbmlImporter:
                 continue
 
             target_state_model_idx = state_idxs[target_state_cl_idx]
-            target_state = state_ids[target_state_cl_idx]
+            target_state_id = state_ids[target_state_cl_idx]
+            eliminated_state_ids.add(target_state_id)
 
             compartment_sizes = [
                 self.compartments[
@@ -1496,7 +1498,7 @@ class SbmlImporter:
                     "currently supported and will be turned off.")
                 return species_solver
 
-            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
             target_compartment = compartment_sizes[target_state_cl_idx]
             target_state_coeff = coefficients[target_state_cl_idx]
 
@@ -1508,11 +1510,11 @@ class SbmlImporter:
             ])
 
             new_conservation_laws.append({
-                'state': target_state,
+                'state': target_state_id,
                 'total_abundance': total_abundance,
                 'state_expr':
                     (total_abundance - (abundance_expr
-                                        - target_state * target_compartment
+                                        - target_state_id * target_compartment
                                         * target_state_coeff))
                     / target_state_coeff / target_compartment,
                 'abundance_expr': abundance_expr
