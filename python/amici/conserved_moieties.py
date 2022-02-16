@@ -128,9 +128,9 @@ def kernel(
     effectively with a possibly ill-conditioned stoichiometric matrix
     :math:`S`.
 
-    Note that this is the Python reimplementation of the algorithm proposed
-    by De Martino et al. (2014) https://doi.org/10.1371/journal.pone.0100750
-    and thus a direct adaption of the original implementation in C/C++.
+    Note that this is the Python reimplementation of the algorithm proposed by
+    `De Martino et al. (2014) <https://doi.org/10.1371/journal.pone.0100750>`_
+    and thus a direct adaption of the original implementation in C++.
 
     :param stoichiometric_list:
         the stoichiometric matrix as a list (species x reactions,
@@ -143,12 +143,8 @@ def kernel(
         kernel dimension, MCLs, integer kernel dimension, integer MCLs and
         indices to species and reactions in the preceding order as a tuple
     """
-    MAX = 1e9
-    MIN = 1e-9
-
     matrix: List[List[int]] = [[] for _ in range(num_species)]
     matrix2: List[List[float]] = [[] for _ in range(num_species)]
-
     i_reaction = 0
     i_species = 0
     for val in stoichiometric_list:
@@ -163,6 +159,8 @@ def kernel(
         matrix[i].append(num_reactions + i)
         matrix2[i].append(1)
 
+    MIN = 1e-9
+    MAX = 1e9
     order: List[int] = list(range(num_species))
     pivots = [matrix[i][0] if len(matrix[i]) else MAX
               for i in range(num_species)]
@@ -172,13 +170,13 @@ def kernel(
         _qsort(num_species, 0, order, pivots)
         for j in range(num_species - 1):
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
-                min1 = 100000000
+                min1 = MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(min1, abs(matrix2[order[j]][0]
                                              / matrix2[order[j]][i]))
 
-                min2 = 100000000
+                min2 = MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(min2, abs(matrix2[order[j + 1]][0]
@@ -195,7 +193,7 @@ def kernel(
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
-                column = [0] * (num_species + num_reactions)
+                column: List[float] = [0] * (num_species + num_reactions)
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
@@ -360,9 +358,6 @@ def _is_linearly_dependent(
         boolean indicating linear dependence (true) or not (false)
     """
     K = int_kernel_dim + 1
-    MIN = 1e-9
-    MAX = 1e+9
-    # TODO simplify - copy + []
     matrix: List[List[int]] = [[] for _ in range(K)]
     matrix2: List[List[float]] = [[] for _ in range(K)]
     # Populate matrices with species ids and coefficients for CLs
@@ -376,6 +371,8 @@ def _is_linearly_dependent(
     _qsort(len(matched), 0, order2, pivots2)
 
     # ensure positivity
+    MIN = 1e-9
+    MAX = 1e+9
     for i in range(len(matched)):
         if vector[order2[i]] > MIN:
             matrix[K - 1].append(matched[order2[i]])
@@ -410,7 +407,7 @@ def _is_linearly_dependent(
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
-                column = [0] * num_species
+                column: List[float] = [0] * num_species
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
@@ -476,7 +473,6 @@ def monte_carlo(
     """
     # TODO: doc: what does value of status indicate
 
-    MIN = 1e-9
     dim = len(matched)
     num = [int(2 * random.uniform(0, 1)) if len(J[i]) else 0
            for i in range(dim)]
@@ -488,6 +484,7 @@ def monte_carlo(
         for j in range(len(J[i])):
             H += J2[i][j] * num[i] * num[J[i][j]]
 
+    MIN = 1e-9
     count = 0
     howmany = 0
     T1 = initial_temperature
@@ -536,49 +533,44 @@ def monte_carlo(
         if (H < MIN and numtot > 0) or (howmany == 10 * max_iter):
             break
 
-    if howmany < 10 * max_iter:
-        # founds MCLS? need to check for linear independence
-        if len(int_matched):
-            yes = _is_linearly_dependent(
-                num, int_kernel_dim, cls_species_idxs,
-                cls_coefficients, matched, num_species)
-        else:
-            yes = True
+    if howmany >= 10 * max_iter:
+        return False, int_kernel_dim, int_matched
 
-        # reduce by MC procedure
-        if yes:
-            order2 = list(range(len(matched)))
-            pivots2 = matched[:]
-            _qsort(len(matched), 0, order2, pivots2)
-            for i in range(len(matched)):
-                if num[order2[i]] > 0:
-                    cls_species_idxs[int_kernel_dim].append(
-                        matched[order2[i]])
-                    cls_coefficients[int_kernel_dim].append(num[order2[i]])
-            int_kernel_dim += 1
-            reduce(int_kernel_dim, cls_species_idxs, cls_coefficients,
-                   num_species)
-            min_value = 1000
-            for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-                if not len(int_matched) \
-                        or all(cur_int_matched
-                               != cls_species_idxs[int_kernel_dim - 1][i]
-                               for cur_int_matched in int_matched):
-                    int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+    # founds MCLS? need to check for linear independence
+    if len(int_matched) and not _is_linearly_dependent(
+            num, int_kernel_dim, cls_species_idxs,
+            cls_coefficients, matched, num_species):
+        logger.debug(
+            "Found a moiety but it is linearly dependent... next.")
+        return False, int_kernel_dim, int_matched
 
-                min_value = min(min_value,
-                                cls_coefficients[int_kernel_dim - 1][i])
-            for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-                cls_coefficients[int_kernel_dim - 1][i] /= min_value
-            logger.debug(
-                f"Found linearly independent moiety, now there are "
-                f"{int_kernel_dim} engaging {len(int_matched)} species")
-        else:
-            logger.debug(
-                "Found a moiety but it is linearly dependent... next.")
-    else:
-        yes = False
-    return yes, int_kernel_dim, int_matched
+    # reduce by MC procedure
+    order2 = list(range(len(matched)))
+    pivots2 = matched[:]
+    _qsort(len(matched), 0, order2, pivots2)
+    for i in range(len(matched)):
+        if num[order2[i]] > 0:
+            cls_species_idxs[int_kernel_dim].append(matched[order2[i]])
+            cls_coefficients[int_kernel_dim].append(num[order2[i]])
+    int_kernel_dim += 1
+    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    min_value = 1000
+    for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+        if not len(int_matched) \
+                or all(cur_int_matched
+                       != cls_species_idxs[int_kernel_dim - 1][i]
+                       for cur_int_matched in int_matched):
+            int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+
+        min_value = min(min_value, cls_coefficients[int_kernel_dim - 1][i])
+    for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+        cls_coefficients[int_kernel_dim - 1][i] /= min_value
+
+    logger.debug(
+        f"Found linearly independent moiety, now there are "
+        f"{int_kernel_dim} engaging {len(int_matched)} species")
+
+    return True, int_kernel_dim, int_matched
 
 
 def relax(
@@ -613,26 +605,26 @@ def relax(
     MIN = 1e-9
     MAX = 1e9
 
-    i1 = 0
-    j1 = 0
     K = len(int_matched)
+
     matrix: List[List[int]] = [[] for _ in range(K)]
     matrix2: List[List[float]] = [[] for _ in range(K)]
-
+    i_reaction = 0
+    i_species = 0
     for val in stoichiometric_list:
         if val != 0:
-            prendo = K
+            take = K
             if K > 0:
                 for i in range(K):
-                    if j1 == int_matched[i]:
-                        prendo = i
-            if prendo < K:
-                matrix[prendo].append(i1)
-                matrix2[prendo].append(val)
-        j1 += 1
-        if j1 == num_species:
-            j1 = 0
-            i1 += 1
+                    if i_species == int_matched[i]:
+                        take = i
+            if take < K:
+                matrix[take].append(i_reaction)
+                matrix2[take].append(val)
+        i_species += 1
+        if i_species == num_species:
+            i_species = 0
+            i_reaction += 1
 
     # reducing the stoichiometric matrix of conserved moieties to row echelon
     # form by Gaussian elimination
@@ -695,8 +687,8 @@ def relax(
 
         i = 0
         while i < len(matrix[k]):
-            for j1 in range(k1 + 1, K):
-                j = order[j1]
+            for i_species in range(k1 + 1, K):
+                j = order[i_species]
                 print("matrix[j]", matrix[j])
                 print("matrix[k]", matrix[k], i)
                 if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
@@ -727,12 +719,12 @@ def relax(
 
     matrixAus = [[] for _ in range(M1)]
     matrixAus2 = [[] for _ in range(M1)]
-    i1 = 0
+    i_reaction = 0
     for i in range(num_reactions):
         if indip[i] >= K:
-            matrixAus[i1].append(i)
-            matrixAus2[i1].append(1)
-            i1 += 1
+            matrixAus[i_reaction].append(i)
+            matrixAus2[i_reaction].append(1)
+            i_reaction += 1
         else:
             t = indip[i]
             if len(matrix[t]) > 1:
@@ -746,22 +738,22 @@ def relax(
     matrix_aus = [[] for _ in range(N1)]
     matrix_aus2 = [[] for _ in range(N1)]
     k1 = 0
-    i1 = 0
-    j1 = 0
+    i_reaction = 0
+    i_species = 0
     for val in stoichiometric_list:
-        prendo = 1
+        take = 1
         for i in range(len(int_matched)):
-            if j1 == int_matched[i]:
-                prendo -= 1
-        if val != 0 and prendo == 1:
-            matrix_aus[k1].append(i1)
+            if i_species == int_matched[i]:
+                take -= 1
+        if val != 0 and take == 1:
+            matrix_aus[k1].append(i_reaction)
             matrix_aus2[k1].append(val)
-        j1 += 1
-        k1 += prendo
-        if j1 == num_species:
-            j1 = 0
+        i_species += 1
+        k1 += take
+        if i_species == num_species:
+            i_species = 0
             k1 = 0
-            i1 += 1
+            i_reaction += 1
 
     matrixb = [[] for _ in range(N1)]
     matrixb2 = [[] for _ in range(N1)]
