@@ -37,15 +37,16 @@ def compute_moiety_conservation_laws(
         list of lists of corresponding coefficients.
     """
     # compute semi-positive conservation laws
-    kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
-    cls_species_idxs, cls_coefficients = _kernel(
+    (kernel_dim, engaged_species, int_kernel_dim, conserved_moieties,
+     cls_species_idxs, cls_coefficients) = _kernel(
         stoichiometric_list, num_species, num_reactions)
     # if the number of integer MCLs equals total MCLS no MC relaxation
     done = (int_kernel_dim == kernel_dim)
 
     if not done:
         # construct interaction matrix
-        J, J2, fields = _fill(stoichiometric_list, engaged_species, num_species)
+        J, J2, fields = _fill(stoichiometric_list, engaged_species,
+                              num_species)
 
         timer = 0
         # maximum number of montecarlo search before starting relaxation
@@ -470,14 +471,12 @@ def _monte_carlo(
     :returns:
         status of MC iteration, number of integer MCLs, number of MCLs,
         metabolites and reaction indices, MCLs and integer MCLs as a tuple
-        
+
         status indicates if the currently found moiety by the Monte Carlo
         process is linearly dependent (False) or linearly independent (True)
         in case of linear dependence, the current Monte Carlo cycle can be
         considered otherwise the algorithm retries Monte Carlo up to max_iter
     """
-    # TODO: doc: what does value of status indicate
-
     dim = len(matched)
     num = [int(2 * random.uniform(0, 1)) if len(J[i]) else 0
            for i in range(dim)]
@@ -658,7 +657,7 @@ def _relax(
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
-                column = [0] * num_reactions
+                column: List[float] = [0] * num_reactions
                 g = matrix2[k2][0] / matrix2[k1][0]
                 for i in range(1, len(matrix[k1])):
                     column[matrix[k1][i]] = matrix2[k1][i] * g
