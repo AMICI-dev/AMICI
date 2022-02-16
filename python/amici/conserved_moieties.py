@@ -446,13 +446,13 @@ def _monte_carlo(
     the De Martino (2014) paper and Eqs. 11-13 in the publication
 
     :param matched:
-        matched
+        number of found MCLs
     :param J:
-        J
+        index of metabolites involved in a MCL
     :param J2:
-        J2
+        coefficients of metabolites involved in a MCL
     :param fields:
-        fields
+        actual number of metabolites involved in a MCL
     :param int_matched:
         actual matched MCLs
     :param int_kernel_dim:
@@ -470,6 +470,11 @@ def _monte_carlo(
     :returns:
         status of MC iteration, number of integer MCLs, number of MCLs,
         metabolites and reaction indices, MCLs and integer MCLs as a tuple
+        
+        status indicates if the currently found moiety by the Monte Carlo
+        process is linearly dependent (False) or linearly independent (True)
+        in case of linear dependence, the current Monte Carlo cycle can be
+        considered otherwise the algorithm retries Monte Carlo up to max_iter
     """
     # TODO: doc: what does value of status indicate
 
