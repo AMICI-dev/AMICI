@@ -6,8 +6,10 @@ from typing import List, MutableSequence, Sequence, Tuple
 
 from .logging import get_logger
 
-sys.setrecursionlimit(3000)
 logger = get_logger(__name__, logging.ERROR)
+
+# increase recursion limit for recursive quicksort
+sys.setrecursionlimit(3000)
 
 
 def compute_moiety_conservation_laws(
@@ -23,7 +25,7 @@ def compute_moiety_conservation_laws(
 
     :param stoichiometric_list:
         the stoichiometric matrix as a list (species x reactions,
-        col-major ordering)
+        column-major ordering)
     :param num_species:
         total number of species in the reaction network
     :param num_reactions:
@@ -38,9 +40,6 @@ def compute_moiety_conservation_laws(
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
     cls_species_idxs, cls_coefficients = kernel(
         stoichiometric_list, num_species, num_reactions)
-
-    print(cls_species_idxs)
-    print(cls_coefficients)
     done = (int_kernel_dim == kernel_dim)
 
     if not done:
@@ -55,22 +54,14 @@ def compute_moiety_conservation_laws(
                 int_kernel_dim, cls_species_idxs, cls_coefficients,
                 num_species, max_iter=max_num_monte_carlo
             )
-            print(cls_species_idxs)
-            print(cls_coefficients)
-
             done = (int_kernel_dim == kernel_dim)
-            if yes:
-                timer = 0
-            else:
-                timer += 1
+            timer = 0 if yes else timer + 1
 
             if timer == max_num_monte_carlo:
                 done = relax(stoichiometric_list, conserved_moieties,
                              num_reactions, num_species)
                 timer = 0
     reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
-    print(cls_species_idxs)
-    print(cls_coefficients)
 
     return cls_species_idxs[:int_kernel_dim], cls_coefficients[:int_kernel_dim]
 
@@ -84,7 +75,6 @@ def _qsort(
     """Quicksort
 
     Recursive implementation of the quicksort algorithm
-    TODO: Rewrite into an iterative algorithm with pivoting strategy
 
     :param k:
         number of elements to sort
@@ -95,8 +85,10 @@ def _qsort(
     :param pivots:
         corresponding pivot elements from scaled partial pivoting strategy
     """
+    # TODO: Rewrite into an iterative algorithm with pivoting strategy
+
     if k - km < 1:
-        # nothing to do
+        # nothing to sort
         return
 
     pivot = km + int((k - km) / 2)
@@ -112,8 +104,7 @@ def _qsort(
                 new_order[p] = order[i]
                 p -= 1
     new_order[p] = order[pivot]
-    for i in range(km, k):
-        order[i] = new_order[i - km]
+    order[km:k] = new_order
 
     centre = p + km
     _qsort(k, centre + 1, order, pivots)

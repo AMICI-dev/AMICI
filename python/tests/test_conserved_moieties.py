@@ -170,7 +170,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     assert runtime < max_time_seconds, "Took too long"
 
 
-def test_detect_conservation_laws():
+def test_compute_moiety_conservation_laws_simple():
     """Test a simple example, ensure the conservation laws are identified
      reliably. Requires the Monte Carlo to identify all."""
     stoichiometric_matrix = sp.Matrix([

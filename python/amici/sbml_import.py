@@ -1436,9 +1436,6 @@ class SbmlImporter:
         """
         # indices of retained species
         species_solver = list(range(ode_model.num_states_rdata()))
-        from pprint import pprint
-        pprint(ode_model._states)
-        pprint(self.stoichiometric_matrix)
 
         try:
             stoichiometric_list = [
