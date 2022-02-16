@@ -1472,7 +1472,7 @@ class SbmlImporter:
             try:
                 target_state_cl_idx = next(filter(
                     lambda x: state_ids[x] not in eliminated_state_ids,
-                    state_idxs)
+                    range(len(state_idxs)))
                 )
             except StopIteration:
                 # all engaged states have already been eliminated
