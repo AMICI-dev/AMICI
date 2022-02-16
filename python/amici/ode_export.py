@@ -959,7 +959,8 @@ class ODEModel:
     """
 
     def __init__(self, verbose: Optional[Union[bool, int]] = False,
-                 simplify: Optional[Callable] = sp.powsimp):
+                 simplify: Optional[Callable] = sp.powsimp,
+                 cache_simplify: bool = True):
         """
         Create a new ODEModel instance.
 
@@ -969,6 +970,10 @@ class ODEModel:
 
         :param simplify:
             see :meth:`ODEModel._simplify`
+
+        :param cache_simplify:
+            Whether to cache calls to the simplify method. Can e.g. decrease
+            import times for models with events.
         """
         self._states: List[State] = []
         self._observables: List[Observable] = []
@@ -1036,8 +1041,8 @@ class ODEModel:
             }
 
         self._lock_total_derivative: List[str] = list()
-        self._simplify: Callable = None
-        if simplify is not None:
+        self._simplify: Callable = simplify
+        if cache_simplify and simplify is not None:
             def cached_simplify(
                 expr: sp.Expr,
                 _simplified: Dict[str, sp.Expr] = {},

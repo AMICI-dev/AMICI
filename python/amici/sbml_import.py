@@ -218,6 +218,7 @@ class SbmlImporter:
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+                   cache_simplify: bool = True,
                    log_as_log10: bool = True,
                    generate_sensitivity_code: bool = True,
                    **kwargs) -> None:
@@ -287,6 +288,9 @@ class SbmlImporter:
 
         :param simplify:
             see :attr:`ODEModel._simplify`
+
+        :param cache_simplify:
+                see :func:`amici.ODEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
@@ -361,7 +365,11 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._process_time()
 
-        ode_model = ODEModel(verbose=verbose, simplify=simplify)
+        ode_model = ODEModel(
+            verbose=verbose,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+        )
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
