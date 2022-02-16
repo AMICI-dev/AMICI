@@ -1,7 +1,6 @@
 import logging
 import math
 import random
-from re import A
 import sys
 from typing import List, MutableSequence, Sequence, Tuple
 
@@ -115,31 +114,6 @@ def _qsort(
     _qsort(k, centre + 1, order, pivots)
     _qsort(centre, km, order, pivots)
 
-def _helper(num_species, pivots, order, matrix, matrix2, MAX=1e9):
-    """Helper
-    
-    TODO: doc string, type hints
-    
-    """
-    for j in range(num_species - 1):
-        if pivots[order[j + 1]] == pivots[order[j]] != MAX:
-            min1 = MAX
-            if len(matrix[order[j]]) > 1:
-                for i in range(len(matrix[order[j]])):
-                    min1 = min(min1, abs(matrix2[order[j]][0]
-                                            / matrix2[order[j]][i]))
-
-            min2 = MAX
-            if len(matrix[order[j + 1]]) > 1:
-                for i in range(len(matrix[order[j + 1]])):
-                    min2 = min(min2, abs(matrix2[order[j + 1]][0]
-                                            / matrix2[order[j + 1]][i]))
-
-            if min2 > min1:
-                # swap
-                k2 = order[j + 1]
-                order[j + 1] = order[j]
-                order[j] = k2
 
 def _kernel(
         stoichiometric_list: Sequence[float],
@@ -195,7 +169,25 @@ def _kernel(
     done = False
     while not done:
         _qsort(num_species, 0, order, pivots)
-        _helper(num_species-1, pivots, order, matrix, matrix2)
+        for j in range(num_species - 1):
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+                min1 = MAX
+                if len(matrix[order[j]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        min1 = min(min1, abs(matrix2[order[j]][0]
+                                             / matrix2[order[j]][i]))
+
+                min2 = MAX
+                if len(matrix[order[j + 1]]) > 1:
+                    for i in range(len(matrix[order[j + 1]])):
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]
+                                             / matrix2[order[j + 1]][i]))
+
+                if min2 > min1:
+                    # swap
+                    k2 = order[j + 1]
+                    order[j + 1] = order[j]
+                    order[j] = k2
         done = True
 
         for j in range(num_species - 1):
@@ -394,7 +386,23 @@ def _is_linearly_dependent(
     ok = False
     while not ok:
         _qsort(K, 0, order, pivots)
-        _helper(K-1, pivots, order, matrix, matrix2)
+        for j in range(K - 1):
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+                min1 = MAX
+                if len(matrix[order[j]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        min1 = min(min1, abs(matrix2[order[j]][0]
+                                             / matrix2[order[j]][i]))
+                min2 = MAX
+                if len(matrix[order[j + 1]]) > 1:
+                    for i in range(len(matrix[order[j + 1]])):
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]
+                                             / matrix2[order[j + 1]][i]))
+                if min2 > min1:
+                    # swap
+                    k2 = order[j + 1]
+                    order[j + 1] = order[j]
+                    order[j] = k2
         ok = True
         for j in range(K - 1):
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
@@ -626,7 +634,24 @@ def _relax(
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
     done = False
     while not done:
-        _helper(K-1, pivots, order, matrix, matrix2)
+        _qsort(K, 0, order, pivots)
+        for j in range(K - 1):
+            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+                min1 = MAX
+                if len(matrix[order[j]]) > 1:
+                    for i in range(len(matrix[order[j]])):
+                        min1 = min(min1, abs(matrix2[order[j]][0]
+                                             / matrix2[order[j]][i]))
+                min2 = MAX
+                if len(matrix[order[j + 1]]) > 1:
+                    for i in range(len(matrix[order[j + 1]])):
+                        min2 = min(min2, abs(matrix2[order[j + 1]][0]
+                                             / matrix2[order[j + 1]][i]))
+                if min2 > min1:
+                    # swap
+                    k2 = order[j + 1]
+                    order[j + 1] = order[j]
+                    order[j] = k2
         done = True
         for j in range(K - 1):
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
