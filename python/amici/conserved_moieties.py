@@ -537,45 +537,40 @@ def monte_carlo(
         return False, int_kernel_dim, int_matched
 
     # founds MCLS? need to check for linear independence
-    if len(int_matched):
-        yes = _is_linearly_dependent(
+    if len(int_matched) and not _is_linearly_dependent(
             num, int_kernel_dim, cls_species_idxs,
-            cls_coefficients, matched, num_species)
-    else:
-        yes = True
-
-    # reduce by MC procedure
-    if yes:
-        order2 = list(range(len(matched)))
-        pivots2 = matched[:]
-        _qsort(len(matched), 0, order2, pivots2)
-        for i in range(len(matched)):
-            if num[order2[i]] > 0:
-                cls_species_idxs[int_kernel_dim].append(
-                    matched[order2[i]])
-                cls_coefficients[int_kernel_dim].append(num[order2[i]])
-        int_kernel_dim += 1
-        reduce(int_kernel_dim, cls_species_idxs, cls_coefficients,
-               num_species)
-        min_value = 1000
-        for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-            if not len(int_matched) \
-                    or all(cur_int_matched
-                           != cls_species_idxs[int_kernel_dim - 1][i]
-                           for cur_int_matched in int_matched):
-                int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
-
-            min_value = min(min_value,
-                            cls_coefficients[int_kernel_dim - 1][i])
-        for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
-            cls_coefficients[int_kernel_dim - 1][i] /= min_value
-        logger.debug(
-            f"Found linearly independent moiety, now there are "
-            f"{int_kernel_dim} engaging {len(int_matched)} species")
-    else:
+            cls_coefficients, matched, num_species):
         logger.debug(
             "Found a moiety but it is linearly dependent... next.")
-    return yes, int_kernel_dim, int_matched
+        return False, int_kernel_dim, int_matched
+
+    # reduce by MC procedure
+    order2 = list(range(len(matched)))
+    pivots2 = matched[:]
+    _qsort(len(matched), 0, order2, pivots2)
+    for i in range(len(matched)):
+        if num[order2[i]] > 0:
+            cls_species_idxs[int_kernel_dim].append(matched[order2[i]])
+            cls_coefficients[int_kernel_dim].append(num[order2[i]])
+    int_kernel_dim += 1
+    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    min_value = 1000
+    for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+        if not len(int_matched) \
+                or all(cur_int_matched
+                       != cls_species_idxs[int_kernel_dim - 1][i]
+                       for cur_int_matched in int_matched):
+            int_matched.append(cls_species_idxs[int_kernel_dim - 1][i])
+
+        min_value = min(min_value, cls_coefficients[int_kernel_dim - 1][i])
+    for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
+        cls_coefficients[int_kernel_dim - 1][i] /= min_value
+
+    logger.debug(
+        f"Found linearly independent moiety, now there are "
+        f"{int_kernel_dim} engaging {len(int_matched)} species")
+
+    return True, int_kernel_dim, int_matched
 
 
 def relax(
