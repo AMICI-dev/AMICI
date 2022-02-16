@@ -13,7 +13,7 @@ using amici::SplineBoundaryCondition;
 using amici::SplineExtrapolation;
 using amici::AmiException;
 
-#define ASSERT_APPROX(x, x0, rtol, atol) ASSERT_LT(std::abs((x) - (x0)), (atol) + (rtol) * std::abs(x0))
+#define ASSERT_APPROX(x, x0, rtol, atol) ASSERT_LE(std::abs((x) - (x0)), (atol) + (rtol) * std::abs(x0))
 
 void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations)
 {
