@@ -14,7 +14,8 @@ from toposort import toposort
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 
-# Monkey-patch toposort CircularDependencyError to handle non-sortable objects
+# Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
+#  such as sympy objects
 class CircularDependencyError(ValueError):
     def __init__(self, data):
         # Sort the data just to make the output consistent, for use in

@@ -1400,16 +1400,13 @@ class SbmlImporter:
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must be switched off in this
         # case
-        if len(species_solver) == 0:
+        if not len(species_solver):
             conservation_laws = []
             species_solver = list(range(ode_model.num_states_rdata()))
 
         # prune out species from stoichiometry and
         self.stoichiometric_matrix = \
             self.stoichiometric_matrix[species_solver, :]
-
-        from pprint import pprint
-        pprint(conservation_laws)
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
@@ -1420,17 +1417,12 @@ class SbmlImporter:
         ode_model: ODEModel,
         conservation_laws: List[ConservationLaw]
     ) -> List[int]:
-        """
-        Adds non-constant species to conservation laws
+        """Add non-constant species to conservation laws
 
-        Parameters
-        ----------
         :param ode_model:
             ODEModel object with basic definitions
-
         :param conservation_laws:
             List of already known conservation laws
-
         :returns:
             List of species indices which remain later in the ODE solver
         """
