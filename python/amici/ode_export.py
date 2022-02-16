@@ -1036,7 +1036,18 @@ class ODEModel:
             }
 
         self._lock_total_derivative: List[str] = list()
-        self._simplify: Callable = simplify
+        self._simplify: Callable = None
+        if simplify is not None:
+            def cached_simplify(
+                expr: sp.Expr,
+                _simplified: Dict[str, sp.Expr] = {},
+                _simplify: Callable = simplify,
+            ) -> sp.Expr:
+                expr_str = str(expr)
+                if expr_str not in _simplified:
+                    _simplified[expr_str] = _simplify(expr)
+                return copy.deepcopy(_simplified[expr_str])
+            self._simplify = cached_simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
