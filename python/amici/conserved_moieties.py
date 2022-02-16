@@ -114,7 +114,7 @@ def _qsort(
     _qsort(k, centre + 1, order, pivots)
     _qsort(centre, km, order, pivots)
 
-def _helper(
+def _swap_minima(
     num_species: int,
     pivots: Sequence[int],
     order: MutableSequence[int],
@@ -122,9 +122,9 @@ def _helper(
     matrix2: List[List[float]],
     MAX=1e9
     ) -> None:
-    """Helper
+    """Swap minima
 
-    Helper method
+    Swaps minima indices
 
     :param num_species:
         number of involved metabolites
@@ -211,7 +211,7 @@ def _kernel(
     done = False
     while not done:
         _qsort(num_species, 0, order, pivots)
-        _helper(num_species-1, pivots, order, matrix, matrix2)
+        _swap_minima(num_species-1, pivots, order, matrix, matrix2)
         done = True
 
         for j in range(num_species - 1):
@@ -410,7 +410,7 @@ def _is_linearly_dependent(
     ok = False
     while not ok:
         _qsort(K, 0, order, pivots)
-        _helper(K-1, pivots, order, matrix, matrix2)
+        _swap_minima(K-1, pivots, order, matrix, matrix2)
         ok = True
         for j in range(K - 1):
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
@@ -642,7 +642,7 @@ def _relax(
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
     done = False
     while not done:
-        _helper(K-1, pivots, order, matrix, matrix2)
+        _swap_minima(K-1, pivots, order, matrix, matrix2)
         done = True
         for j in range(K - 1):
             if pivots[order[j + 1]] == pivots[order[j]] != MAX:
