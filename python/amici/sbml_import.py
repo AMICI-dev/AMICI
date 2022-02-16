@@ -4,13 +4,13 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
-from copy import deepcopy
 import copy
 import itertools as itt
 import logging
 import math
 import re
 import warnings
+from numbers import Number
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
 import libsbml as sbml
@@ -347,7 +347,8 @@ class SbmlImporter:
             sbml.L3P_PARSE_LOG_AS_LN
         )
         self._process_sbml(constant_parameters)
-        if self.symbols.get(SymbolId.EVENT, False):
+        if self.symbols.get(SymbolId.EVENT, False) \
+                or any(e.has(sp.Heaviside) for e in self.flux_vector):
             if compute_conservation_laws:
                 logger.warning(
                     'Conservation laws are currently not supported for models '
@@ -1433,6 +1434,7 @@ class SbmlImporter:
         :returns:
             List of species indices which remain later in the ODE solver
         """
+        # indices of retained species
         species_solver = list(range(ode_model.num_states_rdata()))
         from pprint import pprint
         pprint(ode_model._states)
@@ -1445,23 +1447,23 @@ class SbmlImporter:
         except TypeError:
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
-                          "coefficients are not currently supported. "
-                          "Skipping.")
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
             return species_solver
 
         if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
                for rule in self.sbml.getListOfRules()):
             # see SBML semantic test suite, case 33 for an example
             warnings.warn("Conservation laws for non-constant species in "
-                          "models with RateRules are not currently supported. "
-                          "Skipping.")
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
             return species_solver
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape)
 
-        replacements = {cl['state']: cl['total_abundance']
-                        for cl in conservation_laws }
+        # previously removed constant species
+        eliminated_states = {cl['state'] for cl in conservation_laws}
 
         # iterate over list of conservation laws, create symbolic expressions,
         # and mark replaced species for removal from stoichiometric matrix
@@ -1470,32 +1472,51 @@ class SbmlImporter:
         new_conservation_laws = []
         for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
             assert len(state_idxs) == len(coefficients)
-            if not state_idxs:
-                # TODO why even return those?
-                continue
-            # choose a state that is not subject to removal
-            # TODO is this necessary or can we just take the first one?
-            target_state_idx = None
-            target_state_coeff = None
-            target_state = None
-            for target_state_coeff, target_state_idx \
-                    in zip(coefficients, state_idxs):
-                # TODO: need to consider also those from constant species
-                if target_state_idx not in species_to_be_removed:
-                    target_state = ode_model._states[target_state_idx].get_id()
-                    if target_state not in replacements:
-                        break
-            if target_state_idx in species_to_be_removed or target_state in replacements:
-                # should not happen?
-                # raise AssertionError()
-                continue
-            target_state = ode_model._states[target_state_idx].get_id()
-            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
 
-            # \sum coeff * state
+            # choose a state that is not already subject to removal
+            # TODO is this necessary or can we just take the first one?
+            target_state_cl_idx = None
+            target_state_model_idx = None
+            target_state = None
+            for target_state_cl_idx, target_state_model_idx \
+                    in enumerate(state_idxs):
+                if target_state_model_idx not in species_to_be_removed:
+                    target_state = \
+                        ode_model._states[target_state_model_idx].get_id()
+                    if target_state not in eliminated_states:
+                        break
+            if target_state_model_idx in species_to_be_removed \
+                    or target_state in eliminated_states:
+                continue
+
+            state_ids = [ode_model._states[i_state].get_id()
+                         for i_state in state_idxs]
+            compartment_sizes = [
+                self.compartments[
+                    self.symbols[SymbolId.SPECIES][state_id]['compartment']]
+                if not self.symbols[SymbolId.SPECIES][state_id]['amount']
+                else 1
+                for state_id in state_ids
+            ]
+            # TODO: shouldnt those all be sympy objects?
+            if any(False if isinstance(x, Number) else x.free_symbols
+                   for x in compartment_sizes):
+                # see SBML semantic test suite, case 783 for an example
+                warnings.warn(
+                    "Conservation laws for non-constant species in "
+                    "compartments with parameter-dependent size are not "
+                    "currently supported and will be turned off.")
+                return species_solver
+
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
+            target_compartment = compartment_sizes[target_state_cl_idx]
+            target_state_coeff = coefficients[target_state_cl_idx]
+
+            # \sum coeff * state * volume
             abundance_expr = sp.Add(*[
-                ode_model._states[i_state].get_id() * coeff
-                for i_state, coeff in zip(state_idxs, coefficients)
+                state_id * coeff * compartment
+                for state_id, coeff, compartment
+                in zip(state_ids, coefficients, compartment_sizes)
             ])
 
             new_conservation_laws.append({
@@ -1503,11 +1524,12 @@ class SbmlImporter:
                 'total_abundance': total_abundance,
                 'state_expr':
                     (total_abundance - (abundance_expr
-                                        - target_state * target_state_coeff))
-                    / target_state_coeff,
+                                        - target_state * target_compartment
+                                        * target_state_coeff))
+                    / target_state_coeff / target_compartment,
                 'abundance_expr': abundance_expr
             })
-            species_to_be_removed.add(target_state_idx)
+            species_to_be_removed.add(target_state_model_idx)
 
         # replace eliminated states by their state expressions, taking care of
         #  any (non-cyclic) dependencies
@@ -1524,7 +1546,7 @@ class SbmlImporter:
                           f"species. Error was: {e}.")
             return species_solver
 
-        for cl in conservation_laws:
+        for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
                                                sorted_state_exprs)
 
@@ -1532,7 +1554,6 @@ class SbmlImporter:
 
         # list of species that are not determined by conservation laws
         return [ix for ix in species_solver if ix not in species_to_be_removed]
-
 
     def _replace_compartments_with_volumes(self):
         """
