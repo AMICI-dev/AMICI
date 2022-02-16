@@ -599,14 +599,10 @@ def relax(
     :param relaxation_step:
         relaxation step width
     :returns:
-        boolean indicating if relaxation has succeeded (``True` ) or not
+        boolean indicating if relaxation has succeeded (``True``) or not
         (``False``)
     """
-    MIN = 1e-9
-    MAX = 1e9
-
     K = len(int_matched)
-
     matrix: List[List[int]] = [[] for _ in range(K)]
     matrix2: List[List[float]] = [[] for _ in range(K)]
     i_reaction = 0
@@ -627,7 +623,9 @@ def relax(
             i_reaction += 1
 
     # reducing the stoichiometric matrix of conserved moieties to row echelon
-    # form by Gaussian elimination
+    #  form by Gaussian elimination
+    MIN = 1e-9
+    MAX = 1e9
     order = list(range(K))
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
     done = False
@@ -674,11 +672,12 @@ def relax(
                 else:
                     pivots[order[j + 1]] = MAX
 
-    for i in range(K):
-        if len(matrix[i]):
-            norm = matrix2[i][0]
-            for j in range(len(matrix[i])):
-                matrix2[i][j] /= norm
+    # normalize
+    for matrix2_i in matrix2:
+        if len(matrix2_i):
+            norm = matrix2_i[0]
+            for j in range(len(matrix2_i)):
+                matrix2_i[j] /= norm
 
     for k1 in reversed(range(K - 1)):
         k = order[k1]
@@ -689,22 +688,18 @@ def relax(
         while i < len(matrix[k]):
             for i_species in range(k1 + 1, K):
                 j = order[i_species]
-                print("matrix[j]", matrix[j])
-                print("matrix[k]", matrix[k], i)
                 if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
                     continue
 
-                row_k = [0] * num_reactions
+                row_k: List[float] = [0] * num_reactions
                 for a in range(len(matrix[k])):
                     row_k[matrix[k][a]] = matrix2[k][a]
                 for a in range(len(matrix[j])):
                     row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
-                matrix[k] = []
-                matrix2[k] = []
-                for row_idx, row_val in enumerate(row_k):
-                    if row_val != 0:
-                        matrix[k].append(row_idx)
-                        matrix2[k].append(row_val)
+                # filter
+                matrix[k] = [row_idx for row_idx, row_val in enumerate(row_k)
+                             if row_val != 0]
+                matrix2[k] = [row_val for row_val in row_k if row_val != 0]
             i += 1
 
     indip = [K + 1] * num_reactions
@@ -729,9 +724,9 @@ def relax(
             t = indip[i]
             if len(matrix[t]) > 1:
                 for k in range(1, len(matrix[t])):
-                    quelo = indip[matrix[t][k]] - K
-                    matrixAus[quelo].append(i)
-                    matrixAus2[quelo].append(-matrix2[t][k])
+                    idx = indip[matrix[t][k]] - K
+                    matrixAus[idx].append(i)
+                    matrixAus2[idx].append(-matrix2[t][k])
     del matrix
 
     N1 = num_species - K
