@@ -38,19 +38,19 @@ def compute_moiety_conservation_laws(
     """
     # compute semi-positive conservation laws
     kernel_dim, engaged_species, int_kernel_dim, conserved_moieties, \
-    cls_species_idxs, cls_coefficients = kernel(
+    cls_species_idxs, cls_coefficients = _kernel(
         stoichiometric_list, num_species, num_reactions)
     # if the number of integer MCLs equals total MCLS no MC relaxation
     done = (int_kernel_dim == kernel_dim)
 
     if not done:
         # construct interaction matrix
-        J, J2, fields = fill(stoichiometric_list, engaged_species, num_species)
+        J, J2, fields = _fill(stoichiometric_list, engaged_species, num_species)
 
         timer = 0
         # maximum number of montecarlo search before starting relaxation
         while not done:
-            yes, int_kernel_dim, conserved_moieties = monte_carlo(
+            yes, int_kernel_dim, conserved_moieties = _monte_carlo(
                 engaged_species, J, J2, fields, conserved_moieties,
                 int_kernel_dim, cls_species_idxs, cls_coefficients,
                 num_species, max_iter=max_num_monte_carlo
@@ -60,10 +60,10 @@ def compute_moiety_conservation_laws(
             timer = 0 if yes else timer + 1
 
             if timer == max_num_monte_carlo:
-                done = relax(stoichiometric_list, conserved_moieties,
-                             num_reactions, num_species)
+                done = _relax(stoichiometric_list, conserved_moieties,
+                              num_reactions, num_species)
                 timer = 0
-    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    _reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
 
     return cls_species_idxs[:int_kernel_dim], cls_coefficients[:int_kernel_dim]
 
@@ -114,7 +114,7 @@ def _qsort(
     _qsort(centre, km, order, pivots)
 
 
-def kernel(
+def _kernel(
         stoichiometric_list: Sequence[float],
         num_species: int,
         num_reactions: int
@@ -268,7 +268,7 @@ def kernel(
             cls_coefficients)
 
 
-def fill(
+def _fill(
         stoichiometric_list: Sequence[float],
         matched: Sequence[int],
         num_species: int
@@ -426,7 +426,7 @@ def _is_linearly_dependent(
     return K == K1
 
 
-def monte_carlo(
+def _monte_carlo(
         matched: Sequence[int],
         J: Sequence[Sequence[int]],
         J2: Sequence[Sequence[float]],
@@ -553,7 +553,7 @@ def monte_carlo(
             cls_species_idxs[int_kernel_dim].append(matched[order2[i]])
             cls_coefficients[int_kernel_dim].append(num[order2[i]])
     int_kernel_dim += 1
-    reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    _reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
     min_value = 1000
     for i in range(len(cls_species_idxs[int_kernel_dim - 1])):
         if not len(int_matched) \
@@ -573,7 +573,7 @@ def monte_carlo(
     return True, int_kernel_dim, int_matched
 
 
-def relax(
+def _relax(
         stoichiometric_list: Sequence[float],
         int_matched: Sequence[int],
         num_reactions: int,
@@ -798,7 +798,7 @@ def relax(
     return done
 
 
-def reduce(
+def _reduce(
         int_kernel_dim: int,
         cls_species_idxs: MutableSequence[MutableSequence[int]],
         cls_coefficients: MutableSequence[MutableSequence[float]],
