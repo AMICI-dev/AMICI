@@ -1043,7 +1043,7 @@ class ODEModel:
                 _simplified: Dict[str, sp.Expr] = {},
                 _simplify: Callable = simplify,
             ) -> sp.Expr:
-                expr_str = str(expr)
+                expr_str = repr(expr)
                 if expr_str not in _simplified:
                     _simplified[expr_str] = _simplify(expr)
                 return copy.deepcopy(_simplified[expr_str])
