@@ -484,13 +484,13 @@ TEST(Splines, SplineLogarithmicSensitivity)
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
     std::vector<std::tuple<double, std::vector<double>>> expectations = {
         // t, expected values of sensitivities
-        {0.00, { 3.0,       1.0,        0.0}},
-        {0.05, { 1.27483,   0.424942,   6.11077}},
-        {0.10, { 0.0,       0.0,        5.0}},
-        {0.30, {-0.356731, -0.11891,    1.00886}},
-        {0.50, { 0.0,       0.0,        0.0}},
-        {0.75, { 0.428375, -0.0713958, -0.214188}},
-        {1.00, {-6.0,       1.0,        3.0}},
+        {0.00, { 3.0,       1.0,       0.0}},
+        {0.05, { 0.585881,  0.195294,  4.38532}},
+        {0.10, { 0.0,       0.0,       5.0}},
+        {0.30, { 0.514003, -0.132395,  1.52044}},
+        {0.50, { 0.0,       0.0,       0.0}},
+        {0.75, {-0.820743,  0.13679,  -0.0577988}},
+        {1.00, {-6.0,       1.0,       3.0}},
     };
     test_spline_sensitivities(spline, expectations, 1e-6, 0.0);
     ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
