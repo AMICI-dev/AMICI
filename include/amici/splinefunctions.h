@@ -59,10 +59,12 @@ class AbstractSpline
      * parameters (for all splines in the model, not just this one)
      * @param dslopesdp derivatives of the spline derivatives with respect
      * to the parameters (for all splines in the model, not just this one)
+     * @remark The contents of `dnodesdp` and `dslopesdp` may be modified
+     * by this function.
      */
     virtual void compute_coefficients_sensi(int nplist,
                                             int spline_offset,
-                                            gsl::span<realtype> dnodesdp,
+                                            gsl::span<realtype> dvaluesdp,
                                             gsl::span<realtype> dslopesdp) = 0;
 
     /**
@@ -318,7 +320,7 @@ class HermiteSpline : public AbstractSpline
 
     void compute_coefficients_sensi(int nplist,
                                     int spline_offset,
-                                    gsl::span<realtype> dnodesdp,
+                                    gsl::span<realtype> dvaluesdp,
                                     gsl::span<realtype> dslopesdp) override;
 
     realtype get_value_scaled(const realtype t) const override;

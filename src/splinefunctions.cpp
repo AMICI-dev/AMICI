@@ -402,20 +402,46 @@ HermiteSpline::compute_coefficients_extrapolation()
     }
 }
 
+#ifdef DVALUESDP
+#error "Preprocessor macro DVALUESDP already defined?!"
+#else
+#define DVALUESDP(i_node) dvaluesdp[node_offset + (i_node) * nplist]
+#endif
+#ifdef DSLOPESDP
+#error "Preprocessor macro DSLOPESDP already defined?!"
+#else
+#define DSLOPESDP(i_node) dslopesdp[node_offset + (i_node) * nplist]
+#endif
+
 void
 HermiteSpline::compute_coefficients_sensi(int nplist,
                                           int spline_offset,
-                                          gsl::span<realtype> dspline_valuesdp,
-                                          gsl::span<realtype> dspline_slopesdp)
+                                          gsl::span<realtype> dvaluesdp,
+                                          gsl::span<realtype> dslopesdp)
 {
     // If slopes are computed by finite differences,
     // we need to autocompute the slope sensitivities
     if (node_derivative_by_FD_){
-      assert(dspline_valuesdp.size() == dspline_slopesdp.size());
+      assert(dvaluesdp.size() == dslopesdp.size());
       for (int ip = 0; ip < nplist; ip++)
         compute_slope_sensitivities_by_fd(
-          nplist, spline_offset, ip, dspline_valuesdp, dspline_slopesdp
+          nplist, spline_offset, ip, dvaluesdp, dslopesdp
         );
+    }
+
+    // If necessary, translate sensitivities to logarithmic parametrization
+    if (get_logarithmic_parametrization()) {
+      for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
+        for (int ip = 0; ip < nplist; ip++) {
+          int node_offset = spline_offset + ip;
+          realtype value = get_node_value(i_node);
+          realtype slope = node_values_derivative_[i_node];
+          realtype dvaluedp = DVALUESDP(i_node);
+          realtype dslopedp = DSLOPESDP(i_node);
+          DVALUESDP(i_node) = dvaluedp / value;
+          DSLOPESDP(i_node) = (dslopedp - dvaluedp * slope / value) / value;
+        }
+      }
     }
 
     /*
@@ -454,14 +480,14 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
                                       n_spline_coefficients,
                                       spline_offset,
                                       len,
-                                      dspline_valuesdp,
-                                      dspline_slopesdp,
+                                      dvaluesdp,
+                                      dslopesdp,
                                       coefficients_sensi);
     }
 
     /* We need the coefficients for extrapolating beyond the spline domain */
     compute_coefficients_extrapolation_sensi(
-      nplist, spline_offset, dspline_valuesdp, dspline_slopesdp);
+      nplist, spline_offset, dvaluesdp, dslopesdp);
 }
 
 void
@@ -477,17 +503,6 @@ HermiteSpline::compute_slope_sensitivities_by_fd(
     int node_offset = spline_offset + ip;
 
     // TODO should we check that dvaluesdp satisfies the bc?
-
-#ifdef DVALUESDP
-#error "Preprocessor macro DVALUESDP already defined?!"
-#else
-#define DVALUESDP(i_node) dvaluesdp[node_offset + (i_node) * nplist]
-#endif
-#ifdef DSLOPESDP
-#error "Preprocessor macro DSLOPESDP already defined?!"
-#else
-#define DSLOPESDP(i_node) dslopesdp[node_offset + (i_node) * nplist]
-#endif
 
     // Left boundary (first node)
     switch (first_node_bc_) {
@@ -575,17 +590,17 @@ HermiteSpline::compute_slope_sensitivities_by_fd(
         default:
             throw AmiException("Unexpected value for boundary condition.");
     }
+}
 
 #undef DVALUESDP
 #undef DSLOPESDP
-}
 
 void
 HermiteSpline::compute_coefficients_extrapolation_sensi(
   int nplist,
   int spline_offset,
-  gsl::span<realtype> dspline_valuesdp,
-  gsl::span<realtype> dspline_slopesdp)
+  gsl::span<realtype> dvaluesdp,
+  gsl::span<realtype> dslopesdp)
 {
 
     /* Do we want to extrapolate at all? */
@@ -608,7 +623,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
     realtype sm0;
     for (int ip = 0; ip < nplist; ip++) {
-        realtype sp0 = dspline_valuesdp[spline_offset + ip];
+        realtype sp0 = dvaluesdp[spline_offset + ip];
         switch (first_node_ep_) {
             /* This whole switch-case-if-else-if-thing could be moved
              * outside the loop, I know. Yet, it's at most some thousand
@@ -622,7 +637,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                 if (get_node_derivative_by_fd() &&
                     first_node_bc_ == SplineBoundaryCondition::given) {
                     sm0 =
-                      (dspline_valuesdp[spline_offset + ip + nplist] - sp0) /
+                      (dvaluesdp[spline_offset + ip + nplist] - sp0) /
                       (nodes_[1] - nodes_[0]);
 
                 } else if (get_node_derivative_by_fd() &&
@@ -634,7 +649,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
                 } else if (!get_node_derivative_by_fd() &&
                            first_node_bc_ == SplineBoundaryCondition::given) {
-                    // sm0 = dspline_slopesdp[spline_offset + ip];
+                    // sm0 = dslopesdp[spline_offset + ip];
                     throw AmiException(
                       "Natural boundary condition for "
                       "Hermite splines with linear extrapolation is "
@@ -669,7 +684,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
     realtype sm_end;
     for (int ip = 0; ip < nplist; ip++) {
         realtype sp_end =
-          dspline_valuesdp[spline_offset + ip + (n_nodes() - 1) * nplist];
+          dvaluesdp[spline_offset + ip + (n_nodes() - 1) * nplist];
         switch (last_node_ep_) {
             /* This whole switch-case-if-else-if-thing could be moved
              * outside the loop, I know. Yet, it's at most some thousand
@@ -683,7 +698,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                 if (get_node_derivative_by_fd() &&
                     last_node_bc_ == SplineBoundaryCondition::given) {
                     sm_end =
-                      (sp_end - dspline_valuesdp[spline_offset + ip +
+                      (sp_end - dvaluesdp[spline_offset + ip +
                                                  (n_nodes() - 2) * nplist]) /
                       (nodes_[n_nodes() - 1] - nodes_[n_nodes() - 2]);
 
@@ -696,7 +711,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
                 } else if (!get_node_derivative_by_fd() &&
                            last_node_bc_ == SplineBoundaryCondition::given) {
-                    sm_end = dspline_slopesdp[spline_offset + ip +
+                    sm_end = dslopesdp[spline_offset + ip +
                                               (n_nodes() - 1) * nplist];
 
                 } else if (!get_node_derivative_by_fd() &&
@@ -816,8 +831,8 @@ void
 HermiteSpline::compute_final_sensitivity(
   int nplist,
   int /*spline_offset*/,
-  gsl::span<realtype> /*dspline_valuesdp*/,
-  gsl::span<realtype> /*dspline_slopesdp*/)
+  gsl::span<realtype> /*dvaluesdp*/,
+  gsl::span<realtype> /*dslopesdp*/)
 {
     /* We need to compute the final value of the spline, depending on its
      * boundary condition and the extrapolation option. */
