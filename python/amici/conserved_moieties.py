@@ -11,6 +11,9 @@ logger = get_logger(__name__, logging.ERROR)
 # increase recursion limit for recursive quicksort
 sys.setrecursionlimit(3000)
 
+_MIN = 1e-9
+_MAX = 1e9
+
 
 def compute_moiety_conservation_laws(
         stoichiometric_list: Sequence[float],
@@ -160,24 +163,22 @@ def _kernel(
         matrix[i].append(num_reactions + i)
         matrix2[i].append(1)
 
-    MIN = 1e-9
-    MAX = 1e9
     order: List[int] = list(range(num_species))
-    pivots = [matrix[i][0] if len(matrix[i]) else MAX
+    pivots = [matrix[i][0] if len(matrix[i]) else _MAX
               for i in range(num_species)]
 
     done = False
     while not done:
         _qsort(num_species, 0, order, pivots)
         for j in range(num_species - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
-                min1 = MAX
+            if pivots[order[j + 1]] == pivots[order[j]] != _MAX:
+                min1 = _MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(min1, abs(matrix2[order[j]][0]
                                              / matrix2[order[j]][i]))
 
-                min2 = MAX
+                min2 = _MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(min2, abs(matrix2[order[j + 1]][0]
@@ -191,7 +192,7 @@ def _kernel(
         done = True
 
         for j in range(num_species - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+            if pivots[order[j + 1]] == pivots[order[j]] != _MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
                 column: List[float] = [0] * (num_species + num_reactions)
@@ -205,7 +206,7 @@ def _kernel(
                 matrix[k1] = []
                 matrix2[k1] = []
                 for col_idx, col_val in enumerate(column):
-                    if abs(col_val) > MIN:
+                    if abs(col_val) > _MIN:
                         matrix[k1].append(col_idx)
                         matrix2[k1].append(col_val)
 
@@ -213,7 +214,7 @@ def _kernel(
                 if len(matrix[order[j + 1]]):
                     pivots[order[j + 1]] = matrix[order[j + 1]][0]
                 else:
-                    pivots[order[j + 1]] = MAX
+                    pivots[order[j + 1]] = _MAX
 
     RSolutions = [[] for _ in range(num_species)]
     RSolutions2 = [[] for _ in range(num_species)]
@@ -246,7 +247,7 @@ def _kernel(
             ):
                 matched.append(RSolutions[i][j])
         if ok2 and len(RSolutions[i]):
-            min_value = MAX
+            min_value = _MAX
             for j in range(len(RSolutions[i])):
                 cls_species_idxs[i2].append(RSolutions[i][j])
                 cls_coefficients[i2].append(abs(RSolutions2[i][j]))
@@ -289,7 +290,6 @@ def _fill(
         interactions of metabolites and reactions, and matrix of interaction
     """
     dim = len(matched)
-    MIN = 1e-9
 
     # for each entry in the stoichiometric matrix save interaction
     i_reaction = 0
@@ -322,7 +322,7 @@ def _fill(
                         interactions += matrix2[i][po] * matrix2[j][pu]
             if j == i:
                 fields[i] = interactions
-            elif abs(interactions) > MIN:
+            elif abs(interactions) > _MIN:
                 J[i].append(j)
                 J2[i].append(interactions)
                 J[j].append(i)
@@ -372,28 +372,26 @@ def _is_linearly_dependent(
     _qsort(len(matched), 0, order2, pivots2)
 
     # ensure positivity
-    MIN = 1e-9
-    MAX = 1e+9
     for i in range(len(matched)):
-        if vector[order2[i]] > MIN:
+        if vector[order2[i]] > _MIN:
             matrix[K - 1].append(matched[order2[i]])
             matrix2[K - 1].append(vector[order2[i]])
 
     order = list(range(K))
-    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
+    pivots = [matrix[i][0] if len(matrix[i]) else _MAX for i in range(K)]
 
     # check for linear independence of the solution
     ok = False
     while not ok:
         _qsort(K, 0, order, pivots)
         for j in range(K - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
-                min1 = MAX
+            if pivots[order[j + 1]] == pivots[order[j]] != _MAX:
+                min1 = _MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(min1, abs(matrix2[order[j]][0]
                                              / matrix2[order[j]][i]))
-                min2 = MAX
+                min2 = _MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(min2, abs(matrix2[order[j + 1]][0]
@@ -405,7 +403,7 @@ def _is_linearly_dependent(
                     order[j] = k2
         ok = True
         for j in range(K - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+            if pivots[order[j + 1]] == pivots[order[j]] != _MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
                 column: List[float] = [0] * num_species
@@ -418,11 +416,11 @@ def _is_linearly_dependent(
                 matrix[k1] = []
                 matrix2[k1] = []
                 for i in range(num_species):
-                    if abs(column[i]) > MIN:
+                    if abs(column[i]) > _MIN:
                         matrix[k1].append(i)
                         matrix2[k1].append(column[i])
                 ok = False
-                pivots[k1] = matrix[k1][0] if len(matrix[k1]) else MAX
+                pivots[k1] = matrix[k1][0] if len(matrix[k1]) else _MAX
     K1 = sum(len(matrix[i]) > 0 for i in range(K))
     return K == K1
 
@@ -492,7 +490,6 @@ def _monte_carlo(
 
     H = compute_h()
 
-    MIN = 1e-9
     count = 0
     howmany = 0
     T1 = initial_temperature
@@ -534,7 +531,7 @@ def _monte_carlo(
             H = compute_h()
             howmany += 1
 
-        if (H < MIN and numtot > 0) or (howmany == 10 * max_iter):
+        if (H < _MIN and numtot > 0) or (howmany == 10 * max_iter):
             break
 
     if howmany >= 10 * max_iter:
@@ -628,21 +625,19 @@ def _relax(
 
     # reducing the stoichiometric matrix of conserved moieties to row echelon
     #  form by Gaussian elimination
-    MIN = 1e-9
-    MAX = 1e9
     order = list(range(K))
-    pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
+    pivots = [matrix[i][0] if len(matrix[i]) else _MAX for i in range(K)]
     done = False
     while not done:
         _qsort(K, 0, order, pivots)
         for j in range(K - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
-                min1 = MAX
+            if pivots[order[j + 1]] == pivots[order[j]] != _MAX:
+                min1 = _MAX
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(min1, abs(matrix2[order[j]][0]
                                              / matrix2[order[j]][i]))
-                min2 = MAX
+                min2 = _MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(min2, abs(matrix2[order[j + 1]][0]
@@ -654,7 +649,7 @@ def _relax(
                     order[j] = k2
         done = True
         for j in range(K - 1):
-            if pivots[order[j + 1]] == pivots[order[j]] != MAX:
+            if pivots[order[j + 1]] == pivots[order[j]] != _MAX:
                 k1 = order[j + 1]
                 k2 = order[j]
                 column: List[float] = [0] * num_reactions
@@ -667,14 +662,14 @@ def _relax(
                 matrix[k1] = []
                 matrix2[k1] = []
                 for col_idx, col_val in enumerate(column):
-                    if abs(col_val) > MIN:
+                    if abs(col_val) > _MIN:
                         matrix[k1].append(col_idx)
                         matrix2[k1].append(col_val)
                 done = False
                 if len(matrix[order[j + 1]]):
                     pivots[order[j + 1]] = matrix[order[j + 1]][0]
                 else:
-                    pivots[order[j + 1]] = MAX
+                    pivots[order[j + 1]] = _MAX
 
     # normalize
     for matrix2_i in matrix2:
@@ -764,12 +759,12 @@ def _relax(
                     for jb in range(len(matrix_aus[j])):
                         if matrixAus[i][ib] == matrix_aus[j][jb]:
                             prod += matrixAus2[i][ib] * matrix_aus2[j][jb]
-                if abs(prod) > MIN:
+                if abs(prod) > _MIN:
                     matrixb[j].append(i)
                     matrixb2[j].append(prod)
     del matrixAus, matrixAus2, matrix_aus, matrix_aus2
 
-    var = [MIN] * M1
+    var = [_MIN] * M1
     time = 0
     cmin_idx = 0
     while True:
@@ -790,7 +785,7 @@ def _relax(
         alpha = -relaxation_step * cmin
         fact = sum(val ** 2 for val in matrixb2[cmin_idx])
         alpha /= fact
-        alpha = max(1e-9 * MIN, alpha)
+        alpha = max(1e-9 * _MIN, alpha)
         for j in range(len(matrixb[cmin_idx])):
             var[matrixb[cmin_idx][j]] += alpha * matrixb2[cmin_idx][j]
 
@@ -826,7 +821,6 @@ def _reduce(
         number of species / rows in :math:`S`
     """
     K = int_kernel_dim
-    MIN = 1e-9
     order = list(range(K))
     pivots = [-len(cls_species_idxs[i]) for i in range(K)]
 
@@ -846,7 +840,7 @@ def _reduce(
                 for species_idx, coefficient \
                         in zip(cls_species_idxs[k2], cls_coefficients[k2]):
                     column[species_idx] -= coefficient
-                    if column[species_idx] < -MIN:
+                    if column[species_idx] < -_MIN:
                         ok1 = False
                         break
                 if not ok1:
@@ -856,7 +850,7 @@ def _reduce(
                 cls_species_idxs[k1] = []
                 cls_coefficients[k1] = []
                 for col_idx, col_val in enumerate(column):
-                    if abs(col_val) > MIN:
+                    if abs(col_val) > _MIN:
                         cls_species_idxs[k1].append(col_idx)
                         cls_coefficients[k1].append(col_val)
                 pivots[k1] = -len(cls_species_idxs[k1])
