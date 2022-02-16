@@ -115,13 +115,30 @@ def _qsort(
     _qsort(k, centre + 1, order, pivots)
     _qsort(centre, km, order, pivots)
 
-def _helper(num_species, pivots, order, matrix, matrix2, MAX=1e9):
+def _helper(
+    num_species: int,
+    pivots: Sequence[int],
+    order: MutableSequence[int],
+    matrix: List[List[int]],
+    matrix2: List[List[float]],
+    MAX=1e9
+    ) -> None:
     """Helper
-    
-    TODO: doc string, type hints
-    
+
+    Helper method
+
+    :param num_species:
+        number of involved metabolites
+    :param pivots: 
+        pivots for GE
+    :param order:
+        ordering of the elements
+    :param matrix:
+        coefficients  
+    :param matrix2:
+        coefficients
     """
-    for j in range(num_species - 1):
+    for j in range(num_species):
         if pivots[order[j + 1]] == pivots[order[j]] != MAX:
             min1 = MAX
             if len(matrix[order[j]]) > 1:
