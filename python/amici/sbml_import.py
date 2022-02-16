@@ -1434,6 +1434,7 @@ class SbmlImporter:
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
             ]
         except TypeError:
+            # https://github.com/AMICI-dev/AMICI/issues/1673
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
                           "coefficients are not currently supported "
@@ -1453,7 +1454,7 @@ class SbmlImporter:
             rng_seed=1)
 
         # previously removed constant species
-        eliminated_states = {cl['state'] for cl in conservation_laws}
+        eliminated_state_ids = {cl['state'] for cl in conservation_laws}
 
         # iterate over list of conservation laws, create symbolic expressions,
         # and mark replaced species for removal from stoichiometric matrix
@@ -1463,24 +1464,22 @@ class SbmlImporter:
         for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
             assert len(state_idxs) == len(coefficients)
 
-            # choose a state that is not already subject to removal
-            # TODO is this necessary or can we just take the first one?
-            target_state_cl_idx = None
-            target_state_model_idx = None
-            target_state = None
-            for target_state_cl_idx, target_state_model_idx \
-                    in enumerate(state_idxs):
-                if target_state_model_idx not in species_to_be_removed:
-                    target_state = \
-                        ode_model._states[target_state_model_idx].get_id()
-                    if target_state not in eliminated_states:
-                        break
-            if target_state_model_idx in species_to_be_removed \
-                    or target_state in eliminated_states:
-                continue
-
             state_ids = [ode_model._states[i_state].get_id()
                          for i_state in state_idxs]
+
+            # choose a state that is not already subject to removal
+            try:
+                target_state_cl_idx = next(filter(
+                    lambda x: state_ids[x] not in species_to_be_removed,
+                    state_idxs)
+                )
+            except StopIteration:
+                # all engaged states have already been eliminated
+                continue
+
+            target_state_model_idx = state_idxs[target_state_cl_idx]
+            target_state = state_ids[target_state_cl_idx]
+
             compartment_sizes = [
                 self.compartments[
                     self.symbols[SymbolId.SPECIES][state_id]['compartment']]
@@ -1489,6 +1488,7 @@ class SbmlImporter:
                 for state_id in state_ids
             ]
             if any(x.free_symbols for x in compartment_sizes):
+                # https://github.com/AMICI-dev/AMICI/issues/1673
                 # see SBML semantic test suite, case 783 for an example
                 warnings.warn(
                     "Conservation laws for non-constant species in "
