@@ -52,8 +52,8 @@ def data_demartino2014():
 
 
 def output(
-        int_kernel_dim, kernel_dim, int_matched, NSolutions, NSolutions2,
-        row_names, verbose=False
+        int_kernel_dim, kernel_dim, int_matched, species_indices, 
+        species_coefficients, row_names, verbose=False
 ):
     """Print status"""
     print(f"There are {int_kernel_dim} linearly independent conserved "
@@ -67,7 +67,7 @@ def output(
     # print all conservation laws
     if verbose:
         for i, coefficients, engaged_species_idxs \
-                in enumerate(zip(NSolutions2, NSolutions)):
+                in enumerate(zip(species_coefficients, species_indices)):
             print(f"Moiety number {i + 1} engages {len(engaged_species_idxs)} "
                   "metabolites:")
             for species_idx, coefficient \
