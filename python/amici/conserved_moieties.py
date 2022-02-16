@@ -2,7 +2,7 @@ import logging
 import math
 import random
 import sys
-from typing import List, MutableSequence, Sequence, Tuple
+from typing import List, MutableSequence, Sequence, Tuple, Union
 
 from .logging import get_logger
 
@@ -19,7 +19,8 @@ def compute_moiety_conservation_laws(
         stoichiometric_list: Sequence[float],
         num_species: int,
         num_reactions: int,
-        max_num_monte_carlo: int = 20
+        max_num_monte_carlo: int = 20,
+        rng_seed: Union[None, bool, int] = False
 ) -> Tuple[List[List[int]], List[List[float]]]:
     """Compute moiety conservation laws.
 
@@ -35,6 +36,9 @@ def compute_moiety_conservation_laws(
         total number of reactions in the reaction network
     :param max_num_monte_carlo:
         maximum number of MonteCarlo steps before changing to relaxation
+    :param rng_seed:
+        Seed for the random number generator. If `False`, the RNG will not be
+        re-initialized. Other values will be passed to :func:`random.seed`.
     :returns:
         Integer MCLs as list of lists of indices of involved species and
         list of lists of corresponding coefficients.
@@ -50,6 +54,10 @@ def compute_moiety_conservation_laws(
         # construct interaction matrix
         J, J2, fields = _fill(stoichiometric_list, engaged_species,
                               num_species)
+
+        # seed random number generator
+        if rng_seed is not False:
+            random.seed(rng_seed)
 
         timer = 0
         # maximum number of montecarlo search before starting relaxation

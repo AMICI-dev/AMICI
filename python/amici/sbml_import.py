@@ -1449,7 +1449,8 @@ class SbmlImporter:
             return species_solver
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
-            stoichiometric_list, *self.stoichiometric_matrix.shape)
+            stoichiometric_list, *self.stoichiometric_matrix.shape,
+            rng_seed=1)
 
         # previously removed constant species
         eliminated_states = {cl['state'] for cl in conservation_laws}
