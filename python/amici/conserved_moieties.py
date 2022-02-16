@@ -13,7 +13,8 @@ logger = get_logger(__name__, logging.ERROR)
 def compute_moiety_conservation_laws(
         stoichiometric_list: Sequence[float],
         num_species: int,
-        num_reactions: int
+        num_reactions: int,
+        max_num_monte_carlo: int = 20
 ) -> Tuple[List[List[int]], List[List[float]]]:
     """Compute moiety conservation laws.
 
@@ -27,6 +28,8 @@ def compute_moiety_conservation_laws(
         total number of species in the reaction network
     :param num_reactions:
         total number of reactions in the reaction network
+    :param max_num_monte_carlo:
+        maximum number of MonteCarlo steps before changing to relaxation
     :returns:
         Integer MCLs as list of lists of indices of involved species and
         list of lists of corresponding coefficients.
@@ -46,7 +49,6 @@ def compute_moiety_conservation_laws(
 
         timer = 0
         # maximum number of montecarlo search before starting relaxation
-        max_num_monte_carlo = 10
         while not done:
             yes, int_kernel_dim, conserved_moieties = monte_carlo(
                 engaged_species, J, J2, fields, conserved_moieties,

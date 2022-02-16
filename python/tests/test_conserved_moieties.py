@@ -200,5 +200,5 @@ def test_detect_conservation_laws():
         if num_cls_found == 3:
             found_all_n_times += 1
     # sometimes we don't find all conservation laws, but this should be rare
-    assert found_all_n_times / num_tries > 0.99
+    assert found_all_n_times / num_tries > 0.999
 
