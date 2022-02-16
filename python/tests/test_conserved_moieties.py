@@ -214,5 +214,5 @@ def test_compute_moiety_conservation_laws_simple():
         if num_cls_found == 3:
             found_all_n_times += 1
     # sometimes we don't find all conservation laws, but this should be rare
-    assert found_all_n_times / num_tries > 0.999
+    assert found_all_n_times / num_tries >= 0.995
 
