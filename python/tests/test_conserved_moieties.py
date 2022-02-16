@@ -171,7 +171,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     """Test execution time stays within a certain predefined bound.
     As the algorithm is non-deterministic, allow for some retries.
     Only one has to succeed."""
-    max_tries = 3
+    max_tries = 5
     # <5s on modern hardware, but leave some slack
     max_time_seconds = 30 if "GITHUB_ACTIONS" in os.environ else 10
 
