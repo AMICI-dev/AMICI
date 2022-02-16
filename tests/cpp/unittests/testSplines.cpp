@@ -421,7 +421,7 @@ TEST(Splines, SplineExplicitSensitivity)
 {
     HermiteSpline spline({ 0.0, 1.0 },
                          { 2.5, 3.25, 1.0, 4.5 },
-                         {},
+                         { 13.625, 7.5, 1.1585290151921035, 1.0 },
                          SplineBoundaryCondition::given,
                          SplineBoundaryCondition::given,
                          SplineExtrapolation::noExtrapolation,
