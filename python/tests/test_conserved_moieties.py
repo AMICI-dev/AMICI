@@ -117,7 +117,7 @@ def test_fill_demartino2014(data_demartino2014):
     num_species = 1668
     J, J2, fields = _fill(stoichiometric_list,
                           demartino2014_kernel_engaged_species, num_species)
-    Jref = [
+    ref_for_J = [
         [25, 27], [12, 42], [13, 43], [14, 44], [15, 41], [16, 45],
         [17, 47], [18, 48], [19, 23, 49], [20, 50], [21, 51], [22, 52],
         [1, 23, 30, 35], [2, 23, 29, 35], [3, 23, 35, 46],
@@ -146,7 +146,7 @@ def test_fill_demartino2014(data_demartino2014):
         [115], [114], [117], [116], [119], [118, 120], [119], [122],
         [121], [124], [123], [126], [125], [128], [127], [130], [129]
     ]
-    J2ref = [
+    ref_for_J2 = [
         [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1],
         [-1, -1], [-1, -1], [-1, -2, -1], [-1, -1], [-1, -1],
         [-1, -1], [-1, 1, -1, -1], [-1, 1, -1, -1], [-1, 1, -1, -1],
@@ -175,7 +175,7 @@ def test_fill_demartino2014(data_demartino2014):
         [-1, -1], [-1], [-1], [-1], [-1], [-1], [-1], [-1], [-1],
         [-1], [-1], [-1]
     ]
-    fieldsref = [
+    ref_for_fields = [
         2, 2, 2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
         2, 2, 2, 2, 51, 3, 3, 1, 3, 3, 3, 2, 5, 8, 8, 3, 15, 9, 5,
         5, 5, 7, 3, 3, 3, 3, 3, 7, 4, 3, 3, 3, 3, 3, 2, 2, 1, 3,
@@ -185,22 +185,22 @@ def test_fill_demartino2014(data_demartino2014):
         1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
     ]
     # compare J from Python with reference from C++
-    for i in range(len(Jref)):
-        assert J[i] == Jref[i], \
-            f"J_{i} ({J[i]}) does not match J_{i}_ref ({Jref[i]})"
-    assert not any(J[len(Jref):])
+    for i in range(len(ref_for_J)):
+        assert J[i] == ref_for_J[i], \
+            f"J_{i} ({J[i]}) does not match J_{i}_ref ({ref_for_J[i]})"
+    assert not any(J[len(ref_for_J):])
 
     # compare J2 from Python with reference from C++
-    for i in range(len(J2ref)):
-        assert J2[i] == J2ref[i], \
-            f"J_{i} ({J2[i]}) does not match J_{i}_ref ({J2ref[i]})"
-    assert not any(J2[len(J2ref):])
+    for i in range(len(ref_for_J2)):
+        assert J2[i] == ref_for_J2[i], \
+            f"J_{i} ({J2[i]}) does not match J_{i}_ref ({ref_for_J2[i]})"
+    assert not any(J2[len(ref_for_J2):])
 
     # compare fields from Python with reference from C++
-    for i in range(len(fieldsref)):
-        assert fields[i] == fieldsref[i], \
-            f"J_{i} ({fields[i]}) does not match J_{i}_ref ({fieldsref[i]})"
-    assert not any(fields[len(fieldsref):])
+    for i in range(len(ref_for_fields)):
+        assert fields[i] == ref_for_fields[i], \
+            f"J_{i} ({fields[i]}) does not match J_{i}_ref ({ref_for_fields[i]})"
+    assert not any(fields[len(ref_for_fields):])
 
 
 def test_compute_moiety_conservation_laws_demartino2014(
