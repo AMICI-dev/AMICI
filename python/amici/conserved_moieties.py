@@ -41,6 +41,7 @@ def compute_moiety_conservation_laws(
 
     print(cls_species_idxs)
     print(cls_coefficients)
+    # if the number of integer MCLs equals total MCLS no MC relaxation 
     done = (int_kernel_dim == kernel_dim)
 
     if not done:
@@ -58,6 +59,7 @@ def compute_moiety_conservation_laws(
             print(cls_species_idxs)
             print(cls_coefficients)
 
+            # if the number of integer MCLs equals total MCLS then MC done
             done = (int_kernel_dim == kernel_dim)
             if yes:
                 timer = 0
@@ -115,6 +117,7 @@ def _qsort(
     for i in range(km, k):
         order[i] = new_order[i - km]
 
+    # calculate center, then recursive calls on left and right intervals
     centre = p + km
     _qsort(k, centre + 1, order, pivots)
     _qsort(centre, km, order, pivots)
@@ -306,6 +309,7 @@ def fill(
     fields = [0] * num_species
     i1 = 0
     j1 = 0
+    # for each entry in the stoichiometrix matrix save interaction
     for val in stoichiometric_list:
         if val != 0:
             prendo = dim
@@ -372,6 +376,7 @@ def _is_linearly_dependent(
     # TODO simplify - copy + []
     matrix: List[List[int]] = [[] for _ in range(K)]
     matrix2: List[List[float]] = [[] for _ in range(K)]
+    # Populate matrices with species ids and coefficients for CLs
     for i in range(K - 1):
         for j in range(len(cls_species_idxs[i])):
             matrix[i].append(cls_species_idxs[i][j])
@@ -381,6 +386,7 @@ def _is_linearly_dependent(
     pivots2 = matched[:]
     _qsort(len(matched), 0, order2, pivots2)
 
+    # ensure positivity
     for i in range(len(matched)):
         if vector[order2[i]] > MIN:
             matrix[K - 1].append(matched[order2[i]])
@@ -389,6 +395,7 @@ def _is_linearly_dependent(
     order = list(range(K))
     pivots = [matrix[i][0] if len(matrix[i]) else MAX for i in range(K)]
 
+    # check for linear independence of the solution
     ok = False
     while not ok:
         _qsort(K, 0, order, pivots)
@@ -601,7 +608,7 @@ def relax(
     :param stoichiometric_list:
         stoichiometric matrix :math:`S` as a flat list (column-major ordering)
     :param int_matched:
-        intmatched
+        number of matched integer CLs
     :param num_reactions:
         number of reactions in reaction network
     :param num_species:
