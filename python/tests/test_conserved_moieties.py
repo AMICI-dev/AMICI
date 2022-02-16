@@ -36,7 +36,9 @@ def data_demartino2014():
 
     # stoichiometric matrix
     response = urllib.request.urlopen(
-        r'https://chimera.roma1.infn.it/SYSBIO/test-ecoli.dat.gz')
+        r'https://chimera.roma1.infn.it/SYSBIO/test-ecoli.dat.gz',
+        timeout=10
+    )
     data = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
     S = [int(item) for sl in
          [entry.decode('ascii').strip().split('\t')
@@ -44,7 +46,9 @@ def data_demartino2014():
 
     # metabolite / row names
     response = urllib.request.urlopen(
-        r'https://chimera.roma1.infn.it/SYSBIO/test-ecoli-met.txt')
+        r'https://chimera.roma1.infn.it/SYSBIO/test-ecoli-met.txt',
+        timeout=10
+    )
     row_names = [entry.decode('ascii').strip()
                  for entry in io.BytesIO(response.read())]
 
@@ -52,7 +56,7 @@ def data_demartino2014():
 
 
 def output(
-        int_kernel_dim, kernel_dim, int_matched, species_indices, 
+        int_kernel_dim, kernel_dim, int_matched, species_indices,
         species_coefficients, row_names, verbose=False
 ):
     """Print status"""
