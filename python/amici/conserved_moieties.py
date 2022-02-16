@@ -837,10 +837,10 @@ def _reduce(
         _qsort(K, 0, order, pivots)
         done = True
         for i in range(K - 1):
+            k1 = order[i]
             for j in range(i + 1, K):
-                k1 = order[i]
                 k2 = order[j]
-                column = [0] * num_species
+                column: List[float] = [0] * num_species
                 for species_idx, coefficient \
                         in zip(cls_species_idxs[k1], cls_coefficients[k1]):
                     column[species_idx] = coefficient
