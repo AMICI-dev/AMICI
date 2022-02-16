@@ -189,14 +189,14 @@ def test_detect_conservation_laws():
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *stoichiometric_matrix.shape)
 
-        assert cls_state_idxs in ([[0, 3], [1, 2], [1, 3], []],
-                                  [[0, 3], [1, 2], [0, 2], []],
+        assert cls_state_idxs in ([[0, 3], [1, 2], [1, 3]],
+                                  [[0, 3], [1, 2], [0, 2]],
                                   # should happen rarely
-                                  [[0, 3], [1, 2], [], []])
-        assert cls_coefficients in ([[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], []],
-                                    [[1.0, 1.0], [1.0, 1.0], [], []])
+                                  [[0, 3], [1, 2]])
+        assert cls_coefficients in ([[1.0, 1.0], [1.0, 1.0], [1.0, 1.0]],
+                                    [[1.0, 1.0], [1.0, 1.0]])
 
-        num_cls_found = sum(len(x) > 0 for x in cls_state_idxs)
+        num_cls_found = len(cls_state_idxs)
         if num_cls_found == 3:
             found_all_n_times += 1
     # sometimes we don't find all conservation laws, but this should be rare
