@@ -1484,12 +1484,10 @@ class SbmlImporter:
                 self.compartments[
                     self.symbols[SymbolId.SPECIES][state_id]['compartment']]
                 if not self.symbols[SymbolId.SPECIES][state_id]['amount']
-                else 1
+                else sp.Integer(1)
                 for state_id in state_ids
             ]
-            # TODO: shouldnt those all be sympy objects?
-            if any(False if isinstance(x, Number) else x.free_symbols
-                   for x in compartment_sizes):
+            if any(x.free_symbols for x in compartment_sizes):
                 # see SBML semantic test suite, case 783 for an example
                 warnings.warn(
                     "Conservation laws for non-constant species in "
