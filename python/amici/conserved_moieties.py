@@ -483,11 +483,15 @@ def _monte_carlo(
            for i in range(dim)]
     numtot = sum(num)
 
-    H = 0
-    for i in range(dim):
-        H += fields[i] * num[i] ** 2
-        for j in range(len(J[i])):
-            H += J2[i][j] * num[i] * num[J[i][j]]
+    def compute_h():
+        H = 0
+        for i in range(dim):
+            H += fields[i] * num[i] ** 2
+            for j in range(len(J[i])):
+                H += J2[i][j] * num[i] * num[J[i][j]]
+        return H
+
+    H = compute_h()
 
     MIN = 1e-9
     count = 0
@@ -528,11 +532,7 @@ def _monte_carlo(
             num[en] = 1
             numtot = 1
 
-            H = 0
-            for i in range(dim):
-                H += fields[i] * num[i] ** 2
-                for j in range(len(J[i])):
-                    H += J2[i][j] * num[i] * num[J[i][j]]
+            H = compute_h()
             howmany += 1
 
         if (H < MIN and numtot > 0) or (howmany == 10 * max_iter):
