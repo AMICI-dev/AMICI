@@ -835,21 +835,24 @@ def reduce(
                 k1 = order[i]
                 k2 = order[j]
                 column = [0] * num_species
-                ok1 = True
                 for species_idx, coefficient \
                         in zip(cls_species_idxs[k1], cls_coefficients[k1]):
                     column[species_idx] = coefficient
+                ok1 = True
                 for species_idx, coefficient \
                         in zip(cls_species_idxs[k2], cls_coefficients[k2]):
                     column[species_idx] -= coefficient
                     if column[species_idx] < -MIN:
                         ok1 = False
-                if ok1:
-                    done = False
-                    cls_species_idxs[k1] = []
-                    cls_coefficients[k1] = []
-                    for col_idx, col_val in enumerate(column):
-                        if abs(col_val) > MIN:
-                            cls_species_idxs[k1].append(col_idx)
-                            cls_coefficients[k1].append(col_val)
-                    pivots[k1] = -len(cls_species_idxs[k1])
+                        break
+                if not ok1:
+                    continue
+
+                done = False
+                cls_species_idxs[k1] = []
+                cls_coefficients[k1] = []
+                for col_idx, col_val in enumerate(column):
+                    if abs(col_val) > MIN:
+                        cls_species_idxs[k1].append(col_idx)
+                        cls_coefficients[k1].append(col_val)
+                pivots[k1] = -len(cls_species_idxs[k1])
