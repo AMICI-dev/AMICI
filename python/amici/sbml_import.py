@@ -355,8 +355,7 @@ class SbmlImporter:
             sbml.L3P_PARSE_LOG_AS_LN
         )
         self._process_sbml(constant_parameters)
-        if self.symbols.get(SymbolId.EVENT, False) \
-                or any(e.has(sp.Heaviside) for e in self.flux_vector):
+        if self.symbols.get(SymbolId.EVENT, False):
             if compute_conservation_laws:
                 logger.warning(
                     'Conservation laws are currently not supported for models '

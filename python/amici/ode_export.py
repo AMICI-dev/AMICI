@@ -111,7 +111,8 @@ functions = {
     'root':
         _FunctionInfo(
             'realtype *root, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h'
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *tcl'
         ),
     'dwdp':
         _FunctionInfo(
@@ -181,7 +182,8 @@ functions = {
         _FunctionInfo(
             'realtype *stau, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *sx, const int ip, const int ie',
+            'const realtype *sx, const int ip, const int ie, '
+            'const realtype *tcl',
             generate_body=False
         ),
     'drootdt':
@@ -196,7 +198,8 @@ functions = {
         _FunctionInfo(
             'realtype *stau, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *sx, const int ip, const int ie'
+            'const realtype *tcl, const realtype *sx, const int ip, '
+            'const int ie'
         ),
     'deltax':
         _FunctionInfo(
@@ -216,7 +219,7 @@ functions = {
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const int ip, const int ie, '
             'const realtype *xdot, const realtype *xdot_old, '
-            'const realtype *sx, const realtype *stau'
+            'const realtype *sx, const realtype *stau, const realtype *tcl'
         ),
     'w':
         _FunctionInfo(

@@ -79,6 +79,7 @@ AbstractModel::fstau(realtype* /*stau*/,
                      const realtype* /*p*/,
                      const realtype* /*k*/,
                      const realtype* /*h*/,
+                     const realtype* /*tcl*/,
                      const realtype* /*sx*/,
                      const int /*ip*/,
                      const int /*ie*/)
@@ -280,7 +281,8 @@ AbstractModel::fdeltasx(realtype* /*deltasx*/,
                         const realtype* /*xdot*/,
                         const realtype* /*xdot_old*/,
                         const realtype* /*sx*/,
-                        const realtype* /*stau*/)
+                        const realtype* /*stau*/,
+                        const realtype* /*tcl*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
