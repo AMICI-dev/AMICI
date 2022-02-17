@@ -218,7 +218,7 @@ class SbmlImporter:
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-                   cache_simplify: bool = True,
+                   cache_simplify: bool = False,
                    log_as_log10: bool = True,
                    generate_sensitivity_code: bool = True,
                    **kwargs) -> None:
