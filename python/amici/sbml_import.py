@@ -282,8 +282,12 @@ class SbmlImporter:
             if set to ``True``, conservation laws are automatically computed
             and applied such that the state-jacobian of the ODE
             right-hand-side has full rank. This option should be set to
-            ``True`` when using the newton algorithm to compute steadystate
+            ``True`` when using the Newton algorithm to compute steadystate
             sensitivities.
+            Conservation laws for constant species are enabled by default.
+            Support for conservation laws for non-constant species is
+            experimental and may be enabled by setting an environment variable
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to any value.
 
         :param simplify:
             see :attr:`ODEModel._simplify`
