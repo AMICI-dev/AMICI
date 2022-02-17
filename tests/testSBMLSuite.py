@@ -209,7 +209,7 @@ def write_result_file(
 ):
     """
     Create test result file for upload to
-    https://sbml.org/Facilities/Database/Submission/Create
+    http://raterule.caltech.edu/Facilities/Database
 
     Requires csv file with test ID in name and content of [time, Species, ...]
     """
