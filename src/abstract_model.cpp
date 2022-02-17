@@ -119,6 +119,17 @@ AbstractModel::fdydp(realtype* /*dydp*/,
                        __func__);
 }
 
+void AbstractModel::fdydp(realtype */*dydp*/, const realtype /*t*/,
+                          const realtype */*x*/, const realtype */*p*/,
+                          const realtype */*k*/, const realtype */*h*/,
+                          int /*ip*/, const realtype */*w*/,
+                          const realtype */*tcl*/, const realtype */*dtcldp*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
 void
 AbstractModel::fdydx(realtype* /*dydx*/,
                      const realtype /*t*/,

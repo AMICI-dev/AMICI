@@ -306,7 +306,7 @@ class AbstractModel {
                     const realtype *w);
 
     /**
-     * @brief Model-specific implementation of fdydp
+     * @brief Model-specific implementation of fdydp (MATLAB-only)
      * @param dydp partial derivative of observables y w.r.t. model parameters p
      * @param t current time
      * @param x current state
@@ -320,6 +320,24 @@ class AbstractModel {
     virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        int ip, const realtype *w, const realtype *dwdp);
+
+    /**
+     * @brief Model-specific implementation of fdydp (Python)
+     * @param dydp partial derivative of observables y w.r.t. model parameters p
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param ip parameter index w.r.t. which the derivative is requested
+     * @param w repeating elements vector
+     * @param tcl total abundances for conservation laws
+     * @param dtcldp Sensitivities of total abundances for conservation laws
+     */
+    virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h,
+                       int ip, const realtype *w, const realtype *tcl,
+                       const realtype *dtcldp);
 
     /**
      * @brief Model-specific implementation of fdydx

@@ -1503,14 +1503,9 @@ class SbmlImporter:
                 else sp.Integer(1)
                 for state_id in state_ids
             ]
-            if any(x.free_symbols for x in compartment_sizes):
-                # https://github.com/AMICI-dev/AMICI/issues/1673
-                # see SBML semantic test suite, case 783 for an example
-                warnings.warn(
-                    "Conservation laws for non-constant species in "
-                    "compartments with parameter-dependent size are not "
-                    "currently supported and will be turned off.")
-                return species_solver
+            # prevent sympy from evaluating float operations in abundance
+            #  expression below
+            coefficients = list(map(sp.Rational, coefficients))
 
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
             target_compartment = compartment_sizes[target_state_cl_idx]

@@ -234,7 +234,9 @@ void Model::initializeStates(AmiVector &x) {
         fx0(x);
     } else {
         std::vector<realtype> x0_solver(nx_solver, 0.0);
-        ftotal_cl(state_.total_cl.data(), x0data_.data());
+        ftotal_cl(state_.total_cl.data(), x0data_.data(),
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data());
         fx_solver(x0_solver.data(), x0data_.data());
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
@@ -250,7 +252,11 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx,
         for (int ip = 0; ip < nplist(); ip++) {
             if (ncl() > 0)
                 stcl = &state_.stotal_cl.at(plist(ip) * ncl());
-            fstotal_cl(stcl, &sx0data_.at(ip * nx_rdata), plist(ip));
+            fstotal_cl(stcl, &sx0data_.at(ip * nx_rdata), plist(ip),
+                       derived_state_.x_rdata_.data(),
+                       state_.unscaledParameters.data(),
+                       state_.fixedParameters.data(),
+                       state_.total_cl.data());
             fsx_solver(sx0_solver_slice.data(), &sx0data_.at(ip * nx_rdata));
             for (int ix = 0; ix < nx_solver; ix++) {
                 sx.at(ix, ip) = sx0_solver_slice.at(ix);
@@ -1215,7 +1221,9 @@ void Model::fx0(AmiVector &x) {
         state_.unscaledParameters.data(),
         state_.fixedParameters.data());
     fx_solver(x.data(), derived_state_.x_rdata_.data());
-    ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data());
+    ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data(),
+              state_.unscaledParameters.data(),
+              state_.fixedParameters.data());
 
     if (always_check_finite_) {
         checkFinite(derived_state_.x_rdata_, "x0 x_rdata");
@@ -1232,7 +1240,8 @@ void Model::fx0_fixedParameters(AmiVector &x) {
      conservation laws and (ii) be able to correctly compute total abundances
      after updating the state variables */
     fx_rdata(derived_state_.x_rdata_.data(), computeX_pos(x),
-             state_.total_cl.data());
+             state_.total_cl.data(), state_.unscaledParameters.data(),
+             state_.fixedParameters.data());
     fx0_fixedParameters(derived_state_.x_rdata_.data(),
                         simulation_parameters_.tstart_,
                         state_.unscaledParameters.data(),
@@ -1241,7 +1250,9 @@ void Model::fx0_fixedParameters(AmiVector &x) {
                         );
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     /* update total abundances */
-    ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data());
+    ftotal_cl(state_.total_cl.data(), derived_state_.x_rdata_.data(),
+              state_.unscaledParameters.data(),
+              state_.fixedParameters.data());
 }
 
 void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
@@ -1256,7 +1267,11 @@ void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
              computeX_pos(x), state_.unscaledParameters.data(),
              state_.fixedParameters.data(), plist(ip));
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
-        fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip));
+        fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip),
+                   derived_state_.x_rdata_.data(),
+                   state_.unscaledParameters.data(),
+                   state_.fixedParameters.data(),
+                   state_.total_cl.data());
     }
 }
 
@@ -1267,7 +1282,11 @@ void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(derived_state_.sx_rdata_.data(), sx.data(ip), stcl, plist(ip));
+        fsx_rdata(derived_state_.sx_rdata_.data(), sx.data(ip), stcl,
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data(),
+                  x.data(), state_.total_cl.data(),
+                  plist(ip));
         fsx0_fixedParameters(derived_state_.sx_rdata_.data(),
                              simulation_parameters_.tstart_,
                              computeX_pos(x),
@@ -1276,24 +1295,33 @@ void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
                              plist(ip),
                              simulation_parameters_.reinitialization_state_idxs_sim);
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
-        fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip));
+        fstotal_cl(stcl, derived_state_.sx_rdata_.data(), plist(ip),
+                   derived_state_.x_rdata_.data(),
+                   state_.unscaledParameters.data(),
+                   state_.fixedParameters.data(),
+                   state_.total_cl.data());
     }
 }
 
 void Model::fsdx0() {}
 
 void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
-    fx_rdata(x_rdata.data(), computeX_pos(x), state_.total_cl.data());
+    fx_rdata(x_rdata.data(), computeX_pos(x), state_.total_cl.data(),
+             state_.unscaledParameters.data(), state_.fixedParameters.data());
     if (always_check_finite_)
         checkFinite(x_rdata.getVector(), "x_rdata");
 }
 
-void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx) {
+void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx,
+                      AmiVector const& x_solver) {
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &state_.stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(sx_rdata.data(ip), sx.data(ip), stcl, ip);
+        fsx_rdata(sx_rdata.data(ip), sx.data(ip), stcl,
+                  state_.unscaledParameters.data(),
+                  state_.fixedParameters.data(), x_solver.data(),
+                  state_.total_cl.data(), plist(ip));
     }
 }
 
@@ -1379,7 +1407,8 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
             fdydp(&derived_state_.dydp_.at(ip * ny), t, x_pos,
                   state_.unscaledParameters.data(),
                   state_.fixedParameters.data(), state_.h.data(), plist(ip),
-                  derived_state_.w_.data(), state_.stotal_cl.data());
+                  derived_state_.w_.data(), state_.total_cl.data(),
+                  state_.stotal_cl.data());
         } else {
             fdydp(&derived_state_.dydp_.at(ip * ny), t, x_pos,
                   state_.unscaledParameters.data(),
@@ -2068,7 +2097,8 @@ void Model::fdwdw(const realtype t, const realtype *x) {
 }
 
 void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
-                     const realtype * /*tcl*/) {
+                     const realtype * /*tcl*/, const realtype */*p*/,
+                     const realtype */*k*/) {
     if (nx_solver != nx_rdata)
         throw AmiException(
             "A model that has differing nx_solver and nx_rdata needs "
@@ -2077,8 +2107,15 @@ void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
 }
 
 void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                      const realtype *stcl, const int /*ip*/) {
-    fx_rdata(sx_rdata, sx_solver, stcl);
+                      const realtype */*stcl*/, const realtype */*p*/,
+                      const realtype */*k*/, const realtype * /*x_solver*/,
+                      const realtype */*tcl*/,
+                      const int /*ip*/) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+            "A model that has differing nx_solver and nx_rdata needs "
+            "to implement its own fx_rdata");
+    std::copy_n(sx_solver, nx_solver, sx_rdata);
 }
 
 void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
@@ -2096,19 +2133,22 @@ void Model::fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
     fx_solver(sx_solver, sx_rdata);
 }
 
-void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/) {
+void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/,
+                      const realtype */*p*/, const realtype */*k*/) {
     if (nx_solver != nx_rdata)
         throw AmiException(
             "A model that has differing nx_solver and nx_rdata needs "
             "to implement its own ftotal_cl");
 }
 
-void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
-                       const int /*ip*/) {
-    /* for the moment we do not need an implementation of fstotal_cl as
-     * we can simply reuse ftotal_cl and replace states by their
-     * sensitivities */
-    ftotal_cl(stotal_cl, sx_rdata);
+void Model::fstotal_cl(realtype */*stotal_cl*/, const realtype */*sx_rdata*/,
+                       const int /*ip*/, const realtype */*x_rdata*/,
+                       const realtype */*p*/, const realtype */*k*/,
+                       const realtype */*tcl*/) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+            "A model that has differing nx_solver and nx_rdata needs "
+            "to implement its own ftotal_cl");
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

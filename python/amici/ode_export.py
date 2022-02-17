@@ -166,7 +166,8 @@ functions = {
         _FunctionInfo(
             'realtype *dydp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ip, const realtype *w, const realtype *dtcldp',
+            'const int ip, const realtype *w, const realtype *tcl, '
+            'const realtype *dtcldp',
         ),
     'dsigmaydp':
         _FunctionInfo(
@@ -241,7 +242,7 @@ functions = {
         ),
     'sx0':
         _FunctionInfo(
-            'realtype *sx0, const realtype t,const realtype *x, '
+            'realtype *sx0, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const int ip',
         ),
     'sx0_fixedParameters':
@@ -267,11 +268,26 @@ functions = {
         ),
     'x_rdata':
         _FunctionInfo(
-            'realtype *x_rdata, const realtype *x, const realtype *tcl'
+            'realtype *x_rdata, const realtype *x, const realtype *tcl, '
+            'const realtype *p, const realtype *k'
+        ),
+    'sx_rdata':
+        _FunctionInfo(
+            'realtype *sx_rdata, const realtype *sx_solver, '
+            'const realtype *stotal_cl, const realtype *p, const realtype *k, '
+            'const realtype *x, const realtype *tcl, const int ip'
         ),
     'total_cl':
-        _FunctionInfo('realtype *total_cl, const realtype *x_rdata'),
-
+        _FunctionInfo(
+            'realtype *total_cl, const realtype *x_rdata, '
+            'const realtype *p, const realtype *k'
+        ),
+    'stotal_cl':
+        _FunctionInfo(
+            'realtype *stotal_cl, const realtype *sx_rdata, const int ip, '
+            'const realtype *x_rdata, const realtype *p, const realtype *k, '
+            'const realtype *tcl'
+        ),
     'x_solver':
         _FunctionInfo('realtype *x_solver, const realtype *x_rdata')
 }
@@ -1032,19 +1048,13 @@ class ODEModel:
         }
         self._total_derivative_prototypes: \
             Dict[str, Dict[str, Union[str, List[str]]]] = {
-                'sx_rdata': {
-                    'eq': 'x_rdata',
-                    'chainvars': ['x'],
-                    'var': 'p',
-                    'dxdz_name': 'sx',
-                },
                 'sroot': {
                     'eq': 'root',
                     'chainvars': ['x'],
                     'var': 'p',
                     'dxdz_name': 'sx',
-                }
-            }
+                },
+        }
 
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
@@ -1603,6 +1613,12 @@ class ODEModel:
                 if state._conservation_law is None
             ])
             return
+        elif name == 'sx_rdata':
+            self._syms[name] = sp.Matrix([
+                f'sx_rdata_{i}'
+                for i in range(len(self._states))
+            ])
+            return
         elif name == 'dtcldp':
             # check, whether the CL consists of only one state. Then,
             # sensitivities drop out, otherwise generate symbols
@@ -1854,9 +1870,41 @@ class ODEModel:
                 sp.zeros(self.num_cons_law(), self.num_states_solver())
 
         elif name == 'dtcldp':
-            # force symbols
-            self._eqs[name] = self.sym(name)
+            self._derivative('total_cl', 'p', name=name)
 
+        elif name == 'stotal_cl':
+            # stotal_cl = dtotal_cl/dp +  dtotal_cl/dx_rdata * sx_rdata
+            # shape: ncl x np
+            self._eqs[name] = self.eq('dtcldp')
+            dtotal_cldx_rdata = smart_jacobian(self.eq('total_cl'),
+                                               self.sym('x_rdata'))
+            tmp = smart_multiply(dtotal_cldx_rdata, self.sym('sx_rdata'))
+            for ip in range(self._eqs[name].shape[1]):
+                self._eqs[name][:, ip] += tmp
+        elif name == 'sx_rdata':
+            if self.num_cons_law():
+                # sx_rdata =  dx_rdata/dx_solver * sx_solver
+                #              + dx_rdata/d_tcl * stcl + dxrdata/dp
+                # shape: nx_rdata, 1
+                dx_rdata_dx_solver = smart_jacobian(self.eq('x_rdata'),
+                                                    self.sym('x'))
+                sym_sx_solver = self.sym('sx_solver')
+                dx_rdata_dp = smart_jacobian(self.eq('x_rdata'),
+                                             self.sym('p'))
+                self._eqs[name] = dx_rdata_dp
+                tmp = smart_multiply(dx_rdata_dx_solver, sym_sx_solver)
+                for ip in range(self._eqs[name].shape[1]):
+                    self._eqs[name][:, ip] += tmp
+
+                sym_stotal_cl = self.sym('stotal_cl')
+                dx_rdata_dtotal_cl = smart_jacobian(self.eq('x_rdata'),
+                                                    self.sym('tcl'))
+                tmp = smart_multiply(dx_rdata_dtotal_cl, sym_stotal_cl)
+                for ip in range(self._eqs[name].shape[1]):
+                    self._eqs[name][:, ip] += tmp
+            else:
+                # if there are no conservation laws, this is simply sx_solver
+                self._eqs[name] = self.sym('sx_solver')
         elif name == 'dxdotdx_explicit':
             # force symbols
             self._derivative('xdot', 'x', name=name)
