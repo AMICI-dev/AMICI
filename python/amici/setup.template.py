@@ -34,6 +34,8 @@ class ModelBuildExt(build_ext):
             self.compiler.compile = compile_parallel.__get__(
                 self.compiler, setuptools._distutils.ccompiler.CCompiler)
 
+        print(f"Building model extension in {os.getcwd()}")
+
         build_ext.build_extension(self, ext)
 
     def find_swig(self) -> str:
