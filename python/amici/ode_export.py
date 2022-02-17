@@ -960,7 +960,7 @@ class ODEModel:
 
     def __init__(self, verbose: Optional[Union[bool, int]] = False,
                  simplify: Optional[Callable] = sp.powsimp,
-                 cache_simplify: bool = True):
+                 cache_simplify: bool = False):
         """
         Create a new ODEModel instance.
 
