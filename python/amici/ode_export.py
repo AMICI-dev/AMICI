@@ -1051,7 +1051,7 @@ class ODEModel:
                 expr_str = repr(expr)
                 if expr_str not in _simplified:
                     _simplified[expr_str] = _simplify(expr)
-                return copy.deepcopy(_simplified[expr_str])
+                return _simplified[expr_str]
             self._simplify = cached_simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
