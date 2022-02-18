@@ -49,7 +49,6 @@ def pysb2amici(
         compute_conservation_laws: bool = True,
         compile: bool = True,
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-        cache_simplify: bool = True,
         generate_sensitivity_code: bool = True,
 ):
     r"""
@@ -116,9 +115,6 @@ def pysb2amici(
     :param simplify:
         see :attr:`amici.ODEModel._simplify`
 
-    :param cache_simplify:
-            see :func:`amici.ODEModel.__init__`
-
     :param generate_sensitivity_code:
         if set to ``False``, code for sensitivity computation will not be
         generated
@@ -138,7 +134,6 @@ def pysb2amici(
         noise_distributions=noise_distributions,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
-        cache_simplify=cache_simplify,
         verbose=verbose,
     )
     exporter = ODEExporter(
@@ -165,7 +160,6 @@ def ode_model_from_pysb_importer(
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
         compute_conservation_laws: bool = True,
         simplify: Callable = sp.powsimp,
-        cache_simplify: bool = True,
         verbose: Union[int, bool] = False,
 ) -> ODEModel:
     """
@@ -194,9 +188,6 @@ def ode_model_from_pysb_importer(
     :param simplify:
             see :attr:`amici.ODEModel._simplify`
 
-    :param cache_simplify:
-            see :func:`amici.ODEModel.__init__`
-
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
@@ -207,7 +198,6 @@ def ode_model_from_pysb_importer(
     ode = ODEModel(
         verbose=verbose,
         simplify=simplify,
-        cache_simplify=cache_simplify,
     )
 
     if constant_parameters is None:
