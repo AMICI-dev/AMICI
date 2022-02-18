@@ -1048,6 +1048,24 @@ class ODEModel:
                 _simplified: Dict[str, sp.Expr] = {},
                 _simplify: Callable = simplify,
             ) -> sp.Expr:
+                """Speed up expression simplification with caching.
+
+                NB: This can decrease model import times for models that have
+                    many repeated expressions during C++ file generation.
+                    For example, this can be useful for models with events.
+                    However, for other models, this may increase model import
+                    times.
+
+                :param expr:
+                    The SymPy expression.
+                :param _simplified:
+                    The cache.
+                :param _simplify:
+                    The simplification method.
+
+                :return:
+                    The simplified expression.
+                """
                 expr_str = repr(expr)
                 if expr_str not in _simplified:
                     _simplified[expr_str] = _simplify(expr)
