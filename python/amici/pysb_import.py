@@ -49,7 +49,7 @@ def pysb2amici(
         compute_conservation_laws: bool = True,
         compile: bool = True,
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-        cache_simplify: bool = False,
+        cache_simplify: bool = True,
         generate_sensitivity_code: bool = True,
 ):
     r"""
@@ -165,7 +165,7 @@ def ode_model_from_pysb_importer(
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
         compute_conservation_laws: bool = True,
         simplify: Callable = sp.powsimp,
-        cache_simplify: bool = False,
+        cache_simplify: bool = True,
         verbose: Union[int, bool] = False,
 ) -> ODEModel:
     """
