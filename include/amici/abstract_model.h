@@ -282,13 +282,14 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param tcl total abundances for conservation laws
      * @param sx current state sensitivity
      * @param ip sensitivity index
      * @param ie event index
      */
     virtual void fstau(realtype *stau, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *sx, int ip, int ie);
+                       const realtype *tcl, const realtype *sx, int ip, int ie);
 
     /**
      * @brief Model-specific implementation of fy
@@ -487,13 +488,15 @@ class AbstractModel {
      * @param xdot_old previous model right hand side
      * @param sx state sensitivity
      * @param stau event-time sensitivity
+     * @param tcl total abundances for conservation laws
      */
     virtual void fdeltasx(realtype *deltasx, const realtype t,
                           const realtype *x, const realtype *p,
                           const realtype *k, const realtype *h,
                           const realtype *w, int ip, int ie,
                           const realtype *xdot, const realtype *xdot_old,
-                          const realtype *sx, const realtype *stau);
+                          const realtype *sx, const realtype *stau,
+                          const realtype *tcl);
 
     /**
      * @brief Model-specific implementation of fdeltaxB

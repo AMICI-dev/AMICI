@@ -1076,7 +1076,7 @@ void Model::getEventTimeSensitivity(std::vector<realtype> &stau,
     for (int ip = 0; ip < nplist(); ip++) {
         fstau(&stau.at(ip), t, computeX_pos(x),
               state_.unscaledParameters.data(), state_.fixedParameters.data(),
-              state_.h.data(), sx.data(ip),
+              state_.h.data(), state_.total_cl.data(), sx.data(ip),
               plist(ip), ie);
     }
 }
@@ -1084,9 +1084,9 @@ void Model::getEventTimeSensitivity(std::vector<realtype> &stau,
 void Model::addStateEventUpdate(AmiVector &x, const int ie, const realtype t,
                                 const AmiVector &xdot,
                                 const AmiVector &xdot_old) {
-    
+
     derived_state_.deltax_.assign(nx_solver, 0.0);
-    
+
     std::copy_n(computeX_pos(x), nx_solver, x.data());
 
     // compute update
@@ -1120,7 +1120,8 @@ void Model::addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
                  state_.unscaledParameters.data(),
                  state_.fixedParameters.data(),
                  state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
-                 xdot.data(), xdot_old.data(), sx.data(ip), &stau.at(ip));
+                 xdot.data(), xdot_old.data(), sx.data(ip), &stau.at(ip),
+                 state_.total_cl.data());
 
         if (always_check_finite_) {
             app->checkFinite(derived_state_.deltasx_, "deltasx");
@@ -1225,7 +1226,7 @@ void Model::fx0(AmiVector &x) {
 void Model::fx0_fixedParameters(AmiVector &x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
-    
+
     /* we transform to the unreduced states x_rdata and then apply
      x0_fixedparameters to (i) enable updates to states that were removed from
      conservation laws and (ii) be able to correctly compute total abundances
@@ -1347,7 +1348,7 @@ void Model::initializeVectors() {
 void Model::fy(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
-    
+
     auto x_pos = computeX_pos(x);
 
     derived_state_.y_.assign(ny, 0.0);
@@ -1365,7 +1366,7 @@ void Model::fy(const realtype t, const AmiVector &x) {
 void Model::fdydp(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
-    
+
     auto x_pos = computeX_pos(x);
 
     derived_state_.dydp_.assign(ny * nplist(), 0.0);
@@ -1394,7 +1395,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
 void Model::fdydx(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
-    
+
     auto x_pos = computeX_pos(x);
 
     derived_state_.dydx_.assign(ny * nx_solver, 0.0);

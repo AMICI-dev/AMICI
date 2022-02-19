@@ -10,7 +10,7 @@ namespace amici {
 
 namespace model_model_events{
 
-void stau_model_events(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
+void stau_model_events(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *sx, const int ip, const int ie) {
 switch (ip) {
   case 0: {
     switch(ie) { 
