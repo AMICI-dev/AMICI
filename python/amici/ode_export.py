@@ -959,7 +959,8 @@ class ODEModel:
     """
 
     def __init__(self, verbose: Optional[Union[bool, int]] = False,
-                 simplify: Optional[Callable] = sp.powsimp):
+                 simplify: Optional[Callable] = sp.powsimp,
+                 cache_simplify: bool = False):
         """
         Create a new ODEModel instance.
 
@@ -969,6 +970,10 @@ class ODEModel:
 
         :param simplify:
             see :meth:`ODEModel._simplify`
+
+        :param cache_simplify:
+            Whether to cache calls to the simplify method. Can e.g. decrease
+            import times for models with events.
         """
         self._states: List[State] = []
         self._observables: List[Observable] = []
@@ -1037,6 +1042,35 @@ class ODEModel:
 
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
+        if cache_simplify and simplify is not None:
+            def cached_simplify(
+                expr: sp.Expr,
+                _simplified: Dict[str, sp.Expr] = {},
+                _simplify: Callable = simplify,
+            ) -> sp.Expr:
+                """Speed up expression simplification with caching.
+
+                NB: This can decrease model import times for models that have
+                    many repeated expressions during C++ file generation.
+                    For example, this can be useful for models with events.
+                    However, for other models, this may increase model import
+                    times.
+
+                :param expr:
+                    The SymPy expression.
+                :param _simplified:
+                    The cache.
+                :param _simplify:
+                    The simplification method.
+
+                :return:
+                    The simplified expression.
+                """
+                expr_str = repr(expr)
+                if expr_str not in _simplified:
+                    _simplified[expr_str] = _simplify(expr)
+                return _simplified[expr_str]
+            self._simplify = cached_simplify
         self._x0_fixedParameters_idx: Union[None, Sequence[int]]
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
