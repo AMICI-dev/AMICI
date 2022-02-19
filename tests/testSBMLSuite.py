@@ -14,18 +14,18 @@ Usage:
 """
 
 import copy
-import importlib
 import os
 import re
 import shutil
 import sys
-from typing import Tuple, Set
+from typing import Set, Tuple
 
-import amici
 import libsbml as sbml
 import numpy as np
 import pandas as pd
 import pytest
+
+import amici
 from amici.constants import SymbolId
 
 # directory with sbml semantic test cases
@@ -35,10 +35,7 @@ TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
 
 @pytest.fixture(scope="session")
 def result_path():
-    # ensure directory for test results is empty
-    upload_result_path = os.path.join(os.path.dirname(__file__),
-                                      'amici-semantic-results')
-    return upload_result_path
+    return os.path.join(os.path.dirname(__file__), 'amici-semantic-results')
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -55,7 +52,6 @@ def sbml_test_dir():
 
 
 def test_sbml_testsuite_case(test_number, result_path):
-
     test_id = format_test_id(test_number)
     model_dir = None
     try:
@@ -63,7 +59,7 @@ def test_sbml_testsuite_case(test_number, result_path):
 
         # parse expected results
         results_file = os.path.join(current_test_path,
-                                    test_id + '-results.csv')
+                                    f'{test_id}-results.csv')
         results = pd.read_csv(results_file, delimiter=',')
         results.rename(columns={c: c.replace(' ', '')
                                 for c in results.columns},
@@ -99,8 +95,10 @@ def test_sbml_testsuite_case(test_number, result_path):
             shutil.rmtree(model_dir, ignore_errors=True)
 
 
-def verify_results(settings, rdata, expected, wrapper,
-                   model, atol, rtol):
+def verify_results(
+        settings, rdata, expected, wrapper,
+        model, atol, rtol
+):
     """Verify test results"""
     amount_species, variables = get_amount_and_variables(settings)
 
@@ -167,7 +165,7 @@ def amounts_to_concentrations(
     This allows for the reuse of the concentrations_to_amounts method...
     """
     for species in amount_species:
-        if not species == '':
+        if species != '':
             simulated.loc[:, species] = 1 / simulated.loc[:, species]
             concentrations_to_amounts([species], wrapper, simulated,
                                       requested_concentrations)
@@ -200,15 +198,18 @@ def concentrations_to_amounts(
             continue
 
         simulated.loc[:, species] *= simulated.loc[
-            :, comp if comp in simulated.columns else 'amici_' + comp
+            :, comp if comp in simulated.columns else f'amici_{comp}'
         ]
 
 
-def write_result_file(simulated: pd.DataFrame,
-                      test_id: str, result_path: str):
+def write_result_file(
+        simulated: pd.DataFrame,
+        test_id: str,
+        result_path: str
+):
     """
     Create test result file for upload to
-    http://sbml.org/Facilities/Database/Submission/Create
+    http://raterule.caltech.edu/Facilities/Database
 
     Requires csv file with test ID in name and content of [time, Species, ...]
     """
@@ -263,7 +264,7 @@ def compile_model(path, test_id, model_dir):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    model_name = 'SBMLTest' + test_id
+    model_name = f'SBMLTest{test_id}'
     wrapper.sbml2amici(model_name, output_dir=model_dir,
                        generate_sensitivity_code=False)
 
@@ -279,26 +280,26 @@ def compile_model(path, test_id, model_dir):
 def find_model_file(current_test_path: str, test_id: str):
     """Find model file for the given test (guess filename extension)"""
 
-    sbml_file = os.path.join(current_test_path, test_id + '-sbml-l3v2.xml')
+    sbml_file = os.path.join(current_test_path, f'{test_id}-sbml-l3v2.xml')
 
     # fallback l3v1
     if not os.path.isfile(sbml_file):
-        sbml_file = os.path.join(current_test_path, test_id + '-sbml-l3v1.xml')
+        sbml_file = os.path.join(current_test_path, f'{test_id}-sbml-l3v1.xml')
 
     # fallback l2v5
     if not os.path.isfile(sbml_file):
-        sbml_file = os.path.join(current_test_path, test_id + '-sbml-l2v5.xml')
+        sbml_file = os.path.join(current_test_path, f'{test_id}-sbml-l2v5.xml')
 
     return sbml_file
 
 
 def read_settings_file(current_test_path: str, test_id: str):
     """Read settings for the given test"""
-    settings_file = os.path.join(current_test_path, test_id + '-settings.txt')
+    settings_file = os.path.join(current_test_path, f'{test_id}-settings.txt')
     settings = {}
     with open(settings_file) as f:
         for line in f:
-            if not line == '\n':
+            if line != '\n':
                 (key, val) = line.split(':')
                 settings[key] = val
     return settings
@@ -306,9 +307,7 @@ def read_settings_file(current_test_path: str, test_id: str):
 
 def format_test_id(test_id) -> str:
     """Format numeric to 0-padded string"""
-    test_str = str(test_id)
-    test_str = '0'*(5-len(test_str)) + test_str
-    return test_str
+    return f"{test_id:0>5}"
 
 
 def get_tags_for_test(test_id) -> Tuple[Set[str], Set[str]]:
@@ -317,7 +316,6 @@ def get_tags_for_test(test_id) -> Tuple[Set[str], Set[str]]:
     Returns:
         Tuple of set of strings for componentTags and testTags
     """
-
     current_test_path = os.path.join(TEST_PATH, test_id)
     info_file = os.path.join(current_test_path, f'{test_id}-model.m')
     with open(info_file) as f:
