@@ -3120,7 +3120,8 @@ class ODEExporter:
                 outer_cases[ie] = copy.copy(inner_lines)
             lines.extend(get_switch_statement('ie', outer_cases, 1))
 
-        elif function in sensi_functions:
+        elif function in sensi_functions \
+                and equations.shape[1] == self.model.num_par():
             cases = {
                 ipar: self.model._code_printer._get_sym_lines_array(
                     equations[:, ipar], function, 0)
@@ -3128,7 +3129,6 @@ class ODEExporter:
                 if not smart_is_zero_matrix(equations[:, ipar])
             }
             lines.extend(get_switch_statement('ip', cases, 1))
-
         elif function in multiobs_functions:
             if function == 'dJydy':
                 cases = {
