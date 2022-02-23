@@ -27,6 +27,7 @@ import pytest
 
 import amici
 from amici.constants import SymbolId
+from amici.gradient_check import check_derivatives
 
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -54,6 +55,14 @@ def sbml_test_dir():
 def test_sbml_testsuite_case(test_number, result_path):
     test_id = format_test_id(test_number)
     model_dir = None
+
+    # test cases for which sensitivities are to be checked
+    #  key: case ID; value: epsilon for finite differences
+    sensitivity_check_cases = {
+        # parameter-dependent conservation laws
+        '00783': 1.5e-2,
+    }
+
     try:
         current_test_path = os.path.join(TEST_PATH, test_id)
 
@@ -68,8 +77,9 @@ def test_sbml_testsuite_case(test_number, result_path):
         # setup model
         model_dir = os.path.join(os.path.dirname(__file__), 'SBMLTestModels',
                                  test_id)
-        model, solver, wrapper = compile_model(current_test_path, test_id,
-                                               model_dir)
+        model, solver, wrapper = compile_model(
+            current_test_path, test_id, model_dir,
+            generate_sensitivity_code=test_id in sensitivity_check_cases)
         settings = read_settings_file(current_test_path, test_id)
 
         atol, rtol = apply_settings(settings, solver, model)
@@ -87,6 +97,12 @@ def test_sbml_testsuite_case(test_number, result_path):
 
         # record results
         write_result_file(simulated, test_id, result_path)
+
+        # check sensitivities for selected models
+        if epsilon := sensitivity_check_cases.get(test_id):
+            solver.setSensitivityOrder(amici.SensitivityOrder.first)
+            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+            check_derivatives(model, solver, epsilon=epsilon)
 
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
@@ -255,7 +271,8 @@ def apply_settings(settings, solver, model):
     return atol, rtol
 
 
-def compile_model(path, test_id, model_dir):
+def compile_model(path, test_id, model_dir,
+                  generate_sensitivity_code: bool = False):
     """Import the given test model to AMICI"""
     sbml_file = find_model_file(path, test_id)
 
@@ -266,7 +283,7 @@ def compile_model(path, test_id, model_dir):
 
     model_name = f'SBMLTest{test_id}'
     wrapper.sbml2amici(model_name, output_dir=model_dir,
-                       generate_sensitivity_code=False)
+                       generate_sensitivity_code=generate_sensitivity_code)
 
     # settings
     model_module = amici.import_model_module(model_name, model_dir)
