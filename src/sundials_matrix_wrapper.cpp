@@ -747,5 +747,45 @@ void SUNMatrixWrapper::refresh() {
 
 SUNMatrix SUNMatrixWrapper::get() const { return matrix_; }
 
+std::pair<sunindextype, sunindextype> unravel_index(sunindextype i, SUNMatrix m)
+{
+    gsl_ExpectsDebug(i >= 0);
+    auto mat_id = SUNMatGetID(m);
+    if(mat_id == SUNMATRIX_DENSE) {
+        gsl_ExpectsDebug(i < SM_COLUMNS_D(m) * SM_ROWS_D(m));
+
+        auto num_rows = SM_ROWS_D(m);
+        // col-major
+        sunindextype row = i % num_rows;
+        sunindextype col = i / num_rows;
+
+        gsl_EnsuresDebug(row >= 0);
+        gsl_EnsuresDebug(row < SM_ROWS_D(m));
+        gsl_EnsuresDebug(col >= 0);
+        gsl_EnsuresDebug(col < SM_COLUMNS_D(m));
+
+        return {row, col};
+    }
+
+    if(mat_id == SUNMATRIX_SPARSE) {
+        gsl_ExpectsDebug(i < SM_NNZ_S(m));
+        sunindextype row = SM_INDEXVALS_S(m)[i];
+        sunindextype i_colptr = 0;
+        while(SM_INDEXPTRS_S(m)[i_colptr] < SM_NNZ_S(m)) {
+            if(SM_INDEXPTRS_S(m)[i_colptr + 1] > i) {
+                sunindextype col = i_colptr;
+                gsl_EnsuresDebug(row >= 0);
+                gsl_EnsuresDebug(row < SM_ROWS_S(m));
+                gsl_EnsuresDebug(col >= 0);
+                gsl_EnsuresDebug(col < SM_COLUMNS_S(m));
+                return {row, col};
+            }
+            ++i_colptr;
+        }
+    }
+
+    throw amici::AmiException("Unimplemented SUNMatrix type for unravel_index");
+}
+
 } // namespace amici
 

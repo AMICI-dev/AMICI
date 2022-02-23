@@ -35,6 +35,34 @@ void serialize(Archive &ar, amici::Model &m, unsigned int version);
 namespace amici {
 
 /**
+ * @brief Describes the various model quantities
+ */
+enum class ModelQuantity {
+    J,
+    JB,
+    Jv,
+    JvB,
+    sx,
+    sy,
+    xdot,
+    xBdot,
+    x0_rdata,
+    x0,
+    x_rdata,
+    x,
+    dwdw,
+    dwdx,
+    dwdp,
+    y,
+    dydp,
+    dydx,
+    w,
+};
+
+extern std::map<ModelQuantity, std::string> model_quantity_to_str;
+
+
+/**
  * @brief The Model class represents an AMICI ODE/DAE model.
  *
  * The model can compute various model related quantities based on symbolically
@@ -1206,6 +1234,8 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * If not, try to give hints by which other fields this could be caused.
      *
+     * For (1D) spans.
+     *
      * @param array Array to check
      * @param fun Name of the function that generated the values (for more
      * informative messages).
@@ -1213,6 +1243,43 @@ class Model : public AbstractModel, public ModelDimensions {
      * `amici::AMICI_SUCCESS` otherwise
      */
     int checkFinite(gsl::span<const realtype> array, const char *fun) const;
+
+    /**
+     * @brief Check if the given array has only finite elements.
+     *
+     * For (1D) spans.
+     *
+     * @param array
+     * @param model_quantity The model quantity `array` corresponds to
+     * @return
+     */
+    int checkFinite(gsl::span<const realtype> array,
+                           ModelQuantity model_quantity) const;
+    /**
+     * @brief Check if the given array has only finite elements.
+     *
+     * For flattened 2D arrays.
+     *
+     * @param array Flattened matrix
+     * @param model_quantity The model quantity `array` corresponds to
+     * @param num_cols Number of columns of the non-flattened matrix
+     * @return
+     */
+    int checkFinite(gsl::span<const realtype> array,
+                    ModelQuantity model_quantity,
+                    size_t num_cols) const;
+
+    /**
+     * @brief Check if the given array has only finite elements.
+     *
+     * For SUNMatrix.
+     *
+     * @param m Matrix to check
+     * @param model_quantity The model quantity `m` corresponds to
+     * @param t current timepoint
+     * @return
+     */
+    int checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) const;
 
     /**
      * @brief Set whether the result of every call to `Model::f*` should be

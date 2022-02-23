@@ -16,6 +16,31 @@
 namespace amici {
 
 /**
+ * @brief Maps ModelQuantity items to their string value
+ */
+std::map<ModelQuantity, std::string> model_quantity_to_str {
+    {ModelQuantity::J, "J"},
+    {ModelQuantity::JB, "JB"},
+    {ModelQuantity::Jv, "Jv"},
+    {ModelQuantity::JvB, "JvB"},
+    {ModelQuantity::sx, "sx"},
+    {ModelQuantity::sy, "sy"},
+    {ModelQuantity::xdot, "xdot"},
+    {ModelQuantity::xBdot, "xBdot"},
+    {ModelQuantity::x0, "x0"},
+    {ModelQuantity::x0_rdata, "x0_rdata"},
+    {ModelQuantity::x, "x"},
+    {ModelQuantity::x_rdata, "x_rdata"},
+    {ModelQuantity::dwdw, "dwdw"},
+    {ModelQuantity::dwdx, "dwdx"},
+    {ModelQuantity::dwdp, "dwdp"},
+    {ModelQuantity::y, "y"},
+    {ModelQuantity::dydp, "dydp"},
+    {ModelQuantity::dydx, "dydx"},
+    {ModelQuantity::w, "w"},
+};
+
+/**
  * @brief local helper function to get parameters
  * @param ids vector of name/ids of (fixed)Parameters
  * @param values values of the (fixed)Parameters
@@ -843,7 +868,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     writeSlice(derived_state_.dydp_, sy);
 
     if (always_check_finite_)
-        checkFinite(sy, "sy");
+        checkFinite(sy, ModelQuantity::sy, nplist());
 }
 
 void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
@@ -1218,7 +1243,6 @@ void Model::updateHeavisideB(const int *rootsfound) {
     }
 }
 
-
 int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
     auto result = app->checkFinite(array, fun);
 
@@ -1230,6 +1254,214 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
     }
 
     return result;
+}
+
+int Model::checkFinite(gsl::span<const realtype> array,
+                       ModelQuantity model_quantity) const
+{
+    auto it = std::find_if(array.begin(), array.end(),
+                           [](realtype x){return !std::isfinite(x);});
+    if(it == array.end()) {
+        return AMICI_SUCCESS;
+    }
+
+    // there is some issue - produce a meaningful message
+    auto flat_index = it - array.begin();
+
+    std::string msg_id;
+    std::string non_finite_type;
+    if (std::isnan(array[flat_index])) {
+        msg_id = "AMICI:NaN";
+        non_finite_type = "NaN";
+    } else if (std::isinf(array[flat_index])) {
+        msg_id = "AMICI:Inf";
+        non_finite_type = "Inf";
+    }
+    std::string element_id = std::to_string(flat_index);
+
+    switch (model_quantity) {
+    case ModelQuantity::xdot:
+    case ModelQuantity::xBdot:
+    case ModelQuantity::x0:
+    case ModelQuantity::x:
+    case ModelQuantity::x_rdata:
+    case ModelQuantity::x0_rdata:
+        if(hasStateIds()) {
+            element_id = getStateIdsSolver()[flat_index];
+        }
+        break;
+    case ModelQuantity::y:
+        if(hasObservableIds()) {
+            element_id = getObservableIds()[flat_index];
+        }
+        break;
+    case ModelQuantity::w:
+        if(hasExpressionIds()) {
+            element_id = getExpressionIds()[flat_index];
+        }
+        break;
+    default:
+        break;
+    }
+
+    app->warningF(msg_id.c_str(),
+                  "AMICI encountered a %s value for %s[%i] (%s)",
+                  non_finite_type.c_str(),
+                  model_quantity_to_str[model_quantity].c_str(),
+                  static_cast<int>(flat_index),
+                  element_id.c_str()
+                  );
+
+    // check upstream
+    if(!always_check_finite_) {
+        app->checkFinite(derived_state_.w_, "w");
+    }
+    app->checkFinite(state_.fixedParameters, "k");
+    app->checkFinite(state_.unscaledParameters, "p");
+    app->checkFinite(simulation_parameters_.ts_, "t");
+
+    return AMICI_RECOVERABLE_ERROR;
+}
+
+int Model::checkFinite(gsl::span<const realtype> array,
+                       ModelQuantity model_quantity, size_t num_cols) const
+{
+    auto it = std::find_if(array.begin(), array.end(),
+                           [](realtype x){return !std::isfinite(x);});
+    if(it == array.end()) {
+        return AMICI_SUCCESS;
+    }
+
+    // there is some issue - produce a meaningful message
+    auto flat_index = it - array.begin();
+    sunindextype row, col;
+    std::tie(row, col) = unravel_index(flat_index, num_cols);
+    std::string msg_id;
+    std::string non_finite_type;
+    if (std::isnan(array[flat_index])) {
+        msg_id = "AMICI:NaN";
+        non_finite_type = "NaN";
+    } else if (std::isinf(array[flat_index])) {
+        msg_id = "AMICI:Inf";
+        non_finite_type = "Inf";
+    }
+    std::string row_id = std::to_string(row);
+    std::string col_id = std::to_string(col);
+
+    switch (model_quantity) {
+    case ModelQuantity::sy:
+    case ModelQuantity::dydp:
+        row_id += " " + getObservableIds()[row];
+        col_id += " " + getParameterIds()[plist(col)];
+        break;
+    case ModelQuantity::dydx:
+        row_id += " " + getObservableIds()[row];
+        col_id += " " + getStateIdsSolver()[col];
+        break;
+    default:
+        break;
+    }
+
+    app->warningF(msg_id.c_str(),
+                  "AMICI encountered a %s value for %s[%i] (%s, %s)",
+                  non_finite_type.c_str(),
+                  model_quantity_to_str[model_quantity].c_str(),
+                  static_cast<int>(flat_index),
+                  row_id.c_str(),
+                  col_id.c_str()
+                  );
+
+       // check upstream
+    app->checkFinite(state_.fixedParameters, "k");
+    app->checkFinite(state_.unscaledParameters, "p");
+    app->checkFinite(derived_state_.w_, "w");
+    app->checkFinite(simulation_parameters_.ts_, "t");
+
+    return AMICI_RECOVERABLE_ERROR;
+}
+
+int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) const
+{
+    // check flat array, to see if there are any issues
+    // (faster, in particular for sparse arrays)
+    auto m_flat = gsl::make_span(m);
+    auto it = std::find_if(m_flat.begin(), m_flat.end(),
+                    [](realtype x){return !std::isfinite(x);});
+    if(it == m_flat.end()) {
+        return AMICI_SUCCESS;
+    }
+
+    // there is some issue - produce a meaningful message
+    auto flat_index = it - m_flat.begin();
+    sunindextype row, col;
+    std::tie(row, col) = unravel_index(flat_index, m);
+    std::string msg_id;
+    std::string non_finite_type;
+    if (std::isnan(m_flat[flat_index])) {
+        msg_id = "AMICI:NaN";
+        non_finite_type = "NaN";
+    } else if (std::isinf(m_flat[flat_index])) {
+        msg_id = "AMICI:Inf";
+        non_finite_type = "Inf";
+    } else {
+        throw std::runtime_error(
+            "Value is not finite, but neither infinite nor NaN.");
+    }
+    std::string row_id = std::to_string(row);
+    std::string col_id = std::to_string(col);
+
+    switch (model_quantity) {
+    case ModelQuantity::J:
+    case ModelQuantity::JB:
+    case ModelQuantity::Jv:
+    case ModelQuantity::JvB:
+        if(hasStateIds()) {
+            auto state_ids = getStateIdsSolver();
+            row_id += " " + state_ids[row];
+            col_id += " " + state_ids[col];
+        }
+        break;
+    case ModelQuantity::dwdx:
+        // FIXME: indices wrong?!
+        if(hasExpressionIds())
+            row_id += " " + getExpressionIds()[row];
+        if(hasStateIds())
+            col_id += " " + getStateIdsSolver()[col];
+        break;
+    case ModelQuantity::dwdw:
+        if(hasExpressionIds()) {
+            auto expr_ids = getExpressionIds();
+            row_id += " " + expr_ids[row];
+            col_id += " " + expr_ids[col];
+        }
+        break;
+    case ModelQuantity::dwdp:
+        if(hasExpressionIds())
+            row_id += " " + getExpressionIds()[row];
+        if(hasParameterIds())
+            col_id += " " + getParameterIds()[plist(col)];
+        break;
+    default:
+        break;
+    }
+
+    app->warningF(msg_id.c_str(),
+                  "AMICI encountered a %s value for %s[%i] (%s, %s) at t=%g",
+                  non_finite_type.c_str(),
+                  model_quantity_to_str[model_quantity].c_str(),
+                  static_cast<int>(flat_index),
+                  row_id.c_str(),
+                  col_id.c_str(),
+                  t
+                  );
+
+       // check upstream
+    app->checkFinite(state_.fixedParameters, "k");
+    app->checkFinite(state_.unscaledParameters, "p");
+    app->checkFinite(derived_state_.w_, "w");
+    app->checkFinite(simulation_parameters_.ts_, "t");
+
+    return AMICI_RECOVERABLE_ERROR;
 }
 
 void Model::setAlwaysCheckFinite(bool alwaysCheck) {
@@ -1250,8 +1482,8 @@ void Model::fx0(AmiVector &x) {
               state_.fixedParameters.data());
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.x_rdata_, "x0 x_rdata");
-        checkFinite(x.getVector(), "x0 x");
+        checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata);
+        checkFinite(x.getVector(), ModelQuantity::x0);
     }
 }
 
@@ -1333,7 +1565,7 @@ void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
     fx_rdata(x_rdata.data(), computeX_pos(x), state_.total_cl.data(),
              state_.unscaledParameters.data(), state_.fixedParameters.data());
     if (always_check_finite_)
-        checkFinite(x_rdata.getVector(), "x_rdata");
+        checkFinite(x_rdata.getVector(), ModelQuantity::x_rdata);
 }
 
 void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx,
@@ -1411,7 +1643,7 @@ void Model::fy(const realtype t, const AmiVector &x) {
        state_.h.data(), derived_state_.w_.data());
 
     if (always_check_finite_) {
-        app->checkFinite(gsl::make_span(derived_state_.y_.data(), ny), "y");
+        checkFinite(gsl::make_span(derived_state_.y_.data(), ny), ModelQuantity::y);
     }
 }
 
@@ -1441,7 +1673,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
         }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dydp_, "dydp");
+        checkFinite(derived_state_.dydp_, ModelQuantity::dydp, nplist());
     }
 }
 
@@ -1461,7 +1693,7 @@ void Model::fdydx(const realtype t, const AmiVector &x) {
           derived_state_.dwdx_.data());
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dydx_, "dydx");
+        checkFinite(derived_state_.dydx_, ModelQuantity::dydx, ny);
     }
 }
 
@@ -2076,7 +2308,7 @@ void Model::fw(const realtype t, const realtype *x) {
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data());
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.w_, "w");
+        checkFinite(derived_state_.w_, ModelQuantity::w);
     }
 }
 
@@ -2116,7 +2348,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(gsl::make_span(derived_state_.dwdp_.get()), "dwdp");
+        checkFinite(derived_state_.dwdp_.get(), ModelQuantity::dwdp, t);
     }
 }
 
@@ -2157,7 +2389,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(gsl::make_span(derived_state_.dwdx_.get()), "dwdx");
+        checkFinite(derived_state_.dwdx_.get(), ModelQuantity::dwdx, t);
     }
 }
 
@@ -2172,7 +2404,7 @@ void Model::fdwdw(const realtype t, const realtype *x) {
           derived_state_.w_.data(), state_.total_cl.data());
 
     if (always_check_finite_) {
-        app->checkFinite(gsl::make_span(dwdw_.get()), "dwdw");
+        checkFinite(dwdw_.get(), ModelQuantity::dwdw, t);
     }
 }
 

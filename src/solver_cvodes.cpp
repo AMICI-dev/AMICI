@@ -807,7 +807,6 @@ const Model *CVodeSolver::getModel() const {
 
 /**
  * @brief Jacobian of xdot with respect to states x
- * @param N number of state variables
  * @param t timepoint
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
@@ -827,13 +826,12 @@ static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
     Expects(model);
 
     model->fJ(t, x, xdot, J);
-    return model->checkFinite(gsl::make_span(J), "Jacobian");
+    return model->checkFinite(J, ModelQuantity::J, t);
 }
 
 
 /**
  * @brief Jacobian of xBdot with respect to adjoint state xB
- * @param NeqBdot number of adjoint state variables
  * @param t timepoint
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
@@ -854,7 +852,7 @@ static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     Expects(model);
 
     model->fJB(t, x, xB, xBdot, JB);
-    return model->checkFinite(gsl::make_span(JB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB);
 }
 
 
@@ -879,7 +877,7 @@ static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
     Expects(model);
 
     model->fJSparse(t, x, J);
-    return model->checkFinite(gsl::make_span(J), "Jacobian");
+    return model->checkFinite(J, ModelQuantity::J, t);
 }
 
 
@@ -905,7 +903,7 @@ static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     Expects(model);
 
     model->fJSparseB(t, x, xB, xBdot, JB);
-    return model->checkFinite(gsl::make_span(JB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB);
 }
 
 
@@ -967,7 +965,7 @@ static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
     Expects(model);
 
     model->fJv(v, Jv, t, x);
-    return model->checkFinite(gsl::make_span(Jv), "Jacobian");
+    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv);
 }
 
 
@@ -993,7 +991,7 @@ static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
     Expects(model);
 
     model->fJvB(vB, JvB, t, x, xB);
-    return model->checkFinite(gsl::make_span(JvB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB);
 }
 
 
@@ -1038,7 +1036,8 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
 
-    if (t > 1e200 && !model->checkFinite(gsl::make_span(x), "fxdot")) {
+    if (t > 1e200
+        && !model->checkFinite(gsl::make_span(x), ModelQuantity::xdot)) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
            to fxdot from which we typically cannot recover. To save time
            on normal execution, we do not always want to check finiteness
@@ -1047,7 +1046,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     }
 
     model->fxdot(t, x, xdot);
-    return model->checkFinite(gsl::make_span(xdot), "fxdot");
+    return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot);
 }
 
 
@@ -1074,7 +1073,7 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     }
 
     model->fxBdot(t, x, xB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), "fxBdot");
+    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot);
 }
 
 
