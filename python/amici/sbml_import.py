@@ -1466,7 +1466,9 @@ class SbmlImporter:
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape,
-            rng_seed=32)
+            rng_seed=32,
+            species_names=[str(x.get_id()) for x in ode_model._states]
+        )
 
         # previously removed constant species
         eliminated_state_ids = {cl['state'] for cl in conservation_laws}
