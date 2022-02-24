@@ -100,7 +100,7 @@ def _output(
         logger.log(log_level, *args, **kwargs)
 
     log(f"There are {int_kernel_dim} linearly independent conserved "
-        f"moieties, engaging {len(int_matched)} metabolites.")
+        f"moieties, engaging {len(int_matched)} state variables.")
     if int_kernel_dim == kernel_dim:
         log("They generate all the conservation laws")
     else:
