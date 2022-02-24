@@ -1449,7 +1449,9 @@ class SbmlImporter:
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
             ]
         except TypeError:
-            # https://github.com/AMICI-dev/AMICI/issues/1673
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
                           "coefficients are not currently supported "
@@ -1469,7 +1471,7 @@ class SbmlImporter:
             rng_seed=32)
 
         # sparsify conserved quantities
-        # construct and reduce A * x0 = T
+        # construct and reduce A * x0 = total_cl
         A = sp.zeros(len(cls_coefficients), len(ode_model._states))
         for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
                                                       cls_coefficients)):
@@ -1480,35 +1482,34 @@ class SbmlImporter:
 
         # keep new conservations laws separate until we know everything worked
         new_conservation_laws = []
-        all_state_ids = [x.get_id() for x in ode_model._states]
         # previously removed constant species
         eliminated_state_ids = {cl['state'] for cl in conservation_laws}
 
+        all_state_ids = [x.get_id() for x in ode_model._states]
+        all_compartment_sizes = [
+            self.compartments[
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']]
+            if not self.symbols[SymbolId.SPECIES][state_id]['amount']
+            else sp.Integer(1)
+            for state_id in all_state_ids
+        ]
+
+        # iterate over list of conservation laws, create symbolic expressions,
         for i_cl, target_state_model_idx in enumerate(pivots):
             if all_state_ids[target_state_model_idx] in eliminated_state_ids:
                 # constants state, already eliminated
                 continue
-            # state indices, coefficients, IDs for species
-            #  engaged in the current CL
+            # collect values for species engaged in the current CL
             state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
                           if coeff]
             coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
             state_ids = [all_state_ids[i_state] for i_state in state_idxs]
+            compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
-            target_state_cl_idx = state_idxs.index(target_state_model_idx)
-            target_state_id = state_ids[target_state_cl_idx]
-
-            compartment_sizes = [
-                self.compartments[
-                    self.symbols[SymbolId.SPECIES][state_id]['compartment']]
-                if not self.symbols[SymbolId.SPECIES][state_id]['amount']
-                else sp.Integer(1)
-                for state_id in state_ids
-            ]
-
+            target_state_id = all_state_ids[target_state_model_idx]
+            target_compartment = all_compartment_sizes[target_state_model_idx]
+            target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
-            target_compartment = compartment_sizes[target_state_cl_idx]
-            target_state_coeff = coefficients[target_state_cl_idx]
 
             # \sum coeff * state * volume
             abundance_expr = sp.Add(*[
