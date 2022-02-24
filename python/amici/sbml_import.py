@@ -1468,33 +1468,35 @@ class SbmlImporter:
             stoichiometric_list, *self.stoichiometric_matrix.shape,
             rng_seed=32)
 
+        # sparsify conserved quantities
+        # construct and reduce A * x0 = T
+        A = sp.zeros(len(cls_coefficients), len(ode_model._states))
+        for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
+                                                      cls_coefficients)):
+            for i, c in zip(cl, coefficients):
+                A[i_cl, i] = sp.Rational(c)
+        rref, pivots = A.rref()
+        species_to_be_removed = set(pivots)
+
+        # keep new conservations laws separate until we know everything worked
+        new_conservation_laws = []
+        all_state_ids = [x.get_id() for x in ode_model._states]
         # previously removed constant species
         eliminated_state_ids = {cl['state'] for cl in conservation_laws}
 
-        # iterate over list of conservation laws, create symbolic expressions,
-        # and mark replaced species for removal from stoichiometric matrix
-        species_to_be_removed = set()
-        # keep new conservation laws separate until we know everything worked
-        new_conservation_laws = []
-        for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
-            assert len(state_idxs) == len(coefficients)
-
-            state_ids = [ode_model._states[i_state].get_id()
-                         for i_state in state_idxs]
-
-            # choose a state that is not already subject to removal
-            try:
-                target_state_cl_idx = next(filter(
-                    lambda x: state_ids[x] not in eliminated_state_ids,
-                    range(len(state_idxs)))
-                )
-            except StopIteration:
-                # all engaged states have already been eliminated
+        for i_cl, target_state_model_idx in enumerate(pivots):
+            if all_state_ids[target_state_model_idx] in eliminated_state_ids:
+                # constants state, already eliminated
                 continue
+            # state indices, coefficients, IDs for species
+            #  engaged in the current CL
+            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
+                          if coeff]
+            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
+            state_ids = [all_state_ids[i_state] for i_state in state_idxs]
 
-            target_state_model_idx = state_idxs[target_state_cl_idx]
+            target_state_cl_idx = state_idxs.index(target_state_model_idx)
             target_state_id = state_ids[target_state_cl_idx]
-            eliminated_state_ids.add(target_state_id)
 
             compartment_sizes = [
                 self.compartments[
@@ -1503,9 +1505,6 @@ class SbmlImporter:
                 else sp.Integer(1)
                 for state_id in state_ids
             ]
-            # prevent sympy from evaluating float operations in abundance
-            #  expression below
-            coefficients = list(map(sp.Rational, coefficients))
 
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
             target_compartment = compartment_sizes[target_state_cl_idx]
@@ -1539,7 +1538,7 @@ class SbmlImporter:
         try:
             sorted_state_exprs = toposort_symbols(state_exprs)
         except CircularDependencyError as e:
-            # see SBML semantic test suite, case 18 for an example
+            # This should never happen
             warnings.warn("Circular dependency detected in conservation laws. "
                           "Skipping conservation laws for non-constant "
                           f"species. Error was: {e}.")
