@@ -695,7 +695,8 @@ def _relax(
         while i < len(matrix[k]):
             for i_species in range(k1 + 1, K):
                 j = order[i_species]
-                if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
+                if not len(matrix[j]) or len(matrix[k]) <= i \
+                        or matrix[j][0] != matrix[k][i]:
                     continue
 
                 row_k: List[float] = [0] * num_reactions
