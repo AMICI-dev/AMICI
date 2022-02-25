@@ -2,7 +2,7 @@ import logging
 import math
 import random
 import sys
-from typing import List, MutableSequence, Sequence, Tuple, Union
+from typing import List, MutableSequence, Sequence, Tuple, Union, Optional
 
 from .logging import get_logger
 
@@ -20,7 +20,8 @@ def compute_moiety_conservation_laws(
         num_species: int,
         num_reactions: int,
         max_num_monte_carlo: int = 20,
-        rng_seed: Union[None, bool, int] = False
+        rng_seed: Union[None, bool, int] = False,
+        species_names: Optional[Sequence[str]] = None,
 ) -> Tuple[List[List[int]], List[List[float]]]:
     """Compute moiety conservation laws.
 
@@ -39,6 +40,8 @@ def compute_moiety_conservation_laws(
     :param rng_seed:
         Seed for the random number generator. If `False`, the RNG will not be
         re-initialized. Other values will be passed to :func:`random.seed`.
+    :param species_names:
+        Species names. Optional and only used for logging.
     :returns:
         Integer MCLs as list of lists of indices of involved species and
         list of lists of corresponding coefficients.
@@ -76,8 +79,47 @@ def compute_moiety_conservation_laws(
                               num_reactions, num_species)
                 timer = 0
     _reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
+    _output(int_kernel_dim, kernel_dim, engaged_species, cls_species_idxs,
+            cls_coefficients, species_names, verbose=True)
 
     return cls_species_idxs[:int_kernel_dim], cls_coefficients[:int_kernel_dim]
+
+
+def _output(
+        int_kernel_dim: int,
+        kernel_dim: int,
+        int_matched: List[int],
+        species_indices: List[List[int]],
+        species_coefficients: List[List[float]],
+        species_names: Optional[Sequence[str]] = None,
+        verbose: bool = False,
+        log_level: int = logging.DEBUG
+):
+    """Log infos on identified conservation laws"""
+    def log(*args, **kwargs):
+        logger.log(log_level, *args, **kwargs)
+
+    log(f"There are {int_kernel_dim} linearly independent conserved "
+        f"moieties, engaging {len(int_matched)} state variables.")
+    if int_kernel_dim == kernel_dim:
+        log("They generate all the conservation laws")
+    else:
+        log(f"They don't generate all the conservation laws, "
+            f"{kernel_dim - int_kernel_dim} of them are not reducible to "
+            "moieties")
+    # print all conserved quantities
+    if verbose:
+        for i, (coefficients, engaged_species_idxs) \
+                in enumerate(zip(species_coefficients, species_indices)):
+            if not engaged_species_idxs:
+                continue
+            log(f"Moiety number {i + 1} engages {len(engaged_species_idxs)} "
+                "species:")
+            for species_idx, coefficient \
+                    in zip(engaged_species_idxs, coefficients):
+                name = species_names[species_idx] if species_names \
+                    else species_idx
+                log(f"\t{name}\t{coefficient}")
 
 
 def _qsort(
@@ -130,7 +172,7 @@ def _kernel(
         stoichiometric_list: Sequence[float],
         num_species: int,
         num_reactions: int
-) -> Tuple[float, List[int], int, List[int],
+) -> Tuple[int, List[int], int, List[int],
            List[List[int]], List[List[float]]]:
     """
     Kernel (left nullspace of :math:`S`) calculation by Gaussian elimination
