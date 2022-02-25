@@ -26,8 +26,9 @@ from .import_utils import (CircularDependencyError,
                            generate_measurement_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols,
-                           RESERVED_SYMBOLS)
+                           smart_subs, smart_subs_many, smart_subs_dict,
+                           toposort_symbols, RESERVED_SYMBOLS,
+                           CircularDependencyError)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, symbol_with_assumptions
@@ -1397,14 +1398,14 @@ class SbmlImporter:
         if not isinstance(sym_math, sp.Expr):
             return sym_math
 
-        for species_id, species in self.symbols[SymbolId.SPECIES].items():
-            if 'init' in species:
-                sym_math = smart_subs(sym_math, species_id, species['init'])
+        substitutions = [
+            (species_id, species['init'])
+            for species_id, species in self.symbols[SymbolId.SPECIES].items()
+            if 'init' in species
+        ]
+        substitutions.append((self._local_symbols['time'], sp.Float(0)),)
 
-        sym_math = smart_subs(sym_math, self._local_symbols['time'],
-                              sp.Float(0))
-
-        return sym_math
+        return smart_subs_many(sym_math, substitutions)
 
     def process_conservation_laws(self, ode_model) -> None:
         """

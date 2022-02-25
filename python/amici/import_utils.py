@@ -232,7 +232,7 @@ def smart_subs_dict(sym: sp.Expr,
                     field: Optional[str] = None,
                     reverse: bool = True) -> sp.Expr:
     """
-    Subsitutes expressions completely flattening them out. Requires
+    Substitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
 
     :param sym:
@@ -276,12 +276,33 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
         to be substituted
 
     :param new:
-        subsitution value
+        substitution value
 
     :return:
         substituted expression
     """
     return element.subs(old, new) if element.has(old) else element
+
+
+def smart_subs_many(
+        element: sp.Expr,
+        substitutions: Sequence[Tuple[Union[sp.Symbol, sp.Expr], sp.Expr]]
+) -> sp.Expr:
+    """
+    Optimized substitution of several symbols that checks whether
+    anything needs to be done first
+
+    :param element:
+        substitution target
+
+    :param substitutions:
+        Sequence of tuples of old and new values.
+
+    :return:
+        substituted expression
+    """
+    return element.subs(substitutions) \
+        if element.has(*[pair[0] for pair in substitutions]) else element
 
 
 def toposort_symbols(symbols: SymbolDef,
