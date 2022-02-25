@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - compile_without_optimization
+      - speed
 
   pull_request:
     branches:
