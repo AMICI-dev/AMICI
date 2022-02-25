@@ -1472,8 +1472,15 @@ class SbmlImporter:
             species_names=[str(x.get_id()) for x in ode_model._states]
         )
 
-        # sparsify conserved quantities
-        # construct and reduce A * x0 = total_cl
+        # Sparsify conserved quantities
+        #  ``compute_moiety_conservation_laws`` identifies conserved quantities
+        #  with positive coefficients. The resulting system is, therefore,
+        #  often non-sparse. This leads to circular dependencies in the
+        #  state expressions of eliminated states. The identified conserved
+        #  quantities are linearly independent. We can construct `A` as in
+        #  `A * x0 = total_cl` and bring it to reduced row echelon form. The
+        #  pivot species are the ones to be eliminated. The resulting state
+        #  expressions are sparse and void of any circular dependencies.
         A = sp.zeros(len(cls_coefficients), len(ode_model._states))
         for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
                                                       cls_coefficients)):
@@ -1541,11 +1548,10 @@ class SbmlImporter:
         try:
             sorted_state_exprs = toposort_symbols(state_exprs)
         except CircularDependencyError as e:
-            # This should never happen
-            warnings.warn("Circular dependency detected in conservation laws. "
-                          "Skipping conservation laws for non-constant "
-                          f"species. Error was: {e}.")
-            return species_solver
+            raise AssertionError(
+                "Circular dependency detected in conservation laws. "
+                "This should not have happened."
+            ) from e
 
         for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
