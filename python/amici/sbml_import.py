@@ -1449,7 +1449,9 @@ class SbmlImporter:
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
             ]
         except TypeError:
-            # https://github.com/AMICI-dev/AMICI/issues/1673
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
             warnings.warn("Conservation laws for non-constant species in "
                           "combination with parameterized stoichiometric "
                           "coefficients are not currently supported "
@@ -1470,48 +1472,53 @@ class SbmlImporter:
             species_names=[str(x.get_id()) for x in ode_model._states]
         )
 
+        # Sparsify conserved quantities
+        #  ``compute_moiety_conservation_laws`` identifies conserved quantities
+        #  with positive coefficients. The resulting system is, therefore,
+        #  often non-sparse. This leads to circular dependencies in the
+        #  state expressions of eliminated states. The identified conserved
+        #  quantities are linearly independent. We can construct `A` as in
+        #  `A * x0 = total_cl` and bring it to reduced row echelon form. The
+        #  pivot species are the ones to be eliminated. The resulting state
+        #  expressions are sparse and void of any circular dependencies.
+        A = sp.zeros(len(cls_coefficients), len(ode_model._states))
+        for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
+                                                      cls_coefficients)):
+            for i, c in zip(cl, coefficients):
+                A[i_cl, i] = sp.Rational(c)
+        rref, pivots = A.rref()
+        species_to_be_removed = set(pivots)
+
+        # keep new conservations laws separate until we know everything worked
+        new_conservation_laws = []
         # previously removed constant species
         eliminated_state_ids = {cl['state'] for cl in conservation_laws}
 
+        all_state_ids = [x.get_id() for x in ode_model._states]
+        all_compartment_sizes = [
+            self.compartments[
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']]
+            if not self.symbols[SymbolId.SPECIES][state_id]['amount']
+            else sp.Integer(1)
+            for state_id in all_state_ids
+        ]
+
         # iterate over list of conservation laws, create symbolic expressions,
-        # and mark replaced species for removal from stoichiometric matrix
-        species_to_be_removed = set()
-        # keep new conservation laws separate until we know everything worked
-        new_conservation_laws = []
-        for state_idxs, coefficients in zip(cls_state_idxs, cls_coefficients):
-            assert len(state_idxs) == len(coefficients)
-
-            state_ids = [ode_model._states[i_state].get_id()
-                         for i_state in state_idxs]
-
-            # choose a state that is not already subject to removal
-            try:
-                target_state_cl_idx = next(filter(
-                    lambda x: state_ids[x] not in eliminated_state_ids,
-                    range(len(state_idxs)))
-                )
-            except StopIteration:
-                # all engaged states have already been eliminated
+        for i_cl, target_state_model_idx in enumerate(pivots):
+            if all_state_ids[target_state_model_idx] in eliminated_state_ids:
+                # constants state, already eliminated
                 continue
+            # collect values for species engaged in the current CL
+            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
+                          if coeff]
+            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
+            state_ids = [all_state_ids[i_state] for i_state in state_idxs]
+            compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
-            target_state_model_idx = state_idxs[target_state_cl_idx]
-            target_state_id = state_ids[target_state_cl_idx]
-            eliminated_state_ids.add(target_state_id)
-
-            compartment_sizes = [
-                self.compartments[
-                    self.symbols[SymbolId.SPECIES][state_id]['compartment']]
-                if not self.symbols[SymbolId.SPECIES][state_id]['amount']
-                else sp.Integer(1)
-                for state_id in state_ids
-            ]
-            # prevent sympy from evaluating float operations in abundance
-            #  expression below
-            coefficients = list(map(sp.Rational, coefficients))
-
+            target_state_id = all_state_ids[target_state_model_idx]
+            target_compartment = all_compartment_sizes[target_state_model_idx]
+            target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
-            target_compartment = compartment_sizes[target_state_cl_idx]
-            target_state_coeff = coefficients[target_state_cl_idx]
 
             # \sum coeff * state * volume
             abundance_expr = sp.Add(*[
@@ -1541,11 +1548,10 @@ class SbmlImporter:
         try:
             sorted_state_exprs = toposort_symbols(state_exprs)
         except CircularDependencyError as e:
-            # see SBML semantic test suite, case 18 for an example
-            warnings.warn("Circular dependency detected in conservation laws. "
-                          "Skipping conservation laws for non-constant "
-                          f"species. Error was: {e}.")
-            return species_solver
+            raise AssertionError(
+                "Circular dependency detected in conservation laws. "
+                "This should not have happened."
+            ) from e
 
         for cl in new_conservation_laws:
             cl['state_expr'] = smart_subs_dict(cl['state_expr'],
