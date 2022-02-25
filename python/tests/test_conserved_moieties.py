@@ -7,7 +7,8 @@ import pytest
 import sympy as sp
 
 from amici.conserved_moieties import (_fill, _kernel,
-                                      compute_moiety_conservation_laws)
+                                      compute_moiety_conservation_laws,
+                                      _output as output)
 from amici.logging import get_logger, log_execution_time
 
 logger = get_logger(__name__)
@@ -53,30 +54,6 @@ def data_demartino2014():
                  for entry in io.BytesIO(response.read())]
 
     return S, row_names
-
-
-def output(
-        int_kernel_dim, kernel_dim, int_matched, species_indices,
-        species_coefficients, row_names, verbose=False
-):
-    """Print status"""
-    print(f"There are {int_kernel_dim} linearly independent conserved "
-          f"moieties, engaging {len(int_matched)} metabolites.")
-    if int_kernel_dim == kernel_dim:
-        print("They generate all the conservation laws")
-    else:
-        print(f"They don't generate all the conservation laws, "
-              f"{kernel_dim - int_kernel_dim} of them are not reducible to "
-              "moieties")
-    # print all conservation laws
-    if verbose:
-        for i, coefficients, engaged_species_idxs \
-                in enumerate(zip(species_coefficients, species_indices)):
-            print(f"Moiety number {i + 1} engages {len(engaged_species_idxs)} "
-                  "metabolites:")
-            for species_idx, coefficient \
-                    in zip(engaged_species_idxs, coefficients):
-                print(f"\t{row_names[species_idx]}\t{coefficient}")
 
 
 def test_kernel_demartino2014(data_demartino2014, quiet=True):
