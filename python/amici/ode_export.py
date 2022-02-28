@@ -1882,13 +1882,16 @@ class ODEModel:
                 self._eqs[name][:, ip] += tmp
 
         elif name == 'dx_rdatadx_solver':
-            self._derivative('x_rdata', 'x', name=name)
+            self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
+                                             self.sym('x'))
 
         elif name == 'dx_rdatadp':
-            self._derivative('x_rdata', 'p', name=name)
+            self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
+                                             self.sym('p'))
 
         elif name == 'dx_rdatadtcl':
-            self._derivative('x_rdata', 'tcl', name=name)
+            self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
+                                             self.sym('tcl'))
 
         elif name == 'sx_rdata':
             if self.num_cons_law():
