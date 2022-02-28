@@ -691,7 +691,7 @@ def show_model_info(sbml_model: 'libsbml.Model'):
     logger.info(f'Reactions: {len(sbml_model.getListOfReactions())}')
 
 
-def parse_cli_args():
+def _parse_cli_args():
     """
     Parse command line arguments
 
@@ -714,6 +714,9 @@ def parse_cli_args():
                         action='store_true',
                         help='Flatten measurement specific overrides of '
                              'observable and noise parameters')
+    parser.add_argument('--no-sensitivities', dest='generate_sensitivity_code',
+                        default=False, action='store_false',
+                        help='Skip generation of sensitivity code')
 
     # Call with set of files
     parser.add_argument('-s', '--sbml', dest='sbml_file_name',
@@ -750,7 +753,7 @@ def main():
     Command line interface to import a model in the PEtab
     (https://github.com/PEtab-dev/PEtab/) format into AMICI.
     """
-    args = parse_cli_args()
+    args = _parse_cli_args()
 
     if args.yaml_file_name:
         pp = petab.Problem.from_yaml(args.yaml_file_name)
@@ -775,6 +778,7 @@ def main():
                  measurement_table=pp.measurement_df,
                  model_output_dir=args.model_output_dir,
                  compile=args.compile,
+                 generate_sensitivity_code=args.generate_sensitivity_code,
                  verbose=args.verbose)
 
 
