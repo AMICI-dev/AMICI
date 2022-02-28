@@ -740,6 +740,8 @@ def _relax(
                 if not len(matrix[j]) or matrix[j][0] != matrix[k][i]:
                     continue
 
+                # subtract rows
+                # matrix2[k] = matrix2[k] - matrix2[j] * matrix2[k][i]
                 row_k: List[float] = [0] * num_reactions
                 for a in range(len(matrix[k])):
                     row_k[matrix[k][a]] = matrix2[k][a]
@@ -749,6 +751,9 @@ def _relax(
                 matrix[k] = [row_idx for row_idx, row_val in enumerate(row_k)
                              if row_val != 0]
                 matrix2[k] = [row_val for row_val in row_k if row_val != 0]
+
+                if len(matrix[k]) <= i:
+                    break
             i += 1
 
     indip = [K + 1] * num_reactions
