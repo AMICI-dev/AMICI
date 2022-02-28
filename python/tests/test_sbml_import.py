@@ -54,6 +54,25 @@ def test_sbml2amici_no_observables(simple_sbml_model):
         assert hasattr(module_module, 'getModel')
 
 
+def test_sbml2amici_nested_observables_fail(simple_sbml_model):
+    """Test model generation works for model without observables"""
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        with pytest.raises(ValueError, match="(?i)nested"):
+            sbml_importer.sbml2amici(
+                model_name="test",
+                output_dir=tmpdir,
+                observables={'outer': {'formula': 'inner'},
+                             'inner': {'formula': 'S1'}},
+                compute_conservation_laws=False,
+                generate_sensitivity_code=False,
+                compile=False,
+            )
+
+
 def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
