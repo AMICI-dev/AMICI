@@ -2189,12 +2189,13 @@ class ODEModel:
             # which is not checked for by sympy
             if not smart_is_zero_matrix(dydx) and not \
                     smart_is_zero_matrix(dxdz):
+                dydx_times_dxdz = smart_multiply(dydx, dxdz)
                 if dxdz.shape[1] == 1 and \
                         self._eqs[name].shape[1] != dxdz.shape[1]:
                     for iz in range(self._eqs[name].shape[1]):
-                        self._eqs[name][:, iz] += smart_multiply(dydx, dxdz)
+                        self._eqs[name][:, iz] += dydx_times_dxdz
                 else:
-                    self._eqs[name] += smart_multiply(dydx, dxdz)
+                    self._eqs[name] += dydx_times_dxdz
 
     def sym_or_eq(self, name: str, varname: str) -> sp.Matrix:
         """
