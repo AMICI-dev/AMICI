@@ -1876,35 +1876,42 @@ class ODEModel:
             # stotal_cl = dtotal_cl/dp +  dtotal_cl/dx_rdata * sx_rdata
             # shape: ncl x np
             self._eqs[name] = self.eq('dtcldp')
-            dtotal_cldx_rdata = smart_jacobian(self.eq('total_cl'),
-                                               self.sym('x_rdata'))
+            dtotal_cldx_rdata = self.eq('dtotal_cldx_rdata')
             tmp = smart_multiply(dtotal_cldx_rdata, self.sym('sx_rdata'))
             for ip in range(self._eqs[name].shape[1]):
                 self._eqs[name][:, ip] += tmp
+
+        elif name == 'dx_rdatadx_solver':
+            self._derivative('x_rdata', 'x', name=name)
+
+        elif name == 'dx_rdatadp':
+            self._derivative('x_rdata', 'p', name=name)
+
+        elif name == 'dx_rdatadtcl':
+            self._derivative('x_rdata', 'tcl', name=name)
+
         elif name == 'sx_rdata':
             if self.num_cons_law():
                 # sx_rdata =  dx_rdata/dx_solver * sx_solver
                 #              + dx_rdata/d_tcl * stcl + dxrdata/dp
                 # shape: nx_rdata, 1
-                dx_rdata_dx_solver = smart_jacobian(self.eq('x_rdata'),
-                                                    self.sym('x'))
+                dx_rdata_dx_solver = self.eq('dx_rdatadx_solver')
                 sym_sx_solver = self.sym('sx_solver')
-                dx_rdata_dp = smart_jacobian(self.eq('x_rdata'),
-                                             self.sym('p'))
+                dx_rdata_dp = self.eq('dx_rdatadp')
                 self._eqs[name] = dx_rdata_dp
                 tmp = smart_multiply(dx_rdata_dx_solver, sym_sx_solver)
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += tmp
 
                 sym_stotal_cl = self.sym('stotal_cl')
-                dx_rdata_dtotal_cl = smart_jacobian(self.eq('x_rdata'),
-                                                    self.sym('tcl'))
+                dx_rdata_dtotal_cl = self.eq('dx_rdatadtcl')
                 tmp = smart_multiply(dx_rdata_dtotal_cl, sym_stotal_cl)
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += tmp
             else:
                 # if there are no conservation laws, this is simply sx_solver
                 self._eqs[name] = self.sym('sx_solver')
+
         elif name == 'dxdotdx_explicit':
             # force symbols
             self._derivative('xdot', 'x', name=name)
