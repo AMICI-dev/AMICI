@@ -101,14 +101,14 @@ def test_sbml2amici_observable_dependent_error(simple_sbml_model):
     """Check gradients for model with observable-dependent error"""
     sbml_doc, sbml_model = simple_sbml_model
     # add parameter and rate rule
+    sbml_model.getSpecies("S1").setInitialConcentration(1.0)
+    sbml_model.getParameter("p1").setValue(0.2)
+    rr = sbml_model.createRateRule()
+    rr.setVariable("S1")
+    rr.setMath(libsbml.parseL3Formula("p1"))
     relative_sigma = sbml_model.createParameter()
     relative_sigma.setId('relative_sigma')
     relative_sigma.setValue(0.05)
-    rr = sbml_model.createRateRule()
-    rr.setVariable("S1")
-    rr.setMath(libsbml.parseL3Formula("p1 * S1"))
-    sbml_model.getSpecies("S1").setInitialConcentration(1.0)
-    sbml_model.getParameter("p1").setValue(0.2)
 
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
