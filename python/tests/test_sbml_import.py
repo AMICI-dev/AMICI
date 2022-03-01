@@ -106,8 +106,10 @@ def test_sbml2amici_observable_dependent_error(simple_sbml_model):
     relative_sigma.setValue(0.05)
     rr = sbml_model.createRateRule()
     rr.setVariable("S1")
-    rr.setMath(libsbml.parseL3Formula("1"))
+    rr.setMath(libsbml.parseL3Formula("p1 * S1"))
     sbml_model.getSpecies("S1").setInitialConcentration(1.0)
+    sbml_model.getParameter("p1").setValue(0.2)
+
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
 
@@ -130,12 +132,14 @@ def test_sbml2amici_observable_dependent_error(simple_sbml_model):
         edata = amici.ExpData(rdata, 1.0, 0.0)
         edata.setObservedDataStdDev(np.nan)
 
+        # check sensitivities
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
         for sensitivity_method in (amici.SensitivityMethod.forward,
                                    amici.SensitivityMethod.adjoint):
             solver.setSensitivityMethod(sensitivity_method)
             check_derivatives(model, solver, edata)
             rdata = amici.runAmiciSimulation(model, solver, edata)
+            assert rdata.sllh[0] != 0.0
             assert rdata.sllh[1] != 0.0
 
 
