@@ -80,9 +80,9 @@ function this = getArgs(this,model)
         case 'dxdotdp'
             this.argstr = ['(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip' dx ', const realtype *w, const realtype *dwdp)'];
         case 'sigma_y'
-            this.argstr = '(double *sigmay, const realtype t, const realtype *p, const realtype *k)';
+            this.argstr = '(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y)';
         case 'dsigma_ydp'
-            this.argstr = '(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip)';
+            this.argstr = '(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *y, const int ip)';
         case 'sigma_z'
             this.argstr = '(double *sigmaz, const realtype t, const realtype *p, const realtype *k)';
         case 'dsigma_zdp'

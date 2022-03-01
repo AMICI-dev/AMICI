@@ -1447,8 +1447,11 @@ void Model::fsigmay(const int it, const ExpData *edata) {
 
     derived_state_.sigmay_.assign(ny, 0.0);
 
-    fsigmay(derived_state_.sigmay_.data(), getTimepoint(it), state_.unscaledParameters.data(),
-            state_.fixedParameters.data());
+    fsigmay(derived_state_.sigmay_.data(),
+            getTimepoint(it),
+            state_.unscaledParameters.data(),
+            state_.fixedParameters.data(),
+            derived_state_.y_.data());
 
     if (edata) {
         auto sigmay_edata = edata->getObservedDataStdDevPtr(it);
@@ -1481,6 +1484,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
         fdsigmaydp(&derived_state_.dsigmaydp_.at(ip * ny), getTimepoint(it),
                    state_.unscaledParameters.data(),
                    state_.fixedParameters.data(),
+                   derived_state_.y_.data(),
                    plist(ip));
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp

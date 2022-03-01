@@ -561,9 +561,10 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param y model output at timepoint t
      */
     virtual void fsigmay(realtype *sigmay, const realtype t, const realtype *p,
-                         const realtype *k);
+                         const realtype *k, const realtype *y);
 
     /**
      * @brief Model-specific implementation of fsigmay
@@ -574,7 +575,8 @@ class AbstractModel {
      * @param ip sensitivity index
      */
     virtual void fdsigmaydp(realtype *dsigmaydp, const realtype t,
-                            const realtype *p, const realtype *k, int ip);
+                            const realtype *p, const realtype *k,
+                            const realtype *y, int ip);
 
     /**
      * @brief Model-specific implementation of fsigmaz

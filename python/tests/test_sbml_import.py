@@ -97,6 +97,48 @@ def test_nosensi(simple_sbml_model):
         assert rdata.status == amici.AMICI_ERROR
 
 
+def test_sbml2amici_observable_dependent_error(simple_sbml_model):
+    """Check gradients for model with observable-dependent error"""
+    sbml_doc, sbml_model = simple_sbml_model
+    # add parameter and rate rule
+    relative_sigma = sbml_model.createParameter()
+    relative_sigma.setId('relative_sigma')
+    relative_sigma.setValue(0.05)
+    rr = sbml_model.createRateRule()
+    rr.setVariable("S1")
+    rr.setMath(libsbml.parseL3Formula("1"))
+    sbml_model.getSpecies("S1").setInitialConcentration(1.0)
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(
+            model_name="test",
+            output_dir=tmpdir,
+            observables={'observed_s1': {'formula': 'S1'}},
+            sigmas={'observed_s1': '0.1 + relative_sigma * observed_s1'},
+        )
+        model_module = amici.import_model_module(module_name='test',
+                                                 module_path=tmpdir)
+        model = model_module.getModel()
+        model.setTimepoints(np.linspace(0, 60, 61))
+        solver = model.getSolver()
+
+        # generate artificial data
+        rdata = amici.runAmiciSimulation(model, solver)
+        assert np.allclose(rdata.sigmay, 0.1 + 0.05 * rdata.y)
+        edata = amici.ExpData(rdata, 1.0, 0.0)
+        edata.setObservedDataStdDev(np.nan)
+
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        for sensitivity_method in (amici.SensitivityMethod.forward,
+                                   amici.SensitivityMethod.adjoint):
+            solver.setSensitivityMethod(sensitivity_method)
+            check_derivatives(model, solver, edata)
+            rdata = amici.runAmiciSimulation(model, solver, edata)
+            assert rdata.sllh[1] != 0.0
+
+
 @pytest.fixture
 def model_steadystate_module():
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
