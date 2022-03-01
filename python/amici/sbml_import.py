@@ -1229,6 +1229,20 @@ class SbmlImporter:
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
+            # check for nesting of observables (unsupported)
+            #  performing string-based check, because lhs symbols are `real`,
+            #  whereas rhs symbols are not.
+            observable_syms = {
+                str(obs) for obs in self.symbols[SymbolId.OBSERVABLE].keys()
+            }
+            for obs in self.symbols[SymbolId.OBSERVABLE].values():
+                if any(str(sym) in observable_syms
+                       for sym in obs['value'].free_symbols):
+                    raise ValueError(
+                        "Nested observables are not supported, "
+                        f"but observable `{obs['name']} = {obs['value']}` "
+                        "references another observable."
+                    )
         elif observables is None:
             self._generate_default_observables()
 
