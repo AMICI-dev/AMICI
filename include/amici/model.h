@@ -857,13 +857,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
      * @param x State variables
-     * @param sx State sensitivities
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                        gsl::span<const realtype> sy,
                                        const int it, const ExpData *edata,
-                                       const AmiVector &x,
-                                       const AmiVectorArray &sx);
+                                       const AmiVector &x);
 
     /**
      * @brief Add time-resolved measurement negative log-likelihood \f$ Jy \f$.

@@ -851,23 +851,19 @@ void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
 void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                           gsl::span<const realtype> sy,
                                           const int it, const ExpData *edata,
-                                          const AmiVector &x,
-                                          const AmiVectorArray &sx) {
+                                          const AmiVector &x) {
     fdsigmaydp(it, edata);
     writeSlice(derived_state_.dsigmaydp_, ssigmay);
 
     if(pythonGenerated) {
-        // = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
-        // = dsigmaydy*sy+dsigmaydp
+        // ssigmay = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
+        //         = dsigmaydy*sy+dsigmaydp
 
         fdydp(getTimepoint(it), x);
         fdydx(getTimepoint(it), x);
         fdsigmaydy(it, edata);
 
-        derived_state_.sx_.resize(nx_solver * nplist());
-        sx.flatten_to_vector(derived_state_.sx_);
-
-        // compute 1.0 * dsigmaydp += 1.0*dsigmaydy*sy
+        // compute ssigmay = 1.0 * dsigmaydp + 1.0 * dsigmaydy * sy
         // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
         //             M  N                      M  K          K  N
         //             ldc                       lda           ldb

@@ -312,8 +312,7 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
         if (!ssigmay.empty())
             model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
                                                 slice(sy, it, nplist * ny),
-                                                it, edata, x_solver_,
-                                                sx_solver_);
+                                                it, edata, x_solver_);
     }
 }
 
@@ -867,8 +866,8 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
-    model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata, x_solver_,
-                                        sx_solver_);
+    model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata,
+                                        x_solver_);
 
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
@@ -907,7 +906,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
     model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata,
-                                        x_solver_, sx_solver_);
+                                        x_solver_);
 
     /*
      * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+log%28s%28u%2Cv%29%29+%2B+0.5+*+%28r%28u%2Cv%29%2Fs%28u%2Cv%29%29%5E2
