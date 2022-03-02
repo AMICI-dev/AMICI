@@ -874,7 +874,7 @@ void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, ny, nplist(), ny, 1.0,
                     derived_state_.dsigmaydy_.data(), ny,
-                    sy.data(), nx_solver, 1.0, ssigmay.data(), ny);
+                    sy.data(), ny, 1.0, ssigmay.data(), ny);
     }
 
     if (always_check_finite_)
@@ -1595,7 +1595,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
             // (nJ,ny)    (nJ,ny)  * (ny,ny)
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, ny, ny, 1.0,
-                        &derived_state_.dJydsigma_.at(iyt * nJ * ny), ny,
+                        &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
                         derived_state_.dsigmaydy_.data(), ny, 1.0,
                         derived_state_.dJydy_.at(iyt).data(), nJ);
 
