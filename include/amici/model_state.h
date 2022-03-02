@@ -234,7 +234,7 @@ struct ModelStateDerived {
     std::vector<realtype> dsigmaydp_;
 
     /** temporary storage for observable derivative of data standard deviation,
-     * (dimension: ny x nplist, row-major)
+     * (dimension: ny x ny, row-major)
      */
     std::vector<realtype> dsigmaydy_;
 
