@@ -115,6 +115,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdrzdp;
     using AbstractModel::fdrzdx;
     using AbstractModel::fdsigmaydp;
+    using AbstractModel::fdsigmaydy;
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
     using AbstractModel::fdwdp_colptrs;
@@ -1395,6 +1396,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata pointer to `amici::ExpData` data instance holding sigma values
      */
     void fdsigmaydp(int it, const ExpData *edata);
+
+    /**
+     * @brief Compute partial derivative of standard deviation of measurements
+     * w.r.t. model outputs.
+     * @param it Timepoint index
+     * @param edata pointer to `amici::ExpData` data instance holding sigma values
+     */
+    void fdsigmaydy(int it, const ExpData *edata);
 
     /**
      * @brief Compute negative log-likelihood of measurements \f$ y \f$.

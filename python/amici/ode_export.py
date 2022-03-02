@@ -169,6 +169,11 @@ functions = {
             'const int ip, const realtype *w, const realtype *tcl, '
             'const realtype *dtcldp',
         ),
+    'dsigmaydy':
+        _FunctionInfo(
+            'realtype *dsigmaydy, const realtype t, const realtype *p, '
+            'const realtype *k, const realtype *y, const int ip',
+        ),
     'dsigmaydp':
         _FunctionInfo(
             'realtype *dsigmaydp, const realtype t, const realtype *p, '

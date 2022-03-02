@@ -567,7 +567,7 @@ class AbstractModel {
                          const realtype *k, const realtype *y);
 
     /**
-     * @brief Model-specific implementation of fsigmay
+     * @brief Model-specific implementation of fdsigmaydp
      * @param dsigmaydp partial derivative of standard deviation of measurements
      * @param t current time
      * @param p parameter vector
@@ -578,6 +578,20 @@ class AbstractModel {
     virtual void fdsigmaydp(realtype *dsigmaydp, const realtype t,
                             const realtype *p, const realtype *k,
                             const realtype *y, int ip);
+    /**
+     * @brief Model-specific implementation of fsigmay
+     * @param dsigmaydy partial derivative of standard deviation of measurements
+     * w.r.t. model outputs
+     * @param t current time
+     * @param p parameter vector
+     * @param k constant vector
+     * @param y model output at timepoint t
+     * @param ip sensitivity index
+     */
+    virtual void fdsigmaydy(realtype *dsigmaydy, const realtype t,
+                            const realtype *p, const realtype *k,
+                            const realtype *y, int ip);
+
 
     /**
      * @brief Model-specific implementation of fsigmaz

@@ -1504,6 +1504,38 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
     }
 }
 
+void Model::fdsigmaydy(const int it, const ExpData *edata) {
+    if (!ny)
+        return;
+
+    derived_state_.dsigmaydy_.assign(ny * nplist(), 0.0);
+
+    for (int ip = 0; ip < nplist(); ip++)
+        // get dsigmaydy slice (ny) for current timepoint and parameter
+        fdsigmaydy(&derived_state_.dsigmaydy_.at(ip * ny), getTimepoint(it),
+                   state_.unscaledParameters.data(),
+                   state_.fixedParameters.data(),
+                   derived_state_.y_.data(),
+                   plist(ip));
+
+   // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydy
+   // to zero
+    if (edata) {
+        for (int iy = 0; iy < nytrue; iy++) {
+            if (!edata->isSetObservedDataStdDev(it, iy))
+                continue;
+            for (int ip = 0; ip < nplist(); ip++) {
+                derived_state_.dsigmaydy_.at(ip * ny + iy) = 0.0;
+            }
+        }
+    }
+
+    if (always_check_finite_) {
+        app->checkFinite(derived_state_.dsigmaydy_, "dsigmaydy");
+    }
+}
+
+
 void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     if (!ny)
         return;
