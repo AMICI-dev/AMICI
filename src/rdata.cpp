@@ -142,7 +142,6 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
             srz.resize(nmaxevent * nz * nplist, 0.0);
         }
 
-        ssigmay.resize(nt * ny * nplist, 0.0);
         ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
         if (sensi >= SensitivityOrder::second &&
             sensi_meth == SensitivityMethod::forward)
@@ -311,10 +310,10 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
         }
 
         if (!ssigmay.empty())
-            model.getObservableSigmaSensitivity(
-                slice(ssigmay, it, nplist * ny),
-                sy.empty() ? gsl::span<realtype>() : slice(sy, it, nplist * ny),
-                it, edata, x_solver_, sx_solver_);
+            model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
+                                                slice(sy, it, nplist * ny),
+                                                it, edata, x_solver_,
+                                                sx_solver_);
     }
 }
 
