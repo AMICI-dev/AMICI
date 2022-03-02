@@ -852,12 +852,18 @@ class Model : public AbstractModel, public ModelDimensions {
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
      * @param ssigmay Buffer (shape `ny` x `nplist`, row-major)
+     * @param sy Sensitivity of time-resolved observables for current timepoint
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
+     * @param x State variables
+     * @param sx State sensitivities
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
-                                       const int it, const ExpData *edata);
+                                       gsl::span<const realtype> sy,
+                                       const int it, const ExpData *edata,
+                                       const AmiVector &x,
+                                       const AmiVectorArray &sx);
 
     /**
      * @brief Add time-resolved measurement negative log-likelihood \f$ Jy \f$.

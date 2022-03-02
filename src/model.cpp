@@ -849,9 +849,36 @@ void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
 }
 
 void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
-                                          const int it, const ExpData *edata) {
+                                          gsl::span<const realtype> sy,
+                                          const int it, const ExpData *edata,
+                                          const AmiVector &x,
+                                          const AmiVectorArray &sx) {
     fdsigmaydp(it, edata);
     writeSlice(derived_state_.dsigmaydp_, ssigmay);
+
+    if(pythonGenerated) {
+        // = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
+        // = dsigmaydy*sy+dsigmaydp
+
+        fdydp(getTimepoint(it), x);
+        fdydx(getTimepoint(it), x);
+        fdsigmaydy(it, edata);
+
+        derived_state_.sx_.resize(nx_solver * nplist());
+        sx.flatten_to_vector(derived_state_.sx_);
+
+        // compute 1.0 * dsigmaydp += 1.0*dsigmaydy*sy
+        // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
+        //             M  N                      M  K          K  N
+        //             ldc                       lda           ldb
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, ny, nplist(), ny, 1.0,
+                    derived_state_.dsigmaydy_.data(), ny,
+                    sy.data(), nx_solver, 1.0, ssigmay.data(), ny);
+    }
+
+    if (always_check_finite_)
+        checkFinite(ssigmay, "ssigmay");
 }
 
 void Model::addObservableObjective(realtype &Jy, const int it,
