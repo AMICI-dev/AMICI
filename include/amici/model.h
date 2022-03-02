@@ -860,8 +860,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                        gsl::span<const realtype> sy,
-                                       const int it, const ExpData *edata,
-                                       const AmiVector &x);
+                                       const int it, const ExpData *edata);
 
     /**
      * @brief Add time-resolved measurement negative log-likelihood \f$ Jy \f$.

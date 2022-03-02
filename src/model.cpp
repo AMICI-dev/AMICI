@@ -850,8 +850,7 @@ void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
 
 void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                           gsl::span<const realtype> sy,
-                                          const int it, const ExpData *edata,
-                                          const AmiVector &x) {
+                                          const int it, const ExpData *edata) {
     fdsigmaydp(it, edata);
     writeSlice(derived_state_.dsigmaydp_, ssigmay);
 
@@ -859,8 +858,6 @@ void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
         // ssigmay = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
         //         = dsigmaydy*sy+dsigmaydp
 
-        fdydp(getTimepoint(it), x);
-        fdydx(getTimepoint(it), x);
         fdsigmaydy(it, edata);
 
         // compute ssigmay = 1.0 * dsigmaydp + 1.0 * dsigmaydy * sy
@@ -1648,7 +1645,6 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
     // dJydy         nJ, nytrue x ny
     // dydp          nplist * ny
     // dJydp         nplist x nJ
-    // dJydsigma
     if (!ny)
         return;
 
