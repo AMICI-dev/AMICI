@@ -431,7 +431,7 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
 
     // If necessary, translate sensitivities to logarithmic parametrization
     if (get_logarithmic_parametrization()) {
-      for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
+      for (int i_node = 0; i_node < n_nodes(); i_node++) {
         for (int ip = 0; ip < nplist; ip++) {
           int node_offset = spline_offset + ip;
           realtype value = get_node_value(i_node);
