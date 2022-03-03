@@ -856,7 +856,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
-     * @param x State variables
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                        gsl::span<const realtype> sy,
