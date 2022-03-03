@@ -97,8 +97,8 @@ def test_nosensi(simple_sbml_model):
         assert rdata.status == amici.AMICI_ERROR
 
 
-def test_sbml2amici_observable_dependent_error(simple_sbml_model):
-    """Check gradients for model with observable-dependent error"""
+@pytest.fixture
+def observable_dependent_error_model(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     # add parameter and rate rule
     sbml_model.getSpecies("S1").setInitialConcentration(1.0)
@@ -117,30 +117,39 @@ def test_sbml2amici_observable_dependent_error(simple_sbml_model):
         sbml_importer.sbml2amici(
             model_name="test",
             output_dir=tmpdir,
-            observables={'observed_s1': {'formula': 'S1'}},
-            sigmas={'observed_s1': '0.1 + relative_sigma * observed_s1'},
+            observables={'observable_s1': {'formula': 'S1'},
+                         'observable_s1_scaled': {'formula': '0.5 * S1'}},
+            sigmas={'observable_s1': '0.1 + relative_sigma * observable_s1',
+                    'observable_s1_scaled': '0.02 * observable_s1_scaled'},
         )
-        model_module = amici.import_model_module(module_name='test',
-                                                 module_path=tmpdir)
-        model = model_module.getModel()
-        model.setTimepoints(np.linspace(0, 60, 61))
-        solver = model.getSolver()
+        yield amici.import_model_module(module_name='test',
+                                        module_path=tmpdir)
 
-        # generate artificial data
-        rdata = amici.runAmiciSimulation(model, solver)
-        assert np.allclose(rdata.sigmay, 0.1 + 0.05 * rdata.y)
-        edata = amici.ExpData(rdata, 1.0, 0.0)
-        edata.setObservedDataStdDev(np.nan)
 
-        # check sensitivities
-        solver.setSensitivityOrder(amici.SensitivityOrder.first)
-        for sensitivity_method in (amici.SensitivityMethod.forward,
-                                   amici.SensitivityMethod.adjoint):
-            solver.setSensitivityMethod(sensitivity_method)
-            check_derivatives(model, solver, edata)
-            rdata = amici.runAmiciSimulation(model, solver, edata)
-            assert rdata.sllh[0] != 0.0
-            assert rdata.sllh[1] != 0.0
+def test_sbml2amici_observable_dependent_error(observable_dependent_error_model):
+    """Check gradients for model with observable-dependent error"""
+    model_module = observable_dependent_error_model
+    model = model_module.getModel()
+    model.setTimepoints(np.linspace(0, 60, 61))
+    solver = model.getSolver()
+
+    # generate artificial data
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert np.allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0])
+    assert np.allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1])
+    edata = amici.ExpData(rdata, 1.0, 0.0)
+    edata.setObservedDataStdDev(np.nan)
+
+    # check sensitivities
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    # FSA
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    assert np.any(rdata.ssigmay != 0.0)
+    check_derivatives(model, solver, edata)
+    # ASA
+    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+    check_derivatives(model, solver, edata)
 
 
 @pytest.fixture
