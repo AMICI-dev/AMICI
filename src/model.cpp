@@ -1566,6 +1566,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     if (pythonGenerated) {
         fdJydsigma(it, x, edata);
         fdsigmaydy(it, &edata);
+        SUNMatrixWrapper tmp_dense(nJ, ny);
 
         for (int iyt = 0; iyt < nytrue; iyt++) {
             if (!derived_state_.dJydy_.at(iyt).capacity())
@@ -1583,13 +1584,27 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    derived_state_.sigmay_.data(),
                    edata.getObservedDataPtr(it));
 
-            // dJydy_ += dJydsigma * dsigmaydy
+            // dJydy += dJydsigma * dsigmaydy
             // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
+            // sparse    dense       dense
+            tmp_dense.zero();
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, ny, ny, 1.0,
                         &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
                         derived_state_.dsigmaydy_.data(), ny, 1.0,
-                        derived_state_.dJydy_.at(iyt).data(), nJ);
+                        tmp_dense.data(), nJ);
+
+            auto tmp_sparse = SUNSparseFromDenseMatrix(
+                tmp_dense.get(), 0.0, CSC_MAT);
+            auto ret = SUNMatScaleAdd(1.0, derived_state_.dJydy_.at(iyt).get(),
+                                      tmp_sparse);
+            if(ret != SUNMAT_SUCCESS) {
+                SUNMatDestroy(tmp_sparse);
+                throw AmiException("SUNMatScaleAdd failed with status %d in %s",
+                                   ret, __func__);
+            }
+            SUNMatDestroy(tmp_sparse);
+            derived_state_.dJydy_.at(iyt).refresh();
 
             if (always_check_finite_) {
                 app->checkFinite(
