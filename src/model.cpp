@@ -1564,6 +1564,9 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     fsigmay(it, &edata);
 
     if (pythonGenerated) {
+        fdJydsigma(it, x, edata);
+        fdsigmaydy(it, &edata);
+
         for (int iyt = 0; iyt < nytrue; iyt++) {
             if (!derived_state_.dJydy_.at(iyt).capacity())
                 continue;
@@ -1580,12 +1583,8 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    derived_state_.sigmay_.data(),
                    edata.getObservedDataPtr(it));
 
-            // add dJydsigma * dsigmaydy
-            fdJydsigma(it, x, edata);
-            fdsigmaydy(it, &edata);
-
             // dJydy_ += dJydsigma * dsigmaydy
-            // (nJ,ny)    (nJ,ny)  * (ny,ny)
+            // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, ny, ny, 1.0,
                         &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
