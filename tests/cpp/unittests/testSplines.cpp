@@ -375,7 +375,7 @@ TEST(Splines, SplineUniformSensitivity)
         {0.75,  {-1.07812,  0.179688, 0.1875}},
         {1.00,  {-6.0,      1.0,      3.0}},
     };
-    test_spline_sensitivities(spline, expectations, 1e-6, 0.0);
+    test_spline_sensitivities(spline, expectations, 1e-6, 1e-6);
     ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
     ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
@@ -412,7 +412,7 @@ TEST(Splines, SplineNonUniformSensitivity)
         {0.75, {-2.625,   0.4375,  0.921875}},
         {1.00, {-6.0,     1.0,     3.0}},
     };
-    test_spline_sensitivities(spline, expectations, 1e-5, 0.0);
+    test_spline_sensitivities(spline, expectations, 1e-5, 1e-6);
     ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
     ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
@@ -492,7 +492,7 @@ TEST(Splines, SplineLogarithmicSensitivity)
         {0.75, {-0.820743,  0.13679,  -0.0577988}},
         {1.00, {-6.0,       1.0,       3.0}},
     };
-    test_spline_sensitivities(spline, expectations, 1e-6, 0.0);
+    test_spline_sensitivities(spline, expectations, 1e-6, 1e-6);
     ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
     ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
