@@ -1214,6 +1214,10 @@ class SbmlImporter:
         # add user-provided observables or make all species, and compartments
         # with assignment rules, observable
         if observables:
+            # gather local symbols before parsing observable and sigma formulas
+            for obs in observables.keys():
+                self.add_local_symbol(obs, symbol_with_assumptions(obs))
+
             self.symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(obs): {
                     'name': definition.get('name', f'y{iobs}'),
@@ -1230,13 +1234,9 @@ class SbmlImporter:
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
             # check for nesting of observables (unsupported)
-            #  performing string-based check, because lhs symbols are `real`,
-            #  whereas rhs symbols are not.
-            observable_syms = {
-                str(obs) for obs in self.symbols[SymbolId.OBSERVABLE].keys()
-            }
+            observable_syms = set(self.symbols[SymbolId.OBSERVABLE].keys())
             for obs in self.symbols[SymbolId.OBSERVABLE].values():
-                if any(str(sym) in observable_syms
+                if any(sym in observable_syms
                        for sym in obs['value'].free_symbols):
                     raise ValueError(
                         "Nested observables are not supported, "

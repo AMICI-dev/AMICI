@@ -228,10 +228,15 @@ struct ModelStateDerived {
     /** data standard deviation for current timepoint (dimension: ny) */
     std::vector<realtype> sigmay_;
 
-    /** temporary storage for  parameter derivative of data standard deviation,
+    /** temporary storage for parameter derivative of data standard deviation,
      * (dimension: ny x nplist, row-major)
      */
     std::vector<realtype> dsigmaydp_;
+
+    /** temporary storage for observable derivative of data standard deviation,
+     * (dimension: ny x ny, row-major)
+     */
+    std::vector<realtype> dsigmaydy_;
 
     /** temporary storage for event-resolved observable (dimension: nz) */
     std::vector<realtype> z_;

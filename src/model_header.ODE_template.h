@@ -56,6 +56,7 @@ TPL_DYDX_DEF
 TPL_DYDP_DEF
 TPL_SIGMAY_DEF
 TPL_DSIGMAYDP_DEF
+TPL_DSIGMAYDY_DEF
 TPL_W_DEF
 TPL_X0_DEF
 TPL_X0_FIXEDPARAMETERS_DEF
@@ -292,6 +293,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                 const realtype *h) override {}
 
     TPL_DSIGMAYDP_IMPL
+
+    TPL_DSIGMAYDY_IMPL
 
     /**
      * @brief model specific implementation of fsigmaz

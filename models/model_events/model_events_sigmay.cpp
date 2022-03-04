@@ -10,7 +10,7 @@ namespace amici {
 
 namespace model_model_events{
 
-void sigmay_model_events(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
+void sigmay_model_events(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y) {
   sigmay[0] = 1.0;
 }
 

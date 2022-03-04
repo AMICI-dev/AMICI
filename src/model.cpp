@@ -849,9 +849,29 @@ void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
 }
 
 void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
+                                          gsl::span<const realtype> sy,
                                           const int it, const ExpData *edata) {
     fdsigmaydp(it, edata);
     writeSlice(derived_state_.dsigmaydp_, ssigmay);
+
+    if(pythonGenerated) {
+        // ssigmay = dsigmaydy*(dydx_solver*sx+dydp)+dsigmaydp
+        //         = dsigmaydy*sy+dsigmaydp
+
+        fdsigmaydy(it, edata);
+
+        // compute ssigmay = 1.0 * dsigmaydp + 1.0 * dsigmaydy * sy
+        // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
+        //             M  N                      M  K          K  N
+        //             ldc                       lda           ldb
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, ny, nplist(), ny, 1.0,
+                    derived_state_.dsigmaydy_.data(), ny,
+                    sy.data(), ny, 1.0, ssigmay.data(), ny);
+    }
+
+    if (always_check_finite_)
+        checkFinite(ssigmay, "ssigmay");
 }
 
 void Model::addObservableObjective(realtype &Jy, const int it,
@@ -1447,8 +1467,11 @@ void Model::fsigmay(const int it, const ExpData *edata) {
 
     derived_state_.sigmay_.assign(ny, 0.0);
 
-    fsigmay(derived_state_.sigmay_.data(), getTimepoint(it), state_.unscaledParameters.data(),
-            state_.fixedParameters.data());
+    fsigmay(derived_state_.sigmay_.data(),
+            getTimepoint(it),
+            state_.unscaledParameters.data(),
+            state_.fixedParameters.data(),
+            derived_state_.y_.data());
 
     if (edata) {
         auto sigmay_edata = edata->getObservedDataStdDevPtr(it);
@@ -1481,6 +1504,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
         fdsigmaydp(&derived_state_.dsigmaydp_.at(ip * ny), getTimepoint(it),
                    state_.unscaledParameters.data(),
                    state_.fixedParameters.data(),
+                   derived_state_.y_.data(),
                    plist(ip));
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp
@@ -1500,6 +1524,38 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
     }
 }
 
+void Model::fdsigmaydy(const int it, const ExpData *edata) {
+    if (!ny)
+        return;
+
+    derived_state_.dsigmaydy_.assign(ny * nplist(), 0.0);
+
+    for (int ip = 0; ip < nplist(); ip++)
+        // get dsigmaydy slice (ny) for current timepoint and parameter
+        fdsigmaydy(&derived_state_.dsigmaydy_.at(ip * ny), getTimepoint(it),
+                   state_.unscaledParameters.data(),
+                   state_.fixedParameters.data(),
+                   derived_state_.y_.data(),
+                   plist(ip));
+
+   // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydy
+   // to zero
+    if (edata) {
+        for (int iy = 0; iy < nytrue; iy++) {
+            if (!edata->isSetObservedDataStdDev(it, iy))
+                continue;
+            for (int ip = 0; ip < nplist(); ip++) {
+                derived_state_.dsigmaydy_.at(ip * ny + iy) = 0.0;
+            }
+        }
+    }
+
+    if (always_check_finite_) {
+        app->checkFinite(derived_state_.dsigmaydy_, "dsigmaydy");
+    }
+}
+
+
 void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     if (!ny)
         return;
@@ -1508,6 +1564,10 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     fsigmay(it, &edata);
 
     if (pythonGenerated) {
+        fdJydsigma(it, x, edata);
+        fdsigmaydy(it, &edata);
+        SUNMatrixWrapper tmp_dense(nJ, ny);
+
         for (int iyt = 0; iyt < nytrue; iyt++) {
             if (!derived_state_.dJydy_.at(iyt).capacity())
                 continue;
@@ -1523,6 +1583,25 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    state_.fixedParameters.data(), derived_state_.y_.data(),
                    derived_state_.sigmay_.data(),
                    edata.getObservedDataPtr(it));
+
+            // dJydy += dJydsigma * dsigmaydy
+            // C(nJ,ny)  A(nJ,ny)  * B(ny,ny)
+            // sparse    dense       dense
+            tmp_dense.zero();
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, ny, ny, 1.0,
+                        &derived_state_.dJydsigma_.at(iyt * nJ * ny), nJ,
+                        derived_state_.dsigmaydy_.data(), ny, 1.0,
+                        tmp_dense.data(), nJ);
+
+            auto tmp_sparse = SUNMatrixWrapper(tmp_dense, 0.0, CSC_MAT);
+            auto ret = SUNMatScaleAdd(1.0, derived_state_.dJydy_.at(iyt).get(),
+                                      tmp_sparse.get());
+            if(ret != SUNMAT_SUCCESS) {
+                throw AmiException("SUNMatScaleAdd failed with status %d in %s",
+                                   ret, __func__);
+            }
+            derived_state_.dJydy_.at(iyt).refresh();
 
             if (always_check_finite_) {
                 app->checkFinite(
@@ -1577,7 +1656,6 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
     // dJydy         nJ, nytrue x ny
     // dydp          nplist * ny
     // dJydp         nplist x nJ
-    // dJydsigma
     if (!ny)
         return;
 

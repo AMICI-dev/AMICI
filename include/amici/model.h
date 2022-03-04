@@ -115,6 +115,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdrzdp;
     using AbstractModel::fdrzdx;
     using AbstractModel::fdsigmaydp;
+    using AbstractModel::fdsigmaydy;
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
     using AbstractModel::fdwdp_colptrs;
@@ -851,11 +852,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
      * @param ssigmay Buffer (shape `ny` x `nplist`, row-major)
+     * @param sy Sensitivity of time-resolved observables for current timepoint
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
+                                       gsl::span<const realtype> sy,
                                        const int it, const ExpData *edata);
 
     /**
@@ -1395,6 +1398,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata pointer to `amici::ExpData` data instance holding sigma values
      */
     void fdsigmaydp(int it, const ExpData *edata);
+
+    /**
+     * @brief Compute partial derivative of standard deviation of measurements
+     * w.r.t. model outputs.
+     * @param it Timepoint index
+     * @param edata pointer to `amici::ExpData` data instance holding sigma values
+     */
+    void fdsigmaydy(int it, const ExpData *edata);
 
     /**
      * @brief Compute negative log-likelihood of measurements \f$ y \f$.

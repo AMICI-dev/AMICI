@@ -339,7 +339,8 @@ void
 AbstractModel::fsigmay(realtype* /*sigmay*/,
                        const realtype /*t*/,
                        const realtype* /*p*/,
-                       const realtype* /*k*/)
+                       const realtype* /*k*/,
+                       const realtype */*y*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
@@ -351,7 +352,21 @@ AbstractModel::fdsigmaydp(realtype* /*dsigmaydp*/,
                           const realtype /*t*/,
                           const realtype* /*p*/,
                           const realtype* /*k*/,
+                          const realtype */*y*/,
                           const int /*ip*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void
+AbstractModel::fdsigmaydy(realtype */*dsigmaydy*/,
+                          const realtype /*t*/,
+                          const realtype */*p*/,
+                          const realtype */*k*/,
+                          const realtype */*y*/,
+                          int /*ip*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",

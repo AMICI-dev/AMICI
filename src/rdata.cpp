@@ -142,7 +142,6 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
             srz.resize(nmaxevent * nz * nplist, 0.0);
         }
 
-        ssigmay.resize(nt * ny * nplist, 0.0);
         ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
         if (sensi >= SensitivityOrder::second &&
             sensi_meth == SensitivityMethod::forward)
@@ -303,16 +302,17 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
 
     if (sensi >= SensitivityOrder::first && nplist > 0) {
 
-        if (!ssigmay.empty())
-            model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
-                                                it, edata);
-
         if (sensi_meth == SensitivityMethod::forward) {
             getDataSensisFSA(it, model, edata);
         } else if (edata && !sllh.empty()) {
             model.addPartialObservableObjectiveSensitivity(
                 sllh, s2llh, it, x_solver_, *edata);
         }
+
+        if (!ssigmay.empty())
+            model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
+                                                slice(sy, it, nplist * ny),
+                                                it, edata);
     }
 }
 
@@ -866,7 +866,7 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
-    model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
+    model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata);
 
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
@@ -904,7 +904,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
-    model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
+    model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata);
 
     /*
      * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+log%28s%28u%2Cv%29%29+%2B+0.5+*+%28r%28u%2Cv%29%2Fs%28u%2Cv%29%29%5E2
