@@ -1594,11 +1594,9 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                         derived_state_.dsigmaydy_.data(), ny, 1.0,
                         tmp_dense.data(), nJ);
 
-            auto tmp_sparse = SUNSparseFromDenseMatrix(
-                tmp_dense.get(), 0.0, CSC_MAT);
+            auto tmp_sparse = SUNMatrixWrapper(tmp_dense, 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(1.0, derived_state_.dJydy_.at(iyt).get(),
-                                      tmp_sparse);
-            SUNMatDestroy(tmp_sparse);
+                                      tmp_sparse.get());
             if(ret != SUNMAT_SUCCESS) {
                 throw AmiException("SUNMatScaleAdd failed with status %d in %s",
                                    ret, __func__);
