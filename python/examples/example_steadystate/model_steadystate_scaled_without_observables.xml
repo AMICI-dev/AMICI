@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
+  <model substanceUnits="mole" timeUnits="second" extentUnits="mole">
+    <listOfUnitDefinitions>
+      <unitDefinition id="litre_per_second">
+        <listOfUnits>
+          <unit kind="litre" exponent="1" scale="0" multiplier="1"/>
+          <unit kind="second" exponent="-1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="mole_per_litre">
+        <listOfUnits>
+          <unit kind="mole" exponent="1" scale="0" multiplier="1"/>
+          <unit kind="litre" exponent="-1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="mole_per_second">
+        <listOfUnits>
+          <unit kind="mole" exponent="1" scale="0" multiplier="1"/>
+          <unit kind="second" exponent="-1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="litre2_per_mole_per_second">
+        <listOfUnits>
+          <unit kind="litre" exponent="2" scale="0" multiplier="1"/>
+          <unit kind="mole" exponent="-1" scale="0" multiplier="1"/>
+          <unit kind="second" exponent="-1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="c1" spatialDimensions="3" size="1" units="litre" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="x1" name="x1" compartment="c1" initialAmount="0.1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="x2" name="x2" compartment="c1" initialAmount="0.4" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="x3" name="x3" compartment="c1" initialAmount="0.7" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="p1" name="p1" value="1" units="litre2_per_mole_per_second" constant="true"/>
+      <parameter id="p2" name="p2" value="0.5" units="litre2_per_mole_per_second" constant="true"/>
+      <parameter id="p3" name="p3" value="0.4" units="litre_per_second" constant="true"/>
+      <parameter id="p4" name="p4" value="2" units="litre_per_second" constant="true"/>
+      <parameter id="p5" name="p5" value="0.1" units="mole_per_second" constant="true"/>
+      <parameter id="k0" name="k0" value="1" units="litre_per_second" constant="true"/>
+      <parameter id="observable_x1" value="1" units="mole_per_litre" constant="false"/>
+      <parameter id="observable_x2" value="1" units="mole_per_litre" constant="false"/>
+      <parameter id="observable_x3" value="1" units="mole_per_litre" constant="false"/>
+      <parameter id="scaling_x1" name="scale" value="2" units="dimensionless" constant="true"/>
+      <parameter id="observable_x1_scaled" value="1" units="mole_per_litre" constant="false"/>
+      <parameter id="offset_x2" name="offset" value="3" units="mole_per_litre" constant="true"/>
+      <parameter id="observable_x2_offsetted" value="1" units="mole_per_litre" constant="false"/>
+      <parameter id="observable_x1withsigma_sigma" name="sigma" value="0.2" units="dimensionless" constant="true"/>
+      <parameter id="observable_x1withsigma" value="1" units="mole_per_litre" constant="false"/>
+    </listOfParameters>
+    <listOfRules>
+      <assignmentRule variable="observable_x1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> x1 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="observable_x2">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> x2 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="observable_x3">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> x3 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="observable_x1_scaled">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> scaling_x1 </ci>
+            <ci> x1 </ci>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="observable_x2_offsetted">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <ci> offset_x2 </ci>
+            <ci> x2 </ci>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="observable_x1withsigma">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> x1 </ci>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction id="r1" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="x1" stoichiometry="2" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="x2" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p1 </ci>
+              <apply>
+                <power/>
+                <ci> x1 </ci>
+                <cn type="integer"> 2 </cn>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r2" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="x1" stoichiometry="1" constant="true"/>
+          <speciesReference species="x2" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="x3" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p2 </ci>
+              <ci> x1 </ci>
+              <ci> x2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r3" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="x2" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="x1" stoichiometry="2" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p3 </ci>
+              <ci> x2 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r4" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="x3" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="x1" stoichiometry="1" constant="true"/>
+          <speciesReference species="x2" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> p4 </ci>
+              <ci> x3 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r5" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="x3" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> k0 </ci>
+              <ci> x3 </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="r6" reversible="false" fast="false">
+        <listOfProducts>
+          <speciesReference species="x1" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <ci> p5 </ci>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>
+
