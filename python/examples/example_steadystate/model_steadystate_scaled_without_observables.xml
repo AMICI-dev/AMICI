@@ -45,6 +45,7 @@
       <parameter id="k0" name="k0" value="1" units="litre_per_second" constant="true"/>
       <parameter id="scaling_x1" name="scale" value="2" units="dimensionless" constant="true"/>
       <parameter id="offset_x2" name="offset" value="3" units="mole_per_litre" constant="true"/>
+      <parameter id="observable_x1withsigma_sigma" name="sigma" value="0.2" units="dimensionless" constant="true"/>
     </listOfParameters>
     <listOfReactions>
       <reaction id="r1" reversible="false" fast="false">
