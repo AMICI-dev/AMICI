@@ -1598,12 +1598,11 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                 tmp_dense.get(), 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(1.0, derived_state_.dJydy_.at(iyt).get(),
                                       tmp_sparse);
+            SUNMatDestroy(tmp_sparse);
             if(ret != SUNMAT_SUCCESS) {
-                SUNMatDestroy(tmp_sparse);
                 throw AmiException("SUNMatScaleAdd failed with status %d in %s",
                                    ret, __func__);
             }
-            SUNMatDestroy(tmp_sparse);
             derived_state_.dJydy_.at(iyt).refresh();
 
             if (always_check_finite_) {
