@@ -20,9 +20,28 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
             return code
         except TypeError as e:
             raise ValueError(
-                f'Encountered unsupported function in expression "{expr}": '
-                f'{e}!'
-            )
+                f'Encountered unsupported function in expression "{expr}"'
+            ) from e
+
+    def _print_Max(self, expr):
+        from sympy.functions.elementary.miscellaneous import Max
+        # C++ doesn't like mixing int and double for arguments for min/max
+        arg0 = sp.Float(expr.args[0]) if expr.args[0].is_number \
+            else expr.args[0]
+        if len(expr.args) == 1:
+            return self._print(arg0)
+        return "%smax(%s, %s)" % (self._ns, self._print(arg0),
+                                  self._print(Max(*expr.args[1:])))
+
+    def _print_Min(self, expr):
+        from sympy.functions.elementary.miscellaneous import Min
+        # C++ doesn't like mixing int and double for arguments for min/max
+        arg0 = sp.Float(expr.args[0]) if expr.args[0].is_number \
+            else expr.args[0]
+        if len(expr.args) == 1:
+            return self._print(arg0)
+        return "%smin(%s, %s)" % (self._ns, self._print(arg0),
+                                  self._print(Min(*expr.args[1:])))
 
     def _get_sym_lines_array(
             self,
