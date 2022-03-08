@@ -17,8 +17,10 @@ import re
 import shutil
 import subprocess
 import sys
+import sysconfig
 from dataclasses import dataclass
 from itertools import chain
+from pathlib import Path
 from string import Template
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
                     Union)
@@ -42,7 +44,6 @@ try:
     import pysb
 except ImportError:
     pysb = None
-
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -2295,6 +2296,7 @@ class ODEExporter:
         self._write_model_header_cpp()
         self._write_c_make_file()
         self._write_swig_files()
+        self._copy_amici_base()
         self._write_module_setup()
 
         shutil.copy(CXX_MAIN_TEMPLATE_FILE,
@@ -3024,6 +3026,16 @@ class ODEExporter:
         )
         shutil.copy(SWIG_CMAKE_TEMPLATE_FILE,
                     os.path.join(self.model_swig_path, 'CMakeLists.txt'))
+
+    def _copy_amici_base(self):
+        """Copy files for libamici to model package directory"""
+        # prebuilt amici extension
+        package_path = Path(self.model_path) / self.model_name
+        shutil.copy(Path(__file__).parent / "amici.py",
+                    package_path / "core.py")
+        ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+        shutil.copy(Path(__file__).parent / f"_amici{ext_suffix}",
+                    package_path)
 
     def _write_module_setup(self) -> None:
         """
