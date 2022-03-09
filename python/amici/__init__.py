@@ -88,6 +88,7 @@ amiciModulePath = os.path.dirname(__file__)
 
 has_clibs = any([os.path.isfile(os.path.join(amici_path, wrapper))
                  for wrapper in ['amici.py', 'amici_without_hdf5.py']])
+hdf5_enabled = False
 
 # Get version number from file
 with open(os.path.join(amici_path, 'version.txt')) as f:
@@ -100,6 +101,9 @@ if not _imported_from_setup():
     if has_clibs:
         from . import amici
         from .amici import *
+        # has to be done before importing readSolverSettingsFromHDF5
+        #  from .swig_wrappers
+        hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
         from .swig_wrappers import *
 
         # These modules require the swig interface and other dependencies
@@ -122,7 +126,6 @@ if not _imported_from_setup():
     except ImportError:
         pass
 
-hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
 
 
 class add_path:
