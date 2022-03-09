@@ -2,7 +2,7 @@
 import sys
 from contextlib import contextmanager, suppress
 from typing import List, Optional, Union, Sequence, Dict, Any
-import amici
+import amici.amici as amici_swig
 from . import numpy
 
 __all__ = [
@@ -39,7 +39,8 @@ def _capture_cstdout():
 
 def _get_ptr(
         obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData]
-) -> Union['amici.Model', 'amici.ExpData', 'amici.Solver', 'amici.ReturnData']:
+) -> Union['amici_swig.Model', 'amici_swig.ExpData',
+           'amici_swig.Solver', 'amici_swig.ReturnData']:
     """
     Convenience wrapper that returns the smart pointer pointee, if applicable
 
@@ -49,8 +50,8 @@ def _get_ptr(
     :returns:
         Non-smart pointer
     """
-    if isinstance(obj, (amici.ModelPtr, amici.ExpDataPtr, amici.SolverPtr,
-                        amici.ReturnDataPtr)):
+    if isinstance(obj, (amici_swig.ModelPtr, amici_swig.ExpDataPtr,
+                        amici_swig.SolverPtr, amici_swig.ReturnDataPtr)):
         return obj.get()
     return obj
 
@@ -78,12 +79,12 @@ def runAmiciSimulation(
         ReturnData object with simulation results
     """
     with _capture_cstdout():
-        rdata = amici.runAmiciSimulation(_get_ptr(solver), _get_ptr(edata),
-                                         _get_ptr(model))
+        rdata = amici_swig.runAmiciSimulation(
+            _get_ptr(solver), _get_ptr(edata), _get_ptr(model))
     return numpy.ReturnDataView(rdata)
 
 
-def ExpData(*args) -> 'amici.ExpData':
+def ExpData(*args) -> 'amici_swig.ExpData':
     """
     Convenience wrapper for :py:class:`amici.amici.ExpData` constructors
 
@@ -91,19 +92,17 @@ def ExpData(*args) -> 'amici.ExpData':
 
     :returns: ExpData Instance
     """
-    import amici.amici as ext
-
     if isinstance(args[0], numpy.ReturnDataView):
-        return ext.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
-    elif isinstance(args[0], (ext.ExpData, ext.ExpDataPtr)):
+        return amici_swig.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
+    elif isinstance(args[0], (amici_swig.ExpData, amici_swig.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed, and you are glad this
         # wrapper did not break.
-        return ext.ExpData(_get_ptr(args[0]), *args[1:])
-    elif isinstance(args[0], (ext.Model, ext.ModelPtr)):
-        return ext.ExpData(_get_ptr(args[0]))
+        return amici_swig.ExpData(_get_ptr(args[0]), *args[1:])
+    elif isinstance(args[0], (amici_swig.Model, amici_swig.ModelPtr)):
+        return amici_swig.ExpData(_get_ptr(args[0]))
     else:
-        return ext.ExpData(*args)
+        return amici_swig.ExpData(*args)
 
 
 def runAmiciSimulations(
@@ -126,12 +125,14 @@ def runAmiciSimulations(
     :returns: list of simulation results
     """
     with _capture_cstdout():
-        edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
-        rdata_ptr_list = amici.runAmiciSimulations(_get_ptr(solver),
-                                                   edata_ptr_vector,
-                                                   _get_ptr(model),
-                                                   failfast,
-                                                   num_threads)
+        edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
+        rdata_ptr_list = amici_swig.runAmiciSimulations(
+            _get_ptr(solver),
+            edata_ptr_vector,
+            _get_ptr(model),
+            failfast,
+            num_threads
+        )
     return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
 
 
@@ -147,7 +148,7 @@ def readSolverSettingsFromHDF5(
     :param solver: Solver instance to which settings will be transferred
     :param location: location of solver settings in hdf5 file
     """
-    amici.readSolverSettingsFromHDF5(file, _get_ptr(solver), location)
+    amici_swig.readSolverSettingsFromHDF5(file, _get_ptr(solver), location)
 
 
 def writeSolverSettingsToHDF5(
@@ -163,7 +164,7 @@ def writeSolverSettingsToHDF5(
     :param solver: Solver instance from which settings will be stored
     :param location: location of solver settings in hdf5 file
     """
-    amici.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
+    amici_swig.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
 
 
 # Values are suffixes of `get[...]` and `set[...]` `amici.Model` methods.
