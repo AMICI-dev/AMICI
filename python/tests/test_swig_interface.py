@@ -299,10 +299,10 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         'setParametersByNameRegex',
         'setUnscaledInitialStateSensitivities',
     ]
-
+    from amici.swig_wrappers import model_instance_settings
     handled = [
         name
-        for names in amici.model_instance_settings
+        for names in model_instance_settings
         for name in (
             names
             if isinstance(names, tuple) else
