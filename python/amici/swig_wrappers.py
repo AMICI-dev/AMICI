@@ -91,17 +91,19 @@ def ExpData(*args) -> 'amici.ExpData':
 
     :returns: ExpData Instance
     """
+    import amici.amici as ext
+
     if isinstance(args[0], numpy.ReturnDataView):
-        return amici.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
-    elif isinstance(args[0], (amici.ExpData, amici.ExpDataPtr)):
+        return ext.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
+    elif isinstance(args[0], (ext.ExpData, ext.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed, and you are glad this
         # wrapper did not break.
-        return amici.ExpData(_get_ptr(args[0]), *args[1:])
-    elif isinstance(args[0], (amici.Model, amici.ModelPtr)):
-        return amici.ExpData(_get_ptr(args[0]))
+        return ext.ExpData(_get_ptr(args[0]), *args[1:])
+    elif isinstance(args[0], (ext.Model, ext.ModelPtr)):
+        return ext.ExpData(_get_ptr(args[0]))
     else:
-        return amici.ExpData(*args)
+        return ext.ExpData(*args)
 
 
 def runAmiciSimulations(
