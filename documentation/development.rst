@@ -56,7 +56,7 @@ process described below:
    -  Run ``scripts/run-doxygen.sh`` to check completeness of your
       documentation
 
--  Make sure your code is compatible with C++11, ``gcc`` and ``clang``
+-  Make sure your code is compatible with C++14, ``gcc`` and ``clang``
    (our CI pipeline will do this for you)
 
 -  When adding new functionality, please also provide test cases (see
@@ -99,7 +99,7 @@ General
 Python
 ^^^^^^
 
--  We want to be compatible with Python 3.7
+-  We want to be compatible with Python 3.8
 
 -  For the Python code we want to follow
    `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__. Although this
