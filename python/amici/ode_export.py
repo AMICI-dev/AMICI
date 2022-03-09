@@ -172,7 +172,7 @@ functions = {
     'dsigmaydy':
         _FunctionInfo(
             'realtype *dsigmaydy, const realtype t, const realtype *p, '
-            'const realtype *k, const realtype *y, const int ip',
+            'const realtype *k, const realtype *y'
         ),
     'dsigmaydp':
         _FunctionInfo(

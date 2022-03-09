@@ -1530,22 +1530,20 @@ void Model::fdsigmaydy(const int it, const ExpData *edata) {
 
     derived_state_.dsigmaydy_.assign(ny * ny, 0.0);
 
-    for (int ip = 0; ip < nplist(); ip++)
-        // get dsigmaydy slice (ny) for current timepoint and parameter
-        fdsigmaydy(&derived_state_.dsigmaydy_.at(ip * ny), getTimepoint(it),
-                   state_.unscaledParameters.data(),
-                   state_.fixedParameters.data(),
-                   derived_state_.y_.data(),
-                   plist(ip));
+    // get dsigmaydy slice (ny) for current timepoint and parameter
+    fdsigmaydy(derived_state_.dsigmaydy_.data(), getTimepoint(it),
+               state_.unscaledParameters.data(),
+               state_.fixedParameters.data(),
+               derived_state_.y_.data());
 
    // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydy
    // to zero
     if (edata) {
-        for (int iy = 0; iy < nytrue; iy++) {
-            if (!edata->isSetObservedDataStdDev(it, iy))
+        for (int isigmay = 0; isigmay < nytrue; ++isigmay) {
+            if (!edata->isSetObservedDataStdDev(it, isigmay))
                 continue;
-            for (int ip = 0; ip < nplist(); ip++) {
-                derived_state_.dsigmaydy_.at(ip * ny + iy) = 0.0;
+            for (int iy = 0; iy < nytrue; ++iy) {
+                derived_state_.dsigmaydy_.at(isigmay * ny + iy) = 0.0;
             }
         }
     }
