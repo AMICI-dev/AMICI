@@ -982,12 +982,9 @@ class ODEModel:
         Code printer to generate C++ code
     """
 
-    def __init__(
-            self, verbose: Optional[Union[bool, int]] = False,
-            simplify: Optional[Callable]
-            = lambda x: sp.powsimp(x, deep=True).subs(1.0, 1),
-            cache_simplify: bool = False
-    ):
+    def __init__(self, verbose: Optional[Union[bool, int]] = False,
+                 simplify: Optional[Callable] = sp.powsimp,
+                 cache_simplify: bool = False):
         """
         Create a new ODEModel instance.
 
