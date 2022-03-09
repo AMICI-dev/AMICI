@@ -252,7 +252,7 @@ def smart_subs_dict(sym: sp.Expr,
     for substitution in s:
         # note that substitution may change free symbols, so we have to do
         # this recursively
-        if substitution[0] in sym.free_symbols:
+        if sym.has(substitution[0]):
             sym = sym.subs(*substitution)
     return sym
 
@@ -273,11 +273,7 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
     :return:
         substituted expression
     """
-
-    if old in element.free_symbols:
-        return element.subs(old, new)
-
-    return element
+    return element.subs(old, new) if element.has(old) else element
 
 
 def toposort_symbols(symbols: SymbolDef,
