@@ -209,6 +209,9 @@ def test_compute_moiety_conservation_laws_demartino2014(
     return runtime
 
 
+@pytest.mark.skipif(
+    os.environ.get('GITHUB_JOB') == 'valgrind',
+    reason="Performance test under valgrind is not meaningful.")
 @log_execution_time("Detecting moiety conservation laws", logger)
 def test_cl_detect_execution_time(data_demartino2014):
     """Test execution time stays within a certain predefined bound.
