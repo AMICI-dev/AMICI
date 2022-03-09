@@ -129,18 +129,20 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     i_setter = 1
 
     # All settings are tested.
-    assert set(model_instance_settings0) == set(amici.model_instance_settings)
+    assert set(model_instance_settings0) \
+           == set(amici.swig_wrappers.model_instance_settings)
 
     # Skip settings with interdependencies.
     model_instance_settings = \
         {k: v for k, v in model_instance_settings0.items() if v is not None}
 
     # All custom values are different to default values.
-    assert all([
+    assert all(
         default != custom
         for name, (default, custom) in model_instance_settings.items()
         if name != 'ReinitializeFixedParameterInitialStates'
-    ])
+    )
+
 
     # All default values are as expected.
     for name, (default, custom) in model_instance_settings.items():
@@ -173,11 +175,11 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         if model_instance_settings0[name] is not None
     }
     amici.set_model_settings(model, custom_settings_not_none)
-    assert all([
+    assert all(
         value == custom_settings_not_none[name]
         for name, value in amici.get_model_settings(model).items()
         if name in custom_settings_not_none
-    ])
+    )
 
 
 def test_interdependent_settings(pysb_example_presimulation_module):
