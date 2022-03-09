@@ -1530,7 +1530,7 @@ void Model::fdsigmaydy(const int it, const ExpData *edata) {
 
     derived_state_.dsigmaydy_.assign(ny * ny, 0.0);
 
-    // get dsigmaydy slice (ny) for current timepoint and parameter
+    // get dsigmaydy slice (ny) for current timepoint
     fdsigmaydy(derived_state_.dsigmaydy_.data(), getTimepoint(it),
                state_.unscaledParameters.data(),
                state_.fixedParameters.data(),
