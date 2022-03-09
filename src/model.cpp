@@ -1528,7 +1528,7 @@ void Model::fdsigmaydy(const int it, const ExpData *edata) {
     if (!ny)
         return;
 
-    derived_state_.dsigmaydy_.assign(ny * nplist(), 0.0);
+    derived_state_.dsigmaydy_.assign(ny * ny, 0.0);
 
     for (int ip = 0; ip < nplist(); ip++)
         // get dsigmaydy slice (ny) for current timepoint and parameter
