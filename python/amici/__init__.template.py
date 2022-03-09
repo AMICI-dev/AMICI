@@ -1,15 +1,20 @@
 """AMICI-generated module for model TPL_MODELNAME"""
 
-import amici
-
 # Ensure we are binary-compatible, see #556
-if 'TPL_AMICI_VERSION' != amici.__version__:
-    raise RuntimeError('Cannot use model TPL_MODELNAME, generated with AMICI '
-                       'version TPL_AMICI_VERSION, together with AMICI version'
-                       f' {amici.__version__} which is present in your '
-                       'PYTHONPATH. Install the AMICI package matching the '
-                       'model version or regenerate the model with the AMICI '
-                       'currently in your path.')
+#  (to be removed once the amici extension is removed from the amici base
+#  package)
+try:
+    import amici
+    if amici.__version__ != 'TPL_AMICI_VERSION':
+        from warnings import warn
+        warn('Model TPL_MODELNAME was generated with AMICI '
+             'version TPL_AMICI_VERSION. Currently installed AMICI version is '
+             f' {amici.__version__}. This model must not be used in '
+             'combination with any C++ extension objects from the amici base '
+             'package.')
+except ModuleNotFoundError:
+    # AMICI is not installed, so no problem here
+    pass
 
 from TPL_MODELNAME._TPL_MODELNAME import *
 from .core import *

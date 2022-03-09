@@ -3,18 +3,29 @@
 import os
 import sys
 from typing import List
-
-from amici import amici_path, hdf5_enabled, compiledWithOpenMP
-from amici.custom_commands import (set_compiler_specific_extension_options,
-                                   compile_parallel)
-from amici.setuptools import (get_blas_config,
-                              get_hdf5_config,
-                              add_coverage_flags_if_required,
-                              add_debug_flags_if_required,
-                              add_openmp_flags,
-                              )
-from setuptools import find_packages, setup, Extension
+from pathlib import Path
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
+
+# Add containing directory to path, as we need some modules from the AMICI
+# package already for installation
+sys.path.insert(0, os.path.dirname(__file__))
+
+from TPL_MODELNAME.custom_commands import (
+    set_compiler_specific_extension_options,
+    compile_parallel
+)
+from TPL_MODELNAME.setuptools import (
+    get_blas_config,
+    get_hdf5_config,
+    add_coverage_flags_if_required,
+    add_debug_flags_if_required,
+    add_openmp_flags,
+)
+
+# TODO rename
+amici_path = Path(__file__).parent / "TPL_MODELNAME"
+hdf5_enabled = get_hdf5_config()['found']
 
 
 class ModelBuildExt(build_ext):
@@ -71,9 +82,18 @@ def get_extension() -> Extension:
     cxx_flags = []
     linker_flags = []
 
-    if compiledWithOpenMP():
+    try:
+        from amici import compiledWithOpenMP
         # Only build model with OpenMP support if AMICI base packages was built
         #  that way
+        # (still necessary during the transition part when amici core objects
+        #  might be used from either the model package or the amici base
+        #  package)
+        with_openmp = compiledWithOpenMP()
+    except ModuleNotFoundError:
+        # if amici is not installed,
+        with_openmp = True
+    if with_openmp:
         add_openmp_flags(cxx_flags=cxx_flags, ldflags=linker_flags)
 
     add_coverage_flags_if_required(cxx_flags, linker_flags)
