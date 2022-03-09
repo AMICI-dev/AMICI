@@ -1,12 +1,24 @@
 """Convenience wrappers for the swig interface"""
 import sys
 from contextlib import contextmanager, suppress
-from typing import List, Optional, Union
-
+from typing import List, Optional, Union, Sequence, Dict, Any
 import amici
-from amici import (AmiciExpData, AmiciExpDataVector, AmiciModel,
-                   AmiciReturnData, AmiciSolver, ReturnDataView)
 from . import numpy
+
+__all__ = [
+    'runAmiciSimulation', 'runAmiciSimulations', 'ExpData',
+    'readSolverSettingsFromHDF5', 'writeSolverSettingsToHDF5',
+    'set_model_settings', 'get_model_settings',
+    'AmiciModel', 'AmiciSolver', 'AmiciExpData', 'AmiciReturnData',
+    'AmiciExpDataVector'
+]
+
+AmiciModel = Union['amici.Model', 'amici.ModelPtr']
+AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
+AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
+AmiciReturnData = Union['amici.ReturnData', 'amici.ReturnDataPtr']
+AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
+
 
 try:
     from wurlitzer import sys_pipes
@@ -79,7 +91,7 @@ def ExpData(*args) -> 'amici.ExpData':
 
     :returns: ExpData Instance
     """
-    if isinstance(args[0], ReturnDataView):
+    if isinstance(args[0], numpy.ReturnDataView):
         return amici.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
     elif isinstance(args[0], (amici.ExpData, amici.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
@@ -150,3 +162,62 @@ def writeSolverSettingsToHDF5(
     :param location: location of solver settings in hdf5 file
     """
     amici.writeSolverSettingsToHDF5(_get_ptr(solver), file, location)
+
+
+# Values are suffixes of `get[...]` and `set[...]` `amici.Model` methods.
+# If either the getter or setter is not named with this pattern, then the value
+# is a tuple where the first and second elements are the getter and setter
+# methods, respectively.
+model_instance_settings = [
+    'AddSigmaResiduals',
+    'AlwaysCheckFinite',
+    'FixedParameters',
+    'InitialStates',
+    'InitialStateSensitivities',
+    'MinimumSigmaResiduals',
+    ('nMaxEvent', 'setNMaxEvent'),
+    'Parameters',
+    'ParameterList',
+    'ParameterScale',  # getter returns a SWIG object
+    'ReinitializationStateIdxs',
+    'ReinitializeFixedParameterInitialStates',
+    'StateIsNonNegative',
+    'SteadyStateSensitivityMode',
+    ('t0', 'setT0'),
+    'Timepoints',
+]
+
+
+def get_model_settings(
+        model: AmiciModel,
+) -> Dict[str, Any]:
+    """Get model settings that are set independently of the compiled model.
+
+    :param model: The AMICI model instance.
+
+    :returns: Keys are AMICI model attributes, values are attribute values.
+    """
+    settings = {}
+    for setting in model_instance_settings:
+        getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
+        settings[setting] = getattr(model, getter)()
+        # TODO `amici.Model.getParameterScale` returns a SWIG object instead
+        # of a Python list/tuple.
+        if setting == 'ParameterScale':
+            settings[setting] = tuple(settings[setting])
+    return settings
+
+
+def set_model_settings(
+        model: AmiciModel,
+        settings: Dict[str, Any],
+) -> None:
+    """Set model settings.
+
+    :param model: The AMICI model instance.
+    :param settings: Keys are callable attributes (setters) of an AMICI model,
+        values are provided to the setters.
+    """
+    for setting, value in settings.items():
+        setter = setting[1] if isinstance(setting, tuple) else f'set{setting}'
+        getattr(model, setter)(value)
