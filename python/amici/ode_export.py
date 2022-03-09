@@ -3029,13 +3029,28 @@ class ODEExporter:
 
     def _copy_amici_base(self):
         """Copy files for libamici to model package directory"""
+        model_package_path = Path(self.model_path) / self.model_name
+        model_package_path.mkdir(exist_ok=True)
+
         # prebuilt amici extension
-        package_path = Path(self.model_path) / self.model_name
-        shutil.copy(Path(__file__).parent / "amici.py",
-                    package_path / "core.py")
+        amici_package_path = Path(__file__).parent
+        shutil.copy(amici_package_path / "amici.py",
+                    model_package_path / "core.py")
         ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
         shutil.copy(Path(__file__).parent / f"_amici{ext_suffix}",
-                    package_path)
+                    model_package_path)
+
+        # source files
+        tp = Path("ThirdParty")
+        for item in ('src', 'include', tp / 'gsl', tp / 'SuiteSparse',
+                     tp / 'sundials', 'swig',
+                     'custom_commands.py', 'setuptools.py', 'swig.py'):
+            src_path = amici_package_path / item
+            if src_path.is_dir():
+                dest_path = model_package_path / item
+                shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
+            else:
+                shutil.copy(src_path, model_package_path)
 
     def _write_module_setup(self) -> None:
         """
