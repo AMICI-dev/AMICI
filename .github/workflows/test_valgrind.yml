@@ -20,6 +20,9 @@ jobs:
       matrix:
         python-version: [ 3.8 ]
 
+    env:
+      ENABLE_AMICI_DEBUGGING: "TRUE"
+
     steps:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
