@@ -2,14 +2,20 @@
  model format"""
 import enum
 import itertools as itt
+import numbers
 import sys
-from typing import (Any, Callable, Dict, Iterable, Optional, Sequence, Tuple,
-                    Union)
+from typing import (Any, Callable, Dict, Iterable, Optional, Sequence,
+                    SupportsFloat, Tuple, Union)
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanAtom
 from toposort import toposort
+
+try:
+    import pysb
+except ImportError:
+    pysb = None
 
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
@@ -560,3 +566,100 @@ def _check_unsupported_functions(sym: sp.Expr,
                            f'{expression_type}: "{full_sym}"!')
     for arg in list(sym.args):
         _check_unsupported_functions(arg, expression_type)
+
+
+def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
+                input_name: str) -> sp.Expr:
+    """
+    Typecasts the value to :py:class:`sympy.Float` if possible, and ensures the
+    value is a symbolic expression.
+
+    :param value:
+        value to be cast
+
+    :param input_name:
+        name of input variable
+
+    :return:
+        typecast value
+    """
+    if isinstance(value, (sp.RealNumber, numbers.Number)):
+        value = sp.Float(float(value))
+    elif isinstance(value, BooleanAtom):
+        value = sp.Float(float(bool(value)))
+
+    if not isinstance(value, sp.Expr):
+        raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
+                        f"{type(value)}")
+
+    return value
+
+
+def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
+    """
+    Generates the appropriate measurement symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+
+    :return:
+        symbol for the corresponding measurement
+    """
+    if not isinstance(observable_id, str):
+        observable_id = strip_pysb(observable_id)
+    return symbol_with_assumptions(f'm{observable_id}')
+
+
+def generate_flux_symbol(
+        reaction_index: int,
+        name: Optional[str] = None
+) -> sp.Symbol:
+    """
+    Generate identifier symbol for a reaction flux.
+    This function will always return the same unique python object for a
+    given entity.
+
+    :param reaction_index:
+        index of the reaction to which the flux corresponds
+    :param name:
+        an optional identifier of the reaction to which the flux corresponds
+    :return:
+        identifier symbol
+    """
+    if name is not None:
+        return symbol_with_assumptions(name)
+
+    return symbol_with_assumptions(f'flux_r{reaction_index}')
+
+
+def symbol_with_assumptions(name: str):
+    """
+    Central function to create symbols with consistent, canonical assumptions
+
+    :param name:
+        name of the symbol
+
+    :return:
+        symbol with canonical assumptions
+    """
+    return sp.Symbol(name, real=True)
+
+
+def strip_pysb(symbol: sp.Basic) -> sp.Basic:
+    """
+    Strips pysb info from a :class:`pysb.Component` object
+
+    :param symbol:
+        symbolic expression
+
+    :return:
+        stripped expression
+    """
+    # strip pysb type and transform into a flat sympy.Symbol.
+    # this ensures that the pysb type specific __repr__ is used when converting
+    # to string
+    if pysb and isinstance(symbol, pysb.Component):
+        return sp.Symbol(symbol.name, real=True)
+    else:
+        # in this case we will use sympy specific transform anyways
+        return symbol
