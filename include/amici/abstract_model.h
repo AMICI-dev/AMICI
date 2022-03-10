@@ -586,11 +586,10 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param y model output at timepoint t
-     * @param ip sensitivity index
      */
     virtual void fdsigmaydy(realtype *dsigmaydy, const realtype t,
                             const realtype *p, const realtype *k,
-                            const realtype *y, int ip);
+                            const realtype *y);
 
 
     /**
