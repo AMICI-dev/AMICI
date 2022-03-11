@@ -5,9 +5,10 @@ Helper functions for AMICI core and module package preparation
 """
 
 import os
-import sys
 import shlex
 import subprocess
+import sys
+from typing import Any, Dict, List, Tuple, Union
 
 from .swig import find_swig, get_swig_version
 
@@ -20,7 +21,6 @@ try:
 except (ModuleNotFoundError, EnvironmentError):
     pkgconfig = None
 
-from typing import Dict, List, Union, Tuple, Any
 
 PackageInfo = Dict[str, List[Union[str, Tuple[str, Any]]]]
 

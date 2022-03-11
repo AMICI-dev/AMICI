@@ -7,14 +7,15 @@ import sys
 from shutil import copyfile
 from typing import Dict, List, Tuple
 
-from amici.swig import fix_typehints
-from amici.setuptools import generate_swig_interface_files
 from setuptools.command.build_clib import build_clib
 from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
+
+from .setuptools import generate_swig_interface_files
+from .swig import fix_typehints
 
 # typehints
 Library = Tuple[str, Dict[str, List[str]]]
