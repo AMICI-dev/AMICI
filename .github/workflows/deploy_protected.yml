@@ -14,7 +14,7 @@ jobs:
     # https://github.com/marketplace/actions/publish-docker
     name: Deploy Dockerhub
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:

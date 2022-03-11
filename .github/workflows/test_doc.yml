@@ -16,7 +16,7 @@ jobs:
   doxygen:
     name: Test Doxygen
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -51,7 +51,7 @@ jobs:
   sphinx:
     name: Test Sphinx
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
