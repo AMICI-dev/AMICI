@@ -19,8 +19,7 @@ tests = [
     'test_compartment_XML', 'test_setconc', 'test_synthesis_cBNGL_simple',
     'test_synthesis_complex', 'test_synthesis_complex_0_cBNGL',
     'test_synthesis_complex_source_cBNGL', 'test_synthesis_simple',
-    'toy-jim', 'univ_synth', 'visualize', 'Repressilator', 'fceri_ji',
-    'test_paramname', 'tlmr'
+    'univ_synth', 'Repressilator', 'test_paramname', 'tlmr'
 ]
 
 
@@ -50,13 +49,22 @@ def test_compare_to_pysb_simulation(example):
 
     outdir = pysb_model.name
 
-    bngl2amici(
-        model_file,
-        outdir,
-        verbose=logging.INFO,
-        compute_conservation_laws=True,
-        observables=list(pysb_model.observables.keys())
-    )
+    cl = example not in ['Motivating_example_cBNGL', 'univ_synth']
+
+    kwargs = {
+        'compute_conservation_laws': cl,
+        'observables': list(pysb_model.observables.keys())
+    }
+    if cl:
+        with pytest.raises(ValueError, match="Conservation laws"):
+            bngl2amici(model_file, outdir, compute_conservation_laws=True)
+
+    if example in ['empty_compartments_block', 'motor']:
+        with pytest.raises(ValueError, match="Cannot add"):
+            bngl2amici(model_file, outdir, **kwargs)
+        return
+    else:
+        bngl2amici(model_file, outdir, **kwargs)
 
     amici_model_module = amici.import_model_module(pysb_model.name,
                                                    outdir)
