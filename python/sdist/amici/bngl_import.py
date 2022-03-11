@@ -1,1 +1,1 @@
-./../../bngl_import.py
+../../amici/bngl_import.py

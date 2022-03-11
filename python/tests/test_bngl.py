@@ -51,7 +51,7 @@ def test_compare_to_pysb_simulation(example):
     outdir = pysb_model.name
 
     bngl2amici(
-        pysb_model,
+        model_file,
         outdir,
         verbose=logging.INFO,
         compute_conservation_laws=True,
@@ -72,9 +72,7 @@ def test_compare_to_pysb_simulation(example):
     rdata = amici.runAmiciSimulation(model_amici, solver)
 
     # check agreement of species simulation
-    assert np.isclose(rdata['x'],
-                      pysb_simres.species, 1e-4, 1e-4).all()
-    assert np.isclose(rdata['x'],
-                      pysb_simres.observables, 1e-4, 1e-4).all()
+    assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()
+    assert np.isclose(rdata.y, pysb_simres.observables, 1e-4, 1e-4).all()
 
     shutil.rmtree(outdir, ignore_errors=True)
