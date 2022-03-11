@@ -12,7 +12,7 @@ from pysb.simulator import ScipyOdeSimulator
 from pysb.importers.bngl import model_from_bngl
 
 tests = [
-    'CaOscillate_Func', 'continue', 'deleteMolecules', 'egfr_net',
+    'CaOscillate_Func', 'deleteMolecules',
     'empty_compartments_block', 'gene_expr', 'gene_expr_func',
     'gene_expr_simple', 'isomerization', 'localfunc', 'michment',
     'Motivating_example_cBNGL', 'motor', 'simple_system',
