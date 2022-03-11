@@ -365,8 +365,7 @@ AbstractModel::fdsigmaydy(realtype */*dsigmaydy*/,
                           const realtype /*t*/,
                           const realtype */*p*/,
                           const realtype */*k*/,
-                          const realtype */*y*/,
-                          int /*ip*/)
+                          const realtype */*y*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
