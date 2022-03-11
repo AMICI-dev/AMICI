@@ -6,7 +6,7 @@
 namespace amici {
 
 /**
- * amici_dgemm provides an interface to the CBlas matrix vector multiplication
+ * amici_dgemv provides an interface to the CBlas matrix vector multiplication
  * routine dgemv. This routines computes
  * y = alpha*A*x + beta*y with A: [MxN] x:[Nx1] y:[Mx1]
  *

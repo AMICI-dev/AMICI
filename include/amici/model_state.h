@@ -222,6 +222,13 @@ struct ModelStateDerived {
     /** temporary storage for `sx_rdata` slice (dimension: `nx_rdata`) */
     std::vector<realtype> sx_rdata_;
 
+    /** temporary storage for `dx_rdatadx_solver`
+     *   (dimension: `nx_rdata` x `nx_solver`) */
+    std::vector<realtype> dx_rdatadx_solver;
+
+    /** temporary storage for `dx_rdatadtcl` (dimension: `nx_rdata` x `ntcl`) */
+    std::vector<realtype> dx_rdatadtcl;
+
     /** temporary storage for time-resolved observable (dimension: ny) */
     std::vector<realtype> y_;
 

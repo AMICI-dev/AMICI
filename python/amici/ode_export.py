@@ -273,12 +273,6 @@ functions = {
             'realtype *x_rdata, const realtype *x, const realtype *tcl, '
             'const realtype *p, const realtype *k'
         ),
-    'sx_rdata':
-        _FunctionInfo(
-            'realtype *sx_rdata, const realtype *sx_solver, '
-            'const realtype *stotal_cl, const realtype *p, const realtype *k, '
-            'const realtype *x, const realtype *tcl, const int ip'
-        ),
     'total_cl':
         _FunctionInfo(
             'realtype *total_cl, const realtype *x_rdata, '
@@ -291,7 +285,23 @@ functions = {
             'const realtype *tcl'
         ),
     'x_solver':
-        _FunctionInfo('realtype *x_solver, const realtype *x_rdata')
+        _FunctionInfo('realtype *x_solver, const realtype *x_rdata'),
+    'dx_rdatadx_solver':
+        _FunctionInfo(
+            'realtype *dx_rdatadx_solver, const realtype *x, '
+            'const realtype *tcl, const realtype *p, const realtype *k'
+        ),
+    'dx_rdatadp':
+        _FunctionInfo(
+            'realtype *dx_rdatadp, const realtype *x, '
+            'const realtype *tcl, const realtype *p, const realtype *k, '
+            'const int ip'
+        ),
+    'dx_rdatadtcl':
+        _FunctionInfo(
+            'realtype *dx_rdatadtcl, const realtype *x, '
+            'const realtype *tcl, const realtype *p, const realtype *k'
+        ),
 }
 
 # list of sparse functions
@@ -1458,38 +1468,32 @@ class ODEModel:
                 self._eqs[name][:, ip] += tmp
 
         elif name == 'dx_rdatadx_solver':
-            self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
-                                             self.sym('x'))
+            if self.num_cons_law():
+                self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
+                                                 self.sym('x'))
+            else:
+                # so far, dx_rdatadx_solver is only required for sx_rdata
+                # in case of no conservation laws, C++ code will directly use
+                # sx, we don't need this
+                self._eqs[name] = \
+                    sp.zeros(self.num_states_rdata(),
+                             self.num_states_solver())
 
         elif name == 'dx_rdatadp':
-            self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
-                                             self.sym('p'))
+            if self.num_cons_law():
+                self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
+                                                 self.sym('p'))
+            else:
+                # so far, dx_rdatadp is only required for sx_rdata
+                # in case of no conservation laws, C++ code will directly use
+                # sx, we don't need this
+                self._eqs[name] = \
+                    sp.zeros(self.num_states_rdata(),
+                             self.num_par())
 
         elif name == 'dx_rdatadtcl':
             self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
                                              self.sym('tcl'))
-
-        elif name == 'sx_rdata':
-            if self.num_cons_law():
-                # sx_rdata =  dx_rdata/dx_solver * sx_solver
-                #              + dx_rdata/d_tcl * stcl + dxrdata/dp
-                # shape: nx_rdata, 1
-                dx_rdata_dx_solver = self.eq('dx_rdatadx_solver')
-                sym_sx_solver = self.sym('sx_solver')
-                dx_rdata_dp = self.eq('dx_rdatadp')
-                self._eqs[name] = dx_rdata_dp
-                tmp = smart_multiply(dx_rdata_dx_solver, sym_sx_solver)
-                for ip in range(self._eqs[name].shape[1]):
-                    self._eqs[name][:, ip] += tmp
-
-                sym_stotal_cl = self.sym('stotal_cl')
-                dx_rdata_dtotal_cl = self.eq('dx_rdatadtcl')
-                tmp = smart_multiply(dx_rdata_dtotal_cl, sym_stotal_cl)
-                for ip in range(self._eqs[name].shape[1]):
-                    self._eqs[name][:, ip] += tmp
-            else:
-                # if there are no conservation laws, this is simply sx_solver
-                self._eqs[name] = self.sym('sx_solver')
 
         elif name == 'dxdotdx_explicit':
             # force symbols

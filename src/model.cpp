@@ -2183,15 +2183,42 @@ void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
 }
 
 void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                      const realtype */*stcl*/, const realtype */*p*/,
-                      const realtype */*k*/, const realtype * /*x_solver*/,
-                      const realtype */*tcl*/,
-                      const int /*ip*/) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own fx_rdata");
-    std::copy_n(sx_solver, nx_solver, sx_rdata);
+                      const realtype *stcl, const realtype *p,
+                      const realtype *k, const realtype *x_solver,
+                      const realtype *tcl,
+                      const int ip) {
+    if (nx_solver == nx_rdata) {
+        std::copy_n(sx_solver, nx_solver, sx_rdata);
+        return;
+    }
+
+    // sx_rdata = dx_rdata/dx_solver * sx_solver
+    //             + dx_rdata/d_tcl * stcl + dxrdata/dp
+
+    // 1) sx_rdata(nx_rdata, 1) = dx_rdatadp
+    std::fill_n(sx_rdata, nx_rdata, 0.0);
+    fdx_rdatadp(sx_rdata, x_solver, tcl, p, k, ip);
+
+
+    // the following could be moved to the calling function, as it's independent
+    //  of `ip`
+
+    // 2) sx_rdata(nx_rdata, 1) +=
+    //          dx_rdata/dx_solver(nx_rdata,nx_solver) * sx_solver(nx_solver, 1)
+    derived_state_.dx_rdatadx_solver.assign(nx_rdata * nx_solver, 0.0);
+    fdx_rdatadx_solver(derived_state_.dx_rdatadx_solver.data(),
+                       x_solver, tcl, p, k);
+    amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, nx_rdata,
+                nx_solver, 1.0, derived_state_.dx_rdatadx_solver.data(),
+                nx_solver, sx_solver, 1, 1.0, sx_rdata, 1);
+
+    // 3) sx_rdata(nx_rdata, 1) += dx_rdata/d_tcl(nx_rdata,ntcl) * stcl
+    derived_state_.dx_rdatadtcl.assign(nx_rdata * (nx_rdata - nx_solver), 0.0);
+    fdx_rdatadtcl(derived_state_.dx_rdatadtcl.data(), x_solver, tcl, p, k);
+    amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, nx_rdata,
+                nx_rdata - nx_solver, 1.0, derived_state_.dx_rdatadtcl.data(),
+                ncl(), stcl, 1, 1.0, sx_rdata, 1);
+
 }
 
 void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {

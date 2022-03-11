@@ -71,7 +71,9 @@ TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
 TPL_STOTAL_CL_DEF
-TPL_SX_RDATA_DEF
+TPL_DX_RDATADX_SOLVER_DEF
+TPL_DX_RDATADP_DEF
+TPL_DX_RDATADTCL_DEF
 
 /**
  * @brief AMICI-generated model subclass.
@@ -471,7 +473,11 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_STOTAL_CL_IMPL
 
-    TPL_SX_RDATA_IMPL
+    TPL_DX_RDATADX_SOLVER_IMPL
+
+    TPL_DX_RDATADP_IMPL
+
+    TPL_DX_RDATADTCL_IMPL
 
     std::string getName() const override {
         return "TPL_MODELNAME";
