@@ -73,6 +73,5 @@ def test_compare_to_pysb_simulation(example):
 
     # check agreement of species simulation
     assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()
-    assert np.isclose(rdata.y, pysb_simres.observables, 1e-4, 1e-4).all()
 
     shutil.rmtree(outdir, ignore_errors=True)
