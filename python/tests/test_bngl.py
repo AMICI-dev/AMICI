@@ -55,7 +55,7 @@ def test_compare_to_pysb_simulation(example):
         'compute_conservation_laws': cl,
         'observables': list(pysb_model.observables.keys())
     }
-    if cl:
+    if not cl:
         with pytest.raises(ValueError, match="Conservation laws"):
             bngl2amici(model_file, outdir, compute_conservation_laws=True)
 
