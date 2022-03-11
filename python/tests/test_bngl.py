@@ -30,7 +30,7 @@ def test_compare_to_pysb_simulation(example):
 
     model_file = os.path.join(os.path.dirname(__file__), '..', '..',
                               'ThirdParty', 'BioNetGen-2.3.2', 'Validate',
-                              f'{example }.bngl')
+                              f'{example}.bngl')
 
     pysb_model = model_from_bngl(model_file)
 
@@ -73,7 +73,7 @@ def test_compare_to_pysb_simulation(example):
     model_amici.setTimepoints(tspan)
 
     solver = model_amici.getSolver()
-    solver.setMaxSteps(int(1e6))
+    solver.setMaxSteps(10**6)
     solver.setAbsoluteTolerance(atol)
     solver.setRelativeTolerance(rtol)
     rdata = amici.runAmiciSimulation(model_amici, solver)
