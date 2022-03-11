@@ -870,6 +870,43 @@ class AbstractModel {
      * @param dwdw sparse matrix to which rowvals will be written
      */
     virtual void fdwdw_rowvals(SUNMatrixWrapper &dwdw);
+
+    /**
+     * @brief Compute dx_rdata / dx_solver
+     * @param dx_rdatadx_solver dx_rdata / dx_solver
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdx_rdatadx_solver(realtype *dx_rdatadx_solver,
+                                    const realtype *x, const realtype *tcl,
+                                    const realtype *p, const realtype *k);
+
+    /**
+     * @brief Compute dx_rdata / dp
+     * @param dx_rdatadp dx_rdata / dp
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     * @param ip Sensitivity index
+     */
+    virtual void fdx_rdatadp(realtype *dx_rdatadp, const realtype *x,
+                             const realtype *tcl, const realtype *p,
+                             const realtype *k, const int ip);
+
+    /**
+     * @brief Compute dx_rdata / dtcl
+     * @param dx_rdatadtcl dx_rdata / dtcl
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x,
+                               const realtype *tcl, const realtype *p,
+                               const realtype *k);
 };
 
 } // namespace amici

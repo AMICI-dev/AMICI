@@ -654,4 +654,31 @@ void AbstractModel::fdwdw_rowvals(SUNMatrixWrapper &/*dwdw*/) {
                        __func__);
 }
 
+void AbstractModel::fdx_rdatadx_solver(realtype */*dx_rdatadx_solver*/,
+                               const realtype */*x*/, const realtype */*tcl*/,
+                               const realtype */*p*/, const realtype */*k*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdx_rdatadp(realtype */*dx_rdatadp*/, const realtype */*x*/,
+                        const realtype */*tcl*/, const realtype */*p*/,
+                        const realtype */*k*/, const int /*ip*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdx_rdatadtcl(realtype */*dx_rdatadtcl*/, const realtype */*x*/,
+                          const realtype */*tcl*/, const realtype */*p*/,
+                          const realtype */*k*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
 } // namespace amici
