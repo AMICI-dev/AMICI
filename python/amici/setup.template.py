@@ -188,7 +188,7 @@ setup(
     # license = 'BSD',
     ext_modules=[MODEL_EXT],
     packages=find_packages(),
-    install_requires=['amici==TPL_AMICI_VERSION'],
+    install_requires=[],
     extras_require={'wurlitzer': ['wurlitzer']},
     python_requires='>=3.8',
     package_data={},
