@@ -6,7 +6,7 @@ Glossary
     :sorted:
 
     BNGL
-        `BioNetGenLanguage <http://bionetgen.org>`_ is a language for
+        `BioNetGenLanguage <https://bionetgen.org>`_ is a language for
         modular, structure-based modeling of biochemical reaction networks.
 
     CVODES
