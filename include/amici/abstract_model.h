@@ -907,6 +907,31 @@ class AbstractModel {
     virtual void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x,
                                const realtype *tcl, const realtype *p,
                                const realtype *k);
+
+    /**
+     * @brief Compute dtotal_cl / dp
+     * @param dtotal_cldp dtotal_cl / dp
+     * @param x_rdata State variables with conservation laws applied
+     * @param p parameter vector
+     * @param k constant vector
+     * @param ip Sensitivity index
+     */
+    virtual void fdtotal_cldp(realtype *dtotal_cldp, const realtype *x_rdata,
+                             const realtype *p, const realtype *k,
+                             const int ip);
+
+    /**
+     * @brief Compute dtotal_cl / dx_rdata
+     * @param dtotal_cldx_rdata dtotal_cl / dx_rdata
+     * @param x_rdata State variables with conservation laws applied
+     * @param p parameter vector
+     * @param k constant vector
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdtotal_cldx_rdata(realtype *dtotal_cldx_rdata,
+                                   const realtype *x_rdata, const realtype *p,
+                                   const realtype *k, const realtype *tcl);
+
 };
 
 } // namespace amici
