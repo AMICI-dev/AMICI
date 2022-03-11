@@ -1,3 +1,11 @@
+"""
+BNGL Import
+------------
+This module provides all necessary functionality to import a model specified
+in the :term:`BNGL` format.
+"""
+
+
 from pysb.importers.bngl import model_from_bngl
 
 from .pysb_import import pysb2amici

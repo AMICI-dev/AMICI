@@ -1,13 +1,12 @@
 import pytest
 import os
 import amici
-import logging
 import shutil
 import numpy as np
 
-from amici.bngl_import import bngl2amici
-
 pysb = pytest.importorskip("pysb")
+
+from amici.bngl_import import bngl2amici
 from pysb.simulator import ScipyOdeSimulator
 from pysb.importers.bngl import model_from_bngl
 
