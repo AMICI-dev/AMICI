@@ -23,6 +23,7 @@ tests = [
     'test_paramname', 'tlmr'
 ]
 
+
 @pytest.mark.parametrize('example', tests)
 def test_compare_to_pysb_simulation(example):
 
@@ -33,50 +34,47 @@ def test_compare_to_pysb_simulation(example):
                               'ThirdParty', 'BioNetGen-2.3.2', 'Validate',
                               f'{example }.bngl')
 
-    with amici.add_path(os.path.join(os.path.dirname(__file__), '..',
-                                     'tests', 'pysb_test_models')):
+    pysb_model = model_from_bngl(model_file)
 
-        pysb_model = model_from_bngl(model_file)
+    # pysb part
+    tspan = np.linspace(0, 100, 101)
+    sim = ScipyOdeSimulator(
+        pysb_model,
+        tspan=tspan,
+        integrator_options={'rtol': rtol, 'atol': atol},
+        compiler='python'
+    )
+    pysb_simres = sim.run()
 
-        # pysb part
-        tspan = np.linspace(0, 100, 101)
-        sim = ScipyOdeSimulator(
-            pysb_model,
-            tspan=tspan,
-            integrator_options={'rtol': rtol, 'atol': atol},
-            compiler='python'
-        )
-        pysb_simres = sim.run()
+    # amici part
 
-        # amici part
+    outdir = pysb_model.name
 
-        outdir = pysb_model.name
+    bngl2amici(
+        pysb_model,
+        outdir,
+        verbose=logging.INFO,
+        compute_conservation_laws=True,
+        observables=list(pysb_model.observables.keys())
+    )
 
-        bngl2amici(
-            pysb_model,
-            outdir,
-            verbose=logging.INFO,
-            compute_conservation_laws=True,
-            observables=list(pysb_model.observables.keys())
-        )
+    amici_model_module = amici.import_model_module(pysb_model.name,
+                                                   outdir)
 
-        amici_model_module = amici.import_model_module(pysb_model.name,
-                                                       outdir)
+    model_amici = amici_model_module.getModel()
 
-        model_amici = amici_model_module.getModel()
+    model_amici.setTimepoints(tspan)
 
-        model_amici.setTimepoints(tspan)
+    solver = model_amici.getSolver()
+    solver.setMaxSteps(int(1e6))
+    solver.setAbsoluteTolerance(atol)
+    solver.setRelativeTolerance(rtol)
+    rdata = amici.runAmiciSimulation(model_amici, solver)
 
-        solver = model_amici.getSolver()
-        solver.setMaxSteps(int(1e6))
-        solver.setAbsoluteTolerance(atol)
-        solver.setRelativeTolerance(rtol)
-        rdata = amici.runAmiciSimulation(model_amici, solver)
+    # check agreement of species simulation
+    assert np.isclose(rdata['x'],
+                      pysb_simres.species, 1e-4, 1e-4).all()
+    assert np.isclose(rdata['x'],
+                      pysb_simres.observables, 1e-4, 1e-4).all()
 
-        # check agreement of species simulation
-        assert np.isclose(rdata['x'],
-                          pysb_simres.species, 1e-4, 1e-4).all()
-        assert np.isclose(rdata['x'],
-                          pysb_simres.observables, 1e-4, 1e-4).all()
-
-        shutil.rmtree(outdir, ignore_errors=True)
+    shutil.rmtree(outdir, ignore_errors=True)

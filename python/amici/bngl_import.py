@@ -8,12 +8,11 @@ def bngl2amici(bngl_model:  str, **kwargs) -> None:
     Generate AMICI C++ files for the provided model.
 
     :param bngl_model:
-        bngl model, :attr:`pysb.Model.name` will determine the name of the
-        generated module
+        bngl model file, model name will determine the name of the generated
+        module
 
     :param kwargs:
-        see :meth:`amici.ode_export.ODEExporter.set_paths` for additional
-        arguments
+        see :func:`amici.pysb_import.pysb2amici` for additional arguments
 
     """
     if 'model' in kwargs:

@@ -104,9 +104,11 @@ PySB import
 AMICI can import :term:`PySB` models via
 :py:func:`amici.pysb_import.pysb2amici`.
 
-`BioNetGen <https://www.csb.pitt.edu/Faculty/Faeder/?page_id=409>`_ and
-`Kappa <https://kappalanguage.org/>`_ models can be imported into AMICI using
-PySB.
+BNGL import
+-----------
+
+AMICI can import :term:`BNGL` models via
+:py:func:`amici.bngl_import.bngl2amici`.
 
 PEtab import
 ------------
