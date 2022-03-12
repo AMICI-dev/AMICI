@@ -2218,7 +2218,6 @@ void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
     amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, nx_rdata,
                 nx_rdata - nx_solver, 1.0, derived_state_.dx_rdatadtcl.data(),
                 ncl(), stcl, 1, 1.0, sx_rdata, 1);
-
 }
 
 void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
@@ -2244,14 +2243,30 @@ void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/,
             "to implement its own ftotal_cl");
 }
 
-void Model::fstotal_cl(realtype */*stotal_cl*/, const realtype */*sx_rdata*/,
-                       const int /*ip*/, const realtype */*x_rdata*/,
-                       const realtype */*p*/, const realtype */*k*/,
-                       const realtype */*tcl*/) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own ftotal_cl");
+void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
+                       const int ip, const realtype *x_rdata,
+                       const realtype *p, const realtype *k,
+                       const realtype *tcl) {
+    if (nx_solver == nx_rdata)
+        return;
+
+    // stotal_cl(ncl,1) =
+    //            dtotal_cl/dp(ncl,1)
+    //          + dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
+
+    // 1) stotal_cl = dtotal_cl/dp
+    std::fill_n(stotal_cl, ncl(), 0.0);
+    fdtotal_cldp(stotal_cl, x_rdata, p, k, ip);
+
+
+    // 2) stotal_cl += dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
+    derived_state_.dtotal_cldx_rdata.assign(ncl() * nx_rdata, 0.0);
+    fdtotal_cldx_rdata(derived_state_.dtotal_cldx_rdata.data(),
+                       x_rdata, tcl, p, k);
+    amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, ncl(),
+                nx_rdata, 1.0, derived_state_.dtotal_cldx_rdata.data(),
+                nx_rdata, sx_rdata, 1, 1.0, stotal_cl, 1);
+
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

@@ -278,11 +278,15 @@ functions = {
             'realtype *total_cl, const realtype *x_rdata, '
             'const realtype *p, const realtype *k'
         ),
-    'stotal_cl':
+    'dtotal_cldp':
         _FunctionInfo(
-            'realtype *stotal_cl, const realtype *sx_rdata, const int ip, '
-            'const realtype *x_rdata, const realtype *p, const realtype *k, '
-            'const realtype *tcl'
+            'realtype *dtotal_cldp, const realtype *x_rdata, '
+            'const realtype *p, const realtype *k, const int ip'
+        ),
+    'dtotal_cldx_rdata':
+        _FunctionInfo(
+            'realtype *dtotal_cldx_rdata, const realtype *x_rdata, '
+            'const realtype *p, const realtype *k, const realtype *tcl'
         ),
     'x_solver':
         _FunctionInfo('realtype *x_solver, const realtype *x_rdata'),
@@ -1454,18 +1458,6 @@ class ODEModel:
             # this is always zero
             self._eqs[name] = \
                 sp.zeros(self.num_cons_law(), self.num_states_solver())
-
-        elif name == 'dtcldp':
-            self._derivative('total_cl', 'p', name=name)
-
-        elif name == 'stotal_cl':
-            # stotal_cl = dtotal_cl/dp +  dtotal_cl/dx_rdata * sx_rdata
-            # shape: ncl x np
-            self._eqs[name] = self.eq('dtcldp')
-            dtotal_cldx_rdata = self.eq('dtotal_cldx_rdata')
-            tmp = smart_multiply(dtotal_cldx_rdata, self.sym('sx_rdata'))
-            for ip in range(self._eqs[name].shape[1]):
-                self._eqs[name][:, ip] += tmp
 
         elif name == 'dx_rdatadx_solver':
             if self.num_cons_law():
