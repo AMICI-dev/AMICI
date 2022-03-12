@@ -681,4 +681,26 @@ void AbstractModel::fdx_rdatadtcl(realtype */*dx_rdatadtcl*/, const realtype */*
                        __func__);
 }
 
+void AbstractModel::fdtotal_cldp(realtype */*dtotal_cldp*/,
+                                const realtype */*x_rdata*/,
+                                const realtype */*p*/,
+                                const realtype */*k*/,
+                                const int /*ip*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdtotal_cldx_rdata(realtype */*dtotal_cldx_rdata*/,
+                                      const realtype */*x_rdata*/,
+                                      const realtype */*p*/,
+                                      const realtype */*k*/,
+                                      const realtype */*tcl*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
 } // namespace amici
