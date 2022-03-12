@@ -1459,6 +1459,10 @@ class ODEModel:
             self._eqs[name] = \
                 sp.zeros(self.num_cons_law(), self.num_states_solver())
 
+        elif name == 'dtcldp':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
         elif name == 'dx_rdatadx_solver':
             if self.num_cons_law():
                 self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
