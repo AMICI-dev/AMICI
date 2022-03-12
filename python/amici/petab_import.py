@@ -715,7 +715,7 @@ def _parse_cli_args():
                         help='Flatten measurement specific overrides of '
                              'observable and noise parameters')
     parser.add_argument('--no-sensitivities', dest='generate_sensitivity_code',
-                        default=False, action='store_false',
+                        default=True, action='store_false',
                         help='Skip generation of sensitivity code')
 
     # Call with set of files
