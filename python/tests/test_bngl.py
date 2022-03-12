@@ -28,7 +28,7 @@ def test_compare_to_pysb_simulation(example):
     rtol = 1e-8
 
     model_file = os.path.join(os.path.dirname(__file__), '..', '..',
-                              'ThirdParty', 'BioNetGen-2.3.2', 'Validate',
+                              'ThirdParty', 'BioNetGen-2.7.0', 'Validate',
                               f'{example}.bngl')
 
     pysb_model = model_from_bngl(model_file)
