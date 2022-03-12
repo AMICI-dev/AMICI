@@ -38,7 +38,7 @@ from . import (
 from .logging import get_logger, log_execution_time, set_log_level
 from .constants import SymbolId
 from .import_utils import smart_subs_dict, toposort_symbols, \
-    ObservableTransformation, generate_measurement_symbol
+    ObservableTransformation, generate_measurement_symbol, RESERVED_SYMBOLS
 from .import_utils import cast_to_sym
 
 __all__ = [
@@ -70,6 +70,12 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
+
+        if str(identifier) in RESERVED_SYMBOLS or \
+                (hasattr(identifier, 'name') and
+                 identifier.name in RESERVED_SYMBOLS):
+            raise ValueError(f'Cannot add model quantity with name "{name}", '
+                             f'please rename.')
         self._identifier: sp.Symbol = identifier
 
         if not isinstance(name, str):

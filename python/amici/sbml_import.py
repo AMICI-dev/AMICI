@@ -26,7 +26,8 @@ from .import_utils import (CircularDependencyError,
                            generate_measurement_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols)
+                           smart_subs, smart_subs_dict, toposort_symbols,
+                           RESERVED_SYMBOLS)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, symbol_with_assumptions
@@ -1691,9 +1692,7 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't',
-                            'AMICI_EMPTY_BOLUS']
-        for sym in reserved_symbols:
+        for sym in RESERVED_SYMBOLS:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
             self._replace_in_all_expressions(old_symbol, new_symbol,
