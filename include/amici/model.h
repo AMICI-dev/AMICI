@@ -146,6 +146,9 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
     using AbstractModel::fz;
+    using AbstractModel::fdx_rdatadx_solver;
+    using AbstractModel::fdx_rdatadp;
+    using AbstractModel::fdx_rdatadtcl;
 
     /**
      * @brief Initialize model properties.

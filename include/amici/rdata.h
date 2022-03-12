@@ -125,12 +125,14 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sigmaz;
 
     /**
-     * parameter derivative of event output (shape `nmaxevent` x `nz`, row-major)
+     * parameter derivative of event output
+     * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> sz;
 
     /**
-     * parameter derivative of event output standard deviation (shape `nmaxevent` x `nz`, row-major)
+     * parameter derivative of event output standard deviation
+     * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> ssigmaz;
 
@@ -138,7 +140,8 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> rz;
 
     /**
-     * parameter derivative of event trigger output (shape `nmaxevent` x `nz` x `nplist`, row-major)
+     * parameter derivative of event trigger output
+     * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> srz;
 
@@ -169,7 +172,8 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sy;
 
     /**
-     * parameter derivative of observable standard deviation (shape `nt` x `nplist` x `ny`, row-major)
+     * parameter derivative of observable standard deviation
+     * (shape `nt` x `nplist` x `ny`, row-major)
      */
     std::vector<realtype> ssigmay;
 
