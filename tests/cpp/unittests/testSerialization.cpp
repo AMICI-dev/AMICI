@@ -153,8 +153,8 @@ TEST(ModelSerializationTest, ToFile)
             2,         // dwdw
             13,         // ndxdotdw
             {},         // ndJydy
-            15,         // ndxrdatadxsolver
-            16,         // ndxrdatadtcl
+            9,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
             17,         // nnz
             18,         // ubw
             19          // lbw
