@@ -1434,10 +1434,9 @@ class ODEModel:
             if not smart_is_zero_matrix(dx0_fixed_parametersdx):
                 if isinstance(self._eqs[name], ImmutableDenseMatrix):
                     self._eqs[name] = MutableDenseMatrix(self._eqs[name])
+                tmp = smart_multiply(dx0_fixed_parametersdx, self.sym('sx0'))
                 for ip in range(self._eqs[name].shape[1]):
-                    self._eqs[name][:, ip] += smart_multiply(
-                        dx0_fixed_parametersdx, self.sym('sx0')
-                    )
+                    self._eqs[name][:, ip] += tmp
 
         elif name == 'x0_fixedParameters':
             k = self.sym('k')
