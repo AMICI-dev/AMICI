@@ -58,6 +58,7 @@ class ExpDataTest : public ::testing::Test {
             {},         // ndJydy
             0,         // ndxrdatadxsolver
             0,         // ndxrdatadtcl
+            0,         // ndtotal_cldx_rdata
             0,         // nnz
             0,         // ubw
             0          // lbw

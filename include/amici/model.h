@@ -154,6 +154,8 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdx_rdatadtcl_colptrs;
     using AbstractModel::fdx_rdatadtcl_rowvals;
     using AbstractModel::fdtotal_cldx_rdata;
+    using AbstractModel::fdtotal_cldx_rdata_colptrs;
+    using AbstractModel::fdtotal_cldx_rdata_rowvals;
     using AbstractModel::fdtotal_cldp;
 
     /**

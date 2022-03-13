@@ -39,10 +39,16 @@ struct ModelDimensions {
      * repeating elements
      * @param ndwdw Number of nonzero elements in the `w` derivative of the
      * repeating elements
-     * @param ndxdotdw Number of nonzero elements in the \f$ w\f$ derivative of \f$ xdot\f$
-     * @param ndJydy Number of nonzero elements in the \f$ y\f$ derivative of \f$ dJy\f$ (shape `nytrue`)
-     * @param ndxrdatadxsolver Number of nonzero elements in the \f$ x\f$  derivative of \f$ x_rdata\f$
-     * @param ndxrdatadtcl Number of nonzero elements in the \f$ tcl\f$  derivative of \f$ x_rdata\f$
+     * @param ndxdotdw Number of nonzero elements in the \f$ w\f$ derivative of
+     * \f$ xdot\f$
+     * @param ndJydy Number of nonzero elements in the \f$ y\f$ derivative of
+     * \f$ dJy\f$ (shape `nytrue`)
+     * @param ndxrdatadxsolver Number of nonzero elements in the \f$ x\f$
+     * derivative of \f$ x_rdata\f$
+     * @param ndxrdatadtcl Number of nonzero elements in the \f$ tcl\f$
+     * derivative of \f$ x_rdata\f$
+     * @param ndtotal_cldx_rdata Number of nonzero elements in the
+     * \f$ x_rdata \f$  derivative of \f$ total_cl \f$
      * @param nnz Number of nonzero elements in Jacobian
      * @param ubw Upper matrix bandwidth in the Jacobian
      * @param lbw Lower matrix bandwidth in the Jacobian
@@ -55,6 +61,7 @@ struct ModelDimensions {
             const int nJ, const int nw, const int ndwdx, const int ndwdp,
             const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
             const int ndxrdatadxsolver, const int ndxrdatadtcl,
+            const int ndtotal_cldx_rdata,
             const int nnz, const int ubw, const int lbw)
         : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
           nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit),
@@ -63,6 +70,7 @@ struct ModelDimensions {
           ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp), ndwdw(ndwdw),
           ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)),
           ndxrdatadxsolver(ndxrdatadxsolver), ndxrdatadtcl(ndxrdatadtcl),
+          ndtotal_cldx_rdata(ndtotal_cldx_rdata),
           nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw) {
         Expects(nxtrue_rdata >= 0);
         Expects(nxtrue_rdata <= nx_rdata);
@@ -90,6 +98,8 @@ struct ModelDimensions {
         Expects(ndxrdatadxsolver <= nx_rdata * nx_solver);
         Expects(ndxrdatadtcl >= 0);
         Expects(ndxrdatadtcl <= nx_rdata * (nx_rdata-nx_solver));
+        Expects(ndtotal_cldx_rdata >= 0);
+        Expects(ndtotal_cldx_rdata <= (nx_rdata-nx_solver) * nx_rdata);
         Expects(nnz >= 0);
         Expects(nJ >= 0);
         Expects(ubw >= 0);
@@ -164,12 +174,16 @@ struct ModelDimensions {
      * \f$ dJy \f$ (dimension `nytrue`)
      */
     std::vector<int> ndJydy;
-    
+
     /** Number of nonzero elements in the \f$ x \f$ derivative of \f$ x_rdata \f$ */
     int ndxrdatadxsolver{0};
-    
+
     /** Number of nonzero elements in the \f$ tcl\f$ derivative of \f$ x_rdata \f$ */
     int ndxrdatadtcl{0};
+
+    /** Number of nonzero elements in the \f$ x_rdata\f$ derivative of
+     *  \f$ total_cl \f$ */
+    int ndtotal_cldx_rdata{0};
 
     /** Number of nonzero entries in Jacobian */
     int nnz{0};

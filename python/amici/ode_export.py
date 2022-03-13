@@ -286,7 +286,8 @@ functions = {
     'dtotal_cldx_rdata':
         _FunctionInfo(
             'realtype *dtotal_cldx_rdata, const realtype *x_rdata, '
-            'const realtype *p, const realtype *k, const realtype *tcl'
+            'const realtype *p, const realtype *k, const realtype *tcl',
+            sparse=True
         ),
     'x_solver':
         _FunctionInfo('realtype *x_solver, const realtype *x_rdata'),
@@ -1331,8 +1332,16 @@ class ODEModel:
         matrix = self.eq(name)
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
         if match_deriv:
-            rownames = self.sym(match_deriv.group(1))
-            colnames = self.sym(match_deriv.group(2))
+            eq = match_deriv.group(1)
+            var = match_deriv.group(2)
+
+            if name == 'dtotal_cldx_rdata':
+                # not correctly parsed in regex
+                eq = 'total_cl'
+                var = 'x_rdata'
+
+            rownames = self.sym(eq)
+            colnames = self.sym(var)
 
         if name == 'dJydy':
             # One entry per y-slice
@@ -2810,6 +2819,9 @@ class ODEExporter:
             ),
             'NDXRDATADTCL': str(
                 len(self.model.sparsesym('dx_rdatadtcl'))
+            ),
+            'NDTOTALCLDXRDATA': str(
+                len(self.model.sparsesym('dtotal_cldx_rdata'))
             ),
             'UBW': str(self.model.num_states_solver()),
             'LBW': str(self.model.num_states_solver()),
