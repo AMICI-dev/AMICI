@@ -2216,8 +2216,8 @@ void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
     // 3) sx_rdata(nx_rdata, 1) += dx_rdata/d_tcl(nx_rdata,ntcl) * stcl
     derived_state_.dx_rdatadtcl.zero();
     fdx_rdatadtcl(derived_state_.dx_rdatadtcl.data(), x_solver, tcl, p, k);
-    fdx_rdatadtcl_colptrs(derived_state_.dx_rdatadx_solver);
-    fdx_rdatadtcl_rowvals(derived_state_.dx_rdatadx_solver);
+    fdx_rdatadtcl_colptrs(derived_state_.dx_rdatadtcl);
+    fdx_rdatadtcl_rowvals(derived_state_.dx_rdatadtcl);
     derived_state_.dx_rdatadtcl.multiply(gsl::make_span(sx_rdata, nx_rdata),
                                          gsl::make_span(stcl, (nx_rdata - nx_solver)));
 }
