@@ -663,6 +663,20 @@ void AbstractModel::fdx_rdatadx_solver(realtype */*dx_rdatadx_solver*/,
                        __func__);
 }
 
+void AbstractModel::fdx_rdatadx_solver_rowvals(SUNMatrixWrapper &/*dxrdxs*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdx_rdatadx_solver_colptrs(SUNMatrixWrapper &/*dxrdxs*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
 void AbstractModel::fdx_rdatadp(realtype */*dx_rdatadp*/, const realtype */*x*/,
                         const realtype */*tcl*/, const realtype */*p*/,
                         const realtype */*k*/, const int /*ip*/)
@@ -675,6 +689,20 @@ void AbstractModel::fdx_rdatadp(realtype */*dx_rdatadp*/, const realtype */*x*/,
 void AbstractModel::fdx_rdatadtcl(realtype */*dx_rdatadtcl*/, const realtype */*x*/,
                           const realtype */*tcl*/, const realtype */*p*/,
                           const realtype */*k*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdx_rdatadtcl_rowvals(SUNMatrixWrapper &/*dxrdtcl*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdx_rdatadtcl_colptrs(SUNMatrixWrapper &/*dxrdtcl*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
