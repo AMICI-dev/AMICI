@@ -115,6 +115,18 @@ struct ModelStateDerived {
      * type `CSC_MAT`)
      */
     SUNMatrixWrapper dxdotdx_implicit;
+    
+    /**
+     * Temporary storage for `dx_rdatadx_solver`
+     * (dimension: `nx_rdata` x `nx_solver`, nnz: `ndxrdatadxsolver`, type: `CSC_MAT`)
+     */
+    SUNMatrixWrapper dx_rdatadx_solver;
+
+    /**
+     * Temporary storage for `dx_rdatadtcl`
+     * (dimension: `nx_rdata` x `ncl`, nnz: `ndxrdatadtclr`, type: `CSC_MAT`)
+     */
+    SUNMatrixWrapper dx_rdatadtcl;
 
     /**
      * Temporary storage of `dxdotdp` data across functions, Matlab only
@@ -221,13 +233,6 @@ struct ModelStateDerived {
 
     /** temporary storage for `sx_rdata` slice (dimension: `nx_rdata`) */
     std::vector<realtype> sx_rdata_;
-
-    /** temporary storage for `dx_rdatadx_solver`
-     *   (dimension: `nx_rdata` x `nx_solver`) */
-    std::vector<realtype> dx_rdatadx_solver;
-
-    /** temporary storage for `dx_rdatadtcl` (dimension: `nx_rdata` x `ncl`) */
-    std::vector<realtype> dx_rdatadtcl;
 
     /** temporary storage for `dtotal_cldx_rdata`
      *   (dimension: `ncl` x `nx_rdata`) */

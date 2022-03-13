@@ -2205,19 +2205,21 @@ void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
 
     // 2) sx_rdata(nx_rdata, 1) +=
     //          dx_rdata/dx_solver(nx_rdata,nx_solver) * sx_solver(nx_solver, 1)
-    derived_state_.dx_rdatadx_solver.assign(nx_rdata * nx_solver, 0.0);
+    derived_state_.dx_rdatadx_solver.zero();
     fdx_rdatadx_solver(derived_state_.dx_rdatadx_solver.data(),
                        x_solver, tcl, p, k);
-    amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, nx_rdata,
-                nx_solver, 1.0, derived_state_.dx_rdatadx_solver.data(),
-                nx_solver, sx_solver, 1, 1.0, sx_rdata, 1);
+    fdx_rdatadx_solver_colptrs(derived_state_.dx_rdatadx_solver);
+    fdx_rdatadx_solver_rowvals(derived_state_.dx_rdatadx_solver);
+    derived_state_.dx_rdatadx_solver.multiply(gsl::make_span(sx_rdata, nx_rdata),
+                                              gsl::make_span(sx_solver, nx_solver));
 
     // 3) sx_rdata(nx_rdata, 1) += dx_rdata/d_tcl(nx_rdata,ntcl) * stcl
-    derived_state_.dx_rdatadtcl.assign(nx_rdata * (nx_rdata - nx_solver), 0.0);
+    derived_state_.dx_rdatadtcl.zero();
     fdx_rdatadtcl(derived_state_.dx_rdatadtcl.data(), x_solver, tcl, p, k);
-    amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, nx_rdata,
-                nx_rdata - nx_solver, 1.0, derived_state_.dx_rdatadtcl.data(),
-                ncl(), stcl, 1, 1.0, sx_rdata, 1);
+    fdx_rdatadtcl_colptrs(derived_state_.dx_rdatadtcl);
+    fdx_rdatadtcl_rowvals(derived_state_.dx_rdatadtcl);
+    derived_state_.dx_rdatadtcl.multiply(gsl::make_span(sx_rdata, nx_rdata),
+                                         gsl::make_span(stcl, (nx_rdata - nx_solver)));
 }
 
 void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {

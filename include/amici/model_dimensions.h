@@ -41,6 +41,8 @@ struct ModelDimensions {
      * repeating elements
      * @param ndxdotdw Number of nonzero elements in the \f$ w\f$ derivative of \f$ xdot\f$
      * @param ndJydy Number of nonzero elements in the \f$ y\f$ derivative of \f$ dJy\f$ (shape `nytrue`)
+     * @param ndxrdatadxsolver Number of nonzero elements in the \f$ x\f$  derivative of \f$ x_rdata\f$
+     * @param ndxrdatadtcl Number of nonzero elements in the \f$ tcl\f$  derivative of \f$ x_rdata\f$
      * @param nnz Number of nonzero elements in Jacobian
      * @param ubw Upper matrix bandwidth in the Jacobian
      * @param lbw Lower matrix bandwidth in the Jacobian
@@ -52,6 +54,7 @@ struct ModelDimensions {
             const int nytrue, const int nz, const int nztrue, const int ne,
             const int nJ, const int nw, const int ndwdx, const int ndwdp,
             const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
+            const int ndxrdatadxsolver, const int ndxrdatadtcl,
             const int nnz, const int ubw, const int lbw)
         : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
           nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit),
@@ -59,6 +62,7 @@ struct ModelDimensions {
           ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue),
           ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp), ndwdw(ndwdw),
           ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)),
+          ndxrdatadxsolver(ndxrdatadxsolver), ndxrdatadtcl(ndxrdatadtcl),
           nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw) {
         Expects(nxtrue_rdata >= 0);
         Expects(nxtrue_rdata <= nx_rdata);
@@ -82,6 +86,10 @@ struct ModelDimensions {
         Expects(ndwdw >= 0);
         Expects(ndwdw <= nw * nw);
         Expects(ndxdotdw >= 0);
+        Expects(ndxrdatadxsolver >= 0);
+        Expects(ndxrdatadxsolver <= nx_rdata * nx_solver);
+        Expects(ndxrdatadtcl >= 0);
+        Expects(ndxrdatadtcl <= nx_rdata * (nx_rdata-nx_solver));
         Expects(nnz >= 0);
         Expects(nJ >= 0);
         Expects(ubw >= 0);
@@ -156,6 +164,12 @@ struct ModelDimensions {
      * \f$ dJy \f$ (dimension `nytrue`)
      */
     std::vector<int> ndJydy;
+    
+    /** Number of nonzero elements in the \f$ x \f$ derivative of \f$ x_rdata \f$ */
+    int ndxrdatadxsolver{0};
+    
+    /** Number of nonzero elements in the \f$ tcl\f$ derivative of \f$ x_rdata \f$ */
+    int ndxrdatadtcl{0};
 
     /** Number of nonzero entries in Jacobian */
     int nnz{0};

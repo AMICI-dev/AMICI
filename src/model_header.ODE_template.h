@@ -71,8 +71,12 @@ TPL_X_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
 TPL_DX_RDATADX_SOLVER_DEF
+TPL_DX_RDATADX_SOLVER_COLPTRS_DEF
+TPL_DX_RDATADX_SOLVER_ROWVALS_DEF
 TPL_DX_RDATADP_DEF
 TPL_DX_RDATADTCL_DEF
+TPL_DX_RDATADTCL_COLPTRS_DEF
+TPL_DX_RDATADTCL_ROWVALS_DEF
 TPL_DTOTAL_CLDP_DEF
 TPL_DTOTAL_CLDX_RDATA_DEF
 
@@ -106,6 +110,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                   TPL_NDWDW,                               // ndwdw
                   TPL_NDXDOTDW,                            // ndxdotdw
                   TPL_NDJYDY,                              // ndjydy
+                  TPL_NDXRDATADXSOLVER,                    // ndxrdatadxsolver
+                  TPL_NDXRDATADTCL,                        // ndxrdatadtcl
                   0,                                       // nnz
                   TPL_UBW,                                 // ubw
                   TPL_LBW                                  // lbw
@@ -473,10 +479,14 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_TOTAL_CL_IMPL
 
     TPL_DX_RDATADX_SOLVER_IMPL
+    TPL_DX_RDATADX_SOLVER_COLPTRS_IMPL
+    TPL_DX_RDATADX_SOLVER_ROWVALS_IMPL
 
     TPL_DX_RDATADP_IMPL
 
     TPL_DX_RDATADTCL_IMPL
+    TPL_DX_RDATADTCL_COLPTRS_IMPL
+    TPL_DX_RDATADTCL_ROWVALS_IMPL
 
     TPL_DTOTAL_CLDP_IMPL
 

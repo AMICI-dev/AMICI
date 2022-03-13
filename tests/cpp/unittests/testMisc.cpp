@@ -71,6 +71,8 @@ class ModelTest : public ::testing::Test {
             0,         // dwdw
             0,         // ndxdotdw
             {},         // ndJydy
+            0,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
             0,         // nnz
             0,         // ubw
             0          // lbw
@@ -305,6 +307,8 @@ class SolverTest : public ::testing::Test {
             0,         // dwdw
             0,         // ndxdotdw
             {},         // ndJydy
+            0,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
             1,         // nnz
             0,         // ubw
             0         // lbw

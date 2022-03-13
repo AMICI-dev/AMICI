@@ -147,8 +147,12 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fy;
     using AbstractModel::fz;
     using AbstractModel::fdx_rdatadx_solver;
+    using AbstractModel::fdx_rdatadx_solver_colptrs;
+    using AbstractModel::fdx_rdatadx_solver_rowvals;
     using AbstractModel::fdx_rdatadp;
     using AbstractModel::fdx_rdatadtcl;
+    using AbstractModel::fdx_rdatadtcl_colptrs;
+    using AbstractModel::fdx_rdatadtcl_rowvals;
     using AbstractModel::fdtotal_cldx_rdata;
     using AbstractModel::fdtotal_cldp;
 
