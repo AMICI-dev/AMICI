@@ -293,7 +293,8 @@ functions = {
     'dx_rdatadx_solver':
         _FunctionInfo(
             'realtype *dx_rdatadx_solver, const realtype *x, '
-            'const realtype *tcl, const realtype *p, const realtype *k'
+            'const realtype *tcl, const realtype *p, const realtype *k',
+            sparse=True
         ),
     'dx_rdatadp':
         _FunctionInfo(
@@ -304,7 +305,8 @@ functions = {
     'dx_rdatadtcl':
         _FunctionInfo(
             'realtype *dx_rdatadtcl, const realtype *x, '
-            'const realtype *tcl, const realtype *p, const realtype *k'
+            'const realtype *tcl, const realtype *p, const realtype *k',
+            sparse=True
         ),
 }
 
@@ -2803,6 +2805,12 @@ class ODEExporter:
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
+            'NDXRDATADXSOLVER': str(
+                len(self.model.sparsesym('dx_rdatadx_solver'))
+            ),
+            'NDXRDATADTCL': str(
+                len(self.model.sparsesym('dx_rdatadtcl'))
+            ),
             'UBW': str(self.model.num_states_solver()),
             'LBW': str(self.model.num_states_solver()),
             'NP': str(self.model.num_par()),
