@@ -62,6 +62,7 @@ struct ModelDimensions {
           ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue),
           ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp), ndwdw(ndwdw),
           ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)),
+          ndxrdatadxsolver(ndxrdatadxsolver), ndxrdatadtcl(ndxrdatadtcl),
           nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw) {
         Expects(nxtrue_rdata >= 0);
         Expects(nxtrue_rdata <= nx_rdata);
