@@ -14,14 +14,14 @@ import os
 import sys
 from pathlib import Path
 
+import numpy as np
+from setuptools import Extension, setup
+
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation
 sys.path.insert(0, os.path.dirname(__file__))
 
-import numpy as np
-import setup_clibs  # Must run from within containing directory
-from setuptools import setup, Extension
-
+from amici import setup_clibs
 from amici.custom_commands import (
     AmiciInstall, AmiciBuildCLib, AmiciDevelop,
     AmiciInstallLib, AmiciBuildExt, AmiciSDist)

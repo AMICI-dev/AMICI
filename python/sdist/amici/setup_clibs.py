@@ -1,0 +1,1 @@
+../../amici/setup_clibs.py
