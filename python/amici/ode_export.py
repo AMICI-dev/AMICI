@@ -420,9 +420,12 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
     """
     if min(eq.shape) and min(sym_var.shape) \
             and not smart_is_zero_matrix(eq) \
-            and not smart_is_zero_matrix(sym_var) \
-            and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
-        return eq.jacobian(sym_var)
+            and not smart_is_zero_matrix(sym_var):
+        return sp.Matrix([
+            eq[i, :].jacobian(sym_var) if eq[i, :].has(*sym_var.flat())
+            else [0] * sym_var.shape[0]
+            for i in range(eq.shape[0])
+        ])
     return sp.zeros(eq.shape[0], sym_var.shape[0])
 
 
