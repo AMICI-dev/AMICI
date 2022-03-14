@@ -21,6 +21,8 @@ tests = [
 ]
 
 
+@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
+                    reason="Takes too long under valgrind")
 @pytest.mark.parametrize('example', tests)
 def test_compare_to_pysb_simulation(example):
 
