@@ -156,8 +156,8 @@ jobs:
           && brew ls -v boost \
           && brew ls -v libomp \
           && echo "/usr/local/opt/hdf5@1.10/bin" >> $GITHUB_PATH \
-          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/opt/hdf5@1.10/lib" >> $GITHUB_ENV \
-          && echo CPPFLAGS="-I/usr/local/opt/hdf5@1.10/include" >> $GITHUB_ENV \
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/opt/hdf5@1.10/lib -L/usr/local/Cellar/boost/1.78.0_1/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I/usr/local/opt/hdf5@1.10/include -I/usr/local/Cellar/boost/1.78.0_1/include/" >> $GITHUB_ENV \
           && echo HDF5_BASE="/usr/local/opt/hdf5@1.10/" >> $GITHUB_ENV
 
     - name: Build AMICI
