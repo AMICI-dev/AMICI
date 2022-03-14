@@ -154,7 +154,7 @@ jobs:
       run: |
         brew install hdf5@1.10 swig gcc cppcheck libomp boost \
           && echo "/usr/local/opt/hdf5@1.10/bin" >> $GITHUB_PATH \
-          && echo LDFLAGS="-L /usr/local/lib/ -L/usr/local/opt/hdf5@1.10/lib" >> $GITHUB_ENV \
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/opt/hdf5@1.10/lib" >> $GITHUB_ENV \
           && echo CPPFLAGS="-I/usr/local/opt/hdf5@1.10/include" >> $GITHUB_ENV
 
     - name: Build AMICI
