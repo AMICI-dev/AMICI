@@ -3043,7 +3043,7 @@ class ODEExporter:
         # source files
         tp = Path("ThirdParty")
         for item in ('src', 'include', tp / 'gsl', tp / 'SuiteSparse',
-                     tp / 'sundials', 'swig',
+                     tp / 'sundials', 'swig', 'setup_clibs.py',
                      'custom_commands.py', 'setuptools.py', 'swig.py'):
             src_path = amici_package_path / item
             if src_path.is_dir():
@@ -3064,7 +3064,8 @@ class ODEExporter:
                        os.path.join(self.model_path, 'setup.py'),
                        template_data)
         apply_template(os.path.join(amiciModulePath, 'MANIFEST.template.in'),
-                       os.path.join(self.model_path, 'MANIFEST.in'), {})
+                       os.path.join(self.model_path, 'MANIFEST.in'),
+                       template_data)
         # write __init__.py for the model module
         if not os.path.exists(os.path.join(self.model_path, self.model_name)):
             os.makedirs(os.path.join(self.model_path, self.model_name))

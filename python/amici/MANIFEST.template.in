@@ -1,1 +1,7 @@
+recursive-include TPL_MODELNAME/ThirdParty/SuiteSparse *.c *.h LICENSE.txt
+recursive-include TPL_MODELNAME/ThirdParty/sundials *.c *.h LICENSE
+recursive-include TPL_MODELNAME/ThirdParty/gsl *.hpp
+recursive-include TPL_MODELNAME/include *.h
+recursive-include TPL_MODELNAME/src *.cpp
+recursive-include TPL_MODELNAME/swig *.i *.h
 include *.cpp *.h

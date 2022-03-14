@@ -2,7 +2,7 @@
 
 import os
 import sys
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -21,6 +21,12 @@ from TPL_MODELNAME.setuptools import (
     add_coverage_flags_if_required,
     add_debug_flags_if_required,
     add_openmp_flags,
+)
+from TPL_MODELNAME.setup_clibs import (
+    get_lib_amici,
+    get_lib_suite_sparse,
+    get_lib_sundials,
+    Library
 )
 
 package_root = Path(__file__).parent / "TPL_MODELNAME"
@@ -75,7 +81,7 @@ def get_amici_libs() -> List[str]:
     return ['amici', 'sundials', 'suitesparse']
 
 
-def get_extension() -> Extension:
+def get_extension() -> Tuple[Extension, List[Library]]:
     """Get setuptools extension object for this AMICI model package"""
 
     cxx_flags = []
@@ -152,13 +158,35 @@ def get_extension() -> Extension:
     ext.extra_compile_args_unix = ['-std=c++14']
     ext.extra_compile_args_msvc = ['/std:c++14']
 
-    return ext
+    # clibs
+    amici_base_dir = Path('TPL_MODELNAME')
+    suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
+    sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
+
+    libamici = get_lib_amici(
+        amici_base_dir=amici_base_dir,
+        sundials_base_dir=sundials_base_dir,
+        suitesparse_base_dir=suitesparse_base_dir,
+        h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg,
+        extra_compiler_flags=cxx_flags
+    )
+    libsundials = get_lib_sundials(
+        sundials_base_dir=sundials_base_dir,
+        suitesparse_base_dir=suitesparse_base_dir,
+        extra_compiler_flags=cxx_flags
+    )
+    libsuitesparse = get_lib_suite_sparse(
+        extra_compiler_flags=cxx_flags + ['-DDLONG'],
+        suitesparse_base_dir=suitesparse_base_dir
+    )
+
+    return ext, [libamici, libsundials, libsuitesparse]
 
 
 # Change working directory to setup.py location
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-MODEL_EXT = get_extension()
+MODEL_EXT, LIBRARIES = get_extension()
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -186,6 +214,7 @@ setup(
     author_email='model-author-todo',
     # license = 'BSD',
     ext_modules=[MODEL_EXT],
+    libraries=LIBRARIES,
     packages=find_packages(),
     install_requires=[],
     extras_require={'wurlitzer': ['wurlitzer']},
