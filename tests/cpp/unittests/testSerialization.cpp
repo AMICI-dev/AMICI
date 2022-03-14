@@ -155,6 +155,7 @@ TEST(ModelSerializationTest, ToFile)
             {},         // ndJydy
             9,         // ndxrdatadxsolver
             0,         // ndxrdatadtcl
+            0,          // ndtotal_cldx_rdata
             17,         // nnz
             18,         // ubw
             19          // lbw
@@ -218,6 +219,7 @@ TEST(ReturnDataSerializationTest, ToString)
             {},        // ndJydy
             9,         // ndxrdatadxsolver
             0,         // ndxrdatadtcl
+            0,         // ndtotal_cldx_rdata
             17,        // nnz
             18,        // ubw
             19         // lbw

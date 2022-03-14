@@ -2262,13 +2262,14 @@ void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
 
 
     // 2) stotal_cl += dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
-    derived_state_.dtotal_cldx_rdata.assign(ncl() * nx_rdata, 0.0);
+    derived_state_.dtotal_cldx_rdata.zero();
     fdtotal_cldx_rdata(derived_state_.dtotal_cldx_rdata.data(),
                        x_rdata, tcl, p, k);
-    amici_dgemv(BLASLayout::rowMajor, BLASTranspose::noTrans, ncl(),
-                nx_rdata, 1.0, derived_state_.dtotal_cldx_rdata.data(),
-                nx_rdata, sx_rdata, 1, 1.0, stotal_cl, 1);
-
+    fdtotal_cldx_rdata_colptrs(derived_state_.dtotal_cldx_rdata);
+    fdtotal_cldx_rdata_rowvals(derived_state_.dtotal_cldx_rdata);
+    derived_state_.dtotal_cldx_rdata.multiply(
+        gsl::make_span(stotal_cl, ncl()),
+        gsl::make_span(sx_rdata, nx_rdata));
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

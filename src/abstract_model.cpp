@@ -731,4 +731,20 @@ void AbstractModel::fdtotal_cldx_rdata(realtype */*dtotal_cldx_rdata*/,
                        __func__);
 }
 
+void AbstractModel::fdtotal_cldx_rdata_colptrs(
+    SUNMatrixWrapper &/*dtotal_cldx_rdata*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdtotal_cldx_rdata_rowvals(
+    SUNMatrixWrapper &/*dtotal_cldx_rdata*/)
+{
+    throw AmiException("Requested functionality is not supported as %s is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
 } // namespace amici

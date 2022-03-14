@@ -79,7 +79,8 @@ TPL_DX_RDATADTCL_COLPTRS_DEF
 TPL_DX_RDATADTCL_ROWVALS_DEF
 TPL_DTOTAL_CLDP_DEF
 TPL_DTOTAL_CLDX_RDATA_DEF
-
+TPL_DTOTAL_CLDX_RDATA_COLPTRS_DEF
+TPL_DTOTAL_CLDX_RDATA_ROWVALS_DEF
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -112,6 +113,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                   TPL_NDJYDY,                              // ndjydy
                   TPL_NDXRDATADXSOLVER,                    // ndxrdatadxsolver
                   TPL_NDXRDATADTCL,                        // ndxrdatadtcl
+                  TPL_NDTOTALCLDXRDATA,                        // ndtotal_cldx_rdata
                   0,                                       // nnz
                   TPL_UBW,                                 // ubw
                   TPL_LBW                                  // lbw
@@ -491,6 +493,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DTOTAL_CLDP_IMPL
 
     TPL_DTOTAL_CLDX_RDATA_IMPL
+    TPL_DTOTAL_CLDX_RDATA_COLPTRS_IMPL
+    TPL_DTOTAL_CLDX_RDATA_ROWVALS_IMPL
 
     std::string getName() const override {
         return "TPL_MODELNAME";

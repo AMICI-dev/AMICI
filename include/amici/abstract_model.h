@@ -882,7 +882,7 @@ class AbstractModel {
     virtual void fdx_rdatadx_solver(realtype *dx_rdatadx_solver,
                                     const realtype *x, const realtype *tcl,
                                     const realtype *p, const realtype *k);
-    
+
     /**
      * @brief Model-specific implementation of fdx_rdatadx_solver, colptrs part
      * @param dxrdatadxsolver sparse matrix to which colptrs will be written
@@ -919,7 +919,7 @@ class AbstractModel {
     virtual void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x,
                                const realtype *tcl, const realtype *p,
                                const realtype *k);
-    
+
     /**
      * @brief Model-specific implementation of fdx_rdatadtcl, colptrs part
      * @param dx_rdatadtcl sparse matrix to which colptrs will be written
@@ -955,6 +955,20 @@ class AbstractModel {
     virtual void fdtotal_cldx_rdata(realtype *dtotal_cldx_rdata,
                                    const realtype *x_rdata, const realtype *p,
                                    const realtype *k, const realtype *tcl);
+
+    /**
+     * @brief Model-specific implementation of fdtotal_cldx_rdata, colptrs part
+     * @param dtotal_cldx_rdata sparse matrix to which colptrs will be written
+     */
+    virtual void fdtotal_cldx_rdata_colptrs(
+        SUNMatrixWrapper &dtotal_cldx_rdata);
+
+    /**
+     * @brief Model-specific implementation of fdtotal_cldx_rdata, rowvals part
+     * @param dtotal_cldx_rdata sparse matrix to which rowvals will be written
+     */
+    virtual void fdtotal_cldx_rdata_rowvals(
+        SUNMatrixWrapper &dtotal_cldx_rdata);
 
 };
 

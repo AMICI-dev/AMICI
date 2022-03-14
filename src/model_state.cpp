@@ -10,13 +10,11 @@ ModelStateDerived::ModelStateDerived(const ModelDimensions &dim)
                         CSC_MAT),
       dx_rdatadtcl(dim.nx_rdata, dim.nx_rdata - dim.nx_solver, dim.ndxrdatadtcl,
                    CSC_MAT),
+      dtotal_cldx_rdata(dim.nx_rdata - dim.nx_solver, dim.nx_rdata,
+                        dim.ndtotal_cldx_rdata, CSC_MAT),
       w_(dim.nw),
       x_rdata_(dim.nx_rdata, 0.0),
       sx_rdata_(dim.nx_rdata, 0.0),
-      // only required if there are conservation laws
-      dtotal_cldx_rdata(dim.nx_rdata - dim.nx_solver > 0
-                       ? (dim.nx_rdata - dim.nx_solver) * dim.nx_rdata : 0,
-                   0.0),
       x_pos_tmp_(dim.nx_solver)
 {}
 
