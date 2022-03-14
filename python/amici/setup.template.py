@@ -23,8 +23,7 @@ from TPL_MODELNAME.setuptools import (
     add_openmp_flags,
 )
 
-# TODO rename
-amici_path = Path(__file__).parent / "TPL_MODELNAME"
+package_root = Path(__file__).parent / "TPL_MODELNAME"
 hdf5_enabled = get_hdf5_config()['found']
 
 
@@ -118,10 +117,10 @@ def get_extension() -> Extension:
 
     ext_include_dirs = [
         os.getcwd(),
-        os.path.join(amici_path, 'include'),
-        os.path.join(amici_path, "ThirdParty", "gsl"),
-        os.path.join(amici_path, "ThirdParty", "sundials", "include"),
-        os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
+        os.path.join(package_root, 'include'),
+        os.path.join(package_root, "ThirdParty", "gsl"),
+        os.path.join(package_root, "ThirdParty", "sundials", "include"),
+        os.path.join(package_root, "ThirdParty", "SuiteSparse", "include"),
         *h5pkgcfg['include_dirs'],
         *blaspkgcfg['include_dirs']
     ]
@@ -129,7 +128,7 @@ def get_extension() -> Extension:
     ext_library_dirs = [
         *h5pkgcfg['library_dirs'],
         *blaspkgcfg['library_dirs'],
-        os.path.join(amici_path, 'libs')
+        os.path.join(package_root, 'libs')
     ]
 
     # Build shared object
@@ -141,8 +140,8 @@ def get_extension() -> Extension:
         library_dirs=ext_library_dirs,
         swig_opts=[
             '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
-            '-I%s' % os.path.join(amici_path, 'swig'),
-            '-I%s' % os.path.join(amici_path, 'include'),
+            '-I%s' % os.path.join(package_root, 'swig'),
+            '-I%s' % os.path.join(package_root, 'include'),
         ],
         extra_compile_args=cxx_flags,
         extra_link_args=linker_flags
