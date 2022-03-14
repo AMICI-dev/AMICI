@@ -152,7 +152,10 @@ jobs:
     # install amici dependencies
     - name: homebrew
       run: |
-        brew install hdf5 swig gcc cppcheck libomp boost
+        brew install hdf5@1.10 swig gcc cppcheck libomp boost \
+          && echo "/usr/local/opt/hdf5@1.10/bin" >> $GITHUB_PATH \
+          && echo LDFLAGS="-L/usr/local/opt/hdf5@1.10/lib" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I/usr/local/opt/hdf5@1.10/include" >> $GITHUB_ENV
 
     - name: Build AMICI
       run: |
