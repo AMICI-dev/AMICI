@@ -6,8 +6,6 @@ however we want to keep the static libs to avoid recompilation for
 AMICI-generated models.
 """
 
-import glob
-import os
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -170,10 +168,10 @@ def get_amici_base_sources(
         base_dir: AMICI base dir containing ``src/`` and ``include/``
         with_hdf5: compile with HDF5 support
     """
-    amici_base_sources = glob.glob(os.path.join(base_dir, 'src', '*.cpp'))
+    amici_base_sources = (base_dir / 'src').glob('*.cpp')
     amici_base_sources = [
-        src for src in amici_base_sources
-        if not re.search(r'(matlab)|(\.(ODE_)?template\.)', src)
+        str(src) for src in amici_base_sources
+        if not re.search(r'(matlab)|(\.(ODE_)?template\.)', str(src))
     ]
 
     if not with_hdf5:
