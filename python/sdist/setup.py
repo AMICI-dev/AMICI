@@ -12,6 +12,7 @@ Non-python-package requirements:
 
 import os
 import sys
+from pathlib import Path
 
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation
@@ -19,7 +20,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
 import setup_clibs  # Must run from within containing directory
-from setuptools import find_packages, setup, Extension
+from setuptools import setup, Extension
 
 from amici.custom_commands import (
     AmiciInstall, AmiciBuildCLib, AmiciDevelop,
@@ -31,6 +32,7 @@ from amici.setuptools import (
     add_debug_flags_if_required,
     add_openmp_flags,
 )
+
 
 def main():
     # Extra compiler flags
@@ -82,12 +84,25 @@ def main():
         amici_module_linker_flags.extend(
             os.environ['AMICI_LDFLAGS'].split(' '))
 
+    amici_base_dir = Path('amici')
+    suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
+    sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
+
     libamici = setup_clibs.get_lib_amici(
+        amici_base_dir=amici_base_dir,
+        sundials_base_dir=sundials_base_dir,
+        suitesparse_base_dir=suitesparse_base_dir,
         h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg,
-        extra_compiler_flags=cxx_flags)
-    libsundials = setup_clibs.get_lib_sundials(extra_compiler_flags=cxx_flags)
+        extra_compiler_flags=cxx_flags
+    )
+    libsundials = setup_clibs.get_lib_sundials(
+        sundials_base_dir=sundials_base_dir,
+        suitesparse_base_dir=suitesparse_base_dir,
+        extra_compiler_flags=cxx_flags
+    )
     libsuitesparse = setup_clibs.get_lib_suite_sparse(
-        extra_compiler_flags=cxx_flags + ['-DDLONG']
+        extra_compiler_flags=cxx_flags + ['-DDLONG'],
+        suitesparse_base_dir=suitesparse_base_dir
     )
 
     # Readme as long package description to go on PyPi
@@ -100,14 +115,15 @@ def main():
     amici_module = Extension(
         name='amici._amici',
         sources=extension_sources,
-        include_dirs=['amici/include',
-                      'amici/ThirdParty/gsl/',
-                      *libsundials[1]['include_dirs'],
-                      *libsuitesparse[1]['include_dirs'],
-                      *h5pkgcfg['include_dirs'],
-                      *blaspkgcfg['include_dirs'],
-                      np.get_include()
-                      ],
+        include_dirs=[
+            amici_base_dir / 'include',
+            amici_base_dir / 'ThirdParty' / 'gsl',
+            *libsundials[1]['include_dirs'],
+            *libsuitesparse[1]['include_dirs'],
+            *h5pkgcfg['include_dirs'],
+            *blaspkgcfg['include_dirs'],
+            np.get_include()
+        ],
         # Cannot use here, see above
         # libraries=[
         #    'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'
