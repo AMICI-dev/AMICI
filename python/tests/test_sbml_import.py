@@ -518,3 +518,25 @@ def _test_set_parameters_by_dict(model_module):
     assert model.getParameterByName(change_par_name) == new_par_val
     model.setParameterByName(change_par_name, old_par_val)
     assert model.getParameters() == old_parameter_values
+
+
+def test_amici_core_from_model(simple_sbml_model):
+    """Test that AMICI core extension functionality is available through the
+    model module"""
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(model_name="test",
+                                 output_dir=tmpdir,
+                                 observables=None,
+                                 compute_conservation_laws=False)
+
+        # Ensure import succeeds (no missing symbols)
+        model_module = amici.import_model_module("test", tmpdir)
+        model = model_module.getModel()
+        solver = model.getSolver()
+        rdata = model_module.runAmiciSimulation(model, solver)
+        print(rdata)
+        assert rdata.status == amici.AMICI_SUCCESS
