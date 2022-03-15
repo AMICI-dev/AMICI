@@ -20,6 +20,8 @@ from pysb.simulator import ScipyOdeSimulator
 from amici.gradient_check import check_derivatives
 
 
+@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
+                    reason="Takes too long under valgrind")
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
                                 sbml_example_presimulation_module):
     # -------------- PYSB -----------------
@@ -99,6 +101,8 @@ custom_models = [
 ]
 
 
+@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
+                    reason="Takes too long under valgrind")
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
 
