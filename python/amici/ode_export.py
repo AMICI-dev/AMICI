@@ -2324,7 +2324,8 @@ class ODEExporter:
         else:
             script_args.append('--quiet')
 
-        script_args.extend(['build_ext', f'--build-lib={module_dir}'])
+        script_args.extend(['build_clib',
+                            'build_ext', f'--build-lib={module_dir}'])
 
         if compiler is not None:
             script_args.extend([f'--compiler={compiler}'])
