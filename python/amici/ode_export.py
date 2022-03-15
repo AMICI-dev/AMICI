@@ -3031,14 +3031,7 @@ class ODEExporter:
         """Copy files for libamici to model package directory"""
         model_package_path = Path(self.model_path) / self.model_name
         model_package_path.mkdir(exist_ok=True)
-
-        # prebuilt amici extension
         amici_package_path = Path(__file__).parent
-        shutil.copy(amici_package_path / "amici.py",
-                    model_package_path / "core.py")
-        ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
-        shutil.copy(Path(__file__).parent / f"_amici{ext_suffix}",
-                    model_package_path)
 
         # source files
         tp = Path("ThirdParty")
