@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  valgrind:
     name: Tests Valgrind
 
     # TODO: prepare image with more deps preinstalled
@@ -19,6 +19,9 @@ jobs:
     strategy:
       matrix:
         python-version: [ 3.8 ]
+
+    env:
+      ENABLE_AMICI_DEBUGGING: "TRUE"
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}

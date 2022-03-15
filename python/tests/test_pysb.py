@@ -3,7 +3,6 @@
 import importlib
 import logging
 import os
-import platform
 import shutil
 import pytest
 
@@ -21,6 +20,8 @@ from pysb.simulator import ScipyOdeSimulator
 from amici.gradient_check import check_derivatives
 
 
+@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
+                    reason="Takes too long under valgrind")
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
                                 sbml_example_presimulation_module):
     # -------------- PYSB -----------------
@@ -93,13 +94,15 @@ pysb_models = [
     'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
     'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
     'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
-    'fixed_initial',
+    'fixed_initial', 'localfunc'
 ]
 custom_models = [
     'bngwiki_egfr_simple_deletemolecules',
 ]
 
 
+@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
+                    reason="Takes too long under valgrind")
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
 
@@ -109,12 +112,6 @@ def test_compare_to_pysb_simulation(example):
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(os.path.join(os.path.dirname(__file__), '..',
                                          'tests', 'pysb_test_models')):
-
-            if example == 'earm_1_3' \
-                    and platform.sys.version_info[0] == 3 \
-                    and platform.sys.version_info[1] < 7:
-                return
-
             # load example
             pysb.SelfExporter.cleanup()  # reset pysb
             pysb.SelfExporter.do_export = True

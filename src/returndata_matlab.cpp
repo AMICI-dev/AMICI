@@ -82,7 +82,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
             }
         }
 
-        if (rdata->ny > 0) {
+        if (!rdata->ssigmay.empty()) {
             writeMatlabField3(matlabSolutionStruct, "ssigmay", rdata->ssigmay, rdata->nt, rdata->nplist, rdata->ny, perm2);
         }
         if ((rdata->nz > 0) & (rdata->ne > 0)) {
