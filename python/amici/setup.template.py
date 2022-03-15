@@ -1,9 +1,10 @@
 """AMICI model package setup"""
-
 import os
 import sys
-from typing import List, Tuple
 from pathlib import Path
+from typing import List, Tuple
+
+import numpy as np
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
@@ -82,7 +83,7 @@ def get_amici_libs() -> List[str]:
     return ['amici', 'sundials', 'suitesparse']
 
 
-def get_extension() -> Tuple[Extension, List[Library]]:
+def get_extension_and_libs() -> Tuple[Extension, List[Library]]:
     """Get setuptools extension object for this AMICI model package"""
 
     cxx_flags = []
@@ -122,43 +123,6 @@ def get_extension() -> Tuple[Extension, List[Library]]:
     if 'AMICI_LDFLAGS' in os.environ:
         linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
 
-    ext_include_dirs = [
-        os.getcwd(),
-        os.path.join(package_root, 'include'),
-        os.path.join(package_root, "ThirdParty", "gsl"),
-        os.path.join(package_root, "ThirdParty", "sundials", "include"),
-        os.path.join(package_root, "ThirdParty", "SuiteSparse", "include"),
-        *h5pkgcfg['include_dirs'],
-        *blaspkgcfg['include_dirs']
-    ]
-
-    ext_library_dirs = [
-        *h5pkgcfg['library_dirs'],
-        *blaspkgcfg['library_dirs'],
-        os.path.join(package_root, 'libs')
-    ]
-
-    # Build shared object
-    ext = Extension(
-        'TPL_MODELNAME._TPL_MODELNAME',
-        sources=sources,
-        include_dirs=ext_include_dirs,
-        libraries=libraries,
-        library_dirs=ext_library_dirs,
-        swig_opts=[
-            '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
-            '-I%s' % os.path.join(package_root, 'swig'),
-            '-I%s' % os.path.join(package_root, 'include'),
-        ],
-        extra_compile_args=cxx_flags,
-        extra_link_args=linker_flags
-    )
-
-    # see `set_compiler_specific_extension_options`
-    ext.extra_compile_args_mingw32 = ['-std=c++14']
-    ext.extra_compile_args_unix = ['-std=c++14']
-    ext.extra_compile_args_msvc = ['/std:c++14']
-
     # clibs
     amici_base_dir = Path('TPL_MODELNAME')
     suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
@@ -181,13 +145,51 @@ def get_extension() -> Tuple[Extension, List[Library]]:
         suitesparse_base_dir=suitesparse_base_dir
     )
 
+    ext_include_dirs = [
+        os.getcwd(),
+        os.path.join(package_root, 'include'),
+        os.path.join(package_root, "ThirdParty", "gsl"),
+        *libsundials[1]['include_dirs'],
+        *libsuitesparse[1]['include_dirs'],
+        *h5pkgcfg['include_dirs'],
+        *blaspkgcfg['include_dirs'],
+        np.get_include(),
+    ]
+
+    ext_library_dirs = [
+        *h5pkgcfg['library_dirs'],
+        *blaspkgcfg['library_dirs'],
+        os.path.join(package_root, 'libs')
+    ]
+
+    # Build shared object
+    ext = Extension(
+        name='TPL_MODELNAME._TPL_MODELNAME',
+        sources=sources,
+        include_dirs=ext_include_dirs,
+        libraries=libraries,
+        library_dirs=ext_library_dirs,
+        swig_opts=[
+            '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
+            '-I%s' % os.path.join(package_root, 'swig'),
+            '-I%s' % os.path.join(package_root, 'include'),
+        ],
+        extra_compile_args=cxx_flags,
+        extra_link_args=linker_flags
+    )
+
+    # see `set_compiler_specific_extension_options`
+    ext.extra_compile_args_mingw32 = ['-std=c++14']
+    ext.extra_compile_args_unix = ['-std=c++14']
+    ext.extra_compile_args_msvc = ['/std:c++14']
+
     return ext, [libamici, libsundials, libsuitesparse]
 
 
 # Change working directory to setup.py location
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-MODEL_EXT, LIBRARIES = get_extension()
+MODEL_EXT, LIBRARIES = get_extension_and_libs()
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
