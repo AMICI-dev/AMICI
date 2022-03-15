@@ -93,7 +93,7 @@ def get_extension_and_libs() -> Tuple[Extension, List[Library]]:
         from amici import compiledWithOpenMP
         # Only build model with OpenMP support if AMICI base packages was built
         #  that way
-        # (still necessary during the transition part when amici core objects
+        # (still necessary during the transition period when amici core objects
         #  might be used from either the model package or the amici base
         #  package)
         with_openmp = compiledWithOpenMP()
@@ -161,6 +161,13 @@ def get_extension_and_libs() -> Tuple[Extension, List[Library]]:
         *blaspkgcfg['library_dirs'],
         os.path.join(package_root, 'libs')
     ]
+    swig_opts = [
+        '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
+        '-I%s' % os.path.join(package_root, 'swig'),
+        '-I%s' % os.path.join(package_root, 'include'),
+    ]
+    if not h5pkgcfg['found']:
+        swig_opts.append('-DAMICI_SWIG_WITHOUT_HDF5')
 
     # Build shared object
     ext = Extension(
@@ -169,11 +176,7 @@ def get_extension_and_libs() -> Tuple[Extension, List[Library]]:
         include_dirs=ext_include_dirs,
         libraries=libraries,
         library_dirs=ext_library_dirs,
-        swig_opts=[
-            '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
-            '-I%s' % os.path.join(package_root, 'swig'),
-            '-I%s' % os.path.join(package_root, 'include'),
-        ],
+        swig_opts=swig_opts,
         extra_compile_args=cxx_flags,
         extra_link_args=linker_flags
     )

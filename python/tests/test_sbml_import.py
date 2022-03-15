@@ -538,5 +538,4 @@ def test_amici_core_from_model(simple_sbml_model):
         model = model_module.getModel()
         solver = model.getSolver()
         rdata = model_module.runAmiciSimulation(model, solver)
-        print(rdata)
-        assert rdata.status == amici.AMICI_SUCCESS
+        assert rdata.status == model_module.AMICI_SUCCESS

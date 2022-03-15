@@ -268,8 +268,7 @@ def get_lib_amici(
             get_amici_base_sources(
                 amici_base_dir,
                 with_hdf5=(h5pkgcfg
-                           and 'include_dirs' in h5pkgcfg
-                           and len(h5pkgcfg['include_dirs']))
+                           and len(h5pkgcfg.get('include_dirs', '')) > 0)
             ),
         'include_dirs': [
             str(amici_base_dir / 'include'),
