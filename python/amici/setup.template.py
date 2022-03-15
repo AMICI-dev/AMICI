@@ -13,7 +13,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from TPL_MODELNAME.custom_commands import (
     set_compiler_specific_extension_options,
-    compile_parallel
+    compile_parallel,
+    AmiciBuildCLib,
 )
 from TPL_MODELNAME.setuptools import (
     get_blas_config,
@@ -201,6 +202,7 @@ CLASSIFIERS = [
 CMDCLASS = {
     # For parallel compilation and custom swig finder
     'build_ext': ModelBuildExt,
+    'build_clib': AmiciBuildCLib,
 }
 
 # Install

@@ -45,7 +45,6 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
                      extra_postargs=None, depends=None):
     """Parallelized version of distutils.ccompiler.compile"""
-
     macros, objects, extra_postargs, pp_opts, build = \
         self._setup_compile(output_dir, macros, include_dirs, sources,
                             depends, extra_postargs)
@@ -94,8 +93,12 @@ class AmiciBuildCLib(build_clib):
         print("running AmiciBuildCLib.build_libraries")
 
         no_clibs = 'develop' in self.distribution.command_obj \
+                   and hasattr(self.get_finalized_command('develop'),
+                               'no_clibs') \
                    and self.get_finalized_command('develop').no_clibs
         no_clibs |= 'install' in self.distribution.command_obj \
+                    and hasattr(self.get_finalized_command('install'),
+                                'no_clibs')\
                     and self.get_finalized_command('install').no_clibs
 
         if no_clibs:
