@@ -250,11 +250,16 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
      We therefore compute the integral over xB first and then do a
      matrix-vector multiplication */
 
-    /* Try to compute the analytical solution for quadrature algebraically */
-    getQuadratureByLinSolve(newtonSolver, model);
+    auto sensitivityMode = model->getSteadyStateSensitivityMode();
 
-    /* Analytical solution didn't work, perform simulation instead */
-    if (!hasQuadrature())
+    /* Try to compute the analytical solution for quadrature algebraically */
+    if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly 
+        || sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails)
+        getQuadratureByLinSolve(newtonSolver, model);
+
+    /* Perform simulation */
+    if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly || 
+        (sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails && !hasQuadrature()))
         getQuadratureBySimulation(solver, model);
 
     /* If analytic solution and integration did not work, throw an Exception */
@@ -377,7 +382,7 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
     bool forwardSensisAlreadyComputed =
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         steady_state_status_[1] == SteadyStateStatus::success &&
-        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
+        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrationOnly;
 
     bool simulationStartedInSteadystate =
         steady_state_status_[0] == SteadyStateStatus::success &&
@@ -402,7 +407,11 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
     /* When we're creating a new solver object */
     bool needForwardSensiAtCreation = needForwardSensisPreeq &&
-        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
+        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrationOnly;
+
+    if (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrateIfNewtonFails)
+            throw AmiException(" SteadyStateSensitivityMode is not compatible with "
+                               "forward sensitivities approach");
 
     /* Check if we need to store sensis */
     switch (context) {
@@ -651,7 +660,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
         numsteps_.at(1) = sim_steps;
         if (solver->getSensitivityOrder() > SensitivityOrder::none &&
             model->getSteadyStateSensitivityMode() ==
-            SteadyStateSensitivityMode::simulationFSA)
+            SteadyStateSensitivityMode::integrationOnly)
             sx_ = solver->getStateSensitivity(t_);
     }
 }
