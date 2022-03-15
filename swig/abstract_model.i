@@ -62,5 +62,10 @@
 %ignore fx0_fixedParameters;
 %ignore fsx0;
 %ignore fsx0_fixedParameters;
-
+%ignore fdx_rdatadtcl_colptrs;
+%ignore fdx_rdatadtcl_rowvals;
+%ignore fdx_rdatadx_solver_colptrs;
+%ignore fdx_rdatadx_solver_rowvals;
+%ignore fdtotal_cldx_rdata_colptrs;
+%ignore fdtotal_cldx_rdata_rowvals;
 %include "amici/abstract_model.h"

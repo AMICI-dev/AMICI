@@ -1528,24 +1528,22 @@ void Model::fdsigmaydy(const int it, const ExpData *edata) {
     if (!ny)
         return;
 
-    derived_state_.dsigmaydy_.assign(ny * nplist(), 0.0);
+    derived_state_.dsigmaydy_.assign(ny * ny, 0.0);
 
-    for (int ip = 0; ip < nplist(); ip++)
-        // get dsigmaydy slice (ny) for current timepoint and parameter
-        fdsigmaydy(&derived_state_.dsigmaydy_.at(ip * ny), getTimepoint(it),
-                   state_.unscaledParameters.data(),
-                   state_.fixedParameters.data(),
-                   derived_state_.y_.data(),
-                   plist(ip));
+    // get dsigmaydy slice (ny) for current timepoint
+    fdsigmaydy(derived_state_.dsigmaydy_.data(), getTimepoint(it),
+               state_.unscaledParameters.data(),
+               state_.fixedParameters.data(),
+               derived_state_.y_.data());
 
    // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydy
    // to zero
     if (edata) {
-        for (int iy = 0; iy < nytrue; iy++) {
-            if (!edata->isSetObservedDataStdDev(it, iy))
+        for (int isigmay = 0; isigmay < nytrue; ++isigmay) {
+            if (!edata->isSetObservedDataStdDev(it, isigmay))
                 continue;
-            for (int ip = 0; ip < nplist(); ip++) {
-                derived_state_.dsigmaydy_.at(ip * ny + iy) = 0.0;
+            for (int iy = 0; iy < nytrue; ++iy) {
+                derived_state_.dsigmaydy_.at(isigmay * ny + iy) = 0.0;
             }
         }
     }
@@ -2185,15 +2183,43 @@ void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
 }
 
 void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                      const realtype */*stcl*/, const realtype */*p*/,
-                      const realtype */*k*/, const realtype * /*x_solver*/,
-                      const realtype */*tcl*/,
-                      const int /*ip*/) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own fx_rdata");
-    std::copy_n(sx_solver, nx_solver, sx_rdata);
+                      const realtype *stcl, const realtype *p,
+                      const realtype *k, const realtype *x_solver,
+                      const realtype *tcl,
+                      const int ip) {
+    if (nx_solver == nx_rdata) {
+        std::copy_n(sx_solver, nx_solver, sx_rdata);
+        return;
+    }
+
+    // sx_rdata = dx_rdata/dx_solver * sx_solver
+    //             + dx_rdata/d_tcl * stcl + dxrdata/dp
+
+    // 1) sx_rdata(nx_rdata, 1) = dx_rdatadp
+    std::fill_n(sx_rdata, nx_rdata, 0.0);
+    fdx_rdatadp(sx_rdata, x_solver, tcl, p, k, ip);
+
+
+    // the following could be moved to the calling function, as it's independent
+    //  of `ip`
+
+    // 2) sx_rdata(nx_rdata, 1) +=
+    //          dx_rdata/dx_solver(nx_rdata,nx_solver) * sx_solver(nx_solver, 1)
+    derived_state_.dx_rdatadx_solver.zero();
+    fdx_rdatadx_solver(derived_state_.dx_rdatadx_solver.data(),
+                       x_solver, tcl, p, k);
+    fdx_rdatadx_solver_colptrs(derived_state_.dx_rdatadx_solver);
+    fdx_rdatadx_solver_rowvals(derived_state_.dx_rdatadx_solver);
+    derived_state_.dx_rdatadx_solver.multiply(gsl::make_span(sx_rdata, nx_rdata),
+                                              gsl::make_span(sx_solver, nx_solver));
+
+    // 3) sx_rdata(nx_rdata, 1) += dx_rdata/d_tcl(nx_rdata,ntcl) * stcl
+    derived_state_.dx_rdatadtcl.zero();
+    fdx_rdatadtcl(derived_state_.dx_rdatadtcl.data(), x_solver, tcl, p, k);
+    fdx_rdatadtcl_colptrs(derived_state_.dx_rdatadtcl);
+    fdx_rdatadtcl_rowvals(derived_state_.dx_rdatadtcl);
+    derived_state_.dx_rdatadtcl.multiply(gsl::make_span(sx_rdata, nx_rdata),
+                                         gsl::make_span(stcl, (nx_rdata - nx_solver)));
 }
 
 void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
@@ -2219,14 +2245,31 @@ void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/,
             "to implement its own ftotal_cl");
 }
 
-void Model::fstotal_cl(realtype */*stotal_cl*/, const realtype */*sx_rdata*/,
-                       const int /*ip*/, const realtype */*x_rdata*/,
-                       const realtype */*p*/, const realtype */*k*/,
-                       const realtype */*tcl*/) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own ftotal_cl");
+void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
+                       const int ip, const realtype *x_rdata,
+                       const realtype *p, const realtype *k,
+                       const realtype *tcl) {
+    if (nx_solver == nx_rdata)
+        return;
+
+    // stotal_cl(ncl,1) =
+    //            dtotal_cl/dp(ncl,1)
+    //          + dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
+
+    // 1) stotal_cl = dtotal_cl/dp
+    std::fill_n(stotal_cl, ncl(), 0.0);
+    fdtotal_cldp(stotal_cl, x_rdata, p, k, ip);
+
+
+    // 2) stotal_cl += dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
+    derived_state_.dtotal_cldx_rdata.zero();
+    fdtotal_cldx_rdata(derived_state_.dtotal_cldx_rdata.data(),
+                       x_rdata, tcl, p, k);
+    fdtotal_cldx_rdata_colptrs(derived_state_.dtotal_cldx_rdata);
+    fdtotal_cldx_rdata_rowvals(derived_state_.dtotal_cldx_rdata);
+    derived_state_.dtotal_cldx_rdata.multiply(
+        gsl::make_span(stotal_cl, ncl()),
+        gsl::make_span(sx_rdata, nx_rdata));
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

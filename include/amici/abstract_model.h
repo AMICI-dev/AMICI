@@ -586,11 +586,10 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param y model output at timepoint t
-     * @param ip sensitivity index
      */
     virtual void fdsigmaydy(realtype *dsigmaydy, const realtype t,
                             const realtype *p, const realtype *k,
-                            const realtype *y, int ip);
+                            const realtype *y);
 
 
     /**
@@ -871,6 +870,106 @@ class AbstractModel {
      * @param dwdw sparse matrix to which rowvals will be written
      */
     virtual void fdwdw_rowvals(SUNMatrixWrapper &dwdw);
+
+    /**
+     * @brief Compute dx_rdata / dx_solver
+     * @param dx_rdatadx_solver dx_rdata / dx_solver
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdx_rdatadx_solver(realtype *dx_rdatadx_solver,
+                                    const realtype *x, const realtype *tcl,
+                                    const realtype *p, const realtype *k);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadx_solver, colptrs part
+     * @param dxrdatadxsolver sparse matrix to which colptrs will be written
+     */
+    virtual void fdx_rdatadx_solver_colptrs(SUNMatrixWrapper &dxrdatadxsolver);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadx_solver, rowvals part
+     * @param dxrdatadxsolver sparse matrix to which rowvals will be written
+     */
+    virtual void fdx_rdatadx_solver_rowvals(SUNMatrixWrapper &dxrdatadxsolver);
+
+    /**
+     * @brief Compute dx_rdata / dp
+     * @param dx_rdatadp dx_rdata / dp
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     * @param ip Sensitivity index
+     */
+    virtual void fdx_rdatadp(realtype *dx_rdatadp, const realtype *x,
+                             const realtype *tcl, const realtype *p,
+                             const realtype *k, const int ip);
+
+    /**
+     * @brief Compute dx_rdata / dtcl
+     * @param dx_rdatadtcl dx_rdata / dtcl
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x,
+                               const realtype *tcl, const realtype *p,
+                               const realtype *k);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadtcl, colptrs part
+     * @param dx_rdatadtcl sparse matrix to which colptrs will be written
+     */
+    virtual void fdx_rdatadtcl_colptrs(SUNMatrixWrapper &dx_rdatadtcl);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadtcl, rowvals part
+     * @param dx_rdatadtcl sparse matrix to which rowvals will be written
+     */
+    virtual void fdx_rdatadtcl_rowvals(SUNMatrixWrapper &dx_rdatadtcl);
+
+    /**
+     * @brief Compute dtotal_cl / dp
+     * @param dtotal_cldp dtotal_cl / dp
+     * @param x_rdata State variables with conservation laws applied
+     * @param p parameter vector
+     * @param k constant vector
+     * @param ip Sensitivity index
+     */
+    virtual void fdtotal_cldp(realtype *dtotal_cldp, const realtype *x_rdata,
+                             const realtype *p, const realtype *k,
+                             const int ip);
+
+    /**
+     * @brief Compute dtotal_cl / dx_rdata
+     * @param dtotal_cldx_rdata dtotal_cl / dx_rdata
+     * @param x_rdata State variables with conservation laws applied
+     * @param p parameter vector
+     * @param k constant vector
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdtotal_cldx_rdata(realtype *dtotal_cldx_rdata,
+                                   const realtype *x_rdata, const realtype *p,
+                                   const realtype *k, const realtype *tcl);
+
+    /**
+     * @brief Model-specific implementation of fdtotal_cldx_rdata, colptrs part
+     * @param dtotal_cldx_rdata sparse matrix to which colptrs will be written
+     */
+    virtual void fdtotal_cldx_rdata_colptrs(
+        SUNMatrixWrapper &dtotal_cldx_rdata);
+
+    /**
+     * @brief Model-specific implementation of fdtotal_cldx_rdata, rowvals part
+     * @param dtotal_cldx_rdata sparse matrix to which rowvals will be written
+     */
+    virtual void fdtotal_cldx_rdata_rowvals(
+        SUNMatrixWrapper &dtotal_cldx_rdata);
+
 };
 
 } // namespace amici

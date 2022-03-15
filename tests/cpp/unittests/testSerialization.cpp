@@ -153,9 +153,12 @@ TEST(ModelSerializationTest, ToFile)
             2,         // dwdw
             13,         // ndxdotdw
             {},         // ndJydy
-            15,         // nnz
-            16,         // ubw
-            17         // lbw
+            9,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
+            0,          // ndtotal_cldx_rdata
+            17,         // nnz
+            18,         // ubw
+            19          // lbw
             ),
         amici::SimulationParameters(
             std::vector<realtype>(nk, 0.0),
@@ -214,9 +217,12 @@ TEST(ReturnDataSerializationTest, ToString)
             12,        // dwdw
             13,        // ndxdotdw
             {},        // ndJydy
-            15,        // nnz
-            16,        // ubw
-            17         // lbw
+            9,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
+            0,         // ndtotal_cldx_rdata
+            17,        // nnz
+            18,        // ubw
+            19         // lbw
             ),
         amici::SimulationParameters(
             std::vector<realtype>(nk, 0.0),
