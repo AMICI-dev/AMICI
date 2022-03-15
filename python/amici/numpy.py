@@ -12,6 +12,15 @@ from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData
 from typing import Union, List, Dict, Iterator
 
 
+def _isinstance(obj, class_or_tuple):
+    if not isinstance(class_or_tuple, tuple):
+        class_or_tuple = (class_or_tuple,)
+    obj_cls_names = {x.__name__.split(".")[-1] for x in obj.__class__.__mro__}
+    return any(
+        cls.__name__.split(".")[-1] in obj_cls_names for cls in class_or_tuple
+    )
+
+
 class SwigPtrView(collections.abc.Mapping):
     """
     Interface class to expose std::vector<double> and scalar members of
@@ -167,7 +176,7 @@ class ReturnDataView(SwigPtrView):
 
         :param rdata: pointer to the ReturnData instance
         """
-        if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
+        if not _isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(f'Unsupported pointer {type(rdata)}, must be'
                             f'amici.ExpDataPtr!')
         self._field_dimensions = {
@@ -258,7 +267,7 @@ class ExpDataView(SwigPtrView):
 
         :param edata: pointer to the ExpData instance
         """
-        if not isinstance(edata, (ExpDataPtr, ExpData)):
+        if not _isinstance(edata, (ExpDataPtr, ExpData)):
             raise TypeError(f'Unsupported pointer {type(edata)}, must be'
                             f'amici.ExpDataPtr!')
         self._field_dimensions = {  # observables

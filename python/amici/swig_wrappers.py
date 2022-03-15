@@ -16,11 +16,12 @@ __all__ = [
     'AmiciExpDataVector'
 ]
 
-AmiciModel = Union['amici.Model', 'amici.ModelPtr']
-AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
-AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
-AmiciReturnData = Union['amici.ReturnData', 'amici.ReturnDataPtr']
-AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
+AmiciModel = Union['amici_swig.Model', 'amici_swig.ModelPtr']
+AmiciSolver = Union['amici_swig.Solver', 'amici_swig.SolverPtr']
+AmiciExpData = Union['amici_swig.ExpData', 'amici_swig.ExpDataPtr']
+AmiciReturnData = Union['amici_swig.ReturnData', 'amici_swig.ReturnDataPtr']
+AmiciExpDataVector = Union['amici_swig.ExpDataPtrVector',
+                           Sequence[AmiciExpData]]
 
 
 try:
@@ -53,8 +54,9 @@ def _get_ptr(
     :returns:
         Non-smart pointer
     """
-    if isinstance(obj, (amici_swig.ModelPtr, amici_swig.ExpDataPtr,
-                        amici_swig.SolverPtr, amici_swig.ReturnDataPtr)):
+    if numpy._isinstance(obj, (
+            amici_swig.ModelPtr, amici_swig.ExpDataPtr,
+            amici_swig.SolverPtr, amici_swig.ReturnDataPtr)):
         return obj.get()
     return obj
 
@@ -95,14 +97,15 @@ def ExpData(*args) -> 'amici_swig.ExpData':
 
     :returns: ExpData Instance
     """
-    if isinstance(args[0], numpy.ReturnDataView):
+    if numpy._isinstance(args[0], numpy.ReturnDataView):
         return amici_swig.ExpData(_get_ptr(args[0]['ptr']), *args[1:])
-    elif isinstance(args[0], (amici_swig.ExpData, amici_swig.ExpDataPtr)):
+    elif numpy._isinstance(args[0],
+                           (amici_swig.ExpData, amici_swig.ExpDataPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed, and you are glad this
         # wrapper did not break.
         return amici_swig.ExpData(_get_ptr(args[0]), *args[1:])
-    elif isinstance(args[0], (amici_swig.Model, amici_swig.ModelPtr)):
+    elif numpy._isinstance(args[0], (amici_swig.Model, amici_swig.ModelPtr)):
         return amici_swig.ExpData(_get_ptr(args[0]))
     else:
         return amici_swig.ExpData(*args)
