@@ -1,9 +1,12 @@
 """Convenience wrappers for the swig interface"""
 import sys
 from contextlib import contextmanager, suppress
-from typing import List, Optional, Union, Sequence, Dict, Any
-import amici.amici as amici_swig
+from typing import Any, Dict, List, Optional, Sequence, Union
+
 from . import numpy
+
+amici_swig = sys.modules[f"{__package__}.{__package__}"]
+
 
 __all__ = [
     'runAmiciSimulation', 'runAmiciSimulations', 'ExpData',

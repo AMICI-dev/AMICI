@@ -42,6 +42,8 @@ def _imported_from_setup() -> bool:
 
 
 if not _imported_from_setup():
-    from TPL_MODELNAME._TPL_MODELNAME import *
+    # swig interface has to be imported before importing from .swig_wrappers
+    from TPL_MODELNAME.TPL_MODELNAME import *
+    from .swig_wrappers import *
 
 __version__ = 'TPL_PACKAGE_VERSION'

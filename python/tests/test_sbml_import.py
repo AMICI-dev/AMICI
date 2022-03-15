@@ -50,8 +50,8 @@ def test_sbml2amici_no_observables(simple_sbml_model):
                                  compute_conservation_laws=False)
 
         # Ensure import succeeds (no missing symbols)
-        module_module = amici.import_model_module("test", tmpdir)
-        assert hasattr(module_module, 'getModel')
+        model_module = amici.import_model_module("test", tmpdir)
+        assert hasattr(model_module, 'getModel')
 
 
 def test_sbml2amici_nested_observables_fail(simple_sbml_model):

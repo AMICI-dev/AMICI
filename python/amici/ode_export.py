@@ -3038,7 +3038,8 @@ class ODEExporter:
         tp = Path("ThirdParty")
         for item in ('src', 'include', tp / 'gsl', tp / 'SuiteSparse',
                      tp / 'sundials', 'swig', 'setup_clibs.py',
-                     'custom_commands.py', 'setuptools.py', 'swig.py'):
+                     'custom_commands.py', 'setuptools.py', 'swig.py',
+                     'swig_wrappers.py', 'numpy.py'):
             src_path = amici_package_path / item
             if src_path.is_dir():
                 dest_path = model_package_path / item
