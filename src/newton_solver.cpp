@@ -175,7 +175,7 @@ bool NewtonSolverDense::is_singular() const {
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
     NewtonSolverSparse sparse_solver(t_, x_, model_);
     sparse_solver.prepareLinearSystem(0, 0);
-    return sparse_solver->is_singular();
+    return sparse_solver.is_singular();
 }
 
 NewtonSolverDense::~NewtonSolverDense() {
@@ -239,20 +239,19 @@ bool NewtonSolverSparse::is_singular() const {
     // first cheap check via rcond
     int status = sun_klu_rcond(content->symbolic, content->numeric,
                                &content->common);
-    if(status != SUNLS_SUCCESS)
-        throw NewtonFailure(status, "sun_klu_rcond");
+    if(status == 0)
+        throw NewtonFailure(content->last_flag, "sun_klu_rcond");
     
-    auto precision = SUNRpowerR(UNIT_ROUNDOFF, 2.0/3.0);
+    auto precision = std::numeric_limits<realtype>::epsilon()
     
     if (content->common.rcond < precision) {
         // cheap check indicates singular, expensive check via condest
-        status = sun_klu_condest((KLU_INDEXTYPE*) SM_INDEXPTRS_S(Jtmp_.get()),
-                                 SM_DATA_S(Jtmp_.get()),
-                                 content->symbolic,
-                                 content->numeric,
-                                 &content->common);
-        if(status != SUNLS_SUCCESS)
-            throw NewtonFailure(status, "sun_klu_rcond");
+        status = sun_klu_condest(
+            reinterpret_cast<KLU_INDEXTYPE*>(SM_INDEXPTRS_S(Jtmp_.get())),
+            SM_DATA_S(Jtmp_.get()), content->symbolic, content->numeric,
+            &content->common);
+        if(status == 0)
+            throw NewtonFailure(content->last_flag, "sun_klu_rcond");
         return content->common.condest > 1.0/precision;
     }
     return false;
