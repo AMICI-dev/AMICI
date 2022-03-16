@@ -16,7 +16,7 @@
 #include <memory>
 #include <cvodes/cvodes.h>
 
-#define CONV_T = RCONST(1.0)
+#define CONV_T RCONST(1.0)
 
 namespace amici {
 
