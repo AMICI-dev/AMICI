@@ -34,11 +34,6 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi()),
       atol_quad_(solver.getAbsoluteToleranceQuadratures()),
       rtol_quad_(solver.getRelativeToleranceQuadratures()) {
-          /* maxSteps must be adapted if iterative linear solvers are used */
-          if (solver.getLinearSolver() == LinearSolver::SPBCG) {
-              max_steps_ = solver.getNewtonMaxSteps();
-              numlinsteps_.resize(2 * max_steps_, 0);
-          }
           /* Check for compatibility of options */
           if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
               solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint &&
