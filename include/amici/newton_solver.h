@@ -97,6 +97,14 @@ class NewtonSolver {
      * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector &rhs) = 0;
+    
+    /**
+     * @brief Checks whether linear system is singular
+     *
+     * @return boolean indicating whether the linear system is singular
+     * (condition number < 1/machine precision)
+     */
+    virtual bool is_singular() const = 0;
 
     virtual ~NewtonSolver() = default;
 
@@ -185,6 +193,8 @@ class NewtonSolverDense : public NewtonSolver {
      * @param nnewt integer number of current Newton step
      */
     void prepareLinearSystemB(int ntry, int nnewt) override;
+    
+    bool is_singular() const override;
 
   private:
     /** temporary storage of Jacobian */
@@ -245,6 +255,8 @@ class NewtonSolverSparse : public NewtonSolver {
      * @param nnewt integer number of current Newton step
      */
     void prepareLinearSystemB(int ntry, int nnewt) override;
+    
+    bool is_singular() const override;
 
   private:
     /** temporary storage of Jacobian */

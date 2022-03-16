@@ -5,10 +5,18 @@
 
 #include "sunlinsol/sunlinsol_klu.h" // sparse solver
 #include "sunlinsol/sunlinsol_dense.h" // dense solver
+#include <sundials/sundials_math.h> // roundoffs
 
 #include <cstring>
 #include <ctime>
 #include <cmath>
+
+// taken from sundials/src/sunlinsol/klu/sunlinsol_klu.c
+#if defined(SUNDIALS_INT64_T)
+#define KLU_INDEXTYPE long int
+#else
+#define KLU_INDEXTYPE int
+#endif
 
 namespace amici {
 
@@ -91,6 +99,8 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta) {
 void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     prepareLinearSystem(0, -1);
     model_->fdxdotdp(*t_, *x_, dx_);
+    
+    check_cond();
 
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
@@ -160,6 +170,10 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
 
 /* ------------------------------------------------------------------------- */
 
+bool NewtonSolverDense::is_singular() const {
+    
+}
+
 NewtonSolverDense::~NewtonSolverDense() {
     if(linsol_)
         SUNLinSolFree_Dense(linsol_);
@@ -214,6 +228,31 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector &rhs) {
 }
 
 /* ------------------------------------------------------------------------- */
+
+bool NewtonSolverSparse::is_singular() const {
+    // adapted from SUNLinSolSetup_KLU in sunlinsol/klu/sunlinsol_klu.c
+    auto content = (SUNLinearSolverContent_KLU)(linsol_->content);
+    // first cheap check via rcond
+    int status = sun_klu_rcond(content->symbolic, content->numeric,
+                               &content->common);
+    if(status != AMICI_SUCCESS)
+        throw NewtonFailure(status, "sun_klu_rcond");
+    
+    auto precision = SUNRpowerR(UNIT_ROUNDOFF, 2.0/3.0);
+    
+    if (content->common.rcond < precision) {
+        // cheap check indicates singular, expensive check via condest
+        status = sun_klu_condest((KLU_INDEXTYPE*) SM_INDEXPTRS_S(Jtmp_.get()),
+                                 SM_DATA_S(Jtmp_.get()),
+                                 content->symbolic,
+                                 content->numeric,
+                                 &content->common);
+        if(status != AMICI_SUCCESS)
+            throw NewtonFailure(status, "sun_klu_rcond");
+        return content->common.condest > 1.0/precision;
+    }
+    return false;
+}
 
 NewtonSolverSparse::~NewtonSolverSparse() {
     if(linsol_)
