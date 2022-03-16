@@ -173,11 +173,9 @@ bool NewtonSolverDense::is_singular() const {
     // dense solver doesn't have any implementation for rcond/condest, so use
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
-    auto sparse_solver = new NewtonSolverSparse(t_, x_, model_);
-    sparse_solver->prepareLinearSystem(0,0);
-    auto is_singular = sparse_solver->is_singular();
-    delete sparse_solver;
-    return is_singular;
+    NewtonSolverSparse sparse_solver(t_, x_, model_);
+    sparse_solver.prepareLinearSystem(0, 0);
+    return sparse_solver->is_singular();
 }
 
 NewtonSolverDense::~NewtonSolverDense() {
