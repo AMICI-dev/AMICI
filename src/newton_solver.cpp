@@ -97,7 +97,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     prepareLinearSystem(0, -1);
     model_->fdxdotdp(*t_, *x_, dx_);
     
-    if (is_singular());
+    if (is_singular())
         model_->app->warningF("AMICI:newton",
                               "Jacobian is singular at steadystate, sensitivities may be inaccurate");
 
@@ -129,7 +129,7 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
     : NewtonSolver(t, x, model), Jtmp_(model->nx_solver, model->nx_solver),
       linsol_(SUNLinSol_Dense(x->getNVector(), Jtmp_.get())) {
     int status = SUNLinSolInitialize_Dense(linsol_);
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
 }
 
@@ -139,7 +139,7 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
@@ -149,7 +149,7 @@ void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
@@ -163,7 +163,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
     Jtmp_.refresh();
     // last argument is tolerance and does not have any influence on result
 
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }
 
@@ -195,7 +195,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
       Jtmp_(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
       linsol_(SUNKLU(x->getNVector(), Jtmp_.get())) {
     int status = SUNLinSolInitialize_KLU(linsol_);
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
 }
 
@@ -206,7 +206,7 @@ void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
@@ -217,7 +217,7 @@ void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
@@ -229,7 +229,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector &rhs) {
                                     rhs.getNVector(), rhs.getNVector(), 0.0);
     // last argument is tolerance and does not have any influence on result
 
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_KLU");
 }
 
@@ -241,7 +241,7 @@ bool NewtonSolverSparse::is_singular() const {
     // first cheap check via rcond
     int status = sun_klu_rcond(content->symbolic, content->numeric,
                                &content->common);
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "sun_klu_rcond");
     
     auto precision = SUNRpowerR(UNIT_ROUNDOFF, 2.0/3.0);
@@ -253,7 +253,7 @@ bool NewtonSolverSparse::is_singular() const {
                                  content->symbolic,
                                  content->numeric,
                                  &content->common);
-        if(status != AMICI_SUCCESS)
+        if(status != SUNLS_SUCCESS)
             throw NewtonFailure(status, "sun_klu_rcond");
         return content->common.condest > 1.0/precision;
     }
