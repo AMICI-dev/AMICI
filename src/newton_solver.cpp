@@ -5,7 +5,7 @@
 
 #include "sunlinsol/sunlinsol_klu.h" // sparse solver
 #include "sunlinsol/sunlinsol_dense.h" // dense solver
-#include <sundials/sundials_math.h> // roundoffs
+#include <sundials/sundials_config.h> // roundoffs
 
 #include <cstring>
 #include <ctime>
@@ -242,12 +242,12 @@ bool NewtonSolverSparse::is_singular() const {
     if(status == 0)
         throw NewtonFailure(content->last_flag, "sun_klu_rcond");
     
-    auto precision = std::numeric_limits<realtype>::epsilon()
+    auto precision = std::numeric_limits<realtype>::epsilon();
     
     if (content->common.rcond < precision) {
         // cheap check indicates singular, expensive check via condest
         status = sun_klu_condest(
-            reinterpret_cast<KLU_INDEXTYPE*>(SM_INDEXPTRS_S(Jtmp_.get())),
+            static_cast<KLU_INDEXTYPE*>(SM_INDEXPTRS_S(Jtmp_.get())),
             SM_DATA_S(Jtmp_.get()), content->symbolic, content->numeric,
             &content->common);
         if(status == 0)
