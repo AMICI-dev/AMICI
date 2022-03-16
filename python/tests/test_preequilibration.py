@@ -359,19 +359,3 @@ def test_newton_solver_equilibration(preeq_fixture):
             rdatas[settings[1]][variable],
             1e-6, 1e-6
         ).all(), variable
-
-    # test failure for iterative linear solver with sensitivities
-    edata.fixedParametersPreequilibration = ()
-    edata.t_presim = 0.0
-    edata.fixedParametersPresimulation = ()
-
-    solver.setLinearSolver(amici.LinearSolver.SPBCG)
-    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.newtonOnly)
-    solver.setNewtonMaxSteps(10)
-    solver.setNewtonMaxLinearSteps(10)
-    rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
-
-    assert rdata_spbcg['status'] == amici.AMICI_ERROR
