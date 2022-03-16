@@ -463,13 +463,19 @@ realtype SteadystateProblem::getWrms(Model *model,
     
 realtype SteadystateProblem::getWrmsFSA(Model *model) {
     /* Forward sensitivities: Compute weighted error norm for their RHS */
-    realtype wrms = INFINITY;
+    realtype wrms = 0.0;
     for (int ip = 0; ip < model->nplist(); ++ip) {
-        if (wrms >= conv_thresh)
-            break;
         model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
         wrms = getWrmsNorm(sx_[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
+        /* ideally this function would report the maximum of all wrms over
+         all ip, but for practical purposes we can just report the wrms for
+         the first ip where we know that the convergence threshold is not
+         satisfied. */
+        if (wrms > conv_thresh)
+            break;
     }
+    /* just report the parameter for the last ip, value doesn't matter it's
+     only important that all of them satisfy the convergence threshold */
     return wrms;
 }
 
