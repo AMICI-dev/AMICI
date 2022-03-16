@@ -247,7 +247,7 @@ bool NewtonSolverSparse::is_singular() const {
     if (content->common.rcond < precision) {
         // cheap check indicates singular, expensive check via condest
         status = sun_klu_condest(
-            static_cast<KLU_INDEXTYPE*>(SM_INDEXPTRS_S(Jtmp_.get())),
+            reinterpret_cast<KLU_INDEXTYPE*>(SM_INDEXPTRS_S(Jtmp_.get())),
             SM_DATA_S(Jtmp_.get()), content->symbolic, content->numeric,
             &content->common);
         if(status == 0)
