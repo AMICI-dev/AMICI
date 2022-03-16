@@ -54,16 +54,6 @@ def writeSensiForwardDense(filename):
     ex.writeToFile(filename, '/model_steadystate/sensiforwarddense/')
 
 
-def writeNosensiSPBCG(filename):
-    ex = ExampleSteadystate()
-
-    ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sensi'] = 0
-    ex.solverOptions['linsol'] = 7
-
-    ex.writeToFile(filename, '/model_steadystate/nosensiSPBCG/')
-
-
 def writeSensiForwardErrorInt(filename):
     ex = ExampleSteadystate()
 
@@ -379,7 +369,6 @@ def main():
     writeSensiForward(filename)
     writeSensiForwardPlist(filename)
     writeSensiForwardDense(filename)
-    writeNosensiSPBCG(filename)
     writeSensiForwardErrorInt(filename)
     writeSensiForwardErrorNewt(filename)
     writeSensiFwdNewtonPreeq(filename)
