@@ -26,11 +26,6 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       xB_(model.nJ * model.nx_solver), xQ_(model.nJ * model.nx_solver),
       xQB_(model.nplist()), xQBdot_(model.nplist()),
       dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0) {
-          /* maxSteps must be adapted if iterative linear solvers are used */
-          if (solver.getLinearSolver() == LinearSolver::SPBCG) {
-              max_steps_ = solver.getNewtonMaxSteps();
-              numlinsteps_.resize(2 * max_steps_, 0);
-          }
           /* Check for compatibility of options */
           if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
               solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint &&
