@@ -16,7 +16,7 @@
 #include <memory>
 #include <cvodes/cvodes.h>
 
-#define CONV_T RCONST(1.0)
+constexpr realtype conv_thresh = 1.0;
 
 namespace amici {
 
@@ -465,10 +465,10 @@ realtype SteadystateProblem::getWrmsFSA(Model *model) {
     /* Forward sensitivities: Compute weighted error norm for their RHS */
     realtype wrms = INFINITY;
     for (int ip = 0; ip < model->nplist(); ++ip) {
-        if (wrms >= CONV_T) {
-            model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
-            wrms = getWrmsNorm(sx_[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
-        }
+        if (wrms >= conv_thresh)
+            break;
+        model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
+        wrms = getWrmsNorm(sx_[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
     }
     return wrms;
 }
@@ -506,7 +506,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     xdot_old_ = xdot_;
 
     wrms_ = getWrms(model, SensitivityMethod::none);
-    bool converged = newton_retry ? false : wrms_ < CONV_T;
+    bool converged = newton_retry ? false : wrms_ < conv_thresh;
     while (!converged && i_newtonstep < newtonSolver->max_steps) {
 
         /* If Newton steps are necessary, compute the initial search direction */
@@ -535,7 +535,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             compNewStep = true;
             
             // precheck convergence
-            converged = wrms_ < CONV_T;
+            converged = wrms_ < conv_thresh;
             if (converged) {
                 /* Ensure positivity of the found state and recheck if
                    the convergence still holds */
@@ -548,7 +548,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 }
                 if (recheck_convergence) {
                     wrms_ = getWrms(model, SensitivityMethod::none);
-                    converged = wrms_ < CONV_T;
+                    converged = wrms_ < conv_thresh;
                 }
             }
             
@@ -625,12 +625,12 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
 
         /* Check for convergence */
         wrms_ = getWrms(model, sensitivityFlag);
-        if (wrms_ < CONV_T && sensitivityFlag == SensitivityMethod::forward) {
+        if (wrms_ < conv_thresh && sensitivityFlag == SensitivityMethod::forward) {
             sx_ = solver->getStateSensitivity(t_);
-            wrms_ = getWrmsFSA(model) < CONV_T;
+            wrms_ = getWrmsFSA(model) < conv_thresh;
         }
         
-        if (wrms_ < CONV_T)
+        if (wrms_ < conv_thresh)
             break; // converged
         /* increase counter, check for maxsteps */
         sim_steps++;

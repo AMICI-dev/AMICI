@@ -425,9 +425,9 @@ class SteadystateProblem {
     realtype atol_sensi_ {NAN};
     /** relative tolerance for convergence check (state sensi)*/
     realtype rtol_sensi_ {NAN};
-    /** absolute tolerance for convergence check (state sensi)*/
+    /** absolute tolerance for convergence check (quadratures)*/
     realtype atol_quad_ {NAN};
-    /** relative tolerance for convergence check (state sensi)*/
+    /** relative tolerance for convergence check (quadratures)*/
     realtype rtol_quad_ {NAN};
 };
 
