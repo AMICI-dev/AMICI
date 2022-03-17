@@ -59,8 +59,8 @@ extern "C" {
 
 #else
 
-#define SuiteSparse_long int64_t
-#define SuiteSparse_long_max INT64_MAX
+#define SuiteSparse_long long long
+#define SuiteSparse_long_max LLONG_MAX
 #define SuiteSparse_long_idd "lld"
 
 #endif
