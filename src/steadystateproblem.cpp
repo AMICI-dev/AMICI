@@ -480,14 +480,9 @@ realtype SteadystateProblem::getWrmsFSA(Model *model) {
 
 bool SteadystateProblem::checkSteadyStateSuccess() const {
     /* Did one of the attempts yield s steady state? */
-    if (std::any_of(steady_state_status_.begin(), steady_state_status_.end(),
-                    [](SteadyStateStatus status) {
-                        return status == SteadyStateStatus::success;
-                    })) {
-        return true;
-    } else {
-        return false;
-    }
+    return std::any_of(steady_state_status_.begin(), steady_state_status_.end(),
+                       [](SteadyStateStatus status) {
+                           return status == SteadyStateStatus::success;});
 }
 
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
