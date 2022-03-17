@@ -25,8 +25,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       x_old_(model.nx_solver), xdot_(model.nx_solver),
       sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
       xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
-      xQBdot_(model.nplist()),
-      dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
+      xQBdot_(model.nplist()), dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
+      state_({.t=INFINITY, .x=AmiVector(model.nx_solver), .dx=AmiVector(model.nx_solver),
+              .sx=AmiVectorArray(model.nx_solver, model.nplist()), .state=model.getModelState()}),
       atol_(solver.getAbsoluteToleranceSteadyState()),
       rtol_(solver.getRelativeToleranceSteadyState()),
       atol_sensi_(solver.getAbsoluteToleranceSteadyStateSensi()),
@@ -72,18 +73,18 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
              simulation did not find a steady state */
             newton_solver_->computeNewtonSensis(state_.sx);
         } catch (NewtonFailure const &) {
-            /* No steady state could be inferred. Store simulation state */
-            storeSimulationState(model, solver->getSensitivityOrder() >=
-                                 SensitivityOrder::first);
+            /* cleanup sensis if not to be computed */
+            if (!(solver->getSensitivityOrder() >= SensitivityOrder::first))
+                state_.sx = AmiVectorArray();
             throw AmiException("Steady state sensitivity computation failed due "
                                "to unsuccessful factorization of RHS Jacobian");
         }
     }
 
-    /* Get output of steady state solver, write it to x0 and reset time
-     if necessary */
-    storeSimulationState(model, getSensitivityFlag(model, solver, it,
-                         SteadyStateContext::sensiStorage));
+    /* cleanup sensis if not to be computed */
+    if (!getSensitivityFlag(model, solver, it,
+                            SteadyStateContext::sensiStorage))
+        state_.sx = AmiVectorArray();
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -114,7 +115,7 @@ void SteadystateProblem::findSteadyState(Solver *solver, Model *model, int it) {
 
     /* Nothing worked, throw an as informative error as possible */
     if (!checkSteadyStateSuccess())
-        handleSteadyStateFailure(solver, model);
+        handleSteadyStateFailure(solver);
 }
 
 void SteadystateProblem::findSteadyStateByNewtonsMethod(Model *model,
@@ -310,11 +311,10 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     }
 }
 
-[[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,
-                                                               Model *model) {
-    /* No steady state could be inferred. Store simulation state */
-    storeSimulationState(model, solver->getSensitivityOrder() >=
-                         SensitivityOrder::first);
+[[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver) {
+    /* No steady state could be inferred. cleanup sensis */
+    if (solver->getSensitivityOrder() < SensitivityOrder::first)
+        state_.sx = AmiVectorArray();
 
     /* Throw error message according to error codes */
     std::string errorString = "Steady state computation failed. "
@@ -713,12 +713,6 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
                 xB_[ix] += dJydx_[ix + it * model.nx_solver];
         }
     }
-}
-
-void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
-    if (!storesensi)
-        state_.sx.zero();
-    state_.state = model->getModelState();
 }
 
 } // namespace amici

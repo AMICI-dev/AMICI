@@ -227,10 +227,8 @@ class SteadystateProblem {
     /**
      * @brief Stores state and throws an exception if equilibration failed
      * @param solver pointer to the solver object
-     * @param model pointer to the model object
      */
-    [[noreturn]] void handleSteadyStateFailure(const Solver *solver,
-                                               Model *model);
+    [[noreturn]] void handleSteadyStateFailure(const Solver *solver);
 
     /**
      * @brief Assembles the error message to be thrown.
@@ -333,13 +331,6 @@ class SteadystateProblem {
      * @param yQB resulting vector after multiplication
      */
     void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB) const;
-
-    /**
-     * @brief Store carbon copy of current simulation state variables as SimulationState
-     * @param model model carrying the ModelState to be used
-     * @param storesensi flag to enable storage of sensitivities
-     */
-    void storeSimulationState(Model *model, bool storesensi);
     
     /** newton step */
     AmiVector delta_;
