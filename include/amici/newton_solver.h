@@ -37,7 +37,7 @@ class NewtonSolver {
      * @param t pointer to time variable
      * @param x pointer to state variables
      * @param simulationSolver solver with settings
-     * @param model pointer to the model object
+     * @param model pointer to the model instance
      * @return solver NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver> getSolver(
@@ -51,15 +51,16 @@ class NewtonSolver {
      * @param nnewt integer number of current Newton step
      * @param delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
+     * @param model pointer to the model instance
      */
-    void getStep(int ntry, int nnewt, AmiVector &delta);
+    void getStep(int ntry, int nnewt, AmiVector &delta, Model *model);
 
     /**
      * @brief Computes steady state sensitivities
      *
      * @param sx pointer to state variable sensitivities
      */
-    void computeNewtonSensis(AmiVectorArray &sx);
+    void computeNewtonSensis(AmiVectorArray &sx, Model *model);
 
     /**
      * @brief Accessor for numlinsteps
@@ -77,8 +78,9 @@ class NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
      */
-    virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
+    virtual void prepareLinearSystem(int ntry, int nnewt, Model *model) = 0;
 
     /**
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
@@ -87,8 +89,9 @@ class NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
      */
-    virtual void prepareLinearSystemB(int ntry, int nnewt) = 0;
+    virtual void prepareLinearSystemB(int ntry, int nnewt, Model *model) = 0;
 
     /**
      * @brief Solves the linear system for the Newton step
@@ -97,8 +100,6 @@ class NewtonSolver {
      * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector &rhs) = 0;
-    
-    void updateModel(Model *model) {model_ = model;}
 
     virtual ~NewtonSolver() = default;
 
@@ -115,8 +116,6 @@ class NewtonSolver {
   protected:
     /** time variable */
     realtype *t_;
-    /** pointer to the model object */
-    Model *model_;
     /** right hand side AmiVector */
     AmiVector xdot_;
     /** current state */
@@ -171,8 +170,9 @@ class NewtonSolverDense : public NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
      */
-    void prepareLinearSystem(int ntry, int nnewt) override;
+    void prepareLinearSystem(int ntry, int nnewt, Model *model) override;
 
     /**
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
@@ -181,8 +181,9 @@ class NewtonSolverDense : public NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
      */
-    void prepareLinearSystemB(int ntry, int nnewt) override;
+    void prepareLinearSystemB(int ntry, int nnewt, Model *model) override;
 
   private:
     /** temporary storage of Jacobian */
@@ -231,8 +232,9 @@ class NewtonSolverSparse : public NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
      */
-    void prepareLinearSystem(int ntry, int nnewt) override;
+    void prepareLinearSystem(int ntry, int nnewt, Model *model) override;
 
     /**
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
@@ -241,8 +243,9 @@ class NewtonSolverSparse : public NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
      */
-    void prepareLinearSystemB(int ntry, int nnewt) override;
+    void prepareLinearSystemB(int ntry, int nnewt, Model *model) override;
 
   private:
     /** temporary storage of Jacobian */

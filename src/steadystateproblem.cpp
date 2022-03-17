@@ -69,7 +69,6 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
      initialization, needs to happen after initialization to make sure tcl
      is updated */
     state_.state = model->getModelState();
-    newton_solver_->updateModel(model);
 
     /* Compute steady state, track computation time */
     clock_t starttime = clock();
@@ -82,7 +81,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
-            newton_solver_->computeNewtonSensis(state_.sx);
+            newton_solver_->computeNewtonSensis(state_.sx, model);
         } catch (NewtonFailure const &) {
             throw AmiException(
                 "Steady state sensitivity computation failed due "
@@ -101,7 +100,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
      initialization, needs to happen after initialization to make sure tcl
      is updated */
     state_.state = model->getModelState();
-    newton_solver_->updateModel(model);
 
     /* compute quadratures, track computation time */
     clock_t starttime = clock();
@@ -279,7 +277,7 @@ void SteadystateProblem::getQuadratureByLinSolve(Model *model) {
     /* try to solve the linear system */
     try {
         /* compute integral over xB and write to xQ */
-        newton_solver_->prepareLinearSystemB(0, -1);
+        newton_solver_->prepareLinearSystemB(0, -1, model);
         newton_solver_->solveLinearSystem(xQ_);
         /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
@@ -508,7 +506,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
                 // xdot_ computed in getWrms
                 delta_.copy(xdot_);
                 newton_solver_->getStep(newton_retry ? 2 : 1, i_newtonstep,
-                                        delta_);
+                                        delta_, model);
             } catch (NewtonFailure const &) {
                 numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
                 throw;

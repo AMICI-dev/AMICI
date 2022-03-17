@@ -13,9 +13,8 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
-    : t_(t), model_(model), xdot_(model->nx_solver), x_(x),
-      dx_(model->nx_solver), xB_(model->nx_solver), dxB_(model->nx_solver) {
-}
+    : t_(t), xdot_(model->nx_solver), x_(x), dx_(model->nx_solver),
+    xB_(model->nx_solver), dxB_(model->nx_solver) {}
 
 /* ------------------------------------------------------------------------- */
 
@@ -73,8 +72,9 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta) {
-    prepareLinearSystem(ntry, nnewt);
+void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta,
+                           Model *model) {
+    prepareLinearSystem(ntry, nnewt, model);
 
     delta.minus();
     solveLinearSystem(delta);
@@ -82,23 +82,23 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta) {
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
-    prepareLinearSystem(0, -1);
-    model_->fdxdotdp(*t_, *x_, dx_);
+void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model) {
+    prepareLinearSystem(0, -1, model);
+    model->fdxdotdp(*t_, *x_, dx_);
 
-    if (model_->pythonGenerated) {
-        for (int ip = 0; ip < model_->nplist(); ip++) {
+    if (model->pythonGenerated) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-            model_->get_dxdotdp_full().scatter(model_->plist(ip), -1.0, nullptr,
+            model->get_dxdotdp_full().scatter(model->plist(ip), -1.0, nullptr,
                                                gsl::make_span(sx.getNVector(ip)),
                                                0, nullptr, 0);
 
             solveLinearSystem(sx[ip]);
         }
     } else {
-        for (int ip = 0; ip < model_->nplist(); ip++) {
-            for (int ix = 0; ix < model_->nx_solver; ix++)
-                sx.at(ix,ip) = -model_->get_dxdotdp().at(ix, ip);
+        for (int ip = 0; ip < model->nplist(); ip++) {
+            for (int ix = 0; ix < model->nx_solver; ix++)
+                sx.at(ix,ip) = -model->get_dxdotdp().at(ix, ip);
 
             solveLinearSystem(sx[ip]);
         }
@@ -120,8 +120,9 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
-    model_->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/,
+                                            Model *model) {
+    model->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
@@ -130,8 +131,9 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
-    model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/,
+                                             Model *model) {
+    model->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
@@ -175,9 +177,10 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
+void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/,
+                                             Model *model) {
     /* Get sparse Jacobian */
-    model_->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+    model->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
@@ -186,9 +189,10 @@ void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
+void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/,
+                                              Model *model) {
     /* Get sparse Jacobian */
-    model_->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+    model->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
