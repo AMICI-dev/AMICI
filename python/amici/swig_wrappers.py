@@ -222,5 +222,10 @@ def set_model_settings(
         values are provided to the setters.
     """
     for setting, value in settings.items():
+        if setting == 'StateIsNonNegative' and model.ncl():
+            # In case of conservation laws, settings StateIsNonNegative is not
+            #  supported, and would raise an error. We can just skip it here.
+            # tracked here: https://github.com/AMICI-dev/AMICI/issues/1649
+            continue
         setter = setting[1] if isinstance(setting, tuple) else f'set{setting}'
         getattr(model, setter)(value)
