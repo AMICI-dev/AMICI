@@ -52,7 +52,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
-
+    /* update model state, we may have entered a new context after
+     initialization */
+    state_.state = model->getModelState();
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -79,23 +81,18 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
              simulation did not find a steady state */
             newton_solver_->computeNewtonSensis(state_.sx);
         } catch (NewtonFailure const &) {
-            /* cleanup sensis if not to be computed */
-            if (solver->getSensitivityOrder() < SensitivityOrder::first)
-                state_.sx = AmiVectorArray();
             throw AmiException(
                 "Steady state sensitivity computation failed due "
                 "to unsuccessful factorization of RHS Jacobian");
         }
     }
-
-    /* cleanup sensis if not to be computed */
-    if (!getSensitivityFlag(model, solver, it,
-                            SteadyStateContext::sensiStorage))
-        state_.sx = AmiVectorArray();
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
     Solver *solver, Model *model, const BackwardProblem *bwd) {
+    /* update model state, we may have entered a new context after
+     initialization */
+    state_.state = model->getModelState();
     /* initialize and check if there is something to be done */
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
@@ -121,7 +118,7 @@ void SteadystateProblem::findSteadyState(Solver *solver, Model *model, int it) {
 
     /* Nothing worked, throw an as informative error as possible */
     if (!checkSteadyStateSuccess())
-        handleSteadyStateFailure(solver);
+        handleSteadyStateFailure();
 }
 
 void SteadystateProblem::findSteadyStateByNewtonsMethod(Model *model,
@@ -314,11 +311,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
 }
 
 [[noreturn]] void
-SteadystateProblem::handleSteadyStateFailure(const Solver *solver) {
-    /* No steady state could be inferred. cleanup sensis */
-    if (solver->getSensitivityOrder() < SensitivityOrder::first)
-        state_.sx = AmiVectorArray();
-
+SteadystateProblem::handleSteadyStateFailure() {
     /* Throw error message according to error codes */
     std::string errorString = "Steady state computation failed. "
                               "First run of Newton solver failed";

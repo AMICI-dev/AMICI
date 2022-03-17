@@ -226,9 +226,8 @@ class SteadystateProblem {
 
     /**
      * @brief Stores state and throws an exception if equilibration failed
-     * @param solver pointer to the solver object
      */
-    [[noreturn]] void handleSteadyStateFailure(const Solver *solver);
+    [[noreturn]] void handleSteadyStateFailure();
 
     /**
      * @brief Assembles the error message to be thrown.
