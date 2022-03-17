@@ -96,7 +96,7 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta) {
 void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     prepareLinearSystem(0, -1);
     model_->fdxdotdp(*t_, *x_, dx_);
-    
+
     if (is_singular())
         model_->app->warningF("AMICI:newton",
                               "Jacobian is singular at steadystate, sensitivities may be inaccurate");
@@ -237,13 +237,13 @@ bool NewtonSolverSparse::is_singular() const {
     // adapted from SUNLinSolSetup_KLU in sunlinsol/klu/sunlinsol_klu.c
     auto content = (SUNLinearSolverContent_KLU)(linsol_->content);
     // first cheap check via rcond
-    int status = sun_klu_rcond(content->symbolic, content->numeric,
+    auto status = sun_klu_rcond(content->symbolic, content->numeric,
                                &content->common);
     if(status == 0)
         throw NewtonFailure(content->last_flag, "sun_klu_rcond");
-    
+
     auto precision = std::numeric_limits<realtype>::epsilon();
-    
+
     if (content->common.rcond < precision) {
         // cheap check indicates singular, expensive check via condest
         status = sun_klu_condest(
