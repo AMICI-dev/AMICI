@@ -27,11 +27,11 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
       xQBdot_(model.nplist()),
       dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
-      state_({.t = INFINITY,
-              .x = AmiVector(model.nx_solver),
-              .dx = AmiVector(model.nx_solver),
-              .sx = AmiVectorArray(model.nx_solver, model.nplist()),
-              .state = model.getModelState()}),
+      state_({INFINITY, // t
+              AmiVector(model.nx_solver), // x
+              AmiVector(model.nx_solver), // dx
+              AmiVectorArray(model.nx_solver, model.nplist()), // sx
+              model.getModelState()}), // state
       atol_(solver.getAbsoluteToleranceSteadyState()),
       rtol_(solver.getRelativeToleranceSteadyState()),
       atol_sensi_(solver.getAbsoluteToleranceSteadyStateSensi()),
