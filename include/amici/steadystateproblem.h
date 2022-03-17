@@ -158,14 +158,20 @@ class SteadystateProblem {
                          AmiVector &ewt) const;
 
     /**
-     * @brief Checks convergence for state and respective sensitivities
-     * @param solver Solver instance
-     * @param model instance
-     * @param checkSensitivities flag whether sensitivities should be checked
-     * @return boolean indicating convergence
+     * @brief Checks convergence for state or adjoint quadratures, depending on sensi method
+     * @param model Model instance
+     * @param sensi_method sensitivity method
+     * @return weighted root mean squared residuals of the RHS
      */
-    bool checkConvergence(const Solver *solver, Model *model,
-                          SensitivityMethod checkSensitivities);
+    realtype getWrms(Model *model,
+                          SensitivityMethod sensi_method);
+    
+    /**
+     * @brief Checks convergence for state sensitivities
+     * @param model Model instance
+     * @return weighted root mean squared residuals of the RHS
+     */
+    realtype getWrmsFSA(Model *model);
 
     /**
      * @brief Runs the Newton solver iterations and checks for convergence
@@ -410,6 +416,19 @@ class SteadystateProblem {
      * approaches [newton, simulation, newton] (length = 3)
      */
     std::vector<SteadyStateStatus> steady_state_status_;
+    
+    /** absolute tolerance for convergence check (state)*/
+    realtype atol_ {NAN};
+    /** relative tolerance for convergence check (state)*/
+    realtype rtol_ {NAN};
+    /** absolute tolerance for convergence check (state sensi)*/
+    realtype atol_sensi_ {NAN};
+    /** relative tolerance for convergence check (state sensi)*/
+    realtype rtol_sensi_ {NAN};
+    /** absolute tolerance for convergence check (quadratures)*/
+    realtype atol_quad_ {NAN};
+    /** relative tolerance for convergence check (quadratures)*/
+    realtype rtol_quad_ {NAN};
 };
 
 } // namespace amici
