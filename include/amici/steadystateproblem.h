@@ -112,7 +112,7 @@ class SteadystateProblem {
     { return steady_state_status_; }
 
     /**
-     * @brief Accessor for t
+     * @brief Get model time at which steadystate was found through simulation
      * @return t
      */
     realtype getSteadyStateTime() const { return t_; }
