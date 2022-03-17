@@ -29,8 +29,7 @@ class SteadystateProblem {
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(const Solver &solver,
-                                const Model &model);
+    explicit SteadystateProblem(const Solver &solver, Model &model);
 
     /**
      * @brief Handles steady state computation in the forward case:
@@ -53,183 +52,6 @@ class SteadystateProblem {
      */
     void workSteadyStateBackwardProblem(Solver *solver, Model *model,
                                         const BackwardProblem *bwd);
-
-    /**
-     * @brief Handles the computation of the steady state, throws an
-     * AmiException, if no steady state was found
-     * @param solver pointer to the solver object
-     * @param newtonSolver pointer to the newtonSolver solver object
-     * @param model pointer to the model object
-     * @param it integer with the index of the current time step
-     */
-    void findSteadyState(Solver *solver,
-                         NewtonSolver *newtonSolver,
-                         Model *model, int it);
-
-    /**
-     * @brief Tries to determine the steady state by using Newton's method
-     * @param newtonSolver pointer to the newtonSolver solver object
-     * @param model pointer to the model object
-     * @param newton_retry bool flag indicating whether being relaunched
-     */
-    void findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
-                                        Model *model,
-                                        bool newton_retry);
-
-    /**
-     * @brief Tries to determine the steady state by using forward simulation
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     * @param it integer with the index of the current time step
-     */
-    void findSteadyStateBySimulation(const Solver *solver,
-                                     Model *model,
-                                     int it);
-
-    /**
-     * @brief Handles the computation of quadratures in adjoint mode
-     * @param newtonSolver pointer to the newtonSolver solver object
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     */
-    void computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
-                                      const Solver *solver, Model *model);
-
-    /**
-     * @brief Computes the quadrature in steady state backward mode by
-     * solving the linear system defined by the backward Jacobian
-     * @param newtonSolver pointer to the newtonSolver solver object
-     * @param model pointer to the model object
-     */
-    void getQuadratureByLinSolve(NewtonSolver *newtonSolver, Model *model);
-
-    /**
-     * @brief Computes the quadrature in steady state backward mode by
-     * numerical integration of xB forward in time
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     */
-    void getQuadratureBySimulation(const Solver *solver, Model *model);
-
-    /**
-     * @brief Stores state and throws an exception if equilibration failed
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     */
-    [[noreturn]] void handleSteadyStateFailure(const Solver *solver,
-                                               Model *model);
-
-    /**
-     * @brief Assembles the error message to be thrown.
-     * @param errorString const pointer to string with error message
-     * @param status Entry of steady_state_status to be processed
-     */
-    void writeErrorString(std::string *errorString, SteadyStateStatus
-                          status) const;
-
-    /**
-     * @brief Checks depending on the status of the Newton solver,
-     * solver settings, and the model, whether state sensitivities
-     * still need to be computed via a linear system solve or stored
-     * @param model pointer to the model object
-     * @param solver pointer to the solver object
-     * @param it integer with the index of the current time step
-     * @param context SteadyStateContext giving the situation for the flag
-     * @return flag telling how to process state sensitivities
-     */
-    bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
-                            SteadyStateContext context);
-
-    /**
-     * @brief Computes the weighted root mean square of xdot
-     * the weights are computed according to x:
-     * w_i = 1 / ( rtol * x_i + atol )
-     * @param x current state (sx[ip] for sensitivities)
-     * @param xdot current rhs (sxdot[ip] for sensitivities)
-     * @param atol absolute tolerance
-     * @param rtol relative tolerance
-     * @param ewt error weight vector
-     * @return root-mean-square norm
-     */
-    realtype getWrmsNorm(AmiVector const &x,
-                         AmiVector const &xdot,
-                         realtype atol,
-                         realtype rtol,
-                         AmiVector &ewt) const;
-
-    /**
-     * @brief Checks convergence for state or adjoint quadratures, depending on sensi method
-     * @param model Model instance
-     * @param sensi_method sensitivity method
-     * @return weighted root mean squared residuals of the RHS
-     */
-    realtype getWrms(Model *model,
-                          SensitivityMethod sensi_method);
-    
-    /**
-     * @brief Checks convergence for state sensitivities
-     * @param model Model instance
-     * @return weighted root mean squared residuals of the RHS
-     */
-    realtype getWrmsFSA(Model *model);
-
-    /**
-     * @brief Runs the Newton solver iterations and checks for convergence
-     * to steady state
-     * @param model pointer to the model object
-     * @param newtonSolver pointer to the NewtonSolver object
-     * @param newton_retry flag indicating if Newton solver is rerun
-     */
-    void applyNewtonsMethod(Model *model, NewtonSolver *newtonSolver,
-                            bool newton_retry);
-
-    /**
-     * @brief Simulation is launched, if Newton solver or linear system solve fails
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     * @param backward flag indicating adjoint mode (including quadrature)
-     */
-    void runSteadystateSimulation(const Solver *solver, Model *model, bool backward);
-
-    /**
-     * @brief Initialize CVodeSolver instance for preequilibration simulation
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     * @param forwardSensis flag switching on integration with FSA
-     * @param backward flag switching on quadratures computation
-     * @return solver instance
-     */
-    std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
-                                                       Model *model,
-                                                       bool forwardSensis,
-                                                       bool backward) const;
-
-    /**
-     * @brief Initialize backward computation by setting state, time, adjoint
-     * state and checking for preequilibration mode
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     * @param bwd pointer to backward problem
-     * @return flag indicating whether backward computation to be carried out
-     */
-    bool initializeBackwardProblem(Solver *solver, Model *model,
-                                   const BackwardProblem *bwd);
-
-    /**
-     * @brief Compute the backward quadratures, which contribute to the
-     * gradient (xQB) from the quadrature over the backward state itself (xQ)
-     * @param model pointer to the model object
-     * @param yQ vector to be multiplied with dxdotdp
-     * @param yQB resulting vector after multiplication
-     */
-    void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB) const;
-
-    /**
-     * @brief Store carbon copy of current simulation state variables as SimulationState
-     * @param model model carrying the ModelState to be used
-     * @param storesensi flag to enable storage of sensitivities
-     */
-    void storeSimulationState(Model *model, bool storesensi);
 
     /**
      * @brief Returns the stored SimulationState
@@ -351,6 +173,174 @@ class SteadystateProblem {
     bool checkSteadyStateSuccess() const;
 
   private:
+    
+    /**
+     * @brief Handles the computation of the steady state, throws an
+     * AmiException, if no steady state was found
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     */
+    void findSteadyState(Solver *solver, Model *model, int it);
+
+    /**
+     * @brief Tries to determine the steady state by using Newton's method
+     * @param model pointer to the model object
+     * @param newton_retry bool flag indicating whether being relaunched
+     */
+    void findSteadyStateByNewtonsMethod(Model *model,
+                                        bool newton_retry);
+
+    /**
+     * @brief Tries to determine the steady state by using forward simulation
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     */
+    void findSteadyStateBySimulation(const Solver *solver,
+                                     Model *model,
+                                     int it);
+
+    /**
+     * @brief Handles the computation of quadratures in adjoint mode
+     * @param newtonSolver pointer to the newtonSolver solver object
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    void computeSteadyStateQuadrature(const Solver *solver, Model *model);
+
+    /**
+     * @brief Computes the quadrature in steady state backward mode by
+     * solving the linear system defined by the backward Jacobian
+     * @param model pointer to the model object
+     */
+    void getQuadratureByLinSolve(Model *model);
+
+    /**
+     * @brief Computes the quadrature in steady state backward mode by
+     * numerical integration of xB forward in time
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    void getQuadratureBySimulation(const Solver *solver, Model *model);
+
+    /**
+     * @brief Stores state and throws an exception if equilibration failed
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    [[noreturn]] void handleSteadyStateFailure(const Solver *solver,
+                                               Model *model);
+
+    /**
+     * @brief Assembles the error message to be thrown.
+     * @param errorString const pointer to string with error message
+     * @param status Entry of steady_state_status to be processed
+     */
+    void writeErrorString(std::string *errorString, SteadyStateStatus
+                          status) const;
+
+    /**
+     * @brief Checks depending on the status of the Newton solver,
+     * solver settings, and the model, whether state sensitivities
+     * still need to be computed via a linear system solve or stored
+     * @param model pointer to the model object
+     * @param solver pointer to the solver object
+     * @param it integer with the index of the current time step
+     * @param context SteadyStateContext giving the situation for the flag
+     * @return flag telling how to process state sensitivities
+     */
+    bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
+                            SteadyStateContext context);
+
+    /**
+     * @brief Computes the weighted root mean square of xdot
+     * the weights are computed according to x:
+     * w_i = 1 / ( rtol * x_i + atol )
+     * @param x current state (sx[ip] for sensitivities)
+     * @param xdot current rhs (sxdot[ip] for sensitivities)
+     * @param atol absolute tolerance
+     * @param rtol relative tolerance
+     * @param ewt error weight vector
+     * @return root-mean-square norm
+     */
+    realtype getWrmsNorm(AmiVector const &x,
+                         AmiVector const &xdot,
+                         realtype atol,
+                         realtype rtol,
+                         AmiVector &ewt) const;
+
+    /**
+     * @brief Checks convergence for state or adjoint quadratures, depending on sensi method
+     * @param model Model instance
+     * @param sensi_method sensitivity method
+     * @return weighted root mean squared residuals of the RHS
+     */
+    realtype getWrms(Model *model, SensitivityMethod sensi_method);
+    
+    /**
+     * @brief Checks convergence for state sensitivities
+     * @param model Model instance
+     * @return weighted root mean squared residuals of the RHS
+     */
+    realtype getWrmsFSA(Model *model);
+
+    /**
+     * @brief Runs the Newton solver iterations and checks for convergence
+     * to steady state
+     * @param model pointer to the model object
+     * @param newton_retry flag indicating if Newton solver is rerun
+     */
+    void applyNewtonsMethod(Model *model, bool newton_retry);
+
+    /**
+     * @brief Simulation is launched, if Newton solver or linear system solve fails
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param backward flag indicating adjoint mode (including quadrature)
+     */
+    void runSteadystateSimulation(const Solver *solver, Model *model, bool backward);
+
+    /**
+     * @brief Initialize CVodeSolver instance for preequilibration simulation
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param forwardSensis flag switching on integration with FSA
+     * @param backward flag switching on quadratures computation
+     * @return solver instance
+     */
+    std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
+                                                       Model *model,
+                                                       bool forwardSensis,
+                                                       bool backward) const;
+
+    /**
+     * @brief Initialize backward computation by setting state, time, adjoint
+     * state and checking for preequilibration mode
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param bwd pointer to backward problem
+     * @return flag indicating whether backward computation to be carried out
+     */
+    bool initializeBackwardProblem(Solver *solver, Model *model,
+                                   const BackwardProblem *bwd);
+
+    /**
+     * @brief Compute the backward quadratures, which contribute to the
+     * gradient (xQB) from the quadrature over the backward state itself (xQ)
+     * @param model pointer to the model object
+     * @param yQ vector to be multiplied with dxdotdp
+     * @param yQB resulting vector after multiplication
+     */
+    void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB) const;
+
+    /**
+     * @brief Store carbon copy of current simulation state variables as SimulationState
+     * @param model model carrying the ModelState to be used
+     * @param storesensi flag to enable storage of sensitivities
+     */
+    void storeSimulationState(Model *model, bool storesensi);
+    
     /** time variable for simulation steadystate finding */
     realtype t_;
     /** newton step */
@@ -427,6 +417,9 @@ class SteadystateProblem {
     realtype atol_quad_ {NAN};
     /** relative tolerance for convergence check (quadratures)*/
     realtype rtol_quad_ {NAN};
+    
+    /** newton solver */
+    std::unique_ptr<NewtonSolver> newton_solver_ {nullptr};
 };
 
 } // namespace amici

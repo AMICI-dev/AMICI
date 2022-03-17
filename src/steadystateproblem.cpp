@@ -20,7 +20,7 @@ constexpr realtype conv_thresh = 1.0;
 
 namespace amici {
 
-SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
+SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
       x_(model.nx_solver), x_old_(model.nx_solver), dx_(model.nx_solver),
       xdot_(model.nx_solver), sx_(model.nx_solver, model.nplist()),
@@ -33,7 +33,8 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       atol_sensi_(solver.getAbsoluteToleranceSteadyStateSensi()),
       rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi()),
       atol_quad_(solver.getAbsoluteToleranceQuadratures()),
-      rtol_quad_(solver.getRelativeToleranceQuadratures()) {
+      rtol_quad_(solver.getRelativeToleranceQuadratures()),
+      newton_solver_(NewtonSolver::getSolver(&t_, &x_, solver, &model)){
           /* Check for compatibility of options */
           if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
               solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint &&
@@ -59,12 +60,9 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
     }
 
-    /* create a Newton solver object */
-    auto newtonSolver = NewtonSolver::getSolver(&t_, &x_, *solver, model);
-
     /* Compute steady state and get the computation time */
     clock_t starttime = clock();
-    findSteadyState(solver, newtonSolver.get(), model, it);
+    findSteadyState(solver, model, it);
     cpu_time_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
@@ -73,7 +71,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
-            newtonSolver->computeNewtonSensis(sx_);
+            newton_solver_->computeNewtonSensis(sx_);
         } catch (NewtonFailure const &) {
             /* No steady state could be inferred. Store simulation state */
             storeSimulationState(model, solver->getSensitivityOrder() >=
@@ -96,21 +94,16 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
 
-    /* Get the Newton solver */
-    auto newtonSolver = NewtonSolver::getSolver(&t_, &x_, *solver, model);
-
     /* get the run time */
     clock_t starttime = clock();
-    computeSteadyStateQuadrature(newtonSolver.get(), solver, model);
+    computeSteadyStateQuadrature(solver, model);
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 }
 
-void SteadystateProblem::findSteadyState(Solver *solver,
-                                         NewtonSolver *newtonSolver,
-                                         Model *model, int it) {
+void SteadystateProblem::findSteadyState(Solver *solver, Model *model, int it) {
     /* First, try to run the Newton solver */
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    findSteadyStateByNewtonsMethod(newtonSolver, model, false);
+    findSteadyStateByNewtonsMethod(model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
     if (!checkSteadyStateSuccess())
@@ -118,19 +111,18 @@ void SteadystateProblem::findSteadyState(Solver *solver,
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
     if (!checkSteadyStateSuccess())
-        findSteadyStateByNewtonsMethod(newtonSolver, model, true);
+        findSteadyStateByNewtonsMethod(model, true);
 
     /* Nothing worked, throw an as informative error as possible */
     if (!checkSteadyStateSuccess())
         handleSteadyStateFailure(solver, model);
 }
 
-void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
-                                                        Model *model,
+void SteadystateProblem::findSteadyStateByNewtonsMethod(Model *model,
                                                         bool newton_retry) {
     int ind = newton_retry ? 2 : 0;
     try {
-        applyNewtonsMethod(model, newtonSolver, newton_retry);
+        applyNewtonsMethod(model, newton_retry);
         steady_state_status_[ind] = SteadyStateStatus::success;
     } catch (NewtonFailure const &ex) {
         /* nothing to be done */
@@ -159,10 +151,10 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolv
     /* copy number of linear steps used */
     if (max_steps_ > 0) {
         if (newton_retry) {
-            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+            std::copy_n(newton_solver_->getNumLinSteps().begin(),
                         max_steps_, &numlinsteps_.at(max_steps_));
         } else {
-            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+            std::copy_n(newton_solver_->getNumLinSteps().begin(),
                         max_steps_, numlinsteps_.begin());
         }
     }
@@ -243,8 +235,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
     return true;
 }
 
-void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
-                                                      const Solver *solver,
+void SteadystateProblem::computeSteadyStateQuadrature(const Solver *solver,
                                                       Model *model) {
     /* This routine computes the quadratures:
          xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
@@ -254,7 +245,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
      matrix-vector multiplication */
 
     /* Try to compute the analytical solution for quadrature algebraically */
-    getQuadratureByLinSolve(newtonSolver, model);
+    getQuadratureByLinSolve(model);
 
     /* Analytical solution didn't work, perform simulation instead */
     if (!hasQuadrature())
@@ -267,8 +258,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
             "and numerical integration did not equilibrate within maxsteps");
 }
 
-void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
-                                                 Model *model) {
+void SteadystateProblem::getQuadratureByLinSolve(Model *model) {
     /* Computes the integral over the adjoint state xB:
      If the Jacobian has full rank, this has an analytical solution, since
      d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
@@ -284,8 +274,8 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
     /* try to solve the linear system */
     try {
         /* compute integral over xB and write to xQ */
-        newtonSolver->prepareLinearSystemB(0, -1);
-        newtonSolver->solveLinearSystem(xQ_);
+        newton_solver_->prepareLinearSystemB(0, -1);
+        newton_solver_->solveLinearSystem(xQ_);
         /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
         /* set flag that quadratures is available (for processing in rdata) */
@@ -495,9 +485,7 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
     }
 }
 
-void SteadystateProblem::applyNewtonsMethod(Model *model,
-                                            NewtonSolver *newtonSolver,
-                                            bool newton_retry) {
+void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     int i_newtonstep = 0;
     int ix = 0;
     double gamma = 1.0;
@@ -512,14 +500,15 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
     wrms_ = getWrms(model, SensitivityMethod::none);
     bool converged = newton_retry ? false : wrms_ < conv_thresh;
-    while (!converged && i_newtonstep < newtonSolver->max_steps) {
+    while (!converged && i_newtonstep < newton_solver_->max_steps) {
 
         /* If Newton steps are necessary, compute the initial search direction */
         if (compNewStep) {
             try {
                 // xdot_ computed in getWrms
                 delta_ = xdot_;
-                newtonSolver->getStep(newton_retry ? 2 : 1, i_newtonstep, delta_);
+                newton_solver_->getStep(newton_retry ? 2 : 1, i_newtonstep,
+                                        delta_);
             } catch (NewtonFailure const &) {
                 numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
                 throw;
@@ -558,13 +547,13 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             }
             
             // update dampening
-            if (newtonSolver->damping_factor_mode_==NewtonDampingFactorMode::on)
+            if (newton_solver_->damping_factor_mode_==NewtonDampingFactorMode::on)
                 gamma = fmin(1.0, 2.0 * gamma);
             
-        } else if (newtonSolver->damping_factor_mode_==NewtonDampingFactorMode::on) {
+        } else if (newton_solver_->damping_factor_mode_==NewtonDampingFactorMode::on) {
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
-            if (gamma < newtonSolver->damping_factor_lower_bound)
+            if (gamma < newton_solver_->damping_factor_lower_bound)
               throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
                                   "Newton solver failed: the damping factor "
                                   "reached its lower bound");

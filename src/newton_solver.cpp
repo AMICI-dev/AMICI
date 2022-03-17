@@ -19,9 +19,8 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
 
 /* ------------------------------------------------------------------------- */
 
-std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
-                                                      Solver &simulationSolver,
-                                                      Model *model) {
+std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
+    realtype *t, AmiVector *x, const Solver &simulationSolver, Model *model) {
 
     std::unique_ptr<NewtonSolver> solver;
 

@@ -41,7 +41,7 @@ class NewtonSolver {
      * @return solver NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver> getSolver(
-    realtype *t, AmiVector *x, Solver &simulationSolver, Model *model);
+    realtype *t, AmiVector *x, const Solver &simulationSolver, Model *model);
 
     /**
      * @brief Computes the solution of one Newton iteration
