@@ -23,10 +23,10 @@ namespace amici {
 SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
       x_(model.nx_solver), x_old_(model.nx_solver), dx_(model.nx_solver),
-      xdot_(model.nx_solver), xdot_old_(model.nx_solver),
-      sx_(model.nx_solver, model.nplist()), sdx_(model.nx_solver, model.nplist()),
-      xB_(model.nJ * model.nx_solver), xQ_(model.nJ * model.nx_solver),
-      xQB_(model.nplist()), xQBdot_(model.nplist()),
+      xdot_(model.nx_solver), sx_(model.nx_solver, model.nplist()),
+      sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
+      xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
+      xQBdot_(model.nplist()),
       dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
       atol_(solver.getAbsoluteToleranceSteadyState()),
       rtol_(solver.getRelativeToleranceSteadyState()),
@@ -508,13 +508,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
     /* initialize output of linear solver for Newton step */
     delta_.zero();
-
     model->fxdot(t_, x_, dx_, xdot_);
-
-    /* Check for relative error, but make sure not to divide by 0!
-        Ensure positivity of the state */
     x_old_ = x_;
-    xdot_old_ = xdot_;
 
     wrms_ = getWrms(model, SensitivityMethod::none);
     bool converged = newton_retry ? false : wrms_ < conv_thresh;
@@ -541,7 +536,6 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             /* If new residuals are smaller than old ones, update state */
             wrms_ = wrms_tmp;
             x_old_ = x_;
-            xdot_old_ = xdot_;
             /* New linear solve due to new state */
             compNewStep = true;
             
