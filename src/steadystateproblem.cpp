@@ -52,9 +52,6 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
-    /* update model state, we may have entered a new context after
-     initialization */
-    state_.state = model->getModelState();
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -67,6 +64,11 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
     }
+    
+    /* update model state, we may have entered a new context after
+     initialization, needs to happen after initialization to make sure tcl
+     is updated */
+    state_.state = model->getModelState();
 
     /* Compute steady state, track computation time */
     clock_t starttime = clock();
@@ -90,12 +92,14 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
     Solver *solver, Model *model, const BackwardProblem *bwd) {
-    /* update model state, we may have entered a new context after
-     initialization */
-    state_.state = model->getModelState();
     /* initialize and check if there is something to be done */
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
+    
+    /* update model state, we may have entered a new context after
+     initialization, needs to happen after initialization to make sure tcl
+     is updated */
+    state_.state = model->getModelState();
 
     /* compute quadratures, track computation time */
     clock_t starttime = clock();
