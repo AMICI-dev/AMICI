@@ -22,8 +22,7 @@ namespace amici {
 
 SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
-      x_(model.nx_solver), x_old_(model.nx_solver), dx_(model.nx_solver),
-      xdot_(model.nx_solver), sx_(model.nx_solver, model.nplist()),
+      x_old_(model.nx_solver), xdot_(model.nx_solver),
       sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
       xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
       xQBdot_(model.nplist()),
@@ -34,7 +33,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi()),
       atol_quad_(solver.getAbsoluteToleranceQuadratures()),
       rtol_quad_(solver.getRelativeToleranceQuadratures()),
-      newton_solver_(NewtonSolver::getSolver(&t_, &x_, solver, &model)){
+      newton_solver_(NewtonSolver::getSolver(&state_.t, &state_.x, solver, &model)){
           /* Check for compatibility of options */
           if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
               solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint &&
@@ -50,14 +49,14 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
-        model->initialize(x_, dx_, sx_, sdx_,
+        model->initialize(state_.x, state_.dx, state_.sx, sdx_,
                           solver->getSensitivityOrder() >=
                               SensitivityOrder::first);
-        t_ = model->t0();
-        solver->setup(t_, model, x_, dx_, sx_, sdx_);
+        state_.t = model->t0();
+        solver->setup(state_.t, model, state_.x, state_.dx, state_.sx, sdx_);
     } else {
         /* solver was run before, extract current state from solver */
-        solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
+        solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
     }
 
     /* Compute steady state and get the computation time */
@@ -71,7 +70,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
-            newton_solver_->computeNewtonSensis(sx_);
+            newton_solver_->computeNewtonSensis(state_.sx);
         } catch (NewtonFailure const &) {
             /* No steady state could be inferred. Store simulation state */
             storeSimulationState(model, solver->getSensitivityOrder() >=
@@ -165,9 +164,9 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
                                                      int it) {
     /* set starting timepoint for the simulation solver */
     if (it < 1) /* No previous time point computed, set t = t0 */
-        t_ = model->t0();
+        state_.t = model->t0();
     else /* Carry on simulating from last point */
-        t_ = model->getTimepoint(it - 1);
+        state_.t = model->getTimepoint(it - 1);
 
     try {
         if (it < 0) {
@@ -222,7 +221,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
 
         /* If we have a backward problem, we're in preequilibration.
            Hence, quantities like t, x, and xB must be set. */
-        solver->reInit(t_, x_, x_);
+        solver->reInit(state_.t, state_.x, state_.dx);
         solver->updateAndReinitStatesAndSensitivities(model);
         xB_.copy(bwd->getAdjointState());
     }
@@ -295,7 +294,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
        x is not time dependent, no forward trajectory is needed. */
 
     /* set starting timepoint for the simulation solver */
-    t_ = model->t0();
+    state_.t = model->t0();
     /* xQ was written in getQuadratureByLinSolve() -> set to zero */
     xQ_.zero();
 
@@ -449,8 +448,8 @@ realtype SteadystateProblem::getWrms(Model *model,
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
            Get RHS and compute weighted error norm */
-        model->fxdot(t_, x_, dx_, xdot_);
-        wrms = getWrmsNorm(x_, xdot_, atol_, rtol_, ewt_);
+        model->fxdot(state_.t, state_.x, state_.dx, xdot_);
+        wrms = getWrmsNorm(state_.x, xdot_, atol_, rtol_, ewt_);
     }
     return wrms;
 }
@@ -460,8 +459,8 @@ realtype SteadystateProblem::getWrmsFSA(Model *model) {
     /* Forward sensitivities: Compute weighted error norm for their RHS */
     realtype wrms = 0.0;
     for (int ip = 0; ip < model->nplist(); ++ip) {
-        model->fsxdot(t_, x_, dx_, ip, sx_[ip], dx_, xdot_);
-        wrms = getWrmsNorm(sx_[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
+        model->fsxdot(state_.t, state_.x, state_.dx, ip, state_.sx[ip], state_.dx, xdot_);
+        wrms = getWrmsNorm(state_.sx[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
         /* ideally this function would report the maximum of all wrms over
          all ip, but for practical purposes we can just report the wrms for
          the first ip where we know that the convergence threshold is not
@@ -496,7 +495,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 
     /* initialize output of linear solver for Newton step */
     delta_.zero();
-    x_old_ = x_;
+    x_old_ = state_.x;
 
     wrms_ = getWrms(model, SensitivityMethod::none);
     bool converged = newton_retry ? false : wrms_ < conv_thresh;
@@ -516,7 +515,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         }
 
         /* Try a full, undamped Newton step */
-        linearSum(1.0, x_old_, gamma, delta_, x_);
+        linearSum(1.0, x_old_, gamma, delta_, state_.x);
 
         /* Compute new xdot and residuals */
         realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
@@ -524,7 +523,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         if (wrms_tmp < wrms_) {
             /* If new residuals are smaller than old ones, update state */
             wrms_ = wrms_tmp;
-            x_old_ = x_;
+            x_old_ = state_.x;
             /* New linear solve due to new state */
             compNewStep = true;
             
@@ -535,8 +534,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
                    the convergence still holds */
                 bool recheck_convergence = false;
                 for (ix = 0; ix < model->nx_solver; ix++) {
-                    if (x_[ix] < 0.0) {
-                        x_[ix] = 0.0;
+                    if (state_.x[ix] < 0.0) {
+                        state_.x[ix] = 0.0;
                         recheck_convergence = true;
                     }
                 }
@@ -610,17 +609,17 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
          stable computation value is not important for AMICI_ONE_STEP mode,
          only direction w.r.t. current t
          */
-        solver->step(std::max(t_, 1.0) * 10);
+        solver->step(std::max(state_.t, 1.0) * 10);
         if (backward) {
-            solver->writeSolution(&t_, xB_, dx_, sx_, xQ_);
+            solver->writeSolution(&state_.t, xB_, state_.dx, state_.sx, xQ_);
         } else {
-            solver->writeSolution(&t_, x_, dx_, sx_, xQ_);
+            solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
         }
 
         /* Check for convergence */
         wrms_ = getWrms(model, sensitivityFlag);
         if (wrms_ < conv_thresh && sensitivityFlag == SensitivityMethod::forward) {
-            sx_ = solver->getStateSensitivity(t_);
+            state_.sx = solver->getStateSensitivity(state_.t);
             wrms_ = getWrmsFSA(model);
         }
         
@@ -633,7 +632,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,
                                 "exceeded maximum number of steps");
         }
-        if (t_ >= 1e200) {
+        if (state_.t >= 1e200) {
             numsteps_.at(1) = sim_steps;
             throw NewtonFailure(AMICI_NO_STEADY_STATE, "simulated to late time"
                                 " point without convergence of RHS");
@@ -673,12 +672,12 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     }
     /* use x and sx as dummies for dx and sdx
      (they wont get touched in a CVodeSolver) */
-    sim_solver->setup(model->t0(), model, x_, x_, sx_, sx_);
+    sim_solver->setup(model->t0(), model, state_.x, state_.dx, state_.sx, sdx_);
     if (backward) {
-        sim_solver->setup(model->t0(), model, xB_, xB_, sx_, sx_);
-        sim_solver->setupSteadystate(model->t0(), model, x_, x_, xB_, xB_, xQ_);
+        sim_solver->setup(model->t0(), model, xB_, xB_, state_.sx, sdx_);
+        sim_solver->setupSteadystate(model->t0(), model, state_.x, state_.dx, xB_, xB_, xQ_);
     } else {
-        sim_solver->setup(model->t0(), model, x_, x_, sx_, sx_);
+        sim_solver->setup(model->t0(), model, state_.x, state_.dx, state_.sx, sdx_);
     }
 
     return sim_solver;
@@ -694,7 +693,7 @@ void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
     if (model->pythonGenerated) {
         /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
-        model->fdxdotdp(t_, x_, x_);
+        model->fdxdotdp(state_.t, state_.x, state_.dx);
         model->get_dxdotdp_full().multiply(yQB.getNVector(), yQ.getNVector(),
                                            plist, true);
     } else {
@@ -709,7 +708,7 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
-                slice(dJydx_, it, model.nx_solver * model.nJ), it, x_, edata);
+                slice(dJydx_, it, model.nx_solver * model.nJ), it, state_.x, edata);
             for (int ix = 0; ix < model.nxtrue_solver; ix++)
                 xB_[ix] += dJydx_[ix + it * model.nx_solver];
         }
@@ -717,11 +716,8 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
 }
 
 void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
-    state_.t = INFINITY;
-    state_.x = x_;
-    state_.dx = xdot_;
-    if (storesensi)
-        state_.sx = sx_;
+    if (!storesensi)
+        state_.sx.zero();
     state_.state = model->getModelState();
 }
 

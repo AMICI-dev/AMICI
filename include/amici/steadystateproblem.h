@@ -73,7 +73,7 @@ class SteadystateProblem {
      * @return x
      */
     const AmiVector &getState() const {
-        return x_;
+        return state_.x;
     };
 
     /**
@@ -81,7 +81,7 @@ class SteadystateProblem {
      * @return sx
      */
     const AmiVectorArray &getStateSensitivity() const {
-        return sx_;
+        return state_.sx;
     };
 
      /**
@@ -115,7 +115,7 @@ class SteadystateProblem {
      * @brief Get model time at which steadystate was found through simulation
      * @return t
      */
-    realtype getSteadyStateTime() const { return t_; }
+    realtype getSteadyStateTime() const { return state_.t; }
 
     /**
      * @brief Accessor for wrms
@@ -341,25 +341,17 @@ class SteadystateProblem {
      */
     void storeSimulationState(Model *model, bool storesensi);
     
-    /** time variable for simulation steadystate finding */
-    realtype t_;
     /** newton step */
     AmiVector delta_;
     /** error weights for solver state, dimension nx_solver */
     AmiVector ewt_;
     /** error weights for backward quadratures, dimension nplist() */
     AmiVector ewtQB_;
-    /** state vector */
-    AmiVector x_;
     /** old state vector */
     AmiVector x_old_;
-    /** differential state vector */
-    AmiVector dx_;
     /** time derivative state vector */
     AmiVector xdot_;
     /** state sensitivities */
-    AmiVectorArray sx_;
-    /** state differential sensitivities */
     AmiVectorArray sdx_;
     /** adjoint state vector */
     AmiVector xB_;
