@@ -68,7 +68,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
     }
 
-    /* Compute steady state and get the computation time */
+    /* Compute steady state, track computation time */
     clock_t starttime = clock();
     findSteadyState(solver, model, it);
     cpu_time_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
@@ -97,7 +97,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
 
-    /* get the run time */
+    /* compute quadratures, track computation time */
     clock_t starttime = clock();
     computeSteadyStateQuadrature(solver, model);
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
@@ -151,13 +151,13 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(Model *model,
 
     /* copy number of linear steps used */
     if (max_steps_ > 0) {
-        if (newton_retry) {
-            std::copy_n(newton_solver_->getNumLinSteps().begin(), max_steps_,
-                        &numlinsteps_.at(max_steps_));
-        } else {
-            std::copy_n(newton_solver_->getNumLinSteps().begin(), max_steps_,
-                        numlinsteps_.begin());
-        }
+        int *target;
+        if (newton_retry)
+            target = &numlinsteps_.at(max_steps_);
+        else
+            target = &numlinsteps_.at(0);
+        std::copy_n(newton_solver_->getNumLinSteps().begin(), max_steps_,
+                    target);
     }
 }
 
@@ -171,7 +171,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
 
     try {
         if (it < 0) {
-            /* Preequilibration? -> Create a new CVode object for sim */
+            /* Preequilibration? -> Create a new solver instance for sim */
             bool integrateSensis = getSensitivityFlag(
                 model, solver, it, SteadyStateContext::solverCreation);
             auto newtonSimSolver = createSteadystateSimSolver(
@@ -225,7 +225,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver, Model *model,
         xB_.copy(bwd->getAdjointState());
     }
 
-    /* Will need to write quadratures: set to 0 */
+    /* initialize quadratures */
     xQ_.zero();
     xQB_.zero();
     xQBdot_.zero();
@@ -489,7 +489,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 
     /* initialize output of linear solver for Newton step */
     delta_.zero();
-    x_old_ = state_.x;
+    x_old_.copy(state_.x);
 
     wrms_ = getWrms(model, SensitivityMethod::none);
     bool converged = newton_retry ? false : wrms_ < conv_thresh;
@@ -500,7 +500,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         if (compNewStep) {
             try {
                 // xdot_ computed in getWrms
-                delta_ = xdot_;
+                delta_.copy(xdot_);
                 newton_solver_->getStep(newton_retry ? 2 : 1, i_newtonstep,
                                         delta_);
             } catch (NewtonFailure const &) {
@@ -518,7 +518,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         if (wrms_tmp < wrms_) {
             /* If new residuals are smaller than old ones, update state */
             wrms_ = wrms_tmp;
-            x_old_ = state_.x;
+            x_old_.copy(state_.x);
             /* New linear solve due to new state */
             compNewStep = true;
 
