@@ -508,7 +508,6 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
     /* initialize output of linear solver for Newton step */
     delta_.zero();
-    model->fxdot(t_, x_, dx_, xdot_);
     x_old_ = x_;
 
     wrms_ = getWrms(model, SensitivityMethod::none);
@@ -518,6 +517,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         /* If Newton steps are necessary, compute the initial search direction */
         if (compNewStep) {
             try {
+                // xdot_ computed in getWrms
                 delta_ = xdot_;
                 newtonSolver->getStep(newton_retry ? 2 : 1, i_newtonstep, delta_);
             } catch (NewtonFailure const &) {
