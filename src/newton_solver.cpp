@@ -11,13 +11,6 @@
 #include <ctime>
 #include <cmath>
 
-// taken from sundials/src/sunlinsol/klu/sunlinsol_klu.c
-#if defined(SUNDIALS_INT64_T)
-#define KLU_INDEXTYPE long int
-#else
-#define KLU_INDEXTYPE int
-#endif
-
 namespace amici {
 
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
@@ -246,8 +239,7 @@ bool NewtonSolverSparse::is_singular() const {
 
     if (content->common.rcond < precision) {
         // cheap check indicates singular, expensive check via condest
-        status = sun_klu_condest(
-            reinterpret_cast<KLU_INDEXTYPE*>(SM_INDEXPTRS_S(Jtmp_.get())),
+        status = sun_klu_condest(SM_INDEXPTRS_S(Jtmp_.get()),
             SM_DATA_S(Jtmp_.get()), content->symbolic, content->numeric,
             &content->common);
         if(status == 0)
