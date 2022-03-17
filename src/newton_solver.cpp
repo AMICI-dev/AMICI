@@ -62,8 +62,6 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     default:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     }
-    solver->atol_ = simulationSolver.getAbsoluteToleranceSteadyState();
-    solver->rtol_ = simulationSolver.getRelativeToleranceSteadyState();
     solver->max_lin_steps_ = simulationSolver.getNewtonMaxLinearSteps();
     solver->max_steps = simulationSolver.getNewtonMaxSteps();
     solver->damping_factor_mode_ = simulationSolver.getNewtonDampingFactorMode();

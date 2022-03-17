@@ -65,10 +65,11 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
     }
     
-    /* update model state, we may have entered a new context after
+    /* update model (state), we may have entered a new context after
      initialization, needs to happen after initialization to make sure tcl
      is updated */
     state_.state = model->getModelState();
+    newton_solver_->updateModel(model);
 
     /* Compute steady state, track computation time */
     clock_t starttime = clock();
@@ -96,10 +97,11 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
     
-    /* update model state, we may have entered a new context after
+    /* update model (state), we may have entered a new context after
      initialization, needs to happen after initialization to make sure tcl
      is updated */
     state_.state = model->getModelState();
+    newton_solver_->updateModel(model);
 
     /* compute quadratures, track computation time */
     clock_t starttime = clock();

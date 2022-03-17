@@ -97,6 +97,8 @@ class NewtonSolver {
      * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector &rhs) = 0;
+    
+    void updateModel(Model *model) {model_ = model;}
 
     virtual ~NewtonSolver() = default;
 
@@ -105,10 +107,6 @@ class NewtonSolver {
     int max_lin_steps_ {0};
     /** maximum number of allowed Newton steps for steady state computation */
     int max_steps {0};
-    /** absolute tolerance */
-    realtype atol_ {1e-16};
-    /** relative tolerance */
-    realtype rtol_ {1e-8};
     /** damping factor flag */
     NewtonDampingFactorMode damping_factor_mode_ {NewtonDampingFactorMode::on};
     /** damping factor lower bound */
