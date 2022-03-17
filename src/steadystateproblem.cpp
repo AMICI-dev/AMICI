@@ -433,10 +433,15 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          AmiVector &ewt) const {
     /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
        we need to pass ewt[QB], as xdot and xQBdot have different sizes */
+    // ewt = x
     N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
+    // ewt *= rtol
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
+    // ewt += atol
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
+    // ewt = 1/ewt (ewt = 1/(rtol*x+atol))
     N_VInv(ewt.getNVector(), ewt.getNVector());
+    // wrms = sqrt(sum((xdot/ewt)**2))
     return N_VWrmsNorm(const_cast<N_Vector>(xdot.getNVector()),
                        ewt.getNVector());
 }
@@ -633,7 +638,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
         wrms_ = getWrms(model, sensitivityFlag);
         if (wrms_ < conv_thresh && sensitivityFlag == SensitivityMethod::forward) {
             sx_ = solver->getStateSensitivity(t_);
-            wrms_ = getWrmsFSA(model) < conv_thresh;
+            wrms_ = getWrmsFSA(model);
         }
         
         if (wrms_ < conv_thresh)
