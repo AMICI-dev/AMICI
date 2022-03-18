@@ -538,10 +538,10 @@ bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
     /* Ensure positivity of the found state and recheck if
        the convergence still holds */
     bool recheck_convergence = false;
-    bool converged = false;
+    bool converged = true;
     auto nonnegative = model->getStateIsNonNegative();
     for (int ix = 0; ix < model->nx_solver; ix++) {
-        if (state_.x[ix] < 0.0) {//} and nonnegative[ix]) {
+        if (state_.x[ix] < 0.0 and nonnegative[ix]) {
             state_.x[ix] = 0.0;
             recheck_convergence = true;
         }
