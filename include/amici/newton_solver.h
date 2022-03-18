@@ -1,11 +1,11 @@
 #ifndef amici_newton_solver_h
 #define amici_newton_solver_h
 
-#include "amici/vector.h"
 #include "amici/defines.h"
 #include "amici/solver.h"
-#include "amici/sundials_matrix_wrapper.h"
 #include "amici/sundials_linsol_wrapper.h"
+#include "amici/sundials_matrix_wrapper.h"
+#include "amici/vector.h"
 
 #include <memory>
 
@@ -24,7 +24,8 @@ class NewtonSolver {
 
   public:
     /**
-     * @brief Initializes solver according to the dimensions in the provided model
+     * @brief Initializes solver according to the dimensions in the provided
+     * model
      *
      * @param model pointer to the model object
      */
@@ -37,8 +38,8 @@ class NewtonSolver {
      * @param model pointer to the model instance
      * @return solver NewtonSolver according to the specified linsolType
      */
-    static std::unique_ptr<NewtonSolver> getSolver(
-    const Solver &simulationSolver, const Model *model);
+    static std::unique_ptr<NewtonSolver>
+    getSolver(const Solver &simulationSolver, const Model *model);
 
     /**
      * @brief Computes the solution of one Newton iteration
@@ -78,8 +79,8 @@ class NewtonSolver {
                                      const SimulationState &state) = 0;
 
     /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
-     * solver
+     * Writes the Jacobian (JB) for the Newton iteration and passes it to the
+     * linear solver
      *
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
@@ -97,13 +98,13 @@ class NewtonSolver {
      * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector &rhs) = 0;
-    
+
     /**
      * @brief Reinitialize the linear solver
      *
      */
     virtual void reinitialize() = 0;
-  
+
     /**
      * @brief Checks whether linear system is singular
      *
@@ -124,7 +125,8 @@ class NewtonSolver {
     AmiVector x_;
     /** dummy adjoint state, used as dummy argument when computing JB */
     AmiVector xB_;
-    /** dummy differential adjoint state, used as dummy argument when computing JB */
+    /** dummy differential adjoint state, used as dummy argument when computing
+     * JB */
     AmiVector dxB_;
 };
 
@@ -143,9 +145,9 @@ class NewtonSolverDense : public NewtonSolver {
      */
     explicit NewtonSolverDense(const Model *model);
 
-    NewtonSolverDense(const NewtonSolverDense&) = delete;
+    NewtonSolverDense(const NewtonSolverDense &) = delete;
 
-    NewtonSolverDense& operator=(const NewtonSolverDense& other) = delete;
+    NewtonSolverDense &operator=(const NewtonSolverDense &other) = delete;
 
     ~NewtonSolverDense() override;
 
@@ -156,9 +158,9 @@ class NewtonSolverDense : public NewtonSolver {
 
     void prepareLinearSystemB(int ntry, int nnewt, Model *model,
                               const SimulationState &state) override;
-    
+
     void reinitialize() override;
-    
+
     bool is_singular(Model *model, const SimulationState &state) const override;
 
   private:
@@ -166,7 +168,7 @@ class NewtonSolverDense : public NewtonSolver {
     SUNMatrixWrapper Jtmp_;
 
     /** dense linear solver */
-    SUNLinearSolver linsol_ {nullptr};
+    SUNLinearSolver linsol_{nullptr};
 };
 
 /**
@@ -184,9 +186,9 @@ class NewtonSolverSparse : public NewtonSolver {
      */
     explicit NewtonSolverSparse(const Model *model);
 
-    NewtonSolverSparse(const NewtonSolverSparse&) = delete;
+    NewtonSolverSparse(const NewtonSolverSparse &) = delete;
 
-    NewtonSolverSparse& operator=(const NewtonSolverSparse& other) = delete;
+    NewtonSolverSparse &operator=(const NewtonSolverSparse &other) = delete;
 
     ~NewtonSolverSparse() override;
 
@@ -197,19 +199,18 @@ class NewtonSolverSparse : public NewtonSolver {
 
     void prepareLinearSystemB(int ntry, int nnewt, Model *model,
                               const SimulationState &state) override;
-    
+
     bool is_singular(Model *model, const SimulationState &state) const override;
 
     void reinitialize() override;
-    
+
   private:
     /** temporary storage of Jacobian */
     SUNMatrixWrapper Jtmp_;
 
     /** sparse linear solver */
-    SUNLinearSolver linsol_ {nullptr};
+    SUNLinearSolver linsol_{nullptr};
 };
-
 
 } // namespace amici
 

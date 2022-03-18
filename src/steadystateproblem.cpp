@@ -27,11 +27,11 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
       xQBdot_(model.nplist()), max_steps_(solver.getNewtonMaxSteps()),
       dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
-      state_({INFINITY, // t
-              AmiVector(model.nx_solver), // x
-              AmiVector(model.nx_solver), // dx
+      state_({INFINITY,                                        // t
+              AmiVector(model.nx_solver),                      // x
+              AmiVector(model.nx_solver),                      // dx
               AmiVectorArray(model.nx_solver, model.nplist()), // sx
-              model.getModelState()}), // state
+              model.getModelState()}),                         // state
       atol_(solver.getAbsoluteToleranceSteadyState()),
       rtol_(solver.getRelativeToleranceSteadyState()),
       atol_sensi_(solver.getAbsoluteToleranceSteadyStateSensi()),
@@ -54,7 +54,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
     initializeForwardProblem(it, solver, model);
-    
+
     /* Compute steady state, track computation time */
     clock_t starttime = clock();
     findSteadyState(solver, model, it);
@@ -80,7 +80,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
-    
+
     /* compute quadratures, track computation time */
     clock_t starttime = clock();
     computeSteadyStateQuadrature(solver, model);
@@ -90,7 +90,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 void SteadystateProblem::findSteadyState(const Solver *solver, Model *model,
                                          int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    
+
     /* First, try to run the Newton solver */
     findSteadyStateByNewtonsMethod(model, false);
 
@@ -187,13 +187,13 @@ void SteadystateProblem::initializeForwardProblem(int it, const Solver *solver,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
     }
-    
+
     /* overwrite starting timepoint */
     if (it < 1) /* No previous time point computed, set t = t0 */
         state_.t = model->t0();
     else /* Carry on simulating from last point */
         state_.t = model->getTimepoint(it - 1);
-    
+
     state_.state = model->getModelState();
 }
 
@@ -305,8 +305,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     }
 }
 
-[[noreturn]] void
-SteadystateProblem::handleSteadyStateFailure() {
+[[noreturn]] void SteadystateProblem::handleSteadyStateFailure() {
     /* Throw error message according to error codes */
     std::string errorString = "Steady state computation failed. "
                               "First run of Newton solver failed";
@@ -470,7 +469,8 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
     /* Did one of the attempts yield s steady state? */
     return std::any_of(steady_state_status_.begin(), steady_state_status_.end(),
                        [](SteadyStateStatus status) {
-                           return status == SteadyStateStatus::success;});
+                           return status == SteadyStateStatus::success;
+                       });
 }
 
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
@@ -515,13 +515,12 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
             /* If new residuals are smaller than old ones, update state */
             wrms_ = wrms_tmp;
             x_old_.copy(state_.x);
-            
+
             // precheck convergence
             converged = wrms_ < conv_thresh;
             if (converged) {
                 converged = makePositiveAndCheckConvergence(model);
             }
-
         }
         update_direction = updateDampingFactor(step_successful);
         /* increase step counter */
@@ -556,12 +555,12 @@ bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
 bool SteadystateProblem::updateDampingFactor(bool step_successful) {
     if (damping_factor_mode_ != NewtonDampingFactorMode::on)
         return true;
-    
+
     if (step_successful)
         gamma_ = fmin(1.0, 2.0 * gamma_);
     else
         gamma_ = gamma_ / 4.0;
-    
+
     if (gamma_ < damping_factor_lower_bound_)
         throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
                             "Newton solver failed: the damping factor "
