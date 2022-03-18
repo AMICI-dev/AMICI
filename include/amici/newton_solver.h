@@ -24,7 +24,7 @@ class NewtonSolver {
 
   public:
     /**
-     * @brief Initializes all members with the provided objects
+     * @brief Initializes solver according to the dimensions in the provided model
      *
      * @param model pointer to the model object
      */

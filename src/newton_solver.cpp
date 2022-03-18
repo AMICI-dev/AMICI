@@ -13,9 +13,8 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(Model *model)
-    : xdot_(model->nx_solver), x_(model->nx_solver), dxB_(model->nx_solver) {}
-
-/* ------------------------------------------------------------------------- */
+    : xdot_(model->nx_solver), x_(model->nx_solver),
+    xB_(model->nJ * model->nx_solver), dxB_(model->nJ * model->nx_solver) {}
 
 std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     const Solver &simulationSolver, Model *model) {
@@ -69,8 +68,6 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     return solver;
 }
 
-/* ------------------------------------------------------------------------- */
-
 void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta,
                            Model *model, const SimulationState &state) {
     prepareLinearSystem(ntry, nnewt, model, state);
@@ -78,8 +75,6 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta,
     delta.minus();
     solveLinearSystem(delta);
 }
-
-/* ------------------------------------------------------------------------- */
 
 void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model,
                                        const SimulationState &state) {
