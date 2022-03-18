@@ -76,12 +76,13 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model,
     prepareLinearSystem(0, -1, model, state);
     model->fdxdotdp(state.t, state.x, state.dx);
 
-    if (is_singular())
-        model_->app->warningF("AMICI:newton",
-                              "Jacobian is singular at steadystate, sensitivities may be inaccurate");
+    if (is_singular(model, state))
+        model->app->warningF("AMICI:newton",
+                             "Jacobian is singular at steadystate,"
+                             "sensitivities may be inaccurate");
 
-    if (model_->pythonGenerated) {
-        for (int ip = 0; ip < model_->nplist(); ip++) {
+    if (model->pythonGenerated) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
             model->get_dxdotdp_full().scatter(model->plist(ip), -1.0, nullptr,
                                                gsl::make_span(sx.getNVector(ip)),
@@ -141,13 +142,14 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
 /* does not need reinitialization */
 void NewtonSolverDense::reinitialize() {};
 
-bool NewtonSolverDense::is_singular() const {
+bool NewtonSolverDense::is_singular(Model *model,
+                                    const SimulationState &state) const {
     // dense solver doesn't have any implementation for rcond/condest, so use
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
-    NewtonSolverSparse sparse_solver(t_, x_, model_);
-    sparse_solver.prepareLinearSystem(0, 0);
-    return sparse_solver.is_singular();
+    NewtonSolverSparse sparse_solver(model);
+    sparse_solver.prepareLinearSystem(0, 0, model, state);
+    return sparse_solver.is_singular(model, state);
 }
 
 NewtonSolverDense::~NewtonSolverDense() {
@@ -205,7 +207,8 @@ void NewtonSolverSparse::reinitialize() {
         throw NewtonFailure(status, "SUNLinSol_KLUReInit");
 }
 
-bool NewtonSolverSparse::is_singular() const {
+bool NewtonSolverSparse::is_singular(Model* /*model*/,
+                                     const SimulationState& /*state*/) const {
     // adapted from SUNLinSolSetup_KLU in sunlinsol/klu/sunlinsol_klu.c
     auto content = (SUNLinearSolverContent_KLU)(linsol_->content);
     // first cheap check via rcond
