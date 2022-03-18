@@ -33,7 +33,8 @@ def edata_fixture():
     return edata_pre, edata_post, edata_full
 
 
-def generate_models():
+@pytest.fixture(scope="session")
+def models():
     # SBML model we want to import
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_constant_species',
@@ -100,9 +101,9 @@ def get_results(model, edata=None, sensi_order=0,
     return amici.runAmiciSimulation(model, solver, edata)
 
 
-def test_compare_conservation_laws_sbml(edata_fixture):
+def test_compare_conservation_laws_sbml(models, edata_fixture):
     # first, create the model
-    model_with_cl, model_without_cl = generate_models()
+    model_with_cl, model_without_cl = models
 
     assert model_with_cl.ncl() > 0
     assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
@@ -217,3 +218,11 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
 
             # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5).all()
+
+
+def test_get_set_model_settings(models):
+    """test amici.(get|set)_model_settings cycles for models with and without
+    conservation laws"""
+
+    for model in models:
+        amici.set_model_settings(model, amici.get_model_settings(model))
