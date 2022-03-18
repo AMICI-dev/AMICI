@@ -136,12 +136,6 @@ class SteadystateProblem {
     int getNumStepsB() const { return numstepsB_; }
 
     /**
-     * @brief Accessor for numlinsteps
-     * @return numlinsteps
-     */
-    const std::vector<int> &getNumLinSteps() const { return numlinsteps_; }
-
-    /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
      * @param model Model instance
      * @param edata experimental data
@@ -374,9 +368,6 @@ class SteadystateProblem {
     /** stores diagnostic information about employed number of steps */
     std::vector<int> numsteps_ {std::vector<int>(3, 0)};
 
-    /** stores diagnostic information about employed number of linear steps */
-    std::vector<int> numlinsteps_;
-
     /** stores information about employed number of backward steps */
     int numstepsB_ {0};
 
@@ -409,6 +400,11 @@ class SteadystateProblem {
     
     /** newton solver */
     std::unique_ptr<NewtonSolver> newton_solver_ {nullptr};
+    
+    /** damping factor flag */
+    NewtonDampingFactorMode damping_factor_mode_ {NewtonDampingFactorMode::on};
+    /** damping factor lower bound */
+    realtype damping_factor_lower_bound_ {1e-8};
 };
 
 } // namespace amici

@@ -24,7 +24,6 @@ Solver::Solver(const Solver &other)
       sensi_meth_(other.sensi_meth_), sensi_meth_preeq_(other.sensi_meth_preeq_),
       stldet_(other.stldet_), ordering_(other.ordering_),
       newton_maxsteps_(other.newton_maxsteps_),
-      newton_maxlinsteps_(other.newton_maxlinsteps_),
       newton_damping_factor_mode_(other.newton_damping_factor_mode_),
       newton_damping_factor_lower_bound_(other.newton_damping_factor_lower_bound_),
       requires_preequilibration_(other.requires_preequilibration_),
@@ -490,7 +489,6 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.iter_ == b.iter_) && (a.stldet_ == b.stldet_) &&
            (a.ordering_ == b.ordering_) &&
            (a.newton_maxsteps_ == b.newton_maxsteps_) &&
-           (a.newton_maxlinsteps_ == b.newton_maxlinsteps_) &&
            (a.newton_damping_factor_mode_ == b.newton_damping_factor_mode_) &&
            (a.newton_damping_factor_lower_bound_ == b.newton_damping_factor_lower_bound_) &&
            (a.requires_preequilibration_ == b.requires_preequilibration_) && (a.ism_ == b.ism_) &&
@@ -633,14 +631,6 @@ bool Solver::getPreequilibration() const { return requires_preequilibration_; }
 
 void Solver::setPreequilibration(const bool require_preequilibration) {
     requires_preequilibration_ = require_preequilibration;
-}
-
-int Solver::getNewtonMaxLinearSteps() const { return newton_maxlinsteps_; }
-
-void Solver::setNewtonMaxLinearSteps(const int newton_maxlinsteps) {
-    if (newton_maxlinsteps < 0)
-        throw AmiException("newton_maxlinsteps must be a non-negative number");
-    newton_maxlinsteps_ = newton_maxlinsteps;
 }
 
 NewtonDampingFactorMode Solver::getNewtonDampingFactorMode() const { return newton_damping_factor_mode_; }

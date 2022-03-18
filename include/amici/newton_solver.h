@@ -106,16 +106,6 @@ class NewtonSolver {
 
     virtual ~NewtonSolver() = default;
 
-    /** maximum number of allowed linear steps per Newton step for steady state
-     * computation */
-    int max_lin_steps_ {0};
-    /** maximum number of allowed Newton steps for steady state computation */
-    int max_steps {0};
-    /** damping factor flag */
-    NewtonDampingFactorMode damping_factor_mode_ {NewtonDampingFactorMode::on};
-    /** damping factor lower bound */
-    realtype damping_factor_lower_bound {1e-8};
-
   protected:
     /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;

@@ -399,11 +399,6 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
         createAndWriteInt1DDataset(file, hdf5Location + "/preeq_numsteps",
                                    rdata.preeq_numsteps);
 
-    if (!rdata.preeq_numlinsteps.empty())
-        createAndWriteInt2DDataset(file, hdf5Location + "/preeq_numlinsteps",
-                                   rdata.preeq_numlinsteps,
-                                   rdata.newton_maxsteps, 2);
-
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "preeq_numstepsB", &rdata.preeq_numstepsB, 1);
 
@@ -430,11 +425,6 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
     if (!rdata.posteq_numsteps.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/posteq_numsteps",
                                    rdata.posteq_numsteps);
-
-    if (!rdata.posteq_numlinsteps.empty())
-        createAndWriteInt2DDataset(file, hdf5Location + "/posteq_numlinsteps",
-                                   rdata.posteq_numlinsteps,
-                                   rdata.newton_maxsteps, 2);
 
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "posteq_numstepsB", &rdata.posteq_numstepsB, 1);
@@ -735,10 +725,6 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "newton_damping_factor_lower_bound", &dbuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getNewtonMaxLinearSteps());
-    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_maxlinsteps", &ibuffer, 1);
-
     ibuffer = static_cast<int>(solver.getLinearSolver());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "linsol", &ibuffer, 1);
@@ -899,12 +885,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
     if(attributeExists(file, datasetPath, "newton_damping_factor_lower_bound")) {
         solver.setNewtonDampingFactorLowerBound(
                     getDoubleScalarAttribute(file, datasetPath, "newton_damping_factor_lower_bound"));
-    }
-
-    if(attributeExists(file, datasetPath, "newton_maxlinsteps")) {
-        solver.setNewtonMaxLinearSteps(
-                    getIntScalarAttribute(file, datasetPath,
-                                          "newton_maxlinsteps"));
     }
 
     if(attributeExists(file, datasetPath, "linsol")) {

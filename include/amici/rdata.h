@@ -252,13 +252,6 @@ class ReturnData: public ModelDimensions {
     std::vector<int> preeq_numsteps;
 
     /**
-     * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (preequilibration)
-     * (shape `newton_maxsteps * 2`)
-     */
-    std::vector<int> preeq_numlinsteps;
-
-    /**
      * number of simulation steps for adjoint steady state problem
      * (preequilibration) [== 0 if analytical solution worked, > 0 otherwise]
      */
@@ -269,13 +262,6 @@ class ReturnData: public ModelDimensions {
      * [newton, simulation, newton] (shape `3`) (postequilibration)
      */
     std::vector<int> posteq_numsteps;
-
-    /**
-     * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (postequilibration)
-     * (shape `newton_maxsteps * 2`)
-     */
-    std::vector<int> posteq_numlinsteps;
 
     /**
      * number of simulation steps for adjoint steady state problem

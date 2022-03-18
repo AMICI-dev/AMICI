@@ -25,7 +25,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       x_old_(model.nx_solver), xdot_(model.nx_solver),
       sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
       xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
-      xQBdot_(model.nplist()),
+      xQBdot_(model.nplist()), max_steps_(solver.getNewtonMaxSteps()),
       dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0),
       state_({INFINITY, // t
               AmiVector(model.nx_solver), // x
@@ -38,7 +38,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi()),
       atol_quad_(solver.getAbsoluteToleranceQuadratures()),
       rtol_quad_(solver.getRelativeToleranceQuadratures()),
-      newton_solver_(NewtonSolver::getSolver(solver, &model)) {
+      newton_solver_(NewtonSolver::getSolver(solver, &model)),
+      damping_factor_mode_(solver.getNewtonDampingFactorMode()),
+      damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound()) {
     /* Check for compatibility of options */
     if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
         solver.getSensitivityMethodPreequilibration() ==
@@ -130,17 +132,6 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(Model *model,
             steady_state_status_[ind] = SteadyStateStatus::failed;
             break;
         }
-    }
-
-    /* copy number of linear steps used */
-    if (max_steps_ > 0) {
-        int *target;
-        if (newton_retry)
-            target = &numlinsteps_.at(max_steps_);
-        else
-            target = &numlinsteps_.at(0);
-        std::copy_n(newton_solver_->getNumLinSteps().begin(), max_steps_,
-                    target);
     }
 }
 
@@ -276,7 +267,7 @@ void SteadystateProblem::getQuadratureByLinSolve(Model *model) {
     /* try to solve the linear system */
     try {
         /* compute integral over xB and write to xQ */
-        newton_solver_->prepareLinearSystemB(0, -1, model, state_, xB_);
+        newton_solver_->prepareLinearSystemB(0, -1, model, state_);
         newton_solver_->solveLinearSystem(xQ_);
         /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
@@ -496,7 +487,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 
     wrms_ = getWrms(model, SensitivityMethod::none);
     bool converged = newton_retry ? false : wrms_ < conv_thresh;
-    while (!converged && i_newtonstep < newton_solver_->max_steps) {
+    while (!converged && i_newtonstep < max_steps_) {
 
         /* If Newton steps are necessary, compute the initial search direction
          */
@@ -544,16 +535,14 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
             }
 
             // update dampening
-            if (newton_solver_->damping_factor_mode_ ==
-                NewtonDampingFactorMode::on)
+            if (damping_factor_mode_ == NewtonDampingFactorMode::on)
                 gamma = fmin(1.0, 2.0 * gamma);
 
-        } else if (newton_solver_->damping_factor_mode_ ==
-                   NewtonDampingFactorMode::on) {
+        } else if (damping_factor_mode_ == NewtonDampingFactorMode::on) {
             /* Reduce dampening factor and raise an error when becomes too small
              */
             gamma = gamma / 4.0;
-            if (gamma < newton_solver_->damping_factor_lower_bound)
+            if (gamma < damping_factor_lower_bound_)
                 throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
                                     "Newton solver failed: the damping factor "
                                     "reached its lower bound");

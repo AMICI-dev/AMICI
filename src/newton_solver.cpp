@@ -59,12 +59,6 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     default:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     }
-    solver->max_lin_steps_ = simulationSolver.getNewtonMaxLinearSteps();
-    solver->max_steps = simulationSolver.getNewtonMaxSteps();
-    solver->damping_factor_mode_ = simulationSolver.getNewtonDampingFactorMode();
-    solver->damping_factor_lower_bound =
-        simulationSolver.getNewtonDampingFactorLowerBound();
-
     return solver;
 }
 
