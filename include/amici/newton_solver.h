@@ -49,6 +49,7 @@ class NewtonSolver {
      * @param delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      * @param model pointer to the model instance
+     * @param state current simulation state
      */
     void getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
                  const SimulationState &state);
@@ -57,6 +58,8 @@ class NewtonSolver {
      * @brief Computes steady state sensitivities
      *
      * @param sx pointer to state variable sensitivities
+     * @param model pointer to the model instance
+     * @param state current simulation state
      */
     void computeNewtonSensis(AmiVectorArray &sx, Model *model,
                              const SimulationState &state);
@@ -69,6 +72,7 @@ class NewtonSolver {
      * (1 or 2)
      * @param nnewt integer number of current Newton step
      * @param model pointer to the model instance
+     * @param state current simulation state
      */
     virtual void prepareLinearSystem(int ntry, int nnewt, Model *model,
                                      const SimulationState &state) = 0;
@@ -81,6 +85,7 @@ class NewtonSolver {
      * (1 or 2)
      * @param nnewt integer number of current Newton step
      * @param model pointer to the model instance
+     * @param state current simulation state
      */
     virtual void prepareLinearSystemB(int ntry, int nnewt, Model *model,
                                       const SimulationState &state) = 0;
