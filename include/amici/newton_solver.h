@@ -103,6 +103,14 @@ class NewtonSolver {
      *
      */
     virtual void reinitialize() = 0;
+  
+    /**
+     * @brief Checks whether linear system is singular
+     *
+     * @return boolean indicating whether the linear system is singular
+     * (condition number < 1/machine precision)
+     */
+    virtual bool is_singular() const = 0;
 
     virtual ~NewtonSolver() = default;
 
@@ -145,6 +153,8 @@ class NewtonSolverDense : public NewtonSolver {
                               const SimulationState &state) override;
     
     void reinitialize() override;
+    
+    bool is_singular() const override;
 
   private:
     /** temporary storage of Jacobian */
@@ -180,6 +190,8 @@ class NewtonSolverSparse : public NewtonSolver {
 
     void prepareLinearSystemB(int ntry, int nnewt, Model *model,
                               const SimulationState &state) override;
+    
+    bool is_singular() const override;
 
     void reinitialize() override;
     
