@@ -164,7 +164,7 @@ class NewtonSolverSparse : public NewtonSolver {
   public:
     /**
      * @brief constructor for dense solver
-     */s
+     */
     NewtonSolverSparse(Model *model);
 
     NewtonSolverSparse(const NewtonSolverSparse&) = delete;
