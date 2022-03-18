@@ -1663,6 +1663,9 @@ class Solver {
 
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_ {false};
+    
+    /** flag indicating whether sensInit1 was called */
+    mutable bool sens_initialized_ {false};
 
   private:
 
@@ -1761,9 +1764,6 @@ class Solver {
 
     /** flag indicating whether init was called */
     mutable bool initialized_ {false};
-
-    /** flag indicating whether sensInit1 was called */
-    mutable bool sens_initialized_ {false};
 
     /** flag indicating whether adjInit was called */
     mutable bool adj_initialized_ {false};

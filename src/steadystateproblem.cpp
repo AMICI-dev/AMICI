@@ -476,7 +476,8 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     int i_newtonstep = 0;
     gamma_ = 1.0;
-    bool step_successful = true;
+    bool update_direction = true;
+    bool step_successful = false;
 
     if (model->nx_solver == 0)
         return;
@@ -491,7 +492,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 
         /* If Newton steps are necessary, compute the initial search direction
          */
-        if (step_successful) {
+        if (update_direction) {
             try {
                 // xdot_ computed in getWrms
                 delta_.copy(xdot_);
@@ -522,7 +523,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
             }
 
         }
-        updateDampingFactor(step_successful);
+        update_direction = updateDampingFactor(step_successful);
         /* increase step counter */
         i_newtonstep++;
     }
@@ -540,7 +541,7 @@ bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
     bool converged = false;
     auto nonnegative = model->getStateIsNonNegative();
     for (int ix = 0; ix < model->nx_solver; ix++) {
-        if (state_.x[ix] < 0.0 and nonnegative[ix]) {
+        if (state_.x[ix] < 0.0) {//} and nonnegative[ix]) {
             state_.x[ix] = 0.0;
             recheck_convergence = true;
         }
@@ -552,9 +553,10 @@ bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
     return converged;
 }
 
-void SteadystateProblem::updateDampingFactor(bool step_successful) {
+bool SteadystateProblem::updateDampingFactor(bool step_successful) {
     if (damping_factor_mode_ != NewtonDampingFactorMode::on)
-        return;
+        return true;
+    
     if (step_successful)
         gamma_ = fmin(1.0, 2.0 * gamma_);
     else
@@ -564,6 +566,7 @@ void SteadystateProblem::updateDampingFactor(bool step_successful) {
         throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
                             "Newton solver failed: the damping factor "
                             "reached its lower bound");
+    return step_successful;
 }
 
 void SteadystateProblem::runSteadystateSimulation(const Solver *solver,

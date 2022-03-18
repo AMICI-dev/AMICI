@@ -1025,8 +1025,6 @@ void Solver::setInitDone() const { initialized_ = true; };
 
 void Solver::setSensInitDone() const { sens_initialized_ = true; }
 
-void Solver::setSensInitOff() const { sens_initialized_ = false; }
-
 void Solver::setAdjInitDone() const { adj_initialized_ = true; }
 
 void Solver::setInitDoneB(const int which) const {
@@ -1045,7 +1043,6 @@ void Solver::setQuadInitDone() const { quad_initialized_ = true; }
 
 void Solver::switchForwardSensisOff() const {
     sensToggleOff();
-    setSensInitOff();
 }
 
 realtype Solver::getCpuTime() const {

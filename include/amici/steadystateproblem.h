@@ -342,8 +342,10 @@ class SteadystateProblem {
      * @brief updates the damping factor gamma that determines step size
      *
      * @param step_successful flag indicating whether the previous step was successful
+     * @return boolean flag indicating whether search direction should be updated (true) or the same
+     * direction should be retried with the updated dampening (false)
      */
-    void updateDampingFactor(bool step_successful);
+    bool updateDampingFactor(bool step_successful);
     
     /** newton step */
     AmiVector delta_;
