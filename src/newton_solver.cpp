@@ -139,8 +139,9 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }
 
-/* does not need reinitialization */
-void NewtonSolverDense::reinitialize() {};
+void NewtonSolverDense::reinitialize() {
+    /* dense solver does not need reinitialization */
+};
 
 bool NewtonSolverDense::is_singular(Model *model,
                                     const SimulationState &state) const {

@@ -28,7 +28,7 @@ class NewtonSolver {
      *
      * @param model pointer to the model object
      */
-    NewtonSolver(const Model *model);
+    explicit NewtonSolver(const Model *model);
 
     /**
      * @brief Factory method to create a NewtonSolver based on linsolType
@@ -120,12 +120,14 @@ class NewtonSolver {
   protected:
     /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;
-    /** dummy state, attached to linear solver */
-    AmiVector x_;
     /** dummy adjoint state, used as dummy argument when computing JB */
     AmiVector xB_;
     /** dummy differential adjoint state, used as dummy argument when computing JB */
     AmiVector dxB_;
+    
+  private:
+    /** dummy state, attached to linear solver */
+    AmiVector x_;
 };
 
 /**
@@ -141,7 +143,7 @@ class NewtonSolverDense : public NewtonSolver {
      *
      * @param model model instance that provides problem dimensions
      */
-    NewtonSolverDense(const Model *model);
+    explicit NewtonSolverDense(const Model *model);
 
     NewtonSolverDense(const NewtonSolverDense&) = delete;
 
@@ -182,7 +184,7 @@ class NewtonSolverSparse : public NewtonSolver {
      *
      * @param model model instance that provides problem dimensions
      */
-    NewtonSolverSparse(const Model *model);
+    explicit NewtonSolverSparse(const Model *model);
 
     NewtonSolverSparse(const NewtonSolverSparse&) = delete;
 

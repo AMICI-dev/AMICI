@@ -175,7 +175,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void findSteadyState(Solver *solver, Model *model, int it);
+    void findSteadyState(const Solver *solver, Model *model, int it);
 
     /**
      * @brief Tries to determine the steady state by using Newton's method
@@ -311,7 +311,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void initializeForwardProblem(int it, Solver *solver, Model *model);
+    void initializeForwardProblem(int it, const Solver *solver, Model *model);
     
     /**
      * @brief Initialize backward computation
@@ -331,6 +331,19 @@ class SteadystateProblem {
      * @param yQB resulting vector after multiplication
      */
     void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB) const;
+    
+    /**
+     * @brief ensures state positivity, if requested and repeats convergence check, if necessary
+     * @param model pointer to the model object
+     */
+    bool makePositiveAndCheckConvergence(Model *model);
+
+    /**
+     * @brief updates the damping factor gamma that determines step size
+     *
+     * @param step_successful flag indicating whether the previous step was successful
+     */
+    void updateDampingFactor(bool step_successful);
     
     /** newton step */
     AmiVector delta_;
@@ -379,6 +392,9 @@ class SteadystateProblem {
 
     /** flag indicating whether backward mode was run */
     bool hasQuadrature_ {false};
+    
+    /** stepsize for newton step */
+    double gamma_ {1.0};
 
     /** stores diagnostic information about execution success of the different
      * approaches [newton, simulation, newton] (length = 3)

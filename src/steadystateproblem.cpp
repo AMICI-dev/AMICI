@@ -87,7 +87,8 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
     cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 }
 
-void SteadystateProblem::findSteadyState(Solver *solver, Model *model, int it) {
+void SteadystateProblem::findSteadyState(const Solver *solver, Model *model,
+                                         int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
     
     /* First, try to run the Newton solver */
@@ -171,7 +172,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
     }
 }
 
-void SteadystateProblem::initializeForwardProblem(int it, Solver *solver,
+void SteadystateProblem::initializeForwardProblem(int it, const Solver *solver,
                                                   Model *model) {
     newton_solver_->reinitialize();
     /* process solver handling for pre- or postequilibration */
@@ -474,9 +475,8 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     int i_newtonstep = 0;
-    int ix = 0;
-    double gamma = 1.0;
-    bool compNewStep = true;
+    gamma_ = 1.0;
+    bool step_successful = true;
 
     if (model->nx_solver == 0)
         return;
@@ -491,7 +491,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 
         /* If Newton steps are necessary, compute the initial search direction
          */
-        if (compNewStep) {
+        if (step_successful) {
             try {
                 // xdot_ computed in getWrms
                 delta_.copy(xdot_);
@@ -509,47 +509,20 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         /* Compute new xdot and residuals */
         realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
 
-        if (wrms_tmp < wrms_) {
+        step_successful = wrms_tmp < wrms_;
+        if (step_successful) {
             /* If new residuals are smaller than old ones, update state */
             wrms_ = wrms_tmp;
             x_old_.copy(state_.x);
-            /* New linear solve due to new state */
-            compNewStep = true;
-
+            
             // precheck convergence
             converged = wrms_ < conv_thresh;
             if (converged) {
-                /* Ensure positivity of the found state and recheck if
-                   the convergence still holds */
-                bool recheck_convergence = false;
-                for (ix = 0; ix < model->nx_solver; ix++) {
-                    if (state_.x[ix] < 0.0) {
-                        state_.x[ix] = 0.0;
-                        recheck_convergence = true;
-                    }
-                }
-                if (recheck_convergence) {
-                    wrms_ = getWrms(model, SensitivityMethod::none);
-                    converged = wrms_ < conv_thresh;
-                }
+                converged = makePositiveAndCheckConvergence(model);
             }
 
-            // update dampening
-            if (damping_factor_mode_ == NewtonDampingFactorMode::on)
-                gamma = fmin(1.0, 2.0 * gamma);
-
-        } else if (damping_factor_mode_ == NewtonDampingFactorMode::on) {
-            /* Reduce dampening factor and raise an error when becomes too small
-             */
-            gamma = gamma / 4.0;
-            if (gamma < damping_factor_lower_bound_)
-                throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
-                                    "Newton solver failed: the damping factor "
-                                    "reached its lower bound");
-
-            /* No new linear solve, only try new dampening */
-            compNewStep = false;
         }
+        updateDampingFactor(step_successful);
         /* increase step counter */
         i_newtonstep++;
     }
@@ -558,6 +531,39 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
     if (!converged)
         throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
+}
+
+bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
+    /* Ensure positivity of the found state and recheck if
+       the convergence still holds */
+    bool recheck_convergence = false;
+    bool converged = false;
+    auto nonnegative = model->getStateIsNonNegative();
+    for (int ix = 0; ix < model->nx_solver; ix++) {
+        if (state_.x[ix] < 0.0 and nonnegative[ix]) {
+            state_.x[ix] = 0.0;
+            recheck_convergence = true;
+        }
+    }
+    if (recheck_convergence) {
+        wrms_ = getWrms(model, SensitivityMethod::none);
+        converged = wrms_ < conv_thresh;
+    }
+    return converged;
+}
+
+void SteadystateProblem::updateDampingFactor(bool step_successful) {
+    if (damping_factor_mode_ != NewtonDampingFactorMode::on)
+        return;
+    if (step_successful)
+        gamma_ = fmin(1.0, 2.0 * gamma_);
+    else
+        gamma_ = gamma_ / 4.0;
+    
+    if (gamma_ < damping_factor_lower_bound_)
+        throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
+                            "Newton solver failed: the damping factor "
+                            "reached its lower bound");
 }
 
 void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
