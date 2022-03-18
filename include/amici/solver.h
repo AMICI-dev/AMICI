@@ -244,20 +244,6 @@ class Solver {
     void setPreequilibration(bool require_preequilibration);
 
     /**
-     * @brief Get maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @return
-     */
-    int getNewtonMaxLinearSteps() const;
-
-    /**
-     * @brief Set maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @param newton_maxlinsteps
-     */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
-
-    /**
      * @brief Get a state of the damping factor used in the Newton solver
      * @return
      */
