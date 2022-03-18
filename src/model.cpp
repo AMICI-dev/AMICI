@@ -622,7 +622,7 @@ void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
     if (nx_solver != nx_rdata) {
         if(any_state_non_negative)
             throw AmiException("Non-negative states are not supported with"
-                               " conservation laws enabled");
+                               " conservation laws enabled.");
         // nothing to do, as `state_is_non_negative_` will always be all-false
         // in case of conservation laws
         return;
