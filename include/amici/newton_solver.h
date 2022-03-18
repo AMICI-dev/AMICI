@@ -120,14 +120,12 @@ class NewtonSolver {
   protected:
     /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;
+    /** dummy state, attached to linear solver */
+    AmiVector x_;
     /** dummy adjoint state, used as dummy argument when computing JB */
     AmiVector xB_;
     /** dummy differential adjoint state, used as dummy argument when computing JB */
     AmiVector dxB_;
-    
-  private:
-    /** dummy state, attached to linear solver */
-    AmiVector x_;
 };
 
 /**

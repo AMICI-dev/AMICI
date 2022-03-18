@@ -504,7 +504,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         }
 
         /* Try a full, undamped Newton step */
-        linearSum(1.0, x_old_, gamma, delta_, state_.x);
+        linearSum(1.0, x_old_, gamma_, delta_, state_.x);
 
         /* Compute new xdot and residuals */
         realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
