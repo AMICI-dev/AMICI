@@ -5,6 +5,7 @@
 
 #include "sunlinsol/sunlinsol_klu.h" // sparse solver
 #include "sunlinsol/sunlinsol_dense.h" // dense solver
+#include <sundials/sundials_config.h> // roundoffs
 
 #include <cstring>
 #include <ctime>
@@ -89,6 +90,10 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     prepareLinearSystem(0, -1);
     model_->fdxdotdp(*t_, *x_, dx_);
 
+    if (is_singular())
+        model_->app->warningF("AMICI:newton",
+                              "Jacobian is singular at steadystate, sensitivities may be inaccurate");
+
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
@@ -117,7 +122,7 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
     : NewtonSolver(t, x, model), Jtmp_(model->nx_solver, model->nx_solver),
       linsol_(SUNLinSol_Dense(x->getNVector(), Jtmp_.get())) {
     int status = SUNLinSolInitialize_Dense(linsol_);
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
 }
 
@@ -127,7 +132,7 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
@@ -137,7 +142,7 @@ void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
@@ -151,11 +156,20 @@ void NewtonSolverDense::solveLinearSystem(AmiVector &rhs) {
     Jtmp_.refresh();
     // last argument is tolerance and does not have any influence on result
 
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }
 
 /* ------------------------------------------------------------------------- */
+
+bool NewtonSolverDense::is_singular() const {
+    // dense solver doesn't have any implementation for rcond/condest, so use
+    // sparse solver interface, not the most efficient solution, but who is
+    // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
+    NewtonSolverSparse sparse_solver(t_, x_, model_);
+    sparse_solver.prepareLinearSystem(0, 0);
+    return sparse_solver.is_singular();
+}
 
 NewtonSolverDense::~NewtonSolverDense() {
     if(linsol_)
@@ -172,7 +186,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
       Jtmp_(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
       linsol_(SUNKLU(x->getNVector(), Jtmp_.get())) {
     int status = SUNLinSolInitialize_KLU(linsol_);
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
 }
 
@@ -183,7 +197,7 @@ void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
@@ -194,7 +208,7 @@ void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
     model_->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
@@ -206,11 +220,34 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector &rhs) {
                                     rhs.getNVector(), rhs.getNVector(), 0.0);
     // last argument is tolerance and does not have any influence on result
 
-    if(status != AMICI_SUCCESS)
+    if(status != SUNLS_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_KLU");
 }
 
 /* ------------------------------------------------------------------------- */
+
+bool NewtonSolverSparse::is_singular() const {
+    // adapted from SUNLinSolSetup_KLU in sunlinsol/klu/sunlinsol_klu.c
+    auto content = (SUNLinearSolverContent_KLU)(linsol_->content);
+    // first cheap check via rcond
+    auto status = sun_klu_rcond(content->symbolic, content->numeric,
+                               &content->common);
+    if(status == 0)
+        throw NewtonFailure(content->last_flag, "sun_klu_rcond");
+
+    auto precision = std::numeric_limits<realtype>::epsilon();
+
+    if (content->common.rcond < precision) {
+        // cheap check indicates singular, expensive check via condest
+        status = sun_klu_condest(SM_INDEXPTRS_S(Jtmp_.get()),
+            SM_DATA_S(Jtmp_.get()), content->symbolic, content->numeric,
+            &content->common);
+        if(status == 0)
+            throw NewtonFailure(content->last_flag, "sun_klu_rcond");
+        return content->common.condest > 1.0/precision;
+    }
+    return false;
+}
 
 NewtonSolverSparse::~NewtonSolverSparse() {
     if(linsol_)
