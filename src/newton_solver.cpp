@@ -12,14 +12,13 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
-    : t_(t), xdot_(model->nx_solver), x_(x), dx_(model->nx_solver),
-    xB_(model->nx_solver), dxB_(model->nx_solver) {}
+NewtonSolver::NewtonSolver(Model *model)
+    : xdot_(model->nx_solver), x_(model->nx_solver), dxB_(model->nx_solver) {}
 
 /* ------------------------------------------------------------------------- */
 
 std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
-    realtype *t, AmiVector *x, const Solver &simulationSolver, Model *model) {
+    const Solver &simulationSolver, Model *model) {
 
     std::unique_ptr<NewtonSolver> solver;
 
@@ -27,7 +26,7 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
 
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
-        solver.reset(new NewtonSolverDense(t, x, model));
+        solver.reset(new NewtonSolverDense(model));
         break;
 
     case LinearSolver::band:
@@ -56,7 +55,7 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     case LinearSolver::SuperLUMT:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     case LinearSolver::KLU:
-        solver.reset(new NewtonSolverSparse(t, x, model));
+        solver.reset(new NewtonSolverSparse(model));
         break;
     default:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
@@ -73,8 +72,8 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta,
-                           Model *model) {
-    prepareLinearSystem(ntry, nnewt, model);
+                           Model *model, const SimulationState &state) {
+    prepareLinearSystem(ntry, nnewt, model, state);
 
     delta.minus();
     solveLinearSystem(delta);
@@ -82,9 +81,10 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta,
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model) {
-    prepareLinearSystem(0, -1, model);
-    model->fdxdotdp(*t_, *x_, dx_);
+void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model,
+                                       const SimulationState &state) {
+    prepareLinearSystem(0, -1, model, state);
+    model->fdxdotdp(state.t, state.x, state.dx);
 
     if (model->pythonGenerated) {
         for (int ip = 0; ip < model->nplist(); ip++) {
@@ -110,9 +110,9 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model) {
 /* ------------------------------------------------------------------------- */
 
 /* Derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
-    : NewtonSolver(t, x, model), Jtmp_(model->nx_solver, model->nx_solver),
-      linsol_(SUNLinSol_Dense(x->getNVector(), Jtmp_.get())) {
+NewtonSolverDense::NewtonSolverDense(Model *model)
+    : NewtonSolver(model), Jtmp_(model->nx_solver, model->nx_solver),
+      linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_.get())) {
     int status = SUNLinSolInitialize_Dense(linsol_);
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
@@ -121,8 +121,9 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/,
-                                            Model *model) {
-    model->fJ(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+                                            Model *model,
+                                            const SimulationState &state) {
+    model->fJ(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
@@ -132,8 +133,10 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/,
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/,
-                                             Model *model) {
-    model->fJB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+                                             Model *model,
+                                             const SimulationState &state,
+                                             const AmiVector &xB) {
+    model->fJB(state.t, 0.0, state.x, state.dx, xB, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_Dense(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
@@ -166,10 +169,10 @@ NewtonSolverDense::~NewtonSolverDense() {
 /* ------------------------------------------------------------------------- */
 
 /* Derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
-    : NewtonSolver(t, x, model),
+NewtonSolverSparse::NewtonSolverSparse(Model *model)
+    : NewtonSolver(model),
       Jtmp_(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
-      linsol_(SUNKLU(x->getNVector(), Jtmp_.get())) {
+      linsol_(SUNKLU(x_.getNVector(), Jtmp_.get())) {
     int status = SUNLinSolInitialize_KLU(linsol_);
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
@@ -178,9 +181,10 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/,
-                                             Model *model) {
+                                             Model *model,
+                                             const SimulationState &state) {
     /* Get sparse Jacobian */
-    model->fJSparse(*t_, 0.0, *x_, dx_, xdot_, Jtmp_.get());
+    model->fJSparse(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)
@@ -190,9 +194,11 @@ void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/,
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/,
-                                              Model *model) {
+                                              Model *model,
+                                              const SimulationState &state,
+                                              const AmiVector &xB) {
     /* Get sparse Jacobian */
-    model->fJSparseB(*t_, 0.0, *x_, dx_, xB_, dxB_, xdot_, Jtmp_.get());
+    model->fJSparseB(state.t, 0.0, state.x, state.dx, xB, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
     int status = SUNLinSolSetup_KLU(linsol_, Jtmp_.get());
     if(status != AMICI_SUCCESS)

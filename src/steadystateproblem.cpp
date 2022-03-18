@@ -38,8 +38,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       rtol_sensi_(solver.getRelativeToleranceSteadyStateSensi()),
       atol_quad_(solver.getAbsoluteToleranceQuadratures()),
       rtol_quad_(solver.getRelativeToleranceQuadratures()),
-      newton_solver_(
-          NewtonSolver::getSolver(&state_.t, &state_.x, solver, &model)) {
+      newton_solver_(NewtonSolver::getSolver(solver, &model)) {
     /* Check for compatibility of options */
     if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
         solver.getSensitivityMethodPreequilibration() ==
@@ -52,24 +51,8 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
-    /* process solver handling for pre- or postequilibration */
-    if (it == -1) {
-        /* solver was not run before, set up everything */
-        model->initialize(state_.x, state_.dx, state_.sx, sdx_,
-                          solver->getSensitivityOrder() >=
-                              SensitivityOrder::first);
-        state_.t = model->t0();
-        solver->setup(state_.t, model, state_.x, state_.dx, state_.sx, sdx_);
-    } else {
-        /* solver was run before, extract current state from solver */
-        solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
-    }
+    initializeForwardProblem(it, solver, model);
     
-    /* update model (state), we may have entered a new context after
-     initialization, needs to happen after initialization to make sure tcl
-     is updated */
-    state_.state = model->getModelState();
-
     /* Compute steady state, track computation time */
     clock_t starttime = clock();
     findSteadyState(solver, model, it);
@@ -81,7 +64,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
-            newton_solver_->computeNewtonSensis(state_.sx, model);
+            newton_solver_->computeNewtonSensis(state_.sx, model, state_);
         } catch (NewtonFailure const &) {
             throw AmiException(
                 "Steady state sensitivity computation failed due "
@@ -92,15 +75,10 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
     Solver *solver, Model *model, const BackwardProblem *bwd) {
-    /* initialize and check if there is something to be done */
+
     if (!initializeBackwardProblem(solver, model, bwd))
         return;
     
-    /* update model (state), we may have entered a new context after
-     initialization, needs to happen after initialization to make sure tcl
-     is updated */
-    state_.state = model->getModelState();
-
     /* compute quadratures, track computation time */
     clock_t starttime = clock();
     computeSteadyStateQuadrature(solver, model);
@@ -108,8 +86,9 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 }
 
 void SteadystateProblem::findSteadyState(Solver *solver, Model *model, int it) {
-    /* First, try to run the Newton solver */
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
+    
+    /* First, try to run the Newton solver */
     findSteadyStateByNewtonsMethod(model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
@@ -167,12 +146,6 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(Model *model,
 
 void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
                                                      Model *model, int it) {
-    /* set starting timepoint for the simulation solver */
-    if (it < 1) /* No previous time point computed, set t = t0 */
-        state_.t = model->t0();
-    else /* Carry on simulating from last point */
-        state_.t = model->getTimepoint(it - 1);
-
     try {
         if (it < 0) {
             /* Preequilibration? -> Create a new solver instance for sim */
@@ -207,13 +180,38 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
     }
 }
 
+void SteadystateProblem::initializeForwardProblem(int it, Solver *solver,
+                                                  Model *model) {
+    /* process solver handling for pre- or postequilibration */
+    if (it == -1) {
+        /* solver was not run before, set up everything */
+        model->initialize(state_.x, state_.dx, state_.sx, sdx_,
+                          solver->getSensitivityOrder() >=
+                              SensitivityOrder::first);
+        state_.t = model->t0();
+        solver->setup(state_.t, model, state_.x, state_.dx, state_.sx, sdx_);
+    } else {
+        /* solver was run before, extract current state from solver */
+        solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx, xQ_);
+    }
+    
+    /* overwrite starting timepoint */
+    if (it < 1) /* No previous time point computed, set t = t0 */
+        state_.t = model->t0();
+    else /* Carry on simulating from last point */
+        state_.t = model->getTimepoint(it - 1);
+    
+    state_.state = model->getModelState();
+}
+
 bool SteadystateProblem::initializeBackwardProblem(Solver *solver, Model *model,
                                                    const BackwardProblem *bwd) {
+    /* note that state_ is still set from forward run */
     if (bwd) {
-        /* If preequilibration but not adjoint mode, there's nothing to do */
+        /* preequilibration */
         if (solver->getSensitivityMethodPreequilibration() !=
             SensitivityMethod::adjoint)
-            return false;
+            return false; /* if not adjoint mode, there's nothing to do */
 
         /* If we need to reinitialize solver states, this won't work yet. */
         if (model->nx_reinit() > 0)
@@ -222,12 +220,11 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver, Model *model,
                 "Adjoint preequilibration with reinitialization of "
                 "non-constant states is not yet implemented. Stopping.");
 
-        /* If we have a backward problem, we're in preequilibration.
-           Hence, quantities like t, x, and xB must be set. */
         solver->reInit(state_.t, state_.x, state_.dx);
         solver->updateAndReinitStatesAndSensitivities(model);
         xB_.copy(bwd->getAdjointState());
     }
+    /* postequilibration does not need a reInit */
 
     /* initialize quadratures */
     xQ_.zero();
@@ -277,7 +274,7 @@ void SteadystateProblem::getQuadratureByLinSolve(Model *model) {
     /* try to solve the linear system */
     try {
         /* compute integral over xB and write to xQ */
-        newton_solver_->prepareLinearSystemB(0, -1, model);
+        newton_solver_->prepareLinearSystemB(0, -1, model, state_, xB_);
         newton_solver_->solveLinearSystem(xQ_);
         /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
@@ -423,15 +420,15 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          realtype rtol, AmiVector &ewt) const {
     /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
        we need to pass ewt[QB], as xdot and xQBdot have different sizes */
-    // ewt = x
+    /* ewt = x */
     N_VAbs(const_cast<N_Vector>(x.getNVector()), ewt.getNVector());
-    // ewt *= rtol
+    /* ewt *= rtol */
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
-    // ewt += atol
+    /* ewt += atol */
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
-    // ewt = 1/ewt (ewt = 1/(rtol*x+atol))
+    /* ewt = 1/ewt (ewt = 1/(rtol*x+atol)) */
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    // wrms = sqrt(sum((xdot/ewt)**2))
+    /* wrms = sqrt(sum((xdot/ewt)**2)) */
     return N_VWrmsNorm(const_cast<N_Vector>(xdot.getNVector()),
                        ewt.getNVector());
 }
@@ -506,7 +503,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
                 // xdot_ computed in getWrms
                 delta_.copy(xdot_);
                 newton_solver_->getStep(newton_retry ? 2 : 1, i_newtonstep,
-                                        delta_, model);
+                                        delta_, model, state_);
             } catch (NewtonFailure const &) {
                 numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
                 throw;

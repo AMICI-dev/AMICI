@@ -312,8 +312,15 @@ class SteadystateProblem {
                                                        bool backward) const;
 
     /**
-     * @brief Initialize backward computation by setting state, time, adjoint
-     * state and checking for preequilibration mode
+     * @brief Initialize forward computation
+     * @param it integer with the index of the current time step
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    void initializeForwardProblem(int it, Solver *solver, Model *model);
+    
+    /**
+     * @brief Initialize backward computation
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param bwd pointer to backward problem
