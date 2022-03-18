@@ -28,7 +28,7 @@ class NewtonSolver {
      *
      * @param model pointer to the model object
      */
-    NewtonSolver(Model *model);
+    NewtonSolver(const Model *model);
 
     /**
      * @brief Factory method to create a NewtonSolver based on linsolType
@@ -38,7 +38,7 @@ class NewtonSolver {
      * @return solver NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver> getSolver(
-    const Solver &simulationSolver, Model *model);
+    const Solver &simulationSolver, const Model *model);
 
     /**
      * @brief Computes the solution of one Newton iteration
@@ -138,8 +138,10 @@ class NewtonSolverDense : public NewtonSolver {
   public:
     /**
      * @brief constructor for sparse solver
+     *
+     * @param model model instance that provides problem dimensions
      */
-    NewtonSolverDense(Model *model);
+    NewtonSolverDense(const Model *model);
 
     NewtonSolverDense(const NewtonSolverDense&) = delete;
 
@@ -177,8 +179,10 @@ class NewtonSolverSparse : public NewtonSolver {
   public:
     /**
      * @brief constructor for dense solver
+     *
+     * @param model model instance that provides problem dimensions
      */
-    NewtonSolverSparse(Model *model);
+    NewtonSolverSparse(const Model *model);
 
     NewtonSolverSparse(const NewtonSolverSparse&) = delete;
 

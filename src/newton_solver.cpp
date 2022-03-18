@@ -13,12 +13,12 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(Model *model)
+NewtonSolver::NewtonSolver(const Model *model)
     : xdot_(model->nx_solver), x_(model->nx_solver),
     xB_(model->nJ * model->nx_solver), dxB_(model->nJ * model->nx_solver) {}
 
 std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
-    const Solver &simulationSolver, Model *model) {
+    const Solver &simulationSolver, const Model *model) {
 
     std::unique_ptr<NewtonSolver> solver;
 
@@ -100,7 +100,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model,
     }
 }
 
-NewtonSolverDense::NewtonSolverDense(Model *model)
+NewtonSolverDense::NewtonSolverDense(const Model *model)
     : NewtonSolver(model), Jtmp_(model->nx_solver, model->nx_solver),
       linsol_(SUNLinSol_Dense(x_.getNVector(), Jtmp_.get())) {
     auto status = SUNLinSolInitialize_Dense(linsol_);
@@ -157,7 +157,7 @@ NewtonSolverDense::~NewtonSolverDense() {
         SUNLinSolFree_Dense(linsol_);
 }
 
-NewtonSolverSparse::NewtonSolverSparse(Model *model)
+NewtonSolverSparse::NewtonSolverSparse(const Model *model)
     : NewtonSolver(model),
       Jtmp_(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
       linsol_(SUNKLU(x_.getNVector(), Jtmp_.get())) {
@@ -213,7 +213,7 @@ bool NewtonSolverSparse::is_singular(Model* /*model*/,
     auto content = (SUNLinearSolverContent_KLU)(linsol_->content);
     // first cheap check via rcond
     auto status = sun_klu_rcond(content->symbolic, content->numeric,
-                               &content->common);
+                                &content->common);
     if(status == 0)
         throw NewtonFailure(content->last_flag, "sun_klu_rcond");
 
