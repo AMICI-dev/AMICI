@@ -348,7 +348,7 @@ class SteadystateProblem {
     AmiVector x_old_;
     /** time derivative state vector */
     AmiVector xdot_;
-    /** state sensitivities */
+    /** state differential sensitivities */
     AmiVectorArray sdx_;
     /** adjoint state vector */
     AmiVector xB_;
