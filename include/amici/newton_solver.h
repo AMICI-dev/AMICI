@@ -125,6 +125,9 @@ class NewtonSolver {
 class NewtonSolverDense : public NewtonSolver {
 
   public:
+    /**
+     * @brief constructor for sparse solver
+     */
     NewtonSolverDense(Model *model);
 
     NewtonSolverDense(const NewtonSolverDense&) = delete;
@@ -159,6 +162,9 @@ class NewtonSolverDense : public NewtonSolver {
 class NewtonSolverSparse : public NewtonSolver {
 
   public:
+    /**
+     * @brief constructor for dense solver
+     */s
     NewtonSolverSparse(Model *model);
 
     NewtonSolverSparse(const NewtonSolverSparse&) = delete;
