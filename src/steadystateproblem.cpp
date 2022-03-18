@@ -182,6 +182,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
 
 void SteadystateProblem::initializeForwardProblem(int it, Solver *solver,
                                                   Model *model) {
+    newton_solver_->reinitialize();
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
@@ -206,6 +207,7 @@ void SteadystateProblem::initializeForwardProblem(int it, Solver *solver,
 
 bool SteadystateProblem::initializeBackwardProblem(Solver *solver, Model *model,
                                                    const BackwardProblem *bwd) {
+    newton_solver_->reinitialize();
     /* note that state_ is still set from forward run */
     if (bwd) {
         /* preequilibration */

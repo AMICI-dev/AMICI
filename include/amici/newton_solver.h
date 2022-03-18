@@ -62,15 +62,6 @@ class NewtonSolver {
                              const SimulationState &state);
 
     /**
-     * @brief Accessor for numlinsteps
-     *
-     * @return numlinsteps
-     */
-    const std::vector<int> &getNumLinSteps() const {
-        return num_lin_steps_;
-    }
-
-    /**
      * @brief Writes the Jacobian for the Newton iteration and passes it to the
      * linear solver
      *
@@ -92,8 +83,7 @@ class NewtonSolver {
      * @param model pointer to the model instance
      */
     virtual void prepareLinearSystemB(int ntry, int nnewt, Model *model,
-                                      const SimulationState &state,
-                                      const AmiVector &xB) = 0;
+                                      const SimulationState &state) = 0;
 
     /**
      * @brief Solves the linear system for the Newton step
@@ -102,6 +92,12 @@ class NewtonSolver {
      * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector &rhs) = 0;
+    
+    /**
+     * @brief Reinitialize the linear solver
+     *
+     */
+    virtual void reinitialize() = 0;
 
     virtual ~NewtonSolver() = default;
 
@@ -116,13 +112,13 @@ class NewtonSolver {
     realtype damping_factor_lower_bound {1e-8};
 
   protected:
-    /** right hand side AmiVector */
+    /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;
-    /** current state */
+    /** dummy state, attached to linear solver */
     AmiVector x_;
-    /** history of number of linear steps */
-    std::vector<int> num_lin_steps_;
-    /** current adjoint state time derivative (DAE) */
+    /** dummy adjoint state, used as dummy argument when computing JB */
+    AmiVector xB_;
+    /** dummy differential adjoint state, used as dummy argument when computing JB */
     AmiVector dxB_;
 };
 
@@ -134,13 +130,6 @@ class NewtonSolver {
 class NewtonSolverDense : public NewtonSolver {
 
   public:
-    /**
-     * @brief Constructor, initializes all members with the provided objects
-     * and initializes temporary storage objects
-     *
-     * @param model pointer to the model object
-     */
-
     NewtonSolverDense(Model *model);
 
     NewtonSolverDense(const NewtonSolverDense&) = delete;
@@ -149,38 +138,15 @@ class NewtonSolverDense : public NewtonSolver {
 
     ~NewtonSolverDense() override;
 
-    /**
-     * @brief Solves the linear system for the Newton step
-     *
-     * @param rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system
-     */
     void solveLinearSystem(AmiVector &rhs) override;
 
-    /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the
-     * linear solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     * @param model pointer to the model instance
-     */
     void prepareLinearSystem(int ntry, int nnewt, Model *model,
                              const SimulationState &state) override;
 
-    /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
-     * solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     * @param model pointer to the model instance
-     */
     void prepareLinearSystemB(int ntry, int nnewt, Model *model,
-                              const SimulationState &state,
-                              const AmiVector &xB) override;
+                              const SimulationState &state) override;
+    
+    void reinitialize() override;
 
   private:
     /** temporary storage of Jacobian */
@@ -198,12 +164,6 @@ class NewtonSolverDense : public NewtonSolver {
 class NewtonSolverSparse : public NewtonSolver {
 
   public:
-    /**
-     * @brief Constructor, initializes all members with the provided objects,
-     * initializes temporary storage objects and the klu solver
-     *
-     * @param model pointer to the model object
-     */
     NewtonSolverSparse(Model *model);
 
     NewtonSolverSparse(const NewtonSolverSparse&) = delete;
@@ -212,38 +172,16 @@ class NewtonSolverSparse : public NewtonSolver {
 
     ~NewtonSolverSparse() override;
 
-    /**
-     * @brief Solves the linear system for the Newton step
-     *
-     * @param rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system
-     */
     void solveLinearSystem(AmiVector &rhs) override;
 
-    /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the
-     * linear solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     */
     void prepareLinearSystem(int ntry, int nnewt, Model *model,
                              const SimulationState &state) override;
 
-    /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
-     * solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     * @param model pointer to the model instance
-     */
     void prepareLinearSystemB(int ntry, int nnewt, Model *model,
-                              const SimulationState &state,
-                              const AmiVector &xB) override;
+                              const SimulationState &state) override;
 
+    void reinitialize() override;
+    
   private:
     /** temporary storage of Jacobian */
     SUNMatrixWrapper Jtmp_;
