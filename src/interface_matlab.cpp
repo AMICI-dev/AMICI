@@ -328,10 +328,6 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
             solver.setNewtonMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps"))));
         }
-
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps")) {
-            solver.setNewtonMaxLinearSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps"))));
-        }
     }
 }
 

@@ -418,10 +418,6 @@ testSolverGetterSetters(CVodeSolver solver,
     solver.setNewtonMaxSteps(steps);
     ASSERT_EQ(solver.getNewtonMaxSteps(), steps);
 
-    ASSERT_THROW(solver.setNewtonMaxLinearSteps(badsteps), AmiException);
-    solver.setNewtonMaxLinearSteps(steps);
-    ASSERT_EQ(solver.getNewtonMaxLinearSteps(), steps);
-
     ASSERT_THROW(solver.setMaxSteps(badsteps), AmiException);
     solver.setMaxSteps(steps);
     ASSERT_EQ(solver.getMaxSteps(), steps);

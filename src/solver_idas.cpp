@@ -451,6 +451,9 @@ void IDASolver::sensToggleOff() const {
     auto status = IDASensToggleOff(solver_memory_.get());
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASensToggleOff");
+    IDASensFree(solver_memory_.get());
+    /* need to deallocate sensi memory, otherwise can't reenable */
+    sens_initialized_ = false;
 }
 
 void IDASolver::reInitB(const int which, const realtype tB0,

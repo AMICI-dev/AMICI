@@ -244,20 +244,6 @@ class Solver {
     void setPreequilibration(bool require_preequilibration);
 
     /**
-     * @brief Get maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @return
-     */
-    int getNewtonMaxLinearSteps() const;
-
-    /**
-     * @brief Set maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @param newton_maxlinsteps
-     */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
-
-    /**
      * @brief Get a state of the damping factor used in the Newton solver
      * @return
      */
@@ -1677,6 +1663,9 @@ class Solver {
 
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_ {false};
+    
+    /** flag indicating whether sensInit1 was called */
+    mutable bool sens_initialized_ {false};
 
   private:
 
@@ -1775,9 +1764,6 @@ class Solver {
 
     /** flag indicating whether init was called */
     mutable bool initialized_ {false};
-
-    /** flag indicating whether sensInit1 was called */
-    mutable bool sens_initialized_ {false};
 
     /** flag indicating whether adjInit was called */
     mutable bool adj_initialized_ {false};

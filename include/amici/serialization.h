@@ -70,7 +70,6 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.maxstepsB_;
     ar &s.requires_preequilibration_;
     ar &s.newton_maxsteps_;
-    ar &s.newton_maxlinsteps_;
     ar &s.newton_damping_factor_mode_;
     ar &s.newton_damping_factor_lower_bound_;
     ar &s.ism_;
@@ -211,14 +210,12 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
     ar &r.preeq_cpu_timeB;
     ar &r.preeq_status;
     ar &r.preeq_numsteps;
-    ar &r.preeq_numlinsteps;
     ar &r.preeq_wrms;
     ar &r.preeq_t;
     ar &r.posteq_cpu_time;
     ar &r.posteq_cpu_timeB;
     ar &r.posteq_status;
     ar &r.posteq_numsteps;
-    ar &r.posteq_numlinsteps;
     ar &r.posteq_wrms;
     ar &r.posteq_t;
     ar &r.x0;

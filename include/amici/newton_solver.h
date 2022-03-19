@@ -1,10 +1,11 @@
 #ifndef amici_newton_solver_h
 #define amici_newton_solver_h
 
-#include "amici/vector.h"
 #include "amici/defines.h"
-#include "amici/sundials_matrix_wrapper.h"
+#include "amici/solver.h"
 #include "amici/sundials_linsol_wrapper.h"
+#include "amici/sundials_matrix_wrapper.h"
+#include "amici/vector.h"
 
 #include <memory>
 
@@ -23,25 +24,22 @@ class NewtonSolver {
 
   public:
     /**
-     * @brief Initializes all members with the provided objects
+     * @brief Initializes solver according to the dimensions in the provided
+     * model
      *
-     * @param t pointer to time variable
-     * @param x pointer to state variables
      * @param model pointer to the model object
      */
-    NewtonSolver(realtype *t, AmiVector *x, Model *model);
+    explicit NewtonSolver(const Model *model);
 
     /**
      * @brief Factory method to create a NewtonSolver based on linsolType
      *
-     * @param t pointer to time variable
-     * @param x pointer to state variables
      * @param simulationSolver solver with settings
-     * @param model pointer to the model object
+     * @param model pointer to the model instance
      * @return solver NewtonSolver according to the specified linsolType
      */
-    static std::unique_ptr<NewtonSolver> getSolver(
-    realtype *t, AmiVector *x, Solver &simulationSolver, Model *model);
+    static std::unique_ptr<NewtonSolver>
+    getSolver(const Solver &simulationSolver, const Model *model);
 
     /**
      * @brief Computes the solution of one Newton iteration
@@ -51,24 +49,21 @@ class NewtonSolver {
      * @param nnewt integer number of current Newton step
      * @param delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
+     * @param model pointer to the model instance
+     * @param state current simulation state
      */
-    void getStep(int ntry, int nnewt, AmiVector &delta);
+    void getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
+                 const SimulationState &state);
 
     /**
      * @brief Computes steady state sensitivities
      *
      * @param sx pointer to state variable sensitivities
+     * @param model pointer to the model instance
+     * @param state current simulation state
      */
-    void computeNewtonSensis(AmiVectorArray &sx);
-
-    /**
-     * @brief Accessor for numlinsteps
-     *
-     * @return numlinsteps
-     */
-    const std::vector<int> &getNumLinSteps() const {
-        return num_lin_steps_;
-    }
+    void computeNewtonSensis(AmiVectorArray &sx, Model *model,
+                             const SimulationState &state);
 
     /**
      * @brief Writes the Jacobian for the Newton iteration and passes it to the
@@ -77,18 +72,24 @@ class NewtonSolver {
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
+     * @param state current simulation state
      */
-    virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
+    virtual void prepareLinearSystem(int ntry, int nnewt, Model *model,
+                                     const SimulationState &state) = 0;
 
     /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
-     * solver
+     * Writes the Jacobian (JB) for the Newton iteration and passes it to the
+     * linear solver
      *
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
+     * @param model pointer to the model instance
+     * @param state current simulation state
      */
-    virtual void prepareLinearSystemB(int ntry, int nnewt) = 0;
+    virtual void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+                                      const SimulationState &state) = 0;
 
     /**
      * @brief Solves the linear system for the Newton step
@@ -97,47 +98,35 @@ class NewtonSolver {
      * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector &rhs) = 0;
-    
+
+    /**
+     * @brief Reinitialize the linear solver
+     *
+     */
+    virtual void reinitialize() = 0;
+
     /**
      * @brief Checks whether linear system is singular
      *
+     * @param model pointer to the model instance
+     * @param state current simulation state
      * @return boolean indicating whether the linear system is singular
      * (condition number < 1/machine precision)
      */
-    virtual bool is_singular() const = 0;
+    virtual bool is_singular(Model *model,
+                             const SimulationState &state) const = 0;
 
     virtual ~NewtonSolver() = default;
 
-    /** maximum number of allowed linear steps per Newton step for steady state
-     * computation */
-    int max_lin_steps_ {0};
-    /** maximum number of allowed Newton steps for steady state computation */
-    int max_steps {0};
-    /** absolute tolerance */
-    realtype atol_ {1e-16};
-    /** relative tolerance */
-    realtype rtol_ {1e-8};
-    /** damping factor flag */
-    NewtonDampingFactorMode damping_factor_mode_ {NewtonDampingFactorMode::on};
-    /** damping factor lower bound */
-    realtype damping_factor_lower_bound {1e-8};
-
   protected:
-    /** time variable */
-    realtype *t_;
-    /** pointer to the model object */
-    Model *model_;
-    /** right hand side AmiVector */
+    /** dummy rhs, used as dummy argument when computing J and JB */
     AmiVector xdot_;
-    /** current state */
-    AmiVector *x_;
-    /** current state time derivative (DAE) */
-    AmiVector dx_;
-    /** history of number of linear steps */
-    std::vector<int> num_lin_steps_;
-    /** current adjoint state */
+    /** dummy state, attached to linear solver */
+    AmiVector x_;
+    /** dummy adjoint state, used as dummy argument when computing JB */
     AmiVector xB_;
-    /** current adjoint state time derivative (DAE) */
+    /** dummy differential adjoint state, used as dummy argument when computing
+     * JB */
     AmiVector dxB_;
 };
 
@@ -150,58 +139,36 @@ class NewtonSolverDense : public NewtonSolver {
 
   public:
     /**
-     * @brief Constructor, initializes all members with the provided objects
-     * and initializes temporary storage objects
+     * @brief constructor for sparse solver
      *
-     * @param t pointer to time variable
-     * @param x pointer to state variables
-     * @param model pointer to the model object
+     * @param model model instance that provides problem dimensions
      */
+    explicit NewtonSolverDense(const Model *model);
 
-    NewtonSolverDense(realtype *t, AmiVector *x, Model *model);
+    NewtonSolverDense(const NewtonSolverDense &) = delete;
 
-    NewtonSolverDense(const NewtonSolverDense&) = delete;
-
-    NewtonSolverDense& operator=(const NewtonSolverDense& other) = delete;
+    NewtonSolverDense &operator=(const NewtonSolverDense &other) = delete;
 
     ~NewtonSolverDense() override;
 
-    /**
-     * @brief Solves the linear system for the Newton step
-     *
-     * @param rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system
-     */
     void solveLinearSystem(AmiVector &rhs) override;
 
-    /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the
-     * linear solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     */
-    void prepareLinearSystem(int ntry, int nnewt) override;
+    void prepareLinearSystem(int ntry, int nnewt, Model *model,
+                             const SimulationState &state) override;
 
-    /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
-     * solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     */
-    void prepareLinearSystemB(int ntry, int nnewt) override;
-    
-    bool is_singular() const override;
+    void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+                              const SimulationState &state) override;
+
+    void reinitialize() override;
+
+    bool is_singular(Model *model, const SimulationState &state) const override;
 
   private:
     /** temporary storage of Jacobian */
     SUNMatrixWrapper Jtmp_;
 
     /** dense linear solver */
-    SUNLinearSolver linsol_ {nullptr};
+    SUNLinearSolver linsol_{nullptr};
 };
 
 /**
@@ -213,59 +180,37 @@ class NewtonSolverSparse : public NewtonSolver {
 
   public:
     /**
-     * @brief Constructor, initializes all members with the provided objects,
-     * initializes temporary storage objects and the klu solver
+     * @brief constructor for dense solver
      *
-     * @param t pointer to time variable
-     * @param x pointer to state variables
-     * @param model pointer to the model object
+     * @param model model instance that provides problem dimensions
      */
-    NewtonSolverSparse(realtype *t, AmiVector *x, Model *model);
+    explicit NewtonSolverSparse(const Model *model);
 
-    NewtonSolverSparse(const NewtonSolverSparse&) = delete;
+    NewtonSolverSparse(const NewtonSolverSparse &) = delete;
 
-    NewtonSolverSparse& operator=(const NewtonSolverSparse& other) = delete;
+    NewtonSolverSparse &operator=(const NewtonSolverSparse &other) = delete;
 
     ~NewtonSolverSparse() override;
 
-    /**
-     * @brief Solves the linear system for the Newton step
-     *
-     * @param rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system
-     */
     void solveLinearSystem(AmiVector &rhs) override;
 
-    /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the
-     * linear solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     */
-    void prepareLinearSystem(int ntry, int nnewt) override;
+    void prepareLinearSystem(int ntry, int nnewt, Model *model,
+                             const SimulationState &state) override;
 
-    /**
-     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
-     * solver
-     *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
-     */
-    void prepareLinearSystemB(int ntry, int nnewt) override;
-    
-    bool is_singular() const override;
+    void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+                              const SimulationState &state) override;
+
+    bool is_singular(Model *model, const SimulationState &state) const override;
+
+    void reinitialize() override;
 
   private:
     /** temporary storage of Jacobian */
     SUNMatrixWrapper Jtmp_;
 
     /** sparse linear solver */
-    SUNLinearSolver linsol_ {nullptr};
+    SUNLinearSolver linsol_{nullptr};
 };
-
 
 } // namespace amici
 
