@@ -108,8 +108,7 @@ NewtonSolverDense::NewtonSolverDense(const Model *model)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
 }
 
-void NewtonSolverDense::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
-                                            Model *model,
+void NewtonSolverDense::prepareLinearSystem(Model *model,
                                             const SimulationState &state) {
     model->fJ(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
     Jtmp_.refresh();
@@ -118,8 +117,7 @@ void NewtonSolverDense::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
-void NewtonSolverDense::prepareLinearSystemB(int /*ntry*/, int /*nnewt*/,
-                                             Model *model,
+void NewtonSolverDense::prepareLinearSystemB(Model *model,
                                              const SimulationState &state) {
     model->fJB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
@@ -166,8 +164,7 @@ NewtonSolverSparse::NewtonSolverSparse(const Model *model)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
 }
 
-void NewtonSolverSparse::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
-                                             Model *model,
+void NewtonSolverSparse::prepareLinearSystem(Model *model,
                                              const SimulationState &state) {
     /* Get sparse Jacobian */
     model->fJSparse(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
@@ -177,8 +174,7 @@ void NewtonSolverSparse::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
-void NewtonSolverSparse::prepareLinearSystemB(int /*ntry*/, int /*nnewt*/,
-                                              Model *model,
+void NewtonSolverSparse::prepareLinearSystemB(Model *model,
                                               const SimulationState &state) {
     /* Get sparse Jacobian */
     model->fJSparseB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_,

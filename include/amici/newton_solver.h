@@ -44,16 +44,12 @@ class NewtonSolver {
     /**
      * @brief Computes the solution of one Newton iteration
      *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
      * @param delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    void getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
-                 const SimulationState &state);
+    void getStep(AmiVector &delta, Model *model, const SimulationState &state);
 
     /**
      * @brief Computes steady state sensitivities
@@ -75,7 +71,7 @@ class NewtonSolver {
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    virtual void prepareLinearSystem(int ntry, int nnewt, Model *model,
+    virtual void prepareLinearSystem(Model *model,
                                      const SimulationState &state) = 0;
 
     /**
@@ -88,7 +84,7 @@ class NewtonSolver {
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    virtual void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+    virtual void prepareLinearSystemB(Model *model,
                                       const SimulationState &state) = 0;
 
     /**
@@ -153,10 +149,10 @@ class NewtonSolverDense : public NewtonSolver {
 
     void solveLinearSystem(AmiVector &rhs) override;
 
-    void prepareLinearSystem(int ntry, int nnewt, Model *model,
+    void prepareLinearSystem(Model *model,
                              const SimulationState &state) override;
 
-    void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+    void prepareLinearSystemB(Model *model,
                               const SimulationState &state) override;
 
     void reinitialize() override;
@@ -194,10 +190,10 @@ class NewtonSolverSparse : public NewtonSolver {
 
     void solveLinearSystem(AmiVector &rhs) override;
 
-    void prepareLinearSystem(int ntry, int nnewt, Model *model,
+    void prepareLinearSystem(Model *model,
                              const SimulationState &state) override;
 
-    void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+    void prepareLinearSystemB(Model *model,
                               const SimulationState &state) override;
 
     bool is_singular(Model *model, const SimulationState &state) const override;

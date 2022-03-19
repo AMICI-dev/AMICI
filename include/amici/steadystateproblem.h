@@ -416,6 +416,11 @@ class SteadystateProblem {
     NewtonDampingFactorMode damping_factor_mode_{NewtonDampingFactorMode::on};
     /** damping factor lower bound */
     realtype damping_factor_lower_bound_{1e-8};
+    /** whether newton step should be used for convergence steps */
+    bool newton_step_convergence_ {false};
+    /** whether sensitivities should be checked for convergence to steadystate */
+    bool check_sensi_conv_ {true};
+    
 };
 
 } // namespace amici
