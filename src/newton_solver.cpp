@@ -63,9 +63,9 @@ NewtonSolver::getSolver(const Solver &simulationSolver, const Model *model) {
     return solver;
 }
 
-void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
+void NewtonSolver::getStep(AmiVector &delta, Model *model,
                            const SimulationState &state) {
-    prepareLinearSystem(ntry, nnewt, model, state);
+    prepareLinearSystem(model, state);
 
     delta.minus();
     solveLinearSystem(delta);
@@ -73,7 +73,7 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
 
 void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model,
                                        const SimulationState &state) {
-    prepareLinearSystem(0, -1, model, state);
+    prepareLinearSystem(model, state);
     model->fdxdotdp(state.t, state.x, state.dx);
 
     if (is_singular(model, state))
@@ -146,7 +146,7 @@ bool NewtonSolverDense::is_singular(Model *model,
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
     NewtonSolverSparse sparse_solver(model);
-    sparse_solver.prepareLinearSystem(0, 0, model, state);
+    sparse_solver.prepareLinearSystem(model, state);
     return sparse_solver.is_singular(model, state);
 }
 
