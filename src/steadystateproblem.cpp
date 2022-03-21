@@ -26,6 +26,14 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       xB_(model.nJ * model.nx_solver), xQ_(model.nJ * model.nx_solver),
       xQB_(model.nplist()), xQBdot_(model.nplist()),
       dJydx_(model.nJ * model.nx_solver * model.nt(), 0.0) {
+
+          /* Turn off Newton's method if SteadyStateSensitivityMode is integrationOnly 
+           in forward sensitivity case */
+          if (solver.getSensitivityMethod() == SensitivityMethod::forward && 
+              model.getSteadyStateSensitivityMode == SteadyStateSensitivityMode::integrationOnly) {
+              solver.setNewtonMaxSteps(0);
+          }
+
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               max_steps_ = solver.getNewtonMaxSteps();
@@ -382,7 +390,8 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
     bool forwardSensisAlreadyComputed =
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         steady_state_status_[1] == SteadyStateStatus::success &&
-        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrationOnly;
+        (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrationOnly || 
+         model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrateIfNewtonFails);
 
     bool simulationStartedInSteadystate =
         steady_state_status_[0] == SteadyStateStatus::success &&
@@ -407,11 +416,9 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
     /* When we're creating a new solver object */
     bool needForwardSensiAtCreation = needForwardSensisPreeq &&
-        model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrationOnly;
-
-    if (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrateIfNewtonFails)
-            throw AmiException(" SteadyStateSensitivityMode is not compatible with "
-                               "forward sensitivities approach");
+        (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrationOnly || 
+         model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::integrateIfNewtonFails
+        );
 
     /* Check if we need to store sensis */
     switch (context) {
@@ -659,8 +666,10 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
     } else {
         numsteps_.at(1) = sim_steps;
         if (solver->getSensitivityOrder() > SensitivityOrder::none &&
+            (model->getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::integrationOnly || 
             model->getSteadyStateSensitivityMode() ==
-            SteadyStateSensitivityMode::integrationOnly)
+            SteadyStateSensitivityMode::integrateIfNewtonFails))
             sx_ = solver->getStateSensitivity(t_);
     }
 }
