@@ -533,6 +533,9 @@ void CVodeSolver::sensToggleOff() const {
     auto status = CVodeSensToggleOff(solver_memory_.get());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSensToggleOff");
+    /* need to deallocate sensi memory, otherwise can't reenable */
+    CVodeSensFree(solver_memory_.get());
+    sens_initialized_ = false;
 }
 
 void CVodeSolver::quadReInitB(int which, const AmiVector &yQB0) const {

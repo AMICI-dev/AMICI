@@ -101,7 +101,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 }
 
 mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
-    const int numFields = 27;
+    const int numFields = 25;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
                                               "numsteps",
@@ -116,7 +116,6 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "preeq_status",
                                               "preeq_numsteps",
                                               "preeq_numstepsB",
-                                              "preeq_numlinsteps",
                                               "preeq_cpu_time",
                                               "preeq_cpu_timeB",
                                               "preeq_t",
@@ -124,7 +123,6 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "posteq_status",
                                               "posteq_numsteps",
                                               "posteq_numstepsB",
-                                              "posteq_numlinsteps",
                                               "posteq_cpu_time",
                                               "posteq_cpu_timeB",
                                               "posteq_t",
@@ -168,10 +166,6 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
 
         writeMatlabField1(matlabDiagnosisStruct, "preeq_status", gsl::make_span(rdata->preeq_status), 3);
         writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", gsl::make_span(rdata->preeq_numsteps), 3);
-        writeMatlabField2(matlabDiagnosisStruct, "preeq_numlinsteps",
-                          rdata->preeq_numlinsteps,
-                          rdata->preeq_numlinsteps.size() > 0
-                              ? rdata->newton_maxsteps : 0, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_numstepsB", rdata->preeq_numstepsB);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_time", rdata->preeq_cpu_time);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_timeB", rdata->preeq_cpu_timeB);
@@ -180,10 +174,6 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
 
         writeMatlabField1(matlabDiagnosisStruct, "posteq_status", gsl::make_span(rdata->posteq_status), 3);
         writeMatlabField1(matlabDiagnosisStruct, "posteq_numsteps", gsl::make_span(rdata->posteq_numsteps), 3);
-        writeMatlabField2(matlabDiagnosisStruct, "posteq_numlinsteps",
-                          rdata->posteq_numlinsteps,
-                          rdata->posteq_numlinsteps.size() > 0
-                              ? rdata->newton_maxsteps : 0, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_numstepsB", rdata->posteq_numstepsB);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_time", rdata->posteq_cpu_time);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_timeB", rdata->posteq_cpu_timeB);
