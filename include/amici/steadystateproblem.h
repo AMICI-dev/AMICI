@@ -29,7 +29,7 @@ class SteadystateProblem {
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(const Solver &solver, Model &model);
+    explicit SteadystateProblem(Solver &solver, Model &model);
 
     /**
      * @brief Handles steady state computation in the forward case:

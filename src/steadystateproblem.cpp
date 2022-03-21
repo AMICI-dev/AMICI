@@ -20,7 +20,7 @@ constexpr realtype conv_thresh = 1.0;
 
 namespace amici {
 
-SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
+SteadystateProblem::SteadystateProblem(Solver &solver, Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
       x_old_(model.nx_solver), xdot_(model.nx_solver),
       sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
@@ -53,7 +53,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
     /* Turn off Newton's method if SteadyStateSensitivityMode is integrationOnly 
     in forward sensitivity case */
     if (solver.getSensitivityMethod() == SensitivityMethod::forward && 
-        model.getSteadyStateSensitivityMode == 
+        model.getSteadyStateSensitivityMode() == 
         SteadyStateSensitivityMode::integrationOnly) {
         solver.setNewtonMaxSteps(0);
     }    
