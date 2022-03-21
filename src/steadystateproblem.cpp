@@ -20,7 +20,7 @@ constexpr realtype conv_thresh = 1.0;
 
 namespace amici {
 
-SteadystateProblem::SteadystateProblem(Solver &solver, Model &model)
+SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
     : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
       x_old_(model.nx_solver), xdot_(model.nx_solver),
       sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
@@ -48,15 +48,7 @@ SteadystateProblem::SteadystateProblem(Solver &solver, Model &model)
         solver.getSensitivityOrder() > SensitivityOrder::none)
         throw AmiException("Preequilibration using adjoint sensitivities "
                            "is not compatible with using forward "
-                           "sensitivities during simulation");
-
-    /* Turn off Newton's method if SteadyStateSensitivityMode is integrationOnly 
-    in forward sensitivity case */
-    if (solver.getSensitivityMethod() == SensitivityMethod::forward && 
-        model.getSteadyStateSensitivityMode() == 
-        SteadyStateSensitivityMode::integrationOnly) {
-        solver.setNewtonMaxSteps(0);
-    }    
+                           "sensitivities during simulation");  
 }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
@@ -98,16 +90,21 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 void SteadystateProblem::findSteadyState(const Solver *solver, Model *model,
                                          int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
+    bool turnOffNewton = solver->getSensitivityMethod() ==
+        SensitivityMethod::forward && model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::integrationOnly;
+
 
     /* First, try to run the Newton solver */
-    findSteadyStateByNewtonsMethod(model, false);
+    if (!turnOffNewton)
+        findSteadyStateByNewtonsMethod(model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
     if (!checkSteadyStateSuccess())
         findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
-    if (!checkSteadyStateSuccess())
+    if (!turnOffNewton && !checkSteadyStateSuccess())
         findSteadyStateByNewtonsMethod(model, true);
 
     /* Nothing worked, throw an as informative error as possible */
@@ -254,7 +251,8 @@ void SteadystateProblem::computeSteadyStateQuadrature(const Solver *solver,
 
     /* Perform simulation */
     if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly || 
-        (sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails && !hasQuadrature()))
+        (sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails
+         && !hasQuadrature()))
         getQuadratureBySimulation(solver, model);
 
     /* If analytic solution and integration did not work, throw an Exception */
