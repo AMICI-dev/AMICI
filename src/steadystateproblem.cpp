@@ -48,7 +48,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
         solver.getSensitivityOrder() > SensitivityOrder::none)
         throw AmiException("Preequilibration using adjoint sensitivities "
                            "is not compatible with using forward "
-                           "sensitivities during simulation");  
+                           "sensitivities during simulation");
 }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,

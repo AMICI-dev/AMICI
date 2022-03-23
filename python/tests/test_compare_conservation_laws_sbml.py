@@ -135,7 +135,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
     model_without_cl.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
     # run simulations
