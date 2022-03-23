@@ -323,14 +323,14 @@ class SteadystateProblem {
                         AmiVector &yQB) const;
 
     /**
-     * @brief ensures state positivity, if requested and repeats convergence
+     * @brief Ensures state positivity, if requested and repeats convergence
      * check, if necessary
      * @param model pointer to the model object
      */
     bool makePositiveAndCheckConvergence(Model *model);
 
     /**
-     * @brief updates the damping factor gamma that determines step size
+     * @brief Updates the damping factor gamma that determines step size
      *
      * @param step_successful flag indicating whether the previous step was
      * successful
@@ -339,9 +339,38 @@ class SteadystateProblem {
      * dampening (false)
      */
     bool updateDampingFactor(bool step_successful);
+    
+    /**
+     * @brief Updates member variables to indicate that state_.x has been updated and xdot_, delta_, etc.
+     * need to be recomputed.
+     */
+    void flagUpdatedState();
+    
+    /**
+     * @brief Retrieves simulation sensitivities from the provided solver and sets the corresponding flag
+     * to indicate they are up to date
+     * @param solver simulation solver instance
+     */
+    void updateSensiSimulation(const Solver &solver);
+    
+    /**
+     * @brief Computes the right hand side for the current state_.x and sets the corresponding flag to
+     * indicate xdot_ is up to date.
+     * @param model model instance
+     */
+    void updateRightHandSide(Model &model);
+    
+    /**
+     * @brief Computes the newton step for the current state_.x and sets the corresponding flag to
+     * indicate delta_ is up to date.
+     * @param model model instance
+     */
+    void getNewtonStep(Model &model);
 
     /** newton step */
     AmiVector delta_;
+    /** previous newton step */
+    AmiVector delta_old_;
     /** error weights for solver state, dimension nx_solver */
     AmiVector ewt_;
     /** error weights for backward quadratures, dimension nplist() */
@@ -420,6 +449,13 @@ class SteadystateProblem {
     bool newton_step_convergence_ {false};
     /** whether sensitivities should be checked for convergence to steadystate */
     bool check_sensi_conv_ {true};
+    
+    /** flag indicating whether xdot_ has been computed for the current state */
+    bool xdot_updated_ {false};
+    /** flag indicating whether delta_ has been computed for the current state */
+    bool delta_updated_ {false};
+    /** flag indicating whether simulation sensitivities have been retrieved for the current state */
+    bool sensis_updated_ {false};
     
 };
 
