@@ -559,21 +559,15 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
     /* Ensure positivity of the found state and recheck if
        the convergence still holds */
-    bool recheck_convergence = false;
-    bool converged = true;
     auto nonnegative = model->getStateIsNonNegative();
     for (int ix = 0; ix < model->nx_solver; ix++) {
         if (state_.x[ix] < 0.0 && nonnegative[ix]) {
             state_.x[ix] = 0.0;
             flagUpdatedState();
-            recheck_convergence = true;
         }
     }
-    if (recheck_convergence) {
-        wrms_ = getWrms(model, SensitivityMethod::none);
-        converged = wrms_ < conv_thresh;
-    }
-    return converged;
+    wrms_ = getWrms(model, SensitivityMethod::none);
+    return wrms_ < conv_thresh;
 }
 
 bool SteadystateProblem::updateDampingFactor(bool step_successful) {
