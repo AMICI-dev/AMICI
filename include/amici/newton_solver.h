@@ -65,9 +65,6 @@ class NewtonSolver {
      * @brief Writes the Jacobian for the Newton iteration and passes it to the
      * linear solver
      *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
      * @param model pointer to the model instance
      * @param state current simulation state
      */
@@ -78,9 +75,6 @@ class NewtonSolver {
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the
      * linear solver
      *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
      * @param model pointer to the model instance
      * @param state current simulation state
      */
