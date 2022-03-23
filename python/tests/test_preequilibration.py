@@ -336,6 +336,8 @@ def test_newton_solver_equilibration(preeq_fixture):
     settings = [amici.SteadyStateSensitivityMode.simulationFSA,
                 amici.SteadyStateSensitivityMode.newtonOnly]
 
+    solver.setNewtonStepSteadyStateCheck(True)
+
     for equil_meth in settings:
         # set sensi method
         sensi_meth = amici.SensitivityMethod.forward
@@ -358,7 +360,7 @@ def test_newton_solver_equilibration(preeq_fixture):
         assert np.isclose(
             rdatas[settings[0]][variable],
             rdatas[settings[1]][variable],
-            1e-5, 1e-5
+            1e-6, 1e-6
         ).all(), variable
 
 
