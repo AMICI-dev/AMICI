@@ -767,7 +767,7 @@ void SteadystateProblem::updateRightHandSide(Model &model) {
 
 void SteadystateProblem::getNewtonStep(Model &model) {
     if (delta_updated_)
-        return
+        return;
     updateRightHandSide(model);
     delta_.copy(xdot_);
     newton_solver_->getStep(delta_, &model, state_);
