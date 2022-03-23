@@ -446,7 +446,7 @@ class SteadystateProblem {
     /** damping factor lower bound */
     realtype damping_factor_lower_bound_{1e-8};
     /** whether newton step should be used for convergence steps */
-    bool newton_step_convergence_ {false};
+    bool newton_step_conv_ {false};
     /** whether sensitivities should be checked for convergence to steadystate */
     bool check_sensi_conv_ {true};
     

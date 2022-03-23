@@ -41,7 +41,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       rtol_quad_(solver.getRelativeToleranceQuadratures()),
       newton_solver_(NewtonSolver::getSolver(solver, &model)),
       damping_factor_mode_(solver.getNewtonDampingFactorMode()),
-      damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound()) {
+      damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound()),
+      newton_step_conv_(solver.getNewtonStepSteadyStateCheck()),
+      check_sensi_conv_(solver.getSensiSteadyStateCheck()) {
     /* Check for compatibility of options */
     if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
         solver.getSensitivityMethodPreequilibration() ==
@@ -437,7 +439,7 @@ realtype SteadystateProblem::getWrms(Model *model,
            to zero at all. So we need xQBdot, hence compute xQB first. */
         computeQBfromQ(model, xQ_, xQB_);
         computeQBfromQ(model, xB_, xQBdot_);
-        if (newton_step_convergence_)
+        if (newton_step_conv_)
             throw NewtonFailure(
                 AMICI_NOT_IMPLEMENTED,
                 "Newton type convergence check is not impelemtend for adjoint "
@@ -446,12 +448,11 @@ realtype SteadystateProblem::getWrms(Model *model,
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
            Get RHS and compute weighted error norm */
-        if (newton_step_convergence_)
+        if (newton_step_conv_)
             getNewtonStep(*model);
         else
             updateRightHandSide(*model);
-        wrms = getWrmsNorm(state_.x,
-                           newton_step_convergence_ ? delta_ : xdot_,
+        wrms = getWrmsNorm(state_.x, newton_step_conv_ ? delta_ : xdot_,
                            atol_, rtol_, ewt_);
     }
     return wrms;
@@ -469,7 +470,7 @@ realtype SteadystateProblem::getWrmsFSA(Model *model) {
     for (int ip = 0; ip < model->nplist(); ++ip) {
         model->fsxdot(state_.t, state_.x, state_.dx, ip, state_.sx[ip],
                       state_.dx, xdot_);
-        if (newton_step_convergence_)
+        if (newton_step_conv_)
             newton_solver_->solveLinearSystem(xdot_);
         wrms =
             getWrmsNorm(state_.sx[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);

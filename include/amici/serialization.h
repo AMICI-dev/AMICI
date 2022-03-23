@@ -82,6 +82,8 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.ordering_;
     ar &s.cpu_time_;
     ar &s.cpu_timeB_;
+    ar &s.newton_step_steadystate_conv_;
+    ar &s.check_sensi_steadystate_conv_;
     ar &s.rdata_mode_;
     ar &s.maxtime_;
 }

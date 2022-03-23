@@ -867,6 +867,38 @@ class Solver {
     std::vector<int> const& getLastOrder() const {
         return order_;
     }
+    
+    /**
+     * @brief Indicates whether convergence checks for steadystate computation are performed on the
+     * newton step (true) or directly on the right hand side (false).
+     */
+    bool getNewtonStepSteadyStateCheck() const {
+        return newton_step_steadystate_conv_;
+    }
+    
+    /**
+     * @brief Indicates whether convergence checks for are also performed for sensitivity equations (true)
+     * or just for the state variables (false).
+     */
+    bool getSensiSteadyStateCheck() const {
+        return check_sensi_steadystate_conv_;
+    }
+    
+    /**
+     * @brief Sets whether convergence checks for steadystate computation are performed on the
+     * newton step (true) or directly on the right hand side (false, default).
+     */
+    void setNewtonStepSteadyStateCheck(bool flag) {
+        newton_step_steadystate_conv_ = flag;
+    }
+    
+    /**
+     * @brief Sets whether convergence checks for are also performed for sensitivity equations
+     * (true, default) or just for the state variables (false).
+     */
+    void setSensiSteadyStateCheck(bool flag) {
+        check_sensi_steadystate_conv_ = flag;
+    }
 
     /**
      * @brief Serialize Solver (see boost::serialization::serialize)
@@ -1749,6 +1781,12 @@ class Solver {
     realtype ss_rtol_sensi_ {NAN};
 
     RDataReporting rdata_mode_ {RDataReporting::full};
+    
+    /** whether newton step should be used for convergence steps */
+    bool newton_step_steadystate_conv_ {false};
+    
+    /** whether sensitivities should be checked for convergence to steadystate */
+    bool check_sensi_steadystate_conv_ {true};
 
     /** CPU time, forward solve */
     mutable realtype cpu_time_ {0.0};
