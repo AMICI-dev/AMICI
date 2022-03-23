@@ -495,7 +495,8 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 }
 
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
-    int i_newtonstep = 0;
+    int *i_newtonstep = &numsteps_.at(newton_retry ? 2 : 0);
+    *i_newtonstep = 0;
     gamma_ = 1.0;
     bool update_direction = true;
     bool step_successful = false;
@@ -507,52 +508,45 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     delta_.zero();
     x_old_.copy(state_.x);
     bool converged = false;
-    try {
-        wrms_ = getWrms(model, SensitivityMethod::none);
-        converged = newton_retry ? false : wrms_ < conv_thresh;
-        while (!converged && i_newtonstep < max_steps_) {
+    wrms_ = getWrms(model, SensitivityMethod::none);
+    converged = newton_retry ? false : wrms_ < conv_thresh;
+    while (!converged && *i_newtonstep < max_steps_) {
 
-            /* If Newton steps are necessary, compute the initial search
-             direction */
-            if (update_direction) {
-                getNewtonStep(*model);
-                /* we store delta_ here as later convergence checks may
-                 update it */
-                delta_old_.copy(delta_);
-            }
-
-            /* Try step with new gamma_/delta_ */
-            linearSum(1.0, x_old_, gamma_,
-                      update_direction ? delta_ : delta_old_, state_.x);
-            flagUpdatedState();
-                
-            /* Compute new xdot and residuals */
-            realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
-
-            step_successful = wrms_tmp < wrms_;
-            if (step_successful) {
-                /* If new residuals are smaller than old ones, update state */
-                wrms_ = wrms_tmp;
-                /* precheck convergence */
-                converged = wrms_ < conv_thresh;
-                if (converged) {
-                    converged = makePositiveAndCheckConvergence(model);
-                }
-                /* update x_old_ _after_ positivity was enforced */
-                x_old_.copy(state_.x);
-            }
-            
-            update_direction = updateDampingFactor(step_successful);
-            /* increase step counter */
-            i_newtonstep++;
+        /* If Newton steps are necessary, compute the initial search
+         direction */
+        if (update_direction) {
+            getNewtonStep(*model);
+            /* we store delta_ here as later convergence checks may
+             update it */
+            delta_old_.copy(delta_);
         }
-    } catch (NewtonFailure const &) {
-        numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
-        throw;
+
+        /* Try step with new gamma_/delta_ */
+        linearSum(1.0, x_old_, gamma_,
+                  update_direction ? delta_ : delta_old_, state_.x);
+        flagUpdatedState();
+            
+        /* Compute new xdot and residuals */
+        realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
+
+        step_successful = wrms_tmp < wrms_;
+        if (step_successful) {
+            /* If new residuals are smaller than old ones, update state */
+            wrms_ = wrms_tmp;
+            /* precheck convergence */
+            converged = wrms_ < conv_thresh;
+            if (converged) {
+                converged = makePositiveAndCheckConvergence(model);
+            }
+            /* update x_old_ _after_ positivity was enforced */
+            x_old_.copy(state_.x);
+        }
+        
+        update_direction = updateDampingFactor(step_successful);
+        /* increase step counter */
+        (*i_newtonstep)++;
     }
 
-    /* Set return values */
-    numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
     if (!converged)
         throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
