@@ -869,34 +869,32 @@ class Solver {
     }
     
     /**
-     * @brief Indicates whether convergence checks for steadystate computation are performed on the
-     * newton step (true) or directly on the right hand side (false).
-     * @return boolean flag
+     * @brief Returns how convergence checks for steadystate computation are performed.
+     * @return boolean flag indicating newton step (true) or the right hand side (false)
      */
     bool getNewtonStepSteadyStateCheck() const {
         return newton_step_steadystate_conv_;
     }
     
     /**
-     * @brief Indicates whether convergence checks for steadystate computation are also performed for sensitivity equations (true)
-     * or just for the state variables (false).
-     * @return boolean flag
+     * @brief Returns how convergence checks for steadystate computation are performed.
+     * @return boolean flag indicating state and sensitivity equations (true) or only state variables (false).
      */
     bool getSensiSteadyStateCheck() const {
         return check_sensi_steadystate_conv_;
     }
     
     /**
-     * @brief Sets whether convergence checks for steadystate computation are performed on the
-     * newton step (true) or directly on the right hand side (false, default).
+     * @brief Sets how convergence checks for steadystate computation are performed.
+     * @param flag boolean flag to pick newton step (true) or the right hand side (false, default)
      */
     void setNewtonStepSteadyStateCheck(bool flag) {
         newton_step_steadystate_conv_ = flag;
     }
     
     /**
-     * @brief Sets whether convergence checks for steadystate computation are also performed for sensitivity equations
-     * (true, default) or just for the state variables (false).
+     * @brief Sets for which variables convergence checks for steadystate computation are performed.
+     * @param flag boolean flag to pick state and sensitivity equations (true, default) or only state variables (false).
      */
     void setSensiSteadyStateCheck(bool flag) {
         check_sensi_steadystate_conv_ = flag;
