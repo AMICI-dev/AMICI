@@ -495,8 +495,8 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 }
 
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
-    int *i_newtonstep = &numsteps_.at(newton_retry ? 2 : 0);
-    *i_newtonstep = 0;
+    int &i_newtonstep = numsteps_.at(newton_retry ? 2 : 0);
+    i_newtonstep = 0;
     gamma_ = 1.0;
     bool update_direction = true;
     bool step_successful = false;
@@ -510,7 +510,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     bool converged = false;
     wrms_ = getWrms(model, SensitivityMethod::none);
     converged = newton_retry ? false : wrms_ < conv_thresh;
-    while (!converged && *i_newtonstep < max_steps_) {
+    while (!converged && i_newtonstep < max_steps_) {
 
         /* If Newton steps are necessary, compute the initial search
          direction */
@@ -544,7 +544,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         
         update_direction = updateDampingFactor(step_successful);
         /* increase step counter */
-        (*i_newtonstep)++;
+        i_newtonstep++;
     }
 
     if (!converged)
