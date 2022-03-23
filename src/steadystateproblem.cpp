@@ -442,7 +442,7 @@ realtype SteadystateProblem::getWrms(Model *model,
         if (newton_step_conv_)
             throw NewtonFailure(
                 AMICI_NOT_IMPLEMENTED,
-                "Newton type convergence check is not impelemtend for adjoint "
+                "Newton type convergence check is not implemented for adjoint "
                 "steady state computations. Stopping.");
         wrms = getWrmsNorm(xQB_, xQBdot_, atol_quad_, rtol_quad_, ewtQB_);
     } else {

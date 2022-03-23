@@ -878,7 +878,7 @@ class Solver {
     }
     
     /**
-     * @brief Indicates whether convergence checks for are also performed for sensitivity equations (true)
+     * @brief Indicates whether convergence checks for steadystate computation are also performed for sensitivity equations (true)
      * or just for the state variables (false).
      * @return boolean flag
      */
@@ -895,7 +895,7 @@ class Solver {
     }
     
     /**
-     * @brief Sets whether convergence checks for are also performed for sensitivity equations
+     * @brief Sets whether convergence checks for steadystate computation are also performed for sensitivity equations
      * (true, default) or just for the state variables (false).
      */
     void setSensiSteadyStateCheck(bool flag) {
