@@ -871,6 +871,7 @@ class Solver {
     /**
      * @brief Indicates whether convergence checks for steadystate computation are performed on the
      * newton step (true) or directly on the right hand side (false).
+     * @return boolean flag
      */
     bool getNewtonStepSteadyStateCheck() const {
         return newton_step_steadystate_conv_;
@@ -879,6 +880,7 @@ class Solver {
     /**
      * @brief Indicates whether convergence checks for are also performed for sensitivity equations (true)
      * or just for the state variables (false).
+     * @return boolean flag
      */
     bool getSensiSteadyStateCheck() const {
         return check_sensi_steadystate_conv_;
