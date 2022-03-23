@@ -358,7 +358,7 @@ def test_newton_solver_equilibration(preeq_fixture):
         assert np.isclose(
             rdatas[settings[0]][variable],
             rdatas[settings[1]][variable],
-            1e-6, 1e-6
+            1e-5, 1e-5
         ).all(), variable
 
 
@@ -387,7 +387,7 @@ def test_newton_steadystate_check(preeq_fixture):
         # set sensi method
         sensi_meth = amici.SensitivityMethod.forward
         solver.setSensitivityMethod(sensi_meth)
-        model.setNewtonStepSteadyStateCheck(newton_check)
+        solver.setNewtonStepSteadyStateCheck(newton_check)
 
         # add rdatas
         rdatas[newton_check] = amici.runAmiciSimulation(model, solver, edata)
