@@ -360,7 +360,7 @@ def test_newton_solver_equilibration(preeq_fixture):
         assert np.isclose(
             rdatas[settings[0]][variable],
             rdatas[settings[1]][variable],
-            1e-6, 1e-6
+            1e-5, 1e-5
         ).all(), variable
 
 
