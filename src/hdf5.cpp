@@ -739,11 +739,11 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     
     ibuffer = static_cast<int>(solver.getNewtonStepSteadyStateCheck());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_step_steadystate_conv_", &ibuffer, 1);
+                          "newton_step_steadystate_conv", &ibuffer, 1);
     
     ibuffer = static_cast<int>(solver.getSensiSteadyStateCheck());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "check_sensi_steadystate_conv_", &ibuffer, 1);
+                          "check_sensi_steadystate_conv", &ibuffer, 1);
 }
 
 void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
@@ -913,14 +913,14 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                         getIntScalarAttribute(file, datasetPath, "rdrm")));
     }
     
-    if(attributeExists(file, datasetPath, "newton_step_steadystate_conv_")) {
+    if(attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
         solver.setNewtonStepSteadyStateCheck(
-                    getIntScalarAttribute(file, datasetPath, "newton_step_steadystate_conv_"));
+                    getIntScalarAttribute(file, datasetPath, "newton_step_steadystate_conv"));
     }
     
-    if(attributeExists(file, datasetPath, "check_sensi_steadystate_conv_")) {
+    if(attributeExists(file, datasetPath, "check_sensi_steadystate_conv")) {
         solver.setSensiSteadyStateCheck(
-                    getIntScalarAttribute(file, datasetPath, "check_sensi_steadystate_conv_"));
+                    getIntScalarAttribute(file, datasetPath, "check_sensi_steadystate_conv"));
     }
 }
 
