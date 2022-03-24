@@ -435,8 +435,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
     # parallel
     from multiprocessing import Pool
-    p = Pool(n_procs)
-    with p:
+    with Pool(n_procs) as p:
         mapped = p.starmap(_jacobian_row,
                            ((eq[i, :], sym_var) for i in range(eq.shape[0])))
     return sp.Matrix(mapped)
