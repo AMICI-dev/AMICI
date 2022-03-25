@@ -696,7 +696,8 @@ class ODEModel:
     def import_from_sbml_importer(
             self,
             si: 'sbml_import.SbmlImporter',
-            compute_cls: Optional[bool] = True
+            compute_cls: Optional[bool] = True,
+            compute_cls_deterministic: Optional[bool] = False
     ) -> None:
         """
         Imports a model specification from a
@@ -827,7 +828,7 @@ class ODEModel:
 
         # process conservation laws
         if compute_cls:
-            si.process_conservation_laws(self)
+            si.process_conservation_laws(self, compute_cls_deterministic)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)

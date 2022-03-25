@@ -19,6 +19,7 @@ def compute_moiety_conservation_laws(
         stoichiometric_list: Sequence[float],
         num_species: int,
         num_reactions: int,
+        compute_cls_deterministic: bool,
         max_num_monte_carlo: int = 20,
         rng_seed: Union[None, bool, int] = False,
         species_names: Optional[Sequence[str]] = None,
@@ -52,6 +53,8 @@ def compute_moiety_conservation_laws(
         stoichiometric_list, num_species, num_reactions)
     # if the number of integer MCLs equals total MCLS no MC relaxation
     done = (int_kernel_dim == kernel_dim)
+    # if no positivity required (e.g. neither SPCL or MCLs => MC relaxation)
+    done = done or compute_cls_deterministic
 
     if not done:
         # construct interaction matrix

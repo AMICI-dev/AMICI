@@ -12,7 +12,6 @@ import os
 import re
 import warnings
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
-
 import libsbml as sbml
 import sympy as sp
 
@@ -1406,12 +1405,18 @@ class SbmlImporter:
 
         return sym_math
 
-    def process_conservation_laws(self, ode_model) -> None:
+    def process_conservation_laws(
+        self, 
+        ode_model,
+        compute_cls_deterministic: bool
+    ) -> None:
         """
         Find conservation laws in reactions and species.
 
         :param ode_model:
-            ODEModel object with basic definitions
+            ODEModel object with basic definition
+        :param compute_cls_deterministic
+            Whether or not to compute non-const CLs by a deterministic approach
         """
         conservation_laws = []
 
@@ -1424,7 +1429,7 @@ class SbmlImporter:
                 or "GITHUB_ACTIONS" in os.environ:
             species_solver = list(set(
                 self._add_conservation_for_non_constant_species(
-                    ode_model, conservation_laws)) & set(species_solver))
+                    ode_model, conservation_laws, compute_cls_deterministic)) & set(species_solver))
 
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must be switched off in this
@@ -1444,7 +1449,8 @@ class SbmlImporter:
     def _add_conservation_for_non_constant_species(
         self,
         ode_model: ODEModel,
-        conservation_laws: List[ConservationLaw]
+        conservation_laws: List[ConservationLaw],
+        compute_cls_deterministic: bool
     ) -> List[int]:
         """Add non-constant species to conservation laws
 
@@ -1452,6 +1458,8 @@ class SbmlImporter:
             ODEModel object with basic definitions
         :param conservation_laws:
             List of already known conservation laws
+        :param compute_cls_deterministic
+            Whether or not to compute non-const CLs by a deterministic approach
         :returns:
             List of species indices which later remain in the ODE solver
         """
@@ -1482,8 +1490,9 @@ class SbmlImporter:
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape,
+            compute_cls_deterministic,
             rng_seed=32,
-            species_names=[str(x.get_id()) for x in ode_model._states]
+            species_names=[str(x.get_id()) for x in ode_model._states],
         )
 
         # Sparsify conserved quantities
@@ -1705,7 +1714,7 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
+    def _sympy_from_sbml_math(self, var_or_math: List[sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
