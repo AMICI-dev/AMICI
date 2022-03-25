@@ -149,7 +149,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver &solver,
                 model, solver, it, SteadyStateContext::solverCreation);
             auto newtonSimSolver = createSteadystateSimSolver(
                 solver, model, integrateSensis, false);
-            runSteadystateSimulation(*(newtonSimSolver.get()), model, false);
+            runSteadystateSimulation(*newtonSimSolver, model, false);
         } else {
             /* Solver was already created, use this one */
             runSteadystateSimulation(solver, model, false);
@@ -304,7 +304,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver &solver,
 
     /* perform integration and quadrature */
     try {
-        runSteadystateSimulation(*(simSolver.get()), model, true);
+        runSteadystateSimulation(*simSolver, model, true);
         hasQuadrature_ = true;
     } catch (NewtonFailure const &) {
         hasQuadrature_ = false;

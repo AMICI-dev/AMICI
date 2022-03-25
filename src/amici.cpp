@@ -166,7 +166,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 ConditionContext cc2(&model, edata,
                                      FixedParameterContext::preequilibration);
                 preeq->workSteadyStateBackwardProblem(solver, model,
-                                                      bwd.get());
+                                                      *bwd);
             }
         }
 

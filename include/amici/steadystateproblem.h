@@ -50,7 +50,7 @@ class SteadystateProblem {
      * @param bwd backward problem
      */
     void workSteadyStateBackwardProblem(const Solver &solver, Model &model,
-                                        const BackwardProblem *bwd);
+                                        const BackwardProblem &bwd);
 
     /**
      * @brief Returns the stored SimulationState
