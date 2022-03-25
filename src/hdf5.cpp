@@ -84,7 +84,11 @@ void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
 void createGroup(H5::H5File const& file,
                  std::string const& groupPath,
                  bool recursively) {
-
+#if H5_VERSION_GE(1, 10, 6)
+    H5::LinkCreatPropList lcpl;
+    lcpl.setCreateIntermediateGroup(recursively);
+    file.createGroup(groupPath.c_str(), lcpl);
+#else
     auto groupCreationPropertyList = H5P_DEFAULT;
 
     if (recursively) {
@@ -101,6 +105,7 @@ void createGroup(H5::H5File const& file,
         throw(AmiException("Failed to create group in hdf5CreateGroup: %s",
                            groupPath.c_str()));
     H5Gclose(group);
+#endif
 }
 
 std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
