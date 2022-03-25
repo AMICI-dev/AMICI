@@ -131,7 +131,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             );
 
             preeq = std::make_unique<SteadystateProblem>(solver, model);
-            preeq->workSteadyStateProblem(&solver, &model, -1);
+            preeq->workSteadyStateProblem(solver, model, -1);
         }
 
 
@@ -142,7 +142,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::make_unique<SteadystateProblem>(solver, model);
-            posteq->workSteadyStateProblem(&solver, &model,
+            posteq->workSteadyStateProblem(solver, model,
                                            fwd->getCurrentTimeIteration());
         }
 
@@ -151,7 +151,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             fwd->getAdjointUpdates(model, *edata);
             if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
-                posteq->workSteadyStateBackwardProblem(&solver, &model,
+                posteq->workSteadyStateBackwardProblem(solver, model,
                                                        bwd.get());
             }
 
@@ -165,7 +165,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             if (preeq) {
                 ConditionContext cc2(&model, edata,
                                      FixedParameterContext::preequilibration);
-                preeq->workSteadyStateBackwardProblem(&solver, &model,
+                preeq->workSteadyStateBackwardProblem(solver, model,
                                                       bwd.get());
             }
         }
