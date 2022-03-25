@@ -174,12 +174,6 @@ TEST(ExampleSteadystate, SensitivityForwardDense)
     amici::simulateVerifyWrite("/model_steadystate/sensiforwarddense/");
 }
 
-TEST(ExampleSteadystate, SensitivityForwardSPBCG)
-{
-    amici::simulateVerifyWrite(
-      "/model_steadystate/nosensiSPBCG/", 10 * TEST_ATOL, 10 * TEST_RTOL);
-}
-
 TEST(ExampleSteadystate, SensiFwdNewtonPreeq)
 {
     amici::simulateVerifyWrite("/model_steadystate/sensifwdnewtonpreeq/");

@@ -160,6 +160,8 @@
 #define ID  SuiteSparse_long_id
 #define Int_MAX SuiteSparse_long_max
 
+#define UnsignedInt SuiteSparse_unsigned_long
+
 #define CAMD_order camd_l_order
 #define CAMD_defaults camd_l_defaults
 #define CAMD_control camd_l_control
@@ -181,6 +183,8 @@
 #define Int int
 #define ID "%d"
 #define Int_MAX INT_MAX
+
+#define UnsignedInt unsigned int
 
 #define CAMD_order camd_order
 #define CAMD_defaults camd_defaults

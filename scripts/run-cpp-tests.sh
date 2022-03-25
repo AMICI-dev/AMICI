@@ -13,7 +13,7 @@ fi
 # run tests
 cd "${AMICI_PATH}/build"
 
-ctest -V
+ctest -V --output-on-failure
 ret=$?
 if [[ $ret != 0 ]]; then exit $ret; fi
 mv "${AMICI_PATH}/tests/cpp/writeResults.h5" \

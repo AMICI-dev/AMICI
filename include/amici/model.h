@@ -115,6 +115,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdrzdp;
     using AbstractModel::fdrzdx;
     using AbstractModel::fdsigmaydp;
+    using AbstractModel::fdsigmaydy;
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
     using AbstractModel::fdwdp_colptrs;
@@ -145,6 +146,17 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
     using AbstractModel::fz;
+    using AbstractModel::fdx_rdatadx_solver;
+    using AbstractModel::fdx_rdatadx_solver_colptrs;
+    using AbstractModel::fdx_rdatadx_solver_rowvals;
+    using AbstractModel::fdx_rdatadp;
+    using AbstractModel::fdx_rdatadtcl;
+    using AbstractModel::fdx_rdatadtcl_colptrs;
+    using AbstractModel::fdx_rdatadtcl_rowvals;
+    using AbstractModel::fdtotal_cldx_rdata;
+    using AbstractModel::fdtotal_cldx_rdata_colptrs;
+    using AbstractModel::fdtotal_cldx_rdata_rowvals;
+    using AbstractModel::fdtotal_cldp;
 
     /**
      * @brief Initialize model properties.
@@ -851,11 +863,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
      * @param ssigmay Buffer (shape `ny` x `nplist`, row-major)
+     * @param sy Sensitivity of time-resolved observables for current timepoint
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
+                                       gsl::span<const realtype> sy,
                                        const int it, const ExpData *edata);
 
     /**
@@ -1265,8 +1279,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * conservation laws expanded (stored in `amici::ReturnData`).
      * @param sx_solver State variables sensitivities with conservation laws
      * applied (solver returns this)
+     * @param x_solver State variables with conservation laws
+     * applied (solver returns this)
      */
-    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
+    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver,
+                   const AmiVector &x_solver);
 
     /**
      * @brief Set indices of states to be reinitialized based on provided
@@ -1392,6 +1409,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata pointer to `amici::ExpData` data instance holding sigma values
      */
     void fdsigmaydp(int it, const ExpData *edata);
+
+    /**
+     * @brief Compute partial derivative of standard deviation of measurements
+     * w.r.t. model outputs.
+     * @param it Timepoint index
+     * @param edata pointer to `amici::ExpData` data instance holding sigma values
+     */
+    void fdsigmaydy(int it, const ExpData *edata);
 
     /**
      * @brief Compute negative log-likelihood of measurements \f$ y \f$.
@@ -1644,9 +1669,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_rdata State variables with conservation laws expanded
      * @param x_solver State variables with conservation laws applied
      * @param tcl Total abundances for conservation laws
+     * @param p parameter vector
+     * @param k constant vector
      */
     virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
-                          const realtype *tcl);
+                          const realtype *tcl, const realtype *p,
+                          const realtype *k);
 
     /**
      * @brief Compute fsx_solver.
@@ -1658,10 +1686,17 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx_solver State sensitivity variables with conservation laws
      * applied
      * @param stcl Sensitivities of total abundances for conservation laws
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x_solver State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
      * @param ip Sensitivity index
      */
     virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                           const realtype *stcl, int ip);
+                           const realtype *stcl, const realtype *p,
+                           const realtype *k, const realtype *x_solver,
+                           const realtype *tcl,
+                           const int ip);
 
     /**
      * @brief Compute fx_solver.
@@ -1692,8 +1727,11 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param total_cl Total abundances of conservation laws
      * @param x_rdata State variables with conservation laws expanded
+     * @param p parameter vector
+     * @param k constant vector
      */
-    virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata);
+    virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata,
+                           const realtype *p, const realtype *k);
 
     /**
      * @brief Compute fstotal_cl
@@ -1705,9 +1743,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx_rdata State sensitivity variables with conservation laws
      * expanded
      * @param ip Sensitivity index
+     * @param x_rdata State variables with conservation laws expanded
+     * @param p parameter vector
+     * @param k constant vector
+     * @param tcl Total abundances for conservation laws
      */
     virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
-                            int ip);
+                            const int ip, const realtype *x_rdata,
+                            const realtype *p, const realtype *k,
+                            const realtype *tcl);
 
     /**
      * @brief Compute non-negative state vector.
@@ -1723,7 +1767,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * stateIsNonNegative
      */
     const_N_Vector computeX_pos(const_N_Vector x);
-    
+
     /**
      * @brief Compute non-negative state vector.
      *

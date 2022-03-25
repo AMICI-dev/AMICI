@@ -31,7 +31,11 @@ jobs:
       - name: homebrew
         run: |
           if [[ ${{ matrix.os }} == macos* ]] ; then \
-            brew install hdf5 swig gcc libomp
+            brew install hdf5@1.10 swig gcc libomp \
+               && echo "/usr/local/opt/hdf5@1.10/bin" >> $GITHUB_PATH \
+               && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/opt/hdf5@1.10/lib" >> $GITHUB_ENV \
+               && echo CPPFLAGS="-I/usr/local/opt/hdf5@1.10/include" >> $GITHUB_ENV \
+               && echo HDF5_BASE="/usr/local/opt/hdf5@1.10/" >> $GITHUB_ENV
           fi
 
       - name: Set up Python ${{ matrix.python-version }}

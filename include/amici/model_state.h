@@ -117,6 +117,25 @@ struct ModelStateDerived {
     SUNMatrixWrapper dxdotdx_implicit;
 
     /**
+     * Temporary storage for `dx_rdatadx_solver`
+     * (dimension: `nx_rdata` x `nx_solver`, nnz: `ndxrdatadxsolver`, type: `CSC_MAT`)
+     */
+    SUNMatrixWrapper dx_rdatadx_solver;
+
+    /**
+     * Temporary storage for `dx_rdatadtcl`
+     * (dimension: `nx_rdata` x `ncl`, nnz: `ndxrdatadtclr`, type: `CSC_MAT`)
+     */
+    SUNMatrixWrapper dx_rdatadtcl;
+
+    /**
+     * Temporary storage for `dtotal_cldx_rdata`
+     * (dimension: `ncl` x `nx_rdata`, nnz: `ndtotal_cldx_rdata`,
+     * type: `CSC_MAT`)
+     */
+    SUNMatrixWrapper dtotal_cldx_rdata;
+
+    /**
      * Temporary storage of `dxdotdp` data across functions, Matlab only
      * (dimension: `nplist` x `nx_solver` , row-major)
      */
@@ -228,10 +247,15 @@ struct ModelStateDerived {
     /** data standard deviation for current timepoint (dimension: ny) */
     std::vector<realtype> sigmay_;
 
-    /** temporary storage for  parameter derivative of data standard deviation,
+    /** temporary storage for parameter derivative of data standard deviation,
      * (dimension: ny x nplist, row-major)
      */
     std::vector<realtype> dsigmaydp_;
+
+    /** temporary storage for observable derivative of data standard deviation,
+     * (dimension: ny x ny, row-major)
+     */
+    std::vector<realtype> dsigmaydy_;
 
     /** temporary storage for event-resolved observable (dimension: nz) */
     std::vector<realtype> z_;

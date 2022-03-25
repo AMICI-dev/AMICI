@@ -1,16 +1,22 @@
 # References
 
-List of publications using AMICI. Total number is 64.
+List of publications using AMICI. Total number is 66.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-Froehlich2022.02.17.480899">
+<p>Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K. Sorger. 2022. “Mechanistic Model of Mapk Signaling Reveals How Allostery and Rewiring Contribute to Drug Resistance.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.17.480899">https://doi.org/10.1101/2022.02.17.480899</a>.</p>
+</div>
 <div id="ref-SchmuckerFar2022">
 <p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
 </div>
 <div id="ref-StaporSch2022">
 <p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Simon Merkt, Dilan Pathirana, Bodo M. H. Lange, Daniel Weindl, and Jan Hasenauer. 2022. “Mini-batch optimization enables training of ODE models on large-scale datasets.” <em>Nature Communications</em> 13 (1): 34. <a href="https://doi.org/10.1038/s41467-021-27374-6">https://doi.org/10.1038/s41467-021-27374-6</a>.</p>
+</div>
+<div id="ref-Sundqvist2022.02.15.480629">
+<p>Sundqvist, Nicolas, Sebastian Sten, Maria Engström, and Gunnar Cedersund. 2022. “Mechanistic Model for Human Brain Metabolism and the Neurovascular Coupling.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.15.480629">https://doi.org/10.1101/2022.02.15.480629</a>.</p>
 </div>
 </div>
 <h1 class="unnumbered" id="section">2021</h1>

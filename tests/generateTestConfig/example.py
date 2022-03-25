@@ -55,7 +55,6 @@ class AmiciExample:
             'linsol': 9,
             'lmm': 2,
             'maxsteps' : 1e4,
-            'newton_maxlinsteps': 100,
             'newton_maxsteps' : 40,
             'newton_preeq' : 0,
             'nmaxevent' : 10,
