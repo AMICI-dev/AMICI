@@ -418,15 +418,27 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
     :return:
         jacobian of eq wrt sym_var
     """
-    if min(eq.shape) and min(sym_var.shape) \
-            and not smart_is_zero_matrix(eq) \
-            and not smart_is_zero_matrix(sym_var):
+    if (
+        not min(eq.shape)
+        or not min(sym_var.shape)
+        or smart_is_zero_matrix(eq)
+        or smart_is_zero_matrix(sym_var)
+    ):
+        return sp.zeros(eq.shape[0], sym_var.shape[0])
+
+    if (n_procs := int(os.environ.get("AMICI_IMPORT_NPROCS", 1))) == 1:
+        # serial
         return sp.Matrix([
-            eq[i, :].jacobian(sym_var) if eq[i, :].has(*sym_var.flat())
-            else [0] * sym_var.shape[0]
+            _jacobian_row(eq[i, :], sym_var)
             for i in range(eq.shape[0])
         ])
-    return sp.zeros(eq.shape[0], sym_var.shape[0])
+
+    # parallel
+    from multiprocessing import Pool
+    with Pool(n_procs) as p:
+        mapped = p.starmap(_jacobian_row,
+                           ((eq[i, :], sym_var) for i in range(eq.shape[0])))
+    return sp.Matrix(mapped)
 
 
 @log_execution_time('running smart_multiply', logger)
@@ -3322,3 +3334,10 @@ def _custom_pow_eval_derivative(self, s):
         (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
         (part2, True)
     )
+
+
+def _jacobian_row(eq_i, sym_var):
+    """Compute a row of a jacobian"""
+    if eq_i.has(*sym_var.flat()):
+        return eq_i.jacobian(sym_var)
+    return [0] * sym_var.shape[0]
