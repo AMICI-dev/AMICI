@@ -206,7 +206,7 @@ def test_compute_moiety_conservation_laws_demartino2014(
         stoichiometric_list,
         num_species=num_species,
         num_reactions=num_reactions,
-        True
+        compute_cls_deterministic=True
     )
     runtime = perf_counter() - start
     if not quiet:
