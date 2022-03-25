@@ -24,3 +24,4 @@ git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#e
 sphinxcontrib-matlabdomain>=0.12.0
 sphinxcontrib-napoleon
 pygments==2.10.0
+Jinja2==3.0.3  # https://github.com/spatialaudio/nbsphinx/issues/641
