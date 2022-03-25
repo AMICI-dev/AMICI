@@ -204,6 +204,7 @@ def test_compute_moiety_conservation_laws_demartino2014(
     start = perf_counter()
     cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
         stoichiometric_list,
+        True,
         num_species=num_species,
         num_reactions=num_reactions
     )
