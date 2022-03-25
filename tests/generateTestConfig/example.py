@@ -56,7 +56,6 @@ class AmiciExample:
             'lmm': 2,
             'maxsteps' : 1e4,
             'newton_maxsteps' : 40,
-            'newton_preeq' : 0,
             'nmaxevent' : 10,
             'ordering' : 0,
             'rtol' : 1e-8,

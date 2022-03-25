@@ -718,10 +718,6 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_maxsteps", &ibuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getPreequilibration());
-    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_preeq", &ibuffer, 1);
-
     ibuffer = static_cast<int>(solver.getNewtonDampingFactorMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_damping_factor_mode", &ibuffer, 1);
@@ -882,11 +878,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
     if(attributeExists(file, datasetPath, "newton_maxsteps")) {
         solver.setNewtonMaxSteps(
                     getIntScalarAttribute(file, datasetPath, "newton_maxsteps"));
-    }
-
-    if(attributeExists(file, datasetPath, "newton_preeq")) {
-        solver.setPreequilibration(
-                    getIntScalarAttribute(file, datasetPath, "newton_preeq"));
     }
 
     if(attributeExists(file, datasetPath, "newton_damping_factor_mode")) {

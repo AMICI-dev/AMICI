@@ -26,7 +26,6 @@ Solver::Solver(const Solver &other)
       newton_maxsteps_(other.newton_maxsteps_),
       newton_damping_factor_mode_(other.newton_damping_factor_mode_),
       newton_damping_factor_lower_bound_(other.newton_damping_factor_lower_bound_),
-      requires_preequilibration_(other.requires_preequilibration_),
       linsol_(other.linsol_), atol_(other.atol_), rtol_(other.rtol_),
       atol_fsa_(other.atol_fsa_), rtol_fsa_(other.rtol_fsa_),
       atolB_(other.atolB_), rtolB_(other.rtolB_), quad_atol_(other.quad_atol_),
@@ -493,7 +492,7 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.newton_maxsteps_ == b.newton_maxsteps_) &&
            (a.newton_damping_factor_mode_ == b.newton_damping_factor_mode_) &&
            (a.newton_damping_factor_lower_bound_ == b.newton_damping_factor_lower_bound_) &&
-           (a.requires_preequilibration_ == b.requires_preequilibration_) && (a.ism_ == b.ism_) &&
+           (a.ism_ == b.ism_) &&
            (a.linsol_ == b.linsol_) && (a.atol_ == b.atol_) && (a.rtol_ == b.rtol_) &&
            (a.maxsteps_ == b.maxsteps_) && (a.maxstepsB_ == b.maxstepsB_) &&
            (a.quad_atol_ == b.quad_atol_) && (a.quad_rtol_ == b.quad_rtol_) &&
@@ -629,12 +628,6 @@ void Solver::setNewtonMaxSteps(const int newton_maxsteps) {
     if (newton_maxsteps < 0)
         throw AmiException("newton_maxsteps must be a non-negative number");
     newton_maxsteps_ = newton_maxsteps;
-}
-
-bool Solver::getPreequilibration() const { return requires_preequilibration_; }
-
-void Solver::setPreequilibration(const bool require_preequilibration) {
-    requires_preequilibration_ = require_preequilibration;
 }
 
 NewtonDampingFactorMode Solver::getNewtonDampingFactorMode() const { return newton_damping_factor_mode_; }

@@ -57,8 +57,6 @@ classdef amioption < matlab.mixin.CustomDisplay
         sx0 = double.empty();
         % newton solver: maximum newton steps
         newton_maxsteps = 40;
-        % preequilibration of system via newton solver
-        newton_preeq = false;
         % mapping of event ouputs to events
         z2event = double.empty();
         % parameter scaling
@@ -239,16 +237,6 @@ classdef amioption < matlab.mixin.CustomDisplay
             this.newton_maxsteps = value;
         end
 
-        function this = set.newton_preeq(this,value)
-            if(isnumeric(value))
-                assert(floor(value)==value,'The option newton_preeq must be a logical!')
-                assert(value<=1,'Only 0 and 1 are valid options for newton_preeq!')
-                assert(value>=0,'Only 0 and 1 are valid options for newton_preeq!')
-            else
-                assert(islogical(value),'The option newton_preeq must have a logical value!')
-            end
-            this.newton_preeq = value;
-        end
     end
 
     methods(Static)
