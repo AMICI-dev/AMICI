@@ -232,18 +232,6 @@ class Solver {
     void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
-     * @brief Get if model preequilibration is enabled
-     * @return
-     */
-    bool getPreequilibration() const;
-
-    /**
-     * @brief Enable/disable model preequilibration
-     * @param require_preequilibration
-     */
-    void setPreequilibration(bool require_preequilibration);
-
-    /**
      * @brief Get a state of the damping factor used in the Newton solver
      * @return
      */
@@ -1695,7 +1683,7 @@ class Solver {
 
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_ {false};
-    
+
     /** flag indicating whether sensInit1 was called */
     mutable bool sens_initialized_ {false};
 
@@ -1737,9 +1725,6 @@ class Solver {
 
     /** Lower bound of the damping factor. */
     realtype newton_damping_factor_lower_bound_ {1e-8};
-
-    /** Enable model preequilibration */
-    bool requires_preequilibration_ {false};
 
     /** linear solver specification */
     LinearSolver linsol_ {LinearSolver::KLU};

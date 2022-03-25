@@ -225,6 +225,9 @@ class ReturnData: public ModelDimensions {
     /** computation time of backward solve [ms] */
     double cpu_timeB = 0.0;
 
+    /** total CPU time from entering runAmiciSimulation until exiting [ms] */
+    double cpu_time_total = 0.0;
+
     /** flags indicating success of steady state solver (preequilibration) */
     std::vector<SteadyStateStatus> preeq_status;
 

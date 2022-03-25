@@ -408,10 +408,7 @@ testSolverGetterSetters(CVodeSolver solver,
     ASSERT_EQ(static_cast<int>(solver.getLinearMultistepMethod()),
               static_cast<int>(lmm));
 
-    solver.setPreequilibration(true);
-    ASSERT_EQ(solver.getPreequilibration(), true);
-
-    solver.setStabilityLimitFlag(true);
+        solver.setStabilityLimitFlag(true);
     ASSERT_EQ(solver.getStabilityLimitFlag(), true);
 
     ASSERT_THROW(solver.setNewtonMaxSteps(badsteps), AmiException);
