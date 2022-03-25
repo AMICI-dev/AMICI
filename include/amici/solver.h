@@ -147,7 +147,7 @@ class Solver {
      *
      * @param model pointer to the model instance
      */
-    void updateAndReinitStatesAndSensitivities(Model *model);
+    void updateAndReinitStatesAndSensitivities(Model *model) const;
 
     /**
      * getRootInfo extracts information which event occurred
