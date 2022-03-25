@@ -257,7 +257,7 @@ def test_compute_moiety_conservation_laws_simple():
     found_all_n_times = 0
     for _ in range(num_tries):
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
-            stoichiometric_list, *stoichiometric_matrix.shape)
+            stoichiometric_list, *stoichiometric_matrix.shape, True)
 
         assert cls_state_idxs in ([[0, 3], [1, 2], [1, 3]],
                                   [[0, 3], [1, 2], [0, 2]],
