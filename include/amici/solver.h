@@ -232,18 +232,6 @@ class Solver {
     void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
-     * @brief Get if model preequilibration is enabled
-     * @return
-     */
-    bool getPreequilibration() const;
-
-    /**
-     * @brief Enable/disable model preequilibration
-     * @param require_preequilibration
-     */
-    void setPreequilibration(bool require_preequilibration);
-
-    /**
      * @brief Get a state of the damping factor used in the Newton solver
      * @return
      */
