@@ -236,8 +236,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         bwd_success ? bwd.get() : nullptr,
         posteq.get(), model, solver, edata);
 
-    rdata->cpu_time_total = (clock() - start_time_total) * 1000.0
-                            / CLOCKS_PER_SEC;
+    rdata->cpu_time_total = static_cast<double>(clock() - start_time_total)
+                            * 1000.0 / CLOCKS_PER_SEC;
 
     return rdata;
 }
