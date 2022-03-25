@@ -33,6 +33,8 @@ Solver::Solver(const Solver &other)
       quad_rtol_(other.quad_rtol_), ss_atol_(other.ss_atol_),
       ss_rtol_(other.ss_rtol_), ss_atol_sensi_(other.ss_atol_sensi_),
       ss_rtol_sensi_(other.ss_rtol_sensi_), rdata_mode_(other.rdata_mode_),
+      newton_step_steadystate_conv_(other.newton_step_steadystate_conv_),
+      check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_),
       maxstepsB_(other.maxstepsB_), sensi_(other.sensi_)
 {}
 
@@ -511,6 +513,8 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.rtolB_ == b.rtolB_ || (isNaN(a.rtolB_) && isNaN(b.rtolB_))) &&
            (a.atolB_ == b.atolB_ || (isNaN(a.atolB_) && isNaN(b.atolB_))) &&
            (a.sensi_ == b.sensi_) && (a.sensi_meth_ == b.sensi_meth_) &&
+           (a.newton_step_steadystate_conv_ == b.newton_step_steadystate_conv_) &&
+           (a.check_sensi_steadystate_conv_ == b.check_sensi_steadystate_conv_) &&
            (a.rdata_mode_ == b.rdata_mode_);
 }
 

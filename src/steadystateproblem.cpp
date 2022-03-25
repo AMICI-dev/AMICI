@@ -21,7 +21,8 @@ constexpr realtype conv_thresh = 1.0;
 namespace amici {
 
 SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
-    : delta_(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
+    : delta_(model.nx_solver), delta_old_(model.nx_solver),
+      ewt_(model.nx_solver), ewtQB_(model.nplist()),
       x_old_(model.nx_solver), xdot_(model.nx_solver),
       sdx_(model.nx_solver, model.nplist()), xB_(model.nJ * model.nx_solver),
       xQ_(model.nJ * model.nx_solver), xQB_(model.nplist()),
@@ -40,7 +41,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, Model &model)
       rtol_quad_(solver.getRelativeToleranceQuadratures()),
       newton_solver_(NewtonSolver::getSolver(solver, &model)),
       damping_factor_mode_(solver.getNewtonDampingFactorMode()),
-      damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound()) {
+      damping_factor_lower_bound_(solver.getNewtonDampingFactorLowerBound()),
+      newton_step_conv_(solver.getNewtonStepSteadyStateCheck()),
+      check_sensi_conv_(solver.getSensiSteadyStateCheck()) {
     /* Check for compatibility of options */
     if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
         solver.getSensitivityMethodPreequilibration() ==
@@ -195,6 +198,7 @@ void SteadystateProblem::initializeForwardProblem(int it, const Solver *solver,
         state_.t = model->getTimepoint(it - 1);
 
     state_.state = model->getModelState();
+    flagUpdatedState();
 }
 
 bool SteadystateProblem::initializeBackwardProblem(Solver *solver, Model *model,
@@ -268,7 +272,7 @@ void SteadystateProblem::getQuadratureByLinSolve(Model *model) {
     /* try to solve the linear system */
     try {
         /* compute integral over xB and write to xQ */
-        newton_solver_->prepareLinearSystemB(0, -1, model, state_);
+        newton_solver_->prepareLinearSystemB(model, state_);
         newton_solver_->solveLinearSystem(xQ_);
         /* Compute the quadrature as the inner product xQ * dxdotdp */
         computeQBfromQ(model, xQ_, xQB_);
@@ -435,12 +439,21 @@ realtype SteadystateProblem::getWrms(Model *model,
            to zero at all. So we need xQBdot, hence compute xQB first. */
         computeQBfromQ(model, xQ_, xQB_);
         computeQBfromQ(model, xB_, xQBdot_);
+        if (newton_step_conv_)
+            throw NewtonFailure(
+                AMICI_NOT_IMPLEMENTED,
+                "Newton type convergence check is not implemented for adjoint "
+                "steady state computations. Stopping.");
         wrms = getWrmsNorm(xQB_, xQBdot_, atol_quad_, rtol_quad_, ewtQB_);
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
            Get RHS and compute weighted error norm */
-        model->fxdot(state_.t, state_.x, state_.dx, xdot_);
-        wrms = getWrmsNorm(state_.x, xdot_, atol_, rtol_, ewt_);
+        if (newton_step_conv_)
+            getNewtonStep(*model);
+        else
+            updateRightHandSide(*model);
+        wrms = getWrmsNorm(state_.x, newton_step_conv_ ? delta_ : xdot_,
+                           atol_, rtol_, ewt_);
     }
     return wrms;
 }
@@ -448,9 +461,17 @@ realtype SteadystateProblem::getWrms(Model *model,
 realtype SteadystateProblem::getWrmsFSA(Model *model) {
     /* Forward sensitivities: Compute weighted error norm for their RHS */
     realtype wrms = 0.0;
+    
+    /* we don't need to call prepareLinearSystem in this function, since it was
+     already computed in the preceding getWrms call and both equations have the
+     same jacobian */
+    
+    xdot_updated_ = false;
     for (int ip = 0; ip < model->nplist(); ++ip) {
         model->fsxdot(state_.t, state_.x, state_.dx, ip, state_.sx[ip],
                       state_.dx, xdot_);
+        if (newton_step_conv_)
+            newton_solver_->solveLinearSystem(xdot_);
         wrms =
             getWrmsNorm(state_.sx[ip], xdot_, atol_sensi_, rtol_sensi_, ewt_);
         /* ideally this function would report the maximum of all wrms over
@@ -474,7 +495,8 @@ bool SteadystateProblem::checkSteadyStateSuccess() const {
 }
 
 void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
-    int i_newtonstep = 0;
+    int &i_newtonstep = numsteps_.at(newton_retry ? 2 : 0);
+    i_newtonstep = 0;
     gamma_ = 1.0;
     bool update_direction = true;
     bool step_successful = false;
@@ -485,28 +507,25 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
     /* initialize output of linear solver for Newton step */
     delta_.zero();
     x_old_.copy(state_.x);
-
+    bool converged = false;
     wrms_ = getWrms(model, SensitivityMethod::none);
-    bool converged = newton_retry ? false : wrms_ < conv_thresh;
+    converged = newton_retry ? false : wrms_ < conv_thresh;
     while (!converged && i_newtonstep < max_steps_) {
 
-        /* If Newton steps are necessary, compute the initial search direction
-         */
+        /* If Newton steps are necessary, compute the initial search
+         direction */
         if (update_direction) {
-            try {
-                // xdot_ computed in getWrms
-                delta_.copy(xdot_);
-                newton_solver_->getStep(newton_retry ? 2 : 1, i_newtonstep,
-                                        delta_, model, state_);
-            } catch (NewtonFailure const &) {
-                numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
-                throw;
-            }
+            getNewtonStep(*model);
+            /* we store delta_ here as later convergence checks may
+             update it */
+            delta_old_.copy(delta_);
         }
 
-        /* Try a full, undamped Newton step */
-        linearSum(1.0, x_old_, gamma_, delta_, state_.x);
-
+        /* Try step with new gamma_/delta_ */
+        linearSum(1.0, x_old_, gamma_,
+                  update_direction ? delta_ : delta_old_, state_.x);
+        flagUpdatedState();
+            
         /* Compute new xdot and residuals */
         realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
 
@@ -514,21 +533,20 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
         if (step_successful) {
             /* If new residuals are smaller than old ones, update state */
             wrms_ = wrms_tmp;
-            x_old_.copy(state_.x);
-
-            // precheck convergence
+            /* precheck convergence */
             converged = wrms_ < conv_thresh;
             if (converged) {
                 converged = makePositiveAndCheckConvergence(model);
             }
+            /* update x_old_ _after_ positivity was enforced */
+            x_old_.copy(state_.x);
         }
+        
         update_direction = updateDampingFactor(step_successful);
         /* increase step counter */
         i_newtonstep++;
     }
 
-    /* Set return values */
-    numsteps_.at(newton_retry ? 2 : 0) = i_newtonstep;
     if (!converged)
         throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
@@ -536,20 +554,15 @@ void SteadystateProblem::applyNewtonsMethod(Model *model, bool newton_retry) {
 bool SteadystateProblem::makePositiveAndCheckConvergence(Model *model) {
     /* Ensure positivity of the found state and recheck if
        the convergence still holds */
-    bool recheck_convergence = false;
-    bool converged = true;
     auto nonnegative = model->getStateIsNonNegative();
     for (int ix = 0; ix < model->nx_solver; ix++) {
         if (state_.x[ix] < 0.0 && nonnegative[ix]) {
             state_.x[ix] = 0.0;
-            recheck_convergence = true;
+            flagUpdatedState();
         }
     }
-    if (recheck_convergence) {
-        wrms_ = getWrms(model, SensitivityMethod::none);
-        converged = wrms_ < conv_thresh;
-    }
-    return converged;
+    wrms_ = getWrms(model, SensitivityMethod::none);
+    return wrms_ < conv_thresh;
 }
 
 bool SteadystateProblem::updateDampingFactor(bool step_successful) {
@@ -612,14 +625,24 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
         } else {
             solver->writeSolution(&state_.t, state_.x, state_.dx, state_.sx,
                                   xQ_);
+            flagUpdatedState();
         }
-
+        
+        try {
         /* Check for convergence */
         wrms_ = getWrms(model, sensitivityFlag);
-        if (wrms_ < conv_thresh &&
+        /* getWrms needs to be called before getWrmsFSA such that the linear
+         system is prepared for newton type convergence check */
+        if (wrms_ < conv_thresh && check_sensi_conv_ &&
             sensitivityFlag == SensitivityMethod::forward) {
-            state_.sx = solver->getStateSensitivity(state_.t);
+            updateSensiSimulation(*solver);
             wrms_ = getWrmsFSA(model);
+        }
+        
+        } catch (NewtonFailure const &) {
+            /* linear solves in getWrms failed */
+            numsteps_.at(1) = sim_steps;
+            throw;
         }
 
         if (wrms_ < conv_thresh)
@@ -638,6 +661,10 @@ void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
                                 " point without convergence of RHS");
         }
     }
+    
+    // if check_sensi_conv_ is deactivated, we still have to update sensis
+    if (sensitivityFlag == SensitivityMethod::forward)
+        updateSensiSimulation(*solver);
 
     /* store information about steps and sensitivities, if necessary */
     if (backward) {
@@ -718,4 +745,32 @@ void SteadystateProblem::getAdjointUpdates(Model &model, const ExpData &edata) {
     }
 }
 
+void SteadystateProblem::flagUpdatedState() {
+    xdot_updated_ = false;
+    delta_updated_ = false;
+    sensis_updated_ = false;
+}
+
+void SteadystateProblem::updateSensiSimulation(const Solver &solver) {
+    if (sensis_updated_)
+        return;
+    state_.sx = solver.getStateSensitivity(state_.t);
+    sensis_updated_ = true;
+}
+
+void SteadystateProblem::updateRightHandSide(Model &model) {
+    if (xdot_updated_)
+        return;
+    model.fxdot(state_.t, state_.x, state_.dx, xdot_);
+    xdot_updated_ = true;
+}
+
+void SteadystateProblem::getNewtonStep(Model &model) {
+    if (delta_updated_)
+        return;
+    updateRightHandSide(model);
+    delta_.copy(xdot_);
+    newton_solver_->getStep(delta_, &model, state_);
+    delta_updated_ = true;
+}
 } // namespace amici

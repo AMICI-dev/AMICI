@@ -63,9 +63,9 @@ NewtonSolver::getSolver(const Solver &simulationSolver, const Model *model) {
     return solver;
 }
 
-void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
+void NewtonSolver::getStep(AmiVector &delta, Model *model,
                            const SimulationState &state) {
-    prepareLinearSystem(ntry, nnewt, model, state);
+    prepareLinearSystem(model, state);
 
     delta.minus();
     solveLinearSystem(delta);
@@ -73,7 +73,7 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
 
 void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model *model,
                                        const SimulationState &state) {
-    prepareLinearSystem(0, -1, model, state);
+    prepareLinearSystem(model, state);
     model->fdxdotdp(state.t, state.x, state.dx);
 
     if (is_singular(model, state))
@@ -108,8 +108,7 @@ NewtonSolverDense::NewtonSolverDense(const Model *model)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
 }
 
-void NewtonSolverDense::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
-                                            Model *model,
+void NewtonSolverDense::prepareLinearSystem(Model *model,
                                             const SimulationState &state) {
     model->fJ(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
     Jtmp_.refresh();
@@ -118,8 +117,7 @@ void NewtonSolverDense::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
 
-void NewtonSolverDense::prepareLinearSystemB(int /*ntry*/, int /*nnewt*/,
-                                             Model *model,
+void NewtonSolverDense::prepareLinearSystemB(Model *model,
                                              const SimulationState &state) {
     model->fJB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_.get());
     Jtmp_.refresh();
@@ -148,7 +146,7 @@ bool NewtonSolverDense::is_singular(Model *model,
     // sparse solver interface, not the most efficient solution, but who is
     // concerned about speed and used the dense solver anyways ¯\_(ツ)_/¯
     NewtonSolverSparse sparse_solver(model);
-    sparse_solver.prepareLinearSystem(0, 0, model, state);
+    sparse_solver.prepareLinearSystem(model, state);
     return sparse_solver.is_singular(model, state);
 }
 
@@ -166,8 +164,7 @@ NewtonSolverSparse::NewtonSolverSparse(const Model *model)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
 }
 
-void NewtonSolverSparse::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
-                                             Model *model,
+void NewtonSolverSparse::prepareLinearSystem(Model *model,
                                              const SimulationState &state) {
     /* Get sparse Jacobian */
     model->fJSparse(state.t, 0.0, state.x, state.dx, xdot_, Jtmp_.get());
@@ -177,8 +174,7 @@ void NewtonSolverSparse::prepareLinearSystem(int /*ntry*/, int /*nnewt*/,
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 }
 
-void NewtonSolverSparse::prepareLinearSystemB(int /*ntry*/, int /*nnewt*/,
-                                              Model *model,
+void NewtonSolverSparse::prepareLinearSystemB(Model *model,
                                               const SimulationState &state) {
     /* Get sparse Jacobian */
     model->fJSparseB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_,
