@@ -158,7 +158,7 @@ class ReturnDataView(SwigPtrView):
         'posteq_cpu_timeB', 'numsteps', 'numrhsevals',
         'numerrtestfails', 'numnonlinsolvconvfails', 'order', 'cpu_time',
         'numstepsB', 'numrhsevalsB', 'numerrtestfailsB',
-        'numnonlinsolvconvfailsB', 'cpu_timeB'
+        'numnonlinsolvconvfailsB', 'cpu_timeB', 'cpu_time_total'
     ]
 
     def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):

@@ -104,6 +104,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
+    auto start_time_total = clock();
     solver.startTimer();
 
     /* Applies condition-specific model settings and restores them when going
@@ -234,6 +235,10 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         preeq.get(), fwd.get(),
         bwd_success ? bwd.get() : nullptr,
         posteq.get(), model, solver, edata);
+
+    rdata->cpu_time_total = (clock() - start_time_total) * 1000.0
+                            / CLOCKS_PER_SEC;
+
     return rdata;
 }
 
