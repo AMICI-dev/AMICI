@@ -1714,7 +1714,7 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: List[sbml.SBase, str]
+    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
                               ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
