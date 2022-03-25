@@ -32,20 +32,20 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         nytrue = ny;
         o2flag = o2flag;
     end
-    
+
     [commit_hash,branch,url] = getCommitHash(amiciRootDir);
     if(isempty(commit_hash))
         commit_hash = '#';
     end
-    
+
     if(o2flag)
         nxtrue = amimodelo2.nxtrue;
         nytrue = amimodelo2.nytrue;
     end
-    
-    
+
+
     %% Generation of the simulation file
-    
+
     fid = fopen(wrapperFilename,'w');
     fprintf(fid,['%% simulate_' modelname '.m is the matlab interface to the cvodes mex\n'...
         '%%   which simulates the ordinary differential equation and respective\n'...
@@ -142,8 +142,6 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         '%%        a value of 0 will disable the newton solver\n'...
         '%%    .newton_maxlinsteps   ... maximum linear steps\n'...
         '%%        default value is 100\n'...
-        '%%    .newton_preeq   ... preequilibration of system via newton solver\n'...
-        '%%        default value is false\n'...
         '%%    .pscale   ... parameter scaling\n'...
         '%%        []: (DEFAULT) use value specified in the model (fallback: ''lin'')\n'...
         '%%        0 or ''lin'': linear\n'...
@@ -165,8 +163,8 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         '%% sol.z ... event output\n'...
         '%% sol.sz ... sensitivity of event output\n'...
         ]);
-    
-    
+
+
     fprintf(fid,['function varargout = simulate_' modelname '(varargin)\n\n']);
     fprintf(fid,'%% DO NOT CHANGE ANYTHING IN THIS FILE UNLESS YOU ARE VERY SURE ABOUT WHAT YOU ARE DOING\n');
     fprintf(fid,'%% MANUAL CHANGES TO THIS FILE CAN RESULT IN WRONG SOLUTIONS AND CRASHING OF MATLAB\n');
@@ -176,7 +174,7 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'    tout=varargin{1};\n');
     fprintf(fid,'    theta=varargin{2};\n');
     fprintf(fid,'end\n');
-    
+
     fprintf(fid,'if(nargin>=3)\n');
     fprintf(fid,'    kappa=varargin{3};\n');
     fprintf(fid,'else\n');
@@ -188,12 +186,12 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         fprintf(fid,'    kappa = [];\n');
         fprintf(fid,'end\n');
     end
-    
+
     fprintf(fid,['if(length(theta)<' num2str(np) ')\n']);
     fprintf(fid,'    error(''provided parameter vector is too short'');\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
-    
+
     fprintf(fid,'\n');
     fprintf(fid,'xscale = [];\n');
     fprintf(fid,'if(nargin>=5)\n');
@@ -214,12 +212,12 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         fprintf(fid,'end\n');
     end
     fprintf(fid,'\n');
-    
-    
+
+
     fprintf(fid,'if(isempty(options_ami.pscale))\n');
     fprintf(fid,['    options_ami.pscale = ''' pscale ''' ;\n']);
     fprintf(fid,'end\n');
-    
+
     if(o2flag == 2)
         fprintf(fid,'if(nargin>=6)\n');
         fprintf(fid,'    chainRuleFactor = getChainRuleFactors(options_ami.pscale, theta, options_ami.sens_ind);\n');
@@ -231,7 +229,7 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         fprintf(fid,'    end\n');
         fprintf(fid,'end\n');
     end
-    
+
     if(o2flag)
         fprintf(fid,'if(nargout>1)\n');
         fprintf(fid,'    if(nargout>6)\n');
@@ -315,13 +313,13 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,['if(length(kappa)<' num2str(nk) ')\n']);
     fprintf(fid,'    error(''provided condition vector is too short'');\n');
     fprintf(fid,'end\n');
-    
+
     if(o2flag == 2)
         fprintf(fid,'if(nargin>=6)\n');
         fprintf(fid,'    kappa = [kappa(:);v(:)];\n');
         fprintf(fid,'end\n');
     end
-    
+
     fprintf(fid,'init = struct();\n');
     fprintf(fid,'if(~isempty(options_ami.x0))\n');
     fprintf(fid,'    if(size(options_ami.x0,2)~=1)\n');
@@ -340,8 +338,8 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of states!'');\n');
     fprintf(fid,'    end\n');
     fprintf(fid,'end\n');
-    
-    
+
+
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi<2)\n');
         fprintf(fid,['    sol = ami_' modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,xscale,init,data);\n']);
@@ -356,11 +354,11 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     else
         fprintf(fid,['sol = ami_' modelname '(tout,theta(1:' num2str(np) '),kappa(1:' num2str(nk) '),options_ami,plist,xscale,init,data);\n']);
     end
-    
+
     if(o2flag)
         fprintf(fid,'if(options_ami.sensi == 2)\n');
         fprintf(fid, '    if(~(options_ami.sensi_meth==2))\n');
-        
+
         fprintf(fid,['        sz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['        ssigmaz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
         fprintf(fid,['        srz = zeros(size(sol.z,1),' num2str(nztrue) ',length(theta(options_ami.sens_ind)));\n']);
@@ -418,7 +416,7 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
         fprintf(fid,['    sol.sigmaz = sol.sigmaz(:,1:' num2str(nztrue) ');\n']);
         fprintf(fid,'end\n');
     end
-    
+
     fprintf(fid,'if(nargout>1)\n');
     fprintf(fid,'    varargout{1} = sol.status;\n');
     fprintf(fid,'    varargout{2} = sol.t;\n');
@@ -437,7 +435,7 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'else\n');
     fprintf(fid,'    varargout{1} = sol;\n');
     fprintf(fid,'end\n');
-    
+
     fprintf(fid,'function chainRuleFactors = getChainRuleFactors(pscale, theta, sens_ind)\n');
     fprintf(fid,'    if(length(pscale) == 1 && length(sens_ind) ~= length(pscale))\n');
     fprintf(fid,'        chainRuleFactors = arrayfun(@(x, ip) getChainRuleFactor(x, theta(ip)), repmat(pscale, 1, length(sens_ind)), sens_ind);\n');
@@ -460,8 +458,8 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'\n');
 
     fprintf(fid,'end\n');
-    
+
     fclose(fid);
-    
+
 end
 

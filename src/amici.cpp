@@ -124,8 +124,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     bool bwd_success = true;
 
     try {
-        if (solver.getPreequilibration() ||
-            (edata && !edata->fixedParametersPreequilibration.empty())) {
+        if (edata && !edata->fixedParametersPreequilibration.empty()) {
             ConditionContext cc2(
                 &model, edata, FixedParameterContext::preequilibration
             );

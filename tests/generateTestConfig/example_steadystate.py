@@ -104,7 +104,6 @@ def writeSensiFwdNewtonPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10**-16
     ex.solverOptions['rtol'] = 10**-12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
@@ -140,7 +139,6 @@ def writeSensiAdjNewtonPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10**-16
     ex.solverOptions['rtol'] = 10**-12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
@@ -176,7 +174,6 @@ def writeSensiFwdSimPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
@@ -213,7 +210,6 @@ def writeSensiFwdSimPreeqFSA(filename):
     ex.modelOptions['steadyStateSensitivityMode'] = 1
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
@@ -249,7 +245,6 @@ def writeSensiAdjSimPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
@@ -286,7 +281,6 @@ def writeSensiAdjSimPreeqFSA(filename):
     ex.modelOptions['steadyStateSensitivityMode'] = 1
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
@@ -303,7 +297,6 @@ def writeSensiFwdByhandPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = False
     ex.solverOptions['x0'] = np.array([0.532609637980272, 0.625849232840357, 0.066666666666667])
     ex.solverOptions['sx0'] = np.array(
         [[-0.425457638009506, 0.499939012301881, 0], [-0.375463736779318, -0.999878024603762, -0.000000000000000],
@@ -343,7 +336,6 @@ def writeSensiAdjByhandPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = False
     ex.solverOptions['x0'] = np.array([0.532609637980272, 0.625849232840357, 0.066666666666667])
     ex.solverOptions['sx0'] = np.array(
         [[-0.425457638009506, 0.499939012301881, 0], [-0.375463736779318, -0.999878024603762, -0.000000000000000],
