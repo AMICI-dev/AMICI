@@ -224,7 +224,7 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
     model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
 
-void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
+void Solver::updateAndReinitStatesAndSensitivities(Model *model) const {
     model->fx0_fixedParameters(x_);
     reInit(t_, x_, dx_);
 

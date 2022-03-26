@@ -29,7 +29,7 @@ class SteadystateProblem {
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(const Solver &solver, Model &model);
+    explicit SteadystateProblem(const Solver &solver, const Model &model);
 
     /**
      * @brief Handles steady state computation in the forward case:
@@ -39,7 +39,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void workSteadyStateProblem(Solver *solver, Model *model, int it);
+    void workSteadyStateProblem(const Solver &solver, Model &model, int it);
 
     /**
      * Integrates over the adjoint state backward in time by solving a linear
@@ -49,7 +49,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param bwd backward problem
      */
-    void workSteadyStateBackwardProblem(Solver *solver, Model *model,
+    void workSteadyStateBackwardProblem(const Solver &solver, Model &model,
                                         const BackwardProblem *bwd);
 
     /**
@@ -166,14 +166,14 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void findSteadyState(const Solver *solver, Model *model, int it);
+    void findSteadyState(const Solver &solver, Model &model, int it);
 
     /**
      * @brief Tries to determine the steady state by using Newton's method
      * @param model pointer to the model object
      * @param newton_retry bool flag indicating whether being relaunched
      */
-    void findSteadyStateByNewtonsMethod(Model *model, bool newton_retry);
+    void findSteadyStateByNewtonsMethod(Model &model, bool newton_retry);
 
     /**
      * @brief Tries to determine the steady state by using forward simulation
@@ -181,7 +181,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void findSteadyStateBySimulation(const Solver *solver, Model *model,
+    void findSteadyStateBySimulation(const Solver &solver, Model &model,
                                      int it);
 
     /**
@@ -190,14 +190,14 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void computeSteadyStateQuadrature(const Solver *solver, Model *model);
+    void computeSteadyStateQuadrature(const Solver &solver, Model &model);
 
     /**
      * @brief Computes the quadrature in steady state backward mode by
      * solving the linear system defined by the backward Jacobian
      * @param model pointer to the model object
      */
-    void getQuadratureByLinSolve(Model *model);
+    void getQuadratureByLinSolve(Model &model);
 
     /**
      * @brief Computes the quadrature in steady state backward mode by
@@ -205,7 +205,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void getQuadratureBySimulation(const Solver *solver, Model *model);
+    void getQuadratureBySimulation(const Solver &solver, Model &model);
 
     /**
      * @brief Stores state and throws an exception if equilibration failed
@@ -230,7 +230,7 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return flag telling how to process state sensitivities
      */
-    bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
+    bool getSensitivityFlag(const Model &model, const Solver &solver, int it,
                             SteadyStateContext context);
 
     /**
@@ -254,14 +254,14 @@ class SteadystateProblem {
      * @param sensi_method sensitivity method
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrms(Model *model, SensitivityMethod sensi_method);
+    realtype getWrms(Model &model, SensitivityMethod sensi_method);
 
     /**
      * @brief Checks convergence for state sensitivities
      * @param model Model instance
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrmsFSA(Model *model);
+    realtype getWrmsFSA(Model &model);
 
     /**
      * @brief Runs the Newton solver iterations and checks for convergence
@@ -269,7 +269,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param newton_retry flag indicating if Newton solver is rerun
      */
-    void applyNewtonsMethod(Model *model, bool newton_retry);
+    void applyNewtonsMethod(Model &model, bool newton_retry);
 
     /**
      * @brief Simulation is launched, if Newton solver or linear system solve
@@ -278,7 +278,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param backward flag indicating adjoint mode (including quadrature)
      */
-    void runSteadystateSimulation(const Solver *solver, Model *model,
+    void runSteadystateSimulation(const Solver &solver, Model &model,
                                   bool backward);
 
     /**
@@ -289,8 +289,8 @@ class SteadystateProblem {
      * @param backward flag switching on quadratures computation
      * @return solver instance
      */
-    std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
-                                                       Model *model,
+    std::unique_ptr<Solver> createSteadystateSimSolver(const Solver &solver,
+                                                       Model &model,
                                                        bool forwardSensis,
                                                        bool backward) const;
 
@@ -300,7 +300,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void initializeForwardProblem(int it, const Solver *solver, Model *model);
+    void initializeForwardProblem(int it, const Solver &solver, Model &model);
 
     /**
      * @brief Initialize backward computation
@@ -309,7 +309,7 @@ class SteadystateProblem {
      * @param bwd pointer to backward problem
      * @return flag indicating whether backward computation to be carried out
      */
-    bool initializeBackwardProblem(Solver *solver, Model *model,
+    bool initializeBackwardProblem(const Solver &solver, Model &model,
                                    const BackwardProblem *bwd);
 
     /**
@@ -319,7 +319,7 @@ class SteadystateProblem {
      * @param yQ vector to be multiplied with dxdotdp
      * @param yQB resulting vector after multiplication
      */
-    void computeQBfromQ(Model *model, const AmiVector &yQ,
+    void computeQBfromQ(Model &model, const AmiVector &yQ,
                         AmiVector &yQB) const;
 
     /**
@@ -327,7 +327,7 @@ class SteadystateProblem {
      * check, if necessary
      * @param model pointer to the model object
      */
-    bool makePositiveAndCheckConvergence(Model *model);
+    bool makePositiveAndCheckConvergence(Model &model);
 
     /**
      * @brief Updates the damping factor gamma that determines step size
