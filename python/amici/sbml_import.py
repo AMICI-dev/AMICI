@@ -1587,7 +1587,7 @@ class SbmlImporter:
         # indices of retained species
         species_solver = list(range(ode_model.num_states_rdata()))
 
-        algorithm = os.environ["AMICI_EXPERIMENTAL_SBML_NONCONST_CLS"]
+        algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
         if algorithm.lower() == "demartino":
             raw_cls = self._get_conservation_laws_demartino(ode_model)
         else:
