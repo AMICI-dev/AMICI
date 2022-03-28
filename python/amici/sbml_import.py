@@ -1441,23 +1441,14 @@ class SbmlImporter:
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
 
-    def _add_conservation_for_non_constant_species(
-        self,
-        ode_model: ODEModel,
-        conservation_laws: List[ConservationLaw]
-    ) -> List[int]:
-        """Add non-constant species to conservation laws
-
-        :param ode_model:
-            ODEModel object with basic definitions
-        :param conservation_laws:
-            List of already known conservation laws
-        :returns:
-            List of species indices which later remain in the ODE solver
+    def _get_conservation_laws_demartino(
+            self,
+            ode_model: ODEModel,
+    ):
         """
-        # indices of retained species
-        species_solver = list(range(ode_model.num_states_rdata()))
+        TODO
 
+        Returns List of tuples (replaced_species_idx, all_species_idxs_in_cl, species_coefficients)"""
         try:
             stoichiometric_list = [
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
@@ -1470,7 +1461,7 @@ class SbmlImporter:
                           "combination with parameterized stoichiometric "
                           "coefficients are not currently supported "
                           "and will be turned off.")
-            return species_solver
+            return []
 
         if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
                for rule in self.sbml.getListOfRules()):
@@ -1478,7 +1469,7 @@ class SbmlImporter:
             warnings.warn("Conservation laws for non-constant species in "
                           "models with RateRules are not currently supported "
                           "and will be turned off.")
-            return species_solver
+            return []
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape,
@@ -1501,7 +1492,35 @@ class SbmlImporter:
             for i, c in zip(cl, coefficients):
                 A[i_cl, i] = sp.Rational(c)
         rref, pivots = A.rref()
-        species_to_be_removed = set(pivots)
+
+        raw_cls = []
+        for i_cl, target_state_model_idx in enumerate(pivots):
+            # collect values for species engaged in the current CL
+            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
+                          if coeff]
+            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
+            raw_cls.append((target_state_model_idx, state_idxs,
+                            coefficients),)
+        return raw_cls
+
+    def _add_conservation_for_non_constant_species(
+        self,
+        ode_model: ODEModel,
+        conservation_laws: List[ConservationLaw]
+    ) -> List[int]:
+        """Add non-constant species to conservation laws
+
+        :param ode_model:
+            ODEModel object with basic definitions
+        :param conservation_laws:
+            List of already known conservation laws
+        :returns:
+            List of species indices which later remain in the ODE solver
+        """
+        # indices of retained species
+        species_solver = list(range(ode_model.num_states_rdata()))
+        raw_cls = self._get_conservation_laws_demartino(ode_model)
+        species_to_be_removed = {x[0] for x in raw_cls}
 
         # keep new conservations laws separate until we know everything worked
         new_conservation_laws = []
@@ -1518,14 +1537,12 @@ class SbmlImporter:
         ]
 
         # iterate over list of conservation laws, create symbolic expressions,
-        for i_cl, target_state_model_idx in enumerate(pivots):
+        for i_cl, (target_state_model_idx, state_idxs, coefficients) \
+                in enumerate(raw_cls):
             if all_state_ids[target_state_model_idx] in eliminated_state_ids:
                 # constants state, already eliminated
                 continue
             # collect values for species engaged in the current CL
-            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
-                          if coeff]
-            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
             state_ids = [all_state_ids[i_state] for i_state in state_idxs]
             compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
