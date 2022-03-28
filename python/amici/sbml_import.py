@@ -1513,7 +1513,7 @@ class SbmlImporter:
         from numpy.linalg import matrix_rank
         S = np.asarray(self.stoichiometric_matrix, dtype=float)
         # Determine rank via SVD
-        rank = matrix_rank(S)
+        rank = matrix_rank(S) if S.shape[0] else 0
         if rank == S.shape[0]:
             return []
         kernel = nullspace_by_rref(S.T)
