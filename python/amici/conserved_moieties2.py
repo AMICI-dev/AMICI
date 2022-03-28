@@ -90,7 +90,7 @@ def nullspace_by_rref(mat: np.array):
         if i in pivot_cols:
             continue
         nonpivots.append(i)
-        vec = [1 if i == j else 0 for j in range(cols)]
+        vec = [1.0 if i == j else 0.0 for j in range(cols)]
         for ii, jj in enumerate(pivot_cols):
             vec[jj] -= rref_mat[ii][i]
         basis.append(vec)
