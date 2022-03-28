@@ -11,24 +11,22 @@ import math
 import os
 import re
 import warnings
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
+                    Union)
 
 import libsbml as sbml
 import sympy as sp
-from numpy import matrix
 
 from . import has_clibs
-from .conserved_moieties import compute_moiety_conservation_laws
 from .constants import SymbolId
-from .import_utils import (CircularDependencyError,
+from .import_utils import (CircularDependencyError, RESERVED_SYMBOLS,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
                            generate_measurement_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols,
-                           RESERVED_SYMBOLS)
+                           smart_subs, smart_subs_dict, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, symbol_with_assumptions
@@ -1445,11 +1443,19 @@ class SbmlImporter:
     def _get_conservation_laws_demartino(
             self,
             ode_model: ODEModel,
-    ):
-        """
-        TODO
+    ) -> List[Tuple[int, List[int], List[float]]]:
+        """Identify conservation laws based on algorithm by DeMartiono et al.
+        (see conserved_moieties.py).
 
-        Returns List of tuples (replaced_species_idx, all_species_idxs_in_cl, species_coefficients)"""
+        :param ode_model: Model for which to compute conserved quantities
+        :returns: List of one tuple per conservation law, each containing:
+            (0) the index of the (solver-)species to eliminate,
+            (1) (solver-)indices of all species engaged in the conserved
+            quantity (including the eliminated one)
+            (2) coefficients for the species in (1)
+        """
+        from .conserved_moieties import compute_moiety_conservation_laws
+
         try:
             stoichiometric_list = [
                 float(entry) for entry in self.stoichiometric_matrix.T.flat()
@@ -1504,10 +1510,21 @@ class SbmlImporter:
                             coefficients),)
         return raw_cls
 
-    def _get_conservation_laws_new(self):
-        from .conserved_moieties2 import nullspace_by_rref, rref
+    def _get_conservation_laws_new(
+            self
+    ) -> List[Tuple[int, List[int], List[float]]]:
+        """Identify conservation laws based on left nullspace of the
+        stoichiometric matrix, computed through (numeric) Gaussian elimination
+
+        :returns: List of one tuple per conservation law, each containing:
+            (0) the index of the (solver-)species to eliminate,
+            (1) (solver-)indices of all species engaged in the conserved
+            quantity (including the eliminated one)
+            (2) coefficients for the species in (1)
+        """
         import numpy as np
         from numpy.linalg import matrix_rank
+        from .conserved_moieties2 import nullspace_by_rref, rref
 
         try:
             S = np.asarray(self.stoichiometric_matrix, dtype=float)
@@ -1536,7 +1553,13 @@ class SbmlImporter:
         kernel = nullspace_by_rref(S.T)
         # Check dimensions - due to numerical errors, nullspace_by_rref may
         #  fail in certain situations
-        assert kernel.shape[0] == S.shape[0] - rank
+        if kernel.shape[0] != S.shape[0] - rank:
+            raise AssertionError(
+                "Failed to determine all conserved quantities "
+                f"(found {kernel.shape[0]}, expected {S.shape[0] - rank}). "
+                "Try another algorithm, disable detection of conservation "
+                "laws, or submit a bug report along with the model."
+            )
         kernel = rref(kernel)
         raw_cls = []
         for row in kernel:
@@ -1563,8 +1586,13 @@ class SbmlImporter:
         """
         # indices of retained species
         species_solver = list(range(ode_model.num_states_rdata()))
-        # raw_cls = self._get_conservation_laws_demartino(ode_model)
-        raw_cls = self._get_conservation_laws_new()
+
+        algorithm = os.environ["AMICI_EXPERIMENTAL_SBML_NONCONST_CLS"]
+        if algorithm.lower() == "demartino":
+            raw_cls = self._get_conservation_laws_demartino(ode_model)
+        else:
+            raw_cls = self._get_conservation_laws_new()
+
         if not raw_cls:
             # no conservation laws identified
             return species_solver
@@ -1578,16 +1606,16 @@ class SbmlImporter:
 
         all_state_ids = [x.get_id() for x in ode_model._states]
         all_compartment_sizes = [
-            self.compartments[
-                self.symbols[SymbolId.SPECIES][state_id]['compartment']]
-            if not self.symbols[SymbolId.SPECIES][state_id]['amount']
-            else sp.Integer(1)
+            sp.Integer(1)
+            if self.symbols[SymbolId.SPECIES][state_id]['amount']
+            else self.compartments[
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']
+            ]
             for state_id in all_state_ids
         ]
 
         # iterate over list of conservation laws, create symbolic expressions,
-        for i_cl, (target_state_model_idx, state_idxs, coefficients) \
-                in enumerate(raw_cls):
+        for target_state_model_idx, state_idxs, coefficients in raw_cls:
             if all_state_ids[target_state_model_idx] in eliminated_state_ids:
                 # constants state, already eliminated
                 continue
