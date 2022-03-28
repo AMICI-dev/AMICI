@@ -1512,6 +1512,15 @@ class SbmlImporter:
         import numpy as np
         from numpy.linalg import matrix_rank
         S = np.asarray(self.stoichiometric_matrix, dtype=float)
+
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
+            return []
+
         # Determine rank via SVD
         rank = matrix_rank(S) if S.shape[0] else 0
         if rank == S.shape[0]:
