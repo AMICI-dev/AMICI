@@ -1504,14 +1504,22 @@ class SbmlImporter:
                             coefficients),)
         return raw_cls
 
-    def _get_conservation_laws_new(
-            self,
-            ode_model: ODEModel,
-    ):
+    def _get_conservation_laws_new(self):
         from .conserved_moieties2 import nullspace_by_rref, rref
         import numpy as np
         from numpy.linalg import matrix_rank
-        S = np.asarray(self.stoichiometric_matrix, dtype=float)
+
+        try:
+            S = np.asarray(self.stoichiometric_matrix, dtype=float)
+        except TypeError:
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
+            warnings.warn("Conservation laws for non-constant species in "
+                          "combination with parameterized stoichiometric "
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
+            return []
 
         if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
                for rule in self.sbml.getListOfRules()):
