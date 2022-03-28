@@ -14,6 +14,10 @@ def rref(
 
     see https://en.wikipedia.org/wiki/Row_echelon_form
 
+    :param mat: Numpy float matrix to operate on (will be copied)
+    :param round_ndigits: Number of digits to round intermediary results to,
+        or ``False`` to disable rounding completely.
+        Helps to avoid numerical artifacts.
     :returns: ``mat`` in rref form.
     """
     # Rounding function
@@ -23,7 +27,7 @@ def rref(
             return mat
     else:
         if round_ndigits is None:
-            # drop least significant digit (more or less)
+            # drop the least significant digit (more or less)
             round_ndigits = - int(np.ceil(np.log10(np.spacing(1))))
 
         def _round(mat):
@@ -33,6 +37,7 @@ def rref(
 
     # create a copy  that will be modified
     mat = mat.copy()
+
     lead = 0
     n_rows, n_columns = mat.shape
     for r in range(n_rows):
@@ -57,7 +62,6 @@ def rref(
             if i != r:
                 # Subtract multiple
                 mat[i] -= mat[i, lead] * mat[r]
-                # mat[i, np.abs(mat[i]) < 1e-12] = 0
         mat = _round(mat)
         lead += 1
     return mat
@@ -77,7 +81,7 @@ def pivots(mat: np.array) -> List[int]:
     return pivot_cols
 
 
-def nullspace_by_rref(mat: np.array):
+def nullspace_by_rref(mat: np.array) -> np.array:
     """Compute basis of the nullspace of ``mat`` based on the reduced row
     echelon form"""
     rref_mat = rref(mat)
@@ -85,15 +89,11 @@ def nullspace_by_rref(mat: np.array):
     rows, cols = mat.shape
 
     basis = []
-    nonpivots = []
     for i in range(cols):
         if i in pivot_cols:
             continue
-        nonpivots.append(i)
         vec = [1.0 if i == j else 0.0 for j in range(cols)]
-        for ii, jj in enumerate(pivot_cols):
-            vec[jj] -= rref_mat[ii][i]
+        for pivot_row, pivot_col in enumerate(pivot_cols):
+            vec[pivot_col] -= rref_mat[pivot_row][i]
         basis.append(vec)
     return np.array(basis)
-
-

@@ -1,16 +1,16 @@
-import pytest
-from scipy.linalg import null_space
 import numpy as np
 import sympy as sp
-from typing import List, Optional, Union, Literal
+from numpy.testing import assert_almost_equal
 
-from amici.conserved_moieties2 import rref, pivots, nullspace_by_rref
+from amici.conserved_moieties2 import nullspace_by_rref, pivots, rref
 
 
 def test_rref():
+    """Create some random matrices and compare out ``rref`` to sympy"""
     rng = np.random.default_rng(12345)
     for rows, cols in rng.integers(0, 10, [200, 2]):
         M = np.random.rand(rows, cols)
+
         M_rref = rref(M)
         exp_rref, exp_pivots = sp.Matrix(M).rref()
         exp = np.asarray(exp_rref, dtype=float)
@@ -22,13 +22,17 @@ def test_rref():
 
 
 def test_nullspace_by_rref():
-    from numpy.testing import assert_almost_equal
+    """Test ``nullspace_by_rref`` on a number of random matrices and compare
+    to sympy results"""
     rng = np.random.default_rng(12345)
     for rows, cols in rng.integers(0, 50, [100, 2]):
         M = np.random.rand(rows, cols)
+
         actual = nullspace_by_rref(M)
+
         expected = sp.Matrix(M).nullspace()
         expected = np.hstack(expected).T if len(expected) else np.array([])
+
         if len(actual):
             assert np.allclose(M.dot(actual.T), 0)
 
