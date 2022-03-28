@@ -15,6 +15,7 @@ from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
 import libsbml as sbml
 import sympy as sp
+from numpy import matrix
 
 from . import has_clibs
 from .conserved_moieties import compute_moiety_conservation_laws
@@ -1509,8 +1510,16 @@ class SbmlImporter:
     ):
         from .conserved_moieties2 import nullspace_by_rref, rref
         import numpy as np
+        from numpy.linalg import matrix_rank
         S = np.asarray(self.stoichiometric_matrix, dtype=float)
+        # Determine rank via SVD
+        rank = matrix_rank(S)
+        if rank == S.shape[0]:
+            return []
         kernel = nullspace_by_rref(S.T)
+        # Check dimensions - due to numerical errors, nullspace_by_rref may
+        #  fail in certain situations
+        assert kernel.shape[0] == S.shape[0] - rank
         kernel = rref(kernel)
         raw_cls = []
         for row in kernel:
