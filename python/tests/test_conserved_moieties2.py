@@ -9,12 +9,12 @@ from amici.conserved_moieties2 import rref, pivots, nullspace_by_rref
 
 def test_rref():
     rng = np.random.default_rng(12345)
-    for rows, cols in rng.integers(0, 10, [100, 2]):
+    for rows, cols in rng.integers(0, 10, [200, 2]):
         M = np.random.rand(rows, cols)
-        M_rref = M.copy()
-        rref(M_rref)
+        M_rref = rref(M)
         exp_rref, exp_pivots = sp.Matrix(M).rref()
         exp = np.asarray(exp_rref, dtype=float)
+        print(M)
         print(exp)
         print(M_rref)
         assert list(exp_pivots) == pivots(M_rref)

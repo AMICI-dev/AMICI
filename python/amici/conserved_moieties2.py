@@ -80,7 +80,7 @@ def pivots(mat: np.array) -> List[int]:
 def nullspace_by_rref(mat: np.array):
     """Compute basis of the nullspace of ``mat`` based on the reduced row
     echelon form"""
-    rref_mat = rref(mat.copy())
+    rref_mat = rref(mat)
     pivot_cols = pivots(rref_mat)
     rows, cols = mat.shape
 
