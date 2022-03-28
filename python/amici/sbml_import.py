@@ -1503,6 +1503,24 @@ class SbmlImporter:
                             coefficients),)
         return raw_cls
 
+    def _get_conservation_laws_new(
+            self,
+            ode_model: ODEModel,
+    ):
+        from .conserved_moieties2 import nullspace_by_rref, rref
+        import numpy as np
+        S = np.asarray(self.stoichiometric_matrix, dtype=float)
+        kernel = nullspace_by_rref(S.T)
+        kernel = rref(kernel)
+        raw_cls = []
+        for row in kernel:
+            state_idxs = [i for i, coeff in enumerate(row) if coeff]
+            coefficients = [coeff for coeff in row if coeff]
+            print(state_idxs, coefficients)
+            raw_cls.append((state_idxs[0], state_idxs, coefficients),)
+
+        return raw_cls
+
     def _add_conservation_for_non_constant_species(
         self,
         ode_model: ODEModel,
@@ -1519,7 +1537,9 @@ class SbmlImporter:
         """
         # indices of retained species
         species_solver = list(range(ode_model.num_states_rdata()))
-        raw_cls = self._get_conservation_laws_demartino(ode_model)
+        # raw_cls = self._get_conservation_laws_demartino(ode_model)
+        raw_cls = self._get_conservation_laws_new(ode_model)
+
         species_to_be_removed = {x[0] for x in raw_cls}
 
         # keep new conservations laws separate until we know everything worked
