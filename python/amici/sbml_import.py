@@ -1557,6 +1557,9 @@ class SbmlImporter:
         species_solver = list(range(ode_model.num_states_rdata()))
         # raw_cls = self._get_conservation_laws_demartino(ode_model)
         raw_cls = self._get_conservation_laws_new(ode_model)
+        if not raw_cls:
+            # no conservation laws identified
+            return species_solver
 
         species_to_be_removed = {x[0] for x in raw_cls}
 
