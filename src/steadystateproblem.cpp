@@ -248,7 +248,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(const Solver &solver,
      We therefore compute the integral over xB first and then do a
      matrix-vector multiplication */
 
-    auto sensitivityMode = model->getSteadyStateSensitivityMode();
+    auto sensitivityMode = model.getSteadyStateSensitivityMode();
 
     /* Try to compute the analytical solution for quadrature algebraically */
     if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly 
