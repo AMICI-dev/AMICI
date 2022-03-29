@@ -26,13 +26,14 @@ Solver::Solver(const Solver &other)
       newton_maxsteps_(other.newton_maxsteps_),
       newton_damping_factor_mode_(other.newton_damping_factor_mode_),
       newton_damping_factor_lower_bound_(other.newton_damping_factor_lower_bound_),
-      requires_preequilibration_(other.requires_preequilibration_),
       linsol_(other.linsol_), atol_(other.atol_), rtol_(other.rtol_),
       atol_fsa_(other.atol_fsa_), rtol_fsa_(other.rtol_fsa_),
       atolB_(other.atolB_), rtolB_(other.rtolB_), quad_atol_(other.quad_atol_),
       quad_rtol_(other.quad_rtol_), ss_atol_(other.ss_atol_),
       ss_rtol_(other.ss_rtol_), ss_atol_sensi_(other.ss_atol_sensi_),
       ss_rtol_sensi_(other.ss_rtol_sensi_), rdata_mode_(other.rdata_mode_),
+      newton_step_steadystate_conv_(other.newton_step_steadystate_conv_),
+      check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_),
       maxstepsB_(other.maxstepsB_), sensi_(other.sensi_)
 {}
 
@@ -223,7 +224,7 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
     model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
 
-void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
+void Solver::updateAndReinitStatesAndSensitivities(Model *model) const {
     model->fx0_fixedParameters(x_);
     reInit(t_, x_, dx_);
 
@@ -491,7 +492,7 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.newton_maxsteps_ == b.newton_maxsteps_) &&
            (a.newton_damping_factor_mode_ == b.newton_damping_factor_mode_) &&
            (a.newton_damping_factor_lower_bound_ == b.newton_damping_factor_lower_bound_) &&
-           (a.requires_preequilibration_ == b.requires_preequilibration_) && (a.ism_ == b.ism_) &&
+           (a.ism_ == b.ism_) &&
            (a.linsol_ == b.linsol_) && (a.atol_ == b.atol_) && (a.rtol_ == b.rtol_) &&
            (a.maxsteps_ == b.maxsteps_) && (a.maxstepsB_ == b.maxstepsB_) &&
            (a.quad_atol_ == b.quad_atol_) && (a.quad_rtol_ == b.quad_rtol_) &&
@@ -511,6 +512,8 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.rtolB_ == b.rtolB_ || (isNaN(a.rtolB_) && isNaN(b.rtolB_))) &&
            (a.atolB_ == b.atolB_ || (isNaN(a.atolB_) && isNaN(b.atolB_))) &&
            (a.sensi_ == b.sensi_) && (a.sensi_meth_ == b.sensi_meth_) &&
+           (a.newton_step_steadystate_conv_ == b.newton_step_steadystate_conv_) &&
+           (a.check_sensi_steadystate_conv_ == b.check_sensi_steadystate_conv_) &&
            (a.rdata_mode_ == b.rdata_mode_);
 }
 
@@ -625,12 +628,6 @@ void Solver::setNewtonMaxSteps(const int newton_maxsteps) {
     if (newton_maxsteps < 0)
         throw AmiException("newton_maxsteps must be a non-negative number");
     newton_maxsteps_ = newton_maxsteps;
-}
-
-bool Solver::getPreequilibration() const { return requires_preequilibration_; }
-
-void Solver::setPreequilibration(const bool require_preequilibration) {
-    requires_preequilibration_ = require_preequilibration;
 }
 
 NewtonDampingFactorMode Solver::getNewtonDampingFactorMode() const { return newton_damping_factor_mode_; }

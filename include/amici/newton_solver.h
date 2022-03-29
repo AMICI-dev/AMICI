@@ -29,7 +29,7 @@ class NewtonSolver {
      *
      * @param model pointer to the model object
      */
-    explicit NewtonSolver(const Model *model);
+    explicit NewtonSolver(const Model &model);
 
     /**
      * @brief Factory method to create a NewtonSolver based on linsolType
@@ -39,21 +39,17 @@ class NewtonSolver {
      * @return solver NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver>
-    getSolver(const Solver &simulationSolver, const Model *model);
+    getSolver(const Solver &simulationSolver, const Model &model);
 
     /**
      * @brief Computes the solution of one Newton iteration
      *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
      * @param delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    void getStep(int ntry, int nnewt, AmiVector &delta, Model *model,
-                 const SimulationState &state);
+    void getStep(AmiVector &delta, Model &model, const SimulationState &state);
 
     /**
      * @brief Computes steady state sensitivities
@@ -62,33 +58,27 @@ class NewtonSolver {
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    void computeNewtonSensis(AmiVectorArray &sx, Model *model,
+    void computeNewtonSensis(AmiVectorArray &sx, Model &model,
                              const SimulationState &state);
 
     /**
      * @brief Writes the Jacobian for the Newton iteration and passes it to the
      * linear solver
      *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    virtual void prepareLinearSystem(int ntry, int nnewt, Model *model,
+    virtual void prepareLinearSystem(Model &model,
                                      const SimulationState &state) = 0;
 
     /**
      * Writes the Jacobian (JB) for the Newton iteration and passes it to the
      * linear solver
      *
-     * @param ntry integer newton_try integer start number of Newton solver
-     * (1 or 2)
-     * @param nnewt integer number of current Newton step
      * @param model pointer to the model instance
      * @param state current simulation state
      */
-    virtual void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+    virtual void prepareLinearSystemB(Model &model,
                                       const SimulationState &state) = 0;
 
     /**
@@ -113,7 +103,7 @@ class NewtonSolver {
      * @return boolean indicating whether the linear system is singular
      * (condition number < 1/machine precision)
      */
-    virtual bool is_singular(Model *model,
+    virtual bool is_singular(Model &model,
                              const SimulationState &state) const = 0;
 
     virtual ~NewtonSolver() = default;
@@ -143,7 +133,7 @@ class NewtonSolverDense : public NewtonSolver {
      *
      * @param model model instance that provides problem dimensions
      */
-    explicit NewtonSolverDense(const Model *model);
+    explicit NewtonSolverDense(const Model &model);
 
     NewtonSolverDense(const NewtonSolverDense &) = delete;
 
@@ -153,15 +143,15 @@ class NewtonSolverDense : public NewtonSolver {
 
     void solveLinearSystem(AmiVector &rhs) override;
 
-    void prepareLinearSystem(int ntry, int nnewt, Model *model,
+    void prepareLinearSystem(Model &model,
                              const SimulationState &state) override;
 
-    void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+    void prepareLinearSystemB(Model &model,
                               const SimulationState &state) override;
 
     void reinitialize() override;
 
-    bool is_singular(Model *model, const SimulationState &state) const override;
+    bool is_singular(Model &model, const SimulationState &state) const override;
 
   private:
     /** temporary storage of Jacobian */
@@ -184,7 +174,7 @@ class NewtonSolverSparse : public NewtonSolver {
      *
      * @param model model instance that provides problem dimensions
      */
-    explicit NewtonSolverSparse(const Model *model);
+    explicit NewtonSolverSparse(const Model &model);
 
     NewtonSolverSparse(const NewtonSolverSparse &) = delete;
 
@@ -194,13 +184,13 @@ class NewtonSolverSparse : public NewtonSolver {
 
     void solveLinearSystem(AmiVector &rhs) override;
 
-    void prepareLinearSystem(int ntry, int nnewt, Model *model,
+    void prepareLinearSystem(Model &model,
                              const SimulationState &state) override;
 
-    void prepareLinearSystemB(int ntry, int nnewt, Model *model,
+    void prepareLinearSystemB(Model &model,
                               const SimulationState &state) override;
 
-    bool is_singular(Model *model, const SimulationState &state) const override;
+    bool is_singular(Model &model, const SimulationState &state) const override;
 
     void reinitialize() override;
 

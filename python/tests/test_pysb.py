@@ -67,7 +67,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
     skip_attrs = ['ptr', 'preeq_t', 'numsteps', 'preeq_numsteps',
                   'numrhsevals', 'numerrtestfails', 'order', 'J', 'xdot',
                   'preeq_wrms', 'preeq_cpu_time', 'cpu_time',
-                  'cpu_timeB', 'w']
+                  'cpu_timeB', 'cpu_time_total', 'w']
 
     for field in rdata_pysb:
         if field in skip_attrs:

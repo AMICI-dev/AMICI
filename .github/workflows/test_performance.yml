@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - compile_without_optimization
+      - feature_1739_par_jac
 
   pull_request:
     branches:
@@ -63,7 +63,7 @@ jobs:
     # import test model
     - name: Import test model
       run: |
-        check_time.sh petab_import python tests/performance/test.py import
+        AMICI_IMPORT_NPROCS=2 check_time.sh petab_import python tests/performance/test.py import
 
     - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
       uses: actions/upload-artifact@v1

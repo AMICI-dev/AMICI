@@ -84,7 +84,11 @@ void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
 void createGroup(H5::H5File const& file,
                  std::string const& groupPath,
                  bool recursively) {
-
+#if H5_VERSION_GE(1, 10, 6)
+    H5::LinkCreatPropList lcpl;
+    lcpl.setCreateIntermediateGroup(recursively);
+    file.createGroup(groupPath.c_str(), lcpl);
+#else
     auto groupCreationPropertyList = H5P_DEFAULT;
 
     if (recursively) {
@@ -101,6 +105,7 @@ void createGroup(H5::H5File const& file,
         throw(AmiException("Failed to create group in hdf5CreateGroup: %s",
                            groupPath.c_str()));
     H5Gclose(group);
+#endif
 }
 
 std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
@@ -447,6 +452,9 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "cpu_timeB", &rdata.cpu_timeB, 1);
 
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "cpu_time_total", &rdata.cpu_time_total, 1);
+
     if (!rdata.J.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J,
                                       rdata.nx, rdata.nx);
@@ -713,17 +721,13 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_maxsteps", &ibuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getPreequilibration());
-    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_preeq", &ibuffer, 1);
-
     ibuffer = static_cast<int>(solver.getNewtonDampingFactorMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_damping_factor_mode", &ibuffer, 1);
 
     dbuffer = solver.getNewtonDampingFactorLowerBound();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
-                             "newton_damping_factor_lower_bound", &dbuffer, 1);
+                          "newton_damping_factor_lower_bound", &dbuffer, 1);
 
     ibuffer = static_cast<int>(solver.getLinearSolver());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
@@ -736,6 +740,14 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     ibuffer = static_cast<int>(solver.getReturnDataReportingMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "rdrm", &ibuffer, 1);
+    
+    ibuffer = static_cast<int>(solver.getNewtonStepSteadyStateCheck());
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "newton_step_steadystate_conv", &ibuffer, 1);
+    
+    ibuffer = static_cast<int>(solver.getSensiSteadyStateCheck());
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "check_sensi_steadystate_conv", &ibuffer, 1);
 }
 
 void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
@@ -871,11 +883,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getIntScalarAttribute(file, datasetPath, "newton_maxsteps"));
     }
 
-    if(attributeExists(file, datasetPath, "newton_preeq")) {
-        solver.setPreequilibration(
-                    getIntScalarAttribute(file, datasetPath, "newton_preeq"));
-    }
-
     if(attributeExists(file, datasetPath, "newton_damping_factor_mode")) {
         solver.setNewtonDampingFactorMode(
                     static_cast<NewtonDampingFactorMode>(
@@ -903,6 +910,16 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
         solver.setReturnDataReportingMode(
                     static_cast<RDataReporting>(
                         getIntScalarAttribute(file, datasetPath, "rdrm")));
+    }
+    
+    if(attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
+        solver.setNewtonStepSteadyStateCheck(
+                    getIntScalarAttribute(file, datasetPath, "newton_step_steadystate_conv"));
+    }
+    
+    if(attributeExists(file, datasetPath, "check_sensi_steadystate_conv")) {
+        solver.setSensiSteadyStateCheck(
+                    getIntScalarAttribute(file, datasetPath, "check_sensi_steadystate_conv"));
     }
 }
 

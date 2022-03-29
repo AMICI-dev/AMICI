@@ -106,7 +106,6 @@ class SolverSerializationTest : public ::testing::Test {
         solver.setMaxSteps(1e1);
         solver.setMaxStepsBackwardProblem(1e2);
         solver.setNewtonMaxSteps(1e3);
-        solver.setPreequilibration(true);
         solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
         solver.setStabilityLimitFlag(false);
