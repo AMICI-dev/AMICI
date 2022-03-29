@@ -288,7 +288,13 @@ class SbmlImporter:
             Conservation laws for constant species are enabled by default.
             Support for conservation laws for non-constant species is
             experimental and may be enabled by setting an environment variable
-            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to any value.
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
+            to use the algorithm proposed by De Martino et al. (2014)
+            https://doi.org/10.1371/journal.pone.0100750, or to any other value
+            to use the deterministic algorithm implemented in
+            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            run for a very long time. This has been observed for example in the
+            case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
             see :attr:`ODEModel._simplify`
