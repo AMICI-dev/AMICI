@@ -1444,7 +1444,7 @@ class SbmlImporter:
             self,
             ode_model: ODEModel,
     ) -> List[Tuple[int, List[int], List[float]]]:
-        """Identify conservation laws based on algorithm by DeMartiono et al.
+        """Identify conservation laws based on algorithm by DeMartino et al.
         (see conserved_moieties.py).
 
         :param ode_model: Model for which to compute conserved quantities
