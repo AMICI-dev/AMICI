@@ -94,10 +94,11 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 void SteadystateProblem::findSteadyState(const Solver &solver, Model &model,
                                          int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    bool turnOffNewton = solver.getSensitivityMethod() ==
-        SensitivityMethod::forward && model.getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::integrationOnly;
-
+    bool turnOffNewton = model.getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::integrationOnly && 
+        (it == -1 && solver.getSensitivityMethodPreequilibration() ==
+         SensitivityMethod::forward || solver.getSensitivityMethod() ==
+        SensitivityMethod::forward);
 
     /* First, try to run the Newton solver */
     if (!turnOffNewton)
