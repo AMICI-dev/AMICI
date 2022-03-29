@@ -94,8 +94,8 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 void SteadystateProblem::findSteadyState(const Solver &solver, Model &model,
                                          int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    bool turnOffNewton = solver->getSensitivityMethod() ==
-        SensitivityMethod::forward && model->getSteadyStateSensitivityMode() ==
+    bool turnOffNewton = solver.getSensitivityMethod() ==
+        SensitivityMethod::forward && model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly;
 
 
@@ -377,9 +377,9 @@ bool SteadystateProblem::getSensitivityFlag(const Model &model,
     bool forwardSensisAlreadyComputed =
         solver.getSensitivityOrder() >= SensitivityOrder::first &&
         steady_state_status_[1] == SteadyStateStatus::success &&
-        (model->getSteadyStateSensitivityMode() == 
+        (model.getSteadyStateSensitivityMode() ==
          SteadyStateSensitivityMode::integrationOnly || 
-         model->getSteadyStateSensitivityMode() == 
+         model.getSteadyStateSensitivityMode() ==
          SteadyStateSensitivityMode::integrateIfNewtonFails);
 
     bool simulationStartedInSteadystate =
@@ -407,9 +407,9 @@ bool SteadystateProblem::getSensitivityFlag(const Model &model,
     /* When we're creating a new solver object */
     bool needForwardSensiAtCreation = 
         needForwardSensisPreeq &&
-        (model->getSteadyStateSensitivityMode() == 
+        (model.getSteadyStateSensitivityMode() ==
          SteadyStateSensitivityMode::integrationOnly || 
-         model->getSteadyStateSensitivityMode() == 
+         model.getSteadyStateSensitivityMode() ==
          SteadyStateSensitivityMode::integrateIfNewtonFails
         );
 
