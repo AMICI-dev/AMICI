@@ -1,39 +1,40 @@
 import numpy as np
+import pytest
 import sympy as sp
-from numpy.testing import assert_almost_equal
 
 from amici.conserved_moieties2 import nullspace_by_rref, pivots, rref
 
 
-def test_rref():
-    """Create some random matrices and compare out ``rref`` to sympy"""
+def random_matrix_generator(min_dim, max_dim, count):
+    """Generate random 2D square matrix"""
     rng = np.random.default_rng(12345)
-    for rows, cols in rng.integers(0, 10, [200, 2]):
-        mat = np.random.rand(rows, cols)
-
-        mat_rref = rref(mat)
-        exp_rref, exp_pivots = sp.Matrix(mat).rref()
-        exp = np.asarray(exp_rref, dtype=float)
-        print(mat)
-        print(exp)
-        print(mat_rref)
-        assert list(exp_pivots) == pivots(mat_rref)
-        assert np.allclose(mat_rref, exp)
+    for rows, cols in rng.integers(min_dim, max_dim, [count, 2]):
+        yield np.random.rand(rows, cols)
 
 
-def test_nullspace_by_rref():
+@pytest.mark.parametrize("mat", random_matrix_generator(0, 10, 200))
+def test_rref(mat):
+    """Create some random matrices and compare output of ``rref`` and
+    ``pivots`` to that of sympy"""
+    actual_rref = rref(mat)
+    expected_rref, expected_pivots = sp.Matrix(mat).rref()
+    expected_rref = np.asarray(expected_rref, dtype=float)
+
+    assert list(expected_pivots) == pivots(actual_rref)
+    assert np.allclose(expected_rref, actual_rref)
+
+
+@pytest.mark.parametrize("mat", random_matrix_generator(0, 50, 50))
+def test_nullspace_by_rref(mat):
     """Test ``nullspace_by_rref`` on a number of random matrices and compare
     to sympy results"""
-    rng = np.random.default_rng(12345)
-    for rows, cols in rng.integers(0, 50, [50, 2]):
-        mat = np.random.rand(rows, cols)
+    actual = nullspace_by_rref(mat)
 
-        actual = nullspace_by_rref(mat)
+    if len(actual):
+        assert np.allclose(mat.dot(actual.T), 0)
 
-        if len(actual):
-            assert np.allclose(mat.dot(actual.T), 0)
+    expected = sp.Matrix(mat).nullspace()
+    expected = np.hstack(np.asarray(expected, dtype=float)).T \
+        if len(expected) else np.array([])
 
-        expected = sp.Matrix(mat).nullspace()
-        expected = np.hstack(expected).T if len(expected) else np.array([])
-
-        assert_almost_equal(actual, expected)
+    assert np.allclose(actual, expected, rtol=1e-8)
