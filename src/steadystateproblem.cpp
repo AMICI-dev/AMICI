@@ -96,8 +96,8 @@ void SteadystateProblem::findSteadyState(const Solver &solver, Model &model,
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
     bool turnOffNewton = model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly && 
-        (it == -1 && solver.getSensitivityMethodPreequilibration() ==
-         SensitivityMethod::forward || solver.getSensitivityMethod() ==
+        ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
+         SensitivityMethod::forward) || solver.getSensitivityMethod() ==
         SensitivityMethod::forward);
 
     /* First, try to run the Newton solver */
