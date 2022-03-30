@@ -5,6 +5,10 @@ Glossary
 .. glossary::
     :sorted:
 
+    BNGL
+        `BioNetGenLanguage <https://bionetgen.org>`_ is a language for
+        modular, structure-based modeling of biochemical reaction networks.
+
     CVODES
         `CVODES <https://computing.llnl.gov/projects/sundials/cvodes>`_ is a
         solver for stiff and non-stiff :term:`ODE` systems with sensitivity
@@ -46,8 +50,8 @@ Glossary
         biology models as Python code.
 
     SBML
-        `SBML <http://sbml.org/>`_ is a commonly used format for specifying
-        systems biology models.
+        The `Systems Biology Markup Language <http://sbml.org/>`_ is a
+        commonly used format for specifying systems biology models.
 
     SUNDIALS
         `SUNDIALS <https://computing.llnl.gov/projects/sundials/>`_:

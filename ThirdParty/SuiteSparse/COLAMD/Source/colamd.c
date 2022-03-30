@@ -663,6 +663,8 @@
 #define ID  SuiteSparse_long_id
 #define Int_MAX SuiteSparse_long_max
 
+#define UnsignedInt SuiteSparse_unsigned_long
+
 #define COLAMD_recommended colamd_l_recommended
 #define COLAMD_set_defaults colamd_l_set_defaults
 #define COLAMD_MAIN colamd_l
@@ -675,6 +677,8 @@
 #define Int int
 #define ID "%d"
 #define Int_MAX INT_MAX
+
+#define UnsignedInt unsigned int
 
 #define COLAMD_recommended colamd_recommended
 #define COLAMD_set_defaults colamd_set_defaults
@@ -2193,7 +2197,7 @@ PRIVATE Int find_ordering	/* return the number of garbage collections */
     Int col ;			/* a column index */
     Int max_score ;		/* maximum possible score */
     Int cur_score ;		/* score of current column */
-    unsigned Int hash ;		/* hash value for supernode detection */
+    UnsignedInt hash ;		/* hash value for supernode detection */
     Int head_column ;		/* head of hash bucket */
     Int first_col ;		/* first column in hash bucket */
     Int tag_mark ;		/* marker value for mark array */

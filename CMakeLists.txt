@@ -201,6 +201,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC ${SUITESPARSE_LIBRARIES}
     PUBLIC ${HDF5_LIBRARIES}
     PUBLIC ${BLAS_LIBRARIES}
+    PUBLIC ${CMAKE_DL_LIBS}
     )
 
 # Create targets to make the sources show up in IDEs for convenience

@@ -4,33 +4,34 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
-
-
-import sympy as sp
-import libsbml as sbml
-import re
-import math
-import itertools as itt
-import warnings
-import logging
 import copy
-from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional,
-)
+import itertools as itt
+import logging
+import math
+import os
+import re
+import warnings
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
 
-from .import_utils import (
-    smart_subs, smart_subs_dict, toposort_symbols,
-    _get_str_symbol_identifiers, noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation, _parse_special_functions,
-    _check_unsupported_functions,
-)
-from .ode_export import (
-    ODEExporter, ODEModel, generate_measurement_symbol,
-    symbol_with_assumptions
-)
-from .constants import SymbolId
-from .logging import get_logger, log_execution_time, set_log_level
+import libsbml as sbml
+import sympy as sp
+
 from . import has_clibs
+from .conserved_moieties import compute_moiety_conservation_laws
+from .constants import SymbolId
+from .import_utils import (CircularDependencyError,
+                           _check_unsupported_functions,
+                           _get_str_symbol_identifiers,
+                           _parse_special_functions,
+                           generate_measurement_symbol,
+                           noise_distribution_to_cost_function,
+                           noise_distribution_to_observable_transformation,
+                           smart_subs, smart_subs_dict, toposort_symbols,
+                           RESERVED_SYMBOLS)
+from .logging import get_logger, log_execution_time, set_log_level
+from .ode_export import (
+    ODEExporter, ODEModel, symbol_with_assumptions
+)
 
 
 class SBMLException(Exception):
@@ -218,6 +219,7 @@ class SbmlImporter:
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
                    simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+                   cache_simplify: bool = False,
                    log_as_log10: bool = True,
                    generate_sensitivity_code: bool = True,
                    **kwargs) -> None:
@@ -282,11 +284,18 @@ class SbmlImporter:
             if set to ``True``, conservation laws are automatically computed
             and applied such that the state-jacobian of the ODE
             right-hand-side has full rank. This option should be set to
-            ``True`` when using the newton algorithm to compute steadystate
+            ``True`` when using the Newton algorithm to compute steadystate
             sensitivities.
+            Conservation laws for constant species are enabled by default.
+            Support for conservation laws for non-constant species is
+            experimental and may be enabled by setting an environment variable
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to any value.
 
         :param simplify:
             see :attr:`ODEModel._simplify`
+
+        :param cache_simplify:
+                see :func:`amici.ODEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
@@ -361,7 +370,11 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._process_time()
 
-        ode_model = ODEModel(verbose=verbose, simplify=simplify)
+        ode_model = ODEModel(
+            verbose=verbose,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+        )
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
@@ -1201,6 +1214,10 @@ class SbmlImporter:
         # add user-provided observables or make all species, and compartments
         # with assignment rules, observable
         if observables:
+            # gather local symbols before parsing observable and sigma formulas
+            for obs in observables.keys():
+                self.add_local_symbol(obs, symbol_with_assumptions(obs))
+
             self.symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(obs): {
                     'name': definition.get('name', f'y{iobs}'),
@@ -1216,6 +1233,16 @@ class SbmlImporter:
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
+            # check for nesting of observables (unsupported)
+            observable_syms = set(self.symbols[SymbolId.OBSERVABLE].keys())
+            for obs in self.symbols[SymbolId.OBSERVABLE].values():
+                if any(sym in observable_syms
+                       for sym in obs['value'].free_symbols):
+                    raise ValueError(
+                        "Nested observables are not supported, "
+                        f"but observable `{obs['name']} = {obs['value']}` "
+                        "references another observable."
+                    )
         elif observables is None:
             self._generate_default_observables()
 
@@ -1385,21 +1412,24 @@ class SbmlImporter:
 
         :param ode_model:
             ODEModel object with basic definitions
-
-        :returns volume_updates_solver:
-            List (according to reduced stoichiometry) with updates for the
-            stoichiometric matrix accounting for compartment volumes
         """
         conservation_laws = []
 
-        # So far, only conservation laws for constant species are supported
+        # Create conservation laws for constant species
         species_solver = _add_conservation_for_constant_species(
             ode_model, conservation_laws
         )
+        # Non-constant species processed here
+        if "AMICI_EXPERIMENTAL_SBML_NONCONST_CLS" in os.environ \
+                or "GITHUB_ACTIONS" in os.environ:
+            species_solver = list(set(
+                self._add_conservation_for_non_constant_species(
+                    ode_model, conservation_laws)) & set(species_solver))
 
         # Check, whether species_solver is empty now. As currently, AMICI
-        # cannot handle ODEs without species, CLs must switched in this case
-        if len(species_solver) == 0:
+        # cannot handle ODEs without species, CLs must be switched off in this
+        # case
+        if not len(species_solver):
             conservation_laws = []
             species_solver = list(range(ode_model.num_states_rdata()))
 
@@ -1410,6 +1440,141 @@ class SbmlImporter:
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
+
+    def _add_conservation_for_non_constant_species(
+        self,
+        ode_model: ODEModel,
+        conservation_laws: List[ConservationLaw]
+    ) -> List[int]:
+        """Add non-constant species to conservation laws
+
+        :param ode_model:
+            ODEModel object with basic definitions
+        :param conservation_laws:
+            List of already known conservation laws
+        :returns:
+            List of species indices which later remain in the ODE solver
+        """
+        # indices of retained species
+        species_solver = list(range(ode_model.num_states_rdata()))
+
+        try:
+            stoichiometric_list = [
+                float(entry) for entry in self.stoichiometric_matrix.T.flat()
+            ]
+        except TypeError:
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
+            warnings.warn("Conservation laws for non-constant species in "
+                          "combination with parameterized stoichiometric "
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
+            return species_solver
+
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
+            return species_solver
+
+        cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
+            stoichiometric_list, *self.stoichiometric_matrix.shape,
+            rng_seed=32,
+            species_names=[str(x.get_id()) for x in ode_model._states]
+        )
+
+        # Sparsify conserved quantities
+        #  ``compute_moiety_conservation_laws`` identifies conserved quantities
+        #  with positive coefficients. The resulting system is, therefore,
+        #  often non-sparse. This leads to circular dependencies in the
+        #  state expressions of eliminated states. The identified conserved
+        #  quantities are linearly independent. We can construct `A` as in
+        #  `A * x0 = total_cl` and bring it to reduced row echelon form. The
+        #  pivot species are the ones to be eliminated. The resulting state
+        #  expressions are sparse and void of any circular dependencies.
+        A = sp.zeros(len(cls_coefficients), len(ode_model._states))
+        for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
+                                                      cls_coefficients)):
+            for i, c in zip(cl, coefficients):
+                A[i_cl, i] = sp.Rational(c)
+        rref, pivots = A.rref()
+        species_to_be_removed = set(pivots)
+
+        # keep new conservations laws separate until we know everything worked
+        new_conservation_laws = []
+        # previously removed constant species
+        eliminated_state_ids = {cl['state'] for cl in conservation_laws}
+
+        all_state_ids = [x.get_id() for x in ode_model._states]
+        all_compartment_sizes = [
+            self.compartments[
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']]
+            if not self.symbols[SymbolId.SPECIES][state_id]['amount']
+            else sp.Integer(1)
+            for state_id in all_state_ids
+        ]
+
+        # iterate over list of conservation laws, create symbolic expressions,
+        for i_cl, target_state_model_idx in enumerate(pivots):
+            if all_state_ids[target_state_model_idx] in eliminated_state_ids:
+                # constants state, already eliminated
+                continue
+            # collect values for species engaged in the current CL
+            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
+                          if coeff]
+            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
+            state_ids = [all_state_ids[i_state] for i_state in state_idxs]
+            compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
+
+            target_state_id = all_state_ids[target_state_model_idx]
+            target_compartment = all_compartment_sizes[target_state_model_idx]
+            target_state_coeff = coefficients[0]
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
+
+            # \sum coeff * state * volume
+            abundance_expr = sp.Add(*[
+                state_id * coeff * compartment
+                for state_id, coeff, compartment
+                in zip(state_ids, coefficients, compartment_sizes)
+            ])
+
+            new_conservation_laws.append({
+                'state': target_state_id,
+                'total_abundance': total_abundance,
+                'state_expr':
+                    (total_abundance - (abundance_expr
+                                        - target_state_id * target_compartment
+                                        * target_state_coeff))
+                    / target_state_coeff / target_compartment,
+                'abundance_expr': abundance_expr
+            })
+            species_to_be_removed.add(target_state_model_idx)
+
+        # replace eliminated states by their state expressions, taking care of
+        #  any (non-cyclic) dependencies
+        state_exprs = {
+            cl['state']: cl['state_expr']
+            for cl in itt.chain(conservation_laws, new_conservation_laws)
+        }
+        try:
+            sorted_state_exprs = toposort_symbols(state_exprs)
+        except CircularDependencyError as e:
+            raise AssertionError(
+                "Circular dependency detected in conservation laws. "
+                "This should not have happened."
+            ) from e
+
+        for cl in new_conservation_laws:
+            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
+                                               sorted_state_exprs)
+
+        conservation_laws.extend(new_conservation_laws)
+
+        # list of species that are not determined by conservation laws
+        return [ix for ix in species_solver if ix not in species_to_be_removed]
 
     def _replace_compartments_with_volumes(self):
         """
@@ -1527,9 +1692,7 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't',
-                            'AMICI_EMPTY_BOLUS']
-        for sym in reserved_symbols:
+        for sym in RESERVED_SYMBOLS:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
             self._replace_in_all_expressions(old_symbol, new_symbol,
