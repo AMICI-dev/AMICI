@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import sympy as sp
 
-from amici.conserved_moieties2 import nullspace_by_rref, pivots, rref
+from amici.conserved_quantities_rref import nullspace_by_rref, pivots, rref
 
 
 def random_matrix_generator(min_dim, max_dim, count):

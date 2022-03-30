@@ -1460,7 +1460,8 @@ class SbmlImporter:
             quantity (including the eliminated one)
             (2) coefficients for the species in (1)
         """
-        from .conserved_moieties import compute_moiety_conservation_laws
+        from .conserved_quantities_demartino \
+            import compute_moiety_conservation_laws
 
         try:
             stoichiometric_list = [
@@ -1516,7 +1517,7 @@ class SbmlImporter:
                             coefficients),)
         return raw_cls
 
-    def _get_conservation_laws_new(
+    def _get_conservation_laws_rref(
             self
     ) -> List[Tuple[int, List[int], List[float]]]:
         """Identify conservation laws based on left nullspace of the
@@ -1530,7 +1531,7 @@ class SbmlImporter:
         """
         import numpy as np
         from numpy.linalg import matrix_rank
-        from .conserved_moieties2 import nullspace_by_rref, rref
+        from .conserved_quantities_rref import nullspace_by_rref, rref
 
         try:
             S = np.asarray(self.stoichiometric_matrix, dtype=float)
@@ -1597,7 +1598,7 @@ class SbmlImporter:
         if algorithm.lower() == "demartino":
             raw_cls = self._get_conservation_laws_demartino(ode_model)
         else:
-            raw_cls = self._get_conservation_laws_new()
+            raw_cls = self._get_conservation_laws_rref()
 
         if not raw_cls:
             # no conservation laws identified

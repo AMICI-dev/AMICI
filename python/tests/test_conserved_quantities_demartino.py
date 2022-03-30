@@ -6,9 +6,11 @@ import numpy as np
 import pytest
 import sympy as sp
 
-from amici.conserved_moieties import (_fill, _kernel,
-                                      compute_moiety_conservation_laws,
-                                      _output as output)
+from amici.conserved_quantities_demartino import (
+    _fill, _kernel,
+    _output as output,
+    compute_moiety_conservation_laws
+)
 from amici.logging import get_logger, log_execution_time
 
 logger = get_logger(__name__)
