@@ -225,7 +225,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     Only one has to succeed."""
     max_tries = 5
     # <5s on modern hardware, but leave some slack
-    max_time_seconds = 30 if "GITHUB_ACTIONS" in os.environ else 10
+    max_time_seconds = 40 if "GITHUB_ACTIONS" in os.environ else 10
 
     runtime = np.Inf
 
