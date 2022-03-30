@@ -202,6 +202,12 @@ def get_model_settings(
     """
     settings = {}
     for setting in model_instance_settings:
+        if setting == 'InitialStates' and not model.hasCustomInitialStates():
+            continue
+        if setting == 'InitialStateSensitivities' \
+               and not model.hasCustomInitialStateSensitivities():
+            continue
+
         getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
         settings[setting] = getattr(model, getter)()
         # TODO `amici.Model.getParameterScale` returns a SWIG object instead
