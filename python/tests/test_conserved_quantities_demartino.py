@@ -6,9 +6,11 @@ import numpy as np
 import pytest
 import sympy as sp
 
-from amici.conserved_moieties import (_fill, _kernel,
-                                      compute_moiety_conservation_laws,
-                                      _output as output)
+from amici.conserved_quantities_demartino import (
+    _fill, _kernel,
+    _output as output,
+    compute_moiety_conservation_laws
+)
 from amici.logging import get_logger, log_execution_time
 
 logger = get_logger(__name__)
@@ -225,7 +227,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     Only one has to succeed."""
     max_tries = 5
     # <5s on modern hardware, but leave some slack
-    max_time_seconds = 30 if "GITHUB_ACTIONS" in os.environ else 10
+    max_time_seconds = 40 if "GITHUB_ACTIONS" in os.environ else 10
 
     runtime = np.Inf
 
