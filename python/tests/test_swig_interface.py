@@ -377,6 +377,9 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     amici.set_model_settings(model, settings)
     assert not model.hasCustomInitialStates()
     assert not model.hasCustomInitialStateSensitivities()
+    # ensure everything was set correctly, and there wasn't any problem
+    #  due to, e.g. interactions of different setters
+    assert settings == amici.get_model_settings(model)
 
     # ensure custom (s)x0 is restored
     model.setInitialStates(model.getInitialStates())
@@ -391,4 +394,5 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert model2.hasCustomInitialStates()
     assert model2.hasCustomInitialStateSensitivities()
     assert model2.getInitialStateSensitivities() == sx0
+    assert settings == amici.get_model_settings(model2)
 
