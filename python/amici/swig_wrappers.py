@@ -172,6 +172,10 @@ def writeSolverSettingsToHDF5(
 # is a tuple where the first and second elements are the getter and setter
 # methods, respectively.
 model_instance_settings = [
+    # `setParameter{List,Scale}` will clear initial state sensitivities, so
+    #  `setParameter{List,Scale}` has to be called first.
+    'ParameterList',
+    'ParameterScale',  # getter returns a SWIG object
     'AddSigmaResiduals',
     'AlwaysCheckFinite',
     'FixedParameters',
@@ -180,8 +184,6 @@ model_instance_settings = [
     'MinimumSigmaResiduals',
     ('nMaxEvent', 'setNMaxEvent'),
     'Parameters',
-    'ParameterList',
-    'ParameterScale',  # getter returns a SWIG object
     'ReinitializationStateIdxs',
     'ReinitializeFixedParameterInitialStates',
     'StateIsNonNegative',
