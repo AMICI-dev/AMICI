@@ -143,7 +143,6 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         if name != 'ReinitializeFixedParameterInitialStates'
     )
 
-
     # All default values are as expected.
     for name, (default, custom) in model_instance_settings.items():
         getter = name[i_getter] if isinstance(name, tuple) else f'get{name}'
@@ -361,3 +360,25 @@ def set_val(obj, attr, val):
         )
     else:
         setattr(obj, attr, val)
+
+
+def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
+    """Check that settings are applied in the correct order, and only if
+    required"""
+    model = pysb_example_presimulation_module.getModel()
+
+    # ensure no-custom-(s)x0 is preserved
+    assert not model.hasCustomInitialStates()
+    assert not model.hasCustomInitialStateSensitivities()
+    amici.set_model_settings(model, amici.get_model_settings(model))
+    assert not model.hasCustomInitialStates()
+    assert not model.hasCustomInitialStateSensitivities()
+
+    # ensure custom (s)x0 is preserved
+    model.setInitialStates(model.getInitialStates())
+    model.setInitialStateSensitivities(model.getInitialStateSensitivities())
+    assert model.hasCustomInitialStates()
+    assert model.hasCustomInitialStateSensitivities()
+    amici.set_model_settings(model, amici.get_model_settings(model))
+    assert model.hasCustomInitialStates()
+    assert model.hasCustomInitialStateSensitivities()
