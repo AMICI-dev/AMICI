@@ -205,9 +205,11 @@ def get_model_settings(
     settings = {}
     for setting in model_instance_settings:
         if setting == 'InitialStates' and not model.hasCustomInitialStates():
+            settings[setting] = []
             continue
         if setting == 'InitialStateSensitivities' \
                and not model.hasCustomInitialStateSensitivities():
+            settings[setting] = []
             continue
 
         getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
