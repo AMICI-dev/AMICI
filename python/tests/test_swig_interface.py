@@ -75,7 +75,7 @@ model_instance_settings0 = {
         (10.0, 9.0, 1.0, 0.0, 0.0, 0.0),
         tuple([.1]*6),
     ],
-    'InitialStateSensitivities': [
+    ('getInitialStateSensitivities', 'setUnscaledInitialStateSensitivities'): [
         tuple([1.0] + [0.0]*35),
         tuple([.1]*36),
     ],
@@ -164,8 +164,15 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     # The new model has the default settings.
     model_default_settings = amici.get_model_settings(model)
     for name in model_instance_settings:
-        assert model_default_settings[name] == \
-            model_instance_settings[name][i_default]
+        if (name == "InitialStates" and not model.hasCustomInitialStates())\
+                or (name == ('getInitialStateSensitivities',
+                             'setUnscaledInitialStateSensitivities')
+                    and not model.hasCustomInitialStateSensitivities()):
+            # Here the expected value differs from what the getter would return
+            assert model_default_settings[name] == []
+        else:
+            assert model_default_settings[name] == \
+                model_instance_settings[name][i_default], name
 
     # The grouped setter method works.
     custom_settings_not_none = {
@@ -298,7 +305,7 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         'setParameterByName',
         'setParametersByIdRegex',
         'setParametersByNameRegex',
-        'setUnscaledInitialStateSensitivities',
+        'setInitialStateSensitivities',
     ]
     from amici.swig_wrappers import model_instance_settings
     handled = [
