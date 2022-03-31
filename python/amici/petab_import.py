@@ -85,7 +85,8 @@ def get_fixed_parameters(
         # remove overridden parameters (`object`-type columns)
         fixed_parameters = [p for p in fixed_parameters
                             if condition_df[p].dtype != 'O'
-                            and sbml_model.getParameter(p) is not None]
+                            and sbml_model.getParameter(p) is not None
+                            and sbml_model.getRuleByVariable(p) is None]
         # must be unique
         if len(fixed_parameters) != len(set(fixed_parameters)):
             raise AssertionError(
@@ -514,12 +515,11 @@ def import_model_sbml(
     #  create a new parameter initial_${startOrCompartmentID}.
     #  feels dirty and should be changed (see also #924)
     # <BeginWorkAround>
+
     initial_states = [col for col in condition_df
-                      if sbml_model.getSpecies(col) is not None]
-    initial_sizes = [col for col in condition_df
-                     if sbml_model.getCompartment(col) is not None]
+                      if element_is_state(sbml_model, col)]
     fixed_parameters = []
-    if len(initial_states) or len(initial_sizes):
+    if len(initial_states):
         # add preequilibration indicator variable
         # NOTE: would only be required if we actually have preequilibration
         #  adding it anyways. can be optimized-out later
@@ -536,8 +536,8 @@ def import_model_sbml(
         logger.debug("Adding preequilibration indicator "
                      f"constant {PREEQ_INDICATOR_ID}")
     logger.debug("Adding initial assignments for "
-                 f"{initial_sizes + initial_states}")
-    for assignee_id in chain(initial_sizes, initial_states):
+                 f"{initial_states}")
+    for assignee_id in (initial_states):
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
         for init_par_id in [init_par_id_preeq, init_par_id_sim]:
@@ -689,6 +689,20 @@ def show_model_info(sbml_model: 'libsbml.Model'):
     logger.info('Global parameters: '
                 + str(len(sbml_model.getListOfParameters())))
     logger.info(f'Reactions: {len(sbml_model.getListOfReactions())}')
+
+
+def element_is_state(sbml_model: libsbml.Model, sbml_id: str) -> bool:
+    """Does the element with ID `sbml_id` correspond to a state variable?
+    """
+    if sbml_model.getCompartment(sbml_id) is not None:
+        return True
+    if sbml_model.getSpecies(sbml_id) is not None:
+        return True
+    if (rule := sbml_model.getRuleByVariable(sbml_id)) is not None \
+            and rule.getTypeCode() == libsbml.SBML_RATE_RULE:
+        return True
+
+    return False
 
 
 def _parse_cli_args():

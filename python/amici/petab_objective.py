@@ -22,7 +22,7 @@ from petab.C import *  # noqa: F403
 
 from . import AmiciModel, AmiciExpData
 from .logging import get_logger, log_execution_time
-from .petab_import import PREEQ_INDICATOR_ID
+from .petab_import import PREEQ_INDICATOR_ID, element_is_state
 from .parameter_mapping import (
     fill_in_parameters, ParameterMappingForCondition, ParameterMapping)
 
@@ -337,11 +337,11 @@ def create_parameter_mapping_for_condition(
     # ExpData.x0, but in the case of preequilibration this would not allow for
     # resetting initial states.
 
-    species_in_condition_table = [
+    states_in_condition_table = [
         col for col in petab_problem.condition_df
-        if petab_problem.sbml_model.getSpecies(col) is not None]
-
-    if species_in_condition_table:
+        if element_is_state(petab_problem.sbml_model, col)
+    ]
+    if states_in_condition_table:
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
         # that it was not added by the user with a different meaning...)
@@ -352,14 +352,24 @@ def create_parameter_mapping_for_condition(
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-        def _set_initial_concentration(condition_id, species_id, init_par_id,
-                                       par_map, scale_map):
+        def _set_initial_state(condition_id, element_id, init_par_id,
+                               par_map, scale_map):
             value = petab.to_float_if_float(
-                petab_problem.condition_df.loc[condition_id, species_id])
+                petab_problem.condition_df.loc[condition_id, element_id])
             if pd.isna(value):
-                value = get_species_initial(
-                    petab_problem.sbml_model.getSpecies(species_id)
-                )
+                element = petab_problem.sbml_model.getElementBySId(element_id)
+                type_code = element.getTypeCode()
+                if type_code == libsbml.SBML_SPECIES:
+                    value = get_species_initial(element)
+                elif type_code == libsbml.SBML_PARAMETER:
+                    value = element.getValue()
+                elif type_code == libsbml.SBML_COMPARTMENT:
+                    value = element.getSize()
+                else:
+                    raise NotImplementedError(
+                        f"Don't know what how to handle {element_id} in "
+                        "condition table.")
+
                 try:
                     value = float(value)
                 except (ValueError, TypeError):
@@ -368,11 +378,11 @@ def create_parameter_mapping_for_condition(
                         value = sp.nsimplify(value)
                     else:
                         raise NotImplementedError(
-                            "Cannot handle non-trivial expressions for "
-                            f"species initial for {species_id}: {value}")
+                            "Cannot handle non-trivial initial state "
+                            f"expression for {element_id}: {value}")
                     # this should be a parameter ID
                     value = str(value)
-                logger.debug(f'The species {species_id} has no initial value '
+                logger.debug(f'The species {element_id} has no initial value '
                              f'defined for the condition {condition_id} in '
                              'the PEtab conditions table. The initial value is '
                              f'now set to {value}, which is the initial value '
@@ -386,13 +396,13 @@ def create_parameter_mapping_for_condition(
                 scale_map[init_par_id] = petab_problem.parameter_df.loc[
                     value, PARAMETER_SCALE]
 
-        for species_id in species_in_condition_table:
+        for element_id in states_in_condition_table:
             # for preequilibration
-            init_par_id = f'initial_{species_id}_preeq'
+            init_par_id = f'initial_{element_id}_preeq'
             if condition.get(PREEQUILIBRATION_CONDITION_ID):
                 condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
-                _set_initial_concentration(
-                    condition_id, species_id, init_par_id, condition_map_preeq,
+                _set_initial_state(
+                    condition_id, element_id, init_par_id, condition_map_preeq,
                     condition_scale_map_preeq)
             else:
                 # need to set dummy value for preeq parameter anyways, as it
@@ -403,9 +413,9 @@ def create_parameter_mapping_for_condition(
 
             # for simulation
             condition_id = condition[SIMULATION_CONDITION_ID]
-            init_par_id = f'initial_{species_id}_sim'
-            _set_initial_concentration(
-                condition_id, species_id, init_par_id, condition_map_sim,
+            init_par_id = f'initial_{element_id}_sim'
+            _set_initial_state(
+                condition_id, element_id, init_par_id, condition_map_sim,
                 condition_scale_map_sim)
 
     ##########################################################################
@@ -547,22 +557,22 @@ def create_edata_for_condition(
         edata.id += "+" + condition.get(PREEQUILIBRATION_CONDITION_ID)
     ##########################################################################
     # enable initial parameters reinitialization
-    species_in_condition_table = [
+    states_in_condition_table = [
         col for col in petab_problem.condition_df
         if not pd.isna(petab_problem.condition_df.loc[
                            condition[SIMULATION_CONDITION_ID], col])
-           and petab_problem.sbml_model.getSpecies(col) is not None
+           and element_is_state(petab_problem.sbml_model, col)
     ]
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
-            and species_in_condition_table:
+            and states_in_condition_table:
         state_ids = amici_model.getStateIds()
         state_idx_reinitalization = [state_ids.index(s)
-                                     for s in species_in_condition_table]
+                                     for s in states_in_condition_table]
         edata.reinitialization_state_idxs_sim = state_idx_reinitalization
         logger.debug("Enabling state reinitialization for condition "
                      f"{condition.get(PREEQUILIBRATION_CONDITION_ID, '')} - "
                      f"{condition.get(SIMULATION_CONDITION_ID)} "
-                     f"{species_in_condition_table}")
+                     f"{states_in_condition_table}")
 
     ##########################################################################
     # timepoints
