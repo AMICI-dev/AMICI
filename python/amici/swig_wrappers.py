@@ -180,7 +180,7 @@ model_instance_settings = [
     'AlwaysCheckFinite',
     'FixedParameters',
     'InitialStates',
-    'InitialStateSensitivities',
+    ('getInitialStateSensitivities', 'setUnscaledInitialStateSensitivities'),
     'MinimumSigmaResiduals',
     ('nMaxEvent', 'setNMaxEvent'),
     'Parameters',
@@ -204,15 +204,16 @@ def get_model_settings(
     """
     settings = {}
     for setting in model_instance_settings:
-        if setting == 'InitialStates' and not model.hasCustomInitialStates():
+        getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
+
+        if getter == 'getInitialStates' and not model.hasCustomInitialStates():
             settings[setting] = []
             continue
-        if setting == 'InitialStateSensitivities' \
+        if getter == 'getInitialStateSensitivities' \
                and not model.hasCustomInitialStateSensitivities():
             settings[setting] = []
             continue
 
-        getter = setting[0] if isinstance(setting, tuple) else f'get{setting}'
         settings[setting] = getattr(model, getter)()
         # TODO `amici.Model.getParameterScale` returns a SWIG object instead
         # of a Python list/tuple.
