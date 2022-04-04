@@ -322,7 +322,7 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
     S = sp.ImmutableSparseMatrix(
         *pysb_model.stoichiometry_matrix.shape,
         pysb_model.stoichiometry_matrix[
-            np.asarray(list(solver_index.values())),:
+            np.asarray(list(solver_index.keys())),:
         ].todok()
     )
     # don't use `.dot` since it's awfully slow
