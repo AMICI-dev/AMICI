@@ -1015,12 +1015,12 @@ def _construct_conservation_from_prototypes(
         # x_j = (T - sum_i≠j(a_i * x_i))/a_j
         # law: sum_i≠j(a_i * x_i))/a_j
         # state: x_j
-        target_expression = sum(
+        target_expression = sp.Add(*(
             sp.Symbol(f'__s{ix}')
             * extract_monomers(specie).count(monomer_name)
             for ix, specie in enumerate(pysb_model.species)
             if ix != target_index
-        ) / extract_monomers(pysb_model.species[
+        )) / extract_monomers(pysb_model.species[
                                  target_index
                              ]).count(monomer_name)
         # normalize by the stoichiometry of the target species

@@ -1,1 +1,0 @@
-../../amici/conserved_moieties.py
