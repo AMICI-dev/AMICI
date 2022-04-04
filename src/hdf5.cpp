@@ -657,6 +657,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "quad_rtol", &dbuffer, 1);
 
+    dbuffer = solver.getSteadyStateToleranceFactor();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "ss_tol_factor", &dbuffer, 1);
+
     dbuffer = solver.getAbsoluteToleranceSteadyState();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_atol", &dbuffer, 1);
@@ -664,6 +668,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     dbuffer = solver.getRelativeToleranceSteadyState();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_rtol", &dbuffer, 1);
+
+    dbuffer = solver.getSteadyStateSensiToleranceFactor();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "ss_tol_sensi_factor", &dbuffer, 1);
 
     dbuffer = solver.getAbsoluteToleranceSteadyStateSensi();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
