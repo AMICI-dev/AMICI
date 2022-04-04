@@ -240,7 +240,7 @@ def ode_model_from_pysb_importer(
         for noise_distr in noise_distributions.values()
     )
 
-    _process_stoichiometric_matrix(model, ode)
+    _process_stoichiometric_matrix(model, ode, constant_parameters)
 
     ode.generate_basic_variables()
 
@@ -249,7 +249,8 @@ def ode_model_from_pysb_importer(
 
 @log_execution_time('processing PySB stoich. matrix', logger)
 def _process_stoichiometric_matrix(pysb_model: pysb.Model,
-                                   ode_model: ODEModel) -> None:
+                                   ode_model: ODEModel,
+                                   constant_parameters: List[str]) -> None:
 
     """
     Exploits the PySB stoichiometric matrix to generate xdot derivatives
@@ -259,6 +260,9 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
 
     :param ode_model:
         ODEModel instance
+
+    :param constant_parameters:
+        list of constant parameters
     """
 
     x = ode_model.sym('x')
@@ -284,31 +288,32 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
             sidx = solver_index.get(ix, None)
             if sidx is not None:
                 dflux_dx_dict[(ir, sidx)] = sp.diff(rxn['rate'], x[sidx])
-            # typically <= 3 free symbols in rate, we already account for
-            # species above so we only need to account for propensity, which
-            # can only be a parameter or expression
-            for fs in rxn['rate'].free_symbols:
-                # dw
-                if isinstance(fs, pysb.Expression):
-                    var = w
-                    idx_cache = w_idx
-                    values = dflux_dw_dict
-
-                # dp
-                elif isinstance(fs, pysb.Parameter):
-                    var = p
-                    idx_cache = p_idx
-                    values = dflux_dp_dict
-                else:
+        # typically <= 3 free symbols in rate, we already account for
+        # species above so we only need to account for propensity, which
+        # can only be a parameter or expression
+        for fs in rxn['rate'].free_symbols:
+            # dw
+            if isinstance(fs, pysb.Expression):
+                var = w
+                idx_cache = w_idx
+                values = dflux_dw_dict
+            # dp
+            elif isinstance(fs, pysb.Parameter):
+                if fs.name in constant_parameters:
                     continue
+                var = p
+                idx_cache = p_idx
+                values = dflux_dp_dict
+            else:
+                continue
 
-                # index with caching
-                if fs not in idx_cache:
-                    idx = var.index(fs)
-                    idx_cache[fs] = idx
-                else:
-                    idx = idx_cache[fs]
-                values[(ir, idx)] = sp.diff(rxn['rate'], fs)
+            # index with caching
+            if fs not in idx_cache:
+                idx = var.index(fs)
+                idx_cache[fs] = idx
+            else:
+                idx = idx_cache[fs]
+            values[(ir, idx)] = sp.diff(rxn['rate'], fs)
 
     dflux_dx = sp.ImmutableSparseMatrix(n_r, n_x, dflux_dx_dict)
     dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
