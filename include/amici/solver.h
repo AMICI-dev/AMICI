@@ -386,6 +386,7 @@ class Solver {
 
     /**
      * @brief returns the steady state simulation tolerance factor.
+     *
      * Steady state simulation tolerances are the product of the simulation
      * tolerances and this factor, unless manually set with
      * `set(Absolute/Relative)ToleranceSteadyState()`.
@@ -395,6 +396,7 @@ class Solver {
 
     /**
      * @brief set the steady state simulation tolerance factor.
+     *
      * Steady state simulation tolerances are the product of the simulation
      * tolerances and this factor, unless manually set with
      * `set(Absolute/Relative)ToleranceSteadyState()`.
@@ -428,6 +430,7 @@ class Solver {
 
     /**
      * @brief returns the steady state sensitivity simulation tolerance factor.
+     *
      * Steady state sensitivity simulation tolerances are the product of the
      * sensitivity simulation tolerances and this factor, unless manually set
      * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
@@ -437,6 +440,7 @@ class Solver {
 
     /**
      * @brief set the steady state sensitivity simulation tolerance factor.
+     *
      * Steady state sensitivity simulation tolerances are the product of the
      * sensitivity simulation tolerances and this factor, unless manually set
      * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
