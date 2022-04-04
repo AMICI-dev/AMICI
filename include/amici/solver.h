@@ -385,6 +385,24 @@ class Solver {
     void setAbsoluteToleranceQuadratures(double atol);
 
     /**
+     * @brief returns the steady state simulation tolerance factor.
+     * Steady state simulation tolerances are the product of the simulation
+     * tolerances and this factor, unless manually set with
+     * `set(Absolute/Relative)ToleranceSteadyState()`.
+     * @return steady state simulation tolerance factor
+     */
+    double getSteadyStateToleranceFactor() const;
+
+    /**
+     * @brief set the steady state simulation tolerance factor.
+     * Steady state simulation tolerances are the product of the simulation
+     * tolerances and this factor, unless manually set with
+     * `set(Absolute/Relative)ToleranceSteadyState()`.
+     * @param factor tolerance factor (non-negative number)
+     */
+    void setSteadyStateToleranceFactor(double factor);
+
+    /**
      * @brief returns the relative tolerance for the steady state problem
      * @return relative tolerance
      */
@@ -407,6 +425,24 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteToleranceSteadyState(double atol);
+
+    /**
+     * @brief returns the steady state sensitivity simulation tolerance factor.
+     * Steady state sensitivity simulation tolerances are the product of the
+     * sensitivity simulation tolerances and this factor, unless manually set
+     * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
+     * @return steady state simulation tolerance factor
+     */
+    double getSteadyStateSensiToleranceFactor() const;
+
+    /**
+     * @brief set the steady state sensitivity simulation tolerance factor.
+     * Steady state sensitivity simulation tolerances are the product of the
+     * sensitivity simulation tolerances and this factor, unless manually set
+     * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
+     * @param factor tolerance factor (non-negative number)
+     */
+    void setSteadyStateSensiToleranceFactor(double factor);
 
     /**
      * @brief returns the relative tolerance for the sensitivities of the
@@ -855,7 +891,7 @@ class Solver {
     std::vector<int> const& getLastOrder() const {
         return order_;
     }
-    
+
     /**
      * @brief Returns how convergence checks for steadystate computation are performed.
      * @return boolean flag indicating newton step (true) or the right hand side (false)
@@ -863,7 +899,7 @@ class Solver {
     bool getNewtonStepSteadyStateCheck() const {
         return newton_step_steadystate_conv_;
     }
-    
+
     /**
      * @brief Returns how convergence checks for steadystate computation are performed.
      * @return boolean flag indicating state and sensitivity equations (true) or only state variables (false).
@@ -871,7 +907,7 @@ class Solver {
     bool getSensiSteadyStateCheck() const {
         return check_sensi_steadystate_conv_;
     }
-    
+
     /**
      * @brief Sets how convergence checks for steadystate computation are performed.
      * @param flag boolean flag to pick newton step (true) or the right hand side (false, default)
@@ -879,7 +915,7 @@ class Solver {
     void setNewtonStepSteadyStateCheck(bool flag) {
         newton_step_steadystate_conv_ = flag;
     }
-    
+
     /**
      * @brief Sets for which variables convergence checks for steadystate computation are performed.
      * @param flag boolean flag to pick state and sensitivity equations (true, default) or only state variables (false).
@@ -1753,23 +1789,29 @@ class Solver {
     /** relative tolerances for backward quadratures */
     realtype quad_rtol_ {1e-8};
 
+    /** steady state simulation tolerance factor */
+    realtype ss_tol_factor_ {1e2};
+
     /** absolute tolerances for steadystate computation */
     realtype ss_atol_ {NAN};
 
     /** relative tolerances for steadystate computation */
     realtype ss_rtol_ {NAN};
 
-    /** absolute tolerances for steadystate computation */
+    /** steady state sensitivity simulation tolerance factor */
+    realtype ss_tol_sensi_factor_ {1e2};
+
+    /** absolute tolerances for steadystate sensitivity computation */
     realtype ss_atol_sensi_ {NAN};
 
-    /** relative tolerances for steadystate computation */
+    /** relative tolerances for steadystate sensitivity computation */
     realtype ss_rtol_sensi_ {NAN};
 
     RDataReporting rdata_mode_ {RDataReporting::full};
-    
+
     /** whether newton step should be used for convergence steps */
     bool newton_step_steadystate_conv_ {false};
-    
+
     /** whether sensitivities should be checked for convergence to steadystate */
     bool check_sensi_steadystate_conv_ {true};
 
