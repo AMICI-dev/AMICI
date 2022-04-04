@@ -139,9 +139,6 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
         assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
-    model_without_cl.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
-    )
 
     # run simulations
     edata, _, _ = edata_fixture
@@ -159,7 +156,10 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata, sensi_order=1)
     assert rdata_cl['status'] == amici.AMICI_SUCCESS
-    rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
+    rdata = get_results(
+        model_without_cl, edata=edata, sensi_order=1,
+        stst_sensi_mode=amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
     assert rdata['status'] == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
     assert (rdata['preeq_status'] == np.array([-3, 1, 0])).all()
