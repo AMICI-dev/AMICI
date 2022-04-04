@@ -75,7 +75,7 @@ model_instance_settings0 = {
         (10.0, 9.0, 1.0, 0.0, 0.0, 0.0),
         tuple([.1]*6),
     ],
-    'InitialStateSensitivities': [
+    ('getInitialStateSensitivities', 'setUnscaledInitialStateSensitivities'): [
         tuple([1.0] + [0.0]*35),
         tuple([.1]*36),
     ],
@@ -143,7 +143,6 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         if name != 'ReinitializeFixedParameterInitialStates'
     )
 
-
     # All default values are as expected.
     for name, (default, custom) in model_instance_settings.items():
         getter = name[i_getter] if isinstance(name, tuple) else f'get{name}'
@@ -165,8 +164,15 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     # The new model has the default settings.
     model_default_settings = amici.get_model_settings(model)
     for name in model_instance_settings:
-        assert model_default_settings[name] == \
-            model_instance_settings[name][i_default]
+        if (name == "InitialStates" and not model.hasCustomInitialStates())\
+                or (name == ('getInitialStateSensitivities',
+                             'setUnscaledInitialStateSensitivities')
+                    and not model.hasCustomInitialStateSensitivities()):
+            # Here the expected value differs from what the getter would return
+            assert model_default_settings[name] == []
+        else:
+            assert model_default_settings[name] == \
+                model_instance_settings[name][i_default], name
 
     # The grouped setter method works.
     custom_settings_not_none = {
@@ -299,7 +305,7 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         'setParameterByName',
         'setParametersByIdRegex',
         'setParametersByNameRegex',
-        'setUnscaledInitialStateSensitivities',
+        'setInitialStateSensitivities',
     ]
     from amici.swig_wrappers import model_instance_settings
     handled = [
@@ -361,3 +367,39 @@ def set_val(obj, attr, val):
         )
     else:
         setattr(obj, attr, val)
+
+
+def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
+    """Check that settings are applied in the correct order, and only if
+    required"""
+    model = pysb_example_presimulation_module.getModel()
+
+    # ensure no-custom-(s)x0 is restored
+    assert not model.hasCustomInitialStates()
+    assert not model.hasCustomInitialStateSensitivities()
+    settings = amici.get_model_settings(model)
+    model.setInitialStates(model.getInitialStates())
+    model.setUnscaledInitialStateSensitivities(
+        model.getInitialStateSensitivities())
+    amici.set_model_settings(model, settings)
+    assert not model.hasCustomInitialStates()
+    assert not model.hasCustomInitialStateSensitivities()
+    # ensure everything was set correctly, and there wasn't any problem
+    #  due to, e.g. interactions of different setters
+    assert settings == amici.get_model_settings(model)
+
+    # ensure custom (s)x0 is restored
+    model.setInitialStates(model.getInitialStates())
+    model.setParameterScale(amici.ParameterScaling.log10)
+    sx0 = model.getInitialStateSensitivities()
+    model.setUnscaledInitialStateSensitivities(sx0)
+    assert model.hasCustomInitialStates()
+    assert model.hasCustomInitialStateSensitivities()
+    settings = amici.get_model_settings(model)
+    model2 = pysb_example_presimulation_module.getModel()
+    amici.set_model_settings(model2, settings)
+    assert model2.hasCustomInitialStates()
+    assert model2.hasCustomInitialStateSensitivities()
+    assert model2.getInitialStateSensitivities() == sx0
+    assert settings == amici.get_model_settings(model2)
+
