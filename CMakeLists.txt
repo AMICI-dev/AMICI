@@ -54,7 +54,7 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
 
-find_package(SUNDIALS REQUIRED PATHS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/")
+find_package(SUNDIALS REQUIRED PATHS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib/cmake/sundials/")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
