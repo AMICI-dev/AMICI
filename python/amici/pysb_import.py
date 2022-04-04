@@ -240,7 +240,7 @@ def ode_model_from_pysb_importer(
         for noise_distr in noise_distributions.values()
     )
 
-    _process_stoichiometric_matrix
+    _process_stoichiometric_matrix(model, ode)
 
     ode.generate_basic_variables()
 
