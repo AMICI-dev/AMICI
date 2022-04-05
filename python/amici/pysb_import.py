@@ -268,6 +268,7 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
     x = ode_model.sym('x')
     w = list(ode_model.sym('w'))
     p = list(ode_model.sym('p'))
+    x_rdata = list(ode_model.sym('x_rdata'))
 
     n_x = len(x)
     n_w = len(w)
@@ -281,13 +282,30 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
 
     w_idx = dict()
     p_idx = dict()
+    wx_idx = dict()
+
+    def get_cached_index(symbol, sarray, index_cache):
+        if symbol not in index_cache:
+            idx = sarray.index(symbol)
+            index_cache[symbol] = idx
+        else:
+            idx = index_cache[symbol]
+        return idx
 
     for ir, rxn in enumerate(pysb_model.reactions):
         for ix in np.unique(rxn['reactants']):
-            # dx
-            sidx = solver_index.get(ix, None)
-            if sidx is not None:
-                dflux_dx_dict[(ir, sidx)] = sp.diff(rxn['rate'], x[sidx])
+
+            if ix in solver_index:
+                # species
+                idx = solver_index[ix]
+                values = dflux_dx_dict
+            else:
+                # conservation law
+                idx = get_cached_index(x_rdata[ix], w, wx_idx)
+                values = dflux_dw_dict
+
+            values[(ir, idx)] = sp.diff(rxn['rate'], x_rdata[ix])
+
         # typically <= 3 free symbols in rate, we already account for
         # species above so we only need to account for propensity, which
         # can only be a parameter or expression
@@ -307,20 +325,16 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
             else:
                 continue
 
-            # index with caching
-            if fs not in idx_cache:
-                idx = var.index(fs)
-                idx_cache[fs] = idx
-            else:
-                idx = idx_cache[fs]
+            idx = get_cached_index(fs, var, idx_cache)
             values[(ir, idx)] = sp.diff(rxn['rate'], fs)
 
     dflux_dx = sp.ImmutableSparseMatrix(n_r, n_x, dflux_dx_dict)
     dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
     dflux_dp = sp.ImmutableSparseMatrix(n_r, n_p, dflux_dp_dict)
 
+    # use dok format to convert numeric csc to sparse symbolic
     S = sp.ImmutableSparseMatrix(
-        *pysb_model.stoichiometry_matrix.shape,
+        n_x, n_r, # don't use shape here as we are eliminating rows
         pysb_model.stoichiometry_matrix[
             np.asarray(list(solver_index.keys())),:
         ].todok()
