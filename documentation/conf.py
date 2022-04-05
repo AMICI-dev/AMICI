@@ -20,8 +20,9 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
 import pandas as pd
+import sympy as sp
 
-exhale_multiproject_monkeypatch, pd  # to avoid removal of unused import
+exhale_multiproject_monkeypatch, pd, sp  # to avoid removal of unused import
 
 # BEGIN Monkeypatch exhale
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen

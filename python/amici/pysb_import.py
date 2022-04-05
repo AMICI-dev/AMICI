@@ -5,33 +5,31 @@ This module provides all necessary functionality to import a model specified
 in the :class:`pysb.core.Model` format.
 """
 
-from .ode_export import (
-    ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
-    Expression, LogLikelihood, generate_measurement_symbol
-)
-from .import_utils import (
-    noise_distribution_to_cost_function, _get_str_symbol_identifiers,
-    noise_distribution_to_observable_transformation, _parse_special_functions
-)
-import logging
-from .logging import get_logger, log_execution_time, set_log_level
-
-import sympy as sp
-import numpy as np
 import itertools
+import logging
 import os
 import sys
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Set, Tuple,
+                    Union)
 
-from typing import (
-    List, Union, Dict, Tuple, Set, Iterable, Any, Callable, Optional
-)
+import numpy as np
+import pysb
+import pysb.bng
+import pysb.pattern
+import sympy as sp
+
+from .import_utils import (_get_str_symbol_identifiers,
+                           _parse_special_functions,
+                           generate_measurement_symbol,
+                           noise_distribution_to_cost_function,
+                           noise_distribution_to_observable_transformation,
+                           RESERVED_SYMBOLS)
+from .logging import get_logger, log_execution_time, set_log_level
+from .ode_export import (Constant, Expression, LogLikelihood, ODEExporter,
+                         ODEModel, Observable, Parameter, SigmaY, State)
 
 CL_Prototype = Dict[str, Dict[str, Any]]
 ConservationLaw = Dict[str, Union[str, sp.Basic]]
-
-import pysb.bng
-import pysb
-import pysb.pattern
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -49,6 +47,9 @@ def pysb2amici(
         compute_conservation_laws: bool = True,
         compile: bool = True,
         simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+        # Do not enable by default without testing.
+        # See https://github.com/AMICI-dev/AMICI/pull/1672
+        cache_simplify: bool = False,
         generate_sensitivity_code: bool = True,
 ):
     r"""
@@ -115,6 +116,11 @@ def pysb2amici(
     :param simplify:
         see :attr:`amici.ODEModel._simplify`
 
+    :param cache_simplify:
+            see :func:`amici.ODEModel.__init__`
+            Note that there are possible issues with PySB models:
+            https://github.com/AMICI-dev/AMICI/pull/1672
+
     :param generate_sensitivity_code:
         if set to ``False``, code for sensitivity computation will not be
         generated
@@ -134,6 +140,7 @@ def pysb2amici(
         noise_distributions=noise_distributions,
         compute_conservation_laws=compute_conservation_laws,
         simplify=simplify,
+        cache_simplify=cache_simplify,
         verbose=verbose,
     )
     exporter = ODEExporter(
@@ -160,6 +167,9 @@ def ode_model_from_pysb_importer(
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
         compute_conservation_laws: bool = True,
         simplify: Callable = sp.powsimp,
+        # Do not enable by default without testing.
+        # See https://github.com/AMICI-dev/AMICI/pull/1672
+        cache_simplify: bool = False,
         verbose: Union[int, bool] = False,
 ) -> ODEModel:
     """
@@ -188,6 +198,11 @@ def ode_model_from_pysb_importer(
     :param simplify:
             see :attr:`amici.ODEModel._simplify`
 
+    :param cache_simplify:
+            see :func:`amici.ODEModel.__init__`
+            Note that there are possible issues with PySB models:
+            https://github.com/AMICI-dev/AMICI/pull/1672
+
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
@@ -195,7 +210,11 @@ def ode_model_from_pysb_importer(
         New ODEModel instance according to pysbModel
     """
 
-    ode = ODEModel(verbose=verbose, simplify=simplify)
+    ode = ODEModel(
+        verbose=verbose,
+        simplify=simplify,
+        cache_simplify=cache_simplify,
+    )
 
     if constant_parameters is None:
         constant_parameters = []
@@ -221,9 +240,108 @@ def ode_model_from_pysb_importer(
         for noise_distr in noise_distributions.values()
     )
 
+    _process_stoichiometric_matrix(model, ode, constant_parameters)
+
     ode.generate_basic_variables()
 
     return ode
+
+
+@log_execution_time('processing PySB stoich. matrix', logger)
+def _process_stoichiometric_matrix(pysb_model: pysb.Model,
+                                   ode_model: ODEModel,
+                                   constant_parameters: List[str]) -> None:
+
+    """
+    Exploits the PySB stoichiometric matrix to generate xdot derivatives
+
+    :param pysb_model:
+        pysb model instance
+
+    :param ode_model:
+        ODEModel instance
+
+    :param constant_parameters:
+        list of constant parameters
+    """
+
+    x = ode_model.sym('x')
+    w = list(ode_model.sym('w'))
+    p = list(ode_model.sym('p'))
+    x_rdata = list(ode_model.sym('x_rdata'))
+
+    n_x = len(x)
+    n_w = len(w)
+    n_p = len(p)
+    n_r = len(pysb_model.reactions)
+
+    solver_index = ode_model.get_solver_indices()
+    dflux_dx_dict = {}
+    dflux_dw_dict = {}
+    dflux_dp_dict = {}
+
+    w_idx = dict()
+    p_idx = dict()
+    wx_idx = dict()
+
+    def get_cached_index(symbol, sarray, index_cache):
+        idx = index_cache.get(symbol, None)
+        if idx is not None:
+            return idx
+        idx = sarray.index(symbol)
+        index_cache[symbol] = idx
+        return idx
+
+    for ir, rxn in enumerate(pysb_model.reactions):
+        for ix in np.unique(rxn['reactants']):
+            idx = solver_index.get(ix, None)
+            if idx is not None:
+                # species
+                values = dflux_dx_dict
+            else:
+                # conservation law
+                idx = get_cached_index(x_rdata[ix], w, wx_idx)
+                values = dflux_dw_dict
+
+            values[(ir, idx)] = sp.diff(rxn['rate'], x_rdata[ix])
+
+        # typically <= 3 free symbols in rate, we already account for
+        # species above so we only need to account for propensity, which
+        # can only be a parameter or expression
+        for fs in rxn['rate'].free_symbols:
+            # dw
+            if isinstance(fs, pysb.Expression):
+                var = w
+                idx_cache = w_idx
+                values = dflux_dw_dict
+            # dp
+            elif isinstance(fs, pysb.Parameter):
+                if fs.name in constant_parameters:
+                    continue
+                var = p
+                idx_cache = p_idx
+                values = dflux_dp_dict
+            else:
+                continue
+
+            idx = get_cached_index(fs, var, idx_cache)
+            values[(ir, idx)] = sp.diff(rxn['rate'], fs)
+
+    dflux_dx = sp.ImmutableSparseMatrix(n_r, n_x, dflux_dx_dict)
+    dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
+    dflux_dp = sp.ImmutableSparseMatrix(n_r, n_p, dflux_dp_dict)
+
+    # use dok format to convert numeric csc to sparse symbolic
+    S = sp.ImmutableSparseMatrix(
+        n_x, n_r, # don't use shape here as we are eliminating rows
+        pysb_model.stoichiometry_matrix[
+            np.asarray(list(solver_index.keys())),:
+        ].todok()
+    )
+    # don't use `.dot` since it's awfully slow
+    ode_model._eqs['dxdotdx_explicit'] = S*dflux_dx
+    ode_model._eqs['dxdotdw'] = S*dflux_dw
+    ode_model._eqs['dxdotdp_explicit'] = S*dflux_dp
 
 
 @log_execution_time('processing PySB species', logger)
@@ -325,7 +443,20 @@ def _process_pysb_expressions(
     # they are ordered according to their dependency and we can
     # evaluate them sequentially without reordering. Important to make
     # sure that observables are processed first though.
-    for expr in pysb_model.expressions:
+
+    # we use _constant and _dynamic functions to get access to derived
+    # expressions that are otherwise only accessible as private attribute
+    for expr in pysb_model.expressions_constant(include_derived=True)\
+            | pysb_model.expressions_dynamic(include_derived=True):
+        if any(
+            isinstance(symbol, pysb.Tag)
+            for symbol in expr.expand_expr().free_symbols
+        ):
+            # we only need explicit instantiations of expressions with tags,
+            # which are defined in the derived expressions. The abstract
+            # expressions are not needed and lead to compilation errors so
+            # we skip them.
+            continue
         _add_expression(expr, expr.name, expr.expr,
                         pysb_model, ode_model, observables, sigmas,
                         noise_distributions)
@@ -983,12 +1114,12 @@ def _construct_conservation_from_prototypes(
         # x_j = (T - sum_i≠j(a_i * x_i))/a_j
         # law: sum_i≠j(a_i * x_i))/a_j
         # state: x_j
-        target_expression = sum(
+        target_expression = sp.Add(*(
             sp.Symbol(f'__s{ix}')
             * extract_monomers(specie).count(monomer_name)
             for ix, specie in enumerate(pysb_model.species)
             if ix != target_index
-        ) / extract_monomers(pysb_model.species[
+        )) / extract_monomers(pysb_model.species[
                                  target_index
                              ]).count(monomer_name)
         # normalize by the stoichiometry of the target species

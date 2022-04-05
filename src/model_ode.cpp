@@ -83,7 +83,7 @@ void Model_ODE::froot(realtype t, const_N_Vector x, gsl::span<realtype> root) {
     std::fill(root.begin(), root.end(), 0.0);
     froot(root.data(), t, N_VGetArrayPointerConst(x_pos),
           state_.unscaledParameters.data(), state_.fixedParameters.data(),
-          state_.h.data());
+          state_.h.data(), state_.total_cl.data());
 }
 
 void Model_ODE::fxdot(const realtype t, const AmiVector &x,
@@ -204,7 +204,8 @@ void Model_ODE::fJSparse_rowvals(SUNMatrixWrapper &/*JSparse*/) {
 
 void Model_ODE::froot(realtype * /*root*/, const realtype /*t*/,
                       const realtype * /*x*/, const realtype * /*p*/,
-                      const realtype * /*k*/, const realtype * /*h*/) {
+                      const realtype * /*k*/, const realtype * /*h*/,
+                      const realtype */*tcl*/) {
     throw AmiException("Requested functionality is not supported as %s is not "
                        "implemented for this model!",
                        __func__); // not implemented

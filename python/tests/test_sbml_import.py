@@ -54,6 +54,25 @@ def test_sbml2amici_no_observables(simple_sbml_model):
         assert hasattr(module_module, 'getModel')
 
 
+def test_sbml2amici_nested_observables_fail(simple_sbml_model):
+    """Test model generation works for model without observables"""
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        with pytest.raises(ValueError, match="(?i)nested"):
+            sbml_importer.sbml2amici(
+                model_name="test",
+                output_dir=tmpdir,
+                observables={'outer': {'formula': 'inner'},
+                             'inner': {'formula': 'S1'}},
+                compute_conservation_laws=False,
+                generate_sensitivity_code=False,
+                compile=False,
+            )
+
+
 def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
@@ -76,6 +95,61 @@ def test_nosensi(simple_sbml_model):
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
         rdata = amici.runAmiciSimulation(model, solver)
         assert rdata.status == amici.AMICI_ERROR
+
+
+@pytest.fixture
+def observable_dependent_error_model(simple_sbml_model):
+    sbml_doc, sbml_model = simple_sbml_model
+    # add parameter and rate rule
+    sbml_model.getSpecies("S1").setInitialConcentration(1.0)
+    sbml_model.getParameter("p1").setValue(0.2)
+    rr = sbml_model.createRateRule()
+    rr.setVariable("S1")
+    rr.setMath(libsbml.parseL3Formula("p1"))
+    relative_sigma = sbml_model.createParameter()
+    relative_sigma.setId('relative_sigma')
+    relative_sigma.setValue(0.05)
+
+    sbml_importer = SbmlImporter(sbml_source=sbml_model,
+                                 from_file=False)
+
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(
+            model_name="test",
+            output_dir=tmpdir,
+            observables={'observable_s1': {'formula': 'S1'},
+                         'observable_s1_scaled': {'formula': '0.5 * S1'}},
+            sigmas={'observable_s1': '0.1 + relative_sigma * observable_s1',
+                    'observable_s1_scaled': '0.02 * observable_s1_scaled'},
+        )
+        yield amici.import_model_module(module_name='test',
+                                        module_path=tmpdir)
+
+
+def test_sbml2amici_observable_dependent_error(observable_dependent_error_model):
+    """Check gradients for model with observable-dependent error"""
+    model_module = observable_dependent_error_model
+    model = model_module.getModel()
+    model.setTimepoints(np.linspace(0, 60, 61))
+    solver = model.getSolver()
+
+    # generate artificial data
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert np.allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0])
+    assert np.allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1])
+    edata = amici.ExpData(rdata, 1.0, 0.0)
+    edata.setObservedDataStdDev(np.nan)
+
+    # check sensitivities
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    # FSA
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    assert np.any(rdata.ssigmay != 0.0)
+    check_derivatives(model, solver, edata)
+    # ASA
+    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+    check_derivatives(model, solver, edata)
 
 
 @pytest.fixture
@@ -131,10 +205,9 @@ def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
     model = sbml_example_presimulation_module.getModel()
     solver = model.getSolver()
-    solver.setNewtonMaxSteps(0)
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.simulationFSA
+        amici.SteadyStateSensitivityMode.integrationOnly
     )
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     model.setReinitializeFixedParameterInitialStates(True)

@@ -2,6 +2,37 @@
 
 ## v0.X Series
 
+### v0.11.26 (2022-03-14)
+
+New features:
+* Import of BioNetGenLanguage (BNGL) models by @FFroehlich in 
+  https://github.com/AMICI-dev/AMICI/pull/1709
+* Added support for observable-dependent sigmas by @dweindl, @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1692
+* Added support for pysb local functions by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1666
+* Added experimental support for conservation laws for non-constant species to
+  SBML import: conservation laws for non-constant species
+  by @stephanmg, @dweindl in https://github.com/AMICI-dev/AMICI/pull/1669
+  Enable this feature by setting environment variable
+  `AMICI_EXPERIMENTAL_SBML_NONCONST_CLS` to any value
+  * Allow using states eliminated by conservation laws to be used in root
+    functions by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1677
+  * Added support for parameter-dependent conservation laws by @dweindl,
+    @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1678
+* Added optional caching for symbolic simplifications in ODE export by @dilpath
+  in https://github.com/AMICI-dev/AMICI/pull/1672
+* Added CLI option `--no-sensitivities` to `amici_import_petab` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1688
+
+Fixes:
+* SBML import: Raise in case of nested observables by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1690
+* Sympy 1.10 compatibility by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1694
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.25...v0.11.26
+
 ### v0.11.25 (2022-02-09)
 
 * Fixed a bug

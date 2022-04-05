@@ -481,12 +481,27 @@ def create_edatas(
 
     observable_ids = amici_model.getObservableIds()
 
+    measurement_groupvar = [petab.SIMULATION_CONDITION_ID]
+    if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
+        measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
+    measurement_dfs = dict(list(
+        petab_problem.measurement_df.groupby(measurement_groupvar)
+    ))
+
     edatas = []
     for _, condition in simulation_conditions.iterrows():
         # Create amici.ExpData for each simulation
+        if petab.PREEQUILIBRATION_CONDITION_ID in condition:
+            measurement_index = (
+                condition.get(petab.SIMULATION_CONDITION_ID),
+                condition.get(petab.PREEQUILIBRATION_CONDITION_ID)
+            )
+        else:
+            measurement_index = condition.get(petab.SIMULATION_CONDITION_ID)
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,
+            measurement_df=measurement_dfs[measurement_index],
             petab_problem=petab_problem,
             observable_ids=observable_ids,
         )
@@ -497,6 +512,7 @@ def create_edatas(
 
 def create_edata_for_condition(
         condition: Union[Dict, pd.Series],
+        measurement_df: pd.DataFrame,
         amici_model: AmiciModel,
         petab_problem: petab.Problem,
         observable_ids: List[str],
@@ -508,6 +524,8 @@ def create_edata_for_condition(
     :param condition:
         pandas.DataFrame row with preequilibrationConditionId and
         simulationConditionId.
+    :param measurement_df:
+        pandas.DataFrame with measurements for the given condition.
     :param amici_model:
         AMICI model
     :param petab_problem:
@@ -518,10 +536,6 @@ def create_edata_for_condition(
     :return:
         ExpData instance.
     """
-    # extract measurement table rows for condition
-    measurement_df = petab.get_rows_for_condition(
-        measurement_df=petab_problem.measurement_df, condition=condition)
-
     if amici_model.nytrue != len(observable_ids):
         raise AssertionError("Number of AMICI model observables does not "
                              "match number of PEtab observables.")

@@ -120,7 +120,7 @@ public:
     /**
      * @brief Model constants for pre-equilibration
      *
-     * Vector of size Model::nk() or empty. Overrides Solver::newton_preeq
+     * Vector of size Model::nk() or empty.
      */
     std::vector<realtype> fixedParametersPreequilibration;
 

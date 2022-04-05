@@ -147,7 +147,7 @@ class Solver {
      *
      * @param model pointer to the model instance
      */
-    void updateAndReinitStatesAndSensitivities(Model *model);
+    void updateAndReinitStatesAndSensitivities(Model *model) const;
 
     /**
      * getRootInfo extracts information which event occurred
@@ -230,32 +230,6 @@ class Solver {
      * @param newton_maxsteps
      */
     void setNewtonMaxSteps(int newton_maxsteps);
-
-    /**
-     * @brief Get if model preequilibration is enabled
-     * @return
-     */
-    bool getPreequilibration() const;
-
-    /**
-     * @brief Enable/disable model preequilibration
-     * @param require_preequilibration
-     */
-    void setPreequilibration(bool require_preequilibration);
-
-    /**
-     * @brief Get maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @return
-     */
-    int getNewtonMaxLinearSteps() const;
-
-    /**
-     * @brief Set maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @param newton_maxlinsteps
-     */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
 
     /**
      * @brief Get a state of the damping factor used in the Newton solver
@@ -880,6 +854,38 @@ class Solver {
      */
     std::vector<int> const& getLastOrder() const {
         return order_;
+    }
+    
+    /**
+     * @brief Returns how convergence checks for steadystate computation are performed.
+     * @return boolean flag indicating newton step (true) or the right hand side (false)
+     */
+    bool getNewtonStepSteadyStateCheck() const {
+        return newton_step_steadystate_conv_;
+    }
+    
+    /**
+     * @brief Returns how convergence checks for steadystate computation are performed.
+     * @return boolean flag indicating state and sensitivity equations (true) or only state variables (false).
+     */
+    bool getSensiSteadyStateCheck() const {
+        return check_sensi_steadystate_conv_;
+    }
+    
+    /**
+     * @brief Sets how convergence checks for steadystate computation are performed.
+     * @param flag boolean flag to pick newton step (true) or the right hand side (false, default)
+     */
+    void setNewtonStepSteadyStateCheck(bool flag) {
+        newton_step_steadystate_conv_ = flag;
+    }
+    
+    /**
+     * @brief Sets for which variables convergence checks for steadystate computation are performed.
+     * @param flag boolean flag to pick state and sensitivity equations (true, default) or only state variables (false).
+     */
+    void setSensiSteadyStateCheck(bool flag) {
+        check_sensi_steadystate_conv_ = flag;
     }
 
     /**
@@ -1678,6 +1684,9 @@ class Solver {
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_ {false};
 
+    /** flag indicating whether sensInit1 was called */
+    mutable bool sens_initialized_ {false};
+
   private:
 
     /**
@@ -1716,9 +1725,6 @@ class Solver {
 
     /** Lower bound of the damping factor. */
     realtype newton_damping_factor_lower_bound_ {1e-8};
-
-    /** Enable model preequilibration */
-    bool requires_preequilibration_ {false};
 
     /** linear solver specification */
     LinearSolver linsol_ {LinearSolver::KLU};
@@ -1760,6 +1766,12 @@ class Solver {
     realtype ss_rtol_sensi_ {NAN};
 
     RDataReporting rdata_mode_ {RDataReporting::full};
+    
+    /** whether newton step should be used for convergence steps */
+    bool newton_step_steadystate_conv_ {false};
+    
+    /** whether sensitivities should be checked for convergence to steadystate */
+    bool check_sensi_steadystate_conv_ {true};
 
     /** CPU time, forward solve */
     mutable realtype cpu_time_ {0.0};
@@ -1775,9 +1787,6 @@ class Solver {
 
     /** flag indicating whether init was called */
     mutable bool initialized_ {false};
-
-    /** flag indicating whether sensInit1 was called */
-    mutable bool sens_initialized_ {false};
 
     /** flag indicating whether adjInit was called */
     mutable bool adj_initialized_ {false};

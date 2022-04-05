@@ -10,7 +10,7 @@ namespace amici {
 
 namespace model_model_jakstat_adjoint_o2{
 
-void sigmay_model_jakstat_adjoint_o2(double *sigmay, const realtype t, const realtype *p, const realtype *k) {
+void sigmay_model_jakstat_adjoint_o2(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y) {
   sigmay[0] = p[14];
   sigmay[1] = p[15];
   sigmay[2] = p[16];

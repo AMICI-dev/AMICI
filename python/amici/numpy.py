@@ -151,15 +151,14 @@ class ReturnDataView(SwigPtrView):
         'ts', 'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss', 'y', 'sigmay',
         'sy', 'ssigmay', 'z', 'rz', 'sigmaz', 'sz', 'srz',
         'ssigmaz', 'sllh', 's2llh', 'J', 'xdot', 'status', 'llh',
-        'chi2', 'res', 'sres', 'FIM', 'w',
-        'preeq_wrms', 'preeq_t', 'preeq_numlinsteps', 'preeq_numsteps',
-        'preeq_numstepsB', 'preeq_status', 'preeq_cpu_time',
-        'preeq_cpu_timeB', 'posteq_wrms', 'posteq_t', 'posteq_numlinsteps',
-        'posteq_numsteps', 'posteq_numstepsB', 'posteq_status',
-        'posteq_cpu_time', 'posteq_cpu_timeB', 'numsteps', 'numrhsevals',
+        'chi2', 'res', 'sres', 'FIM', 'w', 'preeq_wrms', 'preeq_t',
+        'preeq_numsteps', 'preeq_numstepsB', 'preeq_status', 'preeq_cpu_time',
+        'preeq_cpu_timeB', 'posteq_wrms', 'posteq_t', 'posteq_numsteps',
+        'posteq_numstepsB', 'posteq_status', 'posteq_cpu_time',
+        'posteq_cpu_timeB', 'numsteps', 'numrhsevals',
         'numerrtestfails', 'numnonlinsolvconvfails', 'order', 'cpu_time',
         'numstepsB', 'numrhsevalsB', 'numerrtestfailsB',
-        'numnonlinsolvconvfailsB', 'cpu_timeB'
+        'numnonlinsolvconvfailsB', 'cpu_timeB', 'cpu_time_total'
     ]
 
     def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
