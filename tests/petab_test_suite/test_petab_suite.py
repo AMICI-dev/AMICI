@@ -16,7 +16,7 @@ from amici.logging import get_logger, set_log_level
 from amici.petab_import import import_petab_problem, PysbPetabProblem
 from amici.petab_objective import (
     simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
-from amici import SteadyStateSensitivityMode_simulationFSA
+from amici import SteadyStateSensitivityMode
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -134,7 +134,7 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
     model.setSteadyStateSensitivityMode(
-        SteadyStateSensitivityMode_simulationFSA)
+        SteadyStateSensitivityMode.integrateIfNewtonFails)
 
     for edata in create_parameterized_edatas(
             amici_model=model, petab_problem=problem,
