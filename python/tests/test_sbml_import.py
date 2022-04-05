@@ -205,10 +205,9 @@ def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
     model = sbml_example_presimulation_module.getModel()
     solver = model.getSolver()
-    solver.setNewtonMaxSteps(0)
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.simulationFSA
+        amici.SteadyStateSensitivityMode.integrationOnly
     )
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     model.setReinitializeFixedParameterInitialStates(True)
