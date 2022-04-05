@@ -286,7 +286,8 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
 
     rdatas = {}
     equil_meths = [amici.SteadyStateSensitivityMode.newtonOnly,
-                   amici.SteadyStateSensitivityMode.simulationFSA]
+                   amici.SteadyStateSensitivityMode.integrationOnly,
+                   amici.SteadyStateSensitivityMode.integrateIfNewtonFails]
     sensi_meths = [amici.SensitivityMethod.forward,
                    amici.SensitivityMethod.adjoint]
     settings = itertools.product(equil_meths, sensi_meths)
@@ -333,7 +334,7 @@ def test_newton_solver_equilibration(preeq_fixture):
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
-    settings = [amici.SteadyStateSensitivityMode.simulationFSA,
+    settings = [amici.SteadyStateSensitivityMode.integrationOnly,
                 amici.SteadyStateSensitivityMode.newtonOnly]
 
     solver.setNewtonStepSteadyStateCheck(True)
@@ -345,9 +346,6 @@ def test_newton_solver_equilibration(preeq_fixture):
         model.setSteadyStateSensitivityMode(equil_meth)
         if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
             solver.setNewtonMaxSteps(10)
-        else:
-            solver.setSensiSteadyStateCheck(False)
-            solver.setNewtonMaxSteps(0)
 
         # add rdatas
         rdatas[equil_meth] = amici.runAmiciSimulation(model, solver, edata)
