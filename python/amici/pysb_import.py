@@ -285,19 +285,18 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
     wx_idx = dict()
 
     def get_cached_index(symbol, sarray, index_cache):
-        if symbol not in index_cache:
-            idx = sarray.index(symbol)
-            index_cache[symbol] = idx
-        else:
-            idx = index_cache[symbol]
+        idx = index_cache.get(symbol, None)
+        if idx is not None:
+            return idx
+        idx = sarray.index(symbol)
+        index_cache[symbol] = idx
         return idx
 
     for ir, rxn in enumerate(pysb_model.reactions):
         for ix in np.unique(rxn['reactants']):
-
-            if ix in solver_index:
+            idx = solver_index.get(ix, None)
+            if idx is not None:
                 # species
-                idx = solver_index[ix]
                 values = dflux_dx_dict
             else:
                 # conservation law
