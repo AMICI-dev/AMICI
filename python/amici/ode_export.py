@@ -1617,6 +1617,16 @@ class ODEModel:
             # force symbols
             self._eqs[name] = self.sym(name)
 
+        elif name == 'dwdx':
+            x = self.sym('x')
+            self._eqs[name] = sp.Matrix([
+                [-cl.get_ncoeff(xs) for xs in x]
+                # the insert first in ode_model._add_conservation_law() means
+                # that we need to reverse the order here
+                for cl in reversed(self._conservationlaws)
+            ]) .col_join(smart_jacobian(self.eq('w')[self.num_cons_law():,:],
+                                        x))
+
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2), name)
 
