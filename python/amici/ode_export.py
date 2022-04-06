@@ -878,8 +878,7 @@ class ODEModel:
     def add_conservation_law(self,
                              state: sp.Symbol,
                              total_abundance: sp.Symbol,
-                             state_expr: sp.Expr,
-                             abundance_expr: sp.Expr) -> None:
+                             coefficients: Dict[sp.Symbol, sp.Expr]) -> None:
         r"""
         Adds a new conservation law to the model. A conservation law is defined
         by the conserved quantity :math:`T = \sum_i(a_i * x_i)`, where
@@ -893,16 +892,8 @@ class ODEModel:
         :param total_abundance:
             symbolic identifier of the total abundance (:math:`T/a_j`)
 
-        :param state_expr:
-            symbolic algebraic formula that replaces the state. This is
-            used to compute the numeric value of ``state`` during simulations.
-            :math:`x_j = T/a_j - \sum_{i≠j}(a_i * x_i)/a_j`
-
-        :param abundance_expr:
-            symbolic algebraic formula that computes the value of the
-            conserved quantity. This is used to update the numeric value for
-            ``total_abundance`` after (re-)initialization.
-            :math:`T/a_j = \sum_{i≠j}(a_i * x_i)/a_j + x_j`
+        :param coefficients:
+            Dictionary of coefficients {x_i: a_i}
         """
         try:
             ix = [
@@ -915,20 +906,29 @@ class ODEModel:
 
         state_id = self._states[ix].get_id()
 
+        # \sum_{i≠j}(a_i * x_i)/a_j
+        target_expression = sp.Add(*(
+            c_i*x_i for x_i, c_i in coefficients.items() if x_i != state
+        )) / coefficients[state]
+
+        # x_j = T/a_j - \sum_{i≠j}(a_i * x_i)/a_j
+        state_expr = total_abundance - target_expression
+
+        # T/a_j = \sum_{i≠j}(a_i * x_i)/a_j + x_j
+        abundance_expr = target_expression + state_id
+
         self.add_component(
             Expression(state_id, str(state_id), state_expr),
             insert_first=True
         )
 
-        self.add_component(
-            ConservationLaw(
-                total_abundance,
-                f'total_{state_id}',
-                abundance_expr
-            )
+        cl = ConservationLaw(
+            total_abundance, f'total_{state_id}', abundance_expr,
+            coefficients, state_id
         )
 
-        self._states[ix].set_conservation_law(state_expr)
+        self.add_component(cl)
+        self._states[ix].set_conservation_law(cl)
 
     def get_observable_transformations(self) -> List[ObservableTransformation]:
         """
@@ -1211,14 +1211,14 @@ class ODEModel:
             self._syms[name] = sp.Matrix([
                 state.get_id()
                 for state in self._states
-                if state._conservation_law is None
+                if not state.has_conservation_law()
             ])
             return
         elif name == 'sx0':
             self._syms[name] = sp.Matrix([
                 f's{state.get_id()}_0'
                 for state in self._states
-                if state._conservation_law is None
+                if not state.has_conservation_law()
             ])
             return
         elif name == 'sx_rdata':
@@ -1414,15 +1414,13 @@ class ODEModel:
 
         elif name == 'xdot':
             self._eqs[name] = sp.Matrix([
-                s.get_dt() for s in self._states
-                if s._conservation_law is None
+                state.get_dt() for state in self._states
+                if not state.has_conservation_law()
             ])
 
         elif name == 'x_rdata':
             self._eqs[name] = sp.Matrix([
-                state.get_id()
-                if state._conservation_law is None
-                else state._conservation_law
+                state.get_x_rdata()
                 for state in self._states
             ])
 
@@ -1430,14 +1428,14 @@ class ODEModel:
             self._eqs[name] = sp.Matrix([
                 state.get_id()
                 for state in self._states
-                if state._conservation_law is None
+                if not state.has_conservation_law()
             ])
 
         elif name == 'sx_solver':
             self._eqs[name] = sp.Matrix([
                 self.sym('sx_rdata')[ix]
                 for ix, state in enumerate(self._states)
-                if state._conservation_law is None
+                if not state.has_conservation_law()
             ])
 
         elif name == 'sx0':
@@ -1476,8 +1474,13 @@ class ODEModel:
                                          self._x0_fixedParameters_idx])
 
         elif name == 'dtotal_cldx_rdata':
-            # not correctly parsed in regex
-            self._derivative('total_cl', 'x_rdata')
+            x_rdata = self.sym('x_rdata')
+            self._eqs[name] = sp.Matrix(
+                [
+                    [cl.get_ncoeff(xr) for xr in x_rdata]
+                    for cl in self._conservationlaws
+                ]
+            )
 
         elif name == 'dtcldx':
             # this is always zero
@@ -1490,8 +1493,13 @@ class ODEModel:
 
         elif name == 'dx_rdatadx_solver':
             if self.num_cons_law():
-                self._eqs[name] = smart_jacobian(self.eq('x_rdata'),
-                                                 self.sym('x'))
+                x_solver = self.sym('x')
+                self._eqs[name] = sp.Matrix(
+                    [
+                        [state.get_dx_rdata_dx_solver(xs) for xs in x_solver]
+                        for state in self._states
+                    ]
+                )
             else:
                 # so far, dx_rdatadx_solver is only required for sx_rdata
                 # in case of no conservation laws, C++ code will directly use
@@ -1873,16 +1881,16 @@ class ODEModel:
             [comp.get_val() for comp in getattr(self, component)]
         )
 
-    def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Basic]]:
+    def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Expr]]:
         """Returns a list of states with conservation law set
 
         :return:
             list of state identifiers
         """
         return [
-            (state.get_id(), state._conservation_law)
+            (state.get_id(), state.get_x_rdata())
             for state in self._states
-            if state._conservation_law is not None
+            if state.has_conservation_law()
         ]
 
     def _generate_value(self, name: str) -> None:
@@ -1950,7 +1958,23 @@ class ODEModel:
         :return:
             boolean indicating if conservation_law is not None
         """
-        return self._states[ix]._conservation_law is not None
+        return self._states[ix].has_conservation_law()
+
+    def get_solver_indices(self) -> Dict[int, int]:
+        """
+        Returns a mapping that maps rdata species indices to solver indices
+
+        :return:
+            dictionary mapping rdata species indices to solver indices
+        """
+        solver_index = {}
+        ix_solver = 0
+        for ix in range(len(self._states)):
+            if self.state_has_conservation_law(ix):
+                continue
+            solver_index[ix] = ix_solver
+            ix_solver += 1
+        return solver_index
 
     def get_solver_indices(self) -> Dict[int, int]:
         """
@@ -2896,7 +2920,7 @@ class ODEExporter:
                     [
                         str(idx)
                         for idx, state in enumerate(self.model._states)
-                        if state._conservation_law is None
+                        if not state.has_conservation_law()
                     ]
                 ),
             'REINIT_FIXPAR_INITCOND':

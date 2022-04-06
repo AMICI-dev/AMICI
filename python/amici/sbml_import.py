@@ -1635,22 +1635,14 @@ class SbmlImporter:
             target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
 
-            # \sum coeff * state * volume
-            abundance_expr = sp.Add(*[
-                state_id * coeff * compartment
-                for state_id, coeff, compartment
-                in zip(state_ids, coefficients, compartment_sizes)
-            ])
-
             new_conservation_laws.append({
                 'state': target_state_id,
                 'total_abundance': total_abundance,
-                'state_expr':
-                    (total_abundance - (abundance_expr
-                                        - target_state_id * target_compartment
-                                        * target_state_coeff))
-                    / target_state_coeff / target_compartment,
-                'abundance_expr': abundance_expr
+                'coefficients': {
+                     state_id: coeff * compartment
+                     for state_id, coeff, compartment
+                     in zip(state_ids, coefficients, compartment_sizes)
+                },
             })
             species_to_be_removed.add(target_state_model_idx)
 
@@ -2090,8 +2082,7 @@ def _add_conservation_for_constant_species(
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'coefficients': {target_state: 1.0},
             })
             # mark species to delete from stoichiometric matrix
             species_solver.pop(ix)
