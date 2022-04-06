@@ -1646,24 +1646,6 @@ class SbmlImporter:
             })
             species_to_be_removed.add(target_state_model_idx)
 
-        # replace eliminated states by their state expressions, taking care of
-        #  any (non-cyclic) dependencies
-        state_exprs = {
-            cl['state']: cl['state_expr']
-            for cl in itt.chain(conservation_laws, new_conservation_laws)
-        }
-        try:
-            sorted_state_exprs = toposort_symbols(state_exprs)
-        except CircularDependencyError as e:
-            raise AssertionError(
-                "Circular dependency detected in conservation laws. "
-                "This should not have happened."
-            ) from e
-
-        for cl in new_conservation_laws:
-            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
-                                               sorted_state_exprs)
-
         conservation_laws.extend(new_conservation_laws)
 
         # list of species that are not determined by conservation laws
