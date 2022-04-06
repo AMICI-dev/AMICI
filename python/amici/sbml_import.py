@@ -1631,8 +1631,6 @@ class SbmlImporter:
             compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
             target_state_id = all_state_ids[target_state_model_idx]
-            target_compartment = all_compartment_sizes[target_state_model_idx]
-            target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
 
             new_conservation_laws.append({
