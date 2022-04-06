@@ -1162,53 +1162,52 @@ def _flatten_conservation_laws(
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
 
-    while len(conservation_law_subs):
+    while conservation_law_subs:
         for cl in conservation_laws:
-            matched_subs = [
-                s for s in conservation_law_subs
-                if s[0] in cl['coefficients'] and s[0] != cl['state']
-            ]
-            if matched_subs:
-                for s in matched_subs:
-                    coeff = cl['coefficients'][s[0]]
-                    del cl['coefficients'][s[0]]
-                    # x_j = T/b_j - sum_{i≠j}(x_i * b_i) / b_j
-                    # don't need to account for totals here as we can simply
-                    # absorb that into the new total
-                    for k, v in s[1].items():
-                        if k == s[0]:
-                            continue
-                        update = -coeff * v / s[1][s[0]]
-
-                        if k in cl['coefficients']:
-                            cl['coefficients'][k] += update
-                        else:
-                            cl['coefficients'][k] = update
-
+            # only update if we changed something
+            if any(
+                _apply_conseration_law_sub(cl, sub)
+                for sub in conservation_law_subs
+            ):
                 conservation_law_subs = \
                     _get_conservation_law_subs(conservation_laws)
 
 
-def _select_valid_cls(subs: Iterable[Tuple[sp.Symbol, sp.Basic]],
-                      state: sp.Symbol) -> List[Tuple[sp.Symbol, sp.Basic]]:
+def _apply_conseration_law_sub(cl: ConservationLaw,
+                               sub: Tuple[sp.Symbol, ConservationLaw]) -> bool:
     """
-    Subselect substitutions such that we do not end up with conservation
-    laws that are self-referential
+    Applies a substitution to a conservation law by replacing the
+    coefficient of the state of the
 
-    :param subs:
-        substitutions in tuple format
+    :param cl:
+        conservation law
 
-    :param state:
-        target symbolic state to which substitutions will be applied
+    :param sub:
+        substitution to apply, tuple of (state to be replaced, conservation
+        law)
 
-    :return:
-        list of valid substitutions
+    :return: boolean flag indicating whether the substitution was applied
     """
-    return [
-        sub
-        for sub in subs
-        if str(state) not in [str(symbol) for symbol in sub[1].free_symbols]
-    ]
+    coeff = cl['coefficients'].get(sub[0], 0.0)
+    if coeff == 0.0 or cl['state'] == sub[0]:
+        return False
+
+    del cl['coefficients'][sub[0]]
+    # x_j = T/b_j - sum_{i≠j}(x_i * b_i) / b_j
+    # don't need to account for totals here as we can simply
+    # absorb that into the new total
+    for k, v in sub[1].items():
+        if k == sub[0]:
+            continue
+        update = - coeff * v / sub[1][sub[0]]
+
+        if k in cl['coefficients']:
+            cl['coefficients'][k] += update
+        else:
+            cl['coefficients'][k] = update
+
+    return True
+
 
 def _get_conservation_law_subs(
         conservation_laws: List[ConservationLaw]
