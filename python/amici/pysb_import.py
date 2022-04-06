@@ -1109,8 +1109,6 @@ def _construct_conservation_from_prototypes(
     conservation_laws = []
     for monomer_name in cl_prototypes:
         target_index = cl_prototypes[monomer_name]['target_index']
-
-                             ]).count(monomer_name)
         coefficients = dict()
 
         for ix, specie in enumerate(pysb_model.species):
@@ -1174,13 +1172,18 @@ def _flatten_conservation_laws(
                 for s in matched_subs:
                     coeff = cl['coefficients'][s[0]]
                     del cl['coefficients'][s[0]]
-                    # x_j = T/a_j - sum_{i≠j}(x_i * a_i) / a_j
+                    # x_j = T/b_j - sum_{i≠j}(x_i * b_i) / b_j
                     # don't need to account for totals here as we can simply
                     # absorb that into the new total
                     for k, v in s[1].items():
                         if k == s[0]:
                             continue
-                        cl['coefficients'][k] = -coeff * v / s[1][s[0]]
+                        update = -coeff * v / s[1][s[0]]
+
+                        if k in cl['coefficients']:
+                            cl['coefficients'][k] += update
+                        else:
+                            cl['coefficients'][k] = update
 
                 conservation_law_subs = \
                     _get_conservation_law_subs(conservation_laws)
