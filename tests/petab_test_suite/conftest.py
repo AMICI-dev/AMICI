@@ -61,7 +61,7 @@ def pytest_generate_tests(metafunc):
             argvalues = [(case, 'pysb') for case in test_numbers]
         else:
             argvalues = []
-            for format in ('sbml', test_petab_test_suite.yml'pysb'):
+            for format in ('sbml', 'pysb'):
                 argvalues.extend((case, format)
                                  for case in test_numbers or get_cases(format))
         metafunc.parametrize("case,model_type", argvalues)
