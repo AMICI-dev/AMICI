@@ -19,6 +19,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from itertools import chain, starmap
+from pathlib import Path
 from string import Template
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
                     Union)
@@ -2208,7 +2209,7 @@ class ODEExporter:
     def __init__(
             self,
             ode_model: ODEModel,
-            outdir: Optional[str] = None,
+            outdir: Optional[Path, str] = None,
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
@@ -3090,7 +3091,7 @@ class ODEExporter:
             template_data
         )
 
-    def set_paths(self, output_dir: Optional[str] = None) -> None:
+    def set_paths(self, output_dir: Optional[str, Path] = None) -> None:
         """
         Set output paths for the model and create if necessary
 

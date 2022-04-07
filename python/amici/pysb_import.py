@@ -9,6 +9,7 @@ import itertools
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Set, Tuple,
                     Union)
 
@@ -22,8 +23,7 @@ from .import_utils import (_get_str_symbol_identifiers,
                            _parse_special_functions,
                            generate_measurement_symbol,
                            noise_distribution_to_cost_function,
-                           noise_distribution_to_observable_transformation,
-                           RESERVED_SYMBOLS)
+                           noise_distribution_to_observable_transformation)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (Constant, Expression, LogLikelihood, ODEExporter,
                          ODEModel, Observable, Parameter, SigmaY, State)
@@ -36,7 +36,7 @@ logger = get_logger(__name__, logging.ERROR)
 
 def pysb2amici(
         model: pysb.Model,
-        output_dir: str = None,
+        output_dir: Optional[str, Path] = None,
         observables: List[str] = None,
         constant_parameters: List[str] = None,
         sigmas: Dict[str, str] = None,
@@ -1369,7 +1369,7 @@ def _get_changed_stoichiometries(
     return changed_stoichiometries
 
 
-def pysb_model_from_path(pysb_model_file: str) -> pysb.Model:
+def pysb_model_from_path(pysb_model_file: Union[str, Path]) -> pysb.Model:
     """Load a pysb model module and return the :class:`pysb.Model` instance
 
     :param pysb_model_file: Full or relative path to the PySB model module
