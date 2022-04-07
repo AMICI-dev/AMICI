@@ -3091,7 +3091,7 @@ class ODEExporter:
             template_data
         )
 
-    def set_paths(self, output_dir: Optional[str, Path] = None) -> None:
+    def set_paths(self, output_dir: Optional[Union[str, Path]] = None) -> None:
         """
         Set output paths for the model and create if necessary
 

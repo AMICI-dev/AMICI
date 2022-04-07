@@ -312,7 +312,7 @@ def create_dummy_sbml(
 @log_execution_time('Importing PEtab model', logger)
 def import_model_pysb(
         petab_problem: PysbPetabProblem,
-        model_output_dir: Optional[str, Path] = None,
+        model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
         **kwargs
 ) -> None:

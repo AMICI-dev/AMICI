@@ -373,7 +373,7 @@ def import_model_sbml(
         observable_table: Optional[Union[str, Path, pd.DataFrame]] = None,
         measurement_table: Optional[Union[str, Path, pd.DataFrame]] = None,
         model_name: Optional[str] = None,
-        model_output_dir: Optional[str, Path] = None,
+        model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
         allow_reinit_fixpar_initcond: bool = True,
         **kwargs) -> amici.SbmlImporter:

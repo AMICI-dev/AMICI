@@ -36,7 +36,7 @@ logger = get_logger(__name__, logging.ERROR)
 
 def pysb2amici(
         model: pysb.Model,
-        output_dir: Optional[str, Path] = None,
+        output_dir: Optional[Union[str, Path]] = None,
         observables: List[str] = None,
         constant_parameters: List[str] = None,
         sigmas: Dict[str, str] = None,
