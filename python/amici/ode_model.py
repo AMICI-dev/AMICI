@@ -131,6 +131,73 @@ class ModelQuantity:
         self._value = cast_to_sym(val, 'value')
 
 
+class ConservationLaw(ModelQuantity):
+    """
+    A conservation law defines the absolute the total amount of a
+    (weighted) sum of states
+
+    """
+    def __init__(self,
+                 identifier: sp.Symbol,
+                 name: str,
+                 value: sp.Expr,
+                 coefficients: Dict[sp.Symbol, sp.Expr],
+                 state_id: sp.Symbol):
+        """
+        Create a new ConservationLaw instance.
+
+        :param identifier:
+            unique identifier of the ConservationLaw
+
+        :param name:
+            individual name of the ConservationLaw (does not need to be
+            unique)
+
+        :param value: formula (sum of states)
+
+        :param coefficients:
+            coefficients of the states in the sum
+
+        :param state_id:
+            identifier of the state that this conservation law replaces
+        """
+        self._state_expr: sp.Symbol = identifier - (value - state_id)
+        self._coefficients: Dict[sp.Symbol, sp.Expr] = coefficients
+        self._ncoeff: sp.Expr = coefficients[state_id]
+        super(ConservationLaw, self).__init__(identifier, name, value)
+
+    def get_state(self) -> sp.Symbol:
+        """
+        Get the identifier of the state that this conservation law replaces
+
+        :return: identifier of the state
+        """
+        return self._state_id
+
+    def get_ncoeff(self, state_id) -> Union[sp.Expr, int, float]:
+        """
+        Computes the normalized coefficient a_i/a_j where i is the index of
+        the provided state_id and j is the index of the state that is
+        replaced by this conservation law. This can be used to compute both
+        dtotal_cl/dx_rdata (=ncoeff) and dx_rdata/dx_solver (=-ncoeff).
+
+        :param state_id:
+            identifier of the state
+
+        :return: normalized coefficent of the state
+        """
+        return self._coefficients.get(state_id, 0.0) / self._ncoeff
+
+    def get_x_rdata(self):
+        """
+        Returns the expression that allows computation of x_rdata for the state
+        that this conservation law replaces.
+
+        :return: x_rdata expression
+        """
+        return self._state_expr
+
+
 class State(ModelQuantity):
     """
     A State variable defines an entity that evolves with time according to
@@ -171,10 +238,9 @@ class State(ModelQuantity):
         """
         super(State, self).__init__(identifier, name, init)
         self._dt = cast_to_sym(dt, 'dt')
-        self._conservation_law = None
+        self._conservation_law: Union[ConservationLaw, None] = None
 
-    def set_conservation_law(self,
-                             law: sp.Expr) -> None:
+    def set_conservation_law(self, law: ConservationLaw) -> None:
         """
         Sets the conservation law of a state.
 
@@ -185,9 +251,9 @@ class State(ModelQuantity):
             linear sum of states that if added to this state remain
             constant over time
         """
-        if not isinstance(law, sp.Expr):
-            raise TypeError(f'conservation law must have type sympy.Expr, '
-                            f'was {type(law)}')
+        if not isinstance(law, ConservationLaw):
+            raise TypeError(f'conservation law must have type ConservationLaw'
+                            f', was {type(law)}')
 
         self._conservation_law = law
 
@@ -219,30 +285,37 @@ class State(ModelQuantity):
         """
         return self._dt.free_symbols.union(self._value.free_symbols)
 
-
-class ConservationLaw(ModelQuantity):
-    """
-    A conservation law defines the absolute the total amount of a
-    (weighted) sum of states
-
-    """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr):
+    def has_conservation_law(self):
         """
-        Create a new ConservationLaw instance.
+        Checks whether this state has a conservation law assigned.
 
-        :param identifier:
-            unique identifier of the ConservationLaw
-
-        :param name:
-            individual name of the ConservationLaw (does not need  to be
-            unique)
-
-        :param value: formula (sum of states)
+        :return: True if assigned, False otherwise
         """
-        super(ConservationLaw, self).__init__(identifier, name, value)
+        return self._conservation_law is not None
+
+    def get_x_rdata(self):
+        """
+        Returns the expression that allows computation of x_rdata for this
+        state, accounting for conservation laws.
+
+        :return: x_rdata expression
+        """
+        if self._conservation_law is None:
+            return self.get_id()
+        else:
+            return self._conservation_law.get_x_rdata()
+
+    def get_dx_rdata_dx_solver(self, state_id):
+        """
+        Returns the expression that allows computation of ``dx_rdata_dx_solver`` for this
+        state, accounting for conservation laws.
+
+        :return: dx_rdata_dx_solver expression
+        """
+        if self._conservation_law is None:
+            return sp.Integer(self._identifier == state_id)
+        else:
+            return -self._conservation_law.get_ncoeff(state_id)
 
 
 class Observable(ModelQuantity):

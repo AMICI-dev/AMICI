@@ -1109,37 +1109,17 @@ def _construct_conservation_from_prototypes(
     conservation_laws = []
     for monomer_name in cl_prototypes:
         target_index = cl_prototypes[monomer_name]['target_index']
+        coefficients = dict()
 
-        # T = sum_i(a_i * x_i)
-        # x_j = (T - sum_i≠j(a_i * x_i))/a_j
-        # law: sum_i≠j(a_i * x_i))/a_j
-        # state: x_j
-        target_expression = sp.Add(*(
-            sp.Symbol(f'__s{ix}')
-            * extract_monomers(specie).count(monomer_name)
-            for ix, specie in enumerate(pysb_model.species)
-            if ix != target_index
-        )) / extract_monomers(pysb_model.species[
-                                 target_index
-                             ]).count(monomer_name)
-        # normalize by the stoichiometry of the target species
-        target_state = sp.Symbol(f'__s{target_index}')
-        # = x_j
-
-        total_abundance = sp.Symbol(f'tcl__s{target_index}')
-        # = T/a_j
-
-        state_expr = total_abundance - target_expression
-        # x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
-
-        abundance_expr = target_expression + target_state
-        # T/a_j = sum_i≠j(a_i * x_i)/a_j + x_j
+        for ix, specie in enumerate(pysb_model.species):
+            count = extract_monomers(specie).count(monomer_name)
+            if count > 0:
+                coefficients[sp.Symbol(f'__s{ix}')] = count
 
         conservation_laws.append({
-            'state': target_state,
-            'total_abundance': total_abundance,
-            'state_expr': state_expr,
-            'abundance_expr': abundance_expr,
+            'state': sp.Symbol(f'__s{target_index}'),
+            'total_abundance': sp.Symbol(f'tcl__s{target_index}'),
+            'coefficients': coefficients,
         })
 
     return conservation_laws
@@ -1163,14 +1143,10 @@ def _add_conservation_for_constant_species(
 
     for ix in range(ode_model.num_states_rdata()):
         if ode_model.state_is_constant(ix):
-            target_state = sp.Symbol(f'__s{ix}')
-            total_abundance = sp.Symbol(f'tcl__s{ix}')
-
             conservation_laws.append({
-                'state': target_state,
-                'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'state': sp.Symbol(f'__s{ix}'),
+                'total_abundance': sp.Symbol(f'tcl__s{ix}'),
+                'coefficients': {sp.Symbol(f'__s{ix}'): 1.0}
             })
 
 
@@ -1186,83 +1162,58 @@ def _flatten_conservation_laws(
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
 
-    while len(conservation_law_subs):
+    while conservation_law_subs:
         for cl in conservation_laws:
-            if _sub_matches_cl(
-                    conservation_law_subs,
-                    cl['state_expr'],
-                    cl['state']
+            # only update if we changed something
+            if any(
+                _apply_conseration_law_sub(cl, sub)
+                for sub in conservation_law_subs
             ):
-                # this optimization is done by subs anyways, but we dont
-                # want to recompute the subs if we did not change anything
-                valid_subs = _select_valid_cls(
-                    conservation_law_subs,
-                    cl['state']
-                )
-                if len(valid_subs) > 0:
-                    cl['state_expr'] = cl['state_expr'].subs(valid_subs)
-                    conservation_law_subs = \
-                        _get_conservation_law_subs(conservation_laws)
+                conservation_law_subs = \
+                    _get_conservation_law_subs(conservation_laws)
 
 
-def _select_valid_cls(subs: Iterable[Tuple[sp.Symbol, sp.Basic]],
-                      state: sp.Symbol) -> List[Tuple[sp.Symbol, sp.Basic]]:
+def _apply_conseration_law_sub(cl: ConservationLaw,
+                               sub: Tuple[sp.Symbol, ConservationLaw]) -> bool:
     """
-    Subselect substitutions such that we do not end up with conservation
-    laws that are self-referential
+    Applies a substitution to a conservation law by replacing the
+    coefficient of the state of the
 
-    :param subs:
-        substitutions in tuple format
+    :param cl:
+        conservation law
 
-    :param state:
-        target symbolic state to which substitutions will be applied
+    :param sub:
+        substitution to apply, tuple of (state to be replaced, conservation
+        law)
 
-    :return:
-        list of valid substitutions
+    :return: boolean flag indicating whether the substitution was applied
     """
-    return [
-        sub
-        for sub in subs
-        if str(state) not in [str(symbol) for symbol in sub[1].free_symbols]
-    ]
+    coeff = cl['coefficients'].get(sub[0], 0.0)
+    if coeff == 0.0 or cl['state'] == sub[0]:
+        return False
 
+    del cl['coefficients'][sub[0]]
+    # x_j = T/b_j - sum_{i≠j}(x_i * b_i) / b_j
+    # don't need to account for totals here as we can simply
+    # absorb that into the new total
+    for k, v in sub[1].items():
+        if k == sub[0]:
+            continue
+        update = - coeff * v / sub[1][sub[0]]
 
-def _sub_matches_cl(subs: Iterable[Tuple[sp.Symbol, sp.Basic]],
-                    state_expr: sp.Basic,
-                    state: sp.Basic) -> bool:
-    """
-    Checks whether any of the substitutions in subs will be applied to
-    state_expr
+        if k in cl['coefficients']:
+            cl['coefficients'][k] += update
+        else:
+            cl['coefficients'][k] = update
 
-    :param subs:
-        substitutions in tuple format
-
-    :param state_expr:
-        target symbolic expressions in which substitutions will be applied
-
-    :param state: target symbolic state to which substitutions will
-        be applied
-
-    :return:
-        boolean indicating positive match
-    """
-
-    sub_symbols = set(
-        sub[0]
-        for sub in subs
-        if str(state) not in [
-            str(symbol) for symbol in sub[1].free_symbols
-        ]
-    )
-
-    return len(sub_symbols.intersection(state_expr.free_symbols)) > 0
+    return True
 
 
 def _get_conservation_law_subs(
         conservation_laws: List[ConservationLaw]
-) -> List[Tuple[sp.Symbol, sp.Basic]]:
+) -> List[Tuple[sp.Symbol, Dict[sp.Symbol, sp.Expr]]]:
     """
-    Computes a list of (state, law) tuples for conservation laws that still
+    Computes a list of (state, coeffs) tuples for conservation laws that still
     appear in other conservation laws
 
     :param conservation_laws:
@@ -1272,29 +1223,14 @@ def _get_conservation_law_subs(
         list of tuples containing substitution rules to be used with sympy
         subs
     """
-    free_symbols_cl = _conservation_law_variables(conservation_laws)
     return [
-        (cl['state'], cl['state_expr']) for cl in conservation_laws
-        if cl['state'] in free_symbols_cl
+        (cl['state'], cl['coefficients']) for cl in conservation_laws
+        if any(
+            cl['state'] in other_cl['coefficients']
+            for other_cl in conservation_laws
+            if other_cl != cl
+        )
     ]
-
-
-def _conservation_law_variables(
-        conservation_laws: List[ConservationLaw]) -> Set[sp.Symbol]:
-    """
-    Construct the set of all free variables from a list of conservation laws
-
-    :param conservation_laws:
-        list of conservation laws
-
-    :return:
-        free variables in conservation laws
-    """
-    variables = set()
-    for cl in conservation_laws:
-        variables |= cl['state_expr'].free_symbols
-    return variables
-
 
 def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            pysb_model: pysb.Model,
