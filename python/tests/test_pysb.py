@@ -165,8 +165,7 @@ def test_compare_to_pysb_simulation(example):
             solver.setRelativeTolerance(rtol)
             rdata = amici.runAmiciSimulation(model_pysb, solver)
 
-            # check agreement of species simulation
-
+            # check agreement of species simulations
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
 
