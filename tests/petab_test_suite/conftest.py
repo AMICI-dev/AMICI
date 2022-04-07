@@ -56,15 +56,12 @@ def pytest_generate_tests(metafunc):
         if metafunc.config.getoption("--only-sbml"):
             test_numbers = test_numbers if test_numbers else get_cases("sbml")
             argvalues = [(case, 'sbml') for case in test_numbers]
-
         elif metafunc.config.getoption("--only-pysb"):
             test_numbers = test_numbers if test_numbers else get_cases("pysb")
             argvalues = [(case, 'pysb') for case in test_numbers]
         else:
             argvalues = []
             for format in ('sbml', 'pysb'):
-                test_numbers = test_numbers if test_numbers else get_cases(
-                    format)
-                argvalues += [(case, format) for case in test_numbers]
-
+                argvalues.extend((case, format)
+                                 for case in test_numbers or get_cases(format))
         metafunc.parametrize("case,model_type", argvalues)
