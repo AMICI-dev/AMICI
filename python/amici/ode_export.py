@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from itertools import chain
+from itertools import chain, starmap
 from string import Template
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
                     Union)
@@ -439,7 +439,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
     if (n_procs := int(os.environ.get("AMICI_IMPORT_NPROCS", 1))) == 1:
         # serial
         return sp.MutableSparseMatrix(nrow, ncol,
-            dict(map(_jacobian_element, elements))
+            dict(starmap(_jacobian_element, elements))
         )
 
     # parallel
@@ -3360,7 +3360,6 @@ def _custom_pow_eval_derivative(self, s):
     )
 
 
-def _jacobian_element(args):
-    i, j, eq_i, sym_var_j = args
+def _jacobian_element(i, j, eq_i, sym_var_j):
     """Compute a single element of a jacobian"""
     return (i, j), eq_i.diff(sym_var_j)
