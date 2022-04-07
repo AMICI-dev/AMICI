@@ -321,16 +321,8 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
             solver.setStabilityLimitFlag(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet"))));
         }
 
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq")) {
-            solver.setPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
-        }
-
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
             solver.setNewtonMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps"))));
-        }
-
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps")) {
-            solver.setNewtonMaxLinearSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps"))));
         }
     }
 }

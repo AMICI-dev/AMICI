@@ -104,6 +104,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
+    auto start_time_total = clock();
     solver.startTimer();
 
     /* Applies condition-specific model settings and restores them when going
@@ -124,14 +125,13 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     bool bwd_success = true;
 
     try {
-        if (solver.getPreequilibration() ||
-            (edata && !edata->fixedParametersPreequilibration.empty())) {
+        if (edata && !edata->fixedParametersPreequilibration.empty()) {
             ConditionContext cc2(
                 &model, edata, FixedParameterContext::preequilibration
             );
 
             preeq = std::make_unique<SteadystateProblem>(solver, model);
-            preeq->workSteadyStateProblem(&solver, &model, -1);
+            preeq->workSteadyStateProblem(solver, model, -1);
         }
 
 
@@ -142,7 +142,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::make_unique<SteadystateProblem>(solver, model);
-            posteq->workSteadyStateProblem(&solver, &model,
+            posteq->workSteadyStateProblem(solver, model,
                                            fwd->getCurrentTimeIteration());
         }
 
@@ -151,7 +151,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             fwd->getAdjointUpdates(model, *edata);
             if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
-                posteq->workSteadyStateBackwardProblem(&solver, &model,
+                posteq->workSteadyStateBackwardProblem(solver, model,
                                                        bwd.get());
             }
 
@@ -165,7 +165,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             if (preeq) {
                 ConditionContext cc2(&model, edata,
                                      FixedParameterContext::preequilibration);
-                preeq->workSteadyStateBackwardProblem(&solver, &model,
+                preeq->workSteadyStateBackwardProblem(solver, model,
                                                       bwd.get());
             }
         }
@@ -234,6 +234,10 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         preeq.get(), fwd.get(),
         bwd_success ? bwd.get() : nullptr,
         posteq.get(), model, solver, edata);
+
+    rdata->cpu_time_total = static_cast<double>(clock() - start_time_total)
+                            * 1000.0 / CLOCKS_PER_SEC;
+
     return rdata;
 }
 

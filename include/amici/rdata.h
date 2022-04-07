@@ -225,6 +225,9 @@ class ReturnData: public ModelDimensions {
     /** computation time of backward solve [ms] */
     double cpu_timeB = 0.0;
 
+    /** total CPU time from entering runAmiciSimulation until exiting [ms] */
+    double cpu_time_total = 0.0;
+
     /** flags indicating success of steady state solver (preequilibration) */
     std::vector<SteadyStateStatus> preeq_status;
 
@@ -252,13 +255,6 @@ class ReturnData: public ModelDimensions {
     std::vector<int> preeq_numsteps;
 
     /**
-     * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (preequilibration)
-     * (shape `newton_maxsteps * 2`)
-     */
-    std::vector<int> preeq_numlinsteps;
-
-    /**
      * number of simulation steps for adjoint steady state problem
      * (preequilibration) [== 0 if analytical solution worked, > 0 otherwise]
      */
@@ -269,13 +265,6 @@ class ReturnData: public ModelDimensions {
      * [newton, simulation, newton] (shape `3`) (postequilibration)
      */
     std::vector<int> posteq_numsteps;
-
-    /**
-     * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (postequilibration)
-     * (shape `newton_maxsteps * 2`)
-     */
-    std::vector<int> posteq_numlinsteps;
 
     /**
      * number of simulation steps for adjoint steady state problem

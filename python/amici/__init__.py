@@ -178,3 +178,9 @@ def import_model_module(module_name: str,
 
     with add_path(module_path):
         return importlib.import_module(module_name)
+
+
+class AmiciVersionError(RuntimeError):
+    """Error thrown if an AMICI model is loaded that is incompatible with
+    the installed AMICI base package"""
+    pass

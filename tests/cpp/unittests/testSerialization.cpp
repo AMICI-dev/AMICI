@@ -70,7 +70,6 @@ checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
     ASSERT_TRUE(r.preeq_wrms == s.preeq_wrms ||
                 (std::isnan(r.preeq_wrms) && std::isnan(s.preeq_wrms)));
     ASSERT_EQ(r.preeq_numsteps, s.preeq_numsteps);
-    ASSERT_EQ(r.preeq_numlinsteps, s.preeq_numlinsteps);
     EXPECT_NEAR(r.preeq_cpu_time, s.preeq_cpu_time, 1e-16);
 
     ASSERT_EQ(r.posteq_status, s.posteq_status);
@@ -79,7 +78,6 @@ checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
     ASSERT_TRUE(r.posteq_wrms == s.posteq_wrms ||
                 (std::isnan(r.posteq_wrms) && std::isnan(s.posteq_wrms)));
     ASSERT_EQ(r.posteq_numsteps, s.posteq_numsteps);
-    ASSERT_EQ(r.posteq_numlinsteps, s.posteq_numlinsteps);
     EXPECT_NEAR(r.posteq_cpu_time, s.posteq_cpu_time, 1e-16);
 
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
@@ -108,8 +106,6 @@ class SolverSerializationTest : public ::testing::Test {
         solver.setMaxSteps(1e1);
         solver.setMaxStepsBackwardProblem(1e2);
         solver.setNewtonMaxSteps(1e3);
-        solver.setNewtonMaxLinearSteps(1e4);
-        solver.setPreequilibration(true);
         solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
         solver.setStabilityLimitFlag(false);

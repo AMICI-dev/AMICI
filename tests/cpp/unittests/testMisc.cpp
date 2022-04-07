@@ -408,19 +408,12 @@ testSolverGetterSetters(CVodeSolver solver,
     ASSERT_EQ(static_cast<int>(solver.getLinearMultistepMethod()),
               static_cast<int>(lmm));
 
-    solver.setPreequilibration(true);
-    ASSERT_EQ(solver.getPreequilibration(), true);
-
-    solver.setStabilityLimitFlag(true);
+        solver.setStabilityLimitFlag(true);
     ASSERT_EQ(solver.getStabilityLimitFlag(), true);
 
     ASSERT_THROW(solver.setNewtonMaxSteps(badsteps), AmiException);
     solver.setNewtonMaxSteps(steps);
     ASSERT_EQ(solver.getNewtonMaxSteps(), steps);
-
-    ASSERT_THROW(solver.setNewtonMaxLinearSteps(badsteps), AmiException);
-    solver.setNewtonMaxLinearSteps(steps);
-    ASSERT_EQ(solver.getNewtonMaxLinearSteps(), steps);
 
     ASSERT_THROW(solver.setMaxSteps(badsteps), AmiException);
     solver.setMaxSteps(steps);
