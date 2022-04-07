@@ -8,15 +8,15 @@ import sys
 
 import amici
 import petab
-import petabtests
 import pytest
 from _pytest.outcomes import Skipped
+from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import import_petab_problem, PysbPetabProblem
-from amici.petab_objective import (
-    simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
-from amici import SteadyStateSensitivityMode
+from amici.petab_import import PysbPetabProblem, import_petab_problem
+from amici.petab_objective import (create_parameterized_edatas,
+                                   rdatas_to_measurement_df, simulate_petab)
+from petabtests.core import get_cases
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -152,9 +152,10 @@ def run():
 
     n_success = 0
     n_skipped = 0
-    for case in petabtests.CASES_LIST:
+    cases = get_cases('sbml')
+    for case in cases:
         try:
-            test_case(case)
+            test_case(case, 'sbml')
             n_success += 1
         except Skipped:
             n_skipped += 1
@@ -163,9 +164,9 @@ def run():
             logger.error(f"Case {case} failed.")
             logger.error(e)
 
-    logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful, "
+    logger.info(f"{n_success} / {len(cases)} successful, "
                 f"{n_skipped} skipped")
-    if n_success != len(petabtests.CASES_LIST):
+    if n_success != len(cases):
         sys.exit(1)
 
 
