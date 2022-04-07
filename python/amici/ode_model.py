@@ -150,7 +150,7 @@ class ConservationLaw(ModelQuantity):
             unique identifier of the ConservationLaw
 
         :param name:
-            individual name of the ConservationLaw (does not need  to be
+            individual name of the ConservationLaw (does not need to be
             unique)
 
         :param value: formula (sum of states)
@@ -177,7 +177,7 @@ class ConservationLaw(ModelQuantity):
     def get_ncoeff(self, state_id) -> Union[sp.Expr, int, float]:
         """
         Computes the normalized coefficient a_i/a_j where i is the index of
-        the provided state_id and j is the index of the state that this
+        the provided state_id and j is the index of the state that is
         replaced by this conservation law. This can be used to compute both
         dtotal_cl/dx_rdata (=ncoeff) and dx_rdata/dx_solver (=-ncoeff).
 
@@ -307,10 +307,10 @@ class State(ModelQuantity):
 
     def get_dx_rdata_dx_solver(self, state_id):
         """
-        Returns the expression that allows computation of x_rdata for this
+        Returns the expression that allows computation of ``dx_rdata_dx_solver`` for this
         state, accounting for conservation laws.
 
-        :return: x_rdata expression
+        :return: dx_rdata_dx_solver expression
         """
         if self._conservation_law is None:
             return sp.Integer(self._identifier == state_id)
