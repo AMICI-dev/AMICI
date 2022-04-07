@@ -29,8 +29,10 @@ Solver::Solver(const Solver &other)
       linsol_(other.linsol_), atol_(other.atol_), rtol_(other.rtol_),
       atol_fsa_(other.atol_fsa_), rtol_fsa_(other.rtol_fsa_),
       atolB_(other.atolB_), rtolB_(other.rtolB_), quad_atol_(other.quad_atol_),
-      quad_rtol_(other.quad_rtol_), ss_atol_(other.ss_atol_),
-      ss_rtol_(other.ss_rtol_), ss_atol_sensi_(other.ss_atol_sensi_),
+      quad_rtol_(other.quad_rtol_), ss_tol_factor_(other.ss_tol_factor_),
+      ss_atol_(other.ss_atol_), ss_rtol_(other.ss_rtol_),
+      ss_tol_sensi_factor_(other.ss_tol_sensi_factor_),
+      ss_atol_sensi_(other.ss_atol_sensi_),
       ss_rtol_sensi_(other.ss_rtol_sensi_), rdata_mode_(other.rdata_mode_),
       newton_step_steadystate_conv_(other.newton_step_steadystate_conv_),
       check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_),
@@ -781,8 +783,19 @@ void Solver::setAbsoluteToleranceQuadratures(const double atol) {
             applyTolerancesASA(iMem);
 }
 
+double Solver::getSteadyStateToleranceFactor() const {
+    return static_cast<double>(ss_tol_factor_);
+}
+
+void Solver::setSteadyStateToleranceFactor(const double ss_tol_factor) {
+    if (ss_tol_factor < 0)
+        throw AmiException("ss_tol_factor must be a non-negative number");
+
+    ss_tol_factor_ = static_cast<realtype>(ss_tol_factor);
+}
+
 double Solver::getRelativeToleranceSteadyState() const {
-    return static_cast<double>(isNaN(ss_rtol_) ? rtol_ : ss_rtol_);
+    return static_cast<double>(isNaN(ss_rtol_) ? rtol_ * ss_tol_factor_ : ss_rtol_);
 }
 
 void Solver::setRelativeToleranceSteadyState(const double rtol) {
@@ -793,7 +806,7 @@ void Solver::setRelativeToleranceSteadyState(const double rtol) {
 }
 
 double Solver::getAbsoluteToleranceSteadyState() const {
-    return static_cast<double>(isNaN(ss_atol_) ? atol_ : ss_atol_);
+    return static_cast<double>(isNaN(ss_atol_) ? atol_ * ss_tol_factor_ : ss_atol_);
 }
 
 void Solver::setAbsoluteToleranceSteadyState(const double atol) {
@@ -803,8 +816,19 @@ void Solver::setAbsoluteToleranceSteadyState(const double atol) {
     ss_atol_ = static_cast<realtype>(atol);
 }
 
+double Solver::getSteadyStateSensiToleranceFactor() const {
+    return static_cast<double>(ss_tol_sensi_factor_);
+}
+
+void Solver::setSteadyStateSensiToleranceFactor(const double ss_tol_sensi_factor) {
+    if (ss_tol_sensi_factor < 0)
+        throw AmiException("ss_tol_sensi_factor must be a non-negative number");
+
+    ss_tol_sensi_factor_ = static_cast<realtype>(ss_tol_sensi_factor);
+}
+
 double Solver::getRelativeToleranceSteadyStateSensi() const {
-    return static_cast<double>(isNaN(ss_rtol_sensi_) ? rtol_ : ss_rtol_sensi_);
+    return static_cast<double>(isNaN(ss_rtol_sensi_) ? rtol_ * ss_tol_sensi_factor_ : ss_rtol_sensi_);
 }
 
 void Solver::setRelativeToleranceSteadyStateSensi(const double rtol) {
@@ -815,7 +839,7 @@ void Solver::setRelativeToleranceSteadyStateSensi(const double rtol) {
 }
 
 double Solver::getAbsoluteToleranceSteadyStateSensi() const {
-    return static_cast<double>(isNaN(ss_atol_sensi_) ? atol_ : ss_atol_sensi_);
+    return static_cast<double>(isNaN(ss_atol_sensi_) ? atol_ * ss_tol_sensi_factor_ : ss_atol_sensi_);
 }
 
 void Solver::setAbsoluteToleranceSteadyStateSensi(const double atol) {
