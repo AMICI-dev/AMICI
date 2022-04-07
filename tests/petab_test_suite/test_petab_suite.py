@@ -69,8 +69,7 @@ def _test_case(case, model_type):
         problem, model_output_dir=model_output_dir,
         force_compile=True)
     solver = model.getSolver()
-    if case.startswith('0017') and model_type == "pysb":
-        solver.setSteadyStateToleranceFactor(1.0)
+    solver.setSteadyStateToleranceFactor(1.0)
 
     # simulate
     ret = simulate_petab(
