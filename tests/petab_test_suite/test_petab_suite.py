@@ -8,6 +8,7 @@ import sys
 
 import amici
 import petab
+import petabtests
 import pytest
 from _pytest.outcomes import Skipped
 from amici import SteadyStateSensitivityMode
@@ -16,7 +17,7 @@ from amici.logging import get_logger, set_log_level
 from amici.petab_import import PysbPetabProblem, import_petab_problem
 from amici.petab_objective import (create_parameterized_edatas,
                                    rdatas_to_measurement_df, simulate_petab)
-from petabtests.core import get_cases
+from petabtests.core import get_cases, test_id_str
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -41,22 +42,22 @@ def test_case(case, model_type):
 
 def _test_case(case, model_type):
     """Run a single PEtab test suite case"""
-    case = petabtests.test_id_str(case)
+    case = test_id_str(case)
     logger.debug(f"Case {case} [{model_type}]")
 
     # load
     if model_type == "sbml":
-        case_dir = os.path.join(petabtests.SBML_DIR, case)
+        case_dir = petabtests.SBML_DIR / case
         # import petab problem
-        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        yaml_file = case_dir / petabtests.problem_yaml_name(case)
         problem = petab.Problem.from_yaml(yaml_file)
     elif model_type == "pysb":
         import pysb
         pysb.SelfExporter.cleanup()
         pysb.SelfExporter.do_export = True
-        case_dir = os.path.join(petabtests.PYSB_DIR, case)
+        case_dir = petabtests.PYSB_DIR / case
         # import petab problem
-        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        yaml_file = case_dir / petabtests.problem_yaml_name(case)
         problem = PysbPetabProblem.from_yaml(yaml_file,
                                              flatten=case.startswith('0006'))
     else:
