@@ -445,7 +445,7 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     /* ewt = 1/ewt (ewt = 1/(rtol*x+atol)) */
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    /* wrms = sqrt(sum((xdot/ewt)**2)) */
+    /* wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector */
     return N_VWrmsNorm(const_cast<N_Vector>(xdot.getNVector()),
                        ewt.getNVector());
 }
