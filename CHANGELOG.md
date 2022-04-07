@@ -2,6 +2,63 @@
 
 ## v0.X Series
 
+### v0.11.27 (2022-04-04)
+
+New features:
+* Checking condition number when computing sensitivities via Newton
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1730
+* Removed SPBCG solver by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1729
+* Added Newton step convergence checks to steadystate solver by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1737
+* Removed legacy options/members `amioption.newton_preeq` and `Solver::r… by
+  @dweindl in https://github.com/AMICI-dev/AMICI/pull/1744
+* Added `ReturnData::cpu_time_total` to track total time spent in
+  `runAmiciSimulation` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1743
+* SBML import: Alternative algorithm for identifying conservation laws by
+  @dweindl in https://github.com/AMICI-dev/AMICI/pull/1748
+* Use `amici.AmiciVersionError` to indicate version mismatch by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1764
+
+Performance:
+* Optional parallel computation of derivatives during model import by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1740
+* Sparsify jacobian by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1766
+* Speedup for models with conservation laws by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1765
+* Speedup conservation law computation by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1754
+* Exploit stoichiometric matrix in pysb import by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1761
+* Speedup edata construction from petab problems by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1746
+
+Fixes:
+* Fixed `get_model_settings` that would to setting incorrect initial states and
+  initial state sensitivities for models with parameter-dependent initial
+  states by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1751
+* Use correct tolerances for convergence check in Newton solver by @FFroehlich
+  in https://github.com/AMICI-dev/AMICI/pull/1728
+* Harmonized convergence checks by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1731
+* Made sundials' KLU_INDEXTYPE match actual klu index type by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1733
+* Fixed `Model::setStateIsNonNegative` logic that would raise exceptions in
+  cases where it shouldn't by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1736
+* Fixed undefined reference to dladdr by @kristianmeyerr in
+  https://github.com/AMICI-dev/AMICI/pull/1738
+* Fixed HDF5 OSX intermediate group creation errors by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1741
+* Fixed recent cmake-based build issues due to changed sundials library
+  directory by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1756
+* Updated Windows installation instructions by @paulflang in
+  https://github.com/AMICI-dev/AMICI/pull/1763
+
+... and other contributions by @FFroehlich, @dweindl
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.26...v0.11.27
+
 ### v0.11.26 (2022-03-14)
 
 New features:
