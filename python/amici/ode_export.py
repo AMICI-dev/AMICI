@@ -426,7 +426,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         or smart_is_zero_matrix(eq)
         or smart_is_zero_matrix(sym_var)
     ):
-        return sp.MutableSparseMatrix(nrow, ncol, [])
+        return sp.MutableSparseMatrix(nrow, ncol, dict())
 
     # preprocess sparsity pattern
     elements = (
