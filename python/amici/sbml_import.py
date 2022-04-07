@@ -1631,46 +1631,18 @@ class SbmlImporter:
             compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
             target_state_id = all_state_ids[target_state_model_idx]
-            target_compartment = all_compartment_sizes[target_state_model_idx]
-            target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
-
-            # \sum coeff * state * volume
-            abundance_expr = sp.Add(*[
-                state_id * coeff * compartment
-                for state_id, coeff, compartment
-                in zip(state_ids, coefficients, compartment_sizes)
-            ])
 
             new_conservation_laws.append({
                 'state': target_state_id,
                 'total_abundance': total_abundance,
-                'state_expr':
-                    (total_abundance - (abundance_expr
-                                        - target_state_id * target_compartment
-                                        * target_state_coeff))
-                    / target_state_coeff / target_compartment,
-                'abundance_expr': abundance_expr
+                'coefficients': {
+                     state_id: coeff * compartment
+                     for state_id, coeff, compartment
+                     in zip(state_ids, coefficients, compartment_sizes)
+                },
             })
             species_to_be_removed.add(target_state_model_idx)
-
-        # replace eliminated states by their state expressions, taking care of
-        #  any (non-cyclic) dependencies
-        state_exprs = {
-            cl['state']: cl['state_expr']
-            for cl in itt.chain(conservation_laws, new_conservation_laws)
-        }
-        try:
-            sorted_state_exprs = toposort_symbols(state_exprs)
-        except CircularDependencyError as e:
-            raise AssertionError(
-                "Circular dependency detected in conservation laws. "
-                "This should not have happened."
-            ) from e
-
-        for cl in new_conservation_laws:
-            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
-                                               sorted_state_exprs)
 
         conservation_laws.extend(new_conservation_laws)
 
@@ -2090,8 +2062,7 @@ def _add_conservation_for_constant_species(
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'coefficients': {target_state: 1.0},
             })
             # mark species to delete from stoichiometric matrix
             species_solver.pop(ix)
