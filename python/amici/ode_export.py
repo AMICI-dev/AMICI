@@ -2209,7 +2209,7 @@ class ODEExporter:
     def __init__(
             self,
             ode_model: ODEModel,
-            outdir: Optional[Path, str] = None,
+            outdir: Optional[Union[Path, str]] = None,
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
             compiler: Optional[str] = None,
