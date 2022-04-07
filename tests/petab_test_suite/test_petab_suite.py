@@ -3,7 +3,6 @@
 """Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
 
 import logging
-import os
 import sys
 
 import amici
@@ -17,7 +16,6 @@ from amici.logging import get_logger, set_log_level
 from amici.petab_import import PysbPetabProblem, import_petab_problem
 from amici.petab_objective import (create_parameterized_edatas,
                                    rdatas_to_measurement_df, simulate_petab)
-from petabtests.core import get_cases, test_id_str
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -42,7 +40,7 @@ def test_case(case, model_type):
 
 def _test_case(case, model_type):
     """Run a single PEtab test suite case"""
-    case = test_id_str(case)
+    case = petabtests.test_id_str(case)
     logger.debug(f"Case {case} [{model_type}]")
 
     # load
@@ -153,7 +151,7 @@ def run():
 
     n_success = 0
     n_skipped = 0
-    cases = get_cases('sbml')
+    cases = petabtests.get_cases('sbml')
     for case in cases:
         try:
             test_case(case, 'sbml')
