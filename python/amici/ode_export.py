@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from itertools import chain
+from itertools import chain, starmap
 from string import Template
 from typing import (Any, Callable, Dict, List, Optional, Sequence, Set, Tuple,
                     Union)
@@ -406,7 +406,7 @@ symbol_to_type = {
 
 @log_execution_time('running smart_jacobian', logger)
 def smart_jacobian(eq: sp.MutableDenseMatrix,
-                   sym_var: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+                   sym_var: sp.MutableDenseMatrix) -> sp.MutableSparseMatrix:
     """
     Wrapper around symbolic jacobian with some additional checks that reduce
     computation time for large matrices
@@ -418,27 +418,35 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
     :return:
         jacobian of eq wrt sym_var
     """
+    nrow = eq.shape[0]
+    ncol = sym_var.shape[0]
     if (
         not min(eq.shape)
         or not min(sym_var.shape)
         or smart_is_zero_matrix(eq)
         or smart_is_zero_matrix(sym_var)
     ):
-        return sp.zeros(eq.shape[0], sym_var.shape[0])
+        return sp.MutableSparseMatrix(nrow, ncol, dict())
+
+    # preprocess sparsity pattern
+    elements = (
+        (i, j, a, b)
+        for i, a in enumerate(eq)
+        for j, b in enumerate(sym_var)
+        if a.has(b)
+    )
 
     if (n_procs := int(os.environ.get("AMICI_IMPORT_NPROCS", 1))) == 1:
         # serial
-        return sp.Matrix([
-            _jacobian_row(eq[i, :], sym_var)
-            for i in range(eq.shape[0])
-        ])
+        return sp.MutableSparseMatrix(nrow, ncol,
+            dict(starmap(_jacobian_element, elements))
+        )
 
     # parallel
     from multiprocessing import Pool
     with Pool(n_procs) as p:
-        mapped = p.starmap(_jacobian_row,
-                           ((eq[i, :], sym_var) for i in range(eq.shape[0])))
-    return sp.Matrix(mapped)
+        mapped = p.starmap(_jacobian_element, elements)
+    return sp.MutableSparseMatrix(nrow, ncol, dict(mapped))
 
 
 @log_execution_time('running smart_multiply', logger)
@@ -3386,8 +3394,6 @@ def _custom_pow_eval_derivative(self, s):
     )
 
 
-def _jacobian_row(eq_i, sym_var):
-    """Compute a row of a jacobian"""
-    if eq_i.has(*sym_var.flat()):
-        return eq_i.jacobian(sym_var)
-    return [0] * sym_var.shape[0]
+def _jacobian_element(i, j, eq_i, sym_var_j):
+    """Compute a single element of a jacobian"""
+    return (i, j), eq_i.diff(sym_var_j)
