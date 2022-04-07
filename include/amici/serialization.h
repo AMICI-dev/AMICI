@@ -62,8 +62,10 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.rtol_fsa_;
     ar &s.quad_atol_;
     ar &s.quad_rtol_;
+    ar &s.ss_tol_factor_;
     ar &s.ss_atol_;
     ar &s.ss_rtol_;
+    ar &s.ss_tol_sensi_factor_;
     ar &s.ss_atol_sensi_;
     ar &s.ss_rtol_sensi_;
     ar &s.maxsteps_;

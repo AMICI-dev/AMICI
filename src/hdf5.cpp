@@ -657,6 +657,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "quad_rtol", &dbuffer, 1);
 
+    dbuffer = solver.getSteadyStateToleranceFactor();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "ss_tol_factor", &dbuffer, 1);
+
     dbuffer = solver.getAbsoluteToleranceSteadyState();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_atol", &dbuffer, 1);
@@ -664,6 +668,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     dbuffer = solver.getRelativeToleranceSteadyState();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_rtol", &dbuffer, 1);
+
+    dbuffer = solver.getSteadyStateSensiToleranceFactor();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "ss_tol_sensi_factor", &dbuffer, 1);
 
     dbuffer = solver.getAbsoluteToleranceSteadyStateSensi();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
@@ -773,7 +781,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getDoubleScalarAttribute(file, datasetPath, "rtol_fsa"));
     }
 
-
     if(attributeExists(file, datasetPath, "atolB")) {
         solver.setAbsoluteToleranceB(
                     getDoubleScalarAttribute(file, datasetPath, "atolB"));
@@ -794,6 +801,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getDoubleScalarAttribute(file, datasetPath, "quad_rtol"));
     }
 
+    if(attributeExists(file, datasetPath, "ss_tol_factor")) {
+        solver.setSteadyStateToleranceFactor(
+                    getDoubleScalarAttribute(file, datasetPath, "ss_tol_factor"));
+    }
+
     if(attributeExists(file, datasetPath, "ss_atol")) {
         solver.setAbsoluteToleranceSteadyState(
                     getDoubleScalarAttribute(file, datasetPath, "ss_atol"));
@@ -802,6 +814,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
     if(attributeExists(file, datasetPath, "ss_rtol")) {
         solver.setRelativeToleranceSteadyState(
                     getDoubleScalarAttribute(file, datasetPath, "ss_rtol"));
+    }
+
+    if(attributeExists(file, datasetPath, "ss_tol_sensi_factor")) {
+        solver.setSteadyStateSensiToleranceFactor(
+                    getDoubleScalarAttribute(file, datasetPath, "ss_tol_sensi_factor"));
     }
 
     if(attributeExists(file, datasetPath, "ss_atol_sensi")) {
