@@ -240,9 +240,108 @@ def ode_model_from_pysb_importer(
         for noise_distr in noise_distributions.values()
     )
 
+    _process_stoichiometric_matrix(model, ode, constant_parameters)
+
     ode.generate_basic_variables()
 
     return ode
+
+
+@log_execution_time('processing PySB stoich. matrix', logger)
+def _process_stoichiometric_matrix(pysb_model: pysb.Model,
+                                   ode_model: ODEModel,
+                                   constant_parameters: List[str]) -> None:
+
+    """
+    Exploits the PySB stoichiometric matrix to generate xdot derivatives
+
+    :param pysb_model:
+        pysb model instance
+
+    :param ode_model:
+        ODEModel instance
+
+    :param constant_parameters:
+        list of constant parameters
+    """
+
+    x = ode_model.sym('x')
+    w = list(ode_model.sym('w'))
+    p = list(ode_model.sym('p'))
+    x_rdata = list(ode_model.sym('x_rdata'))
+
+    n_x = len(x)
+    n_w = len(w)
+    n_p = len(p)
+    n_r = len(pysb_model.reactions)
+
+    solver_index = ode_model.get_solver_indices()
+    dflux_dx_dict = {}
+    dflux_dw_dict = {}
+    dflux_dp_dict = {}
+
+    w_idx = dict()
+    p_idx = dict()
+    wx_idx = dict()
+
+    def get_cached_index(symbol, sarray, index_cache):
+        idx = index_cache.get(symbol, None)
+        if idx is not None:
+            return idx
+        idx = sarray.index(symbol)
+        index_cache[symbol] = idx
+        return idx
+
+    for ir, rxn in enumerate(pysb_model.reactions):
+        for ix in np.unique(rxn['reactants']):
+            idx = solver_index.get(ix, None)
+            if idx is not None:
+                # species
+                values = dflux_dx_dict
+            else:
+                # conservation law
+                idx = get_cached_index(x_rdata[ix], w, wx_idx)
+                values = dflux_dw_dict
+
+            values[(ir, idx)] = sp.diff(rxn['rate'], x_rdata[ix])
+
+        # typically <= 3 free symbols in rate, we already account for
+        # species above so we only need to account for propensity, which
+        # can only be a parameter or expression
+        for fs in rxn['rate'].free_symbols:
+            # dw
+            if isinstance(fs, pysb.Expression):
+                var = w
+                idx_cache = w_idx
+                values = dflux_dw_dict
+            # dp
+            elif isinstance(fs, pysb.Parameter):
+                if fs.name in constant_parameters:
+                    continue
+                var = p
+                idx_cache = p_idx
+                values = dflux_dp_dict
+            else:
+                continue
+
+            idx = get_cached_index(fs, var, idx_cache)
+            values[(ir, idx)] = sp.diff(rxn['rate'], fs)
+
+    dflux_dx = sp.ImmutableSparseMatrix(n_r, n_x, dflux_dx_dict)
+    dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
+    dflux_dp = sp.ImmutableSparseMatrix(n_r, n_p, dflux_dp_dict)
+
+    # use dok format to convert numeric csc to sparse symbolic
+    S = sp.ImmutableSparseMatrix(
+        n_x, n_r, # don't use shape here as we are eliminating rows
+        pysb_model.stoichiometry_matrix[
+            np.asarray(list(solver_index.keys())),:
+        ].todok()
+    )
+    # don't use `.dot` since it's awfully slow
+    ode_model._eqs['dxdotdx_explicit'] = S*dflux_dx
+    ode_model._eqs['dxdotdw'] = S*dflux_dw
+    ode_model._eqs['dxdotdp_explicit'] = S*dflux_dp
 
 
 @log_execution_time('processing PySB species', logger)

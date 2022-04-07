@@ -180,7 +180,8 @@ enum class NonlinearSolverIteration {
 /** Sensitivity computation mode in steadyStateProblem */
 enum class SteadyStateSensitivityMode {
     newtonOnly,
-    simulationFSA
+    integrationOnly,
+    integrateIfNewtonFails
 };
 
 /** State in which the steady state computation finished */

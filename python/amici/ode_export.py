@@ -1952,6 +1952,22 @@ class ODEModel:
         """
         return self._states[ix]._conservation_law is not None
 
+    def get_solver_indices(self) -> Dict[int, int]:
+        """
+        Returns a mapping that maps rdata species indices to solver indices
+
+        :return:
+            dictionary mapping rdata species indices to solver indices
+        """
+        solver_index = {}
+        ix_solver = 0
+        for ix in range(len(self._states)):
+            if self.state_has_conservation_law(ix):
+                continue
+            solver_index[ix] = ix_solver
+            ix_solver += 1
+        return solver_index
+
     def state_is_constant(self, ix: int) -> bool:
         """
         Checks whether the temporal derivative of the state is zero

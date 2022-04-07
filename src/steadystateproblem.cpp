@@ -94,16 +94,22 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
 void SteadystateProblem::findSteadyState(const Solver &solver, Model &model,
                                          int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
+    bool turnOffNewton = model.getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::integrationOnly && 
+        ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
+         SensitivityMethod::forward) || solver.getSensitivityMethod() ==
+        SensitivityMethod::forward);
 
     /* First, try to run the Newton solver */
-    findSteadyStateByNewtonsMethod(model, false);
+    if (!turnOffNewton)
+        findSteadyStateByNewtonsMethod(model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
     if (!checkSteadyStateSuccess())
         findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
-    if (!checkSteadyStateSuccess())
+    if (!turnOffNewton && !checkSteadyStateSuccess())
         findSteadyStateByNewtonsMethod(model, true);
 
     /* Nothing worked, throw an as informative error as possible */
@@ -243,11 +249,17 @@ void SteadystateProblem::computeSteadyStateQuadrature(const Solver &solver,
      We therefore compute the integral over xB first and then do a
      matrix-vector multiplication */
 
-    /* Try to compute the analytical solution for quadrature algebraically */
-    getQuadratureByLinSolve(model);
+    auto sensitivityMode = model.getSteadyStateSensitivityMode();
 
-    /* Analytical solution didn't work, perform simulation instead */
-    if (!hasQuadrature())
+    /* Try to compute the analytical solution for quadrature algebraically */
+    if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly 
+        || sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails)
+        getQuadratureByLinSolve(model);
+
+    /* Perform simulation */
+    if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly || 
+        (sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails
+         && !hasQuadrature()))
         getQuadratureBySimulation(solver, model);
 
     /* If analytic solution and integration did not work, throw an Exception */
@@ -366,8 +378,10 @@ bool SteadystateProblem::getSensitivityFlag(const Model &model,
     bool forwardSensisAlreadyComputed =
         solver.getSensitivityOrder() >= SensitivityOrder::first &&
         steady_state_status_[1] == SteadyStateStatus::success &&
-        model.getSteadyStateSensitivityMode() ==
-            SteadyStateSensitivityMode::simulationFSA;
+        (model.getSteadyStateSensitivityMode() ==
+         SteadyStateSensitivityMode::integrationOnly || 
+         model.getSteadyStateSensitivityMode() ==
+         SteadyStateSensitivityMode::integrateIfNewtonFails);
 
     bool simulationStartedInSteadystate =
         steady_state_status_[0] == SteadyStateStatus::success &&
@@ -392,9 +406,13 @@ bool SteadystateProblem::getSensitivityFlag(const Model &model,
         !simulationStartedInSteadystate;
 
     /* When we're creating a new solver object */
-    bool needForwardSensiAtCreation =
-        needForwardSensisPreeq && model.getSteadyStateSensitivityMode() ==
-                                      SteadyStateSensitivityMode::simulationFSA;
+    bool needForwardSensiAtCreation = 
+        needForwardSensisPreeq &&
+        (model.getSteadyStateSensitivityMode() ==
+         SteadyStateSensitivityMode::integrationOnly || 
+         model.getSteadyStateSensitivityMode() ==
+         SteadyStateSensitivityMode::integrateIfNewtonFails
+        );
 
     /* Check if we need to store sensis */
     switch (context) {
