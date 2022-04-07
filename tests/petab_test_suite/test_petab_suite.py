@@ -125,7 +125,7 @@ def _test_case(case, model_type):
                f"LLH: simulated: {llh}, expected: {gt_llh}, "
                f"match = {llhs_match}")
 
-    check_derivatives(problem, model)
+    check_derivatives(problem, model, solver)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
@@ -135,19 +135,23 @@ def _test_case(case, model_type):
     logger.info(f"Case {case} passed.")
 
 
-def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
+def check_derivatives(
+        problem: petab.Problem,
+        model: amici.Model,
+        solver: amici.Solver
+) -> None:
     """Check derivatives using finite differences for all experimental
     conditions
 
     Arguments:
         problem: PEtab problem
         model: AMICI model matching ``problem``
+        solver: AMICI solver
     """
     problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
                           problem.parameter_df.itertuples()}
-    solver = model.getSolver()
-    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
     model.setSteadyStateSensitivityMode(
