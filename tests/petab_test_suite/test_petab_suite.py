@@ -3,7 +3,6 @@
 """Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
 
 import logging
-import os
 import sys
 
 import amici
@@ -11,12 +10,12 @@ import petab
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
+from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import import_petab_problem, PysbPetabProblem
-from amici.petab_objective import (
-    simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
-from amici import SteadyStateSensitivityMode
+from amici.petab_import import PysbPetabProblem, import_petab_problem
+from amici.petab_objective import (create_parameterized_edatas,
+                                   rdatas_to_measurement_df, simulate_petab)
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -46,17 +45,17 @@ def _test_case(case, model_type):
 
     # load
     if model_type == "sbml":
-        case_dir = os.path.join(petabtests.SBML_DIR, case)
+        case_dir = petabtests.SBML_DIR / case
         # import petab problem
-        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        yaml_file = case_dir / petabtests.problem_yaml_name(case)
         problem = petab.Problem.from_yaml(yaml_file)
     elif model_type == "pysb":
         import pysb
         pysb.SelfExporter.cleanup()
         pysb.SelfExporter.do_export = True
-        case_dir = os.path.join(petabtests.PYSB_DIR, case)
+        case_dir = petabtests.PYSB_DIR / case
         # import petab problem
-        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        yaml_file = case_dir / petabtests.problem_yaml_name(case)
         problem = PysbPetabProblem.from_yaml(yaml_file,
                                              flatten=case.startswith('0006'))
     else:
@@ -152,9 +151,10 @@ def run():
 
     n_success = 0
     n_skipped = 0
-    for case in petabtests.CASES_LIST:
+    cases = petabtests.get_cases('sbml')
+    for case in cases:
         try:
-            test_case(case)
+            test_case(case, 'sbml')
             n_success += 1
         except Skipped:
             n_skipped += 1
@@ -163,9 +163,9 @@ def run():
             logger.error(f"Case {case} failed.")
             logger.error(e)
 
-    logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful, "
+    logger.info(f"{n_success} / {len(cases)} successful, "
                 f"{n_skipped} skipped")
-    if n_success != len(petabtests.CASES_LIST):
+    if n_success != len(cases):
         sys.exit(1)
 
 

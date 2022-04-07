@@ -3,7 +3,7 @@
 from typing import List
 import re
 import sys
-import petabtests
+from petabtests.core import get_cases
 
 
 def parse_selection(selection_str: str) -> List[int]:
@@ -43,6 +43,7 @@ def pytest_generate_tests(metafunc):
     # Run for all PEtab test suite cases
     if "case" in metafunc.fixturenames \
             and "model_type" in metafunc.fixturenames:
+
         # Get CLI option
         cases = metafunc.config.getoption("--petab-cases")
         if cases:
@@ -50,15 +51,20 @@ def pytest_generate_tests(metafunc):
             test_numbers = parse_selection(cases)
         else:
             # Run all tests
-            test_numbers = petabtests.CASES_LIST
+            test_numbers = None
 
         if metafunc.config.getoption("--only-sbml"):
-            model_types = ['sbml']
-        elif metafunc.config.getoption("--only-pysb"):
-            model_types = ['pysb']
-        else:
-            model_types = ['sbml', 'pysb']
+            test_numbers = test_numbers if test_numbers else get_cases("sbml")
+            argvalues = [(case, 'sbml') for case in test_numbers]
 
-        argvalues = [(case, model_type) for model_type in model_types
-                     for case in test_numbers]
+        elif metafunc.config.getoption("--only-pysb"):
+            test_numbers = test_numbers if test_numbers else get_cases("pysb")
+            argvalues = [(case, 'pysb') for case in test_numbers]
+        else:
+            argvalues = []
+            for format in ('sbml', 'pysb'):
+                test_numbers = test_numbers if test_numbers else get_cases(
+                    format)
+                argvalues += [(case, format) for case in test_numbers]
+
         metafunc.parametrize("case,model_type", argvalues)
