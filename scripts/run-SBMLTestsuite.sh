@@ -14,9 +14,11 @@ pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
 pip install coverage pytest-cov
 
 if [[ -z "$*" ]]; then
-  args="1-1780" # run all tests
+  # run all tests
+  cases=""
 else
-  args="$@" # use user selection
+  # use user selection
+  cases="--cases=$@"
 fi
 
 # delete old result directory and recreate
@@ -26,5 +28,5 @@ if [[ -d "${RESULT_DIR}" ]]; then
 fi
 mkdir "${RESULT_DIR}"
 
-pytest ./tests/testSBMLSuite.py --cases="${args}" -rfsE -n auto \
+pytest ./tests/testSBMLSuite.py $cases -rfsE -n auto \
   --cov=amici --cov-report=xml:"coverage_SBMLSuite.xml" --cov-append
