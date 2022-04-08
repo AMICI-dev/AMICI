@@ -13,6 +13,7 @@ on:
       - python/amici/import_utils.py
       - scripts/run-SBMLTestsuite.sh
       - tests/testSBMLSuite.py
+      - tests/conftest.py
   check_suite:
    types: [requested]
   workflow_dispatch:
@@ -25,8 +26,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cases: ["1 - 250", "251 - 500", "501 - 750", "751 - 1000",
-                "1000-1250", "1251-1780"]
+        cases: ["1-250", "251-500", "501-750", "751-1000",
+                "1000-1250", "1251-"]
         python-version: [ 3.8 ]
 
     steps:
