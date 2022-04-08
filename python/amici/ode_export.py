@@ -3406,6 +3406,14 @@ def _parallel_applyfunc(
         return obj.applyfunc(func)
 
     # parallel
+    from pickle import PicklingError
     from multiprocessing import Pool
     with Pool(n_procs) as p:
-        return obj._new(obj.rows, obj.cols, p.map(func, obj))
+        try:
+            return obj._new(obj.rows, obj.cols, p.map(func, obj))
+        except PicklingError as e:
+            raise ValueError(f"Couldn't pickle {func}. This is likely due "
+                             "that the argument was not a module-level "
+                             "function. Either rewrite the argument to a "
+                             "module-level function or disable "
+                             "parallelization.") from e
