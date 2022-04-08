@@ -30,7 +30,7 @@ from .import_utils import (RESERVED_SYMBOLS,
                            smart_subs, smart_subs_dict, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
-    ODEExporter, ODEModel, symbol_with_assumptions
+    ODEExporter, ODEModel, symbol_with_assumptions, _default_simplify
 )
 
 
@@ -219,7 +219,7 @@ class SbmlImporter:
             allow_reinit_fixpar_initcond: bool = True,
             compile: bool = True,
             compute_conservation_laws: bool = True,
-            simplify: Optional[Callable] = None,
+            simplify: Optional[Callable] = _default_simplify,
             cache_simplify: bool = False,
             log_as_log10: bool = True,
             generate_sensitivity_code: bool = True,
