@@ -621,16 +621,20 @@ class SbmlImporter:
         :param value:
             local symbol value
         """
-        if key in itt.chain(self._local_symbols.keys(),
-                            ['True', 'False', 'pi']):
+        if key in self._local_symbols.keys():
             raise SBMLException(
                 f'AMICI tried to add a local symbol {key} with value {value}, '
                 f'but {key} was already instantiated with '
-                f'{self._local_symbols[key]}. This means either that there '
-                f'are multiple SBML element with SId {key}, which is '
-                f'invalid SBML, or that the employed SId {key} is a special '
-                'reserved symbol in AMICI. This can be fixed by renaming '
-                f'the element with SId {key}.'
+                f'{self._local_symbols[key]}. This means that there '
+                f'are multiple SBML elements with SId {key}, which is '
+                f'invalid SBML. This can be fixed by renaming '
+                f'the elements with SId {key}.'
+            )
+        if key in {'True', 'False', 'true', 'false', 'pi'}:
+            raise SBMLException(
+                f'AMICI tried to add a local symbol {key} with value {value}, '
+                f'but {key} is a reserved symbol in AMICI. This can be fixed '
+                f'by renaming the element with SId {key}.'
             )
         self._local_symbols[key] = value
 
