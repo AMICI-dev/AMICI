@@ -20,7 +20,7 @@ def sbml_semantic_cases_dir() -> Path:
     return SBML_SEMANTIC_CASES_DIR
 
 
-def parse_selection(selection_str: str) -> List[int]:
+def parse_selection(selection_str: str, last: int) -> List[int]:
     """
     Parse comma-separated list of integer ranges, return selected indices as
     integer list
@@ -29,7 +29,7 @@ def parse_selection(selection_str: str) -> List[int]:
     """
     indices = []
     for group in selection_str.split(','):
-        if not re.match(r'^(?:-?\d+)|(?:\d+(?:-\d+))$', group):
+        if not re.match(r'^-?\d+|\d+-\d*$', group):
             print("Invalid selection", group)
             sys.exit()
         spl = group.split('-')
@@ -37,13 +37,13 @@ def parse_selection(selection_str: str) -> List[int]:
             indices.append(int(spl[0]))
         elif len(spl) == 2:
             begin = int(spl[0]) if spl[0] else 0
-            end = int(spl[1])
+            end = int(spl[1]) if spl[1] else last
             indices.extend(range(begin, end + 1))
     return indices
 
 
 def get_all_semantic_case_ids():
-    """Get all test IDs for the SBML semantic suite"""
+    """Get sorted iterator over all test IDs for the SBML semantic suite"""
     pattern = re.compile(r'\d{5}')
     return sorted(str(x.name) for x in SBML_SEMANTIC_CASES_DIR.iterdir()
                   if pattern.match(x.name))
@@ -63,7 +63,8 @@ def pytest_generate_tests(metafunc):
         cases = metafunc.config.getoption("cases")
         if cases:
             # Run selected tests
-            test_numbers = sorted(set(parse_selection(cases)))
+            last_id = int(list(get_all_semantic_case_ids())[-1])
+            test_numbers = sorted(set(parse_selection(cases, last_id)))
         else:
             # Run all tests
             test_numbers = get_all_semantic_case_ids()
