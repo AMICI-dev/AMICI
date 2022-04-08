@@ -29,7 +29,7 @@ def parse_selection(selection_str: str, last: int) -> List[int]:
     """
     indices = []
     for group in selection_str.split(','):
-        if not re.match(r'^-?\d+|\d+-\d*$', group):
+        if not re.match(r'^(?:-?\d+|\d+-\d*)$', group):
             print("Invalid selection", group)
             sys.exit()
         spl = group.split('-')
