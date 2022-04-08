@@ -2,6 +2,41 @@
 
 ## v0.X Series
 
+### v0.11.28 (2022-04-08)
+
+New features:
+* Added `Solver.setSteadyStateToleranceFactor` and
+  `Solver.setSteadyStateSensiToleranceFactor` to specify a steady state
+  tolerance factor by @dilpath in https://github.com/AMICI-dev/AMICI/pull/1758
+
+  **NOTE: This also relaxed the default steady state (sensitivity)**
+  **tolerances by a factor of 100.**
+* Added support for `pathlib.Path` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1769
+* Allow specifying initial timepoint with `ExpData` by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1776
+
+Performance:
+* Speedup for models with conservation laws by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1765
+* Improved efficiency of newton step convergence check by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1775
+
+Fixes:
+* Fixed deprecation warning for pandas.DataFrame.append in
+  `rdatas_to_measurement_df` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1770
+* Fixed Rule-target handling in PEtab import by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1753
+
+Removed functionality:
+* Removed long deprecated `sbml2amici` arguments `modelName`
+  and `constantParameters` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1774
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.27...v0.11.28
+
 ### v0.11.27 (2022-04-04)
 
 New features:
@@ -24,7 +59,6 @@ Performance:
 * Optional parallel computation of derivatives during model import by @dweindl
   in https://github.com/AMICI-dev/AMICI/pull/1740
 * Sparsify jacobian by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1766
-* Speedup for models with conservation laws by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1765
 * Speedup conservation law computation by @FFroehlich in
   https://github.com/AMICI-dev/AMICI/pull/1754
 * Exploit stoichiometric matrix in pysb import by @FFroehlich in
