@@ -402,8 +402,9 @@ def create_parameter_mapping_for_condition(
                 scale_map[init_par_id] = petab.LIN
             else:
                 # parametric initial state
-                scale_map[init_par_id] = petab_problem.parameter_df.loc[
-                    value, PARAMETER_SCALE]
+                scale_map[init_par_id] = \
+                    petab_problem.parameter_df[PARAMETER_SCALE]\
+                        .get(value, petab.LIN)
 
         for element_id in states_in_condition_table:
             # for preequilibration
