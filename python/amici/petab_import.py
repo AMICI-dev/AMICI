@@ -517,7 +517,7 @@ def import_model_sbml(
     initial_states = [col for col in condition_df
                       if element_is_state(sbml_model, col)]
     fixed_parameters = []
-    if len(initial_states):
+    if initial_states:
         # add preequilibration indicator variable
         # NOTE: would only be required if we actually have preequilibration
         #  adding it anyways. can be optimized-out later
@@ -535,7 +535,7 @@ def import_model_sbml(
                      f"constant {PREEQ_INDICATOR_ID}")
     logger.debug("Adding initial assignments for "
                  f"{initial_states}")
-    for assignee_id in (initial_states):
+    for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
         for init_par_id in [init_par_id_preeq, init_par_id_sim]:
