@@ -630,7 +630,12 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
     /* If run after Newton's method checks again if it converged */
     wrms_ = getWrms(model, sensitivityFlag);
     int sim_steps = 0;
-
+    
+    int convergence_check_frequency = 1;
+    
+    if (newton_step_conv_)
+        convergence_check_frequency = 25;
+        
     while (true) {
         /* One step of ODE integration
          reason for tout specification:
@@ -654,7 +659,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
         /* getWrms needs to be called before getWrmsFSA such that the linear
          system is prepared for newton type convergence check */
         if (wrms_ < conv_thresh && check_sensi_conv_ &&
-            sensitivityFlag == SensitivityMethod::forward) {
+            sensitivityFlag == SensitivityMethod::forward &&
+            convergence_check_frequency % sim_steps == 0) {
             updateSensiSimulation(solver);
             wrms_ = getWrmsFSA(model);
         }

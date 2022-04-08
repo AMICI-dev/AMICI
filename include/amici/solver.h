@@ -897,7 +897,8 @@ class Solver {
     }
 
     /**
-     * @brief Returns how convergence checks for steadystate computation are performed.
+     * @brief Returns how convergence checks for steadystate computation are performed. If activated,
+     * convergence checks are limited to every 25 steps in the simulation solver to limit performance impact.
      * @return boolean flag indicating newton step (true) or the right hand side (false)
      */
     bool getNewtonStepSteadyStateCheck() const {
