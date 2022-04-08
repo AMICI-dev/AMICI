@@ -338,6 +338,7 @@ def test_newton_solver_equilibration(preeq_fixture):
                 amici.SteadyStateSensitivityMode.newtonOnly]
 
     solver.setNewtonStepSteadyStateCheck(True)
+    solver.setRelativeToleranceSteadyState(1e-12)
 
     for equil_meth in settings:
         # set sensi method
