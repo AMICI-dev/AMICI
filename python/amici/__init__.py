@@ -142,8 +142,10 @@ class add_path:
             pass
 
 
-def import_model_module(module_name: str,
-                        module_path: Optional[str] = None) -> ModelModule:
+def import_model_module(
+        module_name: str,
+        module_path: Optional[Union[Path, str]] = None
+) -> ModelModule:
     """
     Import Python module of an AMICI model
 
@@ -154,6 +156,7 @@ def import_model_module(module_name: str,
     :return:
         The model module
     """
+    module_path = str(module_path)
 
     # ensure we will find the newly created module
     importlib.invalidate_caches()
