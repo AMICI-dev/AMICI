@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-
 """Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
 
 import logging
 import sys
 
-import amici
+import pandas as pd
 import petab
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
+
+import amici
 from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
@@ -105,16 +106,26 @@ def _test_case(case, model_type):
     simulations_match = petabtests.evaluate_simulations(
         [simulation_df], gt_simulation_dfs, tol_simulations)
 
+    logger.log(logging.DEBUG if simulations_match else logging.ERROR,
+               f"Simulations: match = {simulations_match}")
+    if not simulations_match:
+        with pd.option_context('display.max_rows', None,
+                               'display.max_columns', None,
+                               'display.width', 200):
+            logger.log(logging.DEBUG, f"x_ss: {model.getStateIds()} "
+                                      f"{[rdata.x_ss for rdata in rdatas]}")
+            logger.log(logging.ERROR,
+                       f"Expected simulations:\n{gt_simulation_dfs}")
+            logger.log(logging.ERROR,
+                       f"Actual simulations:\n{simulation_df}")
     logger.log(logging.DEBUG if chi2s_match else logging.ERROR,
                f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
                f" match = {chi2s_match}")
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"LLH: simulated: {llh}, expected: {gt_llh}, "
                f"match = {llhs_match}")
-    logger.log(logging.DEBUG if simulations_match else logging.ERROR,
-               f"Simulations: match = {simulations_match}")
 
-    check_derivatives(problem, model)
+    check_derivatives(problem, model, solver)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
@@ -124,19 +135,23 @@ def _test_case(case, model_type):
     logger.info(f"Case {case} passed.")
 
 
-def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
+def check_derivatives(
+        problem: petab.Problem,
+        model: amici.Model,
+        solver: amici.Solver
+) -> None:
     """Check derivatives using finite differences for all experimental
     conditions
 
     Arguments:
         problem: PEtab problem
         model: AMICI model matching ``problem``
+        solver: AMICI solver
     """
     problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
                           problem.parameter_df.itertuples()}
-    solver = model.getSolver()
-    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
     model.setSteadyStateSensitivityMode(
