@@ -3408,9 +3408,18 @@ def _parallel_applyfunc(
     # parallel
     from pickle import PicklingError
     from multiprocessing import Pool
+    from sympy.matrices.dense import DenseMatrix
     with Pool(n_procs) as p:
         try:
-            return obj._new(obj.rows, obj.cols, p.map(func, obj))
+            if isinstance(obj, DenseMatrix):
+                return obj._new(obj.rows, obj.cols, p.map(func, obj))
+            elif isinstance(obj, sp.SparseMatrix):
+                dok = obj.todok()
+                mapped = p.map(func, dok.values())
+                dok = {k: v for k, v in zip(dok.keys(), mapped) if v != 0}
+                return obj._new(obj.rows, obj.cols, dok)
+            else:
+                raise ValueError(f"Unsupported matrix type {type(obj)}")
         except PicklingError as e:
             raise ValueError(f"Couldn't pickle {func}. This is likely due "
                              "that the argument was not a module-level "
