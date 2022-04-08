@@ -11,6 +11,7 @@ import math
 import os
 import re
 import warnings
+from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
                     Union)
 
@@ -19,7 +20,7 @@ import sympy as sp
 
 from . import has_clibs
 from .constants import SymbolId
-from .import_utils import (CircularDependencyError, RESERVED_SYMBOLS,
+from .import_utils import (RESERVED_SYMBOLS,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
@@ -115,7 +116,7 @@ class SbmlImporter:
     """
 
     def __init__(self,
-                 sbml_source: Union[str, sbml.Model],
+                 sbml_source: Union[str, Path, sbml.Model],
                  show_sbml_warnings: bool = False,
                  from_file: bool = True) -> None:
         """
@@ -138,7 +139,7 @@ class SbmlImporter:
         else:
             self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
             if from_file:
-                sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+                sbml_doc = self.sbml_reader.readSBMLFromFile(str(sbml_source))
             else:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
@@ -202,11 +203,11 @@ class SbmlImporter:
         Reset the symbols attribute to default values
         """
         self.symbols = copy.deepcopy(default_symbols)
-        self._local_symbols = dict()
+        self._local_symbols = {}
 
     def sbml2amici(self,
                    model_name: str = None,
-                   output_dir: str = None,
+                   output_dir: Union[str, Path] = None,
                    observables: Dict[str, Dict[str, str]] = None,
                    constant_parameters: Iterable[str] = None,
                    sigmas: Dict[str, Union[str, float]] = None,

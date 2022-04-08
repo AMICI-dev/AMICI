@@ -9,7 +9,7 @@ import logging
 import os
 from itertools import chain
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, Optional, Tuple, Union
 
 import libsbml
 import petab
@@ -105,13 +105,20 @@ class PysbPetabProblem(petab.Problem):
             local_syms[sigma_id] = sigma_expr
 
     @staticmethod
-    def from_files(condition_file: str = None,
-                   measurement_file: Union[str, Iterable[str]] = None,
-                   parameter_file: Union[str, List[str]] = None,
-                   visualization_files: Union[str, Iterable[str]] = None,
-                   observable_files: Union[str, Iterable[str]] = None,
-                   pysb_model_file: str = None,
-                   flatten: bool = False) -> 'PysbPetabProblem':
+    def from_files(
+            condition_file:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            measurement_file:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            parameter_file:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            visualization_files:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            observable_files:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            pysb_model_file: Union[str, Path] = None,
+            flatten: bool = False
+    ) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables from files.
 
@@ -176,7 +183,7 @@ class PysbPetabProblem(petab.Problem):
         )
 
     @staticmethod
-    def from_yaml(yaml_config: Union[Dict, str],
+    def from_yaml(yaml_config: Union[Dict, Path, str],
                   flatten: bool = False) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables as specified by YAML file.
@@ -305,7 +312,7 @@ def create_dummy_sbml(
 @log_execution_time('Importing PEtab model', logger)
 def import_model_pysb(
         petab_problem: PysbPetabProblem,
-        model_output_dir: Optional[str] = None,
+        model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
         **kwargs
 ) -> None:
