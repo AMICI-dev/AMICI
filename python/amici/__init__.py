@@ -24,8 +24,9 @@ import importlib
 import os
 import re
 import sys
+from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Optional
+from typing import Optional, Union
 
 
 def _get_amici_path():
@@ -127,8 +128,8 @@ if not _imported_from_setup():
 class add_path:
     """Context manager for temporarily changing PYTHONPATH"""
 
-    def __init__(self, path: str):
-        self.path: str = path
+    def __init__(self, path: Union[str, Path]):
+        self.path: str = str(path)
 
     def __enter__(self):
         if self.path:

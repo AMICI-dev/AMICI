@@ -721,14 +721,11 @@ def rdatas_to_measurement_df(
     :return:
         A dataframe built from the rdatas in the format of `measurement_df`.
     """
-
-    df = pd.DataFrame(columns=list(measurement_df.columns))
-
     simulation_conditions = petab.get_simulation_conditions(
         measurement_df)
 
     observable_ids = model.getObservableIds()
-
+    rows = []
     # iterate over conditions
     for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
@@ -757,10 +754,9 @@ def rdatas_to_measurement_df(
             # change measurement entry
             row_sim[MEASUREMENT] = measurement_sim
 
-            # append to dataframe
-            df = df.append(row_sim, ignore_index=True)
+            rows.append(row_sim)
 
-    return df
+    return pd.DataFrame(rows)
 
 
 def rdatas_to_simulation_df(

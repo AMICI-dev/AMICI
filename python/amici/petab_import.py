@@ -16,6 +16,7 @@ import tempfile
 from _collections import OrderedDict
 from itertools import chain
 from typing import List, Dict, Union, Optional, Tuple
+from pathlib import Path
 
 import amici
 import libsbml
@@ -230,7 +231,7 @@ def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
 
 def import_petab_problem(
         petab_problem: petab.Problem,
-        model_output_dir: str = None,
+        model_output_dir: Union[str, Path, None] = None,
         model_name: str = None,
         force_compile: bool = False,
         **kwargs) -> 'amici.Model':
@@ -322,31 +323,25 @@ def import_petab_problem(
     return model
 
 
-def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> str:
+def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
     """
     Find a folder for storing the compiled amici model.
     If possible, use the sbml model id, otherwise create a random folder.
     The folder will be located in the `amici_models` subfolder of the current
     folder.
     """
-    BASE_DIR = os.path.abspath("amici_models")
-
-    # create base directory
-    if not os.path.exists(BASE_DIR):
-        os.makedirs(BASE_DIR)
-
+    BASE_DIR = Path("amici_models").absolute()
+    BASE_DIR.mkdir(exist_ok=True)
     # try sbml model id
     sbml_model_id = sbml_model.getId()
     if sbml_model_id:
-        model_output_dir = os.path.join(BASE_DIR, sbml_model_id)
-    else:
-        # create random folder name
-        model_output_dir = tempfile.mkdtemp(dir=BASE_DIR)
+        return BASE_DIR / sbml_model_id
 
-    return model_output_dir
+    # create random folder name
+    return Path(tempfile.mkdtemp(dir=BASE_DIR))
 
 
-def _create_model_name(folder: str) -> str:
+def _create_model_name(folder: Union[str, Path]) -> str:
     """
     Create a name for the model.
     Just re-use the last part of the folder.
@@ -354,7 +349,10 @@ def _create_model_name(folder: str) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str, model_output_dir: str) -> bool:
+def _can_import_model(
+        model_name: str,
+        model_output_dir: Union[str, Path]
+) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
@@ -371,12 +369,12 @@ def _can_import_model(model_name: str, model_output_dir: str) -> bool:
 
 @log_execution_time('Importing PEtab model', logger)
 def import_model_sbml(
-        sbml_model: Union[str, 'libsbml.Model'],
-        condition_table: Optional[Union[str, pd.DataFrame]] = None,
-        observable_table: Optional[Union[str, pd.DataFrame]] = None,
-        measurement_table: Optional[Union[str, pd.DataFrame]] = None,
+        sbml_model: Union[str, Path, 'libsbml.Model'],
+        condition_table: Optional[Union[str, Path, pd.DataFrame]] = None,
+        observable_table: Optional[Union[str, Path, pd.DataFrame]] = None,
+        measurement_table: Optional[Union[str, Path, pd.DataFrame]] = None,
         model_name: Optional[str] = None,
-        model_output_dir: Optional[str] = None,
+        model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
         allow_reinit_fixpar_initcond: bool = True,
         **kwargs) -> amici.SbmlImporter:
@@ -485,7 +483,7 @@ def import_model_sbml(
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
 
-    if not len(sigmas) == len(observables):
+    if len(sigmas) != len(observables):
         raise AssertionError(
             f'Number of provided observables ({len(observables)}) and sigmas '
             f'({len(sigmas)}) do not match.')
