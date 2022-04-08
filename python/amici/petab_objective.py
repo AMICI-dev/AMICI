@@ -359,12 +359,21 @@ def create_parameter_mapping_for_condition(
             if pd.isna(value):
                 element = petab_problem.sbml_model.getElementBySId(element_id)
                 type_code = element.getTypeCode()
+                initial_assignment = petab_problem.sbml_model\
+                    .getInitialAssignmentBySymbol(element_id)
+                if initial_assignment:
+                    initial_assignment = sp.sympify(
+                        libsbml.formulaToL3String(initial_assignment.getMath())
+                    )
                 if type_code == libsbml.SBML_SPECIES:
-                    value = get_species_initial(element)
+                    value = get_species_initial(element) \
+                        if initial_assignment is None else initial_assignment
                 elif type_code == libsbml.SBML_PARAMETER:
-                    value = element.getValue()
+                    value = element.getValue()\
+                        if initial_assignment is None else initial_assignment
                 elif type_code == libsbml.SBML_COMPARTMENT:
-                    value = element.getSize()
+                    value = element.getSize()\
+                        if initial_assignment is None else initial_assignment
                 else:
                     raise NotImplementedError(
                         f"Don't know what how to handle {element_id} in "
