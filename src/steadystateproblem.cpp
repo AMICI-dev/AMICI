@@ -660,7 +660,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
          system is prepared for newton type convergence check */
         if (wrms_ < conv_thresh && check_sensi_conv_ &&
             sensitivityFlag == SensitivityMethod::forward &&
-            convergence_check_frequency % sim_steps == 0) {
+            sim_steps % convergence_check_frequency == 0) {
             updateSensiSimulation(solver);
             wrms_ = getWrmsFSA(model);
         }
