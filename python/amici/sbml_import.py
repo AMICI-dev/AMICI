@@ -11,6 +11,7 @@ import math
 import os
 import re
 import warnings
+from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
                     Union)
 
@@ -19,7 +20,7 @@ import sympy as sp
 
 from . import has_clibs
 from .constants import SymbolId
-from .import_utils import (CircularDependencyError, RESERVED_SYMBOLS,
+from .import_utils import (RESERVED_SYMBOLS,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
@@ -115,7 +116,7 @@ class SbmlImporter:
     """
 
     def __init__(self,
-                 sbml_source: Union[str, sbml.Model],
+                 sbml_source: Union[str, Path, sbml.Model],
                  show_sbml_warnings: bool = False,
                  from_file: bool = True) -> None:
         """
@@ -138,7 +139,7 @@ class SbmlImporter:
         else:
             self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
             if from_file:
-                sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+                sbml_doc = self.sbml_reader.readSBMLFromFile(str(sbml_source))
             else:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
@@ -202,26 +203,27 @@ class SbmlImporter:
         Reset the symbols attribute to default values
         """
         self.symbols = copy.deepcopy(default_symbols)
-        self._local_symbols = dict()
+        self._local_symbols = {}
 
-    def sbml2amici(self,
-                   model_name: str = None,
-                   output_dir: str = None,
-                   observables: Dict[str, Dict[str, str]] = None,
-                   constant_parameters: Iterable[str] = None,
-                   sigmas: Dict[str, Union[str, float]] = None,
-                   noise_distributions: Dict[str, Union[str, Callable]] = None,
-                   verbose: Union[int, bool] = logging.ERROR,
-                   assume_pow_positivity: bool = False,
-                   compiler: str = None,
-                   allow_reinit_fixpar_initcond: bool = True,
-                   compile: bool = True,
-                   compute_conservation_laws: bool = True,
-                   simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-                   cache_simplify: bool = False,
-                   log_as_log10: bool = True,
-                   generate_sensitivity_code: bool = True,
-                   **kwargs) -> None:
+    def sbml2amici(
+            self,
+            model_name: str,
+            output_dir: Union[str, Path] = None,
+            observables: Dict[str, Dict[str, str]] = None,
+            constant_parameters: Iterable[str] = None,
+            sigmas: Dict[str, Union[str, float]] = None,
+            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            verbose: Union[int, bool] = logging.ERROR,
+            assume_pow_positivity: bool = False,
+            compiler: str = None,
+            allow_reinit_fixpar_initcond: bool = True,
+            compile: bool = True,
+            compute_conservation_laws: bool = True,
+            simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+            cache_simplify: bool = False,
+            log_as_log10: bool = True,
+            generate_sensitivity_code: bool = True,
+    ) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
         constructor.
@@ -314,46 +316,14 @@ class SbmlImporter:
         """
         set_log_level(logger, verbose)
 
-        if 'constantParameters' in kwargs:
-            logger.warning('Use of `constantParameters` as argument name '
-                           'is deprecated and will be removed in a future '
-                           'version. Please use `constant_parameters` as '
-                           'argument name.')
-
-            if constant_parameters is not None:
-                raise ValueError('Cannot specify constant parameters using '
-                                 'both `constantParameters` and '
-                                 '`constant_parameters` as argument names.')
-
-            constant_parameters = kwargs.pop('constantParameters', [])
-
-        elif constant_parameters is None:
-            constant_parameters = []
-        constant_parameters = list(constant_parameters)
+        constant_parameters = list(constant_parameters) \
+            if constant_parameters else []
 
         if sigmas is None:
             sigmas = {}
 
         if noise_distributions is None:
             noise_distributions = {}
-
-        if model_name is None:
-            model_name = kwargs.pop('modelName', None)
-            if model_name is None:
-                raise ValueError('Missing argument: `model_name`')
-            else:
-                logger.warning('Use of `modelName` as argument name is '
-                               'deprecated and will be removed in a future'
-                               ' version. Please use `model_name` as '
-                               'argument name.')
-        else:
-            if 'modelName' in kwargs:
-                raise ValueError('Cannot specify model name using both '
-                                 '`modelName` and `model_name` as argument '
-                                 'names.')
-
-        if len(kwargs):
-            raise ValueError(f'Unknown arguments {kwargs.keys()}.')
 
         self._reset_symbols()
         self.sbml_parser_settings.setParseLog(
@@ -620,16 +590,20 @@ class SbmlImporter:
         :param value:
             local symbol value
         """
-        if key in itt.chain(self._local_symbols.keys(),
-                            ['True', 'False', 'pi']):
+        if key in self._local_symbols.keys():
             raise SBMLException(
                 f'AMICI tried to add a local symbol {key} with value {value}, '
                 f'but {key} was already instantiated with '
-                f'{self._local_symbols[key]}. This means either that there '
-                f'are multiple SBML element with SId {key}, which is '
-                f'invalid SBML, or that the employed SId {key} is a special '
-                'reserved symbol in AMICI. This can be fixed by renaming '
-                f'the element with SId {key}.'
+                f'{self._local_symbols[key]}. This means that there '
+                f'are multiple SBML elements with SId {key}, which is '
+                f'invalid SBML. This can be fixed by renaming '
+                f'the elements with SId {key}.'
+            )
+        if key in {'True', 'False', 'true', 'false', 'pi'}:
+            raise SBMLException(
+                f'AMICI tried to add a local symbol {key} with value {value}, '
+                f'but {key} is a reserved symbol in AMICI. This can be fixed '
+                f'by renaming the element with SId {key}.'
             )
         self._local_symbols[key] = value
 
@@ -1631,46 +1605,18 @@ class SbmlImporter:
             compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
             target_state_id = all_state_ids[target_state_model_idx]
-            target_compartment = all_compartment_sizes[target_state_model_idx]
-            target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
-
-            # \sum coeff * state * volume
-            abundance_expr = sp.Add(*[
-                state_id * coeff * compartment
-                for state_id, coeff, compartment
-                in zip(state_ids, coefficients, compartment_sizes)
-            ])
 
             new_conservation_laws.append({
                 'state': target_state_id,
                 'total_abundance': total_abundance,
-                'state_expr':
-                    (total_abundance - (abundance_expr
-                                        - target_state_id * target_compartment
-                                        * target_state_coeff))
-                    / target_state_coeff / target_compartment,
-                'abundance_expr': abundance_expr
+                'coefficients': {
+                     state_id: coeff * compartment
+                     for state_id, coeff, compartment
+                     in zip(state_ids, coefficients, compartment_sizes)
+                },
             })
             species_to_be_removed.add(target_state_model_idx)
-
-        # replace eliminated states by their state expressions, taking care of
-        #  any (non-cyclic) dependencies
-        state_exprs = {
-            cl['state']: cl['state_expr']
-            for cl in itt.chain(conservation_laws, new_conservation_laws)
-        }
-        try:
-            sorted_state_exprs = toposort_symbols(state_exprs)
-        except CircularDependencyError as e:
-            raise AssertionError(
-                "Circular dependency detected in conservation laws. "
-                "This should not have happened."
-            ) from e
-
-        for cl in new_conservation_laws:
-            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
-                                               sorted_state_exprs)
 
         conservation_laws.extend(new_conservation_laws)
 
@@ -2090,8 +2036,7 @@ def _add_conservation_for_constant_species(
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'coefficients': {target_state: 1.0},
             })
             # mark species to delete from stoichiometric matrix
             species_solver.pop(ix)

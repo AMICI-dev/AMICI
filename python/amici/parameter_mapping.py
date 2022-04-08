@@ -191,14 +191,18 @@ def fill_in_parameters_for_condition(
     # Parameter mapping may contain parameter_ids as values, these *must*
     # be replaced
 
-    def _get_par(model_par, value):
+    def _get_par(model_par, value, mapping):
         """Replace parameter IDs in mapping dicts by values from
         problem_parameters where necessary"""
         if isinstance(value, str):
-            # estimated parameter
-            # (condition table overrides must have been handled already,
-            # e.g. by the PEtab parameter mapping)
-            return problem_parameters[value]
+            try:
+                # estimated parameter
+                return problem_parameters[value]
+            except KeyError:
+                # condition table overrides must have been handled already,
+                # e.g. by the PEtab parameter mapping, but parameters from
+                # InitialAssignments may still be present.
+                return _get_par(value, mapping[value], mapping)
         if model_par in problem_parameters:
             # user-provided
             return problem_parameters[model_par]
@@ -208,11 +212,11 @@ def fill_in_parameters_for_condition(
         # constant value
         return value
 
-    map_preeq_fix = {key: _get_par(key, val)
+    map_preeq_fix = {key: _get_par(key, val, map_preeq_fix)
                      for key, val in map_preeq_fix.items()}
-    map_sim_fix = {key: _get_par(key, val)
+    map_sim_fix = {key: _get_par(key, val, map_sim_fix)
                    for key, val in map_sim_fix.items()}
-    map_sim_var = {key: _get_par(key, val)
+    map_sim_var = {key: _get_par(key, val, map_sim_var)
                    for key, val in map_sim_var.items()}
 
     # If necessary, (un)scale parameters

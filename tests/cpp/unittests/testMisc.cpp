@@ -448,6 +448,59 @@ testSolverGetterSetters(CVodeSolver solver,
     ASSERT_EQ(solver.getAbsoluteToleranceSteadyState(), tol);
 }
 
+TEST_F(SolverTest, SteadyStateToleranceFactor)
+{
+    CVodeSolver s;
+    // test with unset steadystate tolerances
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyStateSensi(),
+        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance());
+
+    // test with changed steadystate tolerance factor
+    s.setSteadyStateToleranceFactor(5);
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance());
+    s.setSteadyStateSensiToleranceFactor(5);
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyStateSensi(),
+        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance());
+
+
+    // test with steadystate tolerance override tolerance factor
+    s.setRelativeToleranceSteadyState(2);
+    ASSERT_NE(s.getRelativeToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_EQ(s.getRelativeToleranceSteadyState(), 2);
+    s.setAbsoluteToleranceSteadyState(3);
+    ASSERT_NE(s.getAbsoluteToleranceSteadyState(),
+              s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance());
+    ASSERT_EQ(s.getAbsoluteToleranceSteadyState(), 3);
+    s.setRelativeToleranceSteadyStateSensi(4);
+    ASSERT_NE(s.getRelativeToleranceSteadyStateSensi(),
+              s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_EQ(s.getRelativeToleranceSteadyStateSensi(), 4);
+    s.setAbsoluteToleranceSteadyStateSensi(5);
+    ASSERT_NE(s.getAbsoluteToleranceSteadyStateSensi(),
+              s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance());
+    ASSERT_EQ(s.getAbsoluteToleranceSteadyStateSensi(), 5);
+}
+
 class AmiVectorTest : public ::testing::Test {
   protected:
     std::vector<double> vec1{ 1, 2, 4, 3 };

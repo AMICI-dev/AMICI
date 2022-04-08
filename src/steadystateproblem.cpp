@@ -445,7 +445,7 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     /* ewt = 1/ewt (ewt = 1/(rtol*x+atol)) */
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    /* wrms = sqrt(sum((xdot/ewt)**2)) */
+    /* wrms = sqrt(sum((xdot/ewt)**2)/n) where n = size of state vector */
     return N_VWrmsNorm(const_cast<N_Vector>(xdot.getNVector()),
                        ewt.getNVector());
 }
@@ -630,7 +630,12 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
     /* If run after Newton's method checks again if it converged */
     wrms_ = getWrms(model, sensitivityFlag);
     int sim_steps = 0;
-
+    
+    int convergence_check_frequency = 1;
+    
+    if (newton_step_conv_)
+        convergence_check_frequency = 25;
+        
     while (true) {
         /* One step of ODE integration
          reason for tout specification:
@@ -654,7 +659,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
         /* getWrms needs to be called before getWrmsFSA such that the linear
          system is prepared for newton type convergence check */
         if (wrms_ < conv_thresh && check_sensi_conv_ &&
-            sensitivityFlag == SensitivityMethod::forward) {
+            sensitivityFlag == SensitivityMethod::forward &&
+            sim_steps % convergence_check_frequency == 0) {
             updateSensiSimulation(solver);
             wrms_ = getWrmsFSA(model);
         }

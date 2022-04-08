@@ -16,6 +16,7 @@ import tempfile
 from _collections import OrderedDict
 from itertools import chain
 from typing import List, Dict, Union, Optional, Tuple
+from pathlib import Path
 
 import amici
 import libsbml
@@ -85,7 +86,8 @@ def get_fixed_parameters(
         # remove overridden parameters (`object`-type columns)
         fixed_parameters = [p for p in fixed_parameters
                             if condition_df[p].dtype != 'O'
-                            and sbml_model.getParameter(p) is not None]
+                            and sbml_model.getParameter(p) is not None
+                            and sbml_model.getRuleByVariable(p) is None]
         # must be unique
         if len(fixed_parameters) != len(set(fixed_parameters)):
             raise AssertionError(
@@ -229,7 +231,7 @@ def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
 
 def import_petab_problem(
         petab_problem: petab.Problem,
-        model_output_dir: str = None,
+        model_output_dir: Union[str, Path, None] = None,
         model_name: str = None,
         force_compile: bool = False,
         **kwargs) -> 'amici.Model':
@@ -321,31 +323,25 @@ def import_petab_problem(
     return model
 
 
-def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> str:
+def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
     """
     Find a folder for storing the compiled amici model.
     If possible, use the sbml model id, otherwise create a random folder.
     The folder will be located in the `amici_models` subfolder of the current
     folder.
     """
-    BASE_DIR = os.path.abspath("amici_models")
-
-    # create base directory
-    if not os.path.exists(BASE_DIR):
-        os.makedirs(BASE_DIR)
-
+    BASE_DIR = Path("amici_models").absolute()
+    BASE_DIR.mkdir(exist_ok=True)
     # try sbml model id
     sbml_model_id = sbml_model.getId()
     if sbml_model_id:
-        model_output_dir = os.path.join(BASE_DIR, sbml_model_id)
-    else:
-        # create random folder name
-        model_output_dir = tempfile.mkdtemp(dir=BASE_DIR)
+        return BASE_DIR / sbml_model_id
 
-    return model_output_dir
+    # create random folder name
+    return Path(tempfile.mkdtemp(dir=BASE_DIR))
 
 
-def _create_model_name(folder: str) -> str:
+def _create_model_name(folder: Union[str, Path]) -> str:
     """
     Create a name for the model.
     Just re-use the last part of the folder.
@@ -353,7 +349,10 @@ def _create_model_name(folder: str) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str, model_output_dir: str) -> bool:
+def _can_import_model(
+        model_name: str,
+        model_output_dir: Union[str, Path]
+) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
@@ -370,12 +369,12 @@ def _can_import_model(model_name: str, model_output_dir: str) -> bool:
 
 @log_execution_time('Importing PEtab model', logger)
 def import_model_sbml(
-        sbml_model: Union[str, 'libsbml.Model'],
-        condition_table: Optional[Union[str, pd.DataFrame]] = None,
-        observable_table: Optional[Union[str, pd.DataFrame]] = None,
-        measurement_table: Optional[Union[str, pd.DataFrame]] = None,
+        sbml_model: Union[str, Path, 'libsbml.Model'],
+        condition_table: Optional[Union[str, Path, pd.DataFrame]] = None,
+        observable_table: Optional[Union[str, Path, pd.DataFrame]] = None,
+        measurement_table: Optional[Union[str, Path, pd.DataFrame]] = None,
         model_name: Optional[str] = None,
-        model_output_dir: Optional[str] = None,
+        model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
         allow_reinit_fixpar_initcond: bool = True,
         **kwargs) -> amici.SbmlImporter:
@@ -484,7 +483,7 @@ def import_model_sbml(
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
 
-    if not len(sigmas) == len(observables):
+    if len(sigmas) != len(observables):
         raise AssertionError(
             f'Number of provided observables ({len(observables)}) and sigmas '
             f'({len(sigmas)}) do not match.')
@@ -514,12 +513,11 @@ def import_model_sbml(
     #  create a new parameter initial_${startOrCompartmentID}.
     #  feels dirty and should be changed (see also #924)
     # <BeginWorkAround>
+
     initial_states = [col for col in condition_df
-                      if sbml_model.getSpecies(col) is not None]
-    initial_sizes = [col for col in condition_df
-                     if sbml_model.getCompartment(col) is not None]
+                      if element_is_state(sbml_model, col)]
     fixed_parameters = []
-    if len(initial_states) or len(initial_sizes):
+    if initial_states:
         # add preequilibration indicator variable
         # NOTE: would only be required if we actually have preequilibration
         #  adding it anyways. can be optimized-out later
@@ -536,8 +534,8 @@ def import_model_sbml(
         logger.debug("Adding preequilibration indicator "
                      f"constant {PREEQ_INDICATOR_ID}")
     logger.debug("Adding initial assignments for "
-                 f"{initial_sizes + initial_states}")
-    for assignee_id in chain(initial_sizes, initial_states):
+                 f"{initial_states}")
+    for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
         for init_par_id in [init_par_id_preeq, init_par_id_sim]:
@@ -689,6 +687,20 @@ def show_model_info(sbml_model: 'libsbml.Model'):
     logger.info('Global parameters: '
                 + str(len(sbml_model.getListOfParameters())))
     logger.info(f'Reactions: {len(sbml_model.getListOfReactions())}')
+
+
+def element_is_state(sbml_model: libsbml.Model, sbml_id: str) -> bool:
+    """Does the element with ID `sbml_id` correspond to a state variable?
+    """
+    if sbml_model.getCompartment(sbml_id) is not None:
+        return True
+    if sbml_model.getSpecies(sbml_id) is not None:
+        return True
+    if (rule := sbml_model.getRuleByVariable(sbml_id)) is not None \
+            and rule.getTypeCode() == libsbml.SBML_RATE_RULE:
+        return True
+
+    return False
 
 
 def _parse_cli_args():
