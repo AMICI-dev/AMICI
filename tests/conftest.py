@@ -7,6 +7,7 @@ from typing import List, Tuple, Set
 
 import pytest
 
+
 # stores passed SBML semantic test suite IDs
 passed_ids = []
 
@@ -43,7 +44,8 @@ def parse_selection(selection_str: str, last: int) -> List[int]:
 
 
 def get_all_semantic_case_ids():
-    """Get sorted iterator over all test IDs for the SBML semantic suite"""
+    """Get iterator over test sorted IDs of all cases in the SBML semantic
+    suite"""
     pattern = re.compile(r'\d{5}')
     return sorted(str(x.name) for x in SBML_SEMANTIC_CASES_DIR.iterdir()
                   if pattern.match(x.name))

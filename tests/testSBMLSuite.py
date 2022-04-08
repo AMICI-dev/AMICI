@@ -4,13 +4,10 @@ Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
 
 Usage:
-    python tests/testSBMLSuite.py SELECTION
-        SELECTION can be e.g.: `1`, `1,3`, or `-3,4,6-7` to select specific
-        test cases or 1-1780 to run all.
-
-    pytest tests.testSBMLSuite -n CORES --cases SELECTION
+    pytest tests.testSBMLSuite -n CORES --cases=SELECTION
         CORES can be an integer or `auto` for all available cores.
-        SELECTION same as above.
+        SELECTION can be e.g.: `1`, `1,3`, `-3,4,6-7`, or `100-` to select
+        specific test cases. If `--cases` is omitted, all cases are run.
 """
 
 import copy
@@ -30,8 +27,8 @@ from amici.gradient_check import check_derivatives
 
 
 @pytest.fixture(scope="session")
-def result_path():
-    return os.path.join(os.path.dirname(__file__), 'amici-semantic-results')
+def result_path() -> Path:
+    return Path(__file__).parent / 'amici-semantic-results'
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -151,7 +148,7 @@ def verify_results(
                               requested_concentrations)
 
     # simulated may contain `object` dtype columns and `expected` may
-    # contain `np.int64` columns so we cast everything to `np.float64`.
+    # contain `np.int64` columns, so we cast everything to `np.float64`.
     for variable in variables:
         assert np.isclose(
             simulated[variable].astype(np.float64).values,
@@ -170,6 +167,7 @@ def amounts_to_concentrations(
 ):
     """
     Convert AMICI simulated amounts to concentrations
+
     Convert from concentration to amount:
     C=n/V
     n=CV (multiply by V)
@@ -221,7 +219,7 @@ def concentrations_to_amounts(
 def write_result_file(
         simulated: pd.DataFrame,
         test_id: str,
-        result_path: str
+        result_path: Path
 ):
     """
     Create test result file for upload to
@@ -231,7 +229,7 @@ def write_result_file(
     """
     # TODO: only states are reported here, not compartments or parameters
 
-    filename = os.path.join(result_path, f'{test_id}.csv')
+    filename = result_path / f'{test_id}.csv'
     simulated.to_csv(filename, index=False)
 
 
@@ -274,15 +272,16 @@ def apply_settings(settings, solver, model):
 def compile_model(sbml_dir: Path, test_id: str, model_dir: Path,
                   generate_sensitivity_code: bool = False):
     """Import the given test model to AMICI"""
-    sbml_file = find_model_file(sbml_dir, test_id)
-
-    wrapper = amici.SbmlImporter(sbml_file)
-
     model_dir.mkdir(parents=True, exist_ok=True)
 
+    sbml_file = find_model_file(sbml_dir, test_id)
+    sbml_importer = amici.SbmlImporter(sbml_file)
+
     model_name = f'SBMLTest{test_id}'
-    wrapper.sbml2amici(model_name, output_dir=model_dir,
-                       generate_sensitivity_code=generate_sensitivity_code)
+    sbml_importer.sbml2amici(
+        model_name, output_dir=model_dir,
+        generate_sensitivity_code=generate_sensitivity_code
+    )
 
     # settings
     model_module = amici.import_model_module(model_name, model_dir)
@@ -290,7 +289,7 @@ def compile_model(sbml_dir: Path, test_id: str, model_dir: Path,
     model = model_module.getModel()
     solver = model.getSolver()
 
-    return model, solver, wrapper
+    return model, solver, sbml_importer
 
 
 def find_model_file(current_test_path: Path, test_id: str) -> Path:
@@ -298,12 +297,12 @@ def find_model_file(current_test_path: Path, test_id: str) -> Path:
 
     sbml_file = current_test_path / f'{test_id}-sbml-l3v2.xml'
 
-    # fallback l3v1
     if not sbml_file.is_file():
+        # fallback l3v1
         sbml_file = current_test_path / f'{test_id}-sbml-l3v1.xml'
 
-    # fallback l2v5
     if not sbml_file.is_file():
+        # fallback l2v5
         sbml_file = current_test_path / f'{test_id}-sbml-l2v5.xml'
 
     return sbml_file
