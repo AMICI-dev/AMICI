@@ -153,10 +153,12 @@ def simulate_petab(
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
-    if not sim_cond.empty:
-        for i, rdata in enumerate(rdatas):
-            logger.debug(f"Condition: {sim_cond.iloc[i, :].values}, status: "
-                         f"{rdata['status']}, llh: {rdata['llh']}")
+    for i, rdata in enumerate(rdatas):
+        sim_cond_id = "N/A" if sim_cond.empty else sim_cond.iloc[i, :].values
+        logger.debug(
+            f"Condition: {sim_cond_id}, status: {rdata['status']}, "
+            f"llh: {rdata['llh']}"
+        )
 
     return {
         LLH: llh,
