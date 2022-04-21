@@ -629,7 +629,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
 
     /* If run after Newton's method checks again if it converged */
     wrms_ = getWrms(model, sensitivityFlag);
-    int sim_steps = 0;
+    
+    int &sim_steps = backward ? numstepsB_ : numsteps_.at(1);
     
     int convergence_check_frequency = 1;
     
@@ -653,22 +654,16 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
             flagUpdatedState();
         }
         
-        try {
         /* Check for convergence */
-        wrms_ = getWrms(model, sensitivityFlag);
-        /* getWrms needs to be called before getWrmsFSA such that the linear
-         system is prepared for newton type convergence check */
-        if (wrms_ < conv_thresh && check_sensi_conv_ &&
-            sensitivityFlag == SensitivityMethod::forward &&
-            sim_steps % convergence_check_frequency == 0) {
-            updateSensiSimulation(solver);
-            wrms_ = getWrmsFSA(model);
-        }
-        
-        } catch (NewtonFailure const &) {
-            /* linear solves in getWrms failed */
-            numsteps_.at(1) = sim_steps;
-            throw;
+        if (sim_steps % convergence_check_frequency == 0) {
+            wrms_ = getWrms(model, sensitivityFlag);
+            /* getWrms needs to be called before getWrmsFSA such that the linear
+             system is prepared for newton type convergence check */
+            if (wrms_ < conv_thresh && check_sensi_conv_ &&
+                sensitivityFlag == SensitivityMethod::forward) {
+                updateSensiSimulation(solver);
+                wrms_ = getWrmsFSA(model);
+            }
         }
 
         if (wrms_ < conv_thresh)
@@ -676,12 +671,10 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
         /* increase counter, check for maxsteps */
         sim_steps++;
         if (sim_steps >= solver.getMaxSteps()) {
-            numsteps_.at(1) = sim_steps;
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,
                                 "exceeded maximum number of steps");
         }
         if (state_.t >= 1e200) {
-            numsteps_.at(1) = sim_steps;
             throw NewtonFailure(AMICI_NO_STEADY_STATE,
                                 "simulated to late time"
                                 " point without convergence of RHS");
@@ -691,13 +684,6 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
     // if check_sensi_conv_ is deactivated, we still have to update sensis
     if (sensitivityFlag == SensitivityMethod::forward)
         updateSensiSimulation(solver);
-
-    /* store information about steps and sensitivities, if necessary */
-    if (backward) {
-        numstepsB_ = sim_steps;
-    } else {
-        numsteps_.at(1) = sim_steps;
-    }
 }
 
 std::unique_ptr<Solver>
