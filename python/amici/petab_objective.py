@@ -153,9 +153,10 @@ def simulate_petab(
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
-    for i, rdata in enumerate(rdatas):
-        logger.debug(f"Condition: {sim_cond.iloc[i, :].values}, status: "
-                     f"{rdata['status']}, llh: {rdata['llh']}")
+    if not sim_cond.empty:
+        for i, rdata in enumerate(rdatas):
+            logger.debug(f"Condition: {sim_cond.iloc[i, :].values}, status: "
+                         f"{rdata['status']}, llh: {rdata['llh']}")
 
     return {
         LLH: llh,
@@ -230,7 +231,7 @@ def create_parameterized_edatas(
 
 def create_parameter_mapping(
         petab_problem: petab.Problem,
-        simulation_conditions: Union[pd.DataFrame, Dict],
+        simulation_conditions: Union[pd.DataFrame, List[Dict]],
         scaled_parameters: bool,
         amici_model: AmiciModel,
 ) -> ParameterMapping:
@@ -254,6 +255,8 @@ def create_parameter_mapping(
     if simulation_conditions is None:
         simulation_conditions = \
             petab_problem.get_simulation_conditions_from_measurement_df()
+    if isinstance(simulation_conditions, list):
+        simulation_conditions = pd.DataFrame(data=simulation_conditions)
 
     # Because AMICI globalizes all local parameters during model import,
     # we need to do that here as well to prevent parameter mapping errors
