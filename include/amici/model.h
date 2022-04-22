@@ -44,6 +44,7 @@ enum class ModelQuantity {
     JvB,
     sx,
     sy,
+    ssigmay,
     xdot,
     xBdot,
     x0_rdata,

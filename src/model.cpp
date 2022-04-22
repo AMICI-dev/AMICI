@@ -25,6 +25,7 @@ std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::JvB, "JvB"},
     {ModelQuantity::sx, "sx"},
     {ModelQuantity::sy, "sy"},
+    {ModelQuantity::ssigmay, "ssigmay"},
     {ModelQuantity::xdot, "xdot"},
     {ModelQuantity::xBdot, "xBdot"},
     {ModelQuantity::x0, "x0"},
@@ -900,7 +901,7 @@ void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
     }
 
     if (always_check_finite_)
-        checkFinite(ssigmay, "ssigmay");
+        checkFinite(ssigmay, ModelQuantity::ssigmay, nplist());
 }
 
 void Model::addObservableObjective(realtype &Jy, const int it,
@@ -1314,6 +1315,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
 
     // check upstream
     if(!always_check_finite_) {
+        // don't check twice if always_check_finite_
         app->checkFinite(derived_state_.w_, "w");
     }
     app->checkFinite(state_.fixedParameters, "k");
@@ -1350,6 +1352,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
 
     switch (model_quantity) {
     case ModelQuantity::sy:
+    case ModelQuantity::ssigmay:
     case ModelQuantity::dydp:
         row_id += " " + getObservableIds()[row];
         col_id += " " + getParameterIds()[plist(col)];
