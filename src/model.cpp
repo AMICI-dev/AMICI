@@ -1251,19 +1251,6 @@ void Model::updateHeavisideB(const int *rootsfound) {
     }
 }
 
-int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
-    auto result = app->checkFinite(array, fun);
-
-    if (result != AMICI_SUCCESS) {
-        app->checkFinite(state_.fixedParameters, "k");
-        app->checkFinite(state_.unscaledParameters, "p");
-        app->checkFinite(derived_state_.w_, "w");
-        app->checkFinite(simulation_parameters_.ts_, "t");
-    }
-
-    return result;
-}
-
 int Model::checkFinite(gsl::span<const realtype> array,
                        ModelQuantity model_quantity) const
 {

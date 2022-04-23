@@ -1237,20 +1237,6 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void updateHeavisideB(const int *rootsfound);
 
-    /**
-     * @brief Check if the given array has only finite elements.
-     *
-     * If not, try to give hints by which other fields this could be caused.
-     *
-     * For (1D) spans.
-     *
-     * @param array Array to check
-     * @param fun Name of the function that generated the values (for more
-     * informative messages).
-     * @return `amici::AMICI_RECOVERABLE_ERROR` if a NaN/Inf value was found,
-     * `amici::AMICI_SUCCESS` otherwise
-     */
-    int checkFinite(gsl::span<const realtype> array, const char *fun) const;
 
     /**
      * @brief Check if the given array has only finite elements.
