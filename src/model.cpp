@@ -28,6 +28,7 @@ std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::sy, "sy"},
     {ModelQuantity::ssigmay, "ssigmay"},
     {ModelQuantity::xdot, "xdot"},
+    {ModelQuantity::sxdot, "sxdot"},
     {ModelQuantity::xBdot, "xBdot"},
     {ModelQuantity::x0, "x0"},
     {ModelQuantity::x0_rdata, "x0_rdata"},
@@ -40,6 +41,11 @@ std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::dydp, "dydp"},
     {ModelQuantity::dydx, "dydx"},
     {ModelQuantity::w, "w"},
+    {ModelQuantity::root, "root"},
+    {ModelQuantity::qBdot, "qBdot"},
+    {ModelQuantity::qBdot_ss, "qBdot_ss"},
+    {ModelQuantity::xBdot_ss, "xBdot_ss"},
+    {ModelQuantity::JSparseB_ss, "JSparseB_ss"},
 };
 
 /**

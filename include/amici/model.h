@@ -47,6 +47,7 @@ enum class ModelQuantity {
     sy,
     ssigmay,
     xdot,
+    sxdot,
     xBdot,
     x0_rdata,
     x0,
@@ -59,6 +60,11 @@ enum class ModelQuantity {
     dydp,
     dydx,
     w,
+    root,
+    qBdot,
+    qBdot_ss,
+    xBdot_ss,
+    JSparseB_ss,
 };
 
 extern std::map<ModelQuantity, std::string> model_quantity_to_str;

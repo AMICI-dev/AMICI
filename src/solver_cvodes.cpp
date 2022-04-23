@@ -1012,7 +1012,7 @@ static int froot(realtype t, N_Vector x, realtype *root,
 
     model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
-                              "root function");
+                              ModelQuantity::root);
 }
 
 
@@ -1094,7 +1094,7 @@ static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     Expects(model);
 
     model->fqBdot(t, x, xB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), "qBdot");
+    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot);
 }
 
 
@@ -1115,7 +1115,7 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
     Expects(model);
 
     model->fxBdot_ss(t, xB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), "fxBdot_ss");
+    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot_ss);
 }
 
 
@@ -1136,7 +1136,7 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
     Expects(model);
 
     model->fqBdot_ss(t, xB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
+    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot_ss);
 }
 
 /**
@@ -1160,7 +1160,8 @@ static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
     Expects(model);
 
     model->fJSparseB_ss(JB);
-    return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
+    return model->checkFinite(gsl::make_span(xBdot),
+                              ModelQuantity::JSparseB_ss);
 }
 
 
@@ -1188,7 +1189,7 @@ static int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
     Expects(model);
 
     model->fsxdot(t, x, ip, sx, sxdot);
-    return model->checkFinite(gsl::make_span(sxdot), "sxdot");
+    return model->checkFinite(gsl::make_span(sxdot), ModelQuantity::sxdot);
 }
 
 bool operator==(const CVodeSolver &a, const CVodeSolver &b) {
