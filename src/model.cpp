@@ -23,6 +23,7 @@ std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::JB, "JB"},
     {ModelQuantity::Jv, "Jv"},
     {ModelQuantity::JvB, "JvB"},
+    {ModelQuantity::JDiag, "JDiag"},
     {ModelQuantity::sx, "sx"},
     {ModelQuantity::sy, "sy"},
     {ModelQuantity::ssigmay, "ssigmay"},
@@ -1287,6 +1288,9 @@ int Model::checkFinite(gsl::span<const realtype> array,
     case ModelQuantity::x:
     case ModelQuantity::x_rdata:
     case ModelQuantity::x0_rdata:
+    case ModelQuantity::Jv:
+    case ModelQuantity::JvB:
+    case ModelQuantity::JDiag:
         if(hasStateIds()) {
             element_id = getStateIdsSolver()[flat_index];
         }
@@ -1416,8 +1420,6 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
     switch (model_quantity) {
     case ModelQuantity::J:
     case ModelQuantity::JB:
-    case ModelQuantity::Jv:
-    case ModelQuantity::JvB:
         if(hasStateIds()) {
             auto state_ids = getStateIdsSolver();
             row_id += " " + state_ids[row];

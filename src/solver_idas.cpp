@@ -817,7 +817,7 @@ int fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
     auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
     Expects(model);
     model->fJ(t, cj, x, dx, xdot, J);
-    return model->checkFinite(gsl::make_span(J), "Jacobian");
+    return model->checkFinite(J, ModelQuantity::J, t);
 }
 
 /**
@@ -846,7 +846,8 @@ int fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
     Expects(model);
 
     model->fJB(t, cj, x, dx, xB, dxB, JB);
-    return model->checkFinite(gsl::make_span(JB), "Jacobian");
+    return model->checkFinite(JB, ModelQuantity::JB, t);
+
 }
 
 /**
@@ -873,7 +874,7 @@ int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
     Expects(model);
 
     model->fJSparse(t, cj, x, dx, J);
-    return model->checkFinite(gsl::make_span(J), "Jacobian");
+    return model->checkFinite(J, ModelQuantity::J, t);
 }
 
 /**
@@ -902,7 +903,7 @@ int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
     Expects(model);
 
     model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
-    return model->checkFinite(gsl::make_span(JB), "Jacobian");
+    return model->checkFinite(JB, ModelQuantity::JB, t);
 }
 
 /**
@@ -973,7 +974,7 @@ int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector /*xdot*/,
     Expects(model);
 
     model->fJv(t, x, dx, v, Jv, cj);
-    return model->checkFinite(gsl::make_span(Jv), "Jacobian");
+    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv);
 }
 
 /**
@@ -1003,7 +1004,7 @@ int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     Expects(model);
 
     model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
-    return model->checkFinite(gsl::make_span(JvB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB);
 }
 
 /**

@@ -42,6 +42,7 @@ enum class ModelQuantity {
     JB,
     Jv,
     JvB,
+    JDiag,
     sx,
     sy,
     ssigmay,
