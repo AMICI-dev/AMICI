@@ -28,32 +28,6 @@ def test_parameter_scaling_from_int_vector():
     assert scale_vector[2] == amici.ParameterScaling.none
 
 
-def test_sbml2amici_no_observables():
-    """Test model generation works for model without observables"""
-
-    # test model
-    document = libsbml.SBMLDocument(3, 1)
-    model = document.createModel()
-    model.setTimeUnits("second")
-    model.setExtentUnits("mole")
-    model.setSubstanceUnits('mole')
-    c1 = model.createCompartment()
-    c1.setId('C1')
-    model.addCompartment(c1)
-    s1 = model.createSpecies()
-    s1.setId('S1')
-    s1.setCompartment('C1')
-    model.addSpecies(s1)
-
-    sbml_importer = amici.sbml_import.SbmlImporter(sbml_source=model,
-                                                   from_file=False)
-    tmpdir = TemporaryDirectory()
-    sbml_importer.sbml2amici(modelName="test",
-                             output_dir=tmpdir.name,
-                             observables=None,
-                             compute_conservation_laws=False)
-
-
 def test_hill_function_dwdx():
     """Kinetic laws with Hill functions, may lead to NaNs in the Jacobian
     if involved states are zero if not properly arranged symbolically.

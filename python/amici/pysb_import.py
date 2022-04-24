@@ -9,6 +9,7 @@ import itertools
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Set, Tuple,
                     Union)
 
@@ -22,8 +23,7 @@ from .import_utils import (_get_str_symbol_identifiers,
                            _parse_special_functions,
                            generate_measurement_symbol,
                            noise_distribution_to_cost_function,
-                           noise_distribution_to_observable_transformation,
-                           RESERVED_SYMBOLS)
+                           noise_distribution_to_observable_transformation)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (Constant, Expression, LogLikelihood, ODEExporter,
                          ODEModel, Observable, Parameter, SigmaY, State)
@@ -36,7 +36,7 @@ logger = get_logger(__name__, logging.ERROR)
 
 def pysb2amici(
         model: pysb.Model,
-        output_dir: str = None,
+        output_dir: Optional[Union[str, Path]] = None,
         observables: List[str] = None,
         constant_parameters: List[str] = None,
         sigmas: Dict[str, str] = None,
@@ -240,9 +240,108 @@ def ode_model_from_pysb_importer(
         for noise_distr in noise_distributions.values()
     )
 
+    _process_stoichiometric_matrix(model, ode, constant_parameters)
+
     ode.generate_basic_variables()
 
     return ode
+
+
+@log_execution_time('processing PySB stoich. matrix', logger)
+def _process_stoichiometric_matrix(pysb_model: pysb.Model,
+                                   ode_model: ODEModel,
+                                   constant_parameters: List[str]) -> None:
+
+    """
+    Exploits the PySB stoichiometric matrix to generate xdot derivatives
+
+    :param pysb_model:
+        pysb model instance
+
+    :param ode_model:
+        ODEModel instance
+
+    :param constant_parameters:
+        list of constant parameters
+    """
+
+    x = ode_model.sym('x')
+    w = list(ode_model.sym('w'))
+    p = list(ode_model.sym('p'))
+    x_rdata = list(ode_model.sym('x_rdata'))
+
+    n_x = len(x)
+    n_w = len(w)
+    n_p = len(p)
+    n_r = len(pysb_model.reactions)
+
+    solver_index = ode_model.get_solver_indices()
+    dflux_dx_dict = {}
+    dflux_dw_dict = {}
+    dflux_dp_dict = {}
+
+    w_idx = dict()
+    p_idx = dict()
+    wx_idx = dict()
+
+    def get_cached_index(symbol, sarray, index_cache):
+        idx = index_cache.get(symbol, None)
+        if idx is not None:
+            return idx
+        idx = sarray.index(symbol)
+        index_cache[symbol] = idx
+        return idx
+
+    for ir, rxn in enumerate(pysb_model.reactions):
+        for ix in np.unique(rxn['reactants']):
+            idx = solver_index.get(ix, None)
+            if idx is not None:
+                # species
+                values = dflux_dx_dict
+            else:
+                # conservation law
+                idx = get_cached_index(x_rdata[ix], w, wx_idx)
+                values = dflux_dw_dict
+
+            values[(ir, idx)] = sp.diff(rxn['rate'], x_rdata[ix])
+
+        # typically <= 3 free symbols in rate, we already account for
+        # species above so we only need to account for propensity, which
+        # can only be a parameter or expression
+        for fs in rxn['rate'].free_symbols:
+            # dw
+            if isinstance(fs, pysb.Expression):
+                var = w
+                idx_cache = w_idx
+                values = dflux_dw_dict
+            # dp
+            elif isinstance(fs, pysb.Parameter):
+                if fs.name in constant_parameters:
+                    continue
+                var = p
+                idx_cache = p_idx
+                values = dflux_dp_dict
+            else:
+                continue
+
+            idx = get_cached_index(fs, var, idx_cache)
+            values[(ir, idx)] = sp.diff(rxn['rate'], fs)
+
+    dflux_dx = sp.ImmutableSparseMatrix(n_r, n_x, dflux_dx_dict)
+    dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
+    dflux_dp = sp.ImmutableSparseMatrix(n_r, n_p, dflux_dp_dict)
+
+    # use dok format to convert numeric csc to sparse symbolic
+    S = sp.ImmutableSparseMatrix(
+        n_x, n_r, # don't use shape here as we are eliminating rows
+        pysb_model.stoichiometry_matrix[
+            np.asarray(list(solver_index.keys())),:
+        ].todok()
+    )
+    # don't use `.dot` since it's awfully slow
+    ode_model._eqs['dxdotdx_explicit'] = S*dflux_dx
+    ode_model._eqs['dxdotdw'] = S*dflux_dw
+    ode_model._eqs['dxdotdp_explicit'] = S*dflux_dp
 
 
 @log_execution_time('processing PySB species', logger)
@@ -1010,37 +1109,17 @@ def _construct_conservation_from_prototypes(
     conservation_laws = []
     for monomer_name in cl_prototypes:
         target_index = cl_prototypes[monomer_name]['target_index']
+        coefficients = dict()
 
-        # T = sum_i(a_i * x_i)
-        # x_j = (T - sum_i≠j(a_i * x_i))/a_j
-        # law: sum_i≠j(a_i * x_i))/a_j
-        # state: x_j
-        target_expression = sum(
-            sp.Symbol(f'__s{ix}')
-            * extract_monomers(specie).count(monomer_name)
-            for ix, specie in enumerate(pysb_model.species)
-            if ix != target_index
-        ) / extract_monomers(pysb_model.species[
-                                 target_index
-                             ]).count(monomer_name)
-        # normalize by the stoichiometry of the target species
-        target_state = sp.Symbol(f'__s{target_index}')
-        # = x_j
-
-        total_abundance = sp.Symbol(f'tcl__s{target_index}')
-        # = T/a_j
-
-        state_expr = total_abundance - target_expression
-        # x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
-
-        abundance_expr = target_expression + target_state
-        # T/a_j = sum_i≠j(a_i * x_i)/a_j + x_j
+        for ix, specie in enumerate(pysb_model.species):
+            count = extract_monomers(specie).count(monomer_name)
+            if count > 0:
+                coefficients[sp.Symbol(f'__s{ix}')] = count
 
         conservation_laws.append({
-            'state': target_state,
-            'total_abundance': total_abundance,
-            'state_expr': state_expr,
-            'abundance_expr': abundance_expr,
+            'state': sp.Symbol(f'__s{target_index}'),
+            'total_abundance': sp.Symbol(f'tcl__s{target_index}'),
+            'coefficients': coefficients,
         })
 
     return conservation_laws
@@ -1064,14 +1143,10 @@ def _add_conservation_for_constant_species(
 
     for ix in range(ode_model.num_states_rdata()):
         if ode_model.state_is_constant(ix):
-            target_state = sp.Symbol(f'__s{ix}')
-            total_abundance = sp.Symbol(f'tcl__s{ix}')
-
             conservation_laws.append({
-                'state': target_state,
-                'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'state': sp.Symbol(f'__s{ix}'),
+                'total_abundance': sp.Symbol(f'tcl__s{ix}'),
+                'coefficients': {sp.Symbol(f'__s{ix}'): 1.0}
             })
 
 
@@ -1087,83 +1162,58 @@ def _flatten_conservation_laws(
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
 
-    while len(conservation_law_subs):
+    while conservation_law_subs:
         for cl in conservation_laws:
-            if _sub_matches_cl(
-                    conservation_law_subs,
-                    cl['state_expr'],
-                    cl['state']
+            # only update if we changed something
+            if any(
+                _apply_conseration_law_sub(cl, sub)
+                for sub in conservation_law_subs
             ):
-                # this optimization is done by subs anyways, but we dont
-                # want to recompute the subs if we did not change anything
-                valid_subs = _select_valid_cls(
-                    conservation_law_subs,
-                    cl['state']
-                )
-                if len(valid_subs) > 0:
-                    cl['state_expr'] = cl['state_expr'].subs(valid_subs)
-                    conservation_law_subs = \
-                        _get_conservation_law_subs(conservation_laws)
+                conservation_law_subs = \
+                    _get_conservation_law_subs(conservation_laws)
 
 
-def _select_valid_cls(subs: Iterable[Tuple[sp.Symbol, sp.Basic]],
-                      state: sp.Symbol) -> List[Tuple[sp.Symbol, sp.Basic]]:
+def _apply_conseration_law_sub(cl: ConservationLaw,
+                               sub: Tuple[sp.Symbol, ConservationLaw]) -> bool:
     """
-    Subselect substitutions such that we do not end up with conservation
-    laws that are self-referential
+    Applies a substitution to a conservation law by replacing the
+    coefficient of the state of the
 
-    :param subs:
-        substitutions in tuple format
+    :param cl:
+        conservation law
 
-    :param state:
-        target symbolic state to which substitutions will be applied
+    :param sub:
+        substitution to apply, tuple of (state to be replaced, conservation
+        law)
 
-    :return:
-        list of valid substitutions
+    :return: boolean flag indicating whether the substitution was applied
     """
-    return [
-        sub
-        for sub in subs
-        if str(state) not in [str(symbol) for symbol in sub[1].free_symbols]
-    ]
+    coeff = cl['coefficients'].get(sub[0], 0.0)
+    if coeff == 0.0 or cl['state'] == sub[0]:
+        return False
 
+    del cl['coefficients'][sub[0]]
+    # x_j = T/b_j - sum_{i≠j}(x_i * b_i) / b_j
+    # don't need to account for totals here as we can simply
+    # absorb that into the new total
+    for k, v in sub[1].items():
+        if k == sub[0]:
+            continue
+        update = - coeff * v / sub[1][sub[0]]
 
-def _sub_matches_cl(subs: Iterable[Tuple[sp.Symbol, sp.Basic]],
-                    state_expr: sp.Basic,
-                    state: sp.Basic) -> bool:
-    """
-    Checks whether any of the substitutions in subs will be applied to
-    state_expr
+        if k in cl['coefficients']:
+            cl['coefficients'][k] += update
+        else:
+            cl['coefficients'][k] = update
 
-    :param subs:
-        substitutions in tuple format
-
-    :param state_expr:
-        target symbolic expressions in which substitutions will be applied
-
-    :param state: target symbolic state to which substitutions will
-        be applied
-
-    :return:
-        boolean indicating positive match
-    """
-
-    sub_symbols = set(
-        sub[0]
-        for sub in subs
-        if str(state) not in [
-            str(symbol) for symbol in sub[1].free_symbols
-        ]
-    )
-
-    return len(sub_symbols.intersection(state_expr.free_symbols)) > 0
+    return True
 
 
 def _get_conservation_law_subs(
         conservation_laws: List[ConservationLaw]
-) -> List[Tuple[sp.Symbol, sp.Basic]]:
+) -> List[Tuple[sp.Symbol, Dict[sp.Symbol, sp.Expr]]]:
     """
-    Computes a list of (state, law) tuples for conservation laws that still
+    Computes a list of (state, coeffs) tuples for conservation laws that still
     appear in other conservation laws
 
     :param conservation_laws:
@@ -1173,29 +1223,14 @@ def _get_conservation_law_subs(
         list of tuples containing substitution rules to be used with sympy
         subs
     """
-    free_symbols_cl = _conservation_law_variables(conservation_laws)
     return [
-        (cl['state'], cl['state_expr']) for cl in conservation_laws
-        if cl['state'] in free_symbols_cl
+        (cl['state'], cl['coefficients']) for cl in conservation_laws
+        if any(
+            cl['state'] in other_cl['coefficients']
+            for other_cl in conservation_laws
+            if other_cl != cl
+        )
     ]
-
-
-def _conservation_law_variables(
-        conservation_laws: List[ConservationLaw]) -> Set[sp.Symbol]:
-    """
-    Construct the set of all free variables from a list of conservation laws
-
-    :param conservation_laws:
-        list of conservation laws
-
-    :return:
-        free variables in conservation laws
-    """
-    variables = set()
-    for cl in conservation_laws:
-        variables |= cl['state_expr'].free_symbols
-    return variables
-
 
 def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            pysb_model: pysb.Model,
@@ -1334,7 +1369,7 @@ def _get_changed_stoichiometries(
     return changed_stoichiometries
 
 
-def pysb_model_from_path(pysb_model_file: str) -> pysb.Model:
+def pysb_model_from_path(pysb_model_file: Union[str, Path]) -> pysb.Model:
     """Load a pysb model module and return the :class:`pysb.Model` instance
 
     :param pysb_model_file: Full or relative path to the PySB model module

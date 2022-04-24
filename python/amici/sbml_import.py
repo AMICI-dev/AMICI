@@ -11,23 +11,23 @@ import math
 import os
 import re
 import warnings
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Union)
+from pathlib import Path
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
+                    Union)
 
 import libsbml as sbml
 import sympy as sp
 
 from . import has_clibs
-from .conserved_moieties import compute_moiety_conservation_laws
 from .constants import SymbolId
-from .import_utils import (CircularDependencyError,
+from .import_utils import (RESERVED_SYMBOLS,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
                            generate_measurement_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols,
-                           RESERVED_SYMBOLS)
+                           smart_subs, smart_subs_dict, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, symbol_with_assumptions
@@ -116,7 +116,7 @@ class SbmlImporter:
     """
 
     def __init__(self,
-                 sbml_source: Union[str, sbml.Model],
+                 sbml_source: Union[str, Path, sbml.Model],
                  show_sbml_warnings: bool = False,
                  from_file: bool = True) -> None:
         """
@@ -139,7 +139,7 @@ class SbmlImporter:
         else:
             self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
             if from_file:
-                sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+                sbml_doc = self.sbml_reader.readSBMLFromFile(str(sbml_source))
             else:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
@@ -203,26 +203,27 @@ class SbmlImporter:
         Reset the symbols attribute to default values
         """
         self.symbols = copy.deepcopy(default_symbols)
-        self._local_symbols = dict()
+        self._local_symbols = {}
 
-    def sbml2amici(self,
-                   model_name: str = None,
-                   output_dir: str = None,
-                   observables: Dict[str, Dict[str, str]] = None,
-                   constant_parameters: Iterable[str] = None,
-                   sigmas: Dict[str, Union[str, float]] = None,
-                   noise_distributions: Dict[str, Union[str, Callable]] = None,
-                   verbose: Union[int, bool] = logging.ERROR,
-                   assume_pow_positivity: bool = False,
-                   compiler: str = None,
-                   allow_reinit_fixpar_initcond: bool = True,
-                   compile: bool = True,
-                   compute_conservation_laws: bool = True,
-                   simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-                   cache_simplify: bool = False,
-                   log_as_log10: bool = True,
-                   generate_sensitivity_code: bool = True,
-                   **kwargs) -> None:
+    def sbml2amici(
+            self,
+            model_name: str,
+            output_dir: Union[str, Path] = None,
+            observables: Dict[str, Dict[str, str]] = None,
+            constant_parameters: Iterable[str] = None,
+            sigmas: Dict[str, Union[str, float]] = None,
+            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            verbose: Union[int, bool] = logging.ERROR,
+            assume_pow_positivity: bool = False,
+            compiler: str = None,
+            allow_reinit_fixpar_initcond: bool = True,
+            compile: bool = True,
+            compute_conservation_laws: bool = True,
+            simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+            cache_simplify: bool = False,
+            log_as_log10: bool = True,
+            generate_sensitivity_code: bool = True,
+    ) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
         constructor.
@@ -289,7 +290,13 @@ class SbmlImporter:
             Conservation laws for constant species are enabled by default.
             Support for conservation laws for non-constant species is
             experimental and may be enabled by setting an environment variable
-            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to any value.
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
+            to use the algorithm proposed by De Martino et al. (2014)
+            https://doi.org/10.1371/journal.pone.0100750, or to any other value
+            to use the deterministic algorithm implemented in
+            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            run for a very long time. This has been observed for example in the
+            case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
             see :attr:`ODEModel._simplify`
@@ -309,46 +316,14 @@ class SbmlImporter:
         """
         set_log_level(logger, verbose)
 
-        if 'constantParameters' in kwargs:
-            logger.warning('Use of `constantParameters` as argument name '
-                           'is deprecated and will be removed in a future '
-                           'version. Please use `constant_parameters` as '
-                           'argument name.')
-
-            if constant_parameters is not None:
-                raise ValueError('Cannot specify constant parameters using '
-                                 'both `constantParameters` and '
-                                 '`constant_parameters` as argument names.')
-
-            constant_parameters = kwargs.pop('constantParameters', [])
-
-        elif constant_parameters is None:
-            constant_parameters = []
-        constant_parameters = list(constant_parameters)
+        constant_parameters = list(constant_parameters) \
+            if constant_parameters else []
 
         if sigmas is None:
             sigmas = {}
 
         if noise_distributions is None:
             noise_distributions = {}
-
-        if model_name is None:
-            model_name = kwargs.pop('modelName', None)
-            if model_name is None:
-                raise ValueError('Missing argument: `model_name`')
-            else:
-                logger.warning('Use of `modelName` as argument name is '
-                               'deprecated and will be removed in a future'
-                               ' version. Please use `model_name` as '
-                               'argument name.')
-        else:
-            if 'modelName' in kwargs:
-                raise ValueError('Cannot specify model name using both '
-                                 '`modelName` and `model_name` as argument '
-                                 'names.')
-
-        if len(kwargs):
-            raise ValueError(f'Unknown arguments {kwargs.keys()}.')
 
         self._reset_symbols()
         self.sbml_parser_settings.setParseLog(
@@ -615,16 +590,20 @@ class SbmlImporter:
         :param value:
             local symbol value
         """
-        if key in itt.chain(self._local_symbols.keys(),
-                            ['True', 'False', 'pi']):
+        if key in self._local_symbols.keys():
             raise SBMLException(
                 f'AMICI tried to add a local symbol {key} with value {value}, '
                 f'but {key} was already instantiated with '
-                f'{self._local_symbols[key]}. This means either that there '
-                f'are multiple SBML element with SId {key}, which is '
-                f'invalid SBML, or that the employed SId {key} is a special '
-                'reserved symbol in AMICI. This can be fixed by renaming '
-                f'the element with SId {key}.'
+                f'{self._local_symbols[key]}. This means that there '
+                f'are multiple SBML elements with SId {key}, which is '
+                f'invalid SBML. This can be fixed by renaming '
+                f'the elements with SId {key}.'
+            )
+        if key in {'True', 'False', 'true', 'false', 'pi'}:
+            raise SBMLException(
+                f'AMICI tried to add a local symbol {key} with value {value}, '
+                f'but {key} is a reserved symbol in AMICI. This can be fixed '
+                f'by renaming the element with SId {key}.'
             )
         self._local_symbols[key] = value
 
@@ -1441,22 +1420,22 @@ class SbmlImporter:
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
 
-    def _add_conservation_for_non_constant_species(
-        self,
-        ode_model: ODEModel,
-        conservation_laws: List[ConservationLaw]
-    ) -> List[int]:
-        """Add non-constant species to conservation laws
+    def _get_conservation_laws_demartino(
+            self,
+            ode_model: ODEModel,
+    ) -> List[Tuple[int, List[int], List[float]]]:
+        """Identify conservation laws based on algorithm by DeMartino et al.
+        (see conserved_moieties.py).
 
-        :param ode_model:
-            ODEModel object with basic definitions
-        :param conservation_laws:
-            List of already known conservation laws
-        :returns:
-            List of species indices which later remain in the ODE solver
+        :param ode_model: Model for which to compute conserved quantities
+        :returns: List of one tuple per conservation law, each containing:
+            (0) the index of the (solver-)species to eliminate,
+            (1) (solver-)indices of all species engaged in the conserved
+            quantity (including the eliminated one)
+            (2) coefficients for the species in (1)
         """
-        # indices of retained species
-        species_solver = list(range(ode_model.num_states_rdata()))
+        from .conserved_quantities_demartino \
+            import compute_moiety_conservation_laws
 
         try:
             stoichiometric_list = [
@@ -1470,7 +1449,7 @@ class SbmlImporter:
                           "combination with parameterized stoichiometric "
                           "coefficients are not currently supported "
                           "and will be turned off.")
-            return species_solver
+            return []
 
         if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
                for rule in self.sbml.getListOfRules()):
@@ -1478,7 +1457,7 @@ class SbmlImporter:
             warnings.warn("Conservation laws for non-constant species in "
                           "models with RateRules are not currently supported "
                           "and will be turned off.")
-            return species_solver
+            return []
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *self.stoichiometric_matrix.shape,
@@ -1501,7 +1480,105 @@ class SbmlImporter:
             for i, c in zip(cl, coefficients):
                 A[i_cl, i] = sp.Rational(c)
         rref, pivots = A.rref()
-        species_to_be_removed = set(pivots)
+
+        raw_cls = []
+        for i_cl, target_state_model_idx in enumerate(pivots):
+            # collect values for species engaged in the current CL
+            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
+                          if coeff]
+            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
+            raw_cls.append((target_state_model_idx, state_idxs,
+                            coefficients),)
+        return raw_cls
+
+    def _get_conservation_laws_rref(
+            self
+    ) -> List[Tuple[int, List[int], List[float]]]:
+        """Identify conservation laws based on left nullspace of the
+        stoichiometric matrix, computed through (numeric) Gaussian elimination
+
+        :returns: List of one tuple per conservation law, each containing:
+            (0) the index of the (solver-)species to eliminate,
+            (1) (solver-)indices of all species engaged in the conserved
+            quantity (including the eliminated one)
+            (2) coefficients for the species in (1)
+        """
+        import numpy as np
+        from numpy.linalg import matrix_rank
+        from .conserved_quantities_rref import nullspace_by_rref, rref
+
+        try:
+            S = np.asarray(self.stoichiometric_matrix, dtype=float)
+        except TypeError:
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
+            warnings.warn("Conservation laws for non-constant species in "
+                          "combination with parameterized stoichiometric "
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
+            return []
+
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
+            return []
+
+        # Determine rank via SVD
+        rank = matrix_rank(S) if S.shape[0] else 0
+        if rank == S.shape[0]:
+            return []
+        kernel = nullspace_by_rref(S.T)
+        # Check dimensions - due to numerical errors, nullspace_by_rref may
+        #  fail in certain situations
+        if kernel.shape[0] != S.shape[0] - rank:
+            raise AssertionError(
+                "Failed to determine all conserved quantities "
+                f"(found {kernel.shape[0]}, expected {S.shape[0] - rank}). "
+                "Try another algorithm, disable detection of conservation "
+                "laws, or submit a bug report along with the model."
+            )
+        kernel = rref(kernel)
+        raw_cls = []
+        for row in kernel:
+            state_idxs = [i for i, coeff in enumerate(row) if coeff]
+            coefficients = [coeff for coeff in row if coeff]
+            print(state_idxs, coefficients)
+            raw_cls.append((state_idxs[0], state_idxs, coefficients),)
+
+        return raw_cls
+
+    def _add_conservation_for_non_constant_species(
+        self,
+        ode_model: ODEModel,
+        conservation_laws: List[ConservationLaw]
+    ) -> List[int]:
+        """Add non-constant species to conservation laws
+
+        :param ode_model:
+            ODEModel object with basic definitions
+        :param conservation_laws:
+            List of already known conservation laws
+        :returns:
+            List of species indices which later remain in the ODE solver
+        """
+        # indices of retained species
+        species_solver = list(range(ode_model.num_states_rdata()))
+
+        algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
+        if algorithm.lower() == "demartino":
+            raw_cls = self._get_conservation_laws_demartino(ode_model)
+        else:
+            raw_cls = self._get_conservation_laws_rref()
+
+        if not raw_cls:
+            # no conservation laws identified
+            return species_solver
+
+        species_to_be_removed = {x[0] for x in raw_cls}
 
         # keep new conservations laws separate until we know everything worked
         new_conservation_laws = []
@@ -1510,66 +1587,36 @@ class SbmlImporter:
 
         all_state_ids = [x.get_id() for x in ode_model._states]
         all_compartment_sizes = [
-            self.compartments[
-                self.symbols[SymbolId.SPECIES][state_id]['compartment']]
-            if not self.symbols[SymbolId.SPECIES][state_id]['amount']
-            else sp.Integer(1)
+            sp.Integer(1)
+            if self.symbols[SymbolId.SPECIES][state_id]['amount']
+            else self.compartments[
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']
+            ]
             for state_id in all_state_ids
         ]
 
         # iterate over list of conservation laws, create symbolic expressions,
-        for i_cl, target_state_model_idx in enumerate(pivots):
+        for target_state_model_idx, state_idxs, coefficients in raw_cls:
             if all_state_ids[target_state_model_idx] in eliminated_state_ids:
                 # constants state, already eliminated
                 continue
             # collect values for species engaged in the current CL
-            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
-                          if coeff]
-            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
             state_ids = [all_state_ids[i_state] for i_state in state_idxs]
             compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
 
             target_state_id = all_state_ids[target_state_model_idx]
-            target_compartment = all_compartment_sizes[target_state_model_idx]
-            target_state_coeff = coefficients[0]
             total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
-
-            # \sum coeff * state * volume
-            abundance_expr = sp.Add(*[
-                state_id * coeff * compartment
-                for state_id, coeff, compartment
-                in zip(state_ids, coefficients, compartment_sizes)
-            ])
 
             new_conservation_laws.append({
                 'state': target_state_id,
                 'total_abundance': total_abundance,
-                'state_expr':
-                    (total_abundance - (abundance_expr
-                                        - target_state_id * target_compartment
-                                        * target_state_coeff))
-                    / target_state_coeff / target_compartment,
-                'abundance_expr': abundance_expr
+                'coefficients': {
+                     state_id: coeff * compartment
+                     for state_id, coeff, compartment
+                     in zip(state_ids, coefficients, compartment_sizes)
+                },
             })
             species_to_be_removed.add(target_state_model_idx)
-
-        # replace eliminated states by their state expressions, taking care of
-        #  any (non-cyclic) dependencies
-        state_exprs = {
-            cl['state']: cl['state_expr']
-            for cl in itt.chain(conservation_laws, new_conservation_laws)
-        }
-        try:
-            sorted_state_exprs = toposort_symbols(state_exprs)
-        except CircularDependencyError as e:
-            raise AssertionError(
-                "Circular dependency detected in conservation laws. "
-                "This should not have happened."
-            ) from e
-
-        for cl in new_conservation_laws:
-            cl['state_expr'] = smart_subs_dict(cl['state_expr'],
-                                               sorted_state_exprs)
 
         conservation_laws.extend(new_conservation_laws)
 
@@ -1989,8 +2036,7 @@ def _add_conservation_for_constant_species(
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'coefficients': {target_state: 1.0},
             })
             # mark species to delete from stoichiometric matrix
             species_solver.pop(ix)

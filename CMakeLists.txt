@@ -54,34 +54,7 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
 
-set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/${CMAKE_INSTALL_LIBDIR}")
-set(SUNDIALS_LIBRARIES
-    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolband${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolklu${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolpcg${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolspbcgs${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolspfgmr${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixband${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixdense${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixsparse${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunnonlinsolfixedpoint${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunnonlinsolnewton${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_cvodes${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_idas${CMAKE_STATIC_LIBRARY_SUFFIX}
-    )
-set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/include")
-
-option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
-if(SUNDIALS_SUPERLUMT_ENABLE)
-    set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARIES}
-        ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
-        ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
-        -lblas
-        )
-    set(SUNDIALS_INCLUDE_DIRS ${SUNDIALS_INCLUDE_DIRS}
-        "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
-endif()
+find_package(SUNDIALS REQUIRED PATHS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib/cmake/sundials/")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
@@ -187,7 +160,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     PUBLIC swig
     PUBLIC ${GSL_LITE_INCLUDE_DIR}
-    PUBLIC ${SUNDIALS_INCLUDE_DIRS}
     PUBLIC ${SUITESPARSE_INCLUDE_DIRS}
     PUBLIC ${HDF5_INCLUDE_DIRS}
     )
@@ -197,12 +169,39 @@ if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC ${SUNDIALS_LIBRARIES}
+    PUBLIC SUNDIALS::generic_static
+    PUBLIC SUNDIALS::nvecserial_static
+    PUBLIC SUNDIALS::sunmatrixband_static
+    PUBLIC SUNDIALS::sunmatrixdense_static
+    PUBLIC SUNDIALS::sunmatrixsparse_static
+    PUBLIC SUNDIALS::sunlinsolband_static
+    PUBLIC SUNDIALS::sunlinsoldense_static
+    PUBLIC SUNDIALS::sunlinsolpcg_static
+    PUBLIC SUNDIALS::sunlinsolspbcgs_static
+    PUBLIC SUNDIALS::sunlinsolspfgmr_static
+    PUBLIC SUNDIALS::sunlinsolspgmr_static
+    PUBLIC SUNDIALS::sunlinsolsptfqmr_static
+    PUBLIC SUNDIALS::sunlinsolklu_static
+    PUBLIC SUNDIALS::sunnonlinsolnewton_static
+    PUBLIC SUNDIALS::sunnonlinsolfixedpoint_static
+    PUBLIC SUNDIALS::cvodes_static
+    PUBLIC SUNDIALS::idas_static
     PUBLIC ${SUITESPARSE_LIBRARIES}
     PUBLIC ${HDF5_LIBRARIES}
     PUBLIC ${BLAS_LIBRARIES}
     PUBLIC ${CMAKE_DL_LIBS}
     )
+
+option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
+if(SUNDIALS_SUPERLUMT_ENABLE)
+    set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARIES}
+        ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
+        -lblas
+        )
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
+endif()
 
 # Create targets to make the sources show up in IDEs for convenience
 

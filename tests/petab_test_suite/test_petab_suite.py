@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-
 """Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
 
 import logging
-import os
 import sys
 
-import amici
+import pandas as pd
 import petab
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
+
+import amici
+from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import import_petab_problem, PysbPetabProblem
-from amici.petab_objective import (
-    simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
-from amici import SteadyStateSensitivityMode_simulationFSA
+from amici.petab_import import PysbPetabProblem, import_petab_problem
+from amici.petab_objective import (create_parameterized_edatas,
+                                   rdatas_to_measurement_df, simulate_petab)
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -46,17 +46,17 @@ def _test_case(case, model_type):
 
     # load
     if model_type == "sbml":
-        case_dir = os.path.join(petabtests.SBML_DIR, case)
+        case_dir = petabtests.SBML_DIR / case
         # import petab problem
-        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        yaml_file = case_dir / petabtests.problem_yaml_name(case)
         problem = petab.Problem.from_yaml(yaml_file)
     elif model_type == "pysb":
         import pysb
         pysb.SelfExporter.cleanup()
         pysb.SelfExporter.do_export = True
-        case_dir = os.path.join(petabtests.PYSB_DIR, case)
+        case_dir = petabtests.PYSB_DIR / case
         # import petab problem
-        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        yaml_file = case_dir / petabtests.problem_yaml_name(case)
         problem = PysbPetabProblem.from_yaml(yaml_file,
                                              flatten=case.startswith('0006'))
     else:
@@ -69,9 +69,16 @@ def _test_case(case, model_type):
     model = import_petab_problem(
         problem, model_output_dir=model_output_dir,
         force_compile=True)
+    solver = model.getSolver()
+    solver.setSteadyStateToleranceFactor(1.0)
 
     # simulate
-    ret = simulate_petab(problem, model, log_level=logging.DEBUG)
+    ret = simulate_petab(
+        problem,
+        model,
+        solver=solver,
+        log_level=logging.DEBUG,
+    )
 
     rdatas = ret['rdatas']
     chi2 = sum(rdata['chi2'] for rdata in rdatas)
@@ -99,16 +106,26 @@ def _test_case(case, model_type):
     simulations_match = petabtests.evaluate_simulations(
         [simulation_df], gt_simulation_dfs, tol_simulations)
 
+    logger.log(logging.DEBUG if simulations_match else logging.ERROR,
+               f"Simulations: match = {simulations_match}")
+    if not simulations_match:
+        with pd.option_context('display.max_rows', None,
+                               'display.max_columns', None,
+                               'display.width', 200):
+            logger.log(logging.DEBUG, f"x_ss: {model.getStateIds()} "
+                                      f"{[rdata.x_ss for rdata in rdatas]}")
+            logger.log(logging.ERROR,
+                       f"Expected simulations:\n{gt_simulation_dfs}")
+            logger.log(logging.ERROR,
+                       f"Actual simulations:\n{simulation_df}")
     logger.log(logging.DEBUG if chi2s_match else logging.ERROR,
                f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
                f" match = {chi2s_match}")
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"LLH: simulated: {llh}, expected: {gt_llh}, "
                f"match = {llhs_match}")
-    logger.log(logging.DEBUG if simulations_match else logging.ERROR,
-               f"Simulations: match = {simulations_match}")
 
-    check_derivatives(problem, model)
+    check_derivatives(problem, model, solver)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
@@ -118,23 +135,27 @@ def _test_case(case, model_type):
     logger.info(f"Case {case} passed.")
 
 
-def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
+def check_derivatives(
+        problem: petab.Problem,
+        model: amici.Model,
+        solver: amici.Solver
+) -> None:
     """Check derivatives using finite differences for all experimental
     conditions
 
     Arguments:
         problem: PEtab problem
         model: AMICI model matching ``problem``
+        solver: AMICI solver
     """
     problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
                           problem.parameter_df.itertuples()}
-    solver = model.getSolver()
-    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
     model.setSteadyStateSensitivityMode(
-        SteadyStateSensitivityMode_simulationFSA)
+        SteadyStateSensitivityMode.integrateIfNewtonFails)
 
     for edata in create_parameterized_edatas(
             amici_model=model, petab_problem=problem,
@@ -152,9 +173,10 @@ def run():
 
     n_success = 0
     n_skipped = 0
-    for case in petabtests.CASES_LIST:
+    cases = petabtests.get_cases('sbml')
+    for case in cases:
         try:
-            test_case(case)
+            test_case(case, 'sbml')
             n_success += 1
         except Skipped:
             n_skipped += 1
@@ -163,9 +185,9 @@ def run():
             logger.error(f"Case {case} failed.")
             logger.error(e)
 
-    logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful, "
+    logger.info(f"{n_success} / {len(cases)} successful, "
                 f"{n_skipped} skipped")
-    if n_success != len(petabtests.CASES_LIST):
+    if n_success != len(cases):
         sys.exit(1)
 
 

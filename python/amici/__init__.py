@@ -24,8 +24,9 @@ import importlib
 import os
 import re
 import sys
+from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Optional
+from typing import Optional, Union
 
 
 def _get_amici_path():
@@ -127,8 +128,8 @@ if not _imported_from_setup():
 class add_path:
     """Context manager for temporarily changing PYTHONPATH"""
 
-    def __init__(self, path: str):
-        self.path: str = path
+    def __init__(self, path: Union[str, Path]):
+        self.path: str = str(path)
 
     def __enter__(self):
         if self.path:
@@ -141,8 +142,10 @@ class add_path:
             pass
 
 
-def import_model_module(module_name: str,
-                        module_path: Optional[str] = None) -> ModelModule:
+def import_model_module(
+        module_name: str,
+        module_path: Optional[Union[Path, str]] = None
+) -> ModelModule:
     """
     Import Python module of an AMICI model
 
@@ -153,6 +156,7 @@ def import_model_module(module_name: str,
     :return:
         The model module
     """
+    module_path = str(module_path)
 
     # ensure we will find the newly created module
     importlib.invalidate_caches()
@@ -178,3 +182,9 @@ def import_model_module(module_name: str,
 
     with add_path(module_path):
         return importlib.import_module(module_name)
+
+
+class AmiciVersionError(RuntimeError):
+    """Error thrown if an AMICI model is loaded that is incompatible with
+    the installed AMICI base package"""
+    pass

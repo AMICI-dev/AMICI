@@ -336,6 +336,7 @@ ConditionContext::ConditionContext(Model *model, const ExpData *edata,
     : model_(model),
       original_parameters_(model->getParameters()),
       original_fixed_parameters_(model->getFixedParameters()),
+      original_tstart_(model->t0()),
       original_timepoints_(model->getTimepoints()),
       original_parameter_list_(model->getParameterList()),
       original_scaling_(model->getParameterScale()),
@@ -454,6 +455,7 @@ void ConditionContext::applyCondition(const ExpData *edata,
       break;
     }
 
+    model_->setT0(edata->tstart_);
     if(edata->nt()) {
         // fixed parameter in model are superseded by those provided in edata
         model_->setTimepoints(edata->getTimepoints());
@@ -475,6 +477,7 @@ void ConditionContext::restore()
 
     model_->setParameters(original_parameters_);
     model_->setFixedParameters(original_fixed_parameters_);
+    model_->setT0(original_tstart_);
     model_->setTimepoints(original_timepoints_);
     model_->setReinitializeFixedParameterInitialStates(
         original_reinitialize_fixed_parameter_initial_states_);

@@ -165,8 +165,7 @@ def test_compare_to_pysb_simulation(example):
             solver.setRelativeTolerance(rtol)
             rdata = amici.runAmiciSimulation(model_pysb, solver)
 
-            # check agreement of species simulation
-
+            # check agreement of species simulations
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
 
@@ -201,7 +200,7 @@ def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.simulationFSA
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
     rdata = amici.runAmiciSimulation(model, solver)
@@ -220,7 +219,7 @@ def get_results(model, edata):
     edata.reinitializeFixedParameterInitialStates = True
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.simulationFSA
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
     return amici.runAmiciSimulation(model, solver, edata)
 
