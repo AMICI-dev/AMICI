@@ -1439,7 +1439,6 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
         }
         break;
     case ModelQuantity::dwdx:
-        // FIXME: indices wrong?!
         if(hasExpressionIds())
             row_id += " " + getExpressionIds()[row];
         if(hasStateIds())
