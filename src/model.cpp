@@ -1302,22 +1302,31 @@ int Model::checkFinite(gsl::span<const realtype> array,
         break;
     }
 
+    std::string model_quantity_str;
+    try {
+        model_quantity_str = model_quantity_to_str.at(model_quantity);
+    } catch (std::out_of_range&) {
+        // Missing model quantity string - terminate if this is a debug build,
+        // but show the quantity number if non-debug.
+        gsl_ExpectsDebug(false);
+        model_quantity_str = std::to_string(static_cast<int>(model_quantity));
+    }
     app->warningF(msg_id.c_str(),
                   "AMICI encountered a %s value for %s[%i] (%s)",
                   non_finite_type.c_str(),
-                  model_quantity_to_str[model_quantity].c_str(),
+                  model_quantity_str.c_str(),
                   static_cast<int>(flat_index),
                   element_id.c_str()
                   );
 
     // check upstream
-    if(!always_check_finite_) {
-        // don't check twice if always_check_finite_
-        app->checkFinite(derived_state_.w_, "w");
-    }
     app->checkFinite(state_.fixedParameters, "k");
     app->checkFinite(state_.unscaledParameters, "p");
     app->checkFinite(simulation_parameters_.ts_, "t");
+    if(!always_check_finite_) {
+        // don't check twice if always_check_finite_ is true
+        app->checkFinite(derived_state_.w_, "w");
+    }
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1362,20 +1371,30 @@ int Model::checkFinite(gsl::span<const realtype> array,
         break;
     }
 
+    std::string model_quantity_str;
+    try {
+        model_quantity_str = model_quantity_to_str.at(model_quantity);
+    } catch (std::out_of_range&) {
+        // Missing model quantity string - terminate if this is a debug build,
+        // but show the quantity number if non-debug.
+        gsl_ExpectsDebug(false);
+        model_quantity_str = std::to_string(static_cast<int>(model_quantity));
+    }
+
     app->warningF(msg_id.c_str(),
                   "AMICI encountered a %s value for %s[%i] (%s, %s)",
                   non_finite_type.c_str(),
-                  model_quantity_to_str[model_quantity].c_str(),
+                  model_quantity_str.c_str(),
                   static_cast<int>(flat_index),
                   row_id.c_str(),
                   col_id.c_str()
                   );
 
-       // check upstream
+    // check upstream
     app->checkFinite(state_.fixedParameters, "k");
     app->checkFinite(state_.unscaledParameters, "p");
-    app->checkFinite(derived_state_.w_, "w");
     app->checkFinite(simulation_parameters_.ts_, "t");
+    app->checkFinite(derived_state_.w_, "w");
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1443,21 +1462,30 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
         break;
     }
 
+    std::string model_quantity_str;
+    try {
+        model_quantity_str = model_quantity_to_str.at(model_quantity);
+    } catch (std::out_of_range&) {
+        // Missing model quantity string - terminate if this is a debug build,
+        // but show the quantity number if non-debug.
+        gsl_ExpectsDebug(false);
+        model_quantity_str = std::to_string(static_cast<int>(model_quantity));
+    }
     app->warningF(msg_id.c_str(),
                   "AMICI encountered a %s value for %s[%i] (%s, %s) at t=%g",
                   non_finite_type.c_str(),
-                  model_quantity_to_str[model_quantity].c_str(),
+                  model_quantity_str.c_str(),
                   static_cast<int>(flat_index),
                   row_id.c_str(),
                   col_id.c_str(),
                   t
                   );
 
-       // check upstream
+    // check upstream
     app->checkFinite(state_.fixedParameters, "k");
     app->checkFinite(state_.unscaledParameters, "p");
-    app->checkFinite(derived_state_.w_, "w");
     app->checkFinite(simulation_parameters_.ts_, "t");
+    app->checkFinite(derived_state_.w_, "w");
 
     return AMICI_RECOVERABLE_ERROR;
 }
