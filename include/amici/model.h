@@ -67,7 +67,7 @@ enum class ModelQuantity {
     JSparseB_ss,
 };
 
-extern std::map<ModelQuantity, std::string> model_quantity_to_str;
+extern const std::map<ModelQuantity, std::string> model_quantity_to_str;
 
 
 /**

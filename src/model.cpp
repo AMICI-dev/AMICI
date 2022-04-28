@@ -18,7 +18,7 @@ namespace amici {
 /**
  * @brief Maps ModelQuantity items to their string value
  */
-std::map<ModelQuantity, std::string> model_quantity_to_str {
+const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::J, "J"},
     {ModelQuantity::JB, "JB"},
     {ModelQuantity::Jv, "Jv"},
@@ -1305,7 +1305,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
     std::string model_quantity_str;
     try {
         model_quantity_str = model_quantity_to_str.at(model_quantity);
-    } catch (std::out_of_range&) {
+    } catch (std::out_of_range const&) {
         // Missing model quantity string - terminate if this is a debug build,
         // but show the quantity number if non-debug.
         gsl_ExpectsDebug(false);
@@ -1374,7 +1374,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
     std::string model_quantity_str;
     try {
         model_quantity_str = model_quantity_to_str.at(model_quantity);
-    } catch (std::out_of_range&) {
+    } catch (std::out_of_range const&) {
         // Missing model quantity string - terminate if this is a debug build,
         // but show the quantity number if non-debug.
         gsl_ExpectsDebug(false);
@@ -1464,7 +1464,7 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
     std::string model_quantity_str;
     try {
         model_quantity_str = model_quantity_to_str.at(model_quantity);
-    } catch (std::out_of_range&) {
+    } catch (std::out_of_range const&) {
         // Missing model quantity string - terminate if this is a debug build,
         // but show the quantity number if non-debug.
         gsl_ExpectsDebug(false);
