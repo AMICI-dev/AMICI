@@ -179,7 +179,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 throw;
             warningF("AMICI:simulation",
                      "AMICI forward simulation failed at t = %f: "
-                     "Maximum time exceeed.\n",
+                     "Maximum time exceeded.\n",
                      ex.time);
         } else {
             rdata->status = ex.error_code;
@@ -199,7 +199,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             warningF(
                 "AMICI:simulation",
                 "AMICI backward simulation failed when trying to solve until "
-                "t = %f: Maximum time exceeed.\n",
+                "t = %f: Maximum time exceeded.\n",
                 ex.time);
 
         } else {
@@ -305,6 +305,8 @@ AmiciApplication::errorF(const char* identifier, const char* format, ...) const
 int
 AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
 {
+    Expects(array.size()
+            <= static_cast<unsigned>(std::numeric_limits<int>::max()));
 
     for (int idx = 0; idx < (int)array.size(); idx++) {
         if (isNaN(array[idx])) {

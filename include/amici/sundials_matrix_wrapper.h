@@ -532,6 +532,16 @@ class SUNMatrixWrapper {
     bool ownmat = true;
 };
 
+
+/**
+ * @brief Convert a flat index to a pair of row/column indices.
+ * @param i flat index
+ * @param m referred to matrix
+ * @return row index, column index
+ */
+auto unravel_index(sunindextype i, SUNMatrix m)
+    -> std::pair<sunindextype, sunindextype>;
+
 } // namespace amici
 
 namespace gsl {
