@@ -2937,6 +2937,11 @@ class ODEExporter:
             'W_RECURSION_DEPTH': self.model._w_recursion_depth,
             'QUADRATIC_LLH': 'true'
                 if self.model._has_quadratic_nllh else 'false',
+            'ROOT_INITIAL_VALUES':
+                ','.join([
+                    'true' if event.get0() else 'false'
+                    for event in self.model._events
+                ])
         }
 
         for func_name, func_info in self.functions.items():

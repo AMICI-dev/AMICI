@@ -484,13 +484,6 @@ class SbmlImporter:
             if trigger_sbml.getMath() is None:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression, so a dummy trigger will be set.')
-            if not trigger_sbml.getInitialValue():
-                # True: event not executed if triggered at time == 0
-                # (corresponding to AMICI default). Raise if set to False.
-                raise SBMLException(
-                    f'Event {event_id} has a trigger that has an initial '
-                    'value of False. This is currently not supported in AMICI.'
-                )
 
             if not trigger_sbml.getPersistent():
                 raise SBMLException(
@@ -1140,6 +1133,7 @@ class SbmlImporter:
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
                 'event_observable': None,
+                'root0': trigger_sbml.getInitialValue(),
             }
 
     @log_execution_time('processing SBML observables', logger)

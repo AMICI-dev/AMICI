@@ -27,6 +27,7 @@ extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 extern std::array<const char*, TPL_NW> expressionIds;
 extern std::array<int, TPL_NX_SOLVER> stateIdxsSolver;
+extern std::array<bool, TPL_NEVENT> rootInitialValue;
 
 TPL_JY_DEF
 TPL_DJYDSIGMA_DEF
@@ -125,11 +126,13 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
               std::vector<int>{},                          // z2event
+              rootInitialValue,                            // r0
               true,                                        // pythonGenerated
               TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
               TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
               TPL_W_RECURSION_DEPTH                        // w_recursion_depth
-          ) {}
+          ) {
+          }
 
     /**
      * @brief Clone this model instance.

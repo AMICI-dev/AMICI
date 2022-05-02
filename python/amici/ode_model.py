@@ -2,17 +2,7 @@
 
 
 import sympy as sp
-import numpy as np
-import re
-import shutil
-import subprocess
-import sys
-import os
-import copy
 import numbers
-import logging
-import itertools
-import contextlib
 
 try:
     import pysb
@@ -20,31 +10,18 @@ except ImportError:
     pysb = None
 
 from typing import (
-    Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
-    Set, Any
+    Optional, Union, Dict, SupportsFloat, Set
 )
-from dataclasses import dataclass
-from string import Template
-from sympy.matrices.immutable import ImmutableDenseMatrix
-from sympy.matrices.dense import MutableDenseMatrix
-from sympy.logic.boolalg import BooleanAtom
-from itertools import chain
-from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 
-from . import (
-    amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
-    sbml_import
-)
-from .logging import get_logger, log_execution_time, set_log_level
-from .constants import SymbolId
-from .import_utils import smart_subs_dict, toposort_symbols, \
-    ObservableTransformation, generate_measurement_symbol, RESERVED_SYMBOLS
+from .import_utils import ObservableTransformation, \
+    generate_measurement_symbol, RESERVED_SYMBOLS
 from .import_utils import cast_to_sym
 
 __all__ = [
     'ConservationLaw', 'Constant', 'Event', 'Expression', 'LogLikelihood',
     'ModelQuantity', 'Observable', 'Parameter', 'SigmaY', 'State'
 ]
+
 
 class ModelQuantity:
     """
@@ -166,14 +143,6 @@ class ConservationLaw(ModelQuantity):
         self._ncoeff: sp.Expr = coefficients[state_id]
         super(ConservationLaw, self).__init__(identifier, name, value)
 
-    def get_state(self) -> sp.Symbol:
-        """
-        Get the identifier of the state that this conservation law replaces
-
-        :return: identifier of the state
-        """
-        return self._state_id
-
     def get_ncoeff(self, state_id) -> Union[sp.Expr, int, float]:
         """
         Computes the normalized coefficient a_i/a_j where i is the index of
@@ -211,10 +180,6 @@ class State(ModelQuantity):
         algebraic formula that defines the temporal derivative of this state
 
     """
-
-    _dt: Union[sp.Expr, None] = None
-    _conservation_law: Union[sp.Expr, None] = None
-
     def __init__(self,
                  identifier: sp.Symbol,
                  name: str,
@@ -276,7 +241,7 @@ class State(ModelQuantity):
         """
         return self._dt
 
-    def get_free_symbols(self) -> Set[sp.Symbol]:
+    def get_free_symbols(self) -> Set[sp.Basic]:
         """
         Gets the set of free symbols in time derivative and initial conditions
 
@@ -307,8 +272,9 @@ class State(ModelQuantity):
 
     def get_dx_rdata_dx_solver(self, state_id):
         """
-        Returns the expression that allows computation of ``dx_rdata_dx_solver`` for this
-        state, accounting for conservation laws.
+        Returns the expression that allows computation of
+        ``dx_rdata_dx_solver`` for this state, accounting for conservation
+        laws.
 
         :return: dx_rdata_dx_solver expression
         """
@@ -514,7 +480,8 @@ class Event(ModelQuantity):
                  name: str,
                  value: sp.Expr,
                  state_update: Union[sp.Expr, None],
-                 event_observable: Union[sp.Expr, None]):
+                 event_observable: Union[sp.Expr, None],
+                 initial_value: Optional[bool] = True):
         """
         Create a new Event instance.
 
@@ -534,15 +501,29 @@ class Event(ModelQuantity):
         :param event_observable:
             formula a potential observable linked to the event
             (None for Heaviside functions, empty events without observable)
+
+        :param initial_value:
+            initial boolean value of the trigger function at t0. If set to
+            `False`, events may trigger at t==0, otherwise not.
         """
         super(Event, self).__init__(identifier, name, value)
         # add the Event specific components
         self._state_update = state_update
         self._observable = event_observable
+        self._root0 = initial_value
+
+    def get0(self) -> bool:
+        """
+        Return the initial value for the root function.
+        :return:
+            initial value formula
+        """
+        return self._root0
 
     def __eq__(self, other):
         """
         Check equality of events at the level of trigger/root functions, as we
         need to collect unique root functions for ``roots.cpp``
         """
-        return self.get_val() == other.get_val()
+        return self.get_val() == other.get_val() and \
+            (self.get0() == other.get0())
