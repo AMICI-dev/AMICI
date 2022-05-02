@@ -126,12 +126,12 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
               std::vector<int>{},                          // z2event
-              rootInitialValue,                            // r0
               true,                                        // pythonGenerated
               TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
               TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
               TPL_W_RECURSION_DEPTH                        // w_recursion_depth
           ) {
+                 root_initial_value = rootInitialValue;
           }
 
     /**

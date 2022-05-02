@@ -88,7 +88,6 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param o2mode Second order sensitivity mode
      * @param idlist Indexes indicating algebraic components (DAE only)
      * @param z2event Mapping of event outputs to events
-     * @param r0 Root initial values
      * @param pythonGenerated Flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
      * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
@@ -98,7 +97,7 @@ class Model : public AbstractModel, public ModelDimensions {
           SimulationParameters simulation_parameters,
           amici::SecondOrderMode o2mode,
           std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, std::vector<bool> r0,
+          std::vector<int> z2event,
           bool pythonGenerated = false,
           int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
           int w_recursion_depth = 0);

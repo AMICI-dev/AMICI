@@ -131,7 +131,7 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
 Model::Model(ModelDimensions const & model_dimensions,
              SimulationParameters simulation_parameters,
              SecondOrderMode o2mode, std::vector<realtype> idlist,
-             std::vector<int> z2event, std::vector<bool> r0,
+             std::vector<int> z2event,
              const bool pythonGenerated, const int ndxdotdp_explicit,
              const int ndxdotdx_explicit, const int w_recursion_depth)
     : ModelDimensions(model_dimensions), pythonGenerated(pythonGenerated),
@@ -139,12 +139,10 @@ Model::Model(ModelDimensions const & model_dimensions,
       derived_state_(model_dimensions),
       z2event_(std::move(z2event)),
       state_is_non_negative_(nx_solver, false),
-      root_initial_values_(std::move(r0)),
       w_recursion_depth_(w_recursion_depth),
       simulation_parameters_(std::move(simulation_parameters)) {
     Expects(model_dimensions.np == static_cast<int>(simulation_parameters_.parameters.size()));
     Expects(model_dimensions.nk == static_cast<int>(simulation_parameters_.fixedParameters.size()));
-    Expects(model_dimensions.ne == static_cast<int>(r0.size()));
 
     simulation_parameters.pscale = std::vector<ParameterScaling>(model_dimensions.np, ParameterScaling::none);
 
@@ -156,6 +154,8 @@ Model::Model(ModelDimensions const & model_dimensions,
                       simulation_parameters_.pscale, state_.unscaledParameters);
     state_.fixedParameters = simulation_parameters_.fixedParameters;
     state_.plist = simulation_parameters_.plist;
+          
+    root_initial_values_.resize(ne, true);
 
     /* If Matlab wrapped: dxdotdp is a full AmiVector,
        if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices
@@ -245,7 +245,7 @@ bool operator==(const ModelDimensions &a, const ModelDimensions &b) {
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                        AmiVectorArray & /*sdx*/, bool computeSensitivities,
-                       std::vector<int> roots_found) {
+                       std::vector<int> &roots_found) {
     initializeStates(x);
     if (computeSensitivities)
         initializeStateSensitivities(sx, x);
