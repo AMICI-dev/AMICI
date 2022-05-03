@@ -242,7 +242,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param roots_found boolean indicators indicating whether roots were found at t0 by this fun
      */
     void initEvents(const AmiVector &x, const AmiVector &dx,
-                    std::vector<int> &roots_founds);
+                    std::vector<int> &roots_found);
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
