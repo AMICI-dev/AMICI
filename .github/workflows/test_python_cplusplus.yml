@@ -107,7 +107,7 @@ jobs:
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./build/coverage_py.xml
+        file: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
 
@@ -125,7 +125,7 @@ jobs:
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.info
+        file: coverage.info
         flags: cpp
         fail_ci_if_error: true
 

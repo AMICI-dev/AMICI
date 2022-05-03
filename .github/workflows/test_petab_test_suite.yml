@@ -71,7 +71,8 @@ jobs:
       - name: Run PEtab-related unit tests
         run: |
           source ./build/venv/bin/activate \
-            && pytest --cov-report=xml --cov=./ python/tests/test_*petab*.py
+            && pytest --cov-report=xml:coverage.xml \
+              --cov=./ python/tests/test_*petab*.py
 
       # run test models
       - name: Run PEtab test suite
@@ -79,12 +80,15 @@ jobs:
         run: |
           source ./build/venv/bin/activate \
           && AMICI_PARALLEL_COMPILE=2 pytest -v \
-            --cov-report=xml --cov-append --cov=amici tests/petab_test_suite/
+            --cov-report=xml:coverage.xml \
+            --cov-append \
+            --cov=amici \
+            tests/petab_test_suite/
 
       - name: Codecov
         uses: codecov/codecov-action@v3.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
+          file: coverage.xml
           flags: petab
           fail_ci_if_error: true
