@@ -40,6 +40,38 @@ logger = get_logger(__name__, logging.WARNING)
 PREEQ_INDICATOR_ID = 'preequilibration_indicator'
 
 
+def _add_global_parameter(sbml_model: libsbml.Model,
+                          parameter_id: str,
+                          parameter_name: str = None,
+                          constant: bool = False,
+                          units: str = 'dimensionless',
+                          value: float = 0.0) -> libsbml.Parameter:
+    """Add new global parameter to SBML model
+
+    Arguments:
+        sbml_model: SBML model
+        parameter_id: ID of the new parameter
+        parameter_name: Name of the new parameter
+        constant: Is parameter constant?
+        units: SBML unit ID
+        value: parameter value
+
+    Returns:
+        The created parameter
+    """
+
+    if parameter_name is None:
+        parameter_name = parameter_id
+
+    p = sbml_model.createParameter()
+    p.setId(parameter_id)
+    p.setName(parameter_name)
+    p.setConstant(constant)
+    p.setValue(value)
+    p.setUnits(units)
+    return p
+
+
 def get_fixed_parameters(
         sbml_model: 'libsbml.Model',
         condition_df: Optional[pd.DataFrame] = None,
@@ -505,7 +537,7 @@ def import_model_sbml(
                 output_parameters[sym] = None
     logger.debug(f"Adding output parameters to model: {output_parameters}")
     for par in output_parameters.keys():
-        petab.add_global_parameter(sbml_model, par)
+        _add_global_parameter(sbml_model, par)
     # <EndWorkAround>
 
     # TODO: to parameterize initial states or compartment sizes, we currently
