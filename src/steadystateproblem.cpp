@@ -188,9 +188,11 @@ void SteadystateProblem::initializeForwardProblem(int it, const Solver &solver,
     /* process solver handling for pre- or postequilibration */
     if (it == -1) {
         /* solver was not run before, set up everything */
+        auto tmp = std::vector<int>(model.ne, 0);
         model.initialize(state_.x, state_.dx, state_.sx, sdx_,
-                          solver.getSensitivityOrder() >=
-                              SensitivityOrder::first);
+                         solver.getSensitivityOrder() >=
+                         SensitivityOrder::first,
+                         tmp);
         state_.t = model.t0();
         solver.setup(state_.t, &model, state_.x, state_.dx, state_.sx, sdx_);
     } else {
