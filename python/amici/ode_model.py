@@ -510,16 +510,16 @@ class Event(ModelQuantity):
         # add the Event specific components
         self._state_update = state_update
         self._observable = event_observable
-        self._root0 = initial_value
+        self._initial_value = initial_value
 
-    def get0(self) -> bool:
+    def get_initial_value(self) -> bool:
         """
         Return the initial value for the root function.
 
         :return:
             initial value formula
         """
-        return self._root0
+        return self._initial_value
 
     def __eq__(self, other):
         """
@@ -527,4 +527,4 @@ class Event(ModelQuantity):
         need to collect unique root functions for ``roots.cpp``
         """
         return self.get_val() == other.get_val() and \
-            (self.get0() == other.get0())
+            (self.get_initial_value() == other.get_initial_value())

@@ -822,7 +822,7 @@ class ODEModel:
             else:
                 args += ['value']
             if symbol_name == SymbolId.EVENT:
-                args += ['state_update', 'event_observable']
+                args += ['state_update', 'event_observable', 'initial_value']
             if symbol_name == SymbolId.OBSERVABLE:
                 args += ['transformation']
 
@@ -2939,7 +2939,7 @@ class ODEExporter:
                 if self.model._has_quadratic_nllh else 'false',
             'ROOT_INITIAL_VALUES':
                 ','.join([
-                    'true' if event.get0() else 'false'
+                    'true' if event.get_initial_value() else 'false'
                     for event in self.model._events
                 ])
         }

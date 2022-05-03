@@ -1133,7 +1133,7 @@ class SbmlImporter:
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
                 'event_observable': None,
-                'root0': trigger_sbml.getInitialValue(),
+                'initial_value': trigger_sbml.getInitialValue(),
             }
 
     @log_execution_time('processing SBML observables', logger)
