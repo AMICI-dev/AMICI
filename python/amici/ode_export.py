@@ -1591,7 +1591,7 @@ class ODEModel:
                 -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
                 if not self.eq('drootdt_total')[ie].is_zero else
                 sp.zeros(*self.eq('sroot')[ie, :].shape)
-                for ie in range(self.num/_events())
+                for ie in range(self.num_events())
             ]
 
         elif name == 'deltasx':
