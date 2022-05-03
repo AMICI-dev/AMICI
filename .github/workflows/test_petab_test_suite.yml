@@ -82,7 +82,7 @@ jobs:
             --cov-report=xml --cov-append --cov=amici tests/petab_test_suite/
 
       - name: Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml

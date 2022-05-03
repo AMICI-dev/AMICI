@@ -53,7 +53,7 @@ jobs:
         path: tests/amici-semantic-results
 
     - name: Codecov SBMLSuite
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage_SBMLSuite.xml
