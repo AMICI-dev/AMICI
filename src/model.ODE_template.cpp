@@ -54,7 +54,7 @@ std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
 };
 
 std::array<bool, TPL_NEVENT> rootInitialValues = {
-    TPL_ROOT_INITIAL_VALUE
+    TPL_ROOT_INITIAL_VALUES
 };
 
 } // namespace model_TPL_MODELNAME

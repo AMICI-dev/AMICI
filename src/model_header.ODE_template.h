@@ -27,7 +27,7 @@ extern std::array<const char*, TPL_NX_RDATA> stateIds;
 extern std::array<const char*, TPL_NY> observableIds;
 extern std::array<const char*, TPL_NW> expressionIds;
 extern std::array<int, TPL_NX_SOLVER> stateIdxsSolver;
-extern std::array<bool, TPL_NEVENT> rootInitialValue;
+extern std::array<bool, TPL_NEVENT> rootInitialValues;
 
 TPL_JY_DEF
 TPL_DJYDSIGMA_DEF
@@ -131,7 +131,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
               TPL_W_RECURSION_DEPTH                        // w_recursion_depth
           ) {
-                 root_initial_value = rootInitialValue;
+                 root_initial_values_ = std::vector<bool>(
+                     rootInitialValues.begin(), rootInitialValues.end()
+                 );
           }
 
     /**

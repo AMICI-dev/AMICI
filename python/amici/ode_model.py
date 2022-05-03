@@ -515,6 +515,7 @@ class Event(ModelQuantity):
     def get0(self) -> bool:
         """
         Return the initial value for the root function.
+
         :return:
             initial value formula
         """
