@@ -1589,34 +1589,44 @@ class ODEModel:
         elif name == 'stau':
             self._eqs[name] = [
                 -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
-                for ie in range(self.num_events())
+                if not self.eq('drootdt_total')[ie].is_zero else
+                sp.zeros(*self.eq('sroot')[ie, :].shape)
+                for ie in range(self.num/_events())
             ]
 
         elif name == 'deltasx':
             event_eqs = []
             for ie, event in enumerate(self._events):
-                if event._state_update is not None:
-                    # ====== chain rule for the state variables ===============
-                    # get xdot with expressions back-substituted
-                    tmp_eq = smart_multiply(
-                        (self.sym('xdot_old') - self.sym('xdot')),
-                        self.eq('stau')[ie])
-                    # construct an enhanced state sensitivity, which accounts
-                    # for the time point sensitivity as well
-                    tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
-                    tmp_dxdp += smart_multiply(self.sym('xdot'),
-                                               self.eq('stau')[ie])
-                    tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
-                                             tmp_dxdp)
-                    # ====== chain rule for the time point ====================
-                    tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
-                                             self.eq('stau')[ie])
-                    # ====== partial derivative for the parameters ============
-                    tmp_eq += self.eq('ddeltaxdp')[ie]
-                else:
-                    tmp_eq = smart_multiply(
+
+                tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
+
+                # only add stau part if trigger is time-dependent
+                if not self.eq('drootdt_total')[ie].is_zero:
+                    tmp_eq += smart_multiply(
                         (self.eq('xdot_old') - self.eq('xdot')),
                         self.eq('stau')[ie])
+
+                # only add deltax part if there is state update
+                if event._state_update is not None:
+                    # partial derivative for the parameters
+                    tmp_eq = self.eq('ddeltaxdp')[ie]
+
+                    # initial part of chain rule state variables
+                    tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
+
+                    # only add stau part if trigger is time-dependent
+                    if not self.eq('drootdt_total')[ie].is_zero:
+                        # chain rule for the time point
+                        tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                                                 self.eq('stau')[ie])
+
+                        # additional part of chain rule state variables
+                        tmp_dxdp += smart_multiply(self.sym('xdot'),
+                                                   self.eq('stau')[ie])
+                    # finish chain rule for the state variables
+                    tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
+                                             tmp_dxdp)
+
 
                 event_eqs.append(tmp_eq)
 
