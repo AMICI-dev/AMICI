@@ -1609,7 +1609,7 @@ class ODEModel:
                 # only add deltax part if there is state update
                 if event._state_update is not None:
                     # partial derivative for the parameters
-                    tmp_eq = self.eq('ddeltaxdp')[ie]
+                    tmp_eq += self.eq('ddeltaxdp')[ie]
 
                     # initial part of chain rule state variables
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
@@ -1626,7 +1626,6 @@ class ODEModel:
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
-
 
                 event_eqs.append(tmp_eq)
 
