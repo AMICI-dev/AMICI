@@ -1603,7 +1603,7 @@ class ODEModel:
                 # only add stau part if trigger is time-dependent
                 if not self.eq('drootdt_total')[ie].is_zero:
                     tmp_eq += smart_multiply(
-                        (self.eq('xdot_old') - self.eq('xdot')),
+                        (self.sym('xdot_old') - self.sym('xdot')),
                         self.eq('stau')[ie])
 
                 # only add deltax part if there is state update
