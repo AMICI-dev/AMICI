@@ -207,7 +207,7 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                     AmiVectorArray &sdx, bool computeSensitivities,
-                    std::vector<int> &roots_founds);
+                    std::vector<int> &roots_found);
 
     /**
      * @brief Initialize model properties.
