@@ -994,10 +994,16 @@ class SbmlImporter:
                     parameter_def = \
                         self.symbols[symbol_id].pop(parameter_target)
             if parameter_def is None:
-                raise AssertionError(
-                    'Unexpected error. The parameter target of an event '
-                    'assignment could not be found.'
+                # this happens for parameters that have initial assignments
+                # or are assignment rule targets
+                par = self.sbml.getElementBySId(str(parameter_target))
+                ia_init = self._get_element_initial_assignment(
+                    par.getId()
                 )
+                parameter_def = {
+                    'name': par.getName() if par.isSetName() else par.getId(),
+                    'value': par.getValue() if ia_init is None else ia_init
+                }
             # Fixed parameters are added as species such that they can be
             # targets of events.
             self.symbols[SymbolId.SPECIES][parameter_target] = {
@@ -1133,7 +1139,9 @@ class SbmlImporter:
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
                 'event_observable': None,
-                'initial_value': trigger_sbml.getInitialValue(),
+                'initial_value':
+                    trigger_sbml.getInitialValue() if trigger_sbml is not None
+                    else True,
             }
 
     @log_execution_time('processing SBML observables', logger)
