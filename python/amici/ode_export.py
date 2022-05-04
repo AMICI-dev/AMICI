@@ -2947,7 +2947,7 @@ class ODEExporter:
             'QUADRATIC_LLH': 'true'
                 if self.model._has_quadratic_nllh else 'false',
             'ROOT_INITIAL_VALUES':
-                ','.join([
+                ', '.join([
                     'true' if event.get_initial_value() else 'false'
                     for event in self.model._events
                 ])

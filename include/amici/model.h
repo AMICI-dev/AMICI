@@ -1871,7 +1871,7 @@ class Model : public AbstractModel, public ModelDimensions {
     std::vector<bool> state_is_non_negative_;
     
     /** Vector of booleans indicating the initial boolean value for every event trigger function. Events at t0
-     * can only trigger if the initial value is set to False/ Must be specified during model compilation by
+     * can only trigger if the initial value is set to `false`. Must be specified during model compilation by
      * setting the `initialValue` attribute of an event trigger. */
     std::vector<bool> root_initial_values_;
 

@@ -504,7 +504,7 @@ class Event(ModelQuantity):
 
         :param initial_value:
             initial boolean value of the trigger function at t0. If set to
-            `False`, events may trigger at t==0, otherwise not.
+            `False`, events may trigger at ``t==t0``, otherwise not.
         """
         super(Event, self).__init__(identifier, name, value)
         # add the Event specific components

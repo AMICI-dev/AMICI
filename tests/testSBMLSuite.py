@@ -60,6 +60,7 @@ def test_sbml_testsuite_case(
     sensitivity_check_cases = {
         # parameter-dependent conservation laws
         '00783': 1.5e-2,
+        # initial events
         '00995': 1e-3,
     }
 
