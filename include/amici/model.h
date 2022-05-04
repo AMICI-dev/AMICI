@@ -97,7 +97,8 @@ class Model : public AbstractModel, public ModelDimensions {
           SimulationParameters simulation_parameters,
           amici::SecondOrderMode o2mode,
           std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, bool pythonGenerated = false,
+          std::vector<int> z2event,
+          bool pythonGenerated = false,
           int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
           int w_recursion_depth = 0);
 
@@ -202,9 +203,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sdx Reference to time derivative of state sensitivities (DAE only)
      * @param computeSensitivities Flag indicating whether sensitivities are to
      * be computed
+     * @param roots_found boolean indicators indicating whether roots were found at t0 by this fun
      */
     void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
-                    AmiVectorArray &sdx, bool computeSensitivities);
+                    AmiVectorArray &sdx, bool computeSensitivities,
+                    std::vector<int> &roots_found);
 
     /**
      * @brief Initialize model properties.
@@ -236,8 +239,10 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
+     * @param roots_found boolean indicators indicating whether roots were found at t0 by this fun
      */
-    void initHeaviside(const AmiVector &x, const AmiVector &dx);
+    void initEvents(const AmiVector &x, const AmiVector &dx,
+                    std::vector<int> &roots_found);
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
@@ -1864,6 +1869,11 @@ class Model : public AbstractModel, public ModelDimensions {
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
     std::vector<bool> state_is_non_negative_;
+    
+    /** Vector of booleans indicating the initial boolean value for every event trigger function. Events at t0
+     * can only trigger if the initial value is set to `false`. Must be specified during model compilation by
+     * setting the `initialValue` attribute of an event trigger. */
+    std::vector<bool> root_initial_values_;
 
     /** boolean indicating whether any entry in stateIsNonNegative is `true` */
     bool any_state_non_negative_ {false};

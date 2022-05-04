@@ -53,6 +53,10 @@ std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
     TPL_STATE_IDXS_SOLVER_INITIALIZER_LIST
 };
 
+std::array<bool, TPL_NEVENT> rootInitialValues = {
+    TPL_ROOT_INITIAL_VALUES
+};
+
 } // namespace model_TPL_MODELNAME
 
 } // namespace amici
