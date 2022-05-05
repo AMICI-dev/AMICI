@@ -110,6 +110,7 @@ jobs:
         file: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
+        verbose: true
 
     - name: lcov
       run: |
@@ -128,6 +129,7 @@ jobs:
         file: coverage.info
         flags: cpp
         fail_ci_if_error: true
+        verbose: true
 
     - name: Run sonar-scanner
       env:
