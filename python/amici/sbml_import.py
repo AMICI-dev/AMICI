@@ -484,13 +484,6 @@ class SbmlImporter:
             if trigger_sbml.getMath() is None:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression, so a dummy trigger will be set.')
-            if not trigger_sbml.getInitialValue():
-                # True: event not executed if triggered at time == 0
-                # (corresponding to AMICI default). Raise if set to False.
-                raise SBMLException(
-                    f'Event {event_id} has a trigger that has an initial '
-                    'value of False. This is currently not supported in AMICI.'
-                )
 
             if not trigger_sbml.getPersistent():
                 raise SBMLException(
@@ -1001,10 +994,16 @@ class SbmlImporter:
                     parameter_def = \
                         self.symbols[symbol_id].pop(parameter_target)
             if parameter_def is None:
-                raise AssertionError(
-                    'Unexpected error. The parameter target of an event '
-                    'assignment could not be found.'
+                # this happens for parameters that have initial assignments
+                # or are assignment rule targets
+                par = self.sbml.getElementBySId(str(parameter_target))
+                ia_init = self._get_element_initial_assignment(
+                    par.getId()
                 )
+                parameter_def = {
+                    'name': par.getName() if par.isSetName() else par.getId(),
+                    'value': par.getValue() if ia_init is None else ia_init
+                }
             # Fixed parameters are added as species such that they can be
             # targets of events.
             self.symbols[SymbolId.SPECIES][parameter_target] = {
@@ -1140,6 +1139,9 @@ class SbmlImporter:
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
                 'event_observable': None,
+                'initial_value':
+                    trigger_sbml.getInitialValue() if trigger_sbml is not None
+                    else True,
             }
 
     @log_execution_time('processing SBML observables', logger)

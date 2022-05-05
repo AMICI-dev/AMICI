@@ -290,9 +290,11 @@ class ForwardProblem {
      *
      * @param tlastroot pointer to the timepoint of the last event
      * @param seflag Secondary event flag
+     * @param initial_event initial event flag
      */
 
-    void handleEvent(realtype *tlastroot,bool seflag);
+    void handleEvent(realtype *tlastroot, bool seflag,
+                     bool initial_event);
 
     /**
      * @brief Extract output information for events

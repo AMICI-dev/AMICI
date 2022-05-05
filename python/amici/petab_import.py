@@ -40,6 +40,38 @@ logger = get_logger(__name__, logging.WARNING)
 PREEQ_INDICATOR_ID = 'preequilibration_indicator'
 
 
+def _add_global_parameter(sbml_model: libsbml.Model,
+                          parameter_id: str,
+                          parameter_name: str = None,
+                          constant: bool = False,
+                          units: str = 'dimensionless',
+                          value: float = 0.0) -> libsbml.Parameter:
+    """Add new global parameter to SBML model
+
+    Arguments:
+        sbml_model: SBML model
+        parameter_id: ID of the new parameter
+        parameter_name: Name of the new parameter
+        constant: Is parameter constant?
+        units: SBML unit ID
+        value: parameter value
+
+    Returns:
+        The created parameter
+    """
+
+    if parameter_name is None:
+        parameter_name = parameter_id
+
+    p = sbml_model.createParameter()
+    p.setId(parameter_id)
+    p.setName(parameter_name)
+    p.setConstant(constant)
+    p.setValue(value)
+    p.setUnits(units)
+    return p
+
+
 def get_fixed_parameters(
         sbml_model: 'libsbml.Model',
         condition_df: Optional[pd.DataFrame] = None,
@@ -501,11 +533,12 @@ def import_model_sbml(
                            key=lambda symbol: symbol.name)
         for free_sym in free_syms:
             sym = str(free_sym)
-            if sbml_model.getElementBySId(sym) is None and sym != 'time':
+            if sbml_model.getElementBySId(sym) is None and sym != 'time' \
+                    and sym not in observables:
                 output_parameters[sym] = None
     logger.debug(f"Adding output parameters to model: {output_parameters}")
     for par in output_parameters.keys():
-        petab.add_global_parameter(sbml_model, par)
+        _add_global_parameter(sbml_model, par)
     # <EndWorkAround>
 
     # TODO: to parameterize initial states or compartment sizes, we currently
@@ -624,10 +657,15 @@ def get_observation_model(
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
 
-    # Replace observableIds occurring in error model definition
+    # PEtab does currently not allow observables in noiseFormula and AMICI
+    #  cannot handle states in sigma expressions. Therefore, where possible,
+    #  replace species occurring in error model definition by observableIds.
+    replacements = {
+        sp.sympify(observable['formula']): sp.Symbol(observable_id)
+        for observable_id, observable in observables.items()
+    }
     for observable_id, formula in sigmas.items():
-        repl = sp.sympify(formula).subs(
-            observable_id, observables[observable_id]['formula'])
+        repl = sp.sympify(formula).subs(replacements)
         sigmas[observable_id] = str(repl)
 
     noise_distrs = petab_noise_distributions_to_amici(observable_df)

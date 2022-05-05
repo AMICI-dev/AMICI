@@ -130,7 +130,8 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
 
 Model::Model(ModelDimensions const & model_dimensions,
              SimulationParameters simulation_parameters,
-             SecondOrderMode o2mode, std::vector<realtype> idlist, std::vector<int> z2event,
+             SecondOrderMode o2mode, std::vector<realtype> idlist,
+             std::vector<int> z2event,
              const bool pythonGenerated, const int ndxdotdp_explicit,
              const int ndxdotdx_explicit, const int w_recursion_depth)
     : ModelDimensions(model_dimensions), pythonGenerated(pythonGenerated),
@@ -153,6 +154,8 @@ Model::Model(ModelDimensions const & model_dimensions,
                       simulation_parameters_.pscale, state_.unscaledParameters);
     state_.fixedParameters = simulation_parameters_.fixedParameters;
     state_.plist = simulation_parameters_.plist;
+          
+    root_initial_values_.resize(ne, true);
 
     /* If Matlab wrapped: dxdotdp is a full AmiVector,
        if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices
@@ -241,7 +244,8 @@ bool operator==(const ModelDimensions &a, const ModelDimensions &b) {
 
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
-                       AmiVectorArray & /*sdx*/, bool computeSensitivities) {
+                       AmiVectorArray & /*sdx*/, bool computeSensitivities,
+                       std::vector<int> &roots_found) {
     initializeStates(x);
     if (computeSensitivities)
         initializeStateSensitivities(sx, x);
@@ -251,7 +255,7 @@ void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
         fsdx0();
 
     if (ne)
-        initHeaviside(x, dx);
+        initEvents(x, dx, roots_found);
 }
 
 void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
@@ -298,14 +302,18 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx,
     }
 }
 
-void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
+void Model::initEvents(AmiVector const &x, AmiVector const &dx,
+                       std::vector<int> &roots_found) {
     std::vector<realtype> rootvals(ne, 0.0);
     froot(simulation_parameters_.tstart_, x, dx, rootvals);
+    std::fill(roots_found.begin(), roots_found.end(), 0);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             state_.h.at(ie) = 0.0;
         } else {
             state_.h.at(ie) = 1.0;
+            if (!root_initial_values_.at(ie)) // only false->true triggers event
+                roots_found.at(ie) = 1;
         }
     }
 }
