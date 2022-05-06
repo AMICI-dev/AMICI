@@ -2,6 +2,30 @@
 
 ## v0.X Series
 
+### v0.11.29 (2022-05-06)
+
+## What's Changed
+
+Features:
+* Performance: Limit newton step convergence check by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1780
+* More informative NaN/Inf warnings by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1640
+* SBML import can now handle initial events by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1789
+
+Fixes:
+* Avoid error if no measurements in PEtab problem; fixed type handling in
+  PEtab parameter mapping by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1783
+* Fixed substitution of expressions in root and stau by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1784
+* Workaround for PEtab problems with state-dependent noise models by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1791
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.28...v0.11.29
+
+
 ### v0.11.28 (2022-04-08)
 
 New features:
