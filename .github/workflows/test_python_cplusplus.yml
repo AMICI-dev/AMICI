@@ -104,12 +104,13 @@ jobs:
         scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
     - name: Codecov Python
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./build/coverage_py.xml
+        file: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
+        verbose: true
 
     - name: lcov
       run: |
@@ -117,15 +118,15 @@ jobs:
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python3 --version | sed -E 's/.*([0-9]+\.[0-9]+)\..*/\1/')/amici/src \
+        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python -c "import sys; print(sys.implementation.cache_tag)")/amici/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.info
+        file: coverage.info
         flags: cpp
         fail_ci_if_error: true
 

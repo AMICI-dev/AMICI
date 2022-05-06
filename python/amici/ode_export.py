@@ -822,7 +822,7 @@ class ODEModel:
             else:
                 args += ['value']
             if symbol_name == SymbolId.EVENT:
-                args += ['state_update', 'event_observable']
+                args += ['state_update', 'event_observable', 'initial_value']
             if symbol_name == SymbolId.OBSERVABLE:
                 args += ['transformation']
 
@@ -1297,7 +1297,7 @@ class ODEModel:
             expr.set_val(self._process_heavisides(expr.get_val(), roots))
 
         # remove all possible Heavisides from roots, which may arise from
-        # the substitution of `'w'` in `_get_unique_root`
+        # the substitution of `'w'` in `_collect_heaviside_roots`
         for root in roots:
             root.set_val(self._process_heavisides(root.get_val(), roots))
 
@@ -1589,34 +1589,43 @@ class ODEModel:
         elif name == 'stau':
             self._eqs[name] = [
                 -self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
+                if not self.eq('drootdt_total')[ie].is_zero else
+                sp.zeros(*self.eq('sroot')[ie, :].shape)
                 for ie in range(self.num_events())
             ]
 
         elif name == 'deltasx':
             event_eqs = []
             for ie, event in enumerate(self._events):
-                if event._state_update is not None:
-                    # ====== chain rule for the state variables ===============
-                    # get xdot with expressions back-substituted
-                    tmp_eq = smart_multiply(
+
+                tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
+
+                # only add stau part if trigger is time-dependent
+                if not self.eq('drootdt_total')[ie].is_zero:
+                    tmp_eq += smart_multiply(
                         (self.sym('xdot_old') - self.sym('xdot')),
                         self.eq('stau')[ie])
-                    # construct an enhanced state sensitivity, which accounts
-                    # for the time point sensitivity as well
+
+                # only add deltax part if there is state update
+                if event._state_update is not None:
+                    # partial derivative for the parameters
+                    tmp_eq += self.eq('ddeltaxdp')[ie]
+
+                    # initial part of chain rule state variables
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
-                    tmp_dxdp += smart_multiply(self.sym('xdot'),
-                                               self.eq('stau')[ie])
+
+                    # only add stau part if trigger is time-dependent
+                    if not self.eq('drootdt_total')[ie].is_zero:
+                        # chain rule for the time point
+                        tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                                                 self.eq('stau')[ie])
+
+                        # additional part of chain rule state variables
+                        tmp_dxdp += smart_multiply(self.sym('xdot'),
+                                                   self.eq('stau')[ie])
+                    # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
-                    # ====== chain rule for the time point ====================
-                    tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
-                                             self.eq('stau')[ie])
-                    # ====== partial derivative for the parameters ============
-                    tmp_eq += self.eq('ddeltaxdp')[ie]
-                else:
-                    tmp_eq = smart_multiply(
-                        (self.eq('xdot_old') - self.eq('xdot')),
-                        self.eq('stau')[ie])
 
                 event_eqs.append(tmp_eq)
 
@@ -2066,15 +2075,6 @@ class ODEModel:
             unique identifier for root, or ``None`` if the root is not
             time-dependent
         """
-        # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
-        # to include 'w.h'
-        w_sorted = toposort_symbols(dict(zip(
-            [expr.get_id() for expr in self._expressions],
-            [expr.get_val() for expr in self._expressions],
-        )))
-        root_found = root_found.subs(w_sorted)
-
         if not self._expr_is_time_dependent(root_found):
             return None
 
@@ -2114,6 +2114,18 @@ class ODEModel:
                 root_funs.append(arg.args[0])
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
+
+        # substitute 'w' expressions into root expressions now, to avoid
+        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
+        # to include 'w.h'
+        w_sorted = toposort_symbols(dict(zip(
+            [expr.get_id()  for expr in self._expressions],
+            [expr.get_val() for expr in self._expressions],
+        )))
+        root_funs = [
+            r.subs(w_sorted)
+            for r in root_funs
+        ]
 
         return root_funs
 
@@ -2934,6 +2946,11 @@ class ODEExporter:
             'W_RECURSION_DEPTH': self.model._w_recursion_depth,
             'QUADRATIC_LLH': 'true'
                 if self.model._has_quadratic_nllh else 'false',
+            'ROOT_INITIAL_VALUES':
+                ', '.join([
+                    'true' if event.get_initial_value() else 'false'
+                    for event in self.model._events
+                ])
         }
 
         for func_name, func_info in self.functions.items():

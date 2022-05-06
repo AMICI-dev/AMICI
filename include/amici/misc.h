@@ -187,6 +187,17 @@ class ContextManager{
     ContextManager(ContextManager &&other) = delete;
 };
 
+
+/**
+ * @brief Convert a flat index to a pair of row/column indices,
+ * assuming row-major order.
+ * @param flat_idx flat index
+ * @param num_cols number of columns of referred to matrix
+ * @return row index, column index
+ */
+auto unravel_index(size_t flat_idx, size_t num_cols)
+    -> std::pair<size_t, size_t>;
+
 } // namespace amici
 
 #endif // AMICI_MISC_H
