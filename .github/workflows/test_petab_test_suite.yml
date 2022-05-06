@@ -92,5 +92,3 @@ jobs:
           file: coverage.xml
           flags: petab
           fail_ci_if_error: true
-          verbose: true
-          version: v0.2.2
