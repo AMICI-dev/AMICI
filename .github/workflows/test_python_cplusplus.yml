@@ -104,12 +104,13 @@ jobs:
         scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
     - name: Codecov Python
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./build/coverage_py.xml
+        file: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
+        verbose: true
 
     - name: lcov
       run: |
@@ -122,10 +123,10 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.info
+        file: coverage.info
         flags: cpp
         fail_ci_if_error: true
 
