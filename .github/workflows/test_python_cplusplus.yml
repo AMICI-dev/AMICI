@@ -130,6 +130,7 @@ jobs:
         flags: cpp
         fail_ci_if_error: true
         verbose: true
+        version: v0.2.2
 
     - name: Run sonar-scanner
       env:
