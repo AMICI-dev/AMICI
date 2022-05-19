@@ -1363,15 +1363,20 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   element_id.c_str()
                   );
 
-    // check upstream
-    checkFinite(state_.fixedParameters, ModelQuantity::k);
-    checkFinite(state_.unscaledParameters, ModelQuantity::p);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
-    if(!always_check_finite_) {
-        // don't check twice if always_check_finite_ is true
-        checkFinite(derived_state_.w_, ModelQuantity::w);
+    // check upstream, without infinite recursion
+    if(model_quantity != ModelQuantity::k
+        && model_quantity != ModelQuantity::p
+        && model_quantity != ModelQuantity::ts
+        && model_quantity != ModelQuantity::w)
+    {
+        checkFinite(state_.fixedParameters, ModelQuantity::k);
+        checkFinite(state_.unscaledParameters, ModelQuantity::p);
+        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
+        if(!always_check_finite_) {
+            // don't check twice if always_check_finite_ is true
+            checkFinite(derived_state_.w_, ModelQuantity::w);
+        }
     }
-
     return AMICI_RECOVERABLE_ERROR;
 }
 
