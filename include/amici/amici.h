@@ -96,16 +96,6 @@ class AmiciApplication {
      * @param ... arguments to be formatted
      */
     void errorF(const char *identifier, const char *format, ...) const;
-
-    /**
-     * @brief Checks the values in an array for NaNs and Infs
-     *
-     * @param array array
-     * @param fun name of calling function
-     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
-     * AMICI_SUCCESS otherwise
-     */
-    int checkFinite(gsl::span<const realtype> array, const char *fun);
 };
 
 /**
