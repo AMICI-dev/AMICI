@@ -1366,13 +1366,12 @@ int Model::checkFinite(gsl::span<const realtype> array,
     // check upstream, without infinite recursion
     if(model_quantity != ModelQuantity::k
         && model_quantity != ModelQuantity::p
-        && model_quantity != ModelQuantity::ts
-        && model_quantity != ModelQuantity::w)
+        && model_quantity != ModelQuantity::ts)
     {
         checkFinite(state_.fixedParameters, ModelQuantity::k);
         checkFinite(state_.unscaledParameters, ModelQuantity::p);
         checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
-        if(!always_check_finite_) {
+        if(!always_check_finite_ && model_quantity != ModelQuantity::w) {
             // don't check twice if always_check_finite_ is true
             checkFinite(derived_state_.w_, ModelQuantity::w);
         }
