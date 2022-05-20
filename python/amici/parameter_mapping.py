@@ -91,6 +91,15 @@ class ParameterMappingForCondition:
             scale_map_sim_fix = {key: LIN for key in map_sim_fix}
         self.scale_map_sim_fix = scale_map_sim_fix
 
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"map_sim_var={repr(self.map_sim_var)},"
+                f"scale_map_sim_var={repr(self.scale_map_sim_var)},"
+                f"map_preeq_fix={repr(self.map_preeq_fix)},"
+                f"scale_map_preeq_fix={repr(self.scale_map_preeq_fix)},"
+                f"map_sim_fix={repr(self.map_sim_fix)},"
+                f"scale_map_sim_fix={repr(self.scale_map_sim_fix)})")
+
 
 class ParameterMapping(Sequence):
     r"""Parameter mapping for multiple conditions.
@@ -111,8 +120,7 @@ class ParameterMapping(Sequence):
         self.parameter_mappings = parameter_mappings
 
     def __iter__(self):
-        for mapping in self.parameter_mappings:
-            yield mapping
+        yield from self.parameter_mappings
 
     def __getitem__(self, item):
         return self.parameter_mappings[item]
@@ -125,6 +133,9 @@ class ParameterMapping(Sequence):
             parameter_mapping_for_condition: ParameterMappingForCondition):
         """Append a condition specific parameter mapping."""
         self.parameter_mappings.append(parameter_mapping_for_condition)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self.parameter_mappings)})"
 
 
 def fill_in_parameters(
@@ -355,7 +366,7 @@ def scale_parameters_dict(
     :param petab_scale_dict:
         Target scales of ``values``
     """
-    if not value_dict.keys() == petab_scale_dict.keys():
+    if value_dict.keys() != petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
     for key, value in value_dict.items():
@@ -378,7 +389,7 @@ def unscale_parameters_dict(
     :param petab_scale_dict:
         Target scales of ``values``
     """
-    if not value_dict.keys() == petab_scale_dict.keys():
+    if value_dict.keys() != petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
     for key, value in value_dict.items():
