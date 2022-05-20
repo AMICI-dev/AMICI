@@ -451,7 +451,7 @@ def import_model_sbml(
 
     set_log_level(logger, verbose)
 
-    logger.info(f"Importing model ...")
+    logger.info("Importing model ...")
 
     # Get PEtab tables
     observable_df = petab.get_observable_df(observable_table)
@@ -476,15 +476,14 @@ def import_model_sbml(
                 f"Writing model code to '{model_output_dir}'.")
 
     # Load model
-    if isinstance(sbml_model, str):
+    if isinstance(sbml_model, (str, Path)):
         # from file
         sbml_reader = libsbml.SBMLReader()
-        sbml_doc = sbml_reader.readSBMLFromFile(sbml_model)
-        sbml_model = sbml_doc.getModel()
+        sbml_doc = sbml_reader.readSBMLFromFile(str(sbml_model))
     else:
         # Create a copy, because it will be modified by SbmlImporter
         sbml_doc = sbml_model.getSBMLDocument().clone()
-        sbml_model = sbml_doc.getModel()
+    sbml_model = sbml_doc.getModel()
 
     show_model_info(sbml_model)
 
