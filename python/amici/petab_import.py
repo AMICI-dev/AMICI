@@ -280,7 +280,7 @@ def import_petab_problem(
     :param model_name:
         Name of the generated model. If model file name was provided,
         this defaults to the file name without extension, otherwise
-        the SBML model ID will be used.
+        the model ID will be used.
 
     :param force_compile:
         Whether to compile the model even if the target folder is not empty,
@@ -303,12 +303,9 @@ def import_petab_problem(
     else:
         model_output_dir = os.path.abspath(model_output_dir)
 
-    if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
-        if model_name is None:
-            model_name = petab_problem.pysb_model.name
-        else:
-            raise ValueError(
-                "Argument model_name currently not allowed for pysb models")
+    if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem) \
+            and model_name is None:
+        model_name = petab_problem.pysb_model.name
     elif model_name is None:
         model_name = _create_model_name(model_output_dir)
 
@@ -333,6 +330,7 @@ def import_petab_problem(
         if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
             import_model_pysb(
                 petab_problem,
+                model_name=model_name,
                 model_output_dir=model_output_dir,
                 **kwargs)
         else:
