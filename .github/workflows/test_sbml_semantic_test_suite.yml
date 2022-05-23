@@ -47,7 +47,7 @@ jobs:
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: amici-semantic-results
         path: tests/amici-semantic-results
