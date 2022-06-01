@@ -21,7 +21,7 @@ on:
 jobs:
   build:
     name: SBML Semantic Test Suite
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -47,15 +47,15 @@ jobs:
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: amici-semantic-results
         path: tests/amici-semantic-results
 
     - name: Codecov SBMLSuite
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage_SBMLSuite.xml
+        file: coverage_SBMLSuite.xml
         flags: sbmlsuite
         fail_ci_if_error: true

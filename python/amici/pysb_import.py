@@ -51,6 +51,7 @@ def pysb2amici(
         # See https://github.com/AMICI-dev/AMICI/pull/1672
         cache_simplify: bool = False,
         generate_sensitivity_code: bool = True,
+        model_name: Optional[str] = None,
 ):
     r"""
     Generate AMICI C++ files for the provided model.
@@ -124,6 +125,10 @@ def pysb2amici(
     :param generate_sensitivity_code:
         if set to ``False``, code for sensitivity computation will not be
         generated
+
+    :param model_name:
+        Name for the generated model module. If None, :attr:`pysb.Model.name`
+        will be used.
     """
     if observables is None:
         observables = []
@@ -132,6 +137,8 @@ def pysb2amici(
 
     if sigmas is None:
         sigmas = {}
+
+    model_name = model_name or model.name
 
     set_log_level(logger, verbose)
     ode_model = ode_model_from_pysb_importer(
@@ -146,7 +153,7 @@ def pysb2amici(
     exporter = ODEExporter(
         ode_model,
         outdir=output_dir,
-        model_name=model.name,
+        model_name=model_name,
         verbose=verbose,
         assume_pow_positivity=assume_pow_positivity,
         compiler=compiler,

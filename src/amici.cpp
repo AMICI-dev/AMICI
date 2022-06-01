@@ -179,7 +179,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 throw;
             warningF("AMICI:simulation",
                      "AMICI forward simulation failed at t = %f: "
-                     "Maximum time exceeed.\n",
+                     "Maximum time exceeded.\n",
                      ex.time);
         } else {
             rdata->status = ex.error_code;
@@ -199,7 +199,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             warningF(
                 "AMICI:simulation",
                 "AMICI backward simulation failed when trying to solve until "
-                "t = %f: Maximum time exceeed.\n",
+                "t = %f: Maximum time exceeded.\n",
                 ex.time);
 
         } else {
@@ -300,27 +300,6 @@ AmiciApplication::errorF(const char* identifier, const char* format, ...) const
     auto str = printfToString(format, argptr);
     va_end(argptr);
     error(identifier, str);
-}
-
-int
-AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
-{
-
-    for (int idx = 0; idx < (int)array.size(); idx++) {
-        if (isNaN(array[idx])) {
-            warningF("AMICI:NaN",
-                     "AMICI encountered a NaN value for %s[%i]!",
-                     fun, idx);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-        if (isInf(array[idx])) {
-            warningF("AMICI:Inf",
-                     "AMICI encountered an Inf value for %s[%i]!",
-                     fun, idx);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-    }
-    return AMICI_SUCCESS;
 }
 
 } // namespace amici

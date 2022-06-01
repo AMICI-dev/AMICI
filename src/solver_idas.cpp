@@ -817,7 +817,7 @@ int fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
     auto model = dynamic_cast<Model_DAE *>(typed_udata->first);
     Expects(model);
     model->fJ(t, cj, x, dx, xdot, J);
-    return model->checkFinite(gsl::make_span(J), "Jacobian");
+    return model->checkFinite(J, ModelQuantity::J, t);
 }
 
 /**
@@ -846,7 +846,8 @@ int fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
     Expects(model);
 
     model->fJB(t, cj, x, dx, xB, dxB, JB);
-    return model->checkFinite(gsl::make_span(JB), "Jacobian");
+    return model->checkFinite(JB, ModelQuantity::JB, t);
+
 }
 
 /**
@@ -873,7 +874,7 @@ int fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
     Expects(model);
 
     model->fJSparse(t, cj, x, dx, J);
-    return model->checkFinite(gsl::make_span(J), "Jacobian");
+    return model->checkFinite(J, ModelQuantity::J, t);
 }
 
 /**
@@ -902,7 +903,7 @@ int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
     Expects(model);
 
     model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
-    return model->checkFinite(gsl::make_span(JB), "Jacobian");
+    return model->checkFinite(JB, ModelQuantity::JB, t);
 }
 
 /**
@@ -973,7 +974,7 @@ int fJv(realtype t, N_Vector x, N_Vector dx, N_Vector /*xdot*/,
     Expects(model);
 
     model->fJv(t, x, dx, v, Jv, cj);
-    return model->checkFinite(gsl::make_span(Jv), "Jacobian");
+    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv);
 }
 
 /**
@@ -1003,7 +1004,7 @@ int fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     Expects(model);
 
     model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
-    return model->checkFinite(gsl::make_span(JvB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB);
 }
 
 /**
@@ -1024,7 +1025,7 @@ int froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
 
     model->froot(t, x, dx, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
-                              "root function");
+                              ModelQuantity::root);
 }
 
 /**
@@ -1049,7 +1050,8 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
         return AMICI_MAX_TIME_EXCEEDED;
     }
 
-    if (t > 1e200 && !model->app->checkFinite(gsl::make_span(x), "fxdot")) {
+    if (t > 1e200
+        && !model->checkFinite(gsl::make_span(x), ModelQuantity::xdot)) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
            to fxdot from which we typically cannot recover. To save time
            on normal execution, we do not always want to check finiteness
@@ -1058,7 +1060,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
     }
 
     model->fxdot(t, x, dx, xdot);
-    return model->checkFinite(gsl::make_span(xdot), "fxdot");
+    return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot);
 }
 
 /**
@@ -1086,7 +1088,7 @@ int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     }
 
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), "xBdot");
+    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot);
 }
 
 /**
@@ -1109,7 +1111,7 @@ int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     Expects(model);
 
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), "qBdot");
+    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot);
 
 }
 
@@ -1132,7 +1134,7 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot,
     Expects(model);
 
     model->fxBdot_ss(t, xB, dxB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), "xBdot_ss");
+    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot_ss);
 }
 
 
@@ -1154,7 +1156,7 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
     Expects(model);
 
     model->fqBdot_ss(t, xB, dxB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
+    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot_ss);
 }
 
 /**
@@ -1181,7 +1183,8 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
     Expects(model);
 
     model->fJSparseB_ss(JB);
-    return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
+    return model->checkFinite(gsl::make_span(xBdot),
+                              ModelQuantity::JSparseB_ss);
 }
 
 /**
@@ -1212,7 +1215,7 @@ int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector dx,
 
     for (int ip = 0; ip < model->nplist(); ip++) {
         model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
-        if (model->checkFinite(gsl::make_span(sxdot[ip]), "sxdot")
+        if (model->checkFinite(gsl::make_span(sxdot[ip]), ModelQuantity::sxdot)
                 != AMICI_SUCCESS)
             return AMICI_RECOVERABLE_ERROR;
     }
