@@ -380,6 +380,14 @@ void ConditionContext::applyCondition(const ExpData *edata,
         model_->setParameterScale(edata->pscale);
     }
 
+    if(!edata->parameters.empty()) {
+        if(edata->parameters.size() != (unsigned) model_->np())
+            throw AmiException("Number of parameters (%d) in model does not"
+                               " match ExpData (%zd).",
+                               model_->np(), edata->parameters.size());
+        model_->setParameters(edata->parameters);
+    }
+
     if(!edata->x0.empty()) {
         if(edata->x0.size() != (unsigned) model_->nx_rdata)
             throw AmiException("Number of initial conditions (%d) in model does"
@@ -395,14 +403,6 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                model_->nx_rdata * model_->nplist(),
                                edata->sx0.size());
         model_->setInitialStateSensitivities(edata->sx0);
-    }
-
-    if(!edata->parameters.empty()) {
-        if(edata->parameters.size() != (unsigned) model_->np())
-            throw AmiException("Number of parameters (%d) in model does not"
-                               " match ExpData (%zd).",
-                               model_->np(), edata->parameters.size());
-        model_->setParameters(edata->parameters);
     }
 
     model_->setReinitializeFixedParameterInitialStates(
