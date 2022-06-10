@@ -647,7 +647,10 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
          stable computation value is not important for AMICI_ONE_STEP mode,
          only direction w.r.t. current t
          */
+        /* increase counter */
+        sim_steps++; 
         solver.step(std::max(state_.t, 1.0) * 10);
+       
         if (backward) {
             solver.writeSolution(&state_.t, xB_, state_.dx, state_.sx, xQ_);
         } else {
@@ -670,8 +673,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
 
         if (wrms_ < conv_thresh)
             break; // converged
-        /* increase counter, check for maxsteps */
-        sim_steps++;
+        /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,
                                 "exceeded maximum number of steps");
