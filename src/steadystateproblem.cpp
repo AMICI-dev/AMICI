@@ -647,6 +647,16 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
          stable computation value is not important for AMICI_ONE_STEP mode,
          only direction w.r.t. current t
          */
+        /* check for maxsteps  */
+        if (sim_steps >= solver.getMaxSteps()) {
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+                                "exceeded maximum number of steps");
+        }
+        if (state_.t >= 1e200) {
+            throw NewtonFailure(AMICI_NO_STEADY_STATE,
+                                "simulated to late time"
+                                " point without convergence of RHS");
+        }        
         /* increase counter */
         sim_steps++; 
         solver.step(std::max(state_.t, 1.0) * 10);
@@ -673,16 +683,6 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
 
         if (wrms_ < conv_thresh)
             break; // converged
-        /* check for maxsteps  */
-        if (sim_steps >= solver.getMaxSteps()) {
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
-                                "exceeded maximum number of steps");
-        }
-        if (state_.t >= 1e200) {
-            throw NewtonFailure(AMICI_NO_STEADY_STATE,
-                                "simulated to late time"
-                                " point without convergence of RHS");
-        }
     }
     
     // if check_sensi_conv_ is deactivated, we still have to update sensis
