@@ -640,13 +640,6 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
         convergence_check_frequency = 25;
         
     while (true) {
-        /* One step of ODE integration
-         reason for tout specification:
-         max with 1 ensures correct direction (any positive value would do)
-         multiplication with 10 ensures nonzero difference and should ensure
-         stable computation value is not important for AMICI_ONE_STEP mode,
-         only direction w.r.t. current t
-         */
         /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,
@@ -658,7 +651,14 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
                                 " point without convergence of RHS");
         }        
         /* increase counter */
-        sim_steps++; 
+        sim_steps++;         
+        /* One step of ODE integration
+         reason for tout specification:
+         max with 1 ensures correct direction (any positive value would do)
+         multiplication with 10 ensures nonzero difference and should ensure
+         stable computation value is not important for AMICI_ONE_STEP mode,
+         only direction w.r.t. current t
+         */
         solver.step(std::max(state_.t, 1.0) * 10);
        
         if (backward) {
