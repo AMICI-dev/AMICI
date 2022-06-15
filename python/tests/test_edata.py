@@ -14,7 +14,8 @@ def test_edata_sensi_unscaling(model_units_module):
     parameters0 = (5, 5)
     parameters1 = (2, 2)
 
-    sx0 = np.array((3, 3, 3, 3))
+    sx0 = (3, 3, 3, 3)
+    np_sx0 = np.array(sx0)
 
     parameter_scales_log10 = \
         [amici.ParameterScaling.log10.value]*len(parameters0)
@@ -43,5 +44,5 @@ def test_edata_sensi_unscaling(model_units_module):
     rdata2 = amici.runAmiciSimulation(model, solver, edata2)
 
     # The initial state sensitivities are as specified.
-    assert (rdata.sx0.flatten() == sx0).all()
-    assert (rdata2.sx0.flatten() == sx0).all()
+    assert (rdata.sx0.flatten() == np_sx0).all()
+    assert (rdata2.sx0.flatten() == np_sx0).all()
