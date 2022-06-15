@@ -380,6 +380,8 @@ void ConditionContext::applyCondition(const ExpData *edata,
         model_->setParameterScale(edata->pscale);
     }
 
+    // this needs to be set in the model before handling initial state
+    // sensitivities, which may be unscaled using model parameter values
     if(!edata->parameters.empty()) {
         if(edata->parameters.size() != (unsigned) model_->np())
             throw AmiException("Number of parameters (%d) in model does not"
