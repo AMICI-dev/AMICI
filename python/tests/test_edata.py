@@ -1,17 +1,7 @@
 """Tests related to amici.ExpData via Python"""
-import os
-import re
-import shutil
-from urllib.request import urlopen
-
-import libsbml
 import numpy as np
-import pytest
 
 import amici
-from amici.gradient_check import check_derivatives
-from amici.sbml_import import SbmlImporter
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 from test_sbml_import import model_units_module
 
@@ -21,10 +11,10 @@ def test_edata_sensi_unscaling(model_units_module):
     ExpData parameters should be used for unscaling initial state
     sensitivities.
     """
-    parameters0 = (5,5)
-    parameters1 = (2,2)
+    parameters0 = (5, 5)
+    parameters1 = (2, 2)
 
-    sx0 = (3,3,3,3)
+    sx0 = (3, 3, 3, 3)
 
     parameter_scales_log10 = \
         [amici.ParameterScaling.log10.value]*len(parameters0)
