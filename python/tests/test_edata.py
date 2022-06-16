@@ -15,7 +15,6 @@ def test_edata_sensi_unscaling(model_units_module):
     parameters1 = (2, 2)
 
     sx0 = (3, 3, 3, 3)
-    np_sx0 = np.array(sx0)
 
     parameter_scales_log10 = \
         [amici.ParameterScaling.log10.value]*len(parameters0)
@@ -30,19 +29,19 @@ def test_edata_sensi_unscaling(model_units_module):
     solver = model.getSolver()
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
-    edata = amici.ExpData(model)
-    edata.pscale = amici_parameter_scales_log10
-    edata.parameters = parameters0
-    edata.sx0 = sx0
+    edata0 = amici.ExpData(model)
+    edata0.pscale = amici_parameter_scales_log10
+    edata0.parameters = parameters0
+    edata0.sx0 = sx0
 
-    edata2 = amici.ExpData(model)
-    edata2.pscale = amici_parameter_scales_log10
-    edata2.parameters = parameters1
-    edata2.sx0 = sx0
+    edata1 = amici.ExpData(model)
+    edata1.pscale = amici_parameter_scales_log10
+    edata1.parameters = parameters1
+    edata1.sx0 = sx0
 
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-    rdata2 = amici.runAmiciSimulation(model, solver, edata2)
+    rdata0 = amici.runAmiciSimulation(model, solver, edata0)
+    rdata1 = amici.runAmiciSimulation(model, solver, edata1)
 
     # The initial state sensitivities are as specified.
-    assert (rdata.sx0.flatten() == np_sx0).all()
-    assert (rdata2.sx0.flatten() == np_sx0).all()
+    assert np.isclose(rdata0.sx0.flatten(), sx0).all()
+    assert np.isclose(rdata1.sx0.flatten(), sx0).all()
