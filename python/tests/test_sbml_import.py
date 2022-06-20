@@ -182,7 +182,7 @@ def model_steadystate_module():
     shutil.rmtree(outdir, ignore_errors=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def model_units_module():
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_units',
