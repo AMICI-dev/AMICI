@@ -640,6 +640,18 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
         convergence_check_frequency = 25;
         
     while (true) {
+        /* check for maxsteps  */
+        if (sim_steps >= solver.getMaxSteps()) {
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+                                "exceeded maximum number of steps");
+        }
+        if (state_.t >= 1e200) {
+            throw NewtonFailure(AMICI_NO_STEADY_STATE,
+                                "simulated to late time"
+                                " point without convergence of RHS");
+        }        
+        /* increase counter */
+        sim_steps++;         
         /* One step of ODE integration
          reason for tout specification:
          max with 1 ensures correct direction (any positive value would do)
@@ -648,6 +660,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
          only direction w.r.t. current t
          */
         solver.step(std::max(state_.t, 1.0) * 10);
+       
         if (backward) {
             solver.writeSolution(&state_.t, xB_, state_.dx, state_.sx, xQ_);
         } else {
@@ -670,17 +683,6 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
 
         if (wrms_ < conv_thresh)
             break; // converged
-        /* increase counter, check for maxsteps */
-        sim_steps++;
-        if (sim_steps >= solver.getMaxSteps()) {
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
-                                "exceeded maximum number of steps");
-        }
-        if (state_.t >= 1e200) {
-            throw NewtonFailure(AMICI_NO_STEADY_STATE,
-                                "simulated to late time"
-                                " point without convergence of RHS");
-        }
     }
     
     // if check_sensi_conv_ is deactivated, we still have to update sensis
