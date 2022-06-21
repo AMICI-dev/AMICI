@@ -451,7 +451,7 @@ def import_model_sbml(
 
     set_log_level(logger, verbose)
 
-    logger.info(f"Importing model ...")
+    logger.info("Importing model ...")
 
     # Get PEtab tables
     observable_df = petab.get_observable_df(observable_table)
@@ -475,16 +475,19 @@ def import_model_sbml(
     logger.info(f"Model name is '{model_name}'.\n"
                 f"Writing model code to '{model_output_dir}'.")
 
+    if isinstance(sbml_model, Path):
+        sbml_model = str(sbml_model)
+
     # Load model
     if isinstance(sbml_model, str):
         # from file
         sbml_reader = libsbml.SBMLReader()
         sbml_doc = sbml_reader.readSBMLFromFile(sbml_model)
-        sbml_model = sbml_doc.getModel()
     else:
         # Create a copy, because it will be modified by SbmlImporter
         sbml_doc = sbml_model.getSBMLDocument().clone()
-        sbml_model = sbml_doc.getModel()
+
+    sbml_model = sbml_doc.getModel()
 
     show_model_info(sbml_model)
 
@@ -509,6 +512,8 @@ def import_model_sbml(
     if observable_df is not None:
         observables, noise_distrs, sigmas = \
             get_observation_model(observable_df)
+    else:
+        observables = noise_distrs = sigmas = None
 
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
