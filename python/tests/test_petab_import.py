@@ -38,19 +38,3 @@ def simple_sbml_model():
         species_ref.setSpecies(name)
 
     return document, model
-
-
-def test_constant_species_to_parameters(simple_sbml_model):
-    """Test conversion from species to constant parameters"""
-
-    document, model = simple_sbml_model
-
-    amici_petab_import.constant_species_to_parameters(model)
-
-    assert len(list(model.getListOfParameters())) == 1
-    assert len(list(model.getListOfSpecies())) == 0
-
-    r = model.getReaction(0)
-    assert len(list(r.getListOfReactants())) == 0
-    assert len(list(r.getListOfProducts())) == 0
-    assert len(list(r.getListOfModifiers())) == 0
