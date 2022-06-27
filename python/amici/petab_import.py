@@ -7,27 +7,26 @@ into AMICI.
 
 
 import argparse
-import contextlib
 import importlib
 import logging
-import math
 import os
 import re
 import shutil
 import tempfile
 from _collections import OrderedDict
 from itertools import chain
-from typing import List, Dict, Union, Optional, Tuple
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 from warnings import warn
 
-import amici
 import libsbml
 import pandas as pd
 import petab
 import sympy as sp
-from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
+
+import amici
+from amici.logging import get_logger, log_execution_time, set_log_level
 
 try:
     from amici.petab_import_pysb import PysbPetabProblem, import_model_pysb
