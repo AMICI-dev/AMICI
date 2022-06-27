@@ -62,7 +62,7 @@ jobs:
           source ./build/venv/bin/activate \
             && pip3 install wheel pytest shyaml pytest-cov pysb \
             && pip3 install \
-          git+https://github.com/PEtab-dev/libpetab-python.git@abstract_model
+          git+https://github.com/PEtab-dev/libpetab-python.git@develop
 
       # retrieve test models
       - name: Download and install PEtab test suite
