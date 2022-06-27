@@ -91,6 +91,42 @@ def get_fixed_parameters(
     :return:
         List of IDs of parameters which are to be considered constant.
     """
+    # initial concentrations for species or initial compartment sizes in
+    # condition table will need to be turned into fixed parameters
+
+    # if there is no initial assignment for that species, we'd need
+    # to create one. to avoid any naming collision right away, we don't
+    # allow that for now
+
+    # we can't handle them yet
+    compartments = [
+        col for col in petab_problem.condition_df
+        if petab_problem.sbml_model.getCompartment(col) is not None
+    ]
+    if compartments:
+        raise NotImplementedError("Can't handle initial compartment sizes "
+                                  "at the moment. Consider creating an "
+                                  f"initial assignment for {compartments}")
+
+    # if we have a parameter table, all parameters that are allowed to be
+    #  listed in the parameter table, but are not marked as estimated, can be
+    #  turned in to AMICI constants
+    # due to legacy API, we might not always have a parameter table, though
+    if petab_problem.parameter_df is not None:
+        all_parameters = petab.get_valid_parameters_for_parameter_table(
+            sbml_model=petab_problem.sbml_model,
+            condition_df=petab_problem.condition_df,
+            observable_df=petab_problem.observable_df
+            if petab_problem.observable_df is not None
+            else pd.DataFrame(columns=petab.OBSERVABLE_DF_REQUIRED_COLS),
+            measurement_df=petab_problem.measurement_df
+            if petab_problem.measurement_df is not None
+            else pd.DataFrame(columns=petab.MEASUREMENT_DF_REQUIRED_COLS),
+        )
+        estimated_parameters = petab_problem.parameter_df.index.values[
+                                    petab_problem.parameter_df[ESTIMATE] == 1]
+        return list(sorted(set(all_parameters) - set(estimated_parameters)))
+
     sbml_model = petab_problem.sbml_model
     condition_df = petab_problem.condition_df
 
@@ -125,22 +161,6 @@ def get_fixed_parameters(
         if len(fixed_parameters) != len(set(fixed_parameters)):
             raise AssertionError(
                 'len(fixed_parameters) != len(set(fixed_parameters))')
-
-        # initial concentrations for species or initial compartment sizes in
-        # condition table will need to be turned into fixed parameters
-
-        # if there is no initial assignment for that species, we'd need
-        # to create one. to avoid any naming collision right away, we don't
-        # allow that for now
-
-        # we can't handle them yet
-        compartments = [col for col in condition_df
-                        if sbml_model.getCompartment(col) is not None]
-        if compartments:
-            raise NotImplementedError("Can't handle initial compartment sizes "
-                                      "at the moment. Consider creating an "
-                                      f"initial assignment for {compartments}")
-
     else:
         fixed_parameters = []
 
@@ -153,10 +173,6 @@ def get_fixed_parameters(
                            " provided in condition table but not present in"
                            " model. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
-
-    if petab_problem.parameter_df:
-        fixed_parameters.extend(petab_problem.parameter_df.index.values[
-                                    petab_problem.parameter_df[ESTIMATE] == 0])
 
     return fixed_parameters
 
@@ -418,7 +434,7 @@ def import_model_sbml(
 
     logger.info("Importing model ...")
 
-    if any(sbml_model, condition_table, observable_table, measurement_table):
+    if any([sbml_model, condition_table, observable_table, measurement_table]):
         warn("The `sbml_model`, `condition_table`, `observable_table`, and "
              "`measurement_table` arguments are deprecated and will be "
              "removed in a future version. Use `petab_problem` instead.",
