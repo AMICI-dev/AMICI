@@ -112,6 +112,7 @@ def get_fixed_parameters(
     #  listed in the parameter table, but are not marked as estimated, can be
     #  turned in to AMICI constants
     # due to legacy API, we might not always have a parameter table, though
+    fixed_parameters = set()
     if petab_problem.parameter_df is not None:
         all_parameters = petab.get_valid_parameters_for_parameter_table(
             sbml_model=petab_problem.sbml_model,
@@ -125,7 +126,7 @@ def get_fixed_parameters(
         )
         estimated_parameters = petab_problem.parameter_df.index.values[
                                     petab_problem.parameter_df[ESTIMATE] == 1]
-        return list(sorted(set(all_parameters) - set(estimated_parameters)))
+        fixed_parameters = set(all_parameters) - set(estimated_parameters)
 
     sbml_model = petab_problem.sbml_model
     condition_df = petab_problem.condition_df
@@ -138,15 +139,13 @@ def get_fixed_parameters(
 
     # handle parameters in condition table
     if condition_df is not None:
-        fixed_parameters = list(condition_df.columns)
-        # get rid of conditionName column
-        with contextlib.suppress(ValueError):
-            fixed_parameters.remove(CONDITION_NAME)
         logger.debug(f'Condition table: {condition_df.shape}')
 
         # remove overridden parameters (`object`-type columns)
-        fixed_parameters = [
-            p for p in fixed_parameters
+        fixed_parameters.update(
+            p for p in condition_df.columns
+            # get rid of conditionName column
+            if p != CONDITION_NAME
             # there is no parametric override
             # TODO: could check if the final overriding parameter is estimated
             #  or not, but for now, we skip the parameter if there is any kind
@@ -156,17 +155,11 @@ def get_fixed_parameters(
                and sbml_model.getParameter(p) is not None
                # but not a rule target
                and sbml_model.getRuleByVariable(p) is None
-        ]
-        # must be unique
-        if len(fixed_parameters) != len(set(fixed_parameters)):
-            raise AssertionError(
-                'len(fixed_parameters) != len(set(fixed_parameters))')
-    else:
-        fixed_parameters = []
+        )
 
     # Ensure mentioned parameters exist in the model. Remove additional ones
     # from list
-    for fixed_parameter in fixed_parameters[:]:
+    for fixed_parameter in fixed_parameters.copy():
         # check global parameters
         if not sbml_model.getParameter(fixed_parameter):
             logger.warning(f"Parameter or species '{fixed_parameter}'"
@@ -174,7 +167,7 @@ def get_fixed_parameters(
                            " model. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
-    return fixed_parameters
+    return list(sorted(fixed_parameters))
 
 
 def species_to_parameters(species_ids: List[str],
