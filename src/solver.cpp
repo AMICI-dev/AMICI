@@ -172,6 +172,8 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if (model->nt() > 1)
         calcIC(model->getTimepoint(1));
+
+    cpu_time_ = 0.0;
 }
 
 void Solver::setupB(int *which, const realtype tf, Model *model,
@@ -203,6 +205,8 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     applyQuadTolerancesASA(*which);
 
     setStabLimDetB(*which, stldet_);
+
+    cpu_timeB_ = 0.0;
 }
 
 void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &x0,
