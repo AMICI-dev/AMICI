@@ -776,7 +776,8 @@ def rdatas_to_simulation_df(
         rdatas: Sequence[amici.ReturnData],
         model: AmiciModel,
         measurement_df: pd.DataFrame) -> pd.DataFrame:
-    """Create a PEtab simulation dataframe from :class:`amici.ReturnData` s.
+    """Create a PEtab simulation dataframe from
+    :class:`amici.amici.ReturnData` s.
 
     See :func:`rdatas_to_measurement_df` for details, only that model outputs
     will appear in column ``simulation`` instead of ``measurement``."""
