@@ -238,6 +238,14 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     rdata->cpu_time_total = static_cast<double>(clock() - start_time_total)
                             * 1000.0 / CLOCKS_PER_SEC;
 
+    // verify that reported CPU times are plausible
+    gsl_EnsuresDebug(rdata->cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
+
     return rdata;
 }
 
