@@ -107,7 +107,10 @@ def simulate_petab(
         # Use PEtab nominal values as default
         problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
                               petab_problem.parameter_df.itertuples()}
-        scaled_parameters = False
+        if scaled_parameters:
+            raise NotImplementedError(
+                "scaled_parameters=True in combination with "
+                "problem_parameters=None is currently not supported.")
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
