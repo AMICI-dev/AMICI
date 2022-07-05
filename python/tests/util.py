@@ -157,8 +157,8 @@ def check_trajectories_with_forward_sensitivities(
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+    np.testing.assert_allclose(rdata['x'], result_expected_x, rtol=1e-5)
+    np.testing.assert_allclose(rdata['sx'], result_expected_sx, rtol=1e-5)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
@@ -169,5 +169,5 @@ def check_trajectories_with_forward_sensitivities(
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    np.testing.assert_allclose(rdata['x'], result_expected_x, rtol=1e-10)
+    np.testing.assert_allclose(rdata['sx'], result_expected_sx, rtol=1e-10)
