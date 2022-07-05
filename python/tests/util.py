@@ -13,13 +13,6 @@ from amici import (
 )
 
 
-def assert_almost_equal(*args, **kwargs):
-    """Wrapper around numpy.testing.assert_almost_equal to print the complete
-    arrays without truncation."""
-    with np.printoptions(threshold=np.inf):
-        np.testing.assert_almost_equal(*args, **kwargs)
-
-
 def create_amici_model(sbml_model, model_name) -> AmiciModel:
     """
     Import an sbml file and create an AMICI model from it
@@ -139,14 +132,14 @@ def check_trajectories_without_sensitivities(
     solver.setAbsoluteTolerance(1e-16)
     solver.setRelativeTolerance(1e-9)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
 
 
 def check_trajectories_with_forward_sensitivities(
@@ -165,8 +158,8 @@ def check_trajectories_with_forward_sensitivities(
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
@@ -177,5 +170,5 @@ def check_trajectories_with_forward_sensitivities(
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
