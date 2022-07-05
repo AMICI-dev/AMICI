@@ -129,8 +129,7 @@ def check_trajectories_without_sensitivities(
 
     # Does the AMICI simulation match the analytical solution?
     solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-16)
-    solver.setRelativeTolerance(1e-9)
+    solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
     np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
 
