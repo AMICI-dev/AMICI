@@ -75,7 +75,7 @@ def _add_global_parameter(sbml_model: libsbml.Model,
 def get_fixed_parameters(
         sbml_model: 'libsbml.Model',
         condition_df: Optional[pd.DataFrame] = None,
-        const_species_to_parameters: bool = False) -> List[str]:
+) -> List[str]:
     """
     Determine, set and return fixed model parameters.
 
@@ -88,11 +88,6 @@ def get_fixed_parameters(
 
     :param sbml_model:
         libsbml.Model instance
-
-    :param const_species_to_parameters:
-        If `True`, species which are marked constant within the SBML model
-        will be turned into constant parameters *within* the given
-        `sbml_model`.
 
     :return:
         List of IDs of parameters which are to be considered constant.
@@ -126,22 +121,6 @@ def get_fixed_parameters(
                 'len(fixed_parameters) != len(set(fixed_parameters))')
     else:
         fixed_parameters = []
-
-    # Others are optional
-    if const_species_to_parameters:
-        # Turn species which are marked constant in the SBML model into
-        # parameters
-        constant_species = constant_species_to_parameters(sbml_model)
-
-        logger.debug("Constant species converted to parameters: "
-                     + str(len(constant_species)))
-        logger.info("Non-constant species "
-                    + str(len(sbml_model.getListOfSpecies())))
-
-        # ... and append them to the list of fixed_parameters
-        for species in constant_species:
-            if species not in fixed_parameters:
-                fixed_parameters.append(species)
 
     # Ensure mentioned parameters exist in the model. Remove additional ones
     # from list
@@ -235,30 +214,6 @@ def species_to_parameters(species_ids: List[str],
                 pass
 
     return transformables
-
-
-def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
-    """
-    Convert constant species in the SBML model to constant parameters.
-
-    This can be used e.g. for setting up models with condition-specific
-    constant species for PEtab, since there it is not possible to specify
-    constant species in the condition table.
-
-    :param sbml_model:
-        SBML Model
-
-    :return:
-        List of IDs of SBML species that have been turned into constants
-    """
-    transformables = []
-    for species in sbml_model.getListOfSpecies():
-        if not species.getConstant() and not species.getBoundaryCondition():
-            continue
-
-        transformables.append(species.getId())
-
-    return species_to_parameters(transformables, sbml_model)
 
 
 def import_petab_problem(
@@ -475,6 +430,9 @@ def import_model_sbml(
     logger.info(f"Model name is '{model_name}'.\n"
                 f"Writing model code to '{model_output_dir}'.")
 
+    if isinstance(sbml_model, Path):
+        sbml_model = str(sbml_model)
+
     # Load model
     if isinstance(sbml_model, (str, Path)):
         # from file
@@ -483,6 +441,7 @@ def import_model_sbml(
     else:
         # Create a copy, because it will be modified by SbmlImporter
         sbml_doc = sbml_model.getSBMLDocument().clone()
+
     sbml_model = sbml_doc.getModel()
 
     show_model_info(sbml_model)
@@ -508,6 +467,8 @@ def import_model_sbml(
     if observable_df is not None:
         observables, noise_distrs, sigmas = \
             get_observation_model(observable_df)
+    else:
+        observables = noise_distrs = sigmas = None
 
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
