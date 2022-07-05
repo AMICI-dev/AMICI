@@ -236,7 +236,10 @@ extensions = [
 
 intersphinx_mapping = {
     'pysb': ('https://pysb.readthedocs.io/en/stable/', None),
-    'petab': ('https://petab.readthedocs.io/en/stable/', None),
+    'petab': (
+        'https://petab.readthedocs.io/projects/libpetab-python/en/latest/',
+        None
+    ),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'numpy': ('https://numpy.org/devdocs/', None),
     'sympy': ('https://docs.sympy.org/latest/', None),
