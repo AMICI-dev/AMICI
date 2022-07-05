@@ -91,7 +91,7 @@ def simulate_petab(
         Dictionary of
 
         * cost function value (``LLH``),
-        * list of :class:`amici.ReturnData` (``RDATAS``),
+        * list of :class:`amici.amici.ReturnData` (``RDATAS``),
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see
