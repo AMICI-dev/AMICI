@@ -236,6 +236,7 @@ def create_parameter_mapping(
         simulation_conditions: Union[pd.DataFrame, List[Dict]],
         scaled_parameters: bool,
         amici_model: AmiciModel,
+        **parameter_mapping_kwargs,
 ) -> ParameterMapping:
     """Generate AMICI specific parameter mapping.
 
@@ -250,7 +251,11 @@ def create_parameter_mapping(
         are assumed to be in linear scale.
     :param amici_model:
         AMICI model.
-
+    :param parameter_mapping_kwargs:
+        Optional keyword arguments passed to
+        :func:`petab.get_optimization_to_simulation_parameter_mapping`.
+        To allow changing fixed PEtab problem parameters (``estimate=0``),
+        use ``fill_fixed_parameters=False``.
     :return:
         List of the parameter mappings.
     """
@@ -272,13 +277,24 @@ def create_parameter_mapping(
                      "SBML LocalParameters. If the model contains "
                      "LocalParameters, parameter mapping will fail.")
 
-    prelim_parameter_mapping = \
-        petab_problem.get_optimization_to_simulation_parameter_mapping(
-            warn_unmapped=False, scaled_parameters=scaled_parameters,
-            allow_timepoint_specific_numeric_noise_parameters=
+    default_parameter_mapping_kwargs = {
+        "warn_unmapped": False,
+        "scaled_parameters": scaled_parameters,
+        "allow_timepoint_specific_numeric_noise_parameters":
             not petab.lint.observable_table_has_nontrivial_noise_formula(
-                petab_problem.observable_df
-            )
+                petab_problem.observable_df),
+    }
+    if parameter_mapping_kwargs is None:
+        parameter_mapping_kwargs = {}
+
+    prelim_parameter_mapping = \
+        petab.get_optimization_to_simulation_parameter_mapping(
+            condition_df=petab_problem.condition_df,
+            measurement_df=petab_problem.measurement_df,
+            parameter_df=petab_problem.parameter_df,
+            observable_df=petab_problem.observable_df,
+            sbml_model=petab_problem.sbml_model,
+            **(default_parameter_mapping_kwargs | parameter_mapping_kwargs)
         )
 
     parameter_mapping = ParameterMapping()
