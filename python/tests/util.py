@@ -11,6 +11,7 @@ from amici import (
     SensitivityMethod,
     SensitivityOrder
 )
+from amici.gradient_check import _check_close
 
 
 def create_amici_model(sbml_model, model_name) -> AmiciModel:
@@ -131,14 +132,16 @@ def check_trajectories_without_sensitivities(
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=5e-5, atol=1e-13)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=5e-9, atol=1e-13)
 
 
 def check_trajectories_with_forward_sensitivities(
@@ -157,8 +160,10 @@ def check_trajectories_with_forward_sensitivities(
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=1e-5, atol=1e-13)
+    _check_close(rdata['sx'], result_expected_sx, field="sx",
+                 rtol=1e-5, atol=1e-7)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
@@ -169,5 +174,7 @@ def check_trajectories_with_forward_sensitivities(
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=1e-10, atol=1e-12)
+    _check_close(rdata['sx'], result_expected_sx, field="sx",
+                 rtol=1e-10, atol=1e-9)
