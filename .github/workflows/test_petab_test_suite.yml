@@ -16,7 +16,7 @@ jobs:
   build:
     name: PEtab Testsuite
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     env:
       ENABLE_GCOV_COVERAGE: TRUE

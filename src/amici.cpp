@@ -238,6 +238,14 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     rdata->cpu_time_total = static_cast<double>(clock() - start_time_total)
                             * 1000.0 / CLOCKS_PER_SEC;
 
+    // verify that reported CPU times are plausible
+    gsl_EnsuresDebug(rdata->cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
+
     return rdata;
 }
 
@@ -300,29 +308,6 @@ AmiciApplication::errorF(const char* identifier, const char* format, ...) const
     auto str = printfToString(format, argptr);
     va_end(argptr);
     error(identifier, str);
-}
-
-int
-AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
-{
-    Expects(array.size()
-            <= static_cast<unsigned>(std::numeric_limits<int>::max()));
-
-    for (int idx = 0; idx < (int)array.size(); idx++) {
-        if (isNaN(array[idx])) {
-            warningF("AMICI:NaN",
-                     "AMICI encountered a NaN value for %s[%i]!",
-                     fun, idx);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-        if (isInf(array[idx])) {
-            warningF("AMICI:Inf",
-                     "AMICI encountered an Inf value for %s[%i]!",
-                     fun, idx);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-    }
-    return AMICI_SUCCESS;
 }
 
 } // namespace amici

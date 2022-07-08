@@ -2,6 +2,7 @@
 import os
 import re
 import shutil
+from pathlib import Path
 from urllib.request import urlopen
 
 import libsbml
@@ -182,23 +183,20 @@ def model_steadystate_module():
     shutil.rmtree(outdir, ignore_errors=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def model_units_module():
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_units',
-                             'model_units.xml')
+    sbml_file = Path(__file__).parent / '..' / 'examples' \
+                / 'example_units' / 'model_units.xml'
+    module_name = 'test_model_units'
+
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    outdir = 'test_model_units'
-    module_name = 'test_model_units'
-    sbml_importer.sbml2amici(model_name=module_name,
-                             output_dir=outdir)
+    with TemporaryDirectory() as outdir:
+        sbml_importer.sbml2amici(model_name=module_name,
+                                 output_dir=outdir)
 
-    model_module = amici.import_model_module(module_name=module_name,
-                                             module_path=outdir)
-    yield model_module
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(module_name=module_name,
+                                        module_path=outdir)
 
 
 def test_presimulation(sbml_example_presimulation_module):

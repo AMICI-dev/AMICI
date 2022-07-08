@@ -6,7 +6,7 @@ jobs:
     name: Tests Ubuntu
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     env:
       ENABLE_GCOV_COVERAGE: "TRUE"
@@ -87,7 +87,7 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-        && pip3 install coverage pytest pytest-cov \
+        && pip3 install coverage pytest pytest-cov pytest-rerunfailures \
         && pytest \
           --ignore-glob=*petab* \
           --cov=amici \

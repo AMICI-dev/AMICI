@@ -46,6 +46,29 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::qBdot_ss, "qBdot_ss"},
     {ModelQuantity::xBdot_ss, "xBdot_ss"},
     {ModelQuantity::JSparseB_ss, "JSparseB_ss"},
+    {ModelQuantity::deltax, "deltax"},
+    {ModelQuantity::deltasx, "deltasx"},
+    {ModelQuantity::deltaxB, "deltaxB"},
+    {ModelQuantity::k, "k"},
+    {ModelQuantity::p, "p"},
+    {ModelQuantity::ts, "ts"},
+    {ModelQuantity::dJydy, "dJydy"},
+    {ModelQuantity::dJydy_matlab, "dJydy"},
+    {ModelQuantity::deltaqB, "deltaqB"},
+    {ModelQuantity::dsigmaydp, "dsigmaydp"},
+    {ModelQuantity::dsigmaydy, "dsigmaydy"},
+    {ModelQuantity::dJydsigma, "dJydsigma"},
+    {ModelQuantity::dJydx, "dJydx"},
+    {ModelQuantity::dzdp, "dzdp"},
+    {ModelQuantity::dzdx, "dzdx"},
+    {ModelQuantity::dJrzdsigma, "dJrzdsigma"},
+    {ModelQuantity::dJrzdz, "dJrzdz"},
+    {ModelQuantity::dJzdsigma, "dJzdsigma"},
+    {ModelQuantity::dJzdz, "dJzdz"},
+    {ModelQuantity::drzdp, "drzdp"},
+    {ModelQuantity::drzdx, "drzdx"},
+    {ModelQuantity::dsigmazdp, "dsigmazdp"},
+
 };
 
 /**
@@ -154,7 +177,7 @@ Model::Model(ModelDimensions const & model_dimensions,
                       simulation_parameters_.pscale, state_.unscaledParameters);
     state_.fixedParameters = simulation_parameters_.fixedParameters;
     state_.plist = simulation_parameters_.plist;
-          
+
     root_initial_values_.resize(ne, true);
 
     /* If Matlab wrapped: dxdotdp is a full AmiVector,
@@ -1166,7 +1189,7 @@ void Model::addStateEventUpdate(AmiVector &x, const int ie, const realtype t,
             state_.h.data(), ie, xdot.data(), xdot_old.data());
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.deltax_, "deltax");
+        checkFinite(derived_state_.deltax_, ModelQuantity::deltax);
     }
 
     // update
@@ -1195,7 +1218,8 @@ void Model::addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
                  state_.total_cl.data());
 
         if (always_check_finite_) {
-            app->checkFinite(derived_state_.deltasx_, "deltasx");
+            checkFinite(derived_state_.deltasx_, ModelQuantity::deltasx,
+                        nplist());
         }
 
         amici_daxpy(nx_solver, 1.0, derived_state_.deltasx_.data(), 1,
@@ -1217,7 +1241,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
              xdot_old.data(), xB.data());
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.deltaxB_, "deltaxB");
+        checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB);
     }
 
     // apply update
@@ -1243,7 +1267,7 @@ void Model::addAdjointQuadratureEventUpdate(
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.deltaqB_, "deltaqB");
+        checkFinite(derived_state_.deltaqB_, ModelQuantity::deltaqB, nplist());
     }
 }
 
@@ -1292,6 +1316,8 @@ int Model::checkFinite(gsl::span<const realtype> array,
     case ModelQuantity::Jv:
     case ModelQuantity::JvB:
     case ModelQuantity::JDiag:
+    case ModelQuantity::deltax:
+    case ModelQuantity::deltaxB:
         if(hasStateIds()) {
             element_id = getStateIdsSolver()[flat_index];
         }
@@ -1304,6 +1330,16 @@ int Model::checkFinite(gsl::span<const realtype> array,
     case ModelQuantity::w:
         if(hasExpressionIds()) {
             element_id = getExpressionIds()[flat_index];
+        }
+        break;
+    case ModelQuantity::k:
+        if(hasFixedParameterIds()) {
+            element_id = getFixedParameterIds()[flat_index];
+        }
+        break;
+    case ModelQuantity::p:
+        if(hasParameterIds()) {
+            element_id = getParameterIds()[flat_index];
         }
         break;
     default:
@@ -1327,15 +1363,19 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   element_id.c_str()
                   );
 
-    // check upstream
-    app->checkFinite(state_.fixedParameters, "k");
-    app->checkFinite(state_.unscaledParameters, "p");
-    app->checkFinite(simulation_parameters_.ts_, "t");
-    if(!always_check_finite_) {
-        // don't check twice if always_check_finite_ is true
-        app->checkFinite(derived_state_.w_, "w");
+    // check upstream, without infinite recursion
+    if(model_quantity != ModelQuantity::k
+        && model_quantity != ModelQuantity::p
+        && model_quantity != ModelQuantity::ts)
+    {
+        checkFinite(state_.fixedParameters, ModelQuantity::k);
+        checkFinite(state_.unscaledParameters, ModelQuantity::p);
+        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
+        if(!always_check_finite_ && model_quantity != ModelQuantity::w) {
+            // don't check twice if always_check_finite_ is true
+            checkFinite(derived_state_.w_, ModelQuantity::w);
+        }
     }
-
     return AMICI_RECOVERABLE_ERROR;
 }
 
@@ -1368,12 +1408,49 @@ int Model::checkFinite(gsl::span<const realtype> array,
     case ModelQuantity::sy:
     case ModelQuantity::ssigmay:
     case ModelQuantity::dydp:
-        row_id += " " + getObservableIds()[row];
-        col_id += " " + getParameterIds()[plist(col)];
+    case ModelQuantity::dsigmaydp:
+        if(hasObservableIds())
+            row_id += " " + getObservableIds()[row];
+        if(hasParameterIds())
+            col_id += " " + getParameterIds()[plist(col)];
         break;
     case ModelQuantity::dydx:
-        row_id += " " + getObservableIds()[row];
-        col_id += " " + getStateIdsSolver()[col];
+        if(hasObservableIds())
+            row_id += " " + getObservableIds()[row];
+        if(hasStateIds())
+            col_id += " " + getStateIdsSolver()[col];
+        break;
+    case ModelQuantity::deltasx:
+        if(hasStateIds())
+            row_id += " " + getStateIdsSolver()[row];
+        if(hasParameterIds())
+            col_id += " " + getParameterIds()[plist(col)];
+        break;
+    case ModelQuantity::dJydy:
+    case ModelQuantity::dJydy_matlab:
+    case ModelQuantity::dJydsigma:
+        if(hasObservableIds())
+            col_id += " " + getObservableIds()[col];
+        break;
+    case ModelQuantity::dJydx:
+    case ModelQuantity::dzdx:
+    case ModelQuantity::drzdx:
+        if(hasStateIds())
+            col_id += " " + getStateIdsSolver()[col];
+        break;
+    case ModelQuantity::deltaqB:
+    case ModelQuantity::dzdp:
+    case ModelQuantity::drzdp:
+    case ModelQuantity::dsigmazdp:
+        if(hasParameterIds())
+            col_id += " " + getParameterIds()[plist(col)];
+        break;
+    case ModelQuantity::dsigmaydy:
+        if(hasObservableIds()) {
+            auto obs_ids = getObservableIds();
+            row_id += " " + obs_ids[row];
+            col_id += " " + obs_ids[col];
+        }
         break;
     default:
         break;
@@ -1399,10 +1476,10 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   );
 
     // check upstream
-    app->checkFinite(state_.fixedParameters, "k");
-    app->checkFinite(state_.unscaledParameters, "p");
-    app->checkFinite(simulation_parameters_.ts_, "t");
-    app->checkFinite(derived_state_.w_, "w");
+    checkFinite(state_.fixedParameters, ModelQuantity::k);
+    checkFinite(state_.unscaledParameters, ModelQuantity::p);
+    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
+    checkFinite(derived_state_.w_, ModelQuantity::w);
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1489,10 +1566,10 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
                   );
 
     // check upstream
-    app->checkFinite(state_.fixedParameters, "k");
-    app->checkFinite(state_.unscaledParameters, "p");
-    app->checkFinite(simulation_parameters_.ts_, "t");
-    app->checkFinite(derived_state_.w_, "w");
+    checkFinite(state_.fixedParameters, ModelQuantity::k);
+    checkFinite(state_.unscaledParameters, ModelQuantity::p);
+    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
+    checkFinite(derived_state_.w_, ModelQuantity::w);
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1789,7 +1866,8 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dsigmaydp_, "dsigmaydp");
+        checkFinite(derived_state_.dsigmaydp_, ModelQuantity::dsigmaydp,
+                    nplist());
     }
 }
 
@@ -1818,7 +1896,7 @@ void Model::fdsigmaydy(const int it, const ExpData *edata) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dsigmaydy_, "dsigmaydy");
+        checkFinite(derived_state_.dsigmaydy_, ModelQuantity::dsigmaydy, ny);
     }
 }
 
@@ -1871,9 +1949,9 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
             derived_state_.dJydy_.at(iyt).refresh();
 
             if (always_check_finite_) {
-                app->checkFinite(
-                            gsl::make_span(derived_state_.dJydy_.at(iyt).get()),
-                            "dJydy");
+                checkFinite(
+                    gsl::make_span(derived_state_.dJydy_.at(iyt).get()),
+                    ModelQuantity::dJydy, ny);
             }
         }
     } else {
@@ -1887,10 +1965,13 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    state_.fixedParameters.data(), derived_state_.y_.data(),
                    derived_state_.sigmay_.data(),
                    edata.getObservedDataPtr(it));
-        }
-        if (always_check_finite_) {
-            // get dJydy slice (ny) for current timepoint and observable
-            app->checkFinite(derived_state_.dJydy_matlab_, "dJydy");
+            if (always_check_finite_) {
+                // get dJydy slice (ny) for current timepoint and observable
+                checkFinite(
+                    gsl::span<realtype>(
+                        &derived_state_.dJydy_matlab_[iyt * ny * nJ], ny * nJ),
+                    ModelQuantity::dJydy, ny);
+            }
         }
     }
 }
@@ -1905,17 +1986,20 @@ void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData &edata) {
     fsigmay(it, &edata);
 
     for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (edata.isSetObservedData(it, iyt))
+        if (edata.isSetObservedData(it, iyt)) {
             // get dJydsigma slice (ny) for current timepoint and observable
             fdJydsigma(&derived_state_.dJydsigma_.at(iyt * ny * nJ), iyt,
                        state_.unscaledParameters.data(),
                        state_.fixedParameters.data(), derived_state_.y_.data(),
                        derived_state_.sigmay_.data(),
                        edata.getObservedDataPtr(it));
-    }
-
-    if (always_check_finite_) {
-        app->checkFinite(derived_state_.dJydsigma_, "dJydsigma");
+            if (always_check_finite_) {
+                checkFinite(
+                    gsl::span<realtype>(
+                        &derived_state_.dJydsigma_.at(iyt * ny * nJ), ny * nJ),
+                    ModelQuantity::dJydsigma, ny);
+            }
+        }
     }
 }
 
@@ -1997,7 +2081,7 @@ void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dJydx_, "dJydx");
+        checkFinite(derived_state_.dJydx_, ModelQuantity::dJydx, nx_solver);
     }
 }
 
@@ -2023,7 +2107,7 @@ void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dzdp_, "dzdp");
+        checkFinite(derived_state_.dzdp_, ModelQuantity::dzdp, nplist());
     }
 }
 
@@ -2038,7 +2122,7 @@ void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
           state_.h.data());
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dzdx_, "dzdx");
+        checkFinite(derived_state_.dzdx_, ModelQuantity::dzdx, nx_solver);
     }
 }
 
@@ -2064,7 +2148,7 @@ void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.drzdp_, "drzdp");
+        checkFinite(derived_state_.drzdp_, ModelQuantity::drzdp, nplist());
     }
 }
 
@@ -2079,7 +2163,7 @@ void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
            state_.h.data());
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.drzdx_, "drzdx");
+        checkFinite(derived_state_.drzdx_, ModelQuantity::drzdx, nx_solver);
     }
 }
 
@@ -2141,7 +2225,8 @@ void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
     }
 
     if (always_check_finite_) {
-        app->checkFinite(derived_state_.dsigmazdp_, "dsigmazdp");
+        checkFinite(derived_state_.dsigmazdp_, ModelQuantity::dsigmazdp,
+                    nplist());
     }
 }
 
@@ -2162,11 +2247,14 @@ void Model::fdJzdz(const int ie, const int nroots, const realtype t,
                    state_.fixedParameters.data(),
                    derived_state_.z_.data(), derived_state_.sigmaz_.data(),
                    edata.getObservedEventsPtr(nroots));
+            if (always_check_finite_) {
+                checkFinite(
+                    gsl::span<realtype>(
+                        &derived_state_.dJzdz_.at(iztrue * nz * nJ),
+                        nz * nJ),
+                    ModelQuantity::dJzdz, nz);
+            }
         }
-    }
-
-    if (always_check_finite_) {
-        app->checkFinite(derived_state_.dJzdz_, "dJzdz");
     }
 }
 
@@ -2187,11 +2275,14 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
                        state_.fixedParameters.data(), derived_state_.z_.data(),
                        derived_state_.sigmaz_.data(),
                        edata.getObservedEventsPtr(nroots));
+            if (always_check_finite_) {
+                checkFinite(
+                    gsl::span<realtype>(
+                        &derived_state_.dJzdsigma_.at(iztrue * nz * nJ),
+                        nz * nJ),
+                    ModelQuantity::dJzdsigma, nz);
+            }
         }
-    }
-
-    if (always_check_finite_) {
-        app->checkFinite(derived_state_.dJzdsigma_, "dJzdsigma");
     }
 }
 
@@ -2303,11 +2394,14 @@ void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
                     state_.unscaledParameters.data(),
                     state_.fixedParameters.data(), derived_state_.rz_.data(),
                     derived_state_.sigmaz_.data());
+            if (always_check_finite_) {
+                checkFinite(
+                    gsl::span<realtype>(
+                        &derived_state_.dJrzdz_.at(iztrue * nz * nJ),
+                        nz * nJ),
+                    ModelQuantity::dJrzdz, nz);
+            }
         }
-    }
-
-    if (always_check_finite_) {
-        app->checkFinite(derived_state_.dJrzdz_, "dJrzdz");
     }
 }
 
@@ -2327,11 +2421,14 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
                         state_.unscaledParameters.data(),
                         state_.fixedParameters.data(), derived_state_.rz_.data(),
                         derived_state_.sigmaz_.data());
+            if (always_check_finite_) {
+                checkFinite(
+                    gsl::span<realtype>(
+                        &derived_state_.dJrzdsigma_.at(iztrue * nz * nJ),
+                        nz * nJ),
+                    ModelQuantity::dJrzdsigma, nz);
+            }
         }
-    }
-
-    if (always_check_finite_) {
-        app->checkFinite(derived_state_.dJrzdsigma_, "dJrzdsigma");
     }
 }
 

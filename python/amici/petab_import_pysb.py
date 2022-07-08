@@ -314,6 +314,7 @@ def import_model_pysb(
         petab_problem: PysbPetabProblem,
         model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
+        model_name: Optional[str] = None,
         **kwargs
 ) -> None:
     """
@@ -329,11 +330,13 @@ def import_model_pysb(
     :param verbose:
         Print/log extra information.
 
+    :param model_name:
+        Name of the generated model module
+
     :param kwargs:
         Additional keyword arguments to be passed to
         :meth:`amici.pysb_import.pysb2amici`.
     """
-
     set_log_level(logger, verbose)
 
     logger.info("Importing model ...")
@@ -374,7 +377,10 @@ def import_model_pysb(
             observable_table)
 
     from amici.pysb_import import pysb2amici
-    pysb2amici(pysb_model, model_output_dir, verbose=True,
+    pysb2amici(model=pysb_model,
+               output_dir=model_output_dir,
+               model_name=model_name,
+               verbose=True,
                observables=observables,
                sigmas=sigmas,
                constant_parameters=constant_parameters,
