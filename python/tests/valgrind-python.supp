@@ -665,3 +665,41 @@
    ...
    obj:/usr/bin/python3.*
 }
+
+
+{
+   Python lookdict
+   Memcheck:Cond
+   fun:lookdict
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python find_empty_slot
+   Memcheck:Value8
+   fun:find_empty_slot
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python dictkeys_set_index
+   Memcheck:Value8
+   fun:dictkeys_set_index
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python _copy_characters
+   Memcheck:Cond
+   fun:memmove
+   fun:memcpy
+   fun:_copy_characters
+   fun:unicode_concatenate
+   ...
+}
