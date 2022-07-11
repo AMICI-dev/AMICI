@@ -23,4 +23,5 @@ PYTHONMALLOC=malloc valgrind \
   --leak-check=full \
   --gen-suppressions=all \
   -v \
-  python -m pytest -vv --ignore-glob=*petab*
+  python -m pytest -vv --ignore-glob=*petab* \
+    -k "not test_sbml2amici_observable_dependent_error"
