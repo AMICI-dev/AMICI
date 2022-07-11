@@ -15,7 +15,7 @@ source "${amici_path}"/build/venv/bin/activate
 pip install scipy h5py pytest
 
 # PEtab tests are run separately
-PYTHONMALLOC=malloc python -m pytest -vv --ignore-glob=*petab* \
+python -m pytest -vv --ignore-glob=*petab* \
     -k "not test_sbml2amici_observable_dependent_error"
 
 #PYTHONMALLOC=malloc valgrind \
