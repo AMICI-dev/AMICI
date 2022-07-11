@@ -703,3 +703,13 @@
    fun:unicode_concatenate
    ...
 }
+
+{
+   Python _copy_characters
+   Memcheck:Value8
+   fun:memmove
+   fun:memcpy
+   fun:_copy_characters
+   fun:unicode_concatenate
+   ...
+}
