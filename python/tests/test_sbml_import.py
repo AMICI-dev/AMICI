@@ -43,15 +43,15 @@ def test_sbml2amici_no_observables(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_sbml2amici_no_observables"
     with TemporaryDirectory() as tmpdir:
-        sbml_importer.sbml2amici(model_name="test",
+        sbml_importer.sbml2amici(model_name=model_name,
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False)
 
         # Ensure import succeeds (no missing symbols)
-        module_module = amici.import_model_module("test", tmpdir)
+        module_module = amici.import_model_module(model_name, tmpdir)
         assert hasattr(module_module, 'getModel')
 
 
@@ -60,11 +60,11 @@ def test_sbml2amici_nested_observables_fail(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_sbml2amici_nested_observables_fail"
     with TemporaryDirectory() as tmpdir:
         with pytest.raises(ValueError, match="(?i)nested"):
             sbml_importer.sbml2amici(
-                model_name="test",
+                model_name=model_name,
                 output_dir=tmpdir,
                 observables={'outer': {'formula': 'inner'},
                              'inner': {'formula': 'S1'}},
