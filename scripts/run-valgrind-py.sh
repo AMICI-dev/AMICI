@@ -15,7 +15,8 @@ source "${amici_path}"/build/venv/bin/activate
 pip install scipy h5py pytest
 
 # PEtab tests are run separately
-python -m pytest -vv --ignore-glob=*petab* --ignore-glob=*petab* \
+python -m pytest -vv --ignore-glob=*petab* \
+  --ignore-glob=test_sbml_import_special_functions.py \
   --ignore-glob=test_sbml_import.py \
   -k "not test_sbml2amici_observable_dependent_error"
 
