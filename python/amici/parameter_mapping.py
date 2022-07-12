@@ -137,7 +137,10 @@ class ParameterMapping(Sequence):
         yield from self.parameter_mappings
 
     def __getitem__(self, item) -> ParameterMapping:
-        return ParameterMapping(self.parameter_mappings[item])
+        result = self.parameter_mappings[item]
+        if isinstance(result, ParameterMappingForCondition):
+            return result
+        return ParameterMapping(result)
 
     def __len__(self):
         return len(self.parameter_mappings)
