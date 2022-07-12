@@ -2,6 +2,13 @@
 
 ## v0.X Series
 
+### v0.11.31 (2022-07-12)
+
+Fixes:
+* Fixed `ParameterMapping.__getitem__` to either return a
+  `ParameterMappingForCondition` or a new `ParameterMapping`, but not a list
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1826
+
 ### v0.11.30 (2022-07-07)
 
 Features:
