@@ -136,7 +136,9 @@ class ParameterMapping(Sequence):
     def __iter__(self):
         yield from self.parameter_mappings
 
-    def __getitem__(self, item) -> ParameterMapping:
+    def __getitem__(
+            self, item
+    ) -> Union[ParameterMapping, ParameterMappingForCondition]:
         result = self.parameter_mappings[item]
         if isinstance(result, ParameterMappingForCondition):
             return result
