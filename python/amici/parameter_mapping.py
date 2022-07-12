@@ -13,7 +13,7 @@ While the parameter mapping can be used directly with AMICI, it was developed
 for usage together with PEtab, for which the whole workflow of generating
 the mapping is automatized.
 """
-
+from __future__ import annotations
 
 import numbers
 import warnings
@@ -136,8 +136,8 @@ class ParameterMapping(Sequence):
     def __iter__(self):
         yield from self.parameter_mappings
 
-    def __getitem__(self, item):
-        return self.parameter_mappings[item]
+    def __getitem__(self, item) -> ParameterMapping:
+        return ParameterMapping(self.parameter_mappings[item])
 
     def __len__(self):
         return len(self.parameter_mappings)
