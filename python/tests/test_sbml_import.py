@@ -311,8 +311,8 @@ def model_test_likelihoods():
                                  f'/ sigma{str_symbol}',
     }
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'model_test_likelihoods'
+    outdir = 'model_test_likelihoods'
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=outdir,
@@ -395,8 +395,8 @@ def test_likelihoods_error():
     # define different noise models
     noise_distributions = {'o1': 'nörmal'}
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'test_likelihoods_error'
+    outdir = 'test_likelihoods_error'
     with pytest.raises(ValueError):
         sbml_importer.sbml2amici(
             model_name=module_name,
