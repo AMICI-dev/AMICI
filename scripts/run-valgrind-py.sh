@@ -10,13 +10,18 @@ if [[ -z "${BNGPATH}" ]]; then
     export BNGPATH=${amici_path}/ThirdParty/BioNetGen-2.7.0
 fi
 
-cd "${amici_path}"/python/tests
+#cd "${amici_path}"/python/tests
 source "${amici_path}"/build/venv/bin/activate
 pip install scipy h5py pytest
-pip uninstall wurlitzer
 # PEtab tests are run separately
-strace python -m pytest -vv --ignore-glob=*petab* \
-  --ignore-glob=test_sbml_import_special_functions.py
+#python -m pytest -vv --ignore-glob=*petab* \
+#  --ignore-glob=test_sbml_import_special_functions.py
+source build/venv/bin/activate \
+&& pip3 install coverage pytest pytest-cov pytest-rerunfailures \
+&& pytest \
+  --ignore-glob=*petab* \
+  ${AMICI_DIR}/python/tests
+
 
 #PYTHONMALLOC=malloc valgrind \
 #  --suppressions=valgrind-python.supp \
