@@ -14,7 +14,7 @@ jobs:
     name: Tests Valgrind
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -42,6 +42,7 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
+            python3-venv \
             swig \
             valgrind \
             libboost-math-dev
