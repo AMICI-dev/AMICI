@@ -63,7 +63,7 @@ def _imported_from_setup() -> bool:
     """Check whether this module is imported from `setup.py`"""
 
     from inspect import getouterframes, currentframe
-
+    import sysconfig
     # in case we are imported from setup.py, this will be the AMICI package
     # root directory (otherwise it is most likely the Python library directory,
     # we are not interested in)
@@ -75,7 +75,10 @@ def _imported_from_setup() -> bool:
         # requires the AMICI extension during its installation, but seems
         # unlikely...
         frame_path = os.path.realpath(os.path.expanduser(frame.filename))
-        if frame_path == os.path.join(package_root, 'setup.py'):
+        if frame_path in (
+                os.path.join(package_root, 'setup.py'),
+                f"{sysconfig.get_path('purelib')}/setuptools/build_meta.py"
+        ):
             return True
 
     return False
