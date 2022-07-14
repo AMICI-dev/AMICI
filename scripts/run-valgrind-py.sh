@@ -20,7 +20,7 @@ source build/venv/bin/activate \
 && pip3 install coverage pytest pytest-cov pytest-rerunfailures \
 && pytest \
   --ignore-glob=*petab* \
-  ${AMICI_DIR}/python/tests
+  ${amici_path}/python/tests
 
 
 #PYTHONMALLOC=malloc valgrind \
