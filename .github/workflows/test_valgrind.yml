@@ -43,7 +43,8 @@ jobs:
             libboost-serialization-dev \
             libhdf5-serial-dev \
             swig \
-            valgrind
+            valgrind \
+            libboost-math-dev
 
     - name: Build AMICI
       run: |
