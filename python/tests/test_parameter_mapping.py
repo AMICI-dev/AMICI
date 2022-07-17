@@ -55,3 +55,6 @@ def test_parameter_mapping():
     parameter_mapping.append(par_map_for_condition)
 
     assert len(parameter_mapping) == 1
+
+    assert isinstance(parameter_mapping[0], ParameterMappingForCondition)
+    assert isinstance(parameter_mapping[:], ParameterMapping)
