@@ -2,6 +2,12 @@
 
 ## v0.X Series
 
+### v0.11.32 (2022-07-15)
+
+Fixes:
+* Fixed `ImportError`s during package installation with recent setuptools
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1830
+
 ### v0.11.31 (2022-07-12)
 
 Fixes:
