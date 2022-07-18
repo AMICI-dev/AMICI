@@ -43,15 +43,15 @@ def test_sbml2amici_no_observables(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_sbml2amici_no_observables"
     with TemporaryDirectory() as tmpdir:
-        sbml_importer.sbml2amici(model_name="test",
+        sbml_importer.sbml2amici(model_name=model_name,
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False)
 
         # Ensure import succeeds (no missing symbols)
-        module_module = amici.import_model_module("test", tmpdir)
+        module_module = amici.import_model_module(model_name, tmpdir)
         assert hasattr(module_module, 'getModel')
 
 
@@ -60,11 +60,11 @@ def test_sbml2amici_nested_observables_fail(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_sbml2amici_nested_observables_fail"
     with TemporaryDirectory() as tmpdir:
         with pytest.raises(ValueError, match="(?i)nested"):
             sbml_importer.sbml2amici(
-                model_name="test",
+                model_name=model_name,
                 output_dir=tmpdir,
                 observables={'outer': {'formula': 'inner'},
                              'inner': {'formula': 'S1'}},
@@ -78,15 +78,15 @@ def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_nosensi"
     with TemporaryDirectory() as tmpdir:
-        sbml_importer.sbml2amici(model_name="test",
+        sbml_importer.sbml2amici(model_name=model_name,
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False,
                                  generate_sensitivity_code=False)
 
-        model_module = amici.import_model_module(module_name='test',
+        model_module = amici.import_model_module(module_name=model_name,
                                                  module_path=tmpdir)
 
         model = model_module.getModel()
@@ -114,16 +114,17 @@ def observable_dependent_error_model(simple_sbml_model):
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
 
+    model_name = "observable_dependent_error_model"
     with TemporaryDirectory() as tmpdir:
         sbml_importer.sbml2amici(
-            model_name="test",
+            model_name=model_name,
             output_dir=tmpdir,
             observables={'observable_s1': {'formula': 'S1'},
                          'observable_s1_scaled': {'formula': '0.5 * S1'}},
             sigmas={'observable_s1': '0.1 + relative_sigma * observable_s1',
                     'observable_s1_scaled': '0.02 * observable_s1_scaled'},
         )
-        yield amici.import_model_module(module_name='test',
+        yield amici.import_model_module(module_name=model_name,
                                         module_path=tmpdir)
 
 
@@ -176,9 +177,8 @@ def model_steadystate_module():
         constant_parameters=['k0'],
         sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
-    model_module = amici.import_model_module(module_name=module_name,
-                                             module_path=outdir)
-    yield model_module
+    yield amici.import_model_module(module_name=module_name,
+                                    module_path=outdir)
 
     shutil.rmtree(outdir, ignore_errors=True)
 
@@ -311,8 +311,8 @@ def model_test_likelihoods():
                                  f'/ sigma{str_symbol}',
     }
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'model_test_likelihoods'
+    outdir = 'model_test_likelihoods'
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=outdir,
@@ -395,8 +395,8 @@ def test_likelihoods_error():
     # define different noise models
     noise_distributions = {'o1': 'nörmal'}
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'test_likelihoods_error'
+    outdir = 'test_likelihoods_error'
     with pytest.raises(ValueError):
         sbml_importer.sbml2amici(
             model_name=module_name,

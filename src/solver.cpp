@@ -174,6 +174,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
         calcIC(model->getTimepoint(1));
 
     cpu_time_ = 0.0;
+    cpu_timeB_ = 0.0;
 }
 
 void Solver::setupB(int *which, const realtype tf, Model *model,
@@ -206,7 +207,6 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
 
     setStabLimDetB(*which, stldet_);
 
-    cpu_timeB_ = 0.0;
 }
 
 void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &x0,
