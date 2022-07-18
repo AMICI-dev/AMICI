@@ -266,17 +266,19 @@ def create_parameter_mapping(
     if isinstance(simulation_conditions, list):
         simulation_conditions = pd.DataFrame(data=simulation_conditions)
 
+    from petab.models import MODEL_TYPE_SBML
     # Because AMICI globalizes all local parameters during model import,
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
-    if petab_problem.sbml_document:
-        converter_config = libsbml.SBMLLocalParameterConverter() \
-            .getDefaultProperties()
-        petab_problem.sbml_document.convert(converter_config)
-    else:
-        logger.debug("No petab_problem.sbml_document is set. Cannot convert "
-                     "SBML LocalParameters. If the model contains "
-                     "LocalParameters, parameter mapping will fail.")
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        if petab_problem.sbml_document:
+            converter_config = libsbml.SBMLLocalParameterConverter() \
+                .getDefaultProperties()
+            petab_problem.sbml_document.convert(converter_config)
+        else:
+            logger.debug("No petab_problem.sbml_document is set. Cannot "
+                         "convert SBML LocalParameters. If the model contains "
+                         "LocalParameters, parameter mapping will fail.")
 
     default_parameter_mapping_kwargs = {
         "warn_unmapped": False,
@@ -294,7 +296,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            sbml_model=petab_problem.sbml_model,
+            model=petab_problem.model,
             **dict(default_parameter_mapping_kwargs,
                    **parameter_mapping_kwargs)
         )

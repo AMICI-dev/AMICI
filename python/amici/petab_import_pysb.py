@@ -6,19 +6,14 @@ Import a model in the PySB-adapted :mod:`petab`
 """
 
 import logging
-import os
-from itertools import chain
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple, Union
+from typing import Optional, Union
 
-import libsbml
 import petab
 import pysb
 import sympy as sp
-from petab.C import (CONDITION_FILES, CONDITION_NAME, FORMAT_VERSION,
-                     MEASUREMENT_FILES, NOISE_FORMULA, OBSERVABLE_FILES,
-                     OBSERVABLE_FORMULA, PARAMETER_FILE, SBML_FILES,
-                     VISUALIZATION_FILES)
+from petab.C import (CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA)
+from petab.models.pysb_model import PySBModel
 
 from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
@@ -103,7 +98,12 @@ def import_model_pysb(
     logger.info("Importing model ...")
 
     observable_table = petab_problem.observable_df
-    pysb_model = petab_problem.pysb_model
+    if not isinstance(petab_problem.model, PySBModel):
+        raise ValueError("Not a PySB model")
+    pysb_model = petab_problem.model.model
+
+    # TODO create copy?
+    _add_observation_model(pysb_model, petab_problem)
 
     # For pysb, we only allow parameters in the condition table
     # those must be pysb model parameters (either natively, or output
@@ -115,14 +115,17 @@ def import_model_pysb(
             continue
 
         if x not in model_parameters:
+            # TODO
             raise NotImplementedError(
                 "For PySB PEtab import, only model parameters, but no states "
                 "or compartments are allowed in the condition table. "
                 f"Offending column: {x}"
             )
 
-    constant_parameters = petab_import.get_fixed_parameters(
-        petab_problem.sbml_model, petab_problem.condition_df)
+    # TODO
+    # constant_parameters = petab_import.get_fixed_parameters(
+    #     petab_problem.sbml_model, petab_problem.condition_df)
+    constant_parameters = []
 
     if observable_table is None:
         observables = None
