@@ -1,5 +1,10 @@
 name: Windows Tests
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
 
 jobs:
   build:
