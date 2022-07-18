@@ -8,23 +8,24 @@ function as defined by a PEtab problem
 import copy
 import logging
 import numbers
-from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
-                    Collection, Iterator)
+from typing import (Any, Collection, Dict, Iterator, List, Optional, Sequence,
+                    Tuple, Union)
 
-import amici
-from amici.sbml_import import get_species_initial
 import libsbml
 import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
 from petab.C import *  # noqa: F403
+from petab.models import MODEL_TYPE_SBML
 
-from . import AmiciModel, AmiciExpData
+import amici
+from amici.sbml_import import get_species_initial
+from . import AmiciExpData, AmiciModel
 from .logging import get_logger, log_execution_time
+from .parameter_mapping import (ParameterMapping, ParameterMappingForCondition,
+                                fill_in_parameters)
 from .petab_import import PREEQ_INDICATOR_ID, element_is_state
-from .parameter_mapping import (
-    fill_in_parameters, ParameterMappingForCondition, ParameterMapping)
 
 logger = get_logger(__name__)
 
@@ -266,7 +267,6 @@ def create_parameter_mapping(
     if isinstance(simulation_conditions, list):
         simulation_conditions = pd.DataFrame(data=simulation_conditions)
 
-    from petab.models import MODEL_TYPE_SBML
     # Because AMICI globalizes all local parameters during model import,
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
@@ -362,11 +362,8 @@ def create_parameter_mapping_for_condition(
     # ExpData.x0, but in the case of preequilibration this would not allow for
     # resetting initial states.
 
-    states_in_condition_table = [
-        col for col in petab_problem.condition_df
-        if element_is_state(petab_problem.sbml_model, col)
-    ]
-    if states_in_condition_table:
+    if states_in_condition_table := _get_states_in_condition_table(
+            petab_problem):
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
         # that it was not added by the user with a different meaning...)
@@ -592,12 +589,9 @@ def create_edata_for_condition(
         edata.id += "+" + condition.get(PREEQUILIBRATION_CONDITION_ID)
     ##########################################################################
     # enable initial parameters reinitialization
-    states_in_condition_table = [
-        col for col in petab_problem.condition_df
-        if not pd.isna(petab_problem.condition_df.loc[
-                           condition[SIMULATION_CONDITION_ID], col])
-           and element_is_state(petab_problem.sbml_model, col)
-    ]
+
+    states_in_condition_table = _get_states_in_condition_table(
+        petab_problem, condition=condition)
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
             and states_in_condition_table:
         state_ids = amici_model.getStateIds()
@@ -764,9 +758,9 @@ def rdatas_to_measurement_df(
     # iterate over conditions
     for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
-        y = rdata['y']
+        y = rdata.y
         # time array used in rdata
-        t = list(rdata['t'])
+        t = list(rdata.ts)
 
         # extract rows for condition
         cur_measurement_df = petab.get_rows_for_condition(
@@ -808,3 +802,21 @@ def rdatas_to_simulation_df(
                                   measurement_df=measurement_df)
 
     return df.rename(columns={MEASUREMENT: SIMULATION})
+
+
+def _get_states_in_condition_table(
+        petab_problem: petab.Problem,
+        condition: Union[Dict, pd.Series] = None,
+):
+    """Get list of states in the condition table"""
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        return [
+            col for col in petab_problem.condition_df
+            if element_is_state(petab_problem.sbml_model, col)
+            and (not condition or not pd.isna(
+                petab_problem.condition_df.loc[
+                    condition[SIMULATION_CONDITION_ID], col]
+            ))
+        ]
+    # TODO handle for pysb
+    return []
