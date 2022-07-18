@@ -14,7 +14,7 @@ import amici
 from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import PysbPetabProblem, import_petab_problem
+from amici.petab_import import import_petab_problem
 from amici.petab_objective import (create_parameterized_edatas,
                                    rdatas_to_measurement_df, simulate_petab)
 
@@ -24,10 +24,10 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 
 
-def test_case(case, model_type):
+def test_case(case, model_type, version):
     """Wrapper for _test_case for handling test outcomes"""
     try:
-        _test_case(case, model_type)
+        _test_case(case, model_type, version)
     except Exception as e:
         if isinstance(e, NotImplementedError) \
                 or "Timepoint-specific parameter overrides" in str(e):
@@ -39,33 +39,21 @@ def test_case(case, model_type):
             raise e
 
 
-def _test_case(case, model_type):
+def _test_case(case, model_type, version):
     """Run a single PEtab test suite case"""
     case = petabtests.test_id_str(case)
-    logger.debug(f"Case {case} [{model_type}]")
+    logger.debug(f"Case {case} [{model_type}] [{version}]")
 
     # load
-    if model_type == "sbml":
-        case_dir = petabtests.SBML_DIR / case
-        # import petab problem
-        yaml_file = case_dir / petabtests.problem_yaml_name(case)
-        problem = petab.Problem.from_yaml(yaml_file)
-    elif model_type == "pysb":
-        import pysb
-        pysb.SelfExporter.cleanup()
-        pysb.SelfExporter.do_export = True
-        case_dir = petabtests.PYSB_DIR / case
-        # import petab problem
-        yaml_file = case_dir / petabtests.problem_yaml_name(case)
-        problem = PysbPetabProblem.from_yaml(yaml_file,
-                                             flatten=case.startswith('0006'))
-    else:
-        raise ValueError(f"Unsupported model_type: {model_type}")
+    case_dir = petabtests.get_case_dir(case, model_type, version)
+    yaml_file = case_dir / petabtests.problem_yaml_name(case)
+    problem = petab.Problem.from_yaml(yaml_file)
 
     # compile amici model
-    if case.startswith('0006') and model_type != "pysb":
+    if case.startswith('0006'):
         petab.flatten_timepoint_specific_output_overrides(problem)
-    model_name = f"petab_{model_type}_test_case_{case}"
+    model_name = f"petab_{model_type}_test_case_{case}"\
+                 f"_{version.replace('.', '_')}"
     model_output_dir = f'amici_models/{model_name}'
     model = import_petab_problem(
         petab_problem=problem,
@@ -92,7 +80,7 @@ def _test_case(case, model_type):
     simulation_df = simulation_df.rename(
         columns={petab.MEASUREMENT: petab.SIMULATION})
     simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
-    solution = petabtests.load_solution(case, model_type)
+    solution = petabtests.load_solution(case, model_type, version=version)
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
@@ -176,19 +164,22 @@ def run():
 
     n_success = 0
     n_skipped = 0
-    cases = petabtests.get_cases('sbml')
-    for case in cases:
-        try:
-            test_case(case, 'sbml')
-            n_success += 1
-        except Skipped:
-            n_skipped += 1
-        except Exception as e:
-            # run all despite failures
-            logger.error(f"Case {case} failed.")
-            logger.error(e)
+    n_total = 0
+    for version in ("v1.0.0", "v2.0.0"):
+        cases = petabtests.get_cases('sbml', version=version)
+        n_total += len(cases)
+        for case in cases:
+            try:
+                test_case(case, 'sbml', version=version)
+                n_success += 1
+            except Skipped:
+                n_skipped += 1
+            except Exception as e:
+                # run all despite failures
+                logger.error(f"Case {case} failed.")
+                logger.error(e)
 
-    logger.info(f"{n_success} / {len(cases)} successful, "
+    logger.info(f"{n_success} / {n_total} successful, "
                 f"{n_skipped} skipped")
     if n_success != len(cases):
         sys.exit(1)
