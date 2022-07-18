@@ -13,7 +13,7 @@ import petabtests
 def petab_problem() -> petab.Problem:
     """Create a PEtab problem for use in tests."""
     test_case = '0001'
-    test_case_dir = Path(petabtests.SBML_DIR) / test_case
+    test_case_dir = petabtests.get_case_dir(test_case, "sbml", "v1.0.0")
     petab_yaml_path = test_case_dir / petabtests.problem_yaml_name(test_case)
     return petab.Problem.from_yaml(str(petab_yaml_path))
 
