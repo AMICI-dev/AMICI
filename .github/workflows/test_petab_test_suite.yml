@@ -58,7 +58,8 @@ jobs:
         run: |
           scripts/installAmiciSource.sh
 
-      - run: |
+      - name: Install petab
+        run: |
           source ./build/venv/bin/activate \
             && pip3 install wheel pytest shyaml pytest-cov pysb \
             && pip3 install \
