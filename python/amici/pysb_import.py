@@ -1195,8 +1195,7 @@ def _apply_conseration_law_sub(cl: ConservationLaw,
 
     :return: boolean flag indicating whether the substitution was applied
     """
-    coeff = cl['coefficients'].get(sub[0], 0.0)
-    if coeff == 0.0 or cl['state'] == sub[0]:
+    if not _state_in_cl_formula(sub[0], cl):
         return False
 
     del cl['coefficients'][sub[0]]
@@ -1216,6 +1215,27 @@ def _apply_conseration_law_sub(cl: ConservationLaw,
     return True
 
 
+def _state_in_cl_formula(
+        state: sp.Symbol, cl: ConservationLaw
+) -> bool:
+    """
+    Checks whether state appears in the formula the provided cl
+
+    :param state:
+        state
+
+    :param cl:
+        conservation law
+
+    :return:
+        boolean indicator
+    """
+    if cl['state'] == state:
+        return False
+
+    return cl['coefficients'].get(state, 0.0) != 0.0
+
+
 def _get_conservation_law_subs(
         conservation_laws: List[ConservationLaw]
 ) -> List[Tuple[sp.Symbol, Dict[sp.Symbol, sp.Expr]]]:
@@ -1233,9 +1253,8 @@ def _get_conservation_law_subs(
     return [
         (cl['state'], cl['coefficients']) for cl in conservation_laws
         if any(
-            cl['state'] in other_cl['coefficients']
+            _state_in_cl_formula(cl['state'], other_cl)
             for other_cl in conservation_laws
-            if other_cl != cl
         )
     ]
 
