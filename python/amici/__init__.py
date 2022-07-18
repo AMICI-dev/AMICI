@@ -69,6 +69,7 @@ def _imported_from_setup() -> bool:
     # root directory (otherwise it is most likely the Python library directory,
     # we are not interested in)
     package_root = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
+
     for frame in getouterframes(currentframe(), context=0):
         # Need to compare the full path, in case a user tries to import AMICI
         # from a module `*setup.py`. Will still cause trouble if some package
