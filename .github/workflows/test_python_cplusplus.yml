@@ -11,7 +11,6 @@ jobs:
     env:
       ENABLE_GCOV_COVERAGE: "TRUE"
       CI_SONARCLOUD: "TRUE"
-      ENABLE_AMICI_DEBUGGING: "TRUE"
 
     strategy:
       matrix:
