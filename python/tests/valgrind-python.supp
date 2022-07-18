@@ -735,7 +735,7 @@
    fun:__libc_unwind_link_get
 }
 {
-   <insert_a_suppression_name_here>
+   _dl_catch_exception
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -755,7 +755,7 @@
 }
 
 {
-   <insert_a_suppression_name_here>
+   dlopen_implementation
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -775,7 +775,7 @@
 }
 
 {
-   <insert_a_suppression_name_here>
+   dlopen_implementation
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
