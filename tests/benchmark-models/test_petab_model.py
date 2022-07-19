@@ -3,8 +3,8 @@
 """
 Simulate a PEtab problem and compare results to reference values
 """
-
 import argparse
+import contextlib
 import importlib
 import logging
 import os
@@ -15,7 +15,7 @@ import yaml
 from amici.logging import get_logger
 from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
                                    LLH, RDATAS)
-from petab.visualize import plot_petab_problem
+from petab.visualize import plot_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
@@ -56,9 +56,7 @@ def parse_cli_args():
                         help='File to write simulation result to, in PEtab'
                         'measurement table format.')
 
-    args = parser.parse_args()
-
-    return args
+    return parser.parse_args()
 
 
 def main():
@@ -103,20 +101,16 @@ def main():
         sim_df.to_csv(index=False, sep="\t")
 
     if args.plot:
-        try:
+        with contextlib.suppress(NotImplementedError):
             # visualize fit
-            axs = plot_petab_problem(petab_problem=problem, sim_data=sim_df)
+            axs = plot_problem(petab_problem=problem, simulations_df=sim_df)
 
             # save figure
             for plot_id, ax in axs.items():
                 fig_path = os.path.join(args.model_directory,
-                                        args.model_name + "_" + plot_id
-                                        + "_vis.png")
+                                        f"{args.model_name}_{plot_id}_vis.png")
                 logger.info(f"Saving figure to {fig_path}")
                 ax.get_figure().savefig(fig_path, dpi=150)
-
-        except NotImplementedError:
-            pass
 
     if args.check:
         references_yaml = os.path.join(os.path.dirname(__file__),
