@@ -7,8 +7,12 @@
  * issues.
  */
 
-#include "amici/hdf5.h"
-#include "amici/amici.h"
+#include <amici/hdf5.h>
+
+#include <amici/model.h>
+#include <amici/solver.h>
+#include <amici/rdata.h>
+#include <amici/edata.h>
 
 #include <hdf5_hl.h>
 
@@ -685,11 +689,11 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "maxtime", &dbuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getMaxSteps());
+    ibuffer = gsl::narrow<int>(solver.getMaxSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "maxsteps", &ibuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getMaxStepsBackwardProblem());
+    ibuffer = gsl::narrow<int>(solver.getMaxStepsBackwardProblem());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "maxstepsB", &ibuffer, 1);
 
@@ -725,7 +729,7 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "sensi", &ibuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getNewtonMaxSteps());
+    ibuffer = gsl::narrow<int>(solver.getNewtonMaxSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_maxsteps", &ibuffer, 1);
 
@@ -748,11 +752,11 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     ibuffer = static_cast<int>(solver.getReturnDataReportingMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "rdrm", &ibuffer, 1);
-    
+
     ibuffer = static_cast<int>(solver.getNewtonStepSteadyStateCheck());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_step_steadystate_conv", &ibuffer, 1);
-    
+
     ibuffer = static_cast<int>(solver.getSensiSteadyStateCheck());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "check_sensi_steadystate_conv", &ibuffer, 1);
@@ -928,12 +932,12 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     static_cast<RDataReporting>(
                         getIntScalarAttribute(file, datasetPath, "rdrm")));
     }
-    
+
     if(attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
         solver.setNewtonStepSteadyStateCheck(
                     getIntScalarAttribute(file, datasetPath, "newton_step_steadystate_conv"));
     }
-    
+
     if(attributeExists(file, datasetPath, "check_sensi_steadystate_conv")) {
         solver.setSensiSteadyStateCheck(
                     getIntScalarAttribute(file, datasetPath, "check_sensi_steadystate_conv"));

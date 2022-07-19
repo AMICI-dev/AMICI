@@ -8,9 +8,11 @@
 
 #include "amici/interface_matlab.h"
 
+#include "amici/amici.h"
 #include "amici/model.h"
 #include "amici/exception.h"
 #include "amici/edata.h"
+#include "amici/solver.h"
 #include "amici/returndata_matlab.h"
 
 #include <assert.h>
@@ -20,7 +22,7 @@
 
 namespace amici {
 
-    int dbl2int(const double x);
+int dbl2int(double const x);
 
 /**
  * @brief The mexRhsArguments enum takes care of the ordering of mex file
@@ -60,11 +62,12 @@ char amici_blasCBlasTransToBlasTrans(BLASTranspose trans) {
     throw std::invalid_argument("Invalid argument to amici_blasCBlasTransToBlasTrans");
 }
 
-void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
-                 BLASTranspose TransB, const int M, const int N,
-                 const int K, const double alpha, const double *A,
-                 const int lda, const double *B, const int ldb,
-                 const double beta, double *C, const int ldc) {
+void amici_dgemm(
+    BLASLayout layout, BLASTranspose TransA, BLASTranspose TransB, int const M,
+    int const N, int const K, double const alpha, double const* A,
+    int const lda, double const* B, int const ldb, double const beta, double* C,
+    int const ldc
+) {
     assert(layout == BLASLayout::colMajor);
 
     const ptrdiff_t M_ = M;
@@ -73,18 +76,19 @@ void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
     const ptrdiff_t lda_ = lda;
     const ptrdiff_t ldb_ = ldb;
     const ptrdiff_t ldc_ = ldc;
-    const char transA = amici_blasCBlasTransToBlasTrans(TransA);
-    const char transB = amici_blasCBlasTransToBlasTrans(TransB);
+    char const transA = amici_blasCBlasTransToBlasTrans(TransA);
+    char const transB = amici_blasCBlasTransToBlasTrans(TransB);
 
     FORTRAN_WRAPPER(dgemm)(&transA, &transB,
                            &M_, &N_, &K_,
                            &alpha, A, &lda_, B, &ldb_, &beta, C, &ldc_);
 }
 
-void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
-                 const int M, const int N, const double alpha, const double *A,
-                 const int lda, const double *X, const int incX,
-                 const double beta, double *Y, const int incY) {
+void amici_dgemv(
+    BLASLayout layout, BLASTranspose TransA, int const M, int const N,
+    double const alpha, double const* A, int const lda, double const* X,
+    int const incX, double const beta, double* Y, int const incY
+) {
     assert(layout == BLASLayout::colMajor);
 
     const ptrdiff_t M_ = M;
@@ -92,12 +96,14 @@ void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
     const ptrdiff_t lda_ = lda;
     const ptrdiff_t incX_ = incX;
     const ptrdiff_t incY_ = incY;
-    const char transA = amici_blasCBlasTransToBlasTrans(TransA);
+    char const transA = amici_blasCBlasTransToBlasTrans(TransA);
 
     FORTRAN_WRAPPER(dgemv)(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
 }
 
-void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y, int incy) {
+void amici_daxpy(
+    int n, double alpha, double const* x, int const incx, double* y, int incy
+) {
 
     const ptrdiff_t n_ = n;
     const ptrdiff_t incx_ = incx;
@@ -111,16 +117,16 @@ void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y
   * @param length Number of elements in array
   * @return std::vector with data from array
   */
-std::vector<realtype> mxArrayToVector(const mxArray *array, int length) {
+std::vector<realtype> mxArrayToVector(mxArray const* array, int length) {
     return {mxGetPr(array), mxGetPr(array) + length};
 }
 
-std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
-                               Model const &model) {
+std::unique_ptr<ExpData>
+expDataFromMatlabCall(mxArray const* prhs[], Model const& model) {
     if (!mxGetPr(prhs[RHS_DATA]))
         return nullptr;
 
-    auto edata = std::unique_ptr<ExpData>(new ExpData(model));
+    auto edata = std::make_unique<ExpData>(model);
 
     // Y
     if (mxArray *dataY = mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
@@ -239,14 +245,13 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
   *  @param x input
   *  @return int_x casted value
   */
-int dbl2int(const double x){
+int dbl2int(double const x) {
     if((std::round(x)-x) != 0.0)
         throw AmiException("Invalid non-integer value for integer option");
     return(static_cast<int>(x));
 }
 
-void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
-{
+void setSolverOptions(mxArray const* prhs[], int nrhs, Solver& solver) {
     if (mxGetPr(prhs[RHS_OPTIONS])) {
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "atol")) {
             solver.setAbsoluteTolerance(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "atol")));
@@ -327,8 +332,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
     }
 }
 
-void setModelData(const mxArray *prhs[], int nrhs, Model &model)
-{
+void setModelData(mxArray const* prhs[], int nrhs, Model& model) {
     if (mxGetPr(prhs[RHS_OPTIONS])) {
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "nmaxevent")) {
             model.setNMaxEvent(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "nmaxevent"))));
@@ -341,8 +345,8 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
         if (mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")) {
             if(mxGetM(a) == 1 && mxGetN(a) == 1) {
                 model.setParameterScale(static_cast<ParameterScaling>(dbl2int(mxGetScalar(a))));
-            } else if((mxGetM(a) == 1 && mxGetN(a) == model.np())
-                      || (mxGetN(a) == 1 && mxGetM(a) == model.np())) {
+            } else if((mxGetM(a) == 1 && gsl::narrow<int>(mxGetN(a)) == model.np())
+                       || (mxGetN(a) == 1 && gsl::narrow<int>(mxGetM(a)) == model.np())) {
                 auto pscaleArray = static_cast<double *>(mxGetData(a));
                 std::vector<ParameterScaling> pscale(model.np());
                 for(int ip = 0; ip < model.np(); ++ip) {
@@ -366,8 +370,10 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
 
     if (model.np() > 0) {
         if (mxGetPr(prhs[RHS_PARAMETERS])) {
-            if (mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS]) ==
-                    model.np()) {
+            if (gsl::narrow<int>(
+                    mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS])
+                )
+                == model.np()) {
                 model.setParameters(std::vector<double>(mxGetPr(prhs[RHS_PARAMETERS]),
                                                         mxGetPr(prhs[RHS_PARAMETERS])
                                                         + mxGetM(prhs[RHS_PARAMETERS]) * mxGetN(prhs[RHS_PARAMETERS])));
@@ -377,8 +383,10 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
 
     if (model.nk() > 0) {
         if (mxGetPr(prhs[RHS_CONSTANTS])) {
-            if (mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS]) ==
-                    model.nk()) {
+            if (gsl::narrow<int>(
+                    mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS])
+                )
+                == model.nk()) {
                 model.setFixedParameters(std::vector<double>(mxGetPr(prhs[RHS_CONSTANTS]),
                                                              mxGetPr(prhs[RHS_CONSTANTS])
                                                              + mxGetM(prhs[RHS_CONSTANTS]) * mxGetN(prhs[RHS_CONSTANTS])));
@@ -402,7 +410,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
             if (mxGetN(x0) != 1) {
                 throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-            if (mxGetM(x0) != model.nx_rdata) {
+            if (gsl::narrow<int>(mxGetM(x0)) != model.nx_rdata) {
                 throw AmiException("Number of columns in x0 field "
                                    "does not agree with number of "
                                    "model states!");
@@ -419,7 +427,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
             if (mxGetN(x0) != 1) {
                 throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-            if (mxGetM(x0) != model.nx_rdata) {
+            if (gsl::narrow<int>(mxGetM(x0)) != model.nx_rdata) {
                 throw AmiException("Number of columns in x0 field "
                                    "does not agree with number of "
                                    "model states!");
@@ -432,12 +440,12 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
         mxArray *sx0 = mxGetField(prhs[RHS_INITIALIZATION], 0, "sx0");
         if (sx0 && (mxGetM(sx0) * mxGetN(sx0)) > 0) {
             /* check dimensions */
-            if (mxGetN(sx0) != model.nplist()) {
+            if (gsl::narrow<int>(mxGetN(sx0)) != model.nplist()) {
                 throw AmiException("Number of rows in sx0 field "
                                    "does not agree with number of "
                                    "model parameters!");
             }
-            if (mxGetM(sx0) != model.nx_rdata) {
+            if (gsl::narrow<int>(mxGetM(sx0)) != model.nx_rdata) {
                 throw AmiException("Number of columns in sx0 "
                                    "field does not agree with "
                                    "number of model states!");
@@ -454,7 +462,6 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
 
 } // namespace amici
 
-
 /*!
  * mexFunction is the main interface function for the MATLAB interface. It reads
  * in input data (udata and edata) and
@@ -466,33 +473,17 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
  * @param nrhs number of input arguments of the matlab call
  * @param prhs pointer to the array of input arguments
  */
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    // use matlab error reporting
-    amici::AmiciApplication amiciApp;
-    amiciApp.warning = [](
-            std::string const& identifier,
-            std::string const& message){
-        mexWarnMsgIdAndTxt(identifier.c_str(), message.c_str());
-    };
-    amiciApp.error = [](
-            std::string const& identifier,
-            std::string const& message){
-        mexErrMsgIdAndTxt(identifier.c_str(), message.c_str());
-    };
-
+void mexFunction(int nlhs, mxArray* plhs[], int nrhs, mxArray const* prhs[]) {
     if (nlhs != 1) {
-        amiciApp.errorF("AMICI:mex:setup",
+        mexErrMsgIdAndTxt("AMICI:mex:setup",
                         "Incorrect number of output arguments (must be 1)!");
     } else if(nrhs < amici::RHS_NUMARGS_REQUIRED) {
-        amiciApp.errorF("AMICI:mex:setup",
+        mexErrMsgIdAndTxt("AMICI:mex:setup",
                         "Incorrect number of input arguments (must be at least 7)!");
     };
 
     auto model = amici::generic_model::getModel();
-    model->app = &amiciApp;
-
     auto solver = model->getSolver();
-    solver->app = &amiciApp;
     setModelData(prhs, nrhs, *model);
     setSolverOptions(prhs, nrhs, *solver);
 
@@ -501,15 +492,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         try {
             edata = amici::expDataFromMatlabCall(prhs, *model);
         } catch (amici::AmiException const& ex) {
-            amiciApp.errorF("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
+            mexErrMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
     } else if (solver->getSensitivityOrder() >= amici::SensitivityOrder::first &&
                solver->getSensitivityMethod() == amici::SensitivityMethod::adjoint) {
-        amiciApp.errorF("AMICI:mex:setup","No data provided!");
+        mexErrMsgIdAndTxt("AMICI:mex:setup","No data provided!");
     }
 
     /* ensures that plhs[0] is available */
     auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
     plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
 
+    for(auto const& msg: rdata->messages) {
+        auto identifier = "AMICI:simulation:" + msg.identifier;
+        mexWarnMsgIdAndTxt(identifier.c_str(), msg.message.c_str());
+    }
 }

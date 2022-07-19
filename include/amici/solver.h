@@ -1,13 +1,13 @@
 #ifndef AMICI_SOLVER_H
 #define AMICI_SOLVER_H
 
-#include "amici/amici.h"
 #include "amici/defines.h"
 #include "amici/sundials_linsol_wrapper.h"
-#include "amici/symbolic_functions.h"
 #include "amici/vector.h"
+#include "amici/logging.h"
 
 #include <cmath>
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <chrono>
@@ -19,9 +19,7 @@ class ForwardProblem;
 class BackwardProblem;
 class Model;
 class Solver;
-class AmiciApplication;
 
-extern AmiciApplication defaultContext;
 } // namespace amici
 
 // for serialization friend in Solver
@@ -55,12 +53,6 @@ class Solver {
      * @brief Default constructor
      */
     Solver() = default;
-
-    /**
-     * @brief Constructor
-     * @param app AMICI application context
-     */
-    Solver(AmiciApplication *app);
 
     /**
      * @brief Solver copy constructor
@@ -496,8 +488,8 @@ class Solver {
     double getMaxTime() const;
 
     /**
-     * @brief Set the maximum time allowed for integration
-     * @param maxtime Time in seconds
+     * @brief Set the maximum CPU time allowed for integration
+     * @param maxtime Time in seconds. Zero means infinite time.
      */
     void setMaxTime(double maxtime);
 
@@ -508,10 +500,13 @@ class Solver {
 
     /**
      * @brief Check whether maximum integration time was exceeded
+     * @param interval Only check the time every ``interval`` ths call to avoid
+     * potentially relatively expensive syscalls
+
      * @return True if the maximum integration time was exceeded,
      * false otherwise.
      */
-    bool timeExceeded() const;
+    bool timeExceeded(int interval = 1) const;
 
     /**
      * @brief returns the maximum number of solver steps for the backward
@@ -947,8 +942,8 @@ class Solver {
      */
     friend bool operator==(const Solver &a, const Solver &b);
 
-    /** AMICI context */
-    AmiciApplication *app = &defaultContext;
+    /** logger */
+    Logger *logger = nullptr;
 
   protected:
     /**
@@ -1611,16 +1606,16 @@ class Solver {
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
      */
-    InterpolationType interp_type_ {InterpolationType::hermite};
+    InterpolationType interp_type_ {InterpolationType::polynomial};
 
     /** maximum number of allowed integration steps */
     long int maxsteps_ {10000};
 
-    /** Maximum wall-time for integration in seconds */
-    std::chrono::duration<double, std::ratio<1>> maxtime_ {std::chrono::duration<double>::max()};
+    /** Maximum CPU-time for integration in seconds */
+    std::chrono::duration<double, std::ratio<1>> maxtime_ {0};
 
     /** Time at which solver timer was started */
-    mutable std::chrono::time_point<std::chrono::system_clock> starttime_;
+    mutable std::clock_t starttime_;
 
     /** linear solver for the forward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_;

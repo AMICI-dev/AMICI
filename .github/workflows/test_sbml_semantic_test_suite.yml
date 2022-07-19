@@ -8,9 +8,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
-      - python/amici/ode_export.py
-      - python/amici/sbml_import.py
-      - python/amici/import_utils.py
+      - python/sdist/amici/ode_export.py
+      - python/sdist/amici/sbml_import.py
+      - python/sdist/amici/import_utils.py
       - scripts/run-SBMLTestsuite.sh
       - tests/testSBMLSuite.py
       - tests/conftest.py
@@ -32,11 +32,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
     - name: apt

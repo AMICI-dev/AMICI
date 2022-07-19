@@ -24,7 +24,7 @@ endif
 include ../SuiteSparse_config.mk
 
 ifeq ($(USE_FORTRAN),0)
-    COMPILE = $(CC) $(CF) -c xerbla.c
+    COMPILE = "$(CC)" $(CF) -c xerbla.c
     DEPENDS = xerbla.c xerbla.h
 else
     COMPILE = $(F77) $(F77FLAGS) -c xerbla.f
@@ -51,7 +51,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(DEPENDS)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
 	$(COMPILE)
-	$(CC) $(SO_OPTS) xerbla.o -o $@
+	"$(CC)" $(SO_OPTS) xerbla.o -o $@
 	- $(RM) xerbla.o
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )

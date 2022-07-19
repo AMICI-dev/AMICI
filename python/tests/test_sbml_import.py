@@ -1,18 +1,24 @@
 """Tests related to amici.sbml_import"""
 import os
 import re
-import shutil
+from numbers import Number
 from pathlib import Path
 from urllib.request import urlopen
 
 import libsbml
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose, assert_array_equal
 
 import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory, \
+    skip_on_valgrind
+
+EXAMPLES_DIR = Path(__file__).parent / '..' / 'examples'
+STEADYSTATE_MODEL_FILE = (EXAMPLES_DIR / 'example_steadystate'
+                          / 'model_steadystate_scaled.xml')
 
 
 @pytest.fixture
@@ -55,6 +61,7 @@ def test_sbml2amici_no_observables(simple_sbml_model):
         assert hasattr(module_module, 'getModel')
 
 
+@skip_on_valgrind
 def test_sbml2amici_nested_observables_fail(simple_sbml_model):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model
@@ -128,6 +135,7 @@ def observable_dependent_error_model(simple_sbml_model):
                                         module_path=tmpdir)
 
 
+@skip_on_valgrind
 def test_sbml2amici_observable_dependent_error(observable_dependent_error_model):
     """Check gradients for model with observable-dependent error"""
     model_module = observable_dependent_error_model
@@ -137,8 +145,10 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
 
     # generate artificial data
     rdata = amici.runAmiciSimulation(model, solver)
-    assert np.allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0])
-    assert np.allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1])
+    assert_allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0],
+                    rtol=1.e-5, atol=1.e-8)
+    assert_allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1],
+                    rtol=1.e-5, atol=1.e-8)
     edata = amici.ExpData(rdata, 1.0, 0.0)
     edata.setObservedDataStdDev(np.nan)
 
@@ -154,11 +164,30 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
     check_derivatives(model, solver, edata)
 
 
-@pytest.fixture
+@skip_on_valgrind
+def test_logging_works(observable_dependent_error_model, caplog):
+    """Check that warnings are forwarded to Python logging"""
+    model_module = observable_dependent_error_model
+    model = model_module.getModel()
+    model.setTimepoints(np.linspace(0, 60, 61))
+    solver = model.getSolver()
+
+    # this will prematurely stop the simulation
+    solver.setMaxSteps(1)
+
+    rdata = amici.runAmiciSimulation(model, solver)
+    assert rdata.status != amici.AMICI_SUCCESS
+    assert "mxstep steps taken" in caplog.text
+
+@skip_on_valgrind
+def test_model_module_is_set(observable_dependent_error_model):
+    model_module = observable_dependent_error_model
+    assert isinstance(model_module.getModel().module, amici.ModelModule)
+
+
+@pytest.fixture(scope='session')
 def model_steadystate_module():
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_steadystate',
-                             'model_steadystate_scaled.xml')
+    sbml_file = STEADYSTATE_MODEL_FILE
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     observables = amici.assignmentRules2observables(
@@ -168,25 +197,22 @@ def model_steadystate_module():
         not variable.getId().endswith('_sigma')
     )
 
-    outdir = 'test_model_steadystate_scaled'
     module_name = 'test_model_steadystate_scaled'
-    sbml_importer.sbml2amici(
-        model_name=module_name,
-        output_dir=outdir,
-        observables=observables,
-        constant_parameters=['k0'],
-        sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            observables=observables,
+            constant_parameters=['k0'],
+            sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
-    yield amici.import_model_module(module_name=module_name,
-                                    module_path=outdir)
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(module_name=module_name,
+                                        module_path=outdir)
 
 
 @pytest.fixture(scope='session')
 def model_units_module():
-    sbml_file = Path(__file__).parent / '..' / 'examples' \
-                / 'example_units' / 'model_units.xml'
+    sbml_file = EXAMPLES_DIR / 'example_units' / 'model_units.xml'
     module_name = 'test_model_units'
 
     sbml_importer = amici.SbmlImporter(sbml_file)
@@ -241,13 +267,17 @@ def test_steadystate_simulation(model_steadystate_module):
     df_edata = amici.getDataObservablesAsDataFrame(model, edata)
     edata_reconstructed = amici.getEdataFromDataFrame(model, df_edata)
 
-    assert np.isclose(
+    assert_allclose(
         amici.ExpDataView(edata[0])['observedData'],
-        amici.ExpDataView(edata_reconstructed[0])['observedData']).all()
+        amici.ExpDataView(edata_reconstructed[0])['observedData'],
+        rtol=1.e-5, atol=1.e-8
+    )
 
-    assert np.isclose(
+    assert_allclose(
         amici.ExpDataView(edata[0])['observedDataStdDev'],
-        amici.ExpDataView(edata_reconstructed[0])['observedDataStdDev']).all()
+        amici.ExpDataView(edata_reconstructed[0])['observedDataStdDev'],
+        rtol=1.e-5, atol=1.e-8
+    )
 
     if len(edata[0].fixedParameters):
         assert list(edata[0].fixedParameters) \
@@ -261,17 +291,23 @@ def test_steadystate_simulation(model_steadystate_module):
         list(edata_reconstructed[0].fixedParametersPreequilibration)
 
     df_state = amici.getSimulationStatesAsDataFrame(model, edata, rdata)
-    assert np.isclose(rdata[0]['x'],
-                      df_state[list(model.getStateIds())].values).all()
+    assert_allclose(
+        rdata[0]['x'], df_state[list(model.getStateIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
 
     df_obs = amici.getSimulationObservablesAsDataFrame(model, edata, rdata)
-    assert np.isclose(rdata[0]['y'],
-                      df_obs[list(model.getObservableIds())].values).all()
+    assert_allclose(
+        rdata[0]['y'], df_obs[list(model.getObservableIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
     amici.getResidualsAsDataFrame(model, edata, rdata)
 
     df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
-    assert np.isclose(rdata[0]['w'],
-                      df_expr[list(model.getExpressionIds())].values).all()
+    assert_allclose(
+        rdata[0]['w'], df_expr[list(model.getExpressionIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
@@ -283,13 +319,46 @@ def test_steadystate_simulation(model_steadystate_module):
     _test_set_parameters_by_dict(model_steadystate_module)
 
 
+def test_solver_reuse(model_steadystate_module):
+    model = model_steadystate_module.getModel()
+    model.setTimepoints(np.linspace(0, 60, 60))
+    solver = model.getSolver()
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    rdata = amici.runAmiciSimulation(model, solver)
+    edata = amici.ExpData(rdata, 1, 0)
+
+    for sensi_method in (
+            amici.SensitivityMethod.forward,
+            amici.SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityMethod(sensi_method)
+        rdata1 = amici.runAmiciSimulation(model, solver, edata)
+        rdata2 = amici.runAmiciSimulation(model, solver, edata)
+
+        assert rdata1.status == amici.AMICI_SUCCESS
+
+        for attr in rdata1:
+            if 'time' in attr:
+                continue
+
+            val1 = getattr(rdata1, attr)
+            val2 = getattr(rdata2, attr)
+            msg = f"Values for {attr} do not match for sensitivity "\
+                  f"method {sensi_method}"
+            if isinstance(val1, np.ndarray):
+                assert_array_equal(val1, val2, err_msg=msg)
+            elif isinstance(val1, Number) and np.isnan(val1):
+                assert np.isnan(val2)
+            else:
+                assert val1 == val2, msg
+
+
+
 @pytest.fixture
 def model_test_likelihoods():
     """Test model for various likelihood functions."""
     # load sbml model
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_steadystate',
-                             'model_steadystate_scaled.xml')
+    sbml_file = STEADYSTATE_MODEL_FILE
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # define observables
@@ -312,21 +381,20 @@ def model_test_likelihoods():
     }
 
     module_name = 'model_test_likelihoods'
-    outdir = 'model_test_likelihoods'
-    sbml_importer.sbml2amici(
-        model_name=module_name,
-        output_dir=outdir,
-        observables=observables,
-        constant_parameters=['k0'],
-        noise_distributions=noise_distributions,
-    )
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            observables=observables,
+            constant_parameters=['k0'],
+            noise_distributions=noise_distributions,
+        )
 
-    yield amici.import_model_module(module_name=module_name,
-                                    module_path=outdir)
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(module_name=module_name,
+                                        module_path=outdir)
 
 
+@skip_on_valgrind
 def test_likelihoods(model_test_likelihoods):
     """Test the custom noise distributions used to define cost functions."""
     model = model_test_likelihoods.getModel()
@@ -382,11 +450,10 @@ def test_likelihoods(model_test_likelihoods):
         )
 
 
+@skip_on_valgrind
 def test_likelihoods_error():
     """Test whether wrong inputs lead to expected errors."""
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_steadystate',
-                             'model_steadystate_scaled.xml')
+    sbml_file = STEADYSTATE_MODEL_FILE
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # define observables
@@ -407,6 +474,7 @@ def test_likelihoods_error():
         )
 
 
+@skip_on_valgrind
 def test_units(model_units_module):
     """
     Test whether SBML import works for models using sbml:units annotations.
@@ -419,6 +487,7 @@ def test_units(model_units_module):
     assert rdata['status'] == amici.AMICI_SUCCESS
 
 
+@skip_on_valgrind
 @pytest.mark.skipif(os.name == 'nt',
                     reason='Avoid `CERTIFICATE_VERIFY_FAILED` error')
 def test_sympy_exp_monkeypatch():
@@ -429,8 +498,9 @@ def test_sympy_exp_monkeypatch():
     """
     url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
           'filename=BIOMD0000000529_url.xml'
-    importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
-                                  from_file=False)
+    importer = amici.SbmlImporter(
+        urlopen(url, timeout=20).read().decode('utf-8'), from_file=False
+    )
     module_name = 'BIOMD0000000529'
 
     with TemporaryDirectory() as outdir:
@@ -515,3 +585,40 @@ def _test_set_parameters_by_dict(model_module):
     assert model.getParameterByName(change_par_name) == new_par_val
     model.setParameterByName(change_par_name, old_par_val)
     assert model.getParameters() == old_parameter_values
+
+
+@pytest.mark.parametrize("extract_cse", [True, False])
+def test_code_gen_uses_cse(extract_cse):
+    """Check that code generation honors AMICI_EXTRACT_CSE"""
+    old_environ = os.environ.copy()
+    try:
+        os.environ["AMICI_EXTRACT_CSE"] = str(extract_cse)
+        sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
+        model_name = "test_code_gen_uses_cse"
+        with TemporaryDirectory() as tmpdir:
+            sbml_importer.sbml2amici(
+                model_name=model_name,
+                compile=False,
+                generate_sensitivity_code=False,
+                output_dir = tmpdir
+            )
+            xdot = Path(tmpdir, f'{model_name}_xdot.cpp').read_text()
+        assert ("__amici_cse_0 = " in xdot) == extract_cse
+    finally:
+        os.environ = old_environ
+
+
+def test_code_gen_uses_lhs_symbol_ids():
+    """Check that code generation uses symbol IDs instead of plain array
+    indices"""
+    sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
+    model_name = "test_code_gen_uses_lhs_symbol_ids"
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(
+            model_name=model_name,
+            compile=False,
+            generate_sensitivity_code=False,
+            output_dir=tmpdir
+        )
+        dwdx = Path(tmpdir, f'{model_name}_dwdx.cpp').read_text()
+    assert "dobservable_x1_dx1 = " in dwdx

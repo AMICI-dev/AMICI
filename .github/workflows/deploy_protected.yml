@@ -4,9 +4,10 @@ on:
     branches:
       - master
       - develop
+      - release**
   pull_request:
-    branches:
-      - master
+    paths:
+      - container/Dockerfile
   workflow_dispatch:
 
 jobs:
@@ -22,17 +23,22 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: actions/checkout@master
-    - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
+    - uses: actions/checkout@v3
+    - run: git archive -o container/amici.tar.gz --format=tar.gz HEAD
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@v4
       with:
         name: dweindl/amici
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        workdir: docker/
+        workdir: container/
         dockerfile: Dockerfile
         tag_names: true
+        platforms: linux/amd64,linux/arm64

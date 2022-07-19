@@ -529,17 +529,7 @@
    other
    Memcheck:Leak
    fun:realloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -547,17 +537,7 @@
    other
    Memcheck:Leak
    fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -734,25 +714,6 @@
    fun:__libc_unwind_link_get
    fun:__libc_unwind_link_get
 }
-{
-   _dl_catch_exception
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
-   fun:_dl_catch_exception
-}
 
 {
    dlopen_implementation
@@ -793,4 +754,10 @@
    fun:dlopen_implementation
    fun:dlopen@@GLIBC_2.34
    fun:_PyImport_FindSharedFuncptr
+}
+
+{
+   Python dictkeys_get_index
+   Memcheck:Value8
+   fun:dictkeys_get_index
 }

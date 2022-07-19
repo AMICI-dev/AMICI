@@ -1,7 +1,6 @@
 #include "amici/solver_cvodes.h"
 
 #include "amici/exception.h"
-#include "amici/misc.h"
 #include "amici/model_ode.h"
 #include "amici/sundials_linsol_wrapper.h"
 
@@ -113,11 +112,16 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
 
 void CVodeSolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/,
                                   const AmiVector &/*dx0*/) const {
-    /* We need to set the steadystate rhs function. Sundials doesn't have this
-       in its public API, so we have to change it in the solver memory,
-       as re-calling init would unset solver settings. */
+    // We need to set the steadystate rhs function. Sundials doesn't have this
+    // in its public API, so we have to change it in the solver memory,
+    // as re-calling init would unset solver settings.
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_f = fxBdot_ss;
+
+    // Since SUNDIALS v5.8.0, we also need to update the NlsRhs function,
+    // otherwise the old value of `cv_mem->cv_f` would still be used there and
+    // lead to incorrect simulation results.
+    CVodeSetNlsRhsFn(solver_memory_.get(), fxBdot_ss);
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
@@ -1032,7 +1036,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto solver = dynamic_cast<CVodeSolver const *>(typed_udata->second);
     Expects(model);
 
-    if(solver->timeExceeded()) {
+    if (solver->timeExceeded(500)) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
 
@@ -1068,7 +1072,7 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     auto solver = dynamic_cast<CVodeSolver const*>(typed_udata->second);
     Expects(model);
 
-    if(solver->timeExceeded()) {
+    if (solver->timeExceeded(500)) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
 

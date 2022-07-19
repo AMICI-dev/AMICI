@@ -1,6 +1,5 @@
 #include "amici/forwardproblem.h"
 
-#include "amici/cblas.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"
@@ -19,9 +18,9 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
     : model(model),
       solver(solver),
       edata(edata),
-      nroots_(static_cast<decltype (nroots_)::size_type>(model->ne), 0),
-      rootvals_(static_cast<decltype (rootvals_)::size_type>(model->ne), 0.0),
-      rval_tmp_(static_cast<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
+      nroots_(gsl::narrow<decltype (nroots_)::size_type>(model->ne), 0),
+      rootvals_(gsl::narrow<decltype (rootvals_)::size_type>(model->ne), 0.0),
+      rval_tmp_(gsl::narrow<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
       dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0),
       dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t_(model->t0()),
@@ -63,7 +62,7 @@ void ForwardProblem::workForwardProblem() {
     if (presimulate)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
-    
+
     if (model->ne && std::any_of(roots_found_.begin(), roots_found_.end(),
                                  [](int rf){return rf==1;}))
         handleEvent(&t0, false, true);
@@ -82,7 +81,7 @@ void ForwardProblem::workForwardProblem() {
                 handleEvent(&t0, false, true);
         }
     }
-    
+
     /* when computing adjoint sensitivity analysis with presimulation,
      we need to store sx after the reinitialization after preequilibration
      but before reinitialization after presimulation. As presimulation with ASA
@@ -248,11 +247,14 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
     if (secondevent > 0) {
         /* Secondary events may result in wrong forward sensitivities,
          * if the secondary event has a bolus... */
-        if (solver->computingFSA())
-            solver->app->warning("AMICI:simulation",
-                                 "Secondary event was triggered. Depending on "
-                                 "the bolus of the secondary event, forward "
-                                 "sensitivities can be incorrect.");
+        if (solver->computingFSA() && solver->logger)
+            solver->logger->log(
+                LogSeverity::warning,
+                "SECONDARY_EVENT",
+                "Secondary event was triggered. Depending on "
+                "the bolus of the secondary event, forward "
+                "sensitivities can be incorrect."
+            );
         handleEvent(tlastroot, true, false);
     }
 

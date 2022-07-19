@@ -17,12 +17,15 @@ if [ "${GITHUB_ACTIONS:-}" = true ] ||
   [ "${ENABLE_AMICI_DEBUGGING:-}" = TRUE ]; then
   # Running on CI server
   build_type="Debug"
+  # exceptions instead of terminate()
+  extra_cxx_flags=";-Dgsl_CONFIG_CONTRACT_VIOLATION_THROWS;-Dgsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1"
 else
   build_type="RelWithDebInfo"
+  extra_cxx_flags=""
 fi
 
 ${cmake} \
-  -DAMICI_CXX_OPTIONS="-Wall;-Wextra;-Werror" \
+  -DAMICI_CXX_OPTIONS="-Wall;-Wextra;-Werror${extra_cxx_flags}" \
   -DCMAKE_BUILD_TYPE=$build_type \
   -DPython3_EXECUTABLE="$(command -v python3)" ..
 

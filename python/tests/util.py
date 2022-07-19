@@ -14,7 +14,7 @@ from amici import (
 from amici.gradient_check import _check_close
 
 
-def create_amici_model(sbml_model, model_name) -> AmiciModel:
+def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     """
     Import an sbml file and create an AMICI model from it
     """
@@ -26,7 +26,8 @@ def create_amici_model(sbml_model, model_name) -> AmiciModel:
     output_dir = sbml_test_models_output_dir / model_name
     sbml_importer.sbml2amici(
         model_name=model_name,
-        output_dir=str(output_dir)
+        output_dir=str(output_dir),
+        **kwargs
     )
 
     model_module = import_model_module(model_name, str(output_dir.resolve()))
@@ -95,18 +96,21 @@ def create_sbml_model(
         trigger.setMath(libsbml.parseL3Formula(event_def['trigger']))
         trigger.setPersistent(True)
         trigger.setInitialValue(True)
+
+        def creat_event_assignment(target, assignment):
+            ea = event.createEventAssignment()
+            ea.setVariable(target)
+            ea.setMath(libsbml.parseL3Formula(assignment))
+
         if isinstance(event_def['target'], list):
-            assignments = []
-            for ia, event_target in enumerate(event_def['target']):
-                event_assignment = event_def['assignment'][ia]
-                assignments.append(event.createEventAssignment())
-                assignments[ia].setVariable(event_target)
-                assignments[ia].setMath(
-                    libsbml.parseL3Formula(event_assignment))
+            for event_target, event_assignment in zip(
+                    event_def['target'], event_def['assignment']
+            ):
+                creat_event_assignment(event_target, event_assignment)
+
         else:
-            assignment = event.createEventAssignment()
-            assignment.setVariable(event_def['target'])
-            assignment.setMath(libsbml.parseL3Formula(event_def['assignment']))
+            creat_event_assignment(event_def['target'],
+                                   event_def['assignment'])
 
     if to_file:
         libsbml.writeSBMLToFile(

@@ -5,7 +5,7 @@
 #include "amici/vector.h"
 #include "amici/model.h"
 #include "amici/misc.h"
-#include "amici/sundials_matrix_wrapper.h"
+#include <amici/amici.h>
 
 #include <sundials/sundials_direct.h>
 #include <vector>
@@ -17,23 +17,6 @@ class ExpData;
 class Solver;
 class SteadystateProblem;
 class FinalStateStorer;
-
-/**
- * @brief implements an exchange format to store and transfer the state of a simulation at a
- * specific timepoint.
- */
-struct SimulationState{
-    /** timepoint */
-    realtype t;
-    /** state variables */
-    AmiVector x;
-    /** state variables */
-    AmiVector dx;
-    /** state variable sensitivity */
-    AmiVectorArray sx;
-    /** state of the model that was used for simulation */
-    ModelState state;
-};
 
 
 /**
@@ -50,8 +33,10 @@ class ForwardProblem {
      * @param preeq preequilibration with which to initialize the forward problem,
      * pass nullptr for no initialization
      */
-    ForwardProblem(const ExpData *edata, Model *model, Solver *solver,
-                   const SteadystateProblem *preeq);
+    ForwardProblem(
+        ExpData const* edata, Model* model, Solver* solver,
+        SteadystateProblem const* preeq
+    );
 
     ~ForwardProblem() = default;
 
@@ -70,7 +55,7 @@ class ForwardProblem {
      * @param model Model instance
      * @param edata experimental data
      */
-    void getAdjointUpdates(Model &model, const ExpData &edata);
+    void getAdjointUpdates(Model& model, ExpData const& edata);
 
     /**
      * @brief Accessor for t
@@ -221,7 +206,7 @@ class ForwardProblem {
      * @return index
      */
     int getEventCounter() const {
-        return static_cast<int>(event_states_.size() - 1);
+        return gsl::narrow<int>(event_states_.size()) - 1;
     }
 
     /**
@@ -229,7 +214,7 @@ class ForwardProblem {
      * @return index
      */
     int getRootCounter() const {
-        return static_cast<int>(discs_.size() - 1);
+        return gsl::narrow<int>(discs_.size()) - 1;
     }
 
     /**
@@ -238,7 +223,7 @@ class ForwardProblem {
      * @param it timepoint index
      * @return state
      */
-    const SimulationState &getSimulationStateTimepoint(int it) const {
+    SimulationState const& getSimulationStateTimepoint(int it) const {
         if (model->getTimepoint(it) == initial_state_.t)
             return getInitialSimulationState();
         return timepoint_states_.find(model->getTimepoint(it))->second;
@@ -250,7 +235,7 @@ class ForwardProblem {
      * @param iroot event index
      * @return SimulationState
      */
-    const SimulationState &getSimulationStateEvent(int iroot) const {
+    SimulationState const& getSimulationStateEvent(int iroot) const {
         return event_states_.at(iroot);
     };
 
@@ -259,7 +244,7 @@ class ForwardProblem {
      * initial timepoint
      * @return SimulationState
      */
-    const SimulationState &getInitialSimulationState() const {
+    SimulationState const& getInitialSimulationState() const {
         return initial_state_;
     };
 
@@ -268,7 +253,7 @@ class ForwardProblem {
      * final timepoint (or when simulation failed)
      * @return SimulationState
      */
-    const SimulationState &getFinalSimulationState() const {
+    SimulationState const& getFinalSimulationState() const {
         return final_state_;
     };
 
@@ -279,7 +264,7 @@ class ForwardProblem {
     Solver *solver;
 
     /** pointer to experimental data instance */
-    const ExpData *edata;
+    ExpData const* edata;
 
   private:
 
@@ -310,8 +295,6 @@ class ForwardProblem {
 
     /**
      * @brief Applies the event bolus to the current state
-     *
-     * @param model pointer to model specification object
      */
     void applyEventBolus();
 
@@ -468,7 +451,7 @@ class FinalStateStorer : public ContextManager {
     explicit FinalStateStorer(ForwardProblem *fwd) : fwd_(fwd) {
     }
 
-    FinalStateStorer &operator=(const FinalStateStorer &other) = delete;
+    FinalStateStorer& operator=(FinalStateStorer const& other) = delete;
 
     /**
      * @brief destructor, stores simulation state

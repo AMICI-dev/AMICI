@@ -5,16 +5,17 @@ boost.
 """
 
 import os
-import shutil
+
+import numpy as np
+import pytest
+from scipy.special import loggamma
 
 import amici
-import numpy as np
-from scipy.special import loggamma
-import pytest
 from amici.gradient_check import check_derivatives
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
     # load sbml model
@@ -35,21 +36,20 @@ def model_special_likelihoods():
     }
 
     module_name = 'test_special_likelihoods'
-    outdir = 'test_special_likelihoods'
-    sbml_importer.sbml2amici(
-        model_name=module_name,
-        output_dir=outdir,
-        observables=observables,
-        constant_parameters=['k0'],
-        noise_distributions=noise_distributions,
-    )
+    with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            observables=observables,
+            constant_parameters=['k0'],
+            noise_distributions=noise_distributions,
+        )
 
-    yield amici.import_model_module(module_name=module_name,
-                                    module_path=outdir)
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(module_name=module_name,
+                                        module_path=outdir)
 
 
+@skip_on_valgrind
 # FD check fails occasionally, so give some extra tries
 @pytest.mark.flaky(reruns=5)
 def test_special_likelihoods(model_special_likelihoods):

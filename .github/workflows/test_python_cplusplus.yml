@@ -18,11 +18,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -71,7 +71,7 @@ jobs:
 
     - name: Cache sonar files
       id: cache-sonar
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
@@ -87,7 +87,6 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-        && pip3 install coverage pytest pytest-cov pytest-rerunfailures \
         && pytest \
           --ignore-glob=*petab* \
           --cov=amici \
@@ -144,11 +143,18 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@master
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
+    - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
@@ -156,8 +162,8 @@ jobs:
         brew install hdf5 swig gcc cppcheck libomp boost \
           && brew ls -v boost \
           && brew ls -v libomp \
-          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.78.0_1/lib/" >> $GITHUB_ENV \
-          && echo CPPFLAGS="-I/usr/local/Cellar/boost/1.78.0_1/include/" >> $GITHUB_ENV
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
 
     - name: Build AMICI
       run: |

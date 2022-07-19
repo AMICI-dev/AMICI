@@ -1,5 +1,5 @@
-#include "TPL_MODELNAME.h"
 #include <array>
+#include <amici/defines.h>
 
 namespace amici {
 

@@ -37,6 +37,7 @@ def get_sundials_include_dirs(sundials_base_dir: Path) -> List[str]:
     return list(map(str, [
         sundials_base_dir / 'include',
         sundials_base_dir / 'src',
+        sundials_base_dir / 'src' / 'sundials',
     ]))
 
 
@@ -281,7 +282,10 @@ def get_lib_amici(
         'cflags_mingw32': ['-std=c++14'],
         'cflags_unix': ['-std=c++14'],
         'cflags_msvc': ['/std:c++14'],
-        'macros': [("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None)],
+        'macros': [
+            ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
+            ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),
+        ],
     })
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:

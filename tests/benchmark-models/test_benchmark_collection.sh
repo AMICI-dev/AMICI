@@ -25,35 +25,33 @@ Weber_BMC2015
 Zheng_PNAS2012"
 
 #
-#
-# PEtab needs fixing: Bachmann_MSB2011
-#
-# Unsupported:
-#
-# Becker_Science2010: multiple models
+# not merged:
+# Becker_Science2010 (multiple models)             https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Becker_Science2010
+# Hass_PONE2017 (???)                              https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Hass_PONE2017
+# Korkut_eLIFE2015 (???)                           https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Korkut_eLIFE2015
+# Casaletto_PNAS2019 (yaml missing)                https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Casaletto_PNAS2019
+# Merkle_PCB2016 (model missing)                   https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Merkle_PCB2016
+# Parmar_PCB2019 (SBML extensions)                 https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Parmar_PCB2019
+# Swameye_PNAS2003 (splines)                       https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Swameye_PNAS2003
+# Sobotta_Frontiers2017 (???)                      https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Sobotta_Frontiers2017
+# Raia_CancerResearch2011 (state dependent sigmas) https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Raia_CancerResearch2011
 #
 # no reference value:
-# Alkan_SciSignal2018
-# Blasi_CellSystems2016
-# Hass_PONE2017
-# Korkut_eLIFE2015
-# Perelson_Science1996
+# Alkan_SciSignal2018 (d2d: Alkan_DDRP_SciSignal2018)
+# Bertozzi_PNAS2020 (gh: vanako, doi: https://doi.org/10.1073/pnas.2006520117, code/data: https://github.com/gomohler/pnas2020 (R))
+# Blasi_CellSystems2016 (gh: Leonard Schmiester, doi: https://doi.org/10.1016/j.cels.2016.01.002, code/data: not available)
+# Giordano_Nature2020 (gh: Paul Jonas Jost, doi: https://doi.org/10.1038/s41591-020-0883-7, code/data: http://users.dimi.uniud.it/~giulia.giordano/docs/papers/SIDARTHEcode.zip (MATLAB))
+# Laske_PLOSComputBiol2019 (gh: Clemens Peiter, doi: https://doi.org/10.1128/JVI.00080-12 (?), code/data: ???)
+# Okuonghae_ChaosSolitonsFractals2020 (gh: Paul Jonas Jost, doi: https://doi.org/10.1016/j.chaos.2020.110032, code/data: ???)
+# Oliveira_NatCommun2021 (gh: lorenapohl, doi: https://doi.org/10.1038/s41467-020-19798-3, code: https://github.com/cidacslab/Mathematical-and-Statistical-Modeling-of-COVID19-in-Brazil (python) data: https://infovis.sei.ba.gov.br/covid19/ )
+# Perelson_Science1996 (gh: Philipp Staedter, doi: https://doi.org/10.1126/science.271.5255.1582, code/data: ???)
+# Rahman_MBS2016 (gh: Yannik Schaelte, doi: https://doi.org/10.1016/j.mbs.2016.07.009, code: not available, data: table in paper ...)
+# Raimundez_PCB2020 (gh: Elba Raimundez, doi: https://doi.org/10.1371/journal.pcbi.1007147, code/data: https://zenodo.org/record/2908234#.Y5hUUS8w3yw (d2d))
+# SalazarCavazos_MBoC2020 (gh: Dilan Pathirana, doi: https://doi.org/10.1091/mbc.E19-09-0548, code/data: supplement (BNGL))
+# Zhao_QuantBiol2020 (gh: Iva Ewert, doi: https://doi.org/10.1007/s40484-020-0199-0, code: not available, data: table in supp)
 #
-#
-# yaml missing:
-# Casaletto_PNAS2019
-#
-# Model missing:
-# Merkle_PCB2016
-#
-# SBML extensions:
-# Parmar_PCB2019
-#
-# Events:
-# Swameye_PNAS2003
-#
-# state-dependent sigmas:
-# Raia_CancerResearch2011
+# covered by performance test:
+# Froehlich_CellSystems2018
 #
 # Unknown reasons:
 # Chen_MSB2009
@@ -90,8 +88,8 @@ for model in $models; do
   yaml="${model_dir}"/"${model}"/"${model}".yaml
   amici_model_dir=test_bmc/"${model}"
   mkdir -p "$amici_model_dir"
-  cmd_import="amici_import_petab --verbose -y ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
-  cmd_run="$script_path/test_petab_model.py --verbose -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
+  cmd_import="amici_import_petab -y ${yaml} -o ${amici_model_dir} -n ${model} --flatten"
+  cmd_run="$script_path/test_petab_model.py -y ${yaml} -d ${amici_model_dir} -m ${model} -c"
 
   printf '=%.0s' {1..40}
   printf "   %s   " "${model}"
@@ -110,3 +108,5 @@ for model in $models; do
   echo
   echo
 done
+
+cd "$script_path" && python evaluate_benchmark.py

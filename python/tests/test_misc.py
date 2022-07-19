@@ -2,15 +2,14 @@
 
 import os
 import subprocess
-
-import libsbml
+from pathlib import Path
 import pytest
 import sympy as sp
 
 import amici
 from amici.ode_export import _custom_pow_eval_derivative, _monkeypatched, \
     smart_subs_dict
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import skip_on_valgrind
 
 
 def test_parameter_scaling_from_int_vector():
@@ -27,7 +26,7 @@ def test_parameter_scaling_from_int_vector():
     assert scale_vector[1] == amici.ParameterScaling.ln
     assert scale_vector[2] == amici.ParameterScaling.none
 
-
+@skip_on_valgrind
 def test_hill_function_dwdx():
     """Kinetic laws with Hill functions, may lead to NaNs in the Jacobian
     if involved states are zero if not properly arranged symbolically.
@@ -49,6 +48,7 @@ def test_hill_function_dwdx():
     _ = str(res)
 
 
+@skip_on_valgrind
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
                     reason='skipping cmake based test')
 def test_cmake_compilation(sbml_example_presimulation_module):
@@ -56,14 +56,24 @@ def test_cmake_compilation(sbml_example_presimulation_module):
     Python tests"""
 
     source_dir = os.path.dirname(sbml_example_presimulation_module.__path__[0])
+    build_dir = f"{source_dir}/build"
+    # path hint for amici base installation, in case CMake configuration has
+    #  not been exported
+    amici_dir = (Path(__file__).parents[2] / 'build').absolute()
+    cmd = f"set -e; " \
+          f"cmake -S {source_dir} -B '{build_dir}' -DAmici_DIR={amici_dir}; " \
+          f"cmake --build '{build_dir}'"
 
-    cmd = f"set -e; cd {source_dir}; mkdir -p build; cd build; "\
-          "cmake ..; make"
+    try:
+        subprocess.run(cmd, shell=True, check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print(e.stdout.decode())
+        print(e.stderr.decode())
+        raise
 
-    subprocess.run(cmd, shell=True, check=True,
-                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-
+@skip_on_valgrind
 def test_smart_subs_dict():
     expr_str = 'c + d'
     subs_dict = {
@@ -85,6 +95,7 @@ def test_smart_subs_dict():
     assert sp.simplify(result_reverse - expected_reverse).is_zero
 
 
+@skip_on_valgrind
 def test_monkeypatch():
     t = sp.Symbol('t')
     n = sp.Symbol('n')
@@ -101,3 +112,17 @@ def test_monkeypatch():
 
     # check that the monkeypatch is transient
     assert (t ** n).diff(t).subs(vals) is sp.nan
+
+
+@skip_on_valgrind
+def test_get_default_argument():
+    # no default
+    with pytest.raises(ValueError):
+        amici._get_default_argument(lambda x: x, 'x')
+
+    # non-existant parameter
+    with pytest.raises(KeyError):
+        amici._get_default_argument(lambda x: x, 'y')
+
+    # okay
+    assert amici._get_default_argument(lambda x=1: x, 'x') == 1

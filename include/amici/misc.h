@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <regex>
+#include <functional>
 
 #include <gsl/gsl-lite.hpp>
 
@@ -44,8 +45,7 @@ gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
  */
 
 template <class T>
-gsl::span<const T> slice(const std::vector<T> &data,
-                         int index, unsigned size) {
+gsl::span<T const> slice(std::vector<T> const& data, int index, unsigned size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
@@ -77,9 +77,21 @@ void checkBufferSize(gsl::span<T> buffer,
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
+void writeSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
+};
+
+/**
+ * @brief local helper function to add the computed slice to provided buffer (span)
+ * @param slice computed value
+ * @param buffer buffer to which values are to be added
+ */
+template <class T>
+void addSlice(const gsl::span<T const> slice, gsl::span<T> buffer) {
+    checkBufferSize(buffer, slice.size());
+    std::transform(slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
+                   std::plus<T>());
 };
 
 /**
@@ -87,8 +99,7 @@ void writeSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T>
-void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
+template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
     writeSlice(gsl::make_span(s.data(), s.size()),
                gsl::make_span(b.data(), b.size()));
 };
@@ -98,9 +109,17 @@ void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T>
-void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
+template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
     writeSlice(gsl::make_span(s.data(), s.size()), b);
+};
+
+/**
+ * @brief local helper function to add the computed slice to provided buffer (vector/span)
+ * @param s computed value
+ * @param b buffer to which values are to be written
+ */
+template <class T> void addSlice(std::vector<T> const& s, gsl::span<T> b) {
+    addSlice(gsl::make_span(s.data(), s.size()), b);
 };
 
 /**
@@ -108,21 +127,21 @@ void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-void writeSlice(const AmiVector &s, gsl::span<realtype> b);
-
+void writeSlice(AmiVector const& s, gsl::span<realtype> b);
 
 /**
-  * @brief Remove parameter scaling according to the parameter scaling in pscale
-  *
-  * All vectors must be of same length.
-  *
-  * @param bufferScaled scaled parameters
-  * @param pscale parameter scaling
-  * @param bufferUnscaled unscaled parameters are written to the array
-  */
-void unscaleParameters(gsl::span<const realtype> bufferScaled,
-                       gsl::span<const ParameterScaling> pscale,
-                       gsl::span<realtype> bufferUnscaled);
+ * @brief Remove parameter scaling according to the parameter scaling in pscale
+ *
+ * All vectors must be of same length.
+ *
+ * @param bufferScaled scaled parameters
+ * @param pscale parameter scaling
+ * @param bufferUnscaled unscaled parameters are written to the array
+ */
+void unscaleParameters(
+    gsl::span<realtype const> bufferScaled,
+    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferUnscaled
+);
 
 /**
   * @brief Remove parameter scaling according to `scaling`
@@ -150,16 +169,18 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling);
  * @param pscale parameter scaling
  * @param bufferScaled destination
  */
-void scaleParameters(gsl::span<const realtype> bufferUnscaled,
-                     gsl::span<const ParameterScaling> pscale,
-                     gsl::span<realtype> bufferScaled);
+void scaleParameters(
+    gsl::span<realtype const> bufferUnscaled,
+    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferScaled
+);
 
 /**
  * @brief Returns the current backtrace as std::string
  * @param maxFrames Number of frames to include
+ * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames);
+std::string backtraceString(int maxFrames, int const first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
@@ -174,7 +195,7 @@ std::string regexErrorToString(std::regex_constants::error_type err_type);
  * @param ap Argument list pointer
  * @return Formatted String
  */
-std::string printfToString(const char *fmt, va_list ap);
+std::string printfToString(char const* fmt, va_list ap);
 
 /**
  * @brief Generic implementation for a context manager, explicitly deletes copy
@@ -197,6 +218,28 @@ class ContextManager{
  */
 auto unravel_index(size_t flat_idx, size_t num_cols)
     -> std::pair<size_t, size_t>;
+
+/**
+ * @brief Check if two spans are equal, treating NaNs in the same position as
+ * equal.
+ * @param a
+ * @param b
+ * @return Whether the contents of the two spans are equal.
+ */
+template <class T>
+bool is_equal(T const& a, T const& b) {
+    if(a.size() != b.size())
+        return false;
+
+    auto a_data = a.data();
+    auto b_data = b.data();
+    for(typename T::size_type i = 0; i < a.size(); ++i) {
+        if(a_data[i] != b_data[i]
+            && !(std::isnan(a_data[i]) && std::isnan(b_data[i])))
+            return false;
+    }
+    return true;
+}
 
 } // namespace amici
 

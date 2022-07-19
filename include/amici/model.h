@@ -8,6 +8,7 @@
 #include "amici/simulation_parameters.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
+#include "amici/logging.h"
 
 #include <map>
 #include <memory>
@@ -18,9 +19,6 @@ namespace amici {
 class ExpData;
 class Model;
 class Solver;
-class AmiciApplication;
-
-extern AmiciApplication defaultContext;
 
 } // namespace amici
 
@@ -45,7 +43,10 @@ enum class ModelQuantity {
     JDiag,
     sx,
     sy,
+    sz,
+    srz,
     ssigmay,
+    ssigmaz,
     xdot,
     sxdot,
     xBdot,
@@ -76,17 +77,19 @@ enum class ModelQuantity {
     deltaqB,
     dsigmaydp,
     dsigmaydy,
+    dsigmazdp,
     dJydsigma,
     dJydx,
     dzdx,
     dzdp,
     dJrzdsigma,
     dJrzdz,
+    dJrzdx,
     dJzdsigma,
     dJzdz,
+    dJzdx,
     drzdp,
     drzdx,
-    dsigmazdp,
 };
 
 extern const std::map<ModelQuantity, std::string> model_quantity_to_str;
@@ -717,15 +720,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param state Model state
      */
     void setModelState(ModelState const &state) {
-        if (static_cast<int>(state.unscaledParameters.size()) != np())
+        if (gsl::narrow<int>(state.unscaledParameters.size()) != np())
             throw AmiException("Mismatch in parameter size");
-        if (static_cast<int>(state.fixedParameters.size()) != nk())
+        if (gsl::narrow<int>(state.fixedParameters.size()) != nk())
             throw AmiException("Mismatch in fixed parameter size");
-        if (static_cast<int>(state.h.size()) != ne)
+        if (gsl::narrow<int>(state.h.size()) != ne)
             throw AmiException("Mismatch in Heaviside size");
-        if (static_cast<int>(state.total_cl.size()) != ncl())
+        if (gsl::narrow<int>(state.total_cl.size()) != ncl())
             throw AmiException("Mismatch in conservation law size");
-        if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
+        if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np() )
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
@@ -1412,8 +1415,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** AMICI application context */
-    AmiciApplication *app = &defaultContext;
+    /** Logger */
+    Logger *logger = nullptr;
 
   protected:
     /**

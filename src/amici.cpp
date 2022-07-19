@@ -8,7 +8,7 @@
 #include "amici/steadystateproblem.h"
 #include "amici/backwardproblem.h"
 #include "amici/forwardproblem.h"
-#include "amici/misc.h"
+#include "amici/logging.h"
 
 #include <cvodes/cvodes.h>           //return codes
 #include <sundials/sundials_types.h> //realtype
@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <type_traits>
 
@@ -43,67 +44,38 @@ static_assert(std::is_same<amici::realtype, realtype>::value,
 
 namespace amici {
 
-/** AMICI default application context, kept around for convenience for using
-  * amici::runAmiciSimulation or instantiating Solver and Model without special
-  * needs.
-  */
-AmiciApplication defaultContext = AmiciApplication();
+std::map<int, std::string> simulation_status_to_str_map = {
+    {AMICI_RECOVERABLE_ERROR, "AMICI_RECOVERABLE_ERROR"},
+    {AMICI_UNRECOVERABLE_ERROR, "AMICI_UNRECOVERABLE_ERROR"},
+    {AMICI_TOO_MUCH_WORK, "AMICI_TOO_MUCH_WORK"},
+    {AMICI_TOO_MUCH_ACC, "AMICI_TOO_MUCH_ACC"},
+    {AMICI_ERR_FAILURE, "AMICI_ERR_FAILURE"},
+    {AMICI_CONV_FAILURE, "AMICI_CONV_FAILURE"},
+    {AMICI_FIRST_RHSFUNC_ERR, "AMICI_FIRST_RHSFUNC_ERR"},
+    {AMICI_RHSFUNC_FAIL, "AMICI_RHSFUNC_FAIL"},
+    {AMICI_ILL_INPUT, "AMICI_ILL_INPUT"},
+    {AMICI_ERROR, "AMICI_ERROR"},
+    {AMICI_NO_STEADY_STATE, "AMICI_NO_STEADY_STATE"},
+    {AMICI_DAMPING_FACTOR_ERROR, "AMICI_DAMPING_FACTOR_ERROR"},
+    {AMICI_SINGULAR_JACOBIAN, "AMICI_SINGULAR_JACOBIAN"},
+    {AMICI_NOT_IMPLEMENTED, "AMICI_NOT_IMPLEMENTED"},
+    {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
+    {AMICI_SUCCESS, "AMICI_SUCCESS"},
+    {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
+};
 
-std::unique_ptr<ReturnData>
-runAmiciSimulation(Solver& solver,
-                   const ExpData* edata,
-                   Model& model,
-                   bool rethrow)
-{
-    return defaultContext.runAmiciSimulation(solver, edata, model, rethrow);
-}
+std::unique_ptr<ReturnData> runAmiciSimulation(
+    Solver& solver, ExpData const* edata, Model& model, bool rethrow
+) {
+    // create a temporary logger instance for Solver and Model to capture
+    // messages from only this simulation
+    Logger logger;
+    solver.logger = &logger;
+    model.logger = &logger;
+    // prevent dangling pointer
+    auto _ = gsl::finally([&solver, &model]
+                          { solver.logger = model.logger = nullptr; });
 
-void
-printErrMsgIdAndTxt(std::string const& id, std::string const& message)
-{
-    std::cerr << "[Error] ";
-    if (!id.empty()) {
-        std::cerr << id << ": ";
-    }
-    std::cerr << message << std::endl;
-}
-
-void
-printWarnMsgIdAndTxt(std::string const& id, std::string const& message)
-{
-    std::cerr << "[Warning] ";
-    if (!id.empty()) {
-        std::cerr << id << ": ";
-    }
-    std::cerr << message << std::endl;
-}
-
-std::vector<std::unique_ptr<ReturnData>>
-runAmiciSimulations(const Solver& solver,
-                    const std::vector<ExpData*>& edatas,
-                    const Model& model,
-                    const bool failfast,
-#if defined(_OPENMP)
-                    int num_threads
-#else
-                    int /* num_threads */
-#endif
-)
-{
-#if defined(_OPENMP)
-    return defaultContext.runAmiciSimulations(
-      solver, edatas, model, failfast, num_threads);
-#else
-    return defaultContext.runAmiciSimulations(solver, edatas, model, failfast, 1);
-#endif
-}
-
-std::unique_ptr<ReturnData>
-AmiciApplication::runAmiciSimulation(Solver& solver,
-                                     const ExpData* edata,
-                                     Model& model,
-                                     bool rethrow)
-{
     auto start_time_total = clock();
     solver.startTimer();
 
@@ -177,57 +149,67 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if(rethrow)
                 throw;
-            warningF("AMICI:simulation",
-                     "AMICI forward simulation failed at t = %f: "
-                     "Maximum time exceeded.\n",
-                     ex.time);
+            logger.log(
+                LogSeverity::error, "MAXTIME_EXCEEDED",
+                "AMICI forward simulation failed at t = %g: "
+                "Maximum time exceeded in forward solve.",
+                ex.time
+            );
         } else {
             rdata->status = ex.error_code;
             if (rethrow)
                 throw;
-            warningF("AMICI:simulation",
-                     "AMICI forward simulation failed at t = %f:\n%s\n",
-                     ex.time,
-                     ex.what());
-
+            logger.log(
+                LogSeverity::error, "FORWARD_FAILURE",
+                "AMICI forward simulation failed at t = %g: %s", ex.time,
+                ex.what()
+            );
         }
     } catch (amici::IntegrationFailureB const& ex) {
         if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if (rethrow)
                 throw;
-            warningF(
-                "AMICI:simulation",
+            logger.log(
+                LogSeverity::error, "MAXTIME_EXCEEDED",
                 "AMICI backward simulation failed when trying to solve until "
-                "t = %f: Maximum time exceeded.\n",
-                ex.time);
+                "t = %g: Maximum time exceeded in backward solve.",
+                ex.time
+            );
 
         } else {
             rdata->status = ex.error_code;
             if (rethrow)
                 throw;
-            warningF(
-                "AMICI:simulation",
-                "AMICI backward simulation failed when trying to solve until t = %f"
-                " (see message above):\n%s\n",
-                ex.time,
-                ex.what());
+            logger.log(
+                LogSeverity::error, "BACKWARD_FAILURE",
+                "AMICI backward simulation failed when trying to solve until t "
+                "= %g"
+                " (check debug logs for details): %s",
+                ex.time, ex.what()
+            );
         }
     } catch (amici::AmiException const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
-        warningF("AMICI:simulation",
-                 "AMICI simulation failed:\n%s\nError occurred in:\n%s",
-                 ex.what(),
-                 ex.getBacktrace());
+        logger.log(
+            LogSeverity::error, "OTHER",
+            "AMICI simulation failed: %s", ex.what()
+        );
+        logger.log(
+            LogSeverity::debug, "BACKTRACE",
+            "The previous error occurred at:\n%s", ex.getBacktrace()
+            );
+
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
-        warningF("AMICI:simulation",
-                 "AMICI simulation failed:\n%s\n",
-                 ex.what());
+        logger.log(
+            LogSeverity::error, "OTHER", "AMICI simulation failed: %s",
+            ex.what()
+        );
     }
 
     rdata->processSimulationObjects(
@@ -245,23 +227,30 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
-
+    if (!posteq)
+        gsl_EnsuresDebug(
+            std::is_sorted(rdata->numsteps.begin(), rdata->numsteps.end())
+            || rdata->status != AMICI_SUCCESS
+        );
+    if (!preeq)
+        gsl_EnsuresDebug(
+            std::is_sorted(rdata->numstepsB.begin(), rdata->numstepsB.end())
+            || rdata->status != AMICI_SUCCESS
+        );
+    rdata->messages = logger.items;
     return rdata;
 }
 
-std::vector<std::unique_ptr<ReturnData>>
-AmiciApplication::runAmiciSimulations(const Solver& solver,
-                                      const std::vector<ExpData*>& edatas,
-                                      const Model& model,
-                                      bool failfast,
+std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
+    Solver const& solver, std::vector<ExpData*> const& edatas,
+    Model const& model, bool failfast,
 #if defined(_OPENMP)
-                                      int num_threads
+    int num_threads
 #else
-                                      int /* num_threads */
+    int /* num_threads */
 #endif
 
-)
-{
+) {
     std::vector<std::unique_ptr<ReturnData>> results(edatas.size());
     // is set to true if one simulation fails and we should skip the rest.
     // shared across threads.
@@ -290,24 +279,16 @@ AmiciApplication::runAmiciSimulations(const Solver& solver,
     return results;
 }
 
-void
-AmiciApplication::warningF(const char* identifier, const char* format, ...) const
+std::string simulation_status_to_str(int status)
 {
-    va_list argptr;
-    va_start(argptr, format);
-    auto str = printfToString(format, argptr);
-    va_end(argptr);
-    warning(identifier, str);
-}
-
-void
-AmiciApplication::errorF(const char* identifier, const char* format, ...) const
-{
-    va_list argptr;
-    va_start(argptr, format);
-    auto str = printfToString(format, argptr);
-    va_end(argptr);
-    error(identifier, str);
+    try {
+        return simulation_status_to_str_map.at(status);
+    } catch (std::out_of_range const&) {
+        // Missing mapping - terminate if this is a debug build,
+        // but show the number if non-debug.
+        gsl_ExpectsDebug(false);
+        return std::to_string(status);
+    }
 }
 
 } // namespace amici

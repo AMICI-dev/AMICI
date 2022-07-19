@@ -1,9 +1,9 @@
 #include "amici/solver.h"
 
 #include "amici/exception.h"
-#include "amici/misc.h"
 #include "amici/model.h"
-#include "amici/rdata.h"
+#include "amici/symbolic_functions.h"
+
 
 #include <cstdio>
 #include <cstring>
@@ -11,11 +11,6 @@
 #include <memory>
 
 namespace amici {
-
-Solver::Solver(AmiciApplication *app) : app(app)
-{
-
-}
 
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),
@@ -266,16 +261,16 @@ void Solver::storeDiagnosis() const {
 
     long int lnumber;
     getNumSteps(solver_memory_.get(), &lnumber);
-    ns_.push_back(static_cast<int>(lnumber));
+    ns_.push_back(gsl::narrow<int>(lnumber));
 
     getNumRhsEvals(solver_memory_.get(), &lnumber);
-    nrhs_.push_back(static_cast<int>(lnumber));
+    nrhs_.push_back(gsl::narrow<int>(lnumber));
 
     getNumErrTestFails(solver_memory_.get(), &lnumber);
-    netf_.push_back(static_cast<int>(lnumber));
+    netf_.push_back(gsl::narrow<int>(lnumber));
 
     getNumNonlinSolvConvFails(solver_memory_.get(), &lnumber);
-    nnlscf_.push_back(static_cast<int>(lnumber));
+    nnlscf_.push_back(gsl::narrow<int>(lnumber));
 
     int number;
     getLastOrder(solver_memory_.get(), &number);
@@ -293,16 +288,16 @@ void Solver::storeDiagnosisB(const int which) const {
 
     long int number;
     getNumSteps(solver_memory_B_.at(which).get(), &number);
-    nsB_.push_back(static_cast<int>(number));
+    nsB_.push_back(gsl::narrow<int>(number));
 
     getNumRhsEvals(solver_memory_B_.at(which).get(), &number);
-    nrhsB_.push_back(static_cast<int>(number));
+    nrhsB_.push_back(gsl::narrow<int>(number));
 
     getNumErrTestFails(solver_memory_B_.at(which).get(), &number);
-    netfB_.push_back(static_cast<int>(number));
+    netfB_.push_back(gsl::narrow<int>(number));
 
     getNumNonlinSolvConvFails(solver_memory_B_.at(which).get(), &number);
-    nnlscfB_.push_back(static_cast<int>(number));
+    nnlscfB_.push_back(gsl::narrow<int>(number));
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {
@@ -864,12 +859,24 @@ void Solver::setMaxTime(double maxtime)
 
 void Solver::startTimer() const
 {
-    starttime_ = std::chrono::system_clock::now();
+    starttime_ = std::clock();
 }
 
-bool Solver::timeExceeded() const
+bool Solver::timeExceeded(int interval) const
 {
-    return std::chrono::system_clock::now() - starttime_ > maxtime_;
+    static int eval_counter = 0;
+
+    // 0 means infinite time
+    if(maxtime_.count() == 0)
+        return false;
+
+    if (++eval_counter % interval)
+        return false;
+
+    eval_counter = 0;
+    auto cputime_exceed = static_cast<double>(std::clock() - starttime_)
+                          / CLOCKS_PER_SEC;
+    return std::chrono::duration<double>(cputime_exceed) > maxtime_;
 }
 
 void Solver::setMaxSteps(const long int maxsteps) {
@@ -1228,27 +1235,35 @@ void wrapErrHandlerFn(int error_code, const char *module,
             function, msg);
     switch (error_code) {
     case 99:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:WARNING", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
         break;
 
-    case -1:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_WORK", module, function);
+    case AMICI_TOO_MUCH_WORK:
+        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
-    case -2:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_ACC", module, function);
+    case AMICI_TOO_MUCH_ACC:
+        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
-    case -3:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:ERR_FAILURE", module, function);
+    case AMICI_ERR_FAILURE:
+        snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
         break;
 
-    case -4:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:CONV_FAILURE", module, function);
+    case AMICI_CONV_FAILURE:
+        snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
+        break;
+            
+    case AMICI_RHSFUNC_FAIL:
+        snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
+        break;
+            
+    case AMICI_FIRST_RHSFUNC_ERR:
+        snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
         break;
 
     default:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:OTHER", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
         break;
     }
 
@@ -1257,7 +1272,8 @@ void wrapErrHandlerFn(int error_code, const char *module,
         throw std::runtime_error("eh_data unset");
     }
     auto solver = static_cast<Solver const*>(eh_data);
-    solver->app->warning(buffid, buffer);
+    if(solver->logger)
+        solver->logger->log(LogSeverity::debug, buffid, buffer);
 }
 
 } // namespace amici

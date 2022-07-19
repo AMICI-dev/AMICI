@@ -26,10 +26,10 @@ SRC = ../Source/colamd.c
 OBJ = colamd.o colamd_l.o
 
 colamd.o: $(SRC) $(INC)
-	$(CC) $(CF) $(I) -c ../Source/colamd.c
+	"$(CC)" $(CF) $(I) -c ../Source/colamd.c
 
 colamd_l.o: $(SRC) $(INC)
-	$(CC) $(CF) $(I) -c ../Source/colamd.c -DDLONG -o colamd_l.o
+	"$(CC)" $(CF) $(I) -c ../Source/colamd.c -DDLONG -o colamd_l.o
 
 # creates libcolamd.a, a C-callable COLAMD library
 static: $(AR_TARGET)
@@ -55,7 +55,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(OBJ)
 	@mkdir -p $(INSTALL_LIB)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
-	$(CC) $(SO_OPTS) $^ -o $@ $(LDLIBS)
+	"$(CC)" $(SO_OPTS) $^ -o $@ $(LDLIBS)
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )
 	$(CP) ../Include/colamd.h $(INSTALL_INCLUDE)

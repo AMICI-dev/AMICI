@@ -1,7 +1,6 @@
 #ifndef AMICI_SUNDIALS_LINSOL_WRAPPER_H
 #define AMICI_SUNDIALS_LINSOL_WRAPPER_H
 
-#include "amici/exception.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 

@@ -127,10 +127,15 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
         sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[modelname '_' x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
         sources = strjoin(sources,' ');
 
-        eval(['mex ' DEBUG COPT ...
+        cmd = ['mex ' DEBUG COPT ...
             ' -c -outdir "' modelObjectFolder '" ' ...
-            sources ' ' ...
-            includesstr ]);
+            sources ' ' includesstr];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
         cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);
     end
 
@@ -156,10 +161,17 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     % compile the wrapfunctions object
     fprintf('wrapfunctions | ');
-    eval(['mex ' DEBUG COPT ...
+    cmd = ['mex ' DEBUG COPT ...
         ' -c -outdir "' modelObjectFolder '" "' ...
         fullfile(modelSourceFolder,'wrapfunctions.cpp') '" ' model_cpp ...
-        includesstr]);
+        includesstr];
+    try
+        eval(cmd);
+    catch ME
+        disp(cmd);
+        rethrow(ME);
+    end
+
     objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '" ' model_cpp_obj];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
@@ -186,15 +198,22 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     mexFilename = fullfile(modelSourceFolder,['ami_' modelname]);
-    eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
-        ' -output "' mexFilename '" ' objectsstr])
+    cmd = ['mex ' DEBUG ' ' COPT ' ' CLIBS ...
+        ' -output "' mexFilename '" ' objectsstr];
+    try
+        eval(cmd);
+    catch ME
+        disp(cmd);
+        rethrow(ME);
+    end
+
 end
 
 function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT)
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
-        'edata','rdata', 'exception', ...
+        'edata','rdata', 'exception', 'logging', ...
         'interface_matlab', 'misc', 'simulation_parameters', ...
         'solver', 'solver_cvodes', 'solver_idas', 'model_state', ...
         'model', 'model_ode', 'model_dae', 'returndata_matlab', ...
@@ -217,8 +236,15 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
             baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
             sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
         end
-        eval(['mex ' DEBUG COPT ' -c -outdir "' objectFolder '" ' ...
-            includesstr ' ' sourceStr]);
+        cmd = ['mex ' DEBUG COPT ' -c -outdir "' objectFolder '" ' ...
+            includesstr ' ' sourceStr];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
+
         cellfun(@(x) updateFileHashSource(amiciSourcePath, objectFolder, x), sourcesForRecompile);
         updateHeaderFileHashes(amiciIncludePath, objectFolder);
     end

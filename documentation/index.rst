@@ -30,13 +30,9 @@ Welcome to AMICI's documentation!
    glossary
    contributing
 
-.. toctree::
-   :maxdepth: 2
-   :caption: User's guide
-
-   PYTHON
-   CPP
-   MATLAB
+.. include:: PYTHON.rst
+.. include:: CPP.rst
+.. include:: MATLAB.rst
 
 .. toctree::
    :maxdepth: 2

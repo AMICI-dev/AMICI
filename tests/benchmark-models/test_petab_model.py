@@ -9,9 +9,13 @@ import importlib
 import logging
 import os
 import sys
+import pandas as pd
+import numpy as np
 
 import petab
 import yaml
+
+import amici
 from amici.logging import get_logger
 from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
                                    LLH, RDATAS)
@@ -64,8 +68,8 @@ def main():
 
     args = parse_cli_args()
 
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
+    loglevel = logging.DEBUG if args.verbose else logging.INFO
+    logger.setLevel(loglevel)
 
     logger.info(f"Simulating '{args.model_name}' "
                 f"({args.model_directory}) using PEtab data from "
@@ -82,15 +86,53 @@ def main():
     amici_model = model_module.getModel()
     amici_solver = amici_model.getSolver()
 
-    if args.model_name == "Isensee_JCB2018":
-        amici_solver.setAbsoluteTolerance(1e-12)
-        amici_solver.setRelativeTolerance(1e-12)
+    amici_solver.setAbsoluteTolerance(1e-8)
+    amici_solver.setRelativeTolerance(1e-8)
+    amici_solver.setMaxSteps(int(1e4))
+    if args.model_name in ('Brannmark_JBC2010', 'Isensee_JCB2018'):
+        amici_model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.integrationOnly
+        )
 
-    res = simulate_petab(
-        petab_problem=problem, amici_model=amici_model,
-        solver=amici_solver, log_level=logging.DEBUG)
-    rdatas = res[RDATAS]
-    llh = res[LLH]
+    times = dict()
+
+    for label, sensi_mode in {
+        't_sim': amici.SensitivityMethod.none,
+        't_fwd': amici.SensitivityMethod.forward,
+        't_adj': amici.SensitivityOrder.second
+    }.items():
+        amici_solver.setSensitivityMethod(sensi_mode)
+        if sensi_mode == amici.SensitivityMethod.none:
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.none)
+        else:
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+        res_repeats = [
+            simulate_petab(petab_problem=problem, amici_model=amici_model,
+                           solver=amici_solver, log_level=loglevel)
+            for _ in range(3)  # repeat to get more stable timings
+        ]
+        res = res_repeats[0]
+
+        times[label] = np.mean([
+            sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
+            # only forwards/backwards simulation
+            for res in res_repeats
+        ])
+
+        if sensi_mode == amici.SensitivityMethod.none:
+            rdatas = res[RDATAS]
+            llh = res[LLH]
+
+    times['np'] = sum(problem.parameter_df[petab.ESTIMATE])
+
+    pd.Series(times).to_csv(
+        f'./tests/benchmark-models/{args.model_name}_benchmark.csv'
+    )
+
+    for rdata in rdatas:
+        assert rdata.status == amici.AMICI_SUCCESS, \
+            f"Simulation failed for {rdata.id}"
 
     # create simulation PEtab table
     sim_df = rdatas_to_measurement_df(rdatas=rdatas, model=amici_model,
@@ -120,21 +162,51 @@ def main():
 
         try:
             ref_llh = refs[args.model_name]["llh"]
-            logger.info(f"Reference llh: {ref_llh}")
 
-            if abs(ref_llh - llh) < 1e-3:
-                logger.info(f"Computed llh {llh} matches reference "
-                            f"{ref_llh}. Absolute difference is "
-                            f"{ref_llh - llh}.")
+            rdiff = np.abs((llh - ref_llh) / ref_llh)
+            rtol = 1e-3
+            adiff = np.abs(llh - ref_llh)
+            atol = 1e-3
+            tolstr = f' Absolute difference is {adiff:.2e} ' \
+                     f'(tol {atol:.2e}) and relative difference is ' \
+                     f'{rdiff:.2e} (tol {rtol:.2e}).'
+
+            if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
+                logger.info(
+                    f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
+                    + tolstr
+                )
             else:
-                logger.error(f"Computed llh {llh} does not match reference "
-                             f"{ref_llh}. Absolute difference is "
-                             f"{ref_llh - llh}."
-                             f" Relative difference is {llh / ref_llh}")
+                logger.error(
+                    f"Computed llh {llh:.4e} does not match reference "
+                    f"{ref_llh:.4e}." + tolstr
+                )
                 sys.exit(1)
         except KeyError:
             logger.error("No reference likelihood found for "
                          f"{args.model_name} in {references_yaml}")
+
+        for label, key in {
+            'simulation': 't_sim',
+            'adjoint sensitivity': 't_adj',
+            'forward sensitivity': 't_fwd',
+        }.items():
+            try:
+                ref = refs[args.model_name][key]
+                if times[key] > ref:
+                    logger.error(
+                        f"Computation time for {label} ({times[key]:.2e}) "
+                        f"exceeds reference ({ref:.2e})."
+                    )
+                    sys.exit(1)
+                else:
+                    logger.info(
+                        f"Computation time for {label} ({times[key]:.2e}) "
+                        f"within reference ({ref:.2e})."
+                    )
+            except KeyError:
+                logger.error(f"No reference time for {label} found for "
+                             f"{args.model_name} in {references_yaml}")
 
 
 if __name__ == "__main__":

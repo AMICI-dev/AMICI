@@ -48,9 +48,15 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
 
     % compile
     if(~strcmp(sourcesToCompile, ''))
-        eval(['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
+        cmd = ['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
             objectFolder '" ' ...
-            includesstr ' ' sourcesToCompile ]);
+            includesstr ' ' sourcesToCompile];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
     end
 
     % only write versions.txt if we are done compiling
@@ -65,6 +71,7 @@ function includesstr = getIncludeString(amici_root_path, sundials_path, ssparse_
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src', 'sundials'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path, 'src'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path, 'include'), '"');

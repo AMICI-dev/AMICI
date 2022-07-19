@@ -27,11 +27,11 @@ jobs:
 
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 20
 
@@ -44,7 +44,7 @@ jobs:
             libatlas-base-dev \
             python3-venv
 
-      - run: pip3 install pytest shyaml pytest-cov pysb petab
+      - run: pip3 install pysb petab
 
       - name: Build BNGL
         run: |

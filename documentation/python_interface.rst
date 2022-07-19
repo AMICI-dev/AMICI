@@ -134,17 +134,34 @@ SED-ML import
 We also plan to implement support for the
 `Simulation Experiment Description Markup Language (SED-ML) <https://sed-ml.org/>`_.
 
-Examples
-========
+Environment variables affecting model import
+============================================
 
-.. toctree::
-   :maxdepth: 1
+In addition to the environment variables listed
+:ref:`here <amici_python_install_env_vars>`, the following environment
+variables control various behaviours during model import and compilation:
 
-   GettingStarted.ipynb
-   ExampleSteadystate.ipynb
-   petab.ipynb
-   ExampleExperimentalConditions.ipynb
-   ExampleEquilibrationLogic.ipynb
+.. list-table:: Environment variables affecting model import
+   :widths: 25 50 25
+   :header-rows: 1
+
+   * - Variable
+     - Purpose
+     - Example
+   * - ``AMICI_EXTRACT_CSE``
+     - Extract common subexpressions. May significantly reduce file size and
+       compile time for large models, but makes the generated code less
+       readable. Disabled by default.
+     - ``AMICI_EXTRACT_CSE=1``
+   * - ``AMICI_IMPORT_NPROCS``
+     - Number of processes to be used for model import. Defaults to 1.
+       Speeds up import of large models. Will slow down import of small models,
+       benchmarking recommended.
+     - ``AMICI_IMPORT_NPROCS=4``
+   * - ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS``
+     - Compute conservation laws for non-constant species. SBML-import only.
+       See :py:func:`amici.sbml_import.SbmlImporter.sbml2amici`.
+     -
 
 
 Miscellaneous
