@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ 3.8 ]
+        python-version: [ "3.8" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
@@ -44,8 +44,10 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
+            python3-venv \
             swig \
-            valgrind
+            valgrind \
+            libboost-math-dev
 
     - name: Build AMICI
       run: |
