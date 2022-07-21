@@ -281,7 +281,10 @@ def get_lib_amici(
         'cflags_mingw32': ['-std=c++14'],
         'cflags_unix': ['-std=c++14'],
         'cflags_msvc': ['/std:c++14'],
-        'macros': [("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None)],
+        'macros': [
+            ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
+            ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),
+        ],
     })
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:
