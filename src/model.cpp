@@ -164,8 +164,8 @@ Model::Model(ModelDimensions const & model_dimensions,
       state_is_non_negative_(nx_solver, false),
       w_recursion_depth_(w_recursion_depth),
       simulation_parameters_(std::move(simulation_parameters)) {
-    Expects(model_dimensions.np == static_cast<int>(simulation_parameters_.parameters.size()));
-    Expects(model_dimensions.nk == static_cast<int>(simulation_parameters_.fixedParameters.size()));
+    Expects(model_dimensions.np == gsl::narrow<int>(simulation_parameters_.parameters.size()));
+    Expects(model_dimensions.nk == gsl::narrow<int>(simulation_parameters_.fixedParameters.size()));
 
     simulation_parameters.pscale = std::vector<ParameterScaling>(model_dimensions.np, ParameterScaling::none);
 
@@ -198,9 +198,9 @@ Model::Model(ModelDimensions const & model_dimensions,
             dwdx_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT));
         }
-        assert(static_cast<int>(dwdp_hierarchical_.size()) ==
+        assert(gsl::narrow<int>(dwdp_hierarchical_.size()) ==
                w_recursion_depth_ + 1);
-        assert(static_cast<int>(dwdx_hierarchical_.size()) ==
+        assert(gsl::narrow<int>(dwdx_hierarchical_.size()) ==
                w_recursion_depth_ + 1);
 
         derived_state_.dxdotdp_explicit = SUNMatrixWrapper(
@@ -341,11 +341,11 @@ void Model::initEvents(AmiVector const &x, AmiVector const &dx,
     }
 }
 
-int Model::nplist() const { return static_cast<int>(state_.plist.size()); }
+int Model::nplist() const { return gsl::narrow<int>(state_.plist.size()); }
 
-int Model::np() const { return static_cast<int>(static_cast<ModelDimensions const&>(*this).np); }
+int Model::np() const { return gsl::narrow<int>(static_cast<ModelDimensions const&>(*this).np); }
 
-int Model::nk() const { return static_cast<int>(state_.fixedParameters.size()); }
+int Model::nk() const { return gsl::narrow<int>(state_.fixedParameters.size()); }
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
 
@@ -357,7 +357,7 @@ int Model::nMaxEvent() const { return nmaxevent_; }
 
 void Model::setNMaxEvent(int nmaxevent) { nmaxevent_ = nmaxevent; }
 
-int Model::nt() const { return static_cast<int>(simulation_parameters_.ts_.size()); }
+int Model::nt() const { return gsl::narrow<int>(simulation_parameters_.ts_.size()); }
 
 const std::vector<ParameterScaling> &Model::getParameterScale() const {
     return simulation_parameters_.pscale;
@@ -691,7 +691,7 @@ void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
         // in case of conservation laws
         return;
     }
-    if (state_is_non_negative_.size() != static_cast<unsigned long>(nx_rdata)) {
+    if (state_is_non_negative_.size() != gsl::narrow<unsigned long>(nx_rdata)) {
         throw AmiException("Dimension of input stateIsNonNegative (%u) does "
                            "not agree with number of state variables (%d)",
                            state_is_non_negative_.size(), nx_rdata);
@@ -1359,7 +1359,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   "AMICI encountered a %s value for %s[%i] (%s)",
                   non_finite_type.c_str(),
                   model_quantity_str.c_str(),
-                  static_cast<int>(flat_index),
+                  gsl::narrow<int>(flat_index),
                   element_id.c_str()
                   );
 
@@ -1470,7 +1470,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   "AMICI encountered a %s value for %s[%i] (%s, %s)",
                   non_finite_type.c_str(),
                   model_quantity_str.c_str(),
-                  static_cast<int>(flat_index),
+                  gsl::narrow<int>(flat_index),
                   row_id.c_str(),
                   col_id.c_str()
                   );
@@ -1559,7 +1559,7 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
                   "AMICI encountered a %s value for %s[%i] (%s, %s) at t=%g",
                   non_finite_type.c_str(),
                   model_quantity_str.c_str(),
-                  static_cast<int>(flat_index),
+                  gsl::narrow<int>(flat_index),
                   row_id.c_str(),
                   col_id.c_str(),
                   t
@@ -1724,11 +1724,11 @@ void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
 
 void Model::checkLLHBufferSize(std::vector<realtype> const &sllh,
                                std::vector<realtype> const &s2llh) const {
-    if (sllh.size() != static_cast<unsigned>(nplist()))
+    if (sllh.size() != gsl::narrow<unsigned>(nplist()))
         throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());
 
-    if (s2llh.size() != static_cast<unsigned>((nJ - 1) * nplist()))
+    if (s2llh.size() != gsl::narrow<unsigned>((nJ - 1) * nplist()))
         throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
                            s2llh.size(), (nJ - 1) * nplist());
 }

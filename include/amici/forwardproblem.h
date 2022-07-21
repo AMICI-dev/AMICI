@@ -221,7 +221,7 @@ class ForwardProblem {
      * @return index
      */
     int getEventCounter() const {
-        return static_cast<int>(event_states_.size() - 1);
+        return gsl::narrow<int>(event_states_.size()) - 1;
     }
 
     /**
@@ -229,7 +229,7 @@ class ForwardProblem {
      * @return index
      */
     int getRootCounter() const {
-        return static_cast<int>(discs_.size() - 1);
+        return gsl::narrow<int>(discs_.size()) - 1;
     }
 
     /**

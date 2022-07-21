@@ -259,7 +259,7 @@ class SUNMatrixWrapper {
     void set_indexvals(const gsl::span<const sunindextype> vals) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
-        assert(static_cast<sunindextype>(vals.size()) == capacity());
+        assert(gsl::narrow<sunindextype>(vals.size()) == capacity());
         assert(indexvals_ == SM_INDEXVALS_S(matrix_));
         std::copy_n(vals.begin(), capacity(), indexvals_);
     }
@@ -300,7 +300,7 @@ class SUNMatrixWrapper {
     void set_indexptrs(const gsl::span<const sunindextype> ptrs) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
-        assert(static_cast<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
+        assert(gsl::narrow<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
         assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
         std::copy_n(ptrs.begin(), num_indexptrs() + 1, indexptrs_);
         num_nonzeros_ = indexptrs_[num_indexptrs()];

@@ -29,7 +29,7 @@ from .ode_export import (Constant, Expression, LogLikelihood, ODEExporter,
                          ODEModel, Observable, Parameter, SigmaY, State)
 
 CL_Prototype = Dict[str, Dict[str, Any]]
-ConservationLaw = Dict[str, Union[str, sp.Basic]]
+ConservationLaw = Dict[str, Union[Dict, str, sp.Basic]]
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -1195,11 +1195,10 @@ def _apply_conseration_law_sub(cl: ConservationLaw,
 
     :return: boolean flag indicating whether the substitution was applied
     """
-    coeff = cl['coefficients'].get(sub[0], 0.0)
-    if coeff == 0.0 or cl['state'] == sub[0]:
+    if not _state_in_cl_formula(sub[0], cl):
         return False
 
-    del cl['coefficients'][sub[0]]
+    coeff = cl['coefficients'].pop(sub[0], 0.0)
     # x_j = T/b_j - sum_{i≠j}(x_i * b_i) / b_j
     # don't need to account for totals here as we can simply
     # absorb that into the new total
@@ -1214,6 +1213,27 @@ def _apply_conseration_law_sub(cl: ConservationLaw,
             cl['coefficients'][k] = update
 
     return True
+
+
+def _state_in_cl_formula(
+        state: sp.Symbol, cl: ConservationLaw
+) -> bool:
+    """
+    Checks whether state appears in the formula the provided cl
+
+    :param state:
+        state
+
+    :param cl:
+        conservation law
+
+    :return:
+        boolean indicator
+    """
+    if cl['state'] == state:
+        return False
+
+    return cl['coefficients'].get(state, 0.0) != 0.0
 
 
 def _get_conservation_law_subs(
@@ -1233,9 +1253,8 @@ def _get_conservation_law_subs(
     return [
         (cl['state'], cl['coefficients']) for cl in conservation_laws
         if any(
-            cl['state'] in other_cl['coefficients']
+            _state_in_cl_formula(cl['state'], other_cl)
             for other_cl in conservation_laws
-            if other_cl != cl
         )
     ]
 

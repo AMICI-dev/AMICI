@@ -717,15 +717,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param state Model state
      */
     void setModelState(ModelState const &state) {
-        if (static_cast<int>(state.unscaledParameters.size()) != np())
+        if (gsl::narrow<int>(state.unscaledParameters.size()) != np())
             throw AmiException("Mismatch in parameter size");
-        if (static_cast<int>(state.fixedParameters.size()) != nk())
+        if (gsl::narrow<int>(state.fixedParameters.size()) != nk())
             throw AmiException("Mismatch in fixed parameter size");
-        if (static_cast<int>(state.h.size()) != ne)
+        if (gsl::narrow<int>(state.h.size()) != ne)
             throw AmiException("Mismatch in Heaviside size");
-        if (static_cast<int>(state.total_cl.size()) != ncl())
+        if (gsl::narrow<int>(state.total_cl.size()) != ncl())
             throw AmiException("Mismatch in conservation law size");
-        if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
+        if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np() )
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
