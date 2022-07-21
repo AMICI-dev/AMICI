@@ -661,7 +661,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
 
 
         if (!sres.empty())
-            for (int ires = 0; ires < static_cast<int>(res.size()); ++ires)
+            for (int ires = 0; ires < gsl::narrow<int>(res.size()); ++ires)
                 for (int ip = 0; ip < nplist; ++ip)
                     sres.at((ires * nplist + ip)) *= pcoefficient.at(ip);
 
