@@ -813,7 +813,7 @@ def _get_states_in_condition_table(
         return [
             col for col in petab_problem.condition_df
             if element_is_state(petab_problem.sbml_model, col)
-            and (not condition or not pd.isna(
+            and (condition is None or not pd.isna(
                 petab_problem.condition_df.loc[
                     condition[SIMULATION_CONDITION_ID], col]
             ))
