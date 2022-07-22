@@ -294,7 +294,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            sbml_model=petab_problem.sbml_model,
+            model=petab_problem.model,
             **dict(default_parameter_mapping_kwargs,
                    **parameter_mapping_kwargs)
         )
