@@ -419,6 +419,7 @@ def import_model_sbml(
     :return:
         The created :class:`amici.sbml_import.SbmlImporter` instance.
     """
+    from petab.models.sbml_model import SbmlModel
 
     set_log_level(logger, verbose)
 
@@ -436,7 +437,9 @@ def import_model_sbml(
                              "`measurement_table`.")
 
         petab_problem = petab.Problem(
-            sbml_model=sbml_model,
+            model=SbmlModel(sbml_model)
+            if isinstance(sbml_model, libsbml.Model)
+            else SbmlModel.from_file(sbml_model),
             condition_df=petab.get_condition_df(condition_table),
             observable_df=petab.get_observable_df(observable_table),
         )
@@ -445,12 +448,12 @@ def import_model_sbml(
         raise NotImplementedError("PEtab import without observables table "
                                   "is currently not supported.")
 
+    assert isinstance(petab_problem.model, SbmlModel)
+
     # Model name from SBML ID or filename
     if model_name is None:
-        if isinstance(petab_problem.sbml_model, libsbml.Model):
-            model_name = petab_problem.sbml_model.getId()
-        else:
-            model_name = os.path.splitext(os.path.split(sbml_model)[-1])[0]
+        model_name = petab_problem.model.sbml_model.getId() \
+                     or os.path.splitext(os.path.split(sbml_model)[-1])[0]
 
     if model_output_dir is None:
         model_output_dir = os.path.join(
@@ -460,18 +463,8 @@ def import_model_sbml(
     logger.info(f"Model name is '{model_name}'.\n"
                 f"Writing model code to '{model_output_dir}'.")
 
-    if isinstance(sbml_model, Path):
-        sbml_model = str(sbml_model)
-
-    # Load model
-    if isinstance(sbml_model, str):
-        # from file
-        sbml_reader = libsbml.SBMLReader()
-        sbml_doc = sbml_reader.readSBMLFromFile(sbml_model)
-    else:
-        # Create a copy, because it will be modified by SbmlImporter
-        sbml_doc = petab_problem.sbml_model.getSBMLDocument().clone()
-
+    # Create a copy, because it will be modified by SbmlImporter
+    sbml_doc = petab_problem.model.sbml_model.getSBMLDocument().clone()
     sbml_model = sbml_doc.getModel()
 
     show_model_info(sbml_model)
