@@ -13,6 +13,7 @@ import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture
@@ -137,8 +138,10 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
 
     # generate artificial data
     rdata = amici.runAmiciSimulation(model, solver)
-    assert np.allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0])
-    assert np.allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1])
+    assert_allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0],
+                    rtol=1.e-5, atol=1.e-8)
+    assert_allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1],
+                    rtol=1.e-5, atol=1.e-8)
     edata = amici.ExpData(rdata, 1.0, 0.0)
     edata.setObservedDataStdDev(np.nan)
 
@@ -241,13 +244,17 @@ def test_steadystate_simulation(model_steadystate_module):
     df_edata = amici.getDataObservablesAsDataFrame(model, edata)
     edata_reconstructed = amici.getEdataFromDataFrame(model, df_edata)
 
-    assert np.isclose(
+    assert_allclose(
         amici.ExpDataView(edata[0])['observedData'],
-        amici.ExpDataView(edata_reconstructed[0])['observedData']).all()
+        amici.ExpDataView(edata_reconstructed[0])['observedData'],
+        rtol=1.e-5, atol=1.e-8
+    )
 
-    assert np.isclose(
+    assert_allclose(
         amici.ExpDataView(edata[0])['observedDataStdDev'],
-        amici.ExpDataView(edata_reconstructed[0])['observedDataStdDev']).all()
+        amici.ExpDataView(edata_reconstructed[0])['observedDataStdDev'],
+        rtol=1.e-5, atol=1.e-8
+    )
 
     if len(edata[0].fixedParameters):
         assert list(edata[0].fixedParameters) \
@@ -261,17 +268,23 @@ def test_steadystate_simulation(model_steadystate_module):
         list(edata_reconstructed[0].fixedParametersPreequilibration)
 
     df_state = amici.getSimulationStatesAsDataFrame(model, edata, rdata)
-    assert np.isclose(rdata[0]['x'],
-                      df_state[list(model.getStateIds())].values).all()
+    assert_allclose(
+        rdata[0]['x'], df_state[list(model.getStateIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
 
     df_obs = amici.getSimulationObservablesAsDataFrame(model, edata, rdata)
-    assert np.isclose(rdata[0]['y'],
-                      df_obs[list(model.getObservableIds())].values).all()
+    assert_allclose(
+        rdata[0]['y'], df_obs[list(model.getObservableIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
     amici.getResidualsAsDataFrame(model, edata, rdata)
 
     df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
-    assert np.isclose(rdata[0]['w'],
-                      df_expr[list(model.getExpressionIds())].values).all()
+    assert_allclose(
+        rdata[0]['w'], df_expr[list(model.getExpressionIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
