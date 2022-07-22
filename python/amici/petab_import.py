@@ -4,8 +4,6 @@ PEtab Import
 Import a model in the :mod:`petab` (https://github.com/PEtab-dev/PEtab) format
 into AMICI.
 """
-
-
 import argparse
 import importlib
 import logging
@@ -24,6 +22,7 @@ import pandas as pd
 import petab
 import sympy as sp
 from petab.C import *
+from petab.parameters import get_valid_parameters_for_parameter_table
 
 import amici
 from amici.logging import get_logger, log_execution_time, set_log_level
@@ -61,7 +60,6 @@ def _add_global_parameter(sbml_model: libsbml.Model,
     Returns:
         The created parameter
     """
-
     if parameter_name is None:
         parameter_name = parameter_id
 
@@ -113,8 +111,8 @@ def get_fixed_parameters(
     # due to legacy API, we might not always have a parameter table, though
     fixed_parameters = set()
     if petab_problem.parameter_df is not None:
-        all_parameters = petab.get_valid_parameters_for_parameter_table(
-            sbml_model=petab_problem.sbml_model,
+        all_parameters = get_valid_parameters_for_parameter_table(
+            model=petab_problem.model,
             condition_df=petab_problem.condition_df,
             observable_df=petab_problem.observable_df
             if petab_problem.observable_df is not None
