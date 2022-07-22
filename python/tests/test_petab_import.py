@@ -5,6 +5,7 @@ import pytest
 import pandas as pd
 
 petab = pytest.importorskip("petab")
+SbmlModel = pytest.importorskip("petab.models.sbml_model.SbmlModel")
 amici_petab_import = pytest.importorskip("amici.petab_import")
 
 
@@ -59,7 +60,7 @@ def test_get_fixed_parameters(simple_sbml_model):
     )
     print(condition_df)
     print(parameter_df)
-    petab_problem = petab.Problem(sbml_model=sbml_model,
+    petab_problem = petab.Problem(model=SbmlModel(sbml_model),
                                   parameter_df=parameter_df,
                                   condition_df=condition_df)
     assert set(amici_petab_import.get_fixed_parameters(petab_problem)) \

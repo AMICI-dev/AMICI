@@ -452,8 +452,11 @@ def import_model_sbml(
 
     # Model name from SBML ID or filename
     if model_name is None:
-        model_name = petab_problem.model.sbml_model.getId() \
-                     or os.path.splitext(os.path.split(sbml_model)[-1])[0]
+        if not (model_name := petab_problem.model.sbml_model.getId()):
+            if not isinstance(sbml_model, (str, Path)):
+                raise ValueError("No `model_name` was provided and no model "
+                                 "ID was specified in the SBML model.")
+            model_name = os.path.splitext(os.path.split(sbml_model)[-1])[0]
 
     if model_output_dir is None:
         model_output_dir = os.path.join(
