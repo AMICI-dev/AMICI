@@ -48,9 +48,9 @@
  */
 
 #if defined(SUNDIALS_INT64_T)
-#define KLU_INDEXTYPE int64_t
+#define KLU_INDEXTYPE long int
 #else
-#define KLU_INDEXTYPE int32_t
+#define KLU_INDEXTYPE int
 #endif
 
 /*
@@ -331,31 +331,31 @@ int SUNLinSolSetup_KLU(SUNLinearSolver S, SUNMatrix A)
     if ( COMMON(S).rcond < uround_twothirds ) {
 
       /* Condition number may be getting large.
-         Compute more accurate estimate */
+	 Compute more accurate estimate */
       retval = sun_klu_condest((KLU_INDEXTYPE*) SUNSparseMatrix_IndexPointers(A),
                                SUNSparseMatrix_Data(A),
                                SYMBOLIC(S),
                                NUMERIC(S),
                                &COMMON(S));
       if (retval == 0) {
-        LASTFLAG(S) = SUNLS_PACKAGE_FAIL_REC;
+	LASTFLAG(S) = SUNLS_PACKAGE_FAIL_REC;
         return(LASTFLAG(S));
       }
 
       if ( COMMON(S).condest > (ONE/uround_twothirds) ) {
 
-        /* More accurate estimate also says condition number is
-           large, so recompute the numeric factorization */
-        sun_klu_free_numeric(&NUMERIC(S), &COMMON(S));
-        NUMERIC(S) = sun_klu_factor((KLU_INDEXTYPE*) SUNSparseMatrix_IndexPointers(A),
+	/* More accurate estimate also says condition number is
+	   large, so recompute the numeric factorization */
+	sun_klu_free_numeric(&NUMERIC(S), &COMMON(S));
+	NUMERIC(S) = sun_klu_factor((KLU_INDEXTYPE*) SUNSparseMatrix_IndexPointers(A),
                                     (KLU_INDEXTYPE*) SUNSparseMatrix_IndexValues(A),
                                     SUNSparseMatrix_Data(A),
                                     SYMBOLIC(S),
                                     &COMMON(S));
-        if (NUMERIC(S) == NULL) {
-          LASTFLAG(S) = SUNLS_PACKAGE_FAIL_UNREC;
+	if (NUMERIC(S) == NULL) {
+	  LASTFLAG(S) = SUNLS_PACKAGE_FAIL_UNREC;
           return(LASTFLAG(S));
-        }
+	}
       }
 
     }
