@@ -65,6 +65,7 @@ function includesstr = getIncludeString(amici_root_path, sundials_path, ssparse_
     includesstr = '';
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'include'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src'), '"');
+    includesstr = strcat(includesstr,' -I"', fullfile(sundials_path, 'src', 'sundials'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path, 'src'), '"');
     includesstr = strcat(includesstr,' -I"', fullfile(amici_root_path, 'include'), '"');
