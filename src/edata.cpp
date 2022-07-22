@@ -115,7 +115,7 @@ std::vector<realtype> const& ExpData::getTimepoints() const {
 }
 
 int ExpData::nt() const {
-    return static_cast<int>(ts_.size());
+    return gsl::narrow<int>(ts_.size());
 }
 
 realtype ExpData::getTimepoint(int it) const {

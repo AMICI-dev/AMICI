@@ -44,7 +44,7 @@ int SUNLinSolWrapper::Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) c
 }
 
 long SUNLinSolWrapper::getLastFlag() const {
-    return static_cast<long>(SUNLinSolLastFlag(solver_));
+    return gsl::narrow<long>(SUNLinSolLastFlag(solver_));
 }
 
 int SUNLinSolWrapper::space(long *lenrwLS, long *leniwLS) const {

@@ -19,9 +19,9 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
     : model(model),
       solver(solver),
       edata(edata),
-      nroots_(static_cast<decltype (nroots_)::size_type>(model->ne), 0),
-      rootvals_(static_cast<decltype (rootvals_)::size_type>(model->ne), 0.0),
-      rval_tmp_(static_cast<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
+      nroots_(gsl::narrow<decltype (nroots_)::size_type>(model->ne), 0),
+      rootvals_(gsl::narrow<decltype (rootvals_)::size_type>(model->ne), 0.0),
+      rval_tmp_(gsl::narrow<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
       dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0),
       dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t_(model->t0()),
@@ -63,7 +63,7 @@ void ForwardProblem::workForwardProblem() {
     if (presimulate)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
-    
+
     if (model->ne && std::any_of(roots_found_.begin(), roots_found_.end(),
                                  [](int rf){return rf==1;}))
         handleEvent(&t0, false, true);
@@ -82,7 +82,7 @@ void ForwardProblem::workForwardProblem() {
                 handleEvent(&t0, false, true);
         }
     }
-    
+
     /* when computing adjoint sensitivity analysis with presimulation,
      we need to store sx after the reinitialization after preequilibration
      but before reinitialization after presimulation. As presimulation with ASA

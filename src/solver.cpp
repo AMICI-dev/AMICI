@@ -266,16 +266,16 @@ void Solver::storeDiagnosis() const {
 
     long int lnumber;
     getNumSteps(solver_memory_.get(), &lnumber);
-    ns_.push_back(static_cast<int>(lnumber));
+    ns_.push_back(gsl::narrow<int>(lnumber));
 
     getNumRhsEvals(solver_memory_.get(), &lnumber);
-    nrhs_.push_back(static_cast<int>(lnumber));
+    nrhs_.push_back(gsl::narrow<int>(lnumber));
 
     getNumErrTestFails(solver_memory_.get(), &lnumber);
-    netf_.push_back(static_cast<int>(lnumber));
+    netf_.push_back(gsl::narrow<int>(lnumber));
 
     getNumNonlinSolvConvFails(solver_memory_.get(), &lnumber);
-    nnlscf_.push_back(static_cast<int>(lnumber));
+    nnlscf_.push_back(gsl::narrow<int>(lnumber));
 
     int number;
     getLastOrder(solver_memory_.get(), &number);
@@ -293,16 +293,16 @@ void Solver::storeDiagnosisB(const int which) const {
 
     long int number;
     getNumSteps(solver_memory_B_.at(which).get(), &number);
-    nsB_.push_back(static_cast<int>(number));
+    nsB_.push_back(gsl::narrow<int>(number));
 
     getNumRhsEvals(solver_memory_B_.at(which).get(), &number);
-    nrhsB_.push_back(static_cast<int>(number));
+    nrhsB_.push_back(gsl::narrow<int>(number));
 
     getNumErrTestFails(solver_memory_B_.at(which).get(), &number);
-    netfB_.push_back(static_cast<int>(number));
+    netfB_.push_back(gsl::narrow<int>(number));
 
     getNumNonlinSolvConvFails(solver_memory_B_.at(which).get(), &number);
-    nnlscfB_.push_back(static_cast<int>(number));
+    nnlscfB_.push_back(gsl::narrow<int>(number));
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {
