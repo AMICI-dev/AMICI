@@ -118,6 +118,8 @@ void CVodeSolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/
        as re-calling init would unset solver settings. */
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_f = fxBdot_ss;
+
+    CVodeSetNlsRhsFn(solver_memory_.get(), fxBdot_ss);
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
