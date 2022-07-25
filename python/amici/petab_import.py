@@ -7,6 +7,7 @@ into AMICI.
 import argparse
 import importlib
 import logging
+import math
 import os
 import re
 import shutil
@@ -17,15 +18,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 from warnings import warn
 
+import amici
 import libsbml
 import pandas as pd
 import petab
 import sympy as sp
-from petab.C import *
-from petab.models import MODEL_TYPE_SBML, MODEL_TYPE_PYSB
-from petab.parameters import get_valid_parameters_for_parameter_table
-import amici
 from amici.logging import get_logger, log_execution_time, set_log_level
+from petab.C import *
+from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+from petab.parameters import get_valid_parameters_for_parameter_table
 
 try:
     from amici.petab_import_pysb import import_model_pysb
@@ -330,9 +331,7 @@ def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
     """
     BASE_DIR = Path("amici_models").absolute()
     BASE_DIR.mkdir(exist_ok=True)
-    # try sbml model id
-    sbml_model_id = sbml_model.getId()
-    if sbml_model_id:
+    if sbml_model_id := sbml_model.getId():
         return BASE_DIR / sbml_model_id
 
     # create random folder name
@@ -629,7 +628,6 @@ def get_observation_model(
     :return:
         Tuple of dicts with observables, noise distributions, and sigmas.
     """
-
     if observable_df is None:
         return {}, {}, {}
 
@@ -662,8 +660,9 @@ def get_observation_model(
     return observables, noise_distrs, sigmas
 
 
-def petab_noise_distributions_to_amici(observable_df: pd.DataFrame
-                                       ) -> Dict[str, str]:
+def petab_noise_distributions_to_amici(
+        observable_df: pd.DataFrame
+) -> Dict[str, str]:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
@@ -737,7 +736,6 @@ def _parse_cli_args():
     :return:
         Parsed CLI arguments from :mod:`argparse`.
     """
-
     parser = argparse.ArgumentParser(
         description='Import PEtab-format model into AMICI.')
 
