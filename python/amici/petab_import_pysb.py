@@ -29,9 +29,11 @@ def _add_observation_model(
     observables table"""
 
     # add any required output parameters
-    local_syms = {sp.Symbol.__str__(comp): comp for comp in
-                  pysb_model.components if
-                  isinstance(comp, sp.Symbol)}
+    local_syms = {
+        sp.Symbol.__str__(comp): comp
+        for comp in pysb_model.components
+        if isinstance(comp, sp.Symbol)
+    }
     for formula in [*petab_problem.observable_df[OBSERVABLE_FORMULA],
                     *petab_problem.observable_df[NOISE_FORMULA]]:
         sym = sp.sympify(formula, locals=local_syms)
@@ -97,7 +99,6 @@ def import_model_pysb(
 
     logger.info("Importing model ...")
 
-    observable_table = petab_problem.observable_df
     if not isinstance(petab_problem.model, PySBModel):
         raise ValueError("Not a PySB model")
     pysb_model = petab_problem.model.model
@@ -115,29 +116,27 @@ def import_model_pysb(
             continue
 
         if x not in model_parameters:
-            # TODO
+            # TODO: x may also be a output parameter ID
             raise NotImplementedError(
                 "For PySB PEtab import, only model parameters, but no states "
                 "or compartments are allowed in the condition table. "
                 f"Offending column: {x}"
             )
 
-    # TODO
-    constant_parameters = petab_import.get_fixed_parameters(
-        petab_problem)
+    constant_parameters = petab_import.get_fixed_parameters(petab_problem)
 
-    if observable_table is None:
+    if petab_problem.observable_df is None:
         observables = None
         sigmas = None
         noise_distrs = None
     else:
         observables = [expr.name for expr in pysb_model.expressions
-                       if expr.name in observable_table.index]
+                       if expr.name in petab_problem.observable_df.index]
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
         noise_distrs = petab_import.petab_noise_distributions_to_amici(
-            observable_table)
+            petab_problem.observable_df)
 
     from amici.pysb_import import pysb2amici
     pysb2amici(model=pysb_model,
