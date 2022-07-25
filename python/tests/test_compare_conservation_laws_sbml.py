@@ -181,7 +181,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
                         err_msg=f"rdata.{field} mismatch")
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
-    # check failure of steady state senistivity computation if run wo CLs
+    # check failure of steady state sensitivity computation if run wo CLs
     model_without_cl.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode.newtonOnly
     )
@@ -191,16 +191,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
         assert rdata['status'] == amici.AMICI_ERROR
 
 
-def test_adjoint_pre_and_post_equilibration(edata_fixture):
+def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
     # get both models
-    model_module = amici.import_model_module(
-        'model_constant_species',
-        module_path=os.path.abspath('model_constant_species'))
-    model = model_module.getModel()
-    model_module_cl = amici.import_model_module(
-        'model_constant_species_cl',
-        module_path=os.path.abspath('model_constant_species_cl'))
-    model_cl = model_module_cl.getModel()
+    model_cl, model = models
 
     # check gradient with and without state reinitialization
     for edata in edata_fixture:
