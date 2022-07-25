@@ -142,7 +142,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     for field in ['x', 'sx']:
         assert_allclose(rdata[field], rdata_cl[field],
                         rtol=1.e-5, atol=1.e-8,
-                        err_msg=f"rdata[{field}] mismatch")
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
 
