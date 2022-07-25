@@ -87,22 +87,23 @@ def get_fixed_parameters(
     :return:
         List of IDs of parameters which are to be considered constant.
     """
-    # initial concentrations for species or initial compartment sizes in
-    # condition table will need to be turned into fixed parameters
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        # initial concentrations for species or initial compartment sizes in
+        # condition table will need to be turned into fixed parameters
 
-    # if there is no initial assignment for that species, we'd need
-    # to create one. to avoid any naming collision right away, we don't
-    # allow that for now
+        # if there is no initial assignment for that species, we'd need
+        # to create one. to avoid any naming collision right away, we don't
+        # allow that for now
 
-    # we can't handle them yet
-    compartments = [
-        col for col in petab_problem.condition_df
-        if petab_problem.sbml_model.getCompartment(col) is not None
-    ]
-    if compartments:
-        raise NotImplementedError("Can't handle initial compartment sizes "
-                                  "at the moment. Consider creating an "
-                                  f"initial assignment for {compartments}")
+        # we can't handle them yet
+        compartments = [
+            col for col in petab_problem.condition_df
+            if petab_problem.model.sbml_model.getCompartment(col) is not None
+        ]
+        if compartments:
+            raise NotImplementedError("Can't handle initial compartment sizes "
+                                      "at the moment. Consider creating an "
+                                      f"initial assignment for {compartments}")
 
     # if we have a parameter table, all parameters that are allowed to be
     #  listed in the parameter table, but are not marked as estimated, can be
@@ -124,9 +125,6 @@ def get_fixed_parameters(
                                     petab_problem.parameter_df[ESTIMATE] == 1]
         fixed_parameters = set(all_parameters) - set(estimated_parameters)
 
-    sbml_model = petab_problem.sbml_model
-    condition_df = petab_problem.condition_df
-
     # Column names are model parameter IDs, compartment IDs or species IDs.
     # Thereof, all parameters except for any overridden ones should be made
     # constant.
@@ -134,6 +132,7 @@ def get_fixed_parameters(
     # increase model reusability)
 
     # handle parameters in condition table
+    condition_df = petab_problem.condition_df
     if condition_df is not None:
         logger.debug(f'Condition table: {condition_df.shape}')
 
@@ -148,19 +147,18 @@ def get_fixed_parameters(
             #  of overriding
             if condition_df[p].dtype != 'O'
                # p is a parameter
-               and sbml_model.getParameter(p) is not None
-               # but not a rule target
-               and sbml_model.getRuleByVariable(p) is None
+               and not petab_problem.model.is_state_variable(p)
         )
 
     # Ensure mentioned parameters exist in the model. Remove additional ones
     # from list
     for fixed_parameter in fixed_parameters.copy():
         # check global parameters
-        if not sbml_model.getParameter(fixed_parameter):
-            logger.warning(f"Parameter or species '{fixed_parameter}'"
-                           " provided in condition table but not present in"
-                           " model. Ignoring.")
+        if not petab_problem.model.has_entity_with_id(fixed_parameter):
+            # TODO: could still exist as an output parameter?
+            logger.warning(f"Column '{fixed_parameter}' used in condition "
+                           "table but not entity with the corresponding ID "
+                           "exists. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
     return list(sorted(fixed_parameters))
