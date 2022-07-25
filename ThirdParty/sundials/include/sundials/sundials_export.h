@@ -22,11 +22,13 @@
 #endif
 
 #ifndef SUNDIALS_DEPRECATED
-#ifdef __GNUC__
-#  define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
-#else
-#  define SUNDIALS_DEPRECATED
-#endif
+/* BEGIN changed for AMICI */
+#  ifdef __GNUC__
+#    define SUNDIALS_DEPRECATED __attribute__ ((__deprecated__))
+#  else
+#    define SUNDIALS_DEPRECATED
+#  endif
+/* END changed for AMICI */
 #endif
 
 #ifndef SUNDIALS_DEPRECATED_EXPORT

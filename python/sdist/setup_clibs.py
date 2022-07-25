@@ -37,6 +37,7 @@ def get_sundials_include_dirs(sundials_base_dir: Path) -> List[str]:
     return list(map(str, [
         sundials_base_dir / 'include',
         sundials_base_dir / 'src',
+        sundials_base_dir / 'src' / 'sundials',
     ]))
 
 
