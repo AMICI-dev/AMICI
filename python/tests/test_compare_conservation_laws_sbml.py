@@ -129,7 +129,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     # compare state trajectories
     assert_allclose(rdata['x'], rdata_cl['x'],
                     rtol=1.e-5, atol=1.e-8,
-                    err_msg="rdata[x] mismatch")
+                    err_msg="rdata.x mismatch")
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
     # run simulations
@@ -142,7 +142,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     for field in ['x', 'sx']:
         assert_allclose(rdata[field], rdata_cl[field],
                         rtol=1.e-5, atol=1.e-8,
-                        err_msg=f"rdata[{field}] mismatch")
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
 
@@ -157,7 +157,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     for field in ['x', 'x_ss', 'llh']:
         assert_allclose(rdata[field], rdata_cl[field],
                         rtol=1.e-5, atol=1.e-8,
-                        err_msg=f"rdata[{field}] mismatch")
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
 
@@ -178,7 +178,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
         assert_allclose(rdata[field], rdata_cl[field],
                         rtol=1.e-5, atol=1.e-8,
-                        err_msg=f"rdata[{field}] mismatch")
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state sensitivity computation if run wo CLs
