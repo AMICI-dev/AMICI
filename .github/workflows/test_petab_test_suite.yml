@@ -61,9 +61,7 @@ jobs:
       - name: Install petab
         run: |
           source ./build/venv/bin/activate \
-            && pip3 install wheel pytest shyaml pytest-cov pysb \
-            && pip3 install \
-          git+https://github.com/PEtab-dev/libpetab-python.git@model_pysb
+            && pip3 install wheel pytest shyaml pytest-cov pysb
 
       # retrieve test models
       - name: Download and install PEtab test suite
@@ -76,6 +74,7 @@ jobs:
       - name: Run PEtab-related unit tests
         run: |
           source ./build/venv/bin/activate \
+           && pip install -U  git+https://github.com/PEtab-dev/libpetab-python.git@model_pysb \
             && pytest --cov-report=xml:coverage.xml \
               --cov=./ python/tests/test_*petab*.py
 
