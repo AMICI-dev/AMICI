@@ -178,7 +178,7 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
         assert_allclose(rdata[field], rdata_cl[field],
                         rtol=1.e-5, atol=1.e-8,
-                        err_msg=f"rdata[{field}] mismatch")
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state senistivity computation if run wo CLs
