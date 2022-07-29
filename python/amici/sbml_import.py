@@ -1548,7 +1548,6 @@ class SbmlImporter:
         for row in kernel:
             state_idxs = [i for i, coeff in enumerate(row) if coeff]
             coefficients = [coeff for coeff in row if coeff]
-            print(state_idxs, coefficients)
             raw_cls.append((state_idxs[0], state_idxs, coefficients),)
 
         return raw_cls
