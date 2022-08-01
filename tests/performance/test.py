@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
-import amici
-import sys
-import petab
-import subprocess
 import os
 import re
 import shutil
+import subprocess
+import sys
+from pathlib import Path
 
+import petab
+
+import amici
 from amici.petab_import import import_model
 
 
@@ -36,20 +38,21 @@ def check_results(rdata):
     assert rdata['status'] == amici.AMICI_SUCCESS
 
 
-def run_import(model_name):
-    git_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT')
-    if not os.path.exists(git_dir):
+def run_import(model_name, model_dir: Path):
+    git_dir = Path('CS_Signalling_ERBB_RAS_AKT')
+    if not git_dir.exists():
         subprocess.run([
             'git', 'clone', '--depth', '1',
             'https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT']
         )
-    os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT'))
+    os.chdir(git_dir)
 
     pp = petab.Problem.from_yaml(
         'FroehlichKes2018/PEtab/FroehlichKes2018.yaml'
     )
     petab.lint_problem(pp)
     import_model(model_name=model_name,
+                 model_output_dir=model_dir,
                  sbml_model=pp.sbml_model,
                  condition_table=pp.condition_df,
                  observable_table=pp.observable_df,
@@ -58,16 +61,15 @@ def run_import(model_name):
                  verbose=True)
 
 
-def compile_model(model_name, model_dir):
+def compile_model(model_name: str, model_dir: Path):
     if model_name != os.path.basename(model_dir):
         shutil.copytree(
-            os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT',
-                         model_name),
+            Path('CS_Signalling_ERBB_RAS_AKT', model_name),
             model_dir
         )
 
     subprocess.run(['python', 'setup.py',
-                    'build_ext', f'--build-lib=.', '--force'],
+                    'build_ext', '--build-lib=.', '--force'],
                    cwd=model_dir)
 
 
@@ -112,12 +114,12 @@ def prepare_simulation(arg, model, solver, edata):
 def main():
     arg, suffix = parse_args()
 
-    model_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT',
-                             'CS_Signalling_ERBB_RAS_AKT_petab' + suffix)
+    model_dir = Path('CS_Signalling_ERBB_RAS_AKT',
+                     f'CS_Signalling_ERBB_RAS_AKT_petab{suffix}')
     model_name = 'CS_Signalling_ERBB_RAS_AKT_petab'
 
     if arg == 'import':
-        run_import(model_name)
+        run_import(model_name, model_dir)
         return
     elif arg == 'compile':
         compile_model(model_name, model_dir)
