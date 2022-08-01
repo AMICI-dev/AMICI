@@ -2,18 +2,18 @@
 import os
 import re
 import shutil
+from numbers import Number
 from pathlib import Path
 from urllib.request import urlopen
 
+import amici
 import libsbml
 import numpy as np
 import pytest
-
-import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 
 
 @pytest.fixture
@@ -294,6 +294,41 @@ def test_steadystate_simulation(model_steadystate_module):
     # Run some additional tests which need a working Model,
     # but don't need precomputed expectations.
     _test_set_parameters_by_dict(model_steadystate_module)
+
+
+def test_solver_reuse(model_steadystate_module):
+    model = model_steadystate_module.getModel()
+    model.setTimepoints(np.linspace(0, 60, 60))
+    solver = model.getSolver()
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    rdata = amici.runAmiciSimulation(model, solver)
+    edata = amici.ExpData(rdata, 1, 0)
+
+    for sensi_method in (
+            amici.SensitivityMethod.forward,
+            amici.SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityMethod(sensi_method)
+        rdata1 = amici.runAmiciSimulation(model, solver, edata)
+        rdata2 = amici.runAmiciSimulation(model, solver, edata)
+
+        assert rdata1.status == amici.AMICI_SUCCESS
+
+        for attr in rdata1:
+            if 'time' in attr:
+                continue
+
+            val1 = getattr(rdata1, attr)
+            val2 = getattr(rdata2, attr)
+            msg = f"Values for {attr} do not match for sensitivity "\
+                  f"method {sensi_method}"
+            if isinstance(val1, np.ndarray):
+                assert_array_equal(val1, val2, err_msg=msg)
+            elif isinstance(val1, Number) and np.isnan(val1):
+                assert np.isnan(val2)
+            else:
+                assert val1 == val2, msg
+
 
 
 @pytest.fixture
