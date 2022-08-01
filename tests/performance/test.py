@@ -2,7 +2,6 @@
 
 import os
 import re
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -45,11 +44,9 @@ def run_import(model_name, model_dir: Path):
             'git', 'clone', '--depth', '1',
             'https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT']
         )
-    os.chdir(git_dir)
 
-    pp = petab.Problem.from_yaml(
-        'FroehlichKes2018/PEtab/FroehlichKes2018.yaml'
-    )
+    pp = petab.Problem.from_yaml(git_dir / 'FroehlichKes2018' / 'PEtab'
+                                 / 'FroehlichKes2018.yaml')
     petab.lint_problem(pp)
     import_model(model_name=model_name,
                  model_output_dir=model_dir,
@@ -62,12 +59,6 @@ def run_import(model_name, model_dir: Path):
 
 
 def compile_model(model_name: str, model_dir: Path):
-    if model_name != os.path.basename(model_dir):
-        shutil.copytree(
-            Path('CS_Signalling_ERBB_RAS_AKT', model_name),
-            model_dir
-        )
-
     subprocess.run(['python', 'setup.py',
                     'build_ext', '--build-lib=.', '--force'],
                    cwd=model_dir)
@@ -114,9 +105,8 @@ def prepare_simulation(arg, model, solver, edata):
 def main():
     arg, suffix = parse_args()
 
-    model_dir = Path('CS_Signalling_ERBB_RAS_AKT',
-                     f'CS_Signalling_ERBB_RAS_AKT_petab{suffix}')
-    model_name = 'CS_Signalling_ERBB_RAS_AKT_petab'
+    model_dir = Path(f'model_performance_test_{suffix}')
+    model_name = 'model_performance_test'
 
     if arg == 'import':
         run_import(model_name, model_dir)
