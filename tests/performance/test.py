@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-import petab
-
 import amici
+import petab
 from amici.petab_import import import_model
 
 
@@ -58,10 +57,13 @@ def run_import(model_name, model_dir: Path):
                  verbose=True)
 
 
-def compile_model(model_name: str, model_dir: Path):
+def compile_model(model_dir_source: Path, model_dir_compiled: Path):
+    if model_dir_source != model_dir_compiled:
+        shutil.copytree(model_dir_source, model_dir_compiled)
+
     subprocess.run(['python', 'setup.py',
                     'build_ext', '--build-lib=.', '--force'],
-                   cwd=model_dir)
+                   cwd=model_dir_compiled)
 
 
 def prepare_simulation(arg, model, solver, edata):
@@ -105,17 +107,22 @@ def prepare_simulation(arg, model, solver, edata):
 def main():
     arg, suffix = parse_args()
 
-    model_dir = Path(f'model_performance_test_{suffix}')
+    # Model is imported once to this directory
+    model_dir_source = Path('model_performance_test')
+    # and copied to and compiled in this directory with different compiler
+    #  options
+    model_dir_compiled = Path(f'model_performance_test_{suffix}')
     model_name = 'model_performance_test'
 
     if arg == 'import':
-        run_import(model_name, model_dir)
+        run_import(model_name, model_dir_source)
         return
     elif arg == 'compile':
-        compile_model(model_name, model_dir)
+        compile_model(model_dir_source, model_dir_compiled)
         return
     else:
-        model_module = amici.import_model_module(model_name, model_dir)
+        model_module = amici.import_model_module(model_name,
+                                                 model_dir_compiled)
         model = model_module.getModel()
         solver = model.getSolver()
         # TODO
