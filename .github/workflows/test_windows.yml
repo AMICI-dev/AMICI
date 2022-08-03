@@ -55,7 +55,7 @@ jobs:
 
     - name: Create sdist
       working-directory: python/sdist
-      run: python setup.py sdist
+      run: pip install build && python -m build --sdist
 
     - name: Install sdist
       working-directory: python/sdist
