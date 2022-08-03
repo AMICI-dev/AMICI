@@ -39,8 +39,6 @@ jobs:
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
 
-    - run: pip3 install pytest shyaml
-
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
     - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
 
@@ -51,7 +49,7 @@ jobs:
     - name: Install AMICI sdist
       run: |
         AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test]
 
     # retrieve test models
     - name: Download and test benchmark collection

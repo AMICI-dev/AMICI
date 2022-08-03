@@ -87,7 +87,6 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-        && pip3 install coverage pytest pytest-cov pytest-rerunfailures \
         && pytest \
           --ignore-glob=*petab* \
           --cov=amici \
