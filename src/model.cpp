@@ -1016,10 +1016,37 @@ void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
 void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
                                 const realtype t, const AmiVector &x,
                                 const AmiVectorArray &sx) {
-    for (int ip = 0; ip < nplist(); ip++) {
-        fsz(&sz[ip * nz], ie, t, computeX_pos(x),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), sx.data(ip), plist(ip));
+    if (pythonGenerated) {
+        if (!nz)
+            return;
+
+        fdzdx(ie, t, x);
+        fdzdp(ie, t, x);
+
+        derived_state_.sx_.resize(nx_solver * nplist());
+        sx.flatten_to_vector(derived_state_.sx_);
+
+        // compute sy = 1.0*dydx*sx + 1.0*sy
+        // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
+        //        M  K                 K  N                     M  N
+        //        lda                  ldb                      ldc
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
+                    derived_state_.dzdx_.data(), ny,
+                    derived_state_.sx_.data(), nx_solver, 1.0,
+                    derived_state_.dzdp_.data(),
+                    nz);
+
+        writeSlice(derived_state_.dzdp_, sz);
+
+        if (always_check_finite_)
+            checkFinite(sz, ModelQuantity::sz, nplist());
+    } else {
+        for (int ip = 0; ip < nplist(); ip++) {
+            fsz(&sz[ip * nz], ie, t, computeX_pos(x),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), sx.data(ip), plist(ip));
+        }
     }
 }
 
@@ -1043,11 +1070,38 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
                                               const int ie, const realtype t,
                                               const AmiVector &x,
                                               const AmiVectorArray &sx) {
-    for (int ip = 0; ip < nplist(); ip++) {
-        fsrz(&srz[ip * nz], ie, t, computeX_pos(x),
-             state_.unscaledParameters.data(), state_.fixedParameters.data(),
-             state_.h.data(), sx.data(ip),
-             plist(ip));
+    if (pythonGenerated) {
+        if (!nz)
+            return;
+
+        fdrzdx(ie, t, x);
+        fdrzdp(ie, t, x);
+
+        derived_state_.sx_.resize(nx_solver * nplist());
+        sx.flatten_to_vector(derived_state_.sx_);
+
+        // compute sy = 1.0*dydx*sx + 1.0*sy
+        // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
+        //        M  K                 K  N                     M  N
+        //        lda                  ldb                      ldc
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
+                    derived_state_.drzdx_.data(), ny,
+                    derived_state_.sx_.data(), nx_solver, 1.0,
+                    derived_state_.drzdp_.data(),
+                    nz);
+
+        writeSlice(derived_state_.drzdp_, srz);
+
+        if (always_check_finite_)
+            checkFinite(srz, ModelQuantity::sz, nplist());
+    } else {
+        for (int ip = 0; ip < nplist(); ip++) {
+            fsrz(&srz[ip * nz], ie, t, computeX_pos(x),
+                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                 state_.h.data(), sx.data(ip),
+                 plist(ip));
+        }
     }
 }
 
@@ -1433,12 +1487,15 @@ int Model::checkFinite(gsl::span<const realtype> array,
             col_id += " " + getObservableIds()[col];
         break;
     case ModelQuantity::dJydx:
+    case ModelQuantity::dJzdx:
+    case ModelQuantity::dJrzdx:
     case ModelQuantity::dzdx:
     case ModelQuantity::drzdx:
         if(hasStateIds())
             col_id += " " + getStateIdsSolver()[col];
         break;
     case ModelQuantity::deltaqB:
+    case ModelQuantity::sz:
     case ModelQuantity::dzdp:
     case ModelQuantity::drzdp:
     case ModelQuantity::dsigmazdp:

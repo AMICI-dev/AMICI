@@ -25,6 +25,7 @@ from .import_utils import (RESERVED_SYMBOLS,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
                            generate_measurement_symbol,
+                           generate_regularization_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
                            smart_subs, smart_subs_dict, toposort_symbols)
@@ -210,9 +211,12 @@ class SbmlImporter:
             model_name: str,
             output_dir: Union[str, Path] = None,
             observables: Dict[str, Dict[str, str]] = None,
+            event_observables: Dict[str, Dict[str, str]] = None,
             constant_parameters: Iterable[str] = None,
             sigmas: Dict[str, Union[str, float]] = None,
+            event_sigmas: Dict[str, Union[str, float]] = None,
             noise_distributions: Dict[str, Union[str, Callable]] = None,
+            event_noise_distributions: Dict[str, Union[str, Callable]] = None,
             verbose: Union[int, bool] = logging.ERROR,
             assume_pow_positivity: bool = False,
             compiler: str = None,
@@ -249,14 +253,29 @@ class SbmlImporter:
             dictionary( observableId:{'name':observableName
             (optional), 'formula':formulaString)}) to be added to the model
 
+        :param event_observables:
+            dictionary( eventObservableId:{'name':eventObservableName
+            (optional), 'event':eventId, 'formula':formulaString)}) to be
+            added to the model
+
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
 
         :param sigmas:
             dictionary(observableId: sigma value or (existing) parameter name)
 
+        :param event_sigmas:
+            dictionary(eventObservableId: sigma value or (existing) parameter
+            name)
+
         :param noise_distributions:
             dictionary(observableId: noise type).
+            If nothing is passed for some observable id, a normal model is
+            assumed as default. Either pass a noise type identifier, or a
+            callable generating a custom noise string.
+
+        :param event_noise_distributions:
+            dictionary(eventObservableId: noise type).
             If nothing is passed for some observable id, a normal model is
             assumed as default. Either pass a noise type identifier, or a
             callable generating a custom noise string.
@@ -322,8 +341,14 @@ class SbmlImporter:
         if sigmas is None:
             sigmas = {}
 
+        if event_sigmas is None:
+            event_sigmas = {}
+
         if noise_distributions is None:
             noise_distributions = {}
+
+        if event_noise_distributions is None:
+            event_noise_distributions = {}
 
         self._reset_symbols()
         self.sbml_parser_settings.setParseLog(
@@ -339,7 +364,16 @@ class SbmlImporter:
                 )
             compute_conservation_laws = False
 
-        self._process_observables(observables, sigmas, noise_distributions)
+        self._process_observables(
+            observables,
+            sigmas,
+            noise_distributions
+        )
+        self._process_event_observables(
+            event_observables,
+            event_sigmas,
+            event_noise_distributions
+        )
         self._replace_compartments_with_volumes()
 
         self._clean_reserved_symbols()
@@ -1138,7 +1172,6 @@ class SbmlImporter:
                 'name': event_id,
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
-                'event_observable': None,
                 'initial_value':
                     trigger_sbml.getInitialValue() if trigger_sbml is not None
                     else True,
@@ -1146,10 +1179,10 @@ class SbmlImporter:
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(
-            self,
-            observables: Optional[Dict[str, Dict[str, str]]] = None,
-            sigmas: Optional[Dict[str, Union[str, float]]] = None,
-            noise_distributions: Optional[Dict[str, str]] = None
+        self,
+        observables: Union[Dict[str, Dict[str, str]], None],
+        sigmas: Dict[str, Union[str, float]],
+        noise_distributions: Dict[str, str]
     ) -> None:
         """
         Perform symbolic computations required for observable and objective
@@ -1169,28 +1202,8 @@ class SbmlImporter:
             See :py:func:`sbml2amici`.
         """
 
-        if sigmas is None or observables is None:
-            sigmas = {}
-        else:
-            # Ensure no non-existing observableIds have been specified
-            # (no problem here, but usually an upstream bug)
-            unknown_ids = set(sigmas.keys()) - set(observables.keys())
-            if unknown_ids:
-                raise ValueError(
-                    f"Sigma provided for unknown observableIds: "
-                    f"{unknown_ids}.")
-
-        if noise_distributions is None or observables is None:
-            noise_distributions = {}
-        else:
-            # Ensure no non-existing observableIds have been specified
-            # (no problem here, but usually an upstream bug)
-            unknown_ids = set(noise_distributions.keys()) - \
-                          set(observables.keys())
-            if unknown_ids:
-                raise ValueError(
-                    f"Noise distribution provided for unknown observableIds: "
-                    f"{unknown_ids}.")
+        _validate_observables(observables, sigmas, noise_distributions,
+                              events=False)
 
         # add user-provided observables or make all species, and compartments
         # with assignment rules, observable
@@ -1202,8 +1215,6 @@ class SbmlImporter:
             self.symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(obs): {
                     'name': definition.get('name', f'y{iobs}'),
-                    # Replace logX(.) by log(., X) since sympy cannot parse the
-                    # former.
                     'value': self._sympy_from_sbml_math(
                         definition['formula']
                     ),
@@ -1227,7 +1238,80 @@ class SbmlImporter:
         elif observables is None:
             self._generate_default_observables()
 
+        _check_symbol_nesting(self.symbols[SymbolId.OBSERVABLE],
+                              'eventObservable')
+
         self._process_log_likelihood(sigmas, noise_distributions)
+
+    @log_execution_time('processing SBML event observables', logger)
+    def _process_event_observables(
+            self,
+            event_observables: Dict[str, Dict[str, str]],
+            event_sigmas: Dict[str, Union[str, float]],
+            event_noise_distributions: Dict[str, str]
+    ) -> None:
+        """
+        Perform symbolic computations required for observable and objective
+        function evaluation.
+
+        :param event_observables:
+            See :py:func:`sbml2amici`.
+
+        :param event_sigmas:
+            See :py:func:`sbml2amici`.
+
+        :param event_noise_distributions:
+            See :py:func:`sbml2amici`.
+        """
+
+        _validate_observables(event_observables, event_sigmas,
+                              event_noise_distributions,
+                              events=True)
+
+        # gather local symbols before parsing observable and sigma formulas
+        for obs, definition in event_observables.items():
+            self.add_local_symbol(obs, symbol_with_assumptions(obs))
+            # check corresponding event exists
+            if sp.Symbol(definition['event']) not in \
+                    self.symbols[SymbolId.EVENT]:
+                raise ValueError(
+                    'Could not find an event with the event identifier '
+                    f'{definition["event"]} for the event observable with name'
+                    f'{definition["name"]}.'
+                )
+
+        self.symbols[SymbolId.EVENT_OBSERVABLE] = {
+            symbol_with_assumptions(obs): {
+                'name': definition.get('name', f'z{iobs}'),
+                'value': self._sympy_from_sbml_math(
+                    definition['formula']
+                ),
+                'event': sp.Symbol(definition.get('event')),
+                'transformation':
+                    noise_distribution_to_observable_transformation(
+                        event_noise_distributions.get(obs, 'normal')
+                    )
+            }
+            for iobs, (obs, definition) in
+            enumerate(event_observables.items())
+        }
+
+        for eo in self.symbols[SymbolId.EVENT_OBSERVABLE].values():
+            wrong_t = sp.Symbol('t')
+            if eo['value'].has(wrong_t):
+                warnings.warn(f'Event observable {eo["name"]} uses `t` in '
+                              'it\'s formula which is not the time variable.'
+                              'For the time variable, please use `time` '
+                              'instead!')
+
+        # check for nesting of observables (unsupported)
+        _check_symbol_nesting(self.symbols[SymbolId.EVENT_OBSERVABLE],
+                              'eventObservable')
+
+        self._process_log_likelihood(event_sigmas, event_noise_distributions,
+                                     events=True)
+        self._process_log_likelihood(event_sigmas, event_noise_distributions,
+                                     events=True, event_reg=True)
 
     def _generate_default_observables(self):
         """
@@ -1263,7 +1347,9 @@ class SbmlImporter:
 
     def _process_log_likelihood(self,
                                 sigmas: Dict[str, Union[str, float]],
-                                noise_distributions: Dict[str, str]):
+                                noise_distributions: Dict[str, str],
+                                events: bool = False,
+                                event_reg: bool = False):
         """
         Perform symbolic computations required for objective function
         evaluation.
@@ -1273,25 +1359,53 @@ class SbmlImporter:
 
         :param noise_distributions:
             See :py:func:`SBMLImporter._process_observables`
+
+        :param events:
+            indicates whether the passed definitions are for observables
+            (False) or for event observables (True).
+
+        :param event_reg:
+            indicates whether log-likelihoods definitons should be processed
+            for event observable regularization (Jrz). If this is activated,
+            measurements are substituted by 0 and the observable by the
+            respective regularization symbol.
         """
 
-        for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items():
+        if events:
+            if event_reg:
+                obs_symbol = SymbolId.EVENT_OBSERVABLE
+                sigma_symbol = SymbolId.SIGMAZ
+                llh_symbol = SymbolId.LLHRZ
+            else:
+                obs_symbol = SymbolId.EVENT_OBSERVABLE
+                sigma_symbol = SymbolId.SIGMAZ
+                llh_symbol = SymbolId.LLHZ
+        else:
+            assert not event_reg
+            obs_symbol = SymbolId.OBSERVABLE
+            sigma_symbol = SymbolId.SIGMAY
+            llh_symbol = SymbolId.LLHY
+
+        for obs_id, obs in self.symbols[obs_symbol].items():
             obs['measurement_symbol'] = generate_measurement_symbol(obs_id)
+            if event_reg:
+                obs['reg_symbol'] = generate_regularization_symbol(obs_id)
 
-        self.symbols[SymbolId.SIGMAY] = {
-            symbol_with_assumptions(f'sigma_{obs_id}'): {
-                'name': f'sigma_{obs["name"]}',
-                'value': self._sympy_from_sbml_math(
-                    sigmas.get(str(obs_id), '1.0')
-                )
+        if not event_reg:
+            self.symbols[sigma_symbol] = {
+                symbol_with_assumptions(f'sigma_{obs_id}'): {
+                    'name': f'sigma_{obs["name"]}',
+                    'value': self._sympy_from_sbml_math(
+                        sigmas.get(str(obs_id), '1.0')
+                    )
+                }
+                for obs_id, obs in self.symbols[obs_symbol].items()
             }
-            for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items()
-        }
 
-        self.symbols[SymbolId.LLHY] = {}
+        self.symbols[llh_symbol] = {}
         for (obs_id, obs), (sigma_id, sigma) in zip(
-                self.symbols[SymbolId.OBSERVABLE].items(),
-                self.symbols[SymbolId.SIGMAY].items()
+                self.symbols[obs_symbol].items(),
+                self.symbols[sigma_symbol].items()
         ):
             symbol = symbol_with_assumptions(f'J{obs_id}')
             dist = noise_distributions.get(str(obs_id), 'normal')
@@ -1300,7 +1414,10 @@ class SbmlImporter:
                 _get_str_symbol_identifiers(obs_id),
                 (obs_id, obs['measurement_symbol'], sigma_id)
             )))
-            self.symbols[SymbolId.LLHY][symbol] = {
+            if event_reg:
+                value = value.subs(obs['measurement_symbol'], 0.0)
+                value = value.subs(obs_id, obs['reg_symbol'])
+            self.symbols[llh_symbol][symbol] = {
                     'name': f'J{obs["name"]}',
                     'value': value,
                     'dist': dist,
@@ -1701,8 +1818,9 @@ class SbmlImporter:
                 del self.symbols[symbol][old]
 
         # replace in values
-        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
-                       SymbolId.EXPRESSION, SymbolId.EVENT]:
+        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.LLHZ,
+                       SymbolId.SIGMAY, SymbolId.SIGMAZ, SymbolId.EXPRESSION,
+                       SymbolId.EVENT, SymbolId.EVENT_OBSERVABLE]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
@@ -2170,3 +2288,46 @@ def _parse_special_functions_sbml(sym: sp.Expr,
         return _parse_special_functions(sym, toplevel)
     except RuntimeError as err:
         raise SBMLException(str(err))
+
+
+def _validate_observables(
+    observables: Union[Dict[str, Dict[str, str]], None],
+    sigmas: Dict[str, Union[str, float]],
+    noise_distributions: Dict[str, str],
+    events: bool = False
+) -> None:
+
+    if observables is None or not observables:
+        return
+
+    # Ensure no non-existing observableIds have been specified
+    # (no problem here, but usually an upstream bug)
+    unknown_ids = set(sigmas.keys()) - set(observables.keys())
+    if unknown_ids:
+        raise ValueError(
+            f"Sigma provided for unknown "
+            f"{'eventO' if events else 'o'}bservableIds: "
+            f"{unknown_ids}.")
+
+    # Ensure no non-existing observableIds have been specified
+    # (no problem here, but usually an upstream bug)
+    unknown_ids = set(noise_distributions.keys()) - \
+        set(observables.keys())
+    if unknown_ids:
+        raise ValueError(
+            f"Noise distribution provided for unknown "
+            f"{'eventO' if events else 'o'}bservableIds: "
+            f"{unknown_ids}.")
+
+
+def _check_symbol_nesting(symbols: Dict[sp.Symbol, Dict[str, sp.Expr]],
+                          symbol_type: str):
+    observable_syms = set(symbols.keys())
+    for obs in symbols.values():
+        if any(sym in observable_syms
+               for sym in obs['value'].free_symbols):
+            raise ValueError(
+                "Nested observables are not supported, "
+                f"but {symbol_type} `{obs['name']} = {obs['value']}` "
+                "references another observable."
+            )

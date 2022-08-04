@@ -106,6 +106,40 @@ functions = {
             'const realtype *sigmay, const realtype *my',
             sparse=True
         ),
+    'Jz':
+        _FunctionInfo(
+            'realtype *Jz, const int iz, const realtype *p, const realtype *k, '
+            'const realtype *z, const realtype *sigmaz, const realtype *mz'
+        ),
+    'dJzdsigma':
+        _FunctionInfo(
+            'realtype *dJzdsigma, const int iz, const realtype *p, '
+            'const realtype *k, const realtype *z, const realtype *sigmaz, '
+            'const realtype *mz'
+        ),
+    'dJzdz':
+        _FunctionInfo(
+            'realtype *dJzdz, const int iz, const realtype *p, '
+            'const realtype *k, const realtype *z, const realtype *sigmaz, '
+            'const double *mz',
+            sparse=True
+        ),
+    'Jrz':
+        _FunctionInfo(
+            'realtype *Jrz, const int iz, const realtype *p, '
+            'const realtype *k, const realtype *rz, const realtype *sigmaz'
+        ),
+    'dJrzdsigma':
+        _FunctionInfo(
+            'realtype *dJrzdsigma, const int iz, const realtype *p, '
+            'const realtype *k, const realtype *rz, const realtype *sigmaz'
+        ),
+    'dJrzdz':
+        _FunctionInfo(
+            'realtype *dJrzdz, const int iz, const realtype *p, '
+            'const realtype *k, const realtype *rz, const realtype *sigmaz',
+            sparse=True
+        ),
     'root':
         _FunctionInfo(
             'realtype *root, const realtype t, const realtype *x, '
@@ -167,6 +201,30 @@ functions = {
             'const int ip, const realtype *w, const realtype *tcl, '
             'const realtype *dtcldp',
         ),
+    'dzdx':
+        _FunctionInfo(
+            'realtype *dzdx, const int ie, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h',
+        ),
+    'dzdp':
+        _FunctionInfo(
+            'realtype *dzdp, const int ie, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const int ip',
+        ),
+    'drzdx':
+        _FunctionInfo(
+            'realtype *drzdx, const int ie, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h',
+        ),
+    'drzdp':
+        _FunctionInfo(
+            'realtype *drzdp, const int ie, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const int ip',
+        ),
     'dsigmaydy':
         _FunctionInfo(
             'realtype *dsigmaydy, const realtype t, const realtype *p, '
@@ -181,6 +239,16 @@ functions = {
         _FunctionInfo(
             'realtype *sigmay, const realtype t, const realtype *p, '
             'const realtype *k, const realtype *y',
+        ),
+    'dsigmazdp':
+        _FunctionInfo(
+            'realtype *dsigmazdp, const realtype t, const realtype *p,'
+            ' const realtype *k, const int ip',
+        ),
+    'sigmaz':
+        _FunctionInfo(
+            'realtype *sigmaz, const realtype t, const realtype *p, '
+            'const realtype *k',
         ),
     'sroot':
         _FunctionInfo(
@@ -310,6 +378,16 @@ functions = {
             'const realtype *tcl, const realtype *p, const realtype *k',
             sparse=True
         ),
+    'z':
+        _FunctionInfo(
+            'realtype *z, const int ie, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h'
+        ),
+    'rz':
+        _FunctionInfo(
+            'realtype *rz, const int ie, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h'
+        ),
 }
 
 # list of sparse functions
@@ -348,6 +426,7 @@ event_sensi_functions = [
 multiobs_functions = [
     func_name for func_name, func_info in functions.items()
     if 'const int iy' in func_info.arguments
+    or 'const int iz' in func_info.arguments
 ]
 # list of equations that have ids which may not be unique
 non_unique_id_symbols = [
@@ -398,8 +477,12 @@ symbol_to_type = {
     SymbolId.PARAMETER: Parameter,
     SymbolId.FIXED_PARAMETER: Constant,
     SymbolId.OBSERVABLE: Observable,
+    SymbolId.EVENT_OBSERVABLE: EventObservable,
     SymbolId.SIGMAY: SigmaY,
-    SymbolId.LLHY: LogLikelihood,
+    SymbolId.SIGMAZ: SigmaZ,
+    SymbolId.LLHY: LogLikelihoodY,
+    SymbolId.LLHZ: LogLikelihoodZ,
+    SymbolId.LLHRZ: LogLikelihoodRZ,
     SymbolId.EXPRESSION: Expression,
     SymbolId.EVENT: Event
 }
@@ -484,6 +567,9 @@ def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
     if isinstance(x, sp.MutableDenseMatrix):
         return all(xx.is_zero is True for xx in x.flat())
 
+    if isinstance(x, list):
+        return all(smart_is_zero_matrix(xx) for xx in x)
+
     return x.nnz() == 0
 
 
@@ -500,14 +586,26 @@ class ODEModel:
     :ivar _observables:
         list of observables
 
+    :ivar _event_observables:
+        list of event observables
+
     :ivar _sigmays:
-        list of sigmays
+        list of sigmas for observables
+
+    :ivar _sigmazs:
+        list of sigmas for event observables
 
     :ivar _parameters:
         list of parameters
 
-    :ivar _loglikelihoods:
-        list of loglikelihoods
+    :ivar _loglikelihoodys:
+        list of loglikelihoods for observables
+
+    :ivar _loglikelihoodzs:
+        list of loglikelihoods for event observables
+
+    :ivar _loglikelihoodrzs:
+        list of loglikelihoods for event observable regularizations
 
     :ivar _expressions:
         list of expressions instances
@@ -595,6 +693,9 @@ class ODEModel:
 
     :ivar _code_printer:
         Code printer to generate C++ code
+
+    :ivar _z2event:
+        list of event indices for each event observable
     """
 
     def __init__(self, verbose: Optional[Union[bool, int]] = False,
@@ -616,10 +717,14 @@ class ODEModel:
         """
         self._states: List[State] = []
         self._observables: List[Observable] = []
+        self._eventobservables: List[EventObservable] = []
         self._sigmays: List[SigmaY] = []
+        self._sigmazs: List[SigmaZ] = []
         self._parameters: List[Parameter] = []
         self._constants: List[Constant] = []
-        self._loglikelihoods: List[LogLikelihood] = []
+        self._loglikelihoodys: List[LogLikelihoodY] = []
+        self._loglikelihoodzs: List[LogLikelihoodZ] = []
+        self._loglikelihoodrzs: List[LogLikelihoodRZ] = []
         self._expressions: List[Expression] = []
         self._conservationlaws: List[ConservationLaw] = []
         self._events: List[Event] = []
@@ -629,8 +734,10 @@ class ODEModel:
             'vB': self.num_states_solver,
             'xB': self.num_states_solver,
             'sigmay': self.num_obs,
+            'sigmaz': self.num_eventobs,
         }
-        self._eqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
+        self._eqs: Dict[str, Union[sp.Matrix, sp.SparseMatrix,
+                                   List[Union[sp.Matrix, sp.SparseMatrix]]]] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._vals: Dict[str, List[float]] = dict()
         self._names: Dict[str, List[str]] = dict()
@@ -644,19 +751,24 @@ class ODEModel:
             'total_cl': '_conservationlaws',
             'x0': '_states',
             'y': '_observables',
-            'Jy': '_loglikelihoods',
+            'Jy': '_loglikelihoodys',
+            'Jz': '_loglikelihoodzs',
+            'Jrz': '_loglikelihoodrzs',
             'w': '_expressions',
             'root': '_events',
-            'sigmay': '_sigmays'
+            'sigmay': '_sigmays',
+            'sigmaz': '_sigmazs'
         }
         self._variable_prototype: Dict[str, str] = {
             'tcl': '_conservationlaws',
             'x_rdata': '_states',
             'y': '_observables',
+            'z': '_eventobservables',
             'p': '_parameters',
             'k': '_constants',
             'w': '_expressions',
             'sigmay': '_sigmays',
+            'sigmaz': '_sigmazs',
             'h': '_events'
         }
         self._value_prototype: Dict[str, str] = {
@@ -822,9 +934,11 @@ class ODEModel:
             else:
                 args += ['value']
             if symbol_name == SymbolId.EVENT:
-                args += ['state_update', 'event_observable', 'initial_value']
+                args += ['state_update', 'initial_value']
             if symbol_name == SymbolId.OBSERVABLE:
                 args += ['transformation']
+            if symbol_name == SymbolId.EVENT_OBSERVABLE:
+                args += ['event']
 
             protos = [
                 {
@@ -871,7 +985,8 @@ class ODEModel:
             may refer to other components of the same type.
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
-                          LogLikelihood, SigmaY, ConservationLaw, Event]:
+                          LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
+                          SigmaY, SigmaZ, ConservationLaw, Event]:
             if isinstance(component, comp_type):
                 component_list = getattr(
                     self, f'_{type(component).__name__.lower()}s'
@@ -995,6 +1110,15 @@ class ODEModel:
             number of observable symbols
         """
         return len(self.sym('y'))
+
+    def num_eventobs(self) -> int:
+        """
+        Number of Event Observables.
+
+        :return:
+            number of event observable symbols
+        """
+        return len(self.sym('z'))
 
     def num_const(self) -> int:
         """
@@ -1215,6 +1339,15 @@ class ODEModel:
                     comp.get_measurement_symbol()
                     for comp in getattr(self, component)
                 ])
+            if name == 'z':
+                self._syms['mz'] = sp.Matrix([
+                    comp.get_measurement_symbol()
+                    for comp in getattr(self, component)
+                ])
+                self._syms['rz'] = sp.Matrix([
+                    comp.get_regularization_symbol()
+                    for comp in getattr(self, component)
+                ])
             return
         elif name == 'x':
             self._syms[name] = sp.Matrix([
@@ -1255,12 +1388,15 @@ class ODEModel:
             return
         elif name in self._symboldim_funs:
             length = self._symboldim_funs[name]()
+        elif name == 'stau':
+            length = self.eq(name)[0].shape[1]
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
         else:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix([
-            sp.Symbol(f'{name}{i}', real=True) for i in range(length)
+            sp.Symbol(f'{name}{0 if name == "stau" else i}', real=True)
+            for i in range(length)
         ])
 
     def generate_basic_variables(self, *, from_sbml: bool = False) -> None:
@@ -1367,14 +1503,17 @@ class ODEModel:
             rownames = self.sym(eq)
             colnames = self.sym(var)
 
-        if name == 'dJydy':
+        if name in ['dJydy', 'dJzdz', 'dJrzdz']:
             # One entry per y-slice
             self._colptrs[name] = []
             self._rowvals[name] = []
             self._sparseeqs[name] = []
             self._sparsesyms[name] = []
             self._syms[name] = []
-            for iy in range(self.num_obs()):
+
+            n = self.num_obs() if name == 'dJydy' else self.num_eventobs()
+
+            for iy in range(n):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                     sparse_matrix = self._code_printer.csc_matrix(
                     matrix[iy, :], rownames=rownames, colnames=colnames,
@@ -1406,8 +1545,12 @@ class ODEModel:
         """
         # replacement ensures that we don't have to adapt name in abstract
         # model and keep backwards compatibility with matlab
-        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)',
-                               name.replace('dJydsigma', 'dJydsigmay'))
+        match_deriv = re.match(
+            r'd([\w_]+)d([a-z_]+)',
+            re.sub(r'dJ(y|z|rz)dsigma', r'dJ\1dsigma\1', name).replace(
+                'sigmarz', 'sigmaz'
+            ).replace('dJrzdz', 'dJrzdrz')
+        )
         time_symbol = sp.Matrix([symbol_with_assumptions('t')])
 
         if name in self._equation_prototype:
@@ -1568,21 +1711,47 @@ class ODEModel:
 
             self._eqs[name] = event_eqs
 
-        elif name == 'ddeltaxdx':
+        elif name == 'z':
+            event_observables = [
+                sp.zeros(self.num_eventobs(), 1)
+                for _ in self._events
+            ]
+            event_ids = [
+                e.get_id() for e in self._events
+            ]
+            # TODO: get rid of this stupid 1-based indexing as soon as we can 
+            # the matlab interface
+            z2event = [
+                event_ids.index(event_obs.get_event()) + 1
+                for event_obs in self._eventobservables
+            ]
+            for (iz, ie), event_obs in zip(enumerate(z2event),
+                                           self._eventobservables):
+                event_observables[ie-1][iz] = event_obs.get_val()
+
+            self._eqs[name] = event_observables
+            self._z2event = z2event
+
+        elif name in ['ddeltaxdx', 'ddeltaxdp', 'ddeltaxdt', 'dzdp', 'dzdx']:
+            if match_deriv.group(2) == 't':
+                var = time_symbol
+            else:
+                var = self.sym(match_deriv.group(2))
+
             self._eqs[name] = [
-                smart_jacobian(self.eq('deltax')[ie], self.sym('x'))
+                smart_jacobian(self.eq(match_deriv.group(1))[ie], var)
                 for ie in range(self.num_events())
             ]
+            if name == 'dzdx':
+                for ie in range(self.num_events()):
+                    dtaudx = -self.eq('drootdx')[ie, :] / \
+                        self.eq('drootdt_total')[ie]
+                    self._eqs[name][ie] += \
+                        smart_jacobian(self.eq('z')[ie], time_symbol) * dtaudx
 
-        elif name == 'ddeltaxdt':
+        elif name in ['rz', 'drzdx', 'drzdp']:
             self._eqs[name] = [
-                smart_jacobian(self.eq('deltax')[ie], time_symbol)
-                for ie in range(self.num_events())
-            ]
-
-        elif name == 'ddeltaxdp':
-            self._eqs[name] = [
-                smart_jacobian(self.eq('deltax')[ie], self.sym('p'))
+                self.eq(name.replace('rz', 'root'))[ie, :]
                 for ie in range(self.num_events())
             ]
 
@@ -1604,7 +1773,7 @@ class ODEModel:
                 if not self.eq('drootdt_total')[ie].is_zero:
                     tmp_eq += smart_multiply(
                         (self.sym('xdot_old') - self.sym('xdot')),
-                        self.eq('stau')[ie])
+                        self.sym('stau').T)
 
                 # only add deltax part if there is state update
                 if event._state_update is not None:
@@ -1618,11 +1787,11 @@ class ODEModel:
                     if not self.eq('drootdt_total')[ie].is_zero:
                         # chain rule for the time point
                         tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
-                                                 self.eq('stau')[ie])
+                                                 self.sym('stau').T)
 
                         # additional part of chain rule state variables
-                        tmp_dxdp += smart_multiply(self.sym('xdot'),
-                                                   self.eq('stau')[ie])
+                        tmp_dxdp += smart_multiply(self.eq('xdot'),
+                                                   self.sym('stau').T)
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
@@ -1642,8 +1811,8 @@ class ODEModel:
                 # the insert first in ode_model._add_conservation_law() means
                 # that we need to reverse the order here
                 for cl in reversed(self._conservationlaws)
-            ]) .col_join(smart_jacobian(self.eq('w')[self.num_cons_law():,:],
-                                        x))
+            ]).col_join(smart_jacobian(self.eq('w')[self.num_cons_law():, :],
+                                       x))
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2), name)
@@ -1726,7 +1895,7 @@ class ODEModel:
         needs_stripped_symbols = eq == 'xdot' and var != 'x'
 
         # partial derivative
-        sym_eq = self.eq(eq).transpose() if eq == 'Jy' else self.eq(eq)
+        sym_eq = self.eq(eq).transpose() if eq in ['Jy', 'Jz'] else self.eq(eq)
         if pysb is not None and needs_stripped_symbols:
             needs_stripped_symbols = not any(
                 isinstance(sym, pysb.Component)
@@ -2089,7 +2258,6 @@ class ODEModel:
             name=root_symstr,
             value=root_found,
             state_update=None,
-            event_observable=None
         ))
         return roots[-1].get_id()
 
@@ -2406,15 +2574,12 @@ class ODEExporter:
         Create a Matlab script for compiling code files to a mex file
         """
 
-        # Events are not yet implemented. Once this is done, the variable nz
-        # will have to be replaced by "self.model.nz()"
-        nz = 0
-
         # Second order code is not yet implemented. Once this is done,
         # those variables will have to be replaced by
         # "self.model.<var>true()", or the corresponding "model.self.o2flag"
         nxtrue_rdata = self.model.num_states_rdata()
         nytrue = self.model.num_obs()
+        nztrue = self.model.num_eventobs()
         o2flag = 0
 
         lines = [
@@ -2429,7 +2594,7 @@ class ODEExporter:
             "amimodel.compileAndLinkModel(modelName, '', [], [], [], []);",
             f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
             f"{nytrue}, {self.model.num_par()}, "
-            f"{self.model.num_const()}, {nz}, {o2flag}, ...",
+            f"{self.model.num_const()}, {nztrue}, {o2flag}, ...",
             "    [], ['simulate_' modelName '.m'], modelName, ...",
             "    'lin', 1, 1);"
         ]
@@ -2465,6 +2630,9 @@ class ODEExporter:
             if str(symbol_name) == '':
                 raise ValueError(f'{name} contains a symbol called ""')
             lines.append(f'#define {symbol_name} {name}[{index}]')
+            if name == 'stau':
+                # we only need a single macro, as all entries have the same symbol
+                break
 
         filename = os.path.join(self.model_path, f'{self.model_name}_{name}.h')
         with open(filename, 'w') as fileout:
@@ -2797,7 +2965,7 @@ class ODEExporter:
             }
             lines.extend(get_switch_statement('ip', cases, 1))
         elif function in multiobs_functions:
-            if function == 'dJydy':
+            if function in ['dJydy', 'dJzdz', 'dJrzdz']:
                 cases = {
                     iobs: self.model._code_printer._get_sym_lines_array(
                         equations[iobs], function, 0)
@@ -2811,7 +2979,11 @@ class ODEExporter:
                     for iobs in range(self.model.num_obs())
                     if not smart_is_zero_matrix(equations[:, iobs])
                 }
-            lines.extend(get_switch_statement('iy', cases, 1))
+            if function.startswith(('Jz', 'dJz', 'Jrz', 'dJrz')):
+                iterator = 'iz'
+            else:
+                iterator = 'iy'
+            lines.extend(get_switch_statement(iterator, cases, 1))
 
         elif function in self.model.sym_names() \
                 and function not in non_unique_id_symbols:
@@ -2864,8 +3036,8 @@ class ODEExporter:
             'NX_SOLVER_REINIT': str(self.model.num_state_reinits()),
             'NY': str(self.model.num_obs()),
             'NYTRUE': str(self.model.num_obs()),
-            'NZ': '0',
-            'NZTRUE': '0',
+            'NZ': str(self.model.num_eventobs()),
+            'NZTRUE': str(self.model.num_eventobs()),
             'NEVENT': str(self.model.num_events()),
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
@@ -2950,7 +3122,9 @@ class ODEExporter:
                 ', '.join([
                     'true' if event.get_initial_value() else 'false'
                     for event in self.model._events
-                ])
+                ]),
+            'Z2EVENT':
+                ', '.join(str(ie) for ie in self.model._z2event)
         }
 
         for func_name, func_info in self.functions.items():
