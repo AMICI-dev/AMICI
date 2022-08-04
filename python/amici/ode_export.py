@@ -1790,7 +1790,7 @@ class ODEModel:
                                                  self.sym('stau').T)
 
                         # additional part of chain rule state variables
-                        tmp_dxdp += smart_multiply(self.eq('xdot'),
+                        tmp_dxdp += smart_multiply(self.sym('xdot'),
                                                    self.sym('stau').T)
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
