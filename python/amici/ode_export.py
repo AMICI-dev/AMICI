@@ -527,8 +527,11 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         )
 
     # parallel
-    from multiprocessing import Pool
-    with Pool(n_procs) as p:
+    from multiprocessing import get_context
+    # "spawn" should avoid potential deadlocks occurring with fork
+    #  see e.g. https://stackoverflow.com/a/66113051
+    ctx = get_context('spawn')
+    with ctx.Pool(n_procs) as p:
         mapped = p.starmap(_jacobian_element, elements)
     return sp.MutableSparseMatrix(nrow, ncol, dict(mapped))
 
