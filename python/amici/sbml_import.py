@@ -1263,6 +1263,8 @@ class SbmlImporter:
         :param event_noise_distributions:
             See :py:func:`sbml2amici`.
         """
+        if event_observables is None:
+            return
 
         _validate_observables(event_observables, event_sigmas,
                               event_noise_distributions,
