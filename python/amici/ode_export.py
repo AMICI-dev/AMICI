@@ -122,7 +122,6 @@ functions = {
             'realtype *dJzdz, const int iz, const realtype *p, '
             'const realtype *k, const realtype *z, const realtype *sigmaz, '
             'const double *mz',
-            sparse=True
         ),
     'Jrz':
         _FunctionInfo(
@@ -138,7 +137,6 @@ functions = {
         _FunctionInfo(
             'realtype *dJrzdz, const int iz, const realtype *p, '
             'const realtype *k, const realtype *rz, const realtype *sigmaz',
-            sparse=True
         ),
     'root':
         _FunctionInfo(
@@ -1516,11 +1514,11 @@ class ODEModel:
 
             n = self.num_obs() if name == 'dJydy' else self.num_eventobs()
 
-            for iy in range(n):
+            for iyz in range(n):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                     sparse_matrix = self._code_printer.csc_matrix(
-                    matrix[iy, :], rownames=rownames, colnames=colnames,
-                    identifier=iy)
+                    matrix[iyz, :], rownames=rownames, colnames=colnames,
+                    identifier=iyz)
                 self._colptrs[name].append(symbol_col_ptrs)
                 self._rowvals[name].append(symbol_row_vals)
                 self._sparseeqs[name].append(sparse_list)
@@ -1753,10 +1751,19 @@ class ODEModel:
                         smart_jacobian(self.eq('z')[ie], time_symbol) * dtaudx
 
         elif name in ['rz', 'drzdx', 'drzdp']:
-            self._eqs[name] = [
-                self.eq(name.replace('rz', 'root'))[ie, :]
-                for ie in range(self.num_events())
-            ]
+            eq_events = []
+            for ie in range(self.num_events()):
+                val = sp.zeros(
+                    self.num_eventobs(),
+                    1 if name == 'rz' else len(self.sym(match_deriv.group(2)))
+                )
+                # match event observables to root function
+                for iz in range(self.num_eventobs()):
+                    if ie == self._z2event[iz]-1:
+                        val[iz, :] = self.eq(name.replace('rz', 'root'))[ie, :]
+                eq_events.append(val)
+
+            self._eqs[name] = eq_events
 
         elif name == 'stau':
             self._eqs[name] = [
@@ -1898,7 +1905,7 @@ class ODEModel:
         needs_stripped_symbols = eq == 'xdot' and var != 'x'
 
         # partial derivative
-        sym_eq = self.eq(eq).transpose() if eq in ['Jy', 'Jz'] else self.eq(eq)
+        sym_eq = self.eq(eq).transpose() if eq == 'Jy' else self.eq(eq)
         if pysb is not None and needs_stripped_symbols:
             needs_stripped_symbols = not any(
                 isinstance(sym, pysb.Component)
@@ -2968,7 +2975,7 @@ class ODEExporter:
             }
             lines.extend(get_switch_statement('ip', cases, 1))
         elif function in multiobs_functions:
-            if function in ['dJydy', 'dJzdz', 'dJrzdz']:
+            if function == 'dJydy':
                 cases = {
                     iobs: self.model._code_printer._get_sym_lines_array(
                         equations[iobs], function, 0)

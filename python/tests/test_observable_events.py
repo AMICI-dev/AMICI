@@ -9,20 +9,21 @@ from test_pregenerated_models import (
 def model_neuron_def():
     """Python implementation of the neuron model (Hodgkin-Huxley).
 
-        ODEs
-        ----
-        d/dt v:
-            - 0.04*v^2 + 5*v + 140 - u + I
-        d/dt u:
-            - a*(b*v - u);
+    ODEs
+    ----
+    d/dt v:
+        - 0.04*v^2 + 5*v + 140 - u + I
+    d/dt u:
+        - a*(b*v - u);
 
-        Events:
-        -------
-        event_1:
-            trigger: v - 30
-            bolus: [[ -c - v ],
-                    [      0]]
-        """
+    Events:
+    -------
+    event_1:
+        trigger: v - 30
+        bolus: [[ -c - v ],
+                [      0]]
+        observable: t
+    """
     # Model components
     species = ['v', 'u']
     initial_assignments = {
@@ -74,6 +75,94 @@ def model_neuron_def():
     )
 
 
+def model_events_def():
+    """Python implementation of the events model.
+
+    ODEs
+    ----
+    d/dt x1:
+        - -p1*heaviside(t-p4)*x1
+    d/dt x2:
+        - p2*x1*exp(-0.1*t)-p3*x2
+    d/dt x3:
+        - -x3+heaviside(t-4)
+
+    Events:
+    -------
+    event_1:
+        trigger: x2 > x3
+        bolus: 0
+        observable: t
+    event_2:
+        trigger: x1 > x3
+        bolus: 0
+        observable: t
+    """
+    # Model components
+    species = ['x1', 'x2', 'x3']
+    initial_assignments = {
+        'x1': 'k1',
+        'x2': 'k2',
+        'x3': 'k3',
+    }
+    rate_rules = {
+        'x1': '-p1*piecewise(1.0, time>p4, 0.0)*x1',
+        'x2': 'p2*x1*exp(-0.1*time)-p3*x2',
+        'x3': '-x3+piecewise(1.0, time>4, 0.0)'
+    }
+    parameters = {
+        'p1': 0.5,
+        'p2': 2,
+        'p3': 0.5,
+        'p4': 0.5,
+        'k1': 4,
+        'k2': 8,
+        'k3': 10,
+        'k4': 4,
+    }
+    events = {
+        'event_1': {
+            'trigger': 'x2 > x3',
+            'target': [],
+            'assignment': []
+        },
+        'event_2': {
+            'trigger': 'x1 > x3',
+            'target': [],
+            'assignment': []
+        },
+    }
+
+    observables = {
+        'y1': {
+            'name': 'y1',
+            'formula': 'p4*(x1+x2+x3)',
+        }
+    }
+
+    event_observables = {
+        'z1': {
+            'name': 'z1',
+            'event': 'event_1',
+            'formula': 'time'
+        },
+        'z2': {
+            'name': 'z2',
+            'event': 'event_2',
+            'formula': 'time'
+        }
+    }
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        observables,
+        event_observables
+    )
+
+
 def test_model_neuron():
     (
         initial_assignments,
@@ -100,6 +189,40 @@ def test_model_neuron():
         model_name='model_neuron',
         observables=observables,
         constant_parameters=['v0', 'I0'],
+        event_observables=event_observables
+    )
+
+    run_test_cases(model)
+
+    return
+
+
+def test_model_events():
+    (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        observables,
+        event_observables
+    ) = model_events_def()
+
+    sbml_document, sbml_model = create_sbml_model(
+        initial_assignments=initial_assignments,
+        parameters=parameters,
+        rate_rules=rate_rules,
+        species=species,
+        events=events,
+        # uncomment `to_file` to save SBML model to file for inspection
+        # to_file=sbml_test_models / (model_name + '.sbml'),
+    )
+
+    model = create_amici_model(
+        sbml_model,
+        model_name='model_events',
+        observables=observables,
+        constant_parameters=['k1', 'k2', 'k3', 'k4'],
         event_observables=event_observables
     )
 
@@ -146,5 +269,3 @@ def run_test_cases(model):
             rdata, expected_results[model.getName()][case]['results'],
             **verify_simulation_opts
         )
-
-
