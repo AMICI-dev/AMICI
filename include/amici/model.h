@@ -46,6 +46,7 @@ enum class ModelQuantity {
     sx,
     sy,
     sz,
+    srz,
     ssigmay,
     ssigmaz,
     xdot,

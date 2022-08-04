@@ -1504,7 +1504,7 @@ class ODEModel:
             rownames = self.sym(eq)
             colnames = self.sym(var)
 
-        if name in ['dJydy', 'dJzdz', 'dJrzdz']:
+        if name == 'dJydy':
             # One entry per y-slice
             self._colptrs[name] = []
             self._rowvals[name] = []
@@ -1512,13 +1512,11 @@ class ODEModel:
             self._sparsesyms[name] = []
             self._syms[name] = []
 
-            n = self.num_obs() if name == 'dJydy' else self.num_eventobs()
-
-            for iyz in range(n):
+            for iy in range(self.num_obs()):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                     sparse_matrix = self._code_printer.csc_matrix(
-                    matrix[iyz, :], rownames=rownames, colnames=colnames,
-                    identifier=iyz)
+                    matrix[iy, :], rownames=rownames, colnames=colnames,
+                    identifier=iy)
                 self._colptrs[name].append(symbol_col_ptrs)
                 self._rowvals[name].append(symbol_row_vals)
                 self._sparseeqs[name].append(sparse_list)
@@ -2986,7 +2984,7 @@ class ODEExporter:
                 cases = {
                     iobs: self.model._code_printer._get_sym_lines_array(
                         equations[:, iobs], function, 0)
-                    for iobs in range(self.model.num_obs())
+                    for iobs in range(equations.shape[1])
                     if not smart_is_zero_matrix(equations[:, iobs])
                 }
             if function.startswith(('Jz', 'dJz', 'Jrz', 'dJrz')):

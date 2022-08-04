@@ -1032,7 +1032,7 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
         //        lda                  ldb                      ldc
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
-                    derived_state_.dzdx_.data(), ny,
+                    derived_state_.dzdx_.data(), nz,
                     derived_state_.sx_.data(), nx_solver, 1.0,
                     derived_state_.dzdp_.data(),
                     nz);
@@ -1086,7 +1086,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
         //        lda                  ldb                      ldc
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
-                    derived_state_.drzdx_.data(), ny,
+                    derived_state_.drzdx_.data(), nz,
                     derived_state_.sx_.data(), nx_solver, 1.0,
                     derived_state_.drzdp_.data(),
                     nz);
@@ -1094,7 +1094,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
         writeSlice(derived_state_.drzdp_, srz);
 
         if (always_check_finite_)
-            checkFinite(srz, ModelQuantity::sz, nplist());
+            checkFinite(srz, ModelQuantity::srz, nplist());
     } else {
         for (int ip = 0; ip < nplist(); ip++) {
             fsrz(&srz[ip * nz], ie, t, computeX_pos(x),
