@@ -166,9 +166,16 @@ def model_events_def():
     )
 
 
+models = [
+    (model_neuron_def, 'model_neuron', ['v0', 'I0']),
+    (model_events_def, 'model_events', ['k1', 'k2', 'k3', 'k4']),
+]
+
+
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
                     reason='skipping cmake based test')
-def test_model_neuron():
+@pytest.mark.parametrize("model_def,model_name,constants", models)
+def test_models(model_def, model_name, constants):
     (
         initial_assignments,
         parameters,
@@ -177,7 +184,7 @@ def test_model_neuron():
         events,
         observables,
         event_observables
-    ) = model_neuron_def()
+    ) = model_def()
 
     sbml_document, sbml_model = create_sbml_model(
         initial_assignments=initial_assignments,
@@ -191,45 +198,9 @@ def test_model_neuron():
 
     model = create_amici_model(
         sbml_model,
-        model_name='model_neuron',
+        model_name=model_name,
         observables=observables,
-        constant_parameters=['v0', 'I0'],
-        event_observables=event_observables
-    )
-
-    run_test_cases(model)
-
-    return
-
-
-@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
-                    reason='skipping cmake based test')
-def test_model_events():
-    (
-        initial_assignments,
-        parameters,
-        rate_rules,
-        species,
-        events,
-        observables,
-        event_observables
-    ) = model_events_def()
-
-    sbml_document, sbml_model = create_sbml_model(
-        initial_assignments=initial_assignments,
-        parameters=parameters,
-        rate_rules=rate_rules,
-        species=species,
-        events=events,
-        # uncomment `to_file` to save SBML model to file for inspection
-        # to_file=sbml_test_models / (model_name + '.sbml'),
-    )
-
-    model = create_amici_model(
-        sbml_model,
-        model_name='model_events',
-        observables=observables,
-        constant_parameters=['k1', 'k2', 'k3', 'k4'],
+        constant_parameters=constants,
         event_observables=event_observables
     )
 
