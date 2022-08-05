@@ -1744,8 +1744,11 @@ class ODEModel:
                 for ie in range(self.num_events()):
                     dtaudx = -self.eq('drootdx')[ie, :] / \
                         self.eq('drootdt_total')[ie]
-                    self._eqs[name][ie] += \
-                        smart_jacobian(self.eq('z')[ie], time_symbol) * dtaudx
+                    for iz in range(self.num_eventobs()):
+                        if ie != self._z2event[iz]-1:
+                            continue
+                        dzdt = sp.diff(self.eq('z')[ie][iz], time_symbol)
+                        self._eqs[name][ie][iz, :] += dzdt * dtaudx
 
         elif name in ['rz', 'drzdx', 'drzdp']:
             eq_events = []
@@ -1799,8 +1802,12 @@ class ODEModel:
                                                  self.sym('stau').T)
 
                         # additional part of chain rule state variables
-                        tmp_dxdp += smart_multiply(self.sym('xdot'),
+                        # This part only works if we use self.eq('xdot')
+                        # instead of self.sym('xdot'). Not immediately clear
+                        # why that is.
+                        tmp_dxdp += smart_multiply(self.eq('xdot'),
                                                    self.sym('stau').T)
+
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
                                              tmp_dxdp)
@@ -1839,6 +1846,11 @@ class ODEModel:
             # a total derivative
             if not len(self._lock_total_derivative):
                 self._eqs[name] = self._eqs[name].transpose()
+
+        if name in {'dzdx', 'drzdx'}:
+            self._eqs[name] = [
+                e.T for e in self._eqs[name]
+            ]
 
         if self._simplify:
             dec = log_execution_time(f'simplifying {name}', logger)

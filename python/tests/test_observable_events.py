@@ -1,4 +1,7 @@
 import amici
+import pytest
+import os
+
 from util import create_sbml_model, create_amici_model
 from test_pregenerated_models import (
     options_file, expected_results, expected_results_file,
@@ -163,6 +166,8 @@ def model_events_def():
     )
 
 
+@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
+                    reason='skipping cmake based test')
 def test_model_neuron():
     (
         initial_assignments,
@@ -197,6 +202,8 @@ def test_model_neuron():
     return
 
 
+@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
+                    reason='skipping cmake based test')
 def test_model_events():
     (
         initial_assignments,
