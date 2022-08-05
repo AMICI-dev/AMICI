@@ -1037,7 +1037,7 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
                     derived_state_.dzdp_.data(),
                     nz);
 
-        writeSlice(derived_state_.dzdp_, sz);
+        addSlice(derived_state_.dzdp_, sz);
 
         if (always_check_finite_)
             checkFinite(sz, ModelQuantity::sz, nplist());
@@ -1091,7 +1091,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
                     derived_state_.drzdp_.data(),
                     nz);
 
-        writeSlice(derived_state_.drzdp_, srz);
+        addSlice(derived_state_.drzdp_, srz);
 
         if (always_check_finite_)
             checkFinite(srz, ModelQuantity::srz, nplist());
