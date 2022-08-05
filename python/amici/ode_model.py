@@ -417,6 +417,10 @@ class Sigma(ModelQuantity):
         :param value:
             formula
         """
+        if self.__class__.__name__ == "Sigma":
+            raise RuntimeError(
+                "This class is meant to be sub-classed, not used directly."
+            )
         super(Sigma, self).__init__(identifier, name, value)
 
 
@@ -534,21 +538,26 @@ class LogLikelihood(ModelQuantity):
         :param value:
             formula
         """
+        if self.__class__.__name__ == "LogLikelihood":
+            raise RuntimeError(
+                "This class is meant to be sub-classed, not used directly."
+            )
         super(LogLikelihood, self).__init__(identifier, name, value)
 
 
-class LogLikelihoodY(ModelQuantity):
+class LogLikelihoodY(LogLikelihood):
     """
     Loglikelihood for observables
     """
 
 
-class LogLikelihoodZ(ModelQuantity):
+class LogLikelihoodZ(LogLikelihood):
     """
     Loglikelihood for event observables
     """
 
-class LogLikelihoodRZ(ModelQuantity):
+
+class LogLikelihoodRZ(LogLikelihood):
     """
     Loglikelihood for event observables regularization
     """

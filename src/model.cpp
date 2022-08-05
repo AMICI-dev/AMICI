@@ -26,7 +26,10 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::JDiag, "JDiag"},
     {ModelQuantity::sx, "sx"},
     {ModelQuantity::sy, "sy"},
+    {ModelQuantity::sz, "sz"},
+    {ModelQuantity::srz, "srz"},
     {ModelQuantity::ssigmay, "ssigmay"},
+    {ModelQuantity::ssigmaz, "ssigmaz"},
     {ModelQuantity::xdot, "xdot"},
     {ModelQuantity::sxdot, "sxdot"},
     {ModelQuantity::xBdot, "xBdot"},
@@ -57,8 +60,12 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::deltaqB, "deltaqB"},
     {ModelQuantity::dsigmaydp, "dsigmaydp"},
     {ModelQuantity::dsigmaydy, "dsigmaydy"},
+    {ModelQuantity::dsigmaydp, "dsigmazdp"},
+    {ModelQuantity::dsigmaydy, "dsigmazdy"},
     {ModelQuantity::dJydsigma, "dJydsigma"},
     {ModelQuantity::dJydx, "dJydx"},
+    {ModelQuantity::dJydx, "dJrzdx"},
+    {ModelQuantity::dJydx, "dJzdx"},
     {ModelQuantity::dzdp, "dzdp"},
     {ModelQuantity::dzdx, "dzdx"},
     {ModelQuantity::dJrzdsigma, "dJrzdsigma"},
@@ -67,7 +74,6 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::dJzdz, "dJzdz"},
     {ModelQuantity::drzdp, "drzdp"},
     {ModelQuantity::drzdx, "drzdx"},
-    {ModelQuantity::dsigmazdp, "dsigmazdp"},
 
 };
 
@@ -893,7 +899,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     derived_state_.sx_.resize(nx_solver * nplist());
     sx.flatten_to_vector(derived_state_.sx_);
 
-    // compute sy = 1.0*dydx*sx + 1.0*sy
+    // compute sy = 1.0*dydx*sx + 1.0*dydp
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
     //        M  K                 K  N                     M  N
     //        lda                  ldb                      ldc
@@ -1026,8 +1032,8 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
         derived_state_.sx_.resize(nx_solver * nplist());
         sx.flatten_to_vector(derived_state_.sx_);
 
-        // compute sy = 1.0*dydx*sx + 1.0*sy
-        // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
+        // compute sz = 1.0*dzdx*sx + 1.0*dzdp
+        // dzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = sz C[nz,nplist]
         //        M  K                 K  N                     M  N
         //        lda                  ldb                      ldc
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
@@ -1080,10 +1086,10 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
         derived_state_.sx_.resize(nx_solver * nplist());
         sx.flatten_to_vector(derived_state_.sx_);
 
-        // compute sy = 1.0*dydx*sx + 1.0*sy
-        // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
-        //        M  K                 K  N                     M  N
-        //        lda                  ldb                      ldc
+        // compute srz = 1.0*drzdx*sx + 1.0*drzdp
+        // drzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = srz C[nz,nplist]
+        //         M  K                 K  N                      M  N
+        //         lda                  ldb                       ldc
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
                     derived_state_.drzdx_.data(), nz,

@@ -1298,11 +1298,11 @@ class SbmlImporter:
             enumerate(event_observables.items())
         }
 
+        wrong_t = sp.Symbol('t')
         for eo in self.symbols[SymbolId.EVENT_OBSERVABLE].values():
-            wrong_t = sp.Symbol('t')
             if eo['value'].has(wrong_t):
                 warnings.warn(f'Event observable {eo["name"]} uses `t` in '
-                              'it\'s formula which is not the time variable.'
+                              'it\'s formula which is not the time variable. '
                               'For the time variable, please use `time` '
                               'instead!')
 
