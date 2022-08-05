@@ -1691,12 +1691,11 @@ class ODEModel:
             # calling subs() is costly. Due to looping over events though, the
             # following lines are only evaluated if a model has events
             w_sorted = \
-                toposort_symbols(dict(zip(self._syms['w'], self._eqs['w'])))
-            tmp_xdot = smart_subs_dict(self._eqs['xdot'], w_sorted)
-            self._eqs[name] = (
-                smart_multiply(self.eq('drootdx'), tmp_xdot)
-                + self.eq('drootdt')
-            )
+                toposort_symbols(dict(zip(self.sym('w'), self.eq('w'))))
+            tmp_xdot = smart_subs_dict(self.eq('xdot'), w_sorted)
+            self._eqs[name] = self.eq('drootdt')
+            if self.num_states_solver():
+                self._eqs[name] += smart_multiply(self.eq('drootdx'), tmp_xdot)
 
         elif name == 'deltax':
             # fill boluses for Heaviside functions, as empty state updates
