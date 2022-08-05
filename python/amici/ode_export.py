@@ -1777,8 +1777,9 @@ class ODEModel:
 
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
 
-                # only add stau part if trigger is time-dependent
-                if not self.eq('drootdt_total')[ie].is_zero:
+                # need to check if equations are zero since we are using
+                # symbols
+                if not smart_is_zero_matrix(self.eq('stau')[ie]):
                     tmp_eq += smart_multiply(
                         (self.sym('xdot_old') - self.sym('xdot')),
                         self.sym('stau').T)
@@ -1791,8 +1792,9 @@ class ODEModel:
                     # initial part of chain rule state variables
                     tmp_dxdp = self.sym('sx') * sp.ones(1, self.num_par())
 
-                    # only add stau part if trigger is time-dependent
-                    if not self.eq('drootdt_total')[ie].is_zero:
+                    # need to check if equations are zero since we are using
+                    # symbols
+                    if not smart_is_zero_matrix(self.eq('stau')[ie]):
                         # chain rule for the time point
                         tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
                                                  self.sym('stau').T)
