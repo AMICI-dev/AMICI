@@ -1,9 +1,10 @@
 #include "amici/solver.h"
 
 #include "amici/exception.h"
-#include "amici/misc.h"
+#include "amici/amici.h"
 #include "amici/model.h"
-#include "amici/rdata.h"
+#include "amici/symbolic_functions.h"
+
 
 #include <cstdio>
 #include <cstring>

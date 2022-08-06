@@ -5,9 +5,6 @@
 #include <gsl/gsl-lite.hpp>
 
 #include "amici/model_ode.h"
-#include "amici/solver_cvodes.h"
-
-#include "sundials/sundials_types.h"
 
 namespace amici {
 

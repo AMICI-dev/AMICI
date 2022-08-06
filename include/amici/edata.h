@@ -2,7 +2,6 @@
 #define AMICI_EDATA_H
 
 #include "amici/defines.h"
-#include "amici/vector.h"
 #include "amici/misc.h"
 #include "amici/simulation_parameters.h"
 

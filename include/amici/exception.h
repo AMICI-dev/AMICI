@@ -5,6 +5,7 @@
 
 #include <exception>
 #include <array>
+#include <cstdarg>
 
 namespace amici {
 

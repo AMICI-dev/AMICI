@@ -1717,7 +1717,7 @@ class ODEModel:
             event_ids = [
                 e.get_id() for e in self._events
             ]
-            # TODO: get rid of this stupid 1-based indexing as soon as we can 
+            # TODO: get rid of this stupid 1-based indexing as soon as we can
             # the matlab interface
             z2event = [
                 event_ids.index(event_obs.get_event()) + 1
@@ -2686,7 +2686,6 @@ class ODEExporter:
             '#include "sundials/sundials_types.h"',
             '',
             '#include <gsl/gsl-lite.hpp>',
-            '#include <array>',
             '#include <algorithm>',
             ''
         ]
@@ -2777,7 +2776,6 @@ class ODEExporter:
         :param indextype:
             type of index {'colptrs', 'rowvals'}
         """
-
         if indextype == 'colptrs':
             values = self.model.colptrs(function)
             setter = 'indexptrs'
