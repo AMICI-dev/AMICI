@@ -61,7 +61,6 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::dsigmaydp, "dsigmaydp"},
     {ModelQuantity::dsigmaydy, "dsigmaydy"},
     {ModelQuantity::dsigmazdp, "dsigmazdp"},
-    {ModelQuantity::dsigmazdz, "dsigmazdz"},
     {ModelQuantity::dJydsigma, "dJydsigma"},
     {ModelQuantity::dJydx, "dJydx"},
     {ModelQuantity::dJrzdx, "dJrzdx"},

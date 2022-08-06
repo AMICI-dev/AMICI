@@ -80,7 +80,6 @@ enum class ModelQuantity {
     dsigmaydp,
     dsigmaydy,
     dsigmazdp,
-    dsigmazdx,
     dJydsigma,
     dJydx,
     dzdx,
