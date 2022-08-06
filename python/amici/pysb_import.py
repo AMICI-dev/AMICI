@@ -25,7 +25,7 @@ from .import_utils import (_get_str_symbol_identifiers,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation)
 from .logging import get_logger, log_execution_time, set_log_level
-from .ode_export import (Constant, Expression, LogLikelihood, ODEExporter,
+from .ode_export import (Constant, Expression, LogLikelihoodY, ODEExporter,
                          ODEModel, Observable, Parameter, SigmaY, State)
 
 CL_Prototype = Dict[str, Dict[str, Any]]
@@ -425,7 +425,7 @@ def _process_pysb_expressions(
 ) -> None:
     r"""
     Converts pysb expressions/observables into Observables (with
-    corresponding standard deviation SigmaY and LogLikelihood) or
+    corresponding standard deviation SigmaY and LogLikelihoodY) or
     Expressions and adds them to the ODEModel instance
 
     :param pysb_model:
@@ -535,7 +535,7 @@ def _add_expression(
                                        _get_str_symbol_identifiers(name),
                                        (y, my, sigma))))
         ode_model.add_component(
-            LogLikelihood(
+            LogLikelihoodY(
                 sp.Symbol(f'llh_{name}'),
                 f'llh_{name}',
                 cost_fun_expr

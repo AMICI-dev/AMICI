@@ -34,6 +34,12 @@ TPL_DJYDSIGMA_DEF
 TPL_DJYDY_DEF
 TPL_DJYDY_COLPTRS_DEF
 TPL_DJYDY_ROWVALS_DEF
+TPL_JZ_DEF
+TPL_DJZDSIGMA_DEF
+TPL_DJZDZ_DEF
+TPL_JRZ_DEF
+TPL_DJRZDSIGMA_DEF
+TPL_DJRZDZ_DEF
 TPL_ROOT_DEF
 TPL_DWDP_DEF
 TPL_DWDP_COLPTRS_DEF
@@ -55,9 +61,15 @@ TPL_DXDOTDX_EXPLICIT_COLPTRS_DEF
 TPL_DXDOTDX_EXPLICIT_ROWVALS_DEF
 TPL_DYDX_DEF
 TPL_DYDP_DEF
+TPL_DZDX_DEF
+TPL_DZDP_DEF
+TPL_DRZDX_DEF
+TPL_DRZDP_DEF
 TPL_SIGMAY_DEF
+TPL_SIGMAZ_DEF
 TPL_DSIGMAYDP_DEF
 TPL_DSIGMAYDY_DEF
+TPL_DSIGMAZDP_DEF
 TPL_W_DEF
 TPL_X0_DEF
 TPL_X0_FIXEDPARAMETERS_DEF
@@ -65,6 +77,8 @@ TPL_SX0_DEF
 TPL_SX0_FIXEDPARAMETERS_DEF
 TPL_XDOT_DEF
 TPL_Y_DEF
+TPL_Z_DEF
+TPL_RZ_DEF
 TPL_STAU_DEF
 TPL_DELTAX_DEF
 TPL_DELTASX_DEF
@@ -125,7 +139,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               ),
               TPL_O2MODE,                                  // o2mode
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
-              std::vector<int>{},                          // z2event
+              std::vector<int>{TPL_Z2EVENT},               // z2events
               true,                                        // pythonGenerated
               TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
               TPL_NDXDOTDX_EXPLICIT,                       // ndxdotdx_explicit
@@ -144,95 +158,21 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         return new Model_TPL_MODELNAME(*this);
     }
 
-    /**
-     * @brief model specific implementation of fJrz
-     * @param nllh regularization for event measurements z
-     * @param iz event output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param z model event output at timepoint
-     * @param sigmaz event measurement standard deviation at timepoint
-     */
-    void fJrz(realtype *nllh, const int iz, const realtype *p,
-              const realtype *k, const realtype *rz,
-              const realtype *sigmaz) override {}
+    TPL_JRZ_IMPL
 
     TPL_JY_IMPL
 
-    /**
-     * @brief model specific implementation of fJz
-     * @param nllh negative log-likelihood for event measurements z
-     * @param iz event output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param z model event output at timepoint
-     * @param sigmaz event measurement standard deviation at timepoint
-     * @param mz event measurements at timepoint
-     */
-    void fJz(realtype *nllh, const int iz, const realtype *p,
-             const realtype *k, const realtype *z,
-             const realtype *sigmaz, const realtype *mz) override {}
+    TPL_JZ_IMPL
 
-    /**
-     * @brief model specific implementation of fdJrzdsigma
-     * @param dJrzdsigma Sensitivity of event penalization Jrz w.r.t.
-     * standard deviation sigmaz
-     * @param iz event output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param rz model root output at timepoint
-     * @param sigmaz event measurement standard deviation at timepoint
-     */
-    void fdJrzdsigma(realtype *dJrzdsigma, const int iz,
-                     const realtype *p, const realtype *k,
-                     const realtype *rz,
-                     const realtype *sigmaz) override {}
+    TPL_DJRZDSIGMA_IMPL
 
-    /**
-     * @brief model specific implementation of fdJrzdz
-     * @param dJrzdz partial derivative of event penalization Jrz
-     * @param iz event output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param rz model root output at timepoint
-     * @param sigmaz event measurement standard deviation at timepoint
-     */
-    void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p,
-                 const realtype *k, const realtype *rz,
-                 const realtype *sigmaz) override {}
+    TPL_DJRZDZ_IMPL
 
     TPL_DJYDSIGMA_IMPL
 
-    /**
-     * @brief model specific implementation of fdJzdsigma
-     * @param dJzdsigma Sensitivity of event measurement
-     * negative log-likelihood Jz w.r.t. standard deviation sigmaz
-     * @param iz event output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param z model event output at timepoint
-     * @param sigmaz event measurement standard deviation at timepoint
-     * @param mz event measurement at timepoint
-     */
-    void fdJzdsigma(realtype *dJzdsigma, const int iz,
-                    const realtype *p, const realtype *k,
-                    const realtype *z, const realtype *sigmaz,
-                    const realtype *mz) override {}
+    TPL_DJZDSIGMA_IMPL
 
-    /**
-     * @brief model specific implementation of fdJzdz
-     * @param dJzdz partial derivative of event measurement negative
-     * log-likelihood Jz
-     * @param iz event output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param z model event output at timepoint
-     * @param sigmaz event measurement standard deviation at timepoint
-     * @param mz event measurement at timepoint
-     */
-    void fdJzdz(realtype *dJzdz, const int iz, const realtype *p,
-                const realtype *k, const realtype *z,
-                const realtype *sigmaz, const realtype *mz) override {}
+    TPL_DJZDZ_IMPL
 
     /**
      * @brief model specific implementation of fdeltasx
@@ -278,52 +218,15 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                   const realtype *xdot, const realtype *xdot_old,
                   const realtype *xB) override {}
 
-    /**
-     * @brief model specific implementation of fdrzdp
-     * @param drzdp partial derivative of root output rz w.r.t. model parameters
-     * p
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     * @param ip parameter index w.r.t. which the derivative is requested
-     */
-    void fdrzdp(realtype *drzdp, const int ie, const realtype t,
-                const realtype *x, const realtype *p, const realtype *k,
-                const realtype *h, const int ip) override {}
+    TPL_DRZDP_IMPL
 
-    /**
-     * @brief model specific implementation of fdrzdx
-     * @param drzdx partial derivative of root output rz w.r.t. model states x
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     */
-    void fdrzdx(realtype *drzdx, const int ie, const realtype t,
-                const realtype *x, const realtype *p, const realtype *k,
-                const realtype *h) override {}
+    TPL_DRZDX_IMPL
 
     TPL_DSIGMAYDP_IMPL
 
     TPL_DSIGMAYDY_IMPL
 
-    /**
-     * @brief model specific implementation of fsigmaz
-     * @param dsigmazdp partial derivative of standard deviation of event
-     * measurements
-     * @param t current time
-     * @param p parameter vector
-     * @param k constant vector
-     * @param ip sensitivity index
-     */
-    void fdsigmazdp(realtype *dsigmazdp, const realtype t,
-                    const realtype *p, const realtype *k,
-                    const int ip) override {}
+    TPL_DSIGMAZDP_IMPL
 
     TPL_DJYDY_IMPL
     TPL_DJYDY_COLPTRS_IMPL
@@ -357,103 +260,21 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_DYDP_IMPL
 
-    /**
-     * @brief model specific implementation of fdzdp
-     * @param dzdp partial derivative of event-resolved output z w.r.t. model
-     * parameters p
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     * @param ip parameter index w.r.t. which the derivative is requested
-     */
-    void fdzdp(realtype *dzdp, const int ie, const realtype t,
-               const realtype *x, const realtype *p, const realtype *k,
-               const realtype *h, const int ip) override {}
+    TPL_DZDP_IMPL
 
-    /**
-     * @brief model specific implementation of fdzdx
-     * @param dzdx partial derivative of event-resolved output z w.r.t. model
-     * states x
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     */
-    void fdzdx(realtype *dzdx, const int ie, const realtype t,
-               const realtype *x, const realtype *p, const realtype *k,
-               const realtype *h) override {}
+    TPL_DZDX_IMPL
 
     TPL_ROOT_IMPL
 
-    /**
-     * @brief model specific implementation of frz
-     * @param rz value of root function at current timepoint (non-output events
-     * not included)
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     */
-    void frz(realtype *rz, const int ie, const realtype t,
-             const realtype *x, const realtype *p, const realtype *k,
-             const realtype *h) override {}
+    TPL_RZ_IMPL
 
     TPL_SIGMAY_IMPL
 
-    /**
-     * @brief model specific implementation of fsigmaz
-     * @param sigmaz standard deviation of event measurements
-     * @param t current time
-     * @param p parameter vector
-     * @param k constant vector
-     */
-    void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p,
-                 const realtype *k) override {}
-
-    /**
-     * @brief model specific implementation of fsrz
-     * @param srz Sensitivity of rz, total derivative
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param sx current state sensitivity
-     * @param h heaviside vector
-     * @param ip sensitivity index
-     */
-    void fsrz(realtype *srz, const int ie, const realtype t,
-              const realtype *x, const realtype *p, const realtype *k,
-              const realtype *h, const realtype *sx,
-              const int ip) override {}
+    TPL_SIGMAZ_IMPL
 
     TPL_STAU_IMPL
     TPL_SX0_IMPL
     TPL_SX0_FIXEDPARAMETERS_IMPL
-
-    /**
-     * @brief model specific implementation of fsz
-     * @param sz Sensitivity of rz, total derivative
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     * @param sx current state sensitivity
-     * @param ip sensitivity index
-     */
-    void fsz(realtype *sz, const int ie, const realtype t,
-             const realtype *x, const realtype *p, const realtype *k,
-             const realtype *h, const realtype *sx,
-             const int ip) override {}
 
     TPL_W_IMPL
 
@@ -465,19 +286,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_Y_IMPL
 
-    /**
-     * @brief model specific implementation of fz
-     * @param z value of event output
-     * @param ie event index
-     * @param t current time
-     * @param x current state
-     * @param p parameter vector
-     * @param k constant vector
-     * @param h heaviside vector
-     */
-    void fz(realtype *z, const int ie, const realtype t,
-            const realtype *x, const realtype *p, const realtype *k,
-            const realtype *h) override {}
+    TPL_Z_IMPL
 
     TPL_X_RDATA_IMPL
 

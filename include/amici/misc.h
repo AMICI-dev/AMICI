@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <regex>
+#include <functional>
 
 #include <gsl/gsl-lite.hpp>
 
@@ -83,6 +84,18 @@ void writeSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
 };
 
 /**
+ * @brief local helper function to add the computed slice to provided buffer (span)
+ * @param slice computed value
+ * @param buffer buffer to which values are to be added
+ */
+template <class T>
+void addSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
+    checkBufferSize(buffer, slice.size());
+    std::transform(slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
+                   std::plus<T>());
+};
+
+/**
  * @brief local helper function to write computed slice to provided buffer (vector)
  * @param s computed value
  * @param b buffer to which values are to be written
@@ -101,6 +114,16 @@ void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
 template <class T>
 void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
     writeSlice(gsl::make_span(s.data(), s.size()), b);
+};
+
+/**
+ * @brief local helper function to add the computed slice to provided buffer (vector/span)
+ * @param s computed value
+ * @param b buffer to which values are to be written
+ */
+template <class T>
+void addSlice(const std::vector<T> &s, gsl::span<T> b) {
+    addSlice(gsl::make_span(s.data(), s.size()), b);
 };
 
 /**

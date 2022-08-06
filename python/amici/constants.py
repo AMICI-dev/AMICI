@@ -27,3 +27,7 @@ class SymbolId(str, enum.Enum):
     SIGMAY = 'sigmay'
     LLHY = 'llhy'
     EVENT = 'event'
+    EVENT_OBSERVABLE = 'event_observable'
+    SIGMAZ = 'sigmaz'
+    LLHZ = 'llhz'
+    LLHRZ = 'llhrz'
