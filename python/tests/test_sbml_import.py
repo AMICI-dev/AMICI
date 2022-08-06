@@ -157,7 +157,7 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
     check_derivatives(model, solver, edata)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def model_steadystate_module():
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_steadystate',
