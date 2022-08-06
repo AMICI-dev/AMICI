@@ -258,8 +258,12 @@ def _check_close(
     if verbose:
         for idx in np.argwhere(~close):
             idx = tuple(idx)
+            if result.shape:
+                rr = result[idx]
+            else:
+                rr = result
             lines.append(
-                f"\tat {idx}: Expected {expected[idx]}, got {result[idx]}")
+                f"\tat {idx}: Expected {expected[idx]}, got {rr}")
     adev = np.abs(result - expected)
     rdev = np.abs((result - expected) / (expected + atol))
     lines.append(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
