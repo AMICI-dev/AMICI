@@ -12,7 +12,7 @@ namespace amici {
 class Model;
 class Solver;
 class AmiVector;
-class SimulationState;
+struct SimulationState;
 
 /**
  * @brief The NewtonSolver class sets up the linear solver for the Newton
