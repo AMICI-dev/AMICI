@@ -245,10 +245,12 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
     gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
-    gsl_EnsuresDebug(std::is_sorted(rdata->numsteps.begin(),
-                                    rdata->numsteps.end()));
-    gsl_EnsuresDebug(std::is_sorted(rdata->numstepsB.begin(),
-                                    rdata->numstepsB.end()));
+    if (!posteq) {
+        gsl_EnsuresDebug(std::is_sorted(rdata->numsteps.begin(),
+                                        rdata->numsteps.end()));
+        gsl_EnsuresDebug(std::is_sorted(rdata->numstepsB.begin(),
+                                        rdata->numstepsB.end()));
+    }
 
     return rdata;
 }
