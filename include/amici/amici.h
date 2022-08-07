@@ -1,16 +1,20 @@
 #ifndef amici_h
 #define amici_h
 
-#include "amici/cblas.h"
-#include "amici/defines.h"
 #include "amici/edata.h"
-#include "amici/exception.h"
 #include "amici/model.h"
 #include "amici/rdata.h"
 #include "amici/solver.h"
-#include "amici/symbolic_functions.h"
+
 
 namespace amici {
+
+/**
+ * Type for function to process warnings or error messages.
+ */
+using outputFunctionType = std::function<void(std::string const& identifier,
+                                              std::string const& message)>;
+
 
 /*!
  * @brief Prints a specified error message associated with the specified
@@ -96,16 +100,6 @@ class AmiciApplication {
      * @param ... arguments to be formatted
      */
     void errorF(const char *identifier, const char *format, ...) const;
-
-    /**
-     * @brief Checks the values in an array for NaNs and Infs
-     *
-     * @param array array
-     * @param fun name of calling function
-     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
-     * AMICI_SUCCESS otherwise
-     */
-    int checkFinite(gsl::span<const realtype> array, const char *fun);
 };
 
 /**

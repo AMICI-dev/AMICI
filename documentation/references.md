@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 66.
+List of publications using AMICI. Total number is 67.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -11,6 +11,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-SchmuckerFar2022">
 <p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
+</div>
+<div id="ref-SluijsMaa2022">
+<p>Sluijs, Bob van, Roel J. M. Maas, Ardjan J. van der Linden, Tom F. A. de Greef, and Wilhelm T. S. Huck. 2022. “A Microfluidic Optimal Experimental Design Platform for Forward Design of Cell-Free Genetic Networks.” <em>Nature Communications</em> 13 (1): 3626. <a href="https://doi.org/10.1038/s41467-022-31306-3">https://doi.org/10.1038/s41467-022-31306-3</a>.</p>
 </div>
 <div id="ref-StaporSch2022">
 <p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Simon Merkt, Dilan Pathirana, Bodo M. H. Lange, Daniel Weindl, and Jan Hasenauer. 2022. “Mini-batch optimization enables training of ODE models on large-scale datasets.” <em>Nature Communications</em> 13 (1): 34. <a href="https://doi.org/10.1038/s41467-021-27374-6">https://doi.org/10.1038/s41467-021-27374-6</a>.</p>

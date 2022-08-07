@@ -45,7 +45,10 @@ enum class ModelQuantity {
     JDiag,
     sx,
     sy,
+    sz,
+    srz,
     ssigmay,
+    ssigmaz,
     xdot,
     sxdot,
     xBdot,
@@ -65,6 +68,30 @@ enum class ModelQuantity {
     qBdot_ss,
     xBdot_ss,
     JSparseB_ss,
+    deltax,
+    deltasx,
+    deltaxB,
+    k,
+    p,
+    ts,
+    dJydy,
+    dJydy_matlab,
+    deltaqB,
+    dsigmaydp,
+    dsigmaydy,
+    dsigmazdp,
+    dJydsigma,
+    dJydx,
+    dzdx,
+    dzdp,
+    dJrzdsigma,
+    dJrzdz,
+    dJrzdx,
+    dJzdsigma,
+    dJzdz,
+    dJzdx,
+    drzdp,
+    drzdx,
 };
 
 extern const std::map<ModelQuantity, std::string> model_quantity_to_str;
@@ -695,15 +722,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param state Model state
      */
     void setModelState(ModelState const &state) {
-        if (static_cast<int>(state.unscaledParameters.size()) != np())
+        if (gsl::narrow<int>(state.unscaledParameters.size()) != np())
             throw AmiException("Mismatch in parameter size");
-        if (static_cast<int>(state.fixedParameters.size()) != nk())
+        if (gsl::narrow<int>(state.fixedParameters.size()) != nk())
             throw AmiException("Mismatch in fixed parameter size");
-        if (static_cast<int>(state.h.size()) != ne)
+        if (gsl::narrow<int>(state.h.size()) != ne)
             throw AmiException("Mismatch in Heaviside size");
-        if (static_cast<int>(state.total_cl.size()) != ncl())
+        if (gsl::narrow<int>(state.total_cl.size()) != ncl())
             throw AmiException("Mismatch in conservation law size");
-        if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
+        if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np() )
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
@@ -1869,7 +1896,7 @@ class Model : public AbstractModel, public ModelDimensions {
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
     std::vector<bool> state_is_non_negative_;
-    
+
     /** Vector of booleans indicating the initial boolean value for every event trigger function. Events at t0
      * can only trigger if the initial value is set to `false`. Must be specified during model compilation by
      * setting the `initialValue` attribute of an event trigger. */

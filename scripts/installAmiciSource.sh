@@ -30,5 +30,5 @@ fi
 pip install --upgrade pip pkgconfig scipy matplotlib coverage pytest pytest-cov
 pip install git+https://github.com/pysb/pysb # pin to develop to fix sympy compatibility
 
-pip install --verbose -e ${AMICI_PATH}/python/sdist[petab]
+pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test]
 deactivate

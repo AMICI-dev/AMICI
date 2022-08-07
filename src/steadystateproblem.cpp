@@ -2,12 +2,11 @@
 #include "amici/backwardproblem.h"
 #include "amici/defines.h"
 #include "amici/edata.h"
-#include "amici/forwardproblem.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/newton_solver.h"
 #include "amici/solver.h"
-#include "amici/solver_cvodes.h"
+#include "amici/amici.h"
 
 #include <cmath>
 #include <cstring>
@@ -95,7 +94,7 @@ void SteadystateProblem::findSteadyState(const Solver &solver, Model &model,
                                          int it) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
     bool turnOffNewton = model.getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::integrationOnly && 
+        SteadyStateSensitivityMode::integrationOnly &&
         ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
          SensitivityMethod::forward) || solver.getSensitivityMethod() ==
         SensitivityMethod::forward);
@@ -254,12 +253,12 @@ void SteadystateProblem::computeSteadyStateQuadrature(const Solver &solver,
     auto sensitivityMode = model.getSteadyStateSensitivityMode();
 
     /* Try to compute the analytical solution for quadrature algebraically */
-    if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly 
+    if (sensitivityMode == SteadyStateSensitivityMode::newtonOnly
         || sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails)
         getQuadratureByLinSolve(model);
 
     /* Perform simulation */
-    if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly || 
+    if (sensitivityMode == SteadyStateSensitivityMode::integrationOnly ||
         (sensitivityMode == SteadyStateSensitivityMode::integrateIfNewtonFails
          && !hasQuadrature()))
         getQuadratureBySimulation(solver, model);
@@ -381,7 +380,7 @@ bool SteadystateProblem::getSensitivityFlag(const Model &model,
         solver.getSensitivityOrder() >= SensitivityOrder::first &&
         steady_state_status_[1] == SteadyStateStatus::success &&
         (model.getSteadyStateSensitivityMode() ==
-         SteadyStateSensitivityMode::integrationOnly || 
+         SteadyStateSensitivityMode::integrationOnly ||
          model.getSteadyStateSensitivityMode() ==
          SteadyStateSensitivityMode::integrateIfNewtonFails);
 
@@ -408,10 +407,10 @@ bool SteadystateProblem::getSensitivityFlag(const Model &model,
         !simulationStartedInSteadystate;
 
     /* When we're creating a new solver object */
-    bool needForwardSensiAtCreation = 
+    bool needForwardSensiAtCreation =
         needForwardSensisPreeq &&
         (model.getSteadyStateSensitivityMode() ==
-         SteadyStateSensitivityMode::integrationOnly || 
+         SteadyStateSensitivityMode::integrationOnly ||
          model.getSteadyStateSensitivityMode() ==
          SteadyStateSensitivityMode::integrateIfNewtonFails
         );
@@ -483,11 +482,11 @@ realtype SteadystateProblem::getWrms(Model &model,
 realtype SteadystateProblem::getWrmsFSA(Model &model) {
     /* Forward sensitivities: Compute weighted error norm for their RHS */
     realtype wrms = 0.0;
-    
+
     /* we don't need to call prepareLinearSystem in this function, since it was
      already computed in the preceding getWrms call and both equations have the
      same jacobian */
-    
+
     xdot_updated_ = false;
     for (int ip = 0; ip < model.nplist(); ++ip) {
         model.fsxdot(state_.t, state_.x, state_.dx, ip, state_.sx[ip],
@@ -547,7 +546,7 @@ void SteadystateProblem::applyNewtonsMethod(Model &model, bool newton_retry) {
         linearSum(1.0, x_old_, gamma_,
                   update_direction ? delta_ : delta_old_, state_.x);
         flagUpdatedState();
-            
+
         /* Compute new xdot and residuals */
         realtype wrms_tmp = getWrms(model, SensitivityMethod::none);
 
@@ -563,7 +562,7 @@ void SteadystateProblem::applyNewtonsMethod(Model &model, bool newton_retry) {
             /* update x_old_ _after_ positivity was enforced */
             x_old_.copy(state_.x);
         }
-        
+
         update_direction = updateDampingFactor(step_successful);
         /* increase step counter */
         i_newtonstep++;
@@ -631,15 +630,27 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
 
     /* If run after Newton's method checks again if it converged */
     wrms_ = getWrms(model, sensitivityFlag);
-    
+
     int &sim_steps = backward ? numstepsB_ : numsteps_.at(1);
-    
+
     int convergence_check_frequency = 1;
-    
+
     if (newton_step_conv_)
         convergence_check_frequency = 25;
-        
+
     while (true) {
+        /* check for maxsteps  */
+        if (sim_steps >= solver.getMaxSteps()) {
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+                                "exceeded maximum number of steps");
+        }
+        if (state_.t >= 1e200) {
+            throw NewtonFailure(AMICI_NO_STEADY_STATE,
+                                "simulated to late time"
+                                " point without convergence of RHS");
+        }
+        /* increase counter */
+        sim_steps++;
         /* One step of ODE integration
          reason for tout specification:
          max with 1 ensures correct direction (any positive value would do)
@@ -648,6 +659,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
          only direction w.r.t. current t
          */
         solver.step(std::max(state_.t, 1.0) * 10);
+
         if (backward) {
             solver.writeSolution(&state_.t, xB_, state_.dx, state_.sx, xQ_);
         } else {
@@ -655,7 +667,7 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
                                   xQ_);
             flagUpdatedState();
         }
-        
+
         /* Check for convergence */
         if (sim_steps % convergence_check_frequency == 0) {
             wrms_ = getWrms(model, sensitivityFlag);
@@ -670,19 +682,8 @@ void SteadystateProblem::runSteadystateSimulation(const Solver &solver,
 
         if (wrms_ < conv_thresh)
             break; // converged
-        /* increase counter, check for maxsteps */
-        sim_steps++;
-        if (sim_steps >= solver.getMaxSteps()) {
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
-                                "exceeded maximum number of steps");
-        }
-        if (state_.t >= 1e200) {
-            throw NewtonFailure(AMICI_NO_STEADY_STATE,
-                                "simulated to late time"
-                                " point without convergence of RHS");
-        }
     }
-    
+
     // if check_sensi_conv_ is deactivated, we still have to update sensis
     if (sensitivityFlag == SensitivityMethod::forward)
         updateSensiSimulation(solver);

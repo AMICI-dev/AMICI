@@ -13,11 +13,13 @@ While the parameter mapping can be used directly with AMICI, it was developed
 for usage together with PEtab, for which the whole workflow of generating
 the mapping is automatized.
 """
-
+from __future__ import annotations
 
 import numbers
-from typing import Any, Dict, List, Union
+import warnings
+from typing import Any, Dict, List, Union, Set
 from collections.abc import Sequence
+from itertools import chain
 
 import amici
 import numpy as np
@@ -91,6 +93,27 @@ class ParameterMappingForCondition:
             scale_map_sim_fix = {key: LIN for key in map_sim_fix}
         self.scale_map_sim_fix = scale_map_sim_fix
 
+    def __repr__(self):
+        return (f"{self.__class__.__name__}("
+                f"map_sim_var={repr(self.map_sim_var)},"
+                f"scale_map_sim_var={repr(self.scale_map_sim_var)},"
+                f"map_preeq_fix={repr(self.map_preeq_fix)},"
+                f"scale_map_preeq_fix={repr(self.scale_map_preeq_fix)},"
+                f"map_sim_fix={repr(self.map_sim_fix)},"
+                f"scale_map_sim_fix={repr(self.scale_map_sim_fix)})")
+
+    @property
+    def free_symbols(self) -> Set[str]:
+        """Get IDs of all (symbolic) parameters present in this mapping"""
+        return {
+            p for p in chain(
+                self.map_sim_var.values(),
+                self.map_preeq_fix.values(),
+                self.map_sim_fix.values()
+            )
+            if isinstance(p, str)
+        }
+
 
 class ParameterMapping(Sequence):
     r"""Parameter mapping for multiple conditions.
@@ -111,20 +134,33 @@ class ParameterMapping(Sequence):
         self.parameter_mappings = parameter_mappings
 
     def __iter__(self):
-        for mapping in self.parameter_mappings:
-            yield mapping
+        yield from self.parameter_mappings
 
-    def __getitem__(self, item):
-        return self.parameter_mappings[item]
+    def __getitem__(
+            self, item
+    ) -> Union[ParameterMapping, ParameterMappingForCondition]:
+        result = self.parameter_mappings[item]
+        if isinstance(result, ParameterMappingForCondition):
+            return result
+        return ParameterMapping(result)
 
     def __len__(self):
         return len(self.parameter_mappings)
 
     def append(
             self,
-            parameter_mapping_for_condition: ParameterMappingForCondition):
+            parameter_mapping_for_condition: ParameterMappingForCondition
+    ):
         """Append a condition specific parameter mapping."""
         self.parameter_mappings.append(parameter_mapping_for_condition)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self.parameter_mappings)})"
+
+    @property
+    def free_symbols(self) -> Set[str]:
+        """Get IDs of all (symbolic) parameters present in this mapping"""
+        return set.union(*(mapping.free_symbols for mapping in self))
 
 
 def fill_in_parameters(
@@ -132,7 +168,8 @@ def fill_in_parameters(
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
         parameter_mapping: ParameterMapping,
-        amici_model: AmiciModel) -> None:
+        amici_model: AmiciModel
+) -> None:
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
     :param edatas:
@@ -151,6 +188,11 @@ def fill_in_parameters(
     :param amici_model:
         AMICI model.
     """
+    if unused_parameters := (set(problem_parameters.keys())
+                             - parameter_mapping.free_symbols):
+        warnings.warn("The following problem parameters were not used: "
+                      + str(unused_parameters), RuntimeWarning)
+
     for edata, mapping_for_condition in zip(edatas, parameter_mapping):
         fill_in_parameters_for_condition(
             edata, problem_parameters, scaled_parameters,
@@ -216,7 +258,7 @@ def fill_in_parameters_for_condition(
                      for key, val in map_preeq_fix.items()}
     map_sim_fix = {key: _get_par(key, val, map_sim_fix)
                    for key, val in map_sim_fix.items()}
-    map_sim_var = {key: _get_par(key, val, map_sim_var)
+    map_sim_var = {key: _get_par(key, val, dict(map_sim_fix, **map_sim_var))
                    for key, val in map_sim_var.items()}
 
     # If necessary, (un)scale parameters
@@ -355,7 +397,7 @@ def scale_parameters_dict(
     :param petab_scale_dict:
         Target scales of ``values``
     """
-    if not value_dict.keys() == petab_scale_dict.keys():
+    if value_dict.keys() != petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
     for key, value in value_dict.items():
@@ -378,7 +420,7 @@ def unscale_parameters_dict(
     :param petab_scale_dict:
         Target scales of ``values``
     """
-    if not value_dict.keys() == petab_scale_dict.keys():
+    if value_dict.keys() != petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
     for key, value in value_dict.items():

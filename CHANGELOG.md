@@ -2,6 +2,81 @@
 
 ## v0.X Series
 
+### v0.11.32 (2022-07-15)
+
+Fixes:
+* Fixed `ImportError`s during package installation with recent setuptools
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1830
+
+### v0.11.31 (2022-07-12)
+
+Fixes:
+* Fixed `ParameterMapping.__getitem__` to either return a
+  `ParameterMappingForCondition` or a new `ParameterMapping`, but not a list
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1826
+
+### v0.11.30 (2022-07-07)
+
+Features:
+* Allow overriding model name during PySB import by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1801
+* Added __repr__ for parameter mapping classes by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1799
+* More informative warning messages for NaNs/Infs by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1798
+* Moved `sim_steps` increment by @plakrisenko in
+  https://github.com/AMICI-dev/AMICI/pull/1806
+* Re-arranged application of parameters from `ExpData` to avoid initial
+  sensitivities error by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1805
+* Checking for unused parameters in `simulate_petab` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1816
+* Add `create_parameter_mapping` kwarg forwarding by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1820
+
+Other
+* Remove `constant_species_to_parameters` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1809
+
+Fixes
+* Fixed handling of SBML models given as `pathlib.Path` in
+  `petab_import.import_model_sbml by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1808
+* Fixed missing CPU time reset by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1814
+* Raise in `simulate_petab` with `scaled_parameters=True`
+  `problem_parameters=None` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1819
+
+...
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.29...v0.11.30
+
+### v0.11.29 (2022-05-06)
+
+## What's Changed
+
+Features:
+* Performance: Limit newton step convergence check by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1780
+* More informative NaN/Inf warnings by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1640
+* SBML import can now handle initial events by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1789
+
+Fixes:
+* Avoid error if no measurements in PEtab problem; fixed type handling in
+  PEtab parameter mapping by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1783
+* Fixed substitution of expressions in root and stau by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1784
+* Workaround for PEtab problems with state-dependent noise models by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1791
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.28...v0.11.29
+
+
 ### v0.11.28 (2022-04-08)
 
 New features:

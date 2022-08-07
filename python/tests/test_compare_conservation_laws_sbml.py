@@ -1,9 +1,11 @@
-import amici
 import os
-import sys
-import pytest
-import numpy as np
 import warnings
+
+import numpy as np
+import pytest
+from numpy.testing import assert_allclose, assert_array_equal
+
+import amici
 
 
 @pytest.fixture
@@ -125,7 +127,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare state trajectories
-    assert np.isclose(rdata['x'], rdata_cl['x']).all()
+    assert_allclose(rdata['x'], rdata_cl['x'],
+                    rtol=1.e-5, atol=1.e-8,
+                    err_msg="rdata.x mismatch")
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
     # run simulations
@@ -136,7 +140,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # compare state trajectories
     for field in ['x', 'sx']:
-        assert np.isclose(rdata[field], rdata_cl[field]).all(), field
+        assert_allclose(rdata[field], rdata_cl[field],
+                        rtol=1.e-5, atol=1.e-8,
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
 
@@ -149,7 +155,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # compare preequilibrated states
     for field in ['x', 'x_ss', 'llh']:
-        assert np.isclose(rdata[field], rdata_cl[field]).all(), field
+        assert_allclose(rdata[field], rdata_cl[field],
+                        rtol=1.e-5, atol=1.e-8,
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
 
@@ -162,16 +170,18 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     )
     assert rdata['status'] == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
-    assert (rdata['preeq_status'] == np.array([-3, 1, 0])).all()
+    assert_array_equal(rdata['preeq_status'], np.array([[-3, 1, 0]]))
     # check that steady state computation succeeded by Newton in reduced model
-    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
+    assert_array_equal(rdata_cl['preeq_status'], np.array([[1, 0, 0]]))
 
     # compare state sensitivities with edata and preequilibration
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
-        assert np.isclose(rdata[field], rdata_cl[field]).all(), field
+        assert_allclose(rdata[field], rdata_cl[field],
+                        rtol=1.e-5, atol=1.e-8,
+                        err_msg=f"rdata.{field} mismatch")
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
-    # check failure of steady state senistivity computation if run wo CLs
+    # check failure of steady state sensitivity computation if run wo CLs
     model_without_cl.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode.newtonOnly
     )
@@ -181,21 +191,14 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
         assert rdata['status'] == amici.AMICI_ERROR
 
 
-def test_adjoint_pre_and_post_equilibration(edata_fixture):
+def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
     # get both models
-    model_module = amici.import_model_module(
-        'model_constant_species',
-        module_path=os.path.abspath('model_constant_species'))
-    model = model_module.getModel()
-    model_module_cl = amici.import_model_module(
-        'model_constant_species_cl',
-        module_path=os.path.abspath('model_constant_species_cl'))
-    model_cl = model_module_cl.getModel()
+    model_cl, model = models
 
     # check gradient with and without state reinitialization
     for edata in edata_fixture:
         for reinit in [False, True]:
-            # --- compare different ways of preequilibration, full rank Jacobian ------
+            # compare different ways of preequilibration, full rank Jacobian
             # forward preequilibration, forward simulation
             rff_cl = get_results(
                 model_cl, edata=edata, sensi_order=1,
@@ -216,11 +219,15 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                 reinitialize_states=reinit)
 
             # assert all are close
-            assert np.isclose(rff_cl['sllh'], rfa_cl['sllh']).all()
-            assert np.isclose(rfa_cl['sllh'], raa_cl['sllh']).all()
-            assert np.isclose(raa_cl['sllh'], rff_cl['sllh']).all()
+            assert_allclose(rff_cl['sllh'], rfa_cl['sllh'],
+                            rtol=1.e-5, atol=1.e-8)
+            assert_allclose(rfa_cl['sllh'], raa_cl['sllh'],
+                            rtol=1.e-5, atol=1.e-8)
+            assert_allclose(raa_cl['sllh'], rff_cl['sllh'],
+                            rtol=1.e-5, atol=1.e-8)
 
-            # --- compare fully adjoint approach to simulation with singular Jacobian ----
+            # compare fully adjoint approach to simulation with singular
+            #  Jacobian
             raa = get_results(
                 model, edata=edata, sensi_order=1,
                 sensi_meth=amici.SensitivityMethod.adjoint,
@@ -229,7 +236,7 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                 reinitialize_states=reinit)
 
             # assert gradients are close (quadrature tolerances are laxer)
-            assert np.isclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5).all()
+            assert_allclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5)
 
 
 def test_get_set_model_settings(models):

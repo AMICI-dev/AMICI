@@ -1,9 +1,7 @@
 #ifndef amici_newton_solver_h
 #define amici_newton_solver_h
 
-#include "amici/defines.h"
 #include "amici/solver.h"
-#include "amici/sundials_linsol_wrapper.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
@@ -14,6 +12,7 @@ namespace amici {
 class Model;
 class Solver;
 class AmiVector;
+struct SimulationState;
 
 /**
  * @brief The NewtonSolver class sets up the linear solver for the Newton
