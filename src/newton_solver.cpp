@@ -1,10 +1,11 @@
 #include "amici/newton_solver.h"
 
-#include "amici/model.h"
-#include "amici/solver.h"
+#include <amici/amici.h>
+#include <amici/model.h>
+#include <amici/solver.h>
 
-#include "sunlinsol/sunlinsol_dense.h" // dense solver
-#include "sunlinsol/sunlinsol_klu.h"   // sparse solver
+#include <sunlinsol/sunlinsol_dense.h> // dense solver
+#include <sunlinsol/sunlinsol_klu.h>   // sparse solver
 #include <sundials/sundials_config.h>  // roundoffs
 
 #include <cmath>

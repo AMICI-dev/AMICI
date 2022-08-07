@@ -1,8 +1,10 @@
-#include "amici/model.h"
-#include "amici/amici.h"
-#include "amici/exception.h"
-#include "amici/misc.h"
-#include "amici/symbolic_functions.h"
+#include <amici/model.h>
+#include <amici/amici.h>
+#include <amici/exception.h>
+#include <amici/misc.h>
+#include <amici/symbolic_functions.h>
+#include <amici/cblas.h>
+
 
 #include <algorithm>
 #include <cmath>

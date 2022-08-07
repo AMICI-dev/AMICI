@@ -1,6 +1,5 @@
 #include "amici/forwardproblem.h"
 
-#include "amici/cblas.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"

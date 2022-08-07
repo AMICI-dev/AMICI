@@ -5,7 +5,7 @@
 #include "amici/vector.h"
 #include "amici/model.h"
 #include "amici/misc.h"
-#include "amici/sundials_matrix_wrapper.h"
+#include <amici/amici.h>
 
 #include <sundials/sundials_direct.h>
 #include <vector>
@@ -17,23 +17,6 @@ class ExpData;
 class Solver;
 class SteadystateProblem;
 class FinalStateStorer;
-
-/**
- * @brief implements an exchange format to store and transfer the state of a simulation at a
- * specific timepoint.
- */
-struct SimulationState{
-    /** timepoint */
-    realtype t;
-    /** state variables */
-    AmiVector x;
-    /** state variables */
-    AmiVector dx;
-    /** state variable sensitivity */
-    AmiVectorArray sx;
-    /** state of the model that was used for simulation */
-    ModelState state;
-};
 
 
 /**

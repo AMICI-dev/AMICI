@@ -7,8 +7,12 @@
  * issues.
  */
 
-#include "amici/hdf5.h"
-#include "amici/amici.h"
+#include <amici/hdf5.h>
+
+#include <amici/model.h>
+#include <amici/solver.h>
+#include <amici/rdata.h>
+#include <amici/edata.h>
 
 #include <hdf5_hl.h>
 
