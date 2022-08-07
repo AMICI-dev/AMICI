@@ -1,5 +1,4 @@
 #include "amici/misc.h"
-#include "amici/amici.h"
 #include "amici/symbolic_functions.h"
 
 #include <cstdio>

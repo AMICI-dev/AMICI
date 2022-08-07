@@ -1,7 +1,6 @@
 #include "amici/solver_cvodes.h"
 
 #include "amici/exception.h"
-#include "amici/misc.h"
 #include "amici/model_ode.h"
 #include "amici/sundials_linsol_wrapper.h"
 

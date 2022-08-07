@@ -1,10 +1,8 @@
 #ifndef AMICI_SOLVER_H
 #define AMICI_SOLVER_H
 
-#include "amici/amici.h"
 #include "amici/defines.h"
 #include "amici/sundials_linsol_wrapper.h"
-#include "amici/symbolic_functions.h"
 #include "amici/vector.h"
 
 #include <cmath>

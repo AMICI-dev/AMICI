@@ -2,7 +2,6 @@
 
 #include "amici/backwardproblem.h"
 #include "amici/edata.h"
-#include "amici/exception.h"
 #include "amici/forwardproblem.h"
 #include "amici/misc.h"
 #include "amici/model.h"

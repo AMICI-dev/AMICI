@@ -612,6 +612,21 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     return symbol_with_assumptions(f'm{observable_id}')
 
 
+def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
+    """
+    Generates the appropriate regularization symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+
+    :return:
+        symbol for the corresponding regularization
+    """
+    if not isinstance(observable_id, str):
+        observable_id = strip_pysb(observable_id)
+    return symbol_with_assumptions(f'r{observable_id}')
+
+
 def generate_flux_symbol(
         reaction_index: int,
         name: Optional[str] = None

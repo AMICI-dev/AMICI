@@ -375,6 +375,7 @@ def import_model_sbml(
         model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
         allow_reinit_fixpar_initcond: bool = True,
+        validate: bool = True,
         **kwargs) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
@@ -414,6 +415,9 @@ def import_model_sbml(
         See :class:`amici.ode_export.ODEExporter`. Must be enabled if initial
         states are to be reset after preequilibration.
 
+    :param validate:
+        Whether to validate the PEtab problem
+
     :param kwargs:
         Additional keyword arguments to be passed to
         :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
@@ -451,6 +455,10 @@ def import_model_sbml(
                                   "is currently not supported.")
 
     assert isinstance(petab_problem.model, SbmlModel)
+
+    if validate:
+        logger.info("Validating PEtab problem ...")
+        petab.lint_problem(petab_problem)
 
     # Model name from SBML ID or filename
     if model_name is None:
@@ -802,7 +810,7 @@ def main():
             parameter_file=args.parameter_file_name,
             observable_files=args.observable_file_name)
 
-    # First check for valid PEtab
+    # Check for valid PEtab before potentially modifying it
     petab.lint_problem(pp)
 
     if args.flatten:
@@ -816,7 +824,8 @@ def main():
                  model_output_dir=args.model_output_dir,
                  compile=args.compile,
                  generate_sensitivity_code=args.generate_sensitivity_code,
-                 verbose=args.verbose)
+                 verbose=args.verbose,
+                 validate=False)
 
 
 if __name__ == '__main__':
