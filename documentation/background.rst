@@ -30,6 +30,12 @@ publications:
   Adjoint Sensitivity Analysis." *Bioinformatics* 34 (13): i151–i159.
   DOI: `10.1093/bioinformatics/bty230 <https://doi.org/10.1093/bioinformatics/bty230>`_.
 
+* Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski,
+  Dilan Pathirana, Fabian Fröhlich, Glenn Terje Lines, Daniel Weindl,
+  and Jan Hasenauer. 2022.
+  "Efficient Computation of Adjoint Sensitivities at Steady-State in ODE Models
+  of Biochemical Reaction Networks." *bioRxiv* 2022.08.08.503176.
+  DOI: `10.1101/2022.08.08.503176 <https://doi.org/10.1101/2022.08.08.503176>`_.
 
 .. note::
 
