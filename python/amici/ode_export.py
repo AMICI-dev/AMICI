@@ -3614,9 +3614,12 @@ def _parallel_applyfunc(
 
     # parallel
     from pickle import PicklingError
-    from multiprocessing import Pool
     from sympy.matrices.dense import DenseMatrix
-    with Pool(n_procs) as p:
+    from multiprocessing import get_context
+    # "spawn" should avoid potential deadlocks occurring with fork
+    #  see e.g. https://stackoverflow.com/a/66113051
+    ctx = get_context('spawn')
+    with ctx.Pool(n_procs) as p:
         try:
             if isinstance(obj, DenseMatrix):
                 return obj._new(obj.rows, obj.cols, p.map(func, obj))
