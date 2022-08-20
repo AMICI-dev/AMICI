@@ -2414,6 +2414,14 @@ class ODEExporter:
 
     :ivar generate_sensitivity_code:
         Specifies whether code for sensitivity computation is to be generated
+
+    .. note::
+        When importing large models (several hundreds of species or
+        parameters), import time can potentially be reduced by using multiple
+        CPU cores. This is controlled by setting the ``AMICI_IMPORT_NPROCS``
+        environment variable to the number of parallel processes that are to be
+        used (default: 1). Note that for small models this may (slightly)
+        increase import times.
     """
 
     def __init__(
