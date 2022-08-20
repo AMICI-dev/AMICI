@@ -3639,8 +3639,9 @@ def _parallel_applyfunc(
             else:
                 raise ValueError(f"Unsupported matrix type {type(obj)}")
         except PicklingError as e:
-            raise ValueError(f"Couldn't pickle {func}. This is likely due "
-                             "that the argument was not a module-level "
-                             "function. Either rewrite the argument to a "
-                             "module-level function or disable "
-                             "parallelization.") from e
+            raise ValueError(
+                f"Couldn't pickle {func}. This is likely because the argument "
+                "was not a module-level function. Either rewrite the argument "
+                "to a module-level function or disable parallelization by "
+                "setting `AMICI_IMPORT_NPROCS=1`."
+            ) from e
