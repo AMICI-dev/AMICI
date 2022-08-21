@@ -1028,11 +1028,9 @@ class ODEModel:
             Dictionary of coefficients {x_i: a_i}
         """
         try:
-            ix = [
-                s.get_id()
-                for s in self._states
-            ].index(state)
-        except ValueError:
+            ix = next(filter(lambda is_s: is_s[1].get_id() == state,
+                             enumerate(self._states)))[0]
+        except StopIteration:
             raise ValueError(f'Specified state {state} was not found in the '
                              f'model states.')
 
