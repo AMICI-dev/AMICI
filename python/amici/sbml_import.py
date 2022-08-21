@@ -664,7 +664,7 @@ class SbmlImporter:
                 self.sbml.getConversionFactor()
             )
         else:
-            conversion_factor = 1.0
+            conversion_factor = 1
 
         for s in self.sbml.getListOfSpecies():
             if self.is_assignment_rule_target(s):
@@ -905,8 +905,8 @@ class SbmlImporter:
         ]
 
         for reaction_index, reaction in enumerate(reactions):
-            for element_list, sign in [(reaction.getListOfReactants(), -1.0),
-                                       (reaction.getListOfProducts(), 1.0)]:
+            for element_list, sign in [(reaction.getListOfReactants(), -1),
+                                       (reaction.getListOfProducts(), 1)]:
                 for element in element_list:
                     stoichiometry = self._get_element_stoichiometry(
                         element
@@ -927,7 +927,7 @@ class SbmlImporter:
                     self.stoichiometric_matrix[species['index'],
                                                reaction_index] += \
                         sign * stoichiometry * species['conversion_factor']
-
+            print(self.stoichiometric_matrix)
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
@@ -1959,9 +1959,11 @@ class SbmlImporter:
                 return _get_identifier_symbol(ele)
 
         if ele.isSetStoichiometry():
-            return sp.Float(ele.getStoichiometry())
+            stoichiometry: float = ele.getStoichiometry()
+            return sp.Integer(stoichiometry) if stoichiometry.is_integer() \
+                else sp.Float(stoichiometry)
 
-        return sp.Float(1.0)
+        return sp.Integer(1)
 
     def is_assignment_rule_target(self, element: sbml.SBase) -> bool:
         """
