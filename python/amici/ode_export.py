@@ -992,20 +992,20 @@ class ODEModel:
             whether to add quantity first or last, relevant when components
             may refer to other components of the same type.
         """
-        for comp_type in [Observable, Expression, Parameter, Constant, State,
-                          LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
-                          SigmaY, SigmaZ, ConservationLaw, Event]:
-            if isinstance(component, comp_type):
-                component_list = getattr(
-                    self, f'_{type(component).__name__.lower()}s'
-                )
-                if insert_first:
-                    component_list.insert(0, component)
-                else:
-                    component_list.append(component)
-                return
+        if type(component) not in {
+            Observable, Expression, Parameter, Constant, State,
+            LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
+            SigmaY, SigmaZ, ConservationLaw, Event
+        }:
+            raise ValueError(f'Invalid component type {type(component)}')
 
-        raise ValueError(f'Invalid component type {type(component)}')
+        component_list = getattr(
+            self, f'_{type(component).__name__.lower()}s'
+        )
+        if insert_first:
+            component_list.insert(0, component)
+        else:
+            component_list.append(component)
 
     def add_conservation_law(self,
                              state: sp.Symbol,
