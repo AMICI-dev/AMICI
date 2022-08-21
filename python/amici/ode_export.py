@@ -995,7 +995,7 @@ class ODEModel:
         if type(component) not in {
             Observable, Expression, Parameter, Constant, State,
             LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
-            SigmaY, SigmaZ, ConservationLaw, Event
+            SigmaY, SigmaZ, ConservationLaw, Event, EventObservable
         }:
             raise ValueError(f'Invalid component type {type(component)}')
 
