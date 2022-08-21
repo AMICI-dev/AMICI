@@ -927,7 +927,6 @@ class SbmlImporter:
                     self.stoichiometric_matrix[species['index'],
                                                reaction_index] += \
                         sign * stoichiometry * species['conversion_factor']
-            print(self.stoichiometric_matrix)
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
