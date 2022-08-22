@@ -12,6 +12,8 @@ import sys
 
 import petab
 import yaml
+
+import amici
 from amici.logging import get_logger
 from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
                                    LLH, RDATAS)
@@ -91,6 +93,10 @@ def main():
         solver=amici_solver, log_level=logging.DEBUG)
     rdatas = res[RDATAS]
     llh = res[LLH]
+
+    for rdata in rdatas:
+        assert rdata.status == amici.AMICI_SUCCESS, \
+            f"Simulation failed for {rdata.id}"
 
     # create simulation PEtab table
     sim_df = rdatas_to_measurement_df(rdatas=rdatas, model=amici_model,
