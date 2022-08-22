@@ -236,18 +236,19 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
     if not cases:
         return lines
 
+    indent0 = indentation_level * indentation_step
+    indent1 = (indentation_level + 1) * indentation_step
+    indent2 = (indentation_level + 2) * indentation_step
     for expression, statements in cases.items():
         if statements:
-            lines.append((indentation_level + 1) * indentation_step
-                         + f'case {expression}:')
-            for statement in statements:
-                lines.append((indentation_level + 2) * indentation_step
-                             + statement)
-            lines.append((indentation_level + 2) * indentation_step + 'break;')
+            lines.extend([
+                f'{indent1}case {expression}:',
+                *(f"{indent2}{statement}" for statement in statements),
+                f'{indent2}break;'
+            ])
 
     if lines:
-        lines.insert(0, indentation_level * indentation_step
-                     + f'switch({condition}) {{')
-        lines.append(indentation_level * indentation_step + '}')
+        lines.insert(0, f'{indent0}switch({condition}) {{')
+        lines.append(indent0 + '}')
 
     return lines
