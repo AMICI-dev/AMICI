@@ -762,9 +762,9 @@ def rdatas_to_measurement_df(
     # iterate over conditions
     for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
-        y = rdata['y']
+        y = rdata.y
         # time array used in rdata
-        t = list(rdata['t'])
+        t = list(rdata.ts)
 
         # extract rows for condition
         cur_measurement_df = petab.get_rows_for_condition(
