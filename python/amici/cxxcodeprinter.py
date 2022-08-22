@@ -108,7 +108,14 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
             # Extract common subexpressions
             symbol_generator = numbered_symbols(
                 cls=sp.Symbol, prefix="__amici_")
-            replacements, reduced_exprs = sp.cse(equations, symbol_generator)
+            replacements, reduced_exprs = sp.cse(
+                equations,
+                symbols=symbol_generator,
+                # subexpressions must not include symbols computed in this
+                # function, as they will be computed only after the extracted
+                # subexpressions
+                ignore=symbols,
+            )
             assert len(reduced_exprs) == 1, "Unexpected input"
             reduced_exprs = reduced_exprs[0]
 
