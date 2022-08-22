@@ -2168,7 +2168,7 @@ class ODEModel:
         if not isinstance(ic, sp.Basic):
             return False
         return any(
-            fp in [c.get_id() for c in self._constants]
+            fp in (c.get_id() for c in self._constants)
             for fp in ic.free_symbols
         )
 

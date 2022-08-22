@@ -300,7 +300,7 @@ def field_as_numpy(field_dimensions: Dict[str, List[int]],
     specified field dimensions
     """
     attr = getattr(data, field)
-    if field in field_dimensions.keys():
+    if field in field_dimensions:
         if len(attr) == 0:
             return None
         else:

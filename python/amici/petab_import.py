@@ -328,8 +328,7 @@ def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
     BASE_DIR = Path("amici_models").absolute()
     BASE_DIR.mkdir(exist_ok=True)
     # try sbml model id
-    sbml_model_id = sbml_model.getId()
-    if sbml_model_id:
+    if sbml_model_id := sbml_model.getId():
         return BASE_DIR / sbml_model_id
 
     # create random folder name
