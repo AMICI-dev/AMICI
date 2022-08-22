@@ -7,7 +7,7 @@
 
 # Confirmed to be working
 models="
-Bachmann_MSB2011
+Zheng_PNAS2012
 Beer_MolBioSystems2014
 Boehm_JProteomeRes2014
 Borghans_BiophysChem1997
@@ -22,7 +22,7 @@ Lucarelli_CellSystems2018
 Schwen_PONE2014
 Sneyd_PNAS2002
 Weber_BMC2015
-Zheng_PNAS2012"
+Bachmann_MSB2011"
 
 #
 #
