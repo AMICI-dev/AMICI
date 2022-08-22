@@ -1,9 +1,11 @@
 """C++ code generation"""
+import os
 import re
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
 import sympy as sp
 from sympy.printing.cxx import CXX11CodePrinter
+from sympy.utilities.iterables import numbered_symbols
 
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):
@@ -11,6 +13,10 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
     def __init__(self):
         super().__init__()
+
+        # extract common subexpressions in matrix functions?
+        self.extract_cse = (os.getenv("AMICI_EXTRACT_CSE", "0").lower()
+                            in ('1', 'on', 'true'))
 
     def doprint(self, expr: sp.Expr, assign_to: Optional[str] = None) -> str:
         try:
@@ -95,13 +101,38 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :return:
             C++ code as list of lines
         """
-        return [
-            f'{" " * indent_level}{sym} = {self.doprint(math)};'
-            f'  // {variable}[{index}]'.replace('\n',
-                                                '\n' + ' ' * indent_level)
+        indent = " " * indent_level
+        lines = []
+
+        if self.extract_cse:
+            # Extract common subexpressions
+            symbol_generator = numbered_symbols(
+                cls=sp.Symbol, prefix="__amici_")
+            replacements, reduced_exprs = sp.cse(
+                equations,
+                symbols=symbol_generator,
+                # subexpressions must not include symbols computed in this
+                # function, as they will be computed only after the extracted
+                # subexpressions
+                ignore=symbols,
+            )
+            assert len(reduced_exprs) == 1, "Unexpected input"
+            reduced_exprs = reduced_exprs[0]
+
+            if replacements:
+                lines = [
+                    f'{indent}const realtype {sym} = {self.doprint(math)};'
+                    for (sym, math) in replacements
+                ]
+                equations = reduced_exprs
+
+        lines.extend([
+            f'{indent}{sym} = {self.doprint(math)};'
+            f'  // {variable}[{index}]'.replace('\n', '\n' + indent)
             for index, (sym, math) in enumerate(zip(symbols, equations))
             if math not in [0, 0.0]
-        ]
+        ])
+        return lines
 
     def csc_matrix(
             self,
@@ -139,7 +170,6 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :return:
             symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list,
             sparse_matrix
-
         """
         idx = 0
 
@@ -213,19 +243,19 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
     if not cases:
         return lines
 
+    indent0 = indentation_level * indentation_step
+    indent1 = (indentation_level + 1) * indentation_step
+    indent2 = (indentation_level + 2) * indentation_step
     for expression, statements in cases.items():
         if statements:
-            lines.append((indentation_level + 1) * indentation_step
-                         + f'case {expression}:')
-            for statement in statements:
-                lines.append((indentation_level + 2) * indentation_step
-                             + statement)
-            lines.append((indentation_level + 2) * indentation_step + 'break;')
+            lines.extend([
+                f'{indent1}case {expression}:',
+                *(f"{indent2}{statement}" for statement in statements),
+                f'{indent2}break;'
+            ])
 
     if lines:
-        lines.insert(0, indentation_level * indentation_step
-                     + f'switch({condition}) {{')
-        lines.append(indentation_level * indentation_step + '}')
+        lines.insert(0, f'{indent0}switch({condition}) {{')
+        lines.append(indent0 + '}')
 
     return lines
-

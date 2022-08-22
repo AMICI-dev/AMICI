@@ -530,7 +530,8 @@ def import_model_sbml(
             if sbml_model.getElementBySId(sym) is None and sym != 'time' \
                     and sym not in observables:
                 output_parameters[sym] = None
-    logger.debug(f"Adding output parameters to model: {output_parameters}")
+    logger.debug("Adding output parameters to model: "
+                 f"{list(output_parameters.keys())}")
     for par in output_parameters.keys():
         _add_global_parameter(sbml_model, par)
     # <EndWorkAround>
@@ -560,8 +561,7 @@ def import_model_sbml(
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug("Adding preequilibration indicator "
                      f"constant {PREEQ_INDICATOR_ID}")
-    logger.debug("Adding initial assignments for "
-                 f"{initial_states}")
+    logger.debug(f"Adding initial assignments for {initial_states}")
     for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"

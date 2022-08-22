@@ -783,7 +783,7 @@ Targeted inhibition of oncogenic pathways can be highly effective in halting the
 @Article{VanhoeferMat2021,
   author    = {Jakob Vanhoefer and Marta R. A. Matos and Dilan Pathirana and Yannik Schälte and Jan Hasenauer},
   journal   = {Journal of Open Source Software},
-  title     = {yaml2sbml: Human-readable and -writable specification of ODE models and their conversion to SBML},
+  title     = {yaml2sbml: Human-readable and -writable specification of {ODE} models and their conversion to {SBML}},
   year      = {2021},
   number    = {61},
   pages     = {3215},
@@ -1037,6 +1037,19 @@ Survival or apoptosis is a binary decision in individual cells. However, at the 
   abstract = {Cell-free protein synthesis has been widely used as a “breadboard” for design of synthetic genetic networks. However, due to a severe lack of modularity, forward engineering of genetic networks remains challenging. Here, we demonstrate how a combination of optimal experimental design and microfluidics allows us to devise dynamic cell-free gene expression experiments providing maximum information content for subsequent non-linear model identification. Importantly, we reveal that applying this methodology to a library of genetic circuits, that share common elements, further increases the information content of the data resulting in higher accuracy of model parameters. To show modularity of model parameters, we design a pulse decoder and bistable switch, and predict their behaviour both qualitatively and quantitatively. Finally, we update the parameter database and indicate that network topology affects parameter estimation accuracy. Utilizing our methodology provides us with more accurate model parameters, a necessity for forward engineering of complex genetic networks.},
   doi      = {10.1038/s41467-022-31306-3},
   refid    = {van Sluijs2022},
+}
+
+@Article{LakrisenkoSta2022,
+  author       = {Lakrisenko, Polina and Stapor, Paul and Grein, Stephan and Paszkowski, {\L}ukasz and Pathirana, Dilan and Fr{\"o}hlich, Fabian and Lines, Glenn Terje and Weindl, Daniel and Hasenauer, Jan},
+  journal      = {bioRxiv},
+  title        = {Efficient computation of adjoint sensitivities at steady-state in {ODE} models of biochemical reaction networks},
+  year         = {2022},
+  abstract     = {Dynamical models in the form of systems of ordinary differential equations have become a standard tool in systems biology. Many parameters of such models are usually unknown and have to be inferred from experimental data. Gradient-based optimization has proven to be effective for parameter estimation. However, computing gradients becomes increasingly costly for larger models, which are required for capturing the complex interactions of multiple biochemical pathways. Adjoint sensitivity analysis has been pivotal for working with such large models, but methods tailored for steady-state data are currently not available. We propose a new adjoint method for computing gradients, which is applicable if the experimental data include steady-state measurements. The method is based on a reformulation of the backward integration problem to a system of linear algebraic equations. The evaluation of the proposed method using real-world problems shows a speedup of total simulation time by a factor of up to 4.4. Our results demonstrate that the proposed approach can achieve a substantial improvement in computation time, in particular for large-scale models, where computational efficiency is critical.Competing Interest StatementThe authors have declared no competing interest.},
+  doi          = {10.1101/2022.08.08.503176},
+  elocation-id = {2022.08.08.503176},
+  eprint       = {https://www.biorxiv.org/content/early/2022/08/11/2022.08.08.503176.full.pdf},
+  publisher    = {Cold Spring Harbor Laboratory},
+  url          = {https://www.biorxiv.org/content/early/2022/08/11/2022.08.08.503176},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}

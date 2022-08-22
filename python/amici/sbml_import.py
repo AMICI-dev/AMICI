@@ -31,7 +31,7 @@ from .import_utils import (RESERVED_SYMBOLS,
                            smart_subs, smart_subs_dict, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
-    ODEExporter, ODEModel, symbol_with_assumptions
+    ODEExporter, ODEModel, symbol_with_assumptions, _default_simplify
 )
 
 
@@ -223,7 +223,7 @@ class SbmlImporter:
             allow_reinit_fixpar_initcond: bool = True,
             compile: bool = True,
             compute_conservation_laws: bool = True,
-            simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+            simplify: Optional[Callable] = _default_simplify,
             cache_simplify: bool = False,
             log_as_log10: bool = True,
             generate_sensitivity_code: bool = True,
@@ -664,7 +664,7 @@ class SbmlImporter:
                 self.sbml.getConversionFactor()
             )
         else:
-            conversion_factor = 1.0
+            conversion_factor = 1
 
         for s in self.sbml.getListOfSpecies():
             if self.is_assignment_rule_target(s):
@@ -905,8 +905,8 @@ class SbmlImporter:
         ]
 
         for reaction_index, reaction in enumerate(reactions):
-            for element_list, sign in [(reaction.getListOfReactants(), -1.0),
-                                       (reaction.getListOfProducts(), 1.0)]:
+            for element_list, sign in [(reaction.getListOfReactants(), -1),
+                                       (reaction.getListOfProducts(), 1)]:
                 for element in element_list:
                     stoichiometry = self._get_element_stoichiometry(
                         element
@@ -927,7 +927,6 @@ class SbmlImporter:
                     self.stoichiometric_matrix[species['index'],
                                                reaction_index] += \
                         sign * stoichiometry * species['conversion_factor']
-
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
@@ -1959,9 +1958,11 @@ class SbmlImporter:
                 return _get_identifier_symbol(ele)
 
         if ele.isSetStoichiometry():
-            return sp.Float(ele.getStoichiometry())
+            stoichiometry: float = ele.getStoichiometry()
+            return sp.Integer(stoichiometry) if stoichiometry.is_integer() \
+                else sp.Float(stoichiometry)
 
-        return sp.Float(1.0)
+        return sp.Integer(1)
 
     def is_assignment_rule_target(self, element: sbml.SBase) -> bool:
         """

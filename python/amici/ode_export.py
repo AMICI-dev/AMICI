@@ -574,6 +574,13 @@ def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
     return x.nnz() == 0
 
 
+def _default_simplify(x):
+    """Default simplification applied in ODEModel"""
+    # We need this as a free function instead of a lambda to have it picklable
+    #  for parallel simplification
+    return sp.powsimp(x, deep=True)
+
+
 class ODEModel:
     """
     Defines an Ordinary Differential Equation as set of ModelQuantities.
@@ -700,7 +707,7 @@ class ODEModel:
     """
 
     def __init__(self, verbose: Optional[Union[bool, int]] = False,
-                 simplify: Optional[Callable] = sp.powsimp,
+                 simplify: Optional[Callable] = _default_simplify,
                  cache_simplify: bool = False):
         """
         Create a new ODEModel instance.
@@ -985,20 +992,20 @@ class ODEModel:
             whether to add quantity first or last, relevant when components
             may refer to other components of the same type.
         """
-        for comp_type in [Observable, Expression, Parameter, Constant, State,
-                          LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
-                          SigmaY, SigmaZ, ConservationLaw, Event]:
-            if isinstance(component, comp_type):
-                component_list = getattr(
-                    self, f'_{type(component).__name__.lower()}s'
-                )
-                if insert_first:
-                    component_list.insert(0, component)
-                else:
-                    component_list.append(component)
-                return
+        if type(component) not in {
+            Observable, Expression, Parameter, Constant, State,
+            LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
+            SigmaY, SigmaZ, ConservationLaw, Event, EventObservable
+        }:
+            raise ValueError(f'Invalid component type {type(component)}')
 
-        raise ValueError(f'Invalid component type {type(component)}')
+        component_list = getattr(
+            self, f'_{type(component).__name__.lower()}s'
+        )
+        if insert_first:
+            component_list.insert(0, component)
+        else:
+            component_list.append(component)
 
     def add_conservation_law(self,
                              state: sp.Symbol,
@@ -1021,11 +1028,9 @@ class ODEModel:
             Dictionary of coefficients {x_i: a_i}
         """
         try:
-            ix = [
-                s.get_id()
-                for s in self._states
-            ].index(state)
-        except ValueError:
+            ix = next(filter(lambda is_s: is_s[1].get_id() == state,
+                             enumerate(self._states)))[0]
+        except StopIteration:
             raise ValueError(f'Specified state {state} was not found in the '
                              f'model states.')
 
@@ -1855,11 +1860,13 @@ class ODEModel:
         if self._simplify:
             dec = log_execution_time(f'simplifying {name}', logger)
             if isinstance(self._eqs[name], list):
-                self._eqs[name] = [dec(sub_eq.applyfunc)(self._simplify)
-                                   for sub_eq in self._eqs[name]]
+                self._eqs[name] = [
+                    dec(_parallel_applyfunc)(sub_eq, self._simplify)
+                    for sub_eq in self._eqs[name]
+                ]
             else:
-                self._eqs[name] = \
-                    dec(self._eqs[name].applyfunc)(self._simplify)
+                self._eqs[name] = dec(_parallel_applyfunc)(self._eqs[name],
+                                                           self._simplify)
 
     def sym_names(self) -> List[str]:
         """
@@ -2405,6 +2412,14 @@ class ODEExporter:
 
     :ivar generate_sensitivity_code:
         Specifies whether code for sensitivity computation is to be generated
+
+    .. note::
+        When importing large models (several hundreds of species or
+        parameters), import time can potentially be reduced by using multiple
+        CPU cores. This is controlled by setting the ``AMICI_IMPORT_NPROCS``
+        environment variable to the number of parallel processes that are to be
+        used (default: 1). Note that for small models this may (slightly)
+        increase import times.
     """
 
     def __init__(
@@ -3592,3 +3607,39 @@ def _custom_pow_eval_derivative(self, s):
 def _jacobian_element(i, j, eq_i, sym_var_j):
     """Compute a single element of a jacobian"""
     return (i, j), eq_i.diff(sym_var_j)
+
+
+def _parallel_applyfunc(
+        obj: sp.Matrix,
+        func: Callable
+) -> sp.Matrix:
+    """Parallel implementation of sympy's Matrix.applyfunc"""
+    if (n_procs := int(os.environ.get("AMICI_IMPORT_NPROCS", 1))) == 1:
+        # serial
+        return obj.applyfunc(func)
+
+    # parallel
+    from pickle import PicklingError
+    from sympy.matrices.dense import DenseMatrix
+    from multiprocessing import get_context
+    # "spawn" should avoid potential deadlocks occurring with fork
+    #  see e.g. https://stackoverflow.com/a/66113051
+    ctx = get_context('spawn')
+    with ctx.Pool(n_procs) as p:
+        try:
+            if isinstance(obj, DenseMatrix):
+                return obj._new(obj.rows, obj.cols, p.map(func, obj))
+            elif isinstance(obj, sp.SparseMatrix):
+                dok = obj.todok()
+                mapped = p.map(func, dok.values())
+                dok = {k: v for k, v in zip(dok.keys(), mapped) if v != 0}
+                return obj._new(obj.rows, obj.cols, dok)
+            else:
+                raise ValueError(f"Unsupported matrix type {type(obj)}")
+        except PicklingError as e:
+            raise ValueError(
+                f"Couldn't pickle {func}. This is likely because the argument "
+                "was not a module-level function. Either rewrite the argument "
+                "to a module-level function or disable parallelization by "
+                "setting `AMICI_IMPORT_NPROCS=1`."
+            ) from e
