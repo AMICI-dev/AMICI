@@ -311,7 +311,7 @@ def toposort_symbols(symbols: SymbolDef,
     return {
         s: symbols[s]
         for symbol_group in sorted_symbols
-        for s in symbol_group
+        for s in sorted(symbol_group, key=str)
     }
 
 
