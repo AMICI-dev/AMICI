@@ -26,6 +26,8 @@ jobs:
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
+      CC: clang
+      CXX: clang
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -41,7 +43,7 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig libatlas-base-dev
+          && sudo apt-get install -y swig libatlas-base-dev clang
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
     - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
