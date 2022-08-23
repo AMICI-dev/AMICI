@@ -87,6 +87,9 @@ class TypeHintFixer(ast.NodeTransformer):
         'void': None,
         'double': ast.Name('float'),
         'int': ast.Name('int'),
+        'long': ast.Name('int'),
+        'ptrdiff_t': ast.Name('int'),
+        'size_t': ast.Name('int'),
         'bool': ast.Name('bool'),
         'std::unique_ptr< amici::Solver >': ast.Constant('Solver'),
         'amici::InternalSensitivityMethod':
@@ -110,7 +113,7 @@ class TypeHintFixer(ast.NodeTransformer):
             ast.Constant('SteadyStateSensitivityMode'),
         'amici::realtype': ast.Name('float'),
         'DoubleVector': ast.Constant('numpy.ndarray'),
-        'IntVector': ast.Name('List[int]'),
+        'IntVector': ast.Name('Sequence[int]'),
         'std::string': ast.Name('str'),
         'std::string const &': ast.Name('str'),
         'std::unique_ptr< amici::ExpData >': ast.Constant('ExpData'),
@@ -150,7 +153,7 @@ class TypeHintFixer(ast.NodeTransformer):
 
         # std::vector
         if (value_type := re.sub(
-                r'std::vector< (.*),std::allocator< \1 > >',
+                r'std::vector< (.*),std::allocator< \1 > >( const &)?',
                 r'\1', old_annot)) in self.mapping:
             value_type_annot = self.mapping[value_type]
             if isinstance(value_type_annot, ast.Constant):
