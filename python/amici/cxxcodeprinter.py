@@ -1,4 +1,5 @@
 """C++ code generation"""
+import itertools
 import os
 import re
 from typing import Dict, List, Optional, Tuple
@@ -6,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 import sympy as sp
 from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
+from toposort import toposort
 
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):
@@ -102,37 +104,58 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
             C++ code as list of lines
         """
         indent = " " * indent_level
-        lines = []
+
+        def format_regular_line(symbol, math, index):
+            return (
+                f'{indent}{symbol} = {self.doprint(math)};'
+                f'  // {variable}[{index}]'.replace('\n', '\n' + indent)
+            )
 
         if self.extract_cse:
             # Extract common subexpressions
+            cse_sym_prefix = "__amici_cse_"
             symbol_generator = numbered_symbols(
-                cls=sp.Symbol, prefix="__amici_")
+                cls=sp.Symbol, prefix=cse_sym_prefix)
             replacements, reduced_exprs = sp.cse(
                 equations,
                 symbols=symbol_generator,
-                # subexpressions must not include symbols computed in this
-                # function, as they will be computed only after the extracted
-                # subexpressions
-                ignore=symbols,
+                order='none',
+                list=False,
             )
-            assert len(reduced_exprs) == 1, "Unexpected input"
-            reduced_exprs = reduced_exprs[0]
-
             if replacements:
-                lines = [
-                    f'{indent}const realtype {sym} = {self.doprint(math)};'
-                    for (sym, math) in replacements
-                ]
-                equations = reduced_exprs
+                # we need toposort to handle the dependencies of extracted
+                #  subexpressions
+                expr_dict = dict(itertools.chain(zip(symbols, reduced_exprs),
+                                                 replacements))
+                sorted_symbols = toposort({
+                    identifier: {
+                        s for s in definition.free_symbols
+                        if s in expr_dict
+                    }
+                    for (identifier, definition) in expr_dict.items()
+                })
+                symbol_to_idx = {sym: idx for idx, sym in enumerate(symbols)}
 
-        lines.extend([
-            f'{indent}{sym} = {self.doprint(math)};'
-            f'  // {variable}[{index}]'.replace('\n', '\n' + indent)
+                def format_line(symbol):
+                    math = expr_dict[symbol]
+                    if str(symbol).startswith(cse_sym_prefix):
+                        return f'{indent}const realtype {symbol} '\
+                               f'= {self.doprint(math)};'
+                    elif math not in [0, 0.0]:
+                        return format_regular_line(
+                            symbol, math, symbol_to_idx[symbol])
+                return [
+                    line
+                    for symbol_group in sorted_symbols
+                    for symbol in sorted(symbol_group, key=str)
+                    if (line := format_line(symbol))
+                ]
+
+        return [
+            format_regular_line(sym, math, index)
             for index, (sym, math) in enumerate(zip(symbols, equations))
             if math not in [0, 0.0]
-        ])
-        return lines
+        ]
 
     def csc_matrix(
             self,
