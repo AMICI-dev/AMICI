@@ -112,7 +112,7 @@ class TypeHintFixer(ast.NodeTransformer):
         'amici::SteadyStateSensitivityMode':
             ast.Constant('SteadyStateSensitivityMode'),
         'amici::realtype': ast.Name('float'),
-        'DoubleVector': ast.Constant('numpy.ndarray'),
+        'DoubleVector': ast.Constant('Sequence[float]'),
         'IntVector': ast.Name('Sequence[int]'),
         'std::string': ast.Name('str'),
         'std::string const &': ast.Name('str'),
@@ -141,19 +141,18 @@ class TypeHintFixer(ast.NodeTransformer):
             return self.mapping[old_annot]
 
         # std::vector size type
-        if old_annot.startswith("std::vector< ") \
-                and old_annot.endswith(" >::size_type"):
+        if re.match(r"std::vector< .* >::(?:size|difference)_type", old_annot):
             return ast.Name("int")
 
         # std::vector value type
         if (value_type := re.sub(
-                r'std::vector< (.*) >::value_type( const &)?',
+                r'std::vector< (.*) >::value_type(?: const &)?',
                 r'\1', old_annot)) in self.mapping:
             return self.mapping[value_type]
 
         # std::vector
         if (value_type := re.sub(
-                r'std::vector< (.*),std::allocator< \1 > >( const &)?',
+                r'std::vector< (.*),std::allocator< \1 > >(?: const &)?',
                 r'\1', old_annot)) in self.mapping:
             value_type_annot = self.mapping[value_type]
             if isinstance(value_type_annot, ast.Constant):
