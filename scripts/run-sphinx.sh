@@ -8,7 +8,7 @@ python3 -m venv ${AMICI_PATH}/doc-venv --clear
 source ${AMICI_PATH}/doc-venv/bin/activate
 python -m pip install --upgrade --no-cache-dir pip
 python -m pip install --exists-action=w --no-cache-dir -r ${AMICI_PATH}/documentation/rtd_requirements.txt
-python -m pip install exhale>=0.3.5
+python -m pip install --exists-action=w --no-cache-dir -r ${AMICI_PATH}/documentation/rtd_requirements2.txt
 
 ${AMICI_PATH}/scripts/run-sphinx-hasenv.sh
 

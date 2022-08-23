@@ -17,8 +17,7 @@ formats:
 python:
   install:
     - requirements: documentation/rtd_requirements.txt
-    - method: pip
-      path: exhale>=0.3.5
+    - requirements: documentation/rtd_requirements2.txt
 build:
   os: "ubuntu-20.04"
   apt_packages:
