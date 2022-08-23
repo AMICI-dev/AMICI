@@ -1,7 +1,9 @@
 """Functions for downloading/building/finding SWIG"""
 
+
 from typing import Tuple
 import ast
+import contextlib
 import os
 import subprocess
 import re
@@ -135,29 +137,31 @@ class TypeHintFixer(ast.NodeTransformer):
         return node
 
     def _new_annot(self, old_annot: str):
-        try:
+        with contextlib.suppress(KeyError):
             return self.mapping[old_annot]
-        except KeyError:
-            # std::vector size type
-            if old_annot.startswith("std::vector< ") \
-                    and old_annot.endswith(" >::size_type"):
-                return ast.Name("int")
-            # std::vector value type
-            if (value_type := re.sub(
-                    r'std::vector< (.*) >::value_type( const &)?',
-                    r'\1', old_annot)) in self.mapping:
-                return self.mapping[value_type]
-            # std::vector
-            if (value_type := re.sub(
-                    r'std::vector< (.*),std::allocator< \1 > >',
-                    r'\1', old_annot)) in self.mapping:
-                value_type_annot = self.mapping[value_type]
-                if isinstance(value_type_annot, ast.Constant):
-                    return ast.Name(f"Tuple['{value_type_annot.value}']")
-                if isinstance(value_type_annot, ast.Name):
-                    return ast.Name(f"Tuple[{value_type_annot.id}]")
 
-            return ast.Constant(old_annot)
+        # std::vector size type
+        if old_annot.startswith("std::vector< ") \
+                and old_annot.endswith(" >::size_type"):
+            return ast.Name("int")
+
+        # std::vector value type
+        if (value_type := re.sub(
+                r'std::vector< (.*) >::value_type( const &)?',
+                r'\1', old_annot)) in self.mapping:
+            return self.mapping[value_type]
+
+        # std::vector
+        if (value_type := re.sub(
+                r'std::vector< (.*),std::allocator< \1 > >',
+                r'\1', old_annot)) in self.mapping:
+            value_type_annot = self.mapping[value_type]
+            if isinstance(value_type_annot, ast.Constant):
+                return ast.Name(f"Tuple['{value_type_annot.value}']")
+            if isinstance(value_type_annot, ast.Name):
+                return ast.Name(f"Tuple[{value_type_annot.id}]")
+
+        return ast.Constant(old_annot)
 
 
 def fix_typehints(infilename, outfilename):
