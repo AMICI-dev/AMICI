@@ -529,17 +529,7 @@
    other
    Memcheck:Leak
    fun:realloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -547,17 +537,7 @@
    other
    Memcheck:Leak
    fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -733,25 +713,6 @@
    fun:__libc_dlopen_mode
    fun:__libc_unwind_link_get
    fun:__libc_unwind_link_get
-}
-{
-   _dl_catch_exception
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
-   fun:_dl_catch_exception
 }
 
 {
