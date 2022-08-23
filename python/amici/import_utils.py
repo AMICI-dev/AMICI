@@ -232,7 +232,7 @@ def smart_subs_dict(sym: sp.Expr,
                     field: Optional[str] = None,
                     reverse: bool = True) -> sp.Expr:
     """
-    Subsitutes expressions completely flattening them out. Requires
+    Substitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
 
     :param sym:
