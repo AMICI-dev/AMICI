@@ -1,12 +1,10 @@
 """Functions for downloading/building/finding SWIG"""
-
-
-from typing import Tuple
 import ast
 import contextlib
 import os
-import subprocess
 import re
+import subprocess
+from typing import Tuple
 
 
 def find_swig() -> str:
@@ -120,7 +118,6 @@ class TypeHintFixer(ast.NodeTransformer):
         'std::vector< amici::ParameterScaling,'
         'std::allocator< amici::ParameterScaling > > const &':
             ast.Constant('ParameterScalingVector')
-
     }
 
     def visit_FunctionDef(self, node):
