@@ -39,11 +39,6 @@ from .import_utils import (ObservableTransformation, generate_flux_symbol,
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_model import *
 
-try:
-    import pysb
-except ImportError:
-    pysb = None
-
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
