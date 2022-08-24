@@ -265,8 +265,7 @@ if sys.platform == 'win32':
 
 // import additional types for typehints
 %pythonbegin %{
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
 if TYPE_CHECKING:
-    from typing import Iterable, List, Tuple
     import numpy
 %}
