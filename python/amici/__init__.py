@@ -119,6 +119,7 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
+    from .jax import JAXModel
 
     from typing import Protocol
 
@@ -127,6 +128,9 @@ if not _imported_from_setup():
         """Enable Python static type checking for AMICI-generated model
         modules"""
         def getModel(self) -> amici.Model:
+            pass
+
+        def get_jax_model(self) -> JAXModel:
             pass
 
 

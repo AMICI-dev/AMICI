@@ -33,6 +33,7 @@ from . import (__commit__, __version__, amiciModulePath, amiciSrcPath,
                amiciSwigPath, sbml_import)
 from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
+from .jaxcodeprinter import AmiciJaxCodePrinter
 from .import_utils import (ObservableTransformation, generate_flux_symbol,
                            smart_subs_dict, strip_pysb,
                            symbol_with_assumptions, toposort_symbols)
@@ -699,7 +700,10 @@ class ODEModel:
         whether all observables have a gaussian noise model, i.e. whether
         res and FIM make sense.
 
-    :ivar _code_printer:
+    :ivar _code_printer_jax:
+        Code printer to generate JAX code
+
+    :ivar _code_printer_cpp:
         Code printer to generate C++ code
 
     :ivar _z2event:
@@ -829,9 +833,10 @@ class ODEModel:
         self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
 
-        self._code_printer = AmiciCxxCodePrinter()
+        self._code_printer_cpp = AmiciCxxCodePrinter()
+        self._code_printer_jax = AmiciJaxCodePrinter()
         for fun in CUSTOM_FUNCTIONS:
-            self._code_printer.known_functions[fun['sympy']] = fun['c++']
+            self._code_printer_cpp.known_functions[fun['sympy']] = fun['c++']
 
     @log_execution_time('importing SbmlImporter', logger)
     def import_from_sbml_importer(
@@ -1519,7 +1524,7 @@ class ODEModel:
 
             for iy in range(self.num_obs()):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
-                    sparse_matrix = self._code_printer.csc_matrix(
+                    sparse_matrix = self._code_printer_cpp.csc_matrix(
                     matrix[iy, :], rownames=rownames, colnames=colnames,
                     identifier=iy)
                 self._colptrs[name].append(symbol_col_ptrs)
@@ -1529,7 +1534,7 @@ class ODEModel:
                 self._syms[name].append(sparse_matrix)
         else:
             symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
-                sparse_matrix = self._code_printer.csc_matrix(
+                sparse_matrix = self._code_printer_cpp.csc_matrix(
                     matrix, rownames=rownames, colnames=colnames,
                     pattern_only=name in nobody_functions
                 )
@@ -2497,6 +2502,7 @@ class ODEExporter:
                             _custom_pow_eval_derivative):
 
             self._prepare_model_folder()
+            self._generate_jax_code()
             self._generate_c_code()
             self._generate_m_code()
 
@@ -2519,6 +2525,73 @@ class ODEExporter:
             file_path = os.path.join(self.model_path, file)
             if os.path.isfile(file_path):
                 os.remove(file_path)
+
+    @log_execution_time('generating jax code', logger)
+    def _generate_jax_code(self) -> None:
+
+        eq_names = {'xdot', 'w', 'x0', 'y', 'sigmay', 'Jy'}
+        sym_names = {'p', 'k', 'x', 'tcl', 'w', 'my', 'y', 'sigmay'}
+
+        indent = 8
+
+        def jnp_stack_str(array) -> str:
+            elems = ', '.join(str(x) for x in array)
+
+            if not elems:
+                return 'jnp.empty((1,))'
+
+            # scalar
+            if ',' not in elems:
+                elems += ', '
+
+            return f'jnp.stack(({elems}), axis=-1)'
+
+        tpl_data = {
+            **{
+                f'{eq_name.upper()}_EQ': '\n'.join(
+                    self.model._code_printer_jax._get_sym_lines(
+                        (str(strip_pysb(s)) for s in self.model.sym(eq_name)),
+                        self.model.eq(eq_name),
+                        indent
+                    )
+                )
+                for eq_name in eq_names
+            },
+            **{
+                f'{eq_name.upper()}_RET': jnp_stack_str(
+                    strip_pysb(s) for s in self.model.sym(eq_name)
+                ) if eq_name is not 'Jy'
+                else '0 + ' + ' + '.join(
+                    str(s) for s in self.model.sym(eq_name)
+                )
+                for eq_name in eq_names
+            },
+            **{
+                f'{sym_name.upper()}_SYMS': ', '.join(
+                    (str(strip_pysb(s)) for s in self.model.sym(sym_name))
+                )
+                if self.model.sym(sym_name) else '_'
+                for sym_name in sym_names
+            },
+            **{
+                'MODEL_NAME': self.model_name,
+                'NTCL': self.model.num_cons_law(),
+                'PAR_VALS': jnp_stack_str(
+                    p.get_val() for p in self.model._parameters
+                ),
+                'CONST_VALS': jnp_stack_str(
+                    k.get_val() for k in self.model._constants
+                ),
+            }
+        }
+        os.makedirs(os.path.join(self.model_path, self.model_name),
+                    exist_ok=True)
+
+        apply_template(
+            os.path.join(amiciModulePath, 'jax.template.py'),
+            os.path.join(self.model_path, self.model_name, f'jax.py'),
+            tpl_data
+        )
 
     def _generate_c_code(self) -> None:
         """
@@ -2947,7 +3020,7 @@ class ODEExporter:
                             f'reinitialization_state_idxs.cend(), {index}) != '
                             'reinitialization_state_idxs.cend())',
                             f'    {function}[{index}] = '
-                            f'{self.model._code_printer.doprint(formula)};'
+                            f'{self.model._code_printer_cpp.doprint(formula)};'
                         ])
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
@@ -2962,12 +3035,12 @@ class ODEExporter:
                     f'reinitialization_state_idxs.cend(), {index}) != '
                     'reinitialization_state_idxs.cend())\n        '
                     f'{function}[{index}] = '
-                    f'{self.model._code_printer.doprint(formula)};'
+                    f'{self.model._code_printer_cpp.doprint(formula)};'
                 )
 
         elif function in event_functions:
             cases = {
-                ie: self.model._code_printer._get_sym_lines_array(
+                ie: self.model._code_printer_cpp._get_sym_lines_array(
                     equations[ie], function, 0)
                 for ie in range(self.model.num_events())
                 if not smart_is_zero_matrix(equations[ie])
@@ -2979,7 +3052,7 @@ class ODEExporter:
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []
                 inner_cases = {
-                    ipar: self.model._code_printer._get_sym_lines_array(
+                    ipar: self.model._code_printer_cpp._get_sym_lines_array(
                         inner_equations[:, ipar], function, 0)
                     for ipar in range(self.model.num_par())
                     if not smart_is_zero_matrix(inner_equations[:, ipar])
@@ -2992,7 +3065,7 @@ class ODEExporter:
         elif function in sensi_functions \
                 and equations.shape[1] == self.model.num_par():
             cases = {
-                ipar: self.model._code_printer._get_sym_lines_array(
+                ipar: self.model._code_printer_cpp._get_sym_lines_array(
                     equations[:, ipar], function, 0)
                 for ipar in range(self.model.num_par())
                 if not smart_is_zero_matrix(equations[:, ipar])
@@ -3001,14 +3074,14 @@ class ODEExporter:
         elif function in multiobs_functions:
             if function == 'dJydy':
                 cases = {
-                    iobs: self.model._code_printer._get_sym_lines_array(
+                    iobs: self.model._code_printer_cpp._get_sym_lines_array(
                         equations[iobs], function, 0)
                     for iobs in range(self.model.num_obs())
                     if not smart_is_zero_matrix(equations[iobs])
                 }
             else:
                 cases = {
-                    iobs: self.model._code_printer._get_sym_lines_array(
+                    iobs: self.model._code_printer_cpp._get_sym_lines_array(
                         equations[:, iobs], function, 0)
                     for iobs in range(equations.shape[1])
                     if not smart_is_zero_matrix(equations[:, iobs])
@@ -3025,11 +3098,11 @@ class ODEExporter:
                 symbols = self.model.sparsesym(function)
             else:
                 symbols = self.model.sym(function, stripped=True)
-            lines += self.model._code_printer._get_sym_lines_symbols(
+            lines += self.model._code_printer_cpp._get_sym_lines_symbols(
                 symbols, equations, function, 4)
 
         else:
-            lines += self.model._code_printer._get_sym_lines_array(
+            lines += self.model._code_printer_cpp._get_sym_lines_array(
                 equations, function, 4)
 
         return [line for line in lines if line]
@@ -3105,9 +3178,9 @@ class ODEExporter:
             'NK': str(self.model.num_const()),
             'O2MODE': 'amici::SecondOrderMode::none',
             # using cxxcode ensures proper handling of nan/inf
-            'PARAMETERS': self.model._code_printer.doprint(
+            'PARAMETERS': self.model._code_printer_cpp.doprint(
                 self.model.val('p'))[1:-1],
-            'FIXED_PARAMETERS': self.model._code_printer.doprint(
+            'FIXED_PARAMETERS': self.model._code_printer_cpp.doprint(
                 self.model.val('k'))[1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._get_symbol_name_initializer_list('p'),

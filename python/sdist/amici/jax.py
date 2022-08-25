@@ -1,0 +1,127 @@
+from abc import abstractmethod
+from dataclasses import dataclass
+
+import diffrax
+import jax.numpy as jnp
+import numpy as np
+import equinox as eqx
+import functools as ft
+
+import amici
+
+
+class JAXModel(object):
+    @abstractmethod
+    def xdot(self, t, x, args):
+        ...
+
+    @abstractmethod
+    def _w(self, x, p, k, tcl):
+        ...
+
+    @abstractmethod
+    def x0(self, p, k):
+        ...
+
+    @abstractmethod
+    def y(self, x, p, k, tcl):
+        ...
+
+    @abstractmethod
+    def sigmay(self, y, p, k):
+        ...
+
+    @abstractmethod
+    def Jy(self, y, my, sigmay):
+        ...
+
+    def get_solver(self):
+        return JAXSolver(model=self)
+
+
+class JAXSolver(object):
+    def __init__(self, model: JAXModel):
+        self.model: JAXModel = model
+        self.solver: diffrax.AbstractSolver = diffrax.Tsit5()
+        self.atol: float = 1e-8
+        self.rtol: float = 1e-8
+        self.sensi_mode: amici.SensitivityMethod = \
+            amici.SensitivityMethod.adjoint
+
+    def solve(self, ts, p, k):
+        y0 = self.model.x0(p, k)
+        tcl = 0
+        sol = diffrax.diffeqsolve(
+            diffrax.ODETerm(self.model.xdot),
+            self.solver,
+            args=(p, k, tcl),
+            t0=ts[0],
+            t1=ts[-1],
+            dt0=ts[1] - ts[0],
+            y0=y0,
+            stepsize_controller=diffrax.PIDController(
+                rtol=self.rtol,
+                atol=self.atol
+            ),
+            saveat=diffrax.SaveAt(ts=ts)
+        )
+        return sol
+
+    def obs(self, sol, p, k, tcl):
+        return jnp.apply_along_axis(
+            lambda x: self.model.y(x, p, k, tcl),
+            axis=1,
+            arr=sol.ys
+        )[:, :, 0]
+
+    def sigmay(self, obs, p, k):
+        return jnp.apply_along_axis(
+            lambda y: self.model.sigmay(y, p, k),
+            axis=1,
+            arr=obs
+        )
+
+    def loss(self, obs, sigmay, my):
+        return -jnp.sum(jnp.stack(
+            [self.model.Jy(obs[i, :], my[i, :], sigmay[i, :])
+             for i in range(my.shape[0])]
+        ))
+
+
+def runAmiciSimulationJAX(model: JAXModel,
+                          solver: JAXSolver,
+                          edata: amici.ExpData):
+    ts = jnp.asarray(edata.getTimepoints())
+    p = jnp.asarray(edata.parameters)
+    k = jnp.asarray(edata.fixedParameters)
+
+    tcl = 0
+
+    sol = solver.solve(ts, p, k)
+    obs = solver.obs(sol, p, k, tcl)
+    my = jnp.asarray(edata.getObservedData()).reshape(obs.shape)
+    sigmay = solver.sigmay(obs, p, k)
+    loss = solver.loss(obs, sigmay, my)
+
+    return ReturnDataJAX(
+        x=sol.ys,
+        y=obs,
+        sigmay=sigmay,
+        llh=loss,
+    )
+
+
+@dataclass
+class ReturnDataJAX(dict):
+    x: np.array = None
+    sx: np.array = None
+    y: np.array = None
+    sy: np.array = None
+    sigmay: np.array = None
+    ssigmay: np.array = None
+    llh: np.array = None
+    sllh: np.array = None
+
+    def __init__(self, *args, **kwargs):
+        super(ReturnDataJAX, self).__init__(*args, **kwargs)
+        self.__dict__ = self
