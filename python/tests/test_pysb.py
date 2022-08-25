@@ -295,6 +295,11 @@ def test_heavyside_and_special_symbols():
     assert amici_model.ne
 
 
+# TODO: remove me
+@pytest.mark.skipif(
+    not hasattr(pysb, 'EnergyPattern'),
+    reason='pysb energy not yet available'
+)
 def test_energy():
     model_pysb = pysb.Model('energy')
     pysb.Monomer('A', ['a', 'b'])
