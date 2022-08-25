@@ -1250,7 +1250,7 @@ class ODEModel:
             name of the symbolic variable
 
         :return:
-            list containing the row v alues
+            list containing the row values
         """
         if name not in sparse_functions:
             raise ValueError(f'{name} is not marked as sparse')
