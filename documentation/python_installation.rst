@@ -318,6 +318,8 @@ dependencies, you can run
    applied to *all* installed packages, including dependencies.)
 
 
+.. _amici_python_install_env_vars:
+
 Custom installation
 -------------------
 

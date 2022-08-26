@@ -2,17 +2,18 @@
 import os
 import re
 import shutil
+from numbers import Number
 from pathlib import Path
 from urllib.request import urlopen
 
+import amici
 import libsbml
 import numpy as np
 import pytest
-
-import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from numpy.testing import assert_allclose, assert_array_equal
 
 
 @pytest.fixture
@@ -43,15 +44,15 @@ def test_sbml2amici_no_observables(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_sbml2amici_no_observables"
     with TemporaryDirectory() as tmpdir:
-        sbml_importer.sbml2amici(model_name="test",
+        sbml_importer.sbml2amici(model_name=model_name,
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False)
 
         # Ensure import succeeds (no missing symbols)
-        module_module = amici.import_model_module("test", tmpdir)
+        module_module = amici.import_model_module(model_name, tmpdir)
         assert hasattr(module_module, 'getModel')
 
 
@@ -60,11 +61,11 @@ def test_sbml2amici_nested_observables_fail(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_sbml2amici_nested_observables_fail"
     with TemporaryDirectory() as tmpdir:
         with pytest.raises(ValueError, match="(?i)nested"):
             sbml_importer.sbml2amici(
-                model_name="test",
+                model_name=model_name,
                 output_dir=tmpdir,
                 observables={'outer': {'formula': 'inner'},
                              'inner': {'formula': 'S1'}},
@@ -78,15 +79,15 @@ def test_nosensi(simple_sbml_model):
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
-
+    model_name = "test_nosensi"
     with TemporaryDirectory() as tmpdir:
-        sbml_importer.sbml2amici(model_name="test",
+        sbml_importer.sbml2amici(model_name=model_name,
                                  output_dir=tmpdir,
                                  observables=None,
                                  compute_conservation_laws=False,
                                  generate_sensitivity_code=False)
 
-        model_module = amici.import_model_module(module_name='test',
+        model_module = amici.import_model_module(module_name=model_name,
                                                  module_path=tmpdir)
 
         model = model_module.getModel()
@@ -114,16 +115,17 @@ def observable_dependent_error_model(simple_sbml_model):
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
 
+    model_name = "observable_dependent_error_model"
     with TemporaryDirectory() as tmpdir:
         sbml_importer.sbml2amici(
-            model_name="test",
+            model_name=model_name,
             output_dir=tmpdir,
             observables={'observable_s1': {'formula': 'S1'},
                          'observable_s1_scaled': {'formula': '0.5 * S1'}},
             sigmas={'observable_s1': '0.1 + relative_sigma * observable_s1',
                     'observable_s1_scaled': '0.02 * observable_s1_scaled'},
         )
-        yield amici.import_model_module(module_name='test',
+        yield amici.import_model_module(module_name=model_name,
                                         module_path=tmpdir)
 
 
@@ -136,8 +138,10 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
 
     # generate artificial data
     rdata = amici.runAmiciSimulation(model, solver)
-    assert np.allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0])
-    assert np.allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1])
+    assert_allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0],
+                    rtol=1.e-5, atol=1.e-8)
+    assert_allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1],
+                    rtol=1.e-5, atol=1.e-8)
     edata = amici.ExpData(rdata, 1.0, 0.0)
     edata.setObservedDataStdDev(np.nan)
 
@@ -153,7 +157,7 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
     check_derivatives(model, solver, edata)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def model_steadystate_module():
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_steadystate',
@@ -176,9 +180,8 @@ def model_steadystate_module():
         constant_parameters=['k0'],
         sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
-    model_module = amici.import_model_module(module_name=module_name,
-                                             module_path=outdir)
-    yield model_module
+    yield amici.import_model_module(module_name=module_name,
+                                    module_path=outdir)
 
     shutil.rmtree(outdir, ignore_errors=True)
 
@@ -241,13 +244,17 @@ def test_steadystate_simulation(model_steadystate_module):
     df_edata = amici.getDataObservablesAsDataFrame(model, edata)
     edata_reconstructed = amici.getEdataFromDataFrame(model, df_edata)
 
-    assert np.isclose(
+    assert_allclose(
         amici.ExpDataView(edata[0])['observedData'],
-        amici.ExpDataView(edata_reconstructed[0])['observedData']).all()
+        amici.ExpDataView(edata_reconstructed[0])['observedData'],
+        rtol=1.e-5, atol=1.e-8
+    )
 
-    assert np.isclose(
+    assert_allclose(
         amici.ExpDataView(edata[0])['observedDataStdDev'],
-        amici.ExpDataView(edata_reconstructed[0])['observedDataStdDev']).all()
+        amici.ExpDataView(edata_reconstructed[0])['observedDataStdDev'],
+        rtol=1.e-5, atol=1.e-8
+    )
 
     if len(edata[0].fixedParameters):
         assert list(edata[0].fixedParameters) \
@@ -261,17 +268,23 @@ def test_steadystate_simulation(model_steadystate_module):
         list(edata_reconstructed[0].fixedParametersPreequilibration)
 
     df_state = amici.getSimulationStatesAsDataFrame(model, edata, rdata)
-    assert np.isclose(rdata[0]['x'],
-                      df_state[list(model.getStateIds())].values).all()
+    assert_allclose(
+        rdata[0]['x'], df_state[list(model.getStateIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
 
     df_obs = amici.getSimulationObservablesAsDataFrame(model, edata, rdata)
-    assert np.isclose(rdata[0]['y'],
-                      df_obs[list(model.getObservableIds())].values).all()
+    assert_allclose(
+        rdata[0]['y'], df_obs[list(model.getObservableIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
     amici.getResidualsAsDataFrame(model, edata, rdata)
 
     df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
-    assert np.isclose(rdata[0]['w'],
-                      df_expr[list(model.getExpressionIds())].values).all()
+    assert_allclose(
+        rdata[0]['w'], df_expr[list(model.getExpressionIds())].values,
+        rtol=1.e-5, atol=1.e-8
+    )
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
@@ -281,6 +294,41 @@ def test_steadystate_simulation(model_steadystate_module):
     # Run some additional tests which need a working Model,
     # but don't need precomputed expectations.
     _test_set_parameters_by_dict(model_steadystate_module)
+
+
+def test_solver_reuse(model_steadystate_module):
+    model = model_steadystate_module.getModel()
+    model.setTimepoints(np.linspace(0, 60, 60))
+    solver = model.getSolver()
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    rdata = amici.runAmiciSimulation(model, solver)
+    edata = amici.ExpData(rdata, 1, 0)
+
+    for sensi_method in (
+            amici.SensitivityMethod.forward,
+            amici.SensitivityMethod.adjoint,
+    ):
+        solver.setSensitivityMethod(sensi_method)
+        rdata1 = amici.runAmiciSimulation(model, solver, edata)
+        rdata2 = amici.runAmiciSimulation(model, solver, edata)
+
+        assert rdata1.status == amici.AMICI_SUCCESS
+
+        for attr in rdata1:
+            if 'time' in attr:
+                continue
+
+            val1 = getattr(rdata1, attr)
+            val2 = getattr(rdata2, attr)
+            msg = f"Values for {attr} do not match for sensitivity "\
+                  f"method {sensi_method}"
+            if isinstance(val1, np.ndarray):
+                assert_array_equal(val1, val2, err_msg=msg)
+            elif isinstance(val1, Number) and np.isnan(val1):
+                assert np.isnan(val2)
+            else:
+                assert val1 == val2, msg
+
 
 
 @pytest.fixture
@@ -311,8 +359,8 @@ def model_test_likelihoods():
                                  f'/ sigma{str_symbol}',
     }
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'model_test_likelihoods'
+    outdir = 'model_test_likelihoods'
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=outdir,
@@ -395,8 +443,8 @@ def test_likelihoods_error():
     # define different noise models
     noise_distributions = {'o1': 'nörmal'}
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'test_likelihoods_error'
+    outdir = 'test_likelihoods_error'
     with pytest.raises(ValueError):
         sbml_importer.sbml2amici(
             model_name=module_name,

@@ -1,9 +1,13 @@
 """C++ code generation"""
+import itertools
+import os
 import re
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
 import sympy as sp
 from sympy.printing.cxx import CXX11CodePrinter
+from sympy.utilities.iterables import numbered_symbols
+from toposort import toposort
 
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):
@@ -11,6 +15,10 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
     def __init__(self):
         super().__init__()
+
+        # extract common subexpressions in matrix functions?
+        self.extract_cse = (os.getenv("AMICI_EXTRACT_CSE", "0").lower()
+                            in ('1', 'on', 'true'))
 
     def doprint(self, expr: sp.Expr, assign_to: Optional[str] = None) -> str:
         try:
@@ -95,10 +103,56 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :return:
             C++ code as list of lines
         """
+        indent = " " * indent_level
+
+        def format_regular_line(symbol, math, index):
+            return (
+                f'{indent}{symbol} = {self.doprint(math)};'
+                f'  // {variable}[{index}]'.replace('\n', '\n' + indent)
+            )
+
+        if self.extract_cse:
+            # Extract common subexpressions
+            cse_sym_prefix = "__amici_cse_"
+            symbol_generator = numbered_symbols(
+                cls=sp.Symbol, prefix=cse_sym_prefix)
+            replacements, reduced_exprs = sp.cse(
+                equations,
+                symbols=symbol_generator,
+                order='none',
+                list=False,
+            )
+            if replacements:
+                # we need toposort to handle the dependencies of extracted
+                #  subexpressions
+                expr_dict = dict(itertools.chain(zip(symbols, reduced_exprs),
+                                                 replacements))
+                sorted_symbols = toposort({
+                    identifier: {
+                        s for s in definition.free_symbols
+                        if s in expr_dict
+                    }
+                    for (identifier, definition) in expr_dict.items()
+                })
+                symbol_to_idx = {sym: idx for idx, sym in enumerate(symbols)}
+
+                def format_line(symbol):
+                    math = expr_dict[symbol]
+                    if str(symbol).startswith(cse_sym_prefix):
+                        return f'{indent}const realtype {symbol} '\
+                               f'= {self.doprint(math)};'
+                    elif math not in [0, 0.0]:
+                        return format_regular_line(
+                            symbol, math, symbol_to_idx[symbol])
+                return [
+                    line
+                    for symbol_group in sorted_symbols
+                    for symbol in sorted(symbol_group, key=str)
+                    if (line := format_line(symbol))
+                ]
+
         return [
-            f'{" " * indent_level}{sym} = {self.doprint(math)};'
-            f'  // {variable}[{index}]'.replace('\n',
-                                                '\n' + ' ' * indent_level)
+            format_regular_line(sym, math, index)
             for index, (sym, math) in enumerate(zip(symbols, equations))
             if math not in [0, 0.0]
         ]
@@ -139,7 +193,6 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :return:
             symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list,
             sparse_matrix
-
         """
         idx = 0
 
@@ -213,19 +266,19 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
     if not cases:
         return lines
 
+    indent0 = indentation_level * indentation_step
+    indent1 = (indentation_level + 1) * indentation_step
+    indent2 = (indentation_level + 2) * indentation_step
     for expression, statements in cases.items():
         if statements:
-            lines.append((indentation_level + 1) * indentation_step
-                         + f'case {expression}:')
-            for statement in statements:
-                lines.append((indentation_level + 2) * indentation_step
-                             + statement)
-            lines.append((indentation_level + 2) * indentation_step + 'break;')
+            lines.extend([
+                f'{indent1}case {expression}:',
+                *(f"{indent2}{statement}" for statement in statements),
+                f'{indent2}break;'
+            ])
 
     if lines:
-        lines.insert(0, indentation_level * indentation_step
-                     + f'switch({condition}) {{')
-        lines.append(indentation_level * indentation_step + '}')
+        lines.insert(0, f'{indent0}switch({condition}) {{')
+        lines.append(indent0 + '}')
 
     return lines
-

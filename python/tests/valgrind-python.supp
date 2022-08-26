@@ -529,17 +529,7 @@
    other
    Memcheck:Leak
    fun:realloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -547,17 +537,7 @@
    other
    Memcheck:Leak
    fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -664,4 +644,114 @@
    fun:_PyObject_GC_New
    ...
    obj:/usr/bin/python3.*
+}
+
+
+{
+   Python lookdict
+   Memcheck:Cond
+   fun:lookdict
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python find_empty_slot
+   Memcheck:Value8
+   fun:find_empty_slot
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python dictkeys_set_index
+   Memcheck:Value8
+   fun:dictkeys_set_index
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python _copy_characters
+   Memcheck:Cond
+   fun:memmove
+   fun:memcpy
+   fun:_copy_characters
+   fun:unicode_concatenate
+   ...
+}
+
+{
+   Python _copy_characters
+   Memcheck:Value8
+   fun:memmove
+   fun:memcpy
+   fun:_copy_characters
+   fun:unicode_concatenate
+   ...
+}
+
+{
+   __libc_unwind_link_get
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:malloc
+   fun:_dl_find_object_update
+   fun:dl_open_worker_begin
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:do_dlopen
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:dlerror_run
+   fun:__libc_dlopen_mode
+   fun:__libc_unwind_link_get
+   fun:__libc_unwind_link_get
+}
+
+{
+   dlopen_implementation
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:malloc
+   fun:_dl_map_object_deps
+   fun:dl_open_worker_begin
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen_implementation
+   fun:dlopen@@GLIBC_2.34
+}
+
+{
+   dlopen_implementation
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:malloc
+   fun:resize_scopes
+   fun:dl_open_worker_begin
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen_implementation
+   fun:dlopen@@GLIBC_2.34
+   fun:_PyImport_FindSharedFuncptr
 }

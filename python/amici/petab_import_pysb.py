@@ -361,7 +361,7 @@ def import_model_pysb(
             )
 
     constant_parameters = petab_import.get_fixed_parameters(
-        petab_problem.sbml_model, petab_problem.condition_df)
+        petab_problem)
 
     if observable_table is None:
         observables = None

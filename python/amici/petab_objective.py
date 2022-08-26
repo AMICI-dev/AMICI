@@ -294,7 +294,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            sbml_model=petab_problem.sbml_model,
+            model=petab_problem.model,
             **dict(default_parameter_mapping_kwargs,
                    **parameter_mapping_kwargs)
         )
@@ -762,9 +762,9 @@ def rdatas_to_measurement_df(
     # iterate over conditions
     for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
-        y = rdata['y']
+        y = rdata.y
         # time array used in rdata
-        t = list(rdata['t'])
+        t = list(rdata.ts)
 
         # extract rows for condition
         cur_measurement_df = petab.get_rows_for_condition(

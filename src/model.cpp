@@ -1,8 +1,10 @@
-#include "amici/model.h"
-#include "amici/amici.h"
-#include "amici/exception.h"
-#include "amici/misc.h"
-#include "amici/symbolic_functions.h"
+#include <amici/model.h>
+#include <amici/amici.h>
+#include <amici/exception.h>
+#include <amici/misc.h>
+#include <amici/symbolic_functions.h>
+#include <amici/cblas.h>
+
 
 #include <algorithm>
 #include <cmath>
@@ -26,7 +28,10 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::JDiag, "JDiag"},
     {ModelQuantity::sx, "sx"},
     {ModelQuantity::sy, "sy"},
+    {ModelQuantity::sz, "sz"},
+    {ModelQuantity::srz, "srz"},
     {ModelQuantity::ssigmay, "ssigmay"},
+    {ModelQuantity::ssigmaz, "ssigmaz"},
     {ModelQuantity::xdot, "xdot"},
     {ModelQuantity::sxdot, "sxdot"},
     {ModelQuantity::xBdot, "xBdot"},
@@ -57,8 +62,11 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::deltaqB, "deltaqB"},
     {ModelQuantity::dsigmaydp, "dsigmaydp"},
     {ModelQuantity::dsigmaydy, "dsigmaydy"},
+    {ModelQuantity::dsigmazdp, "dsigmazdp"},
     {ModelQuantity::dJydsigma, "dJydsigma"},
     {ModelQuantity::dJydx, "dJydx"},
+    {ModelQuantity::dJrzdx, "dJrzdx"},
+    {ModelQuantity::dJzdx, "dJzdx"},
     {ModelQuantity::dzdp, "dzdp"},
     {ModelQuantity::dzdx, "dzdx"},
     {ModelQuantity::dJrzdsigma, "dJrzdsigma"},
@@ -67,7 +75,6 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
     {ModelQuantity::dJzdz, "dJzdz"},
     {ModelQuantity::drzdp, "drzdp"},
     {ModelQuantity::drzdx, "drzdx"},
-    {ModelQuantity::dsigmazdp, "dsigmazdp"},
 
 };
 
@@ -164,8 +171,8 @@ Model::Model(ModelDimensions const & model_dimensions,
       state_is_non_negative_(nx_solver, false),
       w_recursion_depth_(w_recursion_depth),
       simulation_parameters_(std::move(simulation_parameters)) {
-    Expects(model_dimensions.np == static_cast<int>(simulation_parameters_.parameters.size()));
-    Expects(model_dimensions.nk == static_cast<int>(simulation_parameters_.fixedParameters.size()));
+    Expects(model_dimensions.np == gsl::narrow<int>(simulation_parameters_.parameters.size()));
+    Expects(model_dimensions.nk == gsl::narrow<int>(simulation_parameters_.fixedParameters.size()));
 
     simulation_parameters.pscale = std::vector<ParameterScaling>(model_dimensions.np, ParameterScaling::none);
 
@@ -198,9 +205,9 @@ Model::Model(ModelDimensions const & model_dimensions,
             dwdx_hierarchical_.emplace_back(
                 SUNMatrixWrapper(nw, nx_solver, irec * ndwdw + ndwdx, CSC_MAT));
         }
-        assert(static_cast<int>(dwdp_hierarchical_.size()) ==
+        assert(gsl::narrow<int>(dwdp_hierarchical_.size()) ==
                w_recursion_depth_ + 1);
-        assert(static_cast<int>(dwdx_hierarchical_.size()) ==
+        assert(gsl::narrow<int>(dwdx_hierarchical_.size()) ==
                w_recursion_depth_ + 1);
 
         derived_state_.dxdotdp_explicit = SUNMatrixWrapper(
@@ -341,11 +348,11 @@ void Model::initEvents(AmiVector const &x, AmiVector const &dx,
     }
 }
 
-int Model::nplist() const { return static_cast<int>(state_.plist.size()); }
+int Model::nplist() const { return gsl::narrow<int>(state_.plist.size()); }
 
-int Model::np() const { return static_cast<int>(static_cast<ModelDimensions const&>(*this).np); }
+int Model::np() const { return gsl::narrow<int>(static_cast<ModelDimensions const&>(*this).np); }
 
-int Model::nk() const { return static_cast<int>(state_.fixedParameters.size()); }
+int Model::nk() const { return gsl::narrow<int>(state_.fixedParameters.size()); }
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
 
@@ -357,7 +364,7 @@ int Model::nMaxEvent() const { return nmaxevent_; }
 
 void Model::setNMaxEvent(int nmaxevent) { nmaxevent_ = nmaxevent; }
 
-int Model::nt() const { return static_cast<int>(simulation_parameters_.ts_.size()); }
+int Model::nt() const { return gsl::narrow<int>(simulation_parameters_.ts_.size()); }
 
 const std::vector<ParameterScaling> &Model::getParameterScale() const {
     return simulation_parameters_.pscale;
@@ -691,7 +698,7 @@ void Model::setStateIsNonNegative(std::vector<bool> const &nonNegative) {
         // in case of conservation laws
         return;
     }
-    if (state_is_non_negative_.size() != static_cast<unsigned long>(nx_rdata)) {
+    if (state_is_non_negative_.size() != gsl::narrow<unsigned long>(nx_rdata)) {
         throw AmiException("Dimension of input stateIsNonNegative (%u) does "
                            "not agree with number of state variables (%d)",
                            state_is_non_negative_.size(), nx_rdata);
@@ -893,7 +900,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     derived_state_.sx_.resize(nx_solver * nplist());
     sx.flatten_to_vector(derived_state_.sx_);
 
-    // compute sy = 1.0*dydx*sx + 1.0*sy
+    // compute sy = 1.0*dydx*sx + 1.0*dydp
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
     //        M  K                 K  N                     M  N
     //        lda                  ldb                      ldc
@@ -1016,10 +1023,37 @@ void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
 void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
                                 const realtype t, const AmiVector &x,
                                 const AmiVectorArray &sx) {
-    for (int ip = 0; ip < nplist(); ip++) {
-        fsz(&sz[ip * nz], ie, t, computeX_pos(x),
-            state_.unscaledParameters.data(), state_.fixedParameters.data(),
-            state_.h.data(), sx.data(ip), plist(ip));
+    if (pythonGenerated) {
+        if (!nz)
+            return;
+
+        fdzdx(ie, t, x);
+        fdzdp(ie, t, x);
+
+        derived_state_.sx_.resize(nx_solver * nplist());
+        sx.flatten_to_vector(derived_state_.sx_);
+
+        // compute sz = 1.0*dzdx*sx + 1.0*dzdp
+        // dzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = sz C[nz,nplist]
+        //        M  K                 K  N                     M  N
+        //        lda                  ldb                      ldc
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
+                    derived_state_.dzdx_.data(), nz,
+                    derived_state_.sx_.data(), nx_solver, 1.0,
+                    derived_state_.dzdp_.data(),
+                    nz);
+
+        addSlice(derived_state_.dzdp_, sz);
+
+        if (always_check_finite_)
+            checkFinite(sz, ModelQuantity::sz, nplist());
+    } else {
+        for (int ip = 0; ip < nplist(); ip++) {
+            fsz(&sz[ip * nz], ie, t, computeX_pos(x),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), sx.data(ip), plist(ip));
+        }
     }
 }
 
@@ -1043,11 +1077,38 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
                                               const int ie, const realtype t,
                                               const AmiVector &x,
                                               const AmiVectorArray &sx) {
-    for (int ip = 0; ip < nplist(); ip++) {
-        fsrz(&srz[ip * nz], ie, t, computeX_pos(x),
-             state_.unscaledParameters.data(), state_.fixedParameters.data(),
-             state_.h.data(), sx.data(ip),
-             plist(ip));
+    if (pythonGenerated) {
+        if (!nz)
+            return;
+
+        fdrzdx(ie, t, x);
+        fdrzdp(ie, t, x);
+
+        derived_state_.sx_.resize(nx_solver * nplist());
+        sx.flatten_to_vector(derived_state_.sx_);
+
+        // compute srz = 1.0*drzdx*sx + 1.0*drzdp
+        // drzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = srz C[nz,nplist]
+        //         M  K                 K  N                      M  N
+        //         lda                  ldb                       ldc
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
+                    derived_state_.drzdx_.data(), nz,
+                    derived_state_.sx_.data(), nx_solver, 1.0,
+                    derived_state_.drzdp_.data(),
+                    nz);
+
+        addSlice(derived_state_.drzdp_, srz);
+
+        if (always_check_finite_)
+            checkFinite(srz, ModelQuantity::srz, nplist());
+    } else {
+        for (int ip = 0; ip < nplist(); ip++) {
+            fsrz(&srz[ip * nz], ie, t, computeX_pos(x),
+                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                 state_.h.data(), sx.data(ip),
+                 plist(ip));
+        }
     }
 }
 
@@ -1359,7 +1420,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   "AMICI encountered a %s value for %s[%i] (%s)",
                   non_finite_type.c_str(),
                   model_quantity_str.c_str(),
-                  static_cast<int>(flat_index),
+                  gsl::narrow<int>(flat_index),
                   element_id.c_str()
                   );
 
@@ -1433,12 +1494,15 @@ int Model::checkFinite(gsl::span<const realtype> array,
             col_id += " " + getObservableIds()[col];
         break;
     case ModelQuantity::dJydx:
+    case ModelQuantity::dJzdx:
+    case ModelQuantity::dJrzdx:
     case ModelQuantity::dzdx:
     case ModelQuantity::drzdx:
         if(hasStateIds())
             col_id += " " + getStateIdsSolver()[col];
         break;
     case ModelQuantity::deltaqB:
+    case ModelQuantity::sz:
     case ModelQuantity::dzdp:
     case ModelQuantity::drzdp:
     case ModelQuantity::dsigmazdp:
@@ -1470,7 +1534,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
                   "AMICI encountered a %s value for %s[%i] (%s, %s)",
                   non_finite_type.c_str(),
                   model_quantity_str.c_str(),
-                  static_cast<int>(flat_index),
+                  gsl::narrow<int>(flat_index),
                   row_id.c_str(),
                   col_id.c_str()
                   );
@@ -1559,7 +1623,7 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
                   "AMICI encountered a %s value for %s[%i] (%s, %s) at t=%g",
                   non_finite_type.c_str(),
                   model_quantity_str.c_str(),
-                  static_cast<int>(flat_index),
+                  gsl::narrow<int>(flat_index),
                   row_id.c_str(),
                   col_id.c_str(),
                   t
@@ -1724,11 +1788,11 @@ void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
 
 void Model::checkLLHBufferSize(std::vector<realtype> const &sllh,
                                std::vector<realtype> const &s2llh) const {
-    if (sllh.size() != static_cast<unsigned>(nplist()))
+    if (sllh.size() != gsl::narrow<unsigned>(nplist()))
         throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());
 
-    if (s2llh.size() != static_cast<unsigned>((nJ - 1) * nplist()))
+    if (s2llh.size() != gsl::narrow<unsigned>((nJ - 1) * nplist()))
         throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
                            s2llh.size(), (nJ - 1) * nplist());
 }

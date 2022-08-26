@@ -1,27 +1,22 @@
-sphinx==4.2.0
-mock>=4.0.1
-setuptools>=45.2.0
+sphinx==5.1.1
+mock>=4.0.3
+setuptools==65.2.0
 pysb>=1.11.0
-matplotlib>=3.4.3
+matplotlib==3.5.3
 pkgconfig>=1.5.5
-nbsphinx>=0.8.7
-# nbformat-5.2.0 fails with:
-# Could not import extension nbsphinx (exception: No module named 'ipython_genutils')
-nbformat==5.1.3
+nbsphinx>=0.8.9
+nbformat==5.4.0
 recommonmark>=0.6.0
 sphinx_rtd_theme>=1.0.0
 petab>=0.1.20
-sphinx-autodoc-typehints==1.13.0
+sphinx-autodoc-typehints==1.19.2
 git+https://github.com/readthedocs/sphinx-hoverxref@main
-ipython>=7.28.0
-breathe==4.31.0
-#exhale>=0.2.3
-git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#egg=exhale
-# Newer versions cause trouble with including notebooks:
-# sphinx.errors.SphinxParallelError: ImportError: cannot import name 'Application' from partially initialized module 'prompt_toolkit.application.application' (most likely due to a circular import)
-# https://github.com/svenevs/exhale/issues/27 https://github.com/mithro/sphinx-contrib-mithro/tree/master/sphinx-contrib-exhale-multiproject
+ipython==8.4.0
+breathe==4.34.0
+#exhale>=0.3.5
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
 sphinxcontrib-matlabdomain>=0.12.0
-sphinxcontrib-napoleon
-pygments==2.10.0
-Jinja2==3.0.3  # https://github.com/spatialaudio/nbsphinx/issues/641
+sphinxcontrib-napoleon>=0.7
+pygments==2.13.0
+Jinja2==3.1.2
+git+https://github.com/readthedocs/readthedocs-sphinx-ext

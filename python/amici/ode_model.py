@@ -4,22 +4,19 @@
 import sympy as sp
 import numbers
 
-try:
-    import pysb
-except ImportError:
-    pysb = None
-
 from typing import (
     Optional, Union, Dict, SupportsFloat, Set
 )
 
 from .import_utils import ObservableTransformation, \
-    generate_measurement_symbol, RESERVED_SYMBOLS
+    generate_measurement_symbol, generate_regularization_symbol,\
+    RESERVED_SYMBOLS
 from .import_utils import cast_to_sym
 
 __all__ = [
-    'ConservationLaw', 'Constant', 'Event', 'Expression', 'LogLikelihood',
-    'ModelQuantity', 'Observable', 'Parameter', 'SigmaY', 'State'
+    'ConservationLaw', 'Constant', 'Event', 'Expression', 'LogLikelihoodY',
+    'LogLikelihoodZ', 'LogLikelihoodRZ', 'ModelQuantity', 'Observable',
+    'Parameter', 'SigmaY', 'SigmaZ', 'State', 'EventObservable'
 ]
 
 
@@ -324,6 +321,7 @@ class Observable(ModelQuantity):
         """
         super(Observable, self).__init__(identifier, name, value)
         self._measurement_symbol = measurement_symbol
+        self._regularization_symbol = None
         self.trafo = transformation
 
     def get_measurement_symbol(self) -> sp.Symbol:
@@ -334,12 +332,68 @@ class Observable(ModelQuantity):
 
         return self._measurement_symbol
 
+    def get_regularization_symbol(self) -> sp.Symbol:
+        if self._regularization_symbol is None:
+            self._regularization_symbol = generate_regularization_symbol(
+                self.get_id()
+            )
 
-class SigmaY(ModelQuantity):
+        return self._regularization_symbol
+
+
+class EventObservable(Observable):
     """
-    A Standard Deviation SigmaY rescales the distance between simulations
+    An Event Observable links model simulations to event related experimental
+    measurements, abbreviated by ``z``.
+
+    :ivar _event:
+        symbolic event identifier
+    """
+
+    def __init__(self,
+                 identifier: sp.Symbol,
+                 name: str,
+                 value: sp.Expr,
+                 event: sp.Symbol,
+                 measurement_symbol: Optional[sp.Symbol] = None,
+                 transformation: Optional[ObservableTransformation] = 'lin',):
+        """
+        Create a new EventObservable instance.
+
+        :param identifier:
+            See :py:meth:`Observable.__init__`.
+
+        :param name:
+            See :py:meth:`Observable.__init__`.
+
+        :param value:
+            See :py:meth:`Observable.__init__`.
+
+        :param transformation:
+            See :py:meth:`Observable.__init__`.
+
+        :param event:
+            Symbolic identifier of the corresponding event.
+        """
+        super(EventObservable, self).__init__(identifier, name, value,
+                                              measurement_symbol,
+                                              transformation)
+        self._event: sp.Symbol = event
+
+    def get_event(self) -> sp.Symbol:
+        """
+        Get the symbolic identifier of the corresponding event.
+
+        :return: symbolic identifier
+        """
+        return self._event
+
+
+class Sigma(ModelQuantity):
+    """
+    A Standard Deviation Sigma rescales the distance between simulations
     and measurements when computing residuals or objective functions,
-    abbreviated by ``sigmay``.
+    abbreviated by ``sigma{y,z}``.
     """
     def __init__(self,
                  identifier: sp.Symbol,
@@ -358,7 +412,23 @@ class SigmaY(ModelQuantity):
         :param value:
             formula
         """
-        super(SigmaY, self).__init__(identifier, name, value)
+        if self.__class__.__name__ == "Sigma":
+            raise RuntimeError(
+                "This class is meant to be sub-classed, not used directly."
+            )
+        super(Sigma, self).__init__(identifier, name, value)
+
+
+class SigmaY(Sigma):
+    """
+    Standard deviation for observables
+    """
+
+
+class SigmaZ(Sigma):
+    """
+    Standard deviation for event observables
+    """
 
 
 class Expression(ModelQuantity):
@@ -463,7 +533,29 @@ class LogLikelihood(ModelQuantity):
         :param value:
             formula
         """
+        if self.__class__.__name__ == "LogLikelihood":
+            raise RuntimeError(
+                "This class is meant to be sub-classed, not used directly."
+            )
         super(LogLikelihood, self).__init__(identifier, name, value)
+
+
+class LogLikelihoodY(LogLikelihood):
+    """
+    Loglikelihood for observables
+    """
+
+
+class LogLikelihoodZ(LogLikelihood):
+    """
+    Loglikelihood for event observables
+    """
+
+
+class LogLikelihoodRZ(LogLikelihood):
+    """
+    Loglikelihood for event observables regularization
+    """
 
 
 class Event(ModelQuantity):
@@ -480,7 +572,6 @@ class Event(ModelQuantity):
                  name: str,
                  value: sp.Expr,
                  state_update: Union[sp.Expr, None],
-                 event_observable: Union[sp.Expr, None],
                  initial_value: Optional[bool] = True):
         """
         Create a new Event instance.
@@ -498,10 +589,6 @@ class Event(ModelQuantity):
             formula for the bolus function (None for Heaviside functions,
             zero vector for events without bolus)
 
-        :param event_observable:
-            formula a potential observable linked to the event
-            (None for Heaviside functions, empty events without observable)
-
         :param initial_value:
             initial boolean value of the trigger function at t0. If set to
             `False`, events may trigger at ``t==t0``, otherwise not.
@@ -509,7 +596,6 @@ class Event(ModelQuantity):
         super(Event, self).__init__(identifier, name, value)
         # add the Event specific components
         self._state_update = state_update
-        self._observable = event_observable
         self._initial_value = initial_value
 
     def get_initial_value(self) -> bool:

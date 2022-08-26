@@ -232,7 +232,7 @@ def smart_subs_dict(sym: sp.Expr,
                     field: Optional[str] = None,
                     reverse: bool = True) -> sp.Expr:
     """
-    Subsitutes expressions completely flattening them out. Requires
+    Substitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
 
     :param sym:
@@ -311,7 +311,7 @@ def toposort_symbols(symbols: SymbolDef,
     return {
         s: symbols[s]
         for symbol_group in sorted_symbols
-        for s in symbol_group
+        for s in sorted(symbol_group, key=str)
     }
 
 
@@ -610,6 +610,21 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     if not isinstance(observable_id, str):
         observable_id = strip_pysb(observable_id)
     return symbol_with_assumptions(f'm{observable_id}')
+
+
+def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
+    """
+    Generates the appropriate regularization symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+
+    :return:
+        symbol for the corresponding regularization
+    """
+    if not isinstance(observable_id, str):
+        observable_id = strip_pysb(observable_id)
+    return symbol_with_assumptions(f'r{observable_id}')
 
 
 def generate_flux_symbol(

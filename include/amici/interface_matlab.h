@@ -1,20 +1,21 @@
 #ifndef AMICI_INTERFACE_MATLAB_H
 #define AMICI_INTERFACE_MATLAB_H
 
-#include "amici/amici.h"
+#include <amici/defines.h>
 
 #include <mex.h>
 #include <memory>
 
-
 namespace amici {
+
+class Model;
+class Solver;
+class ReturnDataMatlab;
+class ExpData;
 
 namespace generic_model {
 extern std::unique_ptr<amici::Model> getModel();
 } // namespace generic_model
-
-class Model;
-class ReturnDataMatlab;
 
 
 /**

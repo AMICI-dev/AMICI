@@ -48,8 +48,10 @@
  */
 
 #if defined(SUNDIALS_INT64_T)
+/* Changed for AMICI */
 #define KLU_INDEXTYPE int64_t
 #else
+/* Changed for AMICI */
 #define KLU_INDEXTYPE int32_t
 #endif
 

@@ -5,7 +5,7 @@
 #include "amici/vector.h"
 #include "amici/model.h"
 #include "amici/misc.h"
-#include "amici/forwardproblem.h"
+
 #include <vector>
 
 namespace amici {

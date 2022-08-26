@@ -258,7 +258,7 @@ def fill_in_parameters_for_condition(
                      for key, val in map_preeq_fix.items()}
     map_sim_fix = {key: _get_par(key, val, map_sim_fix)
                    for key, val in map_sim_fix.items()}
-    map_sim_var = {key: _get_par(key, val, map_sim_var)
+    map_sim_var = {key: _get_par(key, val, dict(map_sim_fix, **map_sim_var))
                    for key, val in map_sim_var.items()}
 
     # If necessary, (un)scale parameters

@@ -9,6 +9,8 @@ on:
     branches:
       - master
   workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
 
 jobs:
   build:
@@ -59,6 +61,5 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-          && pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
