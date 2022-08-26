@@ -16,18 +16,17 @@ def test_conversion():
     pysb.SelfExporter.do_export = True
 
     model = pysb.Model('conversion')
-    a = pysb.Monomer('A')
-    b = pysb.Monomer('B')
-    pysb.Initial(a(), pysb.Parameter('a0', 1.2))
+    a = pysb.Monomer('A', sites=['s'], site_states={'s': ['a', 'b']})
+    pysb.Initial(a(s='a'), pysb.Parameter('aa0', 1.2))
     pysb.Rule(
         'conv',
-        a() >> b(), pysb.Parameter('kcat', 0.05)
+        a(s='a') >> a(s='b'), pysb.Parameter('kcat', 0.05)
     )
-    pysb.Observable('b', b())
+    pysb.Observable('ab', a(s='b'))
 
     outdir = model.name
     pysb2amici(model, outdir, verbose=True,
-               observables=['b'])
+               observables=['ab'])
 
     model_module = amici.import_model_module(module_name=model.name,
                                              module_path=outdir)

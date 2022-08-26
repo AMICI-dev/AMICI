@@ -2488,8 +2488,10 @@ class ODEExporter:
     @log_execution_time('generating jax code', logger)
     def _generate_jax_code(self) -> None:
 
-        eq_names = {'xdot', 'w', 'x0', 'y', 'sigmay', 'Jy'}
-        sym_names = {'p', 'k', 'x', 'tcl', 'w', 'my', 'y', 'sigmay'}
+        eq_names = ('xdot', 'w', 'x0', 'y', 'sigmay', 'Jy', 'x_solver',
+                    'x_rdata', 'total_cl')
+        sym_names = ('p', 'k', 'x', 'tcl', 'w', 'my', 'y', 'sigmay',
+                     'x_rdata')
 
         indent = 8
 

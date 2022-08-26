@@ -41,6 +41,33 @@ TPL_X0_EQ
 
         return TPL_X0_RET
 
+    def x_solver(self, x):
+
+        TPL_X_RDATA_SYMS = x
+
+TPL_X_SOLVER_EQ
+
+        return TPL_X_SOLVER_RET
+
+    def x_rdata(self, x, tcl):
+
+        TPL_X_SYMS = x
+        TPL_TCL_SYMS = tcl
+
+TPL_X_RDATA_EQ
+
+        return TPL_X_RDATA_RET
+
+    def tcl(self, x, p, k):
+
+        TPL_X_RDATA_SYMS = x
+        TPL_P_SYMS = p
+        TPL_K_SYMS = k
+
+TPL_TOTAL_CL_EQ
+
+        return TPL_TOTAL_CL_RET
+
     def y(self, x, p, k, tcl):
 
         TPL_X_SYMS = x
