@@ -11,6 +11,12 @@ import amici
 
 
 class JAXModel(object):
+    _unscale_funs = {
+        amici.ParameterScaling.none: lambda x: x,
+        amici.ParameterScaling.ln: lambda x: jnp.exp(x),
+        amici.ParameterScaling.log10: lambda x: jnp.power(10, x)
+    }
+
     @abstractmethod
     def xdot(self, t, x, args):
         ...
@@ -34,6 +40,12 @@ class JAXModel(object):
     @abstractmethod
     def Jy(self, y, my, sigmay):
         ...
+
+    def unscale_p(self, p, pscale):
+        return jnp.stack([
+            self._unscale_funs[pscale_i](p_i)
+            for p_i, pscale_i in zip(p, pscale)
+        ])
 
     def get_solver(self):
         return JAXSolver(model=self)
@@ -92,42 +104,46 @@ class JAXSolver(object):
         ))
         return llh
 
-    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my'))
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
     def run(self,
             ts: tuple,
             p: jnp.ndarray,
             k: tuple,
-            my: tuple):
-        x = self._solve(ts, p, k)
+            my: tuple,
+            pscale: tuple):
+        ps = self.model.unscale_p(p, pscale)
+        x = self._solve(ts, ps, k)
         tcl = 0
-        obs = self._obs(x, p, k, tcl)
+        obs = self._obs(x, ps, k, tcl)
         my_r = np.asarray(my).reshape(obs.shape)
-        sigmay = self._sigmay(obs, p, k)
+        sigmay = self._sigmay(obs, ps, k)
         llh = self._loss(obs, sigmay, my_r)
         return llh, (x, obs)
 
-    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my'))
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
     def srun(self,
              ts: tuple,
              p: jnp.ndarray,
              k: tuple,
-             my: tuple):
+             my: tuple,
+             pscale: tuple):
         (llh, (x, obs)), sllh = (jax.value_and_grad(self.run, 1, True))(
-            ts, p, k, my
+            ts, p, k, my, pscale
         )
         return llh, sllh, (x, obs)
 
-    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my'))
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
     def s2run(self,
-             ts: tuple,
-             p: jnp.ndarray,
-             k: tuple,
-             my: tuple):
+              ts: tuple,
+              p: jnp.ndarray,
+              k: tuple,
+              my: tuple,
+              pscale: tuple):
         (llh, (x, obs)), sllh = (jax.value_and_grad(self.run, 1, True))(
-            ts, p, k, my
+            ts, p, k, my, pscale
         )
         s2llh, (x, obs) = jax.jacfwd(jax.grad(self.run, 1, True), 1, True)(
-            ts, p, k, my
+            ts, p, k, my, pscale
         )
         return llh, sllh, s2llh, (x, obs)
 
@@ -139,20 +155,21 @@ def runAmiciSimulationJAX(model: JAXModel,
     p = jnp.asarray(edata.parameters)
     k = tuple(edata.fixedParameters)
     my = tuple(edata.getObservedData())
+    pscale = tuple(edata.pscale)
 
     rdata_kwargs = dict()
 
     if solver.sensi_order == amici.SensitivityOrder.none:
         rdata_kwargs['llh'], (rdata_kwargs['x'], rdata_kwargs['y']) = \
-            solver.run(ts, p, k, my)
+            solver.run(ts, p, k, my, pscale)
     elif solver.sensi_order == amici.SensitivityOrder.first:
         rdata_kwargs['llh'], rdata_kwargs['sllh'], (
             rdata_kwargs['x'], rdata_kwargs['y']
-        ) = solver.srun(ts, p, k, my)
+        ) = solver.srun(ts, p, k, my, pscale)
     elif solver.sensi_order == amici.SensitivityOrder.second:
         rdata_kwargs['llh'], rdata_kwargs['sllh'], rdata_kwargs['s2llh'], (
             rdata_kwargs['x'], rdata_kwargs['y']
-        ) = solver.s2run(ts, p, k, my)
+        ) = solver.s2run(ts, p, k, my, pscale)
 
     return ReturnDataJAX(**rdata_kwargs)
 

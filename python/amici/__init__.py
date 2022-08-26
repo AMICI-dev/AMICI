@@ -119,7 +119,10 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
-    from .jax import JAXModel
+    try:
+        from .jax import JAXModel
+    except (ImportError, ModuleNotFoundError):
+        JAXModel = object
 
     from typing import Protocol
 

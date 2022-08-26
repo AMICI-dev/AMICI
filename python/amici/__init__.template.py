@@ -16,11 +16,12 @@ if 'TPL_AMICI_VERSION' != amici.__version__:
     )
 
 from TPL_MODELNAME._TPL_MODELNAME import *
-from TPL_MODELNAME.jax import JAXModel_TPL_MODELNAME
+try:
+    from TPL_MODELNAME.jax import JAXModel_TPL_MODELNAME
 
-
-def get_jax_model() -> JAXModel:
-    return JAXModel_TPL_MODELNAME()
-
+    def get_jax_model() -> JAXModel:
+        return JAXModel_TPL_MODELNAME()
+except (ModuleNotFoundError, ImportError):
+    pass
 
 __version__ = 'TPL_PACKAGE_VERSION'
