@@ -2499,13 +2499,9 @@ class ODEExporter:
             elems = ', '.join(str(x) for x in array)
 
             if not elems:
-                return 'jnp.empty((1,))'
+                return 'tuple()'
 
-            # scalar
-            if ',' not in elems:
-                elems += ', '
-
-            return f'jnp.stack(({elems}), axis=-1)'
+            return elems
 
         tpl_data = {
             **{
@@ -2536,13 +2532,6 @@ class ODEExporter:
             },
             **{
                 'MODEL_NAME': self.model_name,
-                'NTCL': self.model.num_cons_law(),
-                'PAR_VALS': jnp_stack_str(
-                    p.get_val() for p in self.model._parameters
-                ),
-                'CONST_VALS': jnp_stack_str(
-                    k.get_val() for k in self.model._constants
-                ),
             }
         }
         os.makedirs(os.path.join(self.model_path, self.model_name),

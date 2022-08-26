@@ -94,41 +94,26 @@ class JAXSolver(object):
         return sol.ys, tcl
 
     def _obs(self, x, p, k, tcl):
-        y = jnp.apply_along_axis(
-            lambda x: self.model.y(x, p, k, tcl),
-            axis=1,
-            arr=x
+        return jax.vmap(self.model.y, in_axes=(0, None, None, None))(
+            x, p, k, tcl
         )
-        return y
 
     def _sigmay(self, obs, p, k):
-        sigmay = jnp.apply_along_axis(
-            lambda y: self.model.sigmay(y, p, k),
-            axis=1,
-            arr=obs
-        )
-        return sigmay
+        return jax.vmap(self.model.sigmay, in_axes=(0, None, None))(obs, p, k)
 
     def _x_rdata(self, x, tcl):
-        return jnp.apply_along_axis(
-            lambda y: self.model.x_rdata(x, tcl),
-            axis=1,
-            arr=x
-        )
+        return jax.vmap(self.model.x_rdata, in_axes=(0, None))(x, tcl)
 
     def _loss(self, obs: jnp.ndarray, sigmay: jnp.ndarray, my: np.ndarray):
-        llh = - jnp.sum(jnp.stack(
-            [self.model.Jy(obs[i, :], my[i, :], sigmay[i, :])
-             for i in range(my.shape[0])]
-        ))
-        return llh
+        loss_fun = jax.vmap(self.model.Jy, in_axes=(0, 0, 0))
+        return - jnp.sum(loss_fun(obs, my, sigmay))
 
     def _run(self,
-            ts: tuple,
-            p: jnp.ndarray,
-            k: tuple,
-            my: tuple,
-            pscale: tuple):
+             ts: tuple,
+             p: jnp.ndarray,
+             k: tuple,
+             my: tuple,
+             pscale: tuple):
         ps = self.model.unscale_p(p, pscale)
         x, tcl = self._solve(ts, ps, k)
         obs = self._obs(x, ps, k, tcl)
@@ -140,11 +125,11 @@ class JAXSolver(object):
 
     @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
     def run(self,
-             ts: tuple,
-             p: jnp.ndarray,
-             k: tuple,
-             my: tuple,
-             pscale: tuple):
+            ts: tuple,
+            p: jnp.ndarray,
+            k: tuple,
+            my: tuple,
+            pscale: tuple):
         return self._run(ts, p, k, my, pscale)
 
     @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
@@ -197,6 +182,14 @@ def runAmiciSimulationJAX(model: JAXModel,
         rdata_kwargs['llh'], rdata_kwargs['sllh'], rdata_kwargs['s2llh'], (
             rdata_kwargs['x'], rdata_kwargs['y']
         ) = solver.s2run(ts, p, k, my, pscale)
+
+    for field in rdata_kwargs.keys():
+        if field == 'llh':
+            rdata_kwargs[field] = np.float(rdata_kwargs[field])
+        elif field not in ['sllh', 's2llh']:
+            rdata_kwargs[field] = np.asarray(rdata_kwargs[field]).T
+            if rdata_kwargs[field].ndim == 1:
+                rdata_kwargs[field] = np.expand_dims(rdata_kwargs[field], 1)
 
     return ReturnDataJAX(**rdata_kwargs)
 
