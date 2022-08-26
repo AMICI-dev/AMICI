@@ -293,3 +293,45 @@ def test_heavyside_and_special_symbols():
                                              module_path=outdir)
     amici_model = model_module.getModel()
     assert amici_model.ne
+
+
+# TODO: remove me
+@pytest.mark.skipif(
+    not hasattr(pysb, 'EnergyPattern'),
+    reason='pysb energy not yet available'
+)
+def test_energy():
+    model_pysb = pysb.Model('energy')
+    pysb.Monomer('A', ['a', 'b'])
+    pysb.Monomer('B', ['a'])
+    pysb.Parameter('RT', 2)
+    pysb.Parameter('A_0', 10)
+    pysb.Parameter('AB_0', 10)
+    pysb.Parameter('phi', 0.5)
+    pysb.Expression('E_AAB_RT', -5 / RT)
+    pysb.Expression('E0_AA_RT', -1 / RT)
+    pysb.Rule(
+        'A_dimerize',
+        A(a=None) + A(a=None) | A(a=1) % A(a=1),
+        phi,
+        E0_AA_RT,
+        energy=True,
+    )
+    pysb.EnergyPattern('epAAB', A(a=1) % A(a=1, b=2) % B(a=2), E_AAB_RT)
+    pysb.Initial(A(a=None, b=None), A_0)
+    pysb.Initial(A(a=None, b=1) % B(a=1), AB_0)
+    outdir = model_pysb.name
+    pysb2amici(model_pysb, model_pysb.name)
+
+    model_module = amici.import_model_module(module_name=model_pysb.name,
+                                             module_path=outdir)
+    amici_model = model_module.getModel()
+    amici_model.setTimepoints(np.logspace(-4, 5, 10))
+    solver = amici_model.getSolver()
+    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteTolerance(1e-14)
+
+    check_derivatives(amici_model, solver,
+                      epsilon=1e-4,
+                      rtol=1e-2,
+                      atol=1e-2)
