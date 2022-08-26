@@ -119,7 +119,7 @@ class JAXSolver(object):
         ps = self.model.unscale_p(p, pscale)
         x, tcl = self._solve(ts, ps, k)
         obs = self._obs(x, ps, k, tcl)
-        my_r = np.asarray(my).reshape(obs.shape)
+        my_r = np.asarray(my).reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
         llh = self._loss(obs, sigmay, my_r)
         x_rdata = self._x_rdata(x, tcl)
