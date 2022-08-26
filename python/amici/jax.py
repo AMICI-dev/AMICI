@@ -123,8 +123,7 @@ class JAXSolver(object):
         ))
         return llh
 
-    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
-    def run(self,
+    def _run(self,
             ts: tuple,
             p: jnp.ndarray,
             k: tuple,
@@ -140,13 +139,22 @@ class JAXSolver(object):
         return llh, (x_rdata, obs)
 
     @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
+    def run(self,
+             ts: tuple,
+             p: jnp.ndarray,
+             k: tuple,
+             my: tuple,
+             pscale: tuple):
+        return self._run(ts, p, k, my, pscale)
+
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my', 'pscale'))
     def srun(self,
              ts: tuple,
              p: jnp.ndarray,
              k: tuple,
              my: tuple,
              pscale: tuple):
-        (llh, (x, obs)), sllh = (jax.value_and_grad(self.run, 1, True))(
+        (llh, (x, obs)), sllh = (jax.value_and_grad(self._run, 1, True))(
             ts, p, k, my, pscale
         )
         return llh, sllh, (x, obs)
@@ -158,10 +166,10 @@ class JAXSolver(object):
               k: tuple,
               my: tuple,
               pscale: tuple):
-        (llh, (x, obs)), sllh = (jax.value_and_grad(self.run, 1, True))(
+        (llh, (x, obs)), sllh = (jax.value_and_grad(self._run, 1, True))(
             ts, p, k, my, pscale
         )
-        s2llh, (x, obs) = jax.jacfwd(jax.grad(self.run, 1, True), 1, True)(
+        s2llh, (x, obs) = jax.jacfwd(jax.grad(self._run, 1, True), 1, True)(
             ts, p, k, my, pscale
         )
         return llh, sllh, s2llh, (x, obs)
