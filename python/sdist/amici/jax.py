@@ -2,7 +2,6 @@ from abc import abstractmethod
 from dataclasses import dataclass
 
 import diffrax
-import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
 import jax
@@ -11,7 +10,7 @@ from functools import partial
 import amici
 
 
-class JAXModel(eqx.Module):
+class JAXModel(object):
     @abstractmethod
     def xdot(self, t, x, args):
         ...
