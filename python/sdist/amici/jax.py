@@ -2,15 +2,16 @@ from abc import abstractmethod
 from dataclasses import dataclass
 
 import diffrax
+import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
-import equinox as eqx
-import functools as ft
+import jax
+from functools import partial
 
 import amici
 
 
-class JAXModel(object):
+class JAXModel(eqx.Module):
     @abstractmethod
     def xdot(self, t, x, args):
         ...
@@ -47,8 +48,10 @@ class JAXSolver(object):
         self.rtol: float = 1e-8
         self.sensi_mode: amici.SensitivityMethod = \
             amici.SensitivityMethod.adjoint
+        self.sensi_order: amici.SensitivityOrder = \
+            amici.SensitivityOrder.none
 
-    def solve(self, ts, p, k):
+    def _solve(self, ts, p, k):
         y0 = self.model.x0(p, k)
         tcl = 0
         sol = diffrax.diffeqsolve(
@@ -65,50 +68,94 @@ class JAXSolver(object):
             ),
             saveat=diffrax.SaveAt(ts=ts)
         )
-        return sol
+        return sol.ys
 
-    def obs(self, sol, p, k, tcl):
-        return jnp.apply_along_axis(
+    def _obs(self, x, p, k, tcl):
+        y = jnp.apply_along_axis(
             lambda x: self.model.y(x, p, k, tcl),
             axis=1,
-            arr=sol.ys
-        )[:, :, 0]
+            arr=x
+        )
+        return y
 
-    def sigmay(self, obs, p, k):
-        return jnp.apply_along_axis(
+    def _sigmay(self, obs, p, k):
+        sigmay = jnp.apply_along_axis(
             lambda y: self.model.sigmay(y, p, k),
             axis=1,
             arr=obs
         )
+        return sigmay
 
-    def loss(self, obs, sigmay, my):
-        return -jnp.sum(jnp.stack(
+    def _loss(self, obs: jnp.ndarray, sigmay: jnp.ndarray, my: np.ndarray):
+        llh = - jnp.sum(jnp.stack(
             [self.model.Jy(obs[i, :], my[i, :], sigmay[i, :])
              for i in range(my.shape[0])]
         ))
+        return llh
+
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my'))
+    def run(self,
+            ts: tuple,
+            p: jnp.ndarray,
+            k: tuple,
+            my: tuple):
+        x = self._solve(ts, p, k)
+        tcl = 0
+        obs = self._obs(x, p, k, tcl)
+        my_r = np.asarray(my).reshape(obs.shape)
+        sigmay = self._sigmay(obs, p, k)
+        llh = self._loss(obs, sigmay, my_r)
+        return llh, (x, obs)
+
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my'))
+    def srun(self,
+             ts: tuple,
+             p: jnp.ndarray,
+             k: tuple,
+             my: tuple):
+        (llh, (x, obs)), sllh = (jax.value_and_grad(self.run, 1, True))(
+            ts, p, k, my
+        )
+        return llh, sllh, (x, obs)
+
+    @partial(jax.jit, static_argnames=('self', 'ts', 'k', 'my'))
+    def s2run(self,
+             ts: tuple,
+             p: jnp.ndarray,
+             k: tuple,
+             my: tuple):
+        (llh, (x, obs)), sllh = (jax.value_and_grad(self.run, 1, True))(
+            ts, p, k, my
+        )
+        s2llh, (x, obs) = jax.jacfwd(jax.grad(self.run, 1, True), 1, True)(
+            ts, p, k, my
+        )
+        return llh, sllh, s2llh, (x, obs)
 
 
 def runAmiciSimulationJAX(model: JAXModel,
                           solver: JAXSolver,
                           edata: amici.ExpData):
-    ts = jnp.asarray(edata.getTimepoints())
+    ts = tuple(edata.getTimepoints())
     p = jnp.asarray(edata.parameters)
-    k = jnp.asarray(edata.fixedParameters)
+    k = tuple(edata.fixedParameters)
+    my = tuple(edata.getObservedData())
 
-    tcl = 0
+    rdata_kwargs = dict()
 
-    sol = solver.solve(ts, p, k)
-    obs = solver.obs(sol, p, k, tcl)
-    my = jnp.asarray(edata.getObservedData()).reshape(obs.shape)
-    sigmay = solver.sigmay(obs, p, k)
-    loss = solver.loss(obs, sigmay, my)
+    if solver.sensi_order == amici.SensitivityOrder.none:
+        rdata_kwargs['llh'], (rdata_kwargs['x'], rdata_kwargs['y']) = \
+            solver.run(ts, p, k, my)
+    elif solver.sensi_order == amici.SensitivityOrder.first:
+        rdata_kwargs['llh'], rdata_kwargs['sllh'], (
+            rdata_kwargs['x'], rdata_kwargs['y']
+        ) = solver.srun(ts, p, k, my)
+    elif solver.sensi_order == amici.SensitivityOrder.second:
+        rdata_kwargs['llh'], rdata_kwargs['sllh'], rdata_kwargs['s2llh'], (
+            rdata_kwargs['x'], rdata_kwargs['y']
+        ) = solver.s2run(ts, p, k, my)
 
-    return ReturnDataJAX(
-        x=sol.ys,
-        y=obs,
-        sigmay=sigmay,
-        llh=loss,
-    )
+    return ReturnDataJAX(**rdata_kwargs)
 
 
 @dataclass
