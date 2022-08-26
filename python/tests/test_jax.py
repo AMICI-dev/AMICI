@@ -1,5 +1,6 @@
 import pytest
 import amici
+pytest.importorskip("jax")
 import amici.jax
 
 import jax.numpy as jnp
