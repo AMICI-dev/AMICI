@@ -20,6 +20,8 @@ models and turning them into C++ Python extensions.
     the raw package without
 """
 
+
+import contextlib
 import importlib
 import os
 import re
@@ -90,8 +92,8 @@ amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
 
-has_clibs = any([os.path.isfile(os.path.join(amici_path, wrapper))
-                 for wrapper in ['amici.py', 'amici_without_hdf5.py']])
+has_clibs = any(os.path.isfile(os.path.join(amici_path, wrapper))
+                for wrapper in ['amici.py', 'amici_without_hdf5.py'])
 hdf5_enabled = False
 
 # Get version number from file
@@ -139,10 +141,8 @@ class add_path:
             sys.path.insert(0, self.path)
 
     def __exit__(self, exc_type, exc_value, traceback):
-        try:
+        with contextlib.suppress(ValueError):
             sys.path.remove(self.path)
-        except ValueError:
-            pass
 
 
 def import_model_module(

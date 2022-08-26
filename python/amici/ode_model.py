@@ -4,11 +4,6 @@
 import sympy as sp
 import numbers
 
-try:
-    import pysb
-except ImportError:
-    pysb = None
-
 from typing import (
     Optional, Union, Dict, SupportsFloat, Set
 )

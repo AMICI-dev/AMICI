@@ -1,5 +1,7 @@
 """AMICI model package setup"""
 
+
+import contextlib
 import os
 import sys
 from typing import List
@@ -51,10 +53,8 @@ def get_model_sources() -> List[str]:
     """Get list of source files for the amici base library"""
     import glob
     model_sources = glob.glob('*.cpp')
-    try:
+    with contextlib.suppress(ValueError):
         model_sources.remove('main.cpp')
-    except ValueError:
-        pass
     return model_sources
 
 

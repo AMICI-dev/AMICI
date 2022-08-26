@@ -933,10 +933,10 @@ class SbmlImporter:
                 sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
 
             self.flux_vector[reaction_index] = sym_math
-            if any([
+            if any(
                 str(symbol) in reaction_ids
                 for symbol in self.flux_vector[reaction_index].free_symbols
-            ]):
+            ):
                 raise SBMLException(
                     'Kinetic laws involving reaction ids are currently'
                     ' not supported!'
@@ -1324,8 +1324,8 @@ class SbmlImporter:
                 'name': specie['name'],
                 'value': species_id
             }
-            for ix, (species_id, specie)
-            in enumerate(self.symbols[SymbolId.SPECIES].items())
+            for species_id, specie
+            in self.symbols[SymbolId.SPECIES].items()
         }
 
         for variable, formula in itt.chain(
@@ -1976,10 +1976,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        if a is None or self._sympy_from_sbml_math(a) is None:
-            return False
-
-        return True
+        return a is not None and self._sympy_from_sbml_math(a) is not None
 
     def is_rate_rule_target(self, element: sbml.SBase) -> bool:
         """
@@ -1993,10 +1990,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getRateRuleByVariable(element.getId())
-        if a is None or self._sympy_from_sbml_math(a) is None:
-            return False
-
-        return True
+        return a is not None and self._sympy_from_sbml_math(a) is not None
 
 
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
@@ -2015,7 +2009,7 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
     num_fatal = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
 
     if num_warning + num_error + num_fatal:
-        for i_error in range(0, sbml_doc.getNumErrors()):
+        for i_error in range(sbml_doc.getNumErrors()):
             error = sbml_doc.getError(i_error)
             # we ignore any info messages for now
             if error.getSeverity() >= sbml.LIBSBML_SEV_ERROR \
@@ -2048,12 +2042,12 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         _check_unsupported_functions_sbml(root, 'sympy.Expression')
 
         # convert relational expressions into trigger functions
-        if isinstance(trigger, sp.core.relational.LessThan) or \
-                isinstance(trigger, sp.core.relational.StrictLessThan):
+        if isinstance(trigger, (sp.core.relational.LessThan,
+                                sp.core.relational.StrictLessThan)):
             # y < x or y <= x
             return -root
-        if isinstance(trigger, sp.core.relational.GreaterThan) or \
-                isinstance(trigger, sp.core.relational.StrictGreaterThan):
+        if isinstance(trigger, (sp.core.relational.GreaterThan,
+                                sp.core.relational.StrictGreaterThan)):
             # y >= x or y > x
             return root
 

@@ -374,7 +374,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper &C,
             assert(nnz - C.get_indexptr(bcol) <= rows());
         }
         for (cidx = C.get_indexptr(bcol); cidx < nnz; cidx++)
-            C.set_data(cidx, x.at(C.get_indexval(cidx))); // copy data to C
+            C.set_data(cidx, x[C.get_indexval(cidx)]); // copy data to C
     }
     C.set_indexptr(C.num_indexptrs(), nnz);
 
@@ -518,6 +518,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
     if (!num_nonzeros())
         return nnz;
 
+    auto x_data = x.data();
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
 
     sunindextype aidx;
@@ -529,9 +530,9 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype acol,
             w[arow] = mark;                      /* arow is new entry in C(:,*) */
             if (C)
                 C->set_indexval(nnz++, arow);    /* add arow to pattern of C(:,*) */
-            x[arow] = beta * get_data(aidx);  /* x(arow) = beta*A(arow,acol) */
+            x_data[arow] = beta * get_data(aidx);  /* x(arow) = beta*A(arow,acol) */
         } else {
-            x[arow] += beta * get_data(aidx); /* arow exists in C(:,*) already */
+            x_data[arow] += beta * get_data(aidx); /* arow exists in C(:,*) already */
         }
     }
     assert(!C || nnz <= C->capacity());
