@@ -2521,10 +2521,10 @@ class ODEExporter:
             **{
                 f'{eq_name.upper()}_RET': jnp_stack_str(
                     strip_pysb(s) for s in self.model.sym(eq_name)
-                ) if eq_name is not 'Jy'
-                else '0 + ' + ' + '.join(
+                ) if eq_name != 'Jy'
+                else ' + '.join(
                     str(s) for s in self.model.sym(eq_name)
-                )
+                ) if self.model.sym(eq_name) else '0'
                 for eq_name in eq_names
             },
             **{
