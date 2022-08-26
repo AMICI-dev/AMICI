@@ -88,45 +88,50 @@ def _test_model(model_module, ts, p, k):
 
     amici_model.setParameters(np.asarray(p, dtype=np.float64))
     amici_model.setFixedParameters(np.asarray(k, dtype=np.float64))
-    edata = amici.ExpData(sol_amici_ref, 1.0, 1.0)
-    edata.parameters = amici_model.getParameters()
-    edata.fixedParameters = amici_model.getFixedParameters()
-    edata.pscale = amici_model.getParameterScale()
+    edatas = (
+        amici.ExpData(sol_amici_ref, 1.0, 1.0),
+        amici.ExpData(sol_amici_ref, 1.0, 1.0),
+    )
+    for edata in edatas:
+        edata.parameters = amici_model.getParameters()
+        edata.fixedParameters = amici_model.getFixedParameters()
+        edata.pscale = amici_model.getParameterScale()
     amici_solver = amici_model.getSolver()
     amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
     amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    r_amici = amici.runAmiciSimulation(
+    rs_amici = amici.runAmiciSimulations(
         amici_model,
         amici_solver,
-        edata
+        edatas
     )
 
-    check_fields_jax(r_amici, jax_model, jax_solver, edata,
+    check_fields_jax(rs_amici, jax_model, jax_solver, edatas,
                      ['x', 'y', 'llh'])
 
     jax_solver.sensi_order = amici.SensitivityOrder.first
-    check_fields_jax(r_amici, jax_model, jax_solver, edata,
+    check_fields_jax(rs_amici, jax_model, jax_solver, edatas,
                      ['x', 'y', 'llh', 'sllh'])
 
     jax_solver.sensi_order = amici.SensitivityOrder.second
-    check_fields_jax(r_amici, jax_model, jax_solver, edata,
+    check_fields_jax(rs_amici, jax_model, jax_solver, edatas,
                      ['x', 'y', 'llh', 'sllh'])
 
 
-def check_fields_jax(r_amici,
+def check_fields_jax(rs_amici,
                      jax_model,
                      jax_solver,
-                     edata,
+                     edatas,
                      fields):
-    r_jax = amici.jax.runAmiciSimulationJAX(
+    rs_jax = amici.jax.runAmiciSimulationsJAX(
         jax_model,
         jax_solver,
-        edata
+        edatas
     )
     for field in fields:
-        assert_allclose(
-            actual=r_amici[field],
-            desired=r_jax[field],
-            atol=1e-6,
-            rtol=1e-6
-        )
+        for r_amici, r_jax in zip(rs_amici, rs_jax):
+            assert_allclose(
+                actual=r_amici[field],
+                desired=r_jax[field],
+                atol=1e-6,
+                rtol=1e-6
+            )

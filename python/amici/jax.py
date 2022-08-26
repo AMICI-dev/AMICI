@@ -1,11 +1,13 @@
 from abc import abstractmethod
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
 
 import diffrax
 import jax.numpy as jnp
 import numpy as np
 import jax
 from functools import partial
+from typing import Iterable
 
 import amici
 
@@ -158,6 +160,19 @@ class JAXSolver(object):
             ts, p, k, my, pscale
         )
         return llh, sllh, s2llh, (x, obs)
+
+
+def runAmiciSimulationsJAX(model: JAXModel,
+                           solver: JAXSolver,
+                           edatas: Iterable[amici.ExpData],
+                           num_threads: int = 1):
+
+    def run_simulation(edata):
+        return runAmiciSimulationJAX(model, solver, edata)
+
+    with ThreadPoolExecutor(max_workers=num_threads) as pool:
+        results = pool.map(run_simulation, edatas)
+    return results
 
 
 def runAmiciSimulationJAX(model: JAXModel,
