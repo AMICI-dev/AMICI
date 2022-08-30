@@ -38,10 +38,9 @@ jobs:
       run: |
         scripts/installAmiciSource.sh
 
-    - name: Install pyPESTO
+    - name: Download pyPESTO
       run: |
         git clone https://github.com/ICB-DCM/pyPESTO.git
-        cd pyPESTO
 
     - name: Run pyPESTO tests
       run: |
