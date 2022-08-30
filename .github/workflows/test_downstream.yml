@@ -1,0 +1,52 @@
+name: Downstream tests
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  pypesto:
+    name: Test pyPESTO
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install AMICI apt dependencies
+      run: |
+        sudo apt-get update && sudo apt-get install -y \
+          cmake \
+          g++ \
+          libatlas-base-dev \
+          libboost-serialization-dev \
+          libhdf5-serial-dev \
+          python3-venv \
+          swig \
+          lcov \
+          libboost-math-dev
+
+    - name: Build AMICI dependencies
+      run: |
+        scripts/buildDependencies.sh
+
+    - name: Build AMICI
+      run: |
+        scripts/buildAmici.sh
+
+    - name: Install pyPESTO
+      run: |
+        git clone git@github.com:ICB-DCM/pyPESTO.git
+        cd pyPESTO
+
+    - name: Run pyPESTO tests
+      run: |
+        cd pyPESTO
+        pip install -r requirements-dev.txt
+        tox -e petab
