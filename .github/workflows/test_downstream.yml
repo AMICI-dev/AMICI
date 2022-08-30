@@ -38,6 +38,13 @@ jobs:
       run: |
         scripts/installAmiciSource.sh
 
+    - name: Download BioNetGen
+      run: |      
+        wget -q -O bionetgen.tar \
+          https://github.com/RuleWorld/bionetgen/releases/download/BioNetGen-2.7.0/BioNetGen-2.6.0-linux.tgz
+        tar -xf bionetgen.tar
+        echo "BNGPATH=${pwd}/BioNetGen-2.7.0" >> $GITHUB_ENV
+
     - name: Download pyPESTO
       run: |
         git clone https://github.com/ICB-DCM/pyPESTO.git
