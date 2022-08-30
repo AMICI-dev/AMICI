@@ -28,7 +28,7 @@ jobs:
       with:
         fetch-depth: 20
 
-    - name: Install AMICI apt dependencies
+    - name: Install AMICI dependencies
       run: |
         sudo apt-get update && sudo apt-get install -y \
           swig \
@@ -40,7 +40,7 @@ jobs:
 
     - name: Install pyPESTO
       run: |
-        git clone git@github.com:ICB-DCM/pyPESTO.git
+        git clone https://github.com/ICB-DCM/pyPESTO.git
         cd pyPESTO
 
     - name: Run pyPESTO tests
