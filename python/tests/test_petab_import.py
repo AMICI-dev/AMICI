@@ -3,6 +3,8 @@
 import libsbml
 import pytest
 import pandas as pd
+from amici.testing import skip_on_valgrind
+
 
 petab = pytest.importorskip("petab")
 SbmlModel = pytest.importorskip("petab.models.sbml_model.SbmlModel")
@@ -35,6 +37,7 @@ def simple_sbml_model():
     return document, model
 
 
+@skip_on_valgrind
 def test_get_fixed_parameters(simple_sbml_model):
     """Check for correct identification of fixed parameters:
 
