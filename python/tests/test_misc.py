@@ -48,6 +48,7 @@ def test_hill_function_dwdx():
     _ = str(res)
 
 
+@skip_on_valgrind
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
                     reason='skipping cmake based test')
 def test_cmake_compilation(sbml_example_presimulation_module):

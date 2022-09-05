@@ -7,6 +7,7 @@ from amici.parameter_mapping import (ParameterMapping,
                                      ParameterMappingForCondition)
 from amici.testing import skip_on_valgrind
 
+
 @skip_on_valgrind
 def test_parameter_mapping_for_condition_default_args():
     """Check we can initialize the mapping with default arguments."""

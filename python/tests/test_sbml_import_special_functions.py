@@ -16,7 +16,7 @@ from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
     # load sbml model
