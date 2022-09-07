@@ -7,14 +7,16 @@ boost.
 import os
 import shutil
 
-import amici
 import numpy as np
-from scipy.special import loggamma
 import pytest
+from scipy.special import loggamma
+
+import amici
 from amici.gradient_check import check_derivatives
+from amici.testing import skip_on_valgrind
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def model_special_likelihoods():
     """Test model for special likelihood functions."""
     # load sbml model
@@ -50,6 +52,7 @@ def model_special_likelihoods():
     shutil.rmtree(outdir, ignore_errors=True)
 
 
+@skip_on_valgrind
 # FD check fails occasionally, so give some extra tries
 @pytest.mark.flaky(reruns=5)
 def test_special_likelihoods(model_special_likelihoods):

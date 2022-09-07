@@ -2,10 +2,11 @@
 import numpy as np
 
 import amici
+from amici.testing import skip_on_valgrind
 
 from test_sbml_import import model_units_module
 
-
+@skip_on_valgrind
 def test_edata_sensi_unscaling(model_units_module):
     """
     ExpData parameters should be used for unscaling initial state

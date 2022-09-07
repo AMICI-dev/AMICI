@@ -2,8 +2,9 @@
 
 import sympy as sp
 from amici.cxxcodeprinter import AmiciCxxCodePrinter
+from amici.testing import skip_on_valgrind
 
-
+@skip_on_valgrind
 def test_csc_matrix():
     """Test sparse CSC matrix creation"""
     printer = AmiciCxxCodePrinter()
@@ -19,6 +20,7 @@ def test_csc_matrix():
     assert str(sparse_matrix) == 'Matrix([[da1_db1, 0], [da2_db1, da2_db2]])'
 
 
+@skip_on_valgrind
 def test_csc_matrix_empty():
     """Test sparse CSC matrix creation for empty matrix"""
     printer = AmiciCxxCodePrinter()
@@ -33,6 +35,7 @@ def test_csc_matrix_empty():
     assert str(sparse_matrix) == 'Matrix(0, 0, [])'
 
 
+@skip_on_valgrind
 def test_csc_matrix_vector():
     """Test sparse CSC matrix creation from matrix slice"""
     printer = AmiciCxxCodePrinter()

@@ -6,14 +6,16 @@ from numbers import Number
 from pathlib import Path
 from urllib.request import urlopen
 
-import amici
 import libsbml
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose, assert_array_equal
+
+import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-from numpy.testing import assert_allclose, assert_array_equal
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory, \
+    skip_on_valgrind
 
 
 @pytest.fixture
@@ -56,6 +58,7 @@ def test_sbml2amici_no_observables(simple_sbml_model):
         assert hasattr(module_module, 'getModel')
 
 
+@skip_on_valgrind
 def test_sbml2amici_nested_observables_fail(simple_sbml_model):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model
@@ -129,6 +132,7 @@ def observable_dependent_error_model(simple_sbml_model):
                                         module_path=tmpdir)
 
 
+@skip_on_valgrind
 def test_sbml2amici_observable_dependent_error(observable_dependent_error_model):
     """Check gradients for model with observable-dependent error"""
     model_module = observable_dependent_error_model
@@ -375,6 +379,7 @@ def model_test_likelihoods():
     shutil.rmtree(outdir, ignore_errors=True)
 
 
+@skip_on_valgrind
 def test_likelihoods(model_test_likelihoods):
     """Test the custom noise distributions used to define cost functions."""
     model = model_test_likelihoods.getModel()
@@ -430,6 +435,7 @@ def test_likelihoods(model_test_likelihoods):
         )
 
 
+@skip_on_valgrind
 def test_likelihoods_error():
     """Test whether wrong inputs lead to expected errors."""
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
@@ -455,6 +461,7 @@ def test_likelihoods_error():
         )
 
 
+@skip_on_valgrind
 def test_units(model_units_module):
     """
     Test whether SBML import works for models using sbml:units annotations.
@@ -467,6 +474,7 @@ def test_units(model_units_module):
     assert rdata['status'] == amici.AMICI_SUCCESS
 
 
+@skip_on_valgrind
 @pytest.mark.skipif(os.name == 'nt',
                     reason='Avoid `CERTIFICATE_VERIFY_FAILED` error')
 def test_sympy_exp_monkeypatch():
