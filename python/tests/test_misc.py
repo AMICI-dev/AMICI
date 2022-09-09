@@ -3,14 +3,13 @@
 import os
 import subprocess
 
-import libsbml
 import pytest
 import sympy as sp
 
 import amici
 from amici.ode_export import _custom_pow_eval_derivative, _monkeypatched, \
     smart_subs_dict
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import skip_on_valgrind
 
 
 def test_parameter_scaling_from_int_vector():
@@ -27,7 +26,7 @@ def test_parameter_scaling_from_int_vector():
     assert scale_vector[1] == amici.ParameterScaling.ln
     assert scale_vector[2] == amici.ParameterScaling.none
 
-
+@skip_on_valgrind
 def test_hill_function_dwdx():
     """Kinetic laws with Hill functions, may lead to NaNs in the Jacobian
     if involved states are zero if not properly arranged symbolically.
@@ -49,6 +48,7 @@ def test_hill_function_dwdx():
     _ = str(res)
 
 
+@skip_on_valgrind
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
                     reason='skipping cmake based test')
 def test_cmake_compilation(sbml_example_presimulation_module):
@@ -64,6 +64,7 @@ def test_cmake_compilation(sbml_example_presimulation_module):
                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
+@skip_on_valgrind
 def test_smart_subs_dict():
     expr_str = 'c + d'
     subs_dict = {
@@ -85,6 +86,7 @@ def test_smart_subs_dict():
     assert sp.simplify(result_reverse - expected_reverse).is_zero
 
 
+@skip_on_valgrind
 def test_monkeypatch():
     t = sp.Symbol('t')
     n = sp.Symbol('n')
