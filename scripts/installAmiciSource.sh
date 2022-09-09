@@ -28,7 +28,8 @@ else
 fi
 
 pip install --upgrade pip pkgconfig scipy matplotlib coverage pytest pytest-cov
+pip install jax[cpu] # need to install CPU version of jax
 pip install git+https://github.com/pysb/pysb # pin to develop to fix sympy compatibility
 pip install -U "setuptools<64"
-pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test] --no-build-isolation
+pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test,jax] --no-build-isolation
 deactivate
