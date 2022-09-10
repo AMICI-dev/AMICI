@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <type_traits>
 
@@ -42,6 +43,24 @@ static_assert(std::is_same<amici::realtype, realtype>::value,
               "Definition of realtype does not match");
 
 namespace amici {
+
+std::map<int, std::string> simulation_status_to_str_map = {
+    {AMICI_RECOVERABLE_ERROR, "AMICI_RECOVERABLE_ERROR"},
+    {AMICI_UNRECOVERABLE_ERROR, "AMICI_UNRECOVERABLE_ERROR"},
+    {AMICI_TOO_MUCH_WORK, "AMICI_TOO_MUCH_WORK"},
+    {AMICI_TOO_MUCH_ACC, "AMICI_TOO_MUCH_ACC"},
+    {AMICI_ERR_FAILURE, "AMICI_ERR_FAILURE"},
+    {AMICI_CONV_FAILURE, "AMICI_CONV_FAILURE"},
+    {AMICI_RHSFUNC_FAIL, "AMICI_RHSFUNC_FAIL"},
+    {AMICI_ILL_INPUT, "AMICI_ILL_INPUT"},
+    {AMICI_ERROR, "AMICI_ERROR"},
+    {AMICI_NO_STEADY_STATE, "AMICI_NO_STEADY_STATE"},
+    {AMICI_DAMPING_FACTOR_ERROR, "AMICI_DAMPING_FACTOR_ERROR"},
+    {AMICI_SINGULAR_JACOBIAN, "AMICI_SINGULAR_JACOBIAN"},
+    {AMICI_NOT_IMPLEMENTED, "AMICI_NOT_IMPLEMENTED"},
+    {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
+    {AMICI_SUCCESS, "AMICI_SUCCESS"},
+};
 
 /** AMICI default application context, kept around for convenience for using
   * amici::runAmiciSimulation or instantiating Solver and Model without special
@@ -318,6 +337,18 @@ AmiciApplication::errorF(const char* identifier, const char* format, ...) const
     auto str = printfToString(format, argptr);
     va_end(argptr);
     error(identifier, str);
+}
+
+std::string simulation_status_to_str(int status)
+{
+    try {
+        return simulation_status_to_str_map.at(status);
+    } catch (std::out_of_range const&) {
+        // Missing mapping - terminate if this is a debug build,
+        // but show the number if non-debug.
+        gsl_ExpectsDebug(false);
+        return std::to_string(status);
+    }
 }
 
 } // namespace amici
