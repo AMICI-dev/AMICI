@@ -49,7 +49,8 @@ SWIG_CMAKE_TEMPLATE_FILE = os.path.join(amiciSwigPath,
 MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
                                          'CMakeLists.template.cmake')
 
-
+IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z_]\w*$')
+DERIVATIVE_PATTERN = re.compile(r'^d(x_rdata|xdot|\w+?)d(\w+?)(?:_explicit)?$')
 @dataclass
 class _FunctionInfo:
     """Information on a model-specific generated C++ function
@@ -482,8 +483,10 @@ symbol_to_type = {
 
 
 @log_execution_time('running smart_jacobian', logger)
-def smart_jacobian(eq: sp.MutableDenseMatrix,
-                   sym_var: sp.MutableDenseMatrix) -> sp.MutableSparseMatrix:
+def smart_jacobian(
+        eq: sp.MutableDenseMatrix,
+        sym_var: sp.MutableDenseMatrix
+) -> sp.MutableSparseMatrix:
     """
     Wrapper around symbolic jacobian with some additional checks that reduce
     computation time for large matrices
@@ -530,9 +533,10 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
 
 @log_execution_time('running smart_multiply', logger)
-def smart_multiply(x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
-                   y: sp.MutableDenseMatrix
-                   ) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
+def smart_multiply(
+        x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+        y: sp.MutableDenseMatrix
+) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
     """
     Wrapper around symbolic multiplication with some additional checks that
     reduce computation time for large matrices
@@ -931,11 +935,12 @@ class ODEModel:
                 args += ['dt', 'init']
             else:
                 args += ['value']
+
             if symbol_name == SymbolId.EVENT:
                 args += ['state_update', 'initial_value']
-            if symbol_name == SymbolId.OBSERVABLE:
+            elif symbol_name == SymbolId.OBSERVABLE:
                 args += ['transformation']
-            if symbol_name == SymbolId.EVENT_OBSERVABLE:
+            elif symbol_name == SymbolId.EVENT_OBSERVABLE:
                 args += ['event']
 
             protos = [
@@ -963,7 +968,7 @@ class ODEModel:
             si.process_conservation_laws(self)
 
         # fill in 'self._sym' based on prototypes and components in ode_model
-        self.generate_basic_variables(from_sbml=True)
+        self.generate_basic_variables()
         self._has_quadratic_nllh = all(
             llh['dist'] in ['normal', 'lin-normal', 'log-normal',
                             'log10-normal']
@@ -1298,7 +1303,7 @@ class ODEModel:
             for state in self._states
         ))
 
-    def _generate_symbol(self, name: str, *, from_sbml: bool = False) -> None:
+    def _generate_symbol(self, name: str) -> None:
         """
         Generates the symbolic identifiers for a symbolic variable
 
@@ -1376,13 +1381,10 @@ class ODEModel:
             for i in range(length)
         ])
 
-    def generate_basic_variables(self, *, from_sbml: bool = False) -> None:
+    def generate_basic_variables(self) -> None:
         """
         Generates the symbolic identifiers for all variables in
         ``ODEModel._variable_prototype``
-
-        :param from_sbml:
-            whether the model is generated from SBML
         """
         # We need to process events and Heaviside functions in the ODE Model,
         # before adding it to ODEExporter
@@ -1390,9 +1392,9 @@ class ODEModel:
 
         for var in self._variable_prototype:
             if var not in self._syms:
-                self._generate_symbol(var, from_sbml=from_sbml)
+                self._generate_symbol(var)
 
-        self._generate_symbol('x', from_sbml=from_sbml)
+        self._generate_symbol('x')
 
     def parse_events(self) -> None:
         """
@@ -1467,15 +1469,10 @@ class ODEModel:
             name of the symbolic variable
         """
         matrix = self.eq(name)
-        match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
-        if match_deriv:
+
+        if match_deriv := DERIVATIVE_PATTERN.match(name):
             eq = match_deriv[1]
             var = match_deriv[2]
-
-            if name == 'dtotal_cldx_rdata':
-                # not correctly parsed in regex
-                eq = 'total_cl'
-                var = 'x_rdata'
 
             rownames = self.sym(eq)
             colnames = self.sym(var)
@@ -1520,11 +1517,10 @@ class ODEModel:
         """
         # replacement ensures that we don't have to adapt name in abstract
         # model and keep backwards compatibility with matlab
-        match_deriv = re.match(
-            r'd([\w_]+)d([a-z_]+)',
-            re.sub(r'dJ(y|z|rz)dsigma', r'dJ\1dsigma\1', name).replace(
-                'sigmarz', 'sigmaz'
-            ).replace('dJrzdz', 'dJrzdrz')
+        match_deriv = DERIVATIVE_PATTERN.match(
+            re.sub(r'dJ(y|z|rz)dsigma', r'dJ\1dsigma\1', name)
+                .replace('sigmarz', 'sigmaz')
+                .replace('dJrzdz', 'dJrzdrz')
         )
         time_symbol = sp.Matrix([symbol_with_assumptions('t')])
 
@@ -2705,16 +2701,18 @@ class ODEExporter:
 
         # function body
         body = self._get_function_body(function, equations)
-        if self.assume_pow_positivity and func_info.assume_pow_positivity:
-            body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
-                    for line in body]
-            # execute this twice to catch cases where the ending ( would be the
-            # starting (^|\W) for the following match
-            body = [re.sub(r'(^|\W)std::pow\(', r'\1amici::pos_pow(', line)
-                    for line in body]
-
         if not body:
             return
+
+        if self.assume_pow_positivity and func_info.assume_pow_positivity:
+            pow_rx = re.compile(r'(^|\W)std::pow\(')
+            body = [
+                # execute this twice to catch cases where the ending '(' would
+                #  be the starting (^|\W) for the following match
+                pow_rx.sub(r'\1amici::pos_pow(',
+                           pow_rx.sub(r'\1amici::pos_pow(', line))
+                for line in body
+            ]
 
         self.functions[function].body = body
 
@@ -3021,49 +3019,43 @@ class ODEExporter:
         """
 
         tpl_data = {
-            'MODELNAME': str(self.model_name),
-            'NX_RDATA': str(self.model.num_states_rdata()),
-            'NXTRUE_RDATA': str(self.model.num_states_rdata()),
-            'NX_SOLVER': str(self.model.num_states_solver()),
-            'NXTRUE_SOLVER': str(self.model.num_states_solver()),
-            'NX_SOLVER_REINIT': str(self.model.num_state_reinits()),
-            'NY': str(self.model.num_obs()),
-            'NYTRUE': str(self.model.num_obs()),
-            'NZ': str(self.model.num_eventobs()),
-            'NZTRUE': str(self.model.num_eventobs()),
-            'NEVENT': str(self.model.num_events()),
+            'MODELNAME': self.model_name,
+            'NX_RDATA': self.model.num_states_rdata(),
+            'NXTRUE_RDATA': self.model.num_states_rdata(),
+            'NX_SOLVER': self.model.num_states_solver(),
+            'NXTRUE_SOLVER': self.model.num_states_solver(),
+            'NX_SOLVER_REINIT': self.model.num_state_reinits(),
+            'NY': self.model.num_obs(),
+            'NYTRUE': self.model.num_obs(),
+            'NZ': self.model.num_eventobs(),
+            'NZTRUE': self.model.num_eventobs(),
+            'NEVENT': self.model.num_events(),
             'NOBJECTIVE': '1',
-            'NW': str(len(self.model.sym('w'))),
-            'NDWDP': str(len(self.model.sparsesym(
+            'NW': len(self.model.sym('w')),
+            'NDWDP': len(self.model.sparsesym(
                 'dwdp', force_generate=self.generate_sensitivity_code
-            ))),
-            'NDWDX': str(len(self.model.sparsesym('dwdx'))),
-            'NDWDW': str(len(self.model.sparsesym('dwdw'))),
-            'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
-            'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
+            )),
+            'NDWDX': len(self.model.sparsesym('dwdx')),
+            'NDWDW': len(self.model.sparsesym('dwdw')),
+            'NDXDOTDW': len(self.model.sparsesym('dxdotdw')),
+            'NDXDOTDP_EXPLICIT': len(self.model.sparsesym(
                 'dxdotdp_explicit',
                 force_generate=self.generate_sensitivity_code
-            ))),
-            'NDXDOTDX_EXPLICIT': str(len(self.model.sparsesym(
-                'dxdotdx_explicit'))),
+            )),
+            'NDXDOTDX_EXPLICIT': len(self.model.sparsesym(
+                'dxdotdx_explicit')),
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
-            'NDXRDATADXSOLVER': str(
-                len(self.model.sparsesym('dx_rdatadx_solver'))
-            ),
-            'NDXRDATADTCL': str(
-                len(self.model.sparsesym('dx_rdatadtcl'))
-            ),
-            'NDTOTALCLDXRDATA': str(
-                len(self.model.sparsesym('dtotal_cldx_rdata'))
-            ),
-            'UBW': str(self.model.num_states_solver()),
-            'LBW': str(self.model.num_states_solver()),
-            'NP': str(self.model.num_par()),
-            'NK': str(self.model.num_const()),
+            'NDXRDATADXSOLVER': len(self.model.sparsesym('dx_rdatadx_solver')),
+            'NDXRDATADTCL': len(self.model.sparsesym('dx_rdatadtcl')),
+            'NDTOTALCLDXRDATA': len(self.model.sparsesym('dtotal_cldx_rdata')),
+            'UBW': self.model.num_states_solver(),
+            'LBW': self.model.num_states_solver(),
+            'NP': self.model.num_par(),
+            'NK': self.model.num_const(),
             'O2MODE': 'amici::SecondOrderMode::none',
-            # using cxxcode ensures proper handling of nan/inf
+            # using code printer ensures proper handling of nan/inf
             'PARAMETERS': self.model._code_printer.doprint(
                 self.model.val('p'))[1:-1],
             'FIXED_PARAMETERS': self.model._code_printer.doprint(
@@ -3097,27 +3089,25 @@ class ODEExporter:
                 self._get_symbol_id_initializer_list('w'),
             'STATE_IDXS_SOLVER_INITIALIZER_LIST':
                 ', '.join(
-                    [
                         str(idx)
                         for idx, state in enumerate(self.model._states)
                         if not state.has_conservation_law()
-                    ]
                 ),
             'REINIT_FIXPAR_INITCOND':
-                'true' if self.allow_reinit_fixpar_initcond else
-                'false',
+                AmiciCxxCodePrinter.print_bool(
+                    self.allow_reinit_fixpar_initcond),
             'AMICI_VERSION_STRING':  __version__,
             'AMICI_COMMIT_STRING': __commit__,
             'W_RECURSION_DEPTH': self.model._w_recursion_depth,
-            'QUADRATIC_LLH': 'true'
-                if self.model._has_quadratic_nllh else 'false',
+            'QUADRATIC_LLH': AmiciCxxCodePrinter.print_bool(
+                self.model._has_quadratic_nllh),
             'ROOT_INITIAL_VALUES':
-                ', '.join([
-                    'true' if event.get_initial_value() else 'false'
-                    for event in self.model._events
-                ]),
+                ', '.join(map(
+                    lambda event: AmiciCxxCodePrinter.print_bool(
+                        event.get_initial_value()),
+                    self.model._events)),
             'Z2EVENT':
-                ', '.join(str(ie) for ie in self.model._z2event)
+                ', '.join(map(str, self.model._z2event))
         }
 
         for func_name, func_info in self.functions.items():
@@ -3175,6 +3165,8 @@ class ODEExporter:
             tpl_data['X_RDATA_DEF'] = ''
             tpl_data['X_RDATA_IMPL'] = ''
 
+        tpl_data = {k: str(v) for k, v in tpl_data.items()}
+
         apply_template(
             os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
             os.path.join(self.model_path, f'{self.model_name}.h'),
@@ -3199,10 +3191,8 @@ class ODEExporter:
             Template initializer list of names
         """
         return '\n'.join(
-            [
-                f'"{symbol}", // {name}[{idx}]'
-                for idx, symbol in enumerate(self.model.name(name))
-            ]
+            f'"{symbol}", // {name}[{idx}]'
+            for idx, symbol in enumerate(self.model.name(name))
         )
 
     def _get_symbol_id_initializer_list(self, name: str) -> str:
@@ -3217,40 +3207,37 @@ class ODEExporter:
             Template initializer list of ids
         """
         return '\n'.join(
-            [
-                f'"{strip_pysb(symbol)}", // {name}[{idx}]'
-                for idx, symbol in enumerate(self.model.sym(name))
-            ]
+            f'"{self.model._code_printer.doprint(symbol)}", // {name}[{idx}]'
+            for idx, symbol in enumerate(self.model.sym(name))
         )
 
     def _write_c_make_file(self):
         """Write CMake ``CMakeLists.txt`` file for this model."""
-        sources = [
+        sources = '\n'.join(
             f + ' ' for f in os.listdir(self.model_path)
             if f.endswith('.cpp') and f != 'main.cpp'
-        ]
+        )
 
         template_data = {'MODELNAME': self.model_name,
-                         'SOURCES': '\n'.join(sources),
+                         'SOURCES': sources,
                          'AMICI_VERSION': __version__}
         apply_template(
             MODEL_CMAKE_TEMPLATE_FILE,
-            os.path.join(self.model_path, 'CMakeLists.txt'),
+            Path(self.model_path, 'CMakeLists.txt'),
             template_data
         )
 
     def _write_swig_files(self) -> None:
         """Write SWIG interface files for this model."""
-        if not os.path.exists(self.model_swig_path):
-            os.makedirs(self.model_swig_path)
+        Path(self.model_swig_path).mkdir(exist_ok=True)
         template_data = {'MODELNAME': self.model_name}
         apply_template(
-            os.path.join(amiciSwigPath, 'modelname.template.i'),
-            os.path.join(self.model_swig_path, self.model_name + '.i'),
+            Path(amiciSwigPath, 'modelname.template.i'),
+            Path(self.model_swig_path, self.model_name + '.i'),
             template_data
         )
         shutil.copy(SWIG_CMAKE_TEMPLATE_FILE,
-                    os.path.join(self.model_swig_path, 'CMakeLists.txt'))
+                    Path(self.model_swig_path, 'CMakeLists.txt'))
 
     def _write_module_setup(self) -> None:
         """
@@ -3260,18 +3247,17 @@ class ODEExporter:
         template_data = {'MODELNAME': self.model_name,
                          'AMICI_VERSION': __version__,
                          'PACKAGE_VERSION': '0.1.0'}
-        apply_template(os.path.join(amiciModulePath, 'setup.template.py'),
-                       os.path.join(self.model_path, 'setup.py'),
+        apply_template(Path(amiciModulePath, 'setup.template.py'),
+                       Path(self.model_path, 'setup.py'),
                        template_data)
-        apply_template(os.path.join(amiciModulePath, 'MANIFEST.template.in'),
-                       os.path.join(self.model_path, 'MANIFEST.in'), {})
+        apply_template(Path(amiciModulePath, 'MANIFEST.template.in'),
+                       Path(self.model_path, 'MANIFEST.in'), {})
         # write __init__.py for the model module
-        if not os.path.exists(os.path.join(self.model_path, self.model_name)):
-            os.makedirs(os.path.join(self.model_path, self.model_name))
+        Path(self.model_path, self.model_name).mkdir(exist_ok=True)
 
         apply_template(
-            os.path.join(amiciModulePath, '__init__.template.py'),
-            os.path.join(self.model_path, self.model_name, '__init__.py'),
+            Path(amiciModulePath, '__init__.template.py'),
+            Path(self.model_path, self.model_name, '__init__.py'),
             template_data
         )
 
@@ -3321,8 +3307,8 @@ class TemplateAmici(Template):
     delimiter = 'TPL_'
 
 
-def apply_template(source_file: str,
-                   target_file: str,
+def apply_template(source_file: Union[str, Path],
+                   target_file: Union[str, Path],
                    template_data: Dict[str, str]) -> None:
     """
     Load source file, apply template substitution as provided in
@@ -3512,7 +3498,7 @@ def is_valid_identifier(x: str) -> bool:
         ``True`` if valid, ``False`` otherwise
     """
 
-    return re.match(r'^[a-zA-Z_]\w*$', x) is not None
+    return IDENTIFIER_PATTERN.match(x) is not None
 
 
 @contextlib.contextmanager

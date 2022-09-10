@@ -64,3 +64,18 @@ def test_csc_matrix_vector():
     assert sparse_list == sp.Matrix([[3]])
     assert symbol_list == ['da2_db_1']
     assert str(sparse_matrix) == 'Matrix([[0], [da2_db_1]])'
+
+
+def test_match_deriv():
+    from amici.ode_export import DERIVATIVE_PATTERN as pat
+
+    def check(str, out1, out2):
+        match = pat.match(str)
+        assert match[1] == out1, (str, match[1], match[2])
+        assert match[2] == out2, (str, match[1], match[2])
+
+    check("dwdx", "w", "x")
+    check("dx_rdatadtotal_cl", "x_rdata", "total_cl")
+    check("dtotal_cldx_rdata", "total_cl", "x_rdata")
+    check("dxdotdw", "xdot", "w")
+    check("dxdotdx_explicit", "xdot", "x")
