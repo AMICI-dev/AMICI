@@ -3403,7 +3403,7 @@ def get_model_override_implementation(fun: str, name: str,
         fun=fun,
         name=name,
         signature=func_info.arguments,
-        eval_signature=remove_typedefs(func_info.arguments),
+        eval_signature=remove_argument_types(func_info.arguments),
         return_type=func_info.return_type
     )
 
@@ -3451,9 +3451,9 @@ def get_sunindex_override_implementation(fun: str, name: str,
     )
 
 
-def remove_typedefs(signature: str) -> str:
+def remove_argument_types(signature: str) -> str:
     """
-    Strips typedef info from a function signature
+    Strips argument types from a function signature
 
     :param signature:
         function signature
@@ -3467,7 +3467,7 @@ def remove_typedefs(signature: str) -> str:
     # same applies for const specifications)
     #
     # always add whitespace after type definition for cosmetic reasons
-    typedefs = [
+    known_types = [
         'const realtype *',
         'const double *',
         'const realtype ',
@@ -3479,8 +3479,8 @@ def remove_typedefs(signature: str) -> str:
         'gsl::span<const int>'
     ]
 
-    for typedef in typedefs:
-        signature = signature.replace(typedef, '')
+    for type_str in known_types:
+        signature = signature.replace(type_str, '')
 
     return signature
 
