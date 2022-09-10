@@ -2978,6 +2978,15 @@ class ODEExporter:
                 iterator = 'iy'
             lines.extend(get_switch_statement(iterator, cases, 1))
 
+        elif function in self.model.sym_names() \
+                and function not in non_unique_id_symbols:
+            if function in sparse_functions:
+                symbols = self.model.sparsesym(function)
+            else:
+                symbols = self.model.sym(function)
+            lines += self.model._code_printer._get_sym_lines_symbols(
+                symbols, equations, function, 4)
+
         else:
             lines += self.model._code_printer._get_sym_lines_array(
                 equations, function, 4)

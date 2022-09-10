@@ -17,6 +17,10 @@ from amici.sbml_import import SbmlImporter
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory, \
     skip_on_valgrind
 
+EXAMPLES_DIR = Path(__file__).parent / '..' / 'examples'
+STEADYSTATE_MODEL_FILE = (EXAMPLES_DIR / 'example_steadystate'
+                          / 'model_steadystate_scaled.xml')
+
 
 @pytest.fixture
 def simple_sbml_model():
@@ -163,9 +167,7 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
 
 @pytest.fixture(scope='session')
 def model_steadystate_module():
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_steadystate',
-                             'model_steadystate_scaled.xml')
+    sbml_file = STEADYSTATE_MODEL_FILE
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     observables = amici.assignmentRules2observables(
@@ -192,8 +194,7 @@ def model_steadystate_module():
 
 @pytest.fixture(scope='session')
 def model_units_module():
-    sbml_file = Path(__file__).parent / '..' / 'examples' \
-                / 'example_units' / 'model_units.xml'
+    sbml_file = EXAMPLES_DIR / 'example_units' / 'model_units.xml'
     module_name = 'test_model_units'
 
     sbml_importer = amici.SbmlImporter(sbml_file)
@@ -339,9 +340,7 @@ def test_solver_reuse(model_steadystate_module):
 def model_test_likelihoods():
     """Test model for various likelihood functions."""
     # load sbml model
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_steadystate',
-                             'model_steadystate_scaled.xml')
+    sbml_file = STEADYSTATE_MODEL_FILE
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # define observables
@@ -438,9 +437,7 @@ def test_likelihoods(model_test_likelihoods):
 @skip_on_valgrind
 def test_likelihoods_error():
     """Test whether wrong inputs lead to expected errors."""
-    sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                             'examples', 'example_steadystate',
-                             'model_steadystate_scaled.xml')
+    sbml_file = STEADYSTATE_MODEL_FILE
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # define observables
@@ -571,3 +568,40 @@ def _test_set_parameters_by_dict(model_module):
     assert model.getParameterByName(change_par_name) == new_par_val
     model.setParameterByName(change_par_name, old_par_val)
     assert model.getParameters() == old_parameter_values
+
+
+@pytest.mark.parametrize("extract_cse", [True, False])
+def test_code_gen_uses_cse(extract_cse):
+    """Check that code generation honors AMICI_EXTRACT_CSE"""
+    old_environ = os.environ.copy()
+    try:
+        os.environ["AMICI_EXTRACT_CSE"] = str(extract_cse)
+        sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
+        model_name = "test_code_gen_uses_cse"
+        with TemporaryDirectory() as tmpdir:
+            sbml_importer.sbml2amici(
+                model_name=model_name,
+                compile=False,
+                generate_sensitivity_code=False,
+                output_dir = tmpdir
+            )
+            xdot = Path(tmpdir, f'{model_name}_xdot.cpp').read_text()
+        assert ("__amici_cse_0 = " in xdot) == extract_cse
+    finally:
+        os.environ = old_environ
+
+
+def test_code_gen_uses_lhs_symbol_ids():
+    """Check that code generation uses symbol IDs instead of plain array
+    indices"""
+    sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
+    model_name = "test_code_gen_uses_lhs_symbol_ids"
+    with TemporaryDirectory() as tmpdir:
+        sbml_importer.sbml2amici(
+            model_name=model_name,
+            compile=False,
+            generate_sensitivity_code=False,
+            output_dir=tmpdir
+        )
+        dwdx = Path(tmpdir, f'{model_name}_dwdx.cpp').read_text()
+    assert "dobservable_x1_dx1 = " in dwdx
