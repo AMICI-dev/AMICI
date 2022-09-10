@@ -63,7 +63,7 @@ constexpr int AMICI_ONEOUTPUT=                 5;
 // Return codes
 //
 // NOTE: When adding / removing / renaming return codes,
-//       please update return_code_to_str_map in amici.h
+//       please update simulation_status_to_str_map in amici.h
 constexpr int AMICI_RECOVERABLE_ERROR=         1;
 constexpr int AMICI_UNRECOVERABLE_ERROR=     -10;
 constexpr int AMICI_TOO_MUCH_WORK=            -1;
