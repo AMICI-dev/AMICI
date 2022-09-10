@@ -132,6 +132,15 @@ std::vector<std::unique_ptr<ReturnData>>
 runAmiciSimulations(Solver const &solver, const std::vector<ExpData *> &edatas,
                     Model const &model, bool failfast, int num_threads);
 
+
+/**
+ * @brief Get the string representation of the given simulation status code
+ * (see ReturnData::status).
+ * @param return_code
+ * @return Name of the variable representing this status code.
+ */
+std::string simulation_status_to_str(int status);
+
 } // namespace amici
 
 #endif /* amici_h */
