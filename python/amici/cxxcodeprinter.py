@@ -107,7 +107,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         def format_regular_line(symbol, math, index):
             return (
-                f'{indent}{symbol} = {self.doprint(math)};'
+                f'{indent}{self.doprint(symbol)} = {self.doprint(math)};'
                 f'  // {variable}[{index}]'.replace('\n', '\n' + indent)
             )
 
@@ -136,10 +136,11 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                 })
                 symbol_to_idx = {sym: idx for idx, sym in enumerate(symbols)}
 
-                def format_line(symbol):
+                def format_line(symbol: sp.Symbol):
                     math = expr_dict[symbol]
                     if str(symbol).startswith(cse_sym_prefix):
-                        return f'{indent}const realtype {symbol} '\
+                        return f'{indent}const realtype ' \
+                               f'{self.doprint(symbol)} ' \
                                f'= {self.doprint(math)};'
                     elif math not in [0, 0.0]:
                         return format_regular_line(
