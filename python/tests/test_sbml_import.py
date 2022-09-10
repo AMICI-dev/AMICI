@@ -595,7 +595,7 @@ def test_code_gen_uses_lhs_symbol_ids():
     """Check that code generation uses symbol IDs instead of plain array
     indices"""
     sbml_importer = amici.SbmlImporter(STEADYSTATE_MODEL_FILE)
-    model_name = "test_code_gen_uses_cse"
+    model_name = "test_code_gen_uses_lhs_symbol_ids"
     with TemporaryDirectory() as tmpdir:
         sbml_importer.sbml2amici(
             model_name=model_name,
