@@ -238,6 +238,11 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         return symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                sparse_matrix
 
+    @staticmethod
+    def print_bool(expr) -> str:
+        """Print the boolean value of the given expression"""
+        return "true" if bool(expr) else "false"
+
 
 def get_switch_statement(condition: str, cases: Dict[int, List[str]],
                          indentation_level: Optional[int] = 0,
