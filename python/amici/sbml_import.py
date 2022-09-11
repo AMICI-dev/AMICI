@@ -331,10 +331,61 @@ class SbmlImporter:
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
             not be generated
-
         """
         set_log_level(logger, verbose)
 
+        ode_model = self._build_ode_model(
+            observables=observables,
+            event_observables=event_observables,
+            constant_parameters=constant_parameters,
+            sigmas=sigmas,
+            event_sigmas=event_sigmas,
+            noise_distributions=noise_distributions,
+            event_noise_distributions=event_noise_distributions,
+            verbose=verbose,
+            compute_conservation_laws=compute_conservation_laws,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+            log_as_log10=log_as_log10,
+        )
+
+        exporter = ODEExporter(
+            ode_model,
+            model_name=model_name,
+            outdir=output_dir,
+            verbose=verbose,
+            assume_pow_positivity=assume_pow_positivity,
+            compiler=compiler,
+            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+            generate_sensitivity_code=generate_sensitivity_code
+        )
+        exporter.generate_model_code()
+
+        if compile:
+            if not has_clibs:
+                warnings.warn('AMICI C++ extensions have not been built. '
+                              'Generated model code, but unable to compile.')
+            exporter.compile_model()
+
+    def _build_ode_model(
+            self,
+            observables: Dict[str, Dict[str, str]] = None,
+            event_observables: Dict[str, Dict[str, str]] = None,
+            constant_parameters: Iterable[str] = None,
+            sigmas: Dict[str, Union[str, float]] = None,
+            event_sigmas: Dict[str, Union[str, float]] = None,
+            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            event_noise_distributions: Dict[str, Union[str, Callable]] = None,
+            verbose: Union[int, bool] = logging.ERROR,
+            compute_conservation_laws: bool = True,
+            simplify: Optional[Callable] = _default_simplify,
+            cache_simplify: bool = False,
+            log_as_log10: bool = True,
+    ) -> ODEModel:
+        """Generate an ODEModel from this SBML model.
+
+        See :py:func:`sbml2amici` for parameters.
+        """
         constant_parameters = list(constant_parameters) \
             if constant_parameters else []
 
@@ -386,23 +437,7 @@ class SbmlImporter:
         )
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
-        exporter = ODEExporter(
-            ode_model,
-            model_name=model_name,
-            outdir=output_dir,
-            verbose=verbose,
-            assume_pow_positivity=assume_pow_positivity,
-            compiler=compiler,
-            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
-            generate_sensitivity_code=generate_sensitivity_code
-        )
-        exporter.generate_model_code()
-
-        if compile:
-            if not has_clibs:
-                warnings.warn('AMICI C++ extensions have not been built. '
-                              'Generated model code, but unable to compile.')
-            exporter.compile_model()
+        return ode_model
 
     @log_execution_time('importing SBML', logger)
     def _process_sbml(self, constant_parameters: List[str] = None) -> None:
