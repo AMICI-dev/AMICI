@@ -2496,7 +2496,7 @@ class ODEExporter:
         indent = 8
 
         def jnp_stack_str(array) -> str:
-            elems = ', '.join(str(x) for x in array)
+            elems = ''.join(str(x) + ', ' for x in array)
 
             if not elems:
                 return 'tuple()'
@@ -2518,14 +2518,15 @@ class ODEExporter:
                 f'{eq_name.upper()}_RET': jnp_stack_str(
                     strip_pysb(s) for s in self.model.sym(eq_name)
                 ) if eq_name != 'Jy'
-                else ' + '.join(
-                    str(s) for s in self.model.sym(eq_name)
-                ) if self.model.sym(eq_name) else '0'
+                else ('jnp.nansum(jnp.stack((' + ''.join(
+                    str(s) + ', ' for s in self.model.sym(eq_name)
+                ) + '), axis=-1))') if self.model.sym(eq_name) else '0'
                 for eq_name in eq_names
             },
             **{
-                f'{sym_name.upper()}_SYMS': ', '.join(
-                    (str(strip_pysb(s)) for s in self.model.sym(sym_name))
+                f'{sym_name.upper()}_SYMS': ''.join(
+                    (str(strip_pysb(s)) + ', '
+                     for s in self.model.sym(sym_name))
                 )
                 if self.model.sym(sym_name) else '_'
                 for sym_name in sym_names

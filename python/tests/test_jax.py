@@ -122,7 +122,7 @@ def check_fields_jax(rs_amici,
                      jax_solver,
                      edatas,
                      fields):
-    rs_jax = amici.jax.runAmiciSimulationsJAX(
+    rs_jax = amici.jax.run_simulations(
         jax_model,
         jax_solver,
         edatas

@@ -15,13 +15,13 @@ class JAXModel_TPL_MODEL_NAME(JAXModel):
         TPL_P_SYMS = p
         TPL_K_SYMS = k
         TPL_TCL_SYMS = tcl
-        TPL_W_SYMS = self._w(x, p, k, tcl)
+        TPL_W_SYMS = self._w(t, x, p, k, tcl)
 
 TPL_XDOT_EQ
 
         return TPL_XDOT_RET
 
-    def _w(self, x, p, k, tcl):
+    def _w(self, t, x, p, k, tcl):
 
         TPL_X_SYMS = x
         TPL_P_SYMS = p
@@ -68,12 +68,12 @@ TPL_TOTAL_CL_EQ
 
         return TPL_TOTAL_CL_RET
 
-    def y(self, x, p, k, tcl):
+    def y(self, t, x, p, k, tcl):
 
         TPL_X_SYMS = x
         TPL_P_SYMS = p
         TPL_K_SYMS = k
-        TPL_W_SYMS = self._w(x, p, k, tcl)
+        TPL_W_SYMS = self._w(t, x, p, k, tcl)
 
 TPL_Y_EQ
 

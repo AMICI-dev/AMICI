@@ -11,6 +11,9 @@ from typing import Iterable
 
 import amici
 
+from jax.config import config
+config.update("jax_enable_x64", True)
+
 
 class JAXModel(object):
     _unscale_funs = {
@@ -24,7 +27,7 @@ class JAXModel(object):
         ...
 
     @abstractmethod
-    def _w(self, x, p, k, tcl):
+    def _w(self, t, x, p, k, tcl):
         ...
 
     @abstractmethod
@@ -44,7 +47,7 @@ class JAXModel(object):
         ...
 
     @abstractmethod
-    def y(self, x, p, k, tcl):
+    def y(self, t, x, p, k, tcl):
         ...
 
     @abstractmethod
@@ -68,9 +71,10 @@ class JAXModel(object):
 class JAXSolver(object):
     def __init__(self, model: JAXModel):
         self.model: JAXModel = model
-        self.solver: diffrax.AbstractSolver = diffrax.Tsit5()
+        self.solver: diffrax.AbstractSolver = diffrax.Kvaerno5()
         self.atol: float = 1e-8
         self.rtol: float = 1e-8
+        self.maxsteps: int = int(1e6)
         self.sensi_mode: amici.SensitivityMethod = \
             amici.SensitivityMethod.adjoint
         self.sensi_order: amici.SensitivityOrder = \
@@ -83,21 +87,22 @@ class JAXSolver(object):
             diffrax.ODETerm(self.model.xdot),
             self.solver,
             args=(p, k, tcl),
-            t0=ts[0],
+            t0=0.0,
             t1=ts[-1],
-            dt0=ts[1] - ts[0],
+            dt0=None,
             y0=self.model.x_solver(x0),
             stepsize_controller=diffrax.PIDController(
                 rtol=self.rtol,
                 atol=self.atol
             ),
+            max_steps=self.maxsteps,
             saveat=diffrax.SaveAt(ts=ts)
         )
         return sol.ys, tcl
 
-    def _obs(self, x, p, k, tcl):
-        return jax.vmap(self.model.y, in_axes=(0, None, None, None))(
-            x, p, k, tcl
+    def _obs(self, ts, x, p, k, tcl):
+        return jax.vmap(self.model.y, in_axes=(0, 0, None, None, None))(
+            np.asarray(ts), x, p, k, tcl
         )
 
     def _sigmay(self, obs, p, k):
@@ -118,7 +123,7 @@ class JAXSolver(object):
              pscale: tuple):
         ps = self.model.unscale_p(p, pscale)
         x, tcl = self._solve(ts, ps, k)
-        obs = self._obs(x, ps, k, tcl)
+        obs = self._obs(ts, x, ps, k, tcl)
         my_r = np.asarray(my).reshape((len(ts), -1))
         sigmay = self._sigmay(obs, ps, k)
         llh = self._loss(obs, sigmay, my_r)
@@ -162,22 +167,22 @@ class JAXSolver(object):
         return llh, sllh, s2llh, (x, obs)
 
 
-def runAmiciSimulationsJAX(model: JAXModel,
-                           solver: JAXSolver,
-                           edatas: Iterable[amici.ExpData],
-                           num_threads: int = 1):
+def run_simulations(model: JAXModel,
+                    solver: JAXSolver,
+                    edatas: Iterable[amici.ExpData],
+                    num_threads: int = 1):
 
-    def run_simulation(edata):
-        return runAmiciSimulationJAX(model, solver, edata)
+    def run(edata):
+        return run_simulation(model, solver, edata)
 
     with ThreadPoolExecutor(max_workers=num_threads) as pool:
-        results = pool.map(run_simulation, edatas)
-    return results
+        results = pool.map(run, edatas)
+    return list(results)
 
 
-def runAmiciSimulationJAX(model: JAXModel,
-                          solver: JAXSolver,
-                          edata: amici.ExpData):
+def run_simulation(model: JAXModel,
+                   solver: JAXSolver,
+                   edata: amici.ExpData):
     ts = tuple(edata.getTimepoints())
     p = jnp.asarray(edata.parameters)
     k = tuple(edata.fixedParameters)

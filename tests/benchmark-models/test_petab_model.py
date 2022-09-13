@@ -15,8 +15,11 @@ import yaml
 
 import amici
 from amici.logging import get_logger
-from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
-                                   LLH, RDATAS)
+from amici.petab_objective import (
+    simulate_petab, rdatas_to_measurement_df, LLH, RDATAS, create_edatas,
+    fill_in_parameters, create_parameter_mapping
+)
+from timeit import default_timer as timer
 from petab.visualize import plot_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -87,12 +90,72 @@ def main():
     if args.model_name == "Isensee_JCB2018":
         amici_solver.setAbsoluteTolerance(1e-12)
         amici_solver.setRelativeTolerance(1e-12)
+    elif args.model_name == "Fujita_SciSignal2010":
+        amici_solver.setAbsoluteTolerance(1e-12)
+        amici_solver.setRelativeTolerance(1e-12)
 
     res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
-        solver=amici_solver, log_level=logging.DEBUG)
+        solver=amici_solver, log_level=logging.INFO)
     rdatas = res[RDATAS]
     llh = res[LLH]
+
+    if args.model_name not in (
+        'Bachmann_MSB2011', 'Beer_MolBioSystems2014', 'Brannmark_JBC2010',
+        'Isensee_JCB2018', 'Weber_BMC2015', 'Zheng_PNAS2012'
+    ):
+        # Bachmann: integration failure even with 1e6 steps
+        # Beer: Heaviside
+        # Brannmark_JBC2010: preeq
+        # Isensee_JCB2018: preeq
+        # Weber_BMC2015: preeq
+        # Zheng_PNAS2012: preeq
+
+        jax_model = model_module.get_jax_model()
+        jax_solver = jax_model.get_solver()
+        simulation_conditions = \
+            problem.get_simulation_conditions_from_measurement_df()
+        edatas = create_edatas(
+            amici_model=amici_model,
+            petab_problem=problem,
+            simulation_conditions=simulation_conditions
+        )
+        problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
+                              problem.parameter_df.itertuples()}
+        parameter_mapping = create_parameter_mapping(
+            petab_problem=problem,
+            simulation_conditions=simulation_conditions,
+            scaled_parameters=False,
+            amici_model=amici_model
+        )
+        fill_in_parameters(
+            edatas=edatas,
+            problem_parameters=problem_parameters,
+            scaled_parameters=False,
+            parameter_mapping=parameter_mapping,
+            amici_model=amici_model
+        )
+        # run once to JIT
+        amici.jax.run_simulations(
+            jax_model,
+            jax_solver,
+            edatas
+        )
+        start_jax = timer()
+        rdatas_jax = amici.jax.run_simulations(
+            jax_model,
+            jax_solver,
+            edatas
+        )
+        end_jax = timer()
+
+        t_jax = end_jax - start_jax
+        t_amici = sum(r.cpu_time for r in rdatas)/1e3
+
+        llh_jax = sum(r.llh for r in rdatas_jax)
+
+        print(f'amici (llh={res["llh"]} after {t_amici}s) vs '
+              f'jax (llh={llh_jax} after {t_jax}s)')
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \
