@@ -1,1 +1,1 @@
-../../amici/MANIFEST.template.in
+include *.cpp *.h
