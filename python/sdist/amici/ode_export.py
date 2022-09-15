@@ -33,6 +33,7 @@ from . import (__commit__, __version__, amiciModulePath, amiciSrcPath,
                amiciSwigPath, sbml_import)
 from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
+from .juliacodeprinter import AmiciJuliaCodePrinter
 from .import_utils import (ObservableTransformation, generate_flux_symbol,
                            smart_subs_dict, strip_pysb,
                            symbol_with_assumptions, toposort_symbols)
@@ -824,6 +825,7 @@ class ODEModel:
         set_log_level(logger, verbose)
 
         self._code_printer = AmiciCxxCodePrinter()
+        self._code_printer_julia = AmiciJuliaCodePrinter()
         for fun in CUSTOM_FUNCTIONS:
             self._code_printer.known_functions[fun['sympy']] = fun['c++']
 
@@ -2452,6 +2454,7 @@ class ODEExporter:
                             _custom_pow_eval_derivative):
 
             self._prepare_model_folder()
+            self._generate_julia_code()
             self._generate_c_code()
             self._generate_m_code()
 
@@ -2474,6 +2477,66 @@ class ODEExporter:
             file_path = os.path.join(self.model_path, file)
             if os.path.isfile(file_path):
                 os.remove(file_path)
+
+    @log_execution_time('generating jula code', logger)
+    def _generate_julia_code(self) -> None:
+
+        eq_names = ('xdot', 'w', 'x0', 'y', 'sigmay', 'Jy', 'x_solver',
+                    'x_rdata', 'total_cl')
+        sym_names = ('p', 'k', 'x', 'tcl', 'w', 'my', 'y', 'sigmay',
+                     'x_rdata')
+
+        indent = 8
+
+        def jnp_stack_str(array) -> str:
+            elems = ''.join(str(x) + ', ' for x in array)
+
+            if not elems:
+                return 'tuple()'
+
+            return elems
+
+        tpl_data = {
+            **{
+                f'{eq_name.upper()}_EQ': '\n'.join(
+                    self.model._code_printer_julia._get_sym_lines(
+                        (str(strip_pysb(s)) for s in self.model.sym(eq_name)),
+                        self.model.eq(eq_name),
+                        indent
+                    )
+                )
+                for eq_name in eq_names
+            },
+            **{
+                f'{eq_name.upper()}_RET': '[' + ', '.join(
+                    str(strip_pysb(s)) for s in self.model.sym(eq_name)
+                ) + ']' if eq_name != 'Jy'
+                else ('jnp.nansum(jnp.stack((' + ''.join(
+                    str(s) + ', ' for s in self.model.sym(eq_name)
+                ) + '), axis=-1))') if self.model.sym(eq_name) else '0'
+                for eq_name in eq_names
+            },
+            **{
+                f'{sym_name.upper()}_SYMS': ''.join(
+                    (str(strip_pysb(s)) + ', '
+                     for s in self.model.sym(sym_name))
+                )
+                if self.model.sym(sym_name) else '_'
+                for sym_name in sym_names
+            },
+            **{
+                'MODEL_NAME': self.model_name,
+            }
+        }
+        os.makedirs(os.path.join(self.model_path, self.model_name),
+                    exist_ok=True)
+
+        apply_template(
+            os.path.join(amiciModulePath, 'julia_model.template.jl'),
+            os.path.join(self.model_path, self.model_name,
+                         f'{self.model_name}.jl'),
+            tpl_data
+        )
 
     def _generate_c_code(self) -> None:
         """
