@@ -704,5 +704,11 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     SUNMatDestroy(S);
 }
 
+TEST(ReturnCodeToStr, ReturnCodeToStr)
+{
+    EXPECT_EQ("AMICI_SUCCESS", simulation_status_to_str(AMICI_SUCCESS));
+    EXPECT_EQ("AMICI_UNRECOVERABLE_ERROR",
+              simulation_status_to_str(AMICI_UNRECOVERABLE_ERROR));
+}
 
 } // namespace

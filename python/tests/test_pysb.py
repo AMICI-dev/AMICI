@@ -18,10 +18,10 @@ from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
+from amici.testing import skip_on_valgrind
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Takes too long under valgrind")
+@skip_on_valgrind
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
                                 sbml_example_presimulation_module):
     # -------------- PYSB -----------------
@@ -101,8 +101,7 @@ custom_models = [
 ]
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Takes too long under valgrind")
+@skip_on_valgrind
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
 
@@ -224,6 +223,7 @@ def get_results(model, edata):
     return amici.runAmiciSimulation(model, solver, edata)
 
 
+@skip_on_valgrind
 def test_names_and_ids(pysb_example_presimulation_module):
     model_pysb = pysb_example_presimulation_module.getModel()
     expected = {
@@ -268,6 +268,7 @@ def test_names_and_ids(pysb_example_presimulation_module):
         assert actual == cur_expected
 
 
+@skip_on_valgrind
 def test_heavyside_and_special_symbols():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
@@ -295,6 +296,7 @@ def test_heavyside_and_special_symbols():
     assert amici_model.ne
 
 
+@skip_on_valgrind
 # TODO: remove me
 @pytest.mark.skipif(
     not hasattr(pysb, 'EnergyPattern'),

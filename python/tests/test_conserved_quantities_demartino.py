@@ -12,6 +12,8 @@ from amici.conserved_quantities_demartino import (
     compute_moiety_conservation_laws
 )
 from amici.logging import get_logger, log_execution_time
+from amici.testing import skip_on_valgrind
+
 
 logger = get_logger(__name__)
 
@@ -58,8 +60,7 @@ def data_demartino2014():
     return S, row_names
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Python-only")
+@skip_on_valgrind
 def test_kernel_demartino2014(data_demartino2014, quiet=True):
     """Invoke test case and benchmarking for De Martino's published results
     for E. coli network. Kernel-only."""
@@ -96,8 +97,7 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
             f"Moiety #{i + 1} failed for test case (De Martino et al.)"
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Python-only")
+@skip_on_valgrind
 def test_fill_demartino2014(data_demartino2014):
     """Test creation of interaction matrix"""
     stoichiometric_list, row_names = data_demartino2014
@@ -190,8 +190,7 @@ def test_fill_demartino2014(data_demartino2014):
     assert not any(fields[len(ref_for_fields):])
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Python-only")
+@skip_on_valgrind
 def test_compute_moiety_conservation_laws_demartino2014(
         data_demartino2014, quiet=False
 ):
@@ -217,9 +216,7 @@ def test_compute_moiety_conservation_laws_demartino2014(
     return runtime
 
 
-@pytest.mark.skipif(
-    os.environ.get('GITHUB_JOB') == 'valgrind',
-    reason="Performance test under valgrind is not meaningful.")
+@skip_on_valgrind
 @log_execution_time("Detecting moiety conservation laws", logger)
 def test_cl_detect_execution_time(data_demartino2014):
     """Test execution time stays within a certain predefined bound.
@@ -239,8 +236,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     assert runtime < max_time_seconds, "Took too long"
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Python-only")
+@skip_on_valgrind
 def test_compute_moiety_conservation_laws_simple():
     """Test a simple example, ensure the conservation laws are identified
      reliably. Requires the Monte Carlo to identify all."""

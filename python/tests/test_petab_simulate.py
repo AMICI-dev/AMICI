@@ -1,5 +1,4 @@
 """Tests for petab_simulate.py."""
-
 from pathlib import Path
 import pytest
 import tempfile
@@ -7,6 +6,7 @@ import tempfile
 from amici.petab_simulate import PetabSimulator
 import petab
 import petabtests
+from amici.testing import skip_on_valgrind
 
 
 @pytest.fixture
@@ -18,6 +18,7 @@ def petab_problem() -> petab.Problem:
     return petab.Problem.from_yaml(str(petab_yaml_path))
 
 
+@skip_on_valgrind
 def test_simulate_without_noise(petab_problem):
     """Test the reproducibility of simulation without noise."""
     simulator = PetabSimulator(petab_problem)
@@ -37,6 +38,7 @@ def test_simulate_without_noise(petab_problem):
     assert synthetic_data_df_c.equals(synthetic_data_df_a)
 
 
+@skip_on_valgrind
 def test_subset_call(petab_problem):
     """
     Test the ability to customize AMICI methods, specifically:

@@ -1,4 +1,4 @@
-name: C++ Tests
+name: Valgrind tests
 on:
   push:
     branches:
@@ -12,15 +12,15 @@ on:
     - cron:  '48 4 * * *'
 
 jobs:
-  valgrind:
-    name: Tests Valgrind
+  valgrind_cpp:
+    name: Valgrind C++
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-22.04
 
     strategy:
       matrix:
-        python-version: [ "3.8" ]
+        python-version: [ "3.9" ]
 
     env:
       ENABLE_AMICI_DEBUGGING: "TRUE"
@@ -56,6 +56,46 @@ jobs:
     - name: C++ tests / Valgrind
       run: |
         scripts/run-valgrind-cpp.sh
+
+  valgrind_python:
+    name: Valgrind Python
+
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [ "3.9" ]
+
+    env:
+      ENABLE_AMICI_DEBUGGING: "TRUE"
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    # install amici dependencies
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+            cmake \
+            g++ \
+            libatlas-base-dev \
+            libboost-serialization-dev \
+            libhdf5-serial-dev \
+            python3-venv \
+            swig \
+            valgrind \
+            libboost-math-dev
+
+    - name: Build AMICI
+      run: |
+        scripts/buildAll.sh
 
     - name: Install python package
       run: |
