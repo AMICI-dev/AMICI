@@ -5,10 +5,10 @@ import pytest
 
 from amici.parameter_mapping import (ParameterMapping,
                                      ParameterMappingForCondition)
+from amici.testing import skip_on_valgrind
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Python-only")
+@skip_on_valgrind
 def test_parameter_mapping_for_condition_default_args():
     """Check we can initialize the mapping with default arguments."""
 
@@ -37,8 +37,7 @@ def test_parameter_mapping_for_condition_default_args():
         expected_scale_map_sim_fix
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Python-only")
+@skip_on_valgrind
 def test_parameter_mapping():
     """Test :class:``amici.parameter_mapping.ParameterMapping``."""
 

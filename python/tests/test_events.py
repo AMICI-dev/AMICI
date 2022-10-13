@@ -7,10 +7,11 @@ import pytest
 from util import (check_trajectories_with_forward_sensitivities,
                   check_trajectories_without_sensitivities, create_amici_model,
                   create_sbml_model)
+from amici.testing import skip_on_valgrind
 
 
 @pytest.fixture(params=[
-    'events_plus_heavisides',
+    pytest.param('events_plus_heavisides', marks=skip_on_valgrind),
     'nested_events',
 ])
 def model(request):
@@ -212,7 +213,6 @@ def model_definition_events_plus_heavisides():
         x_pected,
         sx_pected
     )
-
 
 
 def model_definition_nested_events():

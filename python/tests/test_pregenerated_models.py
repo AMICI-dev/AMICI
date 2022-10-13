@@ -11,6 +11,8 @@ import h5py
 import numpy as np
 import pytest
 from amici.gradient_check import check_derivatives, _check_results
+from amici.testing import skip_on_valgrind
+
 
 cpp_test_dir = Path(__file__).parents[2] / 'tests' / 'cpp'
 options_file = str(cpp_test_dir / 'testOptions.h5')
@@ -22,8 +24,7 @@ model_cases = [(sub_test, case)
                for case in list(expected_results[sub_test].keys())]
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Takes too long under valgrind")
+@skip_on_valgrind
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
                     reason='skipping cmake based test')
 @pytest.mark.parametrize("sub_test,case", model_cases)

@@ -9,6 +9,8 @@ pysb = pytest.importorskip("pysb")
 from amici.bngl_import import bngl2amici
 from pysb.simulator import ScipyOdeSimulator
 from pysb.importers.bngl import model_from_bngl
+from amici.testing import skip_on_valgrind
+
 
 tests = [
     'CaOscillate_Func', 'deleteMolecules', 'empty_compartments_block',
@@ -21,8 +23,7 @@ tests = [
 ]
 
 
-@pytest.mark.skipif(os.environ.get('GITHUB_JOB') == 'valgrind',
-                    reason="Takes too long under valgrind")
+@skip_on_valgrind
 @pytest.mark.parametrize('example', tests)
 def test_compare_to_pysb_simulation(example):
 
