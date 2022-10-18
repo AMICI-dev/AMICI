@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 68.
+List of publications using AMICI. Total number is 69.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -23,6 +23,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-Sundqvist2022.02.15.480629">
 <p>Sundqvist, Nicolas, Sebastian Sten, Maria Engström, and Gunnar Cedersund. 2022. “Mechanistic Model for Human Brain Metabolism and the Neurovascular Coupling.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.15.480629">https://doi.org/10.1101/2022.02.15.480629</a>.</p>
+</div>
+<div id="ref-VillaverdeRai2022">
+<p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2022. “Assessment of Prediction Uncertainty Quantification Methods in Systems Biology.” <em>IEEE/ACM Transactions on Computational Biology and Bioinformatics</em>, 1–12. <a href="https://doi.org/10.1109/TCBB.2022.3213914">https://doi.org/10.1109/TCBB.2022.3213914</a>.</p>
 </div>
 </div>
 <h1 class="unnumbered" id="section">2021</h1>
