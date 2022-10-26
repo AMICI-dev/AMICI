@@ -73,7 +73,8 @@ def _add_global_parameter(sbml_model: libsbml.Model,
 
 
 def get_fixed_parameters(
-        petab_problem: petab.Problem
+        petab_problem: petab.Problem,
+        non_estimated_parameters_as_constants=True,
 ) -> List[str]:
     """
     Determine, set and return fixed model parameters.
@@ -84,6 +85,12 @@ def get_fixed_parameters(
 
     :param petab_problem:
         The PEtab problem instance
+
+    :param non_estimated_parameters_as_constants:
+        Whether parameters marked as non-estimated in PEtab should be
+        considered constant in AMICI. Setting this to ``True`` will reduce
+        model size and simulation times. If sensitivities with respect to those
+        parameters are required, this should be set to ``False``.
 
     :return:
         List of IDs of parameters which are to be considered constant.
@@ -107,10 +114,11 @@ def get_fixed_parameters(
 
     # if we have a parameter table, all parameters that are allowed to be
     #  listed in the parameter table, but are not marked as estimated, can be
-    #  turned in to AMICI constants
+    #  turned into AMICI constants
     # due to legacy API, we might not always have a parameter table, though
     fixed_parameters = set()
-    if petab_problem.parameter_df is not None:
+    if non_estimated_parameters_as_constants \
+            and petab_problem.parameter_df is not None:
         all_parameters = get_valid_parameters_for_parameter_table(
             model=petab_problem.model,
             condition_df=petab_problem.condition_df,
@@ -234,6 +242,7 @@ def import_petab_problem(
         model_output_dir: Union[str, Path, None] = None,
         model_name: str = None,
         force_compile: bool = False,
+        non_estimated_parameters_as_constants = True,
         **kwargs) -> 'amici.Model':
     """
     Import model from petab problem.
@@ -253,6 +262,12 @@ def import_petab_problem(
     :param force_compile:
         Whether to compile the model even if the target folder is not empty,
         or the model exists already.
+
+    :param non_estimated_parameters_as_constants:
+        Whether parameters marked as non-estimated in PEtab should be
+        considered constant in AMICI. Setting this to ``True`` will reduce
+        model size and simulation times. If sensitivities with respect to those
+        parameters are required, this should be set to ``False``.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -306,6 +321,8 @@ def import_petab_problem(
                 petab_problem=petab_problem,
                 model_name=model_name,
                 model_output_dir=model_output_dir,
+                non_estimated_parameters_as_constants=
+                non_estimated_parameters_as_constants,
                 **kwargs)
 
     # import model
@@ -373,6 +390,7 @@ def import_model_sbml(
         verbose: Optional[Union[bool, int]] = True,
         allow_reinit_fixpar_initcond: bool = True,
         validate: bool = True,
+        non_estimated_parameters_as_constants=True,
         **kwargs) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
@@ -414,6 +432,12 @@ def import_model_sbml(
 
     :param validate:
         Whether to validate the PEtab problem
+
+    :param non_estimated_parameters_as_constants:
+        Whether parameters marked as non-estimated in PEtab should be
+        considered constant in AMICI. Setting this to ``True`` will reduce
+        model size and simulation times. If sensitivities with respect to those
+        parameters are required, this should be set to ``False``.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -591,6 +615,8 @@ def import_model_sbml(
     fixed_parameters.extend(
         get_fixed_parameters(
             petab_problem=petab_problem,
+            non_estimated_parameters_as_constants=
+            non_estimated_parameters_as_constants,
         ))
 
     logger.debug(f"Fixed parameters are {fixed_parameters}")
