@@ -127,7 +127,8 @@ pre_prob = ODEProblem(
     tspan_ref,
     p_ref,
 )
-sys = modelingtoolkitize(pre_prob)
+time = @elapsed sys = modelingtoolkitize(pre_prob)
+println("toolkitize finished after $time [s]")
 
 prob = ODEProblem(
     sys,

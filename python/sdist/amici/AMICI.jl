@@ -29,10 +29,11 @@ end
 end
 
 import Pkg
-#Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity", "ModelingToolkit", "Symbolics", "SciMLBase"])
+#Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity", "ModelingToolkit", "Symbolics", "SciMLBase", "Sundials"])
 
 
-using OrdinaryDiffEq: solve, KenCarp4, FBDF, QNDF, Rosenbrock23, TRBDF2
+using OrdinaryDiffEq: solve, KenCarp4, FBDF, QNDF, Rosenbrock23, TRBDF2, Rodas4, RadauIIA5
+using Sundials: CVODE_BDF
 using SciMLBase: ODEProblem
 using SciMLSensitivity: remake
 
@@ -53,6 +54,12 @@ function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edat
         solv = Rosenbrock23()
     elseif solver == "TRBDF2"
         solv = TRBDF2()
+    elseif solver == "Rodas4"
+        solv = Rodas4()
+    elseif solver == "RadauIIA5"
+        solv = RadauIIA5()
+    elseif solver == "CVODE_BDF"
+        solv = CVODE_BDF(linear_solver=:KLU)
     else
         solv = QNDF()
     end
