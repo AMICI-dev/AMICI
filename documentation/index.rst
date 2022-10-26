@@ -2,9 +2,6 @@ Welcome to AMICI's documentation!
 =================================
 
 
-.. image:: https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master
-   :target: https://travis-ci.com/AMICI-dev/AMICI
-   :alt: Build status
 .. image:: https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/AMICI-dev/AMICI
    :alt: Code coverage

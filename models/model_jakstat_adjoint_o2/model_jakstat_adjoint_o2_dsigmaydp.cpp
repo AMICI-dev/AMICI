@@ -10,7 +10,7 @@ namespace amici {
 
 namespace model_model_jakstat_adjoint_o2{
 
-void dsigmaydp_model_jakstat_adjoint_o2(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
+void dsigmaydp_model_jakstat_adjoint_o2(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *y, const int ip) {
 switch (ip) {
   case 14: {
   dsigmaydp[0] = 1.0;

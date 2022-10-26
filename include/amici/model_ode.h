@@ -317,9 +317,11 @@ class Model_ODE : public Model {
      * @param p parameter vector
      * @param k constants vector
      * @param h Heaviside vector
+     * @param tcl total abundances for conservation laws
      **/
     virtual void froot(realtype *root, realtype t, const realtype *x,
-                       const realtype *p, const realtype *k, const realtype *h);
+                       const realtype *p, const realtype *k, const realtype *h,
+                       const realtype *tcl);
 
     /**
      * @brief Model specific implementation for fxdot

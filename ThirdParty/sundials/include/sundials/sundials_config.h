@@ -21,11 +21,12 @@
  * -----------------------------------------------------------------*/
 
 
-#define SUNDIALS_VERSION "5.7.0"
+#define SUNDIALS_VERSION "5.8.0"
 #define SUNDIALS_VERSION_MAJOR 5
-#define SUNDIALS_VERSION_MINOR 7
+#define SUNDIALS_VERSION_MINOR 8
 #define SUNDIALS_VERSION_PATCH 0
 #define SUNDIALS_VERSION_LABEL ""
+#define SUNDIALS_GIT_VERSION ""
 
 
 /* ------------------------------------------------------------------
@@ -85,8 +86,8 @@
 
 
 /* MAGMA backends */
-/* #undef SUNDIALS_MAGMA_BACKENDS_HIP */
 #define SUNDIALS_MAGMA_BACKENDS_CUDA
+/* #undef SUNDIALS_MAGMA_BACKENDS_HIP */
 
 /* Set if SUNDIALS is built with MPI support, then
  *     #define SUNDIALS_MPI_ENABLED 1
@@ -104,8 +105,9 @@
 /* #undef SUNDIALS_TRILINOS_HAVE_MPI */
 
 /* RAJA backends */
-/* #undef SUNDIALS_RAJA_BACKENDS_HIP */
 #define SUNDIALS_RAJA_BACKENDS_CUDA
+/* #undef SUNDIALS_RAJA_BACKENDS_HIP */
+/* #undef SUNDIALS_RAJA_BACKENDS_SYCL */
 
 /* ------------------------------------------------------------------
  * SUNDIALS modules enabled

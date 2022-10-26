@@ -1,6 +1,7 @@
 #include "amici/vector.h"
 
 #include <functional>
+#include <algorithm>
 
 namespace amici {
 
@@ -20,7 +21,7 @@ const_N_Vector AmiVector::getNVector() const { return nvec_; }
 
 std::vector<realtype> const &AmiVector::getVector() const { return vec_; }
 
-int AmiVector::getLength() const { return static_cast<int>(vec_.size()); }
+int AmiVector::getLength() const { return gsl::narrow<int>(vec_.size()); }
 
 void AmiVector::zero() { set(0.0); }
 
@@ -32,15 +33,15 @@ void AmiVector::minus() {
 void AmiVector::set(realtype val) { std::fill(vec_.begin(), vec_.end(), val); }
 
 realtype &AmiVector::operator[](int pos) {
-    return vec_.at(static_cast<decltype(vec_)::size_type>(pos));
+    return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
 realtype &AmiVector::at(int pos) {
-    return vec_.at(static_cast<decltype(vec_)::size_type>(pos));
+    return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
 const realtype &AmiVector::at(int pos) const {
-    return vec_.at(static_cast<decltype(vec_)::size_type>(pos));
+    return vec_.at(gsl::narrow<decltype(vec_)::size_type>(pos));
 }
 
 void AmiVector::copy(const AmiVector &other) {
@@ -55,7 +56,7 @@ void AmiVector::copy(const AmiVector &other) {
 void AmiVector::synchroniseNVector() {
     if (nvec_)
         N_VDestroy_Serial(nvec_);
-    nvec_ = N_VMake_Serial(static_cast<long int>(vec_.size()), vec_.data());
+    nvec_ = N_VMake_Serial(gsl::narrow<long int>(vec_.size()), vec_.data());
 }
 
 AmiVector::~AmiVector() {
@@ -115,7 +116,7 @@ const AmiVector &AmiVectorArray::operator[](int pos) const {
 }
 
 int AmiVectorArray::getLength() const {
-    return static_cast<int>(vec_array_.size());
+    return gsl::narrow<int>(vec_array_.size());
 }
 
 void AmiVectorArray::zero() {
@@ -124,12 +125,12 @@ void AmiVectorArray::zero() {
 }
 
 void AmiVectorArray::flatten_to_vector(std::vector<realtype> &vec) const {
-    int n_outer = static_cast<int>(vec_array_.size());
+    int n_outer = gsl::narrow<int>(vec_array_.size());
     if (n_outer == 0)
         return; // nothing to do ...
     int n_inner = vec_array_.at(0).getLength();
 
-    if (static_cast<int>(vec.size()) != n_inner * n_outer) {
+    if (gsl::narrow<int>(vec.size()) != n_inner * n_outer) {
         throw AmiException("Dimension of AmiVectorArray (%ix%i) does not "
                            "match target vector dimension (%u)",
                            n_inner, n_outer, vec.size());

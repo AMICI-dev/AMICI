@@ -1,6 +1,5 @@
 #include "amici/forwardproblem.h"
 
-#include "amici/cblas.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"
@@ -19,9 +18,9 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
     : model(model),
       solver(solver),
       edata(edata),
-      nroots_(static_cast<decltype (nroots_)::size_type>(model->ne), 0),
-      rootvals_(static_cast<decltype (rootvals_)::size_type>(model->ne), 0.0),
-      rval_tmp_(static_cast<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
+      nroots_(gsl::narrow<decltype (nroots_)::size_type>(model->ne), 0),
+      rootvals_(gsl::narrow<decltype (rootvals_)::size_type>(model->ne), 0.0),
+      rval_tmp_(gsl::narrow<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
       dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0),
       dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t_(model->t0()),
@@ -52,15 +51,21 @@ void ForwardProblem::workForwardProblem() {
     if (!preequilibrated_)
         model->initialize(x_, dx_, sx_, sdx_,
                           solver->getSensitivityOrder() >=
-                          SensitivityOrder::first);
-    else if (model->ne)
-        model->initHeaviside(x_, dx_);
+                          SensitivityOrder::first,
+                          roots_found_);
+    else if (model->ne) {
+        model->initEvents(x_, dx_, roots_found_);
+    }
 
     /* compute initial time and setup solver for (pre-)simulation */
     auto t0 = model->t0();
     if (presimulate)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
+
+    if (model->ne && std::any_of(roots_found_.begin(), roots_found_.end(),
+                                 [](int rf){return rf==1;}))
+        handleEvent(&t0, false, true);
 
     /* perform presimulation if necessary */
     if (presimulate) {
@@ -69,9 +74,14 @@ void ForwardProblem::workForwardProblem() {
                                " is currently not implemented.");
         handlePresimulation();
         t_ = model->t0();
-        if (model->ne)
-            model->initHeaviside(x_, dx_);
+        if (model->ne) {
+            model->initEvents(x_, dx_, roots_found_);
+            if (std::any_of(roots_found_.begin(), roots_found_.end(),
+                            [](int rf){return rf==1;}))
+                handleEvent(&t0, false, true);
+        }
     }
+
     /* when computing adjoint sensitivity analysis with presimulation,
      we need to store sx after the reinitialization after preequilibration
      but before reinitialization after presimulation. As presimulation with ASA
@@ -91,7 +101,6 @@ void ForwardProblem::workForwardProblem() {
     */
     if (solver->computingFSA() || (solver->computingASA() && !presimulate ))
         sx_ = solver->getStateSensitivity(model->t0());
-
 
     /* store initial state and sensitivity*/
     initial_state_ = getSimulationState();
@@ -114,7 +123,7 @@ void ForwardProblem::workForwardProblem() {
                     /* clustering of roots => turn off rootfinding */
                     solver->turnOffRootFinding();
                 } else if (status == AMICI_ROOT_RETURN) {
-                    handleEvent(&tlastroot_, false);
+                    handleEvent(&tlastroot_, false, false);
                 }
             }
         }
@@ -138,7 +147,8 @@ void ForwardProblem::handlePresimulation()
 }
 
 
-void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
+void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
+                                 const bool initial_event) {
     /* store Heaviside information at event occurrence */
     model->froot(t_, x_, dx_, rootvals_);
 
@@ -146,14 +156,14 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     discs_.push_back(t_);
 
     /* extract and store which events occurred */
-    if (!seflag) {
+    if (!seflag && !initial_event) {
         solver->getRootInfo(roots_found_.data());
     }
     root_idx_.push_back(roots_found_);
 
     rval_tmp_ = rootvals_;
 
-    if (!seflag) {
+    if (!seflag && !initial_event) {
         /* only check this in the first event fired, otherwise this will always
          * be true */
         if (t_ == *tlastroot) {
@@ -165,24 +175,24 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         *tlastroot = t_;
     }
 
-    if(model->nz>0)
+    if(model->nz > 0)
         storeEvent();
 
     /* if we need to do forward sensitivities later on we need to store the old
      * x and the old xdot */
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         /* store x and xdot to compute jump in sensitivities */
-        x_old_ = x_;
+        x_old_.copy(x_);
     }
     if (solver->computingFSA()) {
         model->fxdot(t_, x_, dx_, xdot_);
-        xdot_old_ = xdot_;
-        dx_old_ = dx_;
+        xdot_old_.copy(xdot_);
+        dx_old_.copy(dx_);
         /* compute event-time derivative only for primary events, we get
          * into trouble with multiple simultaneously firing events here (but
          * is this really well defined then?), in that case just use the
          * last ie and hope for the best. */
-        if (!seflag) {
+        if (!seflag && !initial_event) {
             for (int ie = 0; ie < model->ne; ie++) {
                 if (roots_found_.at(ie) == 1) {
                     /* only consider transitions false -> true */
@@ -190,6 +200,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                 }
             }
         }
+        if (initial_event) // t0 has no parameter dependency
+            std::fill(stau_.begin(), stau_.end(), 0.0);
     } else if (solver->computingASA()) {
         /* store x to compute jump in discontinuity */
         x_disc_.push_back(x_);
@@ -197,7 +209,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         xdot_old_disc_.push_back(xdot_old_);
     }
 
-    model->updateHeaviside(roots_found_);
+    if (!initial_event)
+        model->updateHeaviside(roots_found_);
 
     applyEventBolus();
 
@@ -239,7 +252,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                                  "Secondary event was triggered. Depending on "
                                  "the bolus of the secondary event, forward "
                                  "sensitivities can be incorrect.");
-        handleEvent(tlastroot, true);
+        handleEvent(tlastroot, true, false);
     }
 
     /* only reinitialise in the first event fired */

@@ -3,7 +3,6 @@
 import importlib
 import logging
 import os
-import platform
 import shutil
 import pytest
 
@@ -11,6 +10,7 @@ pysb = pytest.importorskip("pysb")
 
 import amici
 import numpy as np
+import sympy as sp
 import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
@@ -18,8 +18,10 @@ from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
+from amici.testing import skip_on_valgrind
 
 
+@skip_on_valgrind
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
                                 sbml_example_presimulation_module):
     # -------------- PYSB -----------------
@@ -65,7 +67,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
     skip_attrs = ['ptr', 'preeq_t', 'numsteps', 'preeq_numsteps',
                   'numrhsevals', 'numerrtestfails', 'order', 'J', 'xdot',
                   'preeq_wrms', 'preeq_cpu_time', 'cpu_time',
-                  'cpu_timeB', 'w']
+                  'cpu_timeB', 'cpu_time_total', 'w']
 
     for field in rdata_pysb:
         if field in skip_attrs:
@@ -92,15 +94,16 @@ pysb_models = [
     'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
     'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
     'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
-    'fixed_initial',
+    'fixed_initial', 'localfunc'
 ]
 custom_models = [
     'bngwiki_egfr_simple_deletemolecules',
 ]
 
+
+@skip_on_valgrind
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
-    pysb = pytest.importorskip("pysb")
 
     atol = 1e-8
     rtol = 1e-8
@@ -108,12 +111,6 @@ def test_compare_to_pysb_simulation(example):
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(os.path.join(os.path.dirname(__file__), '..',
                                          'tests', 'pysb_test_models')):
-
-            if example == 'earm_1_3' \
-                    and platform.sys.version_info[0] == 3 \
-                    and platform.sys.version_info[1] < 7:
-                return
-
             # load example
             pysb.SelfExporter.cleanup()  # reset pysb
             pysb.SelfExporter.do_export = True
@@ -167,8 +164,7 @@ def test_compare_to_pysb_simulation(example):
             solver.setRelativeTolerance(rtol)
             rdata = amici.runAmiciSimulation(model_pysb, solver)
 
-            # check agreement of species simulation
-
+            # check agreement of species simulations
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
 
@@ -203,7 +199,7 @@ def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.simulationFSA
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
     rdata = amici.runAmiciSimulation(model, solver)
@@ -222,11 +218,12 @@ def get_results(model, edata):
     edata.reinitializeFixedParameterInitialStates = True
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.simulationFSA
+        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
     )
     return amici.runAmiciSimulation(model, solver, edata)
 
 
+@skip_on_valgrind
 def test_names_and_ids(pysb_example_presimulation_module):
     model_pysb = pysb_example_presimulation_module.getModel()
     expected = {
@@ -269,3 +266,74 @@ def test_names_and_ids(pysb_example_presimulation_module):
     for field_name, cur_expected in expected.items():
         actual = getattr(model_pysb, f'get{field_name}')()
         assert actual == cur_expected
+
+
+@skip_on_valgrind
+def test_heavyside_and_special_symbols():
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model('piecewise_test')
+    a = pysb.Monomer('A')
+    pysb.Initial(a(), pysb.Parameter('a0'))
+    pysb.Rule(
+        'deg',
+        a() >> None,
+        pysb.Expression(
+            'rate',
+            sp.Piecewise((1, pysb.Observable('a', a()) < 1),
+                         (0.0, True))
+        )
+    )
+
+    outdir = model.name
+    pysb2amici(model, outdir, verbose=True,
+               observables=['a'])
+
+    model_module = amici.import_model_module(module_name=model.name,
+                                             module_path=outdir)
+    amici_model = model_module.getModel()
+    assert amici_model.ne
+
+
+@skip_on_valgrind
+# TODO: remove me
+@pytest.mark.skipif(
+    not hasattr(pysb, 'EnergyPattern'),
+    reason='pysb energy not yet available'
+)
+def test_energy():
+    model_pysb = pysb.Model('energy')
+    pysb.Monomer('A', ['a', 'b'])
+    pysb.Monomer('B', ['a'])
+    pysb.Parameter('RT', 2)
+    pysb.Parameter('A_0', 10)
+    pysb.Parameter('AB_0', 10)
+    pysb.Parameter('phi', 0.5)
+    pysb.Expression('E_AAB_RT', -5 / RT)
+    pysb.Expression('E0_AA_RT', -1 / RT)
+    pysb.Rule(
+        'A_dimerize',
+        A(a=None) + A(a=None) | A(a=1) % A(a=1),
+        phi,
+        E0_AA_RT,
+        energy=True,
+    )
+    pysb.EnergyPattern('epAAB', A(a=1) % A(a=1, b=2) % B(a=2), E_AAB_RT)
+    pysb.Initial(A(a=None, b=None), A_0)
+    pysb.Initial(A(a=None, b=1) % B(a=1), AB_0)
+    outdir = model_pysb.name
+    pysb2amici(model_pysb, model_pysb.name)
+
+    model_module = amici.import_model_module(module_name=model_pysb.name,
+                                             module_path=outdir)
+    amici_model = model_module.getModel()
+    amici_model.setTimepoints(np.logspace(-4, 5, 10))
+    solver = amici_model.getSolver()
+    solver.setRelativeTolerance(1e-14)
+    solver.setAbsoluteTolerance(1e-14)
+
+    check_derivatives(amici_model, solver,
+                      epsilon=1e-4,
+                      rtol=1e-2,
+                      atol=1e-2)

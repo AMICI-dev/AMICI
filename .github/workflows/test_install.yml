@@ -5,9 +5,18 @@ jobs:
   archive:
     name: Archive Install
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [3.8]
 
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
@@ -44,9 +53,18 @@ jobs:
   sdist:
     name: sdist Install
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [3.8]
 
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 

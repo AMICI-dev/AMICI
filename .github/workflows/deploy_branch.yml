@@ -5,10 +5,19 @@ jobs:
   sdist:
     name: Deploy Python Source Distribution
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [3.8]
 
     steps:
-    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@master
       with:
         fetch-depth: 20
 
@@ -24,7 +33,7 @@ jobs:
         scripts/buildSdist.sh
 
     - name: "Upload artifact: sdist"
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: sdist
-        path: python/sdist/dist
+        path: python/sdist/dist/amici-*.gz

@@ -136,6 +136,7 @@ tests/test/*
 */tests/fricker_2010_apoptosis_amici/*
 */tests/explicit_amici/*
 */tests/fixed_initial_amici/*
+*/tests/localfunc_amici/*
 tests/cpp/writeResults.h5
 tests/cpp/writeResults.h5.bak
 tests/sbml-test-suite/*
@@ -154,6 +155,7 @@ python/examples/example_presimulation/model_presimulation_re/*
 python/examples/example_constant_species/model_constant_species_reduced/*
 python/examples/example_constant_species/model_constant_species/*
 python/tests/sbml_test_models/*
+python/tests/piecewise_test/*
 
 python/sdist/amici.egg-info/*
 python/sdist/amici/version.txt
@@ -190,6 +192,6 @@ tests/performance/CS_Signalling_ERBB_RAS_AKT/
 tests/performance/CS_Signalling_ERBB_RAS_AKT_petab/*
 coverage_SBMLSuite.xml
 Benchmark-Models-PEtab/
-
+/test_bmc/
 
 CS_Signalling_ERBB_RAS_AKT/

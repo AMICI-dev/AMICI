@@ -8,6 +8,7 @@
 #include <gsl/gsl-lite.hpp>
 
 #include <vector>
+#include <algorithm>
 
 #include <assert.h>
 
@@ -258,7 +259,7 @@ class SUNMatrixWrapper {
     void set_indexvals(const gsl::span<const sunindextype> vals) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
-        assert(static_cast<sunindextype>(vals.size()) == capacity());
+        assert(gsl::narrow<sunindextype>(vals.size()) == capacity());
         assert(indexvals_ == SM_INDEXVALS_S(matrix_));
         std::copy_n(vals.begin(), capacity(), indexvals_);
     }
@@ -299,7 +300,7 @@ class SUNMatrixWrapper {
     void set_indexptrs(const gsl::span<const sunindextype> ptrs) {
         assert(matrix_);
         assert(matrix_id() == SUNMATRIX_SPARSE);
-        assert(static_cast<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
+        assert(gsl::narrow<sunindextype>(ptrs.size()) == num_indexptrs() + 1);
         assert(indexptrs_ == SM_INDEXPTRS_S(matrix_));
         std::copy_n(ptrs.begin(), num_indexptrs() + 1, indexptrs_);
         num_nonzeros_ = indexptrs_[num_indexptrs()];
@@ -324,6 +325,17 @@ class SUNMatrixWrapper {
      * @param alpha scalar coefficient for matrix
      */
     void multiply(N_Vector c, const_N_Vector b, realtype alpha = 1.0) const;
+
+    /**
+     * @brief AmiVector interface for multiply
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     * @param alpha scalar coefficient for matrix
+     */
+    void multiply(AmiVector& c, AmiVector const& b, realtype alpha = 1.0) const {
+        multiply(c.getNVector(), b.getNVector(), alpha);
+    }
+
 
     /**
      * @brief Perform matrix vector multiplication c += alpha * A*b
@@ -519,6 +531,16 @@ class SUNMatrixWrapper {
      */
     bool ownmat = true;
 };
+
+
+/**
+ * @brief Convert a flat index to a pair of row/column indices.
+ * @param i flat index
+ * @param m referred to matrix
+ * @return row index, column index
+ */
+auto unravel_index(sunindextype i, SUNMatrix m)
+    -> std::pair<sunindextype, sunindextype>;
 
 } // namespace amici
 

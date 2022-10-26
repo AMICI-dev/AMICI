@@ -3,9 +3,6 @@
 #
 cmake_minimum_required(VERSION 3.3)
 
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif(POLICY CMP0077)
@@ -26,7 +23,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(ENABLE_SWIG ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
@@ -58,34 +54,7 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
 
-set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/${CMAKE_INSTALL_LIBDIR}")
-set(SUNDIALS_LIBRARIES
-    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolband${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolklu${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolpcg${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolspbcgs${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolspfgmr${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixband${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixdense${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixsparse${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunnonlinsolfixedpoint${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_sunnonlinsolnewton${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_cvodes${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUNDIALS_LIB_DIR}/libsundials_idas${CMAKE_STATIC_LIBRARY_SUFFIX}
-    )
-set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/include")
-
-option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
-if(SUNDIALS_SUPERLUMT_ENABLE)
-    set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARIES}
-        ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
-        ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
-        -lblas
-        )
-    set(SUNDIALS_INCLUDE_DIRS ${SUNDIALS_INCLUDE_DIRS}
-        "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
-endif()
+find_package(SUNDIALS REQUIRED PATHS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib/cmake/sundials/")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
@@ -144,12 +113,42 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     ${CMAKE_SOURCE_DIR}/src/vector.cpp
+    ${CMAKE_SOURCE_DIR}/include/amici/abstract_model.h
+    ${CMAKE_SOURCE_DIR}/include/amici/amici.h
+    ${CMAKE_SOURCE_DIR}/include/amici/backwardproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/cblas.h
+    ${CMAKE_SOURCE_DIR}/include/amici/defines.h
+    ${CMAKE_SOURCE_DIR}/include/amici/edata.h
+    ${CMAKE_SOURCE_DIR}/include/amici/exception.h
+    ${CMAKE_SOURCE_DIR}/include/amici/forwardproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/hdf5.h
+    ${CMAKE_SOURCE_DIR}/include/amici/misc.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_dae.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_dimensions.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_ode.h
+    ${CMAKE_SOURCE_DIR}/include/amici/model_state.h
+    ${CMAKE_SOURCE_DIR}/include/amici/newton_solver.h
+    ${CMAKE_SOURCE_DIR}/include/amici/rdata.h
+    ${CMAKE_SOURCE_DIR}/include/amici/serialization.h
+    ${CMAKE_SOURCE_DIR}/include/amici/simulation_parameters.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver_cvodes.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver.h
+    ${CMAKE_SOURCE_DIR}/include/amici/solver_idas.h
+    ${CMAKE_SOURCE_DIR}/include/amici/spline.h
+    ${CMAKE_SOURCE_DIR}/include/amici/steadystateproblem.h
+    ${CMAKE_SOURCE_DIR}/include/amici/sundials_linsol_wrapper.h
+    ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
+    ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
+    ${CMAKE_SOURCE_DIR}/include/amici/vector.h
     )
 if(ENABLE_HDF5)
     list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
 endif()
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
+set(AMICI_CXX_OPTIONS "" CACHE STRING "C++ options for libamici (semicolon-separated)")
+target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
 add_dependencies(${PROJECT_NAME} version)
 file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
@@ -159,7 +158,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     PUBLIC swig
     PUBLIC ${GSL_LITE_INCLUDE_DIR}
-    PUBLIC ${SUNDIALS_INCLUDE_DIRS}
     PUBLIC ${SUITESPARSE_INCLUDE_DIRS}
     PUBLIC ${HDF5_INCLUDE_DIRS}
     )
@@ -169,30 +167,73 @@ if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC ${SUNDIALS_LIBRARIES}
+    PUBLIC SUNDIALS::generic_static
+    PUBLIC SUNDIALS::nvecserial_static
+    PUBLIC SUNDIALS::sunmatrixband_static
+    PUBLIC SUNDIALS::sunmatrixdense_static
+    PUBLIC SUNDIALS::sunmatrixsparse_static
+    PUBLIC SUNDIALS::sunlinsolband_static
+    PUBLIC SUNDIALS::sunlinsoldense_static
+    PUBLIC SUNDIALS::sunlinsolpcg_static
+    PUBLIC SUNDIALS::sunlinsolspbcgs_static
+    PUBLIC SUNDIALS::sunlinsolspfgmr_static
+    PUBLIC SUNDIALS::sunlinsolspgmr_static
+    PUBLIC SUNDIALS::sunlinsolsptfqmr_static
+    PUBLIC SUNDIALS::sunlinsolklu_static
+    PUBLIC SUNDIALS::sunnonlinsolnewton_static
+    PUBLIC SUNDIALS::sunnonlinsolfixedpoint_static
+    PUBLIC SUNDIALS::cvodes_static
+    PUBLIC SUNDIALS::idas_static
     PUBLIC ${SUITESPARSE_LIBRARIES}
     PUBLIC ${HDF5_LIBRARIES}
     PUBLIC ${BLAS_LIBRARIES}
+    PUBLIC ${CMAKE_DL_LIBS}
     )
+
+option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
+if(SUNDIALS_SUPERLUMT_ENABLE)
+    set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARIES}
+        ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
+        -lblas
+        )
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
+endif()
 
 # Create targets to make the sources show up in IDEs for convenience
 
 # For matlab interface
-add_custom_target(matlabInterface
-    SOURCES
+set(matlab_sources
     src/interface_matlab.cpp
     src/returndata_matlab.cpp
-    include/amici/interface_matlab.h)
-set_target_properties(matlabInterface
-    PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
+    include/amici/interface_matlab.h
+    include/amici/returndata_matlab.h
+)
 find_package(Matlab)
+# In case we can find Matlab, we create a respective library to compile the
+# extension from cmake. Otherwise we just create a dummy target for
+# the files to show up inside IDEs.
+# (Set the Matlab_ROOT_DIR cmake variable if CMake cannot find your Matlab
+# installation)
 if (${Matlab_FOUND})
-    # In case we can find Matlab, use the respective include directories
-    # for better IDE integration (set Matlab_ROOT_DIR cmake variable
-    # if CMake cannot find your Matlab installation)
-    set_property(TARGET matlabInterface APPEND
-        PROPERTY INCLUDE_DIRECTORIES "${Matlab_INCLUDE_DIRS}")
+    add_library(matlabInterface
+        ${matlab_sources}
+    )
+    set_target_properties(matlabInterface
+        PROPERTIES INCLUDE_DIRECTORIES "${Matlab_INCLUDE_DIRS}")
+
+    target_link_libraries(matlabInterface
+        PUBLIC amici
+    )
+
+else()
+    add_custom_target(matlabInterface
+        SOURCES ${matlab_sources}
+    )
 endif()
+set_property(TARGET matlabInterface APPEND
+    PROPERTY INCLUDE_DIRECTORIES  "${CMAKE_SOURCE_DIR}/include/")
 
 # For template files
 add_custom_target(

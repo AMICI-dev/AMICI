@@ -2,7 +2,6 @@
 
 #include "amici/backwardproblem.h"
 #include "amici/edata.h"
-#include "amici/exception.h"
 #include "amici/forwardproblem.h"
 #include "amici/misc.h"
 #include "amici/model.h"
@@ -142,7 +141,6 @@ void ReturnData::initializeFullReporting(bool quadratic_llh) {
             srz.resize(nmaxevent * nz * nplist, 0.0);
         }
 
-        ssigmay.resize(nt * ny * nplist, 0.0);
         ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
         if (sensi >= SensitivityOrder::second &&
             sensi_meth == SensitivityMethod::forward)
@@ -193,7 +191,7 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
         writeSlice(x_rdata_, x_ss);
     }
     if (!sx_ss.empty() && sensi >= SensitivityOrder::first) {
-        model.fsx_rdata(sx_rdata_, sx_solver_);
+        model.fsx_rdata(sx_rdata_, sx_solver_, x_solver_);
         for (int ip = 0; ip < nplist; ip++)
             writeSlice(sx_rdata_[ip], slice(sx_ss, ip, nx));
     }
@@ -207,10 +205,6 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
         preeq_t = preeq.getSteadyStateTime();
     if (!preeq_numsteps.empty())
         writeSlice(preeq.getNumSteps(), preeq_numsteps);
-    if (!preeq.getNumLinSteps().empty() && !preeq_numlinsteps.empty()) {
-        preeq_numlinsteps.resize(newton_maxsteps * 2, 0);
-        writeSlice(preeq.getNumLinSteps(), preeq_numlinsteps);
-    }
 }
 
 void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
@@ -232,10 +226,6 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
         posteq_t = posteq.getSteadyStateTime();
     if (!posteq_numsteps.empty())
         writeSlice(posteq.getNumSteps(), posteq_numsteps);
-    if (!posteq.getNumLinSteps().empty() && !posteq_numlinsteps.empty()) {
-        posteq_numlinsteps.resize(newton_maxsteps * 2, 0);
-        writeSlice(posteq.getNumLinSteps(), posteq_numlinsteps);
-    }
 }
 
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
@@ -254,7 +244,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
     }
 
     if (!sx0.empty()) {
-        model.fsx_rdata(sx_rdata_, sx_solver_);
+        model.fsx_rdata(sx_rdata_, sx_solver_, x_solver_);
         for (int ip = 0; ip < nplist; ip++)
             writeSlice(sx_rdata_[ip], slice(sx0, ip, nx));
     }
@@ -303,22 +293,23 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
 
     if (sensi >= SensitivityOrder::first && nplist > 0) {
 
-        if (!ssigmay.empty())
-            model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
-                                                it, edata);
-
         if (sensi_meth == SensitivityMethod::forward) {
             getDataSensisFSA(it, model, edata);
         } else if (edata && !sllh.empty()) {
             model.addPartialObservableObjectiveSensitivity(
                 sllh, s2llh, it, x_solver_, *edata);
         }
+
+        if (!ssigmay.empty())
+            model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
+                                                slice(sy, it, nplist * ny),
+                                                it, edata);
     }
 }
 
 void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
     if (!sx.empty()) {
-        model.fsx_rdata(sx_rdata_, sx_solver_);
+        model.fsx_rdata(sx_rdata_, sx_solver_, x_solver_);
         for (int ip = 0; ip < nplist; ip++) {
             writeSlice(sx_rdata_[ip],
                        slice(sx, it * nplist + ip, nx));
@@ -669,7 +660,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
 
 
         if (!sres.empty())
-            for (int ires = 0; ires < static_cast<int>(res.size()); ++ires)
+            for (int ires = 0; ires < gsl::narrow<int>(res.size()); ++ires)
                 for (int ip = 0; ip < nplist; ++ip)
                     sres.at((ires * nplist + ip)) *= pcoefficient.at(ip);
 
@@ -777,8 +768,18 @@ void ReturnData::initializeObjectiveFunction(bool enable_chi2) {
         chi2 = 0.0;
 }
 
-static realtype fres(realtype y, realtype my, realtype sigma_y) {
-    return (y - my) / sigma_y;
+static realtype fres(realtype y, realtype my, realtype sigma_y,
+                     ObservableScaling scale) {
+    switch (scale) {
+        case amici::ObservableScaling::lin:
+            return (y - my) / sigma_y;
+        case amici::ObservableScaling::log:
+            return (std::log(y) - std::log(my)) / sigma_y;
+        case amici::ObservableScaling::log10:
+            return (std::log10(y) - std::log10(my)) / sigma_y;
+        default:
+            throw std::invalid_argument("only lin, log, log10 allowed.");
+    }
 }
 
 static realtype fres_error(realtype sigma_y, realtype sigma_offset) {
@@ -800,8 +801,11 @@ void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
         int iyt = iy + it * edata.nytrue();
         if (!edata.isSetObservedData(it, iy))
             continue;
+
         res.at(iyt) = amici::fres(y_it.at(iy), observedData[iy],
-                                  sigmay_it.at(iy));
+                                  sigmay_it.at(iy),
+                                  model.getObservableScaling(iy));
+
         if (sigma_res)
             res.at(iyt + nt * nytrue) = fres_error(sigmay_it.at(iy),
                                                    sigma_offset);
@@ -821,10 +825,20 @@ void ReturnData::fchi2(const int it, const ExpData &edata) {
 }
 
 static realtype fsres(realtype y, realtype sy, realtype my,
-                      realtype sigma_y, realtype ssigma_y) {
-    return (sy - ssigma_y * fres(y, my, sigma_y)) / sigma_y;
+                      realtype sigma_y, realtype ssigma_y,
+                      ObservableScaling scale) {
+    auto res = fres(y, my, sigma_y, scale);
+    switch (scale) {
+        case amici::ObservableScaling::lin:
+            return (sy - ssigma_y * res) / sigma_y;
+        case amici::ObservableScaling::log:
+            return (sy / y - ssigma_y * res) / sigma_y;
+        case amici::ObservableScaling::log10:
+            return (sy / (y * std::log(10)) - ssigma_y * res) / sigma_y;
+        default:
+            throw std::invalid_argument("only lin, log, log10 allowed.");
+    }
 }
-
 static realtype fsres_error(realtype sigma_y, realtype ssigma_y,
                             realtype sigma_offset) {
     return ssigma_y / ( fres_error(sigma_y, sigma_offset) * sigma_y);
@@ -843,7 +857,7 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
-    model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
+    model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata);
 
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
@@ -851,9 +865,12 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
             int idx = (iy + it * edata.nytrue()) * nplist + ip;
+
             sres.at(idx) = amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
                                         observedData[iy], sigmay_it.at(iy),
-                                        ssigmay_it.at(iy + ny * ip));
+                                        ssigmay_it.at(iy + ny * ip),
+                                        model.getObservableScaling(iy));
+
             if (sigma_res) {
                 int idx_res =
                     (iy + it * edata.nytrue() + edata.nytrue() * edata.nt()) *
@@ -878,7 +895,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
-    model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
+    model.getObservableSigmaSensitivity(ssigmay_it, sy_it, it, &edata);
 
     /*
      * https://www.wolframalpha.com/input/?i=d%2Fdu+d%2Fdv+log%28s%28u%2Cv%29%29+%2B+0.5+*+%28r%28u%2Cv%29%2Fs%28u%2Cv%29%29%5E2
@@ -941,18 +958,19 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
         auto y = y_it.at(iy);
         auto m = observedData[iy];
         auto s = sigmay_it.at(iy);
+        auto os = model.getObservableScaling(iy);
         // auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
             auto ds_i = ssigmay_it.at(iy + ny * ip);
-            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i);
+            auto sr_i = amici::fsres(y, dy_i, m, s, ds_i, os);
             realtype sre_i = 0.0;
             if (sigma_res)
                 sre_i = amici::fsres_error(s, ds_i, sigma_offset);
             for (int jp = 0; jp < nplist; ++jp) {
                 auto dy_j = sy_it.at(iy + ny * jp);
                 auto ds_j = ssigmay_it.at(iy + ny * jp);
-                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j);
+                auto sr_j = amici::fsres(y, dy_j, m, s, ds_j, os);
                 FIM.at(ip + nplist * jp) += sr_i*sr_j;
                 if (sigma_res) {
                     auto sre_j = amici::fsres_error(s, ds_j, sigma_offset);

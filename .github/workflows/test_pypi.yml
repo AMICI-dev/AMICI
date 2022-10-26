@@ -11,8 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        os: [ubuntu-20.04, macos-latest]
+        python-version: [3.8, 3.9, '3.10']
+        os: [ubuntu-22.04, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -31,7 +31,8 @@ jobs:
       - name: homebrew
         run: |
           if [[ ${{ matrix.os }} == macos* ]] ; then \
-            brew install hdf5 swig gcc libomp
+            brew install hdf5 swig gcc libomp \
+               && echo LDFLAGS="-L/usr/local/lib/" >> $GITHUB_ENV
           fi
 
       - name: Set up Python ${{ matrix.python-version }}

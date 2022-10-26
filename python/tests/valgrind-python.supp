@@ -172,7 +172,7 @@
    Memcheck:Cond
    fun:PyUnicode_Decode
    fun:PyUnicode_FromEncodedObject
-   obj:/usr/bin/python3.?
+   ...
 }
 
 {
@@ -204,23 +204,10 @@
 
 {
    other
-   Memcheck:Cond
-   ...
-   fun:PyBytes_Repr
-   fun:PyObject_Str
-   obj:/usr/bin/python3.?
-   ...
-   fun:PyObject_Format
-   ...
-}
-
-{
-   other
    Memcheck:Value8
    ...
    fun:PyBytes_Repr
    fun:PyObject_Str
-   obj:/usr/bin/python3.?
    ...
    fun:PyObject_Format
    ...
@@ -230,104 +217,237 @@
    other
    Memcheck:Cond
    ...
-   fun:_PyUnicodeWriter_WriteStr
+   fun:PyBytes_Repr
+   fun:PyObject_Str
+   ...
+   fun:PyObject_Format
    ...
 }
 
 {
-   other
+   _Py_HashBytes
+   Memcheck:Cond
+   ...
+   fun:_Py_HashBytes
+   ...
+}
+
+{
+   _Py_HashBytes
    Memcheck:Value8
    ...
-   fun:_PyUnicodeWriter_WriteStr
+   fun:_Py_HashBytes
    ...
 }
 
 {
-   other
+   PyDict_SetItem
    Memcheck:Cond
-   ...
-   fun:_PyUnicodeWriter_Finish
-   ...
-}
-
-{
-   other
-   Memcheck:Value8
-   ...
-   fun:_PyUnicodeWriter_Finish
-   ...
-}
-
-{
-   other
-   Memcheck:Cond
-   ...
-   fun:_PyUnicode_JoinArray
-   ...
-}
-
-{
-   other
-   Memcheck:Value8
-   ...
-   fun:_PyUnicode_JoinArray
-   ...
-}
-
-{
-   other
-   Memcheck:Cond
-   obj:/usr/bin/python3.?
-   ...
-   obj:/usr/bin/python3.?
-   fun:__Pyx_PyObject_Call
-   fun:__Pyx__PyObject_CallOneArg
-   ...
-}
-
-{
-   other
-   Memcheck:Cond
-   fun:memmove
-   obj:/usr/bin/python3.?
-   ...
-}
-
-{
-   other
-   Memcheck:Value8
-   fun:memmove
-   obj:/usr/bin/python3.?
-   ...
-}
-
-{
-   other
-   Memcheck:Cond
-   ...
-   obj:/usr/bin/python3.?
-   fun:_PyObject_CallMethodIdObjArgs
-   obj:/usr/bin/python3.?
-   ...
-}
-
-{
-   other
-   Memcheck:Value8
-   ...
-   obj:/usr/bin/python3.?
-   fun:_PyObject_CallMethodIdObjArgs
-   obj:/usr/bin/python3.?
-   ...
-}
-
-{
-   other
-   Memcheck:Cond
-   ...
-   obj:/usr/bin/python3.?
    fun:PyDict_SetItem
+   ...
+}
+
+{
+   PyDict_SetItem
+   Memcheck:Value8
+   ...
+   fun:PyDict_SetItem
+   ...
+}
+
+{
+   tuplehash
+   Memcheck:Cond
+   fun:tuplehash
+}
+
+{
+   _PyUnicodeWriter_WriteSubstring
+   Memcheck:Cond
+   ...
+   fun:_PyUnicodeWriter_WriteSubstring
+   fun:do_markup
+   ...
+}
+
+{
+   _PyUnicodeWriter_WriteSubstring
+   Memcheck:Value8
+   fun:memmove
+   fun:_PyUnicodeWriter_WriteSubstring
+   fun:do_markup
+}
+
+{
+   sre_match
+   Memcheck:Cond
+   ...
+   fun:sre_ucs1_match
+   fun:sre_match
+   ...
+}
+
+{
+   sre_ucs1_count
+   Memcheck:Value8
+   ...
+   fun:sre_ucs1_match
+   fun:sre_match
+}
+
+{
+   PyUnicode_Splitlines
+   Memcheck:Cond
+   fun:asciilib_splitlines
+   fun:PyUnicode_Splitlines
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:PyBytes_Repr
+   fun:PyObject_Str
    obj:/usr/bin/python3.?
+   ...
+   fun:PyObject_Format
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:_PyUnicodeWriter_WriteStr
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:_PyUnicodeWriter_WriteStr
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:PyUnicode_Append
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:PyUnicode_Append
+   ...
+}
+
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:_PyUnicodeWriter_Finish
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:_PyUnicodeWriter_Finish
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:_PyUnicode_JoinArray
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:_PyUnicode_JoinArray
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   obj:/usr/bin/python3.?
+   ...
+   obj:/usr/bin/python3.?
+   fun:__Pyx_PyObject_Call
+   fun:__Pyx__PyObject_CallOneArg
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   fun:memmove
+   fun:unicode_concatenate
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   fun:memmove
+   fun:unicode_concatenate
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   obj:/usr/bin/python3.?
+   fun:_PyObject_CallMethodIdObjArgs
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   dict_get_impl
+   Memcheck:Cond
+   ...
+   fun:dict_get_impl
+   fun:dict_get
+   ...
+}
+
+{
+   lookdict
+   Memcheck:Value8
+   ...
+   fun:lookdict
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   obj:/usr/bin/python3.?
+   fun:_PyObject_CallMethodIdObjArgs
+   obj:/usr/bin/python3.?
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:PyDict_SetItem
    ...
 }
 
@@ -391,9 +511,9 @@
    match-leak-kinds: definite
    fun:malloc
    obj:/usr/bin/python3.?
+   ...
    fun:PyTuple_New
-   fun:_PyEval_EvalCodeWithName
-   fun:_PyFunction_Vectorcall
+   ...
 }
 
 {
@@ -409,17 +529,7 @@
    other
    Memcheck:Leak
    fun:realloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
-   fun:_dl_catch_exception
-   fun:dl_open_worker
-   fun:_dl_catch_exception
-   fun:_dl_open
-   fun:dlopen_doit
+   ...
    fun:_dl_catch_exception
 }
 
@@ -427,16 +537,221 @@
    other
    Memcheck:Leak
    fun:malloc
-   obj:*
-   obj:*
-   obj:*
-   fun:call_init.part.0
-   fun:call_init
-   fun:_dl_init
+   ...
+   fun:_dl_catch_exception
+}
+
+{
+   Pandas
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   obj:*site-packages/pandas/_libs/*.cpython-3*-x86_64-linux-gnu.so
+   ...
+}
+
+{
+   Scipy extensions
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   obj:*/site-packages/scipy/*.cpython-3*-x86_64-linux-gnu.so
+   ...
+}
+
+
+{
+   PyTuple_Pack
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.*
+   fun:PyTuple_Pack
+   obj:/usr/bin/python3.*
+   ...
+}
+
+{
+   PyAST_CompileObject
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:/usr/bin/python3.*
+   ...
+   fun:PyAST_CompileObject
+   obj:/usr/bin/python3.*
+   ...
+}
+
+{
+   other
+   Memcheck:Value8
+   ...
+   fun:PyDict_SetDefault
+   ...
+}
+
+{
+   other
+   Memcheck:Cond
+   ...
+   fun:PyDict_SetDefault
+   ...
+}
+
+{
+   _PyObject_GC_Alloc
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_Alloc
+   ...
+}
+
+{
+   unicode_eq
+   Memcheck:Cond
+   fun:bcmp
+   fun:unicode_eq
+   ...
+}
+
+{
+   PyUnicode_Contains
+   Memcheck:Cond
+   fun:memchr
+   fun:PyUnicode_Contains
+   ...
+}
+
+{
+   _Py_write
+   Memcheck:Param
+   write(buf)
+   fun:__libc_write
+   fun:write
+   fun:_Py_write
+   obj:/usr/bin/python3.*
+}
+
+{
+   _PyObject_GC_New
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_GC_New
+   ...
+   obj:/usr/bin/python3.*
+}
+
+
+{
+   Python lookdict
+   Memcheck:Cond
+   fun:lookdict
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python find_empty_slot
+   Memcheck:Value8
+   fun:find_empty_slot
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python dictkeys_set_index
+   Memcheck:Value8
+   fun:dictkeys_set_index
+   fun:insertdict
+   fun:warn_explicit.cold
+   ...
+}
+
+{
+   Python _copy_characters
+   Memcheck:Cond
+   fun:memmove
+   fun:memcpy
+   fun:_copy_characters
+   fun:unicode_concatenate
+   ...
+}
+
+{
+   Python _copy_characters
+   Memcheck:Value8
+   fun:memmove
+   fun:memcpy
+   fun:_copy_characters
+   fun:unicode_concatenate
+   ...
+}
+
+{
+   __libc_unwind_link_get
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:malloc
+   fun:_dl_find_object_update
+   fun:dl_open_worker_begin
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:do_dlopen
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:dlerror_run
+   fun:__libc_dlopen_mode
+   fun:__libc_unwind_link_get
+   fun:__libc_unwind_link_get
+}
+
+{
+   dlopen_implementation
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:malloc
+   fun:_dl_map_object_deps
+   fun:dl_open_worker_begin
    fun:_dl_catch_exception
    fun:dl_open_worker
    fun:_dl_catch_exception
    fun:_dl_open
    fun:dlopen_doit
    fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen_implementation
+   fun:dlopen@@GLIBC_2.34
+}
+
+{
+   dlopen_implementation
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:malloc
+   fun:resize_scopes
+   fun:dl_open_worker_begin
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen_implementation
+   fun:dlopen@@GLIBC_2.34
+   fun:_PyImport_FindSharedFuncptr
 }

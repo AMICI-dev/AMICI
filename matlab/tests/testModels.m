@@ -71,9 +71,6 @@ function testModels()
         options = rmfield(options,'kappa');
         t = options.ts;
         options = rmfield(options,'ts');
-        if isempty(options.newton_preeq)
-            options.newton_preeq = false;
-        end
         if(isfield(options, 'sx0'))
             options.sx0 = transpose(options.sx0);
         end

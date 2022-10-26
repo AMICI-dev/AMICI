@@ -67,7 +67,7 @@ Graphics for documentation are kept in `documentation/gfx/`.
 
 ### When using Markdown
 
-* Note that there are some incompatibilities of Github Markdown and Doxygen
+* Note that there are some incompatibilities of GitHub Markdown and Doxygen
   Markdown. Ideally documentation should be written in a format compatible with
   both.
   This affects for example images links which currently cause trouble in

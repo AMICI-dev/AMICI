@@ -2,6 +2,376 @@
 
 ## v0.X Series
 
+### v0.12.0 (2022-08-26)
+
+Features:
+* Support for event observables via the Python interface
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1845
+* Treat non-estimated parameters as constants during SBML-PEtab import
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1810
+* Updated SUNDIALS to v5.8.0
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1836
+* Option to extract common subexpressions
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1852,
+  https://github.com/AMICI-dev/AMICI/pull/1856
+* Parallelize matrix simplification
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1778
+* Validate PEtab problems before attempting import
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1842
+* Improved type annotations for the swig interface
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1860
+
+Fixes:
+* Fixed an issue with potentially infinite loops during conservation law
+  processing by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1833
+* Fixed potential deadlocks during parallel simplification
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1844
+* Fix resetting `ReturnData::numstepsB` when re-using Solver
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1841
+
+And further contributions by @dilpath, @dweindl, @FFroehlich
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.32...v0.11.33
+
+### v0.11.32 (2022-07-15)
+
+Fixes:
+* Fixed `ImportError`s during package installation with recent setuptools
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1830
+
+### v0.11.31 (2022-07-12)
+
+Fixes:
+* Fixed `ParameterMapping.__getitem__` to either return a
+  `ParameterMappingForCondition` or a new `ParameterMapping`, but not a list
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1826
+
+### v0.11.30 (2022-07-07)
+
+Features:
+* Allow overriding model name during PySB import by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1801
+* Added __repr__ for parameter mapping classes by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1799
+* More informative warning messages for NaNs/Infs by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1798
+* Moved `sim_steps` increment by @plakrisenko in
+  https://github.com/AMICI-dev/AMICI/pull/1806
+* Re-arranged application of parameters from `ExpData` to avoid initial
+  sensitivities error by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1805
+* Checking for unused parameters in `simulate_petab` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1816
+* Add `create_parameter_mapping` kwarg forwarding by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1820
+
+Other
+* Remove `constant_species_to_parameters` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1809
+
+Fixes
+* Fixed handling of SBML models given as `pathlib.Path` in
+  `petab_import.import_model_sbml by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1808
+* Fixed missing CPU time reset by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1814
+* Raise in `simulate_petab` with `scaled_parameters=True`
+  `problem_parameters=None` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1819
+
+...
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.29...v0.11.30
+
+### v0.11.29 (2022-05-06)
+
+## What's Changed
+
+Features:
+* Performance: Limit newton step convergence check by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1780
+* More informative NaN/Inf warnings by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1640
+* SBML import can now handle initial events by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1789
+
+Fixes:
+* Avoid error if no measurements in PEtab problem; fixed type handling in
+  PEtab parameter mapping by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1783
+* Fixed substitution of expressions in root and stau by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1784
+* Workaround for PEtab problems with state-dependent noise models by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1791
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.28...v0.11.29
+
+
+### v0.11.28 (2022-04-08)
+
+New features:
+* Added `Solver.setSteadyStateToleranceFactor` and
+  `Solver.setSteadyStateSensiToleranceFactor` to specify a steady state
+  tolerance factor by @dilpath in https://github.com/AMICI-dev/AMICI/pull/1758
+
+  **NOTE: This also relaxed the default steady state (sensitivity)**
+  **tolerances by a factor of 100.**
+* Added support for `pathlib.Path` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1769
+* Allow specifying initial timepoint with `ExpData` by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1776
+
+Performance:
+* Speedup for models with conservation laws by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1765
+* Improved efficiency of newton step convergence check by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1775
+
+Fixes:
+* Fixed deprecation warning for pandas.DataFrame.append in
+  `rdatas_to_measurement_df` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1770
+* Fixed Rule-target handling in PEtab import by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1753
+
+Removed functionality:
+* Removed long deprecated `sbml2amici` arguments `modelName`
+  and `constantParameters` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1774
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.27...v0.11.28
+
+### v0.11.27 (2022-04-04)
+
+New features:
+* Checking condition number when computing sensitivities via Newton
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1730
+* Removed SPBCG solver by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1729
+* Added Newton step convergence checks to steadystate solver by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1737
+* Removed legacy options/members `amioption.newton_preeq` and `Solver::r… by
+  @dweindl in https://github.com/AMICI-dev/AMICI/pull/1744
+* Added `ReturnData::cpu_time_total` to track total time spent in
+  `runAmiciSimulation` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1743
+* SBML import: Alternative algorithm for identifying conservation laws by
+  @dweindl in https://github.com/AMICI-dev/AMICI/pull/1748
+* Use `amici.AmiciVersionError` to indicate version mismatch by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1764
+
+Performance:
+* Optional parallel computation of derivatives during model import by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1740
+* Sparsify jacobian by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1766
+* Speedup conservation law computation by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1754
+* Exploit stoichiometric matrix in pysb import by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1761
+* Speedup edata construction from petab problems by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1746
+
+Fixes:
+* Fixed `get_model_settings` that would to setting incorrect initial states and
+  initial state sensitivities for models with parameter-dependent initial
+  states by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1751
+* Use correct tolerances for convergence check in Newton solver by @FFroehlich
+  in https://github.com/AMICI-dev/AMICI/pull/1728
+* Harmonized convergence checks by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1731
+* Made sundials' KLU_INDEXTYPE match actual klu index type by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1733
+* Fixed `Model::setStateIsNonNegative` logic that would raise exceptions in
+  cases where it shouldn't by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1736
+* Fixed undefined reference to dladdr by @kristianmeyerr in
+  https://github.com/AMICI-dev/AMICI/pull/1738
+* Fixed HDF5 OSX intermediate group creation errors by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1741
+* Fixed recent cmake-based build issues due to changed sundials library
+  directory by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1756
+* Updated Windows installation instructions by @paulflang in
+  https://github.com/AMICI-dev/AMICI/pull/1763
+
+... and other contributions by @FFroehlich, @dweindl
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.26...v0.11.27
+
+### v0.11.26 (2022-03-14)
+
+New features:
+* Import of BioNetGenLanguage (BNGL) models by @FFroehlich in 
+  https://github.com/AMICI-dev/AMICI/pull/1709
+* Added support for observable-dependent sigmas by @dweindl, @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1692
+* Added support for pysb local functions by @FFroehlich in
+  https://github.com/AMICI-dev/AMICI/pull/1666
+* Added experimental support for conservation laws for non-constant species to
+  SBML import: conservation laws for non-constant species
+  by @stephanmg, @dweindl in https://github.com/AMICI-dev/AMICI/pull/1669
+  Enable this feature by setting environment variable
+  `AMICI_EXPERIMENTAL_SBML_NONCONST_CLS` to any value
+  * Allow using states eliminated by conservation laws to be used in root
+    functions by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1677
+  * Added support for parameter-dependent conservation laws by @dweindl,
+    @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1678
+* Added optional caching for symbolic simplifications in ODE export by @dilpath
+  in https://github.com/AMICI-dev/AMICI/pull/1672
+* Added CLI option `--no-sensitivities` to `amici_import_petab` by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1688
+
+Fixes:
+* SBML import: Raise in case of nested observables by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1690
+* Sympy 1.10 compatibility by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1694
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.25...v0.11.26
+
+### v0.11.25 (2022-02-09)
+
+* Fixed a bug
+  where `Model::setStateIsNonNegative(Model::getStateIsNonNegative())` would
+  raise an exception in case conservation laws were enabled - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1648
+* Fixed a bug where `Model::setStateIsNonNegative` would be ignored in certain
+  model expressions - by @FFroehlich
+  in https://github.com/AMICI-dev/AMICI/pull/1650
+* Fixed a bug where special function parsing inside `min()` and `max()` would
+  not be parsed correctly - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1655
+* Fixed a numpy dependency issues for Mac+ARM systems - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1657
+* Fixed convergence check in Newton method - by @plakrisenko
+  in https://github.com/AMICI-dev/AMICI/pull/1663
+* Add `AMICI_CXX_OPTIONS` to pass libamici-specific compiler options during
+  CMake-based builds - by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1664
+* Fixed various warnings and updated documentation - by @dweindl
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.24...v0.11.25
+
+### v0.11.24 (2022-02-01)
+
+Features:
+* Introduced environment variable `AMICI_DLL_DIRS` to control DLL directories
+  on Windows (useful for setting BLAS library directory, as required by
+  Python>=3.8) by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1637
+* Dropped Python3.7 support by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1635
+* Include header files in CMake targets for better IDE integration by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1639
+
+Fixes:
+* Fixed an issue in PEtab import where all-integer parameters would previously
+  result in a TypeError by @stephanmg in
+  https://github.com/AMICI-dev/AMICI/pull/1634
+* Fixed tempdir deletion issues for test suite on Windows by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1636
+* Added functions to provide state IDs/names for x_solver by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1638
+* Fixed docs on RTD by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1643
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.11.23...v0.11.24
+
+### v0.11.23 (2022-01-11)
+
+Features:
+* Added overload for Model::setParameterScale with vector<int> by @dilpath in
+  https://github.com/AMICI-dev/AMICI/pull/1614
+* Removed assert_fun argument from gradient checking, improve output 
+  by @dweindl, @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1609
+* Added get_expressions_as_dataframe by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1621
+* Added `id` field to ExpData and ReturnData by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1622
+* Included condition id in dataframes by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1623
+
+Fixes:
+* C++: Fixed SUNMatrixWrapper ctor for size 0 matrices by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1608
+* Python: Handle TemporaryDirectory cleanup failures on Windows by @dweindl in 
+  https://github.com/AMICI-dev/AMICI/pull/1617
+* Python: pysb.Model.initial_conditions throws a DeprecationWarning by 
+  @PaulJonasJost in https://github.com/AMICI-dev/AMICI/pull/1620
+* Fixed wrong array size in warnings by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1624
+ 
+NOTE: AMICI 0.11.23 requires numpy<1.22.0 
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
+
+### v0.11.22 (2021-12-02)
+
+* **Require sympy>=1.9,pysb>=1.13.1** by @FFroehlich, @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1599
+* Fixed sympy deprecation warning by @dweindl in
+  https://github.com/AMICI-dev/AMICI/pull/1600
+* Updated Windows installation instructions for Python>=3.8 by @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1597
+* Fixed plot labels by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1598
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.11.21...v0.11.22
+
+### v0.11.21 (2021-11-21)
+
+Fixes:
+ * Fixed a bug in recursion depth computation for model expressions. This may
+   have resulted in incorrect sensitivities for models with expressions nested
+   more than 2 levels. (#1595)
+ * Fixed improper handling of Piecewise functions in PySB import which may have
+   produced incorrect simulation results. (#1594)
+ * Fixed changed googletest reference which broke the CMake-based build if
+   tests were enabled (#1592)
+
+New:
+ * It's now possible to build AMICI using Ninja (#1593)
+
+
+### v0.11.20 (2021-11-12)
+
+New: 
+ * Changed parameter mappings such that unassigned values have non-nan default values. This fixes erroneous evaluation of `llh` as `NaN` in some situations (#1574)
+ * Added support for Python 3.10 (#1555)
+
+Fixes:
+ * Fixed a bug when simulation start time was not transferred when copying a solver instance (#1573)
+ * Fixed a bug which led to incorrect sensitivies for models with multiple assignment rules or rate rules (#1584)
+
+Other:
+ * Update CI and documentation settings (#1569, #1527, #1572, #1575, #1579, #1580, #1589, #1581)
+ * Extend set of validated benchmark models that is checked during CI (#1571, #1577)
+ * Fixed string formatting in derivative checks (#1585)
+ * Added helper methods to save and restore model instance-only settings (#1576)
+
+
+### v0.11.19 (2021-10-13)
+
+New:
+* Added support for observable transformations (lin/log/log10) (#1567). Thereby supporting additional noise distributions in combination with least squares solvers.
+
+Fixes:
+* Fixed a bug when Newton sensitivity computation was activated despite specifying newton_steps == 0. The error occurs when simulation converges to a steadystate but simulation sensitivities are not converged according to convergence criteria. In that case simulation returned failure, but the newton rootfinding "finds" a steadystate even before the iteration check, leading to the erroneous computation of sensitivities via Newton/IFT. For singular jacobians this means the overall simulation still fails, but a different, more informative error message is displayed. (#1541)
+* Fixed a bug where argument "outdir" in ODEExporter.__init__ would not be used (#1543)
+
+Other:
+* Improve checking support for SBML extensions (#1546)
+* SBML import: Use more descriptive IDs for flux expressions (#1551)
+* Optimized SUNMatrixWrapper functions (#1538)
+* C++: Changed test suite from CppUTest to gtest (#1532)
+* Add CITATION.cff (#1559)
+* Updated documentation (#1563, #1554, #1536)
+* Removed distutils dependency (#1557)
+* Require sympy<1.9
+
+
 ### v0.11.18 (2021-07-12)
 
 New:

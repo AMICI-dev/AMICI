@@ -8,10 +8,19 @@ jobs:
   pypi:
     name: Deploy PyPI
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [3.8]
 
     steps:
-    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@master
       with:
         fetch-depth: 20
 
@@ -36,7 +45,7 @@ jobs:
   bioSimulatorsUpdateCliAndDockerImage:
     name: Release to BioSimulators
     needs: pypi
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       # Owner/repository-id for the GitHub repository for the downstream command-line interface and Docker image
       DOWNSTREAM_REPOSITORY: biosimulators/Biosimulators_AMICI

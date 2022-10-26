@@ -236,7 +236,7 @@ def test_parameter_in_expdata(preeq_fixture):
 
 
 def test_raise_presimulation_with_adjoints(preeq_fixture):
-    """Test data replicates"""
+    """Test simulation failures with adjoin+presimulation"""
 
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
@@ -248,16 +248,15 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     rdata = amici.runAmiciSimulation(model, solver, edata)
     assert rdata['status'] == amici.AMICI_ERROR
 
-    # presimulation and postequilibration with adjoints:
-    # this also needs to fail
+    # add postequilibration
     y = edata.getObservedData()
     stdy = edata.getObservedDataStdDev()
-
-    # add infty timepoint
     ts = np.hstack([*edata.getTimepoints(), np.inf])
-    edata.setTimepoints(sorted(ts))
+    edata.setTimepoints(ts)
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
+
+    # remove presimulation
     edata.t_presim = 0
     edata.fixedParametersPresimulation = ()
 
@@ -267,7 +266,8 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
 
 
 def test_equilibration_methods_with_adjoints(preeq_fixture):
-    """Test data replicates"""
+    """Test different combinations of equilibration and simulation
+    sensitivity methods"""
 
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
@@ -286,7 +286,8 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
 
     rdatas = {}
     equil_meths = [amici.SteadyStateSensitivityMode.newtonOnly,
-                   amici.SteadyStateSensitivityMode.simulationFSA]
+                   amici.SteadyStateSensitivityMode.integrationOnly,
+                   amici.SteadyStateSensitivityMode.integrateIfNewtonFails]
     sensi_meths = [amici.SensitivityMethod.forward,
                    amici.SensitivityMethod.adjoint]
     settings = itertools.product(equil_meths, sensi_meths)
@@ -333,8 +334,11 @@ def test_newton_solver_equilibration(preeq_fixture):
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
-    settings = [amici.SteadyStateSensitivityMode.simulationFSA,
+    settings = [amici.SteadyStateSensitivityMode.integrationOnly,
                 amici.SteadyStateSensitivityMode.newtonOnly]
+
+    solver.setNewtonStepSteadyStateCheck(True)
+    solver.setRelativeToleranceSteadyState(1e-12)
 
     for equil_meth in settings:
         # set sensi method
@@ -343,8 +347,6 @@ def test_newton_solver_equilibration(preeq_fixture):
         model.setSteadyStateSensitivityMode(equil_meth)
         if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
             solver.setNewtonMaxSteps(10)
-        else:
-            solver.setNewtonMaxSteps(0)
 
         # add rdatas
         rdatas[equil_meth] = amici.runAmiciSimulation(model, solver, edata)
@@ -357,21 +359,50 @@ def test_newton_solver_equilibration(preeq_fixture):
         assert np.isclose(
             rdatas[settings[0]][variable],
             rdatas[settings[1]][variable],
-            1e-6, 1e-6
+            1e-5, 1e-5
         ).all(), variable
 
-    # test failure for iterative linear solver with sensitivities
-    edata.fixedParametersPreequilibration = ()
+
+def test_newton_steadystate_check(preeq_fixture):
+    """Test data replicates"""
+
+    model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, \
+        plists = preeq_fixture
+
+    # we don't want presim
     edata.t_presim = 0.0
     edata.fixedParametersPresimulation = ()
 
-    solver.setLinearSolver(amici.LinearSolver.SPBCG)
-    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.newtonOnly)
-    solver.setNewtonMaxSteps(10)
-    solver.setNewtonMaxLinearSteps(10)
-    rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
+    # add infty timepoint
+    y = edata.getObservedData()
+    stdy = edata.getObservedDataStdDev()
+    ts = np.hstack([*edata.getTimepoints(), np.inf])
+    edata.setTimepoints(sorted(ts))
+    edata.setObservedData(np.hstack([y, y[0]]))
+    edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
-    assert rdata_spbcg['status'] == amici.AMICI_ERROR
+    solver.setNewtonMaxSteps(100)
+
+    rdatas = {}
+    for newton_check in [True, False]:
+        # set sensi method
+        sensi_meth = amici.SensitivityMethod.forward
+        solver.setSensitivityMethod(sensi_meth)
+        solver.setNewtonStepSteadyStateCheck(newton_check)
+
+        # add rdatas
+        rdatas[newton_check] = amici.runAmiciSimulation(model, solver, edata)
+
+        # assert successful simulation
+        assert rdatas[newton_check]['status'] == amici.AMICI_SUCCESS
+
+    # assert correct results
+    for variable in ['llh', 'sllh', 'sx0', 'sx_ss', 'x_ss']:
+        assert np.isclose(
+            rdatas[True][variable],
+            rdatas[False][variable],
+            1e-6, 1e-6
+        ).all(), variable
+
+
+

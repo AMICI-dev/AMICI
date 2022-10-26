@@ -241,6 +241,17 @@ void createAndWriteDouble3DDataset(H5::H5File const &file,
                                    hsize_t n, hsize_t o);
 
 /**
+ * @brief Read string attribute from HDF5 object.
+ * @param file HDF5 file
+ * @param optionsObject Object to read attribute from
+ * @param attributeName Name of attribute to read
+ * @return Attribute value
+ */
+std::string getStringAttribute(H5::H5File const& file,
+                               std::string const& optionsObject,
+                               std::string const& attributeName);
+
+/**
  * @brief Read scalar native double attribute from HDF5 object.
  * @param file HDF5 file
  * @param optionsObject Object to read attribute from

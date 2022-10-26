@@ -5,14 +5,12 @@ from pysb.core import (
 import pysb.export
 import os
 
-import libsbml
-
 model = Model()
 
-prot = Monomer('PROT', ['kin','drug','phospho'], {'phospho': ['u', 'p']})
+prot = Monomer('PROT', ['kin', 'drug', 'phospho'], {'phospho': ['u', 'p']})
 prot_0 = Parameter('PROT_0', 10)
 Initial(prot(phospho='u', drug=None, kin=None),
-        Expression('initProt',prot_0))
+        Expression('initProt', prot_0))
 
 drug = Monomer('DRUG', ['bound'])
 drug_0 = Parameter('DRUG_0', 9)

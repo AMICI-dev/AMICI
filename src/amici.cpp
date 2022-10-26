@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <type_traits>
 
@@ -42,6 +43,24 @@ static_assert(std::is_same<amici::realtype, realtype>::value,
               "Definition of realtype does not match");
 
 namespace amici {
+
+std::map<int, std::string> simulation_status_to_str_map = {
+    {AMICI_RECOVERABLE_ERROR, "AMICI_RECOVERABLE_ERROR"},
+    {AMICI_UNRECOVERABLE_ERROR, "AMICI_UNRECOVERABLE_ERROR"},
+    {AMICI_TOO_MUCH_WORK, "AMICI_TOO_MUCH_WORK"},
+    {AMICI_TOO_MUCH_ACC, "AMICI_TOO_MUCH_ACC"},
+    {AMICI_ERR_FAILURE, "AMICI_ERR_FAILURE"},
+    {AMICI_CONV_FAILURE, "AMICI_CONV_FAILURE"},
+    {AMICI_RHSFUNC_FAIL, "AMICI_RHSFUNC_FAIL"},
+    {AMICI_ILL_INPUT, "AMICI_ILL_INPUT"},
+    {AMICI_ERROR, "AMICI_ERROR"},
+    {AMICI_NO_STEADY_STATE, "AMICI_NO_STEADY_STATE"},
+    {AMICI_DAMPING_FACTOR_ERROR, "AMICI_DAMPING_FACTOR_ERROR"},
+    {AMICI_SINGULAR_JACOBIAN, "AMICI_SINGULAR_JACOBIAN"},
+    {AMICI_NOT_IMPLEMENTED, "AMICI_NOT_IMPLEMENTED"},
+    {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
+    {AMICI_SUCCESS, "AMICI_SUCCESS"},
+};
 
 /** AMICI default application context, kept around for convenience for using
   * amici::runAmiciSimulation or instantiating Solver and Model without special
@@ -104,6 +123,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
+    auto start_time_total = clock();
     solver.startTimer();
 
     /* Applies condition-specific model settings and restores them when going
@@ -112,6 +132,9 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
     std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
                                                                      model);
+    if(edata) {
+        rdata->id = edata->id;
+    }
 
     std::unique_ptr<SteadystateProblem> preeq {};
     std::unique_ptr<ForwardProblem> fwd {};
@@ -121,14 +144,13 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     bool bwd_success = true;
 
     try {
-        if (solver.getPreequilibration() ||
-            (edata && !edata->fixedParametersPreequilibration.empty())) {
+        if (edata && !edata->fixedParametersPreequilibration.empty()) {
             ConditionContext cc2(
                 &model, edata, FixedParameterContext::preequilibration
             );
 
             preeq = std::make_unique<SteadystateProblem>(solver, model);
-            preeq->workSteadyStateProblem(&solver, &model, -1);
+            preeq->workSteadyStateProblem(solver, model, -1);
         }
 
 
@@ -139,7 +161,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::make_unique<SteadystateProblem>(solver, model);
-            posteq->workSteadyStateProblem(&solver, &model,
+            posteq->workSteadyStateProblem(solver, model,
                                            fwd->getCurrentTimeIteration());
         }
 
@@ -148,7 +170,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             fwd->getAdjointUpdates(model, *edata);
             if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
-                posteq->workSteadyStateBackwardProblem(&solver, &model,
+                posteq->workSteadyStateBackwardProblem(solver, model,
                                                        bwd.get());
             }
 
@@ -162,7 +184,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             if (preeq) {
                 ConditionContext cc2(&model, edata,
                                      FixedParameterContext::preequilibration);
-                preeq->workSteadyStateBackwardProblem(&solver, &model,
+                preeq->workSteadyStateBackwardProblem(solver, model,
                                                       bwd.get());
             }
         }
@@ -172,29 +194,44 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     } catch (amici::IntegrationFailure const& ex) {
         if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
+            if(rethrow)
+                throw;
+            warningF("AMICI:simulation",
+                     "AMICI forward simulation failed at t = %f: "
+                     "Maximum time exceeded.\n",
+                     ex.time);
         } else {
             rdata->status = ex.error_code;
+            if (rethrow)
+                throw;
+            warningF("AMICI:simulation",
+                     "AMICI forward simulation failed at t = %f:\n%s\n",
+                     ex.time,
+                     ex.what());
+
         }
-        if (rethrow)
-            throw;
-        warningF("AMICI:simulation",
-                 "AMICI forward simulation failed at t = %f:\n%s\n",
-                 ex.time,
-                 ex.what());
     } catch (amici::IntegrationFailureB const& ex) {
         if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
+            if (rethrow)
+                throw;
+            warningF(
+                "AMICI:simulation",
+                "AMICI backward simulation failed when trying to solve until "
+                "t = %f: Maximum time exceeded.\n",
+                ex.time);
+
         } else {
             rdata->status = ex.error_code;
+            if (rethrow)
+                throw;
+            warningF(
+                "AMICI:simulation",
+                "AMICI backward simulation failed when trying to solve until t = %f"
+                " (see message above):\n%s\n",
+                ex.time,
+                ex.what());
         }
-        if (rethrow)
-            throw;
-        warningF(
-          "AMICI:simulation",
-          "AMICI backward simulation failed when trying to solve until t = %f"
-          " (see message above):\n%s\n",
-          ex.time,
-          ex.what());
     } catch (amici::AmiException const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
@@ -216,6 +253,28 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         preeq.get(), fwd.get(),
         bwd_success ? bwd.get() : nullptr,
         posteq.get(), model, solver, edata);
+
+    rdata->cpu_time_total = static_cast<double>(clock() - start_time_total)
+                            * 1000.0 / CLOCKS_PER_SEC;
+
+    // verify that reported CPU times are plausible
+    gsl_EnsuresDebug(rdata->cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
+    if (!posteq)
+        gsl_EnsuresDebug(
+            std::is_sorted(rdata->numsteps.begin(), rdata->numsteps.end())
+            || rdata->status != AMICI_SUCCESS
+        );
+    if (!preeq)
+        gsl_EnsuresDebug(
+            std::is_sorted(rdata->numstepsB.begin(), rdata->numstepsB.end())
+            || rdata->status != AMICI_SUCCESS
+        );
+
     return rdata;
 }
 
@@ -280,29 +339,16 @@ AmiciApplication::errorF(const char* identifier, const char* format, ...) const
     error(identifier, str);
 }
 
-int
-AmiciApplication::checkFinite(gsl::span<const realtype> array, const char* fun)
+std::string simulation_status_to_str(int status)
 {
-
-    for (int idx = 0; idx < (int)array.size(); idx++) {
-        if (isNaN(array[idx])) {
-            warningF("AMICI:NaN",
-                     "AMICI encountered a NaN value at index %i/%i in %s!",
-                     idx,
-                     (int)array.size()-1,
-                     fun);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-        if (isInf(array[idx])) {
-            warningF("AMICI:Inf",
-                     "AMICI encountered an Inf value at index %i/%i in %s!",
-                     idx,
-                     (int)array.size()-1,
-                     fun);
-            return AMICI_RECOVERABLE_ERROR;
-        }
+    try {
+        return simulation_status_to_str_map.at(status);
+    } catch (std::out_of_range const&) {
+        // Missing mapping - terminate if this is a debug build,
+        // but show the number if non-debug.
+        gsl_ExpectsDebug(false);
+        return std::to_string(status);
     }
-    return AMICI_SUCCESS;
 }
 
 } // namespace amici

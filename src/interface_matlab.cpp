@@ -8,9 +8,11 @@
 
 #include "amici/interface_matlab.h"
 
+#include "amici/amici.h"
 #include "amici/model.h"
 #include "amici/exception.h"
 #include "amici/edata.h"
+#include "amici/solver.h"
 #include "amici/returndata_matlab.h"
 
 #include <assert.h>
@@ -120,7 +122,7 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     if (!mxGetPr(prhs[RHS_DATA]))
         return nullptr;
 
-    auto edata = std::unique_ptr<ExpData>(new ExpData(model));
+    auto edata = std::make_unique<ExpData>(model);
 
     // Y
     if (mxArray *dataY = mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
@@ -321,16 +323,8 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
             solver.setStabilityLimitFlag(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet"))));
         }
 
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq")) {
-            solver.setPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
-        }
-
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
             solver.setNewtonMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps"))));
-        }
-
-        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps")) {
-            solver.setNewtonMaxLinearSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxlinsteps"))));
         }
     }
 }

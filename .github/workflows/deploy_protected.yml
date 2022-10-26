@@ -14,13 +14,21 @@ jobs:
     # https://github.com/marketplace/actions/publish-docker
     name: Deploy Dockerhub
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [3.8]
 
     steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
     - uses: actions/checkout@master
     - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
     - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@2.8
+      uses: elgohr/Publish-Docker-Github-Action@v4
       with:
         name: dweindl/amici
         username: ${{ secrets.DOCKER_USERNAME }}

@@ -7,22 +7,24 @@
 
 # Confirmed to be working
 models="
+Bachmann_MSB2011
 Beer_MolBioSystems2014
 Boehm_JProteomeRes2014
 Borghans_BiophysChem1997
 Brannmark_JBC2010
+Bruno_JExpBot2016
 Crauste_CellSystems2017
 Elowitz_Nature2000
 Fiedler_BMC2016
 Fujita_SciSignal2010
+Isensee_JCB2018
+Lucarelli_CellSystems2018
 Schwen_PONE2014
 Sneyd_PNAS2002
 Weber_BMC2015
 Zheng_PNAS2012"
 
 #
-# Not matching reference for unclear reasons
-# Lucarelli_CellSystems2018
 #
 # PEtab needs fixing: Bachmann_MSB2011
 #
@@ -36,7 +38,7 @@ Zheng_PNAS2012"
 # Hass_PONE2017
 # Korkut_eLIFE2015
 # Perelson_Science1996
-# Bruno_JExpBio2016
+#
 #
 # yaml missing:
 # Casaletto_PNAS2019
@@ -53,11 +55,9 @@ Zheng_PNAS2012"
 # state-dependent sigmas:
 # Raia_CancerResearch2011
 #
-# Evaluation is known to be inconsistent:
+# Unknown reasons:
 # Chen_MSB2009
 #
-# Integration Failure:
-# Isensee_JCB2018
 
 set -e
 

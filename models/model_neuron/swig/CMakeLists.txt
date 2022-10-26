@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8) # swig_add_library
 
 if(POLICY CMP0078)
-  cmake_policy(SET CMP0078 OLD)
+  cmake_policy(SET CMP0078 NEW)
 endif(POLICY CMP0078)
 if(POLICY CMP0074)
   # Use package_ROOT environment variables
@@ -32,12 +32,12 @@ set_source_files_properties(${PROJECT_NAME}.i PROPERTIES CPLUSPLUS ON)
 get_target_property(AMICI_INCLUDE_DIRS Upstream::amici INTERFACE_INCLUDE_DIRECTORIES)
 include_directories(${AMICI_INCLUDE_DIRS} ..)
 
-swig_add_library(${PROJECT_NAME}
+swig_add_library(${SWIG_LIBRARY_NAME}
     TYPE MODULE
     LANGUAGE python
     SOURCES ${PROJECT_NAME}.i)
 
-swig_link_libraries(${PROJECT_NAME}
+swig_link_libraries(${SWIG_LIBRARY_NAME}
     ${Python3_LIBRARIES}
     model)
 

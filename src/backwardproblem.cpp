@@ -31,7 +31,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
     root_idx_(fwd.getRootIndexes()),
     dJydx_(fwd.getDJydx()),
     dJzdx_(fwd.getDJzdx()) {
-        /* complement dJydx from postequilibration. This should overwrite
+        /* complement dJydx from postequilibration. This shouldn't overwrite
          * anything but only fill in previously 0 values, as only non-inf
          * timepoints are filled from fwd.
          */
@@ -78,6 +78,9 @@ void BackwardProblem::workBackwardProblem() {
     {
         handleDataPointB(it);
         solver_->setupB(&which, model_->getTimepoint(it), model_, xB_, dxB_, xQB_);
+        /* for initial datapoint diagnosis needs to be stored after setup as
+         it is not called in handleDataPointB*/
+        solver_->storeDiagnosisB(which);
         --it;
 
         while (it >= 0 || discs_.size() > 0) {
@@ -165,7 +168,11 @@ void BackwardProblem::handleEventB() {
 }
 
 void BackwardProblem::handleDataPointB(const int it) {
-    solver_->storeDiagnosisB(which);
+    /* solver wasn't reset yet, as xB_ is necessary for solver setup.
+     For initial time point (we are integrating backwards!), diagnosis needs
+     to be stored outside this function. */
+    if (it < model_->nt() - 1)
+        solver_->storeDiagnosisB(which);
 
     for (int ix = 0; ix < model_->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model_->nJ; iJ++)
@@ -184,7 +191,7 @@ realtype BackwardProblem::getTnext(const int it) {
             it, discs_.size(), this->t_
         );
     }
-        
+
     if (!discs_.empty() &&
         (it < 0 || discs_.back() > model_->getTimepoint(it))) {
         double tdisc = discs_.back();

@@ -1,5 +1,4 @@
 #include "amici/misc.h"
-#include "amici/amici.h"
 #include "amici/symbolic_functions.h"
 
 #include <cstdio>
@@ -176,6 +175,11 @@ std::string printfToString(const char *fmt, va_list ap) {
     delete[] buf;
 
     return str;
+}
+
+std::pair<size_t, size_t> unravel_index(size_t flat_idx, size_t num_cols)
+{
+    return {flat_idx / num_cols, flat_idx % num_cols};
 }
 
 } // namespace amici
