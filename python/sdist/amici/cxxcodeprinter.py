@@ -14,7 +14,13 @@ from toposort import toposort
 class AmiciCxxCodePrinter(CXX11CodePrinter):
     """C++ code printer"""
 
-    def __init__(self):
+    def __init__(self, optimize_code: bool = True):
+        """
+        Create code printer
+
+        :param optimize_code:
+            Whether to apply code optimizations such as log(1 + x) --> logp1(x)
+        """
         super().__init__()
 
         # extract common subexpressions in matrix functions?
@@ -23,16 +29,20 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         # Floating-point optimizations
         # e.g., log(1 + x) --> logp1(x)
-        self._fpoptimizer = lambda x: optimize(x, optims_c99)
+        if optimize_code:
+            self._fpoptimizer = lambda x: optimize(x, optims_c99)
+        else:
+            self._fpoptimizer = None
 
     def doprint(self, expr: sp.Expr, assign_to: Optional[str] = None) -> str:
-        try:
-            # floating point
+        if self._fpoptimizer:
             if isinstance(expr, list):
                 expr = list(map(self._fpoptimizer, expr))
             else:
                 expr = self._fpoptimizer(expr)
 
+        try:
+            # floating point
             code = super().doprint(expr, assign_to)
             code = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', code)
 
@@ -225,8 +235,8 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
                 symbol_row_vals.append(row)
                 idx += 1
-                symbol_name = f'd{self.doprint(rownames[row])}' \
-                              f'_d{self.doprint(colnames[col])}'
+                symbol_name = f'd{rownames[row].name}' \
+                              f'_d{colnames[col].name}'
                 if identifier:
                     symbol_name += f'_{identifier}'
                 symbol_list.append(symbol_name)
