@@ -342,21 +342,25 @@ def import_petab_problem(
 
 def check_model(amici_model: amici.Model, petab_problem: petab.Problem) -> None:
     """Check that the model is consistent with the PEtab problem."""
-    amici_ids_free = set(amici_model.getParameterIds())
-    amici_ids = amici_ids_free | set(amici_model.getFixedParameterIds())
-    petab_ids = set(petab_problem.parameter_df.index)
+    if petab_problem.parameter_df is not None:
+        amici_ids_free = set(amici_model.getParameterIds())
+        amici_ids = amici_ids_free | set(amici_model.getFixedParameterIds())
+        petab_ids = set(petab_problem.parameter_df.index)
 
-    petab_ids_free = set(petab_problem.parameter_df.loc[petab_problem.parameter_df[ESTIMATE] == 1].index)
+        petab_ids_free = set(petab_problem.parameter_df.loc[
+            petab_problem.parameter_df[ESTIMATE] == 1
+        ].index)
 
-    amici_ids_free_required = petab_ids_free.intersection(amici_ids)
+        amici_ids_free_required = petab_ids_free.intersection(amici_ids)
 
-    if not amici_ids_free_required.issubset(amici_ids_free):
-        raise ValueError(
-            'The available AMICI model does not support estimating the '
-            'following parameters. Please recompile the model and ensure that '
-            'these parameters are not treated as constants. '
-            f'Parameters: {amici_ids_free_required.difference(amici_ids_free)}'
-        )
+        if not amici_ids_free_required.issubset(amici_ids_free):
+            raise ValueError(
+                'The available AMICI model does not support estimating the '
+                'following parameters. Please recompile the model and ensure '
+                'that these parameters are not treated as constants. '
+                'Parameters: '
+                f'{amici_ids_free_required.difference(amici_ids_free)}'
+            )
 
 
 def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
