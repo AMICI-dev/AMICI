@@ -357,8 +357,8 @@ def check_model(amici_model: amici.Model, petab_problem: petab.Problem) -> None:
             raise ValueError(
                 'The available AMICI model does not support estimating the '
                 'following parameters. Please recompile the model and ensure '
-                'that these parameters are not treated as constants. '
-                'Parameters: '
+                'that these parameters are not treated as constants. Deleting '
+                'the current model might also resolve this. Parameters: '
                 f'{amici_ids_free_required.difference(amici_ids_free)}'
             )
 
