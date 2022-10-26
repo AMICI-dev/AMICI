@@ -10,6 +10,7 @@ import logging
 import os
 import sys
 
+import julia.core
 import petab
 import yaml
 
@@ -151,12 +152,18 @@ def main():
             Main.eval('edata = ExpData(id=id, ts=ts, k=k, sigmay=sigmay, my=my, pscale=pscale)')
 
             Main.p = np.asarray(edata.parameters)
-            Main.eval('llh, x, y = run_simulation(p, model, prob, edata)')
-            Main.eval('llh, x, y = run_simulation(p, model, prob, edata)')
-            print(f'amici simulation time: {rdatas[0].cpu_time_total/1000} [s]')
-            assert_allclose(Main.llh, rdata.llh, rtol=1e-3)
-            assert_allclose(Main.x, rdata.x, rtol=1e-2)
-            assert_allclose(Main.y, rdata.y, rtol=1e-2)
+            print(f'=== {args.model_name} ({edata.id}) ===')
+            for solver in ('KenCarp4', 'FBDF', 'QNDF', 'Rosenbrock23', 'TRBDF2'):
+                try:
+                    Main.solver = solver
+                    Main.eval('llh, x, y = run_simulation(p, model, prob, edata, solver)')
+                    Main.eval('llh, x, y = run_simulation(p, model, prob, edata, solver)')
+                    print(f'amici simulation time {rdatas[0].cpu_time_total/1000} [s]')
+                except julia.core.JuliaError:
+                    print(f'julia ({solver}) failed')
+            #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
+            #assert_allclose(Main.x, rdata.x, rtol=1e-2)
+            #assert_allclose(Main.y, rdata.y, rtol=1e-2)
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \

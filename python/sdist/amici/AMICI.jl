@@ -32,24 +32,39 @@ import Pkg
 #Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity", "ModelingToolkit", "Symbolics", "SciMLBase"])
 
 
-using OrdinaryDiffEq: solve, KenCarp4
+using OrdinaryDiffEq: solve, KenCarp4, FBDF, QNDF, Rosenbrock23, TRBDF2
 using SciMLBase: ODEProblem
 using SciMLSensitivity: remake
 
-function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edata::ExpData)::Tuple{Float64, Vector{Vector{Float64}}, Vector{Vector{Float64}}}
+function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edata::ExpData, solver::String)::Tuple{Float64, Vector{Vector{Float64}}, Vector{Vector{Float64}}}
     up = map(transform_scale, zip(p, edata.pscale))
 
     # initialization & prepare
     x0 = model.x0(up, edata.k)
     tcl = model.tcl(x0, up, edata.k)
 
+    if solver == "KenCarp4"
+        solv = KenCarp4()
+    elseif solver == "FBDF"
+        solv = FBDF()
+    elseif solver == "QNDF"
+        solv = QNDF()
+    elseif solver == "Rosenbrock23"
+        solv = Rosenbrock23()
+    elseif solver == "TRBDF2"
+        solv = TRBDF2()
+    else
+        solv = QNDF()
+    end
+
     # simulate
     _prob = remake(prob,
                    p=[up; edata.k; tcl],
                    u0=model.x_solver(x0),
                    tspan=[min(edata.ts[begin], 0.0), edata.ts[end]])
-    time = @elapsed sol = solve(_prob, KenCarp4(), saveat=edata.ts)
-    println("julia simulation time $time [s]")
+    time = @elapsed sol = solve(_prob, solv, saveat=edata.ts,
+                                abstol=1e-16, reltol=1e-8)
+    println("julia ($solver) simulation time $time [s]")
 
     # observables & loss
     nt = length(edata.ts)
