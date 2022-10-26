@@ -117,8 +117,7 @@ def get_fixed_parameters(
     #  turned into AMICI constants
     # due to legacy API, we might not always have a parameter table, though
     fixed_parameters = set()
-    if non_estimated_parameters_as_constants \
-            and petab_problem.parameter_df is not None:
+    if petab_problem.parameter_df is not None:
         all_parameters = get_valid_parameters_for_parameter_table(
             model=petab_problem.model,
             condition_df=petab_problem.condition_df,
@@ -129,8 +128,13 @@ def get_fixed_parameters(
             if petab_problem.measurement_df is not None
             else pd.DataFrame(columns=petab.MEASUREMENT_DF_REQUIRED_COLS),
         )
-        estimated_parameters = petab_problem.parameter_df.index.values[
-                                    petab_problem.parameter_df[ESTIMATE] == 1]
+        if non_estimated_parameters_as_constants:
+            estimated_parameters = \
+                petab_problem.parameter_df.index.values[
+                    petab_problem.parameter_df[ESTIMATE] == 1]
+        else:
+            # don't treat parameter table parameters as constants
+            estimated_parameters = petab_problem.parameter_df.index.values
         fixed_parameters = set(all_parameters) - set(estimated_parameters)
 
     sbml_model = petab_problem.sbml_model
