@@ -340,14 +340,16 @@ def import_petab_problem(
     return model
 
 
-def check_model(amici_model: amici.Model, petab_problem: petab.Problem) -> None:
+def check_model(
+    amici_model: amici.Model,
+    petab_problem: petab.Problem,
+) -> None:
     """Check that the model is consistent with the PEtab problem."""
     if petab_problem.parameter_df is None:
         return
 
     amici_ids_free = set(amici_model.getParameterIds())
     amici_ids = amici_ids_free | set(amici_model.getFixedParameterIds())
-    petab_ids = set(petab_problem.parameter_df.index)
 
     petab_ids_free = set(petab_problem.parameter_df.loc[
         petab_problem.parameter_df[ESTIMATE] == 1
