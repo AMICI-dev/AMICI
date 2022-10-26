@@ -13,11 +13,19 @@ import sys
 import petab
 import yaml
 
+import numpy as np
+
+from julia import Main
+
 import amici
 from amici.logging import get_logger
-from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
-                                   LLH, RDATAS)
+from amici.petab_objective import (
+     simulate_petab, rdatas_to_measurement_df, LLH, RDATAS, create_edatas,
+     fill_in_parameters, create_parameter_mapping
+ )
 from petab.visualize import plot_problem
+
+from numpy.testing import assert_allclose
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
@@ -93,6 +101,62 @@ def main():
         solver=amici_solver, log_level=logging.DEBUG)
     rdatas = res[RDATAS]
     llh = res[LLH]
+
+    if args.model_name not in (
+            'Bachmann_MSB2011', 'Beer_MolBioSystems2014', 'Brannmark_JBC2010',
+            'Isensee_JCB2018', 'Weber_BMC2015', 'Zheng_PNAS2012'
+    ):
+        simulation_conditions = \
+            problem.get_simulation_conditions_from_measurement_df()
+        edatas = create_edatas(
+            amici_model=amici_model,
+            petab_problem=problem,
+            simulation_conditions=simulation_conditions
+        )
+        problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE)
+                              for t in problem.parameter_df.itertuples()}
+        parameter_mapping = create_parameter_mapping(
+            petab_problem=problem,
+            simulation_conditions=simulation_conditions,
+            scaled_parameters=False,
+            amici_model=amici_model
+        )
+        fill_in_parameters(
+            edatas=edatas,
+            problem_parameters=problem_parameters,
+            scaled_parameters=False,
+            parameter_mapping=parameter_mapping,
+            amici_model=amici_model
+        )
+
+        Main.eval(f'push!(LOAD_PATH,"{amici.amiciModulePath}")')
+        Main.eval('using AMICI: ExpData, run_simulation')
+        Main.include(os.path.join(args.model_directory, args.model_name,
+                                  f'{args.model_name}.jl'))
+        Main.eval(f'using .{args.model_name}_model: model, prob')
+        for edata, rdata in zip(edatas, res[RDATAS]):
+            Main.id = edata.id
+            Main.ts = np.asarray(edata.getTimepoints())
+            Main.k = np.asarray(edata.fixedParameters)
+            Main.sigmay = np.asarray(
+                edata.getObservedDataStdDev()
+            ).reshape(len(edata.getTimepoints()), amici_model.ny)
+            Main.my = np.asarray(
+                edata.getObservedData()
+            ).reshape(len(edata.getTimepoints()), amici_model.ny)
+            Main.pscale = np.asarray([
+                amici.ParameterScaling(scale).name for scale in edata.pscale
+            ])
+
+            Main.eval('edata = ExpData(id=id, ts=ts, k=k, sigmay=sigmay, my=my, pscale=pscale)')
+
+            Main.p = np.asarray(edata.parameters)
+            Main.eval('llh, x, y = run_simulation(p, model, prob, edata)')
+            Main.eval('llh, x, y = run_simulation(p, model, prob, edata)')
+            print(f'amici simulation time: {rdatas[0].cpu_time_total/1000} [s]')
+            assert_allclose(Main.llh, rdata.llh, rtol=1e-3)
+            assert_allclose(Main.x, rdata.x, rtol=1e-2)
+            assert_allclose(Main.y, rdata.y, rtol=1e-2)
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \

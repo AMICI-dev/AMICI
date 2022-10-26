@@ -2486,15 +2486,7 @@ class ODEExporter:
         sym_names = ('p', 'k', 'x', 'tcl', 'w', 'my', 'y', 'sigmay',
                      'x_rdata')
 
-        indent = 8
-
-        def jnp_stack_str(array) -> str:
-            elems = ''.join(str(x) + ', ' for x in array)
-
-            if not elems:
-                return 'tuple()'
-
-            return elems
+        indent = 4
 
         tpl_data = {
             **{
@@ -2508,24 +2500,26 @@ class ODEExporter:
                 for eq_name in eq_names
             },
             **{
-                f'{eq_name.upper()}_RET': '[' + ', '.join(
+                f'{eq_name.upper()}_RET': '[' + ','.join(
                     str(strip_pysb(s)) for s in self.model.sym(eq_name)
-                ) + ']' if eq_name != 'Jy'
-                else ('jnp.nansum(jnp.stack((' + ''.join(
-                    str(s) + ', ' for s in self.model.sym(eq_name)
-                ) + '), axis=-1))') if self.model.sym(eq_name) else '0'
+                ) + ']'
                 for eq_name in eq_names
             },
             **{
                 f'{sym_name.upper()}_SYMS': ''.join(
-                    (str(strip_pysb(s)) + ', '
+                    (str(strip_pysb(s)) + ','
                      for s in self.model.sym(sym_name))
                 )
                 if self.model.sym(sym_name) else '_'
                 for sym_name in sym_names
             },
             **{
-                'MODEL_NAME': self.model_name,
+                'MODULE_NAME': self.model_name + '_model',
+                'NX': self.model.num_states_solver(),
+                'NP': self.model.num_par(),
+                'NK': self.model.num_const(),
+                'NTCL': self.model.num_cons_law(),
+                'AMICI_PATH': amiciModulePath,
             }
         }
         os.makedirs(os.path.join(self.model_path, self.model_name),
