@@ -2,19 +2,34 @@
 import itertools
 import os
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Iterable
 
 import sympy as sp
-from sympy.codegen.rewriting import optimize, optims_c99
+from sympy.codegen.rewriting import optimize, Optimization
 from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
 from toposort import toposort
 
 
 class AmiciCxxCodePrinter(CXX11CodePrinter):
-    """C++ code printer"""
+    """
+    C++ code printer
 
-    def __init__(self, optimize_code: bool = True):
+    Attributes
+    ----------
+    extract_cse:
+        Whether to extract common subexpression during code printing.
+        Currently controlled by environment variable ``AMICI_EXTRACT_CSE``.
+    optimizations:
+        Iterable of :class:`sympy.codegen.rewriting.Optimization`s to optimize
+        generated code (e.g. :data:`sympy.codegen.rewriting.Optimization` for
+        optimizations, such as ``log(1 + x)`` --> ``logp1(x)``).
+        Applying these optimizations is potentially quite costly.
+    """
+
+    optimizations: Iterable[Optimization] = ()
+
+    def __init__(self):
         """
         Create code printer
 
@@ -29,8 +44,8 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         # Floating-point optimizations
         # e.g., log(1 + x) --> logp1(x)
-        if optimize_code:
-            self._fpoptimizer = lambda x: optimize(x, optims_c99)
+        if self.optimizations:
+            self._fpoptimizer = lambda x: optimize(x, self.optimizations)
         else:
             self._fpoptimizer = None
 
