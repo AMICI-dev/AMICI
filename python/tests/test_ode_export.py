@@ -10,8 +10,11 @@ def test_csc_matrix():
     printer = AmiciCxxCodePrinter()
     matrix = sp.Matrix([[1, 0], [2, 3]])
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = printer.csc_matrix(matrix, rownames=['a1', 'a2'],
-                             colnames=['b1', 'b2'])
+        = printer.csc_matrix(
+        matrix,
+        rownames=[sp.Symbol('a1'), sp.Symbol('a2')],
+        colnames=[sp.Symbol('b1'), sp.Symbol('b2')]
+    )
 
     assert symbol_col_ptrs == [0, 2, 3]
     assert symbol_row_vals == [0, 1, 1]
