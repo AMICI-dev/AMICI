@@ -222,6 +222,10 @@ def ode_model_from_pysb_importer(
         simplify=simplify,
         cache_simplify=cache_simplify,
     )
+    # Sympy code optimizations are incompatible with PySB objects, as
+    #  `pysb.Observable` comes with its own `.match` which overrides
+    #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.
+    ode._code_printer._fpoptimizer = None
 
     if constant_parameters is None:
         constant_parameters = []

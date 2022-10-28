@@ -2979,7 +2979,7 @@ class ODEExporter:
         elif function in self.model.sym_names() \
                 and function not in non_unique_id_symbols:
             if function in sparse_functions:
-                symbols = self.model.sparsesym(function)
+                symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
             else:
                 symbols = self.model.sym(function)
             lines += self.model._code_printer._get_sym_lines_symbols(
