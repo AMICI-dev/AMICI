@@ -10,7 +10,5 @@ def test_optimizations():
         AmiciCxxCodePrinter.optimizations = optims_c99
         cp = AmiciCxxCodePrinter()
         assert "expm1" in cp.doprint(sp.sympify("exp(x) - 1"))
-    except Exception:
-        raise
     finally:
         AmiciCxxCodePrinter.optimizations = old_optim
