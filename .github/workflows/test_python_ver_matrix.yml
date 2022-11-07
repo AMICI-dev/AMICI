@@ -50,19 +50,21 @@ jobs:
           libhdf5-serial-dev \
           libboost-math-dev
 
-    # install AMICI
-    - name: Build BNGL
-      run: |
-        scripts/buildBNGL.sh
-    - name: Install python package
-      run: |
-        scripts/installAmiciSource.sh
-
     - name: Extra dependencies
+      # h5py from source
       run: |
         if [[ ${{ matrix.python-version }} == "3.11" ]] ; then \
           pip install cython
         fi
+
+    # install AMICI
+    - name: Build BNGL
+      run: |
+        scripts/buildBNGL.sh
+
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
 
     - name: Python tests
       run: |
