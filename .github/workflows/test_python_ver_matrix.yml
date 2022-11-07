@@ -54,7 +54,7 @@ jobs:
       # h5py from source
       run: |
         if [[ ${{ matrix.python-version }} == "3.11" ]] ; then \
-          pip install cython
+          pip3 install cython
         fi
 
     # install AMICI
