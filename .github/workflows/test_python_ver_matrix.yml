@@ -58,6 +58,12 @@ jobs:
       run: |
         scripts/installAmiciSource.sh
 
+    - name: Extra dependencies
+      run: |
+        if [[ ${{ matrix.python-version }} == "3.11" ]] ; then \
+          pip install cython
+        fi
+
     - name: Python tests
       run: |
         source build/venv/bin/activate \
