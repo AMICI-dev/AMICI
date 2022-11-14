@@ -1,9 +1,15 @@
 # References
 
-List of publications using AMICI. Total number is 69.
+List of publications using AMICI. Total number is 70.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
+<h1 class="unnumbered" id="section">2023</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-MishraWan2023">
+<p>Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023. “Design and Application of a Kinetic Model of Lipid Metabolism in Saccharomyces Cerevisiae.” <em>Metabolic Engineering</em> 75: 12–18. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003</a>.</p>
+</div>
+</div>
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-Froehlich2022.02.17.480899">
