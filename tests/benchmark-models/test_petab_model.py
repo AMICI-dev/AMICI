@@ -15,6 +15,7 @@ import petab
 import yaml
 
 import numpy as np
+import pandas as pd
 
 from julia import Main
 
@@ -135,6 +136,15 @@ def main():
         Main.include(os.path.join(args.model_directory, args.model_name,
                                   f'{args.model_name}.jl'))
         Main.eval(f'using .{args.model_name}_model: model, prob')
+        julia_solvers = (
+            'KenCarp4', 'FBDF', 'QNDF', 'Rosenbrock23', 'TRBDF2', 'RadauIIA5',
+            'Rodas4', 'CVODE_BDF'
+        )
+        times = {
+            solver: 0.0
+            for solver in julia_solvers
+        }
+        times['AMICI'] = 0.0
         for edata, rdata in zip(edatas, res[RDATAS]):
             Main.id = edata.id
             Main.ts = np.asarray(edata.getTimepoints())
@@ -153,20 +163,23 @@ def main():
 
             Main.p = np.asarray(edata.parameters)
             print(f'=== {args.model_name} ({edata.id}) ===')
+            times['AMICI'] += rdatas[0].cpu_time_total/1000
             for solver in ('KenCarp4', 'FBDF', 'QNDF', 'Rosenbrock23', 'TRBDF2', 'RadauIIA5', 'Rodas4', 'CVODE_BDF'):
                 try:
                     Main.solver = solver
-                    Main.eval('llh, x, y = run_simulation(p, model, prob, edata, solver)')
+                    Main.eval('llh, x, y, t = run_simulation(p, model, prob, edata, solver)')
                     #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
                     #assert_allclose(Main.x, rdata.x, rtol=1e-2)
                     #assert_allclose(Main.y, rdata.y, rtol=1e-2)
-                    Main.eval('llh, x, y = run_simulation(p, model, prob, edata, solver)')
-                    print(f'amici simulation time {rdatas[0].cpu_time_total/1000} [s]')
+                    Main.eval('llh, x, y, t = run_simulation(p, model, prob, edata, solver)')
+                    times[solver] += Main.t
                     #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
                     #assert_allclose(Main.x, rdata.x, rtol=1e-2)
                     #assert_allclose(Main.y, rdata.y, rtol=1e-2)
                 except julia.core.JuliaError:
-                    print(f'julia ({solver}) failed')
+                    times[solver] += np.Inf
+
+        pd.Series(times).to_csv(f'{args.model_name}_julia_benchmark.csv')
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \

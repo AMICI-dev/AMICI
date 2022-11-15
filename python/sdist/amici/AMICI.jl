@@ -1,7 +1,7 @@
 module AMICI
 
 import Pkg
-#Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity"])
+Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity"])
 
 import Base.@kwdef
 
@@ -37,7 +37,7 @@ using Sundials: CVODE_BDF
 using SciMLBase: ODEProblem
 using SciMLSensitivity: remake
 
-function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edata::ExpData, solver::String)::Tuple{Float64, Vector{Vector{Float64}}, Vector{Vector{Float64}}}
+function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edata::ExpData, solver::String)::Tuple{Float64, Vector{Vector{Float64}}, Vector{Vector{Float64}}, Float64}
     up = map(transform_scale, zip(p, edata.pscale))
 
     # initialization & prepare
@@ -71,7 +71,6 @@ function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edat
                    tspan=[min(edata.ts[begin], 0.0), edata.ts[end]])
     time = @elapsed sol = solve(_prob, solv, saveat=edata.ts,
                                 abstol=1e-16, reltol=1e-8)
-    println("julia ($solver) simulation time $time [s]")
 
     # observables & loss
     nt = length(edata.ts)
@@ -82,7 +81,7 @@ function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edat
                  range(; stop = nt))
     llhs = map(it -> model.Jy(y[it], edata.my[it, :], sigmay[it]),
                range(; stop = length(edata.ts)))
-    return - sum(sum(llhs)), x, y
+    return - sum(sum(llhs)), x, y, time
 end
 
 
