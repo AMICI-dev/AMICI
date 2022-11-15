@@ -1,5 +1,6 @@
 module TPL_MODULE_NAME
 
+import Pkg
 Pkg.add(["Symbolics", "OrdinaryDiffEq", "ModelingToolkit"])
 export model, prob
 
