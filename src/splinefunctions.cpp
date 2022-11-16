@@ -254,6 +254,7 @@ HermiteSpline::handle_boundary_conditions()
               }
             }
             break;
+
         default:
             throw AmiException("Invalid value for boundary condition.");
     }
@@ -289,6 +290,7 @@ HermiteSpline::handle_boundary_conditions()
                 // if one bc is periodic, the other is periodic too
                 node_values_derivative_[last] = node_values_derivative_[0];
             break;
+
         default:
             throw AmiException("Invalid value for boundary condition.");
     }
@@ -502,8 +504,6 @@ HermiteSpline::compute_slope_sensitivities_by_fd(
     int last = n_nodes() - 1;
     int node_offset = spline_offset + ip;
 
-    // TODO should we check that dvaluesdp satisfies the bc?
-
     // Left boundary (first node)
     switch (first_node_bc_) {
         case SplineBoundaryCondition::given:
@@ -649,15 +649,14 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
                 } else if (!get_node_derivative_by_fd() &&
                            first_node_bc_ == SplineBoundaryCondition::given) {
-                    // sm0 = dslopesdp[spline_offset + ip];
+                    sm0 = dslopesdp[spline_offset + ip]; 
+
+                } else if (!get_node_derivative_by_fd() &&
+                           first_node_bc_ == SplineBoundaryCondition::natural) {
                     throw AmiException(
                       "Natural boundary condition for "
                       "Hermite splines with linear extrapolation is "
                       "not yet implemented.");
-
-                } else if (!get_node_derivative_by_fd() &&
-                           first_node_bc_ == SplineBoundaryCondition::natural) {
-                    throw AmiException("Not implemented: sm0 is not set");
 
                 } else {
                     throw AmiException(
@@ -801,7 +800,7 @@ HermiteSpline::compute_final_value()
         } else if (coefficients_extrapolate[2] > 0) {
             finalValue = INFINITY;
         } else {
-            finalValue = coefficients_extrapolate[2];
+            finalValue = 0;
         }
     } else if (last_node_ep_ == SplineExtrapolation::polynomial) {
         int last = 4 * (n_nodes() - 1) - 1;
@@ -822,6 +821,7 @@ HermiteSpline::compute_final_value()
         }
     } else {
         /* Periodic: will not yield a steady state */
+        // TODO unless the spline is the constant funtion
         finalValue = NAN;
     }
     set_final_value_scaled(finalValue);
@@ -851,6 +851,7 @@ HermiteSpline::compute_final_sensitivity(
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     } else {
         /* Periodic: will not yield a steady state */
+        // TODO unless the spline is the constant funtion
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     }
     set_final_sensitivity_scaled(finalSensitivity);
@@ -894,6 +895,7 @@ HermiteSpline::get_value_scaled(const realtype t) const
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
                 return get_value(nodes_[0] + std::fmod(t - nodes_[0], len));
+            
             default:
                 throw AmiException("Unsupported SplineExtrapolation type");
         }
