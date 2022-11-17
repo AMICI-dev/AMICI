@@ -38,13 +38,15 @@ import libsbml
 from abc import abstractmethod, ABC
 from itertools import count
 from sympy.core.parameters import evaluate
-from .sbml_utils import (
+from .import_utils import (
     sbml_time_symbol,
     amici_time_symbol,
+    annotation_namespace,
+)
+from .sbml_utils import (
     pretty_xml,
     mathml2sympy,
     sbml_mathml,
-    annotation_namespace,
     get_sbml_units,
     add_parameter,
     add_assignment_rule,

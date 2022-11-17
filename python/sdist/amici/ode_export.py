@@ -2690,6 +2690,27 @@ class ODEExporter:
         with open(compile_script, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
+    def _get_index(self, name: str) -> Dict[sp.Symbol, int]:
+        """
+        Compute indices for a symbolic array.
+        :param name:
+            key in self.model._syms for which to obtain the index.
+        :return:
+            a dictionary of symbol/index pairs.
+        """
+        if name in self.model.sym_names():
+            if name in sparse_functions:
+                symbols = self.model.sparsesym(name)
+            else:
+                symbols = self.model.sym(name).T
+        else:
+            raise ValueError(f'Unknown symbolic array: {name}')
+
+        return {
+            strip_pysb(symbol).name: index
+            for index, symbol in enumerate(symbols)
+        }
+
     def _write_index_files(self, name: str) -> None:
         """
         Write index file for a symbolic array.
