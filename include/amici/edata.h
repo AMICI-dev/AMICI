@@ -2,7 +2,6 @@
 #define AMICI_EDATA_H
 
 #include "amici/defines.h"
-#include "amici/vector.h"
 #include "amici/misc.h"
 #include "amici/simulation_parameters.h"
 
@@ -519,6 +518,7 @@ class ConditionContext : public ContextManager {
     std::vector<realtype> original_sx0_;
     std::vector<realtype> original_parameters_;
     std::vector<realtype> original_fixed_parameters_;
+    realtype original_tstart_;
     std::vector<realtype> original_timepoints_;
     std::vector<int> original_parameter_list_;
     std::vector<amici::ParameterScaling> original_scaling_;

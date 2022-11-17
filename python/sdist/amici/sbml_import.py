@@ -4,40 +4,43 @@ SBML Import
 This module provides all necessary functionality to import a model specified
 in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
-
-
-import sympy as sp
-import libsbml as sbml
-import re
-import math
-import warnings
-import logging
-import xml.etree.ElementTree as ET
-import itertools as itt
 import copy
-from typing import (
-    Dict, List, Callable, Any, Iterable, Union, Optional,
-)
+import itertools as itt
+import logging
+import math
+import os
+import re
+import warnings
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
+                    Union)
 
-from .import_utils import (
-    smart_subs, smart_subs_dict, toposort_symbols,
-    _get_str_symbol_identifiers, noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation, _parse_special_functions,
-    _check_unsupported_functions,
-)
-from .ode_export import (
-    ODEExporter, ODEModel, generate_measurement_symbol,
-    symbol_with_assumptions
-)
+import libsbml as sbml
+import sympy as sp
+
+from . import has_clibs
 from .constants import SymbolId
+from .import_utils import (RESERVED_SYMBOLS,
+                           annotation_namespace,
+                           _check_unsupported_functions,
+                           _get_str_symbol_identifiers,
+                           _parse_logical_operators,
+                           _parse_special_functions,
+                           generate_measurement_symbol,
+                           generate_regularization_symbol,
+                           noise_distribution_to_cost_function,
+                           noise_distribution_to_observable_transformation,
+                           smart_subs, smart_subs_dict, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
-from .sbml_utils import (
-    SBMLException,
-    annotation_namespace,
-    _parse_logical_operators,
+from .ode_export import (
+    ODEExporter, ODEModel, symbol_with_assumptions, _default_simplify
 )
 from .splines import AbstractSpline
-from . import has_clibs
+
+
+class SBMLException(Exception):
+    pass
 
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
@@ -118,7 +121,7 @@ class SbmlImporter:
     """
 
     def __init__(self,
-                 sbml_source: Union[str, sbml.Model],
+                 sbml_source: Union[str, Path, sbml.Model],
                  show_sbml_warnings: bool = False,
                  from_file: bool = True,
                  discard_annotations: bool = False) -> None:
@@ -145,7 +148,7 @@ class SbmlImporter:
         else:
             self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
             if from_file:
-                sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+                sbml_doc = self.sbml_reader.readSBMLFromFile(str(sbml_source))
             else:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
@@ -212,25 +215,30 @@ class SbmlImporter:
         Reset the symbols attribute to default values
         """
         self.symbols = copy.deepcopy(default_symbols)
-        self._local_symbols = dict()
+        self._local_symbols = {}
 
-    def sbml2amici(self,
-                   model_name: str = None,
-                   output_dir: str = None,
-                   observables: Dict[str, Dict[str, str]] = None,
-                   constant_parameters: Iterable[str] = None,
-                   sigmas: Dict[str, Union[str, float]] = None,
-                   noise_distributions: Dict[str, Union[str, Callable]] = None,
-                   verbose: Union[int, bool] = logging.ERROR,
-                   assume_pow_positivity: bool = False,
-                   compiler: str = None,
-                   allow_reinit_fixpar_initcond: bool = True,
-                   compile: bool = True,
-                   compute_conservation_laws: bool = True,
-                   simplify: Callable = lambda x: sp.powsimp(x, deep=True),
-                   log_as_log10: bool = True,
-                   generate_sensitivity_code: bool = True,
-                   **kwargs) -> None:
+    def sbml2amici(
+            self,
+            model_name: str,
+            output_dir: Union[str, Path] = None,
+            observables: Dict[str, Dict[str, str]] = None,
+            event_observables: Dict[str, Dict[str, str]] = None,
+            constant_parameters: Iterable[str] = None,
+            sigmas: Dict[str, Union[str, float]] = None,
+            event_sigmas: Dict[str, Union[str, float]] = None,
+            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            event_noise_distributions: Dict[str, Union[str, Callable]] = None,
+            verbose: Union[int, bool] = logging.ERROR,
+            assume_pow_positivity: bool = False,
+            compiler: str = None,
+            allow_reinit_fixpar_initcond: bool = True,
+            compile: bool = True,
+            compute_conservation_laws: bool = True,
+            simplify: Optional[Callable] = _default_simplify,
+            cache_simplify: bool = False,
+            log_as_log10: bool = True,
+            generate_sensitivity_code: bool = True,
+    ) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
         constructor.
@@ -256,14 +264,29 @@ class SbmlImporter:
             dictionary( observableId:{'name':observableName
             (optional), 'formula':formulaString)}) to be added to the model
 
+        :param event_observables:
+            dictionary( eventObservableId:{'name':eventObservableName
+            (optional), 'event':eventId, 'formula':formulaString)}) to be
+            added to the model
+
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
 
         :param sigmas:
             dictionary(observableId: sigma value or (existing) parameter name)
 
+        :param event_sigmas:
+            dictionary(eventObservableId: sigma value or (existing) parameter
+            name)
+
         :param noise_distributions:
             dictionary(observableId: noise type).
+            If nothing is passed for some observable id, a normal model is
+            assumed as default. Either pass a noise type identifier, or a
+            callable generating a custom noise string.
+
+        :param event_noise_distributions:
+            dictionary(eventObservableId: noise type).
             If nothing is passed for some observable id, a normal model is
             assumed as default. Either pass a noise type identifier, or a
             callable generating a custom noise string.
@@ -292,11 +315,24 @@ class SbmlImporter:
             if set to ``True``, conservation laws are automatically computed
             and applied such that the state-jacobian of the ODE
             right-hand-side has full rank. This option should be set to
-            ``True`` when using the newton algorithm to compute steadystate
+            ``True`` when using the Newton algorithm to compute steadystate
             sensitivities.
+            Conservation laws for constant species are enabled by default.
+            Support for conservation laws for non-constant species is
+            experimental and may be enabled by setting an environment variable
+            ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` to either ``demartino``
+            to use the algorithm proposed by De Martino et al. (2014)
+            https://doi.org/10.1371/journal.pone.0100750, or to any other value
+            to use the deterministic algorithm implemented in
+            ``conserved_moieties2.py``. In some cases, the ``demartino`` may
+            run for a very long time. This has been observed for example in the
+            case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
             see :attr:`ODEModel._simplify`
+
+        :param cache_simplify:
+                see :func:`amici.ODEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
@@ -306,74 +342,24 @@ class SbmlImporter:
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
             not be generated
-
         """
         set_log_level(logger, verbose)
 
-        if 'constantParameters' in kwargs:
-            logger.warning('Use of `constantParameters` as argument name '
-                           'is deprecated and will be removed in a future '
-                           'version. Please use `constant_parameters` as '
-                           'argument name.')
-
-            if constant_parameters is not None:
-                raise ValueError('Cannot specify constant parameters using '
-                                 'both `constantParameters` and '
-                                 '`constant_parameters` as argument names.')
-
-            constant_parameters = kwargs.pop('constantParameters', [])
-
-        elif constant_parameters is None:
-            constant_parameters = []
-        constant_parameters = list(constant_parameters)
-
-        if sigmas is None:
-            sigmas = {}
-
-        if noise_distributions is None:
-            noise_distributions = {}
-
-        if model_name is None:
-            model_name = kwargs.pop('modelName', None)
-            if model_name is None:
-                raise ValueError('Missing argument: `model_name`')
-            else:
-                logger.warning('Use of `modelName` as argument name is '
-                               'deprecated and will be removed in a future'
-                               ' version. Please use `model_name` as '
-                               'argument name.')
-        else:
-            if 'modelName' in kwargs:
-                raise ValueError('Cannot specify model name using both '
-                                 '`modelName` and `model_name` as argument '
-                                 'names.')
-
-        if len(kwargs):
-            raise ValueError(f'Unknown arguments {kwargs.keys()}.')
-
-        self._reset_symbols()
-        self.sbml_parser_settings.setParseLog(
-            sbml.L3P_PARSE_LOG_AS_LOG10 if log_as_log10 else
-            sbml.L3P_PARSE_LOG_AS_LN
+        ode_model = self._build_ode_model(
+            observables=observables,
+            event_observables=event_observables,
+            constant_parameters=constant_parameters,
+            sigmas=sigmas,
+            event_sigmas=event_sigmas,
+            noise_distributions=noise_distributions,
+            event_noise_distributions=event_noise_distributions,
+            verbose=verbose,
+            compute_conservation_laws=compute_conservation_laws,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+            log_as_log10=log_as_log10,
         )
-        self._process_sbml(constant_parameters)
-        if self.symbols.get(SymbolId.EVENT, False):
-            if compute_conservation_laws:
-                logger.warning(
-                    'Conservation laws are currently not supported for models '
-                    'with events, and will be turned off.'
-                )
-            compute_conservation_laws = False
 
-        self._process_observables(observables, sigmas, noise_distributions)
-        self._replace_compartments_with_volumes()
-
-        self._clean_reserved_symbols()
-        self._process_time()
-
-        ode_model = ODEModel(verbose=verbose, simplify=simplify)
-        ode_model.import_from_sbml_importer(
-            self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
             ode_model,
             model_name=model_name,
@@ -391,6 +377,78 @@ class SbmlImporter:
                 warnings.warn('AMICI C++ extensions have not been built. '
                               'Generated model code, but unable to compile.')
             exporter.compile_model()
+
+    def _build_ode_model(
+            self,
+            observables: Dict[str, Dict[str, str]] = None,
+            event_observables: Dict[str, Dict[str, str]] = None,
+            constant_parameters: Iterable[str] = None,
+            sigmas: Dict[str, Union[str, float]] = None,
+            event_sigmas: Dict[str, Union[str, float]] = None,
+            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            event_noise_distributions: Dict[str, Union[str, Callable]] = None,
+            verbose: Union[int, bool] = logging.ERROR,
+            compute_conservation_laws: bool = True,
+            simplify: Optional[Callable] = _default_simplify,
+            cache_simplify: bool = False,
+            log_as_log10: bool = True,
+    ) -> ODEModel:
+        """Generate an ODEModel from this SBML model.
+
+        See :py:func:`sbml2amici` for parameters.
+        """
+        constant_parameters = list(constant_parameters) \
+            if constant_parameters else []
+
+        if sigmas is None:
+            sigmas = {}
+
+        if event_sigmas is None:
+            event_sigmas = {}
+
+        if noise_distributions is None:
+            noise_distributions = {}
+
+        if event_noise_distributions is None:
+            event_noise_distributions = {}
+
+        self._reset_symbols()
+        self.sbml_parser_settings.setParseLog(
+            sbml.L3P_PARSE_LOG_AS_LOG10 if log_as_log10 else
+            sbml.L3P_PARSE_LOG_AS_LN
+        )
+        self._process_sbml(constant_parameters)
+        if self.symbols.get(SymbolId.EVENT, False):
+            if compute_conservation_laws:
+                logger.warning(
+                    'Conservation laws are currently not supported for models '
+                    'with events, and will be turned off.'
+                )
+            compute_conservation_laws = False
+
+        self._process_observables(
+            observables,
+            sigmas,
+            noise_distributions
+        )
+        self._process_event_observables(
+            event_observables,
+            event_sigmas,
+            event_noise_distributions
+        )
+        self._replace_compartments_with_volumes()
+
+        self._clean_reserved_symbols()
+        self._process_time()
+
+        ode_model = ODEModel(
+            verbose=verbose,
+            simplify=simplify,
+            cache_simplify=cache_simplify,
+        )
+        ode_model.import_from_sbml_importer(
+            self, compute_cls=compute_conservation_laws)
+        return ode_model
 
     @log_execution_time('importing SBML', logger)
     def _process_sbml(self, constant_parameters: List[str] = None) -> None:
@@ -509,13 +567,6 @@ class SbmlImporter:
             if trigger_sbml.getMath() is None:
                 logger.warning(f'Event {event_id} trigger has no trigger '
                                'expression, so a dummy trigger will be set.')
-            if not trigger_sbml.getInitialValue():
-                # True: event not executed if triggered at time == 0
-                # (corresponding to AMICI default). Raise if set to False.
-                raise SBMLException(
-                    f'Event {event_id} has a trigger that has an initial '
-                    'value of False. This is currently not supported in AMICI.'
-                )
 
             if not trigger_sbml.getPersistent():
                 raise SBMLException(
@@ -615,16 +666,20 @@ class SbmlImporter:
         :param value:
             local symbol value
         """
-        if key in itt.chain(self._local_symbols.keys(),
-                            ['True', 'False', 'pi']):
+        if key in self._local_symbols.keys():
             raise SBMLException(
                 f'AMICI tried to add a local symbol {key} with value {value}, '
                 f'but {key} was already instantiated with '
-                f'{self._local_symbols[key]}. This means either that there '
-                f'are multiple SBML element with SId {key}, which is '
-                f'invalid SBML, or that the employed SId {key} is a special '
-                'reserved symbol in AMICI. This can be fixed by renaming '
-                f'the element with SId {key}.'
+                f'{self._local_symbols[key]}. This means that there '
+                f'are multiple SBML elements with SId {key}, which is '
+                f'invalid SBML. This can be fixed by renaming '
+                f'the elements with SId {key}.'
+            )
+        if key in {'True', 'False', 'true', 'false', 'pi'}:
+            raise SBMLException(
+                f'AMICI tried to add a local symbol {key} with value {value}, '
+                f'but {key} is a reserved symbol in AMICI. This can be fixed '
+                f'by renaming the element with SId {key}.'
             )
         self._local_symbols[key] = value
 
@@ -658,7 +713,7 @@ class SbmlImporter:
                 self.sbml.getConversionFactor()
             )
         else:
-            conversion_factor = 1.0
+            conversion_factor = 1
 
         for s in self.sbml.getListOfSpecies():
             if self.is_assignment_rule_target(s):
@@ -918,8 +973,8 @@ class SbmlImporter:
         ]
 
         for reaction_index, reaction in enumerate(reactions):
-            for element_list, sign in [(reaction.getListOfReactants(), -1.0),
-                                       (reaction.getListOfProducts(), 1.0)]:
+            for element_list, sign in [(reaction.getListOfReactants(), -1),
+                                       (reaction.getListOfProducts(), 1)]:
                 for element in element_list:
                     stoichiometry = self._get_element_stoichiometry(
                         element
@@ -940,17 +995,16 @@ class SbmlImporter:
                     self.stoichiometric_matrix[species['index'],
                                                reaction_index] += \
                         sign * stoichiometry * species['conversion_factor']
-
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
                 sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
 
             self.flux_vector[reaction_index] = sym_math
-            if any([
+            if any(
                 str(symbol) in reaction_ids
                 for symbol in self.flux_vector[reaction_index].free_symbols
-            ]):
+            ):
                 raise SBMLException(
                     'Kinetic laws involving reaction ids are currently'
                     ' not supported!'
@@ -1059,10 +1113,16 @@ class SbmlImporter:
                     parameter_def = \
                         self.symbols[symbol_id].pop(parameter_target)
             if parameter_def is None:
-                raise AssertionError(
-                    'Unexpected error. The parameter target of an event '
-                    'assignment could not be found.'
+                # this happens for parameters that have initial assignments
+                # or are assignment rule targets
+                par = self.sbml.getElementBySId(str(parameter_target))
+                ia_init = self._get_element_initial_assignment(
+                    par.getId()
                 )
+                parameter_def = {
+                    'name': par.getName() if par.isSetName() else par.getId(),
+                    'value': par.getValue() if ia_init is None else ia_init
+                }
             # Fixed parameters are added as species such that they can be
             # targets of events.
             self.symbols[SymbolId.SPECIES][parameter_target] = {
@@ -1197,15 +1257,17 @@ class SbmlImporter:
                 'name': event_id,
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
-                'event_observable': None,
+                'initial_value':
+                    trigger_sbml.getInitialValue() if trigger_sbml is not None
+                    else True,
             }
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(
-            self,
-            observables: Optional[Dict[str, Dict[str, str]]] = None,
-            sigmas: Optional[Dict[str, Union[str, float]]] = None,
-            noise_distributions: Optional[Dict[str, str]] = None
+        self,
+        observables: Union[Dict[str, Dict[str, str]], None],
+        sigmas: Dict[str, Union[str, float]],
+        noise_distributions: Dict[str, str]
     ) -> None:
         """
         Perform symbolic computations required for observable and objective
@@ -1225,37 +1287,19 @@ class SbmlImporter:
             See :py:func:`sbml2amici`.
         """
 
-        if sigmas is None or observables is None:
-            sigmas = {}
-        else:
-            # Ensure no non-existing observableIds have been specified
-            # (no problem here, but usually an upstream bug)
-            unknown_ids = set(sigmas.keys()) - set(observables.keys())
-            if unknown_ids:
-                raise ValueError(
-                    f"Sigma provided for unknown observableIds: "
-                    f"{unknown_ids}.")
-
-        if noise_distributions is None or observables is None:
-            noise_distributions = {}
-        else:
-            # Ensure no non-existing observableIds have been specified
-            # (no problem here, but usually an upstream bug)
-            unknown_ids = set(noise_distributions.keys()) - \
-                          set(observables.keys())
-            if unknown_ids:
-                raise ValueError(
-                    f"Noise distribution provided for unknown observableIds: "
-                    f"{unknown_ids}.")
+        _validate_observables(observables, sigmas, noise_distributions,
+                              events=False)
 
         # add user-provided observables or make all species, and compartments
         # with assignment rules, observable
         if observables:
+            # gather local symbols before parsing observable and sigma formulas
+            for obs in observables.keys():
+                self.add_local_symbol(obs, symbol_with_assumptions(obs))
+
             self.symbols[SymbolId.OBSERVABLE] = {
                 symbol_with_assumptions(obs): {
                     'name': definition.get('name', f'y{iobs}'),
-                    # Replace logX(.) by log(., X) since sympy cannot parse the
-                    # former.
                     'value': self._sympy_from_sbml_math(
                         definition['formula']
                     ),
@@ -1266,10 +1310,95 @@ class SbmlImporter:
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
             }
+            # check for nesting of observables (unsupported)
+            observable_syms = set(self.symbols[SymbolId.OBSERVABLE].keys())
+            for obs in self.symbols[SymbolId.OBSERVABLE].values():
+                if any(sym in observable_syms
+                       for sym in obs['value'].free_symbols):
+                    raise ValueError(
+                        "Nested observables are not supported, "
+                        f"but observable `{obs['name']} = {obs['value']}` "
+                        "references another observable."
+                    )
         elif observables is None:
             self._generate_default_observables()
 
+        _check_symbol_nesting(self.symbols[SymbolId.OBSERVABLE],
+                              'eventObservable')
+
         self._process_log_likelihood(sigmas, noise_distributions)
+
+    @log_execution_time('processing SBML event observables', logger)
+    def _process_event_observables(
+            self,
+            event_observables: Dict[str, Dict[str, str]],
+            event_sigmas: Dict[str, Union[str, float]],
+            event_noise_distributions: Dict[str, str]
+    ) -> None:
+        """
+        Perform symbolic computations required for observable and objective
+        function evaluation.
+
+        :param event_observables:
+            See :py:func:`sbml2amici`.
+
+        :param event_sigmas:
+            See :py:func:`sbml2amici`.
+
+        :param event_noise_distributions:
+            See :py:func:`sbml2amici`.
+        """
+        if event_observables is None:
+            return
+
+        _validate_observables(event_observables, event_sigmas,
+                              event_noise_distributions,
+                              events=True)
+
+        # gather local symbols before parsing observable and sigma formulas
+        for obs, definition in event_observables.items():
+            self.add_local_symbol(obs, symbol_with_assumptions(obs))
+            # check corresponding event exists
+            if sp.Symbol(definition['event']) not in \
+                    self.symbols[SymbolId.EVENT]:
+                raise ValueError(
+                    'Could not find an event with the event identifier '
+                    f'{definition["event"]} for the event observable with name'
+                    f'{definition["name"]}.'
+                )
+
+        self.symbols[SymbolId.EVENT_OBSERVABLE] = {
+            symbol_with_assumptions(obs): {
+                'name': definition.get('name', f'z{iobs}'),
+                'value': self._sympy_from_sbml_math(
+                    definition['formula']
+                ),
+                'event': sp.Symbol(definition.get('event')),
+                'transformation':
+                    noise_distribution_to_observable_transformation(
+                        event_noise_distributions.get(obs, 'normal')
+                    )
+            }
+            for iobs, (obs, definition) in
+            enumerate(event_observables.items())
+        }
+
+        wrong_t = sp.Symbol('t')
+        for eo in self.symbols[SymbolId.EVENT_OBSERVABLE].values():
+            if eo['value'].has(wrong_t):
+                warnings.warn(f'Event observable {eo["name"]} uses `t` in '
+                              'it\'s formula which is not the time variable. '
+                              'For the time variable, please use `time` '
+                              'instead!')
+
+        # check for nesting of observables (unsupported)
+        _check_symbol_nesting(self.symbols[SymbolId.EVENT_OBSERVABLE],
+                              'eventObservable')
+
+        self._process_log_likelihood(event_sigmas, event_noise_distributions,
+                                     events=True)
+        self._process_log_likelihood(event_sigmas, event_noise_distributions,
+                                     events=True, event_reg=True)
 
     def _generate_default_observables(self):
         """
@@ -1281,8 +1410,8 @@ class SbmlImporter:
                 'name': specie['name'],
                 'value': species_id
             }
-            for ix, (species_id, specie)
-            in enumerate(self.symbols[SymbolId.SPECIES].items())
+            for species_id, specie
+            in self.symbols[SymbolId.SPECIES].items()
         }
 
         for variable, formula in itt.chain(
@@ -1305,7 +1434,9 @@ class SbmlImporter:
 
     def _process_log_likelihood(self,
                                 sigmas: Dict[str, Union[str, float]],
-                                noise_distributions: Dict[str, str]):
+                                noise_distributions: Dict[str, str],
+                                events: bool = False,
+                                event_reg: bool = False):
         """
         Perform symbolic computations required for objective function
         evaluation.
@@ -1315,25 +1446,53 @@ class SbmlImporter:
 
         :param noise_distributions:
             See :py:func:`SBMLImporter._process_observables`
+
+        :param events:
+            indicates whether the passed definitions are for observables
+            (False) or for event observables (True).
+
+        :param event_reg:
+            indicates whether log-likelihoods definitons should be processed
+            for event observable regularization (Jrz). If this is activated,
+            measurements are substituted by 0 and the observable by the
+            respective regularization symbol.
         """
 
-        for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items():
+        if events:
+            if event_reg:
+                obs_symbol = SymbolId.EVENT_OBSERVABLE
+                sigma_symbol = SymbolId.SIGMAZ
+                llh_symbol = SymbolId.LLHRZ
+            else:
+                obs_symbol = SymbolId.EVENT_OBSERVABLE
+                sigma_symbol = SymbolId.SIGMAZ
+                llh_symbol = SymbolId.LLHZ
+        else:
+            assert not event_reg
+            obs_symbol = SymbolId.OBSERVABLE
+            sigma_symbol = SymbolId.SIGMAY
+            llh_symbol = SymbolId.LLHY
+
+        for obs_id, obs in self.symbols[obs_symbol].items():
             obs['measurement_symbol'] = generate_measurement_symbol(obs_id)
+            if event_reg:
+                obs['reg_symbol'] = generate_regularization_symbol(obs_id)
 
-        self.symbols[SymbolId.SIGMAY] = {
-            symbol_with_assumptions(f'sigma_{obs_id}'): {
-                'name': f'sigma_{obs["name"]}',
-                'value': self._sympy_from_sbml_math(
-                    sigmas.get(str(obs_id), '1.0')
-                )
+        if not event_reg:
+            self.symbols[sigma_symbol] = {
+                symbol_with_assumptions(f'sigma_{obs_id}'): {
+                    'name': f'sigma_{obs["name"]}',
+                    'value': self._sympy_from_sbml_math(
+                        sigmas.get(str(obs_id), '1.0')
+                    )
+                }
+                for obs_id, obs in self.symbols[obs_symbol].items()
             }
-            for obs_id, obs in self.symbols[SymbolId.OBSERVABLE].items()
-        }
 
-        self.symbols[SymbolId.LLHY] = {}
+        self.symbols[llh_symbol] = {}
         for (obs_id, obs), (sigma_id, sigma) in zip(
-                self.symbols[SymbolId.OBSERVABLE].items(),
-                self.symbols[SymbolId.SIGMAY].items()
+                self.symbols[obs_symbol].items(),
+                self.symbols[sigma_symbol].items()
         ):
             symbol = symbol_with_assumptions(f'J{obs_id}')
             dist = noise_distributions.get(str(obs_id), 'normal')
@@ -1342,7 +1501,10 @@ class SbmlImporter:
                 _get_str_symbol_identifiers(obs_id),
                 (obs_id, obs['measurement_symbol'], sigma_id)
             )))
-            self.symbols[SymbolId.LLHY][symbol] = {
+            if event_reg:
+                value = value.subs(obs['measurement_symbol'], 0.0)
+                value = value.subs(obs_id, obs['reg_symbol'])
+            self.symbols[llh_symbol][symbol] = {
                     'name': f'J{obs["name"]}',
                     'value': value,
                     'dist': dist,
@@ -1435,21 +1597,24 @@ class SbmlImporter:
 
         :param ode_model:
             ODEModel object with basic definitions
-
-        :returns volume_updates_solver:
-            List (according to reduced stoichiometry) with updates for the
-            stoichiometric matrix accounting for compartment volumes
         """
         conservation_laws = []
 
-        # So far, only conservation laws for constant species are supported
+        # Create conservation laws for constant species
         species_solver = _add_conservation_for_constant_species(
             ode_model, conservation_laws
         )
+        # Non-constant species processed here
+        if "AMICI_EXPERIMENTAL_SBML_NONCONST_CLS" in os.environ \
+                or "GITHUB_ACTIONS" in os.environ:
+            species_solver = list(set(
+                self._add_conservation_for_non_constant_species(
+                    ode_model, conservation_laws)) & set(species_solver))
 
         # Check, whether species_solver is empty now. As currently, AMICI
-        # cannot handle ODEs without species, CLs must switched in this case
-        if len(species_solver) == 0:
+        # cannot handle ODEs without species, CLs must be switched off in this
+        # case
+        if not len(species_solver):
             conservation_laws = []
             species_solver = list(range(ode_model.num_states_rdata()))
 
@@ -1460,6 +1625,208 @@ class SbmlImporter:
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
+
+    def _get_conservation_laws_demartino(
+            self,
+            ode_model: ODEModel,
+    ) -> List[Tuple[int, List[int], List[float]]]:
+        """Identify conservation laws based on algorithm by DeMartino et al.
+        (see conserved_moieties.py).
+
+        :param ode_model: Model for which to compute conserved quantities
+        :returns: List of one tuple per conservation law, each containing:
+            (0) the index of the (solver-)species to eliminate,
+            (1) (solver-)indices of all species engaged in the conserved
+            quantity (including the eliminated one)
+            (2) coefficients for the species in (1)
+        """
+        from .conserved_quantities_demartino \
+            import compute_moiety_conservation_laws
+
+        try:
+            stoichiometric_list = [
+                float(entry) for entry in self.stoichiometric_matrix.T.flat()
+            ]
+        except TypeError:
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
+            warnings.warn("Conservation laws for non-constant species in "
+                          "combination with parameterized stoichiometric "
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
+            return []
+
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
+            return []
+
+        cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
+            stoichiometric_list, *self.stoichiometric_matrix.shape,
+            rng_seed=32,
+            species_names=[str(x.get_id()) for x in ode_model._states]
+        )
+
+        # Sparsify conserved quantities
+        #  ``compute_moiety_conservation_laws`` identifies conserved quantities
+        #  with positive coefficients. The resulting system is, therefore,
+        #  often non-sparse. This leads to circular dependencies in the
+        #  state expressions of eliminated states. The identified conserved
+        #  quantities are linearly independent. We can construct `A` as in
+        #  `A * x0 = total_cl` and bring it to reduced row echelon form. The
+        #  pivot species are the ones to be eliminated. The resulting state
+        #  expressions are sparse and void of any circular dependencies.
+        A = sp.zeros(len(cls_coefficients), len(ode_model._states))
+        for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
+                                                      cls_coefficients)):
+            for i, c in zip(cl, coefficients):
+                A[i_cl, i] = sp.Rational(c)
+        rref, pivots = A.rref()
+
+        raw_cls = []
+        for i_cl, target_state_model_idx in enumerate(pivots):
+            # collect values for species engaged in the current CL
+            state_idxs = [i for i, coeff in enumerate(rref[i_cl, :])
+                          if coeff]
+            coefficients = [coeff for coeff in rref[i_cl, :] if coeff]
+            raw_cls.append((target_state_model_idx, state_idxs,
+                            coefficients),)
+        return raw_cls
+
+    def _get_conservation_laws_rref(
+            self
+    ) -> List[Tuple[int, List[int], List[float]]]:
+        """Identify conservation laws based on left nullspace of the
+        stoichiometric matrix, computed through (numeric) Gaussian elimination
+
+        :returns: List of one tuple per conservation law, each containing:
+            (0) the index of the (solver-)species to eliminate,
+            (1) (solver-)indices of all species engaged in the conserved
+            quantity (including the eliminated one)
+            (2) coefficients for the species in (1)
+        """
+        import numpy as np
+        from numpy.linalg import matrix_rank
+        from .conserved_quantities_rref import nullspace_by_rref, rref
+
+        try:
+            S = np.asarray(self.stoichiometric_matrix, dtype=float)
+        except TypeError:
+            # Due to the numerical algorithm currently used to identify
+            #  conserved quantities, we can't have symbols in the
+            #  stoichiometric matrix
+            warnings.warn("Conservation laws for non-constant species in "
+                          "combination with parameterized stoichiometric "
+                          "coefficients are not currently supported "
+                          "and will be turned off.")
+            return []
+
+        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+               for rule in self.sbml.getListOfRules()):
+            # see SBML semantic test suite, case 33 for an example
+            warnings.warn("Conservation laws for non-constant species in "
+                          "models with RateRules are not currently supported "
+                          "and will be turned off.")
+            return []
+
+        # Determine rank via SVD
+        rank = matrix_rank(S) if S.shape[0] else 0
+        if rank == S.shape[0]:
+            return []
+        kernel = nullspace_by_rref(S.T)
+        # Check dimensions - due to numerical errors, nullspace_by_rref may
+        #  fail in certain situations
+        if kernel.shape[0] != S.shape[0] - rank:
+            raise AssertionError(
+                "Failed to determine all conserved quantities "
+                f"(found {kernel.shape[0]}, expected {S.shape[0] - rank}). "
+                "Try another algorithm, disable detection of conservation "
+                "laws, or submit a bug report along with the model."
+            )
+        kernel = rref(kernel)
+        raw_cls = []
+        for row in kernel:
+            state_idxs = [i for i, coeff in enumerate(row) if coeff]
+            coefficients = [coeff for coeff in row if coeff]
+            raw_cls.append((state_idxs[0], state_idxs, coefficients),)
+
+        return raw_cls
+
+    def _add_conservation_for_non_constant_species(
+        self,
+        ode_model: ODEModel,
+        conservation_laws: List[ConservationLaw]
+    ) -> List[int]:
+        """Add non-constant species to conservation laws
+
+        :param ode_model:
+            ODEModel object with basic definitions
+        :param conservation_laws:
+            List of already known conservation laws
+        :returns:
+            List of species indices which later remain in the ODE solver
+        """
+        # indices of retained species
+        species_solver = list(range(ode_model.num_states_rdata()))
+
+        algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
+        if algorithm.lower() == "demartino":
+            raw_cls = self._get_conservation_laws_demartino(ode_model)
+        else:
+            raw_cls = self._get_conservation_laws_rref()
+
+        if not raw_cls:
+            # no conservation laws identified
+            return species_solver
+
+        species_to_be_removed = {x[0] for x in raw_cls}
+
+        # keep new conservations laws separate until we know everything worked
+        new_conservation_laws = []
+        # previously removed constant species
+        eliminated_state_ids = {cl['state'] for cl in conservation_laws}
+
+        all_state_ids = [x.get_id() for x in ode_model._states]
+        all_compartment_sizes = [
+            sp.Integer(1)
+            if self.symbols[SymbolId.SPECIES][state_id]['amount']
+            else self.compartments[
+                self.symbols[SymbolId.SPECIES][state_id]['compartment']
+            ]
+            for state_id in all_state_ids
+        ]
+
+        # iterate over list of conservation laws, create symbolic expressions,
+        for target_state_model_idx, state_idxs, coefficients in raw_cls:
+            if all_state_ids[target_state_model_idx] in eliminated_state_ids:
+                # constants state, already eliminated
+                continue
+            # collect values for species engaged in the current CL
+            state_ids = [all_state_ids[i_state] for i_state in state_idxs]
+            compartment_sizes = [all_compartment_sizes[i] for i in state_idxs]
+
+            target_state_id = all_state_ids[target_state_model_idx]
+            total_abundance = symbol_with_assumptions(f'tcl_{target_state_id}')
+
+            new_conservation_laws.append({
+                'state': target_state_id,
+                'total_abundance': total_abundance,
+                'coefficients': {
+                     state_id: coeff * compartment
+                     for state_id, coeff, compartment
+                     in zip(state_ids, coefficients, compartment_sizes)
+                },
+            })
+            species_to_be_removed.add(target_state_model_idx)
+
+        conservation_laws.extend(new_conservation_laws)
+
+        # list of species that are not determined by conservation laws
+        return [ix for ix in species_solver if ix not in species_to_be_removed]
 
     def _replace_compartments_with_volumes(self):
         """
@@ -1538,8 +1905,9 @@ class SbmlImporter:
                 del self.symbols[symbol][old]
 
         # replace in values
-        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.SIGMAY,
-                       SymbolId.EXPRESSION, SymbolId.EVENT]:
+        for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.LLHZ,
+                       SymbolId.SIGMAY, SymbolId.SIGMAZ, SymbolId.EXPRESSION,
+                       SymbolId.EVENT, SymbolId.EVENT_OBSERVABLE]:
             if not self.symbols.get(symbol, None):
                 continue
             for element in self.symbols[symbol].values():
@@ -1581,9 +1949,7 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reserved_symbols = ['x', 'k', 'p', 'y', 'w', 'h', 't',
-                            'AMICI_EMPTY_BOLUS']
-        for sym in reserved_symbols:
+        for sym in RESERVED_SYMBOLS:
             old_symbol = symbol_with_assumptions(sym)
             new_symbol = symbol_with_assumptions(f'amici_{sym}')
             self._replace_in_all_expressions(old_symbol, new_symbol,
@@ -1682,9 +2048,11 @@ class SbmlImporter:
                 return _get_identifier_symbol(ele)
 
         if ele.isSetStoichiometry():
-            return sp.Float(ele.getStoichiometry())
+            stoichiometry: float = ele.getStoichiometry()
+            return sp.Integer(stoichiometry) if stoichiometry.is_integer() \
+                else sp.Float(stoichiometry)
 
-        return sp.Float(1.0)
+        return sp.Integer(1)
 
     def is_assignment_rule_target(self, element: sbml.SBase) -> bool:
         """
@@ -1698,10 +2066,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getAssignmentRuleByVariable(element.getId())
-        if a is None or self._sympy_from_sbml_math(a) is None:
-            return False
-
-        return True
+        return a is not None and self._sympy_from_sbml_math(a) is not None
 
     def is_rate_rule_target(self, element: sbml.SBase) -> bool:
         """
@@ -1715,10 +2080,7 @@ class SbmlImporter:
             boolean indicating truth of function name
         """
         a = self.sbml.getRateRuleByVariable(element.getId())
-        if a is None or self._sympy_from_sbml_math(a) is None:
-            return False
-
-        return True
+        return a is not None and self._sympy_from_sbml_math(a) is not None
 
 
 def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
@@ -1737,7 +2099,7 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
     num_fatal = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
 
     if num_warning + num_error + num_fatal:
-        for i_error in range(0, sbml_doc.getNumErrors()):
+        for i_error in range(sbml_doc.getNumErrors()):
             error = sbml_doc.getError(i_error)
             # we ignore any info messages for now
             if error.getSeverity() >= sbml.LIBSBML_SEV_ERROR \
@@ -1770,12 +2132,12 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         _check_unsupported_functions_sbml(root, 'sympy.Expression')
 
         # convert relational expressions into trigger functions
-        if isinstance(trigger, sp.core.relational.LessThan) or \
-                isinstance(trigger, sp.core.relational.StrictLessThan):
+        if isinstance(trigger, (sp.core.relational.LessThan,
+                                sp.core.relational.StrictLessThan)):
             # y < x or y <= x
             return -root
-        if isinstance(trigger, sp.core.relational.GreaterThan) or \
-                isinstance(trigger, sp.core.relational.StrictGreaterThan):
+        if isinstance(trigger, (sp.core.relational.GreaterThan,
+                                sp.core.relational.StrictGreaterThan)):
             # y >= x or y > x
             return root
 
@@ -1859,8 +2221,7 @@ def _add_conservation_for_constant_species(
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
-                'state_expr': total_abundance,
-                'abundance_expr': target_state,
+                'coefficients': {target_state: 1.0},
             })
             # mark species to delete from stoichiometric matrix
             species_solver.pop(ix)
@@ -1993,3 +2354,46 @@ def _parse_special_functions_sbml(sym: sp.Expr,
         return _parse_special_functions(sym, toplevel)
     except RuntimeError as err:
         raise SBMLException(str(err))
+
+
+def _validate_observables(
+    observables: Union[Dict[str, Dict[str, str]], None],
+    sigmas: Dict[str, Union[str, float]],
+    noise_distributions: Dict[str, str],
+    events: bool = False
+) -> None:
+
+    if observables is None or not observables:
+        return
+
+    # Ensure no non-existing observableIds have been specified
+    # (no problem here, but usually an upstream bug)
+    unknown_ids = set(sigmas.keys()) - set(observables.keys())
+    if unknown_ids:
+        raise ValueError(
+            f"Sigma provided for unknown "
+            f"{'eventO' if events else 'o'}bservableIds: "
+            f"{unknown_ids}.")
+
+    # Ensure no non-existing observableIds have been specified
+    # (no problem here, but usually an upstream bug)
+    unknown_ids = set(noise_distributions.keys()) - \
+        set(observables.keys())
+    if unknown_ids:
+        raise ValueError(
+            f"Noise distribution provided for unknown "
+            f"{'eventO' if events else 'o'}bservableIds: "
+            f"{unknown_ids}.")
+
+
+def _check_symbol_nesting(symbols: Dict[sp.Symbol, Dict[str, sp.Expr]],
+                          symbol_type: str):
+    observable_syms = set(symbols.keys())
+    for obs in symbols.values():
+        if any(sym in observable_syms
+               for sym in obs['value'].free_symbols):
+            raise ValueError(
+                "Nested observables are not supported, "
+                f"but {symbol_type} `{obs['name']} = {obs['value']}` "
+                "references another observable."
+            )

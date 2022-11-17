@@ -115,7 +115,7 @@ std::vector<realtype> const& ExpData::getTimepoints() const {
 }
 
 int ExpData::nt() const {
-    return static_cast<int>(ts_.size());
+    return gsl::narrow<int>(ts_.size());
 }
 
 realtype ExpData::getTimepoint(int it) const {
@@ -336,6 +336,7 @@ ConditionContext::ConditionContext(Model *model, const ExpData *edata,
     : model_(model),
       original_parameters_(model->getParameters()),
       original_fixed_parameters_(model->getFixedParameters()),
+      original_tstart_(model->t0()),
       original_timepoints_(model->getTimepoints()),
       original_parameter_list_(model->getParameterList()),
       original_scaling_(model->getParameterScale()),
@@ -379,6 +380,16 @@ void ConditionContext::applyCondition(const ExpData *edata,
         model_->setParameterScale(edata->pscale);
     }
 
+    // this needs to be set in the model before handling initial state
+    // sensitivities, which may be unscaled using model parameter values
+    if(!edata->parameters.empty()) {
+        if(edata->parameters.size() != (unsigned) model_->np())
+            throw AmiException("Number of parameters (%d) in model does not"
+                               " match ExpData (%zd).",
+                               model_->np(), edata->parameters.size());
+        model_->setParameters(edata->parameters);
+    }
+
     if(!edata->x0.empty()) {
         if(edata->x0.size() != (unsigned) model_->nx_rdata)
             throw AmiException("Number of initial conditions (%d) in model does"
@@ -394,14 +405,6 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                model_->nx_rdata * model_->nplist(),
                                edata->sx0.size());
         model_->setInitialStateSensitivities(edata->sx0);
-    }
-
-    if(!edata->parameters.empty()) {
-        if(edata->parameters.size() != (unsigned) model_->np())
-            throw AmiException("Number of parameters (%d) in model does not"
-                               " match ExpData (%zd).",
-                               model_->np(), edata->parameters.size());
-        model_->setParameters(edata->parameters);
     }
 
     model_->setReinitializeFixedParameterInitialStates(
@@ -454,6 +457,7 @@ void ConditionContext::applyCondition(const ExpData *edata,
       break;
     }
 
+    model_->setT0(edata->tstart_);
     if(edata->nt()) {
         // fixed parameter in model are superseded by those provided in edata
         model_->setTimepoints(edata->getTimepoints());
@@ -475,6 +479,7 @@ void ConditionContext::restore()
 
     model_->setParameters(original_parameters_);
     model_->setFixedParameters(original_fixed_parameters_);
+    model_->setT0(original_tstart_);
     model_->setTimepoints(original_timepoints_);
     model_->setReinitializeFixedParameterInitialStates(
         original_reinitialize_fixed_parameter_initial_states_);

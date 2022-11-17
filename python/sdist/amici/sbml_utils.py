@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     SbmlID = Union[str, sp.Symbol]
 
 from .import_utils import (
+    sbml_time_symbol,
+    amici_time_symbol,
+    _parse_logical_operators,
     _parse_special_functions,
     _check_unsupported_functions,
 )
@@ -23,16 +26,6 @@ from sympy.printing.mathml import MathMLContentPrinter
 from sympy.core.parameters import evaluate
 
 ###############################################################################
-
-
-sbml_time_symbol = sp.Symbol('time', real=True)
-amici_time_symbol = sp.Symbol('t', real=True)
-
-annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
-
-
-class SBMLException(Exception):
-    pass
 
 
 class SbmlInvalidIdSyntax(Exception):
@@ -542,25 +535,3 @@ def mathml2sympy(
         _check_unsupported_functions(expr, expression_type)
 
     return expr
-
-
-def _parse_logical_operators(
-    math_str: Union[str, float, None],
-) -> Union[str, float, None]:
-    """
-    Parses a math string in order to replace logical operators by a form
-    parsable for sympy
-
-    :param math_str:
-        str with mathematical expression
-    :param math_str:
-        parsed math_str
-    """
-    if not isinstance(math_str, str):
-        return math_str
-
-    if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported as logical '
-                            'operation.')
-
-    return (math_str.replace('&&', '&')).replace('||', '|')

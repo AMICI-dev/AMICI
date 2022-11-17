@@ -1,19 +1,17 @@
 """Tests for SBML events, including piecewise expressions."""
-import numpy as np
-import pytest
-import os
-from scipy.linalg import expm
 from copy import deepcopy
 
-from util import (
-    create_sbml_model,
-    create_amici_model,
-    check_trajectories_without_sensitivities,
-    check_trajectories_with_forward_sensitivities,
-)
+import numpy as np
+import pytest
+
+from util import (check_trajectories_with_forward_sensitivities,
+                  check_trajectories_without_sensitivities, create_amici_model,
+                  create_sbml_model)
+from amici.testing import skip_on_valgrind
+
 
 @pytest.fixture(params=[
-    'events_plus_heavisides',
+    pytest.param('events_plus_heavisides', marks=skip_on_valgrind),
     'nested_events',
 ])
 def model(request):
@@ -217,7 +215,6 @@ def model_definition_events_plus_heavisides():
     )
 
 
-
 def model_definition_nested_events():
     """Test model for state- and parameter-dependent heavisides.
 
@@ -349,3 +346,12 @@ def test_models(model):
     check_trajectories_with_forward_sensitivities(amici_model,
                                                   result_expected_x,
                                                   result_expected_sx)
+
+
+def expm(x):
+    """``expm`` wrapper
+
+    Uses ``expm`` from ``mpmath``. *Something* changed in scipy's ``expm`` in
+    version 1.9.0 breaking these tests"""
+    from mpmath import expm
+    return np.array(expm(x).tolist()).astype(float)

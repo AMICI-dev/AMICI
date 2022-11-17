@@ -7,8 +7,12 @@
  * issues.
  */
 
-#include "amici/hdf5.h"
-#include "amici/amici.h"
+#include <amici/hdf5.h>
+
+#include <amici/model.h>
+#include <amici/solver.h>
+#include <amici/rdata.h>
+#include <amici/edata.h>
 
 #include <hdf5_hl.h>
 
@@ -84,7 +88,11 @@ void checkEventDimensionsCompatible(hsize_t m, hsize_t n, Model const& model) {
 void createGroup(H5::H5File const& file,
                  std::string const& groupPath,
                  bool recursively) {
-
+#if H5_VERSION_GE(1, 10, 6)
+    H5::LinkCreatPropList lcpl;
+    lcpl.setCreateIntermediateGroup(recursively);
+    file.createGroup(groupPath.c_str(), lcpl);
+#else
     auto groupCreationPropertyList = H5P_DEFAULT;
 
     if (recursively) {
@@ -101,6 +109,7 @@ void createGroup(H5::H5File const& file,
         throw(AmiException("Failed to create group in hdf5CreateGroup: %s",
                            groupPath.c_str()));
     H5Gclose(group);
+#endif
 }
 
 std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
@@ -399,11 +408,6 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
         createAndWriteInt1DDataset(file, hdf5Location + "/preeq_numsteps",
                                    rdata.preeq_numsteps);
 
-    if (!rdata.preeq_numlinsteps.empty())
-        createAndWriteInt2DDataset(file, hdf5Location + "/preeq_numlinsteps",
-                                   rdata.preeq_numlinsteps,
-                                   rdata.newton_maxsteps, 2);
-
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "preeq_numstepsB", &rdata.preeq_numstepsB, 1);
 
@@ -431,11 +435,6 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
         createAndWriteInt1DDataset(file, hdf5Location + "/posteq_numsteps",
                                    rdata.posteq_numsteps);
 
-    if (!rdata.posteq_numlinsteps.empty())
-        createAndWriteInt2DDataset(file, hdf5Location + "/posteq_numlinsteps",
-                                   rdata.posteq_numlinsteps,
-                                   rdata.newton_maxsteps, 2);
-
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "posteq_numstepsB", &rdata.posteq_numstepsB, 1);
 
@@ -456,6 +455,9 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "cpu_timeB", &rdata.cpu_timeB, 1);
+
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "cpu_time_total", &rdata.cpu_time_total, 1);
 
     if (!rdata.J.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J,
@@ -659,6 +661,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "quad_rtol", &dbuffer, 1);
 
+    dbuffer = solver.getSteadyStateToleranceFactor();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "ss_tol_factor", &dbuffer, 1);
+
     dbuffer = solver.getAbsoluteToleranceSteadyState();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_atol", &dbuffer, 1);
@@ -666,6 +672,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     dbuffer = solver.getRelativeToleranceSteadyState();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "ss_rtol", &dbuffer, 1);
+
+    dbuffer = solver.getSteadyStateSensiToleranceFactor();
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "ss_tol_sensi_factor", &dbuffer, 1);
 
     dbuffer = solver.getAbsoluteToleranceSteadyStateSensi();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
@@ -679,11 +689,11 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "maxtime", &dbuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getMaxSteps());
+    ibuffer = gsl::narrow<int>(solver.getMaxSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "maxsteps", &ibuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getMaxStepsBackwardProblem());
+    ibuffer = gsl::narrow<int>(solver.getMaxStepsBackwardProblem());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "maxstepsB", &ibuffer, 1);
 
@@ -719,13 +729,9 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "sensi", &ibuffer, 1);
 
-    ibuffer = static_cast<int>(solver.getNewtonMaxSteps());
+    ibuffer = gsl::narrow<int>(solver.getNewtonMaxSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_maxsteps", &ibuffer, 1);
-
-    ibuffer = static_cast<int>(solver.getPreequilibration());
-    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_preeq", &ibuffer, 1);
 
     ibuffer = static_cast<int>(solver.getNewtonDampingFactorMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
@@ -733,11 +739,7 @@ void writeSolverSettingsToHDF5(Solver const& solver,
 
     dbuffer = solver.getNewtonDampingFactorLowerBound();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
-                             "newton_damping_factor_lower_bound", &dbuffer, 1);
-
-    ibuffer = static_cast<int>(solver.getNewtonMaxLinearSteps());
-    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_maxlinsteps", &ibuffer, 1);
+                          "newton_damping_factor_lower_bound", &dbuffer, 1);
 
     ibuffer = static_cast<int>(solver.getLinearSolver());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
@@ -750,6 +752,14 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     ibuffer = static_cast<int>(solver.getReturnDataReportingMode());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "rdrm", &ibuffer, 1);
+
+    ibuffer = static_cast<int>(solver.getNewtonStepSteadyStateCheck());
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "newton_step_steadystate_conv", &ibuffer, 1);
+
+    ibuffer = static_cast<int>(solver.getSensiSteadyStateCheck());
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "check_sensi_steadystate_conv", &ibuffer, 1);
 }
 
 void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
@@ -775,7 +785,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getDoubleScalarAttribute(file, datasetPath, "rtol_fsa"));
     }
 
-
     if(attributeExists(file, datasetPath, "atolB")) {
         solver.setAbsoluteToleranceB(
                     getDoubleScalarAttribute(file, datasetPath, "atolB"));
@@ -796,6 +805,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getDoubleScalarAttribute(file, datasetPath, "quad_rtol"));
     }
 
+    if(attributeExists(file, datasetPath, "ss_tol_factor")) {
+        solver.setSteadyStateToleranceFactor(
+                    getDoubleScalarAttribute(file, datasetPath, "ss_tol_factor"));
+    }
+
     if(attributeExists(file, datasetPath, "ss_atol")) {
         solver.setAbsoluteToleranceSteadyState(
                     getDoubleScalarAttribute(file, datasetPath, "ss_atol"));
@@ -804,6 +818,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
     if(attributeExists(file, datasetPath, "ss_rtol")) {
         solver.setRelativeToleranceSteadyState(
                     getDoubleScalarAttribute(file, datasetPath, "ss_rtol"));
+    }
+
+    if(attributeExists(file, datasetPath, "ss_tol_sensi_factor")) {
+        solver.setSteadyStateSensiToleranceFactor(
+                    getDoubleScalarAttribute(file, datasetPath, "ss_tol_sensi_factor"));
     }
 
     if(attributeExists(file, datasetPath, "ss_atol_sensi")) {
@@ -885,11 +904,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getIntScalarAttribute(file, datasetPath, "newton_maxsteps"));
     }
 
-    if(attributeExists(file, datasetPath, "newton_preeq")) {
-        solver.setPreequilibration(
-                    getIntScalarAttribute(file, datasetPath, "newton_preeq"));
-    }
-
     if(attributeExists(file, datasetPath, "newton_damping_factor_mode")) {
         solver.setNewtonDampingFactorMode(
                     static_cast<NewtonDampingFactorMode>(
@@ -899,12 +913,6 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
     if(attributeExists(file, datasetPath, "newton_damping_factor_lower_bound")) {
         solver.setNewtonDampingFactorLowerBound(
                     getDoubleScalarAttribute(file, datasetPath, "newton_damping_factor_lower_bound"));
-    }
-
-    if(attributeExists(file, datasetPath, "newton_maxlinsteps")) {
-        solver.setNewtonMaxLinearSteps(
-                    getIntScalarAttribute(file, datasetPath,
-                                          "newton_maxlinsteps"));
     }
 
     if(attributeExists(file, datasetPath, "linsol")) {
@@ -923,6 +931,16 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
         solver.setReturnDataReportingMode(
                     static_cast<RDataReporting>(
                         getIntScalarAttribute(file, datasetPath, "rdrm")));
+    }
+
+    if(attributeExists(file, datasetPath, "newton_step_steadystate_conv")) {
+        solver.setNewtonStepSteadyStateCheck(
+                    getIntScalarAttribute(file, datasetPath, "newton_step_steadystate_conv"));
+    }
+
+    if(attributeExists(file, datasetPath, "check_sensi_steadystate_conv")) {
+        solver.setSensiSteadyStateCheck(
+                    getIntScalarAttribute(file, datasetPath, "check_sensi_steadystate_conv"));
     }
 }
 

@@ -258,8 +258,12 @@ def _check_close(
     if verbose:
         for idx in np.argwhere(~close):
             idx = tuple(idx)
+            if result.shape:
+                rr = result[idx]
+            else:
+                rr = result
             lines.append(
-                f"\tat {idx}: Expected {expected[idx]}, got {result[idx]}")
+                f"\tat {idx}: Expected {expected[idx]}, got {rr}")
     adev = np.abs(result - expected)
     rdev = np.abs((result - expected) / (expected + atol))
     lines.append(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
@@ -272,8 +276,7 @@ def _check_results(
         field: str,
         expected: np.array,
         atol: float,
-        rtol: float,
-        verbose: Optional[bool] = True,
+        rtol: float
         ) -> None:
     """
     Checks whether rdata[field] agrees with expected according to provided
@@ -294,9 +297,6 @@ def _check_results(
 
     :param rtol:
         relative tolerance for comparison
-
-    :param verbose:
-        produce a more verbose error message in case of unmatched expectations
     """
 
     result = rdata[field]
@@ -304,4 +304,4 @@ def _check_results(
         result = np.array(result)
 
     _check_close(result=result, expected=expected,
-                 atol=atol, rtol=rtol, field=field, verbose=verbose)
+                 atol=atol, rtol=rtol, field=field)

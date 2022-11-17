@@ -20,8 +20,9 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
 import pandas as pd
+import sympy as sp
 
-exhale_multiproject_monkeypatch, pd  # to avoid removal of unused import
+exhale_multiproject_monkeypatch, pd, sp  # to avoid removal of unused import
 
 # BEGIN Monkeypatch exhale
 from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
@@ -180,6 +181,8 @@ except ModuleNotFoundError:
     sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
     import amici
+# Works around some cyclic dependency issue with amici.petab_import_pysb
+import amici.petab_import
 
 typing.TYPE_CHECKING = False
 
@@ -235,7 +238,10 @@ extensions = [
 
 intersphinx_mapping = {
     'pysb': ('https://pysb.readthedocs.io/en/stable/', None),
-    'petab': ('https://petab.readthedocs.io/en/stable/', None),
+    'petab': (
+        'https://petab.readthedocs.io/projects/libpetab-python/en/latest/',
+        None
+    ),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'numpy': ('https://numpy.org/devdocs/', None),
     'sympy': ('https://docs.sympy.org/latest/', None),
@@ -259,7 +265,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

@@ -87,7 +87,7 @@ void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
     fJSparse(t, 0.0, x.getNVector(), dx.getNVector(), derived_state_.J_.get());
     derived_state_.J_.refresh();
     derived_state_.J_.to_diag(JDiag.getNVector());
-    if (!checkFinite(JDiag.getVector(), "Jacobian"))
+    if (checkFinite(JDiag.getVector(), ModelQuantity::JDiag) != AMICI_SUCCESS)
         throw AmiException("Evaluation of fJDiag failed!");
 }
 

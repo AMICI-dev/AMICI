@@ -6,7 +6,6 @@
 #endif
 
 #include <functional>
-#include <string>
 #include <cmath>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
@@ -61,7 +60,10 @@ constexpr double pi = M_PI;
 
 constexpr int AMICI_ONEOUTPUT=                 5;
 
-/* Return codes */
+// Return codes
+//
+// NOTE: When adding / removing / renaming return codes,
+//       please update simulation_status_to_str_map in amici.h
 constexpr int AMICI_RECOVERABLE_ERROR=         1;
 constexpr int AMICI_UNRECOVERABLE_ERROR=     -10;
 constexpr int AMICI_TOO_MUCH_WORK=            -1;
@@ -180,7 +182,8 @@ enum class NonlinearSolverIteration {
 /** Sensitivity computation mode in steadyStateProblem */
 enum class SteadyStateSensitivityMode {
     newtonOnly,
-    simulationFSA
+    integrationOnly,
+    integrateIfNewtonFails
 };
 
 /** State in which the steady state computation finished */
@@ -237,12 +240,6 @@ enum class SplineExtrapolation {
     polynomial      =  2,
     periodic        =  3,
 };
-
-/**
- * Type for function to process warnings or error messages.
- */
-using outputFunctionType = std::function<void(std::string const& identifier,
-                                              std::string const& message)>;
 
 // clang-format on
 

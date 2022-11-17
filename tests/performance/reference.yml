@@ -1,5 +1,5 @@
 # Reference wall times (seconds) with some buffer
-create_sdist: 12
+create_sdist: 16
 install_sdist: 150
 petab_import: 2100
 install_model: 120
@@ -8,7 +8,7 @@ install_model_O1: 90
 install_model_O2: 120
 forward_simulation: 2
 forward_sensitivities: 2
-adjoint_sensitivities: 2
+adjoint_sensitivities: 2.5
 forward_simulation_non_optimal_parameters: 2
 adjoint_sensitivities_non_optimal_parameters: 5
 forward_steadystate_sensitivities_non_optimal_parameters: 5

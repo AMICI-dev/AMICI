@@ -1,16 +1,37 @@
 # References
 
-List of publications using AMICI. Total number is 64.
+List of publications using AMICI. Total number is 70.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
+<h1 class="unnumbered" id="section">2023</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-MishraWan2023">
+<p>Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023. “Design and Application of a Kinetic Model of Lipid Metabolism in Saccharomyces Cerevisiae.” <em>Metabolic Engineering</em> 75: 12–18. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003</a>.</p>
+</div>
+</div>
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-Froehlich2022.02.17.480899">
+<p>Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K. Sorger. 2022. “Mechanistic Model of Mapk Signaling Reveals How Allostery and Rewiring Contribute to Drug Resistance.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.17.480899">https://doi.org/10.1101/2022.02.17.480899</a>.</p>
+</div>
+<div id="ref-LakrisenkoSta2022">
+<p>Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski, Dilan Pathirana, Fabian Fröhlich, Glenn Terje Lines, Daniel Weindl, and Jan Hasenauer. 2022. “Efficient Computation of Adjoint Sensitivities at Steady-State in ODE Models of Biochemical Reaction Networks.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.08.08.503176">https://doi.org/10.1101/2022.08.08.503176</a>.</p>
+</div>
 <div id="ref-SchmuckerFar2022">
 <p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
 </div>
+<div id="ref-SluijsMaa2022">
+<p>Sluijs, Bob van, Roel J. M. Maas, Ardjan J. van der Linden, Tom F. A. de Greef, and Wilhelm T. S. Huck. 2022. “A Microfluidic Optimal Experimental Design Platform for Forward Design of Cell-Free Genetic Networks.” <em>Nature Communications</em> 13 (1): 3626. <a href="https://doi.org/10.1038/s41467-022-31306-3">https://doi.org/10.1038/s41467-022-31306-3</a>.</p>
+</div>
 <div id="ref-StaporSch2022">
 <p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Simon Merkt, Dilan Pathirana, Bodo M. H. Lange, Daniel Weindl, and Jan Hasenauer. 2022. “Mini-batch optimization enables training of ODE models on large-scale datasets.” <em>Nature Communications</em> 13 (1): 34. <a href="https://doi.org/10.1038/s41467-021-27374-6">https://doi.org/10.1038/s41467-021-27374-6</a>.</p>
+</div>
+<div id="ref-Sundqvist2022.02.15.480629">
+<p>Sundqvist, Nicolas, Sebastian Sten, Maria Engström, and Gunnar Cedersund. 2022. “Mechanistic Model for Human Brain Metabolism and the Neurovascular Coupling.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.15.480629">https://doi.org/10.1101/2022.02.15.480629</a>.</p>
+</div>
+<div id="ref-VillaverdeRai2022">
+<p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2022. “Assessment of Prediction Uncertainty Quantification Methods in Systems Biology.” <em>IEEE/ACM Transactions on Computational Biology and Bioinformatics</em>, 1–12. <a href="https://doi.org/10.1109/TCBB.2022.3213914">https://doi.org/10.1109/TCBB.2022.3213914</a>.</p>
 </div>
 </div>
 <h1 class="unnumbered" id="section">2021</h1>
@@ -55,7 +76,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Tomasoni, Danilo, Alessio Paris, Stefano Giampiccolo, Federico Reali, Giulia Simoni, Luca Marchetti, Chanchala Kaddi, et al. 2021. “QSPcc Reduces Bottlenecks in Computational Model Simulations.” <em>Communications Biology</em> 4 (1): 1022. <a href="https://doi.org/10.1038/s42003-021-02553-9">https://doi.org/10.1038/s42003-021-02553-9</a>.</p>
 </div>
 <div id="ref-VanhoeferMat2021">
-<p>Vanhoefer, Jakob, Marta R. A. Matos, Dilan Pathirana, Yannik Schälte, and Jan Hasenauer. 2021. “Yaml2sbml: Human-Readable and -Writable Specification of Ode Models and Their Conversion to Sbml.” <em>Journal of Open Source Software</em> 6 (61): 3215. <a href="https://doi.org/10.21105/joss.03215">https://doi.org/10.21105/joss.03215</a>.</p>
+<p>Vanhoefer, Jakob, Marta R. A. Matos, Dilan Pathirana, Yannik Schälte, and Jan Hasenauer. 2021. “Yaml2sbml: Human-Readable and -Writable Specification of ODE Models and Their Conversion to SBML.” <em>Journal of Open Source Software</em> 6 (61): 3215. <a href="https://doi.org/10.21105/joss.03215">https://doi.org/10.21105/joss.03215</a>.</p>
 </div>
 <div id="ref-vanRosmalenSmi2021">
 <p>van Rosmalen, R. P., R. W. Smith, V. A. P. Martins dos Santos, C. Fleck, and M. Suarez-Diez. 2021. “Model Reduction of Genome-Scale Metabolic Models as a Basis for Targeted Kinetic Models.” <em>Metabolic Engineering</em> 64: 74–84. <a href="https://doi.org/10.1016/j.ymben.2021.01.008">https://doi.org/10.1016/j.ymben.2021.01.008</a>.</p>

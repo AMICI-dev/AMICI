@@ -17,19 +17,23 @@ jobs:
   build:
     name: Benchmark Collection
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [ 3.8 ]
+        python-version: [ "3.8" ]
+        extract_subexpressions: ["true", "false"]
+    env:
+      AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 20
 
@@ -38,8 +42,6 @@ jobs:
       run: |
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
-
-    - run: pip3 install pytest shyaml
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
     - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
@@ -51,7 +53,7 @@ jobs:
     - name: Install AMICI sdist
       run: |
         AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test]
 
     # retrieve test models
     - name: Download and test benchmark collection

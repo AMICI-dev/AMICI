@@ -21,6 +21,9 @@ def writeNoSensi(filename):
     ex = ExampleSteadystate()
 
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
+
     ex.writeToFile(filename, '/model_steadystate/nosensi/')
 
 
@@ -30,6 +33,8 @@ def writeSensiForward(filename):
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiforward/')
 
@@ -40,6 +45,8 @@ def writeSensiForwardPlist(filename):
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
     ex.solverOptions['sens_ind'] = [3, 1, 2, 4]
     ex.solverOptions['sensi'] = 1
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiforwardplist/')
 
@@ -51,17 +58,9 @@ def writeSensiForwardDense(filename):
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 1
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
     ex.writeToFile(filename, '/model_steadystate/sensiforwarddense/')
-
-
-def writeNosensiSPBCG(filename):
-    ex = ExampleSteadystate()
-
-    ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
-    ex.solverOptions['sensi'] = 0
-    ex.solverOptions['linsol'] = 7
-
-    ex.writeToFile(filename, '/model_steadystate/nosensiSPBCG/')
 
 
 def writeSensiForwardErrorInt(filename):
@@ -72,6 +71,8 @@ def writeSensiForwardErrorInt(filename):
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 100
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiforwarderrorint/')
 
@@ -85,6 +86,8 @@ def writeSensiForwardErrorNewt(filename):
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 100
     ex.solverOptions['newton_maxsteps'] = 2
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiforwarderrornewt/')
 
@@ -114,13 +117,14 @@ def writeSensiFwdNewtonPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10**-16
     ex.solverOptions['rtol'] = 10**-12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 20
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensifwdnewtonpreeq/')
 
@@ -150,13 +154,14 @@ def writeSensiAdjNewtonPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10**-16
     ex.solverOptions['rtol'] = 10**-12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 20
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjnewtonpreeq/')
 
@@ -186,13 +191,14 @@ def writeSensiFwdSimPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 0
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensifwdsimpreeq/')
 
@@ -223,13 +229,14 @@ def writeSensiFwdSimPreeqFSA(filename):
     ex.modelOptions['steadyStateSensitivityMode'] = 1
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 0
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensifwdsimpreeqFSA/')
 
@@ -259,13 +266,14 @@ def writeSensiAdjSimPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 0
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjsimpreeq/')
 
@@ -296,13 +304,14 @@ def writeSensiAdjSimPreeqFSA(filename):
     ex.modelOptions['steadyStateSensitivityMode'] = 1
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = True
     ex.solverOptions['atol'] = 10 ** -16
     ex.solverOptions['rtol'] = 10 ** -12
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 0
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjsimpreeqFSA/')
 
@@ -313,7 +322,6 @@ def writeSensiFwdByhandPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
-    ex.solverOptions['newton_preeq'] = False
     ex.solverOptions['x0'] = np.array([0.532609637980272, 0.625849232840357, 0.066666666666667])
     ex.solverOptions['sx0'] = np.array(
         [[-0.425457638009506, 0.499939012301881, 0], [-0.375463736779318, -0.999878024603762, -0.000000000000000],
@@ -325,6 +333,8 @@ def writeSensiFwdByhandPreeq(filename):
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 0
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensifwdbyhandpreeq/')
 
@@ -353,7 +363,6 @@ def writeSensiAdjByhandPreeq(filename):
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
-    ex.solverOptions['newton_preeq'] = False
     ex.solverOptions['x0'] = np.array([0.532609637980272, 0.625849232840357, 0.066666666666667])
     ex.solverOptions['sx0'] = np.array(
         [[-0.425457638009506, 0.499939012301881, 0], [-0.375463736779318, -0.999878024603762, -0.000000000000000],
@@ -365,6 +374,8 @@ def writeSensiAdjByhandPreeq(filename):
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 10000
     ex.solverOptions['newton_maxsteps'] = 0
+    ex.solverOptions['ss_tol_factor'] = 1.0
+    ex.solverOptions['ss_tol_sensi_factor'] = 1.0
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjbyhandpreeq/')
 
@@ -379,7 +390,6 @@ def main():
     writeSensiForward(filename)
     writeSensiForwardPlist(filename)
     writeSensiForwardDense(filename)
-    writeNosensiSPBCG(filename)
     writeSensiForwardErrorInt(filename)
     writeSensiForwardErrorNewt(filename)
     writeSensiFwdNewtonPreeq(filename)

@@ -2,7 +2,8 @@
 
 import re
 import sys
-from typing import List
+from pathlib import Path
+from typing import List, Tuple, Set
 
 import pytest
 
@@ -10,8 +11,17 @@ import pytest
 # stores passed SBML semantic test suite IDs
 passed_ids = []
 
+SBML_SEMANTIC_CASES_DIR = \
+    Path(__file__).parent / 'sbml-test-suite' / 'cases' / 'semantic'
 
-def parse_selection(selection_str: str) -> List[int]:
+
+@pytest.fixture
+def sbml_semantic_cases_dir() -> Path:
+    """directory with sbml semantic test cases"""
+    return SBML_SEMANTIC_CASES_DIR
+
+
+def parse_selection(selection_str: str, last: int) -> List[int]:
     """
     Parse comma-separated list of integer ranges, return selected indices as
     integer list
@@ -20,7 +30,7 @@ def parse_selection(selection_str: str) -> List[int]:
     """
     indices = []
     for group in selection_str.split(','):
-        if not re.match(r'^(?:-?\d+)|(?:\d+(?:-\d+))$', group):
+        if not re.match(r'^(?:-?\d+|\d+-\d*)$', group):
             print("Invalid selection", group)
             sys.exit()
         spl = group.split('-')
@@ -28,9 +38,17 @@ def parse_selection(selection_str: str) -> List[int]:
             indices.append(int(spl[0]))
         elif len(spl) == 2:
             begin = int(spl[0]) if spl[0] else 0
-            end = int(spl[1])
+            end = int(spl[1]) if spl[1] else last
             indices.extend(range(begin, end + 1))
     return indices
+
+
+def get_all_semantic_case_ids():
+    """Get iterator over test sorted IDs of all cases in the SBML semantic
+    suite"""
+    pattern = re.compile(r'\d{5}')
+    return sorted(str(x.name) for x in SBML_SEMANTIC_CASES_DIR.iterdir()
+                  if pattern.match(x.name))
 
 
 def pytest_addoption(parser):
@@ -47,13 +65,11 @@ def pytest_generate_tests(metafunc):
         cases = metafunc.config.getoption("cases")
         if cases:
             # Run selected tests
-            test_numbers = set(parse_selection(cases))
+            last_id = int(list(get_all_semantic_case_ids())[-1])
+            test_numbers = sorted(set(parse_selection(cases, last_id)))
         else:
             # Run all tests
-            test_numbers = set(range(1, 1781))
-
-        # We skip this test due to NaNs in the Jacobian
-        test_numbers -= {1395}
+            test_numbers = get_all_semantic_case_ids()
 
         metafunc.parametrize("test_number", test_numbers)
 
@@ -78,7 +94,6 @@ def write_passed_tags(passed_ids, out=sys.stdout):
     passed_component_tags = set()
     passed_test_tags = set()
 
-    from testSBMLSuite import get_tags_for_test
     for test_id in passed_ids:
         cur_component_tags, cur_test_tags = get_tags_for_test(test_id)
         passed_component_tags |= cur_component_tags
@@ -100,3 +115,29 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
         test_case_id = re.sub(r'^.*::test_sbml_testsuite_case\[(\d+)].*$',
                               r'\1', report.nodeid)
         passed_ids.append(test_case_id)
+
+
+def get_tags_for_test(test_id: str) -> Tuple[Set[str], Set[str]]:
+    """Get sbml test suite tags for the given test ID
+
+    Returns:
+        Tuple of set of strings for componentTags and testTags
+    """
+    current_test_path = SBML_SEMANTIC_CASES_DIR / test_id
+    info_file = current_test_path / f'{test_id}-model.m'
+    with open(info_file) as f:
+        component_tags = set()
+        test_tags = set()
+        for line in f:
+            if line.startswith('testTags:'):
+                test_tags = set(
+                    re.split(r'[ ,:]', line[len('testTags:'):].strip()))
+                test_tags.discard('')
+            if line.startswith('componentTags:'):
+                component_tags = set(
+                    re.split(r'[ ,:]', line[len('componentTags:'):].strip()))
+                component_tags.discard('')
+            if test_tags and component_tags:
+                return component_tags, test_tags
+    print(f"No componentTags or testTags found for test case {test_id}.")
+    return component_tags, test_tags

@@ -1,18 +1,51 @@
 """Miscellaneous functions related to model import, independent of any specific
  model format"""
-
-from typing import (
-    Dict, Union, Optional, Callable, Sequence, Tuple, Iterable, Any
-)
-import sympy as sp
 import enum
 import itertools as itt
+import numbers
+import sys
+from typing import (Any, Callable, Dict, Iterable, Optional, Sequence,
+                    SupportsFloat, Tuple, Union)
 
-from toposort import toposort
-from sympy.logic.boolalg import BooleanAtom
+import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.logic.boolalg import BooleanAtom
+from toposort import toposort
+
+RESERVED_SYMBOLS = ['x', 'k', 'p', 'y', 'w', 'h', 't', 'AMICI_EMPTY_BOLUS']
+
+try:
+    import pysb
+except ImportError:
+    pysb = None
 
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
+
+
+# Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
+#  such as sympy objects
+class CircularDependencyError(ValueError):
+    def __init__(self, data):
+        # Sort the data just to make the output consistent, for use in
+        #  error messages.  That's convenient for doctests.
+        s = "Circular dependencies exist among these items: {{{}}}".format(
+            ", ".join(
+                "{!r}:{!r}".format(key, value) for key, value in sorted(
+                    {str(k): v for k, v in data.items()}.items())
+            )
+        )
+        super(CircularDependencyError, self).__init__(s)
+        self.data = data
+
+
+setattr(sys.modules["toposort"],  "CircularDependencyError",
+        CircularDependencyError)
+
+
+sbml_time_symbol = sp.Symbol('time', real=True)
+amici_time_symbol = sp.Symbol('t', real=True)
+
+annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
 
 
 class ObservableTransformation(str, enum.Enum):
@@ -205,7 +238,7 @@ def smart_subs_dict(sym: sp.Expr,
                     field: Optional[str] = None,
                     reverse: bool = True) -> sp.Expr:
     """
-    Subsitutes expressions completely flattening them out. Requires
+    Substitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
 
     :param sym:
@@ -233,7 +266,7 @@ def smart_subs_dict(sym: sp.Expr,
     for substitution in s:
         # note that substitution may change free symbols, so we have to do
         # this recursively
-        if substitution[0] in sym.free_symbols:
+        if sym.has(substitution[0]):
             sym = sym.subs(*substitution)
     return sym
 
@@ -254,11 +287,7 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
     :return:
         substituted expression
     """
-
-    if old in element.free_symbols:
-        return element.subs(old, new)
-
-    return element
+    return element.subs(old, new) if element.has(old) else element
 
 
 def toposort_symbols(symbols: SymbolDef,
@@ -288,8 +317,29 @@ def toposort_symbols(symbols: SymbolDef,
     return {
         s: symbols[s]
         for symbol_group in sorted_symbols
-        for s in symbol_group
+        for s in sorted(symbol_group, key=str)
     }
+
+
+def _parse_logical_operators(math_str: Union[str, float, None]
+                             ) -> Union[str, float, None]:
+    """
+    Parses a math string in order to replace logical operators by a form
+    parsable for sympy
+
+    :param math_str:
+        str with mathematical expression
+    :param math_str:
+        parsed math_str
+    """
+    if not isinstance(math_str, str):
+        return math_str
+
+    if ' xor(' in math_str or ' Xor(' in math_str:
+        raise SBMLException('Xor is currently not supported as logical '
+                            'operation.')
+
+    return (math_str.replace('&&', '&')).replace('||', '|')
 
 
 def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
@@ -332,11 +382,6 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     }
 
     if sym.__class__.__name__ in fun_mappings:
-        # c++ doesnt like mixing int and double for arguments of those
-        # functions
-        if sym.__class__.__name__ in ['min', 'max']:
-            args = tuple(sp.Float(arg) if arg.is_number else arg
-                         for arg in args)
         return fun_mappings[sym.__class__.__name__](*args)
 
     elif sym.__class__.__name__ == 'piecewise' \
@@ -550,3 +595,114 @@ def _check_unsupported_functions(sym: sp.Expr,
                            f'{expression_type}: "{full_sym}"!')
     for arg in list(sym.args):
         _check_unsupported_functions(arg, expression_type)
+
+def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
+                input_name: str) -> sp.Expr:
+    """
+    Typecasts the value to :py:class:`sympy.Float` if possible, and ensures the
+    value is a symbolic expression.
+
+    :param value:
+        value to be cast
+
+    :param input_name:
+        name of input variable
+
+    :return:
+        typecast value
+    """
+    if isinstance(value, (sp.RealNumber, numbers.Number)):
+        value = sp.Float(float(value))
+    elif isinstance(value, BooleanAtom):
+        value = sp.Float(float(bool(value)))
+
+    if not isinstance(value, sp.Expr):
+        raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
+                        f"{type(value)}")
+
+    return value
+
+
+def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
+    """
+    Generates the appropriate measurement symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+
+    :return:
+        symbol for the corresponding measurement
+    """
+    if not isinstance(observable_id, str):
+        observable_id = strip_pysb(observable_id)
+    return symbol_with_assumptions(f'm{observable_id}')
+
+
+def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
+    """
+    Generates the appropriate regularization symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+
+    :return:
+        symbol for the corresponding regularization
+    """
+    if not isinstance(observable_id, str):
+        observable_id = strip_pysb(observable_id)
+    return symbol_with_assumptions(f'r{observable_id}')
+
+
+def generate_flux_symbol(
+        reaction_index: int,
+        name: Optional[str] = None
+) -> sp.Symbol:
+    """
+    Generate identifier symbol for a reaction flux.
+    This function will always return the same unique python object for a
+    given entity.
+
+    :param reaction_index:
+        index of the reaction to which the flux corresponds
+    :param name:
+        an optional identifier of the reaction to which the flux corresponds
+    :return:
+        identifier symbol
+    """
+    if name is not None:
+        return symbol_with_assumptions(name)
+
+    return symbol_with_assumptions(f'flux_r{reaction_index}')
+
+
+def symbol_with_assumptions(name: str):
+    """
+    Central function to create symbols with consistent, canonical assumptions
+
+    :param name:
+        name of the symbol
+
+    :return:
+        symbol with canonical assumptions
+    """
+    return sp.Symbol(name, real=True)
+
+
+def strip_pysb(symbol: sp.Basic) -> sp.Basic:
+    """
+    Strips pysb info from a :class:`pysb.Component` object
+
+    :param symbol:
+        symbolic expression
+
+    :return:
+        stripped expression
+    """
+    # strip pysb type and transform into a flat sympy.Symbol.
+    # this ensures that the pysb type specific __repr__ is used when converting
+    # to string
+    if pysb and isinstance(symbol, pysb.Component):
+        return sp.Symbol(symbol.name, real=True)
+    else:
+        # in this case we will use sympy specific transform anyways
+        return symbol

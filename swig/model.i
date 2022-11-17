@@ -32,7 +32,7 @@ using namespace amici;
 %ignore getObservable;
 %ignore getObservableSensitivity;
 %ignore getExpression;
-%ignore initHeaviside;
+%ignore initEvents;
 %ignore initialize;
 %ignore initializeB;
 %ignore initializeStateSensitivities;

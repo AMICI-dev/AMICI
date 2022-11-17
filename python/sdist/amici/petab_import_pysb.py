@@ -8,16 +8,17 @@ Import a model in the PySB-adapted :mod:`petab`
 import logging
 import os
 from itertools import chain
-from typing import List, Dict, Union, Optional, Tuple, Iterable
+from pathlib import Path
+from typing import Dict, Iterable, Optional, Tuple, Union
 
 import libsbml
 import petab
 import pysb
 import sympy as sp
-from petab.C import (CONDITION_NAME, OBSERVABLE_TRANSFORMATION, LIN,
-                     OBSERVABLE_FORMULA, NOISE_FORMULA, FORMAT_VERSION,
-                     PARAMETER_FILE, SBML_FILES, CONDITION_FILES,
-                     MEASUREMENT_FILES, VISUALIZATION_FILES, OBSERVABLE_FILES)
+from petab.C import (CONDITION_FILES, CONDITION_NAME, FORMAT_VERSION,
+                     MEASUREMENT_FILES, NOISE_FORMULA, OBSERVABLE_FILES,
+                     OBSERVABLE_FORMULA, PARAMETER_FILE, SBML_FILES,
+                     VISUALIZATION_FILES)
 
 from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
@@ -104,13 +105,20 @@ class PysbPetabProblem(petab.Problem):
             local_syms[sigma_id] = sigma_expr
 
     @staticmethod
-    def from_files(condition_file: str = None,
-                   measurement_file: Union[str, Iterable[str]] = None,
-                   parameter_file: Union[str, List[str]] = None,
-                   visualization_files: Union[str, Iterable[str]] = None,
-                   observable_files: Union[str, Iterable[str]] = None,
-                   pysb_model_file: str = None,
-                   flatten: bool = False) -> 'PysbPetabProblem':
+    def from_files(
+            condition_file:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            measurement_file:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            parameter_file:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            visualization_files:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            observable_files:
+            Union[str, Path, Iterable[Union[str, Path]]] = None,
+            pysb_model_file: Union[str, Path] = None,
+            flatten: bool = False
+    ) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables from files.
 
@@ -175,7 +183,7 @@ class PysbPetabProblem(petab.Problem):
         )
 
     @staticmethod
-    def from_yaml(yaml_config: Union[Dict, str],
+    def from_yaml(yaml_config: Union[Dict, Path, str],
                   flatten: bool = False) -> 'PysbPetabProblem':
         """
         Factory method to load model and tables as specified by YAML file.
@@ -194,7 +202,7 @@ class PysbPetabProblem(petab.Problem):
         """
         from petab.yaml import (load_yaml, is_composite_problem,
                                 assert_single_condition_and_sbml_file)
-        if isinstance(yaml_config, str):
+        if isinstance(yaml_config, (str, Path)):
             path_prefix = os.path.dirname(yaml_config)
             yaml_config = load_yaml(yaml_config)
         else:
@@ -304,8 +312,9 @@ def create_dummy_sbml(
 @log_execution_time('Importing PEtab model', logger)
 def import_model_pysb(
         petab_problem: PysbPetabProblem,
-        model_output_dir: Optional[str] = None,
+        model_output_dir: Optional[Union[str, Path]] = None,
         verbose: Optional[Union[bool, int]] = True,
+        model_name: Optional[str] = None,
         **kwargs
 ) -> None:
     """
@@ -321,14 +330,16 @@ def import_model_pysb(
     :param verbose:
         Print/log extra information.
 
+    :param model_name:
+        Name of the generated model module
+
     :param kwargs:
         Additional keyword arguments to be passed to
         :meth:`amici.pysb_import.pysb2amici`.
     """
-
     set_log_level(logger, verbose)
 
-    logger.info(f"Importing model ...")
+    logger.info("Importing model ...")
 
     observable_table = petab_problem.observable_df
     pysb_model = petab_problem.pysb_model
@@ -350,11 +361,12 @@ def import_model_pysb(
             )
 
     constant_parameters = petab_import.get_fixed_parameters(
-        petab_problem.sbml_model, petab_problem.condition_df)
+        petab_problem)
 
     if observable_table is None:
         observables = None
         sigmas = None
+        noise_distrs = None
     else:
         observables = [expr.name for expr in pysb_model.expressions
                        if expr.name in observable_table.index]
@@ -364,9 +376,11 @@ def import_model_pysb(
         noise_distrs = petab_import.petab_noise_distributions_to_amici(
             observable_table)
 
-
     from amici.pysb_import import pysb2amici
-    pysb2amici(pysb_model, model_output_dir, verbose=True,
+    pysb2amici(model=pysb_model,
+               output_dir=model_output_dir,
+               model_name=model_name,
+               verbose=True,
                observables=observables,
                sigmas=sigmas,
                constant_parameters=constant_parameters,

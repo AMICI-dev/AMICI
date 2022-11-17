@@ -1,10 +1,10 @@
 """Functions for downloading/building/finding SWIG"""
-
-from typing import Tuple
 import ast
+import contextlib
 import os
-import subprocess
 import re
+import subprocess
+from typing import Tuple
 
 
 def find_swig() -> str:
@@ -85,44 +85,82 @@ class TypeHintFixer(ast.NodeTransformer):
 
     mapping = {
         'void': None,
-        'std::unique_ptr< amici::Solver >': 'amici.Solver',
-        'amici::InternalSensitivityMethod': 'amici.InternalSensitivityMethod',
-        'amici::InterpolationType': 'amici.InterpolationType',
-        'amici::LinearMultistepMethod': 'amici.LinearMultistepMethod',
-        'amici::LinearSolver': 'amici.LinearSolver',
-        'amici::Model *': 'amici.Model',
-        'amici::Model const *': 'amici.Model',
-        'amici::NewtonDampingFactorMode': 'amici.NewtonDampingFactorMode',
-        'amici::NonlinearSolverIteration': 'amici.NonlinearSolverIteration',
-        'amici::RDataReporting': 'amici.RDataReporting',
-        'amici::SensitivityMethod': 'amici.SensitivityMethod',
-        'amici::SensitivityOrder': 'amici.SensitivityOrder',
-        'amici::Solver *': 'amici.Solver',
-        'amici::SteadyStateSensitivityMode': 'amici.SteadyStateSensitivityMode',
-        'amici::realtype': 'float',
-        'DoubleVector': 'numpy.ndarray',
-        'IntVector': 'List[int]',
-        'std::string': 'str',
-        'std::string const &': 'str',
-        'std::unique_ptr< amici::ExpData >': 'amici.ExpData',
-        'std::unique_ptr< amici::ReturnData >': 'amici.ReturnData',
+        'double': ast.Name('float'),
+        'int': ast.Name('int'),
+        'long': ast.Name('int'),
+        'ptrdiff_t': ast.Name('int'),
+        'size_t': ast.Name('int'),
+        'bool': ast.Name('bool'),
+        'std::unique_ptr< amici::Solver >': ast.Constant('Solver'),
+        'amici::InternalSensitivityMethod':
+            ast.Constant('InternalSensitivityMethod'),
+        'amici::InterpolationType': ast.Constant('InterpolationType'),
+        'amici::LinearMultistepMethod': ast.Constant('LinearMultistepMethod'),
+        'amici::LinearSolver': ast.Constant('LinearSolver'),
+        'amici::Model *': ast.Constant('Model'),
+        'amici::Model const *': ast.Constant('Model'),
+        'amici::NewtonDampingFactorMode':
+            ast.Constant('NewtonDampingFactorMode'),
+        'amici::NonlinearSolverIteration':
+            ast.Constant('NonlinearSolverIteration'),
+        'amici::ObservableScaling': ast.Constant('ObservableScaling'),
+        'amici::ParameterScaling': ast.Constant('ParameterScaling'),
+        'amici::RDataReporting': ast.Constant('RDataReporting'),
+        'amici::SensitivityMethod': ast.Constant('SensitivityMethod'),
+        'amici::SensitivityOrder': ast.Constant('SensitivityOrder'),
+        'amici::Solver *': ast.Constant('Solver'),
+        'amici::SteadyStateSensitivityMode':
+            ast.Constant('SteadyStateSensitivityMode'),
+        'amici::realtype': ast.Name('float'),
+        'DoubleVector': ast.Constant('Sequence[float]'),
+        'IntVector': ast.Name('Sequence[int]'),
+        'std::string': ast.Name('str'),
+        'std::string const &': ast.Name('str'),
+        'std::unique_ptr< amici::ExpData >': ast.Constant('ExpData'),
+        'std::unique_ptr< amici::ReturnData >': ast.Constant('ReturnData'),
+        'std::vector< amici::ParameterScaling,'
+        'std::allocator< amici::ParameterScaling > > const &':
+            ast.Constant('ParameterScalingVector')
     }
 
     def visit_FunctionDef(self, node):
         # Has a return type annotation?
         if node.returns:
-            node.returns.value = self._new_annot(node.returns.value)
+            node.returns = self._new_annot(node.returns.value)
 
         # Has arguments?
         if node.args.args:
             for arg in node.args.args:
                 if not arg.annotation:
                     continue
-                arg.annotation.value = self._new_annot(arg.annotation.value)
+                arg.annotation = self._new_annot(arg.annotation.value)
         return node
 
-    def _new_annot(self, old_annot):
-        return self.mapping.get(old_annot, old_annot)
+    def _new_annot(self, old_annot: str):
+        with contextlib.suppress(KeyError):
+            return self.mapping[old_annot]
+
+        # std::vector size type
+        if re.match(r"std::vector< .* >::(?:size|difference)_type", old_annot):
+            return ast.Name("int")
+
+        # std::vector value type
+        if (value_type := re.sub(
+                r'std::vector< (.*) >::value_type(?: const &)?',
+                r'\1', old_annot)) in self.mapping:
+            return self.mapping[value_type]
+
+        # std::vector
+        if (value_type := re.sub(
+                r'std::vector< (.*),std::allocator< \1 > >(?: const &)?',
+                r'\1', old_annot)) in self.mapping:
+            value_type_annot = self.mapping[value_type]
+            if isinstance(value_type_annot, ast.Constant):
+                return ast.Name(f"Tuple['{value_type_annot.value}']")
+            if isinstance(value_type_annot, ast.Name):
+                return ast.Name(f"Tuple[{value_type_annot.id}]")
+
+        return ast.Constant(old_annot)
 
 
 def fix_typehints(infilename, outfilename):

@@ -1,5 +1,7 @@
 """AMICI model package setup"""
 
+
+import contextlib
 import os
 import sys
 from typing import List
@@ -34,6 +36,8 @@ class ModelBuildExt(build_ext):
             self.compiler.compile = compile_parallel.__get__(
                 self.compiler, setuptools._distutils.ccompiler.CCompiler)
 
+        print(f"Building model extension in {os.getcwd()}")
+
         build_ext.build_extension(self, ext)
 
     def find_swig(self) -> str:
@@ -49,10 +53,8 @@ def get_model_sources() -> List[str]:
     """Get list of source files for the amici base library"""
     import glob
     model_sources = glob.glob('*.cpp')
-    try:
+    with contextlib.suppress(ValueError):
         model_sources.remove('main.cpp')
-    except ValueError:
-        pass
     return model_sources
 
 
@@ -168,7 +170,7 @@ setup(
     packages=find_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     package_data={},
     zip_safe=False,
     include_package_data=True,

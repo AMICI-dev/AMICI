@@ -36,6 +36,69 @@ void serialize(Archive &ar, amici::Model &m, unsigned int version);
 namespace amici {
 
 /**
+ * @brief Describes the various model quantities
+ */
+enum class ModelQuantity {
+    J,
+    JB,
+    Jv,
+    JvB,
+    JDiag,
+    sx,
+    sy,
+    sz,
+    srz,
+    ssigmay,
+    ssigmaz,
+    xdot,
+    sxdot,
+    xBdot,
+    x0_rdata,
+    x0,
+    x_rdata,
+    x,
+    dwdw,
+    dwdx,
+    dwdp,
+    y,
+    dydp,
+    dydx,
+    w,
+    root,
+    qBdot,
+    qBdot_ss,
+    xBdot_ss,
+    JSparseB_ss,
+    deltax,
+    deltasx,
+    deltaxB,
+    k,
+    p,
+    ts,
+    dJydy,
+    dJydy_matlab,
+    deltaqB,
+    dsigmaydp,
+    dsigmaydy,
+    dsigmazdp,
+    dJydsigma,
+    dJydx,
+    dzdx,
+    dzdp,
+    dJrzdsigma,
+    dJrzdz,
+    dJrzdx,
+    dJzdsigma,
+    dJzdz,
+    dJzdx,
+    drzdp,
+    drzdx,
+};
+
+extern const std::map<ModelQuantity, std::string> model_quantity_to_str;
+
+
+/**
  * @brief The Model class represents an AMICI ODE/DAE model.
  *
  * The model can compute various model related quantities based on symbolically
@@ -62,7 +125,8 @@ class Model : public AbstractModel, public ModelDimensions {
           SimulationParameters simulation_parameters,
           amici::SecondOrderMode o2mode,
           std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, bool pythonGenerated = false,
+          std::vector<int> z2event,
+          bool pythonGenerated = false,
           int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
           int w_recursion_depth = 0);
 
@@ -116,6 +180,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdrzdp;
     using AbstractModel::fdrzdx;
     using AbstractModel::fdsigmaydp;
+    using AbstractModel::fdsigmaydy;
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
     using AbstractModel::fdwdp_colptrs;
@@ -146,6 +211,17 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
     using AbstractModel::fz;
+    using AbstractModel::fdx_rdatadx_solver;
+    using AbstractModel::fdx_rdatadx_solver_colptrs;
+    using AbstractModel::fdx_rdatadx_solver_rowvals;
+    using AbstractModel::fdx_rdatadp;
+    using AbstractModel::fdx_rdatadtcl;
+    using AbstractModel::fdx_rdatadtcl_colptrs;
+    using AbstractModel::fdx_rdatadtcl_rowvals;
+    using AbstractModel::fdtotal_cldx_rdata;
+    using AbstractModel::fdtotal_cldx_rdata_colptrs;
+    using AbstractModel::fdtotal_cldx_rdata_rowvals;
+    using AbstractModel::fdtotal_cldp;
 
     /**
      * @brief Initialize model properties.
@@ -155,9 +231,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sdx Reference to time derivative of state sensitivities (DAE only)
      * @param computeSensitivities Flag indicating whether sensitivities are to
      * be computed
+     * @param roots_found boolean indicators indicating whether roots were found at t0 by this fun
      */
     void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
-                    AmiVectorArray &sdx, bool computeSensitivities);
+                    AmiVectorArray &sdx, bool computeSensitivities,
+                    std::vector<int> &roots_found);
 
     /**
      * @brief Initialize model properties.
@@ -199,8 +277,10 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param x Reference to state variables
      * @param dx Reference to time derivative of states (DAE only)
+     * @param roots_found boolean indicators indicating whether roots were found at t0 by this fun
      */
-    void initHeaviside(const AmiVector &x, const AmiVector &dx);
+    void initEvents(const AmiVector &x, const AmiVector &dx,
+                    std::vector<int> &roots_found);
 
     /**
      * @brief Get number of parameters wrt to which sensitivities are computed.
@@ -653,15 +733,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param state Model state
      */
     void setModelState(ModelState const &state) {
-        if (static_cast<int>(state.unscaledParameters.size()) != np())
+        if (gsl::narrow<int>(state.unscaledParameters.size()) != np())
             throw AmiException("Mismatch in parameter size");
-        if (static_cast<int>(state.fixedParameters.size()) != nk())
+        if (gsl::narrow<int>(state.fixedParameters.size()) != nk())
             throw AmiException("Mismatch in fixed parameter size");
-        if (static_cast<int>(state.h.size()) != ne)
+        if (gsl::narrow<int>(state.h.size()) != ne)
             throw AmiException("Mismatch in Heaviside size");
-        if (static_cast<int>(state.total_cl.size()) != ncl())
+        if (gsl::narrow<int>(state.total_cl.size()) != ncl())
             throw AmiException("Mismatch in conservation law size");
-        if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
+        if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np() )
             throw AmiException("Mismatch in conservation law sensitivity size");
         state_ = state;
     };
@@ -862,11 +942,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
      * @param ssigmay Buffer (shape `ny` x `nplist`, row-major)
+     * @param sy Sensitivity of time-resolved observables for current timepoint
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
+                                       gsl::span<const realtype> sy,
                                        const int it, const ExpData *edata);
 
     /**
@@ -1198,18 +1280,43 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void updateHeavisideB(const int *rootsfound);
 
+
     /**
      * @brief Check if the given array has only finite elements.
      *
-     * If not, try to give hints by which other fields this could be caused.
+     * For (1D) spans.
      *
-     * @param array Array to check
-     * @param fun Name of the function that generated the values (for more
-     * informative messages).
-     * @return `amici::AMICI_RECOVERABLE_ERROR` if a NaN/Inf value was found,
-     * `amici::AMICI_SUCCESS` otherwise
+     * @param array
+     * @param model_quantity The model quantity `array` corresponds to
+     * @return
      */
-    int checkFinite(gsl::span<const realtype> array, const char *fun) const;
+    int checkFinite(gsl::span<const realtype> array,
+                           ModelQuantity model_quantity) const;
+    /**
+     * @brief Check if the given array has only finite elements.
+     *
+     * For flattened 2D arrays.
+     *
+     * @param array Flattened matrix
+     * @param model_quantity The model quantity `array` corresponds to
+     * @param num_cols Number of columns of the non-flattened matrix
+     * @return
+     */
+    int checkFinite(gsl::span<const realtype> array,
+                    ModelQuantity model_quantity,
+                    size_t num_cols) const;
+
+    /**
+     * @brief Check if the given array has only finite elements.
+     *
+     * For SUNMatrix.
+     *
+     * @param m Matrix to check
+     * @param model_quantity The model quantity `m` corresponds to
+     * @param t current timepoint
+     * @return
+     */
+    int checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) const;
 
     /**
      * @brief Set whether the result of every call to `Model::f*` should be
@@ -1276,8 +1383,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * conservation laws expanded (stored in `amici::ReturnData`).
      * @param sx_solver State variables sensitivities with conservation laws
      * applied (solver returns this)
+     * @param x_solver State variables with conservation laws
+     * applied (solver returns this)
      */
-    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
+    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver,
+                   const AmiVector &x_solver);
 
     /**
      * @brief Set indices of states to be reinitialized based on provided
@@ -1403,6 +1513,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param edata pointer to `amici::ExpData` data instance holding sigma values
      */
     void fdsigmaydp(int it, const ExpData *edata);
+
+    /**
+     * @brief Compute partial derivative of standard deviation of measurements
+     * w.r.t. model outputs.
+     * @param it Timepoint index
+     * @param edata pointer to `amici::ExpData` data instance holding sigma values
+     */
+    void fdsigmaydy(int it, const ExpData *edata);
 
     /**
      * @brief Compute negative log-likelihood of measurements \f$ y \f$.
@@ -1667,9 +1785,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_rdata State variables with conservation laws expanded
      * @param x_solver State variables with conservation laws applied
      * @param tcl Total abundances for conservation laws
+     * @param p parameter vector
+     * @param k constant vector
      */
     virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
-                          const realtype *tcl);
+                          const realtype *tcl, const realtype *p,
+                          const realtype *k);
 
     /**
      * @brief Compute fsx_solver.
@@ -1681,10 +1802,17 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx_solver State sensitivity variables with conservation laws
      * applied
      * @param stcl Sensitivities of total abundances for conservation laws
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x_solver State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
      * @param ip Sensitivity index
      */
     virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                           const realtype *stcl, int ip);
+                           const realtype *stcl, const realtype *p,
+                           const realtype *k, const realtype *x_solver,
+                           const realtype *tcl,
+                           const int ip);
 
     /**
      * @brief Compute fx_solver.
@@ -1715,8 +1843,11 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param total_cl Total abundances of conservation laws
      * @param x_rdata State variables with conservation laws expanded
+     * @param p parameter vector
+     * @param k constant vector
      */
-    virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata);
+    virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata,
+                           const realtype *p, const realtype *k);
 
     /**
      * @brief Compute fstotal_cl
@@ -1728,9 +1859,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx_rdata State sensitivity variables with conservation laws
      * expanded
      * @param ip Sensitivity index
+     * @param x_rdata State variables with conservation laws expanded
+     * @param p parameter vector
+     * @param k constant vector
+     * @param tcl Total abundances for conservation laws
      */
     virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
-                            int ip);
+                            const int ip, const realtype *x_rdata,
+                            const realtype *p, const realtype *k,
+                            const realtype *tcl);
 
     /**
      * @brief Compute non-negative state vector.
@@ -1746,7 +1883,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * stateIsNonNegative
      */
     const_N_Vector computeX_pos(const_N_Vector x);
-    
+
     /**
      * @brief Compute non-negative state vector.
      *
@@ -1785,6 +1922,11 @@ class Model : public AbstractModel, public ModelDimensions {
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
     std::vector<bool> state_is_non_negative_;
+
+    /** Vector of booleans indicating the initial boolean value for every event trigger function. Events at t0
+     * can only trigger if the initial value is set to `false`. Must be specified during model compilation by
+     * setting the `initialValue` attribute of an event trigger. */
+    std::vector<bool> root_initial_values_;
 
     /** boolean indicating whether any entry in stateIsNonNegative is `true` */
     bool any_state_non_negative_ {false};

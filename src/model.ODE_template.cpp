@@ -1,5 +1,5 @@
-#include "TPL_MODELNAME.h"
 #include <array>
+#include <amici/defines.h>
 
 namespace amici {
 
@@ -51,6 +51,10 @@ std::array<const char*, TPL_NW> expressionIds = {
 
 std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
     TPL_STATE_IDXS_SOLVER_INITIALIZER_LIST
+};
+
+std::array<bool, TPL_NEVENT> rootInitialValues = {
+    TPL_ROOT_INITIAL_VALUES
 };
 
 } // namespace model_TPL_MODELNAME

@@ -25,19 +25,19 @@ extern void dJydy_model_neuron(double *dJydy, const int iy, const realtype *p, c
 extern void dJzdsigma_model_neuron(double *dJzdsigma, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
 extern void dJzdz_model_neuron(double *dJzdz, const int iz, const realtype *p, const realtype *k, const double *z, const double *sigmaz, const double *mz);
 extern void deltaqB_model_neuron(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
-extern void deltasx_model_neuron(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau);
+extern void deltasx_model_neuron(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl);
 extern void deltax_model_neuron(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old);
 extern void deltaxB_model_neuron(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB);
 extern void drzdx_model_neuron(double *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 extern void dxdotdp_model_neuron(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
 extern void dydx_model_neuron(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void dzdx_model_neuron(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
-extern void root_model_neuron(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void root_model_neuron(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
 extern void rz_model_neuron(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
-extern void sigmay_model_neuron(double *sigmay, const realtype t, const realtype *p, const realtype *k);
+extern void sigmay_model_neuron(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y);
 extern void sigmaz_model_neuron(double *sigmaz, const realtype t, const realtype *p, const realtype *k);
 extern void srz_model_neuron(double *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip);
-extern void stau_model_neuron(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie);
+extern void stau_model_neuron(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *sx, const int ip, const int ie);
 extern void sx0_model_neuron(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
 extern void sz_model_neuron(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip);
 extern void x0_model_neuron(realtype *x0, const realtype t, const realtype *p, const realtype *k);
@@ -70,6 +70,9 @@ public:
                   0,
                   0,
                   {},
+                  0,
+                  0,
+                  0,
                   4,
                   1,
                   1
@@ -131,8 +134,8 @@ public:
         deltaqB_model_neuron(deltaqB, t, x, p, k, h, ip, ie, xdot, xdot_old, xB);
     }
 
-    void fdeltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau) override {
-        deltasx_model_neuron(deltasx, t, x, p, k, h, w, ip, ie, xdot, xdot_old, sx, stau);
+    void fdeltasx(double *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl) override {
+        deltasx_model_neuron(deltasx, t, x, p, k, h, w, ip, ie, xdot, xdot_old, sx, stau, tcl);
     }
 
     void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old) override {
@@ -150,7 +153,7 @@ public:
         drzdx_model_neuron(drzdx, ie, t, x, p, k, h);
     }
 
-    void fdsigmaydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
+    void fdsigmaydp(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *y, const int ip) override {
     }
 
     void fdsigmazdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
@@ -180,16 +183,16 @@ public:
         dzdx_model_neuron(dzdx, ie, t, x, p, k, h);
     }
 
-    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
-        root_model_neuron(root, t, x, p, k, h);
+    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
+        root_model_neuron(root, t, x, p, k, h, tcl);
     }
 
     void frz(double *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
         rz_model_neuron(rz, ie, t, x, p, k, h);
     }
 
-    void fsigmay(double *sigmay, const realtype t, const realtype *p, const realtype *k) override {
-        sigmay_model_neuron(sigmay, t, p, k);
+    void fsigmay(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y) override {
+        sigmay_model_neuron(sigmay, t, p, k, y);
     }
 
     void fsigmaz(double *sigmaz, const realtype t, const realtype *p, const realtype *k) override {
@@ -200,8 +203,8 @@ public:
         srz_model_neuron(srz, ie, t, x, p, k, h, sx, ip);
     }
 
-    void fstau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) override {
-        stau_model_neuron(stau, t, x, p, k, h, sx, ip, ie);
+    void fstau(double *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
+        stau_model_neuron(stau, t, x, p, k, h, tcl, sx, ip, ie);
     }
 
     void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) override {

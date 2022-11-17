@@ -283,13 +283,14 @@ class AbstractModel {
      * @param p parameter vector
      * @param k constant vector
      * @param h Heaviside vector
+     * @param tcl total abundances for conservation laws
      * @param sx current state sensitivity
      * @param ip sensitivity index
      * @param ie event index
      */
     virtual void fstau(realtype *stau, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *sx, int ip, int ie);
+                       const realtype *tcl, const realtype *sx, int ip, int ie);
 
     /**
      * @brief Model-specific implementation of fy
@@ -306,7 +307,7 @@ class AbstractModel {
                     const realtype *w);
 
     /**
-     * @brief Model-specific implementation of fdydp
+     * @brief Model-specific implementation of fdydp (MATLAB-only)
      * @param dydp partial derivative of observables y w.r.t. model parameters p
      * @param t current time
      * @param x current state
@@ -320,6 +321,24 @@ class AbstractModel {
     virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        int ip, const realtype *w, const realtype *dwdp);
+
+    /**
+     * @brief Model-specific implementation of fdydp (Python)
+     * @param dydp partial derivative of observables y w.r.t. model parameters p
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param ip parameter index w.r.t. which the derivative is requested
+     * @param w repeating elements vector
+     * @param tcl total abundances for conservation laws
+     * @param dtcldp Sensitivities of total abundances for conservation laws
+     */
+    virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h,
+                       int ip, const realtype *w, const realtype *tcl,
+                       const realtype *dtcldp);
 
     /**
      * @brief Model-specific implementation of fdydx
@@ -488,13 +507,15 @@ class AbstractModel {
      * @param xdot_old previous model right hand side
      * @param sx state sensitivity
      * @param stau event-time sensitivity
+     * @param tcl total abundances for conservation laws
      */
     virtual void fdeltasx(realtype *deltasx, const realtype t,
                           const realtype *x, const realtype *p,
                           const realtype *k, const realtype *h,
                           const realtype *w, int ip, int ie,
                           const realtype *xdot, const realtype *xdot_old,
-                          const realtype *sx, const realtype *stau);
+                          const realtype *sx, const realtype *stau,
+                          const realtype *tcl);
 
     /**
      * @brief Model-specific implementation of fdeltaxB
@@ -541,20 +562,36 @@ class AbstractModel {
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param y model output at timepoint t
      */
     virtual void fsigmay(realtype *sigmay, const realtype t, const realtype *p,
-                         const realtype *k);
+                         const realtype *k, const realtype *y);
 
     /**
-     * @brief Model-specific implementation of fsigmay
+     * @brief Model-specific implementation of fdsigmaydp
      * @param dsigmaydp partial derivative of standard deviation of measurements
      * @param t current time
      * @param p parameter vector
      * @param k constant vector
+     * @param y model output at timepoint t
      * @param ip sensitivity index
      */
     virtual void fdsigmaydp(realtype *dsigmaydp, const realtype t,
-                            const realtype *p, const realtype *k, int ip);
+                            const realtype *p, const realtype *k,
+                            const realtype *y, int ip);
+    /**
+     * @brief Model-specific implementation of fsigmay
+     * @param dsigmaydy partial derivative of standard deviation of measurements
+     * w.r.t. model outputs
+     * @param t current time
+     * @param p parameter vector
+     * @param k constant vector
+     * @param y model output at timepoint t
+     */
+    virtual void fdsigmaydy(realtype *dsigmaydy, const realtype t,
+                            const realtype *p, const realtype *k,
+                            const realtype *y);
+
 
     /**
      * @brief Model-specific implementation of fsigmaz
@@ -843,6 +880,105 @@ class AbstractModel {
      * @param dwdw sparse matrix to which rowvals will be written
      */
     virtual void fdwdw_rowvals(SUNMatrixWrapper &dwdw);
+
+    /**
+     * @brief Compute dx_rdata / dx_solver
+     * @param dx_rdatadx_solver dx_rdata / dx_solver
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdx_rdatadx_solver(realtype *dx_rdatadx_solver,
+                                    const realtype *x, const realtype *tcl,
+                                    const realtype *p, const realtype *k);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadx_solver, colptrs part
+     * @param dxrdatadxsolver sparse matrix to which colptrs will be written
+     */
+    virtual void fdx_rdatadx_solver_colptrs(SUNMatrixWrapper &dxrdatadxsolver);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadx_solver, rowvals part
+     * @param dxrdatadxsolver sparse matrix to which rowvals will be written
+     */
+    virtual void fdx_rdatadx_solver_rowvals(SUNMatrixWrapper &dxrdatadxsolver);
+
+    /**
+     * @brief Compute dx_rdata / dp
+     * @param dx_rdatadp dx_rdata / dp
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     * @param ip Sensitivity index
+     */
+    virtual void fdx_rdatadp(realtype *dx_rdatadp, const realtype *x,
+                             const realtype *tcl, const realtype *p,
+                             const realtype *k, const int ip);
+
+    /**
+     * @brief Compute dx_rdata / dtcl
+     * @param dx_rdatadtcl dx_rdata / dtcl
+     * @param p parameter vector
+     * @param k constant vector
+     * @param x State variables with conservation laws applied
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdx_rdatadtcl(realtype *dx_rdatadtcl, const realtype *x,
+                               const realtype *tcl, const realtype *p,
+                               const realtype *k);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadtcl, colptrs part
+     * @param dx_rdatadtcl sparse matrix to which colptrs will be written
+     */
+    virtual void fdx_rdatadtcl_colptrs(SUNMatrixWrapper &dx_rdatadtcl);
+
+    /**
+     * @brief Model-specific implementation of fdx_rdatadtcl, rowvals part
+     * @param dx_rdatadtcl sparse matrix to which rowvals will be written
+     */
+    virtual void fdx_rdatadtcl_rowvals(SUNMatrixWrapper &dx_rdatadtcl);
+
+    /**
+     * @brief Compute dtotal_cl / dp
+     * @param dtotal_cldp dtotal_cl / dp
+     * @param x_rdata State variables with conservation laws applied
+     * @param p parameter vector
+     * @param k constant vector
+     * @param ip Sensitivity index
+     */
+    virtual void fdtotal_cldp(realtype *dtotal_cldp, const realtype *x_rdata,
+                             const realtype *p, const realtype *k,
+                             const int ip);
+
+    /**
+     * @brief Compute dtotal_cl / dx_rdata
+     * @param dtotal_cldx_rdata dtotal_cl / dx_rdata
+     * @param x_rdata State variables with conservation laws applied
+     * @param p parameter vector
+     * @param k constant vector
+     * @param tcl Total abundances for conservation laws
+     */
+    virtual void fdtotal_cldx_rdata(realtype *dtotal_cldx_rdata,
+                                   const realtype *x_rdata, const realtype *p,
+                                   const realtype *k, const realtype *tcl);
+
+    /**
+     * @brief Model-specific implementation of fdtotal_cldx_rdata, colptrs part
+     * @param dtotal_cldx_rdata sparse matrix to which colptrs will be written
+     */
+    virtual void fdtotal_cldx_rdata_colptrs(
+        SUNMatrixWrapper &dtotal_cldx_rdata);
+
+    /**
+     * @brief Model-specific implementation of fdtotal_cldx_rdata, rowvals part
+     * @param dtotal_cldx_rdata sparse matrix to which rowvals will be written
+     */
+    virtual void fdtotal_cldx_rdata_rowvals(
+        SUNMatrixWrapper &dtotal_cldx_rdata);
 
     /**
      * @brief Model-specific implementation the spline constructors
