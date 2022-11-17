@@ -1,1 +1,0 @@
-../../amici/setup.template.py

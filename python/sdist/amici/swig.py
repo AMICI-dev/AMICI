@@ -1,1 +1,0 @@
-../../amici/swig.py

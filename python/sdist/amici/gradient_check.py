@@ -1,1 +1,0 @@
-../../amici/gradient_check.py

@@ -1,1 +1,0 @@
-../../amici/parameter_mapping.py

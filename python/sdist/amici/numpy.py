@@ -1,1 +1,0 @@
-../../amici/numpy.py
