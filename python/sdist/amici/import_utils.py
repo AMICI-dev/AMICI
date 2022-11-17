@@ -596,6 +596,7 @@ def _check_unsupported_functions(sym: sp.Expr,
     for arg in list(sym.args):
         _check_unsupported_functions(arg, expression_type)
 
+
 def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
                 input_name: str) -> sp.Expr:
     """

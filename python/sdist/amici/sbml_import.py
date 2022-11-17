@@ -458,7 +458,6 @@ class SbmlImporter:
         :param constant_parameters:
             SBML Ids identifying constant parameters
         """
-
         if not self._discard_annotations:
             self._process_annotations()
         self.check_support()

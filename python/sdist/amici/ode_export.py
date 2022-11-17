@@ -1552,6 +1552,7 @@ class ODEModel:
             self._sparseeqs[name] = []
             self._sparsesyms[name] = []
             self._syms[name] = []
+
             for iy in range(self.num_obs()):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                     sparse_matrix = self._code_printer.csc_matrix(
@@ -2753,6 +2754,7 @@ class ODEExporter:
         :param function:
             name of the function to be written (see ``self.functions``)
         """
+
         # first generate the equations to make sure we have everything we
         # need in subsequent steps
         if function in sparse_functions:
