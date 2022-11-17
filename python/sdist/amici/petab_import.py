@@ -423,6 +423,7 @@ def import_model_sbml(
         allow_reinit_fixpar_initcond: bool = True,
         validate: bool = True,
         non_estimated_parameters_as_constants=True,
+        discard_sbml_annotations: bool = False,
         **kwargs) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
@@ -470,6 +471,9 @@ def import_model_sbml(
         considered constant in AMICI. Setting this to ``True`` will reduce
         model size and simulation times. If sensitivities with respect to those
         parameters are required, this should be set to ``False``.
+
+    :param discard_sbml_annotations:
+        Discard information contained in AMICI SBML annotations (debug).
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -535,7 +539,10 @@ def import_model_sbml(
 
     show_model_info(sbml_model)
 
-    sbml_importer = amici.SbmlImporter(sbml_model)
+    sbml_importer = amici.SbmlImporter(
+        sbml_model,
+        discard_annotations=discard_sbml_annotations,
+    )
     sbml_model = sbml_importer.sbml
 
     allow_n_noise_pars = \
