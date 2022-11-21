@@ -2,6 +2,18 @@
 
 ## v0.X Series
 
+### v0.13.0 (2022-10-04)
+
+* Fixed extraction of common subexpressions
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1865
+* Added function to convert `ReturnData::status` flags to string
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1864
+
+And further contributions by @dweindl, @FFroehlich
+
+**Full Changelog**:
+https://github.com/AMICI-dev/AMICI/compare/v0.12.0...v0.13.0
+
 ### v0.12.0 (2022-08-26)
 
 Features:
@@ -14,6 +26,7 @@ Features:
 * Option to extract common subexpressions
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1852,
   https://github.com/AMICI-dev/AMICI/pull/1856
+  **not available in this release, use v0.13.0**
 * Parallelize matrix simplification
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1778
 * Validate PEtab problems before attempting import
@@ -32,7 +45,7 @@ Fixes:
 And further contributions by @dilpath, @dweindl, @FFroehlich
 
 **Full Changelog**:
-https://github.com/AMICI-dev/AMICI/compare/v0.11.32...v0.11.33
+https://github.com/AMICI-dev/AMICI/compare/v0.11.32...v0.12.0
 
 ### v0.11.32 (2022-07-15)
 
