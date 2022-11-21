@@ -452,7 +452,6 @@ TEST(Splines, SplineExplicitSensitivity)
          4.0, -0.540302,  0.0,
          0.0,  0.0,       0.0,
     };
-    std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
     std::vector<std::tuple<double, std::vector<double>>> expectations = {
