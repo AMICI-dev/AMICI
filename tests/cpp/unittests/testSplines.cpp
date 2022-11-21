@@ -496,3 +496,343 @@ TEST(Splines, SplineLogarithmicSensitivity)
     ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
     ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
+
+TEST(Splines, SplineFinalValue_ConstantExtrapolation)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 4.5 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::constant,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), 4.5);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), -6.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 1.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 3.0);
+}
+
+TEST(Splines, SplineFinalValue_LinearExtrapolationPositiveDerivative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 4.5 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::linear,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 0.0);
+}
+
+TEST(Splines, SplineFinalValue_LinearExtrapolationNegativeDerivative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 0.0 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::linear,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 0.0);
+}
+
+TEST(Splines, SplineFinalValue_LinearExtrapolationZeroDerivative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 1.0 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::linear,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), NAN);
+}
+
+TEST(Splines, SplineFinalValue_LinearExtrapolationZeroDerivativeByBC)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 2.0 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::zeroDerivative,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::linear,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), 2.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), -6.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 1.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 3.0);
+}
+
+TEST(Splines, SplineFinalValue_PolynomialExtrapolationPositive)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { -8.0, -6.0, -1.0, -2.0 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::polynomial,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
+    /* NB sensitivities for this case are not implemented, since they are unlikely to be used*/
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), NAN);
+}
+
+TEST(Splines, SplineFinalValue_PolynomialExtrapolationNegative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 2.0 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::polynomial,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
+    /* NB sensitivities for this case are not implemented, since they are unlikely to be used*/
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), NAN);
+}
+
+TEST(Splines, SplineFinalValue_PeriodicExtrapolation)
+{
+    // Uniform grid
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 1.0, 2.0, 0.5, 1.0 },
+                         {},
+                         SplineBoundaryCondition::periodic,
+                         SplineBoundaryCondition::periodic,
+                         SplineExtrapolation::periodic,
+                         SplineExtrapolation::periodic,
+                         true,   // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), NAN);
+}
+
+TEST(Splines, SplineFinalValue_PeriodicExtrapolationConstant)
+{
+    // Uniform grid
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 1.0, 1.0, 1.0, 1.0 },
+                         {},
+                         SplineBoundaryCondition::periodic,
+                         SplineBoundaryCondition::periodic,
+                         SplineExtrapolation::periodic,
+                         SplineExtrapolation::periodic,
+                         true,   // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), 1.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), NAN);
+}
+
+TEST(Splines, SplineFinalValue_LogarithmicPositiveDerivative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 4.5 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::linear,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         true); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 0.0);
+}
+
+TEST(Splines, SplineFinalValue_LogarithmicNegativeDerivative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 0.5 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::linear,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         true); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 0.0);
+}
+
+TEST(Splines, SplineFinalValue_LogarithmicZeroDerivative)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 0.5 },
+                         {},
+                         SplineBoundaryCondition::given,
+                         SplineBoundaryCondition::given,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::constant,
+                         true,  // node_derivative_by_FD
+                         true,  // equidistant_spacing
+                         true); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    ASSERT_DOUBLE_EQ(spline.get_final_value(), 0.5);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), -6.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 1.0);
+    ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(2), 3.0);
+}

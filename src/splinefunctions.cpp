@@ -723,7 +723,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                 } else {
                     throw AmiException(
                       "Some weird combination of spline boundary "
-                      "condition, extrapolation and finite differecnces was "
+                      "condition, extrapolation and finite differences was "
                       "passed which should not be allowed.");
                 }
                 break;
@@ -790,17 +790,17 @@ HermiteSpline::compute_final_value()
     /* We need to compute the final value of the spline, depending on its
      * boundary condition and the extrapolation option. */
     realtype finalValue;
-    if ((last_node_ep_ == SplineExtrapolation::constant) ||
-        (last_node_bc_ == SplineBoundaryCondition::zeroDerivative &&
-         last_node_ep_ == SplineExtrapolation::linear)) {
+    if (last_node_ep_ == SplineExtrapolation::constant) {
         finalValue = coefficients_extrapolate[2];
     } else if (last_node_ep_ == SplineExtrapolation::linear) {
-        if (coefficients_extrapolate[2] < 0) {
+        if (last_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
+            finalValue = coefficients_extrapolate[3];
+        } else if (coefficients_extrapolate[2] < 0) {
             finalValue = -INFINITY;
         } else if (coefficients_extrapolate[2] > 0) {
             finalValue = INFINITY;
         } else {
-            finalValue = 0;
+            finalValue = coefficients_extrapolate[3];
         }
     } else if (last_node_ep_ == SplineExtrapolation::polynomial) {
         int last = 4 * (n_nodes() - 1) - 1;
@@ -820,9 +820,14 @@ HermiteSpline::compute_final_value()
             finalValue = coefficients[last - 3];
         }
     } else {
-        /* Periodic: will not yield a steady state */
-        // TODO unless the spline is the constant funtion
-        finalValue = NAN;
+        /* Periodic: will not yield a steady state, unless the spline is the constant function */
+        finalValue = get_node_value_scaled(0);
+        for (int i = 0; i < n_nodes(); i++) {
+            if (get_node_value_scaled(i) != finalValue || get_node_derivative_scaled(i) != 0) {
+                finalValue = NAN;
+                break;
+            }
+        }
     }
     set_final_value_scaled(finalValue);
 }
@@ -830,8 +835,8 @@ HermiteSpline::compute_final_value()
 void
 HermiteSpline::compute_final_sensitivity(
   int nplist,
-  int /*spline_offset*/,
-  gsl::span<realtype> /*dvaluesdp*/,
+  int spline_offset,
+  gsl::span<realtype> dvaluesdp,
   gsl::span<realtype> /*dslopesdp*/)
 {
     /* We need to compute the final value of the spline, depending on its
@@ -840,18 +845,29 @@ HermiteSpline::compute_final_sensitivity(
     if ((last_node_ep_ == SplineExtrapolation::constant) ||
         (last_node_bc_ == SplineBoundaryCondition::zeroDerivative &&
          last_node_ep_ == SplineExtrapolation::linear)) {
+        int last = n_nodes() - 1;
         for (int ip = 0; ip < nplist; ip++)
-            finalSensitivity[ip] = coefficients_extrapolate_sensi[4 * ip + 2];
+            finalSensitivity[ip] = dvaluesdp[last * nplist + spline_offset + ip];
     } else if (last_node_ep_ == SplineExtrapolation::linear) {
-        /* If steady state is infinity, sensitivity must be 0 */
+        /* If steady state is infinity, sensitivity must be 0
+        /* (unless the derivative is zero and the final value will change abruptly from finite to +-inf)
+        /* (if the derivative is constant zero in a neighbourhood, then the final value will not change,
+        /* but this is impossible to determine just from the sensitivity of the derivative)
+         */
+        int last = n_nodes() - 1;
+        if (get_node_derivative_scaled(last) == 0)
+            std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     } else if (last_node_ep_ == SplineExtrapolation::polynomial) {
         /* Yes, that's not correct. But I don't see any good reason for
          * implementing a case, which anybody with more than a dead fish
          * between the ears will never use. */
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     } else {
-        /* Periodic: will not yield a steady state */
-        // TODO unless the spline is the constant funtion
+        /* Periodic: will not yield a steady state
+        /* (unless the spline is the constant funtion,
+        /* but even in that case sensitivity information is not able to tell us
+        /* whether the steady state continues to exist in a neighbourhood of the current parameters
+         */
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     }
     set_final_sensitivity_scaled(finalSensitivity);
