@@ -244,16 +244,14 @@ bool operator==(const Model &a, const Model &b) {
             == static_cast<ModelDimensions const&>(b))
             && (a.o2mode == b.o2mode) &&
            (a.z2event_ == b.z2event_) && (a.idlist == b.idlist) &&
-           (a.state_.h == b.state_.h) &&
-           (a.state_.unscaledParameters == b.state_.unscaledParameters) &&
            (a.simulation_parameters_ == b.simulation_parameters_) &&
-           (a.state_.fixedParameters == b.state_.fixedParameters) &&
-           (a.state_.plist == b.state_.plist) && (a.x0data_ == b.x0data_) &&
+           (a.x0data_ == b.x0data_) &&
            (a.sx0data_ == b.sx0data_) &&
            (a.nmaxevent_ == b.nmaxevent_) &&
            (a.state_is_non_negative_ == b.state_is_non_negative_) &&
            (a.sigma_res_ == b.sigma_res_) &&
-           (a.min_sigma_ == b.min_sigma_);
+           (a.min_sigma_ == b.min_sigma_)
+           && a.state_ == b.state_;
 }
 
 bool operator==(const ModelDimensions &a, const ModelDimensions &b) {

@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/model_dimensions.h"
+#include "amici/misc.h"
 
 #include <vector>
 
@@ -47,6 +48,15 @@ struct ModelState {
     /** temporary storage for spline values */
     std::vector<realtype> spl_;
 };
+
+inline bool operator==(const ModelState &a, const ModelState &b) {
+    return is_equal(a.h, b.h)
+           && is_equal(a.total_cl, b.total_cl)
+           && is_equal(a.stotal_cl, b.stotal_cl)
+           && is_equal(a.unscaledParameters, b.unscaledParameters)
+           && is_equal(a.fixedParameters, b.fixedParameters)
+           && a.plist == b.plist;
+}
 
 
 /**

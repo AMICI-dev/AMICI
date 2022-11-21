@@ -143,11 +143,18 @@ jobs:
     runs-on: macos-latest
 
     steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
     - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
@@ -155,8 +162,8 @@ jobs:
         brew install hdf5 swig gcc cppcheck libomp boost \
           && brew ls -v boost \
           && brew ls -v libomp \
-          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.78.0_1/lib/" >> $GITHUB_ENV \
-          && echo CPPFLAGS="-I/usr/local/Cellar/boost/1.78.0_1/include/" >> $GITHUB_ENV
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.80.0/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I/usr/local/Cellar/boost/1.80.0/include/" >> $GITHUB_ENV
 
     - name: Build AMICI
       run: |
