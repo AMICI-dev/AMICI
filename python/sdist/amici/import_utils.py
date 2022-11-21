@@ -321,27 +321,6 @@ def toposort_symbols(symbols: SymbolDef,
     }
 
 
-def _parse_logical_operators(math_str: Union[str, float, None]
-                             ) -> Union[str, float, None]:
-    """
-    Parses a math string in order to replace logical operators by a form
-    parsable for sympy
-
-    :param math_str:
-        str with mathematical expression
-    :param math_str:
-        parsed math_str
-    """
-    if not isinstance(math_str, str):
-        return math_str
-
-    if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported as logical '
-                            'operation.')
-
-    return (math_str.replace('&&', '&')).replace('||', '|')
-
-
 def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     """
     Recursively checks the symbolic expression for functions which have be

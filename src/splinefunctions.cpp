@@ -649,7 +649,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
                 } else if (!get_node_derivative_by_fd() &&
                            first_node_bc_ == SplineBoundaryCondition::given) {
-                    sm0 = dslopesdp[spline_offset + ip]; 
+                    sm0 = dslopesdp[spline_offset + ip];
 
                 } else if (!get_node_derivative_by_fd() &&
                            first_node_bc_ == SplineBoundaryCondition::natural) {
@@ -753,7 +753,7 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
                                          realtype len,
                                          gsl::span<realtype> dnodesdp,
                                          gsl::span<realtype> dslopesdp,
-                                         gsl::span<realtype> coeffs)
+                                         gsl::span<realtype> coeffs) const
 {
     /* We're using the short hand notation for node values and slopes from
      * compute_coefficients_sensi() here. See this function for documentation.
@@ -911,7 +911,7 @@ HermiteSpline::get_value_scaled(const realtype t) const
             case SplineExtrapolation::periodic:
                 len = nodes_[n_nodes() - 1] - nodes_[0];
                 return get_value(nodes_[0] + std::fmod(t - nodes_[0], len));
-            
+
             default:
                 throw AmiException("Unsupported SplineExtrapolation type");
         }

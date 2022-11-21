@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 from .import_utils import (
     sbml_time_symbol,
     amici_time_symbol,
-    _parse_logical_operators,
     _parse_special_functions,
     _check_unsupported_functions,
 )
@@ -28,23 +27,26 @@ from sympy.core.parameters import evaluate
 ###############################################################################
 
 
-class SbmlInvalidIdSyntax(Exception):
+class SBMLException(Exception):
+    pass
+
+class SbmlInvalidIdSyntax(SBMLException):
     pass
 
 
-class SbmlDuplicateComponentIdError(Exception):
+class SbmlDuplicateComponentIdError(SBMLException):
     pass
 
 
-class SbmlMissingComponentIdError(Exception):
+class SbmlMissingComponentIdError(SBMLException):
     pass
 
 
-class SbmlMathError(Exception):
+class SbmlMathError(SBMLException):
     pass
 
 
-class SbmlAnnotationError(Exception):
+class SbmlAnnotationError(SBMLException):
     pass
 
 
@@ -535,3 +537,24 @@ def mathml2sympy(
         _check_unsupported_functions(expr, expression_type)
 
     return expr
+
+
+def _parse_logical_operators(math_str: Union[str, float, None]
+                             ) -> Union[str, float, None]:
+    """
+    Parses a math string in order to replace logical operators by a form
+    parsable for sympy
+
+    :param math_str:
+        str with mathematical expression
+    :param math_str:
+        parsed math_str
+    """
+    if not isinstance(math_str, str):
+        return math_str
+
+    if ' xor(' in math_str or ' Xor(' in math_str:
+        raise SBMLException('Xor is currently not supported as logical '
+                            'operation.')
+
+    return (math_str.replace('&&', '&')).replace('||', '|')
