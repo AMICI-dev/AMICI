@@ -528,6 +528,8 @@ TEST(Splines, SplineFinalValue_ConstantExtrapolation)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 4.5);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), -6.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 1.0);
@@ -556,6 +558,8 @@ TEST(Splines, SplineFinalValue_LinearExtrapolationPositiveDerivative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
@@ -584,6 +588,8 @@ TEST(Splines, SplineFinalValue_LinearExtrapolationNegativeDerivative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
@@ -612,6 +618,8 @@ TEST(Splines, SplineFinalValue_LinearExtrapolationZeroDerivative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
@@ -640,6 +648,8 @@ TEST(Splines, SplineFinalValue_LinearExtrapolationZeroDerivativeByBC)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 2.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), -6.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 1.0);
@@ -668,6 +678,8 @@ TEST(Splines, SplineFinalValue_PolynomialExtrapolationPositive)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
     /* NB sensitivities for this case are not implemented, since they are unlikely to be used*/
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
@@ -697,6 +709,8 @@ TEST(Splines, SplineFinalValue_PolynomialExtrapolationNegative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
     /* NB sensitivities for this case are not implemented, since they are unlikely to be used*/
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
@@ -727,6 +741,8 @@ TEST(Splines, SplineFinalValue_PeriodicExtrapolation)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), NAN);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
@@ -756,6 +772,8 @@ TEST(Splines, SplineFinalValue_PeriodicExtrapolationConstant)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 1.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), NAN);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), NAN);
@@ -784,6 +802,8 @@ TEST(Splines, SplineFinalValue_LogarithmicPositiveDerivative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
@@ -812,6 +832,8 @@ TEST(Splines, SplineFinalValue_LogarithmicNegativeDerivative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 0.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), 0.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 0.0);
@@ -840,6 +862,8 @@ TEST(Splines, SplineFinalValue_LogarithmicZeroDerivative)
     auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
     spline.compute_coefficients();
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    spline.compute_final_value();
+    spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 0.5);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(0), -6.0);
     ASSERT_DOUBLE_EQ(spline.get_final_sensitivity(1), 1.0);

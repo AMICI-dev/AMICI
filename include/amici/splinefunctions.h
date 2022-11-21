@@ -132,6 +132,30 @@ class AbstractSpline
     virtual realtype get_sensitivity_scaled(const realtype t, const int ip) const = 0;
 
     /**
+     * @brief Compute the limit value of the spline
+     * as the evaluation point tends to positive infinity.
+     */
+    virtual void compute_final_value() = 0;
+
+    /**
+     * @brief Compute the limit of the value of the sensitivity
+     * as the evaluation point tends to positive infinity.
+     * @param nplist number of parameters
+     * @param spline_offset offset of this spline inside `dnodesdp`
+     * and `dslopesdp`
+     * @param dspline_valuesdp derivatives of the spline values with respect to
+     * the parameters (for all splines in the model, not just this one)
+     * @param dspline_slopesdp derivatives of the spline derivatives with
+     * respect to the parameters (for all splines in the model, not just this
+     * one)
+     */
+    virtual void compute_final_sensitivity(
+      int nplist,
+      int spline_offset,
+      gsl::span<realtype> dspline_valuesdp,
+      gsl::span<realtype> dspline_slopesdp) = 0;
+
+    /**
      * @brief Get the limit value of the spline
      * as the evaluation point tends to positive infinity.
      * @return limit value
@@ -214,30 +238,6 @@ class AbstractSpline
      * @brief Polynomial coefficients for the extrapolating the sensitivities
      */
     std::vector<realtype> coefficients_extrapolate_sensi;
-
-    /**
-     * @brief Compute the limit value of the spline
-     * as the evaluation point tends to positive infinity.
-     */
-    virtual void compute_final_value() = 0;
-
-    /**
-     * @brief Compute the limit of the value of the sensitivity
-     * as the evaluation point tends to positive infinity.
-     * @param nplist number of parameters
-     * @param spline_offset offset of this spline inside `dnodesdp`
-     * and `dslopesdp`
-     * @param dspline_valuesdp derivatives of the spline values with respect to
-     * the parameters (for all splines in the model, not just this one)
-     * @param dspline_slopesdp derivatives of the spline derivatives with
-     * respect to the parameters (for all splines in the model, not just this
-     * one)
-     */
-    virtual void compute_final_sensitivity(
-      int nplist,
-      int spline_offset,
-      gsl::span<realtype> dspline_valuesdp,
-      gsl::span<realtype> dspline_slopesdp) = 0;
 
     /**
      * @brief Set the limit value of the spline
@@ -323,6 +323,14 @@ class HermiteSpline : public AbstractSpline
                                     gsl::span<realtype> dvaluesdp,
                                     gsl::span<realtype> dslopesdp) override;
 
+    void compute_final_value() override;
+
+    void compute_final_sensitivity(
+      int nplist,
+      int spline_offset,
+      gsl::span<realtype> dspline_valuesdp,
+      gsl::span<realtype> dspline_slopesdp) override;
+
     realtype get_value_scaled(const realtype t) const override;
 
     /**
@@ -379,14 +387,6 @@ class HermiteSpline : public AbstractSpline
       int spline_offset,
       gsl::span<realtype> dspline_valuesdp,
       gsl::span<realtype> dspline_slopesdp);
-
-    void compute_final_value() override;
-
-    void compute_final_sensitivity(
-      int nplist,
-      int spline_offset,
-      gsl::span<realtype> dspline_valuesdp,
-      gsl::span<realtype> dspline_slopesdp) override;
 
     std::vector<realtype> node_values_derivative_;
 
