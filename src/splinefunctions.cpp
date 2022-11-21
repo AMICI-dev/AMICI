@@ -794,13 +794,13 @@ HermiteSpline::compute_final_value()
         finalValue = coefficients_extrapolate[2];
     } else if (last_node_ep_ == SplineExtrapolation::linear) {
         if (last_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
-            finalValue = coefficients_extrapolate[3];
-        } else if (coefficients_extrapolate[2] < 0) {
+            finalValue = coefficients_extrapolate[2];
+        } else if (coefficients_extrapolate[3] < 0) {
             finalValue = -INFINITY;
-        } else if (coefficients_extrapolate[2] > 0) {
+        } else if (coefficients_extrapolate[3] > 0) {
             finalValue = INFINITY;
         } else {
-            finalValue = coefficients_extrapolate[3];
+            finalValue = coefficients_extrapolate[2];
         }
     } else if (last_node_ep_ == SplineExtrapolation::polynomial) {
         int last = 4 * (n_nodes() - 1) - 1;
