@@ -143,6 +143,11 @@ jobs:
     runs-on: macos-latest
 
     steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
     - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
