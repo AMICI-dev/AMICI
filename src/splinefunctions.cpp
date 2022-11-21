@@ -850,9 +850,9 @@ HermiteSpline::compute_final_sensitivity(
             finalSensitivity[ip] = dvaluesdp[last * nplist + spline_offset + ip];
     } else if (last_node_ep_ == SplineExtrapolation::linear) {
         /* If steady state is infinity, sensitivity must be 0
-        /* (unless the derivative is zero and the final value will change abruptly from finite to +-inf)
-        /* (if the derivative is constant zero in a neighbourhood, then the final value will not change,
-        /* but this is impossible to determine just from the sensitivity of the derivative)
+         * (unless the derivative is zero and the final value will change abruptly from finite to +-inf)
+         * (if the derivative is constant zero in a neighbourhood, then the final value will not change,
+         * but this is impossible to determine just from the sensitivity of the derivative)
          */
         int last = n_nodes() - 1;
         if (get_node_derivative_scaled(last) == 0)
@@ -864,9 +864,9 @@ HermiteSpline::compute_final_sensitivity(
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     } else {
         /* Periodic: will not yield a steady state
-        /* (unless the spline is the constant funtion,
-        /* but even in that case sensitivity information is not able to tell us
-        /* whether the steady state continues to exist in a neighbourhood of the current parameters
+         * (unless the spline is the constant funtion,
+         * but even in that case sensitivity information is not able to tell us
+         * whether the steady state continues to exist in a neighbourhood of the current parameters
          */
         std::fill(finalSensitivity.begin(), finalSensitivity.end(), NAN);
     }
