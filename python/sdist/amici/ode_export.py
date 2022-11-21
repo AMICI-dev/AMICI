@@ -3388,23 +3388,22 @@ def get_model_override_implementation(fun: str, name: str,
     :return:
         C++ function implementation string
     """
-    impl = '{return_type} f{fun}({signature}) override {{'
-
-    if nobody:
-        impl += '}}\n'
-    else:
-        impl += '\n{ind8}{fun}_{name}({eval_signature});\n{ind4}}}\n'
-
     func_info = functions[fun]
-
-    return impl.format(
-        ind4=' ' * 4,
-        ind8=' ' * 8,
+    body = "" if nobody \
+        else '\n{ind8}{maybe_return}{fun}_{name}({eval_signature});{ind4}\n' \
+        .format(
+            ind4=' ' * 4,
+            ind8=' ' * 8,
+            maybe_return="" if func_info.return_type == "void" else "return ",
+            fun=fun,
+            name=name,
+            eval_signature=remove_argument_types(func_info.arguments),
+        )
+    return '{return_type} f{fun}({signature}) override {{{body}}}\n'.format(
+        return_type=func_info.return_type,
         fun=fun,
-        name=name,
         signature=func_info.arguments,
-        eval_signature=remove_argument_types(func_info.arguments),
-        return_type=func_info.return_type
+        body=body,
     )
 
 
