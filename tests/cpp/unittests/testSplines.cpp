@@ -621,9 +621,9 @@ TEST(Splines, SplineFinalValue_LinearExtrapolationZeroDerivative)
     spline.compute_final_value();
     spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 1.0);
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(0)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(1)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(2)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(0)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(1)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(2)));
 }
 
 TEST(Splines, SplineFinalValue_LinearExtrapolationZeroDerivativeByBC)
@@ -682,9 +682,9 @@ TEST(Splines, SplineFinalValue_PolynomialExtrapolationPositive)
     spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), INFINITY);
     /* NB sensitivities for this case are not implemented, since they are unlikely to be used*/
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(0)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(1)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(2)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(0)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(1)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(2)));
 }
 
 TEST(Splines, SplineFinalValue_PolynomialExtrapolationNegative)
@@ -713,9 +713,9 @@ TEST(Splines, SplineFinalValue_PolynomialExtrapolationNegative)
     spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), -INFINITY);
     /* NB sensitivities for this case are not implemented, since they are unlikely to be used*/
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(0)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(1)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(2)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(0)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(1)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(2)));
 }
 
 TEST(Splines, SplineFinalValue_PeriodicExtrapolation)
@@ -743,10 +743,10 @@ TEST(Splines, SplineFinalValue_PeriodicExtrapolation)
     spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
     spline.compute_final_value();
     spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
-    ASSERT_TRUE(isnan(spline.get_final_value()));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(0)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(1)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(2)));
+    ASSERT_TRUE(std::isnan(spline.get_final_value()));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(0)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(1)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(2)));
 }
 
 TEST(Splines, SplineFinalValue_PeriodicExtrapolationConstant)
@@ -775,9 +775,9 @@ TEST(Splines, SplineFinalValue_PeriodicExtrapolationConstant)
     spline.compute_final_value();
     spline.compute_final_sensitivity(n_params, 0, dvaluesdp, dslopesdp);
     ASSERT_DOUBLE_EQ(spline.get_final_value(), 1.0);
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(0)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(1)));
-    ASSERT_TRUE(isnan(spline.get_final_sensitivity(2)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(0)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(1)));
+    ASSERT_TRUE(std::isnan(spline.get_final_sensitivity(2)));
 }
 
 TEST(Splines, SplineFinalValue_LogarithmicPositiveDerivative)
