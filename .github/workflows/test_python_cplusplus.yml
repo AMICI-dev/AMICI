@@ -25,6 +25,9 @@ jobs:
     - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
+
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
