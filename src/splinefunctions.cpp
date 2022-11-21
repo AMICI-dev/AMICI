@@ -835,7 +835,7 @@ HermiteSpline::compute_final_value()
 void
 HermiteSpline::compute_final_sensitivity(
   int nplist,
-  int spline_offset,
+  int /*spline_offset*/,
   gsl::span<realtype> /*dvaluesdp*/,
   gsl::span<realtype> /*dslopesdp*/)
 {
@@ -845,7 +845,6 @@ HermiteSpline::compute_final_sensitivity(
     if ((last_node_ep_ == SplineExtrapolation::constant) ||
         (last_node_bc_ == SplineBoundaryCondition::zeroDerivative &&
          last_node_ep_ == SplineExtrapolation::linear)) {
-        int last = n_nodes() - 1;
         for (int ip = 0; ip < nplist; ip++)
             finalSensitivity[ip] = coefficients_extrapolate_sensi[4 * ip + 2];
     } else if (last_node_ep_ == SplineExtrapolation::linear) {
