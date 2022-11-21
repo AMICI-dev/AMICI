@@ -15,9 +15,11 @@ using amici::AmiException;
 
 #define ASSERT_APPROX(x, x0, rtol, atol) ASSERT_LE(std::abs((x) - (x0)), (atol) + (rtol) * std::abs(x0))
 
-void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations)
+void test_spline_values(
+    HermiteSpline const& spline,
+    std::vector<std::tuple<double, double>> const& expectations)
 {
-  for (auto expected : expectations) {
+  for (auto const& expected : expectations) {
     double time;
     double expected_value;
     std::tie(time, expected_value) = expected;
@@ -25,7 +27,10 @@ void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, do
   }
 }
 
-void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, double>> &expectations, const double rtol, const double atol)
+void test_spline_values(
+    HermiteSpline const& spline,
+    std::vector<std::tuple<double, double>> const& expectations,
+    const double rtol, const double atol)
 {
   for (auto expected : expectations) {
     double time;
@@ -35,7 +40,9 @@ void test_spline_values(HermiteSpline &spline, std::vector<std::tuple<double, do
   }
 }
 
-void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<double, std::vector<double>>> &expectations)
+void test_spline_sensitivities(
+    HermiteSpline const& spline,
+    std::vector<std::tuple<double, std::vector<double>>> const& expectations)
 {
   for (auto expected : expectations) {
     double time;
@@ -46,9 +53,12 @@ void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<dou
   }
 }
 
-void test_spline_sensitivities(HermiteSpline &spline, std::vector<std::tuple<double, std::vector<double>>> &expectations, const double rtol, const double atol)
+void test_spline_sensitivities(
+    HermiteSpline const& spline,
+    std::vector<std::tuple<double, std::vector<double>>> const& expectations,
+    const double rtol, const double atol)
 {
-  for (auto expected : expectations) {
+  for (auto const& expected : expectations) {
     double time;
     std::vector<double> expected_values;
     std::tie(time, expected_values) = expected;

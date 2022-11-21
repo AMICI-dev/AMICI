@@ -366,7 +366,7 @@ class HermiteSpline : public AbstractSpline
                                    realtype len,
                                    gsl::span<realtype> dnodesdp,
                                    gsl::span<realtype> dslopesdp,
-                                   gsl::span<realtype> coeffs);
+                                   gsl::span<realtype> coeffs) const;
 
     void handle_inner_derivatives();
 
