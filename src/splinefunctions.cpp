@@ -431,6 +431,17 @@ HermiteSpline::compute_coefficients_sensi(int nplist,
         );
     }
 
+    /* Ensure that dslopesdp satisfies the BC */
+    if (first_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
+        for (int ip = 0; ip < nplist; ip++)
+            dslopesdp[spline_offset + ip] = 0.0;
+    }
+     if (last_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
+        int last = n_nodes() - 1;
+        for (int ip = 0; ip < nplist; ip++)
+            dslopesdp[spline_offset + ip + last * nplist] = 0.0;
+    }
+
     // If necessary, translate sensitivities to logarithmic parametrization
     if (get_logarithmic_parametrization()) {
       for (int i_node = 0; i_node < n_nodes(); i_node++) {
@@ -635,7 +646,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
             case SplineExtrapolation::linear:
                 if (get_node_derivative_by_fd() &&
-                    first_node_bc_ == SplineBoundaryCondition::given) {
+                    (first_node_bc_ == SplineBoundaryCondition::given || first_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
                     sm0 =
                       (dvaluesdp[spline_offset + ip + nplist] - sp0) /
                       (nodes_[1] - nodes_[0]);
@@ -648,7 +659,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                       "not yet implemented.");
 
                 } else if (!get_node_derivative_by_fd() &&
-                           first_node_bc_ == SplineBoundaryCondition::given) {
+                           (first_node_bc_ == SplineBoundaryCondition::given || first_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
                     sm0 = dslopesdp[spline_offset + ip];
 
                 } else if (!get_node_derivative_by_fd() &&
@@ -695,7 +706,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
 
             case SplineExtrapolation::linear:
                 if (get_node_derivative_by_fd() &&
-                    last_node_bc_ == SplineBoundaryCondition::given) {
+                    (last_node_bc_ == SplineBoundaryCondition::given || last_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
                     sm_end =
                       (sp_end - dvaluesdp[spline_offset + ip +
                                                  (n_nodes() - 2) * nplist]) /
@@ -709,7 +720,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                       "not yet implemented.");
 
                 } else if (!get_node_derivative_by_fd() &&
-                           last_node_bc_ == SplineBoundaryCondition::given) {
+                           (last_node_bc_ == SplineBoundaryCondition::given || last_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
                     sm_end = dslopesdp[spline_offset + ip +
                                               (n_nodes() - 1) * nplist];
 
@@ -763,17 +774,6 @@ HermiteSpline::get_coeffs_sensi_lowlevel(int ip,
     realtype spk1 = dnodesdp[node_offset + (i_node + 1) * nplist];
     realtype smk = dslopesdp[node_offset + i_node * nplist];
     realtype smk1 = dslopesdp[node_offset + (i_node + 1) * nplist];
-
-    /* For the nodes at the boundary, we have to take care of the bc
-     * TODO Should we enforce that the given dsplopesdp satisfy the BC?
-     *      If so, this check would no longer be needed (here, that is).
-    */
-    if (i_node == 0 &&
-        first_node_bc_ == SplineBoundaryCondition::zeroDerivative)
-        smk = 0;
-    if (i_node == n_nodes() - 2 &&
-        last_node_bc_ == SplineBoundaryCondition::zeroDerivative)
-        smk1 = 0;
 
     /* Compute the actual coefficients */
     coeffs[ip * n_spline_coefficients + 4 * i_node] = spk;
@@ -836,7 +836,7 @@ void
 HermiteSpline::compute_final_sensitivity(
   int nplist,
   int spline_offset,
-  gsl::span<realtype> dvaluesdp,
+  gsl::span<realtype> /*dvaluesdp*/,
   gsl::span<realtype> /*dslopesdp*/)
 {
     /* We need to compute the final value of the spline, depending on its
@@ -847,7 +847,7 @@ HermiteSpline::compute_final_sensitivity(
          last_node_ep_ == SplineExtrapolation::linear)) {
         int last = n_nodes() - 1;
         for (int ip = 0; ip < nplist; ip++)
-            finalSensitivity[ip] = dvaluesdp[last * nplist + spline_offset + ip];
+            finalSensitivity[ip] = coefficients_extrapolate_sensi[4 * ip + 2];
     } else if (last_node_ep_ == SplineExtrapolation::linear) {
         /* If steady state is infinity, sensitivity must be 0
          * (unless the derivative is zero and the final value will change abruptly from finite to +-inf)
