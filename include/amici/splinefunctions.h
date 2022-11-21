@@ -132,6 +132,40 @@ class AbstractSpline
     virtual realtype get_sensitivity_scaled(const realtype t, const int ip) const = 0;
 
     /**
+     * @brief Get the limit value of the spline
+     * as the evaluation point tends to positive infinity.
+     * @return limit value
+     */
+    realtype get_final_value() const;
+
+    /**
+     * @brief Get the limit value of the spline
+     * (in the scale in which interpolation is carried out)
+     * as the evaluation point tends to positive infinity.
+     * @return limit value
+     */
+    realtype get_final_value_scaled() const;
+
+    /**
+     * @brief Get the limit value of the sensitivity
+     * with respect to the given parameter
+     * as the evaluation point tends to positive infinity.
+     * @param ip parameter index
+     * @return limit value
+     */
+    realtype get_final_sensitivity(const int ip) const;
+
+    /**
+     * @brief Get the limit value of the sensitivity
+     * with respect to the given parameter
+     * (in the scale in which interpolation is carried out)
+     * as the evaluation point tends to positive infinity.
+     * @param ip parameter index
+     * @return limit value
+     */
+    realtype get_final_sensitivity_scaled(const int ip) const;
+
+    /**
      * @brief Whether nodes are uniformly spaced
      * @return boolean flag
      */
@@ -206,46 +240,12 @@ class AbstractSpline
       gsl::span<realtype> dspline_slopesdp) = 0;
 
     /**
-     * @brief Get the limit value of the spline
-     * as the evaluation point tends to positive infinity.
-     * @return limit value
-     */
-    realtype get_final_value() const;
-
-    /**
-     * @brief Get the limit value of the spline
-     * (in the scale in which interpolation is carried out)
-     * as the evaluation point tends to positive infinity.
-     * @return limit value
-     */
-    realtype get_final_value_scaled() const;
-
-    /**
      * @brief Set the limit value of the spline
      * (in the scale in which interpolation is carried out)
      * as the evaluation point tends to positive infinity.
      * @param finalValue final value
      */
     void set_final_value_scaled(realtype finalValue);
-
-    /**
-     * @brief Get the limit value of the sensitivity
-     * with respect to the given parameter
-     * as the evaluation point tends to positive infinity.
-     * @param ip parameter index
-     * @return limit value
-     */
-    realtype get_final_sensitivity(const int ip) const;
-
-    /**
-     * @brief Get the limit value of the sensitivity
-     * with respect to the given parameter
-     * (in the scale in which interpolation is carried out)
-     * as the evaluation point tends to positive infinity.
-     * @param ip parameter index
-     * @return limit value
-     */
-    realtype get_final_sensitivity_scaled(const int ip) const;
 
     /**
      * @brief Set the limit value of the sensitivity
