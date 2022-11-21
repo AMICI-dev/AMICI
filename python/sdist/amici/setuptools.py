@@ -112,14 +112,16 @@ def get_hdf5_config() -> PackageInfo:
         '/usr/include/hdf5/serial',
         '/usr/local/include',
         '/usr/include',  # travis ubuntu xenial, centos
-        '/usr/local/Cellar/hdf5/1.10.2_1/include'  # travis macOS
+        '/usr/local/Cellar/hdf5/1.10.2_1/include',  # travis macOS
+        '/opt/homebrew/Cellar/hdf5/1.12.2_2/include'
     ]
     hdf5_library_dir_hints = [
         '/usr/lib/x86_64-linux-gnu/',  # travis ubuntu xenial
         '/usr/lib/x86_64-linux-gnu/hdf5/serial',
         '/usr/local/lib',
         '/usr/lib64/',  # CentOS
-        '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
+        '/usr/local/Cellar/hdf5/1.10.2_1/lib',  # travis macOS
+        '/opt/homebrew/Cellar/hdf5/1.12.2_2/lib'
     ]
 
     # special treatment for conda environments
