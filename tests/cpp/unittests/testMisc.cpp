@@ -711,4 +711,14 @@ TEST(ReturnCodeToStr, ReturnCodeToStr)
               simulation_status_to_str(AMICI_UNRECOVERABLE_ERROR));
 }
 
+TEST(SpanEqual, SpanEqual)
+{
+    std::vector<realtype> a {1, 2, 3};
+    std::vector<realtype> b {1, 2, NAN};
+
+    EXPECT_TRUE(is_equal(a, a));
+    EXPECT_TRUE(is_equal(b, b));
+    EXPECT_FALSE(is_equal(a, b));
+}
+
 } // namespace

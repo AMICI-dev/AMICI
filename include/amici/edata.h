@@ -115,6 +115,8 @@ class ExpData : public SimulationParameters {
 
     ~ExpData() = default;
 
+    friend inline bool operator==(const ExpData& lhs, const ExpData& rhs);
+
     /**
      * @brief number of observables of the non-augmented model
      *
@@ -454,6 +456,25 @@ class ExpData : public SimulationParameters {
      */
     std::vector<realtype> observed_events_std_dev_;
 };
+
+
+inline bool operator==(const ExpData& lhs, const ExpData& rhs) {
+    return *dynamic_cast< const SimulationParameters* >(&lhs)
+               == *dynamic_cast< const SimulationParameters* >(&rhs)
+           && lhs.id == rhs.id
+           && lhs.nytrue_ == rhs.nytrue_
+           && lhs.nztrue_ == rhs.nztrue_
+           && lhs.nmaxevent_ == rhs.nmaxevent_
+           && is_equal(lhs.observed_data_,
+                       rhs.observed_data_)
+           && is_equal(lhs.observed_data_std_dev_,
+                       rhs.observed_data_std_dev_)
+           && is_equal(lhs.observed_events_,
+                       rhs.observed_events_)
+           && is_equal(lhs.observed_events_std_dev_,
+                       rhs.observed_events_std_dev_);
+};
+
 
 /**
  * @brief checks input vector of sigmas for not strictly positive values
