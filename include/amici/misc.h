@@ -221,6 +221,28 @@ class ContextManager{
 auto unravel_index(size_t flat_idx, size_t num_cols)
     -> std::pair<size_t, size_t>;
 
+/**
+ * @brief Check if two spans are equal, treating NaNs in the same position as
+ * equal.
+ * @param a
+ * @param b
+ * @return Whether the contents of the two spans are equal.
+ */
+template <class T>
+bool is_equal(T const& a, T const& b) {
+    if(a.size() != b.size())
+        return false;
+
+    auto a_data = a.data();
+    auto b_data = b.data();
+    for(typename T::size_type i = 0; i < a.size(); ++i) {
+        if(a_data[i] != b_data[i]
+            && !(std::isnan(a_data[i]) && std::isnan(b_data[i])))
+            return false;
+    }
+    return true;
+}
+
 } // namespace amici
 
 #endif // AMICI_MISC_H

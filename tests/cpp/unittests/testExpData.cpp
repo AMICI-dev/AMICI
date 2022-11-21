@@ -182,6 +182,17 @@ TEST_F(ExpDataTest, CopyConstructable)
                     "ts");
 }
 
+
+TEST_F(ExpDataTest, Equality)
+{
+    auto edata = ExpData(testModel);
+    auto edata2(edata);
+    ASSERT_TRUE(edata == edata2);
+
+    edata2.id = "different";
+    ASSERT_FALSE(edata == edata2);
+}
+
 TEST_F(ExpDataTest, DimensionChecks)
 {
     std::vector<realtype> bad_std(ny, -0.1);
