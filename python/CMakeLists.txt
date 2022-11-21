@@ -1,11 +1,10 @@
+if(DEFINED ENV{PYTHON_EXECUTABLE})
+    set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
+endif()
 if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-    if(DEFINED ENV{PYTHON_EXECUTABLE})
-        set( PYTHON_EXECUTABLE $ENV{PYTHON_EXECUTABLE} )
-    endif()
     find_package(PythonInterp 3.8 REQUIRED)
-    set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
 else()
-    find_package (Python3 COMPONENTS Interpreter)
+    find_package(Python3 COMPONENTS Interpreter)
 endif()
 
 
