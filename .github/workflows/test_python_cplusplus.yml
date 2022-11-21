@@ -160,8 +160,8 @@ jobs:
         brew install hdf5 swig gcc cppcheck libomp boost \
           && brew ls -v boost \
           && brew ls -v libomp \
-          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.78.0_1/lib/" >> $GITHUB_ENV \
-          && echo CPPFLAGS="-I/usr/local/Cellar/boost/1.78.0_1/include/" >> $GITHUB_ENV
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.80.0/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I/usr/local/Cellar/boost/1.80.0/include/" >> $GITHUB_ENV
 
     - name: Build AMICI
       run: |
