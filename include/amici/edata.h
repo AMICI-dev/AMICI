@@ -465,10 +465,14 @@ inline bool operator==(const ExpData& lhs, const ExpData& rhs) {
            && lhs.nytrue_ == rhs.nytrue_
            && lhs.nztrue_ == rhs.nztrue_
            && lhs.nmaxevent_ == rhs.nmaxevent_
-           && lhs.observed_data_ == rhs.observed_data_
-           && lhs.observed_data_std_dev_ == rhs.observed_data_std_dev_
-           && lhs.observed_events_ == rhs.observed_events_
-           && lhs.observed_events_std_dev_ == rhs.observed_events_std_dev_;
+           && is_equal(lhs.observed_data_,
+                       rhs.observed_data_)
+           && is_equal(lhs.observed_data_std_dev_,
+                       rhs.observed_data_std_dev_)
+           && is_equal(lhs.observed_events_,
+                       rhs.observed_events_)
+           && is_equal(lhs.observed_events_std_dev_,
+                       rhs.observed_events_std_dev_);
 };
 
 

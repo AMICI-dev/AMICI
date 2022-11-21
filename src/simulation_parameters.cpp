@@ -1,21 +1,25 @@
 #include "amici/simulation_parameters.h"
+#include "amici/misc.h"
 
 #include <numeric>
 
 namespace amici {
 
 bool operator==(const SimulationParameters &a, const SimulationParameters &b) {
-    return (a.fixedParameters == b.fixedParameters) &&
-            (a.fixedParametersPreequilibration == b.fixedParametersPreequilibration) &&
-            (a.fixedParametersPresimulation == b.fixedParametersPresimulation) &&
-            (a.parameters == b.parameters) &&
-            (a.plist == b.plist) &&
-            (a.pscale == b.pscale) &&
-            (a.reinitializeFixedParameterInitialStates == b.reinitializeFixedParameterInitialStates) &&
-            (a.sx0 == b.sx0) &&
-            (a.t_presim == b.t_presim) &&
-            (a.tstart_ == b.tstart_) &&
-            (a.ts_ == b.ts_);
+    return is_equal(a.fixedParameters, b.fixedParameters) &&
+           is_equal(a.fixedParametersPreequilibration,
+                    b.fixedParametersPreequilibration) &&
+           is_equal(a.fixedParametersPresimulation,
+                    b.fixedParametersPresimulation) &&
+           is_equal(a.parameters, b.parameters) &&
+           (a.plist == b.plist) &&
+           (a.pscale == b.pscale) &&
+           (a.reinitializeFixedParameterInitialStates
+            == b.reinitializeFixedParameterInitialStates) &&
+           is_equal(a.sx0, b.sx0) &&
+           (a.t_presim == b.t_presim) &&
+           (a.tstart_ == b.tstart_) &&
+           (a.ts_ == b.ts_);
 }
 
 void SimulationParameters::reinitializeAllFixedParameterDependentInitialStatesForPresimulation(int nx_rdata)
