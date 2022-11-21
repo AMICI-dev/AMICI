@@ -25,22 +25,18 @@ from .import_utils import (RESERVED_SYMBOLS,
                            annotation_namespace,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
-                           _parse_logical_operators,
                            _parse_special_functions,
                            generate_measurement_symbol,
                            generate_regularization_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
                            smart_subs, smart_subs_dict, toposort_symbols)
+from .sbml_utils import SBMLException, _parse_logical_operators
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (
     ODEExporter, ODEModel, symbol_with_assumptions, _default_simplify
 )
 from .splines import AbstractSpline
-
-
-class SBMLException(Exception):
-    pass
 
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
@@ -1961,8 +1957,9 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
-                              ) -> Union[sp.Expr, float, None]:
+    def _sympy_from_sbml_math(
+            self, var_or_math: [sbml.SBase, str]
+    ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
