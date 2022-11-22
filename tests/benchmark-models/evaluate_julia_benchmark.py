@@ -57,5 +57,4 @@ g = sns.heatmap(
     cbar_kws={'label': 'log10 foldchange simulation time'},
 )
 plt.tight_layout()
-plt.show()
 plt.savefig('benchmark-models-julia.pdf')
