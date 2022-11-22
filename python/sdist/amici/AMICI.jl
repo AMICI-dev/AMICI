@@ -1,7 +1,7 @@
 module AMICI
 
 import Pkg
-Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity"])
+Pkg.add(["OrdinaryDiffEq", "SciMLSensitivity", "Sundials", "SciMLBase"])
 
 import Base.@kwdef
 
@@ -27,10 +27,6 @@ end
     sigmay::Function
     Jy::Function
 end
-
-import Pkg
-#Pkg.add(["OrdinaryDiffEq", "Zygote", "SciMLSensitivity", "ModelingToolkit", "Symbolics", "SciMLBase", "Sundials"])
-
 
 using OrdinaryDiffEq: solve, KenCarp4, FBDF, QNDF, Rosenbrock23, TRBDF2, Rodas4, RadauIIA5
 using Sundials: CVODE_BDF
@@ -58,8 +54,10 @@ function run_simulation(p::Vector{Float64}, model::Model, prob::ODEProblem, edat
         solv = Rodas4()
     elseif solver == "RadauIIA5"
         solv = RadauIIA5()
-    elseif solver == "CVODE_BDF"
+    elseif solver == "CVODE_BDF_SPARSE"
         solv = CVODE_BDF(linear_solver=:KLU)
+    elseif solver == "CVODE_BDF_DENSE"
+        solv = CVODE_BDF(linear_solver=:Dense)
     else
         solv = QNDF()
     end

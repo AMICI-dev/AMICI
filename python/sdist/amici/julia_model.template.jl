@@ -2,7 +2,7 @@ module TPL_MODULE_NAME
 
 import Pkg
 Pkg.add(["Symbolics", "OrdinaryDiffEq", "ModelingToolkit"])
-export model, prob
+export model, prob_sparse, prob_dense
 
 using Symbolics
 
@@ -132,12 +132,20 @@ pre_prob = ODEProblem(
 time = @elapsed sys = modelingtoolkitize(pre_prob)
 println("toolkitize finished after $time [s]")
 
-prob = ODEProblem(
+prob_sparse = ODEProblem(
     sys,
     [],
     tspan_ref,
     jac=true,
     sparse=true
+)
+
+prob_dense = ODEProblem(
+    sys,
+    [],
+    tspan_ref,
+    jac=true,
+    sparse=false
 )
 
 end

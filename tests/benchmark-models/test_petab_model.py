@@ -27,8 +27,6 @@ from amici.petab_objective import (
  )
 from petab.visualize import plot_problem
 
-from numpy.testing import assert_allclose
-
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
 
@@ -76,8 +74,8 @@ def main():
 
     args = parse_cli_args()
 
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
+    loglevel = logging.DEBUG if args.verbose else logging.INFO
+    logger.setLevel(loglevel)
 
     logger.info(f"Simulating '{args.model_name}' "
                 f"({args.model_directory}) using PEtab data from "
@@ -100,14 +98,19 @@ def main():
 
     res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
-        solver=amici_solver, log_level=logging.DEBUG)
+        solver=amici_solver, log_level=loglevel)
     rdatas = res[RDATAS]
     llh = res[LLH]
 
     if args.model_name not in (
-            'Bachmann_MSB2011', 'Beer_MolBioSystems2014', 'Brannmark_JBC2010',
-            'Isensee_JCB2018', 'Weber_BMC2015', 'Zheng_PNAS2012'
+        # Preequilibration
+        'Bachmann_MSB2011', 'Beer_MolBioSystems2014', 'Brannmark_JBC2010',
+        'Isensee_JCB2018', 'Weber_BMC2015', 'Zheng_PNAS2012',
+        # Events
+        'Fujita_SciSignal2010'
     ):
+        print(f'running julia analysis for model {args.model_name}')
+
         simulation_conditions = \
             problem.get_simulation_conditions_from_measurement_df()
         edatas = create_edatas(
@@ -135,15 +138,8 @@ def main():
         Main.eval('using AMICI: ExpData, run_simulation')
         Main.include(os.path.join(args.model_directory, args.model_name,
                                   f'{args.model_name}.jl'))
-        Main.eval(f'using .{args.model_name}_model: model, prob')
-        julia_solvers = (
-            'KenCarp4', 'FBDF', 'QNDF', 'Rosenbrock23', 'TRBDF2', 'RadauIIA5',
-            'Rodas4', 'CVODE_BDF'
-        )
-        times = {
-            solver: 0.0
-            for solver in julia_solvers
-        }
+        Main.eval(f'using .{args.model_name}_model: model, prob_sparse, prob_dense')
+        times = dict()
         times['AMICI'] = 0.0
         for edata, rdata in zip(edatas, res[RDATAS]):
             Main.id = edata.id
@@ -164,22 +160,27 @@ def main():
             Main.p = np.asarray(edata.parameters)
             print(f'=== {args.model_name} ({edata.id}) ===')
             times['AMICI'] += rdatas[0].cpu_time_total/1000
-            for solver in ('KenCarp4', 'FBDF', 'QNDF', 'Rosenbrock23', 'TRBDF2', 'RadauIIA5', 'Rodas4', 'CVODE_BDF'):
-                try:
-                    Main.solver = solver
-                    Main.eval('llh, x, y, t = run_simulation(p, model, prob, edata, solver)')
-                    #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
-                    #assert_allclose(Main.x, rdata.x, rtol=1e-2)
-                    #assert_allclose(Main.y, rdata.y, rtol=1e-2)
-                    Main.eval('llh, x, y, t = run_simulation(p, model, prob, edata, solver)')
-                    times[solver] += Main.t
-                    #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
-                    #assert_allclose(Main.x, rdata.x, rtol=1e-2)
-                    #assert_allclose(Main.y, rdata.y, rtol=1e-2)
-                except julia.core.JuliaError:
-                    times[solver] += np.Inf
+            for linear_solver in ('sparse', 'dense'):
+                for solver in ('KenCarp4', 'FBDF', 'QNDF', 'Rosenbrock23', 'TRBDF2', 'RadauIIA5', 'Rodas4',
+                               f'CVODE_BDF_{linear_solver.upper()}'):
+                    setting = f'{solver}_{linear_solver}'
+                    if solver not in times:
+                        times[setting] = 0.0
+                    try:
+                        Main.solver = solver
+                        Main.eval(f'llh, x, y, t = run_simulation(p, model, prob_{linear_solver}, edata, solver)')
+                        #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
+                        #assert_allclose(Main.x, rdata.x, rtol=1e-2)
+                        #assert_allclose(Main.y, rdata.y, rtol=1e-2)
+                        Main.eval(f'llh, x, y, t = run_simulation(p, model, prob_{linear_solver}, edata, solver)')
+                        times[setting] += Main.t
+                        #assert_allclose(Main.llh, rdata.llh, rtol=1e-2)
+                        #assert_allclose(Main.x, rdata.x, rtol=1e-2)
+                        #assert_allclose(Main.y, rdata.y, rtol=1e-2)
+                    except julia.core.JuliaError:
+                        times[setting] += np.Inf
 
-        pd.Series(times).to_csv(f'{args.model_name}_julia_benchmark.csv')
+        pd.Series(times).to_csv(f'./tests/benchmark-models/{args.model_name}_julia_benchmark.csv')
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \

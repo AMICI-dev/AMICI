@@ -2522,8 +2522,7 @@ class ODEExporter:
                 'AMICI_PATH': amiciModulePath,
             }
         }
-        os.makedirs(os.path.join(self.model_path, self.model_name),
-                    exist_ok=True)
+        os.makedirs(os.path.join(self.model_path, self.model_name), exist_ok=True)
 
         apply_template(
             os.path.join(amiciModulePath, 'julia_model.template.jl'),
