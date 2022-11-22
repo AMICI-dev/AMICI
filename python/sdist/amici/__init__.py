@@ -197,7 +197,6 @@ def _get_default_argument(func: Callable, arg: str) -> Any:
     """Get the default value of the given argument in the given function."""
     import inspect
     signature = inspect.signature(func)
-    print(signature, signature.parameters)
     if (default := signature.parameters[arg].default) is not inspect.Parameter.empty:
         return default
     raise ValueError(f"No default value for argument {arg} of {func}.")
