@@ -145,6 +145,7 @@ Examples
    petab.ipynb
    ExampleExperimentalConditions.ipynb
    ExampleEquilibrationLogic.ipynb
+   ExampleSplines.ipynb
 
 Environment variables affecting model import
 ============================================
