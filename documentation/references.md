@@ -1,9 +1,15 @@
 # References
 
-List of publications using AMICI. Total number is 68.
+List of publications using AMICI. Total number is 70.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
+<h1 class="unnumbered" id="section">2023</h1>
+<div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-MishraWan2023">
+<p>Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023. “Design and Application of a Kinetic Model of Lipid Metabolism in Saccharomyces Cerevisiae.” <em>Metabolic Engineering</em> 75: 12–18. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003</a>.</p>
+</div>
+</div>
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-Froehlich2022.02.17.480899">
@@ -23,6 +29,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-Sundqvist2022.02.15.480629">
 <p>Sundqvist, Nicolas, Sebastian Sten, Maria Engström, and Gunnar Cedersund. 2022. “Mechanistic Model for Human Brain Metabolism and the Neurovascular Coupling.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.15.480629">https://doi.org/10.1101/2022.02.15.480629</a>.</p>
+</div>
+<div id="ref-VillaverdeRai2022">
+<p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2022. “Assessment of Prediction Uncertainty Quantification Methods in Systems Biology.” <em>IEEE/ACM Transactions on Computational Biology and Bioinformatics</em>, 1–12. <a href="https://doi.org/10.1109/TCBB.2022.3213914">https://doi.org/10.1109/TCBB.2022.3213914</a>.</p>
 </div>
 </div>
 <h1 class="unnumbered" id="section">2021</h1>
