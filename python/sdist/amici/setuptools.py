@@ -215,7 +215,8 @@ def add_debug_flags_if_required(cxx_flags: List[str],
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         print("ENABLE_AMICI_DEBUGGING was set to TRUE."
               " Building AMICI with debug symbols.")
-        cxx_flags.extend(['-g', '-O0', '-UNDEBUG', '-Werror'])
+        cxx_flags.extend(['-g', '-O0', '-UNDEBUG', '-Werror',
+                          '-Wno-error=deprecated-declarations'])
         linker_flags.extend(['-g'])
 
 
