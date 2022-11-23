@@ -13,7 +13,7 @@ REF="$1"
 # Command to time
 CMD="${@:2}"
 # Logfile
-LOG=$(tempfile)
+LOG=$(mktemp)
 
 # Run and time
 /usr/bin/time -f %e ${CMD} 2>&1 | tee "$LOG"
