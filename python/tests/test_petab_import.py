@@ -6,8 +6,7 @@ import pandas as pd
 from amici.testing import skip_on_valgrind
 
 
-petab = pytest.importorskip("petab")
-SbmlModel = pytest.importorskip("petab.models.sbml_model.SbmlModel")
+petab = pytest.importorskip("petab", reason="Missing petab")
 amici_petab_import = pytest.importorskip("amici.petab_import")
 
 
@@ -47,6 +46,7 @@ def test_get_fixed_parameters(simple_sbml_model):
     p4: not fixed (via parameter table `estimate=1`)
     p5: fixed (implicitly, because not listed as estimated)
     """
+    from petab.models.sbml_model import SbmlModel
     sbml_doc, sbml_model = simple_sbml_model
     condition_df = petab.get_condition_df(
         pd.DataFrame({
@@ -69,4 +69,7 @@ def test_get_fixed_parameters(simple_sbml_model):
     assert set(amici_petab_import.get_fixed_parameters(petab_problem)) \
         == {"p1", "p3", "p5"}
 
-    # TODO: any non-estimated model parameter should be made constant
+    assert set(amici_petab_import.get_fixed_parameters(
+        petab_problem,
+        non_estimated_parameters_as_constants=False)) \
+        == {"p1", "p5"}

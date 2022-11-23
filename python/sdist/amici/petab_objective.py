@@ -524,11 +524,13 @@ def create_edatas(
 
     observable_ids = amici_model.getObservableIds()
 
-    measurement_groupvar = [petab.SIMULATION_CONDITION_ID]
-    if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
-        measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
     measurement_dfs = dict(list(
-        petab_problem.measurement_df.groupby(measurement_groupvar)
+        petab_problem.measurement_df.groupby(
+            [petab.SIMULATION_CONDITION_ID,
+             petab.PREEQUILIBRATION_CONDITION_ID]
+            if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions
+            else petab.SIMULATION_CONDITION_ID
+        )
     ))
 
     edatas = []
