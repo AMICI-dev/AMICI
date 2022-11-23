@@ -16,6 +16,11 @@
 * Added equality operator for ExpData
 
   by @dweindl in  https://github.com/AMICI-dev/AMICI/pull/1881
+  
+* Updated base image for Dockerfile to Ubuntu 22.04/Python 3.10
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1896
+
 
 #### Fixes:
 
