@@ -36,3 +36,4 @@ jobs:
         workdir: docker/
         dockerfile: Dockerfile
         tag_names: true
+        platforms: linux/amd64,linux/arm64
