@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - develop
+      - multiarch_docker
   pull_request:
     branches:
       - master
