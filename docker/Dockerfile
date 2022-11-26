@@ -1,7 +1,9 @@
 FROM ubuntu:22.04
 
-RUN apt update \
-    && apt-get install -y \
+# install dependencies
+
+RUN apt update
+RUN apt-get install -y \
     g++ \
     libatlas-base-dev \
     python3 \
@@ -10,13 +12,20 @@ RUN apt update \
     python3-venv \
     swig
 
+# prepare python install
+
 COPY amici.tar.gz /tmp
 
-RUN pip3 install --upgrade pip build \
-    && mkdir -p /tmp/amici/ \
-    && cd /tmp/amici \
-    && tar -xzf ../amici.tar.gz \
-    && cd /tmp/amici/python/sdist \
-    && python3 -m build --sdist \
-    && pip3 install -v $(ls -t /tmp/amici/python/sdist/dist/amici-*.tar.gz | head -1)[petab] \
-    && rm -rf /tmp && mkdir /tmp
+RUN pip3 install --upgrade pip build
+RUN pip3 install -v python-libsbml
+RUN mkdir -p /tmp/amici/ && cd /tmp/amici
+RUN tar -xzf ../amici.tar.gz && cd /tmp/amici/python/sdist
+
+# build sdist & install
+
+RUN python3 -m build --sdist
+RUN pip3 install -v $(ls -t /tmp/amici/python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+
+# cleanup
+
+RUN rm -rf /tmp && mkdir /tmp
