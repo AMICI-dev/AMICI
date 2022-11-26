@@ -19,7 +19,7 @@ COPY amici.tar.gz /tmp
 RUN pip3 install --upgrade pip build
 RUN pip3 install -v python-libsbml
 RUN mkdir -p /tmp/amici/ && cd /tmp/amici
-RUN tar -xzf ../amici.tar.gz && cd /tmp/amici/python/sdist
+RUN tar -xzf /amici.tar.gz && cd /tmp/amici/python/sdist
 
 # build sdist & install
 
