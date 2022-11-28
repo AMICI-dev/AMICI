@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-# install dependencies
+# install dependencies 
 
 RUN apt update
 RUN apt-get install -y \
@@ -10,22 +10,28 @@ RUN apt-get install -y \
     python3-dev \
     python3-pip \
     python3-venv \
-    swig
+    swig \
+    # required for wheel-less libsbml installation 
+    cmake
 
 # prepare python install
 
 COPY amici.tar.gz /tmp
 
 RUN pip3 install --upgrade pip build
-RUN pip3 install -v python-libsbml
-RUN mkdir -p /tmp/amici/ && cd /tmp/amici
-RUN tar -xzf /amici.tar.gz && cd /tmp/amici/python/sdist
 
-# build sdist & install
+# build sdist
 
-RUN python3 -m build --sdist
+RUN mkdir -p /tmp/amici/ && \
+    cd /tmp/amici && \
+    tar -xzf ../amici.tar.gz && cd /tmp/amici/python/sdist && \
+     
+    python3 -m build --sdist
+
+# install
+
 RUN pip3 install -v $(ls -t /tmp/amici/python/sdist/dist/amici-*.tar.gz | head -1)[petab]
 
 # cleanup
 
-RUN rm -rf /tmp && mkdir /tmp
+RUN rm -rf /tmp/*
