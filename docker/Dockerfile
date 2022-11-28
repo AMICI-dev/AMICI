@@ -25,7 +25,6 @@ RUN pip3 install --upgrade pip build
 RUN mkdir -p /tmp/amici/ && \
     cd /tmp/amici && \
     tar -xzf ../amici.tar.gz && cd /tmp/amici/python/sdist && \
-     
     python3 -m build --sdist
 
 # install
