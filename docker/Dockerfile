@@ -10,9 +10,7 @@ RUN apt-get install -y \
     python3-dev \
     python3-pip \
     python3-venv \
-    swig \
-    # required for wheel-less libsbml installation 
-    cmake
+    swig
 
 # prepare python install
 
