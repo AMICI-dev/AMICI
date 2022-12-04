@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 71.
+List of publications using AMICI. Total number is 72.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -20,6 +20,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-MassonisVil2022">
 <p>Massonis, Gemma, Alejandro F Villaverde, and Julio R Banga. 2022. “Improving dynamic predictions with ensembles of observable models.” <em>Bioinformatics</em>, November. <a href="https://doi.org/10.1093/bioinformatics/btac755">https://doi.org/10.1093/bioinformatics/btac755</a>.</p>
+</div>
+<div id="ref-RaimundezFed2022">
+<p>Raimundez, Elba, Michael Fedders, and Jan Hasenauer. 2022. “Posterior Marginalization Accelerates Bayesian Inference for Dynamical Systems.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.12.02.518841">https://doi.org/10.1101/2022.12.02.518841</a>.</p>
 </div>
 <div id="ref-SchmuckerFar2022">
 <p>Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali Sinan Saglam, and Tuomas Sandholm. 2022. “Combination Treatment Optimization Using a Pan-Cancer Pathway Model.” <em>PLOS Computational Biology</em> 17 (12): 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1009689">https://doi.org/10.1371/journal.pcbi.1009689</a>.</p>
