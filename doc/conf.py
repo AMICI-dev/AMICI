@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 from enum import EnumType
+from pathlib import Path
 from unittest import mock
 
 import sphinx
@@ -64,6 +65,16 @@ def install_doxygen():
     assert version in res.stdout.decode()
 
 
+def execute_pre_sphinx_scripts():
+    """Execute scripts that need to be run before Sphinx is executed."""
+    script_dir = Path(__file__).parent / "pre-sphinx.d"
+    assert script_dir.is_dir()
+
+    for script in sorted(script_dir.glob("*.py")):
+        print(f"Executing pre-Sphinx script {script}")
+        subprocess.run([sys.executable, str(script)], check=True)
+
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -78,6 +89,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]:
     install_doxygen()
 
+execute_pre_sphinx_scripts()
 
 # -- Project information -----------------------------------------------------
 # The short X.Y version
@@ -186,6 +198,7 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path .
 exclude_patterns = [
     "_build",
+    "pre-sphinx.d",
     "Thumbs.db",
     ".DS_Store",
     "**.ipynb_checkpoints",
