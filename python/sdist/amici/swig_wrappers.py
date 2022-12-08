@@ -6,9 +6,9 @@ from typing import List, Optional, Union, Sequence, Dict, Any
 
 import amici.amici as amici_swig
 from . import numpy
+from .logging import get_logger
 
-
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 __all__ = [
@@ -256,6 +256,6 @@ def _log_simulation(rdata: amici_swig.ReturnData):
     for msg in rdata.messages:
         logger.log(
             amici_severity_to_logging[msg.severity],
-            f"[{msg.identifier}] {msg.message}"
+            f"[{rdata.id}][{msg.identifier}] {msg.message}"
         )
 
