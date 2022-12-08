@@ -101,6 +101,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/solver.cpp
     ${CMAKE_SOURCE_DIR}/src/solver_cvodes.cpp
     ${CMAKE_SOURCE_DIR}/src/solver_idas.cpp
+    ${CMAKE_SOURCE_DIR}/src/logging.cpp
     ${CMAKE_SOURCE_DIR}/src/model.cpp
     ${CMAKE_SOURCE_DIR}/src/model_ode.cpp
     ${CMAKE_SOURCE_DIR}/src/model_dae.cpp
@@ -122,6 +123,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/include/amici/exception.h
     ${CMAKE_SOURCE_DIR}/include/amici/forwardproblem.h
     ${CMAKE_SOURCE_DIR}/include/amici/hdf5.h
+    ${CMAKE_SOURCE_DIR}/include/amici/logging.h
     ${CMAKE_SOURCE_DIR}/include/amici/misc.h
     ${CMAKE_SOURCE_DIR}/include/amici/model_dae.h
     ${CMAKE_SOURCE_DIR}/include/amici/model_dimensions.h

@@ -5,6 +5,7 @@
 #include "amici/vector.h"
 #include "amici/model.h"
 #include "amici/misc.h"
+#include "amici/logging.h"
 
 #include <vector>
 
@@ -385,6 +386,9 @@ class ReturnData: public ModelDimensions {
 
     /** boolean indicating whether residuals for standard deviations have been added */
     bool sigma_res;
+
+    /** log messages */
+    std::vector<LogItem> messages;
 
   protected:
 

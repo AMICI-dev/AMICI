@@ -13,7 +13,7 @@
 
 namespace amici {
 
-Solver::Solver(AmiciApplication *app) : app(app)
+Solver::Solver(Logger *logger) : logger(logger)
 {
 
 }
@@ -1258,7 +1258,8 @@ void wrapErrHandlerFn(int error_code, const char *module,
         throw std::runtime_error("eh_data unset");
     }
     auto solver = static_cast<Solver const*>(eh_data);
-    solver->app->warning(buffid, buffer);
+    if(solver->logger)
+        solver->logger->log(LogSeverity::warning, buffid, buffer);
 }
 
 } // namespace amici
