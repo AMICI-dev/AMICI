@@ -52,6 +52,11 @@ class Logger
 struct LogItem
 {
     /**
+     * @brief Default ctor.
+     */
+    LogItem() = default;
+
+    /**
      * @brief Construct a LogItem
      * @param severity
      * @param identifier

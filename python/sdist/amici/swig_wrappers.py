@@ -1,9 +1,15 @@
 """Convenience wrappers for the swig interface"""
+import logging
 import sys
 from contextlib import contextmanager, suppress
 from typing import List, Optional, Union, Sequence, Dict, Any
+
 import amici.amici as amici_swig
 from . import numpy
+
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     'runAmiciSimulation', 'runAmiciSimulations', 'ExpData',
@@ -81,6 +87,7 @@ def runAmiciSimulation(
     with _capture_cstdout():
         rdata = amici_swig.runAmiciSimulation(
             _get_ptr(solver), _get_ptr(edata), _get_ptr(model))
+    _log_simulation(rdata)
     return numpy.ReturnDataView(rdata)
 
 
@@ -133,6 +140,8 @@ def runAmiciSimulations(
             failfast,
             num_threads
         )
+    for rdata in rdata_ptr_list:
+        _log_simulation(rdata)
     return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
 
 
@@ -235,3 +244,18 @@ def set_model_settings(
     for setting, value in settings.items():
         setter = setting[1] if isinstance(setting, tuple) else f'set{setting}'
         getattr(model, setter)(value)
+
+
+def _log_simulation(rdata: amici_swig.ReturnData):
+    """Extension warnings to Python logging."""
+    amici_severity_to_logging = {
+        amici_swig.LogSeverity_debug: logging.DEBUG,
+        amici_swig.LogSeverity_warning: logging.WARNING,
+        amici_swig.LogSeverity_error: logging.ERROR,
+    }
+    for msg in rdata.messages:
+        logger.log(
+            amici_severity_to_logging[msg.severity],
+            f"[{msg.identifier}] {msg.message}"
+        )
+
