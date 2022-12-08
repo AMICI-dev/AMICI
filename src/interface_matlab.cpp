@@ -500,9 +500,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     for(auto const& msg: rdata->messages) {
         auto identifier = "AMICI:simulation:" + msg.identifier;
-        if(msg.severity >= amici::LogSeverity::error)
-            mexErrMsgIdAndTxt(identifier.c_str(), msg.message.c_str());
-        else
-            mexWarnMsgIdAndTxt(identifier.c_str(), msg.message.c_str());
+        mexWarnMsgIdAndTxt(identifier.c_str(), msg.message.c_str());
     }
 }
