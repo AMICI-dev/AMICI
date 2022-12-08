@@ -36,7 +36,8 @@ class Logger
      * @brief Add a log entry with printf-like message formatting
      * @param severity Severity level
      * @param identifier Short identifier for the logged event
-     * @param message A more detailed message
+     * @param format printf format string
+     * @param ... arguments to be formatted
      */
     void log(LogSeverity severity, std::string identifier, const char* format, ...);
 
