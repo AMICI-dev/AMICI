@@ -69,7 +69,15 @@ runAmiciSimulation(Solver& solver,
                    Model& model,
                    bool rethrow)
 {
+    // create a temporary logger instance for Solver and Model to capture
+    // messages from only this simulation
     Logger logger;
+    solver.logger = &logger;
+    model.logger = &logger;
+    // prevent dangling pointer
+    auto _ = gsl::finally([&solver, &model]
+                          { solver.logger = model.logger = nullptr; });
+
     auto start_time_total = clock();
     solver.startTimer();
 
