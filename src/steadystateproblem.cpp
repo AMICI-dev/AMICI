@@ -171,7 +171,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver &solver,
         default:
             if(model.logger)
                 model.logger->log(
-                    LogSeverity::warning,
+                    LogSeverity::error,
                     "NEWTON_FAILURE",
                     "AMICI newton method failed: %s\n", ex.what()
                 );
@@ -180,7 +180,7 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver &solver,
     } catch (AmiException const &ex) {
         if(model.logger)
             model.logger->log(
-                LogSeverity::warning,
+                LogSeverity::error,
                 "EQUILIBRATION_FAILURE",
                 "AMICI equilibration failed: %s\n", ex.what()
             );

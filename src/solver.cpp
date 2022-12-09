@@ -1253,7 +1253,7 @@ void wrapErrHandlerFn(int error_code, const char *module,
     }
     auto solver = static_cast<Solver const*>(eh_data);
     if(solver->logger)
-        solver->logger->log(LogSeverity::warning, buffid, buffer);
+        solver->logger->log(LogSeverity::debug, buffid, buffer);
 }
 
 } // namespace amici

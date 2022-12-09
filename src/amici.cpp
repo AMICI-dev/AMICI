@@ -155,7 +155,7 @@ runAmiciSimulation(Solver& solver,
                 LogSeverity::error,
                 "MAXTIME_EXCEEDED",
                 "AMICI forward simulation failed at t = %f: "
-                "Maximum time exceeded.\n",
+                "Maximum time exceeded in forward solve.\n",
                 ex.time
             );
         } else {
@@ -178,9 +178,9 @@ runAmiciSimulation(Solver& solver,
                 throw;
             logger.log(
                 LogSeverity::error,
-                "BACKWARD_FAILURE",
+                "MAXTIME_EXCEEDED",
                 "AMICI backward simulation failed when trying to solve until "
-                "t = %f: Maximum time exceeded.\n",
+                "t = %f: Maximum time exceeded in backward solve.\n",
                 ex.time
             );
 
@@ -190,9 +190,9 @@ runAmiciSimulation(Solver& solver,
                 throw;
             logger.log(
                 LogSeverity::error,
-                "MAXTIME_EXCEEDED",
+                "BACKWARD_FAILURE",
                 "AMICI backward simulation failed when trying to solve until t = %f"
-                " (see message above):\n%s\n",
+                " (check debug logs for details):\n%s\n",
                 ex.time,
                 ex.what()
             );
