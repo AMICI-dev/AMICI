@@ -5,12 +5,16 @@
 
 namespace amici {
 
-void Logger::log(LogSeverity severity, std::string identifier, std::string message)
+void Logger::log(LogSeverity severity,
+                 std::string const& identifier,
+                 std::string const& message)
 {
     items.emplace_back(severity, identifier, message);
 }
 
-void Logger::log(LogSeverity severity, std::string identifier, const char *format, ...)
+void Logger::log(LogSeverity severity,
+                 std::string const& identifier,
+                 const char *format, ...)
 {
     va_list argptr;
     va_start(argptr, format);

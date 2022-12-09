@@ -54,12 +54,6 @@ class Solver {
     Solver() = default;
 
     /**
-     * @brief Constructor
-     * @param logger AMICI logger
-     */
-    Solver(Logger *logger);
-
-    /**
      * @brief Solver copy constructor
      * @param other
      */

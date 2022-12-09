@@ -143,7 +143,7 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
     model = model_module.getModel()
     model.setTimepoints(np.linspace(0, 60, 61))
     solver = model.getSolver()
-
+    solver.setMaxSteps(1)
     # generate artificial data
     rdata = amici.runAmiciSimulation(model, solver)
     assert_allclose(rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0],

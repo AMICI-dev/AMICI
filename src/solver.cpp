@@ -1,7 +1,6 @@
 #include "amici/solver.h"
 
 #include "amici/exception.h"
-#include "amici/amici.h"
 #include "amici/model.h"
 #include "amici/symbolic_functions.h"
 
@@ -12,11 +11,6 @@
 #include <memory>
 
 namespace amici {
-
-Solver::Solver(Logger *logger) : logger(logger)
-{
-
-}
 
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),

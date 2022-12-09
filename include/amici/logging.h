@@ -30,7 +30,11 @@ class Logger
      * @param identifier Short identifier for the logged event
      * @param message A more detailed message
      */
-    void log(LogSeverity severity, std::string identifier, std::string message);
+    void log(
+        LogSeverity severity,
+        std::string const& identifier,
+        std::string const& message
+        );
 
     /**
      * @brief Add a log entry with printf-like message formatting
@@ -39,7 +43,11 @@ class Logger
      * @param format printf format string
      * @param ... arguments to be formatted
      */
-    void log(LogSeverity severity, std::string identifier, const char* format, ...);
+    void log(
+        LogSeverity severity,
+        std::string const& identifier,
+        const char* format, ...
+        );
 
     /** The log items */
     std::vector<LogItem> items;
@@ -64,8 +72,8 @@ struct LogItem
      */
     LogItem(
         LogSeverity severity,
-        std::string identifier,
-        std::string message
+        std::string const& identifier,
+        std::string const& message
         ):
                   severity(severity)
                   ,identifier(identifier)
