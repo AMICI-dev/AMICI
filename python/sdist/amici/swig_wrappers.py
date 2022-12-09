@@ -254,8 +254,9 @@ def _log_simulation(rdata: amici_swig.ReturnData):
         amici_swig.LogSeverity_error: logging.ERROR,
     }
     for msg in rdata.messages:
+        condition = f"[{rdata.id}]" if rdata.id else ""
         logger.log(
             amici_severity_to_logging[msg.severity],
-            f"[{rdata.id}][{msg.identifier}] {msg.message}"
+            f"{condition}[{msg.identifier}] {msg.message}"
         )
 
