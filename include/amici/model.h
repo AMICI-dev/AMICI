@@ -8,6 +8,7 @@
 #include "amici/simulation_parameters.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
+#include "amici/logging.h"
 
 #include <map>
 #include <memory>
@@ -18,9 +19,6 @@ namespace amici {
 class ExpData;
 class Model;
 class Solver;
-class AmiciApplication;
-
-extern AmiciApplication defaultContext;
 
 } // namespace amici
 
@@ -1417,8 +1415,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /** Flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** AMICI application context */
-    AmiciApplication *app = &defaultContext;
+    /** Logger */
+    Logger *logger = nullptr;
 
   protected:
     /**

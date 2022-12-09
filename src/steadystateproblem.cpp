@@ -6,7 +6,6 @@
 #include "amici/model.h"
 #include "amici/newton_solver.h"
 #include "amici/solver.h"
-#include "amici/amici.h"
 
 #include <cmath>
 #include <cstring>
@@ -170,13 +169,21 @@ void SteadystateProblem::findSteadyStateBySimulation(const Solver &solver,
                 SteadyStateStatus::failed_too_long_simulation;
             break;
         default:
-            model.app->warningF("AMICI:newton",
-                                 "AMICI newton method failed: %s\n", ex.what());
+            if(model.logger)
+                model.logger->log(
+                    LogSeverity::error,
+                    "NEWTON_FAILURE",
+                    "AMICI newton method failed: %s\n", ex.what()
+                );
             steady_state_status_[1] = SteadyStateStatus::failed;
         }
     } catch (AmiException const &ex) {
-        model.app->warningF("AMICI:equilibration",
-                             "AMICI equilibration failed: %s\n", ex.what());
+        if(model.logger)
+            model.logger->log(
+                LogSeverity::error,
+                "EQUILIBRATION_FAILURE",
+                "AMICI equilibration failed: %s\n", ex.what()
+            );
         steady_state_status_[1] = SteadyStateStatus::failed;
     }
 }

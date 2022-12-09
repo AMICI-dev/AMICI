@@ -77,10 +77,14 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx, Model &model,
     prepareLinearSystem(model, state);
     model.fdxdotdp(state.t, state.x, state.dx);
 
-    if (is_singular(model, state))
-        model.app->warningF("AMICI:newton",
-                             "Jacobian is singular at steadystate, "
-                             "sensitivities may be inaccurate");
+    if (model.logger && is_singular(model, state)) {
+        model.logger->log(
+            LogSeverity::warning,
+            "NEWTON_JAC_SINGULAR",
+            "Jacobian is singular at steadystate, "
+            "sensitivities may be inaccurate."
+            );
+    }
 
     if (model.pythonGenerated) {
         for (int ip = 0; ip < model.nplist(); ip++) {
