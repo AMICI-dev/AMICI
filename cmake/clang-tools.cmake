@@ -1,7 +1,7 @@
 ######### Add targets for clang-format and clang-tidy ############
 
 # Find all source files
-execute_process(COMMAND sh -c "git ls-tree -r HEAD --name-only src/*.cpp include/*.h | tr '\n' ' '"
+execute_process(COMMAND sh -c "git ls-tree -r HEAD --name-only src/*.cpp include/amici/*.h | tr '\n' ' '"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE ALL_CXX_SOURCE_FILES
     )
