@@ -259,6 +259,7 @@ if($ENV{ENABLE_GCOV_COVERAGE})
 endif()
 
 include(clang-tools)
+include(cmakelang-tools)
 
 set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
 set(AUTHOR_EMAIL "Fabian_Froehlich@hms.harvard.edu")
