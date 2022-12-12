@@ -248,13 +248,16 @@ class ReturnDataView(SwigPtrView):
             from ``field`` (e.g. a state ID).
         """
         if field in {'x', 'x0', 'sx'}:
-            col_index = model.getStateIds().index(entity_id)
+            ids = model.getStateIds()
         elif field in {'w'}:
-            col_index = model.getExpressionIds().index(entity_id)
+            ids = model.getExpressionIds()
+        elif field in {'y', 'sy', 'sigmay'}:
+            ids = model.getObservableIds()
         else:
             raise NotImplementedError(
                 f"Subsetting {field} by ID is not implemented or not possible."
             )
+        col_index = ids.index(entity_id)
         return getattr(self, field)[:, col_index]
 
 
