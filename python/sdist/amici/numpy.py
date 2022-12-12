@@ -8,7 +8,7 @@ import numpy as np
 import copy
 import collections
 
-from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData
+from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData, Model
 from typing import Union, List, Dict, Iterator
 
 
@@ -237,6 +237,25 @@ class ReturnDataView(SwigPtrView):
         if item == 't':
             item = 'ts'
         return super(ReturnDataView, self).__getitem__(item)
+
+    def by_id(self, model: Model, field: str, entity_id: str) -> np.array:
+        """
+        Get the value of a given field for a named entity.
+
+        :param model: The model from which this ReturnDataView was generated.
+        :param field: The requested field, e.g. 'x' for model states
+        :param entity_id: The ID of the model entity that is to be extracted
+            from ``field`` (e.g. a state ID).
+        """
+        if field in {'x', 'x0', 'sx'}:
+            col_index = model.getStateIds().index(entity_id)
+        elif field in {'w'}:
+            col_index = model.getExpressionIds().index(entity_id)
+        else:
+            raise NotImplementedError(
+                f"Subsetting {field} by ID is not implemented or not possible."
+            )
+        return getattr(self, field)[:, col_index]
 
 
 class ExpDataView(SwigPtrView):
