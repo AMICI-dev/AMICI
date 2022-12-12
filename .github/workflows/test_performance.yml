@@ -68,8 +68,8 @@ jobs:
     - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
       uses: actions/upload-artifact@v3
       with:
-        name: CS_Signalling_ERBB_RAS_AKT
-        path: CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab
+        name: model_performance_test
+        path: model_performance_test
 
     # install model package
     - name: Install test model
