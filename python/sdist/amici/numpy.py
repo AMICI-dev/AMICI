@@ -258,7 +258,7 @@ class ReturnDataView(SwigPtrView):
                 f"Subsetting {field} by ID is not implemented or not possible."
             )
         col_index = ids.index(entity_id)
-        return getattr(self, field)[:, col_index]
+        return getattr(self, field)[:, ..., col_index]
 
 
 class ExpDataView(SwigPtrView):
