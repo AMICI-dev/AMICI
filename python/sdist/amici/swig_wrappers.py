@@ -4,6 +4,7 @@ import sys
 from contextlib import contextmanager, suppress
 from typing import List, Optional, Union, Sequence, Dict, Any
 
+import amici
 import amici.amici as amici_swig
 from . import numpy
 from .logging import get_logger
@@ -88,6 +89,8 @@ def runAmiciSimulation(
         rdata = amici_swig.runAmiciSimulation(
             _get_ptr(solver), _get_ptr(edata), _get_ptr(model))
     _log_simulation(rdata)
+    if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
+        _ids_and_names_to_rdata(rdata, model)
     return numpy.ReturnDataView(rdata)
 
 
@@ -142,6 +145,9 @@ def runAmiciSimulations(
         )
     for rdata in rdata_ptr_list:
         _log_simulation(rdata)
+        if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
+            _ids_and_names_to_rdata(rdata, model)
+
     return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
 
 
@@ -260,3 +266,18 @@ def _log_simulation(rdata: amici_swig.ReturnData):
             f"{condition}[{msg.identifier}] {msg.message}"
         )
 
+
+def _ids_and_names_to_rdata(
+        rdata: amici_swig.ReturnData,
+        model: amici_swig.Model
+):
+    """Copy entity IDs and names from a Model to ReturnData."""
+    for entity_type in ('State', 'Observable', 'Expression',
+                        'Parameter', 'FixedParameter'):
+        for name_or_id in ('Ids', 'Names'):
+            names_or_ids = getattr(model, f'get{entity_type}{name_or_id}')()
+            setattr(
+                rdata,
+                f"{entity_type.lower()}_{name_or_id.lower()}",
+                names_or_ids
+            )
