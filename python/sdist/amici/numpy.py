@@ -253,6 +253,8 @@ class ReturnDataView(SwigPtrView):
             ids = model.getExpressionIds()
         elif field in {'y', 'sy', 'sigmay'}:
             ids = model.getObservableIds()
+        elif field in {'sllh'}:
+            ids = model.getParameterIds()
         else:
             raise NotImplementedError(
                 f"Subsetting {field} by ID is not implemented or not possible."
