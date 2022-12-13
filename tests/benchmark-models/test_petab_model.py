@@ -170,18 +170,40 @@ def main():
 
             if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
                 logger.info(
-                    f"Computed llh {llh:.4e} matches ref {ref_llh:.4e}."
+                    f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
                     + tolstr
                 )
             else:
                 logger.error(
-                    f"Computed llh {llh:.4e} does not match ref {ref_llh:.4e}."
-                    + tolstr
+                    f"Computed llh {llh:.4e} does not match reference "
+                    f"{ref_llh:.4e}." + tolstr
                 )
                 sys.exit(1)
         except KeyError:
             logger.error("No reference likelihood found for "
                          f"{args.model_name} in {references_yaml}")
+
+        for label, key in {
+            'simulation': 't_sim',
+            'adjoint sensitiviy': 't_adj',
+            'forward sensitivity': 't_fwd',
+        }.items():
+            try:
+                ref = refs[args.model_name][key]
+                if times[key] > ref:
+                    logger.error(
+                        f"Computation time for {label} ({times[key]:.2e}) "
+                        f"exceeds reference ({ref:.2e}, 25% slack)."
+                    )
+                    sys.exit(1)
+                else:
+                    logger.info(
+                        f"Computation time for {label} ({times[key]:.2e}) "
+                        f"within reference ({ref:.2e}, 25% slack)."
+                    )
+            except KeyError:
+                logger.error(f"No reference time for {label} found for "
+                             f"{args.model_name} in {references_yaml}")
 
 
 if __name__ == "__main__":
