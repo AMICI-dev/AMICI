@@ -247,7 +247,7 @@ class ReturnDataView(SwigPtrView):
         :param entity_id: The ID of the model entity that is to be extracted
             from ``field`` (e.g. a state ID).
         """
-        if field in {'x', 'x0', 'sx'}:
+        if field in {'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss'}:
             ids = model.getStateIds()
         elif field in {'w'}:
             ids = model.getExpressionIds()
