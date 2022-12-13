@@ -44,7 +44,6 @@ jobs:
           && sudo apt-get install -y swig libatlas-base-dev
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
-    - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
 
     # install AMICI
     - name: Create AMICI sdist
@@ -66,6 +65,6 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: computation times
-        path:
+        path: |
           tests/benchmark-models/computation_times.csv
           tests/benchmark-models/computation_times.png
