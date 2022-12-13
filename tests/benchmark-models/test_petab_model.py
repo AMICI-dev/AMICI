@@ -9,6 +9,8 @@ import importlib
 import logging
 import os
 import sys
+import pandas as pd
+import numpy as np
 
 import petab
 import yaml
@@ -66,8 +68,8 @@ def main():
 
     args = parse_cli_args()
 
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
+    loglevel = logging.DEBUG if args.verbose else logging.INFO
+    logger.setLevel(loglevel)
 
     logger.info(f"Simulating '{args.model_name}' "
                 f"({args.model_directory}) using PEtab data from "
@@ -84,15 +86,46 @@ def main():
     amici_model = model_module.getModel()
     amici_solver = amici_model.getSolver()
 
-    if args.model_name == "Isensee_JCB2018":
-        amici_solver.setAbsoluteTolerance(1e-12)
-        amici_solver.setRelativeTolerance(1e-12)
+    amici_solver.setAbsoluteTolerance(1e-8)
+    amici_solver.setRelativeTolerance(1e-8)
+    amici_solver.setMaxSteps(int(1e4))
+    if args.model_name in ('Brannmark_JBC2010', 'Isensee_JCB2018'):
+        amici_model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.integrationOnly
+        )
 
-    res = simulate_petab(
-        petab_problem=problem, amici_model=amici_model,
-        solver=amici_solver, log_level=logging.DEBUG)
-    rdatas = res[RDATAS]
-    llh = res[LLH]
+    times = dict()
+
+    for label, sensi_mode in {
+        't_sim': amici.SensitivityMethod.none,
+        't_fwd': amici.SensitivityMethod.forward,
+        't_adj': amici.SensitivityOrder.second
+    }.items():
+        amici_solver.setSensitivityMethod(sensi_mode)
+        if sensi_mode == amici.SensitivityMethod.none:
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.none)
+        else:
+            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+        res_repeats = [
+            simulate_petab(petab_problem=problem, amici_model=amici_model,
+                           solver=amici_solver, log_level=loglevel)
+            for _ in range(3)  # 10 repeats
+        ]
+        res = res_repeats[0]
+
+        times[label] = np.mean([
+            sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000  # only forwards/backwards simulation
+            for res in res_repeats
+        ])
+
+        if sensi_mode == amici.SensitivityMethod.none:
+            rdatas = res[RDATAS]
+            llh = res[LLH]
+
+    times['np'] = sum(problem.parameter_df[petab.ESTIMATE])
+
+    pd.Series(times).to_csv(f'./tests/benchmark-models/{args.model_name}_benchmark.csv')
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \

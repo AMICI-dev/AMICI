@@ -61,3 +61,11 @@ jobs:
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
           && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
+
+    # upload results
+    - uses: actions/upload-artifact@v3
+      with:
+        name: computation times
+        path:
+          tests/benchmark-models/computation_times.csv
+          tests/benchmark-models/computation_times.png
