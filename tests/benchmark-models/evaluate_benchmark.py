@@ -37,8 +37,6 @@ for ir, row in ratios.iterrows():
     g.text(ir, row['np'], int(row['np']), color='black', ha="center", weight='bold')
 
 plt.xticks(rotation=30, horizontalalignment='right')
-plt.ylim([0, 100])
 plt.tight_layout()
-plt.show()
 plt.savefig('computation_times.png')
 

@@ -159,17 +159,25 @@ def main():
 
         try:
             ref_llh = refs[args.model_name]["llh"]
-            logger.info(f"Reference llh: {ref_llh}")
 
-            if abs(ref_llh - llh) < 1e-3:
-                logger.info(f"Computed llh {llh} matches reference "
-                            f"{ref_llh}. Absolute difference is "
-                            f"{ref_llh - llh}.")
+            rdiff = np.abs((llh - ref_llh) / ref_llh)
+            rtol = 1e-3
+            adiff = np.abs(llh - ref_llh)
+            atol = 1e-3
+            tolstr = f' Absolute difference is {adiff:.2e} ' \
+                     f'(tol {atol:.2e}) and relative difference is ' \
+                     f'{rdiff:.2e} (tol {rtol:.2e}).'
+
+            if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
+                logger.info(
+                    f"Computed llh {llh:.4e} matches ref {ref_llh:.4e}."
+                    + tolstr
+                )
             else:
-                logger.error(f"Computed llh {llh} does not match reference "
-                             f"{ref_llh}. Absolute difference is "
-                             f"{ref_llh - llh}."
-                             f" Relative difference is {llh / ref_llh}")
+                logger.error(
+                    f"Computed llh {llh:.4e} does not match ref {ref_llh:.4e}."
+                    + tolstr
+                )
                 sys.exit(1)
         except KeyError:
             logger.error("No reference likelihood found for "
