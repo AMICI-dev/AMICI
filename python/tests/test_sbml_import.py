@@ -498,8 +498,9 @@ def test_sympy_exp_monkeypatch():
     """
     url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
           'filename=BIOMD0000000529_url.xml'
-    importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
-                                  from_file=False)
+    importer = amici.SbmlImporter(
+        urlopen(url, timeout=20).read().decode('utf-8'), from_file=False
+    )
     module_name = 'BIOMD0000000529'
 
     with TemporaryDirectory() as outdir:
