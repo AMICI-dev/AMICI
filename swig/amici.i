@@ -138,6 +138,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %include model.i
 %include model_ode.i
 %include model_dae.i
+%include logging.i
 %include rdata.i
 
 #ifndef AMICI_SWIG_WITHOUT_HDF5
@@ -154,9 +155,6 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %}
 
 // Add necessary symbols to generated header
-// Ignore due to https://github.com/swig/swig/issues/1643
-%ignore amici::AmiciApplication::warningF;
-%ignore amici::AmiciApplication::errorF;
 %{
 #include "amici/amici.h"
 using namespace amici;
@@ -171,6 +169,7 @@ using namespace amici;
 
 // Expose vectors
 %template(ExpDataPtrVector) std::vector<amici::ExpData*>;
+%template(LogItemVector) std::vector<amici::LogItem>;
 
 
 // Convert integer values to enum class

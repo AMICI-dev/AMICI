@@ -673,10 +673,12 @@ def import_model_sbml(
         verbose=verbose,
         **kwargs)
 
-    # check model
-    model_module = amici.import_model_module(model_name, model_output_dir)
-    model = model_module.getModel()
-    check_model(amici_model=model, petab_problem=petab_problem)
+    if kwargs.get('compile', amici._get_default_argument(
+            sbml_importer.sbml2amici, 'compile')):
+        # check that the model extension was compiled successfully
+        model_module = amici.import_model_module(model_name, model_output_dir)
+        model = model_module.getModel()
+        check_model(amici_model=model, petab_problem=petab_problem)
 
     return sbml_importer
 

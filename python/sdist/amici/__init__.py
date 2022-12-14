@@ -28,7 +28,7 @@ import re
 import sys
 from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Optional, Union
+from typing import Optional, Union, Callable, Any
 
 
 def _get_amici_path():
@@ -191,3 +191,12 @@ class AmiciVersionError(RuntimeError):
     """Error thrown if an AMICI model is loaded that is incompatible with
     the installed AMICI base package"""
     pass
+
+
+def _get_default_argument(func: Callable, arg: str) -> Any:
+    """Get the default value of the given argument in the given function."""
+    import inspect
+    signature = inspect.signature(func)
+    if (default := signature.parameters[arg].default) is not inspect.Parameter.empty:
+        return default
+    raise ValueError(f"No default value for argument {arg} of {func}.")
