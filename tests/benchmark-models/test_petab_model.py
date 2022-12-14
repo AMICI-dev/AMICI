@@ -110,12 +110,13 @@ def main():
         res_repeats = [
             simulate_petab(petab_problem=problem, amici_model=amici_model,
                            solver=amici_solver, log_level=loglevel)
-            for _ in range(3)  # 10 repeats
+            for _ in range(3)  # repeat to get more stable timings
         ]
         res = res_repeats[0]
 
         times[label] = np.mean([
-            sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000  # only forwards/backwards simulation
+            sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
+            # only forwards/backwards simulation
             for res in res_repeats
         ])
 
@@ -125,7 +126,9 @@ def main():
 
     times['np'] = sum(problem.parameter_df[petab.ESTIMATE])
 
-    pd.Series(times).to_csv(f'./tests/benchmark-models/{args.model_name}_benchmark.csv')
+    pd.Series(times).to_csv(
+        f'./tests/benchmark-models/{args.model_name}_benchmark.csv'
+    )
 
     for rdata in rdatas:
         assert rdata.status == amici.AMICI_SUCCESS, \
@@ -185,7 +188,7 @@ def main():
 
         for label, key in {
             'simulation': 't_sim',
-            'adjoint sensitiviy': 't_adj',
+            'adjoint sensitivity': 't_adj',
             'forward sensitivity': 't_fwd',
         }.items():
             try:
@@ -193,13 +196,13 @@ def main():
                 if times[key] > ref:
                     logger.error(
                         f"Computation time for {label} ({times[key]:.2e}) "
-                        f"exceeds reference ({ref:.2e}, 25% slack)."
+                        f"exceeds reference ({ref:.2e})."
                     )
                     sys.exit(1)
                 else:
                     logger.info(
                         f"Computation time for {label} ({times[key]:.2e}) "
-                        f"within reference ({ref:.2e}, 25% slack)."
+                        f"within reference ({ref:.2e})."
                     )
             except KeyError:
                 logger.error(f"No reference time for {label} found for "

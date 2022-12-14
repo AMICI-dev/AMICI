@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+"""
+Aggregate computation times from different benchmarks and plot
+"""
 import os
 import pandas as pd
 import seaborn as sns
@@ -20,7 +25,9 @@ ratios = pd.concat(
 ).reset_index().melt(id_vars=['index', 'np']).rename(
     columns={'index': 'model', 'variable': 'sensitivity', 'value': 'ratio'}
 )
-ratios['sensitivity'] = ratios['sensitivity'].replace({'t_fwd': 'forward', 't_adj': 'adjoint'})
+ratios['sensitivity'] = ratios['sensitivity'].replace(
+    {'t_fwd': 'forward', 't_adj': 'adjoint'}
+)
 
 
 plt.figure(figsize=(10, 5))
