@@ -53,7 +53,7 @@ Crauste_CellSystems2017:
 Elowitz_Nature2000:
   llh: 63.20279991419332
   t_sim: 0.005
-  t_fwd: 0.01
+  t_fwd: 0.1
   t_adj: 0.1
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10))) / 2
 
