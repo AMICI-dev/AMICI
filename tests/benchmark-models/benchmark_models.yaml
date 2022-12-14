@@ -2,7 +2,7 @@ Bachmann_MSB2011:
   llh: 418.40573341425295
   t_sim: 0.05
   t_fwd: 3.0
-  t_adj: 4.0
+  t_adj: 4.5
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Beer_MolBioSystems2014:
