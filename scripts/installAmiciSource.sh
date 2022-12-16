@@ -28,7 +28,7 @@ else
 fi
 
 pip install --upgrade pip pkgconfig scipy matplotlib coverage pytest pytest-cov
-pip install git+https://github.com/pysb/pysb # pin to develop to fix sympy compatibility
+pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
 pip install -U "setuptools<64"
 pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test] --no-build-isolation
 deactivate

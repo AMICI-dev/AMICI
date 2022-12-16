@@ -11,12 +11,15 @@ from typing import Optional, Union
 
 import petab
 import pysb
+import pysb.bng
+import re
 import sympy as sp
 from petab.C import (CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA)
 from petab.models.pysb_model import PySBModel
 
 from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
+from .petab_util import get_states_in_condition_table, PREEQ_INDICATOR_ID
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -39,8 +42,7 @@ def _add_observation_model(
         sym = sp.sympify(formula, locals=local_syms)
         for s in sym.free_symbols:
             if not isinstance(s, pysb.Component):
-                p = pysb.Parameter(str(s), 1.0, _export=False)
-                pysb_model.add_component(p)
+                p = pysb.Parameter(str(s), 1.0)
                 local_syms[sp.Symbol.__str__(p)] = p
 
     # add observables and sigmas to pysb model
@@ -52,9 +54,7 @@ def _add_observation_model(
         if observable_id in pysb_model.expressions.keys():
             obs_expr = pysb_model.expressions[observable_id]
         else:
-            obs_expr = pysb.Expression(observable_id, obs_symbol,
-                                       _export=False)
-            pysb_model.add_component(obs_expr)
+            obs_expr = pysb.Expression(observable_id, obs_symbol)
         local_syms[observable_id] = obs_expr
 
         sigma_id = f"{observable_id}_sigma"
@@ -62,9 +62,84 @@ def _add_observation_model(
             noise_formula,
             locals=local_syms
         )
-        sigma_expr = pysb.Expression(sigma_id, sigma_symbol, _export=False)
-        pysb_model.add_component(sigma_expr)
+        sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
         local_syms[sigma_id] = sigma_expr
+
+
+def _add_initialization_variables(
+        pysb_model: pysb.Model,
+        petab_problem: petab.Problem
+):
+    """ Add initialization variables to the PySB model to support initial
+    conditions specified in the PEtab condition table.
+
+    To parameterize initial states, we currently need initial assignments.
+    If they occur in the condition table, we create a new parameter
+    initial_${speciesID}. Feels dirty and should be changed (see also #924).
+    """
+
+    initial_states = get_states_in_condition_table(petab_problem)
+    fixed_parameters = []
+    if initial_states:
+        # add preequilibration indicator variable
+        # NOTE: would only be required if we actually have preequilibration
+        #  adding it anyways. can be optimized-out later
+        if PREEQ_INDICATOR_ID in [c.name for c in pysb_model.components]:
+            raise AssertionError("Model already has a component with ID "
+                                 f"{PREEQ_INDICATOR_ID}. Cannot handle "
+                                 "species and compartments in condition table "
+                                 "then.")
+        preeq_indicator = pysb.Parameter(PREEQ_INDICATOR_ID)
+        # Can only reset parameters after preequilibration if they are fixed.
+        fixed_parameters.append(PREEQ_INDICATOR_ID)
+        logger.debug("Adding preequilibration indicator constant "
+                     f"{PREEQ_INDICATOR_ID}")
+    logger.debug(f"Adding initial assignments for {initial_states.keys()}")
+
+    for assignee_id in initial_states:
+        init_par_id_preeq = f"initial_{assignee_id}_preeq"
+        init_par_id_sim = f"initial_{assignee_id}_sim"
+        for init_par_id in [init_par_id_preeq, init_par_id_sim]:
+            if init_par_id in [c.name for c in pysb_model.components]:
+                raise ValueError(
+                    "Cannot create parameter for initial assignment "
+                    f"for {assignee_id} because an entity named "
+                    f"{init_par_id} exists already in the model.")
+            pysb.Parameter(init_par_id)
+
+        species_idx = int(re.match(r'__s(\d+)$', assignee_id).group(1))
+        species_pattern = petab_problem.model.model.species[species_idx]
+
+        # species pattern comes from the _original_ model, but we only want
+        # to modify pysb_model, so we have to reconstitute the pattern using
+        # pysb_model
+        for c in pysb_model.components:
+            globals()[c.name] = c
+        species_pattern = pysb.as_complex_pattern(eval(str(species_pattern)))
+
+        from pysb.pattern import match_complex_pattern
+        formula = pysb.Expression(
+            f'initial_{assignee_id}_formula',
+            preeq_indicator * pysb_model.parameters[init_par_id_preeq] +
+            (1 - preeq_indicator) * pysb_model.parameters[init_par_id_sim],
+        )
+
+        for initial in pysb_model.initials:
+            if match_complex_pattern(initial.pattern, species_pattern,
+                                     exact=True):
+                logger.debug(
+                    'The PySB model has an initial defined for species '
+                    f'{assignee_id}, but this species  also has an initial '
+                    'value defined in the PEtab  condition table. The SBML '
+                    'initial assignment will be overwritten to handle '
+                    'preequilibration and  initial values specified by the '
+                    'PEtab problem.'
+                )
+                initial.value = formula
+                return
+        else:
+            # No initial in the pysb model, so add one
+            initial = pysb.Initial(species_pattern, formula)
 
 
 @log_execution_time('Importing PEtab model', logger)
@@ -101,18 +176,25 @@ def import_model_pysb(
 
     if not isinstance(petab_problem.model, PySBModel):
         raise ValueError("Not a PySB model")
-    pysb_model = petab_problem.model.model
 
-    # TODO create copy?
+    # need to create a copy here as we don't wan't to modify the original
+    pysb_model = pysb.Model(
+        base=petab_problem.model.model,
+        name=petab_problem.model.model_id,
+    )
+
     _add_observation_model(pysb_model, petab_problem)
+    # generate species for the _original_ model
+    pysb.bng.generate_equations(petab_problem.model.model)
+    _add_initialization_variables(pysb_model, petab_problem)
 
-    # For pysb, we only allow parameters in the condition table
-    # those must be pysb model parameters (either natively, or output
-    # parameters from measurement or condition table that have been added in
-    # PysbPetabProblem)
+    # check condition table for supported features
     model_parameters = [p.name for p in pysb_model.parameters]
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:
+            continue
+
+        if x in petab_problem.mapping_df.index:
             continue
 
         if x not in model_parameters:

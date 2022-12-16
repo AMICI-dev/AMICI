@@ -28,6 +28,8 @@ from petab.C import *
 from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from petab.parameters import get_valid_parameters_for_parameter_table
 
+from .petab_util import get_states_in_condition_table, PREEQ_INDICATOR_ID
+
 try:
     from amici.petab_import_pysb import import_model_pysb
 except ModuleNotFoundError:
@@ -35,10 +37,6 @@ except ModuleNotFoundError:
     import_model_pysb = None
 
 logger = get_logger(__name__, logging.WARNING)
-
-# ID of model parameter that is to be added to SBML model to indicate
-#  preequilibration
-PREEQ_INDICATOR_ID = 'preequilibration_indicator'
 
 
 def _add_global_parameter(sbml_model: libsbml.Model,
@@ -595,12 +593,11 @@ def import_model_sbml(
 
     # TODO: to parameterize initial states or compartment sizes, we currently
     #  need initial assignments. if they occur in the condition table, we
-    #  create a new parameter initial_${startOrCompartmentID}.
+    #  create a new parameter initial_${speciesOrCompartmentID}.
     #  feels dirty and should be changed (see also #924)
     # <BeginWorkAround>
 
-    initial_states = [col for col in petab_problem.condition_df
-                      if element_is_state(sbml_model, col)]
+    initial_states = get_states_in_condition_table(petab_problem)
     fixed_parameters = []
     if initial_states:
         # add preequilibration indicator variable
@@ -618,7 +615,7 @@ def import_model_sbml(
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug("Adding preequilibration indicator "
                      f"constant {PREEQ_INDICATOR_ID}")
-    logger.debug(f"Adding initial assignments for {initial_states}")
+    logger.debug(f"Adding initial assignments for {initial_states.keys()}")
     for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
@@ -787,20 +784,6 @@ def show_model_info(sbml_model: 'libsbml.Model'):
     logger.info('Global parameters: '
                 + str(len(sbml_model.getListOfParameters())))
     logger.info(f'Reactions: {len(sbml_model.getListOfReactions())}')
-
-
-def element_is_state(sbml_model: libsbml.Model, sbml_id: str) -> bool:
-    """Does the element with ID `sbml_id` correspond to a state variable?
-    """
-    if sbml_model.getCompartment(sbml_id) is not None:
-        return True
-    if sbml_model.getSpecies(sbml_id) is not None:
-        return True
-    if (rule := sbml_model.getRuleByVariable(sbml_id)) is not None \
-            and rule.getTypeCode() == libsbml.SBML_RATE_RULE:
-        return True
-
-    return False
 
 
 def _parse_cli_args():
