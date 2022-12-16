@@ -194,7 +194,7 @@ def import_model_pysb(
         if x == CONDITION_NAME:
             continue
 
-        if x in petab_problem.mapping_df.index:
+        if petab_problem.mapping_df and x in petab_problem.mapping_df.index:
             continue
 
         if x not in model_parameters:

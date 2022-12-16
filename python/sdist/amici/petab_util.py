@@ -2,12 +2,11 @@ import petab
 import re
 import libsbml
 import pandas as pd
-import numpy as np
 
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Tuple
 
 from petab.models import MODEL_TYPE_SBML, MODEL_TYPE_PYSB
-from petab.C import SIMULATION_CONDITION_ID
+from petab.C import SIMULATION_CONDITION_ID, PREEQUILIBRATION_CONDITION_ID
 
 # ID of model parameter that is to be added to SBML model to indicate
 #  preequilibration
@@ -36,7 +35,7 @@ def resolve_mapping(element: str, mapping_df: Optional[pd.DataFrame]) -> str:
 def get_states_in_condition_table(
         petab_problem: petab.Problem,
         condition: Union[Dict, pd.Series] = None,
-) -> Dict[str, Union[float, str]]:
+) -> Dict[str, Tuple[Union[float, str, None], Union[float, str, None]]]:
     """Get list of states in the condition table"""
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
         raise NotImplementedError()
@@ -48,19 +47,19 @@ def get_states_in_condition_table(
     }
     states = {
         resolve_mapping(col, petab_problem.mapping_df):
-            np.NaN if condition is None else
-            petab_problem.condition_df.loc[
-                condition[SIMULATION_CONDITION_ID], col
-            ]
-        for col in petab_problem.condition_df
-        if species_check_funs[petab_problem.model.type_id](
-            resolve_mapping(col, petab_problem.mapping_df)
-        ) and (condition is None or not pd.isna(
-            petab_problem.condition_df.loc[
-                condition[SIMULATION_CONDITION_ID], col
-            ]
-        ))
+            (None, None) if condition is None
+            else (
+                petab_problem.condition_df.loc[
+                    condition[SIMULATION_CONDITION_ID], col
+                ],
+                petab_problem.condition_df.loc[
+                    condition[PREEQUILIBRATION_CONDITION_ID], col
+                ] if PREEQUILIBRATION_CONDITION_ID in condition else None
+            )
+        for col in petab_problem.condition_df.columns
+        if species_check_funs[petab_problem.model.type_id](col)
     }
+
     if petab_problem.model.type_id == MODEL_TYPE_PYSB:
         import pysb.pattern
         spm = pysb.pattern.SpeciesPatternMatcher(

@@ -134,7 +134,8 @@ def simulate_petab(
             petab_problem=petab_problem,
             simulation_conditions=simulation_conditions,
             scaled_parameters=scaled_parameters,
-            amici_model=amici_model)
+            amici_model=amici_model
+        )
 
     # Get edatas
     if edatas is None:
@@ -315,7 +316,8 @@ def create_parameter_mapping(
             zip(simulation_conditions.iterrows(), prelim_parameter_mapping):
         mapping_for_condition = create_parameter_mapping_for_condition(
             prelim_mapping_for_condition, condition, petab_problem,
-            amici_model)
+            amici_model
+        )
         parameter_mapping.append(mapping_for_condition)
 
     return parameter_mapping
@@ -362,7 +364,10 @@ def _get_initial_state_pysb(petab_problem: petab.Problem,
             break
 
     if isinstance(value, pysb.Parameter):
-        value = value.value
+        if value.name in petab_problem.parameter_df.index:
+            value = value.name
+        else:
+            value = value.value
 
     return value
 
@@ -466,7 +471,7 @@ def create_parameter_mapping_for_condition(
     # resetting initial states.
 
     if states_in_condition_table := get_states_in_condition_table(
-            petab_problem, condition
+        petab_problem, condition
     ):
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
@@ -478,14 +483,15 @@ def create_parameter_mapping_for_condition(
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-        for element_id, value in states_in_condition_table.items():
+        for element_id, (value, preeq_value) in \
+                states_in_condition_table.items():
             # for preequilibration
             init_par_id = f'initial_{element_id}_preeq'
             if condition.get(PREEQUILIBRATION_CONDITION_ID):
                 condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
                 _set_initial_state(
                     petab_problem, condition_id, element_id, init_par_id,
-                    condition_map_preeq, condition_scale_map_preeq, value
+                    condition_map_preeq, condition_scale_map_preeq, preeq_value
                 )
             else:
                 # need to set dummy value for preeq parameter anyways, as it
@@ -648,8 +654,11 @@ def create_edata_for_condition(
     if condition.get(PREEQUILIBRATION_CONDITION_ID) \
             and states_in_condition_table:
         state_ids = amici_model.getStateIds()
-        state_idx_reinitalization = [state_ids.index(s)
-                                     for s in states_in_condition_table]
+        state_idx_reinitalization = [
+            state_ids.index(s)
+            for s, (v, v_preeq) in states_in_condition_table.items()
+            if not np.isnan(v)
+        ]
         edata.reinitialization_state_idxs_sim = state_idx_reinitalization
         logger.debug("Enabling state reinitialization for condition "
                      f"{condition.get(PREEQUILIBRATION_CONDITION_ID, '')} - "
