@@ -57,7 +57,9 @@ def get_states_in_condition_table(
                 ] if PREEQUILIBRATION_CONDITION_ID in condition else None
             )
         for col in petab_problem.condition_df.columns
-        if species_check_funs[petab_problem.model.type_id](col)
+        if species_check_funs[petab_problem.model.type_id](
+            resolve_mapping(col, petab_problem.mapping_df)
+        )
     }
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB:

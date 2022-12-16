@@ -136,10 +136,12 @@ def _add_initialization_variables(
                     'PEtab problem.'
                 )
                 initial.value = formula
-                return
+                break
         else:
             # No initial in the pysb model, so add one
-            initial = pysb.Initial(species_pattern, formula)
+            pysb.Initial(species_pattern, formula)
+
+        return fixed_parameters
 
 
 @log_execution_time('Importing PEtab model', logger)
@@ -186,26 +188,27 @@ def import_model_pysb(
     _add_observation_model(pysb_model, petab_problem)
     # generate species for the _original_ model
     pysb.bng.generate_equations(petab_problem.model.model)
-    _add_initialization_variables(pysb_model, petab_problem)
+    fixed_parameters = _add_initialization_variables(pysb_model, petab_problem)
 
     # check condition table for supported features
-    model_parameters = [p.name for p in pysb_model.parameters]
+    model_parameters = [p.name for p in petab_problem.model.model.parameters]
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:
             continue
 
-        if petab_problem.mapping_df and x in petab_problem.mapping_df.index:
+        if petab_problem.mapping_df is not None and \
+                x in petab_problem.mapping_df.index:
             continue
 
         if x not in model_parameters:
-            # TODO: x may also be a output parameter ID
             raise NotImplementedError(
                 "For PySB PEtab import, only model parameters, but no states "
                 "or compartments are allowed in the condition table. "
                 f"Offending column: {x}"
             )
 
-    constant_parameters = petab_import.get_fixed_parameters(petab_problem)
+    constant_parameters = petab_import.get_fixed_parameters(petab_problem) + \
+        fixed_parameters
 
     if petab_problem.observable_df is None:
         observables = None
