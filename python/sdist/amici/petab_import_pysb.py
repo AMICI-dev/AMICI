@@ -203,8 +203,8 @@ def import_model_pysb(
 
         if x not in model_parameters:
             raise NotImplementedError(
-                "For PySB PEtab import, only model parameters, but no states "
-                "or compartments are allowed in the condition table. "
+                "For PySB PEtab import, only model parameters and states, but "
+                "not compartments are allowed in the condition table. "
                 f"Offending column: {x}"
             )
 
