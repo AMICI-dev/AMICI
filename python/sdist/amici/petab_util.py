@@ -17,6 +17,7 @@ PREEQ_INDICATOR_ID = 'preequilibration_indicator'
 def get_states_in_condition_table(
         petab_problem: petab.Problem,
         condition: Union[Dict, pd.Series] = None,
+        return_patterns: bool = False,
 ) -> Dict[str, Tuple[Union[float, str, None], Union[float, str, None]]]:
     """Get list of states in the condition table"""
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
@@ -45,6 +46,8 @@ def get_states_in_condition_table(
     }
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB:
+        if return_patterns:
+            return states
         import pysb.pattern
         spm = pysb.pattern.SpeciesPatternMatcher(
             model=petab_problem.model.model

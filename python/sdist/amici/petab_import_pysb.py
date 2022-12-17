@@ -211,24 +211,22 @@ def import_model_pysb(
     # check condition table for supported features, important to use pysb_model
     # here, as we want to also cover output parameters
     model_parameters = [p.name for p in pysb_model.parameters]
-
+    condition_species_parameters = get_states_in_condition_table(
+        petab_problem, return_patterns=True
+    )
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:
             continue
 
         x = petab.mapping.resolve_mapping(petab_problem.mapping_df, x)
 
+        # parameters
         if x in model_parameters:
             continue
 
-        if _element_is_pysb_pattern(pysb_model, x):
-            spm = SpeciesPatternMatcher(petab_problem.model.model)
-
-            for c in petab_problem.model.model.components:
-                globals()[c.name] = c
-
-            if spm.match(pysb.as_complex_pattern(eval(x))):  # is a species
-                continue
+        # species/pattern
+        if x in condition_species_parameters:
+            continue
 
         raise NotImplementedError(
             "For PySB PEtab import, only model parameters and species, but "
