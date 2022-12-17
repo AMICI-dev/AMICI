@@ -180,6 +180,7 @@ def import_model_pysb(
         raise ValueError("Not a PySB model")
 
     # need to create a copy here as we don't wan't to modify the original
+    pysb.SelfExporter.cleanup()
     pysb_model = pysb.Model(
         base=petab_problem.model.model,
         name=petab_problem.model.model_id,
