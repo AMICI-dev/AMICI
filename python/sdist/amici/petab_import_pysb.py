@@ -198,7 +198,6 @@ def import_model_pysb(
     pysb_model = pysb.Model(
         base=petab_problem.model.model,
         name=petab_problem.model.model_id,
-        _export=False
     )
 
     _add_observation_model(pysb_model, petab_problem)
