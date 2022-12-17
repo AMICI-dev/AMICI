@@ -12,10 +12,12 @@ from typing import Optional, Union
 import petab
 import pysb
 import pysb.bng
+from pysb.pattern import SpeciesPatternMatcher
 import re
 import sympy as sp
 from petab.C import (CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA)
 from petab.models.pysb_model import PySBModel
+
 
 from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
@@ -191,22 +193,32 @@ def import_model_pysb(
     pysb.bng.generate_equations(petab_problem.model.model)
     fixed_parameters = _add_initialization_variables(pysb_model, petab_problem)
 
-    # check condition table for supported features
-    model_parameters = [p.name for p in petab_problem.model.model.parameters]
+    # check condition table for supported features, important to use pysb_model
+    # here, as we want to also cover output parameters
+    model_parameters = [p.name for p in pysb_model.parameters]
+
     for x in petab_problem.condition_df.columns:
         if x == CONDITION_NAME:
             continue
 
-        if petab_problem.mapping_df is not None and \
-                x in petab_problem.mapping_df.index:
+        x = petab.mapping.resolve_mapping(petab_problem.mapping_df, x)
+
+        if x in model_parameters:
             continue
 
-        if x not in model_parameters:
-            raise NotImplementedError(
-                "For PySB PEtab import, only model parameters and states, but "
-                "not compartments are allowed in the condition table. "
-                f"Offending column: {x}"
-            )
+        spm = SpeciesPatternMatcher(pysb_model.parameters)
+
+        for c in petab_problem.model.model.components:
+            globals()[c.name] = c
+
+        if spm.match(eval(x)):  # is a species
+            continue
+
+        raise NotImplementedError(
+            "For PySB PEtab import, only model parameters and states, but not "
+            "compartments are allowed in the condition table. Offending "
+            "column: {x}"
+        )
 
     constant_parameters = petab_import.get_fixed_parameters(petab_problem) + \
         fixed_parameters
