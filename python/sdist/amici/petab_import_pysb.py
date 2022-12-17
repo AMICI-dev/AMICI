@@ -141,7 +141,7 @@ def _add_initialization_variables(
             # No initial in the pysb model, so add one
             pysb.Initial(species_pattern, formula)
 
-        return fixed_parameters
+    return fixed_parameters
 
 
 @log_execution_time('Importing PEtab model', logger)
