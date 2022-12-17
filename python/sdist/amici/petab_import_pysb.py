@@ -224,13 +224,13 @@ def import_model_pysb(
         for c in petab_problem.model.model.components:
             globals()[c.name] = c
 
-        if spm.match(eval(x)):  # is a species
+        if spm.match(pysb.as_complex_pattern(eval(x))):  # is a species
             continue
 
         raise NotImplementedError(
-            "For PySB PEtab import, only model parameters and states, but not "
-            "compartments are allowed in the condition table. Offending "
-            "column: {x}"
+            "For PySB PEtab import, only model parameters and species, but "
+            "not compartments are allowed in the condition table. Offending "
+            f"column: {x}"
         )
 
     constant_parameters = petab_import.get_fixed_parameters(petab_problem) + \
