@@ -193,6 +193,7 @@ def import_model_pysb(
 
     # need to create a copy here as we don't want to modify the original
     pysb.SelfExporter.cleanup()
+    og_export = pysb.SelfExporter.do_export
     pysb.SelfExporter.do_export = False
     pysb_model = pysb.Model(
         base=petab_problem.model.model,
@@ -204,6 +205,7 @@ def import_model_pysb(
     # generate species for the _original_ model
     pysb.bng.generate_equations(petab_problem.model.model)
     fixed_parameters = _add_initialization_variables(pysb_model, petab_problem)
+    pysb.SelfExporter.do_export = og_export
 
     # check condition table for supported features, important to use pysb_model
     # here, as we want to also cover output parameters
