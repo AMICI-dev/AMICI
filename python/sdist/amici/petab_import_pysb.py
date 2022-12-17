@@ -21,7 +21,9 @@ from petab.models.pysb_model import PySBModel
 
 from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
-from .petab_util import get_states_in_condition_table, PREEQ_INDICATOR_ID
+from .petab_util import (
+    get_states_in_condition_table, PREEQ_INDICATOR_ID, _element_is_pysb_pattern
+)
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -219,13 +221,14 @@ def import_model_pysb(
         if x in model_parameters:
             continue
 
-        spm = SpeciesPatternMatcher(petab_problem.model.model)
+        if _element_is_pysb_pattern(pysb_model, x):
+            spm = SpeciesPatternMatcher(petab_problem.model.model)
 
-        for c in petab_problem.model.model.components:
-            globals()[c.name] = c
+            for c in petab_problem.model.model.components:
+                globals()[c.name] = c
 
-        if spm.match(pysb.as_complex_pattern(eval(x))):  # is a species
-            continue
+            if spm.match(pysb.as_complex_pattern(eval(x))):  # is a species
+                continue
 
         raise NotImplementedError(
             "For PySB PEtab import, only model parameters and species, but "
