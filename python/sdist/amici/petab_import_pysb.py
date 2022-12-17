@@ -45,6 +45,7 @@ def _add_observation_model(
         for s in sym.free_symbols:
             if not isinstance(s, pysb.Component):
                 p = pysb.Parameter(str(s), 1.0)
+                pysb_model.add_component(p)
                 local_syms[sp.Symbol.__str__(p)] = p
 
     # add observables and sigmas to pysb model
@@ -57,6 +58,7 @@ def _add_observation_model(
             obs_expr = pysb_model.expressions[observable_id]
         else:
             obs_expr = pysb.Expression(observable_id, obs_symbol)
+            pysb_model.add_component(obs_expr)
         local_syms[observable_id] = obs_expr
 
         sigma_id = f"{observable_id}_sigma"
@@ -65,6 +67,7 @@ def _add_observation_model(
             locals=local_syms
         )
         sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
+        pysb_model.add_component(sigma_expr)
         local_syms[sigma_id] = sigma_expr
 
 
@@ -92,6 +95,7 @@ def _add_initialization_variables(
                                  "species and compartments in condition table "
                                  "then.")
         preeq_indicator = pysb.Parameter(PREEQ_INDICATOR_ID)
+        pysb_model.add_component(preeq_indicator)
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug("Adding preequilibration indicator constant "
@@ -107,9 +111,13 @@ def _add_initialization_variables(
                     "Cannot create parameter for initial assignment "
                     f"for {assignee_id} because an entity named "
                     f"{init_par_id} exists already in the model.")
-            pysb.Parameter(init_par_id)
+            p = pysb.Parameter(init_par_id)
+            pysb_model.add_component(p)
+
 
         species_idx = int(re.match(r'__s(\d+)$', assignee_id).group(1))
+        # use original model here since that's what was used to generate
+        # the ids in initial_states
         species_pattern = petab_problem.model.model.species[species_idx]
 
         # species pattern comes from the _original_ model, but we only want
@@ -125,6 +133,7 @@ def _add_initialization_variables(
             preeq_indicator * pysb_model.parameters[init_par_id_preeq] +
             (1 - preeq_indicator) * pysb_model.parameters[init_par_id_sim],
         )
+        pysb_model.add_component(formula)
 
         for initial in pysb_model.initials:
             if match_complex_pattern(initial.pattern, species_pattern,
@@ -141,7 +150,8 @@ def _add_initialization_variables(
                 break
         else:
             # No initial in the pysb model, so add one
-            pysb.Initial(species_pattern, formula)
+            init = pysb.Initial(species_pattern, formula)
+            pysb_model.add_component(init)
 
     return fixed_parameters
 
@@ -181,11 +191,13 @@ def import_model_pysb(
     if not isinstance(petab_problem.model, PySBModel):
         raise ValueError("Not a PySB model")
 
-    # need to create a copy here as we don't wan't to modify the original
+    # need to create a copy here as we don't want to modify the original
     pysb.SelfExporter.cleanup()
+    pysb.SelfExporter.do_export = False
     pysb_model = pysb.Model(
         base=petab_problem.model.model,
         name=petab_problem.model.model_id,
+        _export=False
     )
 
     _add_observation_model(pysb_model, petab_problem)
@@ -206,7 +218,7 @@ def import_model_pysb(
         if x in model_parameters:
             continue
 
-        spm = SpeciesPatternMatcher(pysb_model.parameters)
+        spm = SpeciesPatternMatcher(petab_problem.model.model)
 
         for c in petab_problem.model.model.components:
             globals()[c.name] = c
