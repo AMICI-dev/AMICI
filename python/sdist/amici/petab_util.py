@@ -3,33 +3,15 @@ import re
 import libsbml
 import pandas as pd
 
-from typing import Optional, Union, Dict, Tuple
+from typing import Union, Dict, Tuple
 
 from petab.models import MODEL_TYPE_SBML, MODEL_TYPE_PYSB
 from petab.C import SIMULATION_CONDITION_ID, PREEQUILIBRATION_CONDITION_ID
+from petab.mapping import resolve_mapping
 
 # ID of model parameter that is to be added to SBML model to indicate
 #  preequilibration
 PREEQ_INDICATOR_ID = 'preequilibration_indicator'
-
-
-def resolve_mapping(element: str, mapping_df: Optional[pd.DataFrame]) -> str:
-    """Resolve mapping for a given element.
-
-    :param element:
-        Element to resolve.
-
-    :param mapping_df:
-        Mapping table.
-
-    :return:
-        Resolved element.
-    """
-    if mapping_df is None:
-        return element
-    if element in mapping_df.index:
-        return mapping_df.loc[element, petab.MODEL_ENTITY_ID]
-    return element
 
 
 def get_states_in_condition_table(
@@ -46,7 +28,7 @@ def get_states_in_condition_table(
             lambda x: _element_is_pysb_pattern(petab_problem.model.model, x),
     }
     states = {
-        resolve_mapping(col, petab_problem.mapping_df):
+        resolve_mapping(petab_problem.mapping_df, col):
             (None, None) if condition is None
             else (
                 petab_problem.condition_df.loc[
@@ -58,7 +40,7 @@ def get_states_in_condition_table(
             )
         for col in petab_problem.condition_df.columns
         if species_check_funs[petab_problem.model.type_id](
-            resolve_mapping(col, petab_problem.mapping_df)
+            resolve_mapping(petab_problem.mapping_df, col)
         )
     }
 

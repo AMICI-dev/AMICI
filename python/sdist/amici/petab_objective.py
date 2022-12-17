@@ -306,6 +306,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
+            mapping_df=petab_problem.mapping_df,
             model=petab_problem.model,
             **dict(default_parameter_mapping_kwargs,
                    **parameter_mapping_kwargs)
