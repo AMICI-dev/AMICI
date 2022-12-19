@@ -8,8 +8,9 @@ import numpy as np
 import copy
 import collections
 
-from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData
-from typing import Union, List, Dict, Iterator
+import amici
+from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData, Model
+from typing import Union, List, Dict, Iterator, Literal
 
 
 class SwigPtrView(collections.abc.Mapping):
@@ -238,6 +239,44 @@ class ReturnDataView(SwigPtrView):
             item = 'ts'
         return super(ReturnDataView, self).__getitem__(item)
 
+    def by_id(
+            self,
+            entity_id: str,
+            field: str = None,
+            model: Model = None
+    ) -> np.array:
+        """
+        Get the value of a given field for a named entity.
+
+        :param entity_id: The ID of the model entity that is to be extracted
+            from ``field`` (e.g. a state ID).
+        :param field: The requested field, e.g. 'x' for model states. This is
+            optional if field would be one of ``{'x', 'y', 'w'}``
+        :param model: The model from which this ReturnDataView was generated.
+            This is optional if this ReturnData was generated with
+            ``solver.getReturnDataReportingMode() == amici.RDataReporting.full``.
+        """
+        if field is None:
+            field = _entity_type_from_id(entity_id, self, model)
+
+        if field in {'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss'}:
+            ids = (model and model.getStateIds()) or self._swigptr.state_ids
+        elif field in {'w'}:
+            ids = (model and model.getExpressionIds()) \
+                  or self._swigptr.expression_ids
+        elif field in {'y', 'sy', 'sigmay'}:
+            ids = (model and model.getObservableIds()) \
+                  or self._swigptr.observable_ids
+        elif field in {'sllh'}:
+            ids = (model and model.getParameterIds()) \
+                  or self._swigptr.parameter_ids
+        else:
+            raise NotImplementedError(
+                f"Subsetting {field} by ID is not implemented or not possible."
+            )
+        col_index = ids.index(entity_id)
+        return getattr(self, field)[:, ..., col_index]
+
 
 class ExpDataView(SwigPtrView):
     """
@@ -307,3 +346,31 @@ def field_as_numpy(field_dimensions: Dict[str, List[int]],
             return np.array(attr).reshape(field_dimensions[field])
     else:
         return float(attr)
+
+
+def _entity_type_from_id(
+        entity_id: str,
+        rdata: Union[amici.ReturnData, 'amici.ReturnDataView'] = None,
+        model: amici.Model = None,
+) -> Literal['x', 'y', 'w', 'p', 'k']:
+    """Guess the type of some entity by its ID."""
+    for entity_type, symbol in (
+            ('State', 'x'),
+            ('Observable', 'y'),
+            ('Expression', 'w'),
+            ('Parameter', 'p'),
+            ('FixedParameter', 'k')
+    ):
+        if model:
+            if entity_id in getattr(model, f'get{entity_type}Ids')():
+                return symbol
+        else:
+            if entity_id in getattr(
+                    rdata if isinstance(rdata, amici.ReturnData)
+                    else rdata._swigptr,
+                    f'{entity_type.lower()}_ids'):
+                return symbol
+
+        raise KeyError(f"Unknown symbol {entity_type}.")
+
+
