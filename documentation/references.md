@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 72.
+List of publications using AMICI. Total number is 73.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -12,6 +12,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <h1 class="unnumbered" id="section">2022</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-AlbadryHoe2022">
+<p>Albadry, Mohamed, Sebastian Höpfl, Nadia Ehteshamzad, Matthias König, Michael Böttcher, Jasna Neumann, Amelie Lupp, et al. 2022. “Periportal Steatosis in Mice Affects Distinct Parameters of Pericentral Drug Metabolism.” <em>Scientific Reports</em> 12 (1): 21825. <a href="https://doi.org/10.1038/s41598-022-26483-6">https://doi.org/10.1038/s41598-022-26483-6</a>.</p>
+</div>
 <div id="ref-Froehlich2022.02.17.480899">
 <p>Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K. Sorger. 2022. “Mechanistic Model of Mapk Signaling Reveals How Allostery and Rewiring Contribute to Drug Resistance.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.17.480899">https://doi.org/10.1101/2022.02.17.480899</a>.</p>
 </div>
