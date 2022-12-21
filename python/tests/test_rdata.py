@@ -41,6 +41,10 @@ def test_rdata_by_id(rdata_by_id_fixture):
     )
 
     assert_array_equal(
+        rdata.by_id(model.getExpressionIds()[1]),
+        rdata.w[:, 1]
+    )
+    assert_array_equal(
         rdata.by_id(model.getExpressionIds()[1], 'w', model),
         rdata.w[:, 1]
     )
