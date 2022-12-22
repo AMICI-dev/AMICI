@@ -371,6 +371,6 @@ def _entity_type_from_id(
                     f'{entity_type.lower()}_ids'):
                 return symbol
 
-        raise KeyError(f"Unknown symbol {entity_type}.")
+    raise KeyError(f"Unknown symbol {entity_id}.")
 
 
