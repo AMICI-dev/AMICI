@@ -71,7 +71,7 @@ jobs:
 
     - name: Cache sonar files
       id: cache-sonar
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache

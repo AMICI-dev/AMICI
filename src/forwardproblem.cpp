@@ -247,11 +247,14 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
     if (secondevent > 0) {
         /* Secondary events may result in wrong forward sensitivities,
          * if the secondary event has a bolus... */
-        if (solver->computingFSA())
-            solver->app->warning("AMICI:simulation",
-                                 "Secondary event was triggered. Depending on "
-                                 "the bolus of the secondary event, forward "
-                                 "sensitivities can be incorrect.");
+        if (solver->computingFSA() && solver->logger)
+            solver->logger->log(
+                LogSeverity::warning,
+                "SECONDARY_EVENT",
+                "Secondary event was triggered. Depending on "
+                "the bolus of the secondary event, forward "
+                "sensitivities can be incorrect."
+            );
         handleEvent(tlastroot, true, false);
     }
 
