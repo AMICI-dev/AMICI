@@ -62,13 +62,9 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
 };
 
-
-std::unique_ptr<ReturnData>
-runAmiciSimulation(Solver& solver,
-                   const ExpData* edata,
-                   Model& model,
-                   bool rethrow)
-{
+std::unique_ptr<ReturnData> runAmiciSimulation(
+    Solver& solver, ExpData const* edata, Model& model, bool rethrow
+) {
     // create a temporary logger instance for Solver and Model to capture
     // messages from only this simulation
     Logger logger;
@@ -152,10 +148,9 @@ runAmiciSimulation(Solver& solver,
             if(rethrow)
                 throw;
             logger.log(
-                LogSeverity::error,
-                "MAXTIME_EXCEEDED",
+                LogSeverity::error, "MAXTIME_EXCEEDED",
                 "AMICI forward simulation failed at t = %f: "
-                "Maximum time exceeded in forward solve.\n",
+                "Maximum time exceeded in forward solve.",
                 ex.time
             );
         } else {
@@ -163,13 +158,10 @@ runAmiciSimulation(Solver& solver,
             if (rethrow)
                 throw;
             logger.log(
-                LogSeverity::error,
-                "FORWARD_FAILURE",
-                "AMICI forward simulation failed at t = %f:\n%s\n",
-                ex.time,
+                LogSeverity::error, "FORWARD_FAILURE",
+                "AMICI forward simulation failed at t = %f: %s", ex.time,
                 ex.what()
             );
-
         }
     } catch (amici::IntegrationFailureB const& ex) {
         if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
@@ -177,10 +169,9 @@ runAmiciSimulation(Solver& solver,
             if (rethrow)
                 throw;
             logger.log(
-                LogSeverity::error,
-                "MAXTIME_EXCEEDED",
+                LogSeverity::error, "MAXTIME_EXCEEDED",
                 "AMICI backward simulation failed when trying to solve until "
-                "t = %f: Maximum time exceeded in backward solve.\n",
+                "t = %f: Maximum time exceeded in backward solve.",
                 ex.time
             );
 
@@ -189,12 +180,11 @@ runAmiciSimulation(Solver& solver,
             if (rethrow)
                 throw;
             logger.log(
-                LogSeverity::error,
-                "BACKWARD_FAILURE",
-                "AMICI backward simulation failed when trying to solve until t = %f"
-                " (check debug logs for details):\n%s\n",
-                ex.time,
-                ex.what()
+                LogSeverity::error, "BACKWARD_FAILURE",
+                "AMICI backward simulation failed when trying to solve until t "
+                "= %f"
+                " (check debug logs for details): %s",
+                ex.time, ex.what()
             );
         }
     } catch (amici::AmiException const& ex) {
@@ -202,20 +192,16 @@ runAmiciSimulation(Solver& solver,
         if (rethrow)
             throw;
         logger.log(
-            LogSeverity::error,
-            "OTHER",
-             "AMICI simulation failed:\n%s\nError occurred in:\n%s",
-             ex.what(),
-             ex.getBacktrace()
+            LogSeverity::error, "OTHER",
+            "AMICI simulation failed: %s\nError occurred in:\n%s", ex.what(),
+            ex.getBacktrace()
         );
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
         logger.log(
-            LogSeverity::error,
-            "OTHER",
-            "AMICI simulation failed:\n%s\n",
+            LogSeverity::error, "OTHER", "AMICI simulation failed: %s",
             ex.what()
         );
     }
@@ -249,19 +235,16 @@ runAmiciSimulation(Solver& solver,
     return rdata;
 }
 
-std::vector<std::unique_ptr<ReturnData>>
-runAmiciSimulations(const Solver& solver,
-                    const std::vector<ExpData*>& edatas,
-                    const Model& model,
-                    bool failfast,
+std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
+    Solver const& solver, std::vector<ExpData*> const& edatas,
+    Model const& model, bool failfast,
 #if defined(_OPENMP)
-                    int num_threads
+    int num_threads
 #else
-                    int /* num_threads */
+    int /* num_threads */
 #endif
 
-)
-{
+) {
     std::vector<std::unique_ptr<ReturnData>> results(edatas.size());
     // is set to true if one simulation fails and we should skip the rest.
     // shared across threads.
