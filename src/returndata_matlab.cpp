@@ -204,7 +204,7 @@ void writeMatlabField0(
 template <typename T>
 void writeMatlabField1(
     mxArray* matlabStruct, char const* fieldName,
-    gsl::span<T const> const& fieldData, int dim0
+    gsl::span<T const> const& fieldData, mwSize dim0
 ) {
     if(fieldData.size() != dim0)
         throw AmiException("Dimension mismatch when writing rdata->%s to "
