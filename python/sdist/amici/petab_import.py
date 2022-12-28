@@ -176,6 +176,13 @@ def get_fixed_parameters(
                            " model. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
+    # exclude targets of rules or initial assignments
+    for fixed_parameter in fixed_parameters.copy():
+        # check global parameters
+        if sbml_model.getInitialAssignmentBySymbol(fixed_parameter)\
+                or sbml_model.getRuleByVariable(fixed_parameter):
+            fixed_parameters.remove(fixed_parameter)
+
     return list(sorted(fixed_parameters))
 
 
