@@ -149,7 +149,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
                 throw;
             logger.log(
                 LogSeverity::error, "MAXTIME_EXCEEDED",
-                "AMICI forward simulation failed at t = %f: "
+                "AMICI forward simulation failed at t = %g: "
                 "Maximum time exceeded in forward solve.",
                 ex.time
             );
@@ -159,7 +159,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
                 throw;
             logger.log(
                 LogSeverity::error, "FORWARD_FAILURE",
-                "AMICI forward simulation failed at t = %f: %s", ex.time,
+                "AMICI forward simulation failed at t = %g: %s", ex.time,
                 ex.what()
             );
         }
@@ -171,7 +171,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             logger.log(
                 LogSeverity::error, "MAXTIME_EXCEEDED",
                 "AMICI backward simulation failed when trying to solve until "
-                "t = %f: Maximum time exceeded in backward solve.",
+                "t = %g: Maximum time exceeded in backward solve.",
                 ex.time
             );
 
@@ -182,7 +182,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             logger.log(
                 LogSeverity::error, "BACKWARD_FAILURE",
                 "AMICI backward simulation failed when trying to solve until t "
-                "= %f"
+                "= %g"
                 " (check debug logs for details): %s",
                 ex.time, ex.what()
             );
