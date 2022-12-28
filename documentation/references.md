@@ -40,7 +40,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Simon Merkt, Dilan Pathirana, Bodo M. H. Lange, Daniel Weindl, and Jan Hasenauer. 2022. “Mini-batch optimization enables training of ODE models on large-scale datasets.” <em>Nature Communications</em> 13 (1): 34. <a href="https://doi.org/10.1038/s41467-021-27374-6">https://doi.org/10.1038/s41467-021-27374-6</a>.</p>
 </div>
 <div id="ref-SundqvistSte2022">
-<p>Sundqvist, Sebastian AND Thompson, Nicolas AND Sten. 2022. “Mechanistic Model for Human Brain Metabolism and Its Connection to the Neurovascular Coupling.” <em>PLOS Computational Biology</em> 18 (12): 1–24. <a href="https://doi.org/10.1371/journal.pcbi.1010798">https://doi.org/10.1371/journal.pcbi.1010798</a>.</p>
+<p>Sundqvist, Nicolas, Sebastian Sten, Peter Thompson, Benjamin Jan Andersson, Maria Engström, and Gunnar Cedersund. 2022. “Mechanistic Model for Human Brain Metabolism and Its Connection to the Neurovascular Coupling.” <em>PLOS Computational Biology</em> 18 (12): 1–24. <a href="https://doi.org/10.1371/journal.pcbi.1010798">https://doi.org/10.1371/journal.pcbi.1010798</a>.</p>
 </div>
 <div id="ref-VillaverdeRai2022">
 <p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2022. “Assessment of Prediction Uncertainty Quantification Methods in Systems Biology.” <em>IEEE/ACM Transactions on Computational Biology and Bioinformatics</em>, 1–12. <a href="https://doi.org/10.1109/TCBB.2022.3213914">https://doi.org/10.1109/TCBB.2022.3213914</a>.</p>
