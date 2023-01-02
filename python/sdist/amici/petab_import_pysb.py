@@ -20,7 +20,6 @@ from petab.C import (CONDITION_FILES, CONDITION_NAME, FORMAT_VERSION,
                      OBSERVABLE_FORMULA, PARAMETER_FILE, SBML_FILES,
                      VISUALIZATION_FILES)
 
-from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
 
 logger = get_logger(__name__, logging.WARNING)
@@ -360,8 +359,10 @@ def import_model_pysb(
                 f"Offending column: {x}"
             )
 
-    constant_parameters = petab_import.get_fixed_parameters(
-        petab_problem)
+    from .petab_import import (
+        get_fixed_parameters, petab_noise_distributions_to_amici
+    )
+    constant_parameters = get_fixed_parameters(petab_problem)
 
     if observable_table is None:
         observables = None
@@ -373,8 +374,7 @@ def import_model_pysb(
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
-        noise_distrs = petab_import.petab_noise_distributions_to_amici(
-            observable_table)
+        noise_distrs = petab_noise_distributions_to_amici(observable_table)
 
     from amici.pysb_import import pysb2amici
     pysb2amici(model=pysb_model,
