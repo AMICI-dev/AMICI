@@ -6,6 +6,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 
 <h1 class="unnumbered" id="section">2023</h1>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
+<div id="ref-LakrisenkoSta2023">
+<p>Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski, Dilan Pathirana, Fabian Fröhlich, Glenn Terje Lines, Daniel Weindl, and Jan Hasenauer. 2023. “Efficient Computation of Adjoint Sensitivities at Steady-State in Ode Models of Biochemical Reaction Networks.” <em>PLOS Computational Biology</em> 19 (1): 1–19. <a href="https://doi.org/10.1371/journal.pcbi.1010783">https://doi.org/10.1371/journal.pcbi.1010783</a>.</p>
+</div>
 <div id="ref-MishraWan2023">
 <p>Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023. “Design and Application of a Kinetic Model of Lipid Metabolism in Saccharomyces Cerevisiae.” <em>Metabolic Engineering</em> 75: 12–18. <a href="https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/https://doi.org/10.1016/j.ymben.2022.11.003</a>.</p>
 </div>
@@ -17,9 +20,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-Froehlich2022.02.17.480899">
 <p>Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K. Sorger. 2022. “Mechanistic Model of Mapk Signaling Reveals How Allostery and Rewiring Contribute to Drug Resistance.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.02.17.480899">https://doi.org/10.1101/2022.02.17.480899</a>.</p>
-</div>
-<div id="ref-LakrisenkoSta2022">
-<p>Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski, Dilan Pathirana, Fabian Fröhlich, Glenn Terje Lines, Daniel Weindl, and Jan Hasenauer. 2022. “Efficient Computation of Adjoint Sensitivities at Steady-State in ODE Models of Biochemical Reaction Networks.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/2022.08.08.503176">https://doi.org/10.1101/2022.08.08.503176</a>.</p>
 </div>
 <div id="ref-MassonisVil2022">
 <p>Massonis, Gemma, Alejandro F Villaverde, and Julio R Banga. 2022. “Improving dynamic predictions with ensembles of observable models.” <em>Bioinformatics</em>, November. <a href="https://doi.org/10.1093/bioinformatics/btac755">https://doi.org/10.1093/bioinformatics/btac755</a>.</p>

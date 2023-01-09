@@ -1026,19 +1026,6 @@ Survival or apoptosis is a binary decision in individual cells. However, at the 
   refid    = {van Sluijs2022},
 }
 
-@Article{LakrisenkoSta2022,
-  author       = {Lakrisenko, Polina and Stapor, Paul and Grein, Stephan and Paszkowski, {\L}ukasz and Pathirana, Dilan and Fr{\"o}hlich, Fabian and Lines, Glenn Terje and Weindl, Daniel and Hasenauer, Jan},
-  journal      = {bioRxiv},
-  title        = {Efficient computation of adjoint sensitivities at steady-state in {ODE} models of biochemical reaction networks},
-  year         = {2022},
-  abstract     = {Dynamical models in the form of systems of ordinary differential equations have become a standard tool in systems biology. Many parameters of such models are usually unknown and have to be inferred from experimental data. Gradient-based optimization has proven to be effective for parameter estimation. However, computing gradients becomes increasingly costly for larger models, which are required for capturing the complex interactions of multiple biochemical pathways. Adjoint sensitivity analysis has been pivotal for working with such large models, but methods tailored for steady-state data are currently not available. We propose a new adjoint method for computing gradients, which is applicable if the experimental data include steady-state measurements. The method is based on a reformulation of the backward integration problem to a system of linear algebraic equations. The evaluation of the proposed method using real-world problems shows a speedup of total simulation time by a factor of up to 4.4. Our results demonstrate that the proposed approach can achieve a substantial improvement in computation time, in particular for large-scale models, where computational efficiency is critical.Competing Interest StatementThe authors have declared no competing interest.},
-  doi          = {10.1101/2022.08.08.503176},
-  elocation-id = {2022.08.08.503176},
-  eprint       = {https://www.biorxiv.org/content/early/2022/08/11/2022.08.08.503176.full.pdf},
-  publisher    = {Cold Spring Harbor Laboratory},
-  url          = {https://www.biorxiv.org/content/early/2022/08/11/2022.08.08.503176},
-}
-
 @Article{VillaverdeRai2022,
   author  = {Villaverde, Alejandro F. and Raimúndez, Elba and Hasenauer, Jan and Banga, Julio R.},
   journal = {IEEE/ACM Transactions on Computational Biology and Bioinformatics},
@@ -1128,6 +1115,22 @@ Survival or apoptosis is a binary decision in individual cells. However, at the 
   doi      = {10.1016/j.chroma.2022.463741},
   keywords = {Discontinuous Galerkin method, Forward sensitivity analysis, Model calibration, Uncertainty quantification, Process optimization},
   url      = {https://www.sciencedirect.com/science/article/pii/S0021967322009323},
+}
+
+@Article{LakrisenkoSta2023,
+  author       = {Lakrisenko, Polina and Stapor, Paul and Grein, Stephan and Paszkowski, Łukasz and Pathirana, Dilan and Fröhlich, Fabian and Lines, Glenn Terje and Weindl, Daniel and Hasenauer, Jan},
+  journal      = {PLOS Computational Biology},
+  title        = {Efficient computation of adjoint sensitivities at steady-state in ODE models of biochemical reaction networks},
+  year         = {2023},
+  month        = {01},
+  number       = {1},
+  pages        = {1-19},
+  volume       = {19},
+  abstract     = {Dynamical models in the form of systems of ordinary differential equations have become a standard tool in systems biology. Many parameters of such models are usually unknown and have to be inferred from experimental data. Gradient-based optimization has proven to be effective for parameter estimation. However, computing gradients becomes increasingly costly for larger models, which are required for capturing the complex interactions of multiple biochemical pathways. Adjoint sensitivity analysis has been pivotal for working with such large models, but methods tailored for steady-state data are currently not available. We propose a new adjoint method for computing gradients, which is applicable if the experimental data include steady-state measurements. The method is based on a reformulation of the backward integration problem to a system of linear algebraic equations. The evaluation of the proposed method using real-world problems shows a speedup of total simulation time by a factor of up to 4.4. Our results demonstrate that the proposed approach can achieve a substantial improvement in computation time, in particular for large-scale models, where computational efficiency is critical.},
+  creationdate = {2023-01-09T08:36:51},
+  doi          = {10.1371/journal.pcbi.1010783},
+  publisher    = {Public Library of Science},
+  url          = {https://doi.org/10.1371/journal.pcbi.1010783},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
