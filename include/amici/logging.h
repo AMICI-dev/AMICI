@@ -45,6 +45,8 @@ class Logger
      * @param ... arguments to be formatted
      */
 #else
+    // swig 4.0.1 segfaults on "@param ..."
+    // see https://github.com/swig/swig/issues/1643
     /**
      * @brief Add a log entry with printf-like message formatting
      * @param severity Severity level
