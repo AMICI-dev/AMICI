@@ -41,13 +41,13 @@ class Logger
      * @param severity Severity level
      * @param identifier Short identifier for the logged event
      * @param format printf format string
+#if SWIG_VERSION >= 0x040002
      * @param ... arguments to be formatted
+#endif
      */
-    void log(
-        LogSeverity severity,
-        std::string const& identifier,
-        const char* format, ...
-        );
+    void
+    log(LogSeverity severity, std::string const& identifier, char const* format,
+        ...);
 
     /** The log items */
     std::vector<LogItem> items;
