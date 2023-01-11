@@ -36,6 +36,7 @@ class Logger
         std::string const& message
         );
 
+#if SWIG_VERSION >= 0x040002
     /**
      * @brief Add a log entry with printf-like message formatting
      * @param severity Severity level
@@ -43,11 +44,19 @@ class Logger
      * @param format printf format string
      * @param ... arguments to be formatted
      */
-    void log(
-        LogSeverity severity,
-        std::string const& identifier,
-        const char* format, ...
-        );
+#else
+    // swig 4.0.1 segfaults on "@param ..."
+    // see https://github.com/swig/swig/issues/1643
+    /**
+     * @brief Add a log entry with printf-like message formatting
+     * @param severity Severity level
+     * @param identifier Short identifier for the logged event
+     * @param format printf format string
+     */
+#endif
+    void
+    log(LogSeverity severity, std::string const& identifier, char const* format,
+        ...);
 
     /** The log items */
     std::vector<LogItem> items;
