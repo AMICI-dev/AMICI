@@ -52,7 +52,7 @@ class ObservableTransformation(str, enum.Enum):
 
 
 def noise_distribution_to_observable_transformation(
-    noise_distribution: Union[str, Callable]
+    noise_distribution: Union[Dict[str, Union[str, list]], Callable]
 ) -> ObservableTransformation:
     """
     Parse noise distribution string and extract observable transformation
@@ -63,17 +63,18 @@ def noise_distribution_to_observable_transformation(
     :return:
         observable transformation
     """
-    if isinstance(noise_distribution, str):
-        if noise_distribution.startswith('log-'):
+    if isinstance(noise_distribution, dict):
+        noise_distribution_type = noise_distribution['type']
+        if noise_distribution_type.startswith('log-'):
             return ObservableTransformation.LOG
-        if noise_distribution.startswith('log10-'):
+        if noise_distribution_type.startswith('log10-'):
             return ObservableTransformation.LOG10
 
     return ObservableTransformation.LIN
 
 
 def noise_distribution_to_cost_function(
-        noise_distribution: Union[str, Callable]
+        noise_distribution: Union[dict, Callable]
 ) -> Callable[[str], str]:
     """
     Parse noise distribution string to a cost function definition amici can
@@ -103,6 +104,10 @@ def noise_distribution_to_cost_function(
       .. math::
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
          exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
+
+    - `'truncated-normal'`: A truncated normal distribution:
+
+      .. math::
 
     - `'laplace'`, `'lin-laplace'`: A laplace distribution:
 
@@ -181,27 +186,37 @@ def noise_distribution_to_cost_function(
     if isinstance(noise_distribution, Callable):
         return noise_distribution
 
-    if noise_distribution in ['normal', 'lin-normal']:
+    noise_distribution_type = noise_distribution['dist_type']
+
+    if noise_distribution_type in ['normal', 'lin-normal']:
         y_string = '0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2'
-    elif noise_distribution == 'log-normal':
+    elif noise_distribution_type == 'log-normal':
         y_string = '0.5*log(2*pi*{sigma}**2*{m}**2) ' \
                    '+ 0.5*((log({y}) - log({m})) / {sigma})**2'
-    elif noise_distribution == 'log10-normal':
+    elif noise_distribution_type == 'log10-normal':
         y_string = '0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
                    '+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
-    elif noise_distribution in ['laplace', 'lin-laplace']:
+    elif noise_distribution_type == ['left-truncated-normal',
+                                     'lin-left-truncated-normal']:
+        # truncated at a
+        a = noise_distribution['dist_params'][0]  # TODO
+        y_string = f'log(1-0.5*(1+erf({a}-{{y}}/(sqrt(2)*{{sigma}}))))' \
+                   ' + 0.5*log(2*pi*{sigma}**2)' \
+                   ' + 0.5*(({y} - {m}) / {sigma})**2'
+    elif noise_distribution_type in ['laplace', 'lin-laplace']:
         y_string = 'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
-    elif noise_distribution == 'log-laplace':
+    elif noise_distribution_type == 'log-laplace':
         y_string = 'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
-    elif noise_distribution == 'log10-laplace':
+    elif noise_distribution_type == 'log10-laplace':
         y_string = 'log(2*{sigma}*{m}*log(10)) ' \
                    '+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
-    elif noise_distribution in ['binomial', 'lin-binomial']:
+    elif noise_distribution_type in ['binomial', 'lin-binomial']:
         # Binomial noise model parameterized via success probability p
         y_string = '- log(Heaviside({y} - {m})) - loggamma({y}+1) ' \
                    '+ loggamma({m}+1) + loggamma({y}-{m}+1) ' \
                    '- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
-    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
+    elif noise_distribution_type in ['negative-binomial',
+                                     'lin-negative-binomial']:
         # Negative binomial noise model of the number of successes m
         # (data) before r=(1-sigma)/sigma * y failures occur,
         # with mean number of successes y (simulation),
@@ -210,9 +225,13 @@ def noise_distribution_to_cost_function(
         y_string = f'- loggamma({{m}}+{r}) + loggamma({{m}}+1) ' \
                    f'+ loggamma({r}) - {r} * log(1-{{sigma}}) ' \
                    f'- {{m}} * log({{sigma}})'
+    elif noise_distribution_type == 'left-censored-normal':
+        # left-censored at v (detection limit)
+        v = noise_distribution['dist_params'][0]  # TODO
+        y_string = f'log(0.5*(1+erf(({v}-{{y}})/(sqrt(2)*{{sigma}}))))'
     else:
         raise ValueError(
-            f"Cost identifier {noise_distribution} not recognized.")
+            f"Cost identifier {noise_distribution_type} not recognized.")
 
     def nllh_y_string(str_symbol):
         y, m, sigma = _get_str_symbol_identifiers(str_symbol)

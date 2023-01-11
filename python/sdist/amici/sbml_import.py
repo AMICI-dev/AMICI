@@ -47,6 +47,7 @@ default_symbols = {
 }
 
 ConservationLaw = Dict[str, Union[str, sp.Expr]]
+NoiseDistDict = Dict[str, Union[str, list]]
 
 logger = get_logger(__name__, logging.ERROR)
 
@@ -215,7 +216,8 @@ class SbmlImporter:
             constant_parameters: Iterable[str] = None,
             sigmas: Dict[str, Union[str, float]] = None,
             event_sigmas: Dict[str, Union[str, float]] = None,
-            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            noise_distributions: Optional[
+                Dict[str, Union[NoiseDistDict, Callable]]] = None,
             event_noise_distributions: Dict[str, Union[str, Callable]] = None,
             verbose: Union[int, bool] = logging.ERROR,
             assume_pow_positivity: bool = False,
@@ -374,7 +376,8 @@ class SbmlImporter:
             constant_parameters: Iterable[str] = None,
             sigmas: Dict[str, Union[str, float]] = None,
             event_sigmas: Dict[str, Union[str, float]] = None,
-            noise_distributions: Dict[str, Union[str, Callable]] = None,
+            noise_distributions: Optional[
+                Dict[str, Union[NoiseDistDict, Callable]]] = None,
             event_noise_distributions: Dict[str, Union[str, Callable]] = None,
             verbose: Union[int, bool] = logging.ERROR,
             compute_conservation_laws: bool = True,
@@ -1216,7 +1219,7 @@ class SbmlImporter:
         self,
         observables: Union[Dict[str, Dict[str, str]], None],
         sigmas: Dict[str, Union[str, float]],
-        noise_distributions: Dict[str, str]
+        noise_distributions: Dict[str, NoiseDistDict]
     ) -> None:
         """
         Perform symbolic computations required for observable and objective
@@ -1224,7 +1227,7 @@ class SbmlImporter:
 
         :param observables:
             dictionary(observableId: {'name':observableName
-            (optional), 'formula':formulaString)})
+            (optional), 'formula':formulaString})
             to be added to the model
 
         :param sigmas:
@@ -1232,7 +1235,8 @@ class SbmlImporter:
             parameter name)
 
         :param noise_distributions:
-            dictionary(observableId: noise type)
+            dictionary(observableId: {'type': noise type, 'parameters':
+            list with parameter values})
             See :py:func:`sbml2amici`.
         """
 
@@ -1254,7 +1258,8 @@ class SbmlImporter:
                     ),
                     'transformation':
                         noise_distribution_to_observable_transformation(
-                            noise_distributions.get(obs, 'normal')
+                            noise_distributions.get(obs, {'type': 'normal',
+                                                          'parameters': []})
                         )
                 }
                 for iobs, (obs, definition) in enumerate(observables.items())
@@ -1325,7 +1330,7 @@ class SbmlImporter:
                 'event': sp.Symbol(definition.get('event')),
                 'transformation':
                     noise_distribution_to_observable_transformation(
-                        event_noise_distributions.get(obs, 'normal')
+                        event_noise_distributions.get(obs, 'normal')  # TODO
                     )
             }
             for iobs, (obs, definition) in
@@ -1383,7 +1388,7 @@ class SbmlImporter:
 
     def _process_log_likelihood(self,
                                 sigmas: Dict[str, Union[str, float]],
-                                noise_distributions: Dict[str, str],
+                                noise_distributions: Dict[str, NoiseDistDict],
                                 events: bool = False,
                                 event_reg: bool = False):
         """
@@ -1444,7 +1449,8 @@ class SbmlImporter:
                 self.symbols[sigma_symbol].items()
         ):
             symbol = symbol_with_assumptions(f'J{obs_id}')
-            dist = noise_distributions.get(str(obs_id), 'normal')
+            dist = noise_distributions.get(
+                str(obs_id), {'type': 'normal', 'parameters': []})
             cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
             value = sp.sympify(cost_fun, locals=dict(zip(
                 _get_str_symbol_identifiers(obs_id),
@@ -1456,7 +1462,7 @@ class SbmlImporter:
             self.symbols[llh_symbol][symbol] = {
                     'name': f'J{obs["name"]}',
                     'value': value,
-                    'dist': dist,
+                    'dist': dist['type'],
                 }
 
     @log_execution_time('processing SBML initial assignments', logger)
@@ -2325,7 +2331,7 @@ def _parse_special_functions_sbml(sym: sp.Expr,
 def _validate_observables(
     observables: Union[Dict[str, Dict[str, str]], None],
     sigmas: Dict[str, Union[str, float]],
-    noise_distributions: Dict[str, str],
+    noise_distributions: Dict[str, NoiseDistDict],
     events: bool = False
 ) -> None:
 
