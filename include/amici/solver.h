@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
+#include "amici/logging.h"
 
 #include <cmath>
 #include <functional>
@@ -17,9 +18,7 @@ class ForwardProblem;
 class BackwardProblem;
 class Model;
 class Solver;
-class AmiciApplication;
 
-extern AmiciApplication defaultContext;
 } // namespace amici
 
 // for serialization friend in Solver
@@ -53,12 +52,6 @@ class Solver {
      * @brief Default constructor
      */
     Solver() = default;
-
-    /**
-     * @brief Constructor
-     * @param app AMICI application context
-     */
-    Solver(AmiciApplication *app);
 
     /**
      * @brief Solver copy constructor
@@ -945,8 +938,8 @@ class Solver {
      */
     friend bool operator==(const Solver &a, const Solver &b);
 
-    /** AMICI context */
-    AmiciApplication *app = &defaultContext;
+    /** logger */
+    Logger *logger = nullptr;
 
   protected:
     /**

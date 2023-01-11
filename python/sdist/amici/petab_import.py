@@ -176,6 +176,13 @@ def get_fixed_parameters(
                            " model. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
+    # exclude targets of rules or initial assignments
+    for fixed_parameter in fixed_parameters.copy():
+        # check global parameters
+        if sbml_model.getInitialAssignmentBySymbol(fixed_parameter)\
+                or sbml_model.getRuleByVariable(fixed_parameter):
+            fixed_parameters.remove(fixed_parameter)
+
     return list(sorted(fixed_parameters))
 
 
@@ -669,10 +676,12 @@ def import_model_sbml(
         verbose=verbose,
         **kwargs)
 
-    # check model
-    model_module = amici.import_model_module(model_name, model_output_dir)
-    model = model_module.getModel()
-    check_model(amici_model=model, petab_problem=petab_problem)
+    if kwargs.get('compile', amici._get_default_argument(
+            sbml_importer.sbml2amici, 'compile')):
+        # check that the model extension was compiled successfully
+        model_module = amici.import_model_module(model_name, model_output_dir)
+        model = model_module.getModel()
+        check_model(amici_model=model, petab_problem=petab_problem)
 
     return sbml_importer
 

@@ -1,9 +1,16 @@
 """Convenience wrappers for the swig interface"""
+import logging
 import sys
 from contextlib import contextmanager, suppress
 from typing import List, Optional, Union, Sequence, Dict, Any
+
+import amici
 import amici.amici as amici_swig
 from . import numpy
+from .logging import get_logger
+
+logger = get_logger(__name__, log_level=logging.DEBUG)
+
 
 __all__ = [
     'runAmiciSimulation', 'runAmiciSimulations', 'ExpData',
@@ -81,6 +88,9 @@ def runAmiciSimulation(
     with _capture_cstdout():
         rdata = amici_swig.runAmiciSimulation(
             _get_ptr(solver), _get_ptr(edata), _get_ptr(model))
+    _log_simulation(rdata)
+    if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
+        _ids_and_names_to_rdata(rdata, model)
     return numpy.ReturnDataView(rdata)
 
 
@@ -133,6 +143,11 @@ def runAmiciSimulations(
             failfast,
             num_threads
         )
+    for rdata in rdata_ptr_list:
+        _log_simulation(rdata)
+        if solver.getReturnDataReportingMode() == amici.RDataReporting.full:
+            _ids_and_names_to_rdata(rdata, model)
+
     return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
 
 
@@ -235,3 +250,34 @@ def set_model_settings(
     for setting, value in settings.items():
         setter = setting[1] if isinstance(setting, tuple) else f'set{setting}'
         getattr(model, setter)(value)
+
+
+def _log_simulation(rdata: amici_swig.ReturnData):
+    """Extension warnings to Python logging."""
+    amici_severity_to_logging = {
+        amici_swig.LogSeverity_debug: logging.DEBUG,
+        amici_swig.LogSeverity_warning: logging.WARNING,
+        amici_swig.LogSeverity_error: logging.ERROR,
+    }
+    for msg in rdata.messages:
+        condition = f"[{rdata.id}]" if rdata.id else ""
+        logger.log(
+            amici_severity_to_logging[msg.severity],
+            f"{condition}[{msg.identifier}] {msg.message}"
+        )
+
+
+def _ids_and_names_to_rdata(
+        rdata: amici_swig.ReturnData,
+        model: amici_swig.Model
+):
+    """Copy entity IDs and names from a Model to ReturnData."""
+    for entity_type in ('State', 'Observable', 'Expression',
+                        'Parameter', 'FixedParameter'):
+        for name_or_id in ('Ids', 'Names'):
+            names_or_ids = getattr(model, f'get{entity_type}{name_or_id}')()
+            setattr(
+                rdata,
+                f"{entity_type.lower()}_{name_or_id.lower()}",
+                names_or_ids
+            )

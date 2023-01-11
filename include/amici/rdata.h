@@ -5,6 +5,7 @@
 #include "amici/vector.h"
 #include "amici/model.h"
 #include "amici/misc.h"
+#include "amici/logging.h"
 
 #include <vector>
 
@@ -324,7 +325,17 @@ class ReturnData: public ModelDimensions {
      */
     std::vector<realtype> s2llh;
 
-    /** status code */
+    /**
+     * @brief Simulation status code.
+     *
+     * One of:
+     *
+     * * AMICI_SUCCESS, indicating successful simulation
+     * * AMICI_MAX_TIME_EXCEEDED, indicating that the simulation did not finish
+     *   within the allowed time (see Solver.{set,get}MaxTime)
+     * * AMICI_ERROR, indicating that some error occurred during simulation
+     *   (a more detailed error message will have been printed).
+     */
     int status = 0;
 
     /** number of states (alias `nx_rdata`, kept for backward compatibility) */
@@ -375,6 +386,9 @@ class ReturnData: public ModelDimensions {
 
     /** boolean indicating whether residuals for standard deviations have been added */
     bool sigma_res;
+
+    /** log messages */
+    std::vector<LogItem> messages;
 
   protected:
 

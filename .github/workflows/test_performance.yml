@@ -27,11 +27,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 20
 
@@ -68,8 +68,8 @@ jobs:
     - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
       uses: actions/upload-artifact@v3
       with:
-        name: CS_Signalling_ERBB_RAS_AKT
-        path: CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab
+        name: model_performance_test
+        path: model_performance_test
 
     # install model package
     - name: Install test model
