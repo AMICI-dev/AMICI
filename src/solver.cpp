@@ -1,7 +1,6 @@
 #include "amici/solver.h"
 
 #include "amici/exception.h"
-#include "amici/amici.h"
 #include "amici/model.h"
 #include "amici/symbolic_functions.h"
 
@@ -12,11 +11,6 @@
 #include <memory>
 
 namespace amici {
-
-Solver::Solver(AmiciApplication *app) : app(app)
-{
-
-}
 
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),
@@ -1229,27 +1223,27 @@ void wrapErrHandlerFn(int error_code, const char *module,
             function, msg);
     switch (error_code) {
     case 99:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:WARNING", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
         break;
 
     case -1:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_WORK", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
     case -2:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_ACC", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
     case -3:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:ERR_FAILURE", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
         break;
 
     case -4:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:CONV_FAILURE", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
         break;
 
     default:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:OTHER", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
         break;
     }
 
@@ -1258,7 +1252,8 @@ void wrapErrHandlerFn(int error_code, const char *module,
         throw std::runtime_error("eh_data unset");
     }
     auto solver = static_cast<Solver const*>(eh_data);
-    solver->app->warning(buffid, buffer);
+    if(solver->logger)
+        solver->logger->log(LogSeverity::debug, buffid, buffer);
 }
 
 } // namespace amici
