@@ -186,7 +186,7 @@ def noise_distribution_to_cost_function(
     if isinstance(noise_distribution, Callable):
         return noise_distribution
 
-    noise_distribution_type = noise_distribution['dist_type']
+    noise_distribution_type = noise_distribution['type']
 
     if noise_distribution_type in ['normal', 'lin-normal']:
         y_string = '0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2'
@@ -196,13 +196,20 @@ def noise_distribution_to_cost_function(
     elif noise_distribution_type == 'log10-normal':
         y_string = '0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
                    '+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
-    elif noise_distribution_type == ['left-truncated-normal',
+    elif noise_distribution_type in ['left-truncated-normal',
                                      'lin-left-truncated-normal']:
         # truncated at a
-        a = noise_distribution['dist_params'][0]  # TODO
+        a = noise_distribution['parameters'][0]  # TODO
         y_string = f'log(1-0.5*(1+erf({a}-{{y}}/(sqrt(2)*{{sigma}}))))' \
                    ' + 0.5*log(2*pi*{sigma}**2)' \
                    ' + 0.5*(({y} - {m}) / {sigma})**2'
+    elif noise_distribution_type == 'log-left-truncated-normal':
+        # truncated at a
+        a = noise_distribution['parameters'][0]  # TODO
+        # TODO a>0
+        y_string = f'log(1-0.5*(1+erf(log({a})-log({{y}})/(sqrt(2)*{{sigma}}))))' \
+                   ' + 0.5*log(2*pi*{sigma}**2*{m}**2)' \
+                   ' + 0.5*((log({y}) - log({m})) / {sigma})**2'
     elif noise_distribution_type in ['laplace', 'lin-laplace']:
         y_string = 'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
     elif noise_distribution_type == 'log-laplace':
@@ -227,7 +234,7 @@ def noise_distribution_to_cost_function(
                    f'- {{m}} * log({{sigma}})'
     elif noise_distribution_type == 'left-censored-normal':
         # left-censored at v (detection limit)
-        v = noise_distribution['dist_params'][0]  # TODO
+        v = noise_distribution['parameters'][0]  # TODO
         y_string = f'log(0.5*(1+erf(({v}-{{y}})/(sqrt(2)*{{sigma}}))))'
     else:
         raise ValueError(
