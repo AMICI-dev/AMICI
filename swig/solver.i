@@ -41,9 +41,8 @@ using namespace amici;
 %ignore updateAndReinitStatesAndSensitivities;
 
 // Solver.__repr__
-%extend amici::CVodeSolver {
 %pythoncode %{
-def __repr__(self):
+def _solver_repr(self: Solver):
     return "\n".join([
         self.this.__repr__()[:-1],
         "  reporting_mode: "
@@ -81,6 +80,24 @@ def __repr__(self):
         f"  state_ordering: {self.getStateOrdering()}",
         ">"
     ])
+%}
+%extend amici::CVodeSolver {
+%pythoncode %{
+def __repr__(self):
+    return _solver_repr(self)
+%}
+};
+%extend amici::IDASolver {
+%pythoncode %{
+def __repr__(self):
+    return _solver_repr(self)
+%}
+};
+
+%extend std::unique_ptr<amici::Solver> {
+%pythoncode %{
+def __repr__(self):
+    return _solver_repr(self)
 %}
 };
 
