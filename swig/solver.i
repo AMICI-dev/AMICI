@@ -40,6 +40,50 @@ using namespace amici;
 %ignore getRootInfo;
 %ignore updateAndReinitStatesAndSensitivities;
 
+// Solver.__repr__
+%extend amici::CVodeSolver {
+%pythoncode %{
+def __repr__(self):
+    return "\n".join([
+        self.this.__repr__()[:-1],
+        "  reporting_mode: "
+        f"{RDataReporting(self.getReturnDataReportingMode())!r}",
+        f"  sens_meth: {SensitivityMethod(self.getSensitivityMethod())!r}",
+        f"  sens_order: {SensitivityOrder(self.getSensitivityOrder())!r}",
+        f"  sens_order: {SensitivityMethod(self.getSensitivityMethodPreequilibration())!r}",
+        f"  maxsteps: {self.getMaxSteps()}",
+        f"  maxtime: {self.getMaxTime()}s",
+        f"  abs_tol: {self.getAbsoluteTolerance()}",
+        f"  rel_tol: {self.getRelativeTolerance()}",
+        f"  abs_tol_b: {self.getAbsoluteToleranceB()}",
+        f"  rel_tol_b: {self.getRelativeToleranceB()}",
+        f"  abs_tol_fsa: {self.getAbsoluteToleranceFSA()}",
+        f"  rel_tol_fsa: {self.getRelativeToleranceFSA()}",
+        f"  abs_tol_quad: {self.getAbsoluteToleranceQuadratures()}",
+        f"  rel_tol_quad: {self.getRelativeToleranceQuadratures()}",
+        f"  abs_tol_ss: {self.getAbsoluteToleranceSteadyState()}",
+        f"  rel_tol_ss: {self.getRelativeToleranceSteadyState()}",
+        f"  abs_tol_sss: {self.getAbsoluteToleranceSteadyStateSensi()}",
+        f"  rel_tol_sss: {self.getRelativeToleranceSteadyStateSensi()}",
+        f"  int_sens_meth: {InternalSensitivityMethod(self.getInternalSensitivityMethod())!r}",
+        f"  int_type: {InterpolationType(self.getInterpolationType())!r}",
+        f"  linsol: {LinearSolver(self.getLinearSolver())!r}",
+        f"  lmm: {LinearMultistepMethod(self.getLinearMultistepMethod())!r}",
+        f"  newton_damp_mode: {NewtonDampingFactorMode(self.getNewtonDampingFactorMode())!r}",
+        f"  newton_damp_lb: {self.getNewtonDampingFactorLowerBound()}",
+        f"  newton_maxsteps: {self.getNewtonMaxSteps()}",
+        f"  newton_ss_check: {self.getNewtonStepSteadyStateCheck()}",
+        f"  sens_ss_check: {self.getSensiSteadyStateCheck()}",
+        f"  interpolation_type: {InterpolationType(self.getInterpolationType())!r}",
+        f"  ism: {InternalSensitivityMethod(self.getInternalSensitivityMethod())!r}",
+        f"  nlsol_iter: {NonlinearSolverIteration(self.getNonlinearSolverIteration())!r}",
+        f"  stability_limit: {self.getStabilityLimitFlag()}",
+        f"  state_ordering: {self.getStateOrdering()}",
+        ">"
+    ])
+%}
+};
+
 
 %newobject amici::Solver::clone;
 // Process symbols in header

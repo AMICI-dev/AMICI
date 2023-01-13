@@ -403,3 +403,7 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert model2.getInitialStateSensitivities() == sx0
     assert settings == amici.get_model_settings(model2)
 
+
+def test_solver_repr_doesnt_raise():
+    print(str(amici.CVodeSolver()))
+    print(repr(amici.CVodeSolver()))
