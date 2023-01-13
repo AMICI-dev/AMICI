@@ -42,7 +42,7 @@ using namespace amici;
 
 // Solver.__repr__
 %pythoncode %{
-def _solver_repr(self: Solver):
+def _solver_repr(self: "Solver"):
     return "\n".join([
         self.this.__repr__()[:-1],
         "  reporting_mode: "
