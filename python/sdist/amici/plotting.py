@@ -13,7 +13,7 @@ from matplotlib.axes import Axes
 from . import Model, ReturnDataView
 
 
-def plotStateTrajectories(
+def plot_state_trajectories(
         rdata: ReturnDataView,
         state_indices: Optional[Iterable[int]] = None,
         ax: Optional[Axes] = None,
@@ -53,7 +53,7 @@ def plotStateTrajectories(
         ax.set_title('State trajectories')
 
 
-def plotObservableTrajectories(
+def plot_observable_trajectories(
         rdata: ReturnDataView,
         observable_indices: Optional[Iterable[int]] = None,
         ax: Optional[Axes] = None,
@@ -103,6 +103,6 @@ def plot_jacobian(rdata: ReturnDataView):
     sns.heatmap(df)
     plt.title("Jacobian")
 
-
-plot_state_trajectories = plotStateTrajectories
-plot_observable_trajectories = plotObservableTrajectories
+# backwards compatibility
+plotStateTrajectories = plot_state_trajectories
+plotObservableTrajectories = plot_observable_trajectories
