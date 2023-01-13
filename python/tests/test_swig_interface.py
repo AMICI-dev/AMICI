@@ -405,12 +405,13 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
 
 
 def test_solver_repr():
-    solver = amici.CVodeSolver()
-    assert "maxsteps" in str(solver)
-    assert "maxsteps" in repr(solver)
+    for solver in (amici.CVodeSolver(), amici.IDASolver()):
+        assert "maxsteps" in str(solver)
+        assert "maxsteps" in repr(solver)
 
-    solver_ptr = amici.SolverPtr(solver.this)
-    assert "maxsteps" in str(solver_ptr)
-    assert "maxsteps" in repr(solver_ptr)
-    # avoid double delete!!
-    solver_ptr.release()
+        solver_ptr = amici.SolverPtr(solver.this)
+        assert "maxsteps" in str(solver_ptr)
+        assert "maxsteps" in repr(solver_ptr)
+        # avoid double delete!!
+        solver_ptr.release()
+
