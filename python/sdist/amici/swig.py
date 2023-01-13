@@ -133,6 +133,10 @@ class TypeHintFixer(ast.NodeTransformer):
             for arg in node.args.args:
                 if not arg.annotation:
                     continue
+                if isinstance(arg.annotation, ast.Name):
+                    # there is already proper annotation
+                    continue
+
                 arg.annotation = self._new_annot(arg.annotation.value)
         return node
 
