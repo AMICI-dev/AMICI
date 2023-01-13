@@ -50,7 +50,7 @@ def __repr__(self):
         f"{RDataReporting(self.getReturnDataReportingMode())!r}",
         f"  sens_meth: {SensitivityMethod(self.getSensitivityMethod())!r}",
         f"  sens_order: {SensitivityOrder(self.getSensitivityOrder())!r}",
-        f"  sens_order: {SensitivityMethod(self.getSensitivityMethodPreequilibration())!r}",
+        f"  sens_meth_preeq: {SensitivityMethod(self.getSensitivityMethodPreequilibration())!r}",
         f"  maxsteps: {self.getMaxSteps()}",
         f"  maxtime: {self.getMaxTime()}s",
         f"  abs_tol: {self.getAbsoluteTolerance()}",
