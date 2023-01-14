@@ -8,8 +8,8 @@
 
 namespace amici {
 
-AmiException::AmiException(int const stacklevel) {
-    storeBacktrace(12, stacklevel);
+AmiException::AmiException(int const first_frame) {
+    storeBacktrace(12, first_frame);
 }
 
 AmiException::AmiException(char const* fmt, ...)
@@ -24,10 +24,10 @@ char const* AmiException::what() const noexcept { return msg_.data(); }
 
 char const* AmiException::getBacktrace() const { return trace_.data(); }
 
-void AmiException::storeBacktrace(int const nMaxFrames, int const stacklevel) {
+void AmiException::storeBacktrace(int const nMaxFrames, int const first_frame) {
     snprintf(
         trace_.data(), trace_.size(), "%s",
-        backtraceString(nMaxFrames, stacklevel).c_str()
+        backtraceString(nMaxFrames, first_frame).c_str()
     );
 }
 

@@ -177,9 +177,10 @@ void scaleParameters(
 /**
  * @brief Returns the current backtrace as std::string
  * @param maxFrames Number of frames to include
+ * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames, int const stacklevel = 0);
+std::string backtraceString(int maxFrames, int const first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string

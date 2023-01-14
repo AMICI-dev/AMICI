@@ -78,18 +78,19 @@ void scaleParameters(
     }
 }
 
-std::string backtraceString(int const maxFrames, int const stacklevel) {
+std::string backtraceString(int const maxFrames, int const first_frame) {
     std::ostringstream trace_buf;
 
 #ifdef PLATFORM_WINDOWS
     trace_buf << "stacktrace not available on windows platforms\n";
 #else
-    void *callstack[maxFrames];
+    int const last_frame = first_frame + maxFrames;
+    void* callstack[last_frame];
     char buf[1024];
-    int nFrames = backtrace(callstack, stacklevel + maxFrames);
+    int nFrames = backtrace(callstack, last_frame);
     char **symbols = backtrace_symbols(callstack, nFrames);
 
-    for (int i = stacklevel; i < nFrames; i++) {
+    for (int i = first_frame; i < nFrames; i++) {
         // call
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
@@ -115,8 +116,8 @@ std::string backtraceString(int const maxFrames, int const stacklevel) {
     }
     free(symbols);
 
-    if (nFrames == maxFrames)
-        trace_buf << "[truncated]\n";
+    if (nFrames == last_frame)
+        trace_buf << "[possibly truncated]\n";
 #endif
     return trace_buf.str();
 }
