@@ -19,7 +19,7 @@ class AmiException : public std::exception {
     /**
      * @brief Default ctor.
      */
-    AmiException();
+    AmiException(int const stacklevel = 3);
 
     /**
      * @brief Constructor with printf style interface
@@ -44,7 +44,7 @@ class AmiException : public std::exception {
      * @brief Stores the current backtrace
      * @param nMaxFrames number of frames to go back in stacktrace
      */
-    void storeBacktrace(int nMaxFrames);
+    void storeBacktrace(int nMaxFrames, int const stacklevel);
 
   protected:
     /**

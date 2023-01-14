@@ -20,7 +20,7 @@
 
 namespace amici {
 
-void writeSlice(const AmiVector &s, gsl::span<realtype> b) {
+void writeSlice(AmiVector const& s, gsl::span<realtype> b) {
     writeSlice(s.getVector(), b);
 };
 
@@ -38,10 +38,10 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void unscaleParameters(gsl::span<const realtype> bufferScaled,
-                       gsl::span<const ParameterScaling> pscale,
-                       gsl::span<realtype> bufferUnscaled)
-{
+void unscaleParameters(
+    gsl::span<realtype const> bufferScaled,
+    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferUnscaled
+) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
 
@@ -50,7 +50,6 @@ void unscaleParameters(gsl::span<const realtype> bufferScaled,
         bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
     }
 }
-
 
 double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
 {
@@ -66,11 +65,10 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-
-void scaleParameters(gsl::span<const realtype> bufferUnscaled,
-                     gsl::span<const ParameterScaling> pscale,
-                     gsl::span<realtype> bufferScaled)
-{
+void scaleParameters(
+    gsl::span<realtype const> bufferUnscaled,
+    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferScaled
+) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
 
@@ -78,11 +76,9 @@ void scaleParameters(gsl::span<const realtype> bufferUnscaled,
          ip < bufferUnscaled.size(); ++ip) {
         bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
     }
-
 }
 
-std::string backtraceString(const int maxFrames)
-{
+std::string backtraceString(int const maxFrames, int const stacklevel) {
     std::ostringstream trace_buf;
 
 #ifdef PLATFORM_WINDOWS
@@ -93,8 +89,7 @@ std::string backtraceString(const int maxFrames)
     int nFrames = backtrace(callstack, maxFrames);
     char **symbols = backtrace_symbols(callstack, nFrames);
 
-    // start at 2 to omit AmiException and storeBacktrace
-    for (int i = 2; i < nFrames; i++) {
+    for (int i = stacklevel; i < stacklevel + nFrames; i++) {
         // call
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
@@ -160,7 +155,7 @@ std::string regexErrorToString(std::regex_constants::error_type err_type)
     }
 }
 
-std::string printfToString(const char *fmt, va_list ap) {
+std::string printfToString(char const* fmt, va_list ap) {
     // Get size of string
     va_list ap_count;
     va_copy(ap_count, ap);
