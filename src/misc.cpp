@@ -86,10 +86,10 @@ std::string backtraceString(int const maxFrames, int const stacklevel) {
 #else
     void *callstack[maxFrames];
     char buf[1024];
-    int nFrames = backtrace(callstack, maxFrames);
+    int nFrames = backtrace(callstack, stacklevel + maxFrames);
     char **symbols = backtrace_symbols(callstack, nFrames);
 
-    for (int i = stacklevel; i < stacklevel + nFrames; i++) {
+    for (int i = stacklevel; i < nFrames; i++) {
         // call
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
