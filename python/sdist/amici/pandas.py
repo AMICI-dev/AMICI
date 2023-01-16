@@ -727,7 +727,7 @@ def getEdataFromDataFrame(
     for ir, row in conditions.iterrows():
         # subselect rows that match condition
         selected = np.ones((len(df),), dtype=bool)
-        for par_label, par in row.iteritems():
+        for par_label, par in row.items():
             if math.isnan(par):
                 selected = selected & np.isnan(
                     df[par_label].astype(float).values

@@ -1,6 +1,6 @@
 sphinx==5.1.1
 mock>=4.0.3
-setuptools==65.2.0
+setuptools==65.5.1
 pysb>=1.11.0
 matplotlib==3.5.3
 pkgconfig>=1.5.5

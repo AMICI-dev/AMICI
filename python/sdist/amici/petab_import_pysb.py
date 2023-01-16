@@ -19,7 +19,6 @@ from petab.C import (CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA)
 from petab.models.pysb_model import PySBModel
 
 
-from . import petab_import
 from .logging import get_logger, log_execution_time, set_log_level
 from .petab_util import (
     get_states_in_condition_table, PREEQ_INDICATOR_ID, _element_is_pysb_pattern
@@ -234,6 +233,9 @@ def import_model_pysb(
             f"column: {x}"
         )
 
+    from .petab_import import (
+        get_fixed_parameters, petab_noise_distributions_to_amici
+    )
     constant_parameters = petab_import.get_fixed_parameters(petab_problem) + \
         fixed_parameters
 
@@ -247,7 +249,7 @@ def import_model_pysb(
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
-        noise_distrs = petab_import.petab_noise_distributions_to_amici(
+        noise_distrs = petab_noise_distributions_to_amici(
             petab_problem.observable_df)
 
     from amici.pysb_import import pysb2amici

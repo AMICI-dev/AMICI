@@ -180,6 +180,11 @@ def test_logging_works(observable_dependent_error_model, caplog):
     assert rdata.status != amici.AMICI_SUCCESS
     assert "mxstep steps taken" in caplog.text
 
+@skip_on_valgrind
+def test_model_module_is_set(observable_dependent_error_model):
+    model_module = observable_dependent_error_model
+    assert isinstance(model_module.getModel().module, amici.ModelModule)
+
 
 @pytest.fixture(scope='session')
 def model_steadystate_module():
@@ -498,8 +503,9 @@ def test_sympy_exp_monkeypatch():
     """
     url = 'https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?' \
           'filename=BIOMD0000000529_url.xml'
-    importer = amici.SbmlImporter(urlopen(url).read().decode('utf-8'),
-                                  from_file=False)
+    importer = amici.SbmlImporter(
+        urlopen(url, timeout=20).read().decode('utf-8'), from_file=False
+    )
     module_name = 'BIOMD0000000529'
 
     with TemporaryDirectory() as outdir:

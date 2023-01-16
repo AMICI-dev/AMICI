@@ -60,6 +60,11 @@ mv "${DOXY_WARNING_FILE}_tmp" "${DOXY_WARNING_FILE}"
 grep -v "error: Problem.* running g.*. Check your installation!" "${DOXY_WARNING_FILE}" > "${DOXY_WARNING_FILE}_tmp" || [[ $? == 1 ]]
 mv "${DOXY_WARNING_FILE}_tmp" "${DOXY_WARNING_FILE}"
 
+# unclear error parsing ghostscript-generated eps files
+# result seems fine despite error
+grep -v "Couldn't extract bounding box from" "${DOXY_WARNING_FILE}" > "${DOXY_WARNING_FILE}_tmp" || [[ $? == 1 ]]
+mv "${DOXY_WARNING_FILE}_tmp" "${DOXY_WARNING_FILE}"
+
 # check if warnings log was created
 if [ -f "${DOXY_WARNING_FILE}"  ]; then
     # check if warnings log is empty

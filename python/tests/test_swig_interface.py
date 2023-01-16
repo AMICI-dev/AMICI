@@ -403,3 +403,15 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert model2.getInitialStateSensitivities() == sx0
     assert settings == amici.get_model_settings(model2)
 
+
+def test_solver_repr():
+    for solver in (amici.CVodeSolver(), amici.IDASolver()):
+        assert "maxsteps" in str(solver)
+        assert "maxsteps" in repr(solver)
+
+        solver_ptr = amici.SolverPtr(solver.this)
+        assert "maxsteps" in str(solver_ptr)
+        assert "maxsteps" in repr(solver_ptr)
+        # avoid double delete!!
+        solver_ptr.release()
+
