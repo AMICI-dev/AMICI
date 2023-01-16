@@ -120,13 +120,13 @@ if not _imported_from_setup():
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
 
-    from typing import Protocol
+    from typing import Protocol, runtime_checkable
 
 
+    @runtime_checkable
     class ModelModule(Protocol):
         """Enable Python static type checking for AMICI-generated model
         modules"""
-        module: "ModelModule"
 
         def getModel(self) -> amici.Model:
             ...
