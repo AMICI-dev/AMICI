@@ -180,6 +180,11 @@ def test_logging_works(observable_dependent_error_model, caplog):
     assert rdata.status != amici.AMICI_SUCCESS
     assert "mxstep steps taken" in caplog.text
 
+@skip_on_valgrind
+def test_model_module_is_set(observable_dependent_error_model):
+    model_module = observable_dependent_error_model
+    assert isinstance(model_module.getModel().module, amici.ModelModule)
+
 
 @pytest.fixture(scope='session')
 def model_steadystate_module():
