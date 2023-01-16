@@ -235,9 +235,13 @@ class ReturnDataView(SwigPtrView):
 
         :returns: self[item]
         """
+        if item == 'status':
+            return int(super().__getitem__(item))
+
         if item == 't':
             item = 'ts'
-        return super(ReturnDataView, self).__getitem__(item)
+
+        return super().__getitem__(item)
 
     def by_id(
             self,
