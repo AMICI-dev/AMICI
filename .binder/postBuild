@@ -3,4 +3,4 @@ set -eou pipefail
 
 pip install -e python/sdist[petab,pysb]
 
-
+scripts/buildBNGL.sh
