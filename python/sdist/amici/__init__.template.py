@@ -14,6 +14,7 @@ if 'TPL_AMICI_VERSION' != amici.__version__:
         'version currently installed.'
     )
 
-from TPL_MODELNAME._TPL_MODELNAME import *
+from .TPL_MODELNAME import *
+from .TPL_MODELNAME import getModel as get_model
 
 __version__ = 'TPL_PACKAGE_VERSION'
