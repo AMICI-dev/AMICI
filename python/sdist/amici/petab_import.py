@@ -172,12 +172,14 @@ def get_fixed_parameters(
                            "exists. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
-    # exclude targets of rules or initial assignments
-    for fixed_parameter in fixed_parameters.copy():
-        # check global parameters
-        if sbml_model.getInitialAssignmentBySymbol(fixed_parameter)\
-                or sbml_model.getRuleByVariable(fixed_parameter):
-            fixed_parameters.remove(fixed_parameter)
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        # exclude targets of rules or initial assignments
+        sbml_model = petab_problem.model.sbml_model
+        for fixed_parameter in fixed_parameters.copy():
+            # check global parameters
+            if sbml_model.getInitialAssignmentBySymbol(fixed_parameter)\
+                    or sbml_model.getRuleByVariable(fixed_parameter):
+                fixed_parameters.remove(fixed_parameter)
 
     return list(sorted(fixed_parameters))
 
