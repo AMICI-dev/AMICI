@@ -3,14 +3,17 @@ Plotting
 --------
 Plotting related functions
 """
-from . import ReturnDataView, Model
+from typing import Iterable, Optional
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 from matplotlib.axes import Axes
-from typing import Optional, Iterable
+
+from . import Model, ReturnDataView
 
 
-def plotStateTrajectories(
+def plot_state_trajectories(
         rdata: ReturnDataView,
         state_indices: Optional[Iterable[int]] = None,
         ax: Optional[Axes] = None,
@@ -50,7 +53,7 @@ def plotStateTrajectories(
         ax.set_title('State trajectories')
 
 
-def plotObservableTrajectories(
+def plot_observable_trajectories(
         rdata: ReturnDataView,
         observable_indices: Optional[Iterable[int]] = None,
         ax: Optional[Axes] = None,
@@ -88,3 +91,18 @@ def plotObservableTrajectories(
         ax.set_ylabel('$y(t)$')
         ax.legend()
         ax.set_title('Observable trajectories')
+
+
+def plot_jacobian(rdata: ReturnDataView):
+    """Plot Jacobian as heatmap."""
+    df = pd.DataFrame(
+        data=rdata.J,
+        index=rdata._swigptr.state_ids,
+        columns=rdata._swigptr.state_ids
+    )
+    sns.heatmap(df, center=0.0)
+    plt.title("Jacobian")
+
+# backwards compatibility
+plotStateTrajectories = plot_state_trajectories
+plotObservableTrajectories = plot_observable_trajectories
