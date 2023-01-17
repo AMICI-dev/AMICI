@@ -210,6 +210,27 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
 }
 
+# Add notebooks prolog with binder links
+# get current git reference
+ret = subprocess.run(
+    "git rev-parse HEAD".split(" "),
+    capture_output=True
+)
+ref = ret.stdout.rstrip().decode()
+nbsphinx_prolog = (
+    f"{{% set {ref=} %}}"
+    r"""
+    {% set docname = "documentation/" + env.doc2path(env.docname, base=False) %}
+    .. raw:: html
+
+        <div class="note">
+          <a href="https://mybinder.org/v2/gh/AMICI-dev/AMICI/{{ ref|e }}?labpath={{ docname|e }}" target="_blank">
+          <img src="https://mybinder.org/badge_logo.svg" alt="Open in binder"/></a>
+        </div>
+
+    """
+)
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
