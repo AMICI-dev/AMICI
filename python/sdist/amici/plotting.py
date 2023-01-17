@@ -100,7 +100,7 @@ def plot_jacobian(rdata: ReturnDataView):
         index=rdata._swigptr.state_ids,
         columns=rdata._swigptr.state_ids
     )
-    sns.heatmap(df)
+    sns.heatmap(df, center=0.0)
     plt.title("Jacobian")
 
 # backwards compatibility
