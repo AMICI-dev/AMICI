@@ -24,5 +24,7 @@ build:
     # for custom doxygen
     - libclang-cpp9
     - libclang1-9
+    - libatlas-base-dev
+    - swig
   tools:
     python: "3.8"
