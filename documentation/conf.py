@@ -126,26 +126,7 @@ install_mtocpp()
 
 # Install AMICI if not already present
 typing.TYPE_CHECKING = True
-
-try:
-    import amici
-except ModuleNotFoundError:
-    subprocess.run([
-        'python', '-m', 'pip', 'install', '--verbose', '-e',
-        os.path.join(amici_dir, 'python', 'sdist')
-    ], check=True)
-
-    from importlib import invalidate_caches
-
-    invalidate_caches()
-
-    sys.path.insert(0, amici_dir)
-    sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
-
-    import amici
-# Works around some cyclic dependency issue with amici.petab_import_pysb
-import amici.petab_import
-
+import amici
 typing.TYPE_CHECKING = False
 
 
