@@ -15,7 +15,7 @@ git+https://github.com/readthedocs/sphinx-hoverxref@main
 ipython==8.4.0
 breathe==4.34.0
 #exhale>=0.3.5
--e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
+git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
 sphinxcontrib-matlabdomain>=0.12.0
 sphinxcontrib-napoleon>=0.7
 pygments==2.13.0
