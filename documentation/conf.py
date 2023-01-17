@@ -251,7 +251,7 @@ intersphinx_mapping = {
 # Add notebooks prolog with binder links
 # get current git reference
 ret = subprocess.run(
-    "git rev-parse --abbrev-ref HEAD".split(" "),
+    "git rev-parse HEAD".split(" "),
     capture_output=True
 )
 ref = ret.stdout.rstrip().decode()
