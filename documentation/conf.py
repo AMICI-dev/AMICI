@@ -84,43 +84,6 @@ def install_mtocpp():
         raise RuntimeError('downloadAndBuildMtocpp.sh failed')
 
 
-def install_amici_deps_rtd():
-    """Install AMICI dependencies and set up environment for use on RTD"""
-
-    # cblas -- manually install ubuntu deb package
-    cblas_root = os.path.join(amici_dir, 'ThirdParty', 'libatlas-base-dev',
-                              'usr')
-
-    if os.path.isdir(cblas_root):
-        # If this exists, it means this has been run before. On RTD, sphinx is
-        #  being run several times and we don't want to reinstall dependencies
-        #  every time.
-        return
-
-    cblas_inc_dir = os.path.join(cblas_root, "include", "x86_64-linux-gnu")
-    cblas_lib_dir = os.path.join(cblas_root, "lib", "x86_64-linux-gnu")
-    cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
-           "&& apt download libatlas-base-dev && mkdir libatlas-base-dev "
-           "&& cd libatlas-base-dev "
-           "&& ar x ../libatlas-base-dev_3.10.3-8ubuntu7_amd64.deb "
-           "&& tar -xJf data.tar.xz "
-           f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h "
-           )
-    subprocess.run(cmd, shell=True, check=True)
-    os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
-    os.environ['BLAS_LIBS'] = (f'-L{cblas_lib_dir}/atlas -L{cblas_lib_dir} '
-                               '-lcblas -latlas -lblas -lm')
-
-    # build swig4.0
-    subprocess.run(os.path.join(amici_dir, 'scripts',
-                                'downloadAndBuildSwig.sh'), check=True)
-
-    # add swig to path
-    swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.2', 'install',
-                            'bin')
-    os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
-
-
 def install_doxygen():
     """Get a more recent doxygen"""
     version = '1.9.6'
@@ -156,7 +119,6 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
-    install_amici_deps_rtd()
     install_doxygen()
 
 # Required for matlab doxygen processing
@@ -247,6 +209,27 @@ intersphinx_mapping = {
     'sympy': ('https://docs.sympy.org/latest/', None),
     'python': ('https://docs.python.org/3', None),
 }
+
+# Add notebooks prolog with binder links
+# get current git reference
+ret = subprocess.run(
+    "git rev-parse HEAD".split(" "),
+    capture_output=True
+)
+ref = ret.stdout.rstrip().decode()
+nbsphinx_prolog = (
+    f"{{% set {ref=} %}}"
+    r"""
+    {% set docname = "documentation/" + env.doc2path(env.docname, base=False) %}
+    .. raw:: html
+
+        <div class="note">
+          <a href="https://mybinder.org/v2/gh/AMICI-dev/AMICI/{{ ref|e }}?labpath={{ docname|e }}" target="_blank">
+          <img src="https://mybinder.org/badge_logo.svg" alt="Open in binder"/></a>
+        </div>
+
+    """
+)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
