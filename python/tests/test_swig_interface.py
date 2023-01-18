@@ -415,3 +415,14 @@ def test_solver_repr():
         # avoid double delete!!
         solver_ptr.release()
 
+
+def test_edata_repr():
+    edata = amici.ExpData(1, 1)
+    assert "datapoints" in str(edata)
+    assert "datapoints" in repr(edata)
+
+    edata_ptr = amici.ExpDataPtr(edata.this)
+    assert "datapoints" in str(edata_ptr)
+    assert "datapoints" in repr(edata_ptr)
+    edata_ptr.release()
+
