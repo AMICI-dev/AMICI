@@ -60,7 +60,7 @@ def get_states_in_condition_table(
         states = {
             f'__s{ix}': value
             for pattern, value in states.items()
-            for ix in spm.match(eval(pattern), index=True)
+            for ix in spm.match(eval(pattern), index=True, exact=True)
         }
     return states
 
