@@ -22,12 +22,12 @@ def _edata_repr(self: "ExpData"):
         for iy in range(self.nytrue())
     )
     n_data_z = sum(
-        self.isSetObservedData(it, ie)
+        self.isSetObservedData(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
     n_sigma_z = sum(
-        self.isSetObservedDataStdDev(it, ie)
+        self.isSetObservedDataStdDev(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
