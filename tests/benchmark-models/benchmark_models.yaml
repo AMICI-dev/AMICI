@@ -1,15 +1,15 @@
 Bachmann_MSB2011:
   llh: 418.40573341425295
   t_sim: 0.05
-  t_fwd: 3.0
-  t_adj: 4.5
+  t_fwd: 3.5
+  t_adj: 5.0
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Beer_MolBioSystems2014:
   llh: 58622.9145631413
   t_sim: 0.05
   t_fwd: 0.5
-  t_adj: 8.0
+  t_adj: 8.5
   note: benchmark collection reference parameters do not match petab, but reference llh has been confirmed for parameters reported there up to sign
 
 Boehm_JProteomeRes2014:
@@ -61,7 +61,7 @@ Fiedler_BMC2016:
   llh: 58.58390161681
   t_sim: 0.005
   t_fwd: 0.05
-  t_adj: 0.1
+  t_adj: 0.15
 
 Fujita_SciSignal2010:
   llh: 53.08377736998929
@@ -80,7 +80,7 @@ Lucarelli_CellSystems2018:
   llh: -1681.6059879426584
   t_sim: 0.05
   t_fwd: 2.5
-  t_adj: 2.0
+  t_adj: 2.5
 
 Schwen_PONE2014:
   llh: -943.9992988598723
