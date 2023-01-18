@@ -424,8 +424,8 @@ def test_edata_repr():
     expected_strs = (
         f'{nt}x{ny} time-resolved datapoints',
         f'{ne}x{nz} event-resolved datapoints',
-        f'(0/{ny * nt} measurements)',
-        f'(0/{nz * ne} measurements)'
+        f'(0/{ny * nt} measurements',
+        f'(0/{nz * ne} measurements'
     )
     for e in [edata, edata_ptr]:
         for expected_str in expected_strs:
