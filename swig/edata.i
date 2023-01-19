@@ -31,8 +31,38 @@ def _edata_repr(self: "ExpData"):
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
+
+    custom_simulation_settings = []
+    if self.pscale:
+        custom_simulation_settings.append(f"parameter scales")
+    if self.fixedParameters:
+        custom_simulation_settings.append(f"constants")
+    if self.fixedParametersPreequilibration:
+        custom_simulation_settings.append(f"pre-equilibration condition")
+    if self.t_presim:
+        tmp = f"pre-simulation condition (t={self.t_presim})"
+        if self.fixedParametersPresimulation:
+            tmp += " with custom constants"
+        custom_simulation_settings.append(tmp)
+    if self.reinitializeFixedParameterInitialStates and self.reinitialization_state_idxs_sim:
+        custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_sim)} reinitialized states (simulation)")
+    if self.reinitializeFixedParameterInitialStates and self.reinitialization_state_idxs_presim:
+        custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_presim)} reinitialized states (presimulation)")
+    if self.parameters:
+        custom_simulation_settings.append(f"parameters")
+    if self.x0:
+        custom_simulation_settings.append(f"initial states")
+    if self.sx0:
+        custom_simulation_settings.append(f"initial state sensitivities")
+
+    if custom_simulation_settings:
+        custom_simulation_settings = " with custom " + ", ".join(custom_simulation_settings)
+    else:
+        custom_simulation_settings = " without custom settings"
+
     return "\n".join([
         self.this.__repr__()[:-1],
+        f"  condition {id} starting at t={t_start}" + custom_simulation_settings,
         f"  {self.nt()}x{self.nytrue()} time-resolved datapoints",
         f"    ({n_data_y}/{self.nt()*self.nytrue()} measurements & {n_sigma_y}/{self.nt()*self.nytrue()} sigmas set)",
         f"  {self.nmaxevent()}x{self.nztrue()} event-resolved datapoints",
