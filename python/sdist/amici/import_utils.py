@@ -200,7 +200,7 @@ def noise_distribution_to_cost_function(
                                      'lin-left-truncated-normal']:
         # truncated at a
         a = noise_distribution['parameters'][0]  # TODO
-        y_string = f'log(1-0.5*(1+erf({a}-{{y}}/(sqrt(2)*{{sigma}}))))' \
+        y_string = f'log(1-0.5*(1+erf(({a}-{{y}})/(sqrt(2)*{{sigma}}))))' \
                    ' + 0.5*log(2*pi*{sigma}**2)' \
                    ' + 0.5*(({y} - {m}) / {sigma})**2'
     elif noise_distribution_type == 'log-left-truncated-normal':
@@ -232,7 +232,8 @@ def noise_distribution_to_cost_function(
         y_string = f'- loggamma({{m}}+{r}) + loggamma({{m}}+1) ' \
                    f'+ loggamma({r}) - {r} * log(1-{{sigma}}) ' \
                    f'- {{m}} * log({{sigma}})'
-    elif noise_distribution_type == 'left-censored-normal':
+    elif noise_distribution_type in ['lin-left-censored-normal',
+                                     'left-censored-normal']:
         # left-censored at v (detection limit)
         v = noise_distribution['parameters'][0]  # TODO
         y_string = f'log(0.5*(1+erf(({v}-{{y}})/(sqrt(2)*{{sigma}}))))'
