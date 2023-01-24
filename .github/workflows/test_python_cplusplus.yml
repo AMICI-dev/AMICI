@@ -76,6 +76,8 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
+    - run: python test_blasi.py
+
     - name: C++ tests
       run: |
         scripts/run-cpp-tests.sh
