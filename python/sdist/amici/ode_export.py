@@ -3070,7 +3070,7 @@ class ODEExporter:
                 self._get_symbol_name_initializer_list('y'),
             'OBSERVABLE_TRAFO_INITIALIZER_LIST':
                 '\n'.join(
-                    f'ObservableScaling::{trafo}, // y[{idx}]'
+                    f'ObservableScaling::{trafo.value}, // y[{idx}]'
                     for idx, trafo in enumerate(
                         self.model.get_observable_transformations()
                     )
