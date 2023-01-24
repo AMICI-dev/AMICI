@@ -147,7 +147,7 @@ class SwigPtrView(collections.abc.Mapping):
 
         :returns: string representation
         """
-        return f'{self.__class__.__name__}({self._swigptr})'
+        return f'<{self.__class__.__name__}({self._swigptr})>'
 
 
 class ReturnDataView(SwigPtrView):
