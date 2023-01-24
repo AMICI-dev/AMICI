@@ -141,6 +141,14 @@ class SwigPtrView(collections.abc.Mapping):
         other._cache = copy.deepcopy(self._cache)
         return other
 
+    def __repr__(self):
+        """
+        String representation of the object
+
+        :returns: string representation
+        """
+        return f'<{self.__class__.__name__}({self._swigptr})>'
+
 
 class ReturnDataView(SwigPtrView):
     """
