@@ -187,16 +187,19 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
             )
 
             recursion = ''
+            level = logging.INFO
             if recursion_level > 1:
                 recursion = '+' * (recursion_level - 1)
+                level = logging.DEBUG
 
             tstart = time.perf_counter()
             rval = func(*args, **kwargs)
             tend = time.perf_counter()
             spacers = ' ' * max(54 - len(description) - len(logger.name) -
                                 len(recursion), 0)
-            logger.info(f'Finished {description}{spacers}'
-                        f'{recursion} ({(tend - tstart):.2E}s)')
+            logger.log(
+                level, f'Finished {description}{spacers}{recursion} ({(tend - tstart):.2E}s)'
+            )
             return rval
         return wrapper_timer
     return decorator_timer

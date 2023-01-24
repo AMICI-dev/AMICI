@@ -1,4 +1,4 @@
-# .binder/
+# binder/repo2docker configuration
 
 Configuration files for [binder](https://mybinder.org/) / repo2docker.
 

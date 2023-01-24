@@ -297,12 +297,15 @@ class Observable(ModelQuantity):
 
     _measurement_symbol: Union[sp.Symbol, None] = None
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr,
-                 measurement_symbol: Optional[sp.Symbol] = None,
-                 transformation: Optional[ObservableTransformation] = 'lin'):
+    def __init__(
+            self,
+            identifier: sp.Symbol,
+            name: str,
+            value: sp.Expr,
+            measurement_symbol: Optional[sp.Symbol] = None,
+            transformation: Optional[
+                ObservableTransformation] = ObservableTransformation.LIN
+    ):
         """
         Create a new Observable instance.
 
