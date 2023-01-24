@@ -1872,7 +1872,7 @@ class ODEModel:
             cv for cv in ['w', 'tcl']
             if var_in_function_signature(eq, cv)
                and cv not in self._lock_total_derivative
-               and var is not cv
+               and var != cv
                and min(self.sym(cv).shape)
                and (
                        (eq, var) not in ignore_chainrule
