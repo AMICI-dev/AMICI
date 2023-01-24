@@ -216,7 +216,7 @@ void writeMatlabField1(
     double *array = initAndAttachArray(matlabStruct, fieldName, dim);
 
     auto data_ptr = fieldData.data();
-    for(int i = 0; i < dim0; i++)
+    for (mwSize i = 0; i < dim0; i++)
         array[i] = static_cast<double>(data_ptr[i]);
 }
 
