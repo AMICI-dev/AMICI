@@ -19,7 +19,7 @@ amici_solver = amici_model.getSolver()
 #amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
 #amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
 
-for i in range(1850, 4000):
+for i in range(3350, 7000):
     print(f"{'-' * 10} {i} {'-' * 10}")
 
     np.random.seed(i)
