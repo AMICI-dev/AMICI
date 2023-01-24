@@ -185,7 +185,6 @@ class SteadystateProblem {
 
     /**
      * @brief Handles the computation of quadratures in adjoint mode
-     * @param newtonSolver pointer to the newtonSolver solver object
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
