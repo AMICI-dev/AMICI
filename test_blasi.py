@@ -12,13 +12,14 @@ from amici.petab_objective import RDATAS, simulate_petab
 with suppress(KeyError):
     del os.environ["AMICI_EXPERIMENTAL_SBML_NONCONST_CLS"]
     del os.environ["AMICI_EXTRACT_CSE"]
-petab_problem = benchmark_models_petab.get_problem("Blasi_CellSystems2016")
+#petab_problem = benchmark_models_petab.get_problem("Blasi_CellSystems2016")
+petab_problem = benchmark_models_petab.get_problem("Brannmark_JBC2010")
 amici_model = import_petab_problem(petab_problem, verbose=False, force_compile=True, compute_conservation_laws=False)
 amici_solver = amici_model.getSolver()
-amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+#amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
+#amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
 
-for i in range(2000, 4000):
+for i in range(1850, 4000):
     print(f"{'-' * 10} {i} {'-' * 10}")
 
     np.random.seed(i)
