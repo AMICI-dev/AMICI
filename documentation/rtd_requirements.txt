@@ -1,3 +1,4 @@
+# NOTE: relative paths are expected to be relative to the repository root
 sphinx==5.1.1
 mock>=4.0.3
 setuptools==65.5.1
@@ -20,3 +21,4 @@ sphinxcontrib-napoleon>=0.7
 pygments==2.13.0
 Jinja2==3.1.2
 git+https://github.com/readthedocs/readthedocs-sphinx-ext
+-e python/sdist/
