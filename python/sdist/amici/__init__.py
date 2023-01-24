@@ -28,7 +28,7 @@ import re
 import sys
 from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Optional, Union
+from typing import Optional, Union, Callable, Any
 
 
 def _get_amici_path():
@@ -120,14 +120,19 @@ if not _imported_from_setup():
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
 
-    from typing import Protocol
+    from typing import Protocol, runtime_checkable
 
 
+    @runtime_checkable
     class ModelModule(Protocol):
         """Enable Python static type checking for AMICI-generated model
         modules"""
+
         def getModel(self) -> amici.Model:
-            pass
+            ...
+
+        def get_model(self) -> amici.Model:
+            ...
 
 
 class add_path:
@@ -191,3 +196,12 @@ class AmiciVersionError(RuntimeError):
     """Error thrown if an AMICI model is loaded that is incompatible with
     the installed AMICI base package"""
     pass
+
+
+def _get_default_argument(func: Callable, arg: str) -> Any:
+    """Get the default value of the given argument in the given function."""
+    import inspect
+    signature = inspect.signature(func)
+    if (default := signature.parameters[arg].default) is not inspect.Parameter.empty:
+        return default
+    raise ValueError(f"No default value for argument {arg} of {func}.")

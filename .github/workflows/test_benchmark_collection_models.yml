@@ -29,11 +29,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 20
 
@@ -44,7 +44,6 @@ jobs:
           && sudo apt-get install -y swig libatlas-base-dev
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
-    - run: echo "${GITHUB_WORKSPACE}/tests/performance/" >> $GITHUB_PATH
 
     # install AMICI
     - name: Create AMICI sdist
@@ -61,3 +60,11 @@ jobs:
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
           && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
+
+    # upload results
+    - uses: actions/upload-artifact@v3
+      with:
+        name: computation times
+        path: |
+          tests/benchmark-models/computation_times.csv
+          tests/benchmark-models/computation_times.png

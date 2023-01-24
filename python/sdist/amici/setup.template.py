@@ -15,7 +15,7 @@ from amici.setuptools import (get_blas_config,
                               add_debug_flags_if_required,
                               add_openmp_flags,
                               )
-from setuptools import find_packages, setup, Extension
+from setuptools import find_namespace_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 
 
@@ -167,12 +167,11 @@ setup(
     author_email='model-author-todo',
     # license = 'BSD',
     ext_modules=[MODEL_EXT],
-    packages=find_packages(),
+    packages=find_namespace_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},
     python_requires='>=3.8',
     package_data={},
     zip_safe=False,
-    include_package_data=True,
     classifiers=CLASSIFIERS,
 )

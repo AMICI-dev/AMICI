@@ -103,3 +103,17 @@ def test_monkeypatch():
 
     # check that the monkeypatch is transient
     assert (t ** n).diff(t).subs(vals) is sp.nan
+
+
+@skip_on_valgrind
+def test_get_default_argument():
+    # no default
+    with pytest.raises(ValueError):
+        amici._get_default_argument(lambda x: x, 'x')
+
+    # non-existant parameter
+    with pytest.raises(KeyError):
+        amici._get_default_argument(lambda x: x, 'y')
+
+    # okay
+    assert amici._get_default_argument(lambda x=1: x, 'x') == 1
