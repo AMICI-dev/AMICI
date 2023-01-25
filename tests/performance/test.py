@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+import logging
 from pathlib import Path
 
 import amici
@@ -47,6 +48,8 @@ def run_import(model_name, model_dir: Path):
     pp = petab.Problem.from_yaml(git_dir / 'FroehlichKes2018' / 'PEtab'
                                  / 'FroehlichKes2018.yaml')
     petab.lint_problem(pp)
+    amici.ode_export.logger.setLevel(logging.DEBUG)
+    amici.sbml_import.logger.setLevel(logging.DEBUG)
     import_model(model_name=model_name,
                  model_output_dir=model_dir,
                  sbml_model=pp.sbml_model,
