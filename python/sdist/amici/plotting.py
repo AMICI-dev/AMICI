@@ -97,8 +97,8 @@ def plot_jacobian(rdata: ReturnDataView):
     """Plot Jacobian as heatmap."""
     df = pd.DataFrame(
         data=rdata.J,
-        index=rdata._swigptr.state_ids,
-        columns=rdata._swigptr.state_ids
+        index=rdata._swigptr.state_ids_solver,
+        columns=rdata._swigptr.state_ids_solver,
     )
     sns.heatmap(df, center=0.0)
     plt.title("Jacobian")

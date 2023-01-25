@@ -21,4 +21,6 @@ sphinxcontrib-napoleon>=0.7
 pygments==2.13.0
 Jinja2==3.1.2
 git+https://github.com/readthedocs/readthedocs-sphinx-ext
+ipykernel
+-e git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab
 -e python/sdist/
