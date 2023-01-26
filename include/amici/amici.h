@@ -20,10 +20,9 @@ namespace amici {
  * @param rethrow rethrow integration exceptions?
  * @return rdata pointer to return data object
  */
-std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver,
-                                               const ExpData *edata,
-                                               Model &model,
-                                               bool rethrow = false);
+std::unique_ptr<ReturnData> runAmiciSimulation(
+    Solver& solver, ExpData const* edata, Model& model, bool rethrow = false
+);
 
 /**
  * @brief Same as runAmiciSimulation, but for multiple ExpData instances. When
@@ -36,15 +35,15 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver,
  * @param num_threads number of threads for parallel execution
  * @return vector of pointers to return data objects
  */
-std::vector<std::unique_ptr<ReturnData>>
-runAmiciSimulations(Solver const &solver, const std::vector<ExpData *> &edatas,
-                    Model const &model, bool failfast, int num_threads);
-
+std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
+    Solver const& solver, std::vector<ExpData*> const& edatas,
+    Model const& model, bool failfast, int num_threads
+);
 
 /**
  * @brief Get the string representation of the given simulation status code
  * (see ReturnData::status).
- * @param return_code
+ * @param status Status code
  * @return Name of the variable representing this status code.
  */
 std::string simulation_status_to_str(int status);

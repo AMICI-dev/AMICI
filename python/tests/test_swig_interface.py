@@ -403,3 +403,34 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert model2.getInitialStateSensitivities() == sx0
     assert settings == amici.get_model_settings(model2)
 
+
+def test_solver_repr():
+    for solver in (amici.CVodeSolver(), amici.IDASolver()):
+        solver_ptr = amici.SolverPtr(solver.this)
+        for s in (solver, solver_ptr):
+            assert "maxsteps" in str(s)
+            assert "maxsteps" in repr(s)
+        # avoid double delete!!
+        solver_ptr.release()
+
+
+def test_edata_repr():
+    ny = 1
+    nz = 2
+    ne = 3
+    nt = 4
+    edata = amici.ExpData(ny, nz, ne, range(nt))
+    edata_ptr = amici.ExpDataPtr(edata.this)
+    expected_strs = (
+        f'{nt}x{ny} time-resolved datapoints',
+        f'{ne}x{nz} event-resolved datapoints',
+        f'(0/{ny * nt} measurements',
+        f'(0/{nz * ne} measurements'
+    )
+    for e in [edata, edata_ptr]:
+        for expected_str in expected_strs:
+            assert expected_str in str(e)
+            assert expected_str in repr(e)
+    # avoid double delete!!
+    edata_ptr.release()
+
