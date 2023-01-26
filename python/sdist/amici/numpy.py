@@ -141,6 +141,14 @@ class SwigPtrView(collections.abc.Mapping):
         other._cache = copy.deepcopy(self._cache)
         return other
 
+    def __repr__(self):
+        """
+        String representation of the object
+
+        :returns: string representation
+        """
+        return f'<{self.__class__.__name__}({self._swigptr})>'
+
 
 class ReturnDataView(SwigPtrView):
     """
@@ -235,9 +243,13 @@ class ReturnDataView(SwigPtrView):
 
         :returns: self[item]
         """
+        if item == 'status':
+            return int(super().__getitem__(item))
+
         if item == 't':
             item = 'ts'
-        return super(ReturnDataView, self).__getitem__(item)
+
+        return super().__getitem__(item)
 
     def by_id(
             self,

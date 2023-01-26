@@ -755,3 +755,9 @@
    fun:dlopen@@GLIBC_2.34
    fun:_PyImport_FindSharedFuncptr
 }
+
+{
+   Python dictkeys_get_index
+   Memcheck:Value8
+   fun:dictkeys_get_index
+}

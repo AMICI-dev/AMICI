@@ -308,6 +308,8 @@ void Model::initializeStates(AmiVector &x) {
         fx_solver(x0_solver.data(), x0data_.data());
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
+
+    checkFinite(x.getVector(), ModelQuantity::x0);
 }
 
 void Model::initializeSplines() {
@@ -1701,10 +1703,7 @@ void Model::fx0(AmiVector &x) {
               state_.unscaledParameters.data(),
               state_.fixedParameters.data());
 
-    if (always_check_finite_) {
-        checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata);
-        checkFinite(x.getVector(), ModelQuantity::x0);
-    }
+    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata);
 }
 
 void Model::fx0_fixedParameters(AmiVector &x) {

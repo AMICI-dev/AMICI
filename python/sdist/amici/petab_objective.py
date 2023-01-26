@@ -37,6 +37,7 @@ S2LLH = 's2llh'
 RES = 'res'
 SRES = 'sres'
 RDATAS = 'rdatas'
+EDATAS = 'edatas'
 
 
 @log_execution_time('Simulating PEtab model', logger)
@@ -92,6 +93,7 @@ def simulate_petab(
 
         * cost function value (``LLH``),
         * list of :class:`amici.amici.ReturnData` (``RDATAS``),
+        * list of :class:`amici.amici.ExpData` (``EDATAS``),
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see
@@ -163,7 +165,8 @@ def simulate_petab(
 
     return {
         LLH: llh,
-        RDATAS: rdatas
+        RDATAS: rdatas,
+        EDATAS: edatas,
     }
 
 

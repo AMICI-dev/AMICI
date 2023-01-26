@@ -137,6 +137,9 @@ We also plan to implement support for the
 Examples
 ========
 
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=binder%2Foverview.ipynb
+
 .. toctree::
    :maxdepth: 1
 
@@ -146,6 +149,7 @@ Examples
    ExampleExperimentalConditions.ipynb
    ExampleEquilibrationLogic.ipynb
    ExampleSplines.ipynb
+   example_errors.ipynb
 
 Environment variables affecting model import
 ============================================
