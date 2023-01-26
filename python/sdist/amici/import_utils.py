@@ -105,9 +105,24 @@ def noise_distribution_to_cost_function(
          \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
          exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
 
-    - `'truncated-normal'`: A truncated normal distribution:
+    - `'left-truncated-normal'`: A truncated normal distribution:
 
       .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{1-\\Phi(\\frac{a-y}{\\sigma})}
+         \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+         exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+      where \\Phi is the standard normal cumulative distribution function
+
+      .. math::
+         \\Phi(x) = \\frac{1}{2}(1+\\erf(\\frac{x}{\\sqrt{2}}))
+
+    - `'right-truncated-normal'`: A truncated normal distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\Phi(\\frac{b-y}{\\sigma})}
+         \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+         exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
 
     - `'laplace'`, `'lin-laplace'`: A laplace distribution:
 
@@ -151,6 +166,44 @@ def noise_distribution_to_cost_function(
 
       .. math::
          r = \\frac{1-\\sigma}{\\sigma} y
+
+    - `'left-censored-normal'`: A left-censored normal distribution with
+      threshold v:
+
+      - if m <= v:
+
+          .. math::
+             \\Phi(\\frac{v-y}{\\sigma})
+
+          where \\Phi is the standard normal cumulative distribution function
+
+          .. math::
+             \\Phi(x) = \\frac{1}{2}(1+\\erf(\\frac{x}{\\sqrt{2}}))
+
+      - if m > v:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+             exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+    - `'right-censored-normal'`: A right-censored normal distribution with
+      threshold v:
+
+      - if m < v:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+             exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+      - if m >= v:
+
+          .. math::
+             1-\\Phi(\\frac{v-y}{\\sigma})
+
+          where \\Phi is the standard normal cumulative distribution function
+
+          .. math::
+             \\Phi(x) = \\frac{1}{2}(1+\\erf(\\frac{x}{\\sqrt{2}}))
 
     The distributions above are for a single data point.
     For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
@@ -198,16 +251,24 @@ def noise_distribution_to_cost_function(
                    '+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
     elif noise_distribution_type in ['left-truncated-normal',
                                      'lin-left-truncated-normal']:
-        # truncated at a
+        # left-truncated at a
         a = noise_distribution['parameters'][0]  # TODO
         y_string = f'log(1-0.5*(1+erf(({a}-{{y}})/(sqrt(2)*{{sigma}}))))' \
+                   ' + 0.5*log(2*pi*{sigma}**2)' \
+                   ' + 0.5*(({y} - {m}) / {sigma})**2'
+    elif noise_distribution_type in ['right-truncated-normal',
+                                     'lin-right-truncated-normal']:
+        # right-truncated at b
+        b = noise_distribution['parameters'][0]  # TODO
+        y_string = f'log(0.5*(1+erf(({b}-{{y}})/(sqrt(2)*{{sigma}}))))' \
                    ' + 0.5*log(2*pi*{sigma}**2)' \
                    ' + 0.5*(({y} - {m}) / {sigma})**2'
     elif noise_distribution_type == 'log-left-truncated-normal':
         # truncated at a
         a = noise_distribution['parameters'][0]  # TODO
         # TODO a>0
-        y_string = f'log(1-0.5*(1+erf(log({a})-log({{y}})/(sqrt(2)*{{sigma}}))))' \
+        y_string = f'log(1-0.5*(1+erf(log({a})-log({{y}})/' \
+                   f'(sqrt(2)*{{sigma}}))))' \
                    ' + 0.5*log(2*pi*{sigma}**2*{m}**2)' \
                    ' + 0.5*((log({y}) - log({m})) / {sigma})**2'
     elif noise_distribution_type in ['laplace', 'lin-laplace']:
@@ -236,7 +297,22 @@ def noise_distribution_to_cost_function(
                                      'left-censored-normal']:
         # left-censored at v (detection limit)
         v = noise_distribution['parameters'][0]  # TODO
-        y_string = f'log(0.5*(1+erf(({v}-{{y}})/(sqrt(2)*{{sigma}}))))'
+        y_string = f'Piecewise((-log(0.5*(1+erf(({v}-{{y}})/' \
+                   f'(sqrt(2)*{{sigma}})))), ' \
+                   f'{{m}}<={v}), ' \
+                   f'(0.5*log(2*pi*{{sigma}}**2) + ' \
+                   f'0.5*(({{y}} - {{m}}) / {{sigma}})**2, ' \
+                   f'{{m}}>{v}))'
+    elif noise_distribution_type in ['lin-right-censored-normal',
+                                     'right-censored-normal']:
+        # right-censored at v (detection limit)
+        v = noise_distribution['parameters'][0]  # TODO
+        y_string = f'Piecewise((-log(1-0.5*(1+erf(({v}-{{y}})/' \
+                   f'(sqrt(2)*{{sigma}})))), ' \
+                   f'{{m}}>={v}), ' \
+                   f'(0.5*log(2*pi*{{sigma}}**2) + ' \
+                   f'0.5*(({{y}} - {{m}}) / {{sigma}})**2, ' \
+                   f'{{m}}<{v}))'
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution_type} not recognized.")
