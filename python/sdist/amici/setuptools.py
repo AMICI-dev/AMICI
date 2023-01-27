@@ -73,7 +73,7 @@ def get_blas_config() -> PackageInfo:
 
     # Try pkgconfig
     if pkgconfig:
-        for blas_name in ['cblas', 'openblas']:
+        for blas_name in ['cblas', 'blas-atlas', 'openblas', 'blas']:
             if pkgconfig.exists(blas_name):
                 blaspkgcfg = pkgconfig.parse(blas_name)
                 blaspkgcfg['extra_compile_args'] = [

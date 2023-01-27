@@ -2,6 +2,49 @@
 
 ## v0.X Series
 
+### v0.16.0 (2023-01-25)
+
+Features
+* Python 3.11 compatibility
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1876
+* AMICI now runs on binder (https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=binder%2Foverview.ipynb)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1935,
+  https://github.com/AMICI-dev/AMICI/pull/1937,
+  https://github.com/AMICI-dev/AMICI/pull/1939
+* More informative `Solver.__repr__` and `ExpData.__repr__`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1928
+  and @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1948
+* `simulate_petab` returns the generated/used `ExpData`s
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1933
+* Model module is now accessible from model instance
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1932
+* Added `plot_jacobian`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1930
+* Now logs all nested execution times as debug
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1947
+* Always check for finite initial states, not only with
+  `Model.setAlwaysCheckFinite(True)`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1955
+
+Fixes
+* `ReturnDataView.status` now returns `int` instead of `float`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1929
+* Updated simulation status codes
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1931
+* Skip irrelevant frames in stacktraces
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1934
+* Fixed compiler warning (matlab)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1954
+
+Documentation:
+* Added a notebook demonstrating common simulation failures and show how to
+  analyze / fix them
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1946
+* various minor fixes / updates
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.15.0...v0.16.0
+
+
 ### v0.15.0 (2023-01-11)
 
 Features
