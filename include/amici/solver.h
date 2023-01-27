@@ -1602,7 +1602,7 @@ class Solver {
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
      */
-    InterpolationType interp_type_ {InterpolationType::hermite};
+    InterpolationType interp_type_ {InterpolationType::polynomial};
 
     /** maximum number of allowed integration steps */
     long int maxsteps_ {10000};
