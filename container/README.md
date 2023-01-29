@@ -36,9 +36,9 @@ git archive -o container/amici.tar.gz --format=tar.gz HEAD
 # install spython if necessary
 test -x "$(command -v spython)" || pip install spython
 # convert Dockerfile to singularity/apptainer definition using spython
-cd container/ && spython recipe Dockerfile amici.def
+(cd container/ && spython recipe Dockerfile amici.def)
 # build image
-cd container/ && singularity build amici.sif amici.def
+(cd container/ && singularity build amici.sif amici.def)
 ```
 
 ### Pull published image
