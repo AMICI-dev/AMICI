@@ -5,6 +5,7 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y \
     g++ \
     libatlas-base-dev \
+    python-is-python3 \
     python3 \
     python3-dev \
     python3-pip \

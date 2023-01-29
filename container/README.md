@@ -3,7 +3,10 @@
 AMICI docker images are regularly published to
 https://hub.docker.com/r/dweindl/amici.
 
-## Docker
+## Docker / Podman
+
+The commands below are for use with Docker. When using Podman, just replace
+`docker` by `podman`.
 
 ### Create an image
 
