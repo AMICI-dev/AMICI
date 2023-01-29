@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-# install dependencies 
+# install dependencies
 
 RUN apt-get update && apt-get install -y \
     g++ \
@@ -13,12 +13,12 @@ RUN apt-get update && apt-get install -y \
 
 # prepare python install
 
-COPY amici.tar.gz /tmp
+COPY amici.tar.gz /from_host/
 
 RUN pip3 install --upgrade pip build && \
-    mkdir -p /tmp/amici/ && \
-    cd /tmp/amici && \
-    tar -xzf ../amici.tar.gz && cd /tmp/amici/python/sdist && \
+    mkdir -p /from_host/amici/ && \
+    cd /from_host/amici && \
+    tar -xzf ../amici.tar.gz && cd python/sdist && \
     python3 -m build --sdist && \
-    pip3 install -v $(ls -t /tmp/amici/python/sdist/dist/amici-*.tar.gz | head -1)[petab] && \
-    rm -rf /tmp/*
+    pip3 install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab] && \
+    rm -rf /from_host
