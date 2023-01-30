@@ -236,7 +236,7 @@ def import_model_pysb(
     from .petab_import import (
         get_fixed_parameters, petab_noise_distributions_to_amici
     )
-    constant_parameters = petab_import.get_fixed_parameters(petab_problem) + \
+    constant_parameters = get_fixed_parameters(petab_problem) + \
         fixed_parameters
 
     if petab_problem.observable_df is None:
