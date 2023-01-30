@@ -149,6 +149,7 @@ Examples
    ExampleExperimentalConditions.ipynb
    ExampleEquilibrationLogic.ipynb
    example_errors.ipynb
+   example_large_models/example_performance_optimization.ipynb
 
 Environment variables affecting model import
 ============================================
