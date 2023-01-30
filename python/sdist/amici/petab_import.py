@@ -825,6 +825,9 @@ def _parse_cli_args():
     parser.add_argument('--no-compile', action='store_false',
                         dest='compile',
                         help='Only generate model code, do not compile')
+    parser.add_argument('--no-validate', action='store_false',
+                        dest='validate',
+                        help='Skip validation of PEtab files')
     parser.add_argument('--flatten', dest='flatten', default=False,
                         action='store_true',
                         help='Flatten measurement specific overrides of '
@@ -881,7 +884,8 @@ def main():
             observable_files=args.observable_file_name)
 
     # Check for valid PEtab before potentially modifying it
-    petab.lint_problem(pp)
+    if args.validate:
+        petab.lint_problem(pp)
 
     if args.flatten:
         petab.flatten_timepoint_specific_output_overrides(pp)
