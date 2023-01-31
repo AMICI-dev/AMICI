@@ -62,7 +62,7 @@ def _edata_repr(self: "ExpData"):
 
     return "\n".join([
         self.this.__repr__()[:-1],
-        f"  condition {id} starting at t={self.tstart_}" + custom_simulation_settings,
+        f"  condition "{self.id}" starting at t={self.tstart_}" + custom_simulation_settings,
         f"  {self.nt()}x{self.nytrue()} time-resolved datapoints",
         f"    ({n_data_y}/{self.nt()*self.nytrue()} measurements & {n_sigma_y}/{self.nt()*self.nytrue()} sigmas set)",
         f"  {self.nmaxevent()}x{self.nztrue()} event-resolved datapoints",
