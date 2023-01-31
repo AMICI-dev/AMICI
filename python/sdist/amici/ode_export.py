@@ -1858,7 +1858,7 @@ class ODEModel:
                         self.eq('dtaudx')[ie])
                     tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
                 event_eqs.append(tmp_eq)
-                self._eqs[name] = event_eqs
+            self._eqs[name] = event_eqs
 
         elif name == 'deltaqB':
             event_eqs = []
