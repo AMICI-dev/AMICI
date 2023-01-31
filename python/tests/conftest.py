@@ -71,7 +71,4 @@ def pysb_example_presimulation_module():
                    observables=['pPROT_obs'],
                    constant_parameters=constant_parameters)
 
-        with amici.add_path(outdir):
-            model_module_pysb = importlib.import_module(outdir)
-
-        yield model_module_pysb
+        yield amici.import_model_module(model.name, outdir)

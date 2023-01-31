@@ -317,7 +317,7 @@ def test_energy():
     pysb.Initial(A(a=None, b=1) % B(a=1), AB_0)
 
     with TemporaryDirectoryWinSafe(prefix=model_pysb.name) as outdir:
-        pysb2amici(model_pysb, model_pysb.name)
+        pysb2amici(model_pysb, output_dir=outdir)
 
         model_module = amici.import_model_module(module_name=model_pysb.name,
                                                  module_path=outdir)
