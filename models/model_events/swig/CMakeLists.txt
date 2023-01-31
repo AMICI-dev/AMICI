@@ -23,6 +23,8 @@ if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
     include_directories(${PYTHON_INCLUDE_DIRS})
     set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
 else()
+    # We don't need "Interpreter" here, but without that, FindPython3 will
+    # ignore the Python version selected via $Python3_EXECUTABLE
     find_package(Python3 COMPONENTS Interpreter Development)
     include_directories(${Python3_INCLUDE_DIRS})
 endif()
