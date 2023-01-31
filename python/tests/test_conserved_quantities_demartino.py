@@ -190,13 +190,13 @@ def test_fill_demartino2014(data_demartino2014):
     assert not any(fields[len(ref_for_fields):])
 
 
-@skip_on_valgrind
-def test_compute_moiety_conservation_laws_demartino2014(
+def compute_moiety_conservation_laws_demartino2014(
         data_demartino2014, quiet=False
 ):
-    """Invoke test case and benchmarking for De Martino's published results
+    """Compute conserved quantities for De Martino's published results
     for E. coli network"""
     stoichiometric_list, row_names = data_demartino2014
+
     num_species = 1668
     num_reactions = 2381
     assert len(stoichiometric_list) == num_species * num_reactions, \
@@ -217,6 +217,15 @@ def test_compute_moiety_conservation_laws_demartino2014(
 
 
 @skip_on_valgrind
+def test_compute_moiety_conservation_laws_demartino2014(data_demartino2014):
+    """Invoke test case and benchmarking for De Martino's published results
+    for E. coli network"""
+    compute_moiety_conservation_laws_demartino2014(
+        data_demartino2014, quiet=False
+    )
+
+
+@skip_on_valgrind
 @log_execution_time("Detecting moiety conservation laws", logger)
 def test_cl_detect_execution_time(data_demartino2014):
     """Test execution time stays within a certain predefined bound.
@@ -229,7 +238,7 @@ def test_cl_detect_execution_time(data_demartino2014):
     runtime = np.Inf
 
     for _ in range(max_tries):
-        runtime = test_compute_moiety_conservation_laws_demartino2014(
+        runtime = compute_moiety_conservation_laws_demartino2014(
             data_demartino2014, quiet=True)
         if runtime < max_time_seconds:
             break
