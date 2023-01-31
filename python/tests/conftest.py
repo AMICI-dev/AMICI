@@ -31,7 +31,7 @@ def sbml_example_presimulation_module():
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=outdir,
-        verbose=False,
+        verbose=True,
         observables=observables,
         constant_parameters=constant_parameters)
 
