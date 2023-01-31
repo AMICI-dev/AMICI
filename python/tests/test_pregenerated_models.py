@@ -11,6 +11,8 @@ import h5py
 import numpy as np
 import pytest
 from amici.gradient_check import check_derivatives, _check_results
+from amici.testing import skip_on_valgrind
+
 
 cpp_test_dir = Path(__file__).parents[2] / 'tests' / 'cpp'
 options_file = str(cpp_test_dir / 'testOptions.h5')
@@ -22,11 +24,12 @@ model_cases = [(sub_test, case)
                for case in list(expected_results[sub_test].keys())]
 
 
+@skip_on_valgrind
 @pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
                     reason='skipping cmake based test')
 @pytest.mark.parametrize("sub_test,case", model_cases)
 def test_pregenerated_model(sub_test, case):
-    """Tests models that were pregenerated using the the matlab code
+    """Tests models that were pregenerated using the matlab code
     generation routines and cmake build routines.
 
     NOTE: requires having run `make python-tests` in /build/ before to build

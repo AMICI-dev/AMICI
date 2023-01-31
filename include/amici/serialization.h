@@ -62,15 +62,15 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.rtol_fsa_;
     ar &s.quad_atol_;
     ar &s.quad_rtol_;
+    ar &s.ss_tol_factor_;
     ar &s.ss_atol_;
     ar &s.ss_rtol_;
+    ar &s.ss_tol_sensi_factor_;
     ar &s.ss_atol_sensi_;
     ar &s.ss_rtol_sensi_;
     ar &s.maxsteps_;
     ar &s.maxstepsB_;
-    ar &s.requires_preequilibration_;
     ar &s.newton_maxsteps_;
-    ar &s.newton_maxlinsteps_;
     ar &s.newton_damping_factor_mode_;
     ar &s.newton_damping_factor_lower_bound_;
     ar &s.ism_;
@@ -83,6 +83,8 @@ void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
     ar &s.ordering_;
     ar &s.cpu_time_;
     ar &s.cpu_timeB_;
+    ar &s.newton_step_steadystate_conv_;
+    ar &s.check_sensi_steadystate_conv_;
     ar &s.rdata_mode_;
     ar &s.maxtime_;
 }
@@ -207,18 +209,17 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/
     ar &r.order;
     ar &r.cpu_time;
     ar &r.cpu_timeB;
+    ar &r.cpu_time_total;
     ar &r.preeq_cpu_time;
     ar &r.preeq_cpu_timeB;
     ar &r.preeq_status;
     ar &r.preeq_numsteps;
-    ar &r.preeq_numlinsteps;
     ar &r.preeq_wrms;
     ar &r.preeq_t;
     ar &r.posteq_cpu_time;
     ar &r.posteq_cpu_timeB;
     ar &r.posteq_status;
     ar &r.posteq_numsteps;
-    ar &r.posteq_numlinsteps;
     ar &r.posteq_wrms;
     ar &r.posteq_t;
     ar &r.x0;

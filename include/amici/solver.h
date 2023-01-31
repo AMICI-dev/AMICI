@@ -1,11 +1,10 @@
 #ifndef AMICI_SOLVER_H
 #define AMICI_SOLVER_H
 
-#include "amici/amici.h"
 #include "amici/defines.h"
 #include "amici/sundials_linsol_wrapper.h"
-#include "amici/symbolic_functions.h"
 #include "amici/vector.h"
+#include "amici/logging.h"
 
 #include <cmath>
 #include <functional>
@@ -19,9 +18,7 @@ class ForwardProblem;
 class BackwardProblem;
 class Model;
 class Solver;
-class AmiciApplication;
 
-extern AmiciApplication defaultContext;
 } // namespace amici
 
 // for serialization friend in Solver
@@ -44,7 +41,7 @@ namespace amici {
  *
  * NOTE: Any changes in data members here must be propagated to copy ctor,
  * equality operator, serialization functions in serialization.h, and
- * amici::hdf5::readSolverSettingsFromHDF5 in hdf5.cpp.
+ * amici::hdf5::(read/write)SolverSettings(From/To)HDF5 in hdf5.cpp.
  */
 class Solver {
   public:
@@ -55,12 +52,6 @@ class Solver {
      * @brief Default constructor
      */
     Solver() = default;
-
-    /**
-     * @brief Constructor
-     * @param app AMICI application context
-     */
-    Solver(AmiciApplication *app);
 
     /**
      * @brief Solver copy constructor
@@ -147,7 +138,7 @@ class Solver {
      *
      * @param model pointer to the model instance
      */
-    void updateAndReinitStatesAndSensitivities(Model *model);
+    void updateAndReinitStatesAndSensitivities(Model *model) const;
 
     /**
      * getRootInfo extracts information which event occurred
@@ -230,32 +221,6 @@ class Solver {
      * @param newton_maxsteps
      */
     void setNewtonMaxSteps(int newton_maxsteps);
-
-    /**
-     * @brief Get if model preequilibration is enabled
-     * @return
-     */
-    bool getPreequilibration() const;
-
-    /**
-     * @brief Enable/disable model preequilibration
-     * @param require_preequilibration
-     */
-    void setPreequilibration(bool require_preequilibration);
-
-    /**
-     * @brief Get maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @return
-     */
-    int getNewtonMaxLinearSteps() const;
-
-    /**
-     * @brief Set maximum number of allowed linear steps per Newton step for
-     * steady state computation
-     * @param newton_maxlinsteps
-     */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
 
     /**
      * @brief Get a state of the damping factor used in the Newton solver
@@ -411,6 +376,26 @@ class Solver {
     void setAbsoluteToleranceQuadratures(double atol);
 
     /**
+     * @brief returns the steady state simulation tolerance factor.
+     *
+     * Steady state simulation tolerances are the product of the simulation
+     * tolerances and this factor, unless manually set with
+     * `set(Absolute/Relative)ToleranceSteadyState()`.
+     * @return steady state simulation tolerance factor
+     */
+    double getSteadyStateToleranceFactor() const;
+
+    /**
+     * @brief set the steady state simulation tolerance factor.
+     *
+     * Steady state simulation tolerances are the product of the simulation
+     * tolerances and this factor, unless manually set with
+     * `set(Absolute/Relative)ToleranceSteadyState()`.
+     * @param factor tolerance factor (non-negative number)
+     */
+    void setSteadyStateToleranceFactor(double factor);
+
+    /**
      * @brief returns the relative tolerance for the steady state problem
      * @return relative tolerance
      */
@@ -433,6 +418,26 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteToleranceSteadyState(double atol);
+
+    /**
+     * @brief returns the steady state sensitivity simulation tolerance factor.
+     *
+     * Steady state sensitivity simulation tolerances are the product of the
+     * sensitivity simulation tolerances and this factor, unless manually set
+     * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
+     * @return steady state simulation tolerance factor
+     */
+    double getSteadyStateSensiToleranceFactor() const;
+
+    /**
+     * @brief set the steady state sensitivity simulation tolerance factor.
+     *
+     * Steady state sensitivity simulation tolerances are the product of the
+     * sensitivity simulation tolerances and this factor, unless manually set
+     * with `set(Absolute/Relative)ToleranceSteadyStateSensi()`.
+     * @param factor tolerance factor (non-negative number)
+     */
+    void setSteadyStateSensiToleranceFactor(double factor);
 
     /**
      * @brief returns the relative tolerance for the sensitivities of the
@@ -883,6 +888,39 @@ class Solver {
     }
 
     /**
+     * @brief Returns how convergence checks for steadystate computation are performed. If activated,
+     * convergence checks are limited to every 25 steps in the simulation solver to limit performance impact.
+     * @return boolean flag indicating newton step (true) or the right hand side (false)
+     */
+    bool getNewtonStepSteadyStateCheck() const {
+        return newton_step_steadystate_conv_;
+    }
+
+    /**
+     * @brief Returns how convergence checks for steadystate computation are performed.
+     * @return boolean flag indicating state and sensitivity equations (true) or only state variables (false).
+     */
+    bool getSensiSteadyStateCheck() const {
+        return check_sensi_steadystate_conv_;
+    }
+
+    /**
+     * @brief Sets how convergence checks for steadystate computation are performed.
+     * @param flag boolean flag to pick newton step (true) or the right hand side (false, default)
+     */
+    void setNewtonStepSteadyStateCheck(bool flag) {
+        newton_step_steadystate_conv_ = flag;
+    }
+
+    /**
+     * @brief Sets for which variables convergence checks for steadystate computation are performed.
+     * @param flag boolean flag to pick state and sensitivity equations (true, default) or only state variables (false).
+     */
+    void setSensiSteadyStateCheck(bool flag) {
+        check_sensi_steadystate_conv_ = flag;
+    }
+
+    /**
      * @brief Serialize Solver (see boost::serialization::serialize)
      * @param ar Archive to serialize to
      * @param s Data to serialize
@@ -900,8 +938,8 @@ class Solver {
      */
     friend bool operator==(const Solver &a, const Solver &b);
 
-    /** AMICI context */
-    AmiciApplication *app = &defaultContext;
+    /** logger */
+    Logger *logger = nullptr;
 
   protected:
     /**
@@ -1564,7 +1602,7 @@ class Solver {
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
      */
-    InterpolationType interp_type_ {InterpolationType::hermite};
+    InterpolationType interp_type_ {InterpolationType::polynomial};
 
     /** maximum number of allowed integration steps */
     long int maxsteps_ {10000};
@@ -1678,6 +1716,9 @@ class Solver {
     /** flag to force reInitPostProcessB before next call to solveB */
     mutable bool force_reinit_postprocess_B_ {false};
 
+    /** flag indicating whether sensInit1 was called */
+    mutable bool sens_initialized_ {false};
+
   private:
 
     /**
@@ -1717,9 +1758,6 @@ class Solver {
     /** Lower bound of the damping factor. */
     realtype newton_damping_factor_lower_bound_ {1e-8};
 
-    /** Enable model preequilibration */
-    bool requires_preequilibration_ {false};
-
     /** linear solver specification */
     LinearSolver linsol_ {LinearSolver::KLU};
 
@@ -1747,19 +1785,31 @@ class Solver {
     /** relative tolerances for backward quadratures */
     realtype quad_rtol_ {1e-8};
 
+    /** steady state simulation tolerance factor */
+    realtype ss_tol_factor_ {1e2};
+
     /** absolute tolerances for steadystate computation */
     realtype ss_atol_ {NAN};
 
     /** relative tolerances for steadystate computation */
     realtype ss_rtol_ {NAN};
 
-    /** absolute tolerances for steadystate computation */
+    /** steady state sensitivity simulation tolerance factor */
+    realtype ss_tol_sensi_factor_ {1e2};
+
+    /** absolute tolerances for steadystate sensitivity computation */
     realtype ss_atol_sensi_ {NAN};
 
-    /** relative tolerances for steadystate computation */
+    /** relative tolerances for steadystate sensitivity computation */
     realtype ss_rtol_sensi_ {NAN};
 
     RDataReporting rdata_mode_ {RDataReporting::full};
+
+    /** whether newton step should be used for convergence steps */
+    bool newton_step_steadystate_conv_ {false};
+
+    /** whether sensitivities should be checked for convergence to steadystate */
+    bool check_sensi_steadystate_conv_ {true};
 
     /** CPU time, forward solve */
     mutable realtype cpu_time_ {0.0};
@@ -1775,9 +1825,6 @@ class Solver {
 
     /** flag indicating whether init was called */
     mutable bool initialized_ {false};
-
-    /** flag indicating whether sensInit1 was called */
-    mutable bool sens_initialized_ {false};
 
     /** flag indicating whether adjInit was called */
     mutable bool adj_initialized_ {false};

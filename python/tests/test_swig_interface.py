@@ -75,7 +75,7 @@ model_instance_settings0 = {
         (10.0, 9.0, 1.0, 0.0, 0.0, 0.0),
         tuple([.1]*6),
     ],
-    'InitialStateSensitivities': [
+    ('getInitialStateSensitivities', 'setUnscaledInitialStateSensitivities'): [
         tuple([1.0] + [0.0]*35),
         tuple([.1]*36),
     ],
@@ -129,18 +129,19 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     i_setter = 1
 
     # All settings are tested.
-    assert set(model_instance_settings0) == set(amici.model_instance_settings)
+    assert set(model_instance_settings0) \
+           == set(amici.swig_wrappers.model_instance_settings)
 
     # Skip settings with interdependencies.
     model_instance_settings = \
         {k: v for k, v in model_instance_settings0.items() if v is not None}
 
     # All custom values are different to default values.
-    assert all([
+    assert all(
         default != custom
         for name, (default, custom) in model_instance_settings.items()
         if name != 'ReinitializeFixedParameterInitialStates'
-    ])
+    )
 
     # All default values are as expected.
     for name, (default, custom) in model_instance_settings.items():
@@ -163,8 +164,15 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     # The new model has the default settings.
     model_default_settings = amici.get_model_settings(model)
     for name in model_instance_settings:
-        assert model_default_settings[name] == \
-            model_instance_settings[name][i_default]
+        if (name == "InitialStates" and not model.hasCustomInitialStates())\
+                or (name == ('getInitialStateSensitivities',
+                             'setUnscaledInitialStateSensitivities')
+                    and not model.hasCustomInitialStateSensitivities()):
+            # Here the expected value differs from what the getter would return
+            assert model_default_settings[name] == []
+        else:
+            assert model_default_settings[name] == \
+                model_instance_settings[name][i_default], name
 
     # The grouped setter method works.
     custom_settings_not_none = {
@@ -173,11 +181,11 @@ def test_model_instance_settings(pysb_example_presimulation_module):
         if model_instance_settings0[name] is not None
     }
     amici.set_model_settings(model, custom_settings_not_none)
-    assert all([
+    assert all(
         value == custom_settings_not_none[name]
         for name, value in amici.get_model_settings(model).items()
         if name in custom_settings_not_none
-    ])
+    )
 
 
 def test_interdependent_settings(pysb_example_presimulation_module):
@@ -297,12 +305,12 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         'setParameterByName',
         'setParametersByIdRegex',
         'setParametersByNameRegex',
-        'setUnscaledInitialStateSensitivities',
+        'setInitialStateSensitivities',
     ]
-
+    from amici.swig_wrappers import model_instance_settings
     handled = [
         name
-        for names in amici.model_instance_settings
+        for names in model_instance_settings
         for name in (
             names
             if isinstance(names, tuple) else
@@ -359,3 +367,70 @@ def set_val(obj, attr, val):
         )
     else:
         setattr(obj, attr, val)
+
+
+def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
+    """Check that settings are applied in the correct order, and only if
+    required"""
+    model = pysb_example_presimulation_module.getModel()
+
+    # ensure no-custom-(s)x0 is restored
+    assert not model.hasCustomInitialStates()
+    assert not model.hasCustomInitialStateSensitivities()
+    settings = amici.get_model_settings(model)
+    model.setInitialStates(model.getInitialStates())
+    model.setUnscaledInitialStateSensitivities(
+        model.getInitialStateSensitivities())
+    amici.set_model_settings(model, settings)
+    assert not model.hasCustomInitialStates()
+    assert not model.hasCustomInitialStateSensitivities()
+    # ensure everything was set correctly, and there wasn't any problem
+    #  due to, e.g. interactions of different setters
+    assert settings == amici.get_model_settings(model)
+
+    # ensure custom (s)x0 is restored
+    model.setInitialStates(model.getInitialStates())
+    model.setParameterScale(amici.ParameterScaling.log10)
+    sx0 = model.getInitialStateSensitivities()
+    model.setUnscaledInitialStateSensitivities(sx0)
+    assert model.hasCustomInitialStates()
+    assert model.hasCustomInitialStateSensitivities()
+    settings = amici.get_model_settings(model)
+    model2 = pysb_example_presimulation_module.getModel()
+    amici.set_model_settings(model2, settings)
+    assert model2.hasCustomInitialStates()
+    assert model2.hasCustomInitialStateSensitivities()
+    assert model2.getInitialStateSensitivities() == sx0
+    assert settings == amici.get_model_settings(model2)
+
+
+def test_solver_repr():
+    for solver in (amici.CVodeSolver(), amici.IDASolver()):
+        solver_ptr = amici.SolverPtr(solver.this)
+        for s in (solver, solver_ptr):
+            assert "maxsteps" in str(s)
+            assert "maxsteps" in repr(s)
+        # avoid double delete!!
+        solver_ptr.release()
+
+
+def test_edata_repr():
+    ny = 1
+    nz = 2
+    ne = 3
+    nt = 4
+    edata = amici.ExpData(ny, nz, ne, range(nt))
+    edata_ptr = amici.ExpDataPtr(edata.this)
+    expected_strs = (
+        f'{nt}x{ny} time-resolved datapoints',
+        f'{ne}x{nz} event-resolved datapoints',
+        f'(0/{ny * nt} measurements',
+        f'(0/{nz * ne} measurements'
+    )
+    for e in [edata, edata_ptr]:
+        for expected_str in expected_strs:
+            assert expected_str in str(e)
+            assert expected_str in repr(e)
+    # avoid double delete!!
+    edata_ptr.release()
+

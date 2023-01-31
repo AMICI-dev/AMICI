@@ -27,28 +27,28 @@ nonstandard type conversions.
 %typemap(doctype) std::vector< amici::ExpData *,std::allocator< amici::ExpData * > > "ExpDataPtrVector";
 %typemap(doctype) std::vector< std::unique_ptr< amici::ReturnData >,std::allocator< std::unique_ptr< amici::ReturnData > > > "Iterable[ReturnData]";
 %typemap(doctype) void "None";
-%typemap(doctype) std::unique_ptr< amici::Solver > "amici.Solver";
-%typemap(doctype) amici::InternalSensitivityMethod "amici.InternalSensitivityMethod";
-%typemap(doctype) amici::InterpolationType "amici.InterpolationType";
-%typemap(doctype) amici::LinearMultistepMethod "amici.LinearMultistepMethod";
-%typemap(doctype) amici::LinearSolver "amici.LinearSolver";
-%typemap(doctype) amici::Model * "amici.Model";
-%typemap(doctype) amici::Model const * "amici.Model";
-%typemap(doctype) amici::NewtonDampingFactorMode "amici.NewtonDampingFactorMode";
-%typemap(doctype) amici::NonlinearSolverIteration "amici.NonlinearSolverIteration";
-%typemap(doctype) amici::RDataReporting "amici.RDataReporting";
-%typemap(doctype) amici::SensitivityMethod "amici.SensitivityMethod";
-%typemap(doctype) amici::SensitivityOrder "amici.SensitivityOrder";
-%typemap(doctype) amici::Solver * "amici.Solver";
-%typemap(doctype) amici::SteadyStateSensitivityMode "amici.SteadyStateSensitivityMode";
+%typemap(doctype) std::unique_ptr< amici::Solver > "Solver";
+%typemap(doctype) amici::InternalSensitivityMethod "InternalSensitivityMethod";
+%typemap(doctype) amici::InterpolationType "InterpolationType";
+%typemap(doctype) amici::LinearMultistepMethod "LinearMultistepMethod";
+%typemap(doctype) amici::LinearSolver "LinearSolver";
+%typemap(doctype) amici::Model * "Model";
+%typemap(doctype) amici::Model const * "Model";
+%typemap(doctype) amici::NewtonDampingFactorMode "NewtonDampingFactorMode";
+%typemap(doctype) amici::NonlinearSolverIteration "NonlinearSolverIteration";
+%typemap(doctype) amici::RDataReporting "RDataReporting";
+%typemap(doctype) amici::SensitivityMethod "SensitivityMethod";
+%typemap(doctype) amici::SensitivityOrder "SensitivityOrder";
+%typemap(doctype) amici::Solver * "Solver";
+%typemap(doctype) amici::SteadyStateSensitivityMode "SteadyStateSensitivityMode";
 %typemap(doctype) amici::realtype "float";
 %typemap(doctype) DoubleVector "numpy.ndarray";
 %typemap(doctype) IntVector "List[int]";
 %typemap(doctype) std::pair< size_t,size_t > "Tuple[int, int]";
 %typemap(doctype) std::string "str";
 %typemap(doctype) std::string const & "str";
-%typemap(doctype) std::unique_ptr< amici::ExpData >   "amici.ExpData";
-%typemap(doctype) std::unique_ptr< amici::ReturnData > "amici.ReturnData";
+%typemap(doctype) std::unique_ptr< amici::ExpData >   "ExpData";
+%typemap(doctype) std::unique_ptr< amici::ReturnData > "ReturnData";
 %typemap(doctype) size_t "int";
 
 
@@ -62,6 +62,9 @@ nonstandard type conversions.
         SWIG_exception_fail(SWIG_RuntimeError, "Unknown exception occurred");
     }
 }
+
+// Warning 503: Can't wrap 'operator ==' unless renamed to a valid identifier.
+%rename("__eq__") operator ==;
 
 %{
 #define SWIG_FILE_WITH_INIT
@@ -120,6 +123,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %ignore amici::ContextManager;
 %ignore amici::ModelState;
 %ignore amici::ModelStateDerived;
+%ignore amici::unravel_index;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
@@ -137,6 +141,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %include model.i
 %include model_ode.i
 %include model_dae.i
+%include logging.i
 %include rdata.i
 
 #ifndef AMICI_SWIG_WITHOUT_HDF5
@@ -153,9 +158,6 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %}
 
 // Add necessary symbols to generated header
-// Ignore due to https://github.com/swig/swig/issues/1643
-%ignore amici::AmiciApplication::warningF;
-%ignore amici::AmiciApplication::errorF;
 %{
 #include "amici/amici.h"
 using namespace amici;
@@ -170,6 +172,7 @@ using namespace amici;
 
 // Expose vectors
 %template(ExpDataPtrVector) std::vector<amici::ExpData*>;
+%template(LogItemVector) std::vector<amici::LogItem>;
 
 
 // Convert integer values to enum class
@@ -264,8 +267,7 @@ if sys.platform == 'win32':
 
 // import additional types for typehints
 %pythonbegin %{
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
 if TYPE_CHECKING:
-    from typing import Iterable, List, Tuple
     import numpy
 %}

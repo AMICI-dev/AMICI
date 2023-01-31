@@ -44,6 +44,7 @@ extern "C" {
 
 #include <limits.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 /* ========================================================================== */
 /* === SuiteSparse_long ===================================================== */
@@ -59,12 +60,13 @@ extern "C" {
 
 #else
 
-#define SuiteSparse_long long
-#define SuiteSparse_long_max LONG_MAX
-#define SuiteSparse_long_idd "ld"
+#define SuiteSparse_long int64_t
+#define SuiteSparse_long_max INT64_MAX
+#define SuiteSparse_long_idd PRId64
 
 #endif
 #define SuiteSparse_long_id "%" SuiteSparse_long_idd
+#define SuiteSparse_unsigned_long uint64_t
 #endif
 
 /* ========================================================================== */

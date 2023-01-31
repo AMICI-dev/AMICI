@@ -47,7 +47,7 @@ class AmiVector {
      */
     explicit AmiVector(std::vector<realtype> rvec)
         : vec_(std::move(rvec)),
-          nvec_(N_VMake_Serial(static_cast<long int>(vec_.size()), vec_.data())) {}
+          nvec_(N_VMake_Serial(gsl::narrow<long int>(vec_.size()), vec_.data())) {}
 
     /** Copy data from gsl::span and constructs a vector
      * @brief constructor from gsl::span,
@@ -62,7 +62,7 @@ class AmiVector {
      */
     AmiVector(const AmiVector &vold) : vec_(vold.vec_) {
         nvec_ =
-            N_VMake_Serial(static_cast<long int>(vold.vec_.size()), vec_.data());
+            N_VMake_Serial(gsl::narrow<long int>(vold.vec_.size()), vec_.data());
     }
 
     /**

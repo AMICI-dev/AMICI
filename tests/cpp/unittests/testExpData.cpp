@@ -56,6 +56,9 @@ class ExpDataTest : public ::testing::Test {
             0,         // dwdw
             0,         // ndxdotdw
             {},         // ndJydy
+            0,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
+            0,         // ndtotal_cldx_rdata
             0,         // nnz
             0,         // ubw
             0          // lbw
@@ -177,6 +180,17 @@ TEST_F(ExpDataTest, CopyConstructable)
                     TEST_ATOL,
                     TEST_RTOL,
                     "ts");
+}
+
+
+TEST_F(ExpDataTest, Equality)
+{
+    auto edata = ExpData(testModel);
+    auto edata2(edata);
+    ASSERT_TRUE(edata == edata2);
+
+    edata2.id = "different";
+    ASSERT_FALSE(edata == edata2);
 }
 
 TEST_F(ExpDataTest, DimensionChecks)

@@ -26,7 +26,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 996 out of the 1780 (~56%) test cases** from
+Python-AMICI currently **passes 1030 out of the 1821 (~57%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -60,6 +60,7 @@ The following SBML test suite tags are currently supported
 * Concentration
 * ConstantSpecies
 * ConversionFactors
+* DefaultValue
 * EventT0Firing
 * HasOnlySubstanceUnits
 * InitialValueReassigned
@@ -104,9 +105,11 @@ PySB import
 AMICI can import :term:`PySB` models via
 :py:func:`amici.pysb_import.pysb2amici`.
 
-`BioNetGen <https://www.csb.pitt.edu/Faculty/Faeder/?page_id=409>`_ and
-`Kappa <https://kappalanguage.org/>`_ models can be imported into AMICI using
-PySB.
+BNGL import
+-----------
+
+AMICI can import :term:`BNGL` models via
+:py:func:`amici.bngl_import.bngl2amici`.
 
 PEtab import
 ------------
@@ -134,6 +137,9 @@ We also plan to implement support for the
 Examples
 ========
 
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=binder%2Foverview.ipynb
+
 .. toctree::
    :maxdepth: 1
 
@@ -142,6 +148,37 @@ Examples
    petab.ipynb
    ExampleExperimentalConditions.ipynb
    ExampleEquilibrationLogic.ipynb
+   example_errors.ipynb
+   example_large_models/example_performance_optimization.ipynb
+
+Environment variables affecting model import
+============================================
+
+In addition to the environment variables listed
+:ref:`here <amici_python_install_env_vars>`, the following environment
+variables control various behaviours during model import and compilation:
+
+.. list-table:: Environment variables affecting model import
+   :widths: 25 50 25
+   :header-rows: 1
+
+   * - Variable
+     - Purpose
+     - Example
+   * - ``AMICI_EXTRACT_CSE``
+     - Extract common subexpressions. May significantly reduce file size and
+       compile time for large models, but makes the generated code less
+       readable. Disabled by default.
+     - ``AMICI_EXTRACT_CSE=1``
+   * - ``AMICI_IMPORT_NPROCS``
+     - Number of processes to be used for model import. Defaults to 1.
+       Speeds up import of large models. Will slow down import of small models,
+       benchmarking recommended.
+     - ``AMICI_IMPORT_NPROCS=4``
+   * - ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS``
+     - Compute conservation laws for non-constant species. SBML-import only.
+       See :py:func:`amici.sbml_import.SbmlImporter.sbml2amici`.
+     -
 
 
 Miscellaneous

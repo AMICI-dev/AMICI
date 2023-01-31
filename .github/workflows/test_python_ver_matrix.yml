@@ -9,12 +9,14 @@ on:
     branches:
       - master
   workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
 
 jobs:
   build:
     name: Python Version Matrix
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.experimental }}
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
@@ -22,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10', '3.11']
         experimental: [false]
 
     steps:
@@ -30,11 +32,11 @@ jobs:
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 20
 
@@ -59,6 +61,5 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-          && pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests

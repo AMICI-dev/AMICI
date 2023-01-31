@@ -5,7 +5,8 @@
 #include "amici/vector.h"
 #include "amici/model.h"
 #include "amici/misc.h"
-#include "amici/forwardproblem.h"
+#include "amici/logging.h"
+
 #include <vector>
 
 namespace amici {
@@ -125,12 +126,14 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sigmaz;
 
     /**
-     * parameter derivative of event output (shape `nmaxevent` x `nz`, row-major)
+     * parameter derivative of event output
+     * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> sz;
 
     /**
-     * parameter derivative of event output standard deviation (shape `nmaxevent` x `nz`, row-major)
+     * parameter derivative of event output standard deviation
+     * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> ssigmaz;
 
@@ -138,7 +141,8 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> rz;
 
     /**
-     * parameter derivative of event trigger output (shape `nmaxevent` x `nz` x `nplist`, row-major)
+     * parameter derivative of event trigger output
+     * (shape `nmaxevent` x `nplist` x `nz`, row-major)
      */
     std::vector<realtype> srz;
 
@@ -169,7 +173,8 @@ class ReturnData: public ModelDimensions {
     std::vector<realtype> sy;
 
     /**
-     * parameter derivative of observable standard deviation (shape `nt` x `nplist` x `ny`, row-major)
+     * parameter derivative of observable standard deviation
+     * (shape `nt` x `nplist` x `ny`, row-major)
      */
     std::vector<realtype> ssigmay;
 
@@ -221,6 +226,9 @@ class ReturnData: public ModelDimensions {
     /** computation time of backward solve [ms] */
     double cpu_timeB = 0.0;
 
+    /** total CPU time from entering runAmiciSimulation until exiting [ms] */
+    double cpu_time_total = 0.0;
+
     /** flags indicating success of steady state solver (preequilibration) */
     std::vector<SteadyStateStatus> preeq_status;
 
@@ -248,13 +256,6 @@ class ReturnData: public ModelDimensions {
     std::vector<int> preeq_numsteps;
 
     /**
-     * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (preequilibration)
-     * (shape `newton_maxsteps * 2`)
-     */
-    std::vector<int> preeq_numlinsteps;
-
-    /**
      * number of simulation steps for adjoint steady state problem
      * (preequilibration) [== 0 if analytical solution worked, > 0 otherwise]
      */
@@ -265,13 +266,6 @@ class ReturnData: public ModelDimensions {
      * [newton, simulation, newton] (shape `3`) (postequilibration)
      */
     std::vector<int> posteq_numsteps;
-
-    /**
-     * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (postequilibration)
-     * (shape `newton_maxsteps * 2`)
-     */
-    std::vector<int> posteq_numlinsteps;
 
     /**
      * number of simulation steps for adjoint steady state problem
@@ -331,7 +325,17 @@ class ReturnData: public ModelDimensions {
      */
     std::vector<realtype> s2llh;
 
-    /** status code */
+    /**
+     * @brief Simulation status code.
+     *
+     * One of:
+     *
+     * * AMICI_SUCCESS, indicating successful simulation
+     * * AMICI_MAX_TIME_EXCEEDED, indicating that the simulation did not finish
+     *   within the allowed time (see Solver.{set,get}MaxTime)
+     * * AMICI_ERROR, indicating that some error occurred during simulation
+     *   (a more detailed error message will have been printed).
+     */
     int status = 0;
 
     /** number of states (alias `nx_rdata`, kept for backward compatibility) */
@@ -382,6 +386,9 @@ class ReturnData: public ModelDimensions {
 
     /** boolean indicating whether residuals for standard deviations have been added */
     bool sigma_res;
+
+    /** log messages */
+    std::vector<LogItem> messages;
 
   protected:
 

@@ -6,7 +6,7 @@ jobs:
     name: Tests Ubuntu
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     env:
       ENABLE_GCOV_COVERAGE: "TRUE"
@@ -18,11 +18,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -71,7 +71,7 @@ jobs:
 
     - name: Cache sonar files
       id: cache-sonar
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
@@ -87,7 +87,6 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-        && pip3 install coverage pytest pytest-cov \
         && pytest \
           --ignore-glob=*petab* \
           --cov=amici \
@@ -104,12 +103,13 @@ jobs:
         scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
     - name: Codecov Python
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./build/coverage_py.xml
+        file: build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
+        verbose: true
 
     - name: lcov
       run: |
@@ -117,15 +117,15 @@ jobs:
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python3 --version | sed -E 's/.*([0-9]+\.[0-9]+)\..*/\1/')/amici/src \
+        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python -c "import sys; print(sys.implementation.cache_tag)")/amici/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.info
+        file: coverage.info
         flags: cpp
         fail_ci_if_error: true
 
@@ -143,16 +143,27 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@master
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
+    - uses: actions/checkout@v3
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
       run: |
-        brew install hdf5 swig gcc cppcheck libomp boost
+        brew install hdf5 swig gcc cppcheck libomp boost \
+          && brew ls -v boost \
+          && brew ls -v libomp \
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
 
     - name: Build AMICI
       run: |

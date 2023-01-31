@@ -6,6 +6,7 @@
 #include <amici/solver_cvodes.h>
 #include <amici/solver_idas.h>
 #include <amici/symbolic_functions.h>
+#include <amici/misc.h>
 
 #include <cmath>
 #include <cstring>
@@ -70,7 +71,10 @@ class ModelTest : public ::testing::Test {
             0,         // ndwdp
             0,         // dwdw
             0,         // ndxdotdw
-            {},         // ndJydy
+            {},        // ndJydy
+            0,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
+            0,         // ndtotal_cldx_rdata
             0,         // nnz
             0,         // ubw
             0          // lbw
@@ -304,10 +308,13 @@ class SolverTest : public ::testing::Test {
             0,         // ndwdp
             0,         // dwdw
             0,         // ndxdotdw
-            {},         // ndJydy
+            {},        // ndJydy
+            0,         // ndxrdatadxsolver
+            0,         // ndxrdatadtcl
+            0,         // ndtotal_cldx_rdata
             1,         // nnz
             0,         // ubw
-            0         // lbw
+            0          // lbw
             ),
         SimulationParameters(
             std::vector<realtype>(3, 0.0),
@@ -402,19 +409,12 @@ testSolverGetterSetters(CVodeSolver solver,
     ASSERT_EQ(static_cast<int>(solver.getLinearMultistepMethod()),
               static_cast<int>(lmm));
 
-    solver.setPreequilibration(true);
-    ASSERT_EQ(solver.getPreequilibration(), true);
-
-    solver.setStabilityLimitFlag(true);
+        solver.setStabilityLimitFlag(true);
     ASSERT_EQ(solver.getStabilityLimitFlag(), true);
 
     ASSERT_THROW(solver.setNewtonMaxSteps(badsteps), AmiException);
     solver.setNewtonMaxSteps(steps);
     ASSERT_EQ(solver.getNewtonMaxSteps(), steps);
-
-    ASSERT_THROW(solver.setNewtonMaxLinearSteps(badsteps), AmiException);
-    solver.setNewtonMaxLinearSteps(steps);
-    ASSERT_EQ(solver.getNewtonMaxLinearSteps(), steps);
 
     ASSERT_THROW(solver.setMaxSteps(badsteps), AmiException);
     solver.setMaxSteps(steps);
@@ -447,6 +447,59 @@ testSolverGetterSetters(CVodeSolver solver,
     ASSERT_THROW(solver.setAbsoluteToleranceSteadyState(badtol), AmiException);
     solver.setAbsoluteToleranceSteadyState(tol);
     ASSERT_EQ(solver.getAbsoluteToleranceSteadyState(), tol);
+}
+
+TEST_F(SolverTest, SteadyStateToleranceFactor)
+{
+    CVodeSolver s;
+    // test with unset steadystate tolerances
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyStateSensi(),
+        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance());
+
+    // test with changed steadystate tolerance factor
+    s.setSteadyStateToleranceFactor(5);
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance());
+    s.setSteadyStateSensiToleranceFactor(5);
+    ASSERT_DOUBLE_EQ(
+        s.getRelativeToleranceSteadyStateSensi(),
+        s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_DOUBLE_EQ(
+        s.getAbsoluteToleranceSteadyState(),
+        s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance());
+
+
+    // test with steadystate tolerance override tolerance factor
+    s.setRelativeToleranceSteadyState(2);
+    ASSERT_NE(s.getRelativeToleranceSteadyState(),
+        s.getSteadyStateToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_EQ(s.getRelativeToleranceSteadyState(), 2);
+    s.setAbsoluteToleranceSteadyState(3);
+    ASSERT_NE(s.getAbsoluteToleranceSteadyState(),
+              s.getSteadyStateToleranceFactor() * s.getAbsoluteTolerance());
+    ASSERT_EQ(s.getAbsoluteToleranceSteadyState(), 3);
+    s.setRelativeToleranceSteadyStateSensi(4);
+    ASSERT_NE(s.getRelativeToleranceSteadyStateSensi(),
+              s.getSteadyStateSensiToleranceFactor() * s.getRelativeTolerance());
+    ASSERT_EQ(s.getRelativeToleranceSteadyStateSensi(), 4);
+    s.setAbsoluteToleranceSteadyStateSensi(5);
+    ASSERT_NE(s.getAbsoluteToleranceSteadyStateSensi(),
+              s.getSteadyStateSensiToleranceFactor() * s.getAbsoluteTolerance());
+    ASSERT_EQ(s.getAbsoluteToleranceSteadyStateSensi(), 5);
 }
 
 class AmiVectorTest : public ::testing::Test {
@@ -592,6 +645,80 @@ TEST_F(SunMatrixWrapperTest, BlockTranspose)
     for (int icol = 0; icol <= 4; icol++)
         ASSERT_EQ(SM_INDEXPTRS_S(B.get())[icol],
                   SM_INDEXPTRS_S(B_sparse.get())[icol]);
+}
+
+TEST(UnravelIndex, UnravelIndex)
+{
+    EXPECT_EQ(unravel_index(0, 2), std::make_pair((size_t) 0, (size_t) 0));
+    EXPECT_EQ(unravel_index(1, 2), std::make_pair((size_t) 0, (size_t) 1));
+    EXPECT_EQ(unravel_index(2, 2), std::make_pair((size_t) 1, (size_t) 0));
+    EXPECT_EQ(unravel_index(3, 2), std::make_pair((size_t) 1, (size_t) 1));
+    EXPECT_EQ(unravel_index(4, 2), std::make_pair((size_t) 2, (size_t) 0));
+    EXPECT_EQ(unravel_index(5, 2), std::make_pair((size_t) 2, (size_t) 1));
+    EXPECT_EQ(unravel_index(6, 2), std::make_pair((size_t) 3, (size_t) 0));
+}
+
+TEST(UnravelIndex, UnravelIndexSunMatDense)
+{
+    SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
+
+    A.set_data(0, 0, 0);
+    A.set_data(1, 0, 1);
+    A.set_data(2, 0, 2);
+    A.set_data(0, 1, 3);
+    A.set_data(1, 1, 4);
+    A.set_data(2, 1, 5);
+
+    for(int i = 0; i < 6; ++i) {
+        auto idx = unravel_index(i, A.get());
+        EXPECT_EQ(A.get_data(idx.first, idx.second), i);
+    }
+}
+
+TEST(UnravelIndex, UnravelIndexSunMatSparse)
+{
+    SUNMatrixWrapper D = SUNMatrixWrapper(4, 2);
+
+    // [0, 3]
+    // [0, 0]
+    // [1, 0]
+    // [2, 0]
+    // data [1, 2, 3]
+    // colptrs [0, 2, 3]
+    // rowidxs [2, 3, 1]
+    D.set_data(0, 0, 0);
+    D.set_data(1, 0, 0);
+    D.set_data(2, 0, 1);
+    D.set_data(3, 0, 2);
+    D.set_data(0, 1, 3);
+    D.set_data(1, 1, 0);
+    D.set_data(2, 1, 0);
+    D.set_data(3, 1, 0);
+
+    auto S = SUNSparseFromDenseMatrix(D.get(), 1e-15, CSC_MAT);
+
+    EXPECT_EQ(unravel_index(0, S), std::make_pair((sunindextype) 2, (sunindextype) 0));
+    EXPECT_EQ(unravel_index(1, S), std::make_pair((sunindextype) 3, (sunindextype) 0));
+    EXPECT_EQ(unravel_index(2, S), std::make_pair((sunindextype) 0, (sunindextype) 1));
+
+    SUNMatDestroy(S);
+}
+
+TEST(ReturnCodeToStr, ReturnCodeToStr)
+{
+    EXPECT_EQ("AMICI_SUCCESS", simulation_status_to_str(AMICI_SUCCESS));
+    EXPECT_EQ("AMICI_UNRECOVERABLE_ERROR",
+              simulation_status_to_str(AMICI_UNRECOVERABLE_ERROR));
+}
+
+TEST(SpanEqual, SpanEqual)
+{
+    std::vector<realtype> a {1, 2, 3};
+    std::vector<realtype> b {1, 2, NAN};
+
+    EXPECT_TRUE(is_equal(a, a));
+    EXPECT_TRUE(is_equal(b, b));
+    EXPECT_FALSE(is_equal(a, b));
 }
 
 } // namespace

@@ -10,5 +10,12 @@ using namespace amici;
 %}
 
 
+// Make model module accessible from the model
+%feature("pythonappend") amici::generic_model::getModel %{
+    import sys
+    val.module = sys.modules['.'.join(__name__.split('.')[:-1])]
+%}
+
+
 // Process symbols in header
 %include "wrapfunctions.h"

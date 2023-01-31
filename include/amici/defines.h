@@ -6,7 +6,6 @@
 #endif
 
 #include <functional>
-#include <string>
 #include <cmath>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
@@ -61,7 +60,10 @@ constexpr double pi = M_PI;
 
 constexpr int AMICI_ONEOUTPUT=                 5;
 
-/* Return codes */
+// Return codes
+//
+// NOTE: When adding / removing / renaming return codes,
+//       please update simulation_status_to_str_map in amici.h
 constexpr int AMICI_RECOVERABLE_ERROR=         1;
 constexpr int AMICI_UNRECOVERABLE_ERROR=     -10;
 constexpr int AMICI_TOO_MUCH_WORK=            -1;
@@ -69,6 +71,7 @@ constexpr int AMICI_TOO_MUCH_ACC=             -2;
 constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
+constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
 constexpr int AMICI_NO_STEADY_STATE=         -81;
@@ -180,7 +183,8 @@ enum class NonlinearSolverIteration {
 /** Sensitivity computation mode in steadyStateProblem */
 enum class SteadyStateSensitivityMode {
     newtonOnly,
-    simulationFSA
+    integrationOnly,
+    integrateIfNewtonFails
 };
 
 /** State in which the steady state computation finished */
@@ -219,12 +223,6 @@ enum class RDataReporting {
     residuals,
     likelihood,
 };
-
-/**
- * Type for function to process warnings or error messages.
- */
-using outputFunctionType = std::function<void(std::string const& identifier,
-                                              std::string const& message)>;
 
 // clang-format on
 

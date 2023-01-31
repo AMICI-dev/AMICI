@@ -1,9 +1,9 @@
 #include "amici/solver.h"
 
 #include "amici/exception.h"
-#include "amici/misc.h"
 #include "amici/model.h"
-#include "amici/rdata.h"
+#include "amici/symbolic_functions.h"
+
 
 #include <cstdio>
 #include <cstring>
@@ -12,11 +12,6 @@
 
 namespace amici {
 
-Solver::Solver(AmiciApplication *app) : app(app)
-{
-
-}
-
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),
       interp_type_(other.interp_type_), maxsteps_(other.maxsteps_),
@@ -24,16 +19,18 @@ Solver::Solver(const Solver &other)
       sensi_meth_(other.sensi_meth_), sensi_meth_preeq_(other.sensi_meth_preeq_),
       stldet_(other.stldet_), ordering_(other.ordering_),
       newton_maxsteps_(other.newton_maxsteps_),
-      newton_maxlinsteps_(other.newton_maxlinsteps_),
       newton_damping_factor_mode_(other.newton_damping_factor_mode_),
       newton_damping_factor_lower_bound_(other.newton_damping_factor_lower_bound_),
-      requires_preequilibration_(other.requires_preequilibration_),
       linsol_(other.linsol_), atol_(other.atol_), rtol_(other.rtol_),
       atol_fsa_(other.atol_fsa_), rtol_fsa_(other.rtol_fsa_),
       atolB_(other.atolB_), rtolB_(other.rtolB_), quad_atol_(other.quad_atol_),
-      quad_rtol_(other.quad_rtol_), ss_atol_(other.ss_atol_),
-      ss_rtol_(other.ss_rtol_), ss_atol_sensi_(other.ss_atol_sensi_),
+      quad_rtol_(other.quad_rtol_), ss_tol_factor_(other.ss_tol_factor_),
+      ss_atol_(other.ss_atol_), ss_rtol_(other.ss_rtol_),
+      ss_tol_sensi_factor_(other.ss_tol_sensi_factor_),
+      ss_atol_sensi_(other.ss_atol_sensi_),
       ss_rtol_sensi_(other.ss_rtol_sensi_), rdata_mode_(other.rdata_mode_),
+      newton_step_steadystate_conv_(other.newton_step_steadystate_conv_),
+      check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_),
       maxstepsB_(other.maxstepsB_), sensi_(other.sensi_)
 {}
 
@@ -170,6 +167,9 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if (model->nt() > 1)
         calcIC(model->getTimepoint(1));
+
+    cpu_time_ = 0.0;
+    cpu_timeB_ = 0.0;
 }
 
 void Solver::setupB(int *which, const realtype tf, Model *model,
@@ -201,6 +201,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     applyQuadTolerancesASA(*which);
 
     setStabLimDetB(*which, stldet_);
+
 }
 
 void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &x0,
@@ -224,7 +225,7 @@ void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &
     model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
 
-void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
+void Solver::updateAndReinitStatesAndSensitivities(Model *model) const {
     model->fx0_fixedParameters(x_);
     reInit(t_, x_, dx_);
 
@@ -260,16 +261,16 @@ void Solver::storeDiagnosis() const {
 
     long int lnumber;
     getNumSteps(solver_memory_.get(), &lnumber);
-    ns_.push_back(static_cast<int>(lnumber));
+    ns_.push_back(gsl::narrow<int>(lnumber));
 
     getNumRhsEvals(solver_memory_.get(), &lnumber);
-    nrhs_.push_back(static_cast<int>(lnumber));
+    nrhs_.push_back(gsl::narrow<int>(lnumber));
 
     getNumErrTestFails(solver_memory_.get(), &lnumber);
-    netf_.push_back(static_cast<int>(lnumber));
+    netf_.push_back(gsl::narrow<int>(lnumber));
 
     getNumNonlinSolvConvFails(solver_memory_.get(), &lnumber);
-    nnlscf_.push_back(static_cast<int>(lnumber));
+    nnlscf_.push_back(gsl::narrow<int>(lnumber));
 
     int number;
     getLastOrder(solver_memory_.get(), &number);
@@ -287,16 +288,16 @@ void Solver::storeDiagnosisB(const int which) const {
 
     long int number;
     getNumSteps(solver_memory_B_.at(which).get(), &number);
-    nsB_.push_back(static_cast<int>(number));
+    nsB_.push_back(gsl::narrow<int>(number));
 
     getNumRhsEvals(solver_memory_B_.at(which).get(), &number);
-    nrhsB_.push_back(static_cast<int>(number));
+    nrhsB_.push_back(gsl::narrow<int>(number));
 
     getNumErrTestFails(solver_memory_B_.at(which).get(), &number);
-    netfB_.push_back(static_cast<int>(number));
+    netfB_.push_back(gsl::narrow<int>(number));
 
     getNumNonlinSolvConvFails(solver_memory_B_.at(which).get(), &number);
-    nnlscfB_.push_back(static_cast<int>(number));
+    nnlscfB_.push_back(gsl::narrow<int>(number));
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {
@@ -490,10 +491,9 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.iter_ == b.iter_) && (a.stldet_ == b.stldet_) &&
            (a.ordering_ == b.ordering_) &&
            (a.newton_maxsteps_ == b.newton_maxsteps_) &&
-           (a.newton_maxlinsteps_ == b.newton_maxlinsteps_) &&
            (a.newton_damping_factor_mode_ == b.newton_damping_factor_mode_) &&
            (a.newton_damping_factor_lower_bound_ == b.newton_damping_factor_lower_bound_) &&
-           (a.requires_preequilibration_ == b.requires_preequilibration_) && (a.ism_ == b.ism_) &&
+           (a.ism_ == b.ism_) &&
            (a.linsol_ == b.linsol_) && (a.atol_ == b.atol_) && (a.rtol_ == b.rtol_) &&
            (a.maxsteps_ == b.maxsteps_) && (a.maxstepsB_ == b.maxstepsB_) &&
            (a.quad_atol_ == b.quad_atol_) && (a.quad_rtol_ == b.quad_rtol_) &&
@@ -513,6 +513,8 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.rtolB_ == b.rtolB_ || (isNaN(a.rtolB_) && isNaN(b.rtolB_))) &&
            (a.atolB_ == b.atolB_ || (isNaN(a.atolB_) && isNaN(b.atolB_))) &&
            (a.sensi_ == b.sensi_) && (a.sensi_meth_ == b.sensi_meth_) &&
+           (a.newton_step_steadystate_conv_ == b.newton_step_steadystate_conv_) &&
+           (a.check_sensi_steadystate_conv_ == b.check_sensi_steadystate_conv_) &&
            (a.rdata_mode_ == b.rdata_mode_);
 }
 
@@ -627,20 +629,6 @@ void Solver::setNewtonMaxSteps(const int newton_maxsteps) {
     if (newton_maxsteps < 0)
         throw AmiException("newton_maxsteps must be a non-negative number");
     newton_maxsteps_ = newton_maxsteps;
-}
-
-bool Solver::getPreequilibration() const { return requires_preequilibration_; }
-
-void Solver::setPreequilibration(const bool require_preequilibration) {
-    requires_preequilibration_ = require_preequilibration;
-}
-
-int Solver::getNewtonMaxLinearSteps() const { return newton_maxlinsteps_; }
-
-void Solver::setNewtonMaxLinearSteps(const int newton_maxlinsteps) {
-    if (newton_maxlinsteps < 0)
-        throw AmiException("newton_maxlinsteps must be a non-negative number");
-    newton_maxlinsteps_ = newton_maxlinsteps;
 }
 
 NewtonDampingFactorMode Solver::getNewtonDampingFactorMode() const { return newton_damping_factor_mode_; }
@@ -794,8 +782,19 @@ void Solver::setAbsoluteToleranceQuadratures(const double atol) {
             applyTolerancesASA(iMem);
 }
 
+double Solver::getSteadyStateToleranceFactor() const {
+    return static_cast<double>(ss_tol_factor_);
+}
+
+void Solver::setSteadyStateToleranceFactor(const double ss_tol_factor) {
+    if (ss_tol_factor < 0)
+        throw AmiException("ss_tol_factor must be a non-negative number");
+
+    ss_tol_factor_ = static_cast<realtype>(ss_tol_factor);
+}
+
 double Solver::getRelativeToleranceSteadyState() const {
-    return static_cast<double>(isNaN(ss_rtol_) ? rtol_ : ss_rtol_);
+    return static_cast<double>(isNaN(ss_rtol_) ? rtol_ * ss_tol_factor_ : ss_rtol_);
 }
 
 void Solver::setRelativeToleranceSteadyState(const double rtol) {
@@ -806,7 +805,7 @@ void Solver::setRelativeToleranceSteadyState(const double rtol) {
 }
 
 double Solver::getAbsoluteToleranceSteadyState() const {
-    return static_cast<double>(isNaN(ss_atol_) ? atol_ : ss_atol_);
+    return static_cast<double>(isNaN(ss_atol_) ? atol_ * ss_tol_factor_ : ss_atol_);
 }
 
 void Solver::setAbsoluteToleranceSteadyState(const double atol) {
@@ -816,8 +815,19 @@ void Solver::setAbsoluteToleranceSteadyState(const double atol) {
     ss_atol_ = static_cast<realtype>(atol);
 }
 
+double Solver::getSteadyStateSensiToleranceFactor() const {
+    return static_cast<double>(ss_tol_sensi_factor_);
+}
+
+void Solver::setSteadyStateSensiToleranceFactor(const double ss_tol_sensi_factor) {
+    if (ss_tol_sensi_factor < 0)
+        throw AmiException("ss_tol_sensi_factor must be a non-negative number");
+
+    ss_tol_sensi_factor_ = static_cast<realtype>(ss_tol_sensi_factor);
+}
+
 double Solver::getRelativeToleranceSteadyStateSensi() const {
-    return static_cast<double>(isNaN(ss_rtol_sensi_) ? rtol_ : ss_rtol_sensi_);
+    return static_cast<double>(isNaN(ss_rtol_sensi_) ? rtol_ * ss_tol_sensi_factor_ : ss_rtol_sensi_);
 }
 
 void Solver::setRelativeToleranceSteadyStateSensi(const double rtol) {
@@ -828,7 +838,7 @@ void Solver::setRelativeToleranceSteadyStateSensi(const double rtol) {
 }
 
 double Solver::getAbsoluteToleranceSteadyStateSensi() const {
-    return static_cast<double>(isNaN(ss_atol_sensi_) ? atol_ : ss_atol_sensi_);
+    return static_cast<double>(isNaN(ss_atol_sensi_) ? atol_ * ss_tol_sensi_factor_ : ss_atol_sensi_);
 }
 
 void Solver::setAbsoluteToleranceSteadyStateSensi(const double atol) {
@@ -1035,8 +1045,6 @@ void Solver::setInitDone() const { initialized_ = true; };
 
 void Solver::setSensInitDone() const { sens_initialized_ = true; }
 
-void Solver::setSensInitOff() const { sens_initialized_ = false; }
-
 void Solver::setAdjInitDone() const { adj_initialized_ = true; }
 
 void Solver::setInitDoneB(const int which) const {
@@ -1055,7 +1063,6 @@ void Solver::setQuadInitDone() const { quad_initialized_ = true; }
 
 void Solver::switchForwardSensisOff() const {
     sensToggleOff();
-    setSensInitOff();
 }
 
 realtype Solver::getCpuTime() const {
@@ -1216,27 +1223,27 @@ void wrapErrHandlerFn(int error_code, const char *module,
             function, msg);
     switch (error_code) {
     case 99:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:WARNING", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
         break;
 
     case -1:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_WORK", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
     case -2:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_ACC", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
     case -3:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:ERR_FAILURE", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
         break;
 
     case -4:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:CONV_FAILURE", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
         break;
 
     default:
-        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:OTHER", module, function);
+        snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
         break;
     }
 
@@ -1245,7 +1252,8 @@ void wrapErrHandlerFn(int error_code, const char *module,
         throw std::runtime_error("eh_data unset");
     }
     auto solver = static_cast<Solver const*>(eh_data);
-    solver->app->warning(buffid, buffer);
+    if(solver->logger)
+        solver->logger->log(LogSeverity::debug, buffid, buffer);
 }
 
 } // namespace amici

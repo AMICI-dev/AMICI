@@ -13,9 +13,10 @@ from amici import (
     SensitivityMethod,
     SensitivityOrder
 )
+from amici.gradient_check import _check_close
 
 
-def create_amici_model(sbml_model, model_name, observables=None) -> AmiciModel:
+def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     """
     Import an sbml file and create an AMICI model from it
     """
@@ -29,7 +30,7 @@ def create_amici_model(sbml_model, model_name, observables=None) -> AmiciModel:
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=str(output_dir),
-        observables=observables
+        **kwargs
     )
 
     model_module = import_model_module(model_name, str(output_dir.resolve()))
@@ -98,18 +99,21 @@ def create_sbml_model(
         trigger.setMath(libsbml.parseL3Formula(event_def['trigger']))
         trigger.setPersistent(True)
         trigger.setInitialValue(True)
+
+        def creat_event_assignment(target, assignment):
+            ea = event.createEventAssignment()
+            ea.setVariable(target)
+            ea.setMath(libsbml.parseL3Formula(assignment))
+
         if isinstance(event_def['target'], list):
-            assignments = []
-            for ia, event_target in enumerate(event_def['target']):
-                event_assignment = event_def['assignment'][ia]
-                assignments.append(event.createEventAssignment())
-                assignments[ia].setVariable(event_target)
-                assignments[ia].setMath(
-                    libsbml.parseL3Formula(event_assignment))
+            for event_target, event_assignment in zip(
+                    event_def['target'], event_def['assignment']
+            ):
+                creat_event_assignment(event_target, event_assignment)
+
         else:
-            assignment = event.createEventAssignment()
-            assignment.setVariable(event_def['target'])
-            assignment.setMath(libsbml.parseL3Formula(event_def['assignment']))
+            creat_event_assignment(event_def['target'],
+                                   event_def['assignment'])
 
     if to_file:
         libsbml.writeSBMLToFile(
@@ -135,14 +139,16 @@ def check_trajectories_without_sensitivities(
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=5e-5, atol=1e-13)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=5e-9, atol=1e-13)
 
 
 def check_trajectories_with_forward_sensitivities(
@@ -161,8 +167,10 @@ def check_trajectories_with_forward_sensitivities(
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=5)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=5)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=1e-5, atol=1e-13)
+    _check_close(rdata['sx'], result_expected_sx, field="sx",
+                 rtol=1e-5, atol=1e-7)
 
     # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
@@ -173,8 +181,10 @@ def check_trajectories_with_forward_sensitivities(
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    np.testing.assert_almost_equal(rdata['x'], result_expected_x, decimal=8)
-    np.testing.assert_almost_equal(rdata['sx'], result_expected_sx, decimal=8)
+    _check_close(rdata['x'], result_expected_x, field="x",
+                 rtol=1e-10, atol=1e-12)
+    _check_close(rdata['sx'], result_expected_sx, field="sx",
+                 rtol=1e-10, atol=1e-9)
 
 
 def check_trajectories_with_adjoint_sensitivities(

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-
-import amici
-import sys
-import petab
-import subprocess
 import os
 import re
 import shutil
+import subprocess
+import sys
+import logging
+from pathlib import Path
 
+import amici
+import petab
 from amici.petab_import import import_model
 
 
@@ -36,20 +37,21 @@ def check_results(rdata):
     assert rdata['status'] == amici.AMICI_SUCCESS
 
 
-def run_import(model_name):
-    git_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT')
-    if not os.path.exists(git_dir):
+def run_import(model_name, model_dir: Path):
+    git_dir = Path('CS_Signalling_ERBB_RAS_AKT')
+    if not git_dir.exists():
         subprocess.run([
             'git', 'clone', '--depth', '1',
             'https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT']
         )
-    os.chdir(os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT'))
 
-    pp = petab.Problem.from_yaml(
-        'FroehlichKes2018/PEtab/FroehlichKes2018.yaml'
-    )
+    pp = petab.Problem.from_yaml(git_dir / 'FroehlichKes2018' / 'PEtab'
+                                 / 'FroehlichKes2018.yaml')
     petab.lint_problem(pp)
+    amici.ode_export.logger.setLevel(logging.DEBUG)
+    amici.sbml_import.logger.setLevel(logging.DEBUG)
     import_model(model_name=model_name,
+                 model_output_dir=model_dir,
                  sbml_model=pp.sbml_model,
                  condition_table=pp.condition_df,
                  observable_table=pp.observable_df,
@@ -58,17 +60,13 @@ def run_import(model_name):
                  verbose=True)
 
 
-def compile_model(model_name, model_dir):
-    if model_name != os.path.basename(model_dir):
-        shutil.copytree(
-            os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT',
-                         model_name),
-            model_dir
-        )
+def compile_model(model_dir_source: Path, model_dir_compiled: Path):
+    if model_dir_source != model_dir_compiled:
+        shutil.copytree(model_dir_source, model_dir_compiled)
 
     subprocess.run(['python', 'setup.py',
-                    'build_ext', f'--build-lib=.', '--force'],
-                   cwd=model_dir)
+                    'build_ext', '--build-lib=.', '--force'],
+                   cwd=model_dir_compiled)
 
 
 def prepare_simulation(arg, model, solver, edata):
@@ -112,18 +110,22 @@ def prepare_simulation(arg, model, solver, edata):
 def main():
     arg, suffix = parse_args()
 
-    model_dir = os.path.join(os.curdir, 'CS_Signalling_ERBB_RAS_AKT',
-                             'CS_Signalling_ERBB_RAS_AKT_petab' + suffix)
-    model_name = 'CS_Signalling_ERBB_RAS_AKT_petab'
+    # Model is imported once to this directory
+    model_dir_source = Path('model_performance_test')
+    # and copied to and compiled in this directory with different compiler
+    #  options
+    model_dir_compiled = Path(f'model_performance_test_{suffix}')
+    model_name = 'model_performance_test'
 
     if arg == 'import':
-        run_import(model_name)
+        run_import(model_name, model_dir_source)
         return
     elif arg == 'compile':
-        compile_model(model_name, model_dir)
+        compile_model(model_dir_source, model_dir_compiled)
         return
     else:
-        model_module = amici.import_model_module(model_name, model_dir)
+        model_module = amici.import_model_module(model_name,
+                                                 model_dir_compiled)
         model = model_module.getModel()
         solver = model.getSolver()
         # TODO

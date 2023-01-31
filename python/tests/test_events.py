@@ -1,9 +1,13 @@
 """Tests for SBML events, including piecewise expressions."""
+from copy import deepcopy
+
 import numpy as np
 import pytest
-import os
-from scipy.linalg import expm
-from copy import deepcopy
+
+from util import (check_trajectories_with_forward_sensitivities,
+                  check_trajectories_without_sensitivities, create_amici_model,
+                  create_sbml_model)
+from amici.testing import skip_on_valgrind
 
 from util import (
     create_sbml_model,
@@ -14,11 +18,13 @@ from util import (
 )
 
 @pytest.fixture(params=[
-    'piecewise_plus_event_simple_case',
-    'piecewise_plus_event_semi_complicated',
-    'piecewise_plus_event_trigger_depends_on_state',
-    'events_plus_heavisides',
-    'nested_events',
+    pytest.param('events_plus_heavisides', marks=skip_on_valgrind),
+    pytest.param('piecewise_plus_event_simple_case', marks=skip_on_valgrind),
+    pytest.param('piecewise_plus_event_semi_complicated',
+                 marks=skip_on_valgrind),
+    pytest.param('piecewise_plus_event_trigger_depends_on_state',
+                 marks=skip_on_valgrind),
+    pytest.param('nested_events', marks=skip_on_valgrind),
 ])
 def model(request):
     """Returns the requested AMICI model and analytical expressions."""
@@ -634,3 +640,12 @@ def test_models(model):
     check_trajectories_with_forward_sensitivities(amici_model,
                                                   result_expected_x,
                                                   result_expected_sx)
+
+
+def expm(x):
+    """``expm`` wrapper
+
+    Uses ``expm`` from ``mpmath``. *Something* changed in scipy's ``expm`` in
+    version 1.9.0 breaking these tests"""
+    from mpmath import expm
+    return np.array(expm(x).tolist()).astype(float)

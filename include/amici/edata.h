@@ -2,7 +2,6 @@
 #define AMICI_EDATA_H
 
 #include "amici/defines.h"
-#include "amici/vector.h"
 #include "amici/misc.h"
 #include "amici/simulation_parameters.h"
 
@@ -29,7 +28,7 @@ class ExpData : public SimulationParameters {
      * @brief Copy constructor, needs to be declared to be generated in
      * swig
      */
-    ExpData(const ExpData &) = default;
+    ExpData(ExpData const&) = default;
 
     /**
      * @brief constructor that only initializes dimensions
@@ -89,7 +88,7 @@ class ExpData : public SimulationParameters {
      *
      * @param model pointer to model specification object
      */
-    explicit ExpData(const Model &model);
+    explicit ExpData(Model const& model);
 
     /**
      * @brief constructor that initializes with returnData, adds noise according
@@ -99,7 +98,7 @@ class ExpData : public SimulationParameters {
      * @param sigma_y scalar standard deviations for all observables
      * @param sigma_z scalar standard deviations for all event observables
      */
-    ExpData(const ReturnData &rdata, realtype sigma_y, realtype sigma_z);
+    ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z);
 
     /**
      * @brief constructor that initializes with returnData, adds noise according
@@ -111,10 +110,14 @@ class ExpData : public SimulationParameters {
      * @param sigma_z vector of standard deviations for event observables
      * (dimension: nztrue or nmaxevent x nztrue, row-major)
      */
-    ExpData(const ReturnData &rdata, std::vector<realtype> sigma_y,
-            std::vector<realtype> sigma_z);
+    ExpData(
+        ReturnData const& rdata, std::vector<realtype> sigma_y,
+        std::vector<realtype> sigma_z
+    );
 
     ~ExpData() = default;
+
+    friend inline bool operator==(ExpData const& lhs, ExpData const& rhs);
 
     /**
      * @brief number of observables of the non-augmented model
@@ -149,7 +152,7 @@ class ExpData : public SimulationParameters {
      *
      * @param ts timepoints
      */
-    void setTimepoints(const std::vector<realtype> &ts);
+    void setTimepoints(std::vector<realtype> const& ts);
 
     /**
      * @brief get function that copies data from ExpData::ts to output
@@ -172,7 +175,7 @@ class ExpData : public SimulationParameters {
      *
      * @param observedData observed data (dimension: nt x nytrue, row-major)
      */
-    void setObservedData(const std::vector<realtype> &observedData);
+    void setObservedData(std::vector<realtype> const& observedData);
 
     /**
      * @brief set function that copies observed data for specific observable
@@ -180,7 +183,7 @@ class ExpData : public SimulationParameters {
      * @param observedData observed data (dimension: nt)
      * @param iy observed data index
      */
-    void setObservedData(const std::vector<realtype> &observedData, int iy);
+    void setObservedData(std::vector<realtype> const& observedData, int iy);
 
     /**
      * @brief get function that checks whether data at specified indices has
@@ -207,7 +210,7 @@ class ExpData : public SimulationParameters {
      *
      * @return pointer to observed data at index (dimension: nytrue)
      */
-    const realtype *getObservedDataPtr(int it) const;
+    realtype const* getObservedDataPtr(int it) const;
 
     /**
      * @brief set function that copies data from input to
@@ -216,7 +219,7 @@ class ExpData : public SimulationParameters {
      * @param observedDataStdDev standard deviation of observed data (dimension:
      * nt x nytrue, row-major)
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev);
+    void setObservedDataStdDev(std::vector<realtype> const& observedDataStdDev);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -234,8 +237,9 @@ class ExpData : public SimulationParameters {
      * nt)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev,
-                               int iy);
+    void setObservedDataStdDev(
+        std::vector<realtype> const& observedDataStdDev, int iy
+    );
 
     /**
      * @brief set function that sets all standard deviation of a specific
@@ -271,7 +275,7 @@ class ExpData : public SimulationParameters {
      * @param it timepoint index
      * @return pointer to standard deviation of observed data at index
      */
-    const realtype *getObservedDataStdDevPtr(int it) const;
+    realtype const* getObservedDataStdDevPtr(int it) const;
 
     /**
      * @brief set function that copies observed event data from input to
@@ -280,7 +284,7 @@ class ExpData : public SimulationParameters {
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void setObservedEvents(const std::vector<realtype> &observedEvents);
+    void setObservedEvents(std::vector<realtype> const& observedEvents);
 
     /**
      * @brief set function that copies observed event data for specific event
@@ -289,7 +293,7 @@ class ExpData : public SimulationParameters {
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
      */
-    void setObservedEvents(const std::vector<realtype> &observedEvents, int iz);
+    void setObservedEvents(std::vector<realtype> const& observedEvents, int iz);
 
     /**
      * @brief get function that checks whether event data at specified indices
@@ -316,7 +320,7 @@ class ExpData : public SimulationParameters {
      *
      * @return pointer to observed event data at ieth occurrence
      */
-    const realtype *getObservedEventsPtr(int ie) const;
+    realtype const* getObservedEventsPtr(int ie) const;
 
     /**
      * @brief set function that copies data from input to
@@ -325,7 +329,7 @@ class ExpData : public SimulationParameters {
      * @param observedEventsStdDev standard deviation of observed event data
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev);
+    setObservedEventsStdDev(std::vector<realtype> const& observedEventsStdDev);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -343,9 +347,9 @@ class ExpData : public SimulationParameters {
      * (dimension: nmaxevent)
      * @param iz observed data index
      */
-    void
-    setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev,
-                            int iz);
+    void setObservedEventsStdDev(
+        std::vector<realtype> const& observedEventsStdDev, int iz
+    );
 
     /**
      * @brief set function that sets all standard deviation of a specific
@@ -383,7 +387,7 @@ class ExpData : public SimulationParameters {
      * @return pointer to standard deviation of observed event data at ie-th
      * occurrence
      */
-    const realtype *getObservedEventsStdDevPtr(int ie) const;
+    realtype const* getObservedEventsStdDevPtr(int ie) const;
 
     /**
      * @brief Arbitrary (not necessarily unique) identifier.
@@ -413,8 +417,9 @@ class ExpData : public SimulationParameters {
      * @param input vector input to be checked
      * @param fieldname name of the input
      */
-    void checkDataDimension(std::vector<realtype> const &input,
-                            const char *fieldname) const;
+    void checkDataDimension(
+        std::vector<realtype> const& input, char const* fieldname
+    ) const;
 
     /**
      * @brief checker for dimensions of input observedEvents or
@@ -423,8 +428,9 @@ class ExpData : public SimulationParameters {
      * @param input vector input to be checked
      * @param fieldname name of the input
      */
-    void checkEventsDimension(std::vector<realtype> const &input,
-                              const char *fieldname) const;
+    void checkEventsDimension(
+        std::vector<realtype> const& input, char const* fieldname
+    ) const;
 
     /** @brief number of observables */
     int nytrue_{0};
@@ -457,13 +463,33 @@ class ExpData : public SimulationParameters {
 };
 
 /**
+ * @brief Equality operator
+ * @param lhs some object
+ * @param rhs another object
+ * @return `true`, if both arguments are equal; `false` otherwise.
+ */
+inline bool operator==(ExpData const& lhs, ExpData const& rhs) {
+    return *dynamic_cast<SimulationParameters const*>(&lhs)
+               == *dynamic_cast<SimulationParameters const*>(&rhs)
+           && lhs.id == rhs.id && lhs.nytrue_ == rhs.nytrue_
+           && lhs.nztrue_ == rhs.nztrue_ && lhs.nmaxevent_ == rhs.nmaxevent_
+           && is_equal(lhs.observed_data_, rhs.observed_data_)
+           && is_equal(lhs.observed_data_std_dev_, rhs.observed_data_std_dev_)
+           && is_equal(lhs.observed_events_, rhs.observed_events_)
+           && is_equal(
+               lhs.observed_events_std_dev_, rhs.observed_events_std_dev_
+           );
+};
+
+/**
  * @brief checks input vector of sigmas for not strictly positive values
  *
  * @param sigmaVector vector input to be checked
  * @param vectorName name of the input
  */
-void checkSigmaPositivity(std::vector<realtype> const &sigmaVector,
-                          const char *vectorName);
+void checkSigmaPositivity(
+    std::vector<realtype> const& sigmaVector, char const* vectorName
+);
 
 /**
  * @brief checks input scalar sigma for not strictly positive value
@@ -471,7 +497,7 @@ void checkSigmaPositivity(std::vector<realtype> const &sigmaVector,
  * @param sigma input to be checked
  * @param sigmaName name of the input
  */
-void checkSigmaPositivity(realtype sigma, const char *sigmaName);
+void checkSigmaPositivity(realtype sigma, char const* sigmaName);
 
 /**
  * @brief The ConditionContext class applies condition-specific amici::Model
@@ -488,10 +514,11 @@ class ConditionContext : public ContextManager {
      * @param fpc flag indicating which fixedParameter from edata to apply
      */
     explicit ConditionContext(
-        Model *model, const ExpData *edata = nullptr,
-        FixedParameterContext fpc = FixedParameterContext::simulation);
+        Model* model, ExpData const* edata = nullptr,
+        FixedParameterContext fpc = FixedParameterContext::simulation
+    );
 
-    ConditionContext &operator=(const ConditionContext &other) = delete;
+    ConditionContext& operator=(ConditionContext const& other) = delete;
 
     ~ConditionContext();
 
@@ -503,8 +530,7 @@ class ConditionContext : public ContextManager {
      * @param edata
      * @param fpc flag indicating which fixedParameter from edata to apply
      */
-    void applyCondition(const ExpData *edata,
-                        FixedParameterContext fpc);
+    void applyCondition(ExpData const* edata, FixedParameterContext fpc);
 
     /**
      * @brief Restore original settings on constructor-supplied amici::Model.
@@ -519,6 +545,7 @@ class ConditionContext : public ContextManager {
     std::vector<realtype> original_sx0_;
     std::vector<realtype> original_parameters_;
     std::vector<realtype> original_fixed_parameters_;
+    realtype original_tstart_;
     std::vector<realtype> original_timepoints_;
     std::vector<int> original_parameter_list_;
     std::vector<amici::ParameterScaling> original_scaling_;

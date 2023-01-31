@@ -1,9 +1,14 @@
 """Test for ``amici.parameter_mapping``"""
+import os
 
-from amici.parameter_mapping import (
-    ParameterMappingForCondition, ParameterMapping)
+import pytest
+
+from amici.parameter_mapping import (ParameterMapping,
+                                     ParameterMappingForCondition)
+from amici.testing import skip_on_valgrind
 
 
+@skip_on_valgrind
 def test_parameter_mapping_for_condition_default_args():
     """Check we can initialize the mapping with default arguments."""
 
@@ -32,6 +37,7 @@ def test_parameter_mapping_for_condition_default_args():
         expected_scale_map_sim_fix
 
 
+@skip_on_valgrind
 def test_parameter_mapping():
     """Test :class:``amici.parameter_mapping.ParameterMapping``."""
 
@@ -48,3 +54,6 @@ def test_parameter_mapping():
     parameter_mapping.append(par_map_for_condition)
 
     assert len(parameter_mapping) == 1
+
+    assert isinstance(parameter_mapping[0], ParameterMappingForCondition)
+    assert isinstance(parameter_mapping[:], ParameterMapping)
