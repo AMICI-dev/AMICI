@@ -8,6 +8,7 @@ import sys
 import pytest
 
 import amici
+from amici.testing import TemporaryDirectoryWinSafe
 
 
 @pytest.fixture(scope="session")
@@ -26,27 +27,26 @@ def sbml_example_presimulation_module():
         sbml_importer.sbml,  # the libsbml model object
         filter_function=lambda variable: variable.getName() == 'pPROT_obs'
     )
-    outdir = 'test_model_presimulation'
     module_name = 'test_model_presimulation'
-    sbml_importer.sbml2amici(
-        model_name=module_name,
-        output_dir=outdir,
-        verbose=True,
-        observables=observables,
-        constant_parameters=constant_parameters)
 
-    model_module = amici.import_model_module(module_name=module_name,
-                                             module_path=outdir)
-    yield model_module
+    with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            verbose=False,
+            observables=observables,
+            constant_parameters=constant_parameters)
 
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
 
 
 @pytest.fixture(scope="session")
 def pysb_example_presimulation_module():
     """PySB example_presimulation model module fixture"""
-
     pysb = pytest.importorskip("pysb")
+    from amici.pysb_import import pysb2amici
 
     constant_parameters = ['DRUG_0', 'KIN_0']
 
@@ -65,17 +65,10 @@ def pysb_example_presimulation_module():
     model = copy.deepcopy(model_module.model)
 
     model.name = 'test_model_presimulation_pysb'
-    outdir = model.name
 
-    from amici.pysb_import import pysb2amici
+    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+        pysb2amici(model, outdir, verbose=True,
+                   observables=['pPROT_obs'],
+                   constant_parameters=constant_parameters)
 
-    pysb2amici(model, outdir, verbose=True,
-               observables=['pPROT_obs'],
-               constant_parameters=constant_parameters)
-
-    with amici.add_path(outdir):
-        model_module_pysb = importlib.import_module(outdir)
-
-    yield model_module_pysb
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(model.name, outdir)
