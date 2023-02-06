@@ -2140,11 +2140,14 @@ def assignmentRules2observables(sbml_model: sbml.Model,
         })
     """
     observables = {}
-    for p in sbml_model.getListOfParameters():
-        parameter_id = p.getId()
-        if filter_function(p):
+    for rule in sbml_model.getListOfRules():
+        if rule.getTypeCode() != sbml.SBML_ASSIGNMENT_RULE:
+            continue
+        parameter_id = rule.getVariable()
+        if (p := sbml_model.getParameter(parameter_id)) \
+                and filter_function(p):
             observables[parameter_id] = {
-                'name': p.getName() if p.isSetName() else p.getId(),
+                'name': p.getName() if p.isSetName() else parameter_id,
                 'formula': sbml_model.getAssignmentRuleByVariable(
                     parameter_id
                 ).getFormula()
