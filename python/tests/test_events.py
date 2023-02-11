@@ -4,18 +4,12 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from util import (check_trajectories_with_forward_sensitivities,
+from amici.testing import skip_on_valgrind
+from util import (check_trajectories_with_adjoint_sensitivities,
+                  check_trajectories_with_forward_sensitivities,
                   check_trajectories_without_sensitivities, create_amici_model,
                   create_sbml_model)
-from amici.testing import skip_on_valgrind
 
-from util import (
-    create_sbml_model,
-    create_amici_model,
-    check_trajectories_without_sensitivities,
-    check_trajectories_with_forward_sensitivities,
-    check_trajectories_with_adjoint_sensitivities,
-)
 
 @pytest.fixture(params=[
     pytest.param('events_plus_heavisides', marks=skip_on_valgrind),
@@ -62,19 +56,19 @@ def model(request):
 
 def get_model_definition(model_name):
     if model_name == 'piecewise_plus_event_simple_case':
-       return model_definition_piecewise_plus_event_simple_case()
+        return model_definition_piecewise_plus_event_simple_case()
     if model_name == 'piecewise_plus_event_semi_complicated':
         return model_definition_piecewise_plus_event_semi_complicated()
     if model_name == 'piecewise_plus_event_trigger_depends_on_state':
         return model_definition_piecewise_plus_event_trigger_depends_on_state()
     if model_name == 'events_plus_heavisides':
-       return model_definition_events_plus_heavisides()
+        return model_definition_events_plus_heavisides()
     if model_name == 'nested_events':
         return model_definition_nested_events()
-    else:
-        raise NotImplementedError(
-            f'Model with name {model_name} is not implemented.'
-        )
+
+    raise NotImplementedError(
+        f'Model with name {model_name} is not implemented.'
+    )
 
 
 def model_definition_events_plus_heavisides():
@@ -293,7 +287,7 @@ def model_definition_nested_events():
         equil = inflow_1 / decay_1
         tmp1 = inflow_1 / decay_2 - inflow_1 / decay_1
         tmp2 = k1 - inflow_1 / decay_1
-        event_time = (- 1 / decay_1) * np.log( tmp1 / tmp2)
+        event_time = (- 1 / decay_1) * np.log(tmp1 / tmp2)
 
         def get_early_x(t):
             # compute dynamics before event
@@ -359,13 +353,7 @@ def model_definition_piecewise_plus_event_simple_case():
     species = ['x_1']
     initial_assignments = {'x_1': 'x_1_0'}
     rate_rules = {
-        'x_1': (
-            'piecewise('
-                '1, '
-                    '(alpha < time && time < beta), '
-                '0'
-            ')'
-        )
+        'x_1': ('piecewise(1, (alpha < time && time < beta), 0)')
     }
     parameters = {
         'alpha': 2,
@@ -438,16 +426,9 @@ def model_definition_piecewise_plus_event_semi_complicated():
     initial_assignments = {'x_1': 'x_1_0',
                            'x_2': 'x_2_0'}
     rate_rules = {
-        'x_1': (
-            'piecewise('
-                'delta * x_1, '
-                    '(alpha < time && time < beta), '
-                '- x_1'
-            ')'
-        ),
-        'x_2': (
-            '- eta * x_2'
-        ),
+        'x_1':
+            'piecewise(delta * x_1, (alpha < time && time < beta), - x_1)',
+        'x_2': '- eta * x_2',
     }
     parameters = {
         'alpha': 2,
@@ -538,16 +519,8 @@ def model_definition_piecewise_plus_event_trigger_depends_on_state():
     initial_assignments = {'x_1': 'x_1_0',
                            'x_2': 'x_2_0'}
     rate_rules = {
-        'x_1': (
-            'piecewise('
-                '1, '
-                    '(alpha < time && time < beta), '
-                '0'
-            ')'
-        ),
-        'x_2': (
-            '- x_2'
-        ),
+        'x_1': 'piecewise(1, (alpha < time && time < beta), 0)',
+        'x_2': '- x_2',
     }
     parameters = {
         'alpha': 2,
