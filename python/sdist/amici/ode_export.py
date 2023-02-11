@@ -1804,6 +1804,7 @@ class ODEModel:
                     if not smart_is_zero_matrix(self.eq('stau')[ie]):
                         # chain rule for the time point
                         tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
+                                                 # TODO(stephanmg) changed sign
                                                  -self.sym('stau').T)
 
                         # additional part of chain rule state variables
@@ -1848,7 +1849,7 @@ class ODEModel:
                         smart_multiply(self.eq('ddeltaxdx')[ie],
                                        self.sym('xdot_old')),
                         self.eq('dtaudx')[ie]
-                    ) # transpose? minus sign?
+                    ) # TODO transpose? minus sign?
                     # ==== 3rd group of terms : Dirac deltas ==================
                     tmp_eq += self.eq('ddeltaxdx')[ie]
                     tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
