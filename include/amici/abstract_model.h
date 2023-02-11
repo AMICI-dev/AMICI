@@ -543,12 +543,14 @@ class AbstractModel {
      * @param xdot_old previous model right hand side
      * @param xB current adjoint state
      * @param xBdot right hand side of adjoint state
+     * @param tcl total abundances for conservation laws
      */
     virtual void fdeltaxB(realtype *deltaxB, const realtype t,
                           const realtype *x, const realtype *p,
                           const realtype *k, const realtype *h, int ie,
                           const realtype *xdot, const realtype *xdot_old,
-                          const realtype *xB, const realtype *xBdot);
+                          const realtype *xB, const realtype *xBdot,
+                          const realtype* tcl);
 
     /**
      * @brief Model-specific implementation of fdeltaqB

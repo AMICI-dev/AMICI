@@ -1300,7 +1300,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
     fdeltaxB(derived_state_.deltaxB_.data(), t, computeX_pos(x),
              state_.unscaledParameters.data(),
              state_.fixedParameters.data(), state_.h.data(), ie, xdot.data(),
-             xdot_old.data(), xB.data(), xBdot.data());
+             xdot_old.data(), xB.data(), xBdot.data(), state_.total_cl.data());
 
     if (always_check_finite_) {
         checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB);
