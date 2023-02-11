@@ -61,6 +61,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_NOT_IMPLEMENTED, "AMICI_NOT_IMPLEMENTED"},
     {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
+    {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
