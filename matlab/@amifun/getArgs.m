@@ -10,7 +10,7 @@ function this = getArgs(this,model)
     % Return values:
     %  this: updated function definition object @type amifun
     %
-        
+
     if(strcmp(model.wtype,'iw'))
         dx = ', const realtype *dx';
         sdx = ', const realtype *sdx';
@@ -24,7 +24,7 @@ function this = getArgs(this,model)
         M = '';
         cj = '';
     end
-    
+
     switch(this.funstr)
         case 'xdot'
             this.argstr = ['(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h' dx ', const realtype *w)'];
@@ -72,7 +72,7 @@ function this = getArgs(this,model)
         case 'deltax'
             this.argstr = '(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old)';
         case 'deltaxB'
-            this.argstr = '(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB, const realtype *xBdot)';
+            this.argstr = '(double *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB, const realtype *xBdot, const realtype *tcl)';
         case 'deltaqB'
             this.argstr = '(double *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB, const realtype *xBdot)';
         case 'deltasx'
@@ -118,5 +118,5 @@ function this = getArgs(this,model)
         otherwise
             %nothing
     end
-    
+
 end
