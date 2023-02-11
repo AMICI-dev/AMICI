@@ -193,8 +193,8 @@ def model_definition_events_plus_heavisides():
 
             hom_x = np.matmul(expm((t - event_3_time) * A), x3)
             inhom_x = [[0], [0],
-                       [-np.exp(-eta * (t - event_3_time)) / (eta)
-                        + 1 / (eta)]]
+                       [-np.exp(-eta * (t - event_3_time)) / eta
+                        + 1 / eta]]
 
             x = (hom_x + inhom_x).flatten()
 
@@ -264,7 +264,7 @@ def model_definition_nested_events():
         'inflow_1': 4,
         'decay_1': 2,
         'decay_2': 5,
-        'bolus': 0, # for bolus != 0, nested event sensitivities are off!
+        'bolus': 0,  # for bolus != 0, nested event sensitivities are off!
     }
     events = {
         'event_1': {
@@ -353,7 +353,7 @@ def model_definition_piecewise_plus_event_simple_case():
     species = ['x_1']
     initial_assignments = {'x_1': 'x_1_0'}
     rate_rules = {
-        'x_1': ('piecewise(1, (alpha < time && time < beta), 0)')
+        'x_1': 'piecewise(1, (alpha < time && time < beta), 0)'
     }
     parameters = {
         'alpha': 2,
@@ -361,7 +361,7 @@ def model_definition_piecewise_plus_event_simple_case():
         'gamma': 4.5,
         'x_1_0': 1,
     }
-    timepoints = np.linspace(0., 5., 100)# np.array((0.0, 4.0,))
+    timepoints = np.linspace(0., 5., 100)  # np.array((0.0, 4.0,))
     events = {
         'event_1': {
             'trigger': 'time > alpha',
@@ -470,8 +470,9 @@ def model_definition_piecewise_plus_event_semi_complicated():
             x_1 = x_1_heaviside_1 * np.exp(delta * (t - heaviside_1))
         else:
             x_1_heaviside_1 = gamma * np.exp(- (heaviside_1 - t_event_1))
-            x_1_at_event_2 = x_1_heaviside_1 * \
-                             np.exp(delta * (t_event_2 - heaviside_1))
+            x_1_at_event_2 = (
+                    x_1_heaviside_1 * np.exp(delta * (t_event_2 - heaviside_1))
+            )
             x_2_at_event_2 = x_2_0 * np.exp(- eta * t_event_2)
             x1_after_event_2 = x_1_at_event_2 + x_2_at_event_2
             x_1 = x1_after_event_2 * np.exp(- (t - t_event_2))

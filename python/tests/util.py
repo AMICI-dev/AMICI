@@ -29,13 +29,12 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     os.environ["ENABLE_AMICI_DEBUGGING"] = "TRUE"
     sbml_importer.sbml2amici(
         model_name=model_name,
-        output_dir=str(output_dir),
+        output_dir=output_dir,
         **kwargs
     )
 
-    model_module = import_model_module(model_name, str(output_dir.resolve()))
-    model = model_module.getModel()
-    return model
+    model_module = import_model_module(model_name, output_dir)
+    return model_module.getModel()
 
 
 def create_sbml_model(
@@ -116,10 +115,7 @@ def create_sbml_model(
                                    event_def['assignment'])
 
     if to_file:
-        libsbml.writeSBMLToFile(
-            document,
-            str(to_file),
-        )
+        libsbml.writeSBMLToFile(document, to_file)
 
     # Need to return document, else AMICI throws an error.
     # (possibly due to garbage collection?)
