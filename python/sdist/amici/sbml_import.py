@@ -318,10 +318,10 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`ODEModel._simplify`
+            see :attr:`amici.ODEModel._simplify`
 
         :param cache_simplify:
-                see :func:`amici.ODEModel.__init__`
+                see :meth:`amici.ODEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``

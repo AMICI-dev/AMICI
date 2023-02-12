@@ -124,6 +124,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %ignore amici::ModelState;
 %ignore amici::ModelStateDerived;
 %ignore amici::unravel_index;
+%ignore amici::backtraceString;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
