@@ -2,6 +2,7 @@
 
 .. automodule:: {{ fullname }}
    :members:
+   :undoc-members:
 
    {% block attributes %}
    {% if attributes %}
