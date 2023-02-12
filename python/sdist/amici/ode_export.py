@@ -1758,8 +1758,8 @@ class ODEModel:
             self._eqs[name] = [
                 # TODO(stephanmg) check removed minus
                 self.eq('sroot')[ie, :] / self.eq('drootdt_total')[ie]
-                if not self.eq('drootdt_total')[ie].is_zero else
-                sp.zeros(*self.eq('sroot')[ie, :].shape)
+                if not self.eq('drootdt_total')[ie].is_zero
+                else sp.zeros(*self.eq('sroot')[ie, :].shape)
                 for ie in range(self.num_events())
             ]
 
@@ -1787,7 +1787,7 @@ class ODEModel:
                     tmp_eq += smart_multiply(
                         # TODO(stephanmg) check changed sign
                         # (self.sym('xdot_old') - self.sym('xdot')),
-                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.sym('xdot') - self.sym('xdot_old'),
                         self.sym('stau').T
                     )
 
@@ -1803,18 +1803,22 @@ class ODEModel:
                     # symbols
                     if not smart_is_zero_matrix(self.eq('stau')[ie]):
                         # chain rule for the time point
-                        tmp_eq += smart_multiply(self.eq('ddeltaxdt')[ie],
-                                                 # TODO(stephanmg) changed sign
-                                                 -self.sym('stau').T)
+                        tmp_eq += smart_multiply(
+                            self.eq('ddeltaxdt')[ie],
+                            # TODO(stephanmg) changed sign
+                            -self.sym('stau').T
+                        )
 
                         # additional part of chain rule state variables
                         # This part only works if we use self.eq('xdot')
                         # instead of self.sym('xdot'). Not immediately clear
                         # why that is.
                         # TODO(stephanmg) was `x_dot` before
-                        tmp_dxdp += smart_multiply(self.eq('xdot_old'),
-                        # TODO(stephanmg) changed sign
-                                                   -self.sym('stau').T)
+                        tmp_dxdp += smart_multiply(
+                            self.eq('xdot_old'),
+                            # TODO(stephanmg) changed sign
+                            -self.sym('stau').T
+                        )
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq('ddeltaxdx')[ie],
@@ -1823,7 +1827,7 @@ class ODEModel:
                     tmp_eq = smart_multiply(
                         # TODO(stephanmg) changed signs
                         # (self.eq('xdot_old') - self.eq('xdot')),
-                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.sym('xdot') - self.sym('xdot_old'),
                         self.eq('stau')[ie]
                     )
                 event_eqs.append(tmp_eq)
@@ -1836,8 +1840,9 @@ class ODEModel:
                 if event._state_update is not None:
                     # ==== 1st group of terms : Heaviside functions ===========
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot') - self.sym('xdot_old')),
-                        self.eq('dtaudx')[ie])
+                        self.sym('xdot') - self.sym('xdot_old'),
+                        self.eq('dtaudx')[ie]
+                    )
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
@@ -1855,7 +1860,7 @@ class ODEModel:
                     tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
                 else:
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.sym('xdot') - self.sym('xdot_old'),
                         self.eq('dtaudx')[ie])
                     tmp_eq = smart_multiply(self.sym('xB').T, tmp_eq)
                 event_eqs.append(tmp_eq)
@@ -1867,7 +1872,7 @@ class ODEModel:
                 if event._state_update is not None:
                     # ==== 1st group of terms : Heaviside functions ===========
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.sym('xdot') - self.sym('xdot_old'),
                         self.eq('dtaudp')[ie])
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
@@ -1885,7 +1890,7 @@ class ODEModel:
                     tmp_eq += self.eq('ddeltaxdp')[ie]
                 else:
                     tmp_eq = smart_multiply(
-                        (self.sym('xdot') - self.sym('xdot_old')),
+                        self.sym('xdot') - self.sym('xdot_old'),
                         self.eq('dtaudp')[ie])
                 event_eqs.append(smart_multiply(self.sym('xB').T, tmp_eq))
             self._eqs[name] = event_eqs
