@@ -3,7 +3,7 @@ import libsbml
 import os
 import numpy as np
 from pathlib import Path
-
+from numpy.testing import assert_allclose
 from amici import (
     AmiciModel,
     ExpData,
@@ -187,10 +187,9 @@ def check_trajectories_with_adjoint_sensitivities(
         amici_model: AmiciModel
 ):
     """
-    Check whether the AMICI simulation matches a known solution
-    (ideally an analytically calculated one).
+    Check whether adjoint sensitivities match forward sensitivities and finite
+    differences.
     """
-
     # First compute a dummy experimental data to use adjoints
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
@@ -220,13 +219,13 @@ def check_trajectories_with_adjoint_sensitivities(
     # Also test against finite differences
     parameters = amici_model.getUnscaledParameters()
     sllh_fd = []
+    eps = 1e-4
     for i_par, par in enumerate(parameters):
         solver = amici_model.getSolver()
         solver.setSensitivityOrder(SensitivityOrder.none)
         solver.setSensitivityMethod(SensitivityMethod.none)
         solver.setAbsoluteTolerance(1e-15)
         solver.setRelativeTolerance(1e-13)
-        eps = 1e-4
         tmp_par = np.array(parameters[:])
         tmp_par[i_par] += eps
         amici_model.setParameters(tmp_par)
@@ -239,9 +238,6 @@ def check_trajectories_with_adjoint_sensitivities(
 
     # test less strict in terms of absolute error, as the gradient are
     # typically in the order of 1e3
-    np.testing.assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'],
-                               rtol=1e-5, atol=1e-3)
-    np.testing.assert_allclose(sllh_fd, rdata_fsa['sllh'],
-                               rtol=1e-5, atol=1e-3)
-    np.testing.assert_allclose(sllh_fd, rdata_asa['sllh'],
-                               rtol=1e-5, atol=1e-3)
+    assert_allclose(rdata_fsa['sllh'], rdata_asa['sllh'], rtol=1e-5, atol=1e-3)
+    assert_allclose(sllh_fd, rdata_fsa['sllh'], rtol=1e-5, atol=1e-3)
+    assert_allclose(sllh_fd, rdata_asa['sllh'], rtol=1e-5, atol=1e-3)

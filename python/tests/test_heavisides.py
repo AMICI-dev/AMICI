@@ -2,14 +2,11 @@
 import numpy as np
 import pytest
 
+from util import (check_trajectories_with_adjoint_sensitivities,
+                  check_trajectories_with_forward_sensitivities,
+                  check_trajectories_without_sensitivities, create_amici_model,
+                  create_sbml_model)
 
-from util import (
-    create_sbml_model,
-    create_amici_model,
-    check_trajectories_without_sensitivities,
-    check_trajectories_with_forward_sensitivities,
-    check_trajectories_with_adjoint_sensitivities
-)
 
 @pytest.fixture(params=[
     'state_and_parameter_dependent_heavisides',
@@ -25,8 +22,8 @@ def model(request):
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     ) = get_model_definition(request.param)
 
     # SBML model
@@ -47,18 +44,18 @@ def model(request):
     )
     amici_model.setTimepoints(timepoints)
 
-    return amici_model, parameters, timepoints, x_pected, sx_pected
+    return amici_model, parameters, timepoints, x_expected, sx_expected
 
 
 def test_models(model):
-    amici_model, parameters, timepoints, x_pected, sx_pected = model
+    amici_model, parameters, timepoints, x_expected, sx_expected = model
 
     result_expected_x = np.array([
-        x_pected(t, **parameters)
+        x_expected(t, **parameters)
         for t in timepoints
     ])
     result_expected_sx = np.array([
-        sx_pected(t, **parameters)
+        sx_expected(t, **parameters)
         for t in timepoints
     ])
 
@@ -117,7 +114,7 @@ def model_definition_state_and_parameter_dependent_heavisides():
     events = {}
 
     # Analytical solution
-    def x_pected(t, alpha, beta, gamma, delta, eta, zeta):
+    def x_expected(t, alpha, beta, gamma, delta, eta, zeta):
         # get x_1
         tau_1 = (np.exp(gamma * delta) - delta * eta) / (1 - eta)
         if t < tau_1:
@@ -132,9 +129,9 @@ def model_definition_state_and_parameter_dependent_heavisides():
         else:
             x_2 = np.exp(gamma*delta) + eta*(t-delta)
 
-        return (x_1, x_2)
+        return x_1, x_2
 
-    def sx_pected(t, alpha, beta, gamma, delta, eta, zeta):
+    def sx_expected(t, alpha, beta, gamma, delta, eta, zeta):
         # get sx_1, w.r.t. parameters
         tau_1 = (np.exp(gamma * delta) - delta * eta) / (1 - eta)
         if t < tau_1:
@@ -174,20 +171,17 @@ def model_definition_state_and_parameter_dependent_heavisides():
 
         # get sx_2, w.r.t. parameters
         tau_2 = delta
+        sx_2_alpha = 0
+        sx_2_beta = 0
+        sx_2_zeta = 0
         if t < tau_2:
-            sx_2_alpha = 0
-            sx_2_beta = 0
             sx_2_gamma = t * np.exp(gamma*t)
             sx_2_delta = 0
             sx_2_eta = 0
-            sx_2_zeta = 0
         else:
-            sx_2_alpha = 0
-            sx_2_beta = 0
             sx_2_gamma = delta * np.exp(gamma*delta)
             sx_2_delta = gamma*np.exp(gamma*delta) - eta
             sx_2_eta = t - delta
-            sx_2_zeta = 0
 
         sx_1 = (sx_1_alpha, sx_1_beta, sx_1_gamma,
                 sx_1_delta, sx_1_eta, sx_1_zeta)
@@ -203,8 +197,8 @@ def model_definition_state_and_parameter_dependent_heavisides():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
@@ -241,37 +235,26 @@ def model_definition_piecewise_with_boolean_operations():
     events = {}
 
     # Analytical solution
-    def x_pected(t, x_1_0, alpha, beta, gamma, delta):
+    def x_expected(t, x_1_0, alpha, beta, gamma, delta):
         if t < alpha:
-            return (x_1_0,)
+            return x_1_0,
         elif alpha <= t < beta:
-            return (x_1_0 + (t - alpha),)
+            return x_1_0 + (t - alpha),
         elif beta <= t < gamma:
-            return (x_1_0 + (beta - alpha),)
+            return x_1_0 + (beta - alpha),
         elif gamma <= t < delta:
-            return (x_1_0 + (beta - alpha) + (t - gamma),)
+            return x_1_0 + (beta - alpha) + (t - gamma),
         else:
-            return (x_1_0 + (beta - alpha) + (delta - gamma), )
+            return x_1_0 + (beta - alpha) + (delta - gamma),
 
-    def sx_pected(t, x_1_0, alpha, beta, gamma, delta):
+    def sx_expected(t, x_1_0, alpha, beta, gamma, delta):
         # x0 is very simple...
         sx_x0 = 1
-        sx_alpha = 0
-        sx_beta = 0
-        sx_gamma = 0
-        sx_delta = 0
-
-        if t >= alpha:
-            sx_alpha = -1
-        if t >= beta:
-            sx_beta = 1
-        if t >= gamma:
-            sx_gamma = -1
-        if t >= delta:
-            sx_delta = 1
-
+        sx_alpha = -1 if t >= alpha else 0
+        sx_beta = 1 if t >= beta else 0
+        sx_gamma = -1 if t >= gamma else 0
+        sx_delta = 1 if t >= delta else 0
         sx = (sx_alpha, sx_beta, sx_gamma, sx_delta, sx_x0)
-
         return np.array((sx,)).transpose()
 
     return (
@@ -281,8 +264,8 @@ def model_definition_piecewise_with_boolean_operations():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
@@ -318,13 +301,13 @@ def model_definition_piecewise_many_conditions():
     events = {}
 
     # Analytical solution
-    def x_pected(t, x_1_0):
+    def x_expected(t, x_1_0):
         if np.floor(t) % 2 == 1:
-            return (x_1_0 + (np.floor(t)-1)/2 + (t-np.floor(t)), )
+            return x_1_0 + (np.floor(t) - 1) / 2 + (t - np.floor(t)),
         else:
-            return (x_1_0 + np.floor(t)/2, )
+            return x_1_0 + np.floor(t) / 2,
 
-    def sx_pected(t, x_1_0):
+    def sx_expected(t, x_1_0):
         return np.array([[1, ], ])
 
     return (
@@ -334,6 +317,6 @@ def model_definition_piecewise_many_conditions():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )

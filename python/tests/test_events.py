@@ -29,8 +29,8 @@ def model(request):
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     ) = get_model_definition(request.param)
 
     # SBML model
@@ -51,7 +51,7 @@ def model(request):
     )
     amici_model.setTimepoints(timepoints)
 
-    return amici_model, parameters, timepoints, x_pected, sx_pected
+    return amici_model, parameters, timepoints, x_expected, sx_expected
 
 
 def get_model_definition(model_name):
@@ -72,7 +72,7 @@ def get_model_definition(model_name):
 
 
 def model_definition_events_plus_heavisides():
-    """Test model for state- and parameter-dependent heavisides.
+    """Test model for state- and parameter-dependent Heavisides.
 
     ODEs
     ----
@@ -136,7 +136,7 @@ def model_definition_events_plus_heavisides():
     timepoints = np.linspace(0, 8, 400)
 
     # Analytical solution
-    def x_pected(t, k1, k2, k3, alpha, beta, gamma, delta, eta, zeta):
+    def x_expected(t, k1, k2, k3, alpha, beta, gamma, delta, eta, zeta):
         # The system reads dx/dt = Ax + b
         # x0 = (k1, k2, k3)
         x0 = np.array([[k1], [k2], [k3]])
@@ -192,25 +192,27 @@ def model_definition_events_plus_heavisides():
             x3 += np.array([[0], [0], [zeta / 3]])
 
             hom_x = np.matmul(expm((t - event_3_time) * A), x3)
-            inhom_x = [[0], [0],
-                       [-np.exp(-eta * (t - event_3_time)) / eta
-                        + 1 / eta]]
+            inhom_x = [
+                [0],
+                [0],
+                [-np.exp(-eta * (t - event_3_time)) / eta + 1 / eta],
+            ]
 
             x = (hom_x + inhom_x).flatten()
 
         return np.array(x)
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = x_pected(t, **perturbed_params)
+            sx_p = x_expected(t, **perturbed_params)
             perturbed_params[ip] -= 2*eps
-            sx_m = x_pected(t, **perturbed_params)
+            sx_m = x_expected(t, **perturbed_params)
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -222,8 +224,8 @@ def model_definition_events_plus_heavisides():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
@@ -281,7 +283,7 @@ def model_definition_nested_events():
     timepoints = np.linspace(0, 1, 101)
 
     # Analytical solution
-    def x_pected(t, k1, k2, inflow_1, decay_1, decay_2, bolus):
+    def x_expected(t, k1, k2, inflow_1, decay_1, decay_2, bolus):
         # gather temporary variables
         # event_time = x_1 > inflow_1 / decay_2
         equil = inflow_1 / decay_1
@@ -313,17 +315,17 @@ def model_definition_nested_events():
 
         return x.flatten()
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = x_pected(t, **perturbed_params)
+            sx_p = x_expected(t, **perturbed_params)
             perturbed_params[ip] -= 2*eps
-            sx_m = x_pected(t, **perturbed_params)
+            sx_m = x_expected(t, **perturbed_params)
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -335,8 +337,8 @@ def model_definition_nested_events():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
@@ -376,7 +378,7 @@ def model_definition_piecewise_plus_event_simple_case():
     }
 
     # Analytical solution
-    def x_pected(t, x_1_0, alpha, beta, gamma):
+    def x_expected(t, x_1_0, alpha, beta, gamma):
         t_event_1 = alpha
         t_event_2 = beta
 
@@ -389,17 +391,17 @@ def model_definition_piecewise_plus_event_simple_case():
 
         return np.array((x,))
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = np.array(x_pected(t, **perturbed_params))
+            sx_p = np.array(x_expected(t, **perturbed_params))
             perturbed_params[ip] -= 2*eps
-            sx_m = np.array(x_pected(t, **perturbed_params))
+            sx_m = np.array(x_expected(t, **perturbed_params))
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -411,8 +413,8 @@ def model_definition_piecewise_plus_event_simple_case():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
@@ -454,7 +456,7 @@ def model_definition_piecewise_plus_event_semi_complicated():
     }
 
     # Analytical solution
-    def x_pected(t, x_1_0, x_2_0, alpha, beta, gamma, delta, eta):
+    def x_expected(t, x_1_0, x_2_0, alpha, beta, gamma, delta, eta):
         t_event_1 = alpha / 2
         t_event_2 = beta
         heaviside_1 = alpha
@@ -479,17 +481,17 @@ def model_definition_piecewise_plus_event_semi_complicated():
 
         return np.array((x_1, x_2))
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = np.array(x_pected(t, **perturbed_params))
+            sx_p = np.array(x_expected(t, **perturbed_params))
             perturbed_params[ip] -= 2*eps
-            sx_m = np.array(x_pected(t, **perturbed_params))
+            sx_m = np.array(x_expected(t, **perturbed_params))
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -501,8 +503,8 @@ def model_definition_piecewise_plus_event_semi_complicated():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
@@ -545,7 +547,7 @@ def model_definition_piecewise_plus_event_trigger_depends_on_state():
     }
 
     # Analytical solution
-    def x_pected(t, x_1_0, x_2_0, alpha, beta, gamma):
+    def x_expected(t, x_1_0, x_2_0, alpha, beta, gamma):
 
         heaviside_1 = alpha
         t_event_1 = alpha + 1.4 - x_1_0
@@ -569,17 +571,17 @@ def model_definition_piecewise_plus_event_trigger_depends_on_state():
 
         return np.array((x_1, x_2))
 
-    def sx_pected(t, parameters):
-        # get sx, w.r.t. parameters, via finite differences
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
         sx = []
+        eps = 1e-6
 
         for ip in parameters:
-            eps = 1e-6
             perturbed_params = deepcopy(parameters)
             perturbed_params[ip] += eps
-            sx_p = np.array(x_pected(t, **perturbed_params))
+            sx_p = np.array(x_expected(t, **perturbed_params))
             perturbed_params[ip] -= 2*eps
-            sx_m = np.array(x_pected(t, **perturbed_params))
+            sx_m = np.array(x_expected(t, **perturbed_params))
             sx.append((sx_p - sx_m) / (2 * eps))
 
         return np.array(sx)
@@ -591,20 +593,20 @@ def model_definition_piecewise_plus_event_trigger_depends_on_state():
         species,
         events,
         timepoints,
-        x_pected,
-        sx_pected
+        x_expected,
+        sx_expected
     )
 
 
 def test_models(model):
-    amici_model, parameters, timepoints, x_pected, sx_pected = model
+    amici_model, parameters, timepoints, x_expected, sx_expected = model
 
     result_expected_x = np.array([
-        x_pected(t, **parameters)
+        x_expected(t, **parameters)
         for t in timepoints
     ])
     result_expected_sx = np.array([
-        sx_pected(t, parameters)
+        sx_expected(t, parameters)
         for t in timepoints
     ])
 
