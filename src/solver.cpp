@@ -859,12 +859,13 @@ void Solver::setMaxTime(double maxtime)
 
 void Solver::startTimer() const
 {
-    starttime_ = std::chrono::system_clock::now();
+    starttime_ = std::clock();
 }
 
 bool Solver::timeExceeded() const
 {
-    return std::chrono::system_clock::now() - starttime_ > maxtime_;
+    auto cputime_exceed = static_cast<double>(std::clock() - starttime_) / CLOCKS_PER_SEC;
+    return std::chrono::duration<double>(cputime_exceed) > maxtime_;
 }
 
 void Solver::setMaxSteps(const long int maxsteps) {

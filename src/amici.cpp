@@ -61,6 +61,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_NOT_IMPLEMENTED, "AMICI_NOT_IMPLEMENTED"},
     {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
+    {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
@@ -194,9 +195,13 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             throw;
         logger.log(
             LogSeverity::error, "OTHER",
-            "AMICI simulation failed: %s\nError occurred in:\n%s", ex.what(),
-            ex.getBacktrace()
+            "AMICI simulation failed: %s", ex.what()
         );
+        logger.log(
+            LogSeverity::debug, "OTHER",
+            "The previous error occurred at:\n%s", ex.getBacktrace()
+            );
+
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
