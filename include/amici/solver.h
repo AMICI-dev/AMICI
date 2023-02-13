@@ -489,7 +489,7 @@ class Solver {
 
     /**
      * @brief Set the maximum CPU time allowed for integration
-     * @param maxtime Time in seconds. Zero means infinte time.
+     * @param maxtime Time in seconds. Zero means infinite time.
      */
     void setMaxTime(double maxtime);
 
