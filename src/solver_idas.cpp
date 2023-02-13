@@ -1045,8 +1045,14 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
     auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
     Expects(model);
 
-    if(solver->timeExceeded()) {
-        return AMICI_MAX_TIME_EXCEEDED;
+    // Avoid expensive syscalls by checking only every N rhs evaluations
+    static int eval_counter = 0;
+    int const interval = 1000;
+    if (++eval_counter / interval) {
+        eval_counter = 0;
+        if (solver->timeExceeded()) {
+            return AMICI_MAX_TIME_EXCEEDED;
+        }
     }
 
     if (t > 1e200
@@ -1082,8 +1088,14 @@ int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     auto solver = dynamic_cast<IDASolver const*>(typed_udata->second);
     Expects(model);
 
-    if(solver->timeExceeded()) {
-        return AMICI_MAX_TIME_EXCEEDED;
+    // Avoid expensive syscalls by checking only every N rhs evaluations
+    static int eval_counter = 0;
+    int const interval = 1000;
+    if (++eval_counter / interval) {
+        eval_counter = 0;
+        if (solver->timeExceeded()) {
+            return AMICI_MAX_TIME_EXCEEDED;
+        }
     }
 
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
@@ -1111,7 +1123,6 @@ int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
 
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot);
-
 }
 
 
