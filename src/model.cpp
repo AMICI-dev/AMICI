@@ -1476,7 +1476,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
         if(hasObservableIds())
             row_id += " " + getObservableIds()[row];
         if(hasParameterIds())
-            col_id += " " + getParameterIds()[plist(col)];
+            col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dydx:
         if(hasObservableIds())
@@ -1488,7 +1488,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
         if(hasStateIds())
             row_id += " " + getStateIdsSolver()[row];
         if(hasParameterIds())
-            col_id += " " + getParameterIds()[plist(col)];
+            col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dJydy:
     case ModelQuantity::dJydy_matlab:
@@ -1510,7 +1510,7 @@ int Model::checkFinite(gsl::span<const realtype> array,
     case ModelQuantity::drzdp:
     case ModelQuantity::dsigmazdp:
         if(hasParameterIds())
-            col_id += " " + getParameterIds()[plist(col)];
+            col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
         break;
     case ModelQuantity::dsigmaydy:
         if(hasObservableIds()) {
@@ -1610,7 +1610,7 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t) co
         if(hasExpressionIds())
             row_id += " " + getExpressionIds()[row];
         if(hasParameterIds())
-            col_id += " " + getParameterIds()[plist(col)];
+            col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
         break;
     default:
         break;

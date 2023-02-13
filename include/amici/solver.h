@@ -7,6 +7,7 @@
 #include "amici/logging.h"
 
 #include <cmath>
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <chrono>
@@ -487,7 +488,7 @@ class Solver {
     double getMaxTime() const;
 
     /**
-     * @brief Set the maximum time allowed for integration
+     * @brief Set the maximum CPU time allowed for integration
      * @param maxtime Time in seconds
      */
     void setMaxTime(double maxtime);
@@ -1607,11 +1608,11 @@ class Solver {
     /** maximum number of allowed integration steps */
     long int maxsteps_ {10000};
 
-    /** Maximum wall-time for integration in seconds */
+    /** Maximum CPU-time for integration in seconds */
     std::chrono::duration<double, std::ratio<1>> maxtime_ {std::chrono::duration<double>::max()};
 
     /** Time at which solver timer was started */
-    mutable std::chrono::time_point<std::chrono::system_clock> starttime_;
+    mutable std::clock_t starttime_;
 
     /** linear solver for the forward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_;
