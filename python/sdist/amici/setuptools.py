@@ -215,8 +215,13 @@ def add_debug_flags_if_required(cxx_flags: List[str],
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         print("ENABLE_AMICI_DEBUGGING was set to TRUE."
               " Building AMICI with debug symbols.")
-        cxx_flags.extend(['-g', '-O0', '-UNDEBUG', '-Werror',
-                          '-Wno-error=deprecated-declarations'])
+        cxx_flags.extend(['-g', '-O0', '-UNDEBUG'])
+        if sys.platform != "win32":
+            # these options are incompatible with MSVC, but there is no easy
+            # way to detect which compiler will be used. so we just skip them
+            # altogether on windows.
+            cxx_flags.extend(['-Werror', '-Wno-error=deprecated-declarations'])
+
         linker_flags.extend(['-g'])
 
 

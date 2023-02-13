@@ -134,22 +134,6 @@ SED-ML import
 We also plan to implement support for the
 `Simulation Experiment Description Markup Language (SED-ML) <https://sed-ml.org/>`_.
 
-Examples
-========
-
-.. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/AMICI-dev/AMICI/develop?labpath=binder%2Foverview.ipynb
-
-.. toctree::
-   :maxdepth: 1
-
-   GettingStarted.ipynb
-   ExampleSteadystate.ipynb
-   petab.ipynb
-   ExampleExperimentalConditions.ipynb
-   ExampleEquilibrationLogic.ipynb
-   example_errors.ipynb
-
 Environment variables affecting model import
 ============================================
 

@@ -362,9 +362,7 @@ def get_mod_val(val, attr):
 
 def set_val(obj, attr, val):
     if callable(getattr(obj, attr)):
-        getattr(obj, 'set' + attr[3:])(
-            val
-        )
+        getattr(obj, 'set' + attr[3:])(val)
     else:
         setattr(obj, attr, val)
 

@@ -434,6 +434,7 @@ def import_model_sbml(
         allow_reinit_fixpar_initcond: bool = True,
         validate: bool = True,
         non_estimated_parameters_as_constants=True,
+        output_parameter_defaults: Optional[Dict[str, float]] = None,
         **kwargs) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
@@ -481,6 +482,11 @@ def import_model_sbml(
         considered constant in AMICI. Setting this to ``True`` will reduce
         model size and simulation times. If sensitivities with respect to those
         parameters are required, this should be set to ``False``.
+
+    :param output_parameter_defaults:
+        Optional default parameter values for output parameters introduced in
+        the PEtab observables table, in particular for placeholder parameters.
+        Dictionary mapping parameter IDs to default values.
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -596,8 +602,20 @@ def import_model_sbml(
                 output_parameters[sym] = None
     logger.debug("Adding output parameters to model: "
                  f"{list(output_parameters.keys())}")
+    output_parameter_defaults = output_parameter_defaults or {}
+    if extra_pars := (set(output_parameter_defaults)
+                   - set(output_parameters.keys())):
+        raise ValueError(
+            f"Default output parameter values were given for {extra_pars}, "
+            "but they those are not output parameters."
+        )
+
     for par in output_parameters.keys():
-        _add_global_parameter(sbml_model, par)
+        _add_global_parameter(
+            sbml_model=sbml_model,
+            parameter_id=par,
+            value=output_parameter_defaults.get(par, 0.0)
+        )
     # <EndWorkAround>
 
     # TODO: to parameterize initial states or compartment sizes, we currently
@@ -813,6 +831,9 @@ def _parse_cli_args():
     parser.add_argument('--no-compile', action='store_false',
                         dest='compile',
                         help='Only generate model code, do not compile')
+    parser.add_argument('--no-validate', action='store_false',
+                        dest='validate',
+                        help='Skip validation of PEtab files')
     parser.add_argument('--flatten', dest='flatten', default=False,
                         action='store_true',
                         help='Flatten measurement specific overrides of '
@@ -851,7 +872,7 @@ def _parse_cli_args():
     return args
 
 
-def main():
+def _main():
     """
     Command line interface to import a model in the PEtab
     (https://github.com/PEtab-dev/PEtab/) format into AMICI.
@@ -869,7 +890,8 @@ def main():
             observable_files=args.observable_file_name)
 
     # Check for valid PEtab before potentially modifying it
-    petab.lint_problem(pp)
+    if args.validate:
+        petab.lint_problem(pp)
 
     if args.flatten:
         petab.flatten_timepoint_specific_output_overrides(pp)
@@ -887,4 +909,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    _main()

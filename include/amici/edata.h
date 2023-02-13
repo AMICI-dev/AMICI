@@ -148,21 +148,21 @@ class ExpData : public SimulationParameters {
     int nt() const;
 
     /**
-     * @brief Set function that copies data from input to ExpData::ts
+     * @brief Set output timepoints.
      *
      * @param ts timepoints
      */
     void setTimepoints(std::vector<realtype> const& ts);
 
     /**
-     * @brief get function that copies data from ExpData::ts to output
+     * @brief Get output timepoints.
      *
      * @return ExpData::ts
      */
     std::vector<realtype> const &getTimepoints() const;
 
     /**
-     * @brief get function that returns timepoint at index
+     * @brief Get timepoint for the given index
      *
      * @param it timepoint index
      *
@@ -171,14 +171,14 @@ class ExpData : public SimulationParameters {
     realtype getTimepoint(int it) const;
 
     /**
-     * @brief set function that copies data from input to ExpData::my
+     * @brief Set all measurements.
      *
      * @param observedData observed data (dimension: nt x nytrue, row-major)
      */
     void setObservedData(std::vector<realtype> const& observedData);
 
     /**
-     * @brief set function that copies observed data for specific observable
+     * @brief Set measurements for a given observable index
      *
      * @param observedData observed data (dimension: nt)
      * @param iy observed data index
@@ -186,8 +186,8 @@ class ExpData : public SimulationParameters {
     void setObservedData(std::vector<realtype> const& observedData, int iy);
 
     /**
-     * @brief get function that checks whether data at specified indices has
-     * been set
+     * @brief Whether there is a measurement for the given time- and observable-
+     * index.
      *
      * @param it time index
      * @param iy observable index
@@ -197,14 +197,14 @@ class ExpData : public SimulationParameters {
     bool isSetObservedData(int it, int iy) const;
 
     /**
-     * @brief get function that copies data from ExpData::observedData to output
+     * @brief Get all measurements.
      *
      * @return observed data (dimension: nt x nytrue, row-major)
      */
     std::vector<realtype> const &getObservedData() const;
 
     /**
-     * @brief get function that returns a pointer to observed data at index
+     * @brief Get measurements for a given timepoint index.
      *
      * @param it timepoint index
      *
@@ -213,8 +213,7 @@ class ExpData : public SimulationParameters {
     realtype const* getObservedDataPtr(int it) const;
 
     /**
-     * @brief set function that copies data from input to
-     * ExpData::observedDataStdDev
+     * @brief Set standard deviations for measurements.
      *
      * @param observedDataStdDev standard deviation of observed data (dimension:
      * nt x nytrue, row-major)
@@ -222,16 +221,15 @@ class ExpData : public SimulationParameters {
     void setObservedDataStdDev(std::vector<realtype> const& observedDataStdDev);
 
     /**
-     * @brief set function that sets all ExpData::observedDataStdDev to the
-     * input value
+     * @brief Set indentical standard deviation for all measurements.
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
     void setObservedDataStdDev(realtype stdDev);
 
     /**
-     * @brief set function that copies standard deviation of observed data for
-     * specific observable
+     * @brief Set standard deviations of observed data for a
+     * specific observable index.
      *
      * @param observedDataStdDev standard deviation of observed data (dimension:
      * nt)
@@ -242,8 +240,8 @@ class ExpData : public SimulationParameters {
     );
 
     /**
-     * @brief set function that sets all standard deviation of a specific
-     * observable to the input value
+     * @brief Set all standard deviation for a given observable index to the
+     * input value.
      *
      * @param stdDev standard deviation (dimension: scalar)
      * @param iy observed data index
@@ -251,8 +249,8 @@ class ExpData : public SimulationParameters {
     void setObservedDataStdDev(realtype stdDev, int iy);
 
     /**
-     * @brief get function that checks whether standard deviation of data at
-     * specified indices has been set
+     * @brief Whether standard deviation for a measurement at
+     * specified timepoint- and observable index has been set.
      *
      * @param it time index
      * @param iy observable index
@@ -261,16 +259,14 @@ class ExpData : public SimulationParameters {
     bool isSetObservedDataStdDev(int it, int iy) const;
 
     /**
-     * @brief get function that copies data from ExpData::observedDataStdDev to
-     * output
+     * @brief Get measurement standard deviations.
      *
      * @return standard deviation of observed data
      */
     std::vector<realtype> const &getObservedDataStdDev() const;
 
     /**
-     * @brief get function that returns a pointer to standard deviation of
-     * observed data at index
+     * @brief Get pointer to measurement standard deviations.
      *
      * @param it timepoint index
      * @return pointer to standard deviation of observed data at index

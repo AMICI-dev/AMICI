@@ -335,8 +335,9 @@ class ReturnData: public ModelDimensions {
      *   within the allowed time (see Solver.{set,get}MaxTime)
      * * AMICI_ERROR, indicating that some error occurred during simulation
      *   (a more detailed error message will have been printed).
+     * * AMICI_NOT_RUN, if no simulation was started
      */
-    int status = 0;
+    int status = AMICI_NOT_RUN;
 
     /** number of states (alias `nx_rdata`, kept for backward compatibility) */
     int nx{0};
