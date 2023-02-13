@@ -442,8 +442,9 @@ def _process_pysb_expressions(
         observables
 
     :param sigmas:
-        dict with names of observable pysb.Expressions/pysb.Observables
-        names as keys and names of sigma pysb.Expressions as values
+        dict with names of observable :class:`pysb.Expression` /
+        :class:`pysb.Observable` names as keys and names of sigma
+        :class:`pysb.Expressions` as values
 
     :param noise_distributions:
         see :func:`amici.pysb_import.pysb2amici`

@@ -593,7 +593,7 @@ class ODEModel:
     :ivar _observables:
         list of observables
 
-    :ivar _event_observables:
+    :ivar _eventobservables:
         list of event observables
 
     :ivar _sigmays:
@@ -637,7 +637,7 @@ class ODEModel:
         variables of the model
 
     :ivar _names:
-        carries names of symbolic identifiers of the symbolic variables
+        carries the names of symbolic identifiers of the symbolic variables
         of the model
 
     :ivar _syms:

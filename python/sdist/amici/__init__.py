@@ -4,20 +4,6 @@ AMICI
 
 The AMICI Python module provides functionality for importing SBML or PySB
 models and turning them into C++ Python extensions.
-
-:var amici_path:
-    absolute root path of the amici repository or Python package
-:var amiciSwigPath:
-    absolute path of the amici swig directory
-:var amiciSrcPath:
-    absolute path of the amici source directory
-:var amiciModulePath:
-    absolute root path of the amici module
-:var hdf5_enabled:
-    boolean indicating if amici was compiled with hdf5 support
-:var has_clibs:
-    boolean indicating if this is the full package with swig interface or
-    the raw package without
 """
 
 
@@ -87,14 +73,20 @@ def _imported_from_setup() -> bool:
 
 
 # Initialize AMICI paths
+#: absolute root path of the amici repository or Python package
 amici_path = _get_amici_path()
+#: absolute path of the amici swig directory
 amiciSwigPath = os.path.join(amici_path, 'swig')
+#: absolute path of the amici source directory
 amiciSrcPath = os.path.join(amici_path, 'src')
+#: absolute root path of the amici module
 amiciModulePath = os.path.dirname(__file__)
-
-has_clibs = any(os.path.isfile(os.path.join(amici_path, wrapper))
-                for wrapper in ['amici.py', 'amici_without_hdf5.py'])
-hdf5_enabled = False
+#: boolean indicating if this is the full package with swig interface or
+#  the raw package without extension
+has_clibs: bool = any(os.path.isfile(os.path.join(amici_path, wrapper))
+                      for wrapper in ['amici.py', 'amici_without_hdf5.py'])
+#: boolean indicating if amici was compiled with hdf5 support
+hdf5_enabled: bool = False
 
 # Get version number from file
 with open(os.path.join(amici_path, 'version.txt')) as f:
@@ -125,13 +117,16 @@ if not _imported_from_setup():
 
     @runtime_checkable
     class ModelModule(Protocol):
-        """Enable Python static type checking for AMICI-generated model
-        modules"""
+        """Type of AMICI-generated model modules.
+
+        To enable static type checking."""
 
         def getModel(self) -> amici.Model:
+            """Create a model instance."""
             ...
 
         def get_model(self) -> amici.Model:
+            """Create a model instance."""
             ...
 
 

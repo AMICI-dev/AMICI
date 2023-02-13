@@ -30,12 +30,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
     optimizations: Iterable[Optimization] = ()
 
     def __init__(self):
-        """
-        Create code printer
-
-        :param optimize_code:
-            Whether to apply code optimizations such as log(1 + x) --> logp1(x)
-        """
+        """Create code printer"""
         super().__init__()
 
         # extract common subexpressions in matrix functions?
@@ -301,7 +296,6 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
 
     :return:
         Code for switch expression as list of strings
-
     """
     lines = []
 

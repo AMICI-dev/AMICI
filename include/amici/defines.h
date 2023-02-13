@@ -128,15 +128,21 @@ enum class SecondOrderMode {
 
 /** orders of sensitivity analysis */
 enum class SensitivityOrder {
+    /** Don't compute sensitivities. */
     none,
+    /** First-order sensitivities. */
     first,
+    /** Second-order sensitivities. */
     second
 };
 
 /** methods for sensitivity computation */
 enum class SensitivityMethod {
+    /** Don't compute sensitivities. */
     none,
+    /** Forward sensitivity analysis. */
     forward,
+    /** Adjoint sensitivity analysis. */
     adjoint
 };
 

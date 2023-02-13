@@ -866,7 +866,7 @@ def _parse_cli_args():
     return args
 
 
-def main():
+def _main():
     """
     Command line interface to import a model in the PEtab
     (https://github.com/PEtab-dev/PEtab/) format into AMICI.
@@ -903,4 +903,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    _main()
