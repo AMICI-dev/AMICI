@@ -873,6 +873,7 @@ bool Solver::timeExceeded(int interval) const
     if (++eval_counter % interval)
         return false;
 
+    eval_counter = 0;
     auto cputime_exceed = static_cast<double>(std::clock() - starttime_)
                           / CLOCKS_PER_SEC;
     return std::chrono::duration<double>(cputime_exceed) > maxtime_;
