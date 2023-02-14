@@ -864,7 +864,7 @@ void Solver::startTimer() const
 
 bool Solver::timeExceeded() const
 {
-    // 0 means infinte time, don't call `clock()` then (expensive)
+    // 0 means infinite time, don't call `clock()` then (expensive)
     if(maxtime_.count() == 0)
         return false;
 
