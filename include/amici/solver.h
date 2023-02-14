@@ -500,7 +500,7 @@ class Solver {
 
     /**
      * @brief Check whether maximum integration time was exceeded
-     * @param interval Only check the time every ``interval``ths call to avoid
+     * @param interval Only check the time every ``interval`` ths call to avoid
      * potentially relatively expensive syscalls
 
      * @return True if the maximum integration time was exceeded,
