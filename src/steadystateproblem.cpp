@@ -103,11 +103,19 @@ void SteadystateProblem::findSteadyState(
     Solver const& solver, Model& model, int it
 ) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    bool turnOffNewton = model.getSteadyStateSensitivityMode() ==
+    /* Turn off Newton's method if newton_maxsteps is set to 0 or 
+    if 'integrationOnly' approach is chosen for sensitivity computation 
+    in combination with forward sensitivities approach. The latter is necessary 
+    as numerical integration of the model ODEs and corresponding 
+    forward sensitivities ODEs is coupled. If 'integrationOnly' approach is 
+    chosen for sensitivity computation it is enforced that steady state is 
+    computed only be numerical integration as well. */
+    bool turnOffNewton = solver.getNewtonMaxSteps() == 0 || ( 
+        model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly &&
         ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
          SensitivityMethod::forward) || solver.getSensitivityMethod() ==
-        SensitivityMethod::forward);
+        SensitivityMethod::forward));
 
     /* First, try to run the Newton solver */
     if (!turnOffNewton)
