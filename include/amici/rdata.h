@@ -220,33 +220,77 @@ class ReturnData: public ModelDimensions {
     /** employed order forward problem (shape `nt`) */
     std::vector<int> order;
 
-    /** computation time of forward solve [ms] */
+    /**
+     * @brief computation time of forward solve [ms]
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double cpu_time = 0.0;
 
-    /** computation time of backward solve [ms] */
+    /**
+     * @brief computation time of backward solve [ms]
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double cpu_timeB = 0.0;
 
-    /** total CPU time from entering runAmiciSimulation until exiting [ms] */
+    /**
+     * @brief total CPU time from entering runAmiciSimulation until exiting [ms]
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double cpu_time_total = 0.0;
 
     /** flags indicating success of steady state solver (preequilibration) */
     std::vector<SteadyStateStatus> preeq_status;
 
-    /** computation time of the steady state solver [ms] (preequilibration) */
+    /**
+     * @brief computation time of the steady state solver [ms]
+     * (preequilibration)
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double preeq_cpu_time = 0.0;
 
-    /** computation time of the steady state solver of the backward problem [ms]
-     *  (preequilibration) */
+    /**
+     * @brief computation time of the steady state solver of the backward
+     * problem [ms] (preequilibration)
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double preeq_cpu_timeB = 0.0;
 
     /** flags indicating success of steady state solver  (postequilibration) */
     std::vector<SteadyStateStatus> posteq_status;
 
-    /** computation time of the steady state solver [ms]  (postequilibration) */
+    /**
+     * @brief computation time of the steady state solver [ms]
+     * (postequilibration)
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double posteq_cpu_time = 0.0;
 
-    /** computation time of the steady state solver of the backward problem [ms]
-     *  (postequilibration) */
+    /**
+     * @brief computation time of the steady state solver of the backward
+     * problem [ms] (postequilibration)
+     *
+     * \warning {This tracks the CPU-time of the current process. Therefore,
+     * in a multi-threaded context, this value may be incorrect.}
+     *
+     */
     double posteq_cpu_timeB = 0.0;
 
     /**
