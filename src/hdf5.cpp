@@ -946,14 +946,17 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
 
 void readSolverSettingsFromHDF5(const std::string &hdffile, Solver &solver,
                                 const std::string &datasetPath) {
-    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT, H5::FileAccPropList::DEFAULT);
 
     readSolverSettingsFromHDF5(file, solver, datasetPath);
 }
 
 void readModelDataFromHDF5(const std::string &hdffile, Model &model,
                            const std::string &datasetPath) {
-    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    H5::H5File file(hdffile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT, H5::FileAccPropList::DEFAULT);
+
+
+      
 
     readModelDataFromHDF5(file, model, datasetPath);
 }
