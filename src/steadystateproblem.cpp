@@ -109,7 +109,7 @@ void SteadystateProblem::findSteadyState(
     as numerical integration of the model ODEs and corresponding 
     forward sensitivities ODEs is coupled. If 'integrationOnly' approach is 
     chosen for sensitivity computation it is enforced that steady state is 
-    computed only be numerical integration as well. */
+    computed only by numerical integration as well. */
     bool turnOffNewton = solver.getNewtonMaxSteps() == 0 || ( 
         model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly &&
