@@ -489,7 +489,7 @@ class Solver {
 
     /**
      * @brief Set the maximum CPU time allowed for integration
-     * @param maxtime Time in seconds
+     * @param maxtime Time in seconds. Zero means infinite time.
      */
     void setMaxTime(double maxtime);
 
@@ -500,10 +500,13 @@ class Solver {
 
     /**
      * @brief Check whether maximum integration time was exceeded
+     * @param interval Only check the time every ``interval`` ths call to avoid
+     * potentially relatively expensive syscalls
+
      * @return True if the maximum integration time was exceeded,
      * false otherwise.
      */
-    bool timeExceeded() const;
+    bool timeExceeded(int interval = 1) const;
 
     /**
      * @brief returns the maximum number of solver steps for the backward
@@ -1609,7 +1612,7 @@ class Solver {
     long int maxsteps_ {10000};
 
     /** Maximum CPU-time for integration in seconds */
-    std::chrono::duration<double, std::ratio<1>> maxtime_ {std::chrono::duration<double>::max()};
+    std::chrono::duration<double, std::ratio<1>> maxtime_ {0};
 
     /** Time at which solver timer was started */
     mutable std::clock_t starttime_;
