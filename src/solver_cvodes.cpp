@@ -1036,14 +1036,8 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto solver = dynamic_cast<CVodeSolver const *>(typed_udata->second);
     Expects(model);
 
-    // Avoid expensive syscalls by checking only every N rhs evaluations
-    static int eval_counter = 0;
-    int const interval = 1000;
-    if (++eval_counter / interval) {
-        eval_counter = 0;
-        if (solver->timeExceeded()) {
-            return AMICI_MAX_TIME_EXCEEDED;
-        }
+    if (solver->timeExceeded(500)) {
+        return AMICI_MAX_TIME_EXCEEDED;
     }
 
     if (t > 1e200
@@ -1078,14 +1072,8 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     auto solver = dynamic_cast<CVodeSolver const*>(typed_udata->second);
     Expects(model);
 
-    // Avoid expensive syscalls by checking only every N rhs evaluations
-    static int eval_counter = 0;
-    int const interval = 1000;
-    if (++eval_counter / interval) {
-        eval_counter = 0;
-        if (solver->timeExceeded()) {
-            return AMICI_MAX_TIME_EXCEEDED;
-        }
+    if (solver->timeExceeded(500)) {
+        return AMICI_MAX_TIME_EXCEEDED;
     }
 
     model->fxBdot(t, x, xB, xBdot);

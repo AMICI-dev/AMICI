@@ -500,10 +500,13 @@ class Solver {
 
     /**
      * @brief Check whether maximum integration time was exceeded
+     * @param interval Only check the time every ``interval``ths call to avoid
+     * potentially relatively expensive syscalls
+
      * @return True if the maximum integration time was exceeded,
      * false otherwise.
      */
-    bool timeExceeded() const;
+    bool timeExceeded(int interval = 1) const;
 
     /**
      * @brief returns the maximum number of solver steps for the backward
