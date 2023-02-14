@@ -862,9 +862,20 @@ void Solver::startTimer() const
     starttime_ = std::clock();
 }
 
-bool Solver::timeExceeded() const
+bool Solver::timeExceeded(int interval) const
 {
-    auto cputime_exceed = static_cast<double>(std::clock() - starttime_) / CLOCKS_PER_SEC;
+    static int eval_counter = 0;
+
+    // 0 means infinite time
+    if(maxtime_.count() == 0)
+        return false;
+
+    if (++eval_counter % interval)
+        return false;
+
+    eval_counter = 0;
+    auto cputime_exceed = static_cast<double>(std::clock() - starttime_)
+                          / CLOCKS_PER_SEC;
     return std::chrono::duration<double>(cputime_exceed) > maxtime_;
 }
 
