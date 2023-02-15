@@ -13,6 +13,7 @@ Non-python-package requirements:
 import os
 import sys
 from pathlib import Path
+import cmake_build_extension
 
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation
@@ -111,6 +112,8 @@ def main():
               "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
+    # TODO
+
     # Build shared object
     amici_module = Extension(
         name='amici._amici',
@@ -137,6 +140,17 @@ def main():
         extra_compile_args=cxx_flags,
         extra_link_args=amici_module_linker_flags
     )
+    # TODO suitesparse extension
+    # TODO sundials extension?
+    amici_module = cmake_build_extension.CMakeExtension(
+        name='_amici',
+        install_prefix='amici',
+        source_dir='amici',
+        cmake_configure_options=[
+            '-DAMICI_PYTHON_EXT_ONLY=ON',
+        ]
+    )
+
     # Monkey-patch extension (see
     # `custom_commands.set_compiler_specific_extension_options`)
     amici_module.extra_compile_args_mingw32 = ['-std=c++14']
@@ -148,14 +162,15 @@ def main():
         cmdclass={
             'install': AmiciInstall,
             'sdist': AmiciSDist,
-            'build_ext': AmiciBuildExt,
+            # 'build_ext': AmiciBuildExt,
+            'build_ext': cmake_build_extension.BuildExtension,
             'build_clib': AmiciBuildCLib,
             'install_lib': AmiciInstallLib,
             'develop': AmiciDevelop,
         },
         long_description=long_description,
         long_description_content_type="text/markdown",
-        libraries=[libamici, libsundials, libsuitesparse],
+        #libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
     )
 

@@ -40,25 +40,64 @@ set(AMICI_INTERFACE_LIST
 # Add target to show files in IDE
 add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
 
+if(AMICI_PYTHON_EXT_ONLY)
+    # Build suitesparse and install library and headers
+    foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
+        execute_process(
+          COMMAND make library
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/SuiteSparse/${subdir}
+      )
+    endforeach()
 
-# https://cmake.org/cmake/help/latest/module/UseSWIG.html
-include(${SWIG_USE_FILE})
+    # Build sundials and install library and headers
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -S${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials
+        -B${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
+    )
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
+    )
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
+    )
 
-set(UseSWIG_TARGET_NAME_PREFERENCE STANDARD)
-set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
-set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
+    # Get numpy include directory
+    # cmake3.19+: COMMAND_ERROR_IS_FATAL
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "from numpy import get_include; print(get_include())"
+        OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+        RESULT_VARIABLE RETURN_CODE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message("Numpy include directory: ${NUMPY_INCLUDE_DIR}")
 
-swig_add_library(
-  _amici
-  LANGUAGE Python
-  SOURCES amici.i
-  TYPE MODULE)
-set_target_properties(
-  _amici
-  PROPERTIES
-    SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
-    INCLUDE_DIRECTORIES
-    "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include"
-    PREFIX "")
+    # https://cmake.org/cmake/help/latest/module/UseSWIG.html
+    include(${SWIG_USE_FILE})
 
-target_link_libraries(_amici amici Python3::Python)
+    # TODO wrap in option
+    set(UseSWIG_TARGET_NAME_PREFERENCE STANDARD)
+    set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
+    set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
+    # TODO additional swig flags
+    swig_add_library(
+      _amici
+      LANGUAGE Python
+      SOURCES amici.i
+      TYPE MODULE)
+    set_target_properties(
+      _amici
+      PROPERTIES
+        SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
+        INCLUDE_DIRECTORIES
+        "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include;${NUMPY_INCLUDE_DIR}"
+        PREFIX "")
+
+    target_link_libraries(_amici amici Python3::Python)
+
+
+    # TODO generic extension; follow python naming - _amici.cpython-311-x86_64-linux-gnu.so
+    install(
+      FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py
+            ${CMAKE_CURRENT_BINARY_DIR}/_amici.so
+      DESTINATION .)
+endif()

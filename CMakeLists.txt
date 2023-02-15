@@ -1,15 +1,7 @@
 #
 # Build AMICI library
 #
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-endif(POLICY CMP0077)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(amici)
 
@@ -35,8 +27,13 @@ foreach(FLAG ${MY_CXX_FLAGS})
   endif()
 endforeach(FLAG)
 
+# misc options
+option(AMICI_PYTHON_EXT_ONLY "Build only the Python extension?" OFF)
+
 # find dependencies
 include(GNUInstallDirs)
+
+find_package(OpenMP)
 
 option(ENABLE_HDF5 "Build with HDF5 support?" ON)
 if(ENABLE_HDF5)
@@ -218,6 +215,7 @@ target_link_libraries(
   PUBLIC ${SUITESPARSE_LIBRARIES}
   PUBLIC ${HDF5_LIBRARIES}
   PUBLIC ${BLAS_LIBRARIES}
+  PUBLIC OpenMP::OpenMP_CXX
   PUBLIC ${CMAKE_DL_LIBS})
 
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
@@ -275,8 +273,10 @@ if($ENV{ENABLE_GCOV_COVERAGE})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
 endif()
 
-include(clang-tools)
-include(cmakelang-tools)
+if(NOT AMICI_PYTHON_EXT_ONLY)
+  include(clang-tools)
+  include(cmakelang-tools)
+endif()
 
 set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
 set(AUTHOR_EMAIL "Fabian_Froehlich@hms.harvard.edu")
@@ -327,7 +327,7 @@ if(ENABLE_PYTHON)
 endif()
 
 option(BUILD_TESTS "Build integration tests?" ON)
-if(BUILD_TESTS)
+if(BUILD_TESTS AND NOT AMICI_PYTHON_EXT_ONLY)
   if(ENABLE_HDF5)
     enable_testing()
 
