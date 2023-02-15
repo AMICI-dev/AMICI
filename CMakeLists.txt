@@ -241,8 +241,14 @@ target_link_libraries(
   PUBLIC ${SUITESPARSE_LIBRARIES}
   PUBLIC ${HDF5_LIBRARIES}
   PUBLIC ${BLAS_LIBRARIES}
-  PUBLIC OpenMP::OpenMP_CXX
   PUBLIC ${CMAKE_DL_LIBS})
+
+if(OpenMP_FOUND)
+    target_link_libraries(
+      ${PROJECT_NAME}
+      PUBLIC OpenMP::OpenMP_CXX
+    )
+endif()
 
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 if(SUNDIALS_SUPERLUMT_ENABLE)

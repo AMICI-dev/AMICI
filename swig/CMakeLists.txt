@@ -49,18 +49,6 @@ if(AMICI_PYTHON_EXT_ONLY)
       )
     endforeach()
 
-    # Build sundials and install library and headers
-    execute_process(
-        COMMAND ${CMAKE_COMMAND}
-        -S${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials
-        -B${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
-    )
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
-    )
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
-    )
 
     # Get numpy include directory
     # cmake3.19+: COMMAND_ERROR_IS_FATAL
