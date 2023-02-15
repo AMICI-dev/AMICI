@@ -12,7 +12,14 @@ if(${SWIG_VERSION} VERSION_LESS ${SWIG_VERSION_MIN})
                       "but found only ${SWIG_VERSION}.")
 endif()
 
-include(${SWIG_USE_FILE})
+if(DEFINED ENV{PYTHON_EXECUTABLE})
+  set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
+endif()
+if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+  find_package(PythonInterp 3.8 REQUIRED)
+else()
+  find_package(Python3 COMPONENTS Interpreter Development)
+endif()
 
 set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/amici.i
@@ -32,3 +39,26 @@ set(AMICI_INTERFACE_LIST
 
 # Add target to show files in IDE
 add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
+
+
+# https://cmake.org/cmake/help/latest/module/UseSWIG.html
+include(${SWIG_USE_FILE})
+
+set(UseSWIG_TARGET_NAME_PREFERENCE STANDARD)
+set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
+set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
+
+swig_add_library(
+  _amici
+  LANGUAGE Python
+  SOURCES amici.i
+  TYPE MODULE)
+set_target_properties(
+  _amici
+  PROPERTIES
+    SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
+    INCLUDE_DIRECTORIES
+    "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include"
+    PREFIX "")
+
+target_link_libraries(_amici amici Python3::Python)
