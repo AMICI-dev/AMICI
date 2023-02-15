@@ -65,6 +65,7 @@ if(AMICI_PYTHON_EXT_ONLY)
   set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
   set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
   # TODO additional swig flags
+
   swig_add_library(
     _amici
     LANGUAGE Python
@@ -77,6 +78,12 @@ if(AMICI_PYTHON_EXT_ONLY)
       INCLUDE_DIRECTORIES
       "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include;${NUMPY_INCLUDE_DIR}"
       PREFIX "")
+  if(NOT HDF5_FOUND)
+      set_target_properties(
+          _amici
+          PROPERTIES
+              SWIG_COMPILE_DEFINITIONS AMICI_SWIG_WITHOUT_HDF5)
+  endif()
 
   target_link_libraries(_amici amici Python3::Python)
 
