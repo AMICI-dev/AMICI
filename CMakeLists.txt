@@ -35,12 +35,22 @@ include(GNUInstallDirs)
 
 find_package(OpenMP)
 
-option(ENABLE_HDF5 "Build with HDF5 support?" ON)
+option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
+option(ENABLE_HDF5 "Build with HDF5 support?" OFF)
+
 if(ENABLE_HDF5)
   find_package(
     HDF5
     COMPONENTS C HL CXX
     REQUIRED)
+endif()
+if(AMICI_TRY_ENABLE_HDF5)
+    find_package(
+      HDF5
+      COMPONENTS C HL CXX
+      )
+endif()
+if(HDF5_FOUND)
   set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES}
                      ${HDF5_CXX_LIBRARIES})
 endif()
