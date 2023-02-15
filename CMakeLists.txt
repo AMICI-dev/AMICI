@@ -256,7 +256,7 @@ target_link_libraries(
   PUBLIC ${BLAS_LIBRARIES}
   PUBLIC ${CMAKE_DL_LIBS})
 
-if(ENABLE_HDF5)
+if(HDF5_FOUND)
   target_include_directories(${PROJECT_NAME} PUBLIC ${HDF5_INCLUDE_DIRS})
   target_link_libraries(${PROJECT_NAME} PUBLIC ${HDF5_LIBRARIES})
 endif()
@@ -279,28 +279,31 @@ endif()
 # Create targets to make the sources show up in IDEs for convenience
 
 # For matlab interface
-set(matlab_sources
-    src/interface_matlab.cpp src/returndata_matlab.cpp
-    include/amici/interface_matlab.h include/amici/returndata_matlab.h)
-find_package(Matlab)
-# In case we can find Matlab, we create a respective library to compile the
-# extension from cmake. Otherwise we just create a dummy target for the files to
-# show up inside IDEs. (Set the Matlab_ROOT_DIR cmake variable if CMake cannot
-# find your Matlab installation)
-if(${Matlab_FOUND})
-  add_library(matlabInterface ${matlab_sources})
-  set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
-                                                   "${Matlab_INCLUDE_DIRS}")
+if(NOT AMICI_PYTHON_EXT_ONLY)
 
-  target_link_libraries(matlabInterface PUBLIC amici)
+  set(matlab_sources
+      src/interface_matlab.cpp src/returndata_matlab.cpp
+      include/amici/interface_matlab.h include/amici/returndata_matlab.h)
+  find_package(Matlab)
+  # In case we can find Matlab, we create a respective library to compile the
+  # extension from cmake. Otherwise we just create a dummy target for the files
+  # to show up inside IDEs. (Set the Matlab_ROOT_DIR cmake variable if CMake
+  # cannot find your Matlab installation)
+  if(${Matlab_FOUND})
+    add_library(matlabInterface ${matlab_sources})
+    set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
+                                                     "${Matlab_INCLUDE_DIRS}")
 
-else()
-  add_custom_target(matlabInterface SOURCES ${matlab_sources})
+    target_link_libraries(matlabInterface PUBLIC amici)
+
+  else()
+    add_custom_target(matlabInterface SOURCES ${matlab_sources})
+  endif()
+  set_property(
+    TARGET matlabInterface
+    APPEND
+    PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
 endif()
-set_property(
-  TARGET matlabInterface
-  APPEND
-  PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
 
 # For template files
 add_custom_target(

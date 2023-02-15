@@ -61,7 +61,6 @@ if(AMICI_PYTHON_EXT_ONLY)
   # https://cmake.org/cmake/help/latest/module/UseSWIG.html
   include(${SWIG_USE_FILE})
 
-  # TODO wrap in option
   set(UseSWIG_TARGET_NAME_PREFERENCE STANDARD)
   set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
   set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
