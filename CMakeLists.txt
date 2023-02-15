@@ -71,7 +71,7 @@ if(AMICI_USE_VENDORED_SUNDIALS)
 
   # Build suitesparse and install library and headers
   foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
-    execute_process(COMMAND make library
+    execute_process(COMMAND make static install
                     WORKING_DIRECTORY ${SUITESPARSE_DIR}/${subdir})
   endforeach()
 
@@ -251,7 +251,6 @@ target_link_libraries(
   PUBLIC SUNDIALS::cvodes_static
   PUBLIC SUNDIALS::idas_static
   PUBLIC ${SUITESPARSE_LIBRARIES}
-  PUBLIC ${HDF5_LIBRARIES}
   PUBLIC ${BLAS_LIBRARIES}
   PUBLIC ${CMAKE_DL_LIBS})
 
