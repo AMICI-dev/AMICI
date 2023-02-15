@@ -45,19 +45,15 @@ if(ENABLE_HDF5)
     REQUIRED)
 endif()
 if(AMICI_TRY_ENABLE_HDF5)
-    find_package(
-      HDF5
-      COMPONENTS C HL CXX
-      )
+  find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 if(HDF5_FOUND)
   set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES}
                      ${HDF5_CXX_LIBRARIES})
 endif()
 
-set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse/")
-set(SUITESPARSE_INCLUDE_DIRS "${SUITESPARSE_DIR}/include"
-                             "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
+set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse")
+set(SUITESPARSE_INCLUDE_DIRS "${SUITESPARSE_DIR}/include")
 set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/KLU/Lib/libklu${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUITESPARSE_DIR}/COLAMD/Lib/libcolamd${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -66,25 +62,42 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
-option(AMICI_USE_VENDORED_SUNDIALS ON)
+option(AMICI_USE_VENDORED_SUNDIALS "Use the vendored SUNDIALS?" ON)
+set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
+set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
+set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 if(AMICI_USE_VENDORED_SUNDIALS)
-    # Build sundials and install library and headers
-    execute_process(
-        COMMAND ${CMAKE_COMMAND}
-        -S${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials
-        -B${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
-    )
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
-    )
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
-    )
+  message("Building vendored SUNDIALS")
+
+  # Build suitesparse and install library and headers
+  foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
+    execute_process(COMMAND make library
+                    WORKING_DIRECTORY ${SUITESPARSE_DIR}/${subdir})
+  endforeach()
+
+  # Build sundials and install library and headers
+  execute_process(
+    COMMAND
+      ${CMAKE_COMMAND} -S${VENDORED_SUNDIALS_DIR}
+      -B${VENDORED_SUNDIALS_BUILD_DIR}
+      -DCMAKE_INSTALL_PREFIX=${VENDORED_SUNDIALS_INSTALL_DIR}
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+      -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_IDA=OFF -DBUILD_KINSOL=OFF
+      -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON
+      -DBUILD_NVECTOR_MANYVECTOR=OFF -DBUILD_SUNNONLINSOL_PETSCSNES=OFF
+      -DEXAMPLES_ENABLE_C=OFF -DEXAMPLES_INSTALL=OFF -DENABLE_KLU=ON
+      -DKLU_LIBRARY_DIR=${SUITESPARSE_DIR}/lib
+      -DKLU_INCLUDE_DIR=${SUITESPARSE_DIR}/include)
+  execute_process(COMMAND ${CMAKE_COMMAND} --build
+                          ${VENDORED_SUNDIALS_BUILD_DIR} --parallel)
+  execute_process(COMMAND ${CMAKE_COMMAND} --install
+                          ${VENDORED_SUNDIALS_BUILD_DIR})
+else()
+  message("Not building vendored SUNDIALS")
 endif()
 
-find_package(
-  SUNDIALS REQUIRED PATHS
-  "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib/cmake/sundials/")
+find_package(SUNDIALS REQUIRED PATHS
+             "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
@@ -212,8 +225,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
   PUBLIC swig
   PUBLIC ${GSL_LITE_INCLUDE_DIR}
-  PUBLIC ${SUITESPARSE_INCLUDE_DIRS}
-  PUBLIC ${HDF5_INCLUDE_DIRS})
+  PUBLIC ${SUITESPARSE_INCLUDE_DIRS})
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
   target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
@@ -243,11 +255,13 @@ target_link_libraries(
   PUBLIC ${BLAS_LIBRARIES}
   PUBLIC ${CMAKE_DL_LIBS})
 
+if(ENABLE_HDF5)
+  target_include_directories(${PROJECT_NAME} PUBLIC ${HDF5_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${HDF5_LIBRARIES})
+endif()
+
 if(OpenMP_FOUND)
-    target_link_libraries(
-      ${PROJECT_NAME}
-      PUBLIC OpenMP::OpenMP_CXX
-    )
+  target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
