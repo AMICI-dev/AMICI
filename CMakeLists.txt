@@ -338,12 +338,12 @@ endif()
 
 option(BUILD_TESTS "Build integration tests?" ON)
 if(BUILD_TESTS AND NOT AMICI_PYTHON_EXT_ONLY)
-  if(ENABLE_HDF5)
+  if(HDF5_FOUND)
     enable_testing()
 
     add_subdirectory(tests/cpp)
   else()
-    message(WARNING "Cannot build tests with ENABLE_HDF5=OFF.")
+    message(WARNING "Cannot build tests without HDF5 support.")
   endif()
 
 endif()

@@ -69,7 +69,7 @@ if(AMICI_PYTHON_EXT_ONLY)
         RESULT_VARIABLE RETURN_CODE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    message("Numpy include directory: ${NUMPY_INCLUDE_DIR}")
+    message("NumPy include directory: ${NUMPY_INCLUDE_DIR}")
 
     # https://cmake.org/cmake/help/latest/module/UseSWIG.html
     include(${SWIG_USE_FILE})
