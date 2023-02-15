@@ -43,8 +43,7 @@ if(ENABLE_HDF5)
     HDF5
     COMPONENTS C HL CXX
     REQUIRED)
-endif()
-if(AMICI_TRY_ENABLE_HDF5)
+elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 if(HDF5_FOUND)
@@ -206,7 +205,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
     ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
     ${CMAKE_SOURCE_DIR}/include/amici/vector.h)
-if(ENABLE_HDF5)
+if(HDF5_FOUND)
   list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
 endif()
 
