@@ -66,6 +66,22 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
+option(AMICI_USE_VENDORED_SUNDIALS ON)
+if(AMICI_USE_VENDORED_SUNDIALS)
+    # Build sundials and install library and headers
+    execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -S${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials
+        -B${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
+    )
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
+    )
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/sundials/build
+    )
+endif()
+
 find_package(
   SUNDIALS REQUIRED PATHS
   "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib/cmake/sundials/")
