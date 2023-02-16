@@ -24,7 +24,12 @@ from . import AmiciModel, AmiciExpData
 from .logging import get_logger, log_execution_time
 from .petab_import import PREEQ_INDICATOR_ID, element_is_state
 from .parameter_mapping import (
-    fill_in_parameters, ParameterMappingForCondition, ParameterMapping)
+    fill_in_parameters,
+    scale_parameter,
+    unscale_parameter,
+    ParameterMappingForCondition,
+    ParameterMapping,
+)
 
 logger = get_logger(__name__)
 
@@ -37,7 +42,6 @@ S2LLH = 's2llh'
 RES = 'res'
 SRES = 'sres'
 RDATAS = 'rdatas'
-EDATAS = 'edatas'
 
 
 @log_execution_time('Simulating PEtab model', logger)
@@ -56,6 +60,10 @@ def simulate_petab(
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
 
+    .. note::
+        Regardless of `scaled_parameters`, sensitivities are returned on the
+        scales defined in the PEtab parameters table.
+
     :param petab_problem:
         PEtab problem to work on.
     :param amici_model:
@@ -63,9 +71,9 @@ def simulate_petab(
     :param solver:
         An AMICI solver. Will use default options if None.
     :param problem_parameters:
-        Run simulation with these parameters. If ``None``, PEtab
-        ``nominalValues`` will be used. To be provided as dict, mapping PEtab
-        problem parameters to SBML IDs.
+        Run simulation with these parameters. If None, PEtab `nominalValues`
+        will be used). To be provided as dict,  mapping PEtab problem
+        parameters to SBML IDs.
     :param simulation_conditions:
         Result of :py:func:`petab.get_simulation_conditions`. Can be provided
         to save time if this has be obtained before.
@@ -93,7 +101,6 @@ def simulate_petab(
 
         * cost function value (``LLH``),
         * list of :class:`amici.amici.ReturnData` (``RDATAS``),
-        * list of :class:`amici.amici.ExpData` (``EDATAS``),
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see
@@ -104,15 +111,13 @@ def simulate_petab(
     if solver is None:
         solver = amici_model.getSolver()
 
-    # Get parameters
-    if problem_parameters is None:
-        # Use PEtab nominal values as default
-        problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
-                              petab_problem.parameter_df.itertuples()}
-        if scaled_parameters:
-            raise NotImplementedError(
-                "scaled_parameters=True in combination with "
-                "problem_parameters=None is currently not supported.")
+    # Switch to scaled parameters.
+    problem_parameters = _default_scaled_parameters(
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        scaled_parameters=scaled_parameters,
+    )
+    scaled_parameters = True
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
@@ -153,6 +158,17 @@ def simulate_petab(
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
+    # Compute total sllh
+    sllh = None
+    if solver.getSensitivityOrder() != amici.SensitivityOrder.none:
+        sllh = aggregate_sllh(
+            amici_model=amici_model,
+            rdatas=rdatas,
+            parameter_mapping=parameter_mapping,
+            petab_scale=scaled_parameters,
+            petab_problem=petab_problem,
+            edatas=edatas,
+        )
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -165,9 +181,108 @@ def simulate_petab(
 
     return {
         LLH: llh,
-        RDATAS: rdatas,
-        EDATAS: edatas,
+        SLLH: sllh,
+        RDATAS: rdatas
     }
+
+
+def aggregate_sllh(
+        amici_model: AmiciModel,
+        rdatas: Sequence[amici.ReturnDataView],
+        parameter_mapping: Optional[ParameterMapping],
+        edatas: List[AmiciExpData],
+        petab_scale: bool = True,
+        petab_problem: petab.Problem = None,
+) -> Union[None, Dict[str, float]]:
+    """
+    Aggregate likelihood gradient for all conditions, according to PEtab
+    parameter mapping.
+
+    :param amici_model:
+        AMICI model from which ``rdatas`` were obtained.
+    :param rdatas:
+        Simulation results.
+    :param parameter_mapping:
+        PEtab parameter mapping to condition-specific
+            simulation parameters
+    :param edatas:
+        Experimental data used for simulation.
+    :param petab_scale:
+        Sensitivities are returned on PEtab scale if `True`, else AMICI model
+        scale.
+    :param petab_problem:
+        The PEtab problem that defines the parameter scales.
+
+    :return:
+        Aggregated likelihood sensitivities.
+    """
+    accumulated_sllh = {}
+    model_parameter_ids = amici_model.getParameterIds()
+
+    if petab_scale and petab_problem is None:
+        raise ValueError(
+            'Please provide a PEtab problem if scaled SLLH is desired, or set '
+            '`petab_scale=False`.'
+        )
+
+    # Check for issues in all condition simulation results.
+    for rdata in rdatas:
+        # Condition failed during simulation.
+        if rdata.status != amici.AMICI_SUCCESS:
+            return None
+        # Condition simulation result does not provide SLLH.
+        if rdata.sllh is None:
+            raise ValueError(
+                'The sensitivities of the likelihood for a condition were '
+                'not computed.'
+            )
+
+    for condition_parameter_mapping, edata, rdata in \
+            zip(parameter_mapping, edatas, rdatas):
+        for sllh_parameter_index, condition_parameter_sllh in \
+                enumerate(rdata.sllh):
+            # Get PEtab parameter ID
+            # Use ExpData if it provides a parameter list, else default to
+            # Model.
+            if edata.plist:
+                model_parameter_index = edata.plist[sllh_parameter_index]
+            else:
+                model_parameter_index = amici_model.plist(sllh_parameter_index)
+            model_parameter_id = model_parameter_ids[model_parameter_index]
+            petab_parameter_id = (
+                condition_parameter_mapping
+                .map_sim_var[model_parameter_id]
+            )
+
+            # Initialize
+            if petab_parameter_id not in accumulated_sllh:
+                accumulated_sllh[petab_parameter_id] = 0
+
+            # Check scale
+            if petab_scale:
+                # `ParameterMappingForCondition` objects provide the scale in
+                # terms of `petab.C` constants already, not AMICI equivalents.
+                model_parameter_scale = (
+                    condition_parameter_mapping
+                    .scale_map_sim_var[model_parameter_id]
+                )
+                petab_parameter_scale = (
+                    petab_problem
+                    .parameter_df
+                    .loc[petab_parameter_id, PARAMETER_SCALE]
+                )
+                if model_parameter_scale != petab_parameter_scale:
+                    raise ValueError(
+                        f'The scale of the parameter `{petab_parameter_id}` '
+                        'differs between the AMICI model '
+                        f'({model_parameter_scale}) and the PEtab problem '
+                        f'({petab_parameter_scale}).'
+                    )
+
+            # Accumulate
+            accumulated_sllh[petab_parameter_id] += condition_parameter_sllh
+
+    return accumulated_sllh
 
 
 def create_parameterized_edatas(
@@ -185,9 +300,9 @@ def create_parameterized_edatas(
     :param petab_problem:
         PEtab problem to work on.
     :param problem_parameters:
-        Run simulation with these parameters. If ``None``, PEtab
-        ``nominalValues`` will be used. To be provided as dict, mapping PEtab
-        problem parameters to SBML IDs.
+        Run simulation with these parameters. If None, PEtab `nominalValues`
+        will be used). To be provided as dict, mapping PEtab problem
+        parameters to SBML IDs.
     :param scaled_parameters:
         If ``True``, ``problem_parameters`` are assumed to be on the scale
         provided in the PEtab parameter table and will be unscaled.
@@ -297,7 +412,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            model=petab_problem.model,
+            sbml_model=petab_problem.sbml_model,
             **dict(default_parameter_mapping_kwargs,
                    **parameter_mapping_kwargs)
         )
@@ -464,16 +579,16 @@ def create_parameter_mapping_for_condition(
     fixed_par_ids = amici_model.getFixedParameterIds()
 
     condition_map_preeq_var, condition_map_preeq_fix = \
-        _subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
+        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
 
     condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
-        _subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
+        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
 
     condition_map_sim_var, condition_map_sim_fix = \
-        _subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
+        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
 
     condition_scale_map_sim_var, condition_scale_map_sim_fix = \
-        _subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
+        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
 
     logger.debug("Fixed parameters preequilibration: "
                  f"{condition_map_preeq_fix}")
@@ -527,13 +642,11 @@ def create_edatas(
 
     observable_ids = amici_model.getObservableIds()
 
+    measurement_groupvar = [petab.SIMULATION_CONDITION_ID]
+    if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
+        measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
     measurement_dfs = dict(list(
-        petab_problem.measurement_df.groupby(
-            [petab.SIMULATION_CONDITION_ID,
-             petab.PREEQUILIBRATION_CONDITION_ID]
-            if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions
-            else petab.SIMULATION_CONDITION_ID
-        )
+        petab_problem.measurement_df.groupby(measurement_groupvar)
     ))
 
     edatas = []
@@ -631,8 +744,8 @@ def create_edata_for_condition(
     return edata
 
 
-def _subset_dict(full: Dict[Any, Any],
-                 *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
+def subset_dict(full: Dict[Any, Any],
+                *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
     """Get subset of dictionary based on provided keys
 
     :param full:
@@ -767,9 +880,9 @@ def rdatas_to_measurement_df(
     # iterate over conditions
     for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
-        y = rdata.y
+        y = rdata['y']
         # time array used in rdata
-        t = list(rdata.ts)
+        t = list(rdata['t'])
 
         # extract rows for condition
         cur_measurement_df = petab.get_rows_for_condition(
@@ -811,3 +924,316 @@ def rdatas_to_simulation_df(
                                   measurement_df=measurement_df)
 
     return df.rename(columns={MEASUREMENT: SIMULATION})
+
+
+def check_grad_multi_eps(
+    *args,
+    multi_eps: Optional[List[float]] = None,
+    label: str = 'rel_err',
+    **kwargs,
+) -> pd.DataFrame:
+    """Compare gradient evaluation.
+
+    Based on the equivalent method in `pypesto.objective.ObjectiveBase`.
+
+    Equivalent to the `amici.petab_objective.check_grad` method, except
+    multiple finite difference step sizes are tested. The result contains the
+    lowest finite difference for each parameter, and the corresponding finite
+    difference step size.
+
+    See `amici.petab_objective.check_grad` method parameters for other
+    parameters.
+
+    :param multi_eps:
+        The finite difference step sizes to be tested.
+    :param label:
+        The label of the column that will be minimized for each parameter.
+        Valid options are the column labels of the dataframe returned by the
+        `amici.petab_objective.check_grad` method.
+
+    :return:
+        Gradient, finite difference approximations and error estimates, with
+        best epsilon indicated.
+    """
+    if 'eps' in kwargs:
+        raise KeyError(
+            'Please use the `multi_eps` (not the `eps`) argument with '
+            '`check_grad_multi_eps` to specify step sizes.'
+        )
+
+    if multi_eps is None:
+        multi_eps = {1e-1, 1e-3, 1e-5, 1e-7, 1e-9}
+
+    results = {}
+    for eps in multi_eps:
+        results[eps] = check_grad(*args, **kwargs, eps=eps)
+
+    # The combined result is, for each parameter, the gradient check from
+    # the step size (`eps`) that produced the smallest error (`label`).
+    combined_result = None
+    for eps, result in results.items():
+        result['eps'] = eps
+        if combined_result is None:
+            combined_result = result
+            continue
+        # Replace rows in `combined_result` with corresponding rows
+        # in `result` that have an improved value in column `label`.
+        mask_improvements = result[label] < combined_result[label]
+        combined_result.loc[mask_improvements, :] = \
+            result.loc[mask_improvements, :]
+
+    return combined_result
+
+
+def check_grad(
+    petab_problem: petab.Problem,
+    amici_model: amici.Model,
+    amici_solver: amici.Solver,
+    problem_parameters: Optional[Dict[str, float]] = None,
+    scaled_parameters: bool = False,
+    parameter_ids: Sequence[str] = None,
+    eps: float = 1e-5,
+    verbosity: int = 1,
+    detailed: bool = False,
+    ignore_missing_parameters: bool = False,
+) -> pd.DataFrame:
+    """
+    Compare gradient evaluation.
+
+    Based on the equivalent method in `pypesto.objective.ObjectiveBase`.
+
+    Firstly approximate via finite differences, and secondly use the
+    objective gradient.
+
+    :param petab_problem:
+        The PEtab problem.
+    :param amici_model:
+        The model for the PEtab problem.
+    :param amici_solver:
+        The solver, setup to compute sensitivities.
+    :param problem_parameters:
+        Keys are PEtab parameter IDs, values are parameter values on the scale
+        defined in the PEtab parameter table. Defaults to the nominal values in
+        the PEtab parameter table.
+    :param scaled_parameters:
+        Whether `problem_parameters` are on the scale defined in the PEtab
+        parameter table.
+    :param parameter_ids:
+        IDs of parameters that will have gradients computed. Default: all
+        parameter IDs in `problem_parameters`.
+    :param eps:
+        Finite differences step size.
+    :param verbosity:
+        Level of verbosity for function output.
+        0: no output,
+        1: summary for all parameters,
+        2: summary for individual parameters.
+    :param detailed:
+        Toggle whether additional values are returned. Additional values
+        are function values, and the central difference weighted by the
+        difference in output from all methods (standard deviation and
+        mean).
+    :param ignore_missing_parameters:
+        Whether to ignore a parameter that is missing from the gradients.
+
+    :return:
+        Gradient, finite difference approximations and error estimates.
+    """
+    # Switch to scaled parameters.
+    problem_parameters = _default_scaled_parameters(
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        scaled_parameters=scaled_parameters,
+    )
+    scaled_parameters = True
+
+    if parameter_ids is None:
+        parameter_ids = list(problem_parameters)
+
+    def _simulate(
+        vector,
+        petab_problem=petab_problem,
+        amici_model=amici_model,
+        amici_solver=amici_solver,
+        sllh=False,
+    ):
+        _result = amici.petab_objective.simulate_petab(
+            petab_problem=petab_problem,
+            amici_model=amici_model,
+            solver=amici_solver,
+            problem_parameters=vector,
+            # If unscaled parameters are provided, they are scaled, so this is
+            # always true.
+            scaled_parameters=True,
+        )
+        if sllh:
+            return _result[LLH], _result[SLLH]
+        return _result[LLH]
+
+    # function value and objective gradient
+    fval, grad = _simulate(problem_parameters, sllh=True)
+
+    grad_list = []
+    fd_f_list = []
+    fd_b_list = []
+    fd_c_list = []
+    fd_err_list = []
+    abs_err_list = []
+    rel_err_list = []
+
+    if detailed:
+        fval_p_list = []
+        fval_m_list = []
+        std_check_list = []
+        mean_check_list = []
+
+    # loop over parameter IDs
+    for ix in parameter_ids:
+        if ix not in grad:
+            if not ignore_missing_parameters:
+                raise ValueError(
+                    f'A parameter ({ix}) is missing from the gradients. This '
+                    'may be because the parameter is fixed to a specific '
+                    'value in the PEtab parameters table. To suppress this '
+                    'error and use `np.nan` as the gradient,'
+                    'set `ignore_missing_parameters=True`.'
+                    #'check, set'skip the parameter in the gradient check, set '
+                    #'`ignore_missing_parameters=True`.'
+                )
+            grad[ix] = np.nan
+        # forward (plus) point
+        x_p = copy.deepcopy(problem_parameters)
+        x_p[ix] += eps
+        fval_p = _simulate(x_p)
+
+        # backward (minus) point
+        x_m = copy.deepcopy(problem_parameters)
+        x_m[ix] -= eps
+        fval_m = _simulate(x_m)
+
+        # finite differences
+        fd_f_ix = (fval_p - fval) / eps
+        fd_b_ix = (fval - fval_m) / eps
+        fd_c_ix = (fval_p - fval_m) / (2 * eps)
+
+        # gradient in direction ix
+        grad_ix = grad[ix]
+
+        # errors
+        fd_err_ix = abs(fd_f_ix - fd_b_ix)
+        abs_err_ix = abs(grad_ix - fd_c_ix)
+        rel_err_ix = abs(abs_err_ix / (fd_c_ix + eps))
+
+        if detailed:
+            std_check_ix = (grad_ix - fd_c_ix)/np.std([
+                fd_f_ix,
+                fd_b_ix,
+                fd_c_ix
+            ])
+            mean_check_ix = abs(grad_ix - fd_c_ix)/np.mean([
+                abs(fd_f_ix - fd_b_ix),
+                abs(fd_f_ix - fd_c_ix),
+                abs(fd_b_ix - fd_c_ix),
+            ])
+
+        # log for dimension ix
+        if verbosity > 1:
+            logger.info(
+                f'index:    {ix}\n'
+                f'grad:     {grad_ix}\n'
+                f'fd_f:     {fd_f_ix}\n'
+                f'fd_b:     {fd_b_ix}\n'
+                f'fd_c:     {fd_c_ix}\n'
+                f'fd_err:   {fd_err_ix}\n'
+                f'abs_err:  {abs_err_ix}\n'
+                f'rel_err:  {rel_err_ix}\n'
+            )
+
+        # append to lists
+        grad_list.append(grad_ix)
+        fd_f_list.append(fd_f_ix)
+        fd_b_list.append(fd_b_ix)
+        fd_c_list.append(fd_c_ix)
+        fd_err_list.append(np.mean(fd_err_ix))
+        abs_err_list.append(np.mean(abs_err_ix))
+        rel_err_list.append(np.mean(rel_err_ix))
+        if detailed:
+            fval_p_list.append(fval_p)
+            fval_m_list.append(fval_m)
+            std_check_list.append(std_check_ix)
+            mean_check_list.append(mean_check_ix)
+
+    # create data dictionary for dataframe
+    data = {
+        'grad': grad_list,
+        'fd_f': fd_f_list,
+        'fd_b': fd_b_list,
+        'fd_c': fd_c_list,
+        'fd_err': fd_err_list,
+        'abs_err': abs_err_list,
+        'rel_err': rel_err_list,
+    }
+
+    # update data dictionary if detailed output is requested
+    if detailed:
+        prefix_data = {
+            'fval': [fval]*len(parameter_ids),
+            'fval_p': fval_p_list,
+            'fval_m': fval_m_list,
+
+        }
+        std_str = '(grad-fd_c)/std({fd_f,fd_b,fd_c})'
+        mean_str = '|grad-fd_c|/mean(|fd_f-fd_b|,|fd_f-fd_c|,|fd_b-fd_c|)'
+        postfix_data = {
+            std_str: std_check_list,
+            mean_str: mean_check_list,
+        }
+        data = {**prefix_data, **data, **postfix_data}
+
+    # create dataframe
+    result = pd.DataFrame(
+        data=data,
+        index=parameter_ids,
+    )
+
+    # log full result
+    if verbosity > 0:
+        logger.info(result)
+
+    return result
+
+
+def _default_scaled_parameters(
+    petab_problem: petab.Problem,
+    problem_parameters: Optional[Dict[str, float]] = None,
+    scaled_parameters: bool = False,
+) -> Optional[Dict[str, float]]:
+    """
+    Helper method to handle an unscaled or unspecified parameter vector.
+
+    The parameter vector defaults to the nominal values in the PEtab
+    parameter table.
+
+    Unscaled parameter values are scaled.
+
+    :param petab_problem:
+        The PEtab problem.
+    :param problem_parameters:
+        Keys are PEtab parameter IDs, values are parameter values on the scale
+        defined in the PEtab parameter table. Defaults to the nominal values in
+        the PEtab parameter table.
+    :param scaled_parameters:
+        Whether `problem_parameters` are on the scale defined in the PEtab
+        parameter table.
+
+    :return:
+        The scaled parameter vector.
+    """
+    if problem_parameters is None:
+        problem_parameters = dict(zip(
+            petab_problem.x_ids,
+            petab_problem.x_nominal_scaled,
+        ))
+    elif not scaled_parameters:
+        problem_parameters = petab_problem.scale_parameters(problem_parameters)
+    return problem_parameters
