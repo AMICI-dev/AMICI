@@ -370,7 +370,7 @@ if(ENABLE_SWIG)
 endif()
 
 option(ENABLE_PYTHON "Create Python module?" ON)
-if(ENABLE_PYTHON)
+if(ENABLE_PYTHON AND NOT AMICI_PYTHON_EXT_ONLY)
   add_subdirectory(python)
 endif()
 
