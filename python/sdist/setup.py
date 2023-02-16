@@ -157,6 +157,16 @@ def main():
     amici_module.extra_compile_args_unix = ['-std=c++14']
     amici_module.extra_compile_args_msvc = ['/std:c++14']
 
+    from setuptools import setup, find_packages, Extension
+    from setuptools.command.build_py import build_py as _build_py
+
+    class build_py(_build_py):
+        def run(self):
+            # We need build_ext before build_py, that all artifacts will be
+            # copied from the build dir
+            self.run_command("build_ext")
+            return super().run()
+
     # Install
     setup(
         cmdclass={
@@ -167,6 +177,7 @@ def main():
             'build_clib': AmiciBuildCLib,
             'install_lib': AmiciInstallLib,
             'develop': AmiciDevelop,
+            'build_py': build_py,
         },
         long_description=long_description,
         long_description_content_type="text/markdown",
