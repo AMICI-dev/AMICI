@@ -8,7 +8,7 @@ include ../../SuiteSparse_config/SuiteSparse_config.mk
 
 I = -I../../include
 
-C = "$(CC)" $(CF) $(I)
+C = $(CC) $(CF) $(I)
 
 LIB2 = $(LDFLAGS) -L../../lib -lcolamd -lsuitesparseconfig $(LDLIBS)
 

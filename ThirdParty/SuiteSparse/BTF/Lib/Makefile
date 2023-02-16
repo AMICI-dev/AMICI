@@ -22,7 +22,7 @@ library:
 # for testing only:
 # TEST = -DTESTING
 
-C = "$(CC)" $(CF)
+C = $(CC) $(CF)
 
 INC = ../Include/btf.h ../Include/btf_internal.h
 

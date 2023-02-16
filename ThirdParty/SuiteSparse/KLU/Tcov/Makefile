@@ -22,7 +22,7 @@ CF = -Wall -W -Wshadow -Wmissing-prototypes -Wstrict-prototypes \
  	-ansi -g -ftest-coverage -fprofile-arcs -fexceptions \
 	-fopenmp
 
-C = "$(CC)" $(CF)
+C = $(CC) $(CF)
 
 LDLIBS = -L../../lib -lamd -lcolamd -lcholmod -lcamd -lccolamd \
     -lmetis -lsuitesparseconfig \

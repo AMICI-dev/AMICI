@@ -22,7 +22,7 @@ library:
 # for testing only:
 # TEST = -DTESTING
 
-C = "$(CC)" $(CF)
+C = $(CC) $(CF)
 
 INC = ../Include/klu.h ../Include/klu_internal.h ../Include/klu_version.h \
     ../../SuiteSparse_config/SuiteSparse_config.h

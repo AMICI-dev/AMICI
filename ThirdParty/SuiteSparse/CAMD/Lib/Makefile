@@ -17,7 +17,7 @@ LDLIBS += -lsuitesparseconfig
 library:
 	$(MAKE) install INSTALL=$(SUITESPARSE)
 
-C = "$(CC)" $(CF) -I../Include -I../../SuiteSparse_config
+C = $(CC) $(CF) -I../Include -I../../SuiteSparse_config
 
 #-------------------------------------------------------------------------------
 # source files

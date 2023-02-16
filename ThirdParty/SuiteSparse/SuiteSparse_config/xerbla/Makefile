@@ -24,7 +24,7 @@ endif
 include ../SuiteSparse_config.mk
 
 ifeq ($(USE_FORTRAN),0)
-    COMPILE = "$(CC)" $(CF) -c xerbla.c
+    COMPILE = $(CC) $(CF) -c xerbla.c
     DEPENDS = xerbla.c xerbla.h
 else
     COMPILE = $(F77) $(F77FLAGS) -c xerbla.f
