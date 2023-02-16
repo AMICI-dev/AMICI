@@ -15,6 +15,7 @@ from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
+from setuptools.command.build_py import build_py
 
 # typehints
 Library = Tuple[str, Dict[str, List[str]]]
@@ -326,3 +327,10 @@ def set_compiler_specific_extension_options(
             # No compiler-specific options set
             pass
 
+
+class AmiciBuildPy(build_py):
+    def run(self):
+        # We need build_ext before build_py, that all artifacts will be
+        # copied from the build dir
+        self.run_command("build_ext")
+        return super().run()
