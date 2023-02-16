@@ -71,7 +71,7 @@ if(AMICI_USE_VENDORED_SUNDIALS)
 
   # Build suitesparse and install library and headers
   foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
-    execute_process(COMMAND make static
+    execute_process(COMMAND make library
                     WORKING_DIRECTORY ${SUITESPARSE_DIR}/${subdir})
   endforeach()
 

@@ -272,3 +272,18 @@ from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
 if TYPE_CHECKING:
     import numpy
 %}
+
+// library dirs for dependencies
+%pythonbegin %{
+    from pathlib import Path
+
+    suitesparse_lib_dir = Path(__file__).parents[1] / 'ThirdParty' \
+        / 'SuiteSparse' / lib
+    if sys.platform == 'win32':
+        os.add_dll_directory(str(suitesparse_lib_dir))
+    else:
+        os.environ['LD_LIBRARY_PATH'] = (
+            str(suitesparse_lib_dir) + ':' + os.environ['LD_LIBRARY_PATH']
+        )
+%}
+
