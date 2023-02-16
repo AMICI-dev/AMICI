@@ -285,6 +285,9 @@ print(suitesparse_lib_dir)
 if sys.platform == 'win32':
     os.add_dll_directory(str(suitesparse_lib_dir))
 else:
+    import sys
+    sys.path.insert(0, str(suitesparse_lib_dir))
+
     os.environ['LD_LIBRARY_PATH'] = (
         str(suitesparse_lib_dir) + ':' + os.environ['LD_LIBRARY_PATH']
         if os.environ.get('LD_LIBRARY_PATH', None)
