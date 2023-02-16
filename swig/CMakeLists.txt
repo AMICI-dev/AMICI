@@ -77,14 +77,15 @@ if(AMICI_PYTHON_EXT_ONLY)
       SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
       INCLUDE_DIRECTORIES
       "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include;${NUMPY_INCLUDE_DIR}"
-      PREFIX "")
+      PREFIX ""
+      INSTALL_RPATH ThirdParty/SuiteSparse/lib
+    )
   if(NOT HDF5_FOUND)
       set_target_properties(
           _amici
           PROPERTIES
               SWIG_COMPILE_DEFINITIONS AMICI_SWIG_WITHOUT_HDF5)
   endif()
-
   target_link_libraries(_amici amici Python3::Python)
 
   # TODO generic extension; follow python naming -
