@@ -78,8 +78,9 @@ if(AMICI_PYTHON_EXT_ONLY)
       INCLUDE_DIRECTORIES
       "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include;${NUMPY_INCLUDE_DIR}"
       PREFIX ""
-      INSTALL_RPATH ThirdParty/SuiteSparse/lib
       BUILD_RPATH_USE_ORIGIN TRUE
+      INSTALL_RPATH ThirdParty/SuiteSparse/lib
+      BUILD_RPATH ThirdParty/SuiteSparse/lib
     )
   if(NOT HDF5_FOUND)
       set_target_properties(
