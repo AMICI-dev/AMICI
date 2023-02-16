@@ -278,7 +278,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     suitesparse_lib_dir = Path(__file__).parents[1] / 'ThirdParty' \
-        / 'SuiteSparse' / lib
+        / 'SuiteSparse' / 'lib'
     if sys.platform == 'win32':
         os.add_dll_directory(str(suitesparse_lib_dir))
     else:
