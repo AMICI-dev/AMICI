@@ -22,7 +22,7 @@ library:
 # for testing only:
 # TEST = -DTESTING
 
-C = $(CC) $(CF)
+C = "$(CC)" $(CF)
 
 INC = ../Include/btf.h ../Include/btf_internal.h
 
@@ -72,7 +72,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(OBJ)
 	@mkdir -p $(INSTALL_LIB)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
-	$(CC) $(SO_OPTS) $^ -o $@ $(LDLIBS)
+	"$(CC)" $(SO_OPTS) $^ -o $@ $(LDLIBS)
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )
 	$(CP) ../Include/btf.h $(INSTALL_INCLUDE)

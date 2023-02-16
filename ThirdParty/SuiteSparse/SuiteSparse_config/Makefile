@@ -25,7 +25,7 @@ library: $(AR_TARGET)
 OBJ = SuiteSparse_config.o
 
 SuiteSparse_config.o: SuiteSparse_config.c SuiteSparse_config.h
-	$(CC) $(CF) -c SuiteSparse_config.c
+	"$(CC)" $(CF) -c SuiteSparse_config.c
 
 static: $(AR_TARGET)
 
@@ -50,7 +50,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(OBJ)
 	@mkdir -p $(INSTALL_LIB)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
-	$(CC) $(SO_OPTS) $^ -o $@ $(LDLIBS)
+	"$(CC)" $(SO_OPTS) $^ -o $@ $(LDLIBS)
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )
 	$(CP) SuiteSparse_config.h $(INSTALL_INCLUDE)
