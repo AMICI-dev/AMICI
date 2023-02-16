@@ -273,6 +273,7 @@ if TYPE_CHECKING:
     import numpy
 %}
 
+// TODO REMOVE ME ?!
 // library dirs for dependencies
 // the current suitesparse does not install static libraries and
 // sundials doesn't find the ones from `make static`
