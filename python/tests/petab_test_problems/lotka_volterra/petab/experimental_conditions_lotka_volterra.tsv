@@ -1,0 +1,4 @@
+conditionId	beta	delta	departure_prey	arrival_predator
+weak_predator	2.0	3.0	0.0	0.0
+strong_predator	4.0	3.0	0.0	0.0
+no_interaction	0.0	0.0	3.0	3.0
