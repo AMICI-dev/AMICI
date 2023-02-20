@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0060)
-  cmake_policy(SET CMP0060 NEW)
-endif(POLICY CMP0060)
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(TPL_MODELNAME)
 
@@ -30,7 +19,7 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici TPL_AMICI_VERSION HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici TPL_AMICI_VERSION REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
