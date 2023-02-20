@@ -1,12 +1,12 @@
-/* ========================================================================= */
-/* === CAMD_order ========================================================== */
-/* ========================================================================= */
+//------------------------------------------------------------------------------
+// CAMD/Source/camd_order: user-callable CAMD ordering method
+//------------------------------------------------------------------------------
 
-/* ------------------------------------------------------------------------- */
-/* CAMD, Copyright (c) Timothy A. Davis, Yanqing Chen,			     */
-/* Patrick R. Amestoy, and Iain S. Duff.  See ../README.txt for License.     */
-/* email: DrTimothyAldenDavis@gmail.com                                      */
-/* ------------------------------------------------------------------------- */
+// CAMD, Copyright (c) 2007-2022, Timothy A. Davis, Yanqing Chen, Patrick R.
+// Amestoy, and Iain S. Duff.  All Rights Reserved.
+// SPDX-License-Identifier: BSD-3-clause
+
+//------------------------------------------------------------------------------
 
 /* User-callable CAMD minimum degree ordering routine.  See camd.h for
  * documentation.
@@ -18,7 +18,7 @@
 /* === CAMD_order ========================================================== */
 /* ========================================================================= */
 
-GLOBAL Int CAMD_order
+int CAMD_order
 (
     Int n,
     const Int Ap [ ],
@@ -158,7 +158,6 @@ GLOBAL Int CAMD_order
     }
     mem += slen ;
     ok = ok && (slen < SIZE_T_MAX / sizeof (Int)) ; /* check for overflow */
-    ok = ok && (slen < Int_MAX) ;	/* S[i] for Int i must be OK */
     if (ok)
     {
 	S = SuiteSparse_malloc (slen, sizeof (Int)) ;

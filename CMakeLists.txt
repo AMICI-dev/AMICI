@@ -67,20 +67,38 @@ option(AMICI_USE_VENDORED_SUNDIALS "Use the vendored SUNDIALS?" ON)
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
-if(AMICI_USE_VENDORED_SUNDIALS)
-  message("Building vendored SUNDIALS")
+set(VENDORED_SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse")
+set(VENDORED_SUITESPARSE_BUILD_DIR "${VENDORED_SUITESPARSE_DIR}/build")
+set(VENDORED_SUITESPARSE_INSTALL_DIR "${VENDORED_SUITESPARSE_BUILD_DIR}")
 
-  # Build suitesparse and install library and headers
-  foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
-    execute_process(COMMAND make library
-                    WORKING_DIRECTORY ${SUITESPARSE_DIR}/${subdir})
-  endforeach()
+if(AMICI_USE_VENDORED_SUNDIALS)
+    message("Building vendored SUNDIALS")
+
+#  # Build suitesparse and install library and headers
+foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
+    execute_process(
+      COMMAND
+        ${CMAKE_COMMAND} -S${VENDORED_SUITESPARSE_DIR}/${subdir}
+        -B${VENDORED_SUITESPARSE_DIR}/${subdir}/build
+        -DCMAKE_INSTALL_PREFIX=${VENDORED_SUITESPARSE_DIR}/${subdir}/build
+        -B${VENDORED_SUNDIALS_BUILD_DIR}
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DALLOW_64BIT_BLAS=ON
+        -DBLA_VENDOR=All
+        -DNCHOLMOD=ON
+    )
+    execute_process(COMMAND ${CMAKE_COMMAND} --build
+                            ${VENDORED_SUNDIALS_BUILD_DIR} --parallel)
+    execute_process(COMMAND ${CMAKE_COMMAND} --install
+                            ${VENDORED_SUNDIALS_BUILD_DIR})
+ endforeach()
+
 
   # Build sundials and install library and headers
   execute_process(
     COMMAND
       ${CMAKE_COMMAND} -S${VENDORED_SUNDIALS_DIR}
-      -B${VENDORED_SUNDIALS_BUILD_DIR} -G Ninja
+      -B${VENDORED_SUNDIALS_BUILD_DIR}
       -DCMAKE_INSTALL_PREFIX=${VENDORED_SUNDIALS_INSTALL_DIR}
       -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_POSITION_INDEPENDENT_CODE=ON
       -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_IDA=OFF -DBUILD_KINSOL=OFF
