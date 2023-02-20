@@ -25,7 +25,8 @@ from setuptools import setup, Extension
 
 from amici.custom_commands import (
     AmiciInstall, AmiciBuildCLib, AmiciDevelop,
-    AmiciInstallLib, AmiciBuildExt, AmiciSDist, AmiciBuildPy)
+    AmiciInstallLib, AmiciBuildExt, AmiciSDist, AmiciBuildPy,
+    AmiciBuildCMakeExtension)
 from amici.setuptools import (
     get_blas_config,
     get_hdf5_config,
@@ -142,6 +143,27 @@ def main():
     )
     # TODO suitesparse extension
     # TODO sundials extension?
+    sundials = cmake_build_extension.CMakeExtension(
+        name='sundials',
+        install_prefix='amici',
+        source_dir='amici/ThirdParty/sundials',
+        cmake_configure_options=[
+            "-DBUILD_ARKODE=OFF",
+            "-DBUILD_CVODE=OFF",
+            "-DBUILD_IDA=OFF",
+            "-DBUILD_KINSOL=OFF",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DBUILD_STATIC_LIBS=ON",
+            "-DBUILD_NVECTOR_MANYVECTOR=OFF",
+            "-DBUILD_SUNNONLINSOL_PETSCSNES=OFF",
+            "-DEXAMPLES_ENABLE_C=OFF",
+            "-DEXAMPLES_INSTALL=OFF",
+            "-DENABLE_KLU=ON",
+            "-DKLU_LIBRARY_DIR='${build_dir}/amici/libs'",
+            f"-DKLU_INCLUDE_DIR='{Path(__file__).parent / 'amici' / 'ThirdParty' / 'SuiteSparse' }/include'",
+        ]
+    )
+
     amici_module = cmake_build_extension.CMakeExtension(
         name='_amici',
         install_prefix='amici',
@@ -163,7 +185,7 @@ def main():
             'install': AmiciInstall,
             'sdist': AmiciSDist,
             # 'build_ext': AmiciBuildExt,
-            'build_ext': cmake_build_extension.BuildExtension,
+            'build_ext': AmiciBuildCMakeExtension,
             'build_clib': AmiciBuildCLib,
             'install_lib': AmiciInstallLib,
             'develop': AmiciDevelop,
@@ -171,8 +193,8 @@ def main():
         },
         long_description=long_description,
         long_description_content_type="text/markdown",
-        #libraries=[libamici, libsundials, libsuitesparse],
-        ext_modules=[amici_module],
+        libraries=[libsuitesparse], # [libamici, libsundials, libsuitesparse],
+        ext_modules=[sundials, amici_module],
     )
 
 
