@@ -2,7 +2,7 @@
 
 import os
 import subprocess
-
+from pathlib import Path
 import pytest
 import sympy as sp
 
@@ -56,9 +56,13 @@ def test_cmake_compilation(sbml_example_presimulation_module):
     Python tests"""
 
     source_dir = os.path.dirname(sbml_example_presimulation_module.__path__[0])
-
-    cmd = f"set -e; cmake -S {source_dir} -B '{source_dir}/build'; "\
-          f"cmake --build '{source_dir}/build'"
+    build_dir = f"{source_dir}/build"
+    # path hint for amici base installation, in case CMake configuration has
+    #  not been exported
+    amici_dir = (Path(__file__).parents[2] / 'build').absolute()
+    cmd = f"set -e; " \
+          f"cmake -S {source_dir} -B '{build_dir}' -DAmici_DIR={amici_dir};" \
+          f"cmake --build '{source_dir}'"
 
     try:
         subprocess.run(cmd, shell=True, check=True,
