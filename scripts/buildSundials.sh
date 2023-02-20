@@ -32,7 +32,7 @@ fi
 
 mkdir -p "${sundials_build_path}"
 cd "${sundials_build_path}"
-
+set -x
 ${cmake} -DCMAKE_INSTALL_PREFIX="${sundials_build_path}" \
   -DCMAKE_BUILD_TYPE="$build_type" \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -49,7 +49,7 @@ ${cmake} -DCMAKE_INSTALL_PREFIX="${sundials_build_path}" \
   -DENABLE_KLU=ON \
   -DKLU_LIBRARY_DIR="${suitesparse_root}/lib" \
   -DKLU_INCLUDE_DIR="${suitesparse_root}/include" \
-  "${SuperLUMT}" \
+  ${SuperLUMT} \
   ..
 
 ${make}
