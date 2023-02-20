@@ -12,6 +12,8 @@
 
 # cmake 3.22 is required to find the BLAS
 cmake_minimum_required ( VERSION 3.22 )
+# AMICI
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # version of both SuiteSparse and SuiteSparse_config
 set ( SUITESPARSE_DATE "Jan 20, 2023" )
