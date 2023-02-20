@@ -42,8 +42,8 @@ def get_extension() -> CMakeExtension:
     # ]
 
     # Build shared object
-    prefix_path = Path(_get_amici_path(), "share", "Amici", "cmake")
-
+    #prefix_path = Path(_get_amici_path(), "share", "Amici", "cmake")
+    prefix_path = _get_amici_path()
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
     return CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
