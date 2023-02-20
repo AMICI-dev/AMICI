@@ -3,7 +3,7 @@ import os
 
 from setuptools import Extension, find_namespace_packages, setup
 
-from amici import amici_path, compiledWithOpenMP, hdf5_enabled
+from amici import amici_path, compiledWithOpenMP, hdf5_enabled, _get_amici_path
 from amici.custom_commands import AmiciBuildCMakeExtension
 from amici.setuptools import (add_coverage_flags_if_required,
                               add_debug_flags_if_required, add_openmp_flags,
@@ -47,7 +47,9 @@ def get_extension() -> CMakeExtension:
     ext = CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
         source_dir='.',
-        cmake_configure_options=[],
+        cmake_configure_options=[
+            f"-DAmici_DIR={_get_amici_path()}",
+        ],
         # TODO
         # swig_opts=[
         #     '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
