@@ -13,6 +13,7 @@ Non-python-package requirements:
 import os
 import sys
 from pathlib import Path
+
 import cmake_build_extension
 
 # Add containing directory to path, as we need some modules from the AMICI
@@ -20,12 +21,11 @@ import cmake_build_extension
 sys.path.insert(0, os.path.dirname(__file__))
 
 import numpy as np
-import setup_clibs  # Must run from within containing directory
 from setuptools import setup, Extension
 
 from amici.custom_commands import (
-    AmiciInstall, AmiciBuildCLib, AmiciDevelop,
-    AmiciInstallLib, AmiciBuildExt, AmiciSDist, AmiciBuildPy,
+    AmiciInstall, AmiciDevelop,
+    AmiciInstallLib, AmiciSDist, AmiciBuildPy,
     AmiciBuildCMakeExtension)
 from amici.setuptools import (
     get_blas_config,
@@ -37,6 +37,7 @@ from amici.setuptools import (
 
 
 def main():
+    # TODO to CMake
     # Extra compiler flags
     cxx_flags = []
     amici_module_linker_flags = []
@@ -49,10 +50,6 @@ def main():
     amici_module_linker_flags.extend(
         f'-l{lib}' for lib in blaspkgcfg['libraries'])
     define_macros.extend(blaspkgcfg['define_macros'])
-
-    extension_sources = [
-        'amici/amici_wrap.cxx',  # swig interface
-    ]
 
     h5pkgcfg = get_hdf5_config()
 
@@ -90,59 +87,13 @@ def main():
     suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
     sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
 
-    libamici = setup_clibs.get_lib_amici(
-        amici_base_dir=amici_base_dir,
-        sundials_base_dir=sundials_base_dir,
-        suitesparse_base_dir=suitesparse_base_dir,
-        h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg,
-        extra_compiler_flags=cxx_flags
-    )
-    libsundials = setup_clibs.get_lib_sundials(
-        sundials_base_dir=sundials_base_dir,
-        suitesparse_base_dir=suitesparse_base_dir,
-        extra_compiler_flags=cxx_flags
-    )
-    libsuitesparse = setup_clibs.get_lib_suite_sparse(
-        extra_compiler_flags=cxx_flags + ['-DDLONG'],
-        suitesparse_base_dir=suitesparse_base_dir
-    )
-
     # Readme as long package description to go on PyPi
     # (https://pypi.org/project/amici/)
     with open(os.path.join(os.path.dirname(__file__), "README.md"),
               "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
-    # TODO _DNSTATIC
-
-    # Build shared object
-    amici_module = Extension(
-        name='amici._amici',
-        sources=extension_sources,
-        include_dirs=[
-            amici_base_dir / 'include',
-            amici_base_dir / 'ThirdParty' / 'gsl',
-            *libsundials[1]['include_dirs'],
-            *libsuitesparse[1]['include_dirs'],
-            *h5pkgcfg['include_dirs'],
-            *blaspkgcfg['include_dirs'],
-            np.get_include()
-        ],
-        # Cannot use here, see above
-        # libraries=[
-        #    'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'
-        # ],
-        define_macros=define_macros,
-        library_dirs=[
-            *h5pkgcfg['library_dirs'],
-            *blaspkgcfg['library_dirs'],
-            'amici/libs',  # clib target directory
-        ],
-        extra_compile_args=cxx_flags,
-        extra_link_args=amici_module_linker_flags
-    )
-    # TODO suitesparse extension
-    # TODO sundials extension?
+    # C++ extensions
     sundials = cmake_build_extension.CMakeExtension(
         name='sundials',
         install_prefix='amici',
@@ -164,6 +115,12 @@ def main():
         ]
     )
 
+    # TODO
+    # 'macros': [
+    #     ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
+    #     ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),
+    # ],
+
     amici_module = cmake_build_extension.CMakeExtension(
         name='_amici',
         install_prefix='amici',
@@ -172,6 +129,8 @@ def main():
             '-DAMICI_PYTHON_EXT_ONLY=ON',
         ]
     )
+
+    # TODO _DNSTATIC
     ss_config = cmake_build_extension.CMakeExtension(
         name='SuiteSparse_config',
         install_prefix='amici',
@@ -234,16 +193,13 @@ def main():
         cmdclass={
             'install': AmiciInstall,
             'sdist': AmiciSDist,
-            # 'build_ext': AmiciBuildExt,
             'build_ext': AmiciBuildCMakeExtension,
-            'build_clib': AmiciBuildCLib,
             'install_lib': AmiciInstallLib,
             'develop': AmiciDevelop,
             'build_py': AmiciBuildPy,
         },
         long_description=long_description,
         long_description_content_type="text/markdown",
-        # libraries=[libsuitesparse], # [libamici, libsundials, libsuitesparse],
         ext_modules=[ss_config, amd, btf, colamd, klu, sundials, amici_module],
     )
 

@@ -1,23 +1,20 @@
 """Custom setuptools commands for AMICI installation"""
 
-import glob
 import os
 import subprocess
 import sys
-from shutil import copyfile
 from typing import Dict, List, Tuple
 
-from amici.swig import fix_typehints
-from amici.setuptools import generate_swig_interface_files
-from setuptools.command.build_clib import build_clib
+import cmake_build_extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
-from setuptools.command.build_py import build_py
-import cmake_build_extension
 
+from amici.setuptools import generate_swig_interface_files
+from amici.swig import fix_typehints
 
 # typehints
 Library = Tuple[str, Dict[str, List[str]]]
@@ -78,51 +75,6 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
 
     return objects
 
-
-class AmiciBuildCLib(build_clib):
-    """Custom build_clib"""
-
-    def run(self):
-        print("running AmiciBuildCLib")
-
-        # Always force recompilation. The way setuptools/distutils check for
-        # whether sources require recompilation is not reliable and may lead
-        # to crashes or wrong results. We rather compile once too often...
-        self.force = True
-
-        build_clib.run(self)
-
-    def build_libraries(self, libraries: List[Library]):
-        print("running AmiciBuildCLib.build_libraries")
-
-        no_clibs = 'develop' in self.distribution.command_obj \
-                   and self.get_finalized_command('develop').no_clibs
-        no_clibs |= 'install' in self.distribution.command_obj \
-                    and self.get_finalized_command('install').no_clibs
-
-        if no_clibs:
-            return
-
-        # Override for parallel compilation
-        import distutils.ccompiler
-        distutils.ccompiler.CCompiler.compile = compile_parallel
-
-        # Work-around for compiler-specific build options
-        set_compiler_specific_library_options(
-            libraries, self.compiler.compiler_type)
-
-        # Monkey-patch setuptools, to force recompilation of library sources
-        # --force does not work as expected
-
-        # need full import here, not module-level imported build_clib
-        import setuptools.command.build_clib
-        # the patched function may return anything but `([], [])` to trigger
-        # recompilation
-        setuptools.command.build_clib.newer_pairwise_group = lambda *_: None
-
-        build_clib.build_libraries(self, libraries)
-
-
 class AmiciDevelop(develop):
     """Custom develop to build clibs"""
 
@@ -174,6 +126,7 @@ class AmiciInstallLib(install_lib):
         install_lib.run(self)
 
 
+# TODO REMOVEME
 class AmiciBuildExt(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
@@ -213,17 +166,6 @@ class AmiciBuildExt(build_ext):
                 build_dir = os.getcwd()
             target_dir = os.path.join(build_dir, 'amici', 'libs')
             self.mkpath(target_dir)
-
-            # Copy the generated libs
-            for lib in libraries:
-                libfilenames = glob.glob(
-                    f"{build_clib.build_clib}{os.sep}*{lib}.*")
-                assert len(libfilenames) == 1, \
-                    f"Found unexpected number of files: {libfilenames}"
-                src = libfilenames[0]
-                dest = os.path.join(target_dir, os.path.basename(src))
-                print(f"copying {src} -> {dest}")
-                copyfile(src, dest)
 
             swig_outdir = os.path.join(os.path.abspath(build_dir), "amici")
             generate_swig_interface_files(swig_outdir=swig_outdir)
@@ -353,60 +295,3 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             x.replace("${build_dir}", build_dir) for x in
             ext.cmake_configure_options]
         cmake_build_extension.BuildExtension.build_extension(self, ext)
-
-
-    def run(self):
-        """Copy the generated clibs to the extensions folder to be included in
-        the wheel
-        """
-
-        print("running AmiciBuildExt")
-
-        no_clibs = 'develop' in self.distribution.command_obj \
-                   and self.get_finalized_command('develop').no_clibs
-        no_clibs |= 'install' in self.distribution.command_obj \
-                    and self.get_finalized_command('install').no_clibs
-
-        if no_clibs:
-            # Nothing to build
-            return
-
-        if not self.dry_run and self.distribution.has_c_libraries():
-            # get the previously built static libraries
-            build_clib = self.get_finalized_command('build_clib')
-            libraries = build_clib.get_library_names() or []
-
-            # Module build directory where we want to copy the generated
-            # libs to
-            if self.inplace == 0:
-                build_dir = self.build_lib
-            else:
-                build_dir = os.getcwd()
-            target_dir = os.path.join(build_dir, 'amici', 'libs')
-            self.mkpath(target_dir)
-
-            # Copy the generated libs
-            for lib in libraries:
-                libfilenames = glob.glob(
-                    f"{build_clib.build_clib}{os.sep}*{lib}.*")
-                assert len(libfilenames) == 1, \
-                    f"Found unexpected number of files: {libfilenames}"
-                src = libfilenames[0]
-                dest = os.path.join(target_dir, os.path.basename(src))
-                print(f"copying {src} -> {dest}")
-                copyfile(src, dest)
-
-            # swig_outdir = os.path.join(os.path.abspath(build_dir), "amici")
-            # generate_swig_interface_files(swig_outdir=swig_outdir)
-            # swig_py_module_path = os.path.join(swig_outdir, 'amici.py')
-            # print("updating typehints")
-            # fix_typehints(swig_py_module_path, swig_py_module_path)
-
-        # Always force recompilation. The way setuptools/distutils check for
-        # whether sources require recompilation is not reliable and may lead
-        # to crashes or wrong results. We rather compile once too often...
-        self.force = True
-
-        # Continue with the actual extension building
-        super().run()
-
