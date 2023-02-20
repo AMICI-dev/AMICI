@@ -1,125 +1,63 @@
 """AMICI model package setup"""
-import contextlib
 import os
-import sys
-from typing import List
 
 from setuptools import Extension, find_namespace_packages, setup
-from setuptools.command.build_ext import build_ext
 
 from amici import amici_path, compiledWithOpenMP, hdf5_enabled
-from amici.custom_commands import (compile_parallel,
-                                   set_compiler_specific_extension_options)
+from amici.custom_commands import AmiciBuildCMakeExtension
 from amici.setuptools import (add_coverage_flags_if_required,
                               add_debug_flags_if_required, add_openmp_flags,
                               get_blas_config, get_hdf5_config)
+from cmake_build_extension import CMakeExtension
 
 
-class ModelBuildExt(build_ext):
-    """Custom build_ext"""
-
-    def build_extension(self, ext):
-        # Work-around for compiler-specific build options
-        set_compiler_specific_extension_options(
-            ext, self.compiler.compiler_type)
-
-
-        # Monkey-patch compiler instance method for parallel compilation
-        #  except for Windows, where this seems to be incompatible with
-        #  providing swig files. Not investigated further...
-        if sys.platform != 'win32':
-            import setuptools._distutils.ccompiler
-            self.compiler.compile = compile_parallel.__get__(
-                self.compiler, setuptools._distutils.ccompiler.CCompiler)
-
-        print(f"Building model extension in {os.getcwd()}")
-
-        build_ext.build_extension(self, ext)
-
-
-def get_model_sources() -> List[str]:
-    """Get list of source files for the amici base library"""
-    import glob
-    model_sources = glob.glob('*.cpp')
-    with contextlib.suppress(ValueError):
-        model_sources.remove('main.cpp')
-    return model_sources
-
-
-def get_amici_libs() -> List[str]:
-    """
-    Get list of libraries for the amici base library
-    """
-    return ['amici', 'sundials', 'suitesparse']
-
-
-def get_extension() -> Extension:
+def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
 
-    cxx_flags = []
-    linker_flags = []
 
-    if compiledWithOpenMP():
-        # Only build model with OpenMP support if AMICI base packages was built
-        #  that way
-        add_openmp_flags(cxx_flags=cxx_flags, ldflags=linker_flags)
+    # TODO add_coverage_flags_if_required(cxx_flags, linker_flags)
+    # TODO add_debug_flags_if_required(cxx_flags, linker_flags)
+    # TODO blaspkgcfg = get_blas_config()
+    # TODO linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
 
-    add_coverage_flags_if_required(cxx_flags, linker_flags)
-    add_debug_flags_if_required(cxx_flags, linker_flags)
+    # TODO
+    # # compiler and linker flags for libamici
+    # if 'AMICI_CXXFLAGS' in os.environ:
+    #     cxx_flags.extend(os.environ['AMICI_CXXFLAGS'].split(' '))
+    # if 'AMICI_LDFLAGS' in os.environ:
+    #     linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
 
-    h5pkgcfg = get_hdf5_config()
-
-    blaspkgcfg = get_blas_config()
-    linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
-
-    libraries = [*get_amici_libs(), *blaspkgcfg['libraries']]
-    if hdf5_enabled:
-        libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
-
-    sources = [os.path.join("swig", "TPL_MODELNAME.i"), *get_model_sources()]
-
-    # compiler and linker flags for libamici
-    if 'AMICI_CXXFLAGS' in os.environ:
-        cxx_flags.extend(os.environ['AMICI_CXXFLAGS'].split(' '))
-    if 'AMICI_LDFLAGS' in os.environ:
-        linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
-
-    ext_include_dirs = [
-        os.getcwd(),
-        os.path.join(amici_path, 'include'),
-        os.path.join(amici_path, "ThirdParty", "gsl"),
-        os.path.join(amici_path, "ThirdParty", "sundials", "include"),
-        os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
-        *h5pkgcfg['include_dirs'],
-        *blaspkgcfg['include_dirs']
-    ]
-
-    ext_library_dirs = [
-        *h5pkgcfg['library_dirs'],
-        *blaspkgcfg['library_dirs'],
-        os.path.join(amici_path, 'libs')
-    ]
+    # ext_include_dirs = [
+    #     os.getcwd(),
+    #     os.path.join(amici_path, 'include'),
+    #     os.path.join(amici_path, "ThirdParty", "gsl"),
+    #     os.path.join(amici_path, "ThirdParty", "sundials", "include"),
+    #     os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
+    #     *h5pkgcfg['include_dirs'],
+    #     *blaspkgcfg['include_dirs']
+    # ]
+    #
+    # ext_library_dirs = [
+    #     *h5pkgcfg['library_dirs'],
+    #     *blaspkgcfg['library_dirs'],
+    #     os.path.join(amici_path, 'libs')
+    # ]
 
     # Build shared object
-    ext = Extension(
-        'TPL_MODELNAME._TPL_MODELNAME',
-        sources=sources,
-        include_dirs=ext_include_dirs,
-        libraries=libraries,
-        library_dirs=ext_library_dirs,
-        swig_opts=[
-            '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
-            '-I%s' % os.path.join(amici_path, 'swig'),
-            '-I%s' % os.path.join(amici_path, 'include'),
-        ],
-        extra_compile_args=cxx_flags,
-        extra_link_args=linker_flags
+    ext = CMakeExtension(
+        name='TPL_MODELNAME._TPL_MODELNAME',
+        install_prefix='TPL_MODELNAME',
+        source_dir='.',
+        cmake_configure_options=[],
+        # TODO
+        # swig_opts=[
+        #     '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
+        #     '-I%s' % os.path.join(amici_path, 'swig'),
+        #     '-I%s' % os.path.join(amici_path, 'include'),
+        # ],
+        # extra_compile_args=cxx_flags,
+        # extra_link_args=linker_flags
     )
-
-    # see `set_compiler_specific_extension_options`
-    ext.extra_compile_args_mingw32 = ['-std=c++14']
-    ext.extra_compile_args_unix = ['-std=c++14']
-    ext.extra_compile_args_msvc = ['/std:c++14']
 
     return ext
 
@@ -140,8 +78,8 @@ CLASSIFIERS = [
 ]
 
 CMDCLASS = {
-    # For parallel compilation and custom swig finder
-    'build_ext': ModelBuildExt,
+    # CMake-based builds
+    'build_ext': AmiciBuildCMakeExtension,
 }
 
 # Install
@@ -153,7 +91,6 @@ setup(
     url='https://github.com/AMICI-dev/AMICI',
     author='model-author-todo',
     author_email='model-author-todo',
-    # license = 'BSD',
     ext_modules=[MODEL_EXT],
     packages=find_namespace_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],

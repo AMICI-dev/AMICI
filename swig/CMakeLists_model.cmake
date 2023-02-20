@@ -24,9 +24,19 @@ swig_add_library(${SWIG_LIBRARY_NAME}
     LANGUAGE python
     SOURCES ${PROJECT_NAME}.i)
 
+
+set_target_properties(${SWIG_LIBRARY_NAME}
+    PROPERTIES
+    SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
+    PREFIX ""
+)
+
 swig_link_libraries(${SWIG_LIBRARY_NAME}
     ${Python3_LIBRARIES}
     model)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.py
+              ${CMAKE_CURRENT_BINARY_DIR}/${SWIG_LIBRARY_NAME}.so DESTINATION .)
 
 # configure module setup script
 set(SETUP_PY_IN ${Amici_DIR}/model_setup.template.py)

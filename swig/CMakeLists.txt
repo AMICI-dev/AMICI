@@ -70,6 +70,10 @@ if(AMICI_PYTHON_EXT_ONLY)
     #  '-py3',
     #  '-threads',
     #  '-Wall',
+    #if not with_hdf5:
+    #    swig_args.append('-DAMICI_SWIG_WITHOUT_HDF5')
+    #     if swig_version >= (4, 0, 0):
+    # swig_args.append('-doxygen')
 
   swig_add_library(
     _amici
