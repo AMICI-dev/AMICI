@@ -173,7 +173,7 @@ def noise_distribution_to_cost_function(
       - if m <= v:
 
           .. math::
-             \\Phi(\\frac{v-y}{\\sigma})
+             \\pi(m|y,\\sigma) = \\Phi(\\frac{v-y}{\\sigma})
 
           where \\Phi is the standard normal cumulative distribution function
 
@@ -198,12 +198,50 @@ def noise_distribution_to_cost_function(
       - if m >= v:
 
           .. math::
-             1-\\Phi(\\frac{v-y}{\\sigma})
+             \\pi(m|y,\\sigma) = 1-\\Phi(\\frac{v-y}{\\sigma})
 
           where \\Phi is the standard normal cumulative distribution function
 
           .. math::
              \\Phi(x) = \\frac{1}{2}(1+\\erf(\\frac{x}{\\sqrt{2}}))
+
+    - `'left-censored-laplace'`: A left-censored laplace distribution with
+      threshold v:
+
+      - if m <= v:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\F(\\frac{v-y}{\\sigma})
+
+          where \\Phi is the standard laplace cumulative distribution function
+
+          .. math::
+             \\F(x) = \\frac{1}{2}(1+\\sign(x)(1-\\exp(-|x|)))
+
+      - if m > v:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
+             \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+
+    - `'right-censored-laplace'`: A right-censored laplace distribution with
+      threshold v:
+
+      - if m < v:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
+             \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+
+      - if m >= v:
+
+          .. math::
+             \\pi(m|y,\\sigma) = 1-\\Phi(\\frac{v-y}{\\sigma})
+
+          where \\Phi is the standard laplace cumulative distribution function
+
+          .. math::
+             \\Phi(x) = \\frac{1}{2}(1+\\sign(x)(1-\\exp(-|x|)))
 
     The distributions above are for a single data point.
     For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
@@ -312,6 +350,24 @@ def noise_distribution_to_cost_function(
                    f'{{m}}>={v}), ' \
                    f'(0.5*log(2*pi*{{sigma}}**2) + ' \
                    f'0.5*(({{y}} - {{m}}) / {{sigma}})**2, ' \
+                   f'{{m}}<{v}))'
+    elif noise_distribution_type in ['lin-left-censored-laplace',
+                                     'left-censored-laplace']:
+        # left-censored at v (detection limit)
+        v = noise_distribution['parameters'][0]  # TODO
+        y_string = f'Piecewise((-log(0.5*(1+sign({v}-{{y}})*' \
+                   f'(1-exp(-Abs({v}-{{y}})/{{sigma}}))), ' \
+                   f'{{m}}<={v}), ' \
+                   f'(log(2*{{sigma}}) + Abs({{y}} - {{m}}) / {{sigma}}, ' \
+                   f'{{m}}>{v}))'
+    elif noise_distribution_type in ['lin-right-censored-laplace',
+                                     'right-censored-laplace']:
+        # right-censored at v (detection limit)
+        v = noise_distribution['parameters'][0]  # TODO
+        y_string = f'Piecewise((-log(1-0.5*(1+sign({v}-{{y}})*' \
+                   f'(1-exp(-Abs({v}-{{y}})/{{sigma}}))), ' \
+                   f'{{m}}>={v}), ' \
+                   f'(log(2*{{sigma}}) + Abs({{y}} - {{m}}) / {{sigma}}, ' \
                    f'{{m}}<{v}))'
     else:
         raise ValueError(
