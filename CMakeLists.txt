@@ -30,6 +30,8 @@ endforeach(FLAG)
 # find dependencies
 include(GNUInstallDirs)
 
+find_package(OpenMP)
+
 option(ENABLE_HDF5 "Build with HDF5 support?" ON)
 if(ENABLE_HDF5)
   find_package(
@@ -211,6 +213,11 @@ target_link_libraries(
   PUBLIC ${HDF5_LIBRARIES}
   PUBLIC ${BLAS_LIBRARIES}
   PUBLIC ${CMAKE_DL_LIBS})
+
+
+if(OpenMP_FOUND)
+  target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 if(SUNDIALS_SUPERLUMT_ENABLE)
