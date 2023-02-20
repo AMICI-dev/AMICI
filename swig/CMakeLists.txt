@@ -64,16 +64,6 @@ if(AMICI_PYTHON_EXT_ONLY)
   set(UseSWIG_TARGET_NAME_PREFERENCE STANDARD)
   set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
   set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
-  # TODO additional swig flags
-    #  '-c++',
-    #  '-python',
-    #  '-py3',
-    #  '-threads',
-    #  '-Wall',
-    #if not with_hdf5:
-    #    swig_args.append('-DAMICI_SWIG_WITHOUT_HDF5')
-    #     if swig_version >= (4, 0, 0):
-    # swig_args.append('-doxygen')
 
   swig_add_library(
     _amici
@@ -91,13 +81,18 @@ if(AMICI_PYTHON_EXT_ONLY)
       INSTALL_RPATH ThirdParty/SuiteSparse/lib
       BUILD_RPATH ThirdParty/SuiteSparse/lib
     )
+    set_property(TARGET _amici APPEND PROPERTY SWIG_COMPILE_OPTIONS -py3 -threads -Wall)
   if(NOT HDF5_FOUND)
       set_target_properties(
           _amici
           PROPERTIES
-              SWIG_COMPILE_DEFINITIONS AMICI_SWIG_WITHOUT_HDF5)
+              SWIG_COMPILE_DEFINITIONS AMICI_SWIG_WITHOUT_HDF5
+          )
   endif()
 
+  if($SWIG_VERSION VERSION_GREATER_EQUAL 4.0.0)
+      set_property(TARGET _amici APPEND PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
+  endif()
   target_link_libraries(_amici amici Python3::Python)
 
   # TODO generic extension; follow python naming -

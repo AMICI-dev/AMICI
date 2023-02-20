@@ -46,7 +46,6 @@ def get_extension() -> CMakeExtension:
     # Build shared object
     ext = CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
-        install_prefix='TPL_MODELNAME',
         source_dir='.',
         cmake_configure_options=[],
         # TODO
