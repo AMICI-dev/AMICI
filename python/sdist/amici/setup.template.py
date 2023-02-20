@@ -1,22 +1,18 @@
 """AMICI model package setup"""
-
-
 import contextlib
 import os
 import sys
 from typing import List
 
-from amici import amici_path, hdf5_enabled, compiledWithOpenMP
-from amici.custom_commands import (set_compiler_specific_extension_options,
-                                   compile_parallel)
-from amici.setuptools import (get_blas_config,
-                              get_hdf5_config,
-                              add_coverage_flags_if_required,
-                              add_debug_flags_if_required,
-                              add_openmp_flags,
-                              )
-from setuptools import find_namespace_packages, setup, Extension
+from setuptools import Extension, find_namespace_packages, setup
 from setuptools.command.build_ext import build_ext
+
+from amici import amici_path, compiledWithOpenMP, hdf5_enabled
+from amici.custom_commands import (compile_parallel,
+                                   set_compiler_specific_extension_options)
+from amici.setuptools import (add_coverage_flags_if_required,
+                              add_debug_flags_if_required, add_openmp_flags,
+                              get_blas_config, get_hdf5_config)
 
 
 class ModelBuildExt(build_ext):
@@ -39,14 +35,6 @@ class ModelBuildExt(build_ext):
         print(f"Building model extension in {os.getcwd()}")
 
         build_ext.build_extension(self, ext)
-
-    def find_swig(self) -> str:
-        """Find SWIG executable
-
-        Overrides horribly outdated distutils function."""
-
-        from amici.swig import find_swig
-        return find_swig()
 
 
 def get_model_sources() -> List[str]:

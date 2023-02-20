@@ -5,11 +5,8 @@ Helper functions for AMICI core and module package preparation
 """
 
 import os
-import sys
 import shlex
-import subprocess
-
-from .swig import find_swig, get_swig_version
+import sys
 
 try:
     import pkgconfig  # optional
@@ -223,54 +220,6 @@ def add_debug_flags_if_required(cxx_flags: List[str],
             cxx_flags.extend(['-Werror', '-Wno-error=deprecated-declarations'])
 
         linker_flags.extend(['-g'])
-
-
-def generate_swig_interface_files(swig_outdir: str = None,
-                                  with_hdf5: bool = None) -> None:
-    """
-    Compile the swig python interface to amici
-    """
-
-    swig_exe = find_swig()
-    swig_version = get_swig_version(swig_exe)
-
-    swig_args = [
-        '-c++',
-        '-python',
-        '-py3',
-        '-threads',
-        '-Wall',
-        f'-Iamici{os.sep}swig',
-        f'-Iamici{os.sep}include',
-    ]
-
-    print(f"Found SWIG version {swig_version}")
-
-    # Are HDF5 includes available to generate the wrapper?
-    if with_hdf5 is None:
-        with_hdf5 = get_hdf5_config()['found']
-
-    if not with_hdf5:
-        swig_args.append('-DAMICI_SWIG_WITHOUT_HDF5')
-
-    if swig_outdir is not None:
-        swig_args.extend(['-outdir', swig_outdir])
-
-    # Do we have -doxygen?
-    if swig_version >= (4, 0, 0):
-        swig_args.append('-doxygen')
-
-    swig_cmd = [swig_exe,
-                *swig_args,
-                '-o', os.path.join("amici", "amici_wrap.cxx"),
-                os.path.join("amici", "swig", "amici.i")]
-
-    print(f"Running SWIG: {' '.join(swig_cmd)}")
-    sp = subprocess.run(swig_cmd, stdout=subprocess.PIPE,
-                        stderr=sys.stdout.buffer)
-    if not sp.returncode == 0:
-        raise AssertionError('Swigging AMICI failed:\n'
-                             + sp.stdout.decode('utf-8'))
 
 
 def add_openmp_flags(cxx_flags: List, ldflags: List) -> None:

@@ -13,7 +13,6 @@ from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
 
-from amici.setuptools import generate_swig_interface_files
 from amici.swig import fix_typehints
 
 # typehints
@@ -168,7 +167,6 @@ class AmiciBuildExt(build_ext):
             self.mkpath(target_dir)
 
             swig_outdir = os.path.join(os.path.abspath(build_dir), "amici")
-            generate_swig_interface_files(swig_outdir=swig_outdir)
             swig_py_module_path = os.path.join(swig_outdir, 'amici.py')
             print("updating typehints")
             fix_typehints(swig_py_module_path, swig_py_module_path)

@@ -65,6 +65,11 @@ if(AMICI_PYTHON_EXT_ONLY)
   set_property(SOURCE amici.i PROPERTY CPLUSPLUS ON)
   set_property(SOURCE amici.i PROPERTY OUTPUT_NAME _amici)
   # TODO additional swig flags
+    #  '-c++',
+    #  '-python',
+    #  '-py3',
+    #  '-threads',
+    #  '-Wall',
 
   swig_add_library(
     _amici

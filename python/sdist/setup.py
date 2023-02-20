@@ -20,8 +20,7 @@ import cmake_build_extension
 # package already for installation
 sys.path.insert(0, os.path.dirname(__file__))
 
-import numpy as np
-from setuptools import setup, Extension
+from setuptools import setup
 
 from amici.custom_commands import (
     AmiciInstall, AmiciDevelop,
@@ -37,6 +36,7 @@ from amici.setuptools import (
 
 
 def main():
+    # TODO no_clibs option
     # TODO to CMake
     # Extra compiler flags
     cxx_flags = []
