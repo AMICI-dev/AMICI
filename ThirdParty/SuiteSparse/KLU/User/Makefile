@@ -9,7 +9,7 @@ I = -I../../CHOLMOD/Include -I../../SuiteSparse_config \
     -I../../BTF/Include -I../../COLAMD/Include
 
 libklu_cholmod.a:  library klu_cholmod.c klu_cholmod.h
-	$(CC) $(CF) $(I) -c klu_cholmod.c
+	"$(CC)" $(CF) $(I) -c klu_cholmod.c
 	$(ARCHIVE)  libklu_cholmod.a klu_cholmod.o
 	- $(RANLIB) libklu_cholmod.a
 

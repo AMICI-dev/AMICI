@@ -52,12 +52,12 @@ clean:
 	- $(RM) -r $(CLEAN)
 
 kludemo: kludemo.c Makefile
-	$(CC) $(CF) $(I) kludemo.c -o kludemo $(CLIB) $(CHOLMOD)
+	"$(CC)" $(CF) $(I) kludemo.c -o kludemo $(CLIB) $(CHOLMOD)
 
 kluldemo: kludemo.c Makefile
-	$(CC) $(CF) $(I) kluldemo.c -o kluldemo $(CLIB) $(CHOLMOD)
+	"$(CC)" $(CF) $(I) kluldemo.c -o kluldemo $(CLIB) $(CHOLMOD)
 
 klu_simple: klu_simple.c Makefile
-	$(CC) $(CF) $(I) klu_simple.c -o klu_simple $(CLIB)
+	"$(CC)" $(CF) $(I) klu_simple.c -o klu_simple $(CLIB)
 	- ./klu_simple
 

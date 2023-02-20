@@ -22,7 +22,7 @@ library:
 # for testing only:
 # TEST = -DTESTING
 
-C = $(CC) $(CF)
+C = "$(CC)" $(CF)
 
 INC = ../Include/klu.h ../Include/klu_internal.h ../Include/klu_version.h \
     ../../SuiteSparse_config/SuiteSparse_config.h
@@ -269,7 +269,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(OBJ)
 	@mkdir -p $(INSTALL_LIB)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
-	$(CC) $(SO_OPTS) $^ -o $@ $(LDLIBS)
+	"$(CC)" $(SO_OPTS) $^ -o $@ $(LDLIBS)
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )
 	$(CP) ../Include/klu.h $(INSTALL_INCLUDE)
