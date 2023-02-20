@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0060)
-  cmake_policy(SET CMP0060 NEW)
-endif(POLICY CMP0060)
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(TPL_MODELNAME)
 

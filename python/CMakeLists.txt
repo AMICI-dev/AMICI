@@ -1,11 +1,7 @@
 if(DEFINED ENV{PYTHON_EXECUTABLE})
   set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
 endif()
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  find_package(PythonInterp 3.8 REQUIRED)
-else()
-  find_package(Python3 COMPONENTS Interpreter)
-endif()
+find_package(Python3 COMPONENTS Interpreter)
 
 add_custom_target(
   install-python
