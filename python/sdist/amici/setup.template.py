@@ -1,14 +1,12 @@
 """AMICI model package setup"""
 import os
+from pathlib import Path
 
-from setuptools import Extension, find_namespace_packages, setup
-
-from amici import amici_path, compiledWithOpenMP, hdf5_enabled, _get_amici_path
-from amici.custom_commands import AmiciBuildCMakeExtension
-from amici.setuptools import (add_coverage_flags_if_required,
-                              add_debug_flags_if_required, add_openmp_flags,
-                              get_blas_config, get_hdf5_config)
 from cmake_build_extension import CMakeExtension
+from setuptools import find_namespace_packages, setup
+
+from amici import _get_amici_path
+from amici.custom_commands import AmiciBuildCMakeExtension
 
 
 def get_extension() -> CMakeExtension:
@@ -44,12 +42,13 @@ def get_extension() -> CMakeExtension:
     # ]
 
     # Build shared object
-    ext = CMakeExtension(
+    prefix_path = Path(_get_amici_path(), "share", "Amici", "cmake")
+
+    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
+    return CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
         source_dir='.',
-        cmake_configure_options=[
-            f"-DAmici_DIR={_get_amici_path()}",
-        ],
+        cmake_configure_options=[],
         # TODO
         # swig_opts=[
         #     '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
@@ -59,8 +58,6 @@ def get_extension() -> CMakeExtension:
         # extra_compile_args=cxx_flags,
         # extra_link_args=linker_flags
     )
-
-    return ext
 
 
 # Change working directory to setup.py location
