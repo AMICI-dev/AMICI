@@ -9,7 +9,7 @@ gak:
 
 include ../../SuiteSparse_config/SuiteSparse_config.mk
 
-C = $(CC) $(CF) -I../../include
+C = "$(CC)" $(CF) -I../../include
 
 LIB2 = $(LDFLAGS) -L../../lib -lamd -lsuitesparseconfig $(LDLIBS)
 
