@@ -46,6 +46,7 @@ if(ENABLE_HDF5)
 elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
+
 if(HDF5_FOUND)
   set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES}
                      ${HDF5_CXX_LIBRARIES})
