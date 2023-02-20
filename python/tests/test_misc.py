@@ -57,11 +57,16 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
     source_dir = os.path.dirname(sbml_example_presimulation_module.__path__[0])
 
-    cmd = f"set -e; cd {source_dir}; mkdir -p build; cd build; "\
-          "cmake ..; make"
+    cmd = f"set -e; cmake -S {source_dir} -B '{source_dir}/build'; "\
+          f"cmake --build '{source_dir}/build'"
 
-    subprocess.run(cmd, shell=True, check=True,
-                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        subprocess.run(cmd, shell=True, check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print(e.stdout.decode())
+        print(e.stderr.decode())
+        raise
 
 
 @skip_on_valgrind
