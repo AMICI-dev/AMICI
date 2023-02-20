@@ -244,7 +244,7 @@ def main():
         long_description=long_description,
         long_description_content_type="text/markdown",
         # libraries=[libsuitesparse], # [libamici, libsundials, libsuitesparse],
-        ext_modules=[ss_config, amd, btf, colamd, klu, sundials],#, amici_module],
+        ext_modules=[ss_config, amd, btf, colamd, klu, sundials, amici_module],
     )
 
 

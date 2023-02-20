@@ -72,45 +72,6 @@ set(VENDORED_SUITESPARSE_BUILD_DIR "${VENDORED_SUITESPARSE_DIR}/build")
 set(VENDORED_SUITESPARSE_INSTALL_DIR "${VENDORED_SUITESPARSE_BUILD_DIR}")
 
 if(AMICI_USE_VENDORED_SUNDIALS)
-    message("Building vendored SUNDIALS")
-
-#  # Build suitesparse and install library and headers
-foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
-    execute_process(
-      COMMAND
-        ${CMAKE_COMMAND} -S${VENDORED_SUITESPARSE_DIR}/${subdir}
-        -B${VENDORED_SUITESPARSE_DIR}/${subdir}/build
-        -DCMAKE_INSTALL_PREFIX=${VENDORED_SUITESPARSE_DIR}/${subdir}/build
-        -B${VENDORED_SUNDIALS_BUILD_DIR}
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        -DALLOW_64BIT_BLAS=ON
-        -DBLA_VENDOR=All
-        -DNCHOLMOD=ON
-    )
-    execute_process(COMMAND ${CMAKE_COMMAND} --build
-                            ${VENDORED_SUNDIALS_BUILD_DIR} --parallel)
-    execute_process(COMMAND ${CMAKE_COMMAND} --install
-                            ${VENDORED_SUNDIALS_BUILD_DIR})
- endforeach()
-
-
-  # Build sundials and install library and headers
-  execute_process(
-    COMMAND
-      ${CMAKE_COMMAND} -S${VENDORED_SUNDIALS_DIR}
-      -B${VENDORED_SUNDIALS_BUILD_DIR}
-      -DCMAKE_INSTALL_PREFIX=${VENDORED_SUNDIALS_INSTALL_DIR}
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-      -DBUILD_ARKODE=OFF -DBUILD_CVODE=OFF -DBUILD_IDA=OFF -DBUILD_KINSOL=OFF
-      -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON
-      -DBUILD_NVECTOR_MANYVECTOR=OFF -DBUILD_SUNNONLINSOL_PETSCSNES=OFF
-      -DEXAMPLES_ENABLE_C=OFF -DEXAMPLES_INSTALL=OFF -DENABLE_KLU=ON
-      -DKLU_LIBRARY_DIR=${SUITESPARSE_DIR}/lib
-      -DKLU_INCLUDE_DIR=${SUITESPARSE_DIR}/include)
-  execute_process(COMMAND ${CMAKE_COMMAND} --build
-                          ${VENDORED_SUNDIALS_BUILD_DIR} --parallel)
-  execute_process(COMMAND ${CMAKE_COMMAND} --install
-                          ${VENDORED_SUNDIALS_BUILD_DIR})
 else()
   message("Not building vendored SUNDIALS")
 endif()
