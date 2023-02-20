@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 3.15)
 
 project(amici)
 
+message("Source: ${CMAKE_SOURCE_DIR}")
+message("Binary: ${CMAKE_BINARY_DIR}")
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
@@ -52,16 +55,10 @@ if(HDF5_FOUND)
                      ${HDF5_CXX_LIBRARIES})
 endif()
 
-set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse")
-set(SUITESPARSE_INCLUDE_DIRS "${SUITESPARSE_DIR}/include"
-                             "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
-set(SUITESPARSE_LIBRARIES
-    ${SUITESPARSE_DIR}/KLU/Lib/libklu${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUITESPARSE_DIR}/COLAMD/Lib/libcolamd${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUITESPARSE_DIR}/BTF/Lib/libbtf${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUITESPARSE_DIR}/AMD/Lib/libamd${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
-)
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS
+    "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
+
+
 
 option(AMICI_USE_VENDORED_SUNDIALS "Use the vendored SUNDIALS?" ON)
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
@@ -205,10 +202,12 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
   PUBLIC swig
   PUBLIC ${GSL_LITE_INCLUDE_DIR}
-  PUBLIC ${SUITESPARSE_INCLUDE_DIRS})
+  PUBLIC ${SUNDIALS_PRIVATE_INCLUDE_DIRS}
+)
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
-  target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
+  target_include_directories(${PROJECT_NAME}
+      PUBLIC ${BLAS_INCLUDE_DIRS})
 endif()
 
 target_link_libraries(
@@ -230,7 +229,6 @@ target_link_libraries(
   PUBLIC SUNDIALS::sunnonlinsolfixedpoint_static
   PUBLIC SUNDIALS::cvodes_static
   PUBLIC SUNDIALS::idas_static
-  PUBLIC ${SUITESPARSE_LIBRARIES}
   PUBLIC ${BLAS_LIBRARIES}
   PUBLIC ${CMAKE_DL_LIBS})
 

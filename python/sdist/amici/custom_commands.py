@@ -91,14 +91,6 @@ class AmiciDevelop(develop):
             self.no_clibs = True
         develop.finalize_options(self)
 
-    def run(self):
-        print("running AmiciDevelop")
-
-        if not self.no_clibs:
-            self.get_finalized_command('build_clib').run()
-
-        develop.run(self)
-
 
 class AmiciInstallLib(install_lib):
     """Custom install to allow preserving of debug symbols"""
@@ -129,13 +121,6 @@ class AmiciInstallLib(install_lib):
 class AmiciBuildExt(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
-    def build_extension(self, ext):
-        # Work-around for compiler-specific build options
-        set_compiler_specific_extension_options(
-            ext, self.compiler.compiler_type)
-
-        build_ext.build_extension(self, ext)
-
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in
         the wheel
@@ -153,10 +138,6 @@ class AmiciBuildExt(build_ext):
             return
 
         if not self.dry_run and self.distribution.has_c_libraries():
-            # get the previously built static libraries
-            build_clib = self.get_finalized_command('build_clib')
-            libraries = build_clib.get_library_names() or []
-
             # Module build directory where we want to copy the generated
             # libs to
             if self.inplace == 0:
@@ -247,29 +228,6 @@ def set_compiler_specific_library_options(
                 pass
 
 
-def set_compiler_specific_extension_options(
-        ext: 'setuptools.Extension',
-        compiler_type: str) -> None:
-    """Set compiler-specific extension build options.
-
-    Same game as in ``set_compiler_specific_library_options``, except that
-    here we look for compiler-specific class attributes.
-
-    Arguments:
-        ext: setuptools/distutils extension object
-        compiler_type: Compiler type
-    """
-    for attr in ['extra_compile_args', 'extra_link_args']:
-        try:
-            new_value = getattr(ext, attr) + \
-                        getattr(ext, f'{attr}_{compiler_type}')
-            setattr(ext, attr, new_value)
-            print(f"Changed {attr} for {compiler_type} to {new_value}")
-        except AttributeError:
-            # No compiler-specific options set
-            pass
-
-
 class AmiciBuildPy(build_py):
     def run(self):
         # We need build_ext before build_py, that all artifacts will be
@@ -282,7 +240,8 @@ class AmiciBuildPy(build_py):
 
 class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
     def build_extension(self, ext: cmake_build_extension.CMakeExtension) -> None:
-        #clib_dir = self.get_finalized_command('build_clib').build_temp
+        print("-" * 20, ext.name, "-" * 20, file=sys.stderr)
+
         if self.inplace == 0:
             build_dir = self.build_lib
         else:
@@ -293,3 +252,5 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             x.replace("${build_dir}", build_dir) for x in
             ext.cmake_configure_options]
         cmake_build_extension.BuildExtension.build_extension(self, ext)
+
+        print("-" * 40, file=sys.stderr)

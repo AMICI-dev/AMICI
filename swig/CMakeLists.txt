@@ -41,14 +41,6 @@ set(AMICI_INTERFACE_LIST
 add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
 
 if(AMICI_PYTHON_EXT_ONLY)
-  # Build suitesparse and install library and headers
-  foreach(subdir SuiteSparse_config BTF AMD CAMD COLAMD KLU)
-    execute_process(
-      COMMAND make library
-      WORKING_DIRECTORY
-        ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/SuiteSparse/${subdir})
-  endforeach()
-
   # Get numpy include directory cmake3.19+: COMMAND_ERROR_IS_FATAL
   execute_process(
     COMMAND ${Python3_EXECUTABLE} -c

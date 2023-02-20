@@ -144,13 +144,14 @@ def main():
     )
     install_dir = (Path(__file__).parent / "amici").absolute()
     prefix_path = install_dir #/ "lib" / "cmake" / "SuiteSparse"
-    cmake_build_extension.build_extension.BuildExtension.extend_cmake_prefix_path(prefix_path)
+    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
     amd = cmake_build_extension.CMakeExtension(
         name='amd',
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/AMD',
         cmake_configure_options=[
-            f"-DSuiteSparse_config_ROOT={install_dir}"
+            "-DNFORTRAN=TRUE",
+
         ]
     )
     btf = cmake_build_extension.CMakeExtension(
@@ -158,7 +159,7 @@ def main():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/BTF',
         cmake_configure_options=[
-            f"-DSuiteSparse_config_ROOT={install_dir}"
+            "-DNFORTRAN=TRUE",
         ]
     )
     colamd = cmake_build_extension.CMakeExtension(
@@ -166,7 +167,7 @@ def main():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/COLAMD',
         cmake_configure_options=[
-            f"-DSuiteSparse_config_ROOT={install_dir}"
+            "-DNFORTRAN=TRUE",
         ]
     )
 
@@ -175,7 +176,6 @@ def main():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/KLU',
         cmake_configure_options=[
-            f"-DSuiteSparse_config_ROOT={install_dir}"
             "-DNCHOLMOD=ON",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",

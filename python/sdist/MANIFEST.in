@@ -12,4 +12,4 @@ include version.txt
 include LICENSE.md
 exclude amici/*.so
 exclude amici/*.dll
-
+prune **/build/
