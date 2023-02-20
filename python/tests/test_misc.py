@@ -61,8 +61,8 @@ def test_cmake_compilation(sbml_example_presimulation_module):
     #  not been exported
     amici_dir = (Path(__file__).parents[2] / 'build').absolute()
     cmd = f"set -e; " \
-          f"cmake -S {source_dir} -B '{build_dir}' -DAmici_DIR={amici_dir};" \
-          f"cmake --build '{source_dir}'"
+          f"cmake -S {source_dir} -B '{build_dir}' -DAmici_DIR={amici_dir}; " \
+          f"cmake --build '{build_dir}'"
 
     try:
         subprocess.run(cmd, shell=True, check=True,
