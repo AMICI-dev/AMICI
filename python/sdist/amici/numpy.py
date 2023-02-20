@@ -15,13 +15,13 @@ from typing import Union, List, Dict, Iterator, Literal
 
 class SwigPtrView(collections.abc.Mapping):
     """
-    Interface class to expose std::vector<double> and scalar members of
+    Interface class to expose ``std::vector<double>`` and scalar members of
     swig wrapped C++ objects as numpy array attributes and fields. This
     class is memory efficient as copies of the underlying C++ objects is
     only created when respective fields are accessed for the first time.
     Cached copies are used for all subsequent calls.
 
-    :ivar _swigptr: pointer to the c++ object
+    :ivar _swigptr: pointer to the C++ object
     :ivar _field_names: names of members that will be exposed as numpy arrays
     :ivar _field_dimensions: dimensions of numpy arrays
     :ivar _cache: dictionary with cached values
@@ -55,7 +55,7 @@ class SwigPtrView(collections.abc.Mapping):
         if item not in self._field_names:
             self.__missing__(item)
 
-        value = field_as_numpy(
+        value = _field_as_numpy(
             self._field_dimensions, item, self._swigptr
         )
         self._cache[item] = value
@@ -86,7 +86,7 @@ class SwigPtrView(collections.abc.Mapping):
         :param swigptr: pointer to the C++ object
         """
         self._swigptr = swigptr
-        self._cache = dict()
+        self._cache = {}
         super(SwigPtrView, self).__init__()
 
     def __len__(self) -> int:
@@ -119,7 +119,7 @@ class SwigPtrView(collections.abc.Mapping):
 
     def __contains__(self, item) -> bool:
         """
-        Faster implementation of __contains__ that avoids copy of the field
+        Faster implementation of ``__contains__`` that avoids copy of the field
 
         :param item: item to check for
 
@@ -152,8 +152,8 @@ class SwigPtrView(collections.abc.Mapping):
 
 class ReturnDataView(SwigPtrView):
     """
-    Interface class for C++ Return Data objects that avoids possibly costly
-    copies of member data.
+    Interface class for C++ :class:`amici.ReturnData` objects that avoids
+    possibly costly copies of member data.
     """
 
     _field_names = [
@@ -174,7 +174,7 @@ class ReturnDataView(SwigPtrView):
         """
         Constructor
 
-        :param rdata: pointer to the ReturnData instance
+        :param rdata: pointer to the ``ReturnData`` instance
         """
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(f'Unsupported pointer {type(rdata)}, must be'
@@ -237,7 +237,9 @@ class ReturnDataView(SwigPtrView):
     def __getitem__(self, item: str) -> Union[np.ndarray, ReturnDataPtr,
                                               ReturnData, float]:
         """
-        Custom getitem implementation shim to map `t` to `ts`
+        Access fields by name.s
+
+        Custom ``__getitem__`` implementation shim to map ``t`` to ``ts``.
 
         :param item: field/attribute key
 
@@ -334,16 +336,16 @@ class ExpDataView(SwigPtrView):
         super(ExpDataView, self).__init__(edata)
 
 
-def field_as_numpy(field_dimensions: Dict[str, List[int]],
-                   field: str, data: SwigPtrView) -> Union[np.ndarray,
-                                                           float,
-                                                           None]:
+def _field_as_numpy(
+        field_dimensions: Dict[str, List[int]],
+        field: str, data: SwigPtrView
+) -> Union[np.ndarray, float, None]:
     """
     Convert data object field to numpy array with dimensions according to
     specified field dimensions
 
     :param field_dimensions: dimension specifications
-            dict({field: list([dim1, dim2, ...])})
+                ``dict({field: list([dim1, dim2, ...])})``
     :param data: object with fields
     :param field: Name of field
 
@@ -351,13 +353,9 @@ def field_as_numpy(field_dimensions: Dict[str, List[int]],
     specified field dimensions
     """
     attr = getattr(data, field)
-    if field in field_dimensions:
-        if len(attr) == 0:
-            return None
-        else:
-            return np.array(attr).reshape(field_dimensions[field])
-    else:
-        return float(attr)
+    if field_dim := field_dimensions.get(field, None):
+        return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
+    return float(attr)
 
 
 def _entity_type_from_id(
@@ -384,5 +382,3 @@ def _entity_type_from_id(
                 return symbol
 
     raise KeyError(f"Unknown symbol {entity_id}.")
-
-

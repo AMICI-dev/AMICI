@@ -320,10 +320,10 @@ class SbmlImporter:
             case of stoichiometric coefficients with many significant digits.
 
         :param simplify:
-            see :attr:`ODEModel._simplify`
+            see :attr:`amici.ODEModel._simplify`
 
         :param cache_simplify:
-                see :func:`amici.ODEModel.__init__`
+                see :meth:`amici.ODEModel.__init__`
 
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
@@ -2146,11 +2146,14 @@ def assignmentRules2observables(sbml_model: sbml.Model,
         })
     """
     observables = {}
-    for p in sbml_model.getListOfParameters():
-        parameter_id = p.getId()
-        if filter_function(p):
+    for rule in sbml_model.getListOfRules():
+        if rule.getTypeCode() != sbml.SBML_ASSIGNMENT_RULE:
+            continue
+        parameter_id = rule.getVariable()
+        if (p := sbml_model.getParameter(parameter_id)) \
+                and filter_function(p):
             observables[parameter_id] = {
-                'name': p.getName() if p.isSetName() else p.getId(),
+                'name': p.getName() if p.isSetName() else parameter_id,
                 'formula': sbml_model.getAssignmentRuleByVariable(
                     parameter_id
                 ).getFormula()

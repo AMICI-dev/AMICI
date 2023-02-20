@@ -17,7 +17,8 @@ def plot_state_trajectories(
         rdata: ReturnDataView,
         state_indices: Optional[Iterable[int]] = None,
         ax: Optional[Axes] = None,
-        model: Model = None
+        model: Model = None,
+        prefer_names: bool = True,
 ) -> None:
     """
     Plot state trajectories
@@ -34,6 +35,9 @@ def plot_state_trajectories(
 
     :param model:
         amici model instance
+
+    :param prefer_names:
+        Whether state names should be preferred over IDs, if available.
     """
     if not ax:
         fig, ax = plt.subplots()
@@ -42,7 +46,7 @@ def plot_state_trajectories(
     for ix in state_indices:
         if model is None:
             label = f'$x_{{{ix}}}$'
-        elif model.getStateNames()[ix]:
+        elif prefer_names and model.getStateNames()[ix]:
             label = model.getStateNames()[ix]
         else:
             label = model.getStateIds()[ix]
@@ -57,7 +61,8 @@ def plot_observable_trajectories(
         rdata: ReturnDataView,
         observable_indices: Optional[Iterable[int]] = None,
         ax: Optional[Axes] = None,
-        model: Model = None
+        model: Model = None,
+        prefer_names: bool = True,
 ) -> None:
     """
     Plot observable trajectories
@@ -74,6 +79,9 @@ def plot_observable_trajectories(
 
     :param model:
         amici model instance
+
+    :param prefer_names:
+        Whether observables names should be preferred over IDs, if available.
     """
     if not ax:
         fig, ax = plt.subplots()
@@ -82,7 +90,7 @@ def plot_observable_trajectories(
     for iy in observable_indices:
         if model is None:
             label = f'$y_{{{iy}}}$'
-        elif model.getObservableNames()[iy]:
+        elif prefer_names and model.getObservableNames()[iy]:
             label = model.getObservableNames()[iy]
         else:
             label = model.getObservableIds()[iy]
