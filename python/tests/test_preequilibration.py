@@ -432,16 +432,18 @@ def test_simulation_errors(preeq_fixture):
     solver.setRelativeToleranceSteadyState(0.0)
     solver.setAbsoluteToleranceSteadyState(0.0)
     # preeq & posteq
-    for e in [edata, edata_preeq]:
+    for e in [edata_preeq, edata]:
         rdata = amici.runAmiciSimulation(model, solver, e)
         assert rdata['status'] != amici.AMICI_SUCCESS
         assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[0].identifier == 'EQUILIBRATION_FAILURE'
-        assert 'exceedingly long simulation time' in rdata._swigptr.messages[0].message
-        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_error
-        assert rdata._swigptr.messages[1].identifier == 'OTHER'
-        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[2].identifier == 'BACKTRACE'
+        assert rdata._swigptr.messages[0].identifier == 'CVODES:CVode:OTHER'
+        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[1].identifier == 'EQUILIBRATION_FAILURE'
+        assert 'exceedingly long simulation time' in rdata._swigptr.messages[1].message
+        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_error
+        assert rdata._swigptr.messages[2].identifier == 'OTHER'
+        assert rdata._swigptr.messages[3].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[3].identifier == 'BACKTRACE'
 
 
 

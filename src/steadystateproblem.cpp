@@ -726,6 +726,8 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 ) const {
     /* Create new CVode solver object */
     auto sim_solver = std::unique_ptr<Solver>(solver.clone());
+    
+    sim_solver->logger = solver.logger;
 
     switch (solver.getLinearSolver()) {
     case LinearSolver::dense:
