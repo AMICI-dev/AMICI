@@ -47,7 +47,7 @@ if(AMICI_PYTHON_EXT_ONLY)
             "from numpy import get_include; print(get_include())"
     OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
     RESULT_VARIABLE RETURN_CODE
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
   message("NumPy include directory: ${NUMPY_INCLUDE_DIR}")
 
   # https://cmake.org/cmake/help/latest/module/UseSWIG.html
@@ -71,19 +71,21 @@ if(AMICI_PYTHON_EXT_ONLY)
       PREFIX ""
       BUILD_RPATH_USE_ORIGIN TRUE
       INSTALL_RPATH ThirdParty/SuiteSparse/lib
-      BUILD_RPATH ThirdParty/SuiteSparse/lib
-    )
-    set_property(TARGET _amici APPEND PROPERTY SWIG_COMPILE_OPTIONS -py3 -threads -Wall)
+      BUILD_RPATH ThirdParty/SuiteSparse/lib)
+  set_property(
+    TARGET _amici
+    APPEND
+    PROPERTY SWIG_COMPILE_OPTIONS -py3 -threads -Wall)
   if(NOT HDF5_FOUND)
-      set_target_properties(
-          _amici
-          PROPERTIES
-              SWIG_COMPILE_DEFINITIONS AMICI_SWIG_WITHOUT_HDF5
-          )
+    set_target_properties(_amici PROPERTIES SWIG_COMPILE_DEFINITIONS
+                                            AMICI_SWIG_WITHOUT_HDF5)
   endif()
 
   if($SWIG_VERSION VERSION_GREATER_EQUAL 4.0.0)
-      set_property(TARGET _amici APPEND PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
+    set_property(
+      TARGET _amici
+      APPEND
+      PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
   endif()
   target_link_libraries(_amici amici Python3::Python)
 

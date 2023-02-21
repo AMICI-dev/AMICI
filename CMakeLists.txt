@@ -5,10 +5,11 @@ cmake_minimum_required(VERSION 3.15)
 
 project(amici)
 
-message("Source: ${CMAKE_SOURCE_DIR}")
-message("Binary: ${CMAKE_BINARY_DIR}")
+message("CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+message("CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -50,24 +51,14 @@ elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 
-
-option(AMICI_USE_VENDORED_SUNDIALS "Use the vendored SUNDIALS?" ON)
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
-
-if(AMICI_USE_VENDORED_SUNDIALS)
-else()
-  message("Not building vendored SUNDIALS")
-endif()
-
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 find_package(SUNDIALS REQUIRED PATHS
              "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
 
-set(SUNDIALS_PRIVATE_INCLUDE_DIRS
- "${VENDORED_SUNDIALS_DIR}/src")
-
-set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
+set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
@@ -111,94 +102,95 @@ add_custom_target(
   version
   ${CMAKE_COMMAND}
   -D
-  SRC=${CMAKE_SOURCE_DIR}/include/amici/version.in.h
+  SRC=${CMAKE_CURRENT_SOURCE_DIR}/include/amici/version.in.h
   -D
-  DST=${CMAKE_BINARY_DIR}/include/amici/version.h
+  DST=${CMAKE_CURRENT_BINARY_DIR}/include/amici/version.h
   -P
-  ${CMAKE_SOURCE_DIR}/cmake/configureVersion.cmake)
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configureVersion.cmake)
 
 # Library source files
 set(AMICI_SRC_LIST
-    ${CMAKE_SOURCE_DIR}/src/symbolic_functions.cpp
-    ${CMAKE_SOURCE_DIR}/src/cblas.cpp
-    ${CMAKE_SOURCE_DIR}/src/amici.cpp
-    ${CMAKE_SOURCE_DIR}/src/misc.cpp
-    ${CMAKE_SOURCE_DIR}/src/rdata.cpp
-    ${CMAKE_SOURCE_DIR}/src/edata.cpp
-    ${CMAKE_SOURCE_DIR}/src/exception.cpp
-    ${CMAKE_SOURCE_DIR}/src/simulation_parameters.cpp
-    ${CMAKE_SOURCE_DIR}/src/spline.cpp
-    ${CMAKE_SOURCE_DIR}/src/solver.cpp
-    ${CMAKE_SOURCE_DIR}/src/solver_cvodes.cpp
-    ${CMAKE_SOURCE_DIR}/src/solver_idas.cpp
-    ${CMAKE_SOURCE_DIR}/src/logging.cpp
-    ${CMAKE_SOURCE_DIR}/src/model.cpp
-    ${CMAKE_SOURCE_DIR}/src/model_ode.cpp
-    ${CMAKE_SOURCE_DIR}/src/model_dae.cpp
-    ${CMAKE_SOURCE_DIR}/src/model_state.cpp
-    ${CMAKE_SOURCE_DIR}/src/newton_solver.cpp
-    ${CMAKE_SOURCE_DIR}/src/forwardproblem.cpp
-    ${CMAKE_SOURCE_DIR}/src/steadystateproblem.cpp
-    ${CMAKE_SOURCE_DIR}/src/backwardproblem.cpp
-    ${CMAKE_SOURCE_DIR}/src/sundials_matrix_wrapper.cpp
-    ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
-    ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
-    ${CMAKE_SOURCE_DIR}/src/vector.cpp
-    ${CMAKE_SOURCE_DIR}/include/amici/abstract_model.h
-    ${CMAKE_SOURCE_DIR}/include/amici/amici.h
-    ${CMAKE_SOURCE_DIR}/include/amici/backwardproblem.h
-    ${CMAKE_SOURCE_DIR}/include/amici/cblas.h
-    ${CMAKE_SOURCE_DIR}/include/amici/defines.h
-    ${CMAKE_SOURCE_DIR}/include/amici/edata.h
-    ${CMAKE_SOURCE_DIR}/include/amici/exception.h
-    ${CMAKE_SOURCE_DIR}/include/amici/forwardproblem.h
-    ${CMAKE_SOURCE_DIR}/include/amici/hdf5.h
-    ${CMAKE_SOURCE_DIR}/include/amici/logging.h
-    ${CMAKE_SOURCE_DIR}/include/amici/misc.h
-    ${CMAKE_SOURCE_DIR}/include/amici/model_dae.h
-    ${CMAKE_SOURCE_DIR}/include/amici/model_dimensions.h
-    ${CMAKE_SOURCE_DIR}/include/amici/model.h
-    ${CMAKE_SOURCE_DIR}/include/amici/model_ode.h
-    ${CMAKE_SOURCE_DIR}/include/amici/model_state.h
-    ${CMAKE_SOURCE_DIR}/include/amici/newton_solver.h
-    ${CMAKE_SOURCE_DIR}/include/amici/rdata.h
-    ${CMAKE_SOURCE_DIR}/include/amici/serialization.h
-    ${CMAKE_SOURCE_DIR}/include/amici/simulation_parameters.h
-    ${CMAKE_SOURCE_DIR}/include/amici/solver_cvodes.h
-    ${CMAKE_SOURCE_DIR}/include/amici/solver.h
-    ${CMAKE_SOURCE_DIR}/include/amici/solver_idas.h
-    ${CMAKE_SOURCE_DIR}/include/amici/spline.h
-    ${CMAKE_SOURCE_DIR}/include/amici/steadystateproblem.h
-    ${CMAKE_SOURCE_DIR}/include/amici/sundials_linsol_wrapper.h
-    ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
-    ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
-    ${CMAKE_SOURCE_DIR}/include/amici/vector.h)
-if(HDF5_FOUND)
-  list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
-endif()
+    src/symbolic_functions.cpp
+    src/cblas.cpp
+    src/amici.cpp
+    src/misc.cpp
+    src/rdata.cpp
+    src/edata.cpp
+    src/exception.cpp
+    src/simulation_parameters.cpp
+    src/spline.cpp
+    src/solver.cpp
+    src/solver_cvodes.cpp
+    src/solver_idas.cpp
+    src/logging.cpp
+    src/model.cpp
+    src/model_ode.cpp
+    src/model_dae.cpp
+    src/model_state.cpp
+    src/newton_solver.cpp
+    src/forwardproblem.cpp
+    src/steadystateproblem.cpp
+    src/backwardproblem.cpp
+    src/sundials_matrix_wrapper.cpp
+    src/sundials_linsol_wrapper.cpp
+    src/abstract_model.cpp
+    src/vector.cpp
+    include/amici/abstract_model.h
+    include/amici/amici.h
+    include/amici/backwardproblem.h
+    include/amici/cblas.h
+    include/amici/defines.h
+    include/amici/edata.h
+    include/amici/exception.h
+    include/amici/forwardproblem.h
+    include/amici/hdf5.h
+    include/amici/logging.h
+    include/amici/misc.h
+    include/amici/model_dae.h
+    include/amici/model_dimensions.h
+    include/amici/model.h
+    include/amici/model_ode.h
+    include/amici/model_state.h
+    include/amici/newton_solver.h
+    include/amici/rdata.h
+    include/amici/serialization.h
+    include/amici/simulation_parameters.h
+    include/amici/solver_cvodes.h
+    include/amici/solver.h
+    include/amici/solver_idas.h
+    include/amici/spline.h
+    include/amici/steadystateproblem.h
+    include/amici/sundials_linsol_wrapper.h
+    include/amici/sundials_matrix_wrapper.h
+    include/amici/symbolic_functions.h
+    include/amici/vector.h
+    $<$<BOOL:${HDF5_FOUND}>:src/hdf5.cpp>)
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
+
 set(AMICI_CXX_OPTIONS
     ""
     CACHE STRING "C++ options for libamici (semicolon-separated)")
 target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
+
 add_dependencies(${PROJECT_NAME} version)
-file(GLOB PUBLIC_HEADERS include/amici/*.h)
+
+file(
+  GLOB PUBLIC_HEADERS
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
                                                  "${PUBLIC_HEADERS}")
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-  PUBLIC swig
+  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   PUBLIC ${GSL_LITE_INCLUDE_DIR}
-  PUBLIC ${SUNDIALS_PRIVATE_INCLUDE_DIRS}
-)
+  PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
-  target_include_directories(${PROJECT_NAME}
-      PUBLIC ${BLAS_INCLUDE_DIRS})
+  target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
 endif()
 
 target_link_libraries(
@@ -224,13 +216,13 @@ target_link_libraries(
   PUBLIC ${CMAKE_DL_LIBS})
 
 if(HDF5_FOUND)
-  target_link_libraries(${PROJECT_NAME}
-      PUBLIC hdf5::hdf5_hl_cpp
-      PUBLIC hdf5::hdf5_hl
-      PUBLIC hdf5::hdf5_cpp
-      PUBLIC hdf5::hdf5)
+  target_link_libraries(
+    ${PROJECT_NAME}
+    PUBLIC hdf5::hdf5_hl_cpp
+    PUBLIC hdf5::hdf5_hl
+    PUBLIC hdf5::hdf5_cpp
+    PUBLIC hdf5::hdf5)
 endif()
-
 
 if(OpenMP_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
@@ -238,13 +230,8 @@ endif()
 
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 if(SUNDIALS_SUPERLUMT_ENABLE)
-  set(SUNDIALS_LIBRARIES
-      ${SUNDIALS_LIBRARIES}
-      ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
-      ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
-      -lblas)
-  target_include_directories(
-    ${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
+  target_link_libraries(${PROJECT_NAME}
+                        PRIVATE SUNDIALS::sundials_sunlinsolsuperlumt)
 endif()
 
 # Create targets to make the sources show up in IDEs for convenience
@@ -273,7 +260,7 @@ if(NOT AMICI_PYTHON_EXT_ONLY)
   set_property(
     TARGET matlabInterface
     APPEND
-    PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
+    PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 endif()
 
 # For template files
@@ -287,8 +274,9 @@ add_custom_target(
           src/wrapfunctions.template.cpp
           swig/CMakeLists_model.cmake
           swig/modelname.template.i)
-set_target_properties(fileTemplates PROPERTIES INCLUDE_DIRECTORIES
-                                               "${CMAKE_SOURCE_DIR}/include/")
+set_target_properties(
+  fileTemplates PROPERTIES INCLUDE_DIRECTORIES
+                           "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
 if($ENV{ENABLE_GCOV_COVERAGE})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
@@ -320,14 +308,14 @@ include(CMakePackageConfigHelpers)
 include(version)
 configure_package_config_file(
   cmake/AmiciConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
-  INSTALL_DESTINATION "${LIB_INSTALL_DIR}/cmake/")
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
-  DESTINATION share/Amici/cmake)
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
 # Register package
 
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
