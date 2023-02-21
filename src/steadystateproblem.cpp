@@ -190,28 +190,28 @@ void SteadystateProblem::findSteadyStateBySimulation(
                     " integration steps at t=%g.", ex.time
                 );
             break;
-        case AMICI_NO_STEADY_STATE:
+        case AMICI_RHSFUNC_FAIL:
             steady_state_status_[1] =
                 SteadyStateStatus::failed_too_long_simulation;
             if(model.logger)
                 model.logger->log(
                     LogSeverity::debug, "EQUILIBRATION_FAILURE",
-                    "AMICI equilibration exceeded maximum simulation time"
-                    " at t=%g.", ex.time
+                    "AMICI equilibration was stopped after to exceedingly"
+                    " long simulation time at t=%g.", ex.time
                 );
             break;
         default:
             steady_state_status_[1] = SteadyStateStatus::failed;
             if(model.logger)
                 model.logger->log(
-                    LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                    LogSeverity::debug, "OTHER",
                     "AMICI equilibration failed at t=%g.", ex.time
                 );
         }
     } catch (AmiException const &ex) {
         if(model.logger)
             model.logger->log(
-                LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                LogSeverity::debug, "OTHER",
                 "AMICI equilibration failed: %s", ex.what()
             );
         steady_state_status_[1] = SteadyStateStatus::failed;
@@ -685,9 +685,6 @@ void SteadystateProblem::runSteadystateSimulation(
         if (sim_steps >= solver.getMaxSteps()) {
             throw IntegrationFailure(AMICI_TOO_MUCH_WORK, state_.t);
         }
-        if (state_.t >= 1e200) {
-            throw IntegrationFailure(AMICI_NO_STEADY_STATE, state_.t);
-        }
         /* increase counter */
         sim_steps++;
         /* One step of ODE integration
@@ -740,8 +737,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     case LinearSolver::KLU:
         break;
     default:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
-                            "invalid solver for steadystate simulation");
+        throw AmiException("invalid solver for steadystate simulation");
     }
     /* do we need sensitivities? */
     if (forwardSensis) {
