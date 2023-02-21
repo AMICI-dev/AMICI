@@ -75,7 +75,8 @@ if(AMICI_PYTHON_EXT_ONLY)
   set_property(
     TARGET _amici
     APPEND
-    PROPERTY SWIG_COMPILE_OPTIONS -py3 -threads -Wall)
+    PROPERTY SWIG_COMPILE_OPTIONS -threads -Wall)
+
   if(NOT HDF5_FOUND)
     set_target_properties(_amici PROPERTIES SWIG_COMPILE_DEFINITIONS
                                             AMICI_SWIG_WITHOUT_HDF5)

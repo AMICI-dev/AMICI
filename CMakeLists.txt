@@ -9,7 +9,8 @@ message("CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message("CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -19,6 +20,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   endif()
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
@@ -51,12 +53,14 @@ elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 
+
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 find_package(SUNDIALS REQUIRED PATHS
              "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
+
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
 
@@ -186,7 +190,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
   PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PUBLIC ${GSL_LITE_INCLUDE_DIR}
+  PUBLIC $<BUILD_INTERFACE:${GSL_LITE_INCLUDE_DIR}>
   PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
@@ -311,13 +315,17 @@ configure_package_config_file(
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)
+install(EXPORT AmiciTargets
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
+    NAMESPACE Upstream::)
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/AmiciTargets.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
-# Register package
 
+install(DIRECTORY ThirdParty/gsl/ TYPE INCLUDE)
+
+#Register package?
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
 if(EXPORT_PACKAGE)
   export(PACKAGE Amici)

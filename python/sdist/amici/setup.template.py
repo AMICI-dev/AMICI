@@ -48,7 +48,10 @@ def get_extension() -> CMakeExtension:
     return CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
         source_dir='.',
-        cmake_configure_options=[],
+        cmake_configure_options=[
+            f"-DCMAKE_MODULE_PATH={prefix_path}/lib/cmake/SuiteSparse",
+            f"-DKLU_ROOT={prefix_path}",
+        ],
         # TODO
         # swig_opts=[
         #     '-c++', '-modern', '-outdir', 'TPL_MODELNAME',

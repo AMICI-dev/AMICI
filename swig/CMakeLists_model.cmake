@@ -17,7 +17,7 @@ set_source_files_properties(${PROJECT_NAME}.i PROPERTIES CPLUSPLUS ON)
 
 # swig does not use INTERFACE_INCLUDE_DIRS of linked libraries, so add manually
 get_target_property(AMICI_INCLUDE_DIRS Upstream::amici INTERFACE_INCLUDE_DIRECTORIES)
-include_directories(${AMICI_INCLUDE_DIRS} ..)
+include_directories(${AMICI_INCLUDE_DIRS} .. ${AMICI_INCLUDE_DIRS}/../swig)
 
 swig_add_library(${SWIG_LIBRARY_NAME}
     TYPE MODULE
