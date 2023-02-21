@@ -301,7 +301,7 @@ mtocpp_filter = os.path.join(amici_dir, 'matlab', 'mtoc',
 exhale_projects_args = {
     "AMICI_CPP": {
         "exhaleDoxygenStdin": "\n".join([
-            "INPUT = ../include",
+            "INPUT = ../include/amici",
             "BUILTIN_STL_SUPPORT    = YES",
             "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
             "EXCLUDE += ../include/amici/interface_matlab.h",
