@@ -1036,7 +1036,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto solver = dynamic_cast<CVodeSolver const *>(typed_udata->second);
     Expects(model);
 
-    if(solver->timeExceeded()) {
+    if (solver->timeExceeded(500)) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
 
@@ -1072,7 +1072,7 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     auto solver = dynamic_cast<CVodeSolver const*>(typed_udata->second);
     Expects(model);
 
-    if(solver->timeExceeded()) {
+    if (solver->timeExceeded(500)) {
         return AMICI_MAX_TIME_EXCEEDED;
     }
 

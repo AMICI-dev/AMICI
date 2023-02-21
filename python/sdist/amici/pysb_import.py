@@ -26,7 +26,8 @@ from .import_utils import (_get_str_symbol_identifiers,
                            noise_distribution_to_observable_transformation)
 from .logging import get_logger, log_execution_time, set_log_level
 from .ode_export import (Constant, Expression, LogLikelihoodY, ODEExporter,
-                         ODEModel, Observable, Parameter, SigmaY, State)
+                         ODEModel, Observable, Parameter, SigmaY, State,
+                         _default_simplify)
 
 CL_Prototype = Dict[str, Dict[str, Any]]
 ConservationLaw = Dict[str, Union[Dict, str, sp.Basic]]
@@ -46,7 +47,7 @@ def pysb2amici(
         compiler: str = None,
         compute_conservation_laws: bool = True,
         compile: bool = True,
-        simplify: Callable = lambda x: sp.powsimp(x, deep=True),
+        simplify: Callable = _default_simplify,
         # Do not enable by default without testing.
         # See https://github.com/AMICI-dev/AMICI/pull/1672
         cache_simplify: bool = False,
@@ -441,8 +442,9 @@ def _process_pysb_expressions(
         observables
 
     :param sigmas:
-        dict with names of observable pysb.Expressions/pysb.Observables
-        names as keys and names of sigma pysb.Expressions as values
+        dict with names of observable :class:`pysb.Expression` /
+        :class:`pysb.Observable` names as keys and names of sigma
+        :class:`pysb.Expressions` as values
 
     :param noise_distributions:
         see :func:`amici.pysb_import.pysb2amici`

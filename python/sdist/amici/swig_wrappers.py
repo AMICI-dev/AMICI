@@ -75,7 +75,7 @@ def runAmiciSimulation(
     :param model:
         Model instance
 
-`   :param solver:
+    :param solver:
         Solver instance, must be generated from
         :py:meth:`amici.amici.Model.getSolver`
 

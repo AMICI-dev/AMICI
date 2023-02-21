@@ -1,15 +1,7 @@
 #
 # Build AMICI library
 #
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-endif(POLICY CMP0077)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(amici)
 
@@ -38,12 +30,21 @@ endforeach(FLAG)
 # find dependencies
 include(GNUInstallDirs)
 
-option(ENABLE_HDF5 "Build with HDF5 support?" ON)
+find_package(OpenMP)
+
+option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
+option(ENABLE_HDF5 "Build with HDF5 support?" OFF)
+
 if(ENABLE_HDF5)
   find_package(
     HDF5
     COMPONENTS C HL CXX
     REQUIRED)
+elseif(AMICI_TRY_ENABLE_HDF5)
+    find_package(HDF5 COMPONENTS C HL CXX)
+endif()
+
+if(HDF5_FOUND)
   set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES}
                      ${HDF5_CXX_LIBRARIES})
 endif()
@@ -169,7 +170,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/include/amici/sundials_matrix_wrapper.h
     ${CMAKE_SOURCE_DIR}/include/amici/symbolic_functions.h
     ${CMAKE_SOURCE_DIR}/include/amici/vector.h)
-if(ENABLE_HDF5)
+if(HDF5_FOUND)
   list(APPEND AMICI_SRC_LIST ${CMAKE_SOURCE_DIR}/src/hdf5.cpp)
 endif()
 
@@ -216,9 +217,17 @@ target_link_libraries(
   PUBLIC SUNDIALS::cvodes_static
   PUBLIC SUNDIALS::idas_static
   PUBLIC ${SUITESPARSE_LIBRARIES}
-  PUBLIC ${HDF5_LIBRARIES}
   PUBLIC ${BLAS_LIBRARIES}
   PUBLIC ${CMAKE_DL_LIBS})
+
+if(HDF5_FOUND)
+  target_include_directories(${PROJECT_NAME} PUBLIC ${HDF5_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${HDF5_LIBRARIES})
+endif()
+
+if(OpenMP_FOUND)
+  target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 if(SUNDIALS_SUPERLUMT_ENABLE)
@@ -328,12 +337,12 @@ endif()
 
 option(BUILD_TESTS "Build integration tests?" ON)
 if(BUILD_TESTS)
-  if(ENABLE_HDF5)
+  if(HDF5_FOUND)
     enable_testing()
 
     add_subdirectory(tests/cpp)
   else()
-    message(WARNING "Cannot build tests with ENABLE_HDF5=OFF.")
+    message(WARNING "Cannot build tests without HDF5 support.")
   endif()
 
 endif()

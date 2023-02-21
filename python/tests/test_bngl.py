@@ -1,15 +1,16 @@
-import pytest
 import os
-import amici
-import shutil
+
 import numpy as np
+import pytest
+
+import amici
 
 pysb = pytest.importorskip("pysb")
 
 from amici.bngl_import import bngl2amici
 from pysb.simulator import ScipyOdeSimulator
 from pysb.importers.bngl import model_from_bngl
-from amici.testing import skip_on_valgrind
+from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
 
 
 tests = [
@@ -26,7 +27,6 @@ tests = [
 @skip_on_valgrind
 @pytest.mark.parametrize('example', tests)
 def test_compare_to_pysb_simulation(example):
-
     atol = 1e-8
     rtol = 1e-8
 
@@ -47,40 +47,37 @@ def test_compare_to_pysb_simulation(example):
     pysb_simres = sim.run()
 
     # amici part
-
-    outdir = pysb_model.name
-
     cl = example not in ['Motivating_example_cBNGL', 'univ_synth']
 
     kwargs = {
         'compute_conservation_laws': cl,
         'observables': list(pysb_model.observables.keys())
     }
-    if not cl:
-        with pytest.raises(ValueError, match="Conservation laws"):
-            bngl2amici(model_file, outdir, compute_conservation_laws=True)
 
-    if example in ['empty_compartments_block', 'motor']:
-        with pytest.raises(ValueError, match="Cannot add"):
+    with TemporaryDirectoryWinSafe(prefix=pysb_model.name) as outdir:
+        if not cl:
+            with pytest.raises(ValueError, match="Conservation laws"):
+                bngl2amici(model_file, outdir, compute_conservation_laws=True)
+
+        if example in ['empty_compartments_block', 'motor']:
+            with pytest.raises(ValueError, match="Cannot add"):
+                bngl2amici(model_file, outdir, **kwargs)
+            return
+        else:
             bngl2amici(model_file, outdir, **kwargs)
-        return
-    else:
-        bngl2amici(model_file, outdir, **kwargs)
 
-    amici_model_module = amici.import_model_module(pysb_model.name,
-                                                   outdir)
+        amici_model_module = amici.import_model_module(pysb_model.name,
+                                                       outdir)
 
-    model_amici = amici_model_module.getModel()
+        model_amici = amici_model_module.getModel()
 
-    model_amici.setTimepoints(tspan)
+        model_amici.setTimepoints(tspan)
 
-    solver = model_amici.getSolver()
-    solver.setMaxSteps(10**6)
-    solver.setAbsoluteTolerance(atol)
-    solver.setRelativeTolerance(rtol)
-    rdata = amici.runAmiciSimulation(model_amici, solver)
+        solver = model_amici.getSolver()
+        solver.setMaxSteps(10**6)
+        solver.setAbsoluteTolerance(atol)
+        solver.setRelativeTolerance(rtol)
+        rdata = amici.runAmiciSimulation(model_amici, solver)
 
-    # check agreement of species simulation
-    assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        # check agreement of species simulation
+        assert np.isclose(rdata.x, pysb_simres.species, 1e-4, 1e-4).all()

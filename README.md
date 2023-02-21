@@ -25,7 +25,7 @@ forward sensitivity analysis, steady state sensitivity analysis and
 adjoint sensitivity analysis for likelihood-based output functions.
 
 The interface was designed to provide routines for efficient gradient
-computation in parameter estimation of biochemical reaction models but
+computation in parameter estimation of biochemical reaction models, but
 it is also applicable to a wider range of differential equation
 constrained optimization problems.
 
@@ -62,7 +62,6 @@ constrained optimization problems.
 * Pre-equilibration and pre-simulation conditions
 * Support for
   [discrete events and logical operations](https://academic.oup.com/bioinformatics/article/33/7/1049/2769435)
-  (Matlab-only)
 
 ## Interfaces & workflow
 
@@ -125,7 +124,7 @@ with AMICI:
 
 There is a list of [publications using AMICI](https://amici.readthedocs.io/en/latest/references.html).
 If you used AMICI in your work, we are happy to include
-your project, please let us know via a Github issue.
+your project, please let us know via a GitHub issue.
 
 When using AMICI in your project, please cite
 * Fröhlich, F., Weindl, D., Schälte, Y., Pathirana, D., Paszkowski, Ł., Lines, G.T., Stapor, P. and Hasenauer, J., 2021.

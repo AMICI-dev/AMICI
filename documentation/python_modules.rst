@@ -25,3 +25,4 @@ AMICI Python API
    amici.parameter_mapping
    amici.conserved_quantities_demartino
    amici.conserved_quantities_rref
+   amici.numpy
