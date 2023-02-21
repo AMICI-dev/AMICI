@@ -1260,6 +1260,7 @@ void wrapErrHandlerFn(int error_code, const char *module,
             
     case AMICI_FIRST_RHSFUNC_ERR:
         snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
+        break;
 
     default:
         snprintf(buffid, BUF_SIZE, "%s:%s:OTHER", module, function);
