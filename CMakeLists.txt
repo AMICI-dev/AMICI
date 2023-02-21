@@ -325,8 +325,8 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
 
-install(DIRECTORY ThirdParty/gsl/ TYPE INCLUDE)
-install(DIRECTORY swig DESTINATION ${CMAKE_INSTALL_DATADIR}/amici/)
+install(DIRECTORY ThirdParty/gsl TYPE INCLUDE)
+install(DIRECTORY swig DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
 
 #Register package?
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
