@@ -136,7 +136,6 @@ def main():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/SuiteSparse_config',
         cmake_configure_options=[
-            "-DALLOW_64BIT_BLAS=ON",
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
