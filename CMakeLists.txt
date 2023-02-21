@@ -50,23 +50,11 @@ elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 
-if(HDF5_FOUND)
-  set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES}
-                     ${HDF5_CXX_LIBRARIES})
-endif()
-
-set(SUNDIALS_PRIVATE_INCLUDE_DIRS
-    "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
-
-
 
 option(AMICI_USE_VENDORED_SUNDIALS "Use the vendored SUNDIALS?" ON)
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
-set(VENDORED_SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse")
-set(VENDORED_SUITESPARSE_BUILD_DIR "${VENDORED_SUITESPARSE_DIR}/build")
-set(VENDORED_SUITESPARSE_INSTALL_DIR "${VENDORED_SUITESPARSE_BUILD_DIR}")
 
 if(AMICI_USE_VENDORED_SUNDIALS)
 else()
@@ -75,6 +63,9 @@ endif()
 
 find_package(SUNDIALS REQUIRED PATHS
              "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
+
+set(SUNDIALS_PRIVATE_INCLUDE_DIRS
+ "${VENDORED_SUNDIALS_DIR}/src")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
@@ -233,9 +224,13 @@ target_link_libraries(
   PUBLIC ${CMAKE_DL_LIBS})
 
 if(HDF5_FOUND)
-  target_include_directories(${PROJECT_NAME} PUBLIC ${HDF5_INCLUDE_DIRS})
-  target_link_libraries(${PROJECT_NAME} PUBLIC ${HDF5_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}
+      PUBLIC hdf5::hdf5_hl_cpp
+      PUBLIC hdf5::hdf5_hl
+      PUBLIC hdf5::hdf5_cpp
+      PUBLIC hdf5::hdf5)
 endif()
+
 
 if(OpenMP_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
