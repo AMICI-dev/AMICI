@@ -181,8 +181,9 @@ class SbmlImporter:
         """
         # Ensure we got a valid SBML model, otherwise further processing
         # might lead to undefined results
-        dec = log_execution_time(f'validating SBML', logger)
-        dec(self.sbml_doc.validateSBML())
+        log_execution_time(f'validating SBML', logger)(
+            self.sbml_doc.validateSBML
+        )()
         _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # apply several model simplifications that make our life substantially
@@ -190,13 +191,15 @@ class SbmlImporter:
         if self.sbml_doc.getModel().getNumFunctionDefinitions():
             convert_config = sbml.SBMLFunctionDefinitionConverter()\
                 .getDefaultProperties()
-            dec = log_execution_time(f'converting SBML functions', logger)
-            dec(self.sbml_doc.convert(convert_config))
+            log_execution_time(f'converting SBML functions', logger)(
+                self.sbml_doc.convert
+            )(convert_config)
 
         convert_config = sbml.SBMLLocalParameterConverter().\
             getDefaultProperties()
-        dec = log_execution_time(f'converting SBML local parameters', logger)
-        dec(self.sbml_doc.convert(convert_config))
+        dec_fun = log_execution_time(f'converting SBML local parameters', logger)(
+            self.sbml_doc.convert
+        )(convert_config)
 
         # If any of the above calls produces an error, this will be added to
         # the SBMLError log in the sbml document. Thus, it is sufficient to
