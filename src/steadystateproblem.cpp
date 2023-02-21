@@ -179,27 +179,39 @@ void SteadystateProblem::findSteadyStateBySimulation(
             runSteadystateSimulation(solver, model, false);
         }
         steady_state_status_[1] = SteadyStateStatus::success;
-    } catch (NewtonFailure const &ex) {
+    } catch (IntegrationFailure const &ex) {
         switch (ex.error_code) {
         case AMICI_TOO_MUCH_WORK:
             steady_state_status_[1] = SteadyStateStatus::failed_convergence;
+            if(model.logger)
+                model.logger->log(
+                    LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                    "AMICI equilibration exceeded maximum number of"
+                    " integration steps at t=%g.", ex.time
+                );
             break;
         case AMICI_NO_STEADY_STATE:
             steady_state_status_[1] =
                 SteadyStateStatus::failed_too_long_simulation;
-            break;
-        default:
             if(model.logger)
                 model.logger->log(
-                    LogSeverity::error, "NEWTON_FAILURE",
-                    "AMICI newton method failed: %s", ex.what()
+                    LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                    "AMICI equilibration exceeded maximum simulation time"
+                    " at t=%g.", ex.time
                 );
+            break;
+        default:
             steady_state_status_[1] = SteadyStateStatus::failed;
+            if(model.logger)
+                model.logger->log(
+                    LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                    "AMICI equilibration failed at t=%g.", ex.time
+                );
         }
     } catch (AmiException const &ex) {
         if(model.logger)
             model.logger->log(
-                LogSeverity::error, "EQUILIBRATION_FAILURE",
+                LogSeverity::debug, "EQUILIBRATION_FAILURE",
                 "AMICI equilibration failed: %s", ex.what()
             );
         steady_state_status_[1] = SteadyStateStatus::failed;
@@ -671,13 +683,10 @@ void SteadystateProblem::runSteadystateSimulation(
     while (true) {
         /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
-                                "exceeded maximum number of steps");
+            throw IntegrationFailure(AMICI_TOO_MUCH_WORK, state_.t);
         }
         if (state_.t >= 1e200) {
-            throw NewtonFailure(AMICI_NO_STEADY_STATE,
-                                "simulated to late time"
-                                " point without convergence of RHS");
+            throw IntegrationFailure(AMICI_NO_STEADY_STATE, state_.t);
         }
         /* increase counter */
         sim_steps++;
