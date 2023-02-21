@@ -196,7 +196,7 @@ void SteadystateProblem::findSteadyStateBySimulation(
             if(model.logger)
                 model.logger->log(
                     LogSeverity::debug, "EQUILIBRATION_FAILURE",
-                    "AMICI equilibration was stopped after to exceedingly"
+                    "AMICI equilibration was stopped after exceedingly"
                     " long simulation time at t=%g.", ex.time
                 );
             break;
@@ -382,9 +382,7 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
     /* write error message according to steady state status */
     switch (status) {
     case SteadyStateStatus::failed_too_long_simulation:
-        (*errorString)
-            .append(": System could not be equilibrated via"
-                    " simulating to a late time point.");
+        (*errorString).append(": System could not be equilibrated.");
         break;
     case SteadyStateStatus::failed_damping:
         (*errorString).append(": Damping factor reached lower bound.");
@@ -395,10 +393,8 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
     case SteadyStateStatus::failed_convergence:
         (*errorString).append(": No convergence was achieved.");
         break;
-    case SteadyStateStatus::failed:
-        (*errorString).append(".");
-        break;
     default:
+        (*errorString).append(".");
         break;
     }
 }
