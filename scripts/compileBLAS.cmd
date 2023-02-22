@@ -9,7 +9,6 @@ cmake -S . -B build ^
     -DCMAKE_C_COMPILER:FILEPATH=cl ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCMAKE_MAKE_PROGRAM=ninja
-
 cmake --build build --parallel 2
 cmake --install build
 echo compileBLAS.cmd completed

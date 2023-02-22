@@ -34,11 +34,11 @@ jobs:
     - shell: bash
       run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - shell: bash
-      run: echo "C:\\BLAS\\bin" >> $GITHUB_PATH
+      run: echo "C:\\BLAS\\OpenBLAS\\bin" >> $GITHUB_PATH
     - shell: bash
-      run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/lib openblas.lib" >> $GITHUB_ENV
+      run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib" >> $GITHUB_ENV
     - shell: bash
-      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS-${openBLAS_version}/OpenBLAS-${openBLAS_version}" >> $GITHUB_ENV
+      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS/include/openblas/" >> $GITHUB_ENV
 
     # Developer Command Prompt for Microsoft Visual C++
     - uses: ilammy/msvc-dev-cmd@v1
