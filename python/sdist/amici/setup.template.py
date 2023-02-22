@@ -1,6 +1,5 @@
 """AMICI model package setup"""
 import os
-from pathlib import Path
 
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
@@ -11,12 +10,6 @@ from amici.custom_commands import AmiciBuildCMakeExtension
 
 def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
-
-
-    # TODO add_coverage_flags_if_required(cxx_flags, linker_flags)
-    # TODO add_debug_flags_if_required(cxx_flags, linker_flags)
-    # TODO blaspkgcfg = get_blas_config()
-    # TODO linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
 
     # TODO
     # # compiler and linker flags for libamici

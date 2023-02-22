@@ -32,6 +32,28 @@ foreach(FLAG ${MY_CXX_FLAGS})
   endif()
 endforeach(FLAG)
 
+# Debug build?
+if($ENV{ENABLE_AMICI_DEBUGGING} OR $ENV{ENABLE_GCOV_COVERAGE})
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -UNDEBUG")
+    set(CMAKE_BUILD_TYPE "Debug")
+
+    set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
+    foreach(FLAG ${MY_CXX_FLAGS})
+      unset(CUR_FLAG_SUPPORTED CACHE)
+      check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+      if(${CUR_FLAG_SUPPORTED})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+      endif()
+    endforeach(FLAG)
+endif()
+
+# coverage options
+if($ENV{ENABLE_GCOV_COVERAGE})
+  string(APPEND CMAKE_CXX_FLAGS_DEBUG "--coverage")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
+endif()
+
+
 # misc options
 option(AMICI_PYTHON_EXT_ONLY "Build only the Python extension?" OFF)
 
@@ -284,10 +306,6 @@ add_custom_target(
 set_target_properties(
   fileTemplates PROPERTIES INCLUDE_DIRECTORIES
                            "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-
-if($ENV{ENABLE_GCOV_COVERAGE})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
-endif()
 
 if(NOT AMICI_PYTHON_EXT_ONLY)
   include(clang-tools)

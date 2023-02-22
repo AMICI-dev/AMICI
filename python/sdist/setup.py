@@ -24,10 +24,6 @@ from amici.custom_commands import (
     AmiciInstall, AmiciDevelop,
     AmiciInstallLib, AmiciSDist, AmiciBuildPy,
     AmiciBuildCMakeExtension)
-from amici.setuptools import (
-    add_coverage_flags_if_required,
-    add_debug_flags_if_required,
-)
 
 
 def get_extensions():
@@ -38,16 +34,6 @@ def get_extensions():
     # Extra compiler flags
     cxx_flags = []
     amici_module_linker_flags = []
-
-    add_coverage_flags_if_required(
-        cxx_flags,
-        amici_module_linker_flags,
-    )
-
-    add_debug_flags_if_required(
-        cxx_flags,
-        amici_module_linker_flags,
-    )
 
     # compiler and linker flags for libamici
     if 'AMICI_CXXFLAGS' in os.environ:
