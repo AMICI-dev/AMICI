@@ -189,11 +189,11 @@ set(AMICI_SRC_LIST
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
 # legacy python package environment variables:
-if(DEFINED ENV{BLAS_LIBS})
-    target_link_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_LIBS}")
-endif()
 if(DEFINED ENV{BLAS_CFLAGS})
-    target_compile_options(${PROJECT_NAME} PUBLIC "$ENV{BLAS_CFLAGS}")
+    target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
+endif()
+if(DEFINED ENV{BLAS_LIBS})
+    target_link_options(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
 endif()
 
 set(AMICI_CXX_OPTIONS
