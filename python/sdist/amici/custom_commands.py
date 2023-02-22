@@ -237,36 +237,24 @@ class AmiciBuildPy(build_py):
         self.run_command("build_ext")
         return super().run()
 
-
-
 class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
     def build_extension(self, ext: cmake_build_extension.CMakeExtension) -> None:
-        print("-" * 20, ext.name, "-" * 20, file=sys.stderr)
+        print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
 
         if self.inplace == 0:
             build_dir = self.build_lib
         else:
             build_dir = os.getcwd()
-        print("cwd", os.getcwd())
-        print("*" * 50)
-        print(sys.implementation)
-        print("*" * 50)
-        for x in dir(self):
-            print(x, getattr(self, x))
-        print("*" * 50)
 
-        import sysconfig
-        print(sysconfig.get_config_vars())
-        # if sys.platform == "win32":
-        #     # account for e.g. build/lib.win-amd64-cpython-38
-        #     build_dir = Path(build_dir, "build", f"lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}").absolute().as_posix()
-        # else:
+        import glob
+        for filename in glob.iglob(build_dir + '/**/*.txt', recursive=True):
+            print(filename)
+
         build_dir = Path(build_dir).absolute().as_posix()
 
-        #ext.cmake_configure_options = [x.replace("${suitesparse_root}", clib_dir) for x in ext.cmake_configure_options]
         ext.cmake_configure_options = [
             x.replace("${build_dir}", build_dir) for x in
             ext.cmake_configure_options]
         cmake_build_extension.BuildExtension.build_extension(self, ext)
 
-        print("-" * 40, file=sys.stderr)
+        print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
