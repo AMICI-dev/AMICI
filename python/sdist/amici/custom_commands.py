@@ -247,7 +247,7 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             build_dir = self.build_lib
         else:
             build_dir = os.getcwd()
-        build_dir = str(Path(build_dir).absolute())
+        build_dir = Path(build_dir).absolute().as_posix()
         #ext.cmake_configure_options = [x.replace("${suitesparse_root}", clib_dir) for x in ext.cmake_configure_options]
         ext.cmake_configure_options = [
             x.replace("${build_dir}", build_dir) for x in

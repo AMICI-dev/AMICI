@@ -61,6 +61,8 @@ def get_extensions():
     sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
 
     # C++ extensions
+    klu_inc_dir = Path(__file__).parent / 'amici' / 'ThirdParty' / 'SuiteSparse' / 'include'
+    klu_inc_dir = klu_inc_dir.as_posix()
     sundials = cmake_build_extension.CMakeExtension(
         name='sundials',
         install_prefix='amici',
@@ -78,7 +80,7 @@ def get_extensions():
             "-DEXAMPLES_INSTALL=OFF",
             "-DENABLE_KLU=ON",
             "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
-            f"-DKLU_INCLUDE_DIR='{Path(__file__).parent / 'amici' / 'ThirdParty' / 'SuiteSparse' }/include'",
+            f"-DKLU_INCLUDE_DIR='{klu_inc_dir}'",
         ]
     )
 
