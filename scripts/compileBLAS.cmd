@@ -3,6 +3,8 @@ cd /D "C:\BLAS\OpenBLAS-%1\OpenBLAS-%1"
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 cmake -G "Ninja" ^
     -DBUILD_DOUBLE=1 ^
+    -DBUILD_WITHOUT_LAPACK=ON ^
+    -DBUILD_TESTING=OFF ^
     -DBUILD_SHARED_LIBS=ON ^
     -DCMAKE_INSTALL_PREFIX:PATH="C:\BLAS\OpenBLAS-%1\OpenBLAS-%1\out\install\x64-Release" ^
     -DCMAKE_C_COMPILER:FILEPATH=cl ^
