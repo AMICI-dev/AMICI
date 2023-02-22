@@ -61,15 +61,6 @@ target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
   add_compile_options(-UNDEBUG -O0 -g)
   set(CMAKE_BUILD_TYPE "Debug")
-
-  set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
-  foreach(FLAG ${MY_CXX_FLAGS})
-    unset(CUR_FLAG_SUPPORTED CACHE)
-    check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
-    if(${CUR_FLAG_SUPPORTED})
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
-    endif()
-  endforeach(FLAG)
 endif()
 
 # coverage options
