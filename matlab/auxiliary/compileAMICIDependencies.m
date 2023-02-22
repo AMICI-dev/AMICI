@@ -48,9 +48,15 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
 
     % compile
     if(~strcmp(sourcesToCompile, ''))
-        eval(['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
+        cmd = ['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
             objectFolder '" ' ...
-            includesstr ' ' sourcesToCompile ]);
+            includesstr ' ' sourcesToCompile];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
     end
 
     % only write versions.txt if we are done compiling
