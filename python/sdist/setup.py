@@ -113,6 +113,7 @@ def get_extensions():
             "-DENABLE_KLU=ON",
             "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
             "-DKLU_INCLUDE_DIR='${build_dir}/amici/include'",
+            "--debug-find-pkg=KLU",
         ]
     )
 
