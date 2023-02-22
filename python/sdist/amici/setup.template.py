@@ -12,9 +12,9 @@ def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
 
     # Build shared object
-    #prefix_path = Path(_get_amici_path(), "share", "Amici", "cmake")
     prefix_path = _get_amici_path()
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
+
     return CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
         source_dir='.',
@@ -22,14 +22,6 @@ def get_extension() -> CMakeExtension:
             f"-DCMAKE_MODULE_PATH={prefix_path}/lib/cmake/SuiteSparse",
             f"-DKLU_ROOT={prefix_path}",
         ],
-        # TODO
-        # swig_opts=[
-        #     '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
-        #     '-I%s' % os.path.join(amici_path, 'swig'),
-        #     '-I%s' % os.path.join(amici_path, 'include'),
-        # ],
-        # extra_compile_args=cxx_flags,
-        # extra_link_args=linker_flags
     )
 
 

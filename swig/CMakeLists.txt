@@ -87,7 +87,19 @@ if(AMICI_PYTHON_EXT_ONLY)
       TARGET _amici
       APPEND
       PROPERTY SWIG_COMPILE_OPTIONS -doxygen)
+  else()
+    set_property(
+      TARGET _amici
+      APPEND
+      PROPERTY SWIG_COMPILE_OPTIONS -modern)
   endif()
+  if($SWIG_VERSION VERSION_LESS 4.1.0)
+    set_property(
+      TARGET _amici
+      APPEND
+      PROPERTY SWIG_COMPILE_OPTIONS -py3)
+  endif()
+
   target_link_libraries(_amici amici Python3::Python)
 
   # TODO generic extension; follow python naming -
