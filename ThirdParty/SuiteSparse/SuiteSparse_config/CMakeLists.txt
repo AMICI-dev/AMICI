@@ -14,6 +14,8 @@
 cmake_minimum_required ( VERSION 3.22 )
 # AMICI
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# AMICI TODO REMOVE ME
+link_directories("C:/BLAS/lib")
 
 # version of both SuiteSparse and SuiteSparse_config
 set ( SUITESPARSE_DATE "Jan 20, 2023" )
