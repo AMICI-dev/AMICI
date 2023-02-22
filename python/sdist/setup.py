@@ -13,7 +13,7 @@ import os
 import sys
 from pathlib import Path
 
-import cmake_build_extension
+from cmake_build_extension import CMakeExtension
 from setuptools import setup
 
 # Add containing directory to path, as we need some modules from the AMICI
@@ -27,17 +27,70 @@ from amici.custom_commands import (
 
 
 def get_extensions():
-    """Get required extensions for build_ext"""
-    # TODO no_clibs option
+    """Get required C(++) extensions for build_ext"""
+    # TODO --no_clibs option? already available via cmake_build_extension?
 
-    amici_base_dir = Path('amici')
-    suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
-    sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
+    suitesparse_config = CMakeExtension(
+        name='SuiteSparse_config',
+        install_prefix='amici',
+        source_dir='amici/ThirdParty/SuiteSparse/SuiteSparse_config',
+        cmake_configure_options=[
+            "-DBLA_VENDOR=All",
+            "-DENABLE_CUDA=FALSE",
+            "-DNFORTRAN=TRUE",
+            # "--trace-expand",
+            # "--debug-output",
+            # "--debug-find",
+        ]
+    )
 
-    # C++ extensions
-    klu_inc_dir = Path(__file__).parent / 'amici' / 'ThirdParty' / 'SuiteSparse' / 'include'
+    # CMake prefix path for finding FindXXX.cmake
+    install_dir = (Path(__file__).parent / "amici").absolute()
+    prefix_path = install_dir
+    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
+
+    amd = CMakeExtension(
+        name='amd',
+        install_prefix='amici',
+        source_dir='amici/ThirdParty/SuiteSparse/AMD',
+        cmake_configure_options=[
+            "-DNFORTRAN=TRUE",
+        ]
+    )
+
+    btf = CMakeExtension(
+        name='btf',
+        install_prefix='amici',
+        source_dir='amici/ThirdParty/SuiteSparse/BTF',
+        cmake_configure_options=[
+            "-DNFORTRAN=TRUE",
+        ]
+    )
+
+    colamd = CMakeExtension(
+        name='colamd',
+        install_prefix='amici',
+        source_dir='amici/ThirdParty/SuiteSparse/COLAMD',
+        cmake_configure_options=[
+            "-DNFORTRAN=TRUE",
+        ]
+    )
+
+    klu = CMakeExtension(
+        name='klu',
+        install_prefix='amici',
+        source_dir='amici/ThirdParty/SuiteSparse/KLU',
+        cmake_configure_options=[
+            "-DNCHOLMOD=ON",
+            "-DENABLE_CUDA=FALSE",
+            "-DNFORTRAN=TRUE",
+        ]
+    )
+
+    klu_inc_dir = (Path(__file__).parent / 'amici' / 'ThirdParty'
+                   / 'SuiteSparse' / 'include')
     klu_inc_dir = klu_inc_dir.as_posix()
-    sundials = cmake_build_extension.CMakeExtension(
+    sundials = CMakeExtension(
         name='sundials',
         install_prefix='amici',
         source_dir='amici/ThirdParty/sundials',
@@ -63,7 +116,7 @@ def get_extensions():
     #     ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
     #     ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),
     # ],
-    amici_module = cmake_build_extension.CMakeExtension(
+    amici_module = CMakeExtension(
         name='_amici',
         install_prefix='amici',
         source_dir='amici',
@@ -72,59 +125,8 @@ def get_extensions():
             f'-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}',
         ]
     )
-
-    ss_config = cmake_build_extension.CMakeExtension(
-        name='SuiteSparse_config',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/SuiteSparse_config',
-        cmake_configure_options=[
-            "-DBLA_VENDOR=All",
-            "-DENABLE_CUDA=FALSE",
-            "-DNFORTRAN=TRUE",
-            # "--trace-expand",
-            # "--debug-output",
-            # "--debug-find",
-        ]
-    )
-    install_dir = (Path(__file__).parent / "amici").absolute()
-    prefix_path = install_dir #/ "lib" / "cmake" / "SuiteSparse"
-    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
-    amd = cmake_build_extension.CMakeExtension(
-        name='amd',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/AMD',
-        cmake_configure_options=[
-            "-DNFORTRAN=TRUE",
-        ]
-    )
-    btf = cmake_build_extension.CMakeExtension(
-        name='btf',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/BTF',
-        cmake_configure_options=[
-            "-DNFORTRAN=TRUE",
-        ]
-    )
-    colamd = cmake_build_extension.CMakeExtension(
-        name='colamd',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/COLAMD',
-        cmake_configure_options=[
-            "-DNFORTRAN=TRUE",
-        ]
-    )
-
-    klu = cmake_build_extension.CMakeExtension(
-        name='klu',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/KLU',
-        cmake_configure_options=[
-            "-DNCHOLMOD=ON",
-            "-DENABLE_CUDA=FALSE",
-            "-DNFORTRAN=TRUE",
-        ]
-    )
-    return [ss_config, amd, btf, colamd, klu, sundials, amici_module]
+    # Order matters!
+    return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_module]
 
 
 def main():
