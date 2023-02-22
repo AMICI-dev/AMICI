@@ -111,12 +111,7 @@ def get_extensions():
         ]
     )
 
-    # TODO
-    # 'macros': [
-    #     ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
-    #     ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),
-    # ],
-    amici_module = CMakeExtension(
+    amici_ext = CMakeExtension(
         name='_amici',
         install_prefix='amici',
         source_dir='amici',
@@ -126,7 +121,7 @@ def get_extensions():
         ]
     )
     # Order matters!
-    return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_module]
+    return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_ext]
 
 
 def main():

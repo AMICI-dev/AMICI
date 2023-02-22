@@ -124,7 +124,7 @@ else()
       -lcblas
       CACHE STRING "")
 endif()
-add_definitions(-DAMICI_BLAS_${BLAS})
+add_compile_definitions(AMICI_BLAS_${BLAS})
 
 # Add target to create version file
 add_custom_target(
@@ -256,7 +256,6 @@ if(HDF5_FOUND)
     PUBLIC hdf5::hdf5)
 else()
   message(STATUS "HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
-
 endif()
 
 if(OpenMP_FOUND)
@@ -267,6 +266,11 @@ option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 if(SUNDIALS_SUPERLUMT_ENABLE)
   target_link_libraries(${PROJECT_NAME}
                         PRIVATE SUNDIALS::sundials_sunlinsolsuperlumt)
+endif()
+
+if(AMICI_PYTHON_EXT_ONLY)
+    add_compile_definitions("gsl_CONFIG_CONTRACT_VIOLATION_THROWS"
+        "gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1")
 endif()
 
 # Create targets to make the sources show up in IDEs for convenience
