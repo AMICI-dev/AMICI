@@ -139,6 +139,7 @@ def main():
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
+            "--trace-expand"
         ]
     )
     install_dir = (Path(__file__).parent / "amici").absolute()
