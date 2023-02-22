@@ -198,7 +198,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             "AMICI simulation failed: %s", ex.what()
         );
         logger.log(
-            LogSeverity::debug, "OTHER",
+            LogSeverity::debug, "BACKTRACE",
             "The previous error occurred at:\n%s", ex.getBacktrace()
             );
 
