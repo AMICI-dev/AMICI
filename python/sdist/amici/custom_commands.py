@@ -21,8 +21,7 @@ Library = Tuple[str, Dict[str, List[str]]]
 
 
 class AmiciInstall(install):
-    """Custom install to handle extra arguments"""
-
+    """Custom `install` command to handle extra arguments"""
     print("running AmiciInstall")
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
@@ -247,7 +246,8 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             build_dir = os.getcwd()
 
         import glob
-        for filename in glob.iglob(build_dir + '/**/*.txt', recursive=True):
+        print("cwd", os.getcwd())
+        for filename in glob.iglob(build_dir + '/**/*', recursive=True):
             print(filename)
 
         build_dir = Path(build_dir).absolute().as_posix()

@@ -88,7 +88,8 @@ def get_extensions():
     )
 
     import glob
-    for filename in glob.iglob('./**/*.txt', recursive=True):
+    print("cwd", os.getcwd())
+    for filename in glob.iglob('./**/*', recursive=True):
         print(filename)
 
     klu_inc_dir = (Path(__file__).parent / 'amici' / 'ThirdParty'
