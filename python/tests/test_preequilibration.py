@@ -405,4 +405,47 @@ def test_newton_steadystate_check(preeq_fixture):
         ).all(), variable
 
 
+def test_simulation_errors(preeq_fixture):
+    model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, \
+        plists = preeq_fixture
+
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.setSensitivityMethodPreequilibration(amici.SensitivityMethod.forward)
+    model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrationOnly)
+    solver.setMaxSteps(1)
+
+    # exceeded maxsteps
+    # preeq & posteq
+    for e in [edata, edata_preeq]:
+        rdata = amici.runAmiciSimulation(model, solver, e)
+        assert rdata['status'] != amici.AMICI_SUCCESS
+        assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[0].identifier == 'EQUILIBRATION_FAILURE'
+        assert 'exceeded maximum number of integration steps' in rdata._swigptr.messages[0].message
+        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_error
+        assert rdata._swigptr.messages[1].identifier == 'OTHER'
+        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[2].identifier == 'BACKTRACE'
+
+    # too long simulations
+    solver.setMaxSteps(int(1e4))
+    solver.setRelativeToleranceSteadyState(0.0)
+    solver.setAbsoluteToleranceSteadyState(0.0)
+    # preeq & posteq
+    for e in [edata_preeq, edata]:
+        rdata = amici.runAmiciSimulation(model, solver, e)
+        assert rdata['status'] != amici.AMICI_SUCCESS
+        assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[0].identifier == 'CVODES:CVode:RHSFUNC_FAIL'
+        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[1].identifier == 'EQUILIBRATION_FAILURE'
+        assert 'exceedingly long simulation time' in rdata._swigptr.messages[1].message
+        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_error
+        assert rdata._swigptr.messages[2].identifier == 'OTHER'
+        assert rdata._swigptr.messages[3].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[3].identifier == 'BACKTRACE'
+
+
+
+
 

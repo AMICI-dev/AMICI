@@ -237,12 +237,13 @@ def generate_swig_interface_files(swig_outdir: str = None,
     swig_args = [
         '-c++',
         '-python',
-        '-py3',
         '-threads',
         '-Wall',
         f'-Iamici{os.sep}swig',
         f'-Iamici{os.sep}include',
     ]
+    if swig_version < (4, 1, 0):
+        swig_args.insert(2, '-py3')
 
     print(f"Found SWIG version {swig_version}")
 
