@@ -27,8 +27,9 @@ else
     source ${AMICI_PATH}/build/venv/bin/activate
 fi
 
-pip install --upgrade pip pkgconfig scipy matplotlib coverage pytest \
-  pytest-cov cmake_build_extension oldest-supported-numpy wheel
+pip install --upgrade pip wheel
+pip install --upgrade pip scipy matplotlib coverage pytest \
+  pytest-cov cmake_build_extension oldest-supported-numpy
 pip install git+https://github.com/pysb/pysb # pin to develop to fix sympy compatibility
 pip install -U "setuptools<64"
 pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test] --no-build-isolation
