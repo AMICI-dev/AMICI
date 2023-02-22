@@ -260,7 +260,7 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             # account for e.g. build/lib.win-amd64-cpython-38
             build_dir = Path(build_dir, "build", f"lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}").absolute().as_posix()
         else:
-            build_dir = Path(build_dir).absolute()
+            build_dir = str(Path(build_dir).absolute())
 
         #ext.cmake_configure_options = [x.replace("${suitesparse_root}", clib_dir) for x in ext.cmake_configure_options]
         ext.cmake_configure_options = [
