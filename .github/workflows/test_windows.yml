@@ -15,8 +15,8 @@ jobs:
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       openBLAS_version: "0.3.19"
-      AMICI_DLL_DIRS: "C:\\BLAS\\bin"
-      LIB: "C:/BLAS/lib"
+      AMICI_DLL_DIRS: "C:\\BLAS\\OpenBLAS\\bin"
+      LIB: "C:/BLAS/OpenBLAS/lib"
 
     strategy:
       matrix:
@@ -53,6 +53,11 @@ jobs:
     - name: Install OpenBLAS
       shell: powershell
       run: scripts/installOpenBLAS
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: OpenBLAS
+        path: C:\BLAS\OpenBLAS
 
     - name: Create sdist
       working-directory: python/sdist
