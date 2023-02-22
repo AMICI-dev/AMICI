@@ -81,9 +81,9 @@ def get_extensions():
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
-            "--trace-expand",
-            "--debug-output",
-            "--debug-find",
+            # "--trace-expand",
+            # "--debug-output",
+            # "--debug-find",
         ]
     )
     install_dir = (Path(__file__).parent / "amici").absolute()
