@@ -188,6 +188,14 @@ set(AMICI_SRC_LIST
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
+# legacy python package environment variables:
+if(DEFINED ENV{BLAS_LIBS})
+    set(BLAS_LIBRARIES "$ENV{BLAS_LIBS}")
+endif()
+if(DEFINED ENV{BLAS_CFLAGS})
+    target_compile_options(${PROJECT_NAME} "$ENV{BLAS_CFLAGS}")
+endif()
+
 set(AMICI_CXX_OPTIONS
     ""
     CACHE STRING "C++ options for libamici (semicolon-separated)")
