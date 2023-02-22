@@ -1238,20 +1238,28 @@ void wrapErrHandlerFn(int error_code, const char *module,
         snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
         break;
 
-    case -1:
+    case AMICI_TOO_MUCH_WORK:
         snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
-    case -2:
+    case AMICI_TOO_MUCH_ACC:
         snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
-    case -3:
+    case AMICI_ERR_FAILURE:
         snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
         break;
 
-    case -4:
+    case AMICI_CONV_FAILURE:
         snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
+        break;
+            
+    case AMICI_RHSFUNC_FAIL:
+        snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
+        break;
+            
+    case AMICI_FIRST_RHSFUNC_ERR:
+        snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
         break;
 
     default:
