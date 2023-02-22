@@ -130,7 +130,6 @@ def main():
         ]
     )
 
-    # TODO _DNSTATIC
     ss_config = cmake_build_extension.CMakeExtension(
         name='SuiteSparse_config',
         install_prefix='amici',
@@ -139,7 +138,9 @@ def main():
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
-            "--trace-expand"
+            "--trace-expand",
+            "--debug-output",
+            "--debug-find",
         ]
     )
     install_dir = (Path(__file__).parent / "amici").absolute()
