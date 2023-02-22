@@ -15,11 +15,9 @@ endif()
 if(DEFINED ENV{PYTHON_EXECUTABLE})
   set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
 endif()
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  find_package(PythonInterp 3.8 REQUIRED)
-else()
-  find_package(Python3 COMPONENTS Interpreter Development)
-endif()
+message("${Python3_EXECUTABLE}")
+find_package(Python3 COMPONENTS Interpreter Development)
+message("${Python3_EXECUTABLE}")
 
 set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/amici.i
