@@ -36,15 +36,6 @@ endforeach(FLAG)
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -UNDEBUG")
     set(CMAKE_BUILD_TYPE "Debug")
-
-    set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
-    foreach(FLAG ${MY_CXX_FLAGS})
-      unset(CUR_FLAG_SUPPORTED CACHE)
-      check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
-      if(${CUR_FLAG_SUPPORTED})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
-      endif()
-    endforeach(FLAG)
 endif()
 
 # coverage options
@@ -223,6 +214,18 @@ target_include_directories(
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
   target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
 endif()
+
+if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
+    set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
+    foreach(FLAG ${MY_CXX_FLAGS})
+      unset(CUR_FLAG_SUPPORTED CACHE)
+      check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+      if(${CUR_FLAG_SUPPORTED})
+          target_compile_options(${PROJECT_NAME} PRIVATE ${FLAG})
+      endif()
+    endforeach(FLAG)
+endif()
+
 
 target_link_libraries(
   ${PROJECT_NAME}
