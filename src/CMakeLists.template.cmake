@@ -42,11 +42,11 @@ endif()
 # TODO: set some flag during code generation whether the given model requires
 # boost. for now, try to find it, add include directories and link against it.
 # let the compiler/linker error if it is required but not found
-find_package(Boost COMPONENTS math)
+find_package(Boost)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
-    PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::math>
+    PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::boost>
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Upstream::amici)
