@@ -193,7 +193,7 @@ if(DEFINED ENV{BLAS_CFLAGS})
     target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
 endif()
 if(DEFINED ENV{BLAS_LIBS})
-    target_link_options(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
+    target_link_libraries(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
 endif()
 
 set(AMICI_CXX_OPTIONS
