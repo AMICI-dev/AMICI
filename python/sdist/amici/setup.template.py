@@ -11,13 +11,6 @@ from amici.custom_commands import AmiciBuildCMakeExtension
 def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
 
-    # TODO
-    # # compiler and linker flags for libamici
-    # if 'AMICI_CXXFLAGS' in os.environ:
-    #     cxx_flags.extend(os.environ['AMICI_CXXFLAGS'].split(' '))
-    # if 'AMICI_LDFLAGS' in os.environ:
-    #     linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
-
     # Build shared object
     #prefix_path = Path(_get_amici_path(), "share", "Amici", "cmake")
     prefix_path = _get_amici_path()

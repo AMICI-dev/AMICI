@@ -79,6 +79,12 @@ if($ENV{ENABLE_GCOV_COVERAGE})
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
 endif()
 
+if($ENV{AMICI_CXXFLAGS})
+  string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
+endif()
+if($ENV{AMICI_LDFLAGS})
+  string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
+endif()
 
 # SWIG
 option(ENABLE_SWIG "Build swig/python library?" ON)

@@ -53,6 +53,12 @@ if($ENV{ENABLE_GCOV_COVERAGE})
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
 endif()
 
+if($ENV{AMICI_CXXFLAGS})
+  string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
+endif()
+if($ENV{AMICI_LDFLAGS})
+  string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
+endif()
 
 # misc options
 option(AMICI_PYTHON_EXT_ONLY "Build only the Python extension?" OFF)

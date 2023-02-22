@@ -30,18 +30,6 @@ def get_extensions():
     """Get required extensions for build_ext"""
     # TODO no_clibs option
 
-    # TODO to CMake
-    # Extra compiler flags
-    cxx_flags = []
-    amici_module_linker_flags = []
-
-    # compiler and linker flags for libamici
-    if 'AMICI_CXXFLAGS' in os.environ:
-        cxx_flags.extend(os.environ['AMICI_CXXFLAGS'].split(' '))
-    if 'AMICI_LDFLAGS' in os.environ:
-        amici_module_linker_flags.extend(
-            os.environ['AMICI_LDFLAGS'].split(' '))
-
     amici_base_dir = Path('amici')
     suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
     sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
