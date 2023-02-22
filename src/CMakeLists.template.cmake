@@ -38,7 +38,16 @@ if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
   set_source_files_properties(wrapfunctions.cpp PROPERTIES COMPILE_FLAGS -O0)
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+# Some special functions require boost
+# TODO: set some flag during code generation whether the given model requires
+# boost. for now, try to find it, add include directories and link against it.
+# let the compiler/linker error if it is required but not found
+find_package(Boost COMPONENTS math)
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
+    PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::math>
+)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC Upstream::amici)
 
