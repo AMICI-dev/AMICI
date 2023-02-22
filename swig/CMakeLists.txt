@@ -80,7 +80,7 @@ if(AMICI_PYTHON_EXT_ONLY)
                                             AMICI_SWIG_WITHOUT_HDF5)
   endif()
 
-  if($SWIG_VERSION VERSION_GREATER_EQUAL 4.0.0)
+  if(${SWIG_VERSION} VERSION_GREATER_EQUAL 4.0.0)
     set_property(
       TARGET _amici
       APPEND
@@ -91,7 +91,7 @@ if(AMICI_PYTHON_EXT_ONLY)
       APPEND
       PROPERTY SWIG_COMPILE_OPTIONS -modern)
   endif()
-  if($SWIG_VERSION VERSION_LESS 4.1.0)
+  if(${SWIG_VERSION} VERSION_LESS 4.1.0)
     set_property(
       TARGET _amici
       APPEND
