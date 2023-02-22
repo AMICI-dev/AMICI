@@ -24,6 +24,9 @@ else
   extra_cxx_flags=""
 fi
 
+# required for build swig interface
+python3 -m pip install numpy
+
 ${cmake} \
   -DAMICI_CXX_OPTIONS="-Wall;-Wextra;-Werror${extra_cxx_flags}" \
   -DCMAKE_BUILD_TYPE=$build_type \
