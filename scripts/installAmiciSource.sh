@@ -28,6 +28,7 @@ else
 fi
 
 pip install -U "setuptools<64"
+pip install --upgrade pip wheel
 pip install --upgrade pip scipy matplotlib coverage pytest \
   pytest-cov cmake_build_extension numpy
 pip install git+https://github.com/pysb/pysb # pin to develop to fix sympy compatibility
