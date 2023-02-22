@@ -248,10 +248,13 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
         else:
             build_dir = os.getcwd()
 
+        for x in dir(self):
+            print(x, getattr(self, x))
+        print("*" * 50)
+
         import sysconfig
         print(sysconfig.get_config_vars())
-        # build_dir = Path(build_dir).absolute().as_posix()
-        build_dir = Path(build_dir, "build", sysconfig.get_config_var("SOABI")).absolute().as_posix()
+        build_dir = Path(build_dir).absolute().as_posix()
 
         #ext.cmake_configure_options = [x.replace("${suitesparse_root}", clib_dir) for x in ext.cmake_configure_options]
         ext.cmake_configure_options = [
