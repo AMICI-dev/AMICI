@@ -60,7 +60,7 @@ target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -UNDEBUG")
+    add_compile_options(-UNDEBUG -O0 -g)
     set(CMAKE_BUILD_TYPE "Debug")
 
     set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)

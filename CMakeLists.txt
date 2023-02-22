@@ -34,7 +34,7 @@ endforeach(FLAG)
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -UNDEBUG")
+    add_compile_options(-UNDEBUG -O0 -g)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
