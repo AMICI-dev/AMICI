@@ -87,14 +87,6 @@ def get_extensions():
         ]
     )
 
-    import glob
-    print("cwd", os.getcwd())
-    for filename in glob.iglob('./**/*', recursive=True):
-        print(filename)
-
-    klu_inc_dir = (Path(__file__).parent / 'amici' / 'ThirdParty'
-                   / 'SuiteSparse' / 'include')
-    klu_inc_dir = klu_inc_dir.as_posix()
     sundials = CMakeExtension(
         name='sundials',
         install_prefix='amici',
@@ -113,7 +105,6 @@ def get_extensions():
             "-DENABLE_KLU=ON",
             "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
             "-DKLU_INCLUDE_DIR='${build_dir}/amici/include'",
-            "--debug-find-pkg=KLU",
         ]
     )
 

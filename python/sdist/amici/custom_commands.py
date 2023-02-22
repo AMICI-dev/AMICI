@@ -245,11 +245,6 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
         else:
             build_dir = os.getcwd()
 
-        import glob
-        print("cwd", os.getcwd())
-        for filename in glob.iglob(build_dir + '/**/*', recursive=True):
-            print(filename)
-
         build_dir = Path(build_dir).absolute().as_posix()
 
         ext.cmake_configure_options = [
