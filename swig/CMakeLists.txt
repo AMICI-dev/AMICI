@@ -15,10 +15,8 @@ endif()
 if(DEFINED ENV{PYTHON_EXECUTABLE})
   set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
 endif()
-message("${Python3_EXECUTABLE}")
-find_package(Python3 COMPONENTS Interpreter Development)
-message("${Python3_EXECUTABLE}")
 
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/amici.i
     ${CMAKE_CURRENT_SOURCE_DIR}/edata.i
@@ -39,15 +37,6 @@ set(AMICI_INTERFACE_LIST
 add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
 
 if(AMICI_PYTHON_EXT_ONLY)
-  # Get numpy include directory cmake3.19+: COMMAND_ERROR_IS_FATAL
-  execute_process(
-    COMMAND ${Python3_EXECUTABLE} -c
-            "from numpy import get_include; print(get_include())"
-    OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
-    RESULT_VARIABLE RETURN_CODE
-    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
-  message("NumPy include directory: ${NUMPY_INCLUDE_DIR}")
-
   # https://cmake.org/cmake/help/latest/module/UseSWIG.html
   include(${SWIG_USE_FILE})
 
@@ -64,12 +53,16 @@ if(AMICI_PYTHON_EXT_ONLY)
     _amici
     PROPERTIES
       SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
-      INCLUDE_DIRECTORIES
-      "${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_SOURCE_DIR}/../include;${NUMPY_INCLUDE_DIR}"
       PREFIX ""
       BUILD_RPATH_USE_ORIGIN TRUE
       INSTALL_RPATH ThirdParty/SuiteSparse/lib
       BUILD_RPATH ThirdParty/SuiteSparse/lib)
+  target_include_directories(
+      _amici
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+      PRIVATE ${Python3_NumPy_INCLUDE_DIRS}
+  )
   set_property(
     TARGET _amici
     APPEND
