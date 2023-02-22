@@ -75,7 +75,7 @@ endif()
 
 # coverage options
 if($ENV{ENABLE_GCOV_COVERAGE})
-  string(APPEND CMAKE_CXX_FLAGS_DEBUG "--coverage")
+  string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
 endif()
 
