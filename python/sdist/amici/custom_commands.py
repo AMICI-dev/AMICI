@@ -247,6 +247,7 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             build_dir = self.build_lib
         else:
             build_dir = os.getcwd()
+        print("cwd", os.getcwd())
         print("*" * 50)
         print(sys.implementation)
         print("*" * 50)
@@ -256,11 +257,11 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
 
         import sysconfig
         print(sysconfig.get_config_vars())
-        if sys.platform == "win32":
-            # account for e.g. build/lib.win-amd64-cpython-38
-            build_dir = Path(build_dir, "build", f"lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}").absolute().as_posix()
-        else:
-            build_dir = str(Path(build_dir).absolute())
+        # if sys.platform == "win32":
+        #     # account for e.g. build/lib.win-amd64-cpython-38
+        #     build_dir = Path(build_dir, "build", f"lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}").absolute().as_posix()
+        # else:
+        build_dir = Path(build_dir).absolute().as_posix()
 
         #ext.cmake_configure_options = [x.replace("${suitesparse_root}", clib_dir) for x in ext.cmake_configure_options]
         ext.cmake_configure_options = [
