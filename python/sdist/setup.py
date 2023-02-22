@@ -6,65 +6,38 @@ All sources are compiled anew.
 This file expects to be run from within its directory.
 
 Non-python-package requirements:
-- swig3.0
+- swig>=3.0
 - Optional: hdf5 libraries and headers
 """
-
 import os
 import sys
 from pathlib import Path
 
 import cmake_build_extension
+from setuptools import setup
 
 # Add containing directory to path, as we need some modules from the AMICI
 # package already for installation
 sys.path.insert(0, os.path.dirname(__file__))
-
-from setuptools import setup
 
 from amici.custom_commands import (
     AmiciInstall, AmiciDevelop,
     AmiciInstallLib, AmiciSDist, AmiciBuildPy,
     AmiciBuildCMakeExtension)
 from amici.setuptools import (
-    get_blas_config,
-    get_hdf5_config,
     add_coverage_flags_if_required,
     add_debug_flags_if_required,
-    add_openmp_flags,
 )
 
 
-def main():
+def get_extensions():
+    """Get required extensions for build_ext"""
     # TODO no_clibs option
+
     # TODO to CMake
     # Extra compiler flags
     cxx_flags = []
     amici_module_linker_flags = []
-    define_macros = []
-
-    add_openmp_flags(cxx_flags=cxx_flags, ldflags=amici_module_linker_flags)
-
-    blaspkgcfg = get_blas_config()
-    amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
-    amici_module_linker_flags.extend(
-        f'-l{lib}' for lib in blaspkgcfg['libraries'])
-    define_macros.extend(blaspkgcfg['define_macros'])
-
-    h5pkgcfg = get_hdf5_config()
-
-    if h5pkgcfg['found']:
-        # Manually add linker flags. The libraries passed to Extension will
-        # end up in front of the clibs in the linker line and not after, where
-        # they are required.
-        print("HDF5 library found. Building AMICI with HDF5 support.")
-        amici_module_linker_flags.extend(
-            [f'-l{lib}' for lib in
-             ['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']])
-        define_macros.extend(h5pkgcfg['define_macros'])
-    else:
-        print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
-        define_macros.append(('AMICI_SWIG_WITHOUT_HDF5', None))
 
     add_coverage_flags_if_required(
         cxx_flags,
@@ -86,12 +59,6 @@ def main():
     amici_base_dir = Path('amici')
     suitesparse_base_dir = amici_base_dir / 'ThirdParty' / 'SuiteSparse'
     sundials_base_dir = amici_base_dir / 'ThirdParty' / 'sundials'
-
-    # Readme as long package description to go on PyPi
-    # (https://pypi.org/project/amici/)
-    with open(os.path.join(os.path.dirname(__file__), "README.md"),
-              "r", encoding="utf-8") as fh:
-        long_description = fh.read()
 
     # C++ extensions
     sundials = cmake_build_extension.CMakeExtension(
@@ -152,7 +119,6 @@ def main():
         source_dir='amici/ThirdParty/SuiteSparse/AMD',
         cmake_configure_options=[
             "-DNFORTRAN=TRUE",
-
         ]
     )
     btf = cmake_build_extension.CMakeExtension(
@@ -182,12 +148,17 @@ def main():
             "-DNFORTRAN=TRUE",
         ]
     )
+    return [ss_config, amd, btf, colamd, klu, sundials, amici_module]
 
-    # Monkey-patch extension (see
-    # `custom_commands.set_compiler_specific_extension_options`)
-    amici_module.extra_compile_args_mingw32 = ['-std=c++14']
-    amici_module.extra_compile_args_unix = ['-std=c++14']
-    amici_module.extra_compile_args_msvc = ['/std:c++14']
+
+def main():
+    # Readme as long package description to go on PyPi
+    # (https://pypi.org/project/amici/)
+    with open(os.path.join(os.path.dirname(__file__), "README.md"),
+              "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+
+    ext_modules = get_extensions()
 
     # Install
     setup(
@@ -201,7 +172,7 @@ def main():
         },
         long_description=long_description,
         long_description_content_type="text/markdown",
-        ext_modules=[ss_config, amd, btf, colamd, klu, sundials, amici_module],
+        ext_modules=ext_modules,
     )
 
 

@@ -25,22 +25,6 @@ def get_extension() -> CMakeExtension:
     # if 'AMICI_LDFLAGS' in os.environ:
     #     linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
 
-    # ext_include_dirs = [
-    #     os.getcwd(),
-    #     os.path.join(amici_path, 'include'),
-    #     os.path.join(amici_path, "ThirdParty", "gsl"),
-    #     os.path.join(amici_path, "ThirdParty", "sundials", "include"),
-    #     os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
-    #     *h5pkgcfg['include_dirs'],
-    #     *blaspkgcfg['include_dirs']
-    # ]
-    #
-    # ext_library_dirs = [
-    #     *h5pkgcfg['library_dirs'],
-    #     *blaspkgcfg['library_dirs'],
-    #     os.path.join(amici_path, 'libs')
-    # ]
-
     # Build shared object
     #prefix_path = Path(_get_amici_path(), "share", "Amici", "cmake")
     prefix_path = _get_amici_path()
@@ -79,7 +63,7 @@ CLASSIFIERS = [
 ]
 
 CMDCLASS = {
-    # CMake-based builds
+    # for CMake-based builds
     'build_ext': AmiciBuildCMakeExtension,
 }
 

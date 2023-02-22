@@ -21,7 +21,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 # Compiler flags
 include(CheckCXXCompilerFlag)
 set(MY_CXX_FLAGS -Wall)
@@ -53,14 +52,12 @@ elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
 endif()
 
-
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
 set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 find_package(SUNDIALS REQUIRED PATHS
              "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
-
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
 
@@ -222,12 +219,16 @@ target_link_libraries(
   PUBLIC ${CMAKE_DL_LIBS})
 
 if(HDF5_FOUND)
+  message(STATUS "HDF5 library found. Building AMICI with HDF5 support.")
   target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC hdf5::hdf5_hl_cpp
     PUBLIC hdf5::hdf5_hl
     PUBLIC hdf5::hdf5_cpp
     PUBLIC hdf5::hdf5)
+else()
+  message(STATUS "HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
+
 endif()
 
 if(OpenMP_FOUND)
@@ -317,20 +318,21 @@ configure_package_config_file(
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici")
 write_basic_package_version_file(AmiciConfigVersion.cmake
                                  COMPATIBILITY ExactVersion)
-install(EXPORT AmiciTargets
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
-    NAMESPACE Upstream::)
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
+  EXPORT AmiciTargets
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
+  NAMESPACE Upstream::)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
 
 install(DIRECTORY ThirdParty/gsl/gsl TYPE INCLUDE)
 # When running from setup.py, this is a symlink we need to dereference
 get_filename_component(_swig_realpath "swig" REALPATH)
-install(DIRECTORY "${_swig_realpath}" DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
+install(DIRECTORY "${_swig_realpath}"
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
 
-#Register package?
+# Register package?
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
 if(EXPORT_PACKAGE)
   export(PACKAGE Amici)
