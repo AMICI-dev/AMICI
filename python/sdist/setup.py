@@ -75,13 +75,13 @@ def get_extensions():
     #     ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
     #     ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),
     # ],
-
     amici_module = cmake_build_extension.CMakeExtension(
         name='_amici',
         install_prefix='amici',
         source_dir='amici',
         cmake_configure_options=[
             '-DAMICI_PYTHON_EXT_ONLY=ON',
+            f'-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}',
         ]
     )
 
