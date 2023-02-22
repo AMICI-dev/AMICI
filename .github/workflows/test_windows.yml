@@ -59,3 +59,16 @@ jobs:
         name: OpenBLAS
         path: C:\BLAS\OpenBLAS
 
+    - name: Create sdist
+      working-directory: python/sdist
+      run: pip install build && python -m build --sdist
+
+    - name: Install sdist
+      working-directory: python/sdist
+      shell: bash
+      run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab,test]
+
+    - run: python -m amici
+
+    - name: Run Python tests
+      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
