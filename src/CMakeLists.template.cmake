@@ -38,18 +38,18 @@ if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
   set_source_files_properties(wrapfunctions.cpp PROPERTIES COMPILE_FLAGS -O0)
 endif()
 
-# Some special functions require boost
-# TODO: set some flag during code generation whether the given model requires
-# boost. for now, try to find it, add include directories and link against it.
-# let the compiler/linker error if it is required but not found
+# Some special functions require boost TODO: set some flag during code
+# generation whether the given model requires boost. for now, try to find it,
+# add include directories and link against it. let the compiler/linker error if
+# it is required but not found
 find_package(Boost)
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
-    PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::boost>
-)
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Upstream::amici)
+target_link_libraries(
+  ${PROJECT_NAME}
+  PUBLIC Upstream::amici
+  PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::boost>)
 
 set(SRC_LIST_EXE main.cpp)
 
@@ -57,20 +57,19 @@ add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
 
 target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
 
-
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-    add_compile_options(-UNDEBUG -O0 -g)
-    set(CMAKE_BUILD_TYPE "Debug")
+  add_compile_options(-UNDEBUG -O0 -g)
+  set(CMAKE_BUILD_TYPE "Debug")
 
-    set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
-    foreach(FLAG ${MY_CXX_FLAGS})
-      unset(CUR_FLAG_SUPPORTED CACHE)
-      check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
-      if(${CUR_FLAG_SUPPORTED})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
-      endif()
-    endforeach(FLAG)
+  set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
+  foreach(FLAG ${MY_CXX_FLAGS})
+    unset(CUR_FLAG_SUPPORTED CACHE)
+    check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+    if(${CUR_FLAG_SUPPORTED})
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    endif()
+  endforeach(FLAG)
 endif()
 
 # coverage options
