@@ -66,7 +66,9 @@ else ( )
     find_package ( OpenMP )
 endif ( )
 
-include ( SuiteSparseBLAS )
+# AMICI TODO
+# include ( SuiteSparseBLAS )
+set(SuiteSparse_BLAS_integer int64_t)
 
 #-------------------------------------------------------------------------------
 # configure files
