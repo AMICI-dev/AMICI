@@ -326,7 +326,9 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
 
 install(DIRECTORY ThirdParty/gsl/gsl TYPE INCLUDE)
-install(DIRECTORY swig DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
+# When running from setup.py, this is a symlink we need to dereference
+get_filename_component(_swig_realpath "swig" REALPATH)
+install(DIRECTORY "${_swig_realpath}" DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
 
 #Register package?
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
