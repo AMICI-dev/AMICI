@@ -14,7 +14,7 @@ jobs:
 
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
-      openBLAS_version: "0.3.19"
+      openBLAS_version: "0.3.21"
       AMICI_DLL_DIRS: "C:\\BLAS\\bin"
 
     strategy:
