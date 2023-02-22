@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 import cmake_build_extension
@@ -246,7 +247,7 @@ class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
             build_dir = self.build_lib
         else:
             build_dir = os.getcwd()
-
+        build_dir = str(Path(build_dir).absolute())
         #ext.cmake_configure_options = [x.replace("${suitesparse_root}", clib_dir) for x in ext.cmake_configure_options]
         ext.cmake_configure_options = [
             x.replace("${build_dir}", build_dir) for x in
