@@ -107,7 +107,7 @@ if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
         -lmkl
         CACHE STRING "")
   endif()
-else()
+elseif(NOT DEFINED ENV{BLAS_LIBS} AND NOT DEFINED ENV{BLAS_CFLAGS})
   set(BLAS_INCLUDE_DIRS
       ""
       CACHE STRING "")
