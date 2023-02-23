@@ -15,10 +15,18 @@ def get_extension() -> CMakeExtension:
     prefix_path = _get_amici_path()
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
 
+    # handle parallel building
+    # Note: can be empty to use all hardware threads
+    if parallel_jobs := os.environ.get('AMICI_PARALLEL_COMPILE') is not None:
+        os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = parallel_jobs
+    else:
+        os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = "1"
+
     return CMakeExtension(
         name='TPL_MODELNAME._TPL_MODELNAME',
         source_dir='.',
         cmake_configure_options=[
+            "-DCMAKE_VERBOSE_MAKEFILE=ON",
             f"-DCMAKE_MODULE_PATH={prefix_path}/lib/cmake/SuiteSparse",
             f"-DKLU_ROOT={prefix_path}",
         ],
