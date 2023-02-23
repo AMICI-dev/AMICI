@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
+      AMICI_PARALLEL_COMPILE: ""
       ENABLE_GCOV_COVERAGE: "TRUE"
       CI_SONARCLOUD: "TRUE"
 
