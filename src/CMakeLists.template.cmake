@@ -38,10 +38,11 @@ if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
   set_source_files_properties(wrapfunctions.cpp PROPERTIES COMPILE_FLAGS -O0)
 endif()
 
-# Some special functions require boost TODO: set some flag during code
-# generation whether the given model requires boost. for now, try to find it,
-# add include directories and link against it. let the compiler/linker error if
-# it is required but not found
+# Some special functions require boost
+#
+# TODO: set some flag during code generation whether the given model requires
+# boost. for now, try to find it, add include directories and link against it.
+# let the compiler/linker error if it is required but not found
 find_package(Boost)
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -51,11 +52,13 @@ target_link_libraries(
   PUBLIC Upstream::amici
   PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::boost>)
 
-set(SRC_LIST_EXE main.cpp)
+if(NOT "${AMICI_PYTHON_BUILD_EXT_ONLY}")
+  set(SRC_LIST_EXE main.cpp)
 
-add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
+  add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
 
-target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
+  target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
+endif()
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")

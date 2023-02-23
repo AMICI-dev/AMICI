@@ -32,6 +32,7 @@ def get_extension() -> CMakeExtension:
             "-DCMAKE_MODULE_PATH="
             f"{prefix_path.as_posix()}/lib/cmake/SuiteSparse",
             f"-DKLU_ROOT={prefix_path.as_posix()}",
+            f"-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
         ],
     )
 
