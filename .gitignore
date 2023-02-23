@@ -163,7 +163,8 @@ python/sdist/amici/amici.py
 python/sdist/amici/amici_wrap.cxx
 python/sdist/amici/amici_without_hdf5.py
 python/sdist/amici/amici_wrap_without_hdf5.cxx
-
+python/sdist/amici/lib/
+python/sdist/amici/share/
 python/sdist/build/*
 python/sdist/amici/git_version.txt
 
@@ -177,6 +178,7 @@ ThirdParty/doxygen/*
 ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
+ThirdParty/SuiteSparse/include/
 ThirdParty/SuiteSparse/share/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
