@@ -136,9 +136,12 @@ class AmiciBuildCMakeExtension(BuildExtension):
         if not self.dry_run:
             # Fix SWIG-generated typehints
             build_dir = self.build_lib if self.inplace == 0 else os.getcwd()
-            print("updating typehints")
             swig_py_module_path = Path(build_dir, "amici", "amici.py")
-            fix_typehints(swig_py_module_path, swig_py_module_path)
+            # this is class is used for the amici core extension, and any model
+            #  extensions. if amici.py is present, this is the core extension.
+            if swig_py_module_path.is_file():
+                print("updating typehints")
+                fix_typehints(swig_py_module_path, swig_py_module_path)
 
         return result
 

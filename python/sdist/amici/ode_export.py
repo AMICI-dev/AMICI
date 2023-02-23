@@ -2530,7 +2530,7 @@ class ODEExporter:
         # setup.py assumes it is run from within the model directory
         module_dir = self.model_path
         script_args = [sys.executable, os.path.join(module_dir, 'setup.py')]
-        verbose = True
+
         if verbose:
             script_args.append('--verbose')
         else:

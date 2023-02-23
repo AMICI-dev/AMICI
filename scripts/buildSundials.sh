@@ -32,7 +32,7 @@ fi
 
 mkdir -p "${sundials_build_path}"
 cd "${sundials_build_path}"
-set -x
+
 ${cmake} -DCMAKE_INSTALL_PREFIX="${sundials_build_path}" \
   -DCMAKE_BUILD_TYPE="$build_type" \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \

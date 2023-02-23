@@ -1,4 +1,4 @@
-"""Functions for downloading/building/finding SWIG"""
+"""Functions related to SWIG or SWIG-generated code"""
 import ast
 import contextlib
 import re

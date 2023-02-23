@@ -28,8 +28,6 @@ from amici.custom_commands import (
 
 def get_extensions():
     """Get required C(++) extensions for build_ext"""
-    # TODO --no_clibs option? already available via cmake_build_extension?
-
     # CMake prefix path for finding FindXXX.cmake to find SuiteSparse
     #  components
     install_dir = (Path(__file__).parent / "amici").absolute()
