@@ -110,7 +110,10 @@ jobs:
         flags: python
         fail_ci_if_error: true
         verbose: true
-
+    - name: gcda
+      run: find . -name '*.gcda'
+    - name: gcda
+      run: find /tmp -name '*.gcda'
     - name: lcov
       run: |
         lcov --compat-libtool --no-external \
