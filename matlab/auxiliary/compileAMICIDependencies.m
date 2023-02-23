@@ -1,6 +1,6 @@
 function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, o_suffix, COPT, DEBUG)
     %COMPILEAMICIDEPENDENCIES Compiles Sundials and SuiteSparse libraries required by AMICI
-
+    COPT = ['CFLAGS=''$CFLAGS -std=c99'' ' COPT];
     sundials_path = fullfile(dependencyPath,'sundials');
     sundials_ver = '5.2.0';
 
