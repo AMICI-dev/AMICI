@@ -128,7 +128,7 @@ def get_extensions():
         source_dir='amici',
         cmake_configure_options=[
             *global_cmake_configure_options,
-            '-DAMICI_PYTHON_EXT_ONLY=ON',
+            '-DAMICI_PYTHON_BUILD_EXT_ONLY=ON',
             f'-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}',
         ]
     )

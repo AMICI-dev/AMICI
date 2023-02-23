@@ -111,6 +111,7 @@ jobs:
         flags: python
         fail_ci_if_error: true
         verbose: true
+
     - name: lcov
       run: |
         lcov --compat-libtool --no-external \
@@ -120,6 +121,7 @@ jobs:
         -d ${AMICI_DIR}/python/sdist/build/$(python -c "import sys, sysconfig; print(f'temp.{sysconfig.get_platform()}-{sys.implementation.cache_tag}_amici')")/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+
     - name: Codecov CPP
       uses: codecov/codecov-action@v3.1.0
       with:

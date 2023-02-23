@@ -5,20 +5,31 @@ cmake_minimum_required(VERSION 3.15)
 
 project(amici)
 
-message("CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
-message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
-message("CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+# misc options
+option(AMICI_PYTHON_BUILD_EXT_ONLY "Build only the Python extension?" OFF)
+option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
+option(ENABLE_HDF5 "Build with HDF5 support?" OFF)
+option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
+option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
+option(ENABLE_SWIG "Build AMICI swig library?" ON)
+option(ENABLE_PYTHON "Create Python module?" ON)
+option(BUILD_TESTS "Build integration tests?" ON)
+
+message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 14)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # require at least gcc 4.9, otherwise regex wont work properly
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
     message(FATAL_ERROR "GCC version must be at least 4.9!")
   endif()
 endif()
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
@@ -65,6 +76,7 @@ if($ENV{ENABLE_GCOV_COVERAGE})
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
 endif()
 
+# Legacy environment variables from Python-sdist times
 if($ENV{AMICI_CXXFLAGS})
   string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
 endif()
@@ -72,16 +84,10 @@ if($ENV{AMICI_LDFLAGS})
   string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
 endif()
 
-# misc options
-option(AMICI_PYTHON_EXT_ONLY "Build only the Python extension?" OFF)
-
 # find dependencies
 include(GNUInstallDirs)
 
 find_package(OpenMP)
-
-option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
-option(ENABLE_HDF5 "Build with HDF5 support?" OFF)
 
 if(ENABLE_HDF5)
   find_package(
@@ -246,7 +252,9 @@ if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
   target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
 endif()
 
-if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
+if("$ENV{ENABLE_AMICI_DEBUGGING}"
+   OR "$ENV{ENABLE_GCOV_COVERAGE}"
+   OR CMAKE_BUILD_TYPE MATCHES "Debug")
   set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
   foreach(FLAG ${MY_CXX_FLAGS})
     unset(CUR_FLAG_SUPPORTED CACHE)
@@ -276,7 +284,10 @@ target_link_libraries(
   PUBLIC SUNDIALS::sunnonlinsolfixedpoint_static
   PUBLIC SUNDIALS::cvodes_static
   PUBLIC SUNDIALS::idas_static
+  PRIVATE
+    $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
   PUBLIC ${BLAS_LIBRARIES}
+  PUBLIC $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
   PUBLIC ${CMAKE_DL_LIBS})
 
 if(HDF5_FOUND)
@@ -291,17 +302,7 @@ else()
   message(STATUS "HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
 endif()
 
-if(OpenMP_FOUND)
-  target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-endif()
-
-option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
-if(SUNDIALS_SUPERLUMT_ENABLE)
-  target_link_libraries(${PROJECT_NAME}
-                        PRIVATE SUNDIALS::sundials_sunlinsolsuperlumt)
-endif()
-
-if(AMICI_PYTHON_EXT_ONLY)
+if(AMICI_PYTHON_BUILD_EXT_ONLY)
   add_compile_definitions("gsl_CONFIG_CONTRACT_VIOLATION_THROWS"
                           "gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1")
 endif()
@@ -309,7 +310,7 @@ endif()
 # Create targets to make the sources show up in IDEs for convenience
 
 # For matlab interface
-if(NOT AMICI_PYTHON_EXT_ONLY)
+if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
 
   set(matlab_sources
       src/interface_matlab.cpp src/returndata_matlab.cpp
@@ -323,9 +324,7 @@ if(NOT AMICI_PYTHON_EXT_ONLY)
     add_library(matlabInterface ${matlab_sources})
     set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
                                                      "${Matlab_INCLUDE_DIRS}")
-
     target_link_libraries(matlabInterface PUBLIC amici)
-
   else()
     add_custom_target(matlabInterface SOURCES ${matlab_sources})
   endif()
@@ -350,7 +349,7 @@ set_target_properties(
   fileTemplates PROPERTIES INCLUDE_DIRECTORIES
                            "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
-if(NOT AMICI_PYTHON_EXT_ONLY)
+if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
   include(clang-tools)
   include(cmakelang-tools)
 endif()
@@ -394,25 +393,21 @@ install(DIRECTORY "${_swig_realpath}"
         DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
 
 # Register package?
-option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
 if(EXPORT_PACKAGE)
   export(PACKAGE Amici)
 endif()
 # </Export cmake configuration>
 
 # build interfaces for other languages
-option(ENABLE_SWIG "Build AMICI swig library?" ON)
 if(ENABLE_SWIG)
   add_subdirectory(swig)
 endif()
 
-option(ENABLE_PYTHON "Create Python module?" ON)
-if(ENABLE_PYTHON AND NOT AMICI_PYTHON_EXT_ONLY)
+if(ENABLE_PYTHON AND NOT AMICI_PYTHON_BUILD_EXT_ONLY)
   add_subdirectory(python)
 endif()
 
-option(BUILD_TESTS "Build integration tests?" ON)
-if(BUILD_TESTS AND NOT AMICI_PYTHON_EXT_ONLY)
+if(BUILD_TESTS AND NOT AMICI_PYTHON_BUILD_EXT_ONLY)
   if(HDF5_FOUND)
     enable_testing()
 
