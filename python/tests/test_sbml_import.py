@@ -620,5 +620,5 @@ def test_code_gen_uses_lhs_symbol_ids():
             generate_sensitivity_code=False,
             output_dir=tmpdir
         )
-        dwdx = Path(tmpdir, f'dwdx.cpp').read_text()
+        dwdx = Path(tmpdir, 'dwdx.cpp').read_text()
     assert "dobservable_x1_dx1 = " in dwdx
