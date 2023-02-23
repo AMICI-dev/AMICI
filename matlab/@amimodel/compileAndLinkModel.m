@@ -20,7 +20,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     % if no list provided, try to determine relevant files from model
     % folder
     if(isempty(funs))
-        ls = dir(fullfile(modelSourceFolder, [modelname '_*.cpp']));
+        ls = dir(fullfile(modelSourceFolder, '*.cpp'));
         ls = {ls.name};
         % extract funs from filename (strip of modelname_ and .cpp
         funs = cellfun(@(x) x((length(modelname)+2):(length(x)-4)), ls, 'UniformOutput', false);
@@ -124,7 +124,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     if(numel(funsForRecompile))
         fprintf('ffuns | ');
 
-        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[modelname '_' x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
+        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
         sources = strjoin(sources,' ');
 
         cmd = ['mex ' DEBUG COPT ...
