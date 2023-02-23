@@ -25,7 +25,8 @@ def get_extension() -> CMakeExtension:
 
     return CMakeExtension(
         name='TPL_MODELNAME',
-        source_dir='.',
+        source_dir=os.getcwd(),
+        install_prefix='TPL_MODELNAME',
         cmake_configure_options=[
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
             "-DCMAKE_MODULE_PATH="
