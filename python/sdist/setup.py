@@ -109,7 +109,7 @@ def get_extensions():
     )
 
     amici_ext = CMakeExtension(
-        name='_amici',
+        name='amici',
         install_prefix='amici',
         source_dir='amici',
         cmake_configure_options=[
