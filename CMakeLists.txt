@@ -23,7 +23,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -Wall)
+# MSVC
+# -nologo: hide copyright message
+# -wd4820: hide padding
+# -wd4514: hide unreferenced inline function removed
+# -wd4710: hide not inlined
+set(MY_CXX_FLAGS -Wall -nologo -wd4820 -wd4514 -wd4710)
 foreach(FLAG ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
   check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
@@ -193,6 +198,8 @@ if(DEFINED ENV{BLAS_CFLAGS})
     target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
 endif()
 if(DEFINED ENV{BLAS_LIBS})
+    # Note that, on Windows, at least for ninja, this will only work with
+    # dashes instead of slashes in any linker options
     target_link_libraries(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
 endif()
 
