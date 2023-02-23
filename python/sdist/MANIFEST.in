@@ -1,7 +1,7 @@
-recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt *.so* *.cmake
-recursive-include amici/ThirdParty/sundials *.c *.h LICENSE *.so* *.cmake
+recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt *.cmake
+recursive-include amici/ThirdParty/sundials *.c *.h LICENSE *.cmake
 recursive-include amici/ThirdParty/gsl *.hpp
-recursive-include amici/include *.h
+recursive-include amici/include/amici *.h
 recursive-include amici/swig *.i *.h
 include amici/*
 include amici/src/*template*
@@ -13,3 +13,7 @@ include LICENSE.md
 exclude amici/*.so
 exclude amici/*.dll
 prune **/build/
+prune amici/share
+prune amici/lib
+prune amici/ThirdParty/SuiteSparse/lib
+prune amici/ThirdParty/SuiteSparse/include
