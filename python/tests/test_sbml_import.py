@@ -602,7 +602,7 @@ def test_code_gen_uses_cse(extract_cse):
                 generate_sensitivity_code=False,
                 output_dir = tmpdir
             )
-            xdot = Path(tmpdir, f'{model_name}_xdot.cpp').read_text()
+            xdot = Path(tmpdir, 'xdot.cpp').read_text()
         assert ("__amici_cse_0 = " in xdot) == extract_cse
     finally:
         os.environ = old_environ
@@ -620,5 +620,5 @@ def test_code_gen_uses_lhs_symbol_ids():
             generate_sensitivity_code=False,
             output_dir=tmpdir
         )
-        dwdx = Path(tmpdir, f'{model_name}_dwdx.cpp').read_text()
+        dwdx = Path(tmpdir, 'dwdx.cpp').read_text()
     assert "dobservable_x1_dx1 = " in dwdx

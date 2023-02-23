@@ -29,12 +29,13 @@ The content of a model source directory looks something like this (given
 
    CMakeLists.txt
    main.cpp
-   model_steadystate_deltaqB.cpp
-   model_steadystate_deltaqB.h
-   [... many more files model_steadystate_*.(cpp|h|md5|o) ]
+   deltaqB.cpp
+   deltaqB.h
+   [... many more files *.(cpp|h|md5|o) ]
    wrapfunctions.cpp
    wrapfunctions.h
    model_steadystate.h
+   model_steadystate.cpp
 
 These files provide the implementation of a model-specific subclass of
 :cpp:class:`amici::Model`. The ``CMakeLists.txt`` file can be used to build the

@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0060)
-  cmake_policy(SET CMP0060 NEW)
-endif(POLICY CMP0060)
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(model_jakstat_adjoint_o2)
 
@@ -30,27 +19,27 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici  HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici  REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_jakstat_adjoint_o2_JSparse.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_Jy.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dJydsigma.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dJydy.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dsigmaydp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dwdp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dwdx.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dxdotdp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dydp.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_dydx.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sigmay.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_sx0.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_w.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_x0.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_xdot.cpp
-${MODEL_DIR}/model_jakstat_adjoint_o2_y.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/JSparse.cpp
+${MODEL_DIR}/Jy.cpp
+${MODEL_DIR}/dJydsigma.cpp
+${MODEL_DIR}/dJydy.cpp
+${MODEL_DIR}/dsigmaydp.cpp
+${MODEL_DIR}/dwdp.cpp
+${MODEL_DIR}/dwdx.cpp
+${MODEL_DIR}/dxdotdp.cpp
+${MODEL_DIR}/dydp.cpp
+${MODEL_DIR}/dydx.cpp
+${MODEL_DIR}/sigmay.cpp
+${MODEL_DIR}/sx0.cpp
+${MODEL_DIR}/w.cpp
+${MODEL_DIR}/x0.cpp
+${MODEL_DIR}/xdot.cpp
+${MODEL_DIR}/y.cpp
 
 ${MODEL_DIR}/wrapfunctions.cpp
 )
