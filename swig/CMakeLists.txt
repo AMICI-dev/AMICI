@@ -16,7 +16,10 @@ if(DEFINED ENV{PYTHON_EXECUTABLE})
   set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
 endif()
 
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+find_package(
+  Python3
+  COMPONENTS Interpreter Development NumPy
+  REQUIRED)
 set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/amici.i
     ${CMAKE_CURRENT_SOURCE_DIR}/edata.i
@@ -51,18 +54,16 @@ if(AMICI_PYTHON_EXT_ONLY)
     TYPE MODULE)
   set_target_properties(
     _amici
-    PROPERTIES
-      SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
-      PREFIX ""
-      BUILD_RPATH_USE_ORIGIN TRUE
-      INSTALL_RPATH ThirdParty/SuiteSparse/lib
-      BUILD_RPATH ThirdParty/SuiteSparse/lib)
+    PROPERTIES SWIG_USE_TARGET_INCLUDE_DIRECTORIES TRUE
+               PREFIX ""
+               BUILD_RPATH_USE_ORIGIN TRUE
+               INSTALL_RPATH ThirdParty/SuiteSparse/lib
+               BUILD_RPATH ThirdParty/SuiteSparse/lib)
   target_include_directories(
-      _amici
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
-      PRIVATE ${Python3_NumPy_INCLUDE_DIRS}
-  )
+    _amici
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    PRIVATE ${Python3_NumPy_INCLUDE_DIRS})
   set_property(
     TARGET _amici
     APPEND
@@ -92,9 +93,15 @@ if(AMICI_PYTHON_EXT_ONLY)
   endif()
 
   target_link_libraries(_amici amici Python3::Python)
+  if(WIN32)
+    add_custom_command(OUTPUT dump COMMAND dumpbin /DEPENDENTS
+                                           $<TARGET_FILE:_amici>)
+    message("Dependencies: ${dump}")
+  endif()
 
   # TODO generic extension; follow python naming -
   # _amici.cpython-311-x86_64-linux-gnu.so
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py
-                 $<TARGET_FILE:_amici> DESTINATION .)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py $<TARGET_FILE:_amici>
+          DESTINATION .)
+
 endif()
