@@ -39,7 +39,7 @@ set(AMICI_INTERFACE_LIST
 # Add target to show files in IDE
 add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
 
-if(AMICI_PYTHON_EXT_ONLY)
+if(AMICI_PYTHON_BUILD_EXT_ONLY)
   # https://cmake.org/cmake/help/latest/module/UseSWIG.html
   include(${SWIG_USE_FILE})
 
