@@ -24,8 +24,8 @@ def get_extension() -> CMakeExtension:
         os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = "1"
 
     return CMakeExtension(
-        name='TPL_MODELNAME._TPL_MODELNAME',
-        source_dir='.',
+        name='TPL_MODELNAME',
+        source_dir=os.getcwd(),
         cmake_configure_options=[
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
             "-DCMAKE_MODULE_PATH="
