@@ -35,8 +35,10 @@ swig_link_libraries(${SWIG_LIBRARY_NAME}
     ${Python3_LIBRARIES}
     model)
 
+# TODO generic extension; follow python naming -
+# _amici.cpython-311-x86_64-linux-gnu.so
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.py
-              ${CMAKE_CURRENT_BINARY_DIR}/${SWIG_LIBRARY_NAME}.so DESTINATION .)
+              $<TARGET_FILE:${SWIG_LIBRARY_NAME}> DESTINATION .)
 
 # configure module setup script
 set(SETUP_PY_IN ${Amici_DIR}/model_setup.template.py)

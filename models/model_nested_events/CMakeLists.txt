@@ -25,22 +25,22 @@ message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_nested_events_JSparse.cpp
-${MODEL_DIR}/model_nested_events_Jy.cpp
-${MODEL_DIR}/model_nested_events_dJydsigma.cpp
-${MODEL_DIR}/model_nested_events_dJydy.cpp
-${MODEL_DIR}/model_nested_events_deltaqB.cpp
-${MODEL_DIR}/model_nested_events_deltasx.cpp
-${MODEL_DIR}/model_nested_events_deltax.cpp
-${MODEL_DIR}/model_nested_events_dxdotdp.cpp
-${MODEL_DIR}/model_nested_events_dydx.cpp
-${MODEL_DIR}/model_nested_events_root.cpp
-${MODEL_DIR}/model_nested_events_sigmay.cpp
-${MODEL_DIR}/model_nested_events_stau.cpp
-${MODEL_DIR}/model_nested_events_sx0.cpp
-${MODEL_DIR}/model_nested_events_x0.cpp
-${MODEL_DIR}/model_nested_events_xdot.cpp
-${MODEL_DIR}/model_nested_events_y.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/JSparse.cpp
+${MODEL_DIR}/Jy.cpp
+${MODEL_DIR}/dJydsigma.cpp
+${MODEL_DIR}/dJydy.cpp
+${MODEL_DIR}/deltaqB.cpp
+${MODEL_DIR}/deltasx.cpp
+${MODEL_DIR}/deltax.cpp
+${MODEL_DIR}/dxdotdp.cpp
+${MODEL_DIR}/dydx.cpp
+${MODEL_DIR}/root.cpp
+${MODEL_DIR}/sigmay.cpp
+${MODEL_DIR}/stau.cpp
+${MODEL_DIR}/sx0.cpp
+${MODEL_DIR}/x0.cpp
+${MODEL_DIR}/xdot.cpp
+${MODEL_DIR}/y.cpp
  ${MODEL_DIR}/wrapfunctions.cpp)
 
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
@@ -55,26 +55,44 @@ if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
 endif()
 
 # Some special functions require boost
+#
 # TODO: set some flag during code generation whether the given model requires
 # boost. for now, try to find it, add include directories and link against it.
 # let the compiler/linker error if it is required but not found
-find_package(Boost COMPONENTS math)
+find_package(Boost)
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
-    PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::math>
-)
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC Upstream::amici)
+target_link_libraries(
+  ${PROJECT_NAME}
+  PUBLIC Upstream::amici
+  PRIVATE $<$<BOOL:${Boost_FOUND}>:Boost::boost>)
 
-set(SRC_LIST_EXE main.cpp)
+if(NOT "${AMICI_PYTHON_BUILD_EXT_ONLY}")
+  set(SRC_LIST_EXE main.cpp)
 
-add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
+  add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
 
-target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
+  target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
+endif()
 
+# Debug build?
+if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
+  add_compile_options(-UNDEBUG -O0 -g)
+  set(CMAKE_BUILD_TYPE "Debug")
+endif()
+
+# coverage options
 if($ENV{ENABLE_GCOV_COVERAGE})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
+  string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
+endif()
+
+if($ENV{AMICI_CXXFLAGS})
+  string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
+endif()
+if($ENV{AMICI_LDFLAGS})
+  string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
 endif()
 
 # SWIG
