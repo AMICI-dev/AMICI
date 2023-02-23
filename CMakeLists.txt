@@ -28,7 +28,10 @@ include(CheckCXXCompilerFlag)
 # -wd4820: hide padding
 # -wd4514: hide unreferenced inline function removed
 # -wd4710: hide not inlined
-set(MY_CXX_FLAGS -Wall -nologo -wd4820 -wd4514 -wd4710)
+# -wd4711: hide auto-inlined
+# -wd4525: hide copy-ctor implicitly deleted
+# -wd4526: hide assignment-ctor implicitly deleted
+set(MY_CXX_FLAGS -Wall -nologo -wd4820 -wd4514 -wd4710 -wd4711 -wd4525 -wd4526)
 foreach(FLAG ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
   check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
