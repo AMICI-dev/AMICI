@@ -74,7 +74,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     %% Model-specific files
     for j=1:length(funs)
-        baseFileName = [modelname '_' strrep(funs{j}, 'sigma_', 'sigma')];
+        baseFileName = strrep(funs{j}, 'sigma_', 'sigma');
         cfun(1).(funs{j}) = sourceNeedsRecompilation(modelSourceFolder, modelObjectFolder, baseFileName, objectFileSuffix);
     end
 
@@ -141,7 +141,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     % append model object files
     for j=1:length(funs)
-        filename = fullfile(modelObjectFolder, [modelname '_' strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
+        filename = fullfile(modelObjectFolder, [strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
         if(exist(filename,'file'))
             objectsstr = strcat(objectsstr,...
                 ' "',filename,'"');
