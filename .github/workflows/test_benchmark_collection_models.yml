@@ -53,9 +53,6 @@ jobs:
       run: |
         AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test]
-    - run: pip show amici -f | grep -F .so
-    - run: readelf -d /home/runner/.local/lib/python3.8/site-packages/amici/_amici.so
-    - run: python -m amici
 
     # retrieve test models
     - name: Download and test benchmark collection
