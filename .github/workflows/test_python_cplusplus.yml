@@ -111,20 +111,15 @@ jobs:
         flags: python
         fail_ci_if_error: true
         verbose: true
-    - name: gcda
-      run: find . -name '*.gcda'
-    - name: gcda
-      run: find /tmp -name '*.gcda'
     - name: lcov
       run: |
         lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/amici/src \
+        -d ${AMICI_DIR}/python/sdist/build/$(python -c "import sys, sysconfig; print(f'temp.{sysconfig.get_platform()}-{sys.implementation.cache_tag}_amici')")/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
-    # -d ${AMICI_DIR}/python/sdist/build/$(python -c "import sys, sysconfig; print(f'temp.{sysconfig.get_platform()}-{sys.implementation.cache_tag}_amici')")/amici/src \
     - name: Codecov CPP
       uses: codecov/codecov-action@v3.1.0
       with:
