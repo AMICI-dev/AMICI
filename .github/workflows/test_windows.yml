@@ -19,6 +19,7 @@ jobs:
       LIB: "C:/BLAS/OpenBLAS/lib"
       CFLAGS: "-nologo"
       CXXFLAGS: "-nologo"
+      LDFLAGS: "-nologo"
 
     strategy:
       matrix:
