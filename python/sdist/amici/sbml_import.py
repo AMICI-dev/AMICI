@@ -153,8 +153,7 @@ class SbmlImporter:
         self.sbml: sbml.Model = self.sbml_doc.getModel()
 
         # Long and short names for model components
-        self.symbols: Dict[SymbolId, Union[Dict[sp.Symbol,
-                                           Dict[str, Any]], List[sp.Expr]]] = {}
+        self.symbols: Dict[SymbolId, Dict[sp.Symbol, Dict[str, Any]]] = {}
 
         self._local_symbols: Dict[str, Union[sp.Expr, sp.Function]] = {}
         self.compartments: SymbolicFormula = {}
