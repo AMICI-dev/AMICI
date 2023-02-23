@@ -6,7 +6,7 @@ default: camd_simple camd_demo camd_demo2 camd_l_demo
 
 include ../../SuiteSparse_config/SuiteSparse_config.mk
 
-C = $(CC) $(CF) -I../../include
+C = "$(CC)" $(CF) -I../../include
 
 LIB2 = $(LDFLAGS) -L../../lib -lcamd -lsuitesparseconfig $(LDLIBS) 
 

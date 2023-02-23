@@ -17,7 +17,7 @@ LDLIBS += -lsuitesparseconfig
 library:
 	$(MAKE) install INSTALL=$(SUITESPARSE)
 
-C = $(CC) $(CF) -I../Include -I../../SuiteSparse_config
+C = "$(CC)" $(CF) -I../Include -I../../SuiteSparse_config
 
 #-------------------------------------------------------------------------------
 # source files
@@ -68,7 +68,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(OBJ)
 	@mkdir -p $(INSTALL_LIB)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
-	$(CC) $(SO_OPTS) $^ -o $@ $(LDLIBS)
+	"$(CC)" $(SO_OPTS) $^ -o $@ $(LDLIBS)
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )
 	$(CP) ../Include/camd.h $(INSTALL_INCLUDE)

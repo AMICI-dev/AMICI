@@ -121,6 +121,10 @@ TEST(ExampleSteadystate, Maxtime)
     amici::hdf5::readSolverSettingsFromHDF5(
         NEW_OPTION_FILE, *solver, "/model_steadystate/nosensi/options");
 
+    // Ensure the solver needs sufficiently many steps that time is checked
+    // at least once during integration
+    solver->setRelativeTolerance(1e-14);
+
     auto rdata = runAmiciSimulation(*solver, nullptr, *model);
     ASSERT_EQ(amici::AMICI_SUCCESS, rdata->status);
 
