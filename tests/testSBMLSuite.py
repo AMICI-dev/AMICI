@@ -139,9 +139,12 @@ def verify_results(
     ]
     # We only need to convert species that have only substance units
     concentration_species = [
-        str(species_id)
-        for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
-        if str(species_id) in requested_concentrations and species['amount']
+        str(state_id)
+        for state_id, state in {
+            **wrapper.symbols[SymbolId.SPECIES],
+            **wrapper.symbols[SymbolId.ALGEBRAIC_STATE],
+        }.items()
+        if str(state_id) in requested_concentrations and state.get('amount', False)
     ]
     amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)

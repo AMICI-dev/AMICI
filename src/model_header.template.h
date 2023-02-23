@@ -4,7 +4,7 @@
 #include <memory>
 #include <gsl/gsl-lite.hpp>
 
-#include "amici/model_ode.h"
+#include "amici/model_TPL_MODEL_TYPE_LOWER.h"
 
 namespace amici {
 
@@ -96,13 +96,13 @@ TPL_DTOTAL_CLDX_RDATA_ROWVALS_DEF
 /**
  * @brief AMICI-generated model subclass.
  */
-class Model_TPL_MODELNAME : public amici::Model_ODE {
+class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
   public:
     /**
      * @brief Default constructor.
      */
     Model_TPL_MODELNAME()
-        : amici::Model_ODE(
+        : amici::Model_TPL_MODEL_TYPE_UPPER(
               amici::ModelDimensions(
                   TPL_NX_RDATA,                            // nx_rdata
                   TPL_NXTRUE_RDATA,                        // nxtrue_rdata
@@ -135,7 +135,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                   std::vector<realtype>{TPL_PARAMETERS}        // dynamic parameters
               ),
               TPL_O2MODE,                                  // o2mode
-              std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
+              std::vector<realtype>{TPL_ID},   // idlist
               std::vector<int>{TPL_Z2EVENT},               // z2events
               true,                                        // pythonGenerated
               TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit

@@ -194,7 +194,6 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
                 level = logging.DEBUG
                 level_length = len('DEBUG')
 
-
             tstart = time.perf_counter()
             rval = func(*args, **kwargs)
             tend = time.perf_counter()

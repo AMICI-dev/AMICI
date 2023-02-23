@@ -88,6 +88,9 @@ struct ModelStateDerived {
 
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     SUNMatrixWrapper M_;
+    
+    /** Sparse Mass matrix (dimension: `sum(1-amici::Model::idlist)`) */
+    SUNMatrixWrapper MSparse_;
 
     /**
      * Temporary storage of `dxdotdp_full` data across functions (Python only)

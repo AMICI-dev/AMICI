@@ -25,9 +25,9 @@ from .import_utils import (_get_str_symbol_identifiers,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation)
 from .logging import get_logger, log_execution_time, set_log_level
-from .ode_export import (Constant, Expression, LogLikelihoodY, ODEExporter,
-                         ODEModel, Observable, Parameter, SigmaY, State,
-                         _default_simplify)
+from .de_export import (Constant, Expression, LogLikelihoodY, DEExporter,
+                        DEModel, Observable, Parameter, SigmaY, DifferentialState,
+                        _default_simplify)
 
 CL_Prototype = Dict[str, Dict[str, Any]]
 ConservationLaw = Dict[str, Union[Dict, str, sp.Basic]]
@@ -151,7 +151,7 @@ def pysb2amici(
         cache_simplify=cache_simplify,
         verbose=verbose,
     )
-    exporter = ODEExporter(
+    exporter = DEExporter(
         ode_model,
         outdir=output_dir,
         model_name=model_name,
@@ -179,7 +179,7 @@ def ode_model_from_pysb_importer(
         # See https://github.com/AMICI-dev/AMICI/pull/1672
         cache_simplify: bool = False,
         verbose: Union[int, bool] = False,
-) -> ODEModel:
+) -> DEModel:
     """
     Creates an :class:`amici.ODEModel` instance from a :class:`pysb.Model`
     instance.
@@ -218,7 +218,7 @@ def ode_model_from_pysb_importer(
         New ODEModel instance according to pysbModel
     """
 
-    ode = ODEModel(
+    ode = DEModel(
         verbose=verbose,
         simplify=simplify,
         cache_simplify=cache_simplify,
@@ -261,7 +261,7 @@ def ode_model_from_pysb_importer(
 
 @log_execution_time('processing PySB stoich. matrix', logger)
 def _process_stoichiometric_matrix(pysb_model: pysb.Model,
-                                   ode_model: ODEModel,
+                                   ode_model: DEModel,
                                    constant_parameters: List[str]) -> None:
 
     """
@@ -358,7 +358,7 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
 
 @log_execution_time('processing PySB species', logger)
 def _process_pysb_species(pysb_model: pysb.Model,
-                          ode_model: ODEModel) -> None:
+                          ode_model: DEModel) -> None:
     """
     Converts pysb Species into States and adds them to the ODEModel instance
 
@@ -382,7 +382,7 @@ def _process_pysb_species(pysb_model: pysb.Model,
                     init = ic.value
 
         ode_model.add_component(
-            State(
+            DifferentialState(
                 sp.Symbol(f'__s{ix}'),
                 f'{specie}',
                 init,
@@ -394,7 +394,7 @@ def _process_pysb_species(pysb_model: pysb.Model,
 
 @log_execution_time('processing PySB parameters', logger)
 def _process_pysb_parameters(pysb_model: pysb.Model,
-                             ode_model: ODEModel,
+                             ode_model: DEModel,
                              constant_parameters: List[str]) -> None:
     """
     Converts pysb parameters into Parameters or Constants and adds them to
@@ -423,7 +423,7 @@ def _process_pysb_parameters(pysb_model: pysb.Model,
 @log_execution_time('processing PySB expressions', logger)
 def _process_pysb_expressions(
         pysb_model: pysb.Model,
-        ode_model: ODEModel,
+        ode_model: DEModel,
         observables: List[str],
         sigmas: Dict[str, str],
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
@@ -480,7 +480,7 @@ def _add_expression(
     name: str,
     expr: sp.Basic,
     pysb_model: pysb.Model,
-    ode_model: ODEModel,
+    ode_model: DEModel,
     observables: List[str],
     sigmas: Dict[str, str],
     noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
@@ -592,7 +592,7 @@ def _get_sigma_name_and_value(
 @log_execution_time('processing PySB observables', logger)
 def _process_pysb_observables(
         pysb_model: pysb.Model,
-        ode_model: ODEModel,
+        ode_model: DEModel,
         observables: List[str],
         sigmas: Dict[str, str],
         noise_distributions: Optional[Dict[str, Union[str, Callable]]] = None,
@@ -628,7 +628,7 @@ def _process_pysb_observables(
 
 @log_execution_time('computing PySB conservation laws', logger)
 def _process_pysb_conservation_laws(pysb_model: pysb.Model,
-                                    ode_model: ODEModel) -> None:
+                                    ode_model: DEModel) -> None:
     """
     Removes species according to conservation laws to ensure that the
     jacobian has full rank
@@ -691,7 +691,7 @@ def _compute_monomers_with_fixed_initial_conditions(
 
 def _generate_cl_prototypes(excluded_monomers: Iterable[str],
                             pysb_model: pysb.Model,
-                            ode_model: ODEModel) -> CL_Prototype:
+                            ode_model: DEModel) -> CL_Prototype:
     """
     Constructs a dict that contains preprocessed information for the
     construction of conservation laws
@@ -721,7 +721,7 @@ def _generate_cl_prototypes(excluded_monomers: Iterable[str],
 
 def _compute_possible_indices(cl_prototypes: CL_Prototype,
                               pysb_model: pysb.Model,
-                              ode_model: ODEModel,
+                              ode_model: DEModel,
                               excluded_monomers: Iterable[str]) -> None:
     """
     Computes viable choices for target_index, ie species that could be
@@ -819,7 +819,7 @@ def _compute_dependency_idx(cl_prototypes: CL_Prototype) -> None:
 
 
 def _compute_target_index(cl_prototypes: CL_Prototype,
-                          ode_model: ODEModel) -> None:
+                          ode_model: DEModel) -> None:
     """
     Computes the target index for every monomer
 
@@ -1139,7 +1139,7 @@ def _construct_conservation_from_prototypes(
 
 
 def _add_conservation_for_constant_species(
-        ode_model: ODEModel,
+        ode_model: DEModel,
         conservation_laws: List[ConservationLaw]
 ) -> None:
     """
@@ -1266,7 +1266,7 @@ def _get_conservation_law_subs(
 
 def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            pysb_model: pysb.Model,
-                           ode_model: ODEModel) -> bool:
+                           ode_model: DEModel) -> bool:
     """
     Wrapper to interface
     :meth:`ode_export.ODEModel.state_has_fixed_parameter_initial_condition`

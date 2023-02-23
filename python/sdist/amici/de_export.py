@@ -37,7 +37,7 @@ from .import_utils import (ObservableTransformation, generate_flux_symbol,
                            smart_subs_dict, strip_pysb,
                            symbol_with_assumptions, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
-from .ode_model import *
+from .de_model import *
 
 
 # Template for model simulation main.cpp file
@@ -51,12 +51,16 @@ MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
 
 IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z_]\w*$')
 DERIVATIVE_PATTERN = re.compile(r'^d(x_rdata|xdot|\w+?)d(\w+?)(?:_explicit)?$')
+
+
 @dataclass
 class _FunctionInfo:
     """Information on a model-specific generated C++ function
 
-    :ivar arguments: argument list of the function. input variables should be
+    :ivar arguments: argument list of the ODE function. input variables should be
         ``const``.
+    :ivar arguments: argument list of the DAE function, if different from ODE
+        function. input variables should be ``const``.
     :ivar return_type: the return type of the function
     :ivar assume_pow_positivity:
         identifies the functions on which ``assume_pow_positivity`` will have
@@ -72,12 +76,19 @@ class _FunctionInfo:
     :ivar body:
         the actual function body. will be filled later
     """
-    arguments: str = ''
+    ode_arguments: str = ''
+    dae_arguments: str = ''
     return_type: str = 'void'
     assume_pow_positivity: bool = False
     sparse: bool = False
     generate_body: bool = True
     body: str = ''
+
+    def arguments(self, ode: bool = True) -> str:
+        """Get the arguments for the ODE or DAE function"""
+        if ode or not self.dae_arguments:
+            return self.ode_arguments
+        return self.dae_arguments
 
 
 # Information on a model-specific generated C++ function
@@ -166,6 +177,9 @@ functions = {
             'realtype *dxdotdw, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w',
+            'realtype *dxdotdw, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *dx, const realtype *w',
             assume_pow_positivity=True, sparse=True
         ),
     'dxdotdx_explicit':
@@ -173,6 +187,9 @@ functions = {
             'realtype *dxdotdx_explicit, const realtype t, '
             'const realtype *x, const realtype *p, const realtype *k, '
             'const realtype *h, const realtype *w',
+            'realtype *dxdotdx_explicit, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *dx, const realtype *w',
             assume_pow_positivity=True, sparse=True
         ),
     'dxdotdp_explicit':
@@ -180,6 +197,9 @@ functions = {
             'realtype *dxdotdp_explicit, const realtype t, '
             'const realtype *x, const realtype *p, const realtype *k, '
             'const realtype *h, const realtype *w',
+            'realtype *dxdotdp_explicit, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *dx, const realtype *w',
             assume_pow_positivity=True, sparse=True
         ),
     'dydx':
@@ -321,6 +341,9 @@ functions = {
             'realtype *xdot, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w',
+            'realtype *xdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *dx, const realtype *w',
             assume_pow_positivity=True
         ),
     'xdot_old':
@@ -397,30 +420,30 @@ nobody_functions = [
 # list of sensitivity functions
 sensi_functions = [
     func_name for func_name, func_info in functions.items()
-    if 'const int ip' in func_info.arguments
+    if 'const int ip' in func_info.arguments()
 ]
 # list of sensitivity functions
 sparse_sensi_functions = [
     func_name for func_name, func_info in functions.items()
-    if 'const int ip' not in func_info.arguments
+    if 'const int ip' not in func_info.arguments()
     and func_name.endswith('dp') or func_name.endswith('dp_explicit')
 ]
 # list of event functions
 event_functions = [
     func_name for func_name, func_info in functions.items()
-    if 'const int ie' in func_info.arguments and
-       'const int ip' not in func_info.arguments
+    if 'const int ie' in func_info.arguments() and
+       'const int ip' not in func_info.arguments()
 ]
 event_sensi_functions = [
     func_name for func_name, func_info in functions.items()
-    if 'const int ie' in func_info.arguments and
-       'const int ip' in func_info.arguments
+    if 'const int ie' in func_info.arguments() and
+       'const int ip' in func_info.arguments()
 ]
 # list of multiobs functions
 multiobs_functions = [
     func_name for func_name, func_info in functions.items()
-    if 'const int iy' in func_info.arguments
-    or 'const int iz' in func_info.arguments
+    if 'const int iy' in func_info.arguments()
+    or 'const int iz' in func_info.arguments()
 ]
 # list of equations that have ids which may not be unique
 non_unique_id_symbols = [
@@ -444,7 +467,7 @@ CUSTOM_FUNCTIONS = [
 logger = get_logger(__name__, logging.ERROR)
 
 
-def var_in_function_signature(name: str, varname: str) -> bool:
+def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
     """
     Checks if the values for a symbolic variable is passed in the signature
     of a function
@@ -453,6 +476,8 @@ def var_in_function_signature(name: str, varname: str) -> bool:
         name of the function
     :param varname:
         name of the symbolic variable
+    :param ode:
+        whether to check the ODE or DAE signature
 
     :return:
         boolean indicating whether the variable occurs in the function
@@ -461,13 +486,15 @@ def var_in_function_signature(name: str, varname: str) -> bool:
     return name in functions \
         and re.search(
             rf'const (realtype|double) \*{varname}[0]*(,|$)+',
-            functions[name].arguments
+            functions[name].arguments(ode=ode)
         )
 
 
 # defines the type of some attributes in ODEModel
 symbol_to_type = {
-    SymbolId.SPECIES: State,
+    SymbolId.SPECIES: DifferentialState,
+    SymbolId.ALGEBRAIC_STATE: AlgebraicState,
+    SymbolId.ALGEBRAIC_EQUATION: AlgebraicEquation,
     SymbolId.PARAMETER: Parameter,
     SymbolId.FIXED_PARAMETER: Constant,
     SymbolId.OBSERVABLE: Observable,
@@ -580,15 +607,18 @@ def _default_simplify(x):
     return sp.powsimp(x, deep=True)
 
 
-class ODEModel:
+class DEModel:
     """
     Defines an Ordinary Differential Equation as set of ModelQuantities.
     This class provides general purpose interfaces to compute arbitrary
     symbolic derivatives that are necessary for model simulation or
     sensitivity computation.
 
-    :ivar _states:
-        list of state variables
+    :ivar _differentialstates:
+        list of differential state variables
+
+    :ivar _algebraicstates:
+        list of algebraic state variables
 
     :ivar _observables:
         list of observables
@@ -718,7 +748,9 @@ class ODEModel:
             Whether to cache calls to the simplify method. Can e.g. decrease
             import times for models with events.
         """
-        self._states: List[State] = []
+        self._differentialstates: List[DifferentialState] = []
+        self._algebraicstates: List[AlgebraicState] = []
+        self._algebraicequations: List[AlgebraicEquation] = []
         self._observables: List[Observable] = []
         self._eventobservables: List[EventObservable] = []
         self._sigmays: List[SigmaY] = []
@@ -827,6 +859,14 @@ class ODEModel:
         for fun in CUSTOM_FUNCTIONS:
             self._code_printer.known_functions[fun['sympy']] = fun['c++']
 
+    def is_ode(self) -> bool:
+        """Check if model is ODE model."""
+        return len(self._algebraicequations) == 0
+
+    @property
+    def _states(self) -> List[State]:
+        return self._differentialstates + self._algebraicstates
+
     @log_execution_time('importing SbmlImporter', logger)
     def import_from_sbml_importer(
             self,
@@ -926,13 +966,15 @@ class ODEModel:
                 species['dt'] = transform_dxdt_to_concentration(species_id,
                                                                 formula)
 
-        # create all basic components of the ODE model and add them.
+        # create all basic components of the DE model and add them.
         for symbol_name in symbols:
             # transform dict of lists into a list of dicts
             args = ['name', 'identifier']
 
             if symbol_name == SymbolId.SPECIES:
                 args += ['dt', 'init']
+            elif symbol_name == SymbolId.ALGEBRAIC_STATE:
+                args += ['init']
             else:
                 args += ['value']
 
@@ -943,7 +985,10 @@ class ODEModel:
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
                 args += ['event']
 
-            protos = [
+            if symbol_name == SymbolId.ALGEBRAIC_EQUATION:
+                args = ['formula']
+
+            comp_kwargs = [
                 {
                     'identifier': var_id,
                     **{k: v for k, v in var.items() if k in args}
@@ -951,8 +996,8 @@ class ODEModel:
                 for var_id, var in symbols[symbol_name].items()
             ]
 
-            for proto in protos:
-                self.add_component(symbol_to_type[symbol_name](**proto))
+            for comp_kwarg in comp_kwargs:
+                self.add_component(symbol_to_type[symbol_name](**comp_kwarg))
 
         # add fluxes as expressions, this needs to happen after base
         # expressions from symbols have been parsed
@@ -988,7 +1033,8 @@ class ODEModel:
             may refer to other components of the same type.
         """
         if type(component) not in {
-            Observable, Expression, Parameter, Constant, State,
+            Observable, Expression, Parameter, Constant, DifferentialState,
+            AlgebraicState, AlgebraicEquation,
             LogLikelihoodY, LogLikelihoodZ, LogLikelihoodRZ,
             SigmaY, SigmaZ, ConservationLaw, Event, EventObservable
         }:
@@ -1300,7 +1346,7 @@ class ODEModel:
         """
         return set(chain.from_iterable(
             state.get_free_symbols()
-            for state in self._states
+            for state in self._states + self._algebraicequations
         ))
 
     def _generate_symbol(self, name: str) -> None:
@@ -1334,6 +1380,13 @@ class ODEModel:
         elif name == 'x':
             self._syms[name] = sp.Matrix([
                 state.get_id()
+                for state in self._states
+                if not state.has_conservation_law()
+            ])
+            return
+        elif name == 'dx':
+            self._syms[name] = sp.Matrix([
+                f'd{state.get_id()}dt'
                 for state in self._states
                 if not state.has_conservation_law()
             ])
@@ -1387,7 +1440,7 @@ class ODEModel:
         ``ODEModel._variable_prototype``
         """
         # We need to process events and Heaviside functions in the ODE Model,
-        # before adding it to ODEExporter
+        # before adding it to DEExporter
         self.parse_events()
 
         for var in self._variable_prototype:
@@ -1405,7 +1458,7 @@ class ODEModel:
         """
         # Track all roots functions in the right-hand side
         roots = copy.deepcopy(self._events)
-        for state in self._states:
+        for state in self._differentialstates:
             state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
         for expr in self._expressions:
@@ -1453,9 +1506,9 @@ class ODEModel:
         ))
 
         return [
-            free_symbols_dt.count(str(self._states[idx].get_id()))
+            free_symbols_dt.count(str(self._differentialstates[idx].get_id()))
             +
-            free_symbols_expr.count(str(self._states[idx].get_id()))
+            free_symbols_expr.count(str(self._differentialstates[idx].get_id()))
             for idx in idxs
         ]
 
@@ -1536,10 +1589,20 @@ class ODEModel:
                 self._lock_total_derivative.remove(cv)
 
         elif name == 'xdot':
-            self._eqs[name] = sp.Matrix([
-                state.get_dt() for state in self._states
-                if not state.has_conservation_law()
-            ])
+            if self.is_ode():
+                self._eqs[name] = sp.Matrix([
+                    state.get_dt() for state in self._states
+                    if not state.has_conservation_law()
+                ])
+            else:
+                self._eqs[name] = sp.Matrix([
+                    state.get_dt() - dstatedt
+                    for state, dstatedt in zip(self._differentialstates, self.sym('dx'))
+                    if not state.has_conservation_law()
+                ] + [
+                    eq.get_val()
+                    for eq in self._algebraicequations
+                ])
 
         elif name == 'x_rdata':
             self._eqs[name] = sp.Matrix([
@@ -1870,7 +1933,7 @@ class ODEModel:
         # automatically detect chainrule
         chainvars = [
             cv for cv in ['w', 'tcl']
-            if var_in_function_signature(eq, cv)
+            if var_in_function_signature(eq, cv, self.is_ode())
                and cv not in self._lock_total_derivative
                and var != cv
                and min(self.sym(cv).shape)
@@ -2004,7 +2067,7 @@ class ODEModel:
         # within a column may differ from the initialization of symbols here,
         # so those are not safe to use. Not removing them from signature as
         # this would break backwards compatibility.
-        if var_in_function_signature(name, varname) \
+        if var_in_function_signature(name, varname, self.is_ode()) \
                 and varname not in ['dwdx', 'dwdp']:
             return self.sym(varname)
         else:
@@ -2037,7 +2100,7 @@ class ODEModel:
 
         variables = {
             varname: self.sym(varname)
-            if var_in_function_signature(name, varname)
+            if var_in_function_signature(name, varname, self.is_ode())
             else self.eq(varname)
             for varname in [x, y]
         }
@@ -2166,7 +2229,11 @@ class ODEModel:
         :return:
             boolean indicating if constant over time
         """
-        return self._states[ix].get_dt() == 0.0
+        state = self._states[ix]
+        if isinstance(state, AlgebraicState):
+            return False
+
+        return state.get_dt() == 0.0
 
     def conservation_law_has_multispecies(self,
                                           tcl: ConservationLaw) -> bool:
@@ -2326,9 +2393,9 @@ class ODEModel:
         return dxdt
 
 
-class ODEExporter:
+class DEExporter:
     """
-    The ODEExporter class generates AMICI C++ files for ODE model as
+    The DEExporter class generates AMICI C++ files for ODE model as
     defined in symbolic expressions.
 
     :ivar model:
@@ -2379,7 +2446,7 @@ class ODEExporter:
 
     def __init__(
             self,
-            ode_model: ODEModel,
+            ode_model: DEModel,
             outdir: Optional[Union[Path, str]] = None,
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
@@ -2395,7 +2462,7 @@ class ODEExporter:
             ODE definition
 
         :param outdir:
-            see :meth:`amici.ode_export.ODEExporter.set_paths`
+            see :meth:`amici.ode_export.DEExporter.set_paths`
 
         :param verbose:
             verbosity level for logging, ``True``/``False`` default to
@@ -2410,7 +2477,7 @@ class ODEExporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.ode_export.ODEExporter`
+            see :class:`amici.ode_export.DEExporter`
 
         :param generate_sensitivity_code:
             specifies whether code required for sensitivity computation will be
@@ -2433,7 +2500,7 @@ class ODEExporter:
 
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
-        self.model: ODEModel = ode_model
+        self.model: DEModel = ode_model
 
         # To only generate a subset of functions, apply subselection here
         self.functions: Dict[str, _FunctionInfo] = copy.deepcopy(functions)
@@ -2478,7 +2545,7 @@ class ODEExporter:
     def _generate_c_code(self) -> None:
         """
         Create C++ code files for the model based on
-        :attribute:`ODEExporter.model`.
+        :attribute:`DEExporter.model`.
         """
         for func_name, func_info in self.functions.items():
             if func_name in sensi_functions + sparse_sensi_functions and \
@@ -2668,7 +2735,7 @@ class ODEExporter:
         # here since it may not have been generated yet.
         for sym in re.findall(
                 r'const (?:realtype|double) \*([\w]+)[0]*(?:,|$)',
-                func_info.arguments
+                func_info.arguments(self.model.is_ode())
         ):
             if sym not in self.model.sym_names():
                 continue
@@ -2696,7 +2763,7 @@ class ODEExporter:
             f'namespace model_{self.model_name} {{',
             '',
             f'{func_info.return_type} {function}_{self.model_name}'
-            f'({func_info.arguments}){{'
+            f'({func_info.arguments(self.model.is_ode())}){{'
         ])
 
         # function body
@@ -3008,7 +3075,7 @@ class ODEExporter:
         """
         template_data = {'MODELNAME': str(self.model_name)}
         apply_template(
-            os.path.join(amiciSrcPath, 'wrapfunctions.ODE_template.h'),
+            os.path.join(amiciSrcPath, 'wrapfunctions.template.h'),
             os.path.join(self.model_path, 'wrapfunctions.h'),
             template_data
         )
@@ -3017,8 +3084,10 @@ class ODEExporter:
         """
         Write model-specific header and cpp file (MODELNAME.{h,cpp}).
         """
-
+        model_type = 'ODE' if self.model.is_ode() else 'DAE'
         tpl_data = {
+            'MODEL_TYPE_LOWER': model_type.lower(),
+            'MODEL_TYPE_UPPER': model_type,
             'MODELNAME': self.model_name,
             'NX_RDATA': self.model.num_states_rdata(),
             'NXTRUE_RDATA': self.model.num_states_rdata(),
@@ -3107,7 +3176,10 @@ class ODEExporter:
                         event.get_initial_value()),
                     self.model._events)),
             'Z2EVENT':
-                ', '.join(map(str, self.model._z2event))
+                ', '.join(map(str, self.model._z2event)),
+            'ID':
+                ', '.join(map(lambda x: str(int(isinstance(x, AlgebraicState))),
+                              self.model._states))
         }
 
         for func_name, func_info in self.functions.items():
@@ -3122,7 +3194,8 @@ class ODEExporter:
                     impl = ''
                 else:
                     impl = get_model_override_implementation(
-                        func_name, self.model_name, nobody=True
+                        func_name, self.model_name, self.model.is_ode(),
+                        nobody=True
                     )
 
                 tpl_data[f'{func_name.upper()}_IMPL'] = impl
@@ -3144,9 +3217,11 @@ class ODEExporter:
                 continue
 
             tpl_data[f'{func_name.upper()}_DEF'] = \
-                get_function_extern_declaration(func_name, self.model_name)
+                get_function_extern_declaration(func_name, self.model_name,
+                                                self.model.is_ode())
             tpl_data[f'{func_name.upper()}_IMPL'] = \
-                get_model_override_implementation(func_name, self.model_name)
+                get_model_override_implementation(func_name, self.model_name,
+                                                  self.model.is_ode())
             if func_name in sparse_functions:
                 tpl_data[f'{func_name.upper()}_COLPTRS_DEF'] = \
                     get_sunindex_extern_declaration(
@@ -3168,13 +3243,13 @@ class ODEExporter:
         tpl_data = {k: str(v) for k, v in tpl_data.items()}
 
         apply_template(
-            os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
+            os.path.join(amiciSrcPath, 'model_header.template.h'),
             os.path.join(self.model_path, f'{self.model_name}.h'),
             tpl_data
         )
 
         apply_template(
-            os.path.join(amiciSrcPath, 'model.ODE_template.cpp'),
+            os.path.join(amiciSrcPath, 'model.template.cpp'),
             os.path.join(self.model_path, f'{self.model_name}.cpp'),
             tpl_data
         )
@@ -3331,7 +3406,7 @@ def apply_template(source_file: Union[str, Path],
         fileout.write(result)
 
 
-def get_function_extern_declaration(fun: str, name: str) -> str:
+def get_function_extern_declaration(fun: str, name: str, ode: bool) -> str:
     """
     Constructs the extern function declaration for a given function
 
@@ -3339,12 +3414,14 @@ def get_function_extern_declaration(fun: str, name: str) -> str:
         function name
     :param name:
         model name
+    :param dae:
+        whether to generate declaration for DAE or ODE
 
     :return:
         C++ function definition string
     """
     f = functions[fun]
-    return f'extern {f.return_type} {fun}_{name}({f.arguments});'
+    return f'extern {f.return_type} {fun}_{name}({f.arguments(ode)});'
 
 
 def get_sunindex_extern_declaration(fun: str, name: str,
@@ -3371,7 +3448,7 @@ def get_sunindex_extern_declaration(fun: str, name: str,
         f'(SUNMatrixWrapper &{indextype}{index_arg});'
 
 
-def get_model_override_implementation(fun: str, name: str,
+def get_model_override_implementation(fun: str, name: str, ode: bool,
                                       nobody: bool = False) -> str:
     """
     Constructs ``amici::Model::*`` override implementation for a given function
@@ -3397,12 +3474,12 @@ def get_model_override_implementation(fun: str, name: str,
             maybe_return="" if func_info.return_type == "void" else "return ",
             fun=fun,
             name=name,
-            eval_signature=remove_argument_types(func_info.arguments),
+            eval_signature=remove_argument_types(func_info.arguments(ode)),
         )
     return '{return_type} f{fun}({signature}) override {{{body}}}\n'.format(
         return_type=func_info.return_type,
         fun=fun,
-        signature=func_info.arguments,
+        signature=func_info.arguments(ode),
         body=body,
     )
 

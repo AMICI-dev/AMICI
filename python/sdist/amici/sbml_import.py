@@ -13,7 +13,7 @@ import re
 import warnings
 from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
-                    Union)
+                    Union, Set, List)
 
 import libsbml as sbml
 import sympy as sp
@@ -30,8 +30,9 @@ from .import_utils import (RESERVED_SYMBOLS,
                            noise_distribution_to_observable_transformation,
                            smart_subs, smart_subs_dict, toposort_symbols)
 from .logging import get_logger, log_execution_time, set_log_level
-from .ode_export import (
-    ODEExporter, ODEModel, symbol_with_assumptions, _default_simplify
+from .de_export import (
+    DEExporter, DEModel, symbol_with_assumptions, _default_simplify,
+    smart_is_zero_matrix
 )
 
 
@@ -113,7 +114,6 @@ class SbmlImporter:
 
     :ivar sbml_parser_settings:
         sets behaviour of SBML Formula parsing
-
     """
 
     def __init__(self,
@@ -153,7 +153,8 @@ class SbmlImporter:
         self.sbml: sbml.Model = self.sbml_doc.getModel()
 
         # Long and short names for model components
-        self.symbols: Dict[SymbolId, Dict[sp.Symbol, Dict[str, Any]]] = {}
+        self.symbols: Dict[SymbolId, Union[Dict[sp.Symbol,
+                                           Dict[str, Any]], List[sp.Expr]]] = {}
 
         self._local_symbols: Dict[str, Union[sp.Expr, sp.Function]] = {}
         self.compartments: SymbolicFormula = {}
@@ -356,7 +357,7 @@ class SbmlImporter:
             log_as_log10=log_as_log10,
         )
 
-        exporter = ODEExporter(
+        exporter = DEExporter(
             ode_model,
             model_name=model_name,
             outdir=output_dir,
@@ -388,7 +389,7 @@ class SbmlImporter:
             simplify: Optional[Callable] = _default_simplify,
             cache_simplify: bool = False,
             log_as_log10: bool = True,
-    ) -> ODEModel:
+    ) -> DEModel:
         """Generate an ODEModel from this SBML model.
 
         See :py:func:`sbml2amici` for parameters.
@@ -437,13 +438,14 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._process_time()
 
-        ode_model = ODEModel(
+        ode_model = DEModel(
             verbose=verbose,
             simplify=simplify,
             cache_simplify=cache_simplify,
         )
         ode_model.import_from_sbml_importer(
-            self, compute_cls=compute_conservation_laws)
+            self, compute_cls=compute_conservation_laws
+        )
         return ode_model
 
     @log_execution_time('importing SBML', logger)
@@ -496,22 +498,12 @@ class SbmlImporter:
                         f'Required SBML extension {plugin.getPackageName()} '
                         f'is currently not supported!')
 
-        if any(not rule.isAssignment() and not isinstance(
+        if any(rule.isRate() and not isinstance(
                     self.sbml.getElementBySId(rule.getVariable()),
                     (sbml.Compartment, sbml.Species, sbml.Parameter)
                 ) for rule in self.sbml.getListOfRules()):
-            raise SBMLException('Algebraic rules are currently not supported, '
-                                'and rate rules are only supported for '
+            raise SBMLException('Rate rules are only supported for '
                                 'species, compartments, and parameters.')
-
-        if any(not (rule.isAssignment() or rule.isRate())
-                and isinstance(
-                    self.sbml.getElementBySId(rule.getVariable()),
-                    (sbml.Compartment, sbml.Species, sbml.Parameter)
-                ) for rule in self.sbml.getListOfRules()):
-            raise SBMLException('Only assignment and rate rules are '
-                                'currently supported for compartments, '
-                                'species, and parameters!')
 
         if any(r.getFast() for r in self.sbml.getListOfReactions()):
             raise SBMLException('Fast reactions are currently not supported!')
@@ -964,7 +956,7 @@ class SbmlImporter:
 
                     # Division by species compartment size (to find the
                     # rate of change in species concentration) now occurs
-                    # in the `dx_dt` method in "ode_export.py", which also
+                    # in the `dx_dt` method in "de_export.py", which also
                     # accounts for possibly variable compartments.
                     self.stoichiometric_matrix[species['index'],
                                                reaction_index] += \
@@ -994,26 +986,10 @@ class SbmlImporter:
             if rule.getTypeCode() == sbml.SBML_RATE_RULE:
                 continue
 
-            sbml_var = self.sbml.getElementBySId(rule.getVariable())
-            sym_id = symbol_with_assumptions(rule.getVariable())
-            formula = self._sympy_from_sbml_math(rule)
-            if formula is None:
-                continue
-
-            if isinstance(sbml_var, sbml.Species):
-                self.species_assignment_rules[sym_id] = formula
-
-            elif isinstance(sbml_var, sbml.Compartment):
-                self.compartment_assignment_rules[sym_id] = formula
-                self.compartments[sym_id] = formula
-
-            elif isinstance(sbml_var, sbml.Parameter):
-                self.parameter_assignment_rules[sym_id] = formula
-
-            self.symbols[SymbolId.EXPRESSION][sym_id] = {
-                'name': str(sym_id),
-                'value': formula
-            }
+            if rule.getTypeCode() == sbml.SBML_ALGEBRAIC_RULE:
+                self._process_rule_algebraic(rule)
+            else:
+                self._process_rule_assignment(rule)
 
         self.symbols[SymbolId.EXPRESSION] = toposort_symbols(
             self.symbols[SymbolId.EXPRESSION], 'value'
@@ -1026,6 +1002,105 @@ class SbmlImporter:
                                 self.symbols[SymbolId.EXPRESSION],
                                 'value')
             )
+
+    def _process_rule_algebraic(self, rule: sbml.AlgebraicRule):
+        formula = self._sympy_from_sbml_math(rule)
+
+        free_variables = set()
+        # SBML L3V2 spec, p. 61:
+        # "Therefore, if an algebraic rule is introduced in a model,
+        # for at least one of the entities referenced in the rule’s
+        # math element the value of that entity must not be
+        # completely determined by other constructs in the model"
+        # find those elements:
+        for symbol in formula.free_symbols:
+            sbml_var = self.sbml.getElementBySId(str(symbol))
+            # This means that at least this entity must
+            # not have the attribute constant=“true”
+            if sbml_var.isSetConstant() and sbml_var.getConstant():
+                continue
+            # and there must also not be a rate rule or assignment
+            # rule for it
+            if self.is_assignment_rule_target(sbml_var) or \
+                    self.is_rate_rule_target(sbml_var):
+                continue
+            # Furthermore, if the entity is a Species object, its value
+            # must not be determined by reactions, which means that it
+            # must either have the attribute boundaryCondition=“false”
+            # or else not be involved in any reaction at all.
+            is_species = isinstance(sbml_var, sbml.Species)
+            is_boundary_condition = sbml_var.isSetBoundaryCondition() and \
+                sbml_var.getBoundaryCondition()
+            is_involved_in_reaction = is_species and \
+                not smart_is_zero_matrix(self.stoichiometric_matrix[
+                    list(self.symbols[SymbolId.SPECIES].keys()).index(symbol),
+                    :
+                ])
+            if is_species and (is_boundary_condition or is_involved_in_reaction):
+                continue
+            free_variables.add(symbol)
+
+        assert len(free_variables) >= 1
+        self.symbols[SymbolId.ALGEBRAIC_EQUATION][rule.meta_id] = {
+            'formula': formula
+        }
+        # remove the symbol from the original definition and add to
+        # algebraic symbols (if not already done)
+        for var in free_variables:
+            if var in self.symbols[SymbolId.ALGEBRAIC_STATE]:
+                continue
+            symbol_id, source_symbols = next(
+                ((symol_id, symbols)
+                 for symol_id, symbols in self.symbols.items()
+                 if var in symbols),
+            )
+            six = list(source_symbols.keys()).index(var)
+            symbol = source_symbols.pop(var)
+            # update symbol and adapt stoichiometric matrix
+            if symbol_id != SymbolId.SPECIES:
+                # if not a species, add a zeros row to the stoichiometric
+                # matrix
+                symbol['init'] = symbol.pop('value')
+                self.stoichiometric_matrix.coljoin(
+                    sp.SparseMatrix([
+                        [0] * self.stoichiometric_matrix.shape[1]
+                    ])
+                )
+            if six != self.stoichiometric_matrix.shape[0] - 1:
+                # if not the last col, move it to the end
+                # as we reorder state variables
+                state_ordering = list(range(
+                    len(self.symbols[SymbolId.SPECIES]) +
+                    len(self.symbols[SymbolId.ALGEBRAIC_STATE]) +
+                    1
+                ))
+                state_ordering.append(state_ordering.pop(six))
+                self.stoichiometric_matrix = \
+                    self.stoichiometric_matrix[state_ordering, :]
+
+            self.symbols[SymbolId.ALGEBRAIC_STATE][var] = symbol
+
+    def _process_rule_assignment(self, rule: sbml.AssignmentRule):
+        sbml_var = self.sbml.getElementBySId(rule.getVariable())
+        sym_id = symbol_with_assumptions(rule.getVariable())
+        formula = self._sympy_from_sbml_math(rule)
+        if formula is None:
+            return
+
+        if isinstance(sbml_var, sbml.Species):
+            self.species_assignment_rules[sym_id] = formula
+
+        elif isinstance(sbml_var, sbml.Compartment):
+            self.compartment_assignment_rules[sym_id] = formula
+            self.compartments[sym_id] = formula
+
+        elif isinstance(sbml_var, sbml.Parameter):
+            self.parameter_assignment_rules[sym_id] = formula
+
+        self.symbols[SymbolId.EXPRESSION][sym_id] = {
+            'name': str(sym_id),
+            'value': formula
+        }
 
     def _process_time(self) -> None:
         """
@@ -1362,12 +1437,15 @@ class SbmlImporter:
         (initial) assignment rules.
         """
         self.symbols[SymbolId.OBSERVABLE] = {
-            symbol_with_assumptions(f'y{species_id}'): {
-                'name': specie['name'],
-                'value': species_id
+            symbol_with_assumptions(f'y{state_id}'): {
+                'name': state['name'],
+                'value': state_id
             }
-            for species_id, specie
-            in self.symbols[SymbolId.SPECIES].items()
+            for state_id, state
+            in {
+                **self.symbols[SymbolId.SPECIES],
+                **self.symbols[SymbolId.ALGEBRAIC_STATE]
+            }.items()
         }
 
         for variable, formula in itt.chain(
@@ -1584,7 +1662,7 @@ class SbmlImporter:
 
     def _get_conservation_laws_demartino(
             self,
-            ode_model: ODEModel,
+            ode_model: DEModel,
     ) -> List[Tuple[int, List[int], List[float]]]:
         """Identify conservation laws based on algorithm by DeMartino et al.
         (see conserved_moieties.py).
@@ -1714,7 +1792,7 @@ class SbmlImporter:
 
     def _add_conservation_for_non_constant_species(
         self,
-        ode_model: ODEModel,
+        ode_model: DEModel,
         conservation_laws: List[ConservationLaw]
     ) -> List[int]:
         """Add non-constant species to conservation laws
@@ -1790,12 +1868,16 @@ class SbmlImporter:
         (possibly variable) volumes.
         """
         for comp, vol in self.compartments.items():
-            if comp in self.symbols[SymbolId.SPECIES]:
+            if comp in self.symbols[SymbolId.SPECIES] \
+                    or comp in self.symbols[SymbolId.ALGEBRAIC_STATE]:
                 # for comps with rate rules volume is only initial
-                for species in self.symbols[SymbolId.SPECIES].values():
-                    if isinstance(species['init'], sp.Expr):
-                        species['init'] = smart_subs(species['init'],
-                                                     comp, vol)
+                for state in {
+                    **self.symbols[SymbolId.SPECIES],
+                    **self.symbols[SymbolId.ALGEBRAIC_STATE]
+                }.values():
+                    if isinstance(state['init'], sp.Expr):
+                        state['init'] = smart_subs(state['init'],
+                                                   comp, vol)
                 continue
             self._replace_in_all_expressions(comp, vol)
 
@@ -1844,7 +1926,8 @@ class SbmlImporter:
 
         # replace in identifiers
         if replace_identifiers:
-            for symbol in [SymbolId.EXPRESSION, SymbolId.SPECIES]:
+            for symbol in [SymbolId.EXPRESSION, SymbolId.SPECIES,
+                           SymbolId.ALGEBRAIC_STATE]:
                 # completely recreate the dict to keep ordering consistent
                 if old not in self.symbols[symbol]:
                     continue
@@ -1860,14 +1943,15 @@ class SbmlImporter:
                 self.symbols[symbol][new] = self.symbols[symbol][old]
                 del self.symbols[symbol][old]
 
-        # replace in values
+        # replace in values/formulas
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.LLHZ,
                        SymbolId.SIGMAY, SymbolId.SIGMAZ, SymbolId.EXPRESSION,
-                       SymbolId.EVENT, SymbolId.EVENT_OBSERVABLE]:
-            if not self.symbols.get(symbol, None):
-                continue
+                       SymbolId.EVENT, SymbolId.EVENT_OBSERVABLE,
+                       SymbolId.ALGEBRAIC_EQUATION]:
             for element in self.symbols[symbol].values():
-                element['value'] = smart_subs(element['value'], old, new)
+                for field in ['value', 'formula']:
+                    if field in element:
+                        element[field] = smart_subs(element[field], old, new)
 
         # replace in event state updates (boluses)
         if self.symbols.get(SymbolId.EVENT, False):
@@ -1876,18 +1960,15 @@ class SbmlImporter:
                     event['state_update'][index] = \
                         smart_subs(event['state_update'][index], old, new)
 
-        if SymbolId.SPECIES in self.symbols:
-            for species in self.symbols[SymbolId.SPECIES].values():
-                species['init'] = smart_subs(species['init'],
-                                             old, self._make_initial(new))
+        for state in {
+            **self.symbols[SymbolId.SPECIES],
+            **self.symbols[SymbolId.ALGEBRAIC_STATE]
+        }.values():
+            state['init'] = smart_subs(state['init'],
+                                       old, self._make_initial(new))
 
-                fields = ['dt']
-                if replace_identifiers:
-                    fields.append('compartment')
-
-                for field in ['dt']:
-                    if field in species:
-                        species[field] = smart_subs(species[field], old, new)
+            if 'dt' in state:
+                state['dt'] = smart_subs(state['dt'], old, new)
 
         # Initial compartment volume may also be specified with an assignment
         # rule (at the end of the _process_species method), hence needs to be
@@ -2168,7 +2249,7 @@ def assignmentRules2observables(sbml_model: sbml.Model,
 
 
 def _add_conservation_for_constant_species(
-        ode_model: ODEModel,
+        ode_model: DEModel,
         conservation_laws: List[ConservationLaw]
 ) -> List[int]:
     """
@@ -2192,7 +2273,7 @@ def _add_conservation_for_constant_species(
         if ode_model.state_is_constant(ix):
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
-            target_state = ode_model._states[ix].get_id()
+            target_state = ode_model._differentialstates[ix].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
             conservation_laws.append({
                 'state': target_state,

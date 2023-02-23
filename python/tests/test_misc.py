@@ -7,7 +7,7 @@ import pytest
 import sympy as sp
 
 import amici
-from amici.ode_export import _custom_pow_eval_derivative, _monkeypatched, \
+from amici.de_export import _custom_pow_eval_derivative, _monkeypatched, \
     smart_subs_dict
 from amici.testing import skip_on_valgrind
 
