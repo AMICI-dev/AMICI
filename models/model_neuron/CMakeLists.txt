@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0060)
-  cmake_policy(SET CMP0060 NEW)
-endif(POLICY CMP0060)
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(model_neuron)
 
@@ -30,41 +19,41 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici  HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici  REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_neuron_JSparse.cpp
-${MODEL_DIR}/model_neuron_Jrz.cpp
-${MODEL_DIR}/model_neuron_Jy.cpp
-${MODEL_DIR}/model_neuron_Jz.cpp
-${MODEL_DIR}/model_neuron_dJrzdsigma.cpp
-${MODEL_DIR}/model_neuron_dJrzdz.cpp
-${MODEL_DIR}/model_neuron_dJydsigma.cpp
-${MODEL_DIR}/model_neuron_dJydy.cpp
-${MODEL_DIR}/model_neuron_dJzdsigma.cpp
-${MODEL_DIR}/model_neuron_dJzdz.cpp
-${MODEL_DIR}/model_neuron_deltaqB.cpp
-${MODEL_DIR}/model_neuron_deltasx.cpp
-${MODEL_DIR}/model_neuron_deltax.cpp
-${MODEL_DIR}/model_neuron_deltaxB.cpp
-${MODEL_DIR}/model_neuron_drzdx.cpp
-${MODEL_DIR}/model_neuron_dxdotdp.cpp
-${MODEL_DIR}/model_neuron_dydx.cpp
-${MODEL_DIR}/model_neuron_dzdx.cpp
-${MODEL_DIR}/model_neuron_root.cpp
-${MODEL_DIR}/model_neuron_rz.cpp
-${MODEL_DIR}/model_neuron_sigmay.cpp
-${MODEL_DIR}/model_neuron_sigmaz.cpp
-${MODEL_DIR}/model_neuron_srz.cpp
-${MODEL_DIR}/model_neuron_stau.cpp
-${MODEL_DIR}/model_neuron_sx0.cpp
-${MODEL_DIR}/model_neuron_sz.cpp
-${MODEL_DIR}/model_neuron_x0.cpp
-${MODEL_DIR}/model_neuron_xdot.cpp
-${MODEL_DIR}/model_neuron_y.cpp
-${MODEL_DIR}/model_neuron_z.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/JSparse.cpp
+${MODEL_DIR}/Jrz.cpp
+${MODEL_DIR}/Jy.cpp
+${MODEL_DIR}/Jz.cpp
+${MODEL_DIR}/dJrzdsigma.cpp
+${MODEL_DIR}/dJrzdz.cpp
+${MODEL_DIR}/dJydsigma.cpp
+${MODEL_DIR}/dJydy.cpp
+${MODEL_DIR}/dJzdsigma.cpp
+${MODEL_DIR}/dJzdz.cpp
+${MODEL_DIR}/deltaqB.cpp
+${MODEL_DIR}/deltasx.cpp
+${MODEL_DIR}/deltax.cpp
+${MODEL_DIR}/deltaxB.cpp
+${MODEL_DIR}/drzdx.cpp
+${MODEL_DIR}/dxdotdp.cpp
+${MODEL_DIR}/dydx.cpp
+${MODEL_DIR}/dzdx.cpp
+${MODEL_DIR}/root.cpp
+${MODEL_DIR}/rz.cpp
+${MODEL_DIR}/sigmay.cpp
+${MODEL_DIR}/sigmaz.cpp
+${MODEL_DIR}/srz.cpp
+${MODEL_DIR}/stau.cpp
+${MODEL_DIR}/sx0.cpp
+${MODEL_DIR}/sz.cpp
+${MODEL_DIR}/x0.cpp
+${MODEL_DIR}/xdot.cpp
+${MODEL_DIR}/y.cpp
+${MODEL_DIR}/z.cpp
 
 ${MODEL_DIR}/wrapfunctions.cpp
 )

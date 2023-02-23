@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0060)
-  cmake_policy(SET CMP0060 NEW)
-endif(POLICY CMP0060)
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(model_dirac)
 
@@ -30,24 +19,24 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici  HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici  REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_dirac_JSparse.cpp
-${MODEL_DIR}/model_dirac_Jy.cpp
-${MODEL_DIR}/model_dirac_dJydsigma.cpp
-${MODEL_DIR}/model_dirac_dJydy.cpp
-${MODEL_DIR}/model_dirac_deltasx.cpp
-${MODEL_DIR}/model_dirac_deltax.cpp
-${MODEL_DIR}/model_dirac_dxdotdp.cpp
-${MODEL_DIR}/model_dirac_dydx.cpp
-${MODEL_DIR}/model_dirac_root.cpp
-${MODEL_DIR}/model_dirac_sigmay.cpp
-${MODEL_DIR}/model_dirac_stau.cpp
-${MODEL_DIR}/model_dirac_xdot.cpp
-${MODEL_DIR}/model_dirac_y.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/JSparse.cpp
+${MODEL_DIR}/Jy.cpp
+${MODEL_DIR}/dJydsigma.cpp
+${MODEL_DIR}/dJydy.cpp
+${MODEL_DIR}/deltasx.cpp
+${MODEL_DIR}/deltax.cpp
+${MODEL_DIR}/dxdotdp.cpp
+${MODEL_DIR}/dydx.cpp
+${MODEL_DIR}/root.cpp
+${MODEL_DIR}/sigmay.cpp
+${MODEL_DIR}/stau.cpp
+${MODEL_DIR}/xdot.cpp
+${MODEL_DIR}/y.cpp
 
 ${MODEL_DIR}/wrapfunctions.cpp
 )
