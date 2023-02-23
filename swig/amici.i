@@ -344,27 +344,3 @@ import numpy as np
 if TYPE_CHECKING:
     import numpy
 %}
-
-// TODO REMOVE ME ?!
-// library dirs for dependencies
-// the current suitesparse does not install static libraries and
-// sundials doesn't find the ones from `make static`
-%pythonbegin %{
-from pathlib import Path
-
-suitesparse_lib_dir = Path(__file__).parent / 'ThirdParty' \
-    / 'SuiteSparse' / 'lib'
-print(suitesparse_lib_dir)
-if sys.platform == 'win32':
-    os.add_dll_directory(str(suitesparse_lib_dir))
-else:
-    import sys
-    sys.path.insert(0, str(suitesparse_lib_dir))
-
-    os.environ['LD_LIBRARY_PATH'] = (
-        str(suitesparse_lib_dir) + ':' + os.environ['LD_LIBRARY_PATH']
-        if os.environ.get('LD_LIBRARY_PATH', None)
-        else str(suitesparse_lib_dir)
-    )
-%}
-
