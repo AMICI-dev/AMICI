@@ -24,7 +24,7 @@ def get_extension() -> CMakeExtension:
         os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = "1"
 
     return CMakeExtension(
-        name='TPL_MODELNAME',
+        name='model_ext',
         source_dir=os.getcwd(),
         install_prefix='TPL_MODELNAME',
         cmake_configure_options=[
