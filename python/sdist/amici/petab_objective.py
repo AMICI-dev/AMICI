@@ -811,4 +811,3 @@ def rdatas_to_simulation_df(
                                   measurement_df=measurement_df)
 
     return df.rename(columns={MEASUREMENT: SIMULATION})
-
