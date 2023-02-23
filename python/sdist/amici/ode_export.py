@@ -2543,7 +2543,7 @@ class ODEExporter:
             # length of intermediate build files, that may easily become
             # problematic on Windows, due to its ridiculous 255-character path
             # length limit.
-            f'--build-temp={module_dir}/build',
+            f'--build-temp={Path(module_dir, "build")}',
         ])
 
         if compiler is not None:
