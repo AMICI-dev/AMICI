@@ -86,7 +86,7 @@ import_array();
 %pythoncode %{
 def __repr__(self):
     return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.float64)) + ' >'
-    
+
 %}
 };
 %template(IntVector) std::vector<int>;
@@ -329,8 +329,10 @@ def __repr__(self):
 %pythonbegin %{
 import sys
 import os
+from pathlib import Path
 
 if sys.platform == 'win32':
+    os.add_dll_directory(Path(__file__).parent / "bin")
     for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
         os.add_dll_directory(dll_dir)
 
