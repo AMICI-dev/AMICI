@@ -96,5 +96,5 @@ if(AMICI_PYTHON_EXT_ONLY)
   # TODO generic extension; follow python naming -
   # _amici.cpython-311-x86_64-linux-gnu.so
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/amici.py
-                ${CMAKE_CURRENT_BINARY_DIR}/_amici.so DESTINATION .)
+                 $<TARGET_FILE:_amici> DESTINATION .)
 endif()
