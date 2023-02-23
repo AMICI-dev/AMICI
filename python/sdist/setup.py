@@ -29,12 +29,16 @@ from amici.custom_commands import (
 def get_extensions():
     """Get required C(++) extensions for build_ext"""
     # TODO --no_clibs option? already available via cmake_build_extension?
+    global_cmake_configure_options = [
+        "-DCMAKE_VERBOSE_MAKEFILE=ON",
+    ]
 
     suitesparse_config = CMakeExtension(
         name='SuiteSparse_config',
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/SuiteSparse_config',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
@@ -48,12 +52,12 @@ def get_extensions():
     install_dir = (Path(__file__).parent / "amici").absolute()
     prefix_path = install_dir
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
-
     amd = CMakeExtension(
         name='amd',
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/AMD',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             "-DNFORTRAN=TRUE",
         ]
     )
@@ -63,6 +67,7 @@ def get_extensions():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/BTF',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             "-DNFORTRAN=TRUE",
         ]
     )
@@ -72,6 +77,7 @@ def get_extensions():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/COLAMD',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             "-DNFORTRAN=TRUE",
         ]
     )
@@ -81,6 +87,7 @@ def get_extensions():
         install_prefix='amici',
         source_dir='amici/ThirdParty/SuiteSparse/KLU',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             "-DNCHOLMOD=ON",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
@@ -92,6 +99,7 @@ def get_extensions():
         install_prefix='amici',
         source_dir='amici/ThirdParty/sundials',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             "-DBUILD_ARKODE=OFF",
             "-DBUILD_CVODE=OFF",
             "-DBUILD_IDA=OFF",
@@ -113,6 +121,7 @@ def get_extensions():
         install_prefix='amici',
         source_dir='amici',
         cmake_configure_options=[
+            *global_cmake_configure_options,
             '-DAMICI_PYTHON_EXT_ONLY=ON',
             f'-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}',
         ]
