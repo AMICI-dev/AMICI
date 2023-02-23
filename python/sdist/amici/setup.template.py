@@ -1,5 +1,6 @@
 """AMICI model package setup"""
 import os
+from pathlib import Path
 
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
@@ -12,7 +13,7 @@ def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
 
     # Build shared object
-    prefix_path = _get_amici_path()
+    prefix_path = Path(_get_amici_path())
     AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
 
     # handle parallel building
@@ -27,8 +28,9 @@ def get_extension() -> CMakeExtension:
         source_dir='.',
         cmake_configure_options=[
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
-            f"-DCMAKE_MODULE_PATH={prefix_path}/lib/cmake/SuiteSparse",
-            f"-DKLU_ROOT={prefix_path}",
+            "-DCMAKE_MODULE_PATH="
+            f"{prefix_path.as_posix()}/lib/cmake/SuiteSparse",
+            f"-DKLU_ROOT={prefix_path.as_posix()}",
         ],
     )
 
