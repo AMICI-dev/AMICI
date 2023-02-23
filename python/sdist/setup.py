@@ -141,7 +141,7 @@ def main():
 
     # handle parallel building
     # Note: can be empty to use all hardware threads
-    if parallel_jobs := os.environ.get('AMICI_PARALLEL_COMPILE') is not None:
+    if (parallel_jobs := os.environ.get('AMICI_PARALLEL_COMPILE')) is not None:
         os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = parallel_jobs
     else:
         os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = "1"
