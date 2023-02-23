@@ -94,8 +94,7 @@ if(AMICI_PYTHON_EXT_ONLY)
 
   target_link_libraries(_amici amici Python3::Python)
   if(WIN32)
-    add_custom_command(OUTPUT dump COMMAND dumpbin /DEPENDENTS
-                                           $<TARGET_FILE:_amici>)
+    add_custom_command(TARGET _amici POST_BUILD COMMAND dumpbin "/DEPENDENTS" "$<TARGET_FILE:_amici>")
     message("Dependencies: ${dump}")
   endif()
 
