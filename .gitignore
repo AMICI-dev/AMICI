@@ -163,6 +163,7 @@ python/sdist/amici/amici.py
 python/sdist/amici/amici_wrap.cxx
 python/sdist/amici/amici_without_hdf5.py
 python/sdist/amici/amici_wrap_without_hdf5.cxx
+python/sdist/amici/include/
 python/sdist/amici/lib/
 python/sdist/amici/share/
 python/sdist/build/*
