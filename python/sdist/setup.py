@@ -29,10 +29,19 @@ from amici.custom_commands import (
 def get_extensions():
     """Get required C(++) extensions for build_ext"""
     # TODO --no_clibs option? already available via cmake_build_extension?
+
+    # CMake prefix path for finding FindXXX.cmake to find SuiteSparse
+    #  components
+    install_dir = (Path(__file__).parent / "amici").absolute()
+    prefix_path = install_dir
+    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
+
+    # Used by all extensions
     global_cmake_configure_options = [
         "-DCMAKE_VERBOSE_MAKEFILE=ON",
     ]
 
+    # SuiteSparse Config
     suitesparse_config = CMakeExtension(
         name='SuiteSparse_config',
         install_prefix='amici',
@@ -42,16 +51,9 @@ def get_extensions():
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
-            # "--trace-expand",
-            # "--debug-output",
-            # "--debug-find",
         ]
     )
-
-    # CMake prefix path for finding FindXXX.cmake
-    install_dir = (Path(__file__).parent / "amici").absolute()
-    prefix_path = install_dir
-    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
+    # SuiteSparse AMD
     amd = CMakeExtension(
         name='amd',
         install_prefix='amici',
@@ -61,7 +63,7 @@ def get_extensions():
             "-DNFORTRAN=TRUE",
         ]
     )
-
+    # SuiteSparse BTF
     btf = CMakeExtension(
         name='btf',
         install_prefix='amici',
@@ -71,7 +73,7 @@ def get_extensions():
             "-DNFORTRAN=TRUE",
         ]
     )
-
+    # SuiteSparse COLAMD
     colamd = CMakeExtension(
         name='colamd',
         install_prefix='amici',
@@ -81,7 +83,7 @@ def get_extensions():
             "-DNFORTRAN=TRUE",
         ]
     )
-
+    # SuiteSparse KLU
     klu = CMakeExtension(
         name='klu',
         install_prefix='amici',
@@ -93,7 +95,7 @@ def get_extensions():
             "-DNFORTRAN=TRUE",
         ]
     )
-
+    # SUNDIALS
     sundials = CMakeExtension(
         name='sundials',
         install_prefix='amici',
@@ -111,11 +113,15 @@ def get_extensions():
             "-DEXAMPLES_ENABLE_C=OFF",
             "-DEXAMPLES_INSTALL=OFF",
             "-DENABLE_KLU=ON",
+            # We need the potentially temporary and unpredictable build path
+            #  to use artifacts from other extensions here. `${build_dir}` will
+            #  be replaced by the actual path by `AmiciBuildCMakeExtension`
+            #  before being passed to CMake.
             "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
             "-DKLU_INCLUDE_DIR='${build_dir}/amici/include'",
         ]
     )
-
+    # AMICI
     amici_ext = CMakeExtension(
         name='amici',
         install_prefix='amici',

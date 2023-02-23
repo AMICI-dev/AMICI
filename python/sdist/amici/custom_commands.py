@@ -236,20 +236,21 @@ class AmiciBuildPy(build_py):
         self.run_command("build_ext")
         return super().run()
 
+
 class AmiciBuildCMakeExtension(cmake_build_extension.BuildExtension):
     def build_extension(self, ext: cmake_build_extension.CMakeExtension) -> None:
+        # put some structure into CMake output
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
 
-        if self.inplace == 0:
-            build_dir = self.build_lib
-        else:
-            build_dir = os.getcwd()
-
+        # Some hack to be able to use distutils' potentially temporary build
+        # directory in CMake options:
+        # Any occurrence of `${build_dir}` will be replaced by said path.
+        build_dir = self.build_lib if self.inplace == 0 else os.getcwd()
         build_dir = Path(build_dir).absolute().as_posix()
-
         ext.cmake_configure_options = [
             x.replace("${build_dir}", build_dir) for x in
             ext.cmake_configure_options]
+
         cmake_build_extension.BuildExtension.build_extension(self, ext)
 
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
