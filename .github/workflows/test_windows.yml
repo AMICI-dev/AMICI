@@ -17,6 +17,8 @@ jobs:
       openBLAS_version: "0.3.19"
       AMICI_DLL_DIRS: "C:\\BLAS\\OpenBLAS\\bin"
       LIB: "C:/BLAS/OpenBLAS/lib"
+      CFLAGS: "-nologo"
+      CXXFLAGS: "-nologo"
 
     strategy:
       matrix:
