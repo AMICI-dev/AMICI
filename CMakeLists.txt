@@ -23,16 +23,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
-# MSVC
-# -nologo: hide copyright message
-# -wd4820: hide padding
-# -wd4514: hide unreferenced inline function removed
-# -wd4710: hide not inlined
-# -wd4711: hide auto-inlined
-# -wd4625: hide copy-ctor implicitly deleted
-# -wd4626: hide assignment-ctor implicitly deleted
-# -wd5045: hide spectre mitigation
-set(MY_CXX_FLAGS -Wall -nologo -wd4820 -wd4514 -wd4710 -wd4711 -wd4625 -wd4626 -wd5045)
+set(MY_CXX_FLAGS
+    -Wall
+    # MSVC
+    #
+    # hide copyright message
+    -nologo
+    # -wd4820: hide padding
+    -wd4820
+    # hide unreferenced inline function removed
+    -wd4514
+    # hide not inlined
+    -wd4710
+    # hide auto-inlined
+    -wd4711
+    # hide copy-ctor implicitly deleted
+    -wd4625
+    # hide assignment-ctor implicitly deleted
+    -wd4626
+    # hide spectre mitigation
+    -wd5045
+    # hide enum-switch no explicitly handled
+    -wd4061)
 foreach(FLAG ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
   check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
@@ -43,8 +55,8 @@ endforeach(FLAG)
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-    add_compile_options(-UNDEBUG -O0 -g)
-    set(CMAKE_BUILD_TYPE "Debug")
+  add_compile_options(-UNDEBUG -O0 -g)
+  set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
 # coverage options
@@ -199,12 +211,12 @@ add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
 # legacy python package environment variables:
 if(DEFINED ENV{BLAS_CFLAGS})
-    target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
+  target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
 endif()
 if(DEFINED ENV{BLAS_LIBS})
-    # Note that, on Windows, at least for ninja, this will only work with
-    # dashes instead of slashes in any linker options
-    target_link_libraries(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
+  # Note that, on Windows, at least for ninja, this will only work with dashes
+  # instead of slashes in any linker options
+  target_link_libraries(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
 endif()
 
 set(AMICI_CXX_OPTIONS
@@ -235,16 +247,15 @@ if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
 endif()
 
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-    set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
-    foreach(FLAG ${MY_CXX_FLAGS})
-      unset(CUR_FLAG_SUPPORTED CACHE)
-      check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
-      if(${CUR_FLAG_SUPPORTED})
-          target_compile_options(${PROJECT_NAME} PRIVATE ${FLAG})
-      endif()
-    endforeach(FLAG)
+  set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
+  foreach(FLAG ${MY_CXX_FLAGS})
+    unset(CUR_FLAG_SUPPORTED CACHE)
+    check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+    if(${CUR_FLAG_SUPPORTED})
+      target_compile_options(${PROJECT_NAME} PRIVATE ${FLAG})
+    endif()
+  endforeach(FLAG)
 endif()
-
 
 target_link_libraries(
   ${PROJECT_NAME}
@@ -291,8 +302,8 @@ if(SUNDIALS_SUPERLUMT_ENABLE)
 endif()
 
 if(AMICI_PYTHON_EXT_ONLY)
-    add_compile_definitions("gsl_CONFIG_CONTRACT_VIOLATION_THROWS"
-        "gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1")
+  add_compile_definitions("gsl_CONFIG_CONTRACT_VIOLATION_THROWS"
+                          "gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1")
 endif()
 
 # Create targets to make the sources show up in IDEs for convenience
