@@ -35,9 +35,11 @@ from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 from .import_utils import (ObservableTransformation, generate_flux_symbol,
                            smart_subs_dict, strip_pysb,
-                           symbol_with_assumptions, toposort_symbols)
+                           symbol_with_assumptions, toposort_symbols,
+                           SBMLException)
 from .logging import get_logger, log_execution_time, set_log_level
 from .de_model import *
+
 
 
 # Template for model simulation main.cpp file
@@ -941,6 +943,12 @@ class DEModel:
                 dv_dx = v.diff(species_id)
                 xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
                 return xdot
+            elif comp in si.symbols[SymbolId.ALGEBRAIC_STATE]:
+                raise SBMLException(
+                    f'Species {species_id} is in a compartment {comp} that is'
+                    f' defined by an algebraic equation. This is not'
+                    f' supported.'
+                )
             else:
                 v = si.compartments[comp]
 

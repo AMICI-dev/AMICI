@@ -29,16 +29,13 @@ from .import_utils import (RESERVED_SYMBOLS,
                            generate_regularization_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols)
+                           smart_subs, smart_subs_dict, toposort_symbols,
+                           SBMLException)
 from .logging import get_logger, log_execution_time, set_log_level
 from .de_export import (
     DEExporter, DEModel, symbol_with_assumptions, _default_simplify,
     smart_is_zero_matrix
 )
-
-
-class SBMLException(Exception):
-    pass
 
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
@@ -1872,6 +1869,8 @@ class SbmlImporter:
                 **self.symbols[SymbolId.SPECIES],
                 **self.symbols[SymbolId.ALGEBRAIC_STATE]
             }[state_id]
+            if 'amount' not in symbol:
+                continue  # not a species
             if symbol['amount']:
                 compartment_size = sp.Integer(1)
             else:
