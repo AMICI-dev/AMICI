@@ -3178,7 +3178,7 @@ class DEExporter:
             'Z2EVENT':
                 ', '.join(map(str, self.model._z2event)),
             'ID':
-                ', '.join(map(lambda x: str(int(isinstance(x, AlgebraicState))),
+                ', '.join(map(lambda x: str(int(isinstance(x, DifferentialState))),
                               self.model._states))
         }
 

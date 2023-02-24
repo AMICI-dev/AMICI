@@ -50,9 +50,10 @@ void Model_DAE::fJSparse(realtype t, realtype cj, const_N_Vector x,
         JSparse.sparse_add(derived_state_.dxdotdx_explicit, 1.0,
                            derived_state_.dxdotdx_implicit, 1.0);
         
-        
+        derived_state_.dxdotdx_explicit = JSparse;
+        fM(t, x_pos);
         JSparse.sparse_add(derived_state_.MSparse_, -cj,
-                           derived_state_.dxdotdx_implicit, 1.0);
+                           derived_state_.dxdotdx_explicit, 1.0);
     } else {
         fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
                  N_VGetArrayPointerConst(x_pos),
@@ -168,14 +169,15 @@ void Model_DAE::fM(realtype t, const_N_Vector x) {
          */
         int ndiff = 0;
         for (int ix = 0; ix < nx_solver; ix++) {
+            derived_state_.MSparse_.set_indexptr(ix, ndiff);
             if (this->idlist.at(ix) == 1.0){
                 derived_state_.MSparse_.set_data(ndiff, 1.0);
                 derived_state_.MSparse_.set_indexval(ndiff, ix);
-                derived_state_.MSparse_.set_indexptr(ix, ndiff);
                 ndiff++;
             }
         }
         derived_state_.MSparse_.set_indexptr(nx_solver, ndiff);
+        assert(ndiff == derived_state_.MSparse_.capacity());
     } else {
         fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
            state_.unscaledParameters.data(),

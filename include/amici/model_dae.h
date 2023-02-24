@@ -52,7 +52,7 @@ class Model_DAE : public Model {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
             int ndiff = 0;
         for (auto& n : idlist)
-             ndiff += 1.0 - n;
+             ndiff += n;
         auto M_nnz = static_cast<sunindextype>(ndiff);
         derived_state_.MSparse_ = SUNMatrixWrapper(nx_solver, nx_solver,
                                                    M_nnz, CSC_MAT);
