@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
-
-if(POLICY CMP0060)
-  cmake_policy(SET CMP0060 NEW)
-endif(POLICY CMP0060)
-if(POLICY CMP0065)
-  cmake_policy(SET CMP0065 NEW)
-endif(POLICY CMP0065)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
+cmake_minimum_required(VERSION 3.15)
 
 project(model_events)
 
@@ -30,38 +19,38 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici  HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici  REQUIRED HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(SRC_LIST_LIB ${MODEL_DIR}/model_events_JSparse.cpp
-${MODEL_DIR}/model_events_Jrz.cpp
-${MODEL_DIR}/model_events_Jy.cpp
-${MODEL_DIR}/model_events_Jz.cpp
-${MODEL_DIR}/model_events_dJrzdsigma.cpp
-${MODEL_DIR}/model_events_dJrzdz.cpp
-${MODEL_DIR}/model_events_dJydsigma.cpp
-${MODEL_DIR}/model_events_dJydy.cpp
-${MODEL_DIR}/model_events_dJzdsigma.cpp
-${MODEL_DIR}/model_events_dJzdz.cpp
-${MODEL_DIR}/model_events_deltasx.cpp
-${MODEL_DIR}/model_events_drzdx.cpp
-${MODEL_DIR}/model_events_dxdotdp.cpp
-${MODEL_DIR}/model_events_dydp.cpp
-${MODEL_DIR}/model_events_dydx.cpp
-${MODEL_DIR}/model_events_dzdx.cpp
-${MODEL_DIR}/model_events_root.cpp
-${MODEL_DIR}/model_events_rz.cpp
-${MODEL_DIR}/model_events_sigmay.cpp
-${MODEL_DIR}/model_events_sigmaz.cpp
-${MODEL_DIR}/model_events_srz.cpp
-${MODEL_DIR}/model_events_stau.cpp
-${MODEL_DIR}/model_events_sz.cpp
-${MODEL_DIR}/model_events_x0.cpp
-${MODEL_DIR}/model_events_xdot.cpp
-${MODEL_DIR}/model_events_y.cpp
-${MODEL_DIR}/model_events_z.cpp
+set(SRC_LIST_LIB ${MODEL_DIR}/JSparse.cpp
+${MODEL_DIR}/Jrz.cpp
+${MODEL_DIR}/Jy.cpp
+${MODEL_DIR}/Jz.cpp
+${MODEL_DIR}/dJrzdsigma.cpp
+${MODEL_DIR}/dJrzdz.cpp
+${MODEL_DIR}/dJydsigma.cpp
+${MODEL_DIR}/dJydy.cpp
+${MODEL_DIR}/dJzdsigma.cpp
+${MODEL_DIR}/dJzdz.cpp
+${MODEL_DIR}/deltasx.cpp
+${MODEL_DIR}/drzdx.cpp
+${MODEL_DIR}/dxdotdp.cpp
+${MODEL_DIR}/dydp.cpp
+${MODEL_DIR}/dydx.cpp
+${MODEL_DIR}/dzdx.cpp
+${MODEL_DIR}/root.cpp
+${MODEL_DIR}/rz.cpp
+${MODEL_DIR}/sigmay.cpp
+${MODEL_DIR}/sigmaz.cpp
+${MODEL_DIR}/srz.cpp
+${MODEL_DIR}/stau.cpp
+${MODEL_DIR}/sz.cpp
+${MODEL_DIR}/x0.cpp
+${MODEL_DIR}/xdot.cpp
+${MODEL_DIR}/y.cpp
+${MODEL_DIR}/z.cpp
 
 ${MODEL_DIR}/wrapfunctions.cpp
 )

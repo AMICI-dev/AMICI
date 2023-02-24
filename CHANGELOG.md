@@ -2,6 +2,86 @@
 
 ## v0.X Series
 
+### v0.16.1 (2023-02-24)
+
+Fixes:
+* Additional package names for finding blas via pkg-config
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1959
+* Changed default interpolation type from hermite to polynomial
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1960
+* PySB import: Change default simplify to work with multiprocessing
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1961
+* Add --no-validate to amici_import_petab
+  @dweindl in https://github.com/AMICI-dev/AMICI/pull/1963
+* Fix get_model for direct import of swig interface
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1969
+* Fix PytestReturnNotNoneWarning in test_conserved_quantities_demartino.py
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1968
+* Fix MSVC builds / remove -W* flags
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1972
+* Add option to use IDs when plotting trajectories
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1974
+* Fix assignmentRules2observables - skip non-assignment-rule targets
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1973
+* Use std::clock for measuring solver time
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1982
+  (*Note that this uses cpu-time consumed by all threads*)
+* Fix narrowing-conversion-warning
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1983
+* PEtab import: allow specifying default values for output parameters
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1987
+* Print stacktraces only with debug logging level
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1985
+* Change default ReturnData::status to AMICI_NOT_RUN
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1984
+* Reduce time-tracking overhead
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1988
+* Fix equilibraton status discrepancy
+  by @plakrisenko in https://github.com/AMICI-dev/AMICI/pull/1991
+* Pass model_name to _create_model_output_dir_name
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1994
+* CMake: Build with OpenMP support if available
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2000
+* Fix SuiteSparse Makefiles for compiler-paths
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2003
+* CMake: Build with HDF5 support if available
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1999
+* CMake: Fix reading version file on Windows
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2001
+* CMake: raise minimum required version to 3.15
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2002
+* Fix/extend runtime logging
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2005
+* Fix error logging in steadystate solver
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2008
+* Don't pass `-py3` to swig after 4.1.0
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2010
+* SWIG __repr__s for different templated vector classes
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2009
+* Matlab: If mex fails, print mex arguments
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2013
+* Simplify OpenBLAS installation on Windows
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2016
+* Remove model name prefix in generated model files
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2015
+* ...
+
+Documentation:
+* Restructure sphinx doc
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1978
+* Instructions for AMICI with singularity
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1964
+* Illustrate options for potentially speeding up model import/simulation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1965
+* ...
+
+Dependencies:
+* Updated SuiteSparse to v7.0.1
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2018
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.16.0...v0.16.1
+
+
 ### v0.16.0 (2023-01-25)
 
 Features
@@ -453,7 +533,7 @@ https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
 
 ### v0.11.22 (2021-12-02)
 
-* **Require sympy>=1.9,pysb>=1.13.1** by @FFroehlich, @dweindl
+* **Require sympy>=1.9,pysb>=1.13.1*  by @FFroehlich, @dweindl
   in https://github.com/AMICI-dev/AMICI/pull/1599
 * Fixed sympy deprecation warning by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1600

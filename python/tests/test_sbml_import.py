@@ -1,7 +1,6 @@
 """Tests related to amici.sbml_import"""
 import os
 import re
-import shutil
 from numbers import Number
 from pathlib import Path
 from urllib.request import urlopen
@@ -198,19 +197,17 @@ def model_steadystate_module():
         not variable.getId().endswith('_sigma')
     )
 
-    outdir = 'test_model_steadystate_scaled'
     module_name = 'test_model_steadystate_scaled'
-    sbml_importer.sbml2amici(
-        model_name=module_name,
-        output_dir=outdir,
-        observables=observables,
-        constant_parameters=['k0'],
-        sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            observables=observables,
+            constant_parameters=['k0'],
+            sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
-    yield amici.import_model_module(module_name=module_name,
-                                    module_path=outdir)
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(module_name=module_name,
+                                        module_path=outdir)
 
 
 @pytest.fixture(scope='session')
@@ -384,19 +381,17 @@ def model_test_likelihoods():
     }
 
     module_name = 'model_test_likelihoods'
-    outdir = 'model_test_likelihoods'
-    sbml_importer.sbml2amici(
-        model_name=module_name,
-        output_dir=outdir,
-        observables=observables,
-        constant_parameters=['k0'],
-        noise_distributions=noise_distributions,
-    )
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            observables=observables,
+            constant_parameters=['k0'],
+            noise_distributions=noise_distributions,
+        )
 
-    yield amici.import_model_module(module_name=module_name,
-                                    module_path=outdir)
-
-    shutil.rmtree(outdir, ignore_errors=True)
+        yield amici.import_model_module(module_name=module_name,
+                                        module_path=outdir)
 
 
 @skip_on_valgrind
@@ -607,7 +602,7 @@ def test_code_gen_uses_cse(extract_cse):
                 generate_sensitivity_code=False,
                 output_dir = tmpdir
             )
-            xdot = Path(tmpdir, f'{model_name}_xdot.cpp').read_text()
+            xdot = Path(tmpdir, 'xdot.cpp').read_text()
         assert ("__amici_cse_0 = " in xdot) == extract_cse
     finally:
         os.environ = old_environ
@@ -625,5 +620,5 @@ def test_code_gen_uses_lhs_symbol_ids():
             generate_sensitivity_code=False,
             output_dir=tmpdir
         )
-        dwdx = Path(tmpdir, f'{model_name}_dwdx.cpp').read_text()
+        dwdx = Path(tmpdir, 'dwdx.cpp').read_text()
     assert "dobservable_x1_dx1 = " in dwdx

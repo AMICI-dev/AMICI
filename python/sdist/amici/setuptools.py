@@ -73,7 +73,7 @@ def get_blas_config() -> PackageInfo:
 
     # Try pkgconfig
     if pkgconfig:
-        for blas_name in ['cblas', 'openblas']:
+        for blas_name in ['cblas', 'blas-atlas', 'openblas', 'blas']:
             if pkgconfig.exists(blas_name):
                 blaspkgcfg = pkgconfig.parse(blas_name)
                 blaspkgcfg['extra_compile_args'] = [
@@ -215,8 +215,13 @@ def add_debug_flags_if_required(cxx_flags: List[str],
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         print("ENABLE_AMICI_DEBUGGING was set to TRUE."
               " Building AMICI with debug symbols.")
-        cxx_flags.extend(['-g', '-O0', '-UNDEBUG', '-Werror',
-                          '-Wno-error=deprecated-declarations'])
+        cxx_flags.extend(['-g', '-O0', '-UNDEBUG'])
+        if sys.platform != "win32":
+            # these options are incompatible with MSVC, but there is no easy
+            # way to detect which compiler will be used. so we just skip them
+            # altogether on windows.
+            cxx_flags.extend(['-Werror', '-Wno-error=deprecated-declarations'])
+
         linker_flags.extend(['-g'])
 
 
@@ -232,12 +237,13 @@ def generate_swig_interface_files(swig_outdir: str = None,
     swig_args = [
         '-c++',
         '-python',
-        '-py3',
         '-threads',
         '-Wall',
         f'-Iamici{os.sep}swig',
         f'-Iamici{os.sep}include',
     ]
+    if swig_version < (4, 1, 0):
+        swig_args.insert(2, '-py3')
 
     print(f"Found SWIG version {swig_version}")
 

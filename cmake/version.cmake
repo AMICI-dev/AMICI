@@ -13,7 +13,5 @@ get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_FILE}
                        DIRECTORY)
 get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_DIR} DIRECTORY)
 
-execute_process(
-  COMMAND sh -c "cat version.txt | tr -d '\n'"
-  WORKING_DIRECTORY "${CMAKE_PARENT_LIST_DIR}"
-  OUTPUT_VARIABLE PROJECT_VERSION)
+file(STRINGS "${CMAKE_PARENT_LIST_DIR}/version.txt" PROJECT_VERSION)
+message(DEBUG "Version number: ${PROJECT_VERSION}")

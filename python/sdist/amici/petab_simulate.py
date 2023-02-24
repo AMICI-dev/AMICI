@@ -74,7 +74,7 @@ class PetabSimulator(petab.simulate.Simulator):
                         kwargs[MODEL_NAME] += str(self.rng.integers(10))
                 if MODEL_OUTPUT_DIR not in kwargs:
                     kwargs[MODEL_OUTPUT_DIR] = self.working_dir
-                self.amici_model = subset_call(import_petab_problem, kwargs)
+                self.amici_model = _subset_call(import_petab_problem, kwargs)
             kwargs[AMICI_MODEL] = self.amici_model
         self.amici_model = kwargs[AMICI_MODEL]
 
@@ -83,13 +83,13 @@ class PetabSimulator(petab.simulate.Simulator):
             kwargs[AMICI_SOLVER].setSensitivityMethod(
                 SensitivityMethod_none)
 
-        result = subset_call(simulate_petab, kwargs)
+        result = _subset_call(simulate_petab, kwargs)
         return rdatas_to_measurement_df(result[RDATAS],
                                         self.amici_model,
                                         self.petab_problem.measurement_df)
 
 
-def subset_call(method: Callable, kwargs: dict):
+def _subset_call(method: Callable, kwargs: dict):
     """
     Helper function to call a method with the intersection of arguments in the
     method signature and the supplied arguments.
@@ -97,11 +97,11 @@ def subset_call(method: Callable, kwargs: dict):
     :param method:
         The method to be called.
     :param kwargs:
-        The argument superset as a dictionary, similar to `**kwargs` in method
-        signatures.
+        The argument superset as a dictionary, similar to ``**kwargs`` in
+        method signatures.
     :return:
-        The output of `method`, called with the applicable arguments in
-        `kwargs`.
+        The output of ``method``, called with the applicable arguments in
+        ``kwargs``.
     """
     method_args = inspect.signature(method).parameters
     subset_kwargs = {k: v

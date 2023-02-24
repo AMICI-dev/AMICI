@@ -859,12 +859,24 @@ void Solver::setMaxTime(double maxtime)
 
 void Solver::startTimer() const
 {
-    starttime_ = std::chrono::system_clock::now();
+    starttime_ = std::clock();
 }
 
-bool Solver::timeExceeded() const
+bool Solver::timeExceeded(int interval) const
 {
-    return std::chrono::system_clock::now() - starttime_ > maxtime_;
+    static int eval_counter = 0;
+
+    // 0 means infinite time
+    if(maxtime_.count() == 0)
+        return false;
+
+    if (++eval_counter % interval)
+        return false;
+
+    eval_counter = 0;
+    auto cputime_exceed = static_cast<double>(std::clock() - starttime_)
+                          / CLOCKS_PER_SEC;
+    return std::chrono::duration<double>(cputime_exceed) > maxtime_;
 }
 
 void Solver::setMaxSteps(const long int maxsteps) {
@@ -1226,20 +1238,28 @@ void wrapErrHandlerFn(int error_code, const char *module,
         snprintf(buffid, BUF_SIZE, "%s:%s:WARNING", module, function);
         break;
 
-    case -1:
+    case AMICI_TOO_MUCH_WORK:
         snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
-    case -2:
+    case AMICI_TOO_MUCH_ACC:
         snprintf(buffid, BUF_SIZE, "%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
-    case -3:
+    case AMICI_ERR_FAILURE:
         snprintf(buffid, BUF_SIZE, "%s:%s:ERR_FAILURE", module, function);
         break;
 
-    case -4:
+    case AMICI_CONV_FAILURE:
         snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
+        break;
+            
+    case AMICI_RHSFUNC_FAIL:
+        snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
+        break;
+            
+    case AMICI_FIRST_RHSFUNC_ERR:
+        snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
         break;
 
     default:

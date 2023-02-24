@@ -82,13 +82,48 @@ import_array();
 // Expose vectors
 %include <stl.i>
 %template(DoubleVector) std::vector<double>;
+%extend std::vector<double> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.float64)) + ' >'
+    
+%}
+};
 %template(IntVector) std::vector<int>;
+%extend std::vector<int> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.int64)) + ' >'
+
+%}
+};
 %template(BoolVector) std::vector<bool>;
+%extend std::vector<bool> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.bool_)) + ' >'
+
+%}
+};
 %template(StringVector) std::vector<std::string>;
+%extend std::vector<string> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 %feature("docstring") std::map<std::string, double>
 "Swig-Generated class templating :class:`Dict`
 [:class:`str`, :class:`float`] to facilitate interfacing with C++ bindings.";
 %template(StringDoubleMap) std::map<std::string, double>;
+%extend std::map<std::string, double> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(dict(self)) + ' >'
+
+%}
+};
 
 // Let numpy access std::vector
 %{
@@ -124,6 +159,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %ignore amici::ModelState;
 %ignore amici::ModelStateDerived;
 %ignore amici::unravel_index;
+%ignore amici::backtraceString;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
@@ -166,13 +202,34 @@ using namespace amici;
 // Prevent using ValueWrapper, but don't expose unique_ptr vector
 %ignore std::vector<std::unique_ptr<amici::ReturnData>>;
 %template(ReturnDataPtrVector) std::vector<std::unique_ptr<amici::ReturnData>>;
+%extend std::vector<std::unique_ptr<amici::ReturnData>> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 // Process symbols in header
 %include "amici/amici.h"
 
 // Expose vectors
 %template(ExpDataPtrVector) std::vector<amici::ExpData*>;
+%extend std::vector<amici::ExpData*> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 %template(LogItemVector) std::vector<amici::LogItem>;
+%extend std::vector<amici::LogItem> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 
 // Convert integer values to enum class
@@ -208,6 +265,13 @@ namespace amici {
     void Model::setParameterScale(std::vector<int> const& intVec);
 }
 %template(ParameterScalingVector) std::vector<amici::ParameterScaling>;
+%extend std::vector<amici::ParameterScaling> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 
 // Add function to check if amici was compiled with OpenMP
@@ -253,6 +317,13 @@ RDataReporting = enum('RDataReporting')
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
+%extend std::vector<amici::SteadyStateStatus> {
+%pythoncode %{
+def __repr__(self):
+    return self.this.__repr__()[:-1] + '; ' + repr(list(self)) + ' >'
+
+%}
+};
 
 // Handle AMICI_DLL_DIRS environment variable
 %pythonbegin %{
@@ -265,9 +336,11 @@ if sys.platform == 'win32':
 
 %}
 
-// import additional types for typehints
+// import additional types for typehintsn
+// also import np for use in __repr__ functions
 %pythonbegin %{
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
+import numpy as np
 if TYPE_CHECKING:
     import numpy
 %}

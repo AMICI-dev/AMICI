@@ -101,7 +101,7 @@ def main():
         extra_compiler_flags=cxx_flags
     )
     libsuitesparse = setup_clibs.get_lib_suite_sparse(
-        extra_compiler_flags=cxx_flags + ['-DDLONG'],
+        extra_compiler_flags=cxx_flags,
         suitesparse_base_dir=suitesparse_base_dir
     )
 
