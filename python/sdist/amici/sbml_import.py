@@ -1084,8 +1084,11 @@ class SbmlImporter:
                 symbol['init'] = sp.Float(symbol.pop('value'))
                 # if not a species, add a zeros row to the stoichiometric
                 # matrix
-                if isinstance(symbol['init'], float) and np.isnan(symbol['init']):
-                    # placeholder, needs to be determined n IC calculation
+                if (isinstance(symbol['init'], float)
+                    and np.isnan(symbol['init'])) or \
+                    (isinstance(symbol['init'], sp.Number)
+                     and symbol['init'] == sp.nan):
+                    # placeholder, needs to be determined in IC calculation
                     symbol['init'] = sp.Float(0.0)
                 self.stoichiometric_matrix = self.stoichiometric_matrix.row_insert(
                     self.stoichiometric_matrix.shape[0],
