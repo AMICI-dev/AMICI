@@ -105,7 +105,26 @@ set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 find_package(SUNDIALS REQUIRED PATHS
              "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
 
+<<<<<<< HEAD
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
+=======
+set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse/")
+set(SUITESPARSE_INCLUDE_DIRS "${SUITESPARSE_DIR}/include"
+                             "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/src")
+set(SUITESPARSE_LIBRARIES
+    ${SUITESPARSE_DIR}/lib/libklu${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUITESPARSE_DIR}/lib/libcolamd${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUITESPARSE_DIR}/lib/libbtf${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUITESPARSE_DIR}/lib/libamd${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUITESPARSE_DIR}/lib/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
+)
+
+find_package(
+  SUNDIALS REQUIRED PATHS
+  "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib/cmake/sundials/")
+
+set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
+>>>>>>> develop
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.

@@ -4,7 +4,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 from cmake_build_extension import BuildExtension, CMakeExtension
 from setuptools.command.build_py import build_py

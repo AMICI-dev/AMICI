@@ -31,12 +31,21 @@ set_target_properties(${SWIG_LIBRARY_NAME}
     PREFIX ""
 )
 
+# Python extension suffix
+execute_process(
+  COMMAND ${Python3_EXECUTABLE} -c
+          "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
+  OUTPUT_VARIABLE PY_EXT_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT "${PY_EXT_SUFFIX}" STREQUAL "")
+    message(STATUS "Python extension suffix is ${PY_EXT_SUFFIX}")
+  set_target_properties(${SWIG_LIBRARY_NAME} PROPERTIES SUFFIX "${PY_EXT_SUFFIX}" )
+endif()
+
+
 swig_link_libraries(${SWIG_LIBRARY_NAME}
     ${Python3_LIBRARIES}
     model)
 
-# TODO generic extension; follow python naming -
-# _amici.cpython-311-x86_64-linux-gnu.so
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.py
               $<TARGET_FILE:${SWIG_LIBRARY_NAME}> DESTINATION .)
 
