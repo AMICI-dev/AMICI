@@ -1041,7 +1041,7 @@ class SbmlImporter:
 
         assert len(free_variables) >= 1
         self.symbols[SymbolId.ALGEBRAIC_EQUATION][rule.meta_id] = {
-            'formula': formula
+            'value': formula
         }
         # remove the symbol from the original definition and add to
         # algebraic symbols (if not already done)
@@ -1948,9 +1948,7 @@ class SbmlImporter:
                        SymbolId.EVENT, SymbolId.EVENT_OBSERVABLE,
                        SymbolId.ALGEBRAIC_EQUATION]:
             for element in self.symbols[symbol].values():
-                for field in ['value', 'formula']:
-                    if field in element:
-                        element[field] = smart_subs(element[field], old, new)
+                    element['value'] = smart_subs(element['value'], old, new)
 
         # replace in event state updates (boluses)
         if self.symbols.get(SymbolId.EVENT, False):

@@ -170,16 +170,16 @@ class AlgebraicEquation(ModelQuantity):
     """
     An AlgebraicEquation defines an algeb
     """
-    def __init__(self, identifier: str, formula: sp.Expr):
+    def __init__(self, identifier: str, value: sp.Expr):
         """
         Create a new AlgebraicEquation instance.
 
-        :param formula:
+        :param value:
             formula of the algebraic equation, solution is given by
             formula == 0
         """
         super(AlgebraicEquation, self).__init__(
-            sp.Symbol(identifier), identifier, formula
+            sp.Symbol(identifier), identifier, value
         )
 
     def get_free_symbols(self):

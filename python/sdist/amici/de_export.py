@@ -985,9 +985,6 @@ class DEModel:
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
                 args += ['event']
 
-            if symbol_name == SymbolId.ALGEBRAIC_EQUATION:
-                args = ['formula']
-
             comp_kwargs = [
                 {
                     'identifier': var_id,
