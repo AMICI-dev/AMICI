@@ -26,8 +26,6 @@ message ( STATUS "Building SuiteSparse_config version: v"
 
 # AMICI
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-# AMICI TODO REMOVE ME?
-link_directories("C:/BLAS/lib")
 
 #-------------------------------------------------------------------------------
 # SuiteSparse policies
@@ -67,7 +65,7 @@ else ( )
     find_package ( OpenMP )
 endif ( )
 
-# AMICI TODO
+# AMICI
 # include ( SuiteSparseBLAS )
 set(SuiteSparse_BLAS_integer int64_t)
 
