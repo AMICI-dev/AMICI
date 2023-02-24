@@ -1,16 +1,4 @@
-cmake_minimum_required(VERSION 3.8) # swig_add_library
-
-if(POLICY CMP0078)
-  cmake_policy(SET CMP0078 NEW)
-endif(POLICY CMP0078)
-if(POLICY CMP0074)
-  # Use package_ROOT environment variables
-  cmake_policy(SET CMP0074 NEW)
-endif(POLICY CMP0074)
-if(POLICY CMP0086)
-  cmake_policy(SET CMP0086 NEW)
-endif(POLICY CMP0086)
-
+cmake_minimum_required(VERSION 3.15)
 
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
@@ -18,16 +6,10 @@ include(${SWIG_USE_FILE})
 if(DEFINED ENV{PYTHON_EXECUTABLE})
     set(Python3_EXECUTABLE $ENV{PYTHON_EXECUTABLE})
 endif()
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-    find_package(PythonLibs REQUIRED)
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
-else()
-    # We don't need "Interpreter" here, but without that, FindPython3 will
-    # ignore the Python version selected via $Python3_EXECUTABLE
-    find_package(Python3 COMPONENTS Interpreter Development)
-    include_directories(${Python3_INCLUDE_DIRS})
-endif()
+# We don't need "Interpreter" here, but without that, FindPython3 will
+# ignore the Python version selected via $Python3_EXECUTABLE
+find_package(Python3 COMPONENTS Interpreter Development)
+include_directories(${Python3_INCLUDE_DIRS})
 
 set(SWIG_LIBRARY_NAME _${PROJECT_NAME})
 set(CMAKE_SWIG_FLAGS "")

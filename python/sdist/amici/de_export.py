@@ -2334,7 +2334,7 @@ class DEModel:
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
         # substitute 'w' expressions into root expressions now, to avoid
-        # rewriting '{model_name}_root.cpp' and '{model_name}_stau.cpp' headers
+        # rewriting 'root.cpp' and 'stau.cpp' headers
         # to include 'w.h'
         w_sorted = toposort_symbols(dict(zip(
             [expr.get_id()  for expr in self._expressions],
@@ -2692,7 +2692,7 @@ class DEExporter:
                 # we only need a single macro, as all entries have the same symbol
                 break
 
-        filename = os.path.join(self.model_path, f'{self.model_name}_{name}.h')
+        filename = os.path.join(self.model_path, f'{name}.h')
         with open(filename, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
@@ -2750,12 +2750,12 @@ class DEExporter:
             if iszero:
                 continue
 
-            lines.append(f'#include "{self.model_name}_{sym}.h"')
+            lines.append(f'#include "{sym}.h"')
 
         # include return symbols
         if function in self.model.sym_names() and \
                 function not in non_unique_id_symbols:
-            lines.append(f'#include "{self.model_name}_{function}.h"')
+            lines.append(f'#include "{function}.h"')
 
         lines.extend([
             '',
@@ -2800,7 +2800,7 @@ class DEExporter:
 
         # if not body is None:
         filename = os.path.join(self.model_path,
-                                f'{self.model_name}_{function}.cpp')
+                                f'{function}.cpp')
         with open(filename, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
@@ -2890,7 +2890,7 @@ class DEExporter:
             '} // namespace amici\n',
         ])
 
-        filename = f'{self.model_name}_{function}_{indextype}.cpp'
+        filename = f'{function}_{indextype}.cpp'
         filename = os.path.join(self.model_path, filename)
 
         with open(filename, 'w') as fileout:
