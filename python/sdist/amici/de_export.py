@@ -1596,14 +1596,17 @@ class DEModel:
         elif name == 'xdot':
             if self.is_ode():
                 self._eqs[name] = sp.Matrix([
-                    state.get_dt() for state in self._states
+                    state.get_dt() for state in self._differentialstates
                     if not state.has_conservation_law()
                 ])
             else:
                 self._eqs[name] = sp.Matrix([
-                    state.get_dt() - dstatedt
-                    for state, dstatedt in zip(self._differentialstates, self.sym('dx'))
-                    if not state.has_conservation_law()
+                    x.get_dt() - dx
+                    for x, dx in zip(
+                        (s for s in self._differentialstates
+                         if not s.has_conservation_law()),
+                        self.sym('dx')
+                    )
                 ] + [
                     eq.get_val()
                     for eq in self._algebraicequations

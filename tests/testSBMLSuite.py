@@ -85,10 +85,13 @@ def test_sbml_testsuite_case(
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
-        if rdata['status'] != amici.AMICI_SUCCESS and test_id in [
-            '00748', '00374', '00369'
-        ]:
-            raise amici.sbml_import.SBMLException('Simulation Failed')
+        if rdata['status'] != amici.AMICI_SUCCESS:
+            if test_id in (
+                '00748', '00374', '00369'
+            ):
+                pytest.skip('Simulation Failed expectedly')
+            else:
+                raise RuntimeError('Simulation failed unexpectedly')
 
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
