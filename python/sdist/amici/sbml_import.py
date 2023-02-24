@@ -1857,10 +1857,10 @@ class SbmlImporter:
         all_state_ids = [x.get_id() for x in ode_model._states]
         all_compartment_sizes = []
         for state_id in all_state_ids:
-            symbol = self.symbols[SymbolId.SPECIES].get(
-                state_id,
-                self.symbols[SymbolId.ALGEBRAIC_STATE].get(state_id, None)
-            )
+            symbol = {
+                **self.symbols[SymbolId.SPECIES],
+                **self.symbols[SymbolId.ALGEBRAIC_STATE]
+            }[state_id]
             if symbol['amount']:
                 compartment_size = sp.Integer(1)
             else:
