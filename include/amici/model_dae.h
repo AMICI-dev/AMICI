@@ -38,6 +38,8 @@ class Model_DAE : public Model {
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
+     * @param w_recursion_depth Recursion depth of fw
      */
     Model_DAE(const ModelDimensions &model_dimensions,
               SimulationParameters simulation_parameters,
