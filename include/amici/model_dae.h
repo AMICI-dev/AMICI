@@ -58,6 +58,8 @@ class Model_DAE : public Model {
         auto M_nnz = static_cast<sunindextype>(ndiff);
         derived_state_.MSparse_ = SUNMatrixWrapper(nx_solver, nx_solver,
                                                    M_nnz, CSC_MAT);
+        derived_state_.dfdx_ = SUNMatrixWrapper(nx_solver, nx_solver,
+                                                0, CSC_MAT);
     }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,

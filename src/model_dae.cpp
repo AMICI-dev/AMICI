@@ -47,13 +47,11 @@ void Model_DAE::fJSparse(realtype t, realtype cj, const_N_Vector x,
         derived_state_.dxdotdw_.sparse_multiply(derived_state_.dxdotdx_implicit,
                                                 derived_state_.dwdx_);
 
-        JSparse.sparse_add(derived_state_.dxdotdx_explicit, 1.0,
-                           derived_state_.dxdotdx_implicit, 1.0);
-        
-        derived_state_.dxdotdx_explicit = JSparse;
+        derived_state_.dfdx_.sparse_add(derived_state_.dxdotdx_explicit, 1.0,
+                                        derived_state_.dxdotdx_implicit, 1.0);
         fM(t, x_pos);
         JSparse.sparse_add(derived_state_.MSparse_, -cj,
-                           derived_state_.dxdotdx_explicit, 1.0);
+                           derived_state_.dfdx_, 1.0);
     } else {
         fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
                  N_VGetArrayPointerConst(x_pos),
