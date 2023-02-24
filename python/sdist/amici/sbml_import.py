@@ -1059,6 +1059,7 @@ class SbmlImporter:
                     'value': init,
                 }
                 symbol_id = 'compartment'
+                six = np.nan
                 del self.compartments[var]
             else:
                 symbol_id, source_symbols = next(
@@ -1076,7 +1077,7 @@ class SbmlImporter:
                 if isinstance(symbol['init'], float) and np.isnan(symbol['init']):
                     # placeholder, needs to be determined n IC calculation
                     symbol['init'] = sp.Float(0.0)
-                self.stoichiometric_matrix = self.stoichiometric_matrix.col_insert(
+                self.stoichiometric_matrix = self.stoichiometric_matrix.row_insert(
                     self.stoichiometric_matrix.shape[0],
                     sp.SparseMatrix([
                         [0] * self.stoichiometric_matrix.shape[1]
