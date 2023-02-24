@@ -1067,12 +1067,12 @@ class DEModel:
         """
         try:
             ix = next(filter(lambda is_s: is_s[1].get_id() == state,
-                             enumerate(self._states)))[0]
+                             enumerate(self._differentialstates)))[0]
         except StopIteration:
             raise ValueError(f'Specified state {state} was not found in the '
                              f'model states.')
 
-        state_id = self._states[ix].get_id()
+        state_id = self._differentialstates[ix].get_id()
 
         # \sum_{i≠j}(a_i * x_i)/a_j
         target_expression = sp.Add(*(
@@ -1096,7 +1096,7 @@ class DEModel:
         )
 
         self.add_component(cl)
-        self._states[ix].set_conservation_law(cl)
+        self._differentialstates[ix].set_conservation_law(cl)
 
     def get_observable_transformations(self) -> List[ObservableTransformation]:
         """
@@ -3175,8 +3175,11 @@ class DEExporter:
             'Z2EVENT':
                 ', '.join(map(str, self.model._z2event)),
             'ID':
-                ', '.join(map(lambda x: str(int(isinstance(x, DifferentialState))),
-                              self.model._states))
+                ', '.join((
+                    str(float(isinstance(s, DifferentialState)))
+                    for s in self.model._states
+                    if not s.has_conservation_law()
+                ))
         }
 
         for func_name, func_info in self.functions.items():

@@ -1675,6 +1675,11 @@ class SbmlImporter:
                 self._add_conservation_for_non_constant_species(
                     ode_model, conservation_laws)) & set(species_solver))
 
+        # add algebraic variables to species_solver as they were ignored above
+        ndifferential = len(ode_model._differentialstates)
+        nalgebraic = len(ode_model._algebraicstates)
+        species_solver.extend(list(range(ndifferential, ndifferential + nalgebraic)))
+
         # Check, whether species_solver is empty now. As currently, AMICI
         # cannot handle ODEs without species, CLs must be switched off in this
         # case
@@ -1707,9 +1712,11 @@ class SbmlImporter:
         from .conserved_quantities_demartino \
             import compute_moiety_conservation_laws
 
+        sm = self.stoichiometric_matrix[:len(self.symbols[SymbolId.SPECIES]), :]
+
         try:
             stoichiometric_list = [
-                float(entry) for entry in self.stoichiometric_matrix.T.flat()
+                float(entry) for entry in sm.T.flat()
             ]
         except TypeError:
             # Due to the numerical algorithm currently used to identify
@@ -1730,9 +1737,9 @@ class SbmlImporter:
             return []
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
-            stoichiometric_list, *self.stoichiometric_matrix.shape,
+            stoichiometric_list, *sm.shape,
             rng_seed=32,
-            species_names=[str(x.get_id()) for x in ode_model._states]
+            species_names=[str(x.get_id()) for x in ode_model._differentialstates]
         )
 
         # Sparsify conserved quantities
@@ -1744,7 +1751,7 @@ class SbmlImporter:
         #  `A * x0 = total_cl` and bring it to reduced row echelon form. The
         #  pivot species are the ones to be eliminated. The resulting state
         #  expressions are sparse and void of any circular dependencies.
-        A = sp.zeros(len(cls_coefficients), len(ode_model._states))
+        A = sp.zeros(len(cls_coefficients), len(ode_model._differentialstates))
         for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
                                                       cls_coefficients)):
             for i, c in zip(cl, coefficients):
@@ -1778,7 +1785,11 @@ class SbmlImporter:
         from .conserved_quantities_rref import nullspace_by_rref, rref
 
         try:
-            S = np.asarray(self.stoichiometric_matrix, dtype=float)
+            S = np.asarray(
+                self.stoichiometric_matrix[
+                    :len(self.symbols[SymbolId.SPECIES]), :
+                ], dtype=float
+            )
         except TypeError:
             # Due to the numerical algorithm currently used to identify
             #  conserved quantities, we can't have symbols in the
@@ -1835,7 +1846,7 @@ class SbmlImporter:
             List of species indices which later remain in the ODE solver
         """
         # indices of retained species
-        species_solver = list(range(ode_model.num_states_rdata()))
+        species_solver = list(range(len(ode_model._differentialstates)))
 
         algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
         if algorithm.lower() == "demartino":
@@ -2299,10 +2310,10 @@ def _add_conservation_for_constant_species(
     """
 
     # decide which species to keep in stoichiometry
-    species_solver = list(range(ode_model.num_states_rdata()))
+    species_solver = list(range(len(ode_model._differentialstates)))
 
     # iterate over species, find constant ones
-    for ix in reversed(range(ode_model.num_states_rdata())):
+    for ix in reversed(range(len(ode_model._differentialstates))):
         if ode_model.state_is_constant(ix):
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
