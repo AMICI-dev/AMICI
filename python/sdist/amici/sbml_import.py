@@ -1005,6 +1005,8 @@ class SbmlImporter:
 
     def _process_rule_algebraic(self, rule: sbml.AlgebraicRule):
         formula = self._sympy_from_sbml_math(rule)
+        if formula is None:
+            return
 
         free_variables = set()
         # SBML L3V2 spec, p. 61:
