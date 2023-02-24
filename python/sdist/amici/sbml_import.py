@@ -1050,19 +1050,28 @@ class SbmlImporter:
         for var in free_variables:
             if var in self.symbols[SymbolId.ALGEBRAIC_STATE]:
                 continue
-            symbol_id, source_symbols = next(
-                ((symol_id, symbols)
-                 for symol_id, symbols in self.symbols.items()
-                 if var in symbols),
-            )
-            six = list(source_symbols.keys()).index(var)
-            symbol = source_symbols.pop(var)
+            if var in self.compartments:
+                init = self.compartments[var]
+                symbol = {
+                    'name': str(var),
+                    'value': init,
+                }
+                symbol_id = 'compartment'
+                del self.compartments[var]
+            else:
+                symbol_id, source_symbols = next(
+                    ((symol_id, symbols)
+                     for symol_id, symbols in self.symbols.items()
+                     if var in symbols),
+                )
+                six = list(source_symbols.keys()).index(var)
+                symbol = source_symbols.pop(var)
             # update symbol and adapt stoichiometric matrix
             if symbol_id != SymbolId.SPECIES:
                 # if not a species, add a zeros row to the stoichiometric
                 # matrix
                 symbol['init'] = symbol.pop('value')
-                if np.isnan(symbol['init']):
+                if isinstance(symbol['init'], float) and np.isnan(symbol['init']):
                     # placeholder, needs to be determined n IC calculation
                     symbol['init'] = sp.Float(0.0)
                 self.stoichiometric_matrix = self.stoichiometric_matrix.col_insert(
