@@ -60,9 +60,37 @@ foreach(FLAG ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
   check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
   if(${CUR_FLAG_SUPPORTED})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    string(APPEND CMAKE_CXX_FLAGS "${FLAG}")
   endif()
 endforeach(FLAG)
+
+if(MSVC)
+  set(MY_CXX_FLAGS
+      # hide copyright message
+      -nologo
+      # -wd4820: hide padding
+      -wd4820
+      # hide unreferenced inline function removed
+      -wd4514
+      # hide not inlined
+      -wd4710
+      # hide auto-inlined
+      -wd4711
+      # hide copy-ctor implicitly deleted
+      -wd4625
+      # hide assignment-ctor implicitly deleted
+      -wd4626
+      # hide spectre mitigation
+      -wd5045
+      # hide enum-switch no explicitly handled
+      -wd4061)
+  foreach(FLAG ${MY_CXX_FLAGS})
+    check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+    if(${CUR_FLAG_SUPPORTED})
+      string(APPEND CMAKE_CXX_FLAGS "${FLAG}")
+    endif()
+  endforeach(FLAG)
+endif()
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
