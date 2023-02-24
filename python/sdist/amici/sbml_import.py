@@ -1050,6 +1050,15 @@ class SbmlImporter:
         # remove the symbol from the original definition and add to
         # algebraic symbols (if not already done)
         for var in free_variables:
+            if var in self.symbols[SymbolId.FIXED_PARAMETER]:
+                raise SBMLException(
+                    'There are algebraic rules that specify the '
+                    f'value of {var}, which is also marked as '
+                    'fixed paramter. This is currently not supported!'
+                    f'If {var} is supposed to be a fixed parameter, '
+                    'set its SBML attribute `constant` to True.'
+                )
+
             if var in self.symbols[SymbolId.ALGEBRAIC_STATE]:
                 continue
             if var in self.compartments:
@@ -1063,17 +1072,18 @@ class SbmlImporter:
                 del self.compartments[var]
             else:
                 symbol_id, source_symbols = next(
-                    ((symol_id, symbols)
-                     for symol_id, symbols in self.symbols.items()
-                     if var in symbols),
+                    ((symbol_id, self.symbols[symbol_id])
+                     for symbol_id in (SymbolId.PARAMETER, SymbolId.SPECIES)
+                     if var in self.symbols[symbol_id]),
                 )
                 six = list(source_symbols.keys()).index(var)
                 symbol = source_symbols.pop(var)
             # update symbol and adapt stoichiometric matrix
             if symbol_id != SymbolId.SPECIES:
+                # parameters have numeric values so we can use Float here
+                symbol['init'] = sp.Float(symbol.pop('value'))
                 # if not a species, add a zeros row to the stoichiometric
                 # matrix
-                symbol['init'] = symbol.pop('value')
                 if isinstance(symbol['init'], float) and np.isnan(symbol['init']):
                     # placeholder, needs to be determined n IC calculation
                     symbol['init'] = sp.Float(0.0)
