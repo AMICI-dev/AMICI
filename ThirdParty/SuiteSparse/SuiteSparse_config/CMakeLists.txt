@@ -24,6 +24,9 @@ message ( STATUS "Building SuiteSparse_config version: v"
     ${SUITESPARSE_VERSION_MINOR}.
     ${SUITESPARSE_VERSION_SUB} " (" ${SUITESPARSE_DATE} ")" )
 
+# AMICI
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    
 #-------------------------------------------------------------------------------
 # SuiteSparse policies
 #-------------------------------------------------------------------------------
