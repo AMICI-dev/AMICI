@@ -1859,7 +1859,7 @@ class SbmlImporter:
         for state_id in all_state_ids:
             symbol = self.symbols[SymbolId.SPECIES].get(
                 state_id,
-                self.symbols[SymbolId.ALGEBRAIC_STATES][state_id]
+                self.symbols[SymbolId.ALGEBRAIC_STATE][state_id]
             )
             if symbol['amount']:
                 compartment_size = sp.Integer(1)
