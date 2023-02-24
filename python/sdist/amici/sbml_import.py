@@ -6,6 +6,7 @@ in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
 import copy
 import itertools as itt
+import numpy as np
 import logging
 import math
 import os
@@ -1028,7 +1029,8 @@ class SbmlImporter:
             # must either have the attribute boundaryCondition=“false”
             # or else not be involved in any reaction at all.
             is_species = isinstance(sbml_var, sbml.Species)
-            is_boundary_condition = sbml_var.isSetBoundaryCondition() and \
+            is_boundary_condition = is_species and \
+                sbml_var.isSetBoundaryCondition() and \
                 sbml_var.getBoundaryCondition()
             is_involved_in_reaction = is_species and \
                 not smart_is_zero_matrix(self.stoichiometric_matrix[
@@ -1060,12 +1062,16 @@ class SbmlImporter:
                 # if not a species, add a zeros row to the stoichiometric
                 # matrix
                 symbol['init'] = symbol.pop('value')
-                self.stoichiometric_matrix.coljoin(
+                if np.isnan(symbol['init']):
+                    # placeholder, needs to be determined n IC calculation
+                    symbol['init'] = sp.Float(0.0)
+                self.stoichiometric_matrix = self.stoichiometric_matrix.col_insert(
+                    self.stoichiometric_matrix.shape[0],
                     sp.SparseMatrix([
                         [0] * self.stoichiometric_matrix.shape[1]
                     ])
                 )
-            if six != self.stoichiometric_matrix.shape[0] - 1:
+            elif six != self.stoichiometric_matrix.shape[0] - 1:
                 # if not the last col, move it to the end
                 # as we reorder state variables
                 state_ordering = list(range(
@@ -1942,7 +1948,7 @@ class SbmlImporter:
                 self.symbols[symbol][new] = self.symbols[symbol][old]
                 del self.symbols[symbol][old]
 
-        # replace in values/formulas
+        # replace in values
         for symbol in [SymbolId.OBSERVABLE, SymbolId.LLHY, SymbolId.LLHZ,
                        SymbolId.SIGMAY, SymbolId.SIGMAZ, SymbolId.EXPRESSION,
                        SymbolId.EVENT, SymbolId.EVENT_OBSERVABLE,
