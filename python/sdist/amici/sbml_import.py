@@ -1855,14 +1855,19 @@ class SbmlImporter:
         eliminated_state_ids = {cl['state'] for cl in conservation_laws}
 
         all_state_ids = [x.get_id() for x in ode_model._states]
-        all_compartment_sizes = [
-            sp.Integer(1)
-            if self.symbols[SymbolId.SPECIES][state_id]['amount']
-            else self.compartments[
-                self.symbols[SymbolId.SPECIES][state_id]['compartment']
-            ]
-            for state_id in all_state_ids
-        ]
+        all_compartment_sizes = []
+        for state_id in all_state_ids:
+            symbol = self.symbols[SymbolId.SPECIES].get(
+                state_id,
+                self.symbols[SymbolId.ALGEBRAIC_STATES][state_id]
+            )
+            if symbol['amount']:
+                compartment_size = sp.Integer(1)
+            else:
+                compartment_size = self.compartments[
+                    symbol['compartment']
+                ]
+            all_compartment_sizes.append(compartment_size)
 
         # iterate over list of conservation laws, create symbolic expressions,
         for target_state_model_idx, state_idxs, coefficients in raw_cls:
