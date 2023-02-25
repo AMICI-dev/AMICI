@@ -56,7 +56,7 @@ process described below:
    -  Run ``scripts/run-doxygen.sh`` to check completeness of your
       documentation
 
--  Make sure your code is compatible with C++14, ``gcc`` and ``clang``
+-  Make sure your code is compatible with C++17, ``gcc`` and ``clang``
    (our CI pipeline will do this for you)
 
 -  When adding new functionality, please also provide test cases (see
