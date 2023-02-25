@@ -15,7 +15,7 @@ namespace amici {
 Solver::Solver(const Solver &other)
     : ism_(other.ism_), lmm_(other.lmm_), iter_(other.iter_),
       interp_type_(other.interp_type_), maxsteps_(other.maxsteps_),
-      maxtime_(other.maxtime_), starttime_(other.starttime_),
+      maxtime_(other.maxtime_), simulation_timer_(other.simulation_timer_),
       sensi_meth_(other.sensi_meth_), sensi_meth_preeq_(other.sensi_meth_preeq_),
       stldet_(other.stldet_), ordering_(other.ordering_),
       newton_maxsteps_(other.newton_maxsteps_),
@@ -62,7 +62,7 @@ void Solver::apply_max_num_steps_B() const {
 
 int Solver::run(const realtype tout) const {
     setStopTime(tout);
-    clock_t starttime = clock();
+    CpuTimer cpu_timer;
     int status = AMICI_SUCCESS;
 
     apply_max_num_steps();
@@ -75,7 +75,7 @@ int Solver::run(const realtype tout) const {
     } else {
         t_ = tout;
     }
-    cpu_time_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    cpu_time_ += cpu_timer.elapsed_milliseconds();
     return status;
 }
 
@@ -96,13 +96,13 @@ int Solver::step(const realtype tout) const {
 }
 
 void Solver::runB(const realtype tout) const {
-    clock_t starttime = clock();
+    CpuTimer cpu_timer;
 
     apply_max_num_steps_B();
     if (nx() > 0) {
         solveB(tout, AMICI_NORMAL);
     }
-    cpu_timeB_ += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    cpu_timeB_ += cpu_timer.elapsed_milliseconds();
     t_ = tout;
 }
 
@@ -859,7 +859,7 @@ void Solver::setMaxTime(double maxtime)
 
 void Solver::startTimer() const
 {
-    starttime_ = std::clock();
+    simulation_timer_.reset();
 }
 
 bool Solver::timeExceeded(int interval) const
@@ -874,9 +874,8 @@ bool Solver::timeExceeded(int interval) const
         return false;
 
     eval_counter = 0;
-    auto cputime_exceed = static_cast<double>(std::clock() - starttime_)
-                          / CLOCKS_PER_SEC;
-    return std::chrono::duration<double>(cputime_exceed) > maxtime_;
+    return std::chrono::duration<double>(simulation_timer_.elapsed_seconds())
+           > maxtime_;
 }
 
 void Solver::setMaxSteps(const long int maxsteps) {
@@ -1253,11 +1252,11 @@ void wrapErrHandlerFn(int error_code, const char *module,
     case AMICI_CONV_FAILURE:
         snprintf(buffid, BUF_SIZE, "%s:%s:CONV_FAILURE", module, function);
         break;
-            
+
     case AMICI_RHSFUNC_FAIL:
         snprintf(buffid, BUF_SIZE, "%s:%s:RHSFUNC_FAIL", module, function);
         break;
-            
+
     case AMICI_FIRST_RHSFUNC_ERR:
         snprintf(buffid, BUF_SIZE, "%s:%s:FIRST_RHSFUNC_ERR", module, function);
         break;

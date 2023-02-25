@@ -11,6 +11,7 @@
 #include <memory>
 #include <regex>
 #include <functional>
+#include <ctime>
 
 #include <gsl/gsl-lite.hpp>
 
@@ -240,6 +241,40 @@ bool is_equal(T const& a, T const& b) {
     }
     return true;
 }
+
+/** Tracks elapsed CPU time. */
+class CpuTimer {
+  public:
+    /**
+     * @brief Constructor
+     */
+    CpuTimer() : start_(std::clock()){}
+
+    /**
+     * @brief Reset the timer
+     */
+    void reset() { start_ = std::clock(); }
+
+    /**
+     * @brief Get elapsed CPU time in seconds since initialization or last reset
+     * @return CPU time in seconds
+     */
+    double elapsed_seconds() const {
+        return static_cast<double>(std::clock() - start_) / CLOCKS_PER_SEC;
+    }
+
+    /**
+     * @brief Get elapsed CPU time in milliseconds since initialization or last
+     * reset
+     * @return CPU time in milliseconds
+     */
+    double elapsed_milliseconds() const {
+        return static_cast<double>(std::clock() - start_) * 1000.0 / CLOCKS_PER_SEC;
+    }
+  private:
+    /** Start time */
+    std::clock_t start_;
+};
 
 } // namespace amici
 
