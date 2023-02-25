@@ -984,6 +984,12 @@ class SbmlImporter:
                 continue
 
             if rule.getTypeCode() == sbml.SBML_ALGEBRAIC_RULE:
+                if self.sbml_doc.getLevel() < 3:
+                    # not interested in implementing level 2 boundary condition
+                    # shenanigans, see test 01787 in the sbml testsuite
+                    raise SBMLException(
+                        'Algebraic rules are only supported in SBML L3+'
+                    )
                 self._process_rule_algebraic(rule)
             else:
                 self._process_rule_assignment(rule)
