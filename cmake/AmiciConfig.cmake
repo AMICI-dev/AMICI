@@ -44,6 +44,10 @@ set_target_properties(SUNDIALS::KLU PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
 find_package(SUNDIALS REQUIRED PATHS
              "@CMAKE_SOURCE_DIR@/ThirdParty/sundials/build/lib/cmake/sundials/")
 
+if(@Boost_CHRONO_FOUND@)
+  find_package(Boost COMPONENTS chrono REQUIRED)
+endif()
+
 if(@HDF5_FOUND@)
   find_package(
     HDF5

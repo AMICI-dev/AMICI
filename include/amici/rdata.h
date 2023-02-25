@@ -224,8 +224,9 @@ class ReturnData: public ModelDimensions {
      * @brief computation time of forward solve [ms]
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double cpu_time = 0.0;
@@ -234,8 +235,9 @@ class ReturnData: public ModelDimensions {
      * @brief computation time of backward solve [ms]
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double cpu_timeB = 0.0;
@@ -244,8 +246,9 @@ class ReturnData: public ModelDimensions {
      * @brief total CPU time from entering runAmiciSimulation until exiting [ms]
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double cpu_time_total = 0.0;
@@ -258,8 +261,9 @@ class ReturnData: public ModelDimensions {
      * (preequilibration)
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double preeq_cpu_time = 0.0;
@@ -269,8 +273,9 @@ class ReturnData: public ModelDimensions {
      * problem [ms] (preequilibration)
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double preeq_cpu_timeB = 0.0;
@@ -283,8 +288,9 @@ class ReturnData: public ModelDimensions {
      * (postequilibration)
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double posteq_cpu_time = 0.0;
@@ -294,8 +300,9 @@ class ReturnData: public ModelDimensions {
      * problem [ms] (postequilibration)
      *
      * .. warning::
-     *      This tracks the CPU-time of the current process. Therefore,
-     *      in a multi-threaded context, this value may be incorrect.
+     *      If AMICI was built without boost, this tracks the CPU-time of the
+     *      current process. Therefore, in a multi-threaded context, this value
+     *      may be incorrect.
      *
      */
     double posteq_cpu_timeB = 0.0;

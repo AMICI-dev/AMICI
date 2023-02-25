@@ -874,8 +874,8 @@ bool Solver::timeExceeded(int interval) const
         return false;
 
     eval_counter = 0;
-    return std::chrono::duration<double>(simulation_timer_.elapsed_seconds())
-           > maxtime_;
+    auto elapsed_s = simulation_timer_.elapsed_seconds();
+    return std::chrono::duration<double>(elapsed_s) > maxtime_;
 }
 
 void Solver::setMaxSteps(const long int maxsteps) {
