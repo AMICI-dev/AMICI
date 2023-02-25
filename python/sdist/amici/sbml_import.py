@@ -1319,13 +1319,25 @@ class SbmlImporter:
                 bolus[index] = bolus[index].subs(get_empty_bolus_value(),
                                                  sp.Float(0.0))
 
+            initial_value = trigger_sbml.getInitialValue() \
+                if trigger_sbml is not None else True
+            if self.symbols[SymbolId.ALGEBRAIC_EQUATION] and not initial_value:
+                # in principle this could be implemented, requires running
+                # IDACalcIc (in solver->setup) before check event initialization
+                # (in model->initialize), but at the time of writing this sounded
+                # like something that might break stuff in all kinds of other places
+                # (it might not, but this could be checked when someone actually
+                # needs the feature).
+                raise SBMLException(
+                    'Events with initial values are not supported in models with'
+                    ' algebraic rules.'
+                )
+
             self.symbols[SymbolId.EVENT][event_sym] = {
                 'name': event_id,
                 'value': trigger,
                 'state_update': sp.MutableDenseMatrix(bolus),
-                'initial_value':
-                    trigger_sbml.getInitialValue() if trigger_sbml is not None
-                    else True,
+                'initial_value': initial_value,
             }
 
     @log_execution_time('processing SBML observables', logger)
