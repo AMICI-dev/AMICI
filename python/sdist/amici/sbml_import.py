@@ -1036,7 +1036,7 @@ class SbmlImporter:
                     list(self.symbols[SymbolId.SPECIES].keys()).index(symbol),
                     :
                 ])
-            if is_species and (is_boundary_condition or is_involved_in_reaction):
+            if is_species and (not is_boundary_condition or is_involved_in_reaction):
                 continue
             free_variables.add(symbol)
 
