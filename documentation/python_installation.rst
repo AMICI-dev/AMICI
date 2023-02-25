@@ -12,7 +12,7 @@ Installation of the AMICI Python package has the following prerequisites:
 * :term:`SWIG`>=3.0
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
-* a C++14 compatible C++ compiler and a C compiler
+* a C++17 compatible C++ compiler and a C compiler
   (e.g., g++, clang, Intel C++ compiler, mingw)
 
 If these requirements are fulfilled and all relevant paths are setup properly,

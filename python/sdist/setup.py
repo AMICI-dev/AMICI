@@ -139,9 +139,9 @@ def main():
     )
     # Monkey-patch extension (see
     # `custom_commands.set_compiler_specific_extension_options`)
-    amici_module.extra_compile_args_mingw32 = ['-std=c++14']
-    amici_module.extra_compile_args_unix = ['-std=c++14']
-    amici_module.extra_compile_args_msvc = ['/std:c++14']
+    amici_module.extra_compile_args_mingw32 = ['-std=c++17']
+    amici_module.extra_compile_args_unix = ['-std=c++17']
+    amici_module.extra_compile_args_msvc = ['/std:c++17']
 
     # Install
     setup(
