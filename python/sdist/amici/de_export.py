@@ -1388,6 +1388,16 @@ class DEModel:
                 if not state.has_conservation_law()
             ])
             return
+        elif name == 'xdot':
+            self._syms[name] = sp.Matrix([
+                f'd{x.get_id()}dt' if self.is_ode() else f'de_{ix}'
+                for ix, x in enumerate(self._differentialstates)
+                if not x.has_conservation_law()
+            ] + [
+                f'ae_{ix}'
+                for ix in range(len(self._algebraicequations))
+            ])
+            return
         elif name == 'dx':
             self._syms[name] = sp.Matrix([
                 f'd{state.get_id()}dt'
