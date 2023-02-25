@@ -1,5 +1,5 @@
-recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt *.cmake
-recursive-include amici/ThirdParty/sundials *.c *.h LICENSE *.cmake
+recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt *.cmake CMakeLists.txt
+recursive-include amici/ThirdParty/sundials *.c *.h LICENSE *.cmake CMakeLists.txt
 recursive-include amici/ThirdParty/gsl *.hpp
 recursive-include amici/include/amici *.h
 recursive-include amici/swig *.i *.h
