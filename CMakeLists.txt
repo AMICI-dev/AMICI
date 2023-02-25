@@ -39,7 +39,7 @@ foreach(FLAG ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
   check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
   if(${CUR_FLAG_SUPPORTED})
-    string(APPEND CMAKE_CXX_FLAGS "${FLAG}")
+    string(APPEND CMAKE_CXX_FLAGS " ${FLAG}")
   endif()
 endforeach(FLAG)
 
@@ -85,10 +85,10 @@ endif()
 
 # Legacy environment variables from Python-sdist times
 if($ENV{AMICI_CXXFLAGS})
-  string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
+  string(APPEND CMAKE_CXX_FLAGS " $ENV{AMICI_CXXFLAGS}")
 endif()
 if($ENV{AMICI_LDFLAGS})
-  string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS " $ENV{AMICI_LDFLAGS}")
 endif()
 
 # find dependencies
