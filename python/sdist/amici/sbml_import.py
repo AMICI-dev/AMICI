@@ -1036,12 +1036,14 @@ class SbmlImporter:
                     list(self.symbols[SymbolId.SPECIES].keys()).index(symbol),
                     :
                 ])
-            if is_species and (not is_boundary_condition or is_involved_in_reaction):
+            if is_species and not is_boundary_condition and is_involved_in_reaction:
                 continue
             free_variables.add(symbol)
 
         assert len(free_variables) >= 1
-        self.symbols[SymbolId.ALGEBRAIC_EQUATION][rule.meta_id] = {
+        self.symbols[SymbolId.ALGEBRAIC_EQUATION][
+            f'ae{len(self.symbols[SymbolId.ALGEBRAIC_EQUATION])}'
+        ] = {
             'value': formula
         }
         # remove the symbol from the original definition and add to

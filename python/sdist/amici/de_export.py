@@ -964,7 +964,6 @@ class DEModel:
                 symbols[SymbolId.SPECIES].items(),
                 dxdt
         )):
-            assert ix == species['index']  # check that no reordering occurred
             # rate rules and amount species don't need to be updated
             if 'dt' in species:
                 continue
