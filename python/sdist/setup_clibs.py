@@ -278,9 +278,9 @@ def get_lib_amici(
             str(amici_base_dir / 'ThirdParty' / 'gsl'),
         ],
         'cflags': [*extra_compiler_flags],
-        'cflags_mingw32': ['-std=c++14'],
-        'cflags_unix': ['-std=c++14'],
-        'cflags_msvc': ['/std:c++14'],
+        'cflags_mingw32': ['-std=c++17'],
+        'cflags_unix': ['-std=c++17'],
+        'cflags_msvc': ['/std:c++17'],
         'macros': [
             ("gsl_CONFIG_CONTRACT_VIOLATION_THROWS", None),
             ("gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION", 1),

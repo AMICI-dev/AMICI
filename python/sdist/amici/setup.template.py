@@ -129,9 +129,9 @@ def get_extension() -> Extension:
     )
 
     # see `set_compiler_specific_extension_options`
-    ext.extra_compile_args_mingw32 = ['-std=c++14']
-    ext.extra_compile_args_unix = ['-std=c++14']
-    ext.extra_compile_args_msvc = ['/std:c++14']
+    ext.extra_compile_args_mingw32 = ['-std=c++17']
+    ext.extra_compile_args_unix = ['-std=c++17']
+    ext.extra_compile_args_msvc = ['/std:c++17']
 
     return ext
 
