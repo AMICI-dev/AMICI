@@ -3,10 +3,9 @@ recursive-include amici/ThirdParty/sundials *
 recursive-include amici/ThirdParty/gsl *.hpp
 recursive-include amici/cmake *
 recursive-include amici/include/amici *.h
+recursive-include amici/src *
 recursive-include amici/swig *
 include amici/*
-include amici/src/*template*
-include amici/src/hdf5.cpp
 include version.txt
 include LICENSE.md
 exclude amici/*.so
