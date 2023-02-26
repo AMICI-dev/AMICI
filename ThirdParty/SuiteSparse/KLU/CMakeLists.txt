@@ -22,9 +22,6 @@ message ( STATUS "Building KLU version: v"
     ${KLU_VERSION_MINOR}.
     ${KLU_VERSION_SUB} " (" ${KLU_DATE} ")" )
 
-# AMICI
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 #-------------------------------------------------------------------------------
 # SuiteSparse policies
 #-------------------------------------------------------------------------------
