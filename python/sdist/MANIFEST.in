@@ -3,12 +3,10 @@ recursive-include amici/ThirdParty/sundials *
 recursive-include amici/ThirdParty/gsl *.hpp
 recursive-include amici/cmake *
 recursive-include amici/include/amici *.h
-recursive-include amici/swig *.i *.h
+recursive-include amici/swig *
 include amici/*
 include amici/src/*template*
 include amici/src/hdf5.cpp
-include amici/swig/CMakeLists_model.cmake
-include setup_clibs.py
 include version.txt
 include LICENSE.md
 exclude amici/*.so
@@ -18,3 +16,4 @@ prune amici/share
 prune amici/lib
 prune amici/ThirdParty/SuiteSparse/lib
 prune amici/ThirdParty/SuiteSparse/include
+prune __pycache__
