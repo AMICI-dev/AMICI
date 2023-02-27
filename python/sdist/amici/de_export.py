@@ -616,40 +616,40 @@ class DEModel:
     symbolic derivatives that are necessary for model simulation or
     sensitivity computation.
 
-    :ivar _differentialstates:
+    :ivar _differential_states:
         list of differential state variables
 
-    :ivar _algebraicstates:
+    :ivar _algebraic_states:
         list of algebraic state variables
 
     :ivar _observables:
         list of observables
 
-    :ivar _eventobservables:
+    :ivar _event_observables:
         list of event observables
 
-    :ivar _sigmays:
+    :ivar _sigma_ys:
         list of sigmas for observables
 
-    :ivar _sigmazs:
+    :ivar _sigma_zs:
         list of sigmas for event observables
 
     :ivar _parameters:
         list of parameters
 
-    :ivar _loglikelihoodys:
+    :ivar _log_likelihood_ys:
         list of loglikelihoods for observables
 
-    :ivar _loglikelihoodzs:
+    :ivar _log_likelihood_zs:
         list of loglikelihoods for event observables
 
-    :ivar _loglikelihoodrzs:
+    :ivar _log_likelihood_rzs:
         list of loglikelihoods for event observable regularizations
 
     :ivar _expressions:
         list of expressions instances
 
-    :ivar _conservationlaws:
+    :ivar _conservation_laws:
         list of conservation laws
 
     :ivar _symboldim_funs:
@@ -750,20 +750,20 @@ class DEModel:
             Whether to cache calls to the simplify method. Can e.g. decrease
             import times for models with events.
         """
-        self._differentialstates: List[DifferentialState] = []
-        self._algebraicstates: List[AlgebraicState] = []
-        self._algebraicequations: List[AlgebraicEquation] = []
+        self._differential_states: List[DifferentialState] = []
+        self._algebraic_states: List[AlgebraicState] = []
+        self._algebraic_equations: List[AlgebraicEquation] = []
         self._observables: List[Observable] = []
-        self._eventobservables: List[EventObservable] = []
-        self._sigmays: List[SigmaY] = []
-        self._sigmazs: List[SigmaZ] = []
+        self._event_observables: List[EventObservable] = []
+        self._sigma_ys: List[SigmaY] = []
+        self._sigma_zs: List[SigmaZ] = []
         self._parameters: List[Parameter] = []
         self._constants: List[Constant] = []
-        self._loglikelihoodys: List[LogLikelihoodY] = []
-        self._loglikelihoodzs: List[LogLikelihoodZ] = []
-        self._loglikelihoodrzs: List[LogLikelihoodRZ] = []
+        self._log_likelihood_ys: List[LogLikelihoodY] = []
+        self._log_likelihood_zs: List[LogLikelihoodZ] = []
+        self._log_likelihood_rzs: List[LogLikelihoodRZ] = []
         self._expressions: List[Expression] = []
-        self._conservationlaws: List[ConservationLaw] = []
+        self._conservation_laws: List[ConservationLaw] = []
         self._events: List[Event] = []
         self._symboldim_funs: Dict[str, Callable[[], int]] = {
             'sx': self.num_states_solver,
@@ -776,40 +776,40 @@ class DEModel:
         self._eqs: Dict[str, Union[sp.Matrix, sp.SparseMatrix,
                                    List[Union[sp.Matrix, sp.SparseMatrix]]]] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
-        self._vals: Dict[str, List[float]] = dict()
+        self._vals: Dict[str, List[sp.Expr]] = dict()
         self._names: Dict[str, List[str]] = dict()
         self._syms: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._sparsesyms: Dict[str, Union[List[str], List[List[str]]]] = dict()
         self._colptrs: Dict[str, Union[List[int], List[List[int]]]] = dict()
         self._rowvals: Dict[str, Union[List[int], List[List[int]]]] = dict()
 
-        self._equation_prototype: Dict[str, str] = {
-            'total_cl': '_conservationlaws',
-            'x0': '_states',
-            'y': '_observables',
-            'Jy': '_loglikelihoodys',
-            'Jz': '_loglikelihoodzs',
-            'Jrz': '_loglikelihoodrzs',
-            'w': '_expressions',
-            'root': '_events',
-            'sigmay': '_sigmays',
-            'sigmaz': '_sigmazs'
+        self._equation_prototype: Dict[str, Callable] = {
+            'total_cl': self.conservation_laws,
+            'x0': self.states,
+            'y': self.observables,
+            'Jy': self.log_likelihood_ys,
+            'Jz': self.log_likelihood_zs,
+            'Jrz': self.log_likelihood_rzs,
+            'w': self.expressions,
+            'root': self.events,
+            'sigmay': self.sigma_ys,
+            'sigmaz': self.sigma_zs
         }
-        self._variable_prototype: Dict[str, str] = {
-            'tcl': '_conservationlaws',
-            'x_rdata': '_states',
-            'y': '_observables',
-            'z': '_eventobservables',
-            'p': '_parameters',
-            'k': '_constants',
-            'w': '_expressions',
-            'sigmay': '_sigmays',
-            'sigmaz': '_sigmazs',
-            'h': '_events'
+        self._variable_prototype: Dict[str, Callable] = {
+            'tcl': self.conservation_laws,
+            'x_rdata': self.states,
+            'y': self.observables,
+            'z': self.event_observables,
+            'p': self.parameters,
+            'k': self.constants,
+            'w': self.expressions,
+            'sigmay': self.sigma_ys,
+            'sigmaz': self.sigma_zs,
+            'h': self.events,
         }
-        self._value_prototype: Dict[str, str] = {
-            'p': '_parameters',
-            'k': '_constants',
+        self._value_prototype: Dict[str, Callable] = {
+            'p': self.parameters,
+            'k': self.constants,
         }
         self._total_derivative_prototypes: \
             Dict[str, Dict[str, Union[str, List[str]]]] = {
@@ -861,13 +861,69 @@ class DEModel:
         for fun in CUSTOM_FUNCTIONS:
             self._code_printer.known_functions[fun['sympy']] = fun['c++']
 
+    def differential_states(self) -> List[DifferentialState]:
+        """Get all differential states."""
+        return self._differential_states
+
+    def algebraic_states(self) -> List[AlgebraicState]:
+        """Get all algebraic states."""
+        return self._algebraic_states
+
+    def observables(self) -> List[Observable]:
+        """Get all observables."""
+        return self._observables
+
+    def parameters(self) -> List[Parameter]:
+        """Get all parameters."""
+        return self._parameters
+
+    def constants(self) -> List[Constant]:
+        """Get all constants."""
+        return self._constants
+
+    def expressions(self) -> List[Expression]:
+        """Get all expressions."""
+        return self._expressions
+
+    def events(self) -> List[Event]:
+        """Get all events."""
+        return self._events
+
+    def event_observables(self) -> List[EventObservable]:
+        """Get all event observables."""
+        return self._event_observables
+
+    def sigma_ys(self) -> List[SigmaY]:
+        """Get all observable sigmas."""
+        return self._sigma_ys
+
+    def sigma_zs(self) -> List[SigmaZ]:
+        """Get all event observable sigmas."""
+        return self._sigma_zs
+
+    def conservation_laws(self) -> List[ConservationLaw]:
+        """Get all conservation laws."""
+        return self._conservation_laws
+
+    def log_likelihood_ys(self) -> List[LogLikelihoodY]:
+        """Get all observable log likelihoodss."""
+        return self._log_likelihood_ys
+
+    def log_likelihood_zs(self) -> List[LogLikelihoodZ]:
+        """Get all event observable log likelihoods."""
+        return self._log_likelihood_zs
+
+    def log_likelihood_rzs(self) -> List[LogLikelihoodRZ]:
+        """Get all event observable regularization log likelihoods."""
+        return self._log_likelihood_rzs
+
     def is_ode(self) -> bool:
         """Check if model is ODE model."""
-        return len(self._algebraicequations) == 0
+        return len(self._algebraic_equations) == 0
 
-    @property
-    def _states(self) -> List[State]:
-        return self._differentialstates + self._algebraicstates
+    def states(self) -> List[State]:
+        """Get all states."""
+        return self._differential_states + self._algebraic_states
 
     @log_execution_time('importing SbmlImporter', logger)
     def import_from_sbml_importer(
@@ -1045,7 +1101,10 @@ class DEModel:
             raise ValueError(f'Invalid component type {type(component)}')
 
         component_list = getattr(
-            self, f'_{type(component).__name__.lower()}s'
+            self, '_' + '_'.join(
+                s.lower() for s in re.split(r"([A-Z][^A-Z]+)",
+                type(component).__name__) if s
+            ) + 's'
         )
         if insert_first:
             component_list.insert(0, component)
@@ -1074,12 +1133,12 @@ class DEModel:
         """
         try:
             ix = next(filter(lambda is_s: is_s[1].get_id() == state,
-                             enumerate(self._differentialstates)))[0]
+                             enumerate(self._differential_states)))[0]
         except StopIteration:
             raise ValueError(f'Specified state {state} was not found in the '
                              f'model states.')
 
-        state_id = self._differentialstates[ix].get_id()
+        state_id = self._differential_states[ix].get_id()
 
         # \sum_{i≠j}(a_i * x_i)/a_j
         target_expression = sp.Add(*(
@@ -1103,7 +1162,7 @@ class DEModel:
         )
 
         self.add_component(cl)
-        self._differentialstates[ix].set_conservation_law(cl)
+        self._differential_states[ix].set_conservation_law(cl)
 
     def get_observable_transformations(self) -> List[ObservableTransformation]:
         """
@@ -1313,7 +1372,7 @@ class DEModel:
             self._generate_sparse_symbol(name)
         return self._rowvals[name]
 
-    def val(self, name: str) -> List[float]:
+    def val(self, name: str) -> List[sp.Number]:
         """
         Returns (and constructs if necessary) the numeric values of a
         symbolic entity
@@ -1350,7 +1409,7 @@ class DEModel:
         """
         return set(chain.from_iterable(
             state.get_free_symbols()
-            for state in self._states + self._algebraicequations
+            for state in self.states() + self.algebraic_equations()
         ))
 
     def _generate_symbol(self, name: str) -> None:
@@ -1361,61 +1420,61 @@ class DEModel:
             name of the symbolic variable
         """
         if name in self._variable_prototype:
-            component = self._variable_prototype[name]
+            components = self._variable_prototype[name]()
             self._syms[name] = sp.Matrix([
                 comp.get_id()
-                for comp in getattr(self, component)
+                for comp in components
             ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
                     comp.get_measurement_symbol()
-                    for comp in getattr(self, component)
+                    for comp in components
                 ])
             if name == 'z':
                 self._syms['mz'] = sp.Matrix([
                     comp.get_measurement_symbol()
-                    for comp in getattr(self, component)
+                    for comp in components
                 ])
                 self._syms['rz'] = sp.Matrix([
                     comp.get_regularization_symbol()
-                    for comp in getattr(self, component)
+                    for comp in components
                 ])
             return
         elif name == 'x':
             self._syms[name] = sp.Matrix([
                 state.get_id()
-                for state in self._states
+                for state in self.states()
                 if not state.has_conservation_law()
             ])
             return
         elif name == 'xdot':
             self._syms[name] = sp.Matrix([
                 f'd{x.get_id()}dt' if self.is_ode() else f'de_{ix}'
-                for ix, x in enumerate(self._differentialstates)
+                for ix, x in enumerate(self._differential_states)
                 if not x.has_conservation_law()
             ] + [
                 f'ae_{ix}'
-                for ix in range(len(self._algebraicequations))
+                for ix in range(len(self._algebraic_equations))
             ])
             return
         elif name == 'dx':
             self._syms[name] = sp.Matrix([
                 f'd{state.get_id()}dt'
-                for state in self._states
+                for state in self.states()
                 if not state.has_conservation_law()
             ])
             return
         elif name == 'sx0':
             self._syms[name] = sp.Matrix([
                 f's{state.get_id()}_0'
-                for state in self._states
+                for state in self.states()
                 if not state.has_conservation_law()
             ])
             return
         elif name == 'sx_rdata':
             self._syms[name] = sp.Matrix([
                 f'sx_rdata_{i}'
-                for i in range(len(self._states))
+                for i in range(len(self.states()))
             ])
             return
         elif name == 'dtcldp':
@@ -1427,7 +1486,7 @@ class DEModel:
                     for par in self._parameters]
                 if self.conservation_law_has_multispecies(tcl)
                 else [0] * self.num_par()
-                for tcl in self._conservationlaws
+                for tcl in self._conservation_laws
             ])
             return
         elif name == 'xdot_old':
@@ -1472,7 +1531,7 @@ class DEModel:
         """
         # Track all roots functions in the right-hand side
         roots = copy.deepcopy(self._events)
-        for state in self._differentialstates:
+        for state in self._differential_states:
             state.set_dt(self._process_heavisides(state.get_dt(), roots))
 
         for expr in self._expressions:
@@ -1508,7 +1567,7 @@ class DEModel:
                 str(symbol)
                 for symbol in state.get_dt().free_symbols
             ]
-            for state in self._states
+            for state in self.states()
         ))
 
         free_symbols_expr = list(itertools.chain.from_iterable(
@@ -1520,9 +1579,9 @@ class DEModel:
         ))
 
         return [
-            free_symbols_dt.count(str(self._differentialstates[idx].get_id()))
+            free_symbols_dt.count(str(self._differential_states[idx].get_id()))
             +
-            free_symbols_expr.count(str(self._differentialstates[idx].get_id()))
+            free_symbols_expr.count(str(self._differential_states[idx].get_id()))
             for idx in idxs
         ]
 
@@ -1592,7 +1651,7 @@ class DEModel:
         time_symbol = sp.Matrix([symbol_with_assumptions('t')])
 
         if name in self._equation_prototype:
-            self._equation_from_component(name, self._equation_prototype[name])
+            self._equation_from_components(name, self._equation_prototype[name]())
 
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
@@ -1605,39 +1664,39 @@ class DEModel:
         elif name == 'xdot':
             if self.is_ode():
                 self._eqs[name] = sp.Matrix([
-                    state.get_dt() for state in self._differentialstates
+                    state.get_dt() for state in self._differential_states
                     if not state.has_conservation_law()
                 ])
             else:
                 self._eqs[name] = sp.Matrix([
                     x.get_dt() - dx
                     for x, dx in zip(
-                        (s for s in self._differentialstates
+                        (s for s in self._differential_states
                          if not s.has_conservation_law()),
                         self.sym('dx')
                     )
                 ] + [
                     eq.get_val()
-                    for eq in self._algebraicequations
+                    for eq in self._algebraic_equations
                 ])
 
         elif name == 'x_rdata':
             self._eqs[name] = sp.Matrix([
                 state.get_x_rdata()
-                for state in self._states
+                for state in self.states()
             ])
 
         elif name == 'x_solver':
             self._eqs[name] = sp.Matrix([
                 state.get_id()
-                for state in self._states
+                for state in self.states()
                 if not state.has_conservation_law()
             ])
 
         elif name == 'sx_solver':
             self._eqs[name] = sp.Matrix([
                 self.sym('sx_rdata')[ix]
-                for ix, state in enumerate(self._states)
+                for ix, state in enumerate(self.states())
                 if not state.has_conservation_law()
             ])
 
@@ -1681,7 +1740,7 @@ class DEModel:
             self._eqs[name] = sp.Matrix(
                 [
                     [cl.get_ncoeff(xr) for xr in x_rdata]
-                    for cl in self._conservationlaws
+                    for cl in self._conservation_laws
                 ]
             )
 
@@ -1700,7 +1759,7 @@ class DEModel:
                 self._eqs[name] = sp.Matrix(
                     [
                         [state.get_dx_rdata_dx_solver(xs) for xs in x_solver]
-                        for state in self._states
+                        for state in self.states()
                     ]
                 )
             else:
@@ -1773,10 +1832,10 @@ class DEModel:
             # the matlab interface
             z2event = [
                 event_ids.index(event_obs.get_event()) + 1
-                for event_obs in self._eventobservables
+                for event_obs in self._event_observables
             ]
             for (iz, ie), event_obs in zip(enumerate(z2event),
-                                           self._eventobservables):
+                                           self._event_observables):
                 event_observables[ie-1][iz] = event_obs.get_val()
 
             self._eqs[name] = event_observables
@@ -1878,7 +1937,7 @@ class DEModel:
                 [-cl.get_ncoeff(xs) for xs in x]
                 # the insert first in ode_model._add_conservation_law() means
                 # that we need to reverse the order here
-                for cl in reversed(self._conservationlaws)
+                for cl in reversed(self._conservation_laws)
             ]).col_join(smart_jacobian(self.eq('w')[self.num_cons_law():, :],
                                        x))
 
@@ -2127,7 +2186,8 @@ class DEModel:
 
         self._eqs[name] = sign * smart_multiply(xx, yy)
 
-    def _equation_from_component(self, name: str, component: str) -> None:
+    def _equation_from_components(self, name: str,
+                                  components: List[ModelQuantity]) -> None:
         """
         Generates the formulas of a symbolic variable from the attributes
 
@@ -2138,7 +2198,7 @@ class DEModel:
             name of the attribute
         """
         self._eqs[name] = sp.Matrix(
-            [comp.get_val() for comp in getattr(self, component)]
+            [comp.get_val() for comp in components]
         )
 
     def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Expr]]:
@@ -2149,7 +2209,7 @@ class DEModel:
         """
         return [
             (state.get_id(), state.get_x_rdata())
-            for state in self._states
+            for state in self.states()
             if state.has_conservation_law()
         ]
 
@@ -2162,12 +2222,12 @@ class DEModel:
             name of resulting symbolic variable
         """
         if name in self._value_prototype:
-            component = self._value_prototype[name]
+            components = self._value_prototype[name]()
         else:
             raise ValueError(f'No values for {name}')
 
         self._vals[name] = [comp.get_val()
-                            for comp in getattr(self, component)]
+                            for comp in components]
 
     def _generate_name(self, name: str) -> None:
         """
@@ -2178,14 +2238,14 @@ class DEModel:
             name of resulting symbolic variable
         """
         if name in self._variable_prototype:
-            component = self._variable_prototype[name]
+            components = self._variable_prototype[name]()
         elif name in self._equation_prototype:
-            component = self._equation_prototype[name]
+            components = self._equation_prototype[name]()
         else:
             raise ValueError(f'No names for {name}')
 
         self._names[name] = [comp.get_name()
-                             for comp in getattr(self, component)]
+                             for comp in components]
 
     def state_has_fixed_parameter_initial_condition(self, ix: int) -> bool:
         """
@@ -2199,7 +2259,7 @@ class DEModel:
             boolean indicating if any of the initial condition free
             variables is contained in the model constants
         """
-        ic = self._states[ix].get_val()
+        ic = self.states()[ix].get_val()
         if not isinstance(ic, sp.Basic):
             return False
         return any(
@@ -2218,7 +2278,7 @@ class DEModel:
         :return:
             boolean indicating if conservation_law is not None
         """
-        return self._states[ix].has_conservation_law()
+        return self.states()[ix].has_conservation_law()
 
     def get_solver_indices(self) -> Dict[int, int]:
         """
@@ -2229,7 +2289,7 @@ class DEModel:
         """
         solver_index = {}
         ix_solver = 0
-        for ix in range(len(self._states)):
+        for ix in range(len(self.states())):
             if self.state_has_conservation_law(ix):
                 continue
             solver_index[ix] = ix_solver
@@ -2246,7 +2306,7 @@ class DEModel:
         :return:
             boolean indicating if constant over time
         """
-        state = self._states[ix]
+        state = self.states()[ix]
         if isinstance(state, AlgebraicState):
             return False
 
@@ -2286,7 +2346,7 @@ class DEModel:
             return True
 
         # Check if any time-dependent states are in the expression.
-        state_syms = [str(sym) for sym in self._states]
+        state_syms = [str(sym) for sym in self.states()]
         return any(
             not self.state_is_constant(state_syms.index(state))
             for state in expr_syms.intersection(state_syms)
@@ -3176,7 +3236,7 @@ class DEExporter:
             'STATE_IDXS_SOLVER_INITIALIZER_LIST':
                 ', '.join(
                         str(idx)
-                        for idx, state in enumerate(self.model._states)
+                        for idx, state in enumerate(self.model.states())
                         if not state.has_conservation_law()
                 ),
             'REINIT_FIXPAR_INITCOND':
@@ -3191,13 +3251,13 @@ class DEExporter:
                 ', '.join(map(
                     lambda event: AmiciCxxCodePrinter.print_bool(
                         event.get_initial_value()),
-                    self.model._events)),
+                    self.model.events())),
             'Z2EVENT':
                 ', '.join(map(str, self.model._z2event)),
             'ID':
                 ', '.join((
                     str(float(isinstance(s, DifferentialState)))
-                    for s in self.model._states
+                    for s in self.model.states()
                     if not s.has_conservation_law()
                 ))
         }

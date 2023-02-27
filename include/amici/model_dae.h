@@ -10,6 +10,7 @@
 #include <sunmatrix/sunmatrix_sparse.h>
 
 #include <utility>
+#include <numeric>
 #include <vector>
 
 namespace amici {
@@ -52,7 +53,9 @@ class Model_DAE : public Model {
                 o2mode, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit, ndxdotdx_explicit, w_recursion_depth) {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
-        auto M_nnz = static_cast<sunindextype>(std::reduce(idlist));
+        auto M_nnz = static_cast<sunindextype>(
+            std::reduce(idlist.begin(), idlist.end())
+        );
         derived_state_.MSparse_ = SUNMatrixWrapper(nx_solver, nx_solver,
                                                    M_nnz, CSC_MAT);
         derived_state_.dfdx_ = SUNMatrixWrapper(nx_solver, nx_solver,

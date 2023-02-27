@@ -1696,8 +1696,8 @@ class SbmlImporter:
                     ode_model, conservation_laws)) & set(species_solver))
 
         # add algebraic variables to species_solver as they were ignored above
-        ndifferential = len(ode_model._differentialstates)
-        nalgebraic = len(ode_model._algebraicstates)
+        ndifferential = len(ode_model._differential_states)
+        nalgebraic = len(ode_model._algebraic_states)
         species_solver.extend(list(range(ndifferential, ndifferential + nalgebraic)))
 
         # Check, whether species_solver is empty now. As currently, AMICI
@@ -1759,7 +1759,7 @@ class SbmlImporter:
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
             stoichiometric_list, *sm.shape,
             rng_seed=32,
-            species_names=[str(x.get_id()) for x in ode_model._differentialstates]
+            species_names=[str(x.get_id()) for x in ode_model._differential_states]
         )
 
         # Sparsify conserved quantities
@@ -1771,7 +1771,7 @@ class SbmlImporter:
         #  `A * x0 = total_cl` and bring it to reduced row echelon form. The
         #  pivot species are the ones to be eliminated. The resulting state
         #  expressions are sparse and void of any circular dependencies.
-        A = sp.zeros(len(cls_coefficients), len(ode_model._differentialstates))
+        A = sp.zeros(len(cls_coefficients), len(ode_model._differential_states))
         for i_cl, (cl, coefficients) in enumerate(zip(cls_state_idxs,
                                                       cls_coefficients)):
             for i, c in zip(cl, coefficients):
@@ -1853,12 +1853,12 @@ class SbmlImporter:
 
     def _add_conservation_for_non_constant_species(
         self,
-        ode_model: DEModel,
+        model: DEModel,
         conservation_laws: List[ConservationLaw]
     ) -> List[int]:
         """Add non-constant species to conservation laws
 
-        :param ode_model:
+        :param model:
             ODEModel object with basic definitions
         :param conservation_laws:
             List of already known conservation laws
@@ -1866,11 +1866,11 @@ class SbmlImporter:
             List of species indices which later remain in the ODE solver
         """
         # indices of retained species
-        species_solver = list(range(len(ode_model._differentialstates)))
+        species_solver = list(range(len(model._differential_states)))
 
         algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
         if algorithm.lower() == "demartino":
-            raw_cls = self._get_conservation_laws_demartino(ode_model)
+            raw_cls = self._get_conservation_laws_demartino(model)
         else:
             raw_cls = self._get_conservation_laws_rref()
 
@@ -1885,7 +1885,7 @@ class SbmlImporter:
         # previously removed constant species
         eliminated_state_ids = {cl['state'] for cl in conservation_laws}
 
-        all_state_ids = [x.get_id() for x in ode_model._states]
+        all_state_ids = [x.get_id() for x in model.states()]
         all_compartment_sizes = []
         for state_id in all_state_ids:
             symbol = {
@@ -2332,14 +2332,14 @@ def _add_conservation_for_constant_species(
     """
 
     # decide which species to keep in stoichiometry
-    species_solver = list(range(len(ode_model._differentialstates)))
+    species_solver = list(range(len(ode_model._differential_states)))
 
     # iterate over species, find constant ones
-    for ix in reversed(range(len(ode_model._differentialstates))):
+    for ix in reversed(range(len(ode_model._differential_states))):
         if ode_model.state_is_constant(ix):
             # dont use sym('x') here since conservation laws need to be
             # added before symbols are generated
-            target_state = ode_model._differentialstates[ix].get_id()
+            target_state = ode_model._differential_states[ix].get_id()
             total_abundance = symbol_with_assumptions(f'tcl_{target_state}')
             conservation_laws.append({
                 'state': target_state,
