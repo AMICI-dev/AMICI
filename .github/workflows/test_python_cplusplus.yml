@@ -1,5 +1,5 @@
 name: C++/Python Tests
-on: [push, pull_request, workflow_dispatch]
+on: [push, merge_group, workflow_dispatch]
 
 jobs:
   build:
