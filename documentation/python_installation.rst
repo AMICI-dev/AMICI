@@ -93,7 +93,7 @@ Installation on Windows
 
 Some general remarks:
 
-* Consider using the `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/install-win10>>`_ and follow the instructions for
+* Consider using the `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/install-win10>`__ and follow the instructions for
   installation on linux.
 * Install all libraries in a path not containing white spaces,
   e.g. directly under C:.
