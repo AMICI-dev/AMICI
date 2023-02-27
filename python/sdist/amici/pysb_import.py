@@ -116,10 +116,10 @@ def pysb2amici(
         just generate the source code.
 
     :param simplify:
-        see :attr:`amici.ODEModel._simplify`
+        see :attr:`amici.DEModel._simplify`
 
     :param cache_simplify:
-            see :func:`amici.ODEModel.__init__`
+            see :func:`amici.DEModel.__init__`
             Note that there are possible issues with PySB models:
             https://github.com/AMICI-dev/AMICI/pull/1672
 
@@ -181,7 +181,7 @@ def ode_model_from_pysb_importer(
         verbose: Union[int, bool] = False,
 ) -> DEModel:
     """
-    Creates an :class:`amici.ODEModel` instance from a :class:`pysb.Model`
+    Creates an :class:`amici.DEModel` instance from a :class:`pysb.Model`
     instance.
 
     :param model:
@@ -204,10 +204,10 @@ def ode_model_from_pysb_importer(
         see :func:`amici.pysb_import.pysb2amici`
 
     :param simplify:
-            see :attr:`amici.ODEModel._simplify`
+            see :attr:`amici.DEModel._simplify`
 
     :param cache_simplify:
-            see :func:`amici.ODEModel.__init__`
+            see :func:`amici.DEModel.__init__`
             Note that there are possible issues with PySB models:
             https://github.com/AMICI-dev/AMICI/pull/1672
 
@@ -215,7 +215,7 @@ def ode_model_from_pysb_importer(
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :return:
-        New ODEModel instance according to pysbModel
+        New DEModel instance according to pysbModel
     """
 
     ode = DEModel(
@@ -271,7 +271,7 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
         pysb model instance
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
 
     :param constant_parameters:
         list of constant parameters
@@ -360,13 +360,13 @@ def _process_stoichiometric_matrix(pysb_model: pysb.Model,
 def _process_pysb_species(pysb_model: pysb.Model,
                           ode_model: DEModel) -> None:
     """
-    Converts pysb Species into States and adds them to the ODEModel instance
+    Converts pysb Species into States and adds them to the DEModel instance
 
     :param pysb_model:
         pysb model instance
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
     """
     xdot = sp.Matrix(pysb_model.odes)
 
@@ -398,7 +398,7 @@ def _process_pysb_parameters(pysb_model: pysb.Model,
                              constant_parameters: List[str]) -> None:
     """
     Converts pysb parameters into Parameters or Constants and adds them to
-    the ODEModel instance
+    the DEModel instance
 
     :param pysb_model:
         pysb model
@@ -407,7 +407,7 @@ def _process_pysb_parameters(pysb_model: pysb.Model,
         list of Parameters that should be constants
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
     """
     for par in pysb_model.parameters:
         if par.name in constant_parameters:
@@ -431,14 +431,14 @@ def _process_pysb_expressions(
     r"""
     Converts pysb expressions/observables into Observables (with
     corresponding standard deviation SigmaY and LogLikelihoodY) or
-    Expressions and adds them to the ODEModel instance
+    Expressions and adds them to the DEModel instance
 
     :param pysb_model:
         pysb model
 
     :param observables:
         list of names of :class`pysb.Expression`\ s or
-        :class:`pysb.Observable`\ s that are to be mapped to ODEModel
+        :class:`pysb.Observable`\ s that are to be mapped to DEModel
         observables
 
     :param sigmas:
@@ -450,7 +450,7 @@ def _process_pysb_expressions(
         see :func:`amici.pysb_import.pysb2amici`
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
     """
     # we no longer expand expressions here. pysb/bng guarantees that
     # they are ordered according to their dependency and we can
@@ -599,17 +599,17 @@ def _process_pysb_observables(
 ) -> None:
     """
     Converts :class:`pysb.core.Observable` into
-    :class:`ODEModel.Expressions` and adds them to the ODEModel instance
+    :class:`DEModel.Expressions` and adds them to the DEModel instance
 
     :param pysb_model:
         pysb model
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
 
     :param observables:
         list of names of pysb.Expressions or pysb.Observables that are to be
-        mapped to ODEModel observables
+        mapped to DEModel observables
 
     :param sigmas:
         dict with names of observable pysb.Expressions/pysb.Observables
@@ -637,7 +637,7 @@ def _process_pysb_conservation_laws(pysb_model: pysb.Model,
         pysb model
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
     """
 
     monomers_without_conservation_law = set()
@@ -704,7 +704,7 @@ def _generate_cl_prototypes(excluded_monomers: Iterable[str],
         pysb model
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
 
     :return:
         dict('monomer.name':{'possible_indices': ..., 'target_indices': ...}
@@ -735,7 +735,7 @@ def _compute_possible_indices(cl_prototypes: CL_Prototype,
         pysb model
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
 
     :param excluded_monomers:
         monomers for which no conservation laws will be
@@ -827,7 +827,7 @@ def _compute_target_index(cl_prototypes: CL_Prototype,
         dict that contains possible indices for every monomer
 
     :param ode_model:
-        ODEModel instance
+        DEModel instance
     """
     possible_indices = list(set(list(itertools.chain(*[
         cl_prototypes[monomer]['possible_indices']
@@ -1147,7 +1147,7 @@ def _add_conservation_for_constant_species(
     monomer
 
     :param ode_model:
-        ODEModel instance to which the conservation laws will be added
+        DEModel instance to which the conservation laws will be added
 
     :param conservation_laws:
         see return of :func:`_construct_conservation_from_prototypes`
@@ -1269,7 +1269,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            ode_model: DEModel) -> bool:
     """
     Wrapper to interface
-    :meth:`ode_export.ODEModel.state_has_fixed_parameter_initial_condition`
+    :meth:`ode_export.DEModel.state_has_fixed_parameter_initial_condition`
     from a pysb specie/model arguments
 
     :param specie:
@@ -1284,7 +1284,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
     :return:
         ``False`` if the species does not have an initial condition at all.
         Otherwise the return value of
-        :meth:`ode_export.ODEModel.state_has_fixed_parameter_initial_condition`
+        :meth:`ode_export.DEModel.state_has_fixed_parameter_initial_condition`
     """
     # ComplexPatterns are not hashable, so we have to compare by string
     ic_index = next(
