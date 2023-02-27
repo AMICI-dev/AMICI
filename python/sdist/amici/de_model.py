@@ -1,4 +1,4 @@
-"""Objects for AMICI's internal ODE model representation"""
+"""Objects for AMICI's internal differential equation model representation"""
 import abc
 
 import sympy as sp
@@ -168,7 +168,7 @@ class ConservationLaw(ModelQuantity):
 
 class AlgebraicEquation(ModelQuantity):
     """
-    An AlgebraicEquation defines an algeb
+    An AlgebraicEquation defines an algebraic equation.
     """
     def __init__(self, identifier: str, value: sp.Expr):
         """
@@ -176,7 +176,7 @@ class AlgebraicEquation(ModelQuantity):
 
         :param value:
             formula of the algebraic equation, solution is given by
-            formula == 0
+            ``formula == 0``
         """
         super(AlgebraicEquation, self).__init__(
             sp.Symbol(identifier), identifier, value
