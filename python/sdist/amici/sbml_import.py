@@ -1863,7 +1863,7 @@ class SbmlImporter:
         :param conservation_laws:
             List of already known conservation laws
         :returns:
-            List of species indices which later remain in the ODE solver
+            List of species indices which later remain in the DE solver
         """
         # indices of retained species
         species_solver = list(range(len(model._differential_states)))
@@ -2328,7 +2328,7 @@ def _add_conservation_for_constant_species(
         List of already known conservation laws
 
     :returns species_solver:
-        List of species indices which remain later in the ODE solver
+        List of species indices which remain later in the DE solver
     """
 
     # decide which species to keep in stoichiometry

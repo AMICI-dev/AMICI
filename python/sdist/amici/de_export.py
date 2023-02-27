@@ -1,7 +1,7 @@
 """
 C++ Export
 ----------
-This module provides all necessary functionality specify an ODE model and
+This module provides all necessary functionality specify an DE model and
 generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by
 :py:func:`amici.pysb_import.pysb2amici`,
@@ -492,7 +492,7 @@ def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
         )
 
 
-# defines the type of some attributes in ODEModel
+# defines the type of some attributes in DEModel
 symbol_to_type = {
     SymbolId.SPECIES: DifferentialState,
     SymbolId.ALGEBRAIC_STATE: AlgebraicState,
@@ -603,7 +603,7 @@ def smart_is_zero_matrix(x: Union[sp.MutableDenseMatrix,
 
 
 def _default_simplify(x):
-    """Default simplification applied in ODEModel"""
+    """Default simplification applied in DEModel"""
     # We need this as a free function instead of a lambda to have it picklable
     #  for parallel simplification
     return sp.powsimp(x, deep=True)
@@ -690,20 +690,20 @@ class DEModel:
 
     :ivar _equation_prototype:
         defines the attribute from which an equation should be generated via
-        list comprehension (see :meth:`ODEModel._generate_equation`)
+        list comprehension (see :meth:`OEModel._generate_equation`)
 
     :ivar _variable_prototype:
         defines the attribute from which a variable should be generated via
-        list comprehension (see :meth:`ODEModel._generate_symbol`)
+        list comprehension (see :meth:`DEModel._generate_symbol`)
 
     :ivar _value_prototype:
         defines the attribute from which a value should be generated via
-        list comprehension (see :meth:`ODEModel._generate_value`)
+        list comprehension (see :meth:`DEModel._generate_value`)
 
     :ivar _total_derivative_prototypes:
         defines how a total derivative equation is computed for an equation,
         key defines the name and values should be arguments for
-        ODEModel.totalDerivative()
+        :meth:`DEModel.totalDerivative`
 
     :ivar _lock_total_derivative:
         add chainvariables to this set when computing total derivative from
@@ -737,14 +737,14 @@ class DEModel:
                  simplify: Optional[Callable] = _default_simplify,
                  cache_simplify: bool = False):
         """
-        Create a new ODEModel instance.
+        Create a new DEModel instance.
 
         :param verbose:
             verbosity level for logging, True/False default to
             ``logging.DEBUG``/``logging.ERROR``
 
         :param simplify:
-            see :meth:`ODEModel._simplify`
+            see :meth:`DEModel._simplify`
 
         :param cache_simplify:
             Whether to cache calls to the simplify method. Can e.g. decrease
@@ -1404,7 +1404,7 @@ class DEModel:
 
     def free_symbols(self) -> Set[sp.Basic]:
         """
-        Returns list of free symbols that appear in ODE RHS and initial
+        Returns list of free symbols that appear in RHS and initial
         conditions.
         """
         return set(chain.from_iterable(
@@ -1948,7 +1948,7 @@ class DEModel:
             raise ValueError(f'Unknown equation {name}')
 
         if name == 'root':
-            # Events are processed after the ODE model has been set up.
+            # Events are processed after the model has been set up.
             # Equations are there, but symbols for roots must be added
             self.sym('h')
 
@@ -2476,7 +2476,7 @@ class DEExporter:
     defined in symbolic expressions.
 
     :ivar model:
-        ODE definition
+        DE definition
 
     :ivar verbose:
         more verbose output if True
@@ -2523,7 +2523,7 @@ class DEExporter:
 
     def __init__(
             self,
-            ode_model: DEModel,
+            de_model: DEModel,
             outdir: Optional[Union[Path, str]] = None,
             verbose: Optional[Union[bool, int]] = False,
             assume_pow_positivity: Optional[bool] = False,
@@ -2533,10 +2533,10 @@ class DEExporter:
             model_name: Optional[str] = 'model'
     ):
         """
-        Generate AMICI C++ files for the ODE provided to the constructor.
+        Generate AMICI C++ files for the DE provided to the constructor.
 
-        :param ode_model:
-            ODE definition
+        :param de_model:
+            DE model definition
 
         :param outdir:
             see :meth:`amici.ode_export.DEExporter.set_paths`
@@ -2577,7 +2577,7 @@ class DEExporter:
 
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
-        self.model: DEModel = ode_model
+        self.model: DEModel = de_model
 
         # To only generate a subset of functions, apply subselection here
         self.functions: Dict[str, _FunctionInfo] = copy.deepcopy(functions)
