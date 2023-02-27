@@ -158,7 +158,6 @@ void Model_DAE::fdxdotdp(const realtype t, const const_N_Vector x,
 
 void Model_DAE::fM(realtype t, const_N_Vector x) {
     derived_state_.M_.zero();
-    auto x_pos = computeX_pos(x);
     if (pythonGenerated) {
         /*
          * non-algebraic states in python generated code always have factor
@@ -177,6 +176,7 @@ void Model_DAE::fM(realtype t, const_N_Vector x) {
         derived_state_.MSparse_.set_indexptr(nx_solver, ndiff);
         assert(ndiff == derived_state_.MSparse_.capacity());
     } else {
+        auto x_pos = computeX_pos(x);
         fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
            state_.unscaledParameters.data(),
            state_.fixedParameters.data());

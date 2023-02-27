@@ -1046,7 +1046,10 @@ class SbmlImporter:
                 continue
             free_variables.add(symbol)
 
+        # this should be guaranteed by sbml validation, so better check to make sure
+        # we don't mess anything up
         assert len(free_variables) >= 1
+
         self.symbols[SymbolId.ALGEBRAIC_EQUATION][
             f'ae{len(self.symbols[SymbolId.ALGEBRAIC_EQUATION])}'
         ] = {
@@ -1073,7 +1076,7 @@ class SbmlImporter:
                     'value': init,
                 }
                 symbol_id = 'compartment'
-                six = np.nan
+                var_ix = np.nan
                 del self.compartments[var]
             else:
                 symbol_id, source_symbols = next(
@@ -1081,7 +1084,7 @@ class SbmlImporter:
                      for symbol_id in (SymbolId.PARAMETER, SymbolId.SPECIES)
                      if var in self.symbols[symbol_id]),
                 )
-                six = list(source_symbols.keys()).index(var)
+                var_ix = list(source_symbols.keys()).index(var)
                 symbol = source_symbols.pop(var)
             # update symbol and adapt stoichiometric matrix
             if symbol_id != SymbolId.SPECIES:
@@ -1101,7 +1104,7 @@ class SbmlImporter:
                         [0] * self.stoichiometric_matrix.shape[1]
                     ])
                 )
-            elif six != self.stoichiometric_matrix.shape[0] - 1:
+            elif var_ix != self.stoichiometric_matrix.shape[0] - 1:
                 # if not the last col, move it to the end
                 # as we reorder state variables
                 state_ordering = list(range(
@@ -1109,7 +1112,7 @@ class SbmlImporter:
                     len(self.symbols[SymbolId.ALGEBRAIC_STATE]) +
                     1
                 ))
-                state_ordering.append(state_ordering.pop(six))
+                state_ordering.append(state_ordering.pop(var_ix))
                 self.stoichiometric_matrix = \
                     self.stoichiometric_matrix[state_ordering, :]
 

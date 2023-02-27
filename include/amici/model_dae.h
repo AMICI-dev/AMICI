@@ -52,10 +52,7 @@ class Model_DAE : public Model {
                 o2mode, idlist, z2event, pythonGenerated,
                 ndxdotdp_explicit, ndxdotdx_explicit, w_recursion_depth) {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
-            int ndiff = 0;
-        for (auto& n : idlist)
-             ndiff += static_cast<int>(n);
-        auto M_nnz = static_cast<sunindextype>(ndiff);
+        auto M_nnz = static_cast<sunindextype>(std::reduce(idlist));
         derived_state_.MSparse_ = SUNMatrixWrapper(nx_solver, nx_solver,
                                                    M_nnz, CSC_MAT);
         derived_state_.dfdx_ = SUNMatrixWrapper(nx_solver, nx_solver,
