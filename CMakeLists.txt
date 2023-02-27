@@ -99,6 +99,7 @@ endif()
 include(GNUInstallDirs)
 
 find_package(OpenMP)
+find_package(Boost COMPONENTS chrono)
 
 if(ENABLE_HDF5)
   find_package(
@@ -278,6 +279,9 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
   endforeach()
 endif()
 
+target_compile_definitions(
+    ${PROJECT_NAME} PRIVATE $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
+
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC SUNDIALS::generic_static
@@ -298,6 +302,7 @@ target_link_libraries(
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
          ${BLAS_LIBRARIES}
+         $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
          $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE

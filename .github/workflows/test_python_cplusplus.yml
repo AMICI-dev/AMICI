@@ -56,6 +56,7 @@ jobs:
             g++ \
             libatlas-base-dev \
             libboost-serialization-dev \
+            libboost-chrono-dev \
             libhdf5-serial-dev \
             python3-venv \
             swig \
