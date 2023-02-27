@@ -20,6 +20,15 @@ foreach(flag ${MY_CXX_FLAGS})
   endif()
 endforeach()
 
+if(DEFINED ENV{AMICI_CXXFLAGS})
+  message(STATUS "Appending flags from AMICI_CXXFLAGS: $ENV{AMICI_CXXFLAGS}")
+  add_compile_options("$ENV{AMICI_CXXFLAGS}")
+endif()
+if(DEFINED ENV{AMICI_LDFLAGS})
+  message(STATUS "Appending flags from AMICI_LDFLAGS: $ENV{AMICI_LDFLAGS}")
+  link_libraries("$ENV{AMICI_LDFLAGS}")
+endif()
+
 find_package(Amici TPL_AMICI_VERSION REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
@@ -69,13 +78,6 @@ endif()
 if($ENV{ENABLE_GCOV_COVERAGE})
   string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
-endif()
-
-if($ENV{AMICI_CXXFLAGS})
-  string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
-endif()
-if($ENV{AMICI_LDFLAGS})
-  string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
 endif()
 
 # SWIG
