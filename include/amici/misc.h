@@ -13,6 +13,10 @@
 #include <functional>
 #include <ctime>
 
+#ifdef HAS_BOOST_CHRONO
+#include <boost/chrono/thread_clock.hpp>
+#endif
+
 #include <gsl/gsl-lite.hpp>
 
 namespace amici {
@@ -242,6 +246,47 @@ bool is_equal(T const& a, T const& b) {
     return true;
 }
 
+#ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
+/** Tracks elapsed CPU time. */
+class CpuTimer {
+    using clock = boost::chrono::thread_clock;
+    using time_point = boost::chrono::thread_clock::time_point;
+    using d_seconds = boost::chrono::duration<double>;
+    using d_milliseconds = boost::chrono::duration<double, boost::milli>;
+  public:
+    /**
+     * @brief Constructor
+     */
+    CpuTimer() : start_(clock::now()){}
+
+    /**
+     * @brief Reset the timer
+     */
+    void reset() { start_ = clock::now(); }
+
+    /**
+     * @brief Get elapsed CPU time in seconds since initialization or last reset
+     * @return CPU time in seconds
+     */
+    double elapsed_seconds() const {
+        return boost::chrono::duration_cast<d_seconds>(
+                   clock::now() - start_).count();
+    }
+
+    /**
+     * @brief Get elapsed CPU time in milliseconds since initialization or last
+     * reset
+     * @return CPU time in milliseconds
+     */
+    double elapsed_milliseconds() const {
+        return boost::chrono::duration_cast<d_milliseconds>(
+                   clock::now() - start_).count();
+    }
+  private:
+    /** Start time */
+    time_point start_;
+};
+#else
 /** Tracks elapsed CPU time. */
 class CpuTimer {
   public:
@@ -275,6 +320,7 @@ class CpuTimer {
     /** Start time */
     std::clock_t start_;
 };
+#endif
 
 } // namespace amici
 

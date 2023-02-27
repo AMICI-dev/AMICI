@@ -21,8 +21,8 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     % folder
     if(isempty(funs))
         ls = dir(fullfile(modelSourceFolder, '*.cpp'));
-        % wrapfunctions is handled separately
         ls = {ls.name};
+        % wrapfunctions is handled separately
         ls = ls(cellfun(@(x) ~strcmp(x, "wrapfunctions.cpp"), ls));
         % extract funs from filename (strip of modelname_ and .cpp
         funs = cellfun(@(x) x(1:(length(x)-4)), ls, 'UniformOutput', false);

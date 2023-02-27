@@ -24,9 +24,6 @@ message ( STATUS "Building SuiteSparse_config version: v"
     ${SUITESPARSE_VERSION_MINOR}.
     ${SUITESPARSE_VERSION_SUB} " (" ${SUITESPARSE_DATE} ")" )
 
-# AMICI
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    
 #-------------------------------------------------------------------------------
 # SuiteSparse policies
 #-------------------------------------------------------------------------------
@@ -65,7 +62,9 @@ else ( )
     find_package ( OpenMP )
 endif ( )
 
-include ( SuiteSparseBLAS )
+# AMICI
+# include ( SuiteSparseBLAS )
+set(SuiteSparse_BLAS_integer int64_t)
 
 #-------------------------------------------------------------------------------
 # configure files
