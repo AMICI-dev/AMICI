@@ -81,6 +81,9 @@ cmake_policy ( SET CMP0048 NEW )    # VERSION variable policy
 cmake_policy ( SET CMP0054 NEW )    # if ( expression ) handling policy
 cmake_policy ( SET CMP0104 NEW )    # initialize CUDA architectures
 
+# AMICI
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 if ( WIN32 )
     set ( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true )
     add_compile_definitions ( _CRT_SECURE_NO_WARNINGS )

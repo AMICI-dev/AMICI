@@ -2536,7 +2536,15 @@ class ODEExporter:
         else:
             script_args.append('--quiet')
 
-        script_args.extend(['build_ext', f'--build-lib={module_dir}'])
+        script_args.extend([
+            'build_ext',
+            f'--build-lib={module_dir}',
+            # This is generally not required, but helps to reduce the path
+            # length of intermediate build files, that may easily become
+            # problematic on Windows, due to its ridiculous 255-character path
+            # length limit.
+            f'--build-temp={Path(module_dir, "build")}',
+        ])
 
         if compiler is not None:
             script_args.extend([f'--compiler={compiler}'])

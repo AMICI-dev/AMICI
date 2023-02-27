@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
+      AMICI_PARALLEL_COMPILE: ""
       ENABLE_GCOV_COVERAGE: "TRUE"
       CI_SONARCLOUD: "TRUE"
 
@@ -117,7 +118,7 @@ jobs:
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-$(python -c "import sys; print(sys.implementation.cache_tag)")/amici/src \
+        -d ${AMICI_DIR}/python/sdist/build/$(python -c "import sys, sysconfig; print(f'temp.{sysconfig.get_platform()}-{sys.implementation.cache_tag}_amici')")/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
