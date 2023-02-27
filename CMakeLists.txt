@@ -84,11 +84,15 @@ if($ENV{ENABLE_GCOV_COVERAGE})
 endif()
 
 # Legacy environment variables from Python-sdist times
-if($ENV{AMICI_CXXFLAGS})
+if(DEFINED ENV{AMICI_CXXFLAGS})
   string(APPEND CMAKE_CXX_FLAGS " $ENV{AMICI_CXXFLAGS}")
 endif()
-if($ENV{AMICI_LDFLAGS})
+if(DEFINED ENV{AMICI_LDFLAGS})
   string(APPEND CMAKE_EXE_LINKER_FLAGS " $ENV{AMICI_LDFLAGS}")
+endif()
+
+if(DEFINED ENV{SWIG})
+  set(SWIG_EXECUTABLE $ENV{SWIG})
 endif()
 
 # find dependencies
