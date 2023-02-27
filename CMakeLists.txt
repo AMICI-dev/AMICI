@@ -35,13 +35,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Compiler flags
 include(CheckCXXCompilerFlag)
 set(MY_CXX_FLAGS -Wall)
-foreach(FLAG ${MY_CXX_FLAGS})
+foreach(flag ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+  check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
   if(${CUR_FLAG_SUPPORTED})
-    string(APPEND CMAKE_CXX_FLAGS " ${FLAG}")
+    string(APPEND CMAKE_CXX_FLAGS " ${flag}")
   endif()
-endforeach(FLAG)
+endforeach()
 
 if(MSVC)
   set(MY_CXX_FLAGS
@@ -63,12 +63,12 @@ if(MSVC)
       -wd5045
       # hide enum-switch no explicitly handled
       -wd4061)
-  foreach(FLAG ${MY_CXX_FLAGS})
-    check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+  foreach(flag ${MY_CXX_FLAGS})
+    check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
     if(${CUR_FLAG_SUPPORTED})
-      string(APPEND CMAKE_CXX_FLAGS " ${FLAG}")
+      string(APPEND CMAKE_CXX_FLAGS " ${flag}")
     endif()
-  endforeach(FLAG)
+  endforeach()
 endif()
 
 # Debug build?
@@ -165,7 +165,8 @@ add_custom_target(
   -D
   DST=${CMAKE_CURRENT_BINARY_DIR}/include/amici/version.h
   -P
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configureVersion.cmake)
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/configureVersion.cmake
+  COMMENT "Writing amici/version.h")
 
 # Library source files
 set(AMICI_SRC_LIST
@@ -253,11 +254,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PUBLIC $<BUILD_INTERFACE:${GSL_LITE_INCLUDE_DIR}>
-  PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_DATADIR}/amici/swig>
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>
+         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+         $<BUILD_INTERFACE:${GSL_LITE_INCLUDE_DIR}>
+         $<INSTALL_INTERFACE:${CMAKE_INSTALL_DATADIR}/amici/swig>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>
   PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
@@ -268,48 +269,45 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
    OR "$ENV{ENABLE_GCOV_COVERAGE}"
    OR CMAKE_BUILD_TYPE MATCHES "Debug")
   set(MY_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
-  foreach(FLAG ${MY_CXX_FLAGS})
+  foreach(flag ${MY_CXX_FLAGS})
     unset(CUR_FLAG_SUPPORTED CACHE)
-    check_cxx_compiler_flag(${FLAG} CUR_FLAG_SUPPORTED)
+    check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
     if(${CUR_FLAG_SUPPORTED})
-      target_compile_options(${PROJECT_NAME} PRIVATE ${FLAG})
+      target_compile_options(${PROJECT_NAME} PRIVATE ${flag})
     endif()
-  endforeach(FLAG)
+  endforeach()
 endif()
 
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC SUNDIALS::generic_static
-  PUBLIC SUNDIALS::nvecserial_static
-  PUBLIC SUNDIALS::sunmatrixband_static
-  PUBLIC SUNDIALS::sunmatrixdense_static
-  PUBLIC SUNDIALS::sunmatrixsparse_static
-  PUBLIC SUNDIALS::sunlinsolband_static
-  PUBLIC SUNDIALS::sunlinsoldense_static
-  PUBLIC SUNDIALS::sunlinsolpcg_static
-  PUBLIC SUNDIALS::sunlinsolspbcgs_static
-  PUBLIC SUNDIALS::sunlinsolspfgmr_static
-  PUBLIC SUNDIALS::sunlinsolspgmr_static
-  PUBLIC SUNDIALS::sunlinsolsptfqmr_static
-  PUBLIC SUNDIALS::sunlinsolklu_static
-  PUBLIC SUNDIALS::sunnonlinsolnewton_static
-  PUBLIC SUNDIALS::sunnonlinsolfixedpoint_static
-  PUBLIC SUNDIALS::cvodes_static
-  PUBLIC SUNDIALS::idas_static
+         SUNDIALS::nvecserial_static
+         SUNDIALS::sunmatrixband_static
+         SUNDIALS::sunmatrixdense_static
+         SUNDIALS::sunmatrixsparse_static
+         SUNDIALS::sunlinsolband_static
+         SUNDIALS::sunlinsoldense_static
+         SUNDIALS::sunlinsolpcg_static
+         SUNDIALS::sunlinsolspbcgs_static
+         SUNDIALS::sunlinsolspfgmr_static
+         SUNDIALS::sunlinsolspgmr_static
+         SUNDIALS::sunlinsolsptfqmr_static
+         SUNDIALS::sunlinsolklu_static
+         SUNDIALS::sunnonlinsolnewton_static
+         SUNDIALS::sunnonlinsolfixedpoint_static
+         SUNDIALS::cvodes_static
+         SUNDIALS::idas_static
+         ${BLAS_LIBRARIES}
+         $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
+         ${CMAKE_DL_LIBS}
   PRIVATE
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
-  PUBLIC ${BLAS_LIBRARIES}
-  PUBLIC $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
-  PUBLIC ${CMAKE_DL_LIBS})
+)
 
 if(HDF5_FOUND)
   message(STATUS "HDF5 library found. Building AMICI with HDF5 support.")
-  target_link_libraries(
-    ${PROJECT_NAME}
-    PUBLIC hdf5::hdf5_hl_cpp
-    PUBLIC hdf5::hdf5_hl
-    PUBLIC hdf5::hdf5_cpp
-    PUBLIC hdf5::hdf5)
+  target_link_libraries(${PROJECT_NAME} PUBLIC hdf5::hdf5_hl_cpp hdf5::hdf5_hl
+                                               hdf5::hdf5_cpp hdf5::hdf5)
 else()
   message(STATUS "HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
 endif()
@@ -324,7 +322,7 @@ endif()
 # For matlab interface
 if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
 
-  set(matlab_sources
+  set(MATLAB_SOURCES
       src/interface_matlab.cpp src/returndata_matlab.cpp
       include/amici/interface_matlab.h include/amici/returndata_matlab.h)
   find_package(Matlab)
@@ -333,12 +331,15 @@ if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
   # to show up inside IDEs. (Set the Matlab_ROOT_DIR cmake variable if CMake
   # cannot find your Matlab installation)
   if(${Matlab_FOUND})
-    add_library(matlabInterface ${matlab_sources})
+    add_library(matlabInterface ${MATLAB_SOURCES})
     set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
                                                      "${Matlab_INCLUDE_DIRS}")
     target_link_libraries(matlabInterface PUBLIC amici)
   else()
-    add_custom_target(matlabInterface SOURCES ${matlab_sources})
+    add_custom_target(
+      matlabInterface
+      SOURCES ${MATLAB_SOURCES}
+      COMMENT "Dummy target for MATLAB interface files")
   endif()
   set_property(
     TARGET matlabInterface
@@ -356,7 +357,8 @@ add_custom_target(
           src/wrapfunctions.ODE_template.h
           src/wrapfunctions.template.cpp
           swig/CMakeLists_model.cmake
-          swig/modelname.template.i)
+          swig/modelname.template.i
+  COMMENT "Dummy target for SWIG files")
 set_target_properties(
   fileTemplates PROPERTIES INCLUDE_DIRECTORIES
                            "${CMAKE_CURRENT_SOURCE_DIR}/include/")
