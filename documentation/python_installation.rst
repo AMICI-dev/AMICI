@@ -93,6 +93,8 @@ Installation on Windows
 
 Some general remarks:
 
+* Consider using the `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/install-win10>>`_ and follow the instructions for
+  installation on linux.
 * Install all libraries in a path not containing white spaces,
   e.g. directly under C:.
 * Replace the following paths according to your installation.
@@ -100,69 +102,6 @@ Some general remarks:
   variables.
 * See also [#425](https://github.com/AMICI-dev/amici/issues/425) for
   further discussion.
-
-Using the MinGW compilers
--------------------------
-
-* Install `MinGW-W64 <https://sourceforge.net/projects/mingw-w64/files/>`_
-  (the 32bit version will succeed to compile, but fail during linking).
-
-  MinGW-W64 GCC-8.1.0 for ``x86_64-posix-sjlj``
-  (`direct link <https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z/download>`_) has been shown to work on Windows 7 and 10 test systems.
-
-* Add the following directory to your ``PATH``:
-  ``C:\mingw-w64\x86_64-8.1.0-posix-sjlj-rt_v6-rev0\mingw64\bin``
-
-* Make sure that this is the compiler that is found by the system
-  (e.g. ``where gcc`` in a ``cmd`` should point to this installation).
-
-* Download CBLAS headers and libraries, e.g.
-  `OpenBLAS <https://sourceforge.net/projects/openblas/files/v0.2.19/>`_,
-  binary distribution 0.2.19.
-
-  Set the following environment variables:
-
-  + ``BLAS_CFLAGS=-IC:/OpenBLAS-v0.2.19-Win64-int32/include``
-  + ``BLAS_LIBS=-Wl,-Bstatic -LC:/OpenBLAS-v0.2.19-Win64-int32/lib -lopenblas -Wl,-Bdynamic``
-
-* Install `SWIG <http://www.swig.org/download.html>`_
-  and add the SWIG directory to ``PATH``
-  (e.g. ``C:\swigwin-3.0.12`` for version 3.0.12)
-
-* Install AMICI using:
-
-  .. code-block:: bash
-
-     pip install --global-option="build_clib" \
-                 --global-option="--compiler=mingw32" \
-                 --global-option="build_ext" \
-                 --global-option="--compiler=mingw32" \
-                 amici --no-cache-dir --verbose`
-
-.. note::
-
-   **Possible sources of errors:**
-
-   * On recent Windows versions,
-     ``anaconda3\Lib\distutils\cygwinccompiler.py`` fails linking
-     ``msvcr140.dll`` with
-     ``[...] x86_64-w64-mingw32/bin/ld.exe: cannot find -lmsvcr140``.
-     This is not required for amici, so in ``cygwinccompiler.py``
-     ``return ['msvcr140']`` can be changed to ``return []``.
-
-   * If you use a python version where
-     `python/cpython#880 <https://github.com/python/cpython/pull/880>`_
-     has not been fixed yet, you need to disable
-     ``define hypot _hypot`` in ``anaconda3\include/pyconfig.h`` yourself.
-
-   * ``import amici`` in Python resulting in the very informative
-
-       ImportError: DLL load failed: The specified module could not be found.
-
-     means that some amici module dependencies were not found (not the
-     AMICI module itself).
-     `DependencyWalker <http://www.dependencywalker.com/>`_ can show you
-     which ones.
 
 Using the Microsoft Visual Studio
 ---------------------------------
