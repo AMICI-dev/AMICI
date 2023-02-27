@@ -59,9 +59,9 @@ DERIVATIVE_PATTERN = re.compile(r'^d(x_rdata|xdot|\w+?)d(\w+?)(?:_explicit)?$')
 class _FunctionInfo:
     """Information on a model-specific generated C++ function
 
-    :ivar arguments: argument list of the ODE function. input variables should be
+    :ivar ode_arguments: argument list of the ODE function. input variables should be
         ``const``.
-    :ivar arguments: argument list of the DAE function, if different from ODE
+    :ivar dae_arguments: argument list of the DAE function, if different from ODE
         function. input variables should be ``const``.
     :ivar return_type: the return type of the function
     :ivar assume_pow_positivity:
@@ -611,7 +611,7 @@ def _default_simplify(x):
 
 class DEModel:
     """
-    Defines an Ordinary Differential Equation as set of ModelQuantities.
+    Defines a Differential Equation as set of ModelQuantities.
     This class provides general purpose interfaces to compute arbitrary
     symbolic derivatives that are necessary for model simulation or
     sensitivity computation.
@@ -1451,9 +1451,9 @@ class DEModel:
     def generate_basic_variables(self) -> None:
         """
         Generates the symbolic identifiers for all variables in
-        ``ODEModel._variable_prototype``
+        ``DEModel._variable_prototype``
         """
-        # We need to process events and Heaviside functions in the ODE Model,
+        # We need to process events and Heaviside functions in the ``DEModel`,
         # before adding it to DEExporter
         self.parse_events()
 
@@ -2412,7 +2412,7 @@ class DEModel:
 
 class DEExporter:
     """
-    The DEExporter class generates AMICI C++ files for ODE model as
+    The DEExporter class generates AMICI C++ files for a model as
     defined in symbolic expressions.
 
     :ivar model:
@@ -3434,7 +3434,7 @@ def get_function_extern_declaration(fun: str, name: str, ode: bool) -> str:
         function name
     :param name:
         model name
-    :param dae:
+    :param ode:
         whether to generate declaration for DAE or ODE
 
     :return:

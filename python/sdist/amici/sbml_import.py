@@ -1059,7 +1059,7 @@ class SbmlImporter:
                 raise SBMLException(
                     'There are algebraic rules that specify the '
                     f'value of {var}, which is also marked as '
-                    'fixed paramter. This is currently not supported!'
+                    'fixed parameter. This is currently not supported! '
                     f'If {var} is supposed to be a fixed parameter, '
                     'set its SBML attribute `constant` to True.'
                 )
