@@ -37,7 +37,10 @@ set(AMICI_INTERFACE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/stdvec2numpy.h)
 
 # Add target to show files in IDE
-add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
+add_custom_target(
+  swigInterface
+  SOURCES ${AMICI_INTERFACE_LIST}
+  COMMENT "Dummy target for SWIG files.")
 
 # https://cmake.org/cmake/help/latest/module/UseSWIG.html
 include(${SWIG_USE_FILE})
@@ -64,17 +67,17 @@ set_target_properties(
 execute_process(
   COMMAND ${Python3_EXECUTABLE} -c
           "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX'))"
-  OUTPUT_VARIABLE PY_EXT_SUFFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+  OUTPUT_VARIABLE PY_EXT_SUFFIX
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT "${PY_EXT_SUFFIX}" STREQUAL "")
-    message(STATUS "Python extension suffix is ${PY_EXT_SUFFIX}")
+  message(STATUS "Python extension suffix is ${PY_EXT_SUFFIX}")
   set_target_properties(_amici PROPERTIES SUFFIX "${PY_EXT_SUFFIX}")
 endif()
 
 target_include_directories(
   _amici
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include
-  PRIVATE ${Python3_NumPy_INCLUDE_DIRS})
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include
+          ${Python3_NumPy_INCLUDE_DIRS})
 
 set_property(
   TARGET _amici
@@ -109,7 +112,8 @@ if(WIN32)
   add_custom_command(
     TARGET _amici
     POST_BUILD
-    COMMAND dumpbin "/DEPENDENTS" "$<TARGET_FILE:_amici>")
+    COMMAND dumpbin "/DEPENDENTS" "$<TARGET_FILE:_amici>"
+    COMMENT "Dumping extension dependencies.")
   message("Dependencies: ${dump}")
 endif()
 
