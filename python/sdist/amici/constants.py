@@ -20,6 +20,8 @@ class SymbolId(str, enum.Enum):
         programmatically.
     """
     SPECIES = 'species'
+    ALGEBRAIC_STATE = 'algebraic_state'
+    ALGEBRAIC_EQUATION = 'algebraic_equation'
     PARAMETER = 'parameter'
     FIXED_PARAMETER = 'fixed_parameter'
     OBSERVABLE = 'observable'

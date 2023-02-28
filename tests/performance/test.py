@@ -17,6 +17,7 @@ def parse_args():
     if '_' in arg and re.match(r'O[0-2]', arg.split("_")[-1]):
         optim = arg.split("_")[-1]
         os.environ['AMICI_CXXFLAGS'] = f'-{optim}'
+        print(f"{os.environ['AMICI_CXXFLAGS']=}")
         suffix = f'_{optim}'
         arg = '_'.join(arg.split("_")[:-1])
     else:
@@ -48,7 +49,7 @@ def run_import(model_name, model_dir: Path):
     pp = petab.Problem.from_yaml(git_dir / 'FroehlichKes2018' / 'PEtab'
                                  / 'FroehlichKes2018.yaml')
     petab.lint_problem(pp)
-    amici.ode_export.logger.setLevel(logging.DEBUG)
+    amici.de_export.logger.setLevel(logging.DEBUG)
     amici.sbml_import.logger.setLevel(logging.DEBUG)
     import_model(model_name=model_name,
                  model_output_dir=model_dir,
@@ -64,9 +65,9 @@ def compile_model(model_dir_source: Path, model_dir_compiled: Path):
     if model_dir_source != model_dir_compiled:
         shutil.copytree(model_dir_source, model_dir_compiled)
 
-    subprocess.run(['python', 'setup.py',
-                    'build_ext', '--build-lib=.', '--force'],
-                   cwd=model_dir_compiled)
+    cmd = ['python', 'setup.py', 'build_ext', '--build-lib=.', '--force']
+    print("Running:", " ".join(cmd))
+    subprocess.run(cmd, cwd=model_dir_compiled, check=True)
 
 
 def prepare_simulation(arg, model, solver, edata):

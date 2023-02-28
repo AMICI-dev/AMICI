@@ -70,7 +70,7 @@ def test_csc_matrix_vector():
 
 
 def test_match_deriv():
-    from amici.ode_export import DERIVATIVE_PATTERN as pat
+    from amici.de_export import DERIVATIVE_PATTERN as pat
 
     def check(str, out1, out2):
         match = pat.match(str)

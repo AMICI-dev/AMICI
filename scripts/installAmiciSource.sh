@@ -27,8 +27,10 @@ else
     source ${AMICI_PATH}/build/venv/bin/activate
 fi
 
-pip install --upgrade pip pkgconfig scipy matplotlib coverage pytest pytest-cov
-pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
 pip install -U "setuptools<64"
+pip install --upgrade pip wheel
+pip install --upgrade pip scipy matplotlib coverage pytest \
+  pytest-cov cmake_build_extension numpy
+pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
 pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test] --no-build-isolation
 deactivate

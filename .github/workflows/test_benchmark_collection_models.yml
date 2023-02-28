@@ -4,11 +4,11 @@ on:
     branches:
       - develop
       - master
-
   pull_request:
     branches:
       - master
       - develop
+  merge_group:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
