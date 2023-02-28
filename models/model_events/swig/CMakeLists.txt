@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
+if(DEFINED ENV{SWIG})
+  set(SWIG_EXECUTABLE $ENV{SWIG})
+endif()
+
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 
