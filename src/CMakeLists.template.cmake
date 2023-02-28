@@ -40,14 +40,6 @@ set(SRC_LIST_LIB TPL_SOURCES ${MODEL_DIR}/wrapfunctions.cpp)
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
 add_library(model ALIAS ${PROJECT_NAME})
 
-# This option can be helpful when using the Intel compiler and compilation of
-# wrapfunctions.cpp fails due to insufficient memory.
-option(ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS
-       "Enable compiler optimizations for wrapfunctions.cpp?" ON)
-if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
-  set_source_files_properties(wrapfunctions.cpp PROPERTIES COMPILE_FLAGS -O0)
-endif()
-
 # Some special functions require boost
 #
 # TODO: set some flag during code generation whether the given model requires

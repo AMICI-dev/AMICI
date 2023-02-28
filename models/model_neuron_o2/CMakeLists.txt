@@ -12,13 +12,22 @@ set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND MY_CXX_FLAGS -Wno-unused-but-set-variable)
 endif()
-foreach(FLAG ${MY_CXX_FLAGS})
+foreach(flag ${MY_CXX_FLAGS})
   unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(-Werror ${FLAG} CUR_FLAG_SUPPORTED)
+  check_cxx_compiler_flag(-Werror ${flag} CUR_FLAG_SUPPORTED)
   if(${CUR_FLAG_SUPPORTED})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    string(APPEND CMAKE_CXX_FLAGS " ${flag}")
   endif()
-endforeach(FLAG)
+endforeach()
+
+if(DEFINED ENV{AMICI_CXXFLAGS})
+  message(STATUS "Appending flags from AMICI_CXXFLAGS: $ENV{AMICI_CXXFLAGS}")
+  add_compile_options("$ENV{AMICI_CXXFLAGS}")
+endif()
+if(DEFINED ENV{AMICI_LDFLAGS})
+  message(STATUS "Appending flags from AMICI_LDFLAGS: $ENV{AMICI_LDFLAGS}")
+  link_libraries("$ENV{AMICI_LDFLAGS}")
+endif()
 
 find_package(Amici  REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
@@ -63,14 +72,6 @@ ${MODEL_DIR}/z.cpp
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
 add_library(model ALIAS ${PROJECT_NAME})
 
-# This option can be helpful when using the Intel compiler and compilation of
-# wrapfunctions.cpp fails due to insufficient memory.
-option(ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS
-       "Enable compiler optimizations for wrapfunctions.cpp?" ON)
-if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
-  set_source_files_properties(wrapfunctions.cpp PROPERTIES COMPILE_FLAGS -O0)
-endif()
-
 # Some special functions require boost
 #
 # TODO: set some flag during code generation whether the given model requires
@@ -87,9 +88,7 @@ target_link_libraries(
 
 if(NOT "${AMICI_PYTHON_BUILD_EXT_ONLY}")
   set(SRC_LIST_EXE main.cpp)
-
   add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
-
   target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
 endif()
 
@@ -103,13 +102,6 @@ endif()
 if($ENV{ENABLE_GCOV_COVERAGE})
   string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
-endif()
-
-if($ENV{AMICI_CXXFLAGS})
-  string(APPEND CMAKE_CXX_FLAGS "$ENV{AMICI_CXXFLAGS}")
-endif()
-if($ENV{AMICI_LDFLAGS})
-  string(APPEND CMAKE_EXE_LINKER_FLAGS "$ENV{AMICI_LDFLAGS}")
 endif()
 
 # SWIG
