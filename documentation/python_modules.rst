@@ -16,8 +16,8 @@ AMICI Python API
    amici.petab_objective
    amici.petab_simulate
    amici.import_utils
-   amici.ode_export
-   amici.ode_model
+   amici.de_export
+   amici.de_model
    amici.plotting
    amici.pandas
    amici.logging

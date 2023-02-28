@@ -19,6 +19,11 @@ try:
 except ImportError:
     pysb = None
 
+
+class SBMLException(Exception):
+    pass
+
+
 SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
 
 

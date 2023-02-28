@@ -360,9 +360,9 @@ add_custom_target(
   fileTemplates
   SOURCES src/CMakeLists.template.cmake
           src/main.template.cpp
-          src/model_header.ODE_template.h
-          src/model.ODE_template.cpp
-          src/wrapfunctions.ODE_template.h
+          src/model_header.template.h
+          src/model.template.cpp
+          src/wrapfunctions.template.h
           src/wrapfunctions.template.cpp
           swig/CMakeLists_model.cmake
           swig/modelname.template.i
