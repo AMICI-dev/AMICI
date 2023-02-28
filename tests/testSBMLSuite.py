@@ -85,10 +85,13 @@ def test_sbml_testsuite_case(
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
-        if rdata['status'] != amici.AMICI_SUCCESS and test_id in [
-            '00748', '00374', '00369'
-        ]:
-            raise amici.sbml_import.SBMLException('Simulation Failed')
+        if rdata['status'] != amici.AMICI_SUCCESS:
+            if test_id in (
+                '00748', '00374', '00369'
+            ):
+                pytest.skip('Simulation Failed expectedly')
+            else:
+                raise RuntimeError('Simulation failed unexpectedly')
 
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
@@ -139,9 +142,12 @@ def verify_results(
     ]
     # We only need to convert species that have only substance units
     concentration_species = [
-        str(species_id)
-        for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
-        if str(species_id) in requested_concentrations and species['amount']
+        str(state_id)
+        for state_id, state in {
+            **wrapper.symbols[SymbolId.SPECIES],
+            **wrapper.symbols[SymbolId.ALGEBRAIC_STATE],
+        }.items()
+        if str(state_id) in requested_concentrations and state.get('amount', False)
     ]
     amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)

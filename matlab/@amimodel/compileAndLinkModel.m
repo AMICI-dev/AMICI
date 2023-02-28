@@ -20,10 +20,12 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     % if no list provided, try to determine relevant files from model
     % folder
     if(isempty(funs))
-        ls = dir(fullfile(modelSourceFolder, [modelname '_*.cpp']));
+        ls = dir(fullfile(modelSourceFolder, '*.cpp'));
         ls = {ls.name};
+        % wrapfunctions is handled separately
+        ls = ls(cellfun(@(x) ~strcmp(x, "wrapfunctions.cpp"), ls));
         % extract funs from filename (strip of modelname_ and .cpp
-        funs = cellfun(@(x) x((length(modelname)+2):(length(x)-4)), ls, 'UniformOutput', false);
+        funs = cellfun(@(x) x(1:(length(x)-4)), ls, 'UniformOutput', false);
     end
 
     objectFileSuffix = '.o';
@@ -32,9 +34,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     % compile flags
-    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++14'''];
+    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++17'''];
     if(debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++14 -Wno-unused-function -Wno-unused-variable'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++17 -Wno-unused-function -Wno-unused-variable'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
@@ -74,7 +76,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     %% Model-specific files
     for j=1:length(funs)
-        baseFileName = [modelname '_' strrep(funs{j}, 'sigma_', 'sigma')];
+        baseFileName = strrep(funs{j}, 'sigma_', 'sigma');
         cfun(1).(funs{j}) = sourceNeedsRecompilation(modelSourceFolder, modelObjectFolder, baseFileName, objectFileSuffix);
     end
 
@@ -124,7 +126,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     if(numel(funsForRecompile))
         fprintf('ffuns | ');
 
-        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[modelname '_' x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
+        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
         sources = strjoin(sources,' ');
 
         cmd = ['mex ' DEBUG COPT ...
@@ -136,15 +138,14 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
             disp(cmd);
             rethrow(ME);
         end
-        cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);
+        cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, x),funsForRecompile,'UniformOutput',false);
     end
 
     % append model object files
     for j=1:length(funs)
-        filename = fullfile(modelObjectFolder, [modelname '_' strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
+        filename = fullfile(modelObjectFolder, [strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
         if(exist(filename,'file'))
-            objectsstr = strcat(objectsstr,...
-                ' "',filename,'"');
+            objectsstr = strcat(objectsstr, ' "',filename,'"');
         end
     end
 

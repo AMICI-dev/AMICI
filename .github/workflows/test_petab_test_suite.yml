@@ -4,12 +4,11 @@ on:
     branches:
       - develop
       - master
-
   pull_request:
     branches:
       - master
       - develop
-
+  merge_group:
   workflow_dispatch:
 
 jobs:

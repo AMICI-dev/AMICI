@@ -38,5 +38,5 @@ flags:
   sbmlsuite:
     paths:
       - "python/amici/sbml_import.py"
-      - "python/amici/ode_export.py"
+      - "python/amici/de_export.py"
     carryforward: true
