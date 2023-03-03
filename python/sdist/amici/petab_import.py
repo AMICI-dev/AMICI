@@ -915,10 +915,7 @@ def _main():
         petab.flatten_timepoint_specific_output_overrides(pp)
 
     import_model(model_name=args.model_name,
-                 sbml_model=pp.sbml_model,
-                 condition_table=pp.condition_df,
-                 observable_table=pp.observable_df,
-                 measurement_table=pp.measurement_df,
+                 petab_problem=pp,
                  model_output_dir=args.model_output_dir,
                  compile=args.compile,
                  generate_sensitivity_code=args.generate_sensitivity_code,
