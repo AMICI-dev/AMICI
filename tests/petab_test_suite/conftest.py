@@ -31,8 +31,9 @@ def parse_selection(selection_str: str) -> List[int]:
 def pytest_addoption(parser):
     """Add pytest CLI options"""
     parser.addoption("--petab-cases", help="Test cases to run")
-    parser.addoption("--only-pysb", help="Run only PySB tests",
-                     action="store_true")
+    # TODO: re-enable in #1800
+    # parser.addoption("--only-pysb", help="Run only PySB tests",
+    #                  action="store_true")
     parser.addoption("--only-sbml", help="Run only SBML tests",
                      action="store_true", )
 
@@ -54,7 +55,7 @@ def pytest_generate_tests(metafunc):
             test_numbers = None
 
         if metafunc.config.getoption("--only-sbml"):
-
+            # TODO ???
             if not test_numbers:
                 test_numbers
 

@@ -161,7 +161,6 @@ def check_derivatives(
 
 def run():
     """Run the full PEtab test suite"""
-
     n_success = 0
     n_skipped = 0
     n_total = 0
