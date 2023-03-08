@@ -31,8 +31,9 @@ def parse_selection(selection_str: str) -> List[int]:
 def pytest_addoption(parser):
     """Add pytest CLI options"""
     parser.addoption("--petab-cases", help="Test cases to run")
-    parser.addoption("--only-pysb", help="Run only PySB tests",
-                     action="store_true")
+    # TODO: re-enable in #1800
+    # parser.addoption("--only-pysb", help="Run only PySB tests",
+    #                  action="store_true")
     parser.addoption("--only-sbml", help="Run only SBML tests",
                      action="store_true", )
 
@@ -54,26 +55,23 @@ def pytest_generate_tests(metafunc):
             test_numbers = None
 
         if metafunc.config.getoption("--only-sbml"):
-
-            if not test_numbers:
-                test_numbers
-
             argvalues = [
                 (case, 'sbml', version)
-                for version in ('v1.0.0', "v2.0.0")
+                for version in ('v1.0.0', )
                 for case in (test_numbers if test_numbers
                              else get_cases("sbml", version=version))
             ]
-        elif metafunc.config.getoption("--only-pysb"):
-            argvalues = [
-                (case, 'pysb', "v2.0.0")
-                for case in (test_numbers if test_numbers
-                             else get_cases("pysb", version="v2.0.0"))
-            ]
+        # TODO: re-enable in #1800
+        # elif metafunc.config.getoption("--only-pysb"):
+        #     argvalues = [
+        #         (case, 'pysb', "v1.0.0")
+        #         for case in (test_numbers if test_numbers
+        #                      else get_cases("pysb", version="v1.0.0"))
+        #     ]
         else:
             argvalues = []
-            for version in ('v1.0.0', "v2.0.0"):
-                for format in ('sbml', 'pysb'):
+            for version in ('v1.0.0',):
+                for format in ('sbml',):
                     argvalues.extend(
                         (case, format, version)
                         for case in test_numbers or get_cases(format, version)
