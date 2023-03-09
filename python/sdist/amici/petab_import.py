@@ -671,11 +671,6 @@ def import_model_sbml(
                          'initial values specified by the PEtab problem.')
         formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
-        if sbml_model.getSpecies(assignee_id).getHasOnlySubstanceUnits():
-            compartment = sbml_model.getCompartment(
-                sbml_model.getSpecies(assignee_id).getCompartment()
-            ).getId()
-            formula = f'({formula}) / {compartment}'
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
     # <EndWorkAround>
