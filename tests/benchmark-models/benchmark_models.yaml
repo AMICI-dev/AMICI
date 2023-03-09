@@ -96,7 +96,7 @@ Sneyd_PNAS2002:
   t_adj: 0.5
   note: benchmark collection reference ignores factor 1/2
 
-Smith_BMCSystBiol2013
+Smith_BMCSystBiol2013:
   llh: -343556.54636323644
   t_sim: 1.0
   t_fwd: 100.0
