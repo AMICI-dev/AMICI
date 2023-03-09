@@ -73,7 +73,7 @@ jobs:
       - name: Run PEtab-related unit tests
         run: |
           source ./build/venv/bin/activate \
-           && pip install --force-reinstall -v git+https://github.com/PEtab-dev/libpetab-python.git@model_pysb \
+           && pip install --force-reinstall -v git+https://github.com/PEtab-dev/libpetab-python.git@develop \
           &&  cat /home/runner/work/AMICI/AMICI/build/venv/lib/python3.8/site-packages/petab/models/__init__.py \
             && pytest --cov-report=xml:coverage.xml \
               --cov=./ python/tests/test_*petab*.py
