@@ -43,7 +43,7 @@ jobs:
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
 
-    - run: pip3 install git+https://github.com/PEtab-dev/libpetab-python.git@model_pysb[vis]
+    - run: pip3 install git+https://github.com/PEtab-dev/libpetab-python.git@model_pysb#egg=petab[vis]
 
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
 
