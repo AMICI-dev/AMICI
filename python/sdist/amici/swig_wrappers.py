@@ -281,3 +281,5 @@ def _ids_and_names_to_rdata(
                 f"{entity_type.lower()}_{name_or_id.lower()}",
                 names_or_ids
             )
+    rdata.state_ids_solver = model.getStateIdsSolver()
+    rdata.state_names_solver = model.getStateNamesSolver()
