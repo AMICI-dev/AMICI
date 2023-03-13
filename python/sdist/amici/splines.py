@@ -556,8 +556,18 @@ class AbstractSpline(ABC):
 
         # Compute polynomial in Horner form for the scaled variable
         t = sp.Dummy('t')
-        poly = sp.poly(self._poly(t, i).expand(), wrt=t, domain=sp.RR)
-        poly = sp.horner(poly)
+        poly = self._poly(t, i).expand().as_poly(wrt=t, domain=sp.RR)
+
+        # Rewrite in Horner form
+        # NB any coefficient containing functions must be rewritten for some reason
+        subs = {}
+        reverse_subs = {}
+        for s in poly.args[2:]:
+            if not s.is_Symbol:
+                wild = sp.Dummy()
+                subs[s] = wild
+                reverse_subs[wild] = s
+        poly = sp.horner(poly.subs(subs)).subs(reverse_subs)
 
         # Replace scaled variable with its value,
         # without changing the expression form
