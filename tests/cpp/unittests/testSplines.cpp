@@ -159,6 +159,33 @@ TEST(Splines, SplineExplicit)
     ASSERT_THROW(spline.get_value(1.05), AmiException);
 }
 
+TEST(Splines, SplineZeroBC)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 0.0, 2.0, 0.5, 1.0 },
+                         {},
+                         SplineBoundaryCondition::zeroDerivative,
+                         SplineBoundaryCondition::zeroDerivative,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
+                         true,  // node_derivative_by_FD
+                         true,   // equidistant_spacing
+                         false); // logarithmic_parametrization
+
+    spline.compute_coefficients();
+    std::vector<std::tuple<double, double>> expectations = {
+        // t, expected value
+        {0.0, 0.0},
+        {0.25, 1.65234375},
+        {0.5, 1.3437499999999996},
+        {0.75, 0.5078125},
+        {1.0, 1.0},
+    };
+    test_spline_values(spline, expectations);
+    ASSERT_THROW(spline.get_value(-0.05), AmiException);
+    ASSERT_THROW(spline.get_value(1.05), AmiException);
+}
+
 TEST(Splines, SplineLogarithmic)
 {
     // Logarithmic parametrization
@@ -462,6 +489,43 @@ TEST(Splines, SplineExplicitSensitivity)
         {0.50,  {-0.166667, 0.0641793, 2.625}},
         {2.0/3, { 0.0,      0.0,       0.0}},
         {0.75,  {-0.75,     0.130923,  0.46875}},
+        {1.00,  {-6.0,      1.0,       3.0}},
+    };
+    test_spline_sensitivities(spline, expectations, 1e-5, 0.0);
+    ASSERT_THROW(spline.get_sensitivity(-0.05, 0), AmiException);
+    ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
+}
+
+TEST(Splines, SplineExplicitSensitivity)
+{
+    HermiteSpline spline({ 0.0, 1.0 },
+                         { 2.5, 3.25, 1.0, 4.5 },
+                         {},
+                         SplineBoundaryCondition::zeroDerivative,
+                         SplineBoundaryCondition::zeroDerivative,
+                         SplineExtrapolation::noExtrapolation,
+                         SplineExtrapolation::noExtrapolation,
+                         true,  // node_derivative_by_FD
+                         true,   // equidistant_spacing
+                         false); // logarithmic_parametrization
+    int n_params = 3;
+    std::vector<double> dvaluesdp = {
+         3.0,  1.0,  0.0,
+         0.0,  0.0,  5.0,
+         0.0,  0.0,  0.0,
+        -6.0,  1.0,  3.0
+    };
+    auto dslopesdp = std::vector<double>(spline.n_nodes() * n_params);
+    spline.compute_coefficients();
+    spline.compute_coefficients_sensi(n_params, 0, dvaluesdp, dslopesdp);
+    std::vector<std::tuple<double, std::vector<double>>> expectations = {
+        // t, expected values of sensitivities
+        {0.00,  { 3.0,      1.0,       0.0}},
+        {0.25,  { 0.679688, 0.226562,  4.21875}},
+        {1.0/3, { 0.0,      0.0,       5.0}},
+        {0.50,  {0.1875,   -0.125,     2.625}},
+        {2.0/3, { 0.0,      0.0,       0.0}},
+        {0.75,  {-1.35938,  0.226562,  0.328125}},
         {1.00,  {-6.0,      1.0,       3.0}},
     };
     test_spline_sensitivities(spline, expectations, 1e-5, 0.0);
