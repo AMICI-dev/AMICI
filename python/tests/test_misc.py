@@ -2,12 +2,12 @@
 
 import os
 import subprocess
-
+from pathlib import Path
 import pytest
 import sympy as sp
 
 import amici
-from amici.ode_export import _custom_pow_eval_derivative, _monkeypatched, \
+from amici.de_export import _custom_pow_eval_derivative, _monkeypatched, \
     smart_subs_dict
 from amici.testing import skip_on_valgrind
 
@@ -56,12 +56,21 @@ def test_cmake_compilation(sbml_example_presimulation_module):
     Python tests"""
 
     source_dir = os.path.dirname(sbml_example_presimulation_module.__path__[0])
+    build_dir = f"{source_dir}/build"
+    # path hint for amici base installation, in case CMake configuration has
+    #  not been exported
+    amici_dir = (Path(__file__).parents[2] / 'build').absolute()
+    cmd = f"set -e; " \
+          f"cmake -S {source_dir} -B '{build_dir}' -DAmici_DIR={amici_dir}; " \
+          f"cmake --build '{build_dir}'"
 
-    cmd = f"set -e; cd {source_dir}; mkdir -p build; cd build; "\
-          "cmake ..; make"
-
-    subprocess.run(cmd, shell=True, check=True,
-                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        subprocess.run(cmd, shell=True, check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print(e.stdout.decode())
+        print(e.stderr.decode())
+        raise
 
 
 @skip_on_valgrind

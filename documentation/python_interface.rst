@@ -26,7 +26,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 1030 out of the 1821 (~57%) test cases** from
+Python-AMICI currently **passes 1116 out of the 1821 (~61%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -37,6 +37,7 @@ The following SBML test suite tags are currently supported
 
 **Component tags:**
 
+* AlgebraicRule
 * AssignmentRule
 * Compartment
 * CSymbolAvogadro
@@ -77,13 +78,8 @@ The following SBML test suite tags are currently supported
 * UncommonMathML
 * VolumeConcentrationRates
 
-In addition, we currently plan to add support for the following features
-(see corresponding `issues <https://github.com/AMICI-dev/AMICI/milestone/14>`_
-for details and progress):
-
-- Algebraic rules (`#760 <https://github.com/AMICI-dev/AMICI/issues/760>`_)
-
-However, the following features are unlikely to be supported:
+Additional support may be added in the future. However, the following features are 
+unlikely to be supported:
 
 - any SBML extensions
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with

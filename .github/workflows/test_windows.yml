@@ -1,7 +1,7 @@
 name: Windows Tests
 on:
   push:
-  pull_request:
+  merge_group:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
@@ -15,7 +15,11 @@ jobs:
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       openBLAS_version: "0.3.19"
-      AMICI_DLL_DIRS: "C:\\BLAS\\bin"
+      AMICI_DLL_DIRS: "C:\\BLAS\\OpenBLAS\\bin"
+      LIB: "C:/BLAS/OpenBLAS/lib"
+      CFLAGS: "-nologo"
+      CXXFLAGS: "-nologo"
+      LDFLAGS: "-nologo"
 
     strategy:
       matrix:
@@ -33,11 +37,11 @@ jobs:
     - shell: bash
       run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
     - shell: bash
-      run: echo "C:\\BLAS\\bin" >> $GITHUB_PATH
+      run: echo "C:\\BLAS\\OpenBLAS\\bin" >> $GITHUB_PATH
     - shell: bash
-      run: echo "BLAS_LIBS=/LIBPATH:C:/BLAS/lib openblas.lib" >> $GITHUB_ENV
+      run: echo "BLAS_LIBS=-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib" >> $GITHUB_ENV
     - shell: bash
-      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS-${openBLAS_version}/OpenBLAS-${openBLAS_version}" >> $GITHUB_ENV
+      run: echo "BLAS_CFLAGS=-IC:/BLAS/OpenBLAS/include/openblas/" >> $GITHUB_ENV
 
     # Developer Command Prompt for Microsoft Visual C++
     - uses: ilammy/msvc-dev-cmd@v1
@@ -52,6 +56,11 @@ jobs:
     - name: Install OpenBLAS
       shell: powershell
       run: scripts/installOpenBLAS
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: OpenBLAS
+        path: C:\BLAS\OpenBLAS
 
     - name: Create sdist
       working-directory: python/sdist
