@@ -3134,7 +3134,10 @@ class ODEExporter:
             # vector with the node values
             values = f"{ind8}{{{', '.join(map(str, spline.yy))}}}, "
             # vector with the slopes
-            slopes = f"{ind8}{{}},"
+            if spline.derivatives_by_fd:
+                slopes = f"{ind8}{{}},"
+            else:
+                slopes = f"{ind8}{{{', '.join(map(str, spline.dd))}}},"
 
             body.extend([
                 f"{ind4}HermiteSpline(",
