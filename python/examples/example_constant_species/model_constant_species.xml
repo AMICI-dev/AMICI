@@ -19,7 +19,7 @@
     </listOfCompartments>
     <listOfSpecies>
       <species id="substrate" name="substrate" compartment="compartment" initialConcentration="5" boundaryCondition="false" constant="false" />
-      <species id="enzyme" name="enzyme" compartment="compartment" initialConcentration="2" boundaryCondition="true" constant="true" />
+      <species id="enzyme" name="enzyme" compartment="compartment" initialConcentration="2" boundaryCondition="false" constant="false" />
       <species id="complex" name="complex" compartment="compartment" initialConcentration="0" boundaryCondition="false" constant="false" />
       <species id="product" name="product" compartment="compartment" initialConcentration="0" boundaryCondition="false" constant="false" />
     </listOfSpecies>
