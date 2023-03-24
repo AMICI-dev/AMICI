@@ -924,6 +924,7 @@ class AbstractSpline(ABC):
             y_nominal: Optional[Union[Sequence[float], float]] = None,
             x_units: Optional[str] = None,
             y_units: Optional[str] = None,
+            y_constant: Optional[Union[Sequence[bool], bool]] = None,
     ) -> None:
         """
         Function to add the spline to an SBML model using an assignment rule
@@ -950,6 +951,9 @@ class AbstractSpline(ABC):
 
         :param y_units:
             Units used when auto-adding parameters for `yy`.
+
+        :param y_constant:
+            Constant flags used when auto-adding parameters for `yy`.
         """
         # Convert time from AMICI to SBML naming
         with evaluate(False):
@@ -1005,10 +1009,22 @@ class AbstractSpline(ABC):
                         )
                 else:
                     y_nominal = len(self.yy) * [y_nominal]
-                for (_y, _val) in zip(self.yy, y_nominal):
+                if isinstance(y_constant, collections.abc.Sequence):
+                    if len(y_constant) != len(self.yy):
+                        raise ValueError(
+                            'If y_constant is a list, then it must have '
+                            'the same length as the spline values!'
+                        )
+                else:
+                    y_constant = len(self.yy) * [y_constant]
+                for (_y, _val, _const) in zip(self.yy, y_nominal, y_constant):
                     if _y.is_Symbol and not model.getParameter(_y.name):
-                        add_parameter(model, _y.name, value=_val,
-                                      units=y_units)
+                        add_parameter(
+                            model, _y.name,
+                            value=_val,
+                            constant=_const,
+                            units=y_units,
+                        )
 
         elif auto_add is not False:
             raise ValueError(f'Invalid value {auto_add} for auto_add!')
