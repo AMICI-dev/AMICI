@@ -496,7 +496,7 @@ TEST(Splines, SplineExplicitSensitivity)
     ASSERT_THROW(spline.get_sensitivity( 1.05, 1), AmiException);
 }
 
-TEST(Splines, SplineExplicitSensitivity)
+TEST(Splines, SplineZeroDerivativeSensitivity)
 {
     HermiteSpline spline({ 0.0, 1.0 },
                          { 2.5, 3.25, 1.0, 4.5 },
