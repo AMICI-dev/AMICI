@@ -120,7 +120,18 @@ realtype
 AbstractSpline::get_final_sensitivity(const int ip) const
 {
     auto s = get_final_sensitivity_scaled(ip);
-    return logarithmic_parametrization_ ? s * get_final_value() : s;
+    if (logarithmic_parametrization_) {
+        auto v = get_final_value();
+        if (std::isinf(v)) {
+            assert(v > 0); // logarithmic parameterization means positive values only
+            assert(std::isnan(s) || s == 0); // in the case the limit is +inf, sensitivity in log-scale will either be NaN or zero
+            return s;
+        } else {
+            return s * v;
+        }
+    } else {
+        return s;
+    }
 }
 
 void
