@@ -61,6 +61,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_NOT_IMPLEMENTED, "AMICI_NOT_IMPLEMENTED"},
     {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
+    {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
@@ -75,7 +76,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     auto _ = gsl::finally([&solver, &model]
                           { solver.logger = model.logger = nullptr; });
 
-    auto start_time_total = clock();
+    CpuTimer cpu_timer;
     solver.startTimer();
 
     /* Applies condition-specific model settings and restores them when going
@@ -194,9 +195,13 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             throw;
         logger.log(
             LogSeverity::error, "OTHER",
-            "AMICI simulation failed: %s\nError occurred in:\n%s", ex.what(),
-            ex.getBacktrace()
+            "AMICI simulation failed: %s", ex.what()
         );
+        logger.log(
+            LogSeverity::debug, "BACKTRACE",
+            "The previous error occurred at:\n%s", ex.getBacktrace()
+            );
+
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
@@ -212,8 +217,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         bwd_success ? bwd.get() : nullptr,
         posteq.get(), model, solver, edata);
 
-    rdata->cpu_time_total = static_cast<double>(clock() - start_time_total)
-                            * 1000.0 / CLOCKS_PER_SEC;
+    rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
     // verify that reported CPU times are plausible
     gsl_EnsuresDebug(rdata->cpu_time <= rdata->cpu_time_total);

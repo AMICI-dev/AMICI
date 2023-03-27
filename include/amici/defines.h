@@ -79,6 +79,7 @@ constexpr int AMICI_DAMPING_FACTOR_ERROR=    -86;
 constexpr int AMICI_SINGULAR_JACOBIAN=      -809;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_MAX_TIME_EXCEEDED  =   -1000;
+constexpr int AMICI_NOT_RUN=               -1001;
 constexpr int AMICI_SUCCESS=                   0;
 constexpr int AMICI_DATA_RETURN=               1;
 constexpr int AMICI_ROOT_RETURN=               2;
@@ -128,15 +129,21 @@ enum class SecondOrderMode {
 
 /** orders of sensitivity analysis */
 enum class SensitivityOrder {
+    /** Don't compute sensitivities. */
     none,
+    /** First-order sensitivities. */
     first,
+    /** Second-order sensitivities. */
     second
 };
 
 /** methods for sensitivity computation */
 enum class SensitivityMethod {
+    /** Don't compute sensitivities. */
     none,
+    /** Forward sensitivity analysis. */
     forward,
+    /** Adjoint sensitivity analysis. */
     adjoint
 };
 

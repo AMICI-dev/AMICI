@@ -15,10 +15,11 @@ The following section describes building the AMICI C++ library:
 Prerequisites:
 
 * CBLAS compatible BLAS library
-* HDF5 libraries (currently mandatory, see https://github.com/AMICI-dev/AMICI/issues/1252)
-* a C++14 compatible compiler
+* a C++17 compatible compiler
 * a C compiler
-* Optional: boost for serialization
+* Optional:
+  * HDF5 libraries
+  * boost for serialization
 
 To use AMICI from C++, run the
 

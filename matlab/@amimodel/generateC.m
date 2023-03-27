@@ -26,7 +26,7 @@ for ifun = this.funs
 
         if(bodyNotEmpty)
             fprintf([ifun{1} ' | ']);
-            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' cppFunctionName '.cpp']),'w');
+            fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[ cppFunctionName '.cpp']),'w');
             fprintf(fid,'\n');
             fprintf(fid,'#include "amici/symbolic_functions.h"\n');
             fprintf(fid,'#include "amici/defines.h" //realtype definition\n');
@@ -268,7 +268,7 @@ function generateCMakeFile(this)
         funcName = this.funs{j};
         if(checkIfFunctionBodyIsNonEmpty(this,funcName))
             cppFunctionName = strrep(funcName, 'sigma_', 'sigma');
-            sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, cppFunctionName) ];
+            sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s.cpp\n', cppFunctionName) ];
         end
     end
 
@@ -316,5 +316,5 @@ function nonempty = checkIfFunctionBodyIsNonEmpty(this,ifun)
     % if we don't have symbolic variables, it might have been generated before and symbolic expressions were simply not
     % regenerated. any() for empty (no generated) variables is always false.
     cppFunctionName = strrep(ifun, 'sigma_', 'sigma');
-    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' cppFunctionName '.cpp']),'file'),any(this.fun.(ifun).sym(:)~=0));
+    nonempty = or(exist(fullfile(this.wrap_path,'models',this.modelname,[cppFunctionName '.cpp']),'file'),any(this.fun.(ifun).sym(:)~=0));
 end

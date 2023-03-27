@@ -3,7 +3,7 @@
 import importlib
 import logging
 import os
-import shutil
+
 import pytest
 
 pysb = pytest.importorskip("pysb")
@@ -18,7 +18,7 @@ from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
-from amici.testing import skip_on_valgrind
+from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
 
 
 @skip_on_valgrind
@@ -132,67 +132,66 @@ def test_compare_to_pysb_simulation(example):
             pysb_simres = sim.run()
 
             # amici part
-
-            outdir = pysb_model.name
-
-            if pysb_model.name in ['move_connected_amici']:
-                with pytest.raises(Exception):
-                    pysb2amici(pysb_model, outdir, verbose=logging.INFO,
-                               compute_conservation_laws=True)
-                compute_conservation_laws = False
-            else:
-                compute_conservation_laws = True
-
-            pysb2amici(
-                pysb_model,
-                outdir,
-                verbose=logging.INFO,
-                compute_conservation_laws=compute_conservation_laws,
-                observables=list(pysb_model.observables.keys())
-            )
-
-            amici_model_module = amici.import_model_module(pysb_model.name,
-                                                           outdir)
-
-            model_pysb = amici_model_module.getModel()
-
-            model_pysb.setTimepoints(tspan)
-
-            solver = model_pysb.getSolver()
-            solver.setMaxSteps(int(1e6))
-            solver.setAbsoluteTolerance(atol)
-            solver.setRelativeTolerance(rtol)
-            rdata = amici.runAmiciSimulation(model_pysb, solver)
-
-            # check agreement of species simulations
-            assert np.isclose(rdata['x'],
-                              pysb_simres.species, 1e-4, 1e-4).all()
-
-            if example not in ['fricker_2010_apoptosis', 'fixed_initial',
-                               'bngwiki_egfr_simple_deletemolecules']:
-                if example in ['tyson_oscillator', 'bax_pore_sequential',
-                               'bax_pore', 'kinase_cascade',
-                               'bngwiki_egfr_simple',
-                               'bngwiki_enzymatic_cycle_mm',
-                               'bngwiki_simple']:
-                    solver.setAbsoluteTolerance(1e-14)
-                    solver.setRelativeTolerance(1e-14)
-                    epsilon = 1e-4
+            with TemporaryDirectoryWinSafe(prefix=pysb_model.name) as outdir:
+                if pysb_model.name in ['move_connected_amici']:
+                    with pytest.raises(Exception):
+                        pysb2amici(pysb_model, outdir, verbose=logging.INFO,
+                                   compute_conservation_laws=True)
+                    compute_conservation_laws = False
                 else:
-                    solver.setAbsoluteTolerance(1e-10)
-                    solver.setRelativeTolerance(1e-10)
-                    epsilon = 1e-3
-                model_pysb.setParameterScale(parameterScalingFromIntVector([
-                    ParameterScaling.log10 if p > 0 else ParameterScaling.none
-                    for p in model_pysb.getParameters()
-                ]))
-                check_derivatives(model_pysb, solver,
-                                  epsilon=epsilon,
-                                  rtol=1e-2,
-                                  atol=1e-2,
-                                  skip_zero_pars=True)
+                    compute_conservation_laws = True
 
-            shutil.rmtree(outdir, ignore_errors=True)
+                pysb2amici(
+                    pysb_model,
+                    outdir,
+                    verbose=logging.INFO,
+                    compute_conservation_laws=compute_conservation_laws,
+                    observables=list(pysb_model.observables.keys())
+                )
+
+                amici_model_module = amici.import_model_module(pysb_model.name,
+                                                               outdir)
+                model_pysb = amici_model_module.getModel()
+                model_pysb.setTimepoints(tspan)
+
+                solver = model_pysb.getSolver()
+                solver.setMaxSteps(int(1e6))
+                solver.setAbsoluteTolerance(atol)
+                solver.setRelativeTolerance(rtol)
+                rdata = amici.runAmiciSimulation(model_pysb, solver)
+
+                # check agreement of species simulations
+                assert np.isclose(rdata['x'],
+                                  pysb_simres.species, 1e-4, 1e-4).all()
+
+                if example not in ['fricker_2010_apoptosis', 'fixed_initial',
+                                   'bngwiki_egfr_simple_deletemolecules']:
+                    if example in ['tyson_oscillator', 'bax_pore_sequential',
+                                   'bax_pore', 'kinase_cascade',
+                                   'bngwiki_egfr_simple',
+                                   'bngwiki_enzymatic_cycle_mm',
+                                   'bngwiki_simple']:
+                        solver.setAbsoluteTolerance(1e-14)
+                        solver.setRelativeTolerance(1e-14)
+                        epsilon = 1e-4
+                    else:
+                        solver.setAbsoluteTolerance(1e-10)
+                        solver.setRelativeTolerance(1e-10)
+                        epsilon = 1e-3
+                    model_pysb.setParameterScale(
+                        parameterScalingFromIntVector(
+                            [
+                                ParameterScaling.log10 if p > 0
+                                else ParameterScaling.none
+                                for p in model_pysb.getParameters()
+                            ]
+                        )
+                    )
+                    check_derivatives(model_pysb, solver,
+                                      epsilon=epsilon,
+                                      rtol=1e-2,
+                                      atol=1e-2,
+                                      skip_zero_pars=True)
 
 
 def get_data(model):
@@ -286,22 +285,16 @@ def test_heavyside_and_special_symbols():
         )
     )
 
-    outdir = model.name
-    pysb2amici(model, outdir, verbose=True,
-               observables=['a'])
+    with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
+        pysb2amici(model, outdir, verbose=True, observables=['a'])
 
-    model_module = amici.import_model_module(module_name=model.name,
-                                             module_path=outdir)
-    amici_model = model_module.getModel()
-    assert amici_model.ne
+        model_module = amici.import_model_module(module_name=model.name,
+                                                 module_path=outdir)
+        amici_model = model_module.getModel()
+        assert amici_model.ne
 
 
 @skip_on_valgrind
-# TODO: remove me
-@pytest.mark.skipif(
-    not hasattr(pysb, 'EnergyPattern'),
-    reason='pysb energy not yet available'
-)
 def test_energy():
     model_pysb = pysb.Model('energy')
     pysb.Monomer('A', ['a', 'b'])
@@ -322,18 +315,19 @@ def test_energy():
     pysb.EnergyPattern('epAAB', A(a=1) % A(a=1, b=2) % B(a=2), E_AAB_RT)
     pysb.Initial(A(a=None, b=None), A_0)
     pysb.Initial(A(a=None, b=1) % B(a=1), AB_0)
-    outdir = model_pysb.name
-    pysb2amici(model_pysb, model_pysb.name)
 
-    model_module = amici.import_model_module(module_name=model_pysb.name,
-                                             module_path=outdir)
-    amici_model = model_module.getModel()
-    amici_model.setTimepoints(np.logspace(-4, 5, 10))
-    solver = amici_model.getSolver()
-    solver.setRelativeTolerance(1e-14)
-    solver.setAbsoluteTolerance(1e-14)
+    with TemporaryDirectoryWinSafe(prefix=model_pysb.name) as outdir:
+        pysb2amici(model_pysb, output_dir=outdir)
 
-    check_derivatives(amici_model, solver,
-                      epsilon=1e-4,
-                      rtol=1e-2,
-                      atol=1e-2)
+        model_module = amici.import_model_module(module_name=model_pysb.name,
+                                                 module_path=outdir)
+        amici_model = model_module.getModel()
+        amici_model.setTimepoints(np.logspace(-4, 5, 10))
+        solver = amici_model.getSolver()
+        solver.setRelativeTolerance(1e-14)
+        solver.setAbsoluteTolerance(1e-14)
+
+        check_derivatives(amici_model, solver,
+                          epsilon=1e-4,
+                          rtol=1e-2,
+                          atol=1e-2)

@@ -63,9 +63,9 @@ def simulate_petab(
     :param solver:
         An AMICI solver. Will use default options if None.
     :param problem_parameters:
-        Run simulation with these parameters. If None, PEtab `nominalValues`
-        will be used). To be provided as dict,  mapping PEtab problem
-        parameters to SBML IDs.
+        Run simulation with these parameters. If ``None``, PEtab
+        ``nominalValues`` will be used. To be provided as dict, mapping PEtab
+        problem parameters to SBML IDs.
     :param simulation_conditions:
         Result of :py:func:`petab.get_simulation_conditions`. Can be provided
         to save time if this has be obtained before.
@@ -185,9 +185,9 @@ def create_parameterized_edatas(
     :param petab_problem:
         PEtab problem to work on.
     :param problem_parameters:
-        Run simulation with these parameters. If None, PEtab `nominalValues`
-        will be used). To be provided as dict, mapping PEtab problem
-        parameters to SBML IDs.
+        Run simulation with these parameters. If ``None``, PEtab
+        ``nominalValues`` will be used. To be provided as dict, mapping PEtab
+        problem parameters to SBML IDs.
     :param scaled_parameters:
         If ``True``, ``problem_parameters`` are assumed to be on the scale
         provided in the PEtab parameter table and will be unscaled.
@@ -464,16 +464,16 @@ def create_parameter_mapping_for_condition(
     fixed_par_ids = amici_model.getFixedParameterIds()
 
     condition_map_preeq_var, condition_map_preeq_fix = \
-        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
 
     condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
-        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
 
     condition_map_sim_var, condition_map_sim_fix = \
-        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
 
     condition_scale_map_sim_var, condition_scale_map_sim_fix = \
-        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
 
     logger.debug("Fixed parameters preequilibration: "
                  f"{condition_map_preeq_fix}")
@@ -631,8 +631,8 @@ def create_edata_for_condition(
     return edata
 
 
-def subset_dict(full: Dict[Any, Any],
-                *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
+def _subset_dict(full: Dict[Any, Any],
+                 *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
     """Get subset of dictionary based on provided keys
 
     :param full:
