@@ -645,8 +645,9 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                 break;
 
             case SplineExtrapolation::linear:
-                if (get_node_derivative_by_fd() &&
-                    (first_node_bc_ == SplineBoundaryCondition::given || first_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
+                if (first_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
+                    sm0 = 0;
+                } else if (get_node_derivative_by_fd() && first_node_bc_ == SplineBoundaryCondition::given) {
                     sm0 =
                       (dvaluesdp[spline_offset + ip + nplist] - sp0) /
                       (nodes_[1] - nodes_[0]);
@@ -658,8 +659,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                       "Hermite splines with linear extrapolation is "
                       "not yet implemented.");
 
-                } else if (!get_node_derivative_by_fd() &&
-                           (first_node_bc_ == SplineBoundaryCondition::given || first_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
+                } else if (!get_node_derivative_by_fd() && first_node_bc_ == SplineBoundaryCondition::given) {
                     sm0 = dslopesdp[spline_offset + ip];
 
                 } else if (!get_node_derivative_by_fd() &&
@@ -705,8 +705,9 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                 break;
 
             case SplineExtrapolation::linear:
-                if (get_node_derivative_by_fd() &&
-                    (last_node_bc_ == SplineBoundaryCondition::given || last_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
+                if (last_node_bc_ == SplineBoundaryCondition::zeroDerivative) {
+                    sm_end = 0;
+                } else if (get_node_derivative_by_fd() && last_node_bc_ == SplineBoundaryCondition::given) {
                     sm_end =
                       (sp_end - dvaluesdp[spline_offset + ip +
                                                  (n_nodes() - 2) * nplist]) /
@@ -719,8 +720,7 @@ HermiteSpline::compute_coefficients_extrapolation_sensi(
                       "Hermite splines with linear extrapolation is "
                       "not yet implemented.");
 
-                } else if (!get_node_derivative_by_fd() &&
-                           (last_node_bc_ == SplineBoundaryCondition::given || last_node_bc_ == SplineBoundaryCondition::zeroDerivative)) {
+                } else if (!get_node_derivative_by_fd() && last_node_bc_ == SplineBoundaryCondition::given) {
                     sm_end = dslopesdp[spline_offset + ip +
                                               (n_nodes() - 1) * nplist];
 
