@@ -262,7 +262,7 @@ class SbmlImporter:
             name of the model/model directory
 
         :param output_dir:
-            see :meth:`amici.ode_export.ODEExporter.set_paths`
+            see :meth:`amici.de_export.ODEExporter.set_paths`
 
         :param observables:
             dictionary( observableId:{'name':observableName
@@ -309,7 +309,7 @@ class SbmlImporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.ode_export.ODEExporter`
+            see :class:`amici.de_export.ODEExporter`
 
         :param compile:
             If ``True``, compile the generated Python package,

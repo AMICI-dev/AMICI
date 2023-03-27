@@ -510,7 +510,7 @@ class AbstractSpline(ABC):
         for spline grid points, values, ... contain species symbols.
         """
         # TODO this is very much a draft
-        from .ode_export import SymbolId
+        from .de_export import SymbolId
         fixed_parameters: List[sp.Symbol] = list(
             importer.symbols[SymbolId.FIXED_PARAMETER].keys())
         species: List[sp.Symbol] = list(
@@ -1238,7 +1238,7 @@ class AbstractSpline(ABC):
 
     def parameters(self, importer: sbml_import.SbmlImporter) -> Set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
-        from .ode_export import SymbolId
+        from .de_export import SymbolId
         return self._parameters().intersection(
             set(importer.symbols[SymbolId.PARAMETER].keys())
         )
@@ -1255,7 +1255,7 @@ class AbstractSpline(ABC):
     ) -> sp.Function:
         """
         Returns the `sympy` object to be used by
-        :py:class:`amici.ode_export.ODEModel`.
+        :py:class:`amici.de_export.ODEModel`.
         This expression can be differentiated and easily mapped to the C++
         code.
         """
@@ -1488,7 +1488,7 @@ class CubicHermiteSpline(AbstractSpline):
         for spline grid points, values, ... contain species symbols.
         """
         # TODO this is very much a draft
-        from .ode_export import SymbolId
+        from .de_export import SymbolId
         species: List[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES])
         for d in self.dd:
             if len(d.free_symbols.intersection(species)) != 0:

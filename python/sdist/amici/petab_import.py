@@ -474,7 +474,7 @@ def import_model_sbml(
         Print/log extra information.
 
     :param allow_reinit_fixpar_initcond:
-        See :class:`amici.ode_export.ODEExporter`. Must be enabled if initial
+        See :class:`amici.de_export.ODEExporter`. Must be enabled if initial
         states are to be reset after preequilibration.
 
     :param validate:

@@ -2632,7 +2632,7 @@ class DEExporter:
             DE model definition
 
         :param outdir:
-            see :meth:`amici.ode_export.DEExporter.set_paths`
+            see :meth:`amici.de_export.DEExporter.set_paths`
 
         :param verbose:
             verbosity level for logging, ``True``/``False`` default to
@@ -2647,7 +2647,7 @@ class DEExporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.ode_export.DEExporter`
+            see :class:`amici.de_export.DEExporter`
 
         :param generate_sensitivity_code:
             specifies whether code required for sensitivity computation will be
