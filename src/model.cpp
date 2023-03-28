@@ -322,7 +322,7 @@ void Model::initializeSplines() {
 }
 
 void Model::initializeSplineSensitivities() {
-    derived_state_.sspl_ = SUNMatrixWrapper(splines_.size(), nplist());
+    derived_state_.sspl_ = SUNMatrixWrapper(splines_.size(), np());
     int allnodes = 0;
     for(auto const& spline: splines_) {
         allnodes += spline.n_nodes();
@@ -330,13 +330,41 @@ void Model::initializeSplineSensitivities() {
 
     std::vector<realtype> dspline_valuesdp (allnodes * nplist(), 0.0);
     std::vector<realtype> dspline_slopesdp (allnodes * nplist(), 0.0);
-    fdspline_valuesdp(dspline_valuesdp.data(), state_.unscaledParameters.data(),
-                      state_.fixedParameters.data());
-    fdspline_slopesdp(dspline_slopesdp.data(), state_.unscaledParameters.data(),
-                      state_.fixedParameters.data());
+    std::vector<realtype> tmp_dvalues (allnodes, 0.0);
+    std::vector<realtype> tmp_dslopes (allnodes, 0.0);
+    for (int ip = 0; ip < nplist(); ip++) {
+        std::fill(tmp_dvalues.begin(), tmp_dvalues.end(), 0.0);
+        std::fill(tmp_dslopes.begin(), tmp_dslopes.end(), 0.0);
+        fdspline_valuesdp(
+            tmp_dvalues.data(),
+            state_.unscaledParameters.data(),
+            state_.fixedParameters.data(),
+            plist(ip)
+        );
+        fdspline_slopesdp(
+            tmp_dslopes.data(),
+            state_.unscaledParameters.data(),
+            state_.fixedParameters.data(),
+            plist(ip)
+        );
+        /* NB dspline_valuesdp/dspline_slopesdp must be filled
+         * using the following order for the indices
+         * (from slower to faster): spline, node, parameter.
+         * That is what the current spline implementation expects.
+         */ 
+        int k = 0;
+        int offset = ip;
+        for (auto const& spline: splines_) {
+            for (int n = 0; n < spline.n_nodes(); n++) {
+                dspline_valuesdp[offset] = tmp_dvalues[k];
+                dspline_slopesdp[offset] = tmp_dslopes[k];
+                offset += nplist();
+                k += 1;
+            }
+        }
+        assert(k == allnodes + 1);
+    }
 
-    // QUESTION is it possible for plist != range(nplist) ?
-    //          would that break computeCoefficientsSensi or not?
     int spline_offset = 0;
     for(auto& spline: splines_) {
         spline.compute_coefficients_sensi(nplist(), spline_offset,
@@ -2551,7 +2579,7 @@ void Model::fsspl(const realtype t) {
     realtype *sspl_data = derived_state_.sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++)
-            sspl_data[ispl + nspl * ip] =
+            sspl_data[ispl + nspl * plist(ip)] =
                 splines_[ispl].get_sensitivity(t, ip, state_.spl_[ispl]);
     }
 }

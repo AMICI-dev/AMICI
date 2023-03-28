@@ -995,9 +995,11 @@ class AbstractModel {
      * @param dspline_valuesdp vector to which derivatives will be written
      * @param p parameter vector
      * @param k constants vector
+     * @param ip Sensitivity index
      */
     virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
-                                   const realtype *p, const realtype *k);
+                                   const realtype *p, const realtype *k,
+                                   const int ip);
 
     /**
      * @brief Model-specific implementation the parametric derivatives
@@ -1005,9 +1007,11 @@ class AbstractModel {
      * @param dspline_slopesdp vector to which derivatives will be written
      * @param p parameter vector
      * @param k constants vector
+     * @param ip Sensitivity index
      */
     virtual void fdspline_slopesdp(realtype *dspline_slopesdp,
-                                   const realtype *p, const realtype *k);
+                                   const realtype *p, const realtype *k,
+                                   const int ip);
 };
 
 } // namespace amici

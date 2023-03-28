@@ -189,11 +189,11 @@ functions = {
         ),
     'dspline_valuesdp':
         _FunctionInfo(
-            'realtype *dspline_valuesdp, const realtype *p, const realtype *k'
+            'realtype *dspline_valuesdp, const realtype *p, const realtype *k, const int ip'
         ),
     'dspline_slopesdp':
         _FunctionInfo(
-            'realtype *dspline_slopesdp, const realtype *p, const realtype *k'
+            'realtype *dspline_slopesdp, const realtype *p, const realtype *k, const int ip'
         ),
     'dwdw':
         _FunctionInfo(
