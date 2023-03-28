@@ -362,7 +362,7 @@ void Model::initializeSplineSensitivities() {
                 k += 1;
             }
         }
-        assert(k == allnodes + 1);
+        assert(k == allnodes);
     }
 
     int spline_offset = 0;
