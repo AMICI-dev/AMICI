@@ -68,7 +68,6 @@ void SteadystateProblem::workSteadyStateProblem(
     /* Compute steady state, track computation time */
     CpuTimer cpu_timer;
     findSteadyState(solver, model, it);
-    cpu_time_ = cpu_timer.elapsed_milliseconds();
 
     /* Check whether state sensis still need to be computed */
     if (getSensitivityFlag(model, solver, it,
@@ -83,6 +82,7 @@ void SteadystateProblem::workSteadyStateProblem(
                 "to unsuccessful factorization of RHS Jacobian");
         }
     }
+    cpu_time_ = cpu_timer.elapsed_milliseconds();
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
