@@ -17,6 +17,7 @@ from .import_utils import (
     amici_time_symbol,
     _parse_special_functions,
     _check_unsupported_functions,
+    SBMLException
 )
 import xml.dom.minidom
 import libsbml
@@ -26,9 +27,6 @@ from sympy.core.parameters import evaluate
 
 ###############################################################################
 
-
-class SBMLException(Exception):
-    pass
 
 class SbmlInvalidIdSyntax(SBMLException):
     pass
