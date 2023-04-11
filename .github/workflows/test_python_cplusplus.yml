@@ -1,5 +1,13 @@
 name: C++/Python Tests
-on: [push, merge_group, workflow_dispatch]
+on:
+  push:
+  merge_group:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+      # TODO: remove before merge
+      - develop
 
 jobs:
   build:
@@ -99,7 +107,7 @@ jobs:
 
     # TODO <REMOVE BEFORE MERGE>
     - name: Python tests splines
-      if: ${{ github.base_ref == 'develop' }}
+      if: ${{ github.base_ref == 'develop' || github.event.merge_group.base_ref == 'develop'}}
       run: |
         source build/venv/bin/activate \
         && pytest \
@@ -110,7 +118,7 @@ jobs:
     # TODO </REMOVE BEFORE MERGE>
 
     - name: Python tests splines
-      if: ${{ github.base_ref == 'master' }}
+      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
       run: |
         source build/venv/bin/activate \
         && pytest \
