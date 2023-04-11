@@ -18,14 +18,17 @@ if [ "${GITHUB_ACTIONS:-}" = true ] ||
   # Running on CI server
   build_type="Debug"
   # exceptions instead of terminate()
-  extra_cxx_flags=";-Dgsl_CONFIG_CONTRACT_VIOLATION_THROWS;-Dgsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1"
+  extra_cxx_flags=";-Dgsl_CONFIG_CONTRACT_VIOLATION_THROWS;-Dgsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1;-Werror;-Wno-error=deprecated-declarations"
 else
   build_type="RelWithDebInfo"
   extra_cxx_flags=""
 fi
 
+# required for build swig interface
+python3 -m pip install numpy
+
 ${cmake} \
-  -DAMICI_CXX_OPTIONS="-Wall;-Wextra;-Werror${extra_cxx_flags}" \
+  -Wdev -DAMICI_CXX_OPTIONS="-Wall;-Wextra${extra_cxx_flags}" \
   -DCMAKE_BUILD_TYPE=$build_type \
   -DPython3_EXECUTABLE="$(command -v python3)" ..
 

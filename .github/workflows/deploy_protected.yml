@@ -8,6 +8,8 @@ on:
   pull_request:
     paths:
       - container/Dockerfile
+      # ensure all relevant files are still included in sdist
+      - python/sdist/MANIFEST.in
   workflow_dispatch:
 
 jobs:

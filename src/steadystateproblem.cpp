@@ -9,7 +9,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <ctime>
 #include <cvodes/cvodes.h>
 #include <memory>
 #include <sundials/sundials_dense.h>
@@ -67,9 +66,8 @@ void SteadystateProblem::workSteadyStateProblem(
     initializeForwardProblem(it, solver, model);
 
     /* Compute steady state, track computation time */
-    clock_t starttime = clock();
+    CpuTimer cpu_timer;
     findSteadyState(solver, model, it);
-    cpu_time_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
     if (getSensitivityFlag(model, solver, it,
@@ -84,6 +82,7 @@ void SteadystateProblem::workSteadyStateProblem(
                 "to unsuccessful factorization of RHS Jacobian");
         }
     }
+    cpu_time_ = cpu_timer.elapsed_milliseconds();
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
@@ -94,23 +93,23 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
         return;
 
     /* compute quadratures, track computation time */
-    clock_t starttime = clock();
+    CpuTimer cpu_timer;
     computeSteadyStateQuadrature(solver, model);
-    cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    cpu_timeB_ = cpu_timer.elapsed_milliseconds();
 }
 
 void SteadystateProblem::findSteadyState(
     Solver const& solver, Model& model, int it
 ) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    /* Turn off Newton's method if newton_maxsteps is set to 0 or 
-    if 'integrationOnly' approach is chosen for sensitivity computation 
-    in combination with forward sensitivities approach. The latter is necessary 
-    as numerical integration of the model ODEs and corresponding 
-    forward sensitivities ODEs is coupled. If 'integrationOnly' approach is 
-    chosen for sensitivity computation it is enforced that steady state is 
+    /* Turn off Newton's method if newton_maxsteps is set to 0 or
+    if 'integrationOnly' approach is chosen for sensitivity computation
+    in combination with forward sensitivities approach. The latter is necessary
+    as numerical integration of the model ODEs and corresponding
+    forward sensitivities ODEs is coupled. If 'integrationOnly' approach is
+    chosen for sensitivity computation it is enforced that steady state is
     computed only by numerical integration as well. */
-    bool turnOffNewton = solver.getNewtonMaxSteps() == 0 || ( 
+    bool turnOffNewton = solver.getNewtonMaxSteps() == 0 || (
         model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly &&
         ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
@@ -179,27 +178,39 @@ void SteadystateProblem::findSteadyStateBySimulation(
             runSteadystateSimulation(solver, model, false);
         }
         steady_state_status_[1] = SteadyStateStatus::success;
-    } catch (NewtonFailure const &ex) {
+    } catch (IntegrationFailure const &ex) {
         switch (ex.error_code) {
         case AMICI_TOO_MUCH_WORK:
             steady_state_status_[1] = SteadyStateStatus::failed_convergence;
-            break;
-        case AMICI_NO_STEADY_STATE:
-            steady_state_status_[1] =
-                SteadyStateStatus::failed_too_long_simulation;
-            break;
-        default:
             if(model.logger)
                 model.logger->log(
-                    LogSeverity::error, "NEWTON_FAILURE",
-                    "AMICI newton method failed: %s", ex.what()
+                    LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                    "AMICI equilibration exceeded maximum number of"
+                    " integration steps at t=%g.", ex.time
                 );
+            break;
+        case AMICI_RHSFUNC_FAIL:
+            steady_state_status_[1] =
+                SteadyStateStatus::failed_too_long_simulation;
+            if(model.logger)
+                model.logger->log(
+                    LogSeverity::debug, "EQUILIBRATION_FAILURE",
+                    "AMICI equilibration was stopped after exceedingly"
+                    " long simulation time at t=%g.", ex.time
+                );
+            break;
+        default:
             steady_state_status_[1] = SteadyStateStatus::failed;
+            if(model.logger)
+                model.logger->log(
+                    LogSeverity::debug, "OTHER",
+                    "AMICI equilibration failed at t=%g.", ex.time
+                );
         }
     } catch (AmiException const &ex) {
         if(model.logger)
             model.logger->log(
-                LogSeverity::error, "EQUILIBRATION_FAILURE",
+                LogSeverity::debug, "OTHER",
                 "AMICI equilibration failed: %s", ex.what()
             );
         steady_state_status_[1] = SteadyStateStatus::failed;
@@ -370,9 +381,7 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
     /* write error message according to steady state status */
     switch (status) {
     case SteadyStateStatus::failed_too_long_simulation:
-        (*errorString)
-            .append(": System could not be equilibrated via"
-                    " simulating to a late time point.");
+        (*errorString).append(": System could not be equilibrated.");
         break;
     case SteadyStateStatus::failed_damping:
         (*errorString).append(": Damping factor reached lower bound.");
@@ -383,10 +392,8 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
     case SteadyStateStatus::failed_convergence:
         (*errorString).append(": No convergence was achieved.");
         break;
-    case SteadyStateStatus::failed:
-        (*errorString).append(".");
-        break;
     default:
+        (*errorString).append(".");
         break;
     }
 }
@@ -671,13 +678,7 @@ void SteadystateProblem::runSteadystateSimulation(
     while (true) {
         /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
-                                "exceeded maximum number of steps");
-        }
-        if (state_.t >= 1e200) {
-            throw NewtonFailure(AMICI_NO_STEADY_STATE,
-                                "simulated to late time"
-                                " point without convergence of RHS");
+            throw IntegrationFailure(AMICI_TOO_MUCH_WORK, state_.t);
         }
         /* increase counter */
         sim_steps++;
@@ -725,14 +726,15 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     /* Create new CVode solver object */
     auto sim_solver = std::unique_ptr<Solver>(solver.clone());
 
+    sim_solver->logger = solver.logger;
+
     switch (solver.getLinearSolver()) {
     case LinearSolver::dense:
         break;
     case LinearSolver::KLU:
         break;
     default:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
-                            "invalid solver for steadystate simulation");
+        throw AmiException("invalid solver for steadystate simulation");
     }
     /* do we need sensitivities? */
     if (forwardSensis) {

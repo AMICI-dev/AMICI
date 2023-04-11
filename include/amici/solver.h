@@ -5,9 +5,9 @@
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/vector.h"
 #include "amici/logging.h"
+#include "amici/misc.h"
 
 #include <cmath>
-#include <ctime>
 #include <functional>
 #include <memory>
 #include <chrono>
@@ -1615,7 +1615,7 @@ class Solver {
     std::chrono::duration<double, std::ratio<1>> maxtime_ {0};
 
     /** Time at which solver timer was started */
-    mutable std::clock_t starttime_;
+    mutable CpuTimer simulation_timer_;
 
     /** linear solver for the forward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_;
