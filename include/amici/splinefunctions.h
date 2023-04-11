@@ -53,13 +53,13 @@ class AbstractSpline
      * @brief Compute the coefficients for all polynomial segments of
      * the derivatives of this spline with respect to the parameters
      * @param nplist number of parameters
-     * @param spline_offset offset of this spline inside `dnodesdp`
+     * @param spline_offset offset of this spline inside `dvaluesdp`
      * and `dslopesdp`
-     * @param dnodesdp derivatives of the spline values with respect to the
+     * @param dvaluesdp derivatives of the spline values with respect to the
      * parameters (for all splines in the model, not just this one)
      * @param dslopesdp derivatives of the spline derivatives with respect
      * to the parameters (for all splines in the model, not just this one)
-     * @remark The contents of `dnodesdp` and `dslopesdp` may be modified
+     * @remark The contents of `dvaluesdp` and `dslopesdp` may be modified
      * by this function.
      */
     virtual void compute_coefficients_sensi(int nplist,
@@ -141,8 +141,8 @@ class AbstractSpline
      * @brief Compute the limit of the value of the sensitivity
      * as the evaluation point tends to positive infinity.
      * @param nplist number of parameters
-     * @param spline_offset offset of this spline inside `dnodesdp`
-     * and `dslopesdp`
+     * @param spline_offset offset of this spline inside `dspline_valuesdp`
+     * and `dspline_slopesdp`
      * @param dspline_valuesdp derivatives of the spline values with respect to
      * the parameters (for all splines in the model, not just this one)
      * @param dspline_slopesdp derivatives of the spline derivatives with
