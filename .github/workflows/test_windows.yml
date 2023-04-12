@@ -74,6 +74,7 @@ jobs:
     - run: python -m amici
 
     - name: Run Python tests
+      shell: bash
       run: |
         python -m pytest \
           --ignore-glob=*petab* \
