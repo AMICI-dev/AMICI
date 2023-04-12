@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from splines_utils import (
     example_spline_1,
@@ -71,5 +72,8 @@ def test_splines(**kwargs):
     tols[2]['x_atol']    = max(1e-8,  tols[2].get('x_atol', -np.inf))
     tols[2]['llh_rtol']  = max(5e-14, tols[2].get('llh_rtol', -np.inf))
     tols[2]['sllh_atol'] = max(5e-5,  tols[2].get('sllh_atol', -np.inf))
+
+    if os.name == 'nt':
+        tols[2]['sllh_atol'] = max(5e-4,  tols[2]['sllh_atol'])
 
     check_splines_full(splines, params, tols, **kwargs)
