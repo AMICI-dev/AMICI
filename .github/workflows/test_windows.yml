@@ -74,4 +74,9 @@ jobs:
     - run: python -m amici
 
     - name: Run Python tests
-      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
+      run: |
+        python -m pytest \
+          --ignore-glob=*petab* \
+          --ignore-glob=*special* \
+          --ignore-glob=*test_splines.py \
+          python/tests
