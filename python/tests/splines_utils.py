@@ -685,6 +685,7 @@ def check_splines_full(
     check_forward=True,
     check_adjoint=True,
     folder=None,
+    groundtruth='compute',
     **kwargs
 ):
     """
@@ -710,7 +711,6 @@ def check_splines_full(
         initial_values = None
         petab_problem = None
         amici_model = None
-        groundtruth = 'compute'
 
         if check_piecewise and not contains_periodic:
             results = check_splines(
