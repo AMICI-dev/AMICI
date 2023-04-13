@@ -252,6 +252,12 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# autodoc
+autodoc_default_options = {
+    'special-members': '__init__',
+    'inherited-members': True,
+}
+
 # sphinx-autodoc-typehints
 typehints_fully_qualified = True
 typehints_document_rtype = True
