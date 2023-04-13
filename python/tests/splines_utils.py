@@ -1,11 +1,10 @@
 import math
 import os
 import uuid
-from typing import List, Optional, Union, Dict, Sequence
+from typing import List, Optional, Union, Dict, Any, Sequence
 
 import amici
 import petab
-import pytest
 import sympy as sp
 from amici.gradient_check import _check_results
 from amici.petab_import import import_petab_problem
@@ -417,6 +416,24 @@ def simulate_splines(
     )
 
 
+def compute_ground_truth(splines, initial_values, times, params_true, params_sorted):
+    groundtruth = {}
+    x_true_sym = sp.Matrix([
+        integrate_spline(spline, None, times, iv)
+        for (spline, iv) in zip(splines, initial_values)
+    ]).transpose()
+    groundtruth['x_true'] = np.asarray(x_true_sym.subs(params_true), dtype=float)
+    sx_by_state = [
+        x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
+        for i in range(x_true_sym.shape[1])
+    ]
+    sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
+    groundtruth['sx_true'] = np.concatenate([
+        sx[:, :, np.newaxis] for sx in sx_by_state
+    ], axis=2)
+    return groundtruth
+
+
 def check_splines(
         splines,
         params_true,
@@ -435,6 +452,7 @@ def check_splines(
         w_atol: float = 1e-11,
         sx_rtol: float = 1e-10,
         sx_atol: float = 1e-10,
+        groundtruth: Optional[Union[str, Dict[str, Any]]] = None,
         **kwargs
 ):
     """
@@ -502,11 +520,16 @@ def check_splines(
     params_sorted = [param_by_name(id) for id in param_ids]
 
     # Check states
-    x_true_sym = sp.Matrix([
-        integrate_spline(spline, None, tt, iv)
-        for (spline, iv) in zip(splines, initial_values)
-    ]).transpose()
-    x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
+    if groundtruth == 'compute':
+        groundtruth = compute_ground_truth(splines, initial_values, tt, params_true, params_sorted)
+    if groundtruth is None:
+        x_true_sym = sp.Matrix([
+            integrate_spline(spline, None, tt, iv)
+            for (spline, iv) in zip(splines, initial_values)
+        ]).transpose()
+        x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
+    else:
+        x_true = groundtruth['x_true']
     if not debug:
         assert rdata.x.shape == x_true.shape
         _check_results(rdata, 'x', x_true, atol=x_atol, rtol=x_rtol)
@@ -560,18 +583,21 @@ def check_splines(
         w_true = None
 
     # Check sensitivities
-    if params_sorted:
-        sx_by_state = [
-            x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
-            for i in range(x_true_sym.shape[1])
-        ]
-        sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
-        sx_true = np.concatenate([
-            sx[:, :, np.newaxis] for sx in sx_by_state
-        ], axis=2)
-        if skip_sensitivity or use_adjoint:
+    if params_sorted and not use_adjoint:
+        if skip_sensitivity:
             pass
-        elif not debug:
+        if groundtruth is None:
+            sx_by_state = [
+                x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
+                for i in range(x_true_sym.shape[1])
+            ]
+            sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
+            sx_true = np.concatenate([
+                sx[:, :, np.newaxis] for sx in sx_by_state
+            ], axis=2)
+        else:
+            sx_true = groundtruth['sx_true']
+        if not debug:
             assert rdata.sx.shape == sx_true.shape
             _check_results(
                 rdata, 'sx', sx_true,
@@ -635,6 +661,7 @@ def check_splines(
             initial_values=initial_values,
             petab_problem=petab_problem,
             amici_model=amici_model,
+            groundtruth=groundtruth,
             rdata=rdata,
             params_true=params_true,
             params_sorted=params_sorted,
@@ -647,7 +674,8 @@ def check_splines(
         return dict(
             initial_values=initial_values,
             petab_problem=petab_problem,
-            amici_model=amici_model, 
+            amici_model=amici_model,
+            groundtruth=groundtruth,
         )
 
 
@@ -682,6 +710,7 @@ def check_splines_full(
         initial_values = None
         petab_problem = None
         amici_model = None
+        groundtruth = 'compute'
 
         if check_piecewise and not contains_periodic:
             results = check_splines(
@@ -689,9 +718,11 @@ def check_splines_full(
                 folder=folder,
                 discard_annotations=True,
                 use_adjoint=False,
+                groundtruth=groundtruth,
             )
             initial_values = results["initial_values"]
-            petab_problem = results["petab_problem"]  
+            petab_problem = results["petab_problem"]
+            groundtruth = results["groundtruth"]
 
         if check_forward:
             results = check_splines(
@@ -699,10 +730,12 @@ def check_splines_full(
                 initial_values=initial_values,
                 petab_problem=petab_problem,
                 use_adjoint=False,
+                groundtruth=groundtruth,
             )
             initial_values = results["initial_values"]
             petab_problem = results["petab_problem"]
             amici_model = results["amici_model"]
+            groundtruth = results["groundtruth"]
 
         if check_adjoint:
             check_splines(
@@ -711,6 +744,7 @@ def check_splines_full(
                 petab_problem=petab_problem,
                 amici_model=amici_model,
                 use_adjoint=True,
+                groundtruth=(None if groundtruth == 'compute' else groundtruth), # do not compute sensitivities if possible
             )
 
 
