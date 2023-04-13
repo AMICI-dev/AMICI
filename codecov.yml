@@ -1,8 +1,8 @@
 fixes:
-  - "build/venv/lib/python3.6/site-packages/::python/"
-  - "build/venv/lib/python3.7/site-packages/::python/"
-  - "build/venv/lib/python3.8/site-packages/::python/"
-  
+  - "build/venv/lib/python3.9/site-packages/::python/"
+  - "build/venv/lib/python3.10/site-packages/::python/"
+  - "build/venv/lib/python3.11/site-packages/::python/"
+
 codecov:
   require_ci_to_pass: yes
 
@@ -23,11 +23,11 @@ comment:
   layout: "reach,diff,flags,tree"
   behavior: default
   require_changes: no
-  
+
 ignore:
   - "tests/*"
   - "tests/**/*"
-  
+
 flags:
   python:
     carryforward: false
