@@ -77,7 +77,7 @@ def test_splines(**kwargs):
         tols[2]['sllh_atol'] = max(5e-4,  tols[2]['sllh_atol'])
     
     # Load precomputed results
-    precomputed_path = os.path.join(os.path.abspath(__file__), "test_splines_precomputed.npz")
+    precomputed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_splines_precomputed.npz")
     kwargs['groundtruth'] = dict(np.load(precomputed_path))
 
     check_splines_full(splines, params, tols, **kwargs)
