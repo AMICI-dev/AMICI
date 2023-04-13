@@ -19,7 +19,7 @@ python:
     - requirements: documentation/rtd_requirements.txt
     - requirements: documentation/rtd_requirements2.txt
 build:
-  os: "ubuntu-20.04"
+  os: "ubuntu-22.04"
   apt_packages:
     # for custom doxygen
     - libclang-cpp9
@@ -27,4 +27,4 @@ build:
     - libatlas-base-dev
     - swig
   tools:
-    python: "3.8"
+    python: "3.9"
