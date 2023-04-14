@@ -1330,6 +1330,34 @@ class AbstractSpline(ABC):
 
         return AmiciSpline(self.sbml_id, self.x, *parameters)
 
+    def plot(
+        self,
+        parameters: Optional[Dict] = None,
+        *,
+        xlim: Optional[Tuple[float, float]] = None,
+        npoints: int = 100,
+        xlabel: Optional[str] = None,
+        ylabel: Union[str, None] = "spline value",
+        ax=None,
+    ):
+        "Plots the spline, highlighting the nodes positions."
+        if parameters is None:
+            parameters = {}
+        if ax is None:
+            from matplotlib import pyplot as plt
+            fig, ax = plt.subplots()
+        if xlim is None:
+            xx = np.asarray(self.xx)
+            xlim = (float(xx[0]), float(xx[-1]))
+        xx = np.linspace(*xlim, npoints)
+        ax.plot(xx, [float(self.evaluate(x).subs(parameters)) for x in xx])
+        ax.plot(self.xx, [float(y.subs(parameters)) for y in self.yy], 'o')
+        if xlabel is not None:
+            ax.set_xlabel(xlabel)
+        if ylabel is not None:
+            ax.set_ylabel(ylabel)
+        return ax
+
 
 def spline_user_functions(
         splines: List[AbstractSpline],
