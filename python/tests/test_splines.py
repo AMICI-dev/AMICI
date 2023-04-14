@@ -88,7 +88,10 @@ def test_multiple_splines(**kwargs):
         tols[2]['sllh_atol'] = max(5e-4,  tols[2]['sllh_atol'])
     
     # Load precomputed results
+    # They be computed again by
+    #     groundtruth = test_multiple_splines(return_groundtruth=True)
+    # They should be recomputed only if the splines used in the test change
     precomputed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_splines_precomputed.npz")
     kwargs['groundtruth'] = dict(np.load(precomputed_path))
 
-    check_splines_full(splines, params, tols, **kwargs)
+    return check_splines_full(splines, params, tols, **kwargs)

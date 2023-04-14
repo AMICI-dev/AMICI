@@ -703,11 +703,12 @@ def check_splines(
 
 def check_splines_full(
     splines, params, tols, *args,
-    check_piecewise=True,
-    check_forward=True,
-    check_adjoint=True,
-    folder=None,
-    groundtruth='compute',
+    check_piecewise: bool = True,
+    check_forward: bool = True,
+    check_adjoint: bool = True,
+    folder: Optional[str] = None,
+    groundtruth: Optional[Union[dict, str]] = 'compute',
+    return_groundtruth: bool = False,
     **kwargs
 ):
     """
@@ -724,6 +725,7 @@ def check_splines_full(
                 check_adjoint=check_adjoint,
                 folder=folder,
                 groundtruth=groundtruth,
+                return_groundtruth=return_groundtruth,
                 **kwargs
             )
 
@@ -741,6 +743,7 @@ def check_splines_full(
     )
 
     # Amortize creation of PEtab and AMICI objects
+    results = None
     initial_values = None
     petab_problem = None
     amici_model = None
@@ -772,7 +775,7 @@ def check_splines_full(
         groundtruth = results["groundtruth"]
 
     if check_adjoint:
-        check_splines(
+        results = check_splines(
             splines, params, *args, **kwargs, **tols3,
             initial_values=initial_values,
             folder=folder,
@@ -781,6 +784,14 @@ def check_splines_full(
             use_adjoint=True,
             groundtruth=(None if groundtruth == 'compute' else groundtruth), # do not compute sensitivities if possible
         )
+    
+    if return_groundtruth:
+        if groundtruth is not None and not isinstance(groundtruth, str):
+            return groundtruth
+        elif results is None:
+            return None
+        else:
+            return results['groundtruth']
 
 
 def example_spline_1(
