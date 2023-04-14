@@ -1,3 +1,9 @@
+"""
+Utilities for creating test SBML models containing splines,
+for running them and for comparing them to a symbolically
+computed ground truth.
+"""
+
 import math
 import os
 import uuid
