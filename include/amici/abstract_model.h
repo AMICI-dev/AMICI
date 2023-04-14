@@ -981,7 +981,7 @@ class AbstractModel {
         SUNMatrixWrapper &dtotal_cldx_rdata);
 
     /**
-     * @brief Model-specific implementation the spline constructors
+     * @brief Model-specific implementation of spline creation
      * @param p parameter vector
      * @param k constants vector
      * @return Vector of splines used in the model
