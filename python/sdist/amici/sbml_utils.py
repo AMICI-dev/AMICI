@@ -354,9 +354,9 @@ def add_inflow(
     if reaction_id is None:
         reaction_id = f'inflow_of_{species_id}'
 
-    if model.getReaction(reaction_id):
+    if model.getElementBySId(reaction_id):
         raise SbmlDuplicateComponentIdError(
-            f'A reaction with SBML ID {reaction_id} has already been defined.'
+            f'An element with SBML ID {reaction_id} has already been defined.'
         )
 
     reaction = model.createReaction()
