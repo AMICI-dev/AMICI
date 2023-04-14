@@ -326,9 +326,9 @@ def add_rate_rule(
 
     rule = model.createRateRule()
     if rule.setVariable(variable_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID.')
     if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID.')
     set_sbml_math(rule, formula)
 
     return rule
