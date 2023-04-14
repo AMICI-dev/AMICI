@@ -79,14 +79,21 @@ def create_measurement_table(**columns) -> pd.DataFrame:
 
 
 def species(i) -> str:
+    "Name to use for the `i`-th species."
     return f'z{i}'
 
 
 def observable(i) -> str:
+    """
+    Name to use for the `i`-th observable,
+    i.e., the observable associated to the
+    `i`-th species.
+    """
     return f'{species(i)}_obs'
 
 
 def species_to_index(name) -> int:
+    "Get the species index from a species name."
     assert name[0] == 'z'
     return int(name[1:])
 
