@@ -266,15 +266,13 @@ def add_assignment_rule(
         rule_id = 'assignment_' + variable_id
 
     # Check whether rules exists for this parameter or with the same name
-    # TODO the resulting SBML may still be invalid
-    #      if other types of objects (e.g., species) have the same ID
     if model.getRuleByVariable(variable_id):
         raise SbmlDuplicateComponentIdError(
             f'A rule for parameter {variable_id} has already been defined.'
         )
-    if model.getRule(rule_id):
+    if model.getElementBySId(rule_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule with SBML ID {rule_id} has already been defined.'
+            f'An element with SBML ID {rule_id} has already been defined.'
         )
 
     rule = model.createAssignmentRule()
