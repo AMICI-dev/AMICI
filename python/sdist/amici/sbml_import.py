@@ -865,6 +865,10 @@ class SbmlImporter:
 
     @log_execution_time('processing SBML annotations', logger)
     def _process_annotations(self) -> None:
+        """
+        Process annotations that make modifications to the
+        SBML model and thus have to be run before everything else
+        """
         # Remove all parameters (and corresponding rules)
         # for which amici:discard is set
         parameter_ids_to_remove = []

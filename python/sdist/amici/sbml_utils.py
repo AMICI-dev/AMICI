@@ -392,7 +392,7 @@ def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
     x = sp.sympify(x)
     if not x.is_Symbol:
         return None
-    if x.name == 'time':
+    if x.name == sbml_time_symbol.name:
         if model.isSetTimeUnits():
             return model.getTimeUnits()
         return None
@@ -410,6 +410,7 @@ def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
 
 
 def pretty_xml(ugly_xml: str) -> str:
+    "Prettifies an XML document (given as a string)."
     dom = xml.dom.minidom.parseString(ugly_xml)
     pretty_xml = dom.toprettyxml()
     # We must delete the first line (xml header)
