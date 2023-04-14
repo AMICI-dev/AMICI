@@ -739,6 +739,7 @@ def check_splines_full(
         results = check_splines(
             splines, params, *args, **kwargs, **tols2,
             initial_values=initial_values,
+            folder=folder,
             petab_problem=petab_problem,
             use_adjoint=False,
             groundtruth=groundtruth,
@@ -751,7 +752,8 @@ def check_splines_full(
     if check_adjoint:
         check_splines(
             splines, params, *args, **kwargs, **tols3,
-            initial_values=initial_values, 
+            initial_values=initial_values,
+            folder=folder,
             petab_problem=petab_problem,
             amici_model=amici_model,
             use_adjoint=True,
