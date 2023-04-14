@@ -693,6 +693,18 @@ def check_splines_full(
     both using adjoint and forward sensitivities
     and also in the case in which the splines are read as piecewise functions.
     """
+    if folder is None:
+        with TemporaryDirectory() as folder:
+            return check_splines_full(
+                splines, params, tols, *args,
+                check_piecewise=check_piecewise,
+                check_forward=check_forward,
+                check_adjoint=check_adjoint,
+                folder=folder,
+                groundtruth=groundtruth,
+                **kwargs
+            )
+
     if isinstance(tols, dict):
         tols1 = tols2 = tols3 = tols
     else:
@@ -706,46 +718,45 @@ def check_splines_full(
         for spline in splines
     )
 
-    with TemporaryDirectory() as folder:
-        # Amortize creation of PEtab and AMICI objects
-        initial_values = None
-        petab_problem = None
-        amici_model = None
+    # Amortize creation of PEtab and AMICI objects
+    initial_values = None
+    petab_problem = None
+    amici_model = None
 
-        if check_piecewise and not contains_periodic:
-            results = check_splines(
-                splines, params, *args, **kwargs, **tols1,
-                folder=folder,
-                discard_annotations=True,
-                use_adjoint=False,
-                groundtruth=groundtruth,
-            )
-            initial_values = results["initial_values"]
-            petab_problem = results["petab_problem"]
-            groundtruth = results["groundtruth"]
+    if check_piecewise and not contains_periodic:
+        results = check_splines(
+            splines, params, *args, **kwargs, **tols1,
+            folder=folder,
+            discard_annotations=True,
+            use_adjoint=False,
+            groundtruth=groundtruth,
+        )
+        initial_values = results["initial_values"]
+        petab_problem = results["petab_problem"]
+        groundtruth = results["groundtruth"]
 
-        if check_forward:
-            results = check_splines(
-                splines, params, *args, **kwargs, **tols2,
-                initial_values=initial_values,
-                petab_problem=petab_problem,
-                use_adjoint=False,
-                groundtruth=groundtruth,
-            )
-            initial_values = results["initial_values"]
-            petab_problem = results["petab_problem"]
-            amici_model = results["amici_model"]
-            groundtruth = results["groundtruth"]
+    if check_forward:
+        results = check_splines(
+            splines, params, *args, **kwargs, **tols2,
+            initial_values=initial_values,
+            petab_problem=petab_problem,
+            use_adjoint=False,
+            groundtruth=groundtruth,
+        )
+        initial_values = results["initial_values"]
+        petab_problem = results["petab_problem"]
+        amici_model = results["amici_model"]
+        groundtruth = results["groundtruth"]
 
-        if check_adjoint:
-            check_splines(
-                splines, params, *args, **kwargs, **tols3,
-                initial_values=initial_values, 
-                petab_problem=petab_problem,
-                amici_model=amici_model,
-                use_adjoint=True,
-                groundtruth=(None if groundtruth == 'compute' else groundtruth), # do not compute sensitivities if possible
-            )
+    if check_adjoint:
+        check_splines(
+            splines, params, *args, **kwargs, **tols3,
+            initial_values=initial_values, 
+            petab_problem=petab_problem,
+            amici_model=amici_model,
+            use_adjoint=True,
+            groundtruth=(None if groundtruth == 'compute' else groundtruth), # do not compute sensitivities if possible
+        )
 
 
 def example_spline_1(
