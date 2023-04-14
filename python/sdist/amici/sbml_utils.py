@@ -171,7 +171,7 @@ def add_species(
 
     sp = model.createSpecies()
     if sp.setIdAttribute(species_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{species_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{species_id} is not a valid SBML ID.')
     sp.setCompartment(compartment_id)
     sp.setInitialAmount(float(initial_amount))
     if units is not None:
