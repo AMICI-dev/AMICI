@@ -98,7 +98,7 @@ def create_petab_problem(
         use_reactions: bool = False,
         measure_upsample: int = 6,
         sigma: float = 1.0,
-        Textrapolate: float = 0.25,
+        t_extrapolate: float = 0.25,
         folder: Optional[str] = None,
         model_name: str = 'test_splines',
 ):
@@ -127,7 +127,7 @@ def create_petab_problem(
         standard deviation for additive Normal noise used to corrupt synthetic
         measurements
 
-    :param Textrapolate:
+    :param t_extrapolate:
         factor controlling how long after the final spline node the simulation
         should continue in order to test extrapolation methods.
 
@@ -173,8 +173,8 @@ def create_petab_problem(
                 'its interval of definition should contain zero'
             )
         if spline.extrapolate[1] is not None:
-            f = Textrapolate if spline.extrapolate[
-                                    1] != 'periodic' else 1 + Textrapolate
+            f = t_extrapolate if spline.extrapolate[
+                                    1] != 'periodic' else 1 + t_extrapolate
             DT = f * (spline.xx[-1] - spline.xx[0])
         else:
             DT = 0
