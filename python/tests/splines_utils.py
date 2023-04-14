@@ -93,14 +93,14 @@ def species_to_index(name) -> int:
 
 def create_petab_problem(
         splines: List[AbstractSpline],
-        params_true,
-        initial_values=None,
-        use_reactions=False,
-        measure_upsample=6,
-        sigma=1.0,
-        Textrapolate=0.25,
-        folder=None,
-        model_name='test_splines',
+        params_true: Dict,
+        initial_values: Optional[np.ndarray] = None,
+        use_reactions: bool = False,
+        measure_upsample: int = 6,
+        sigma: float = 1.0,
+        Textrapolate: float = 0.25,
+        folder: Optional[str] = None,
+        model_name: str = 'test_splines',
 ):
     """
     Given a list of `AbstractSplines`, create a PEtab problem for the system of
