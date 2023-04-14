@@ -14,6 +14,7 @@ from amici.sbml_utils import (add_compartment, add_inflow, add_parameter,
                               create_sbml_model)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from tempfile import mkdtemp
 
 import numpy as np
 import pandas as pd
@@ -332,7 +333,7 @@ def simulate_splines(
     # If no working directory is given, create a temporary one
     if folder is None:
         if keep_temporary:
-            folder = TemporaryDirectory().name
+            folder = mkdtemp()
             print(f"temporary folder is {folder}")
         else:
             with TemporaryDirectory() as folder:
