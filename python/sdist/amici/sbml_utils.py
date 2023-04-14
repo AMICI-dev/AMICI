@@ -148,12 +148,10 @@ def add_species(
     if name is True:
         name = species_id
 
-    # Check whether a species with the same ID already exists
-    # TODO the resulting SBML may still be invalid
-    #      if other types of objects (e.g., parameter) have the same ID
-    if model.getSpecies(species_id):
+    # Check whether an element with the same ID already exists
+    if model.getElementBySId(species_id):
         raise SbmlDuplicateComponentIdError(
-            f'A species with ID {species_id} has already been defined'
+            f'An element with ID {species_id} has already been defined.'
         )
 
     if compartment_id is None:
