@@ -166,7 +166,7 @@ def add_species(
         compartment_id = compartments[0].getId()
     elif not model.getCompartment(compartment_id):
         raise SbmlMissingComponentIdError(
-            f'No compartment with ID {compartment_id}'
+            f'No compartment with ID {compartment_id}.'
         )
 
     sp = model.createSpecies()
