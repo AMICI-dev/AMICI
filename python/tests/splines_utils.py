@@ -626,8 +626,8 @@ def check_splines(
     llh_true = - 0.5 * rdata['y'].size * np.log(2 * np.pi)
     llh_error_rel = abs(llh - llh_true) / abs(llh_true)
     if (llh_error_rel > llh_rtol and debug is not True) or debug == 'print':
-        print(f'llh_rtol={llh_rtol}')
-        print(f'llh_error_rel = {llh_error_rel}')
+        print(f'{llh_rtol=}')
+        print(f'{llh_error_rel=}')
     if not debug:
         assert llh_error_rel <= llh_rtol
 
