@@ -224,7 +224,7 @@ def add_parameter(
 
     par = model.createParameter()
     if par.setIdAttribute(parameter_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{parameter_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{parameter_id} is not a valid SBML ID.')
     if units is not None:
         par.setUnits(str(units))
     if constant is not None:
