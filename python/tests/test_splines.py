@@ -1,3 +1,11 @@
+"""
+Test AMICI's C++ spline implementation by comparing
+the results of simulations of simple SBML models
+containing simple splines with a symbolically-computed
+ground truth. NB: The test in this file takes a long
+time to complete.
+"""
+
 import os
 import numpy as np
 from splines_utils import (
@@ -8,7 +16,10 @@ from splines_utils import (
 )
 
 
-def test_splines(**kwargs):
+def test_multiple_splines(**kwargs):
+    """
+    Test a SBML model containing multiple splines.
+    """
     spline0, params0, tols0 = example_spline_1(
         0, num_nodes=9, fixed_values=[0, 2], extrapolate='linear'
     )

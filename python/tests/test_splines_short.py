@@ -1,3 +1,10 @@
+"""
+Test AMICI's C++ spline implementation by comparing
+the results of simulations of simple SBML models
+containing simple splines with a symbolically-computed
+ground truth.
+"""
+
 import numpy as np
 import sympy as sp
 from amici.sbml_utils import amici_time_symbol
@@ -9,11 +16,18 @@ from splines_utils import (
     
 
 def test_spline_piecewise(**kwargs):
+    """
+    Test a SBML model containing a single spline.
+    AMICI's behaviour in absence of spline annotations is also tested.
+    """
     spline, params, tols = example_spline_1()
     check_splines_full(spline, params, tols, **kwargs)
 
 
 def test_two_splines(**kwargs):
+    """
+    Test a SBML model containing two splines.
+    """
     spline0, params0, tols0 = example_spline_1(
         0, num_nodes=4, fixed_values=[0, 2], extrapolate='linear'
     )
@@ -58,6 +72,10 @@ def test_two_splines(**kwargs):
 
 
 def test_splines_plist():
+    """
+    Test if AMICI's spline implementation
+    handles correctly a change in the parameter list.
+    """
     # Dummy spline #1
     xx = UniformGrid(0, 5, length=3)
     yy = np.asarray([0.0, 1.0, 0.5])

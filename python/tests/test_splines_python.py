@@ -1,3 +1,10 @@
+"""
+Test AMICI's Python spline implementation by
+creating splines with different properties,
+evaluating them and comparing them with
+the true analytical values.
+"""
+
 import math
 import sympy as sp
 import amici
