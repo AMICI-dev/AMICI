@@ -28,8 +28,11 @@ def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
 
 
 def integrate_spline(
-        spline: AbstractSpline, params: Union[Dict, None], tt, initial_value=0,
-        **kwargs
+    spline: AbstractSpline,
+    params: Union[Dict, None],
+    tt: Sequence[float],
+    initial_value: float = 0,
+    **kwargs
 ):
     """
     Integrate the `AbstractSpline` `spline` at timepoints `tt`
