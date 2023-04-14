@@ -19,7 +19,12 @@ import numpy as np
 import pandas as pd
 
 
-def evaluate_spline(spline: AbstractSpline, params: dict, tt, **kwargs):
+def evaluate_spline(
+    spline: AbstractSpline,
+    params: dict,
+    tt: Sequence[float],
+    **kwargs
+):
     """
     Evaluate the `AbstractSpline` `spline` at timepoints `tt`
     for the parameters given in the dictionary `params`.
