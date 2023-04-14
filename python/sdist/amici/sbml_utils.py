@@ -361,7 +361,7 @@ def add_inflow(
 
     reaction = model.createReaction()
     if reaction.setId(reaction_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{reaction_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{reaction_id} is not a valid SBML ID.')
     reaction.setReversible(reversible)
 
     spr = reaction.createProduct()
