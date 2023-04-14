@@ -350,7 +350,7 @@ def simulate_splines(
 
     if amici_model is None:
         # Create and compile AMICI model
-        model_id = uuid.uuid1().hex[:5] # to prevent folder/module collisions
+        model_id = uuid.uuid4().hex[-5:] # to prevent folder/module collisions
         amici_model = import_petab_problem(
             petab_problem,
             discard_sbml_annotations=discard_annotations,
