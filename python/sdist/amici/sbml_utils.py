@@ -216,12 +216,10 @@ def add_parameter(
     if name is True:
         name = parameter_id
 
-    # Check whether a parameter with the same ID already exists
-    # TODO the resulting SBML may still be invalid
-    #      if other types of objects (e.g., species) have the same ID
-    if model.getParameter(parameter_id):
+    # Check whether an element with the same ID already exists
+    if model.getElementBySId(parameter_id):
         raise SbmlDuplicateComponentIdError(
-            f'A parameter with ID {parameter_id} has already been defined'
+            f'An element with ID {parameter_id} has already been defined.'
         )
 
     par = model.createParameter()
