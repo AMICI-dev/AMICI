@@ -784,7 +784,7 @@ class AbstractModel {
      * @param tcl total abundances for conservation laws
      * @param stcl sensitivities of total abundances for conservation laws
      * @param spl spline value vector
-     * @param sspl sensitivities of spline values vector
+     * @param sspl sensitivities of spline values vector w.r.t. parameters \f$ p \f$
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,

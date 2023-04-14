@@ -221,7 +221,7 @@ HermiteSpline::handle_boundary_conditions()
          first_node_bc_ != last_node_bc_ )
          throw AmiException(
            "If one of the boundary conditions is periodic, "
-           "the other one must be periodic too");
+           "the other one must be periodic too.");
 
     /* We have to take special care of the first node */
     switch (first_node_bc_) {

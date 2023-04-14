@@ -148,12 +148,10 @@ def add_species(
     if name is True:
         name = species_id
 
-    # Check whether a species with the same ID already exists
-    # TODO the resulting SBML may still be invalid
-    #      if other types of objects (e.g., parameter) have the same ID
-    if model.getSpecies(species_id):
+    # Check whether an element with the same ID already exists
+    if model.getElementBySId(species_id):
         raise SbmlDuplicateComponentIdError(
-            f'A species with ID {species_id} has already been defined'
+            f'An element with ID {species_id} has already been defined.'
         )
 
     if compartment_id is None:
@@ -166,12 +164,12 @@ def add_species(
         compartment_id = compartments[0].getId()
     elif not model.getCompartment(compartment_id):
         raise SbmlMissingComponentIdError(
-            f'No compartment with ID {compartment_id}'
+            f'No compartment with ID {compartment_id}.'
         )
 
     sp = model.createSpecies()
     if sp.setIdAttribute(species_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{species_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{species_id} is not a valid SBML ID.')
     sp.setCompartment(compartment_id)
     sp.setInitialAmount(float(initial_amount))
     if units is not None:
@@ -218,17 +216,15 @@ def add_parameter(
     if name is True:
         name = parameter_id
 
-    # Check whether a parameter with the same ID already exists
-    # TODO the resulting SBML may still be invalid
-    #      if other types of objects (e.g., species) have the same ID
-    if model.getParameter(parameter_id):
+    # Check whether an element with the same ID already exists
+    if model.getElementBySId(parameter_id):
         raise SbmlDuplicateComponentIdError(
-            f'A parameter with ID {parameter_id} has already been defined'
+            f'An element with ID {parameter_id} has already been defined.'
         )
 
     par = model.createParameter()
     if par.setIdAttribute(parameter_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{parameter_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{parameter_id} is not a valid SBML ID.')
     if units is not None:
         par.setUnits(str(units))
     if constant is not None:
@@ -270,22 +266,20 @@ def add_assignment_rule(
         rule_id = 'assignment_' + variable_id
 
     # Check whether rules exists for this parameter or with the same name
-    # TODO the resulting SBML may still be invalid
-    #      if other types of objects (e.g., species) have the same ID
     if model.getRuleByVariable(variable_id):
         raise SbmlDuplicateComponentIdError(
             f'A rule for parameter {variable_id} has already been defined.'
         )
-    if model.getRule(rule_id):
+    if model.getElementBySId(rule_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule with SBML ID {rule_id} has already been defined.'
+            f'An element with SBML ID {rule_id} has already been defined.'
         )
 
     rule = model.createAssignmentRule()
     if rule.setVariable(variable_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID.')
     if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID.')
     set_sbml_math(rule, formula)
 
     return rule
@@ -354,14 +348,14 @@ def add_inflow(
     if reaction_id is None:
         reaction_id = f'inflow_of_{species_id}'
 
-    if model.getReaction(reaction_id):
+    if model.getElementBySId(reaction_id):
         raise SbmlDuplicateComponentIdError(
-            f'A reaction with SBML ID {reaction_id} has already been defined.'
+            f'An element with SBML ID {reaction_id} has already been defined.'
         )
 
     reaction = model.createReaction()
     if reaction.setId(reaction_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{reaction_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f'{reaction_id} is not a valid SBML ID.')
     reaction.setReversible(reversible)
 
     spr = reaction.createProduct()
