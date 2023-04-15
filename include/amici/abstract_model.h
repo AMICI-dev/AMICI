@@ -334,11 +334,14 @@ class AbstractModel {
      * @param w repeating elements vector
      * @param tcl total abundances for conservation laws
      * @param dtcldp Sensitivities of total abundances for conservation laws
+     * @param spl spline value vector
+     * @param sspl sensitivities of spline values vector w.r.t. parameters \f$ p \f$
      */
     virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        int ip, const realtype *w, const realtype *tcl,
-                       const realtype *dtcldp);
+                       const realtype *dtcldp, const realtype *spl,
+                       const realtype *sspl);
 
     /**
      * @brief Model-specific implementation of fdydx

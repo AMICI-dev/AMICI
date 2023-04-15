@@ -243,7 +243,7 @@ functions = {
             'realtype *dydp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ip, const realtype *w, const realtype *tcl, '
-            'const realtype *dtcldp',
+            'const realtype *dtcldp, const realtype *spl, const realtype *sspl'
         ),
     'dzdx':
         _FunctionInfo(

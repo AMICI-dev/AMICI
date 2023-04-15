@@ -351,7 +351,7 @@ void Model::initializeSplineSensitivities() {
          * using the following order for the indices
          * (from slower to faster): spline, node, parameter.
          * That is what the current spline implementation expects.
-         */ 
+         */
         int k = 0;
         int offset = ip;
         for (auto const& spline: splines_) {
@@ -1911,7 +1911,8 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
                   state_.unscaledParameters.data(),
                   state_.fixedParameters.data(), state_.h.data(), plist(ip),
                   derived_state_.w_.data(), state_.total_cl.data(),
-                  state_.stotal_cl.data());
+                  state_.stotal_cl.data(), state_.spl_.data(),
+                  derived_state_.sspl_.data());
         } else {
             fdydp(&derived_state_.dydp_.at(ip * ny), t, x_pos,
                   state_.unscaledParameters.data(),
