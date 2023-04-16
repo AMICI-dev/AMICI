@@ -29,7 +29,7 @@ benchmark_yamls = [
     petab_path / (petab_path.stem + ".yaml")
     for petab_path in benchmark_path.glob("*") if petab_path.is_dir()
 ]
-#benchmark_yamls = [benchmark_yamls[0]]  # FIXME remove
+# sbenchmark_yamls = benchmark_yamls[:] # FIXME remove
 
 debug = True
 if debug:
@@ -40,8 +40,9 @@ if debug:
     debug_minimal_path.mkdir(exist_ok=True, parents=True)
 
 
+@pytest.mark.parametrize("scale", (False, True))
 @pytest.mark.parametrize("petab_yaml", benchmark_yamls)
-def test_benchmark_gradient(petab_yaml):
+def test_benchmark_gradient(petab_yaml, scale):
     petab_problem = petab.Problem.from_yaml(petab_yaml)
 
     sizes = [
@@ -53,26 +54,39 @@ def test_benchmark_gradient(petab_yaml):
         #1e-6,
         1e-7,
         #1e-8,
-        1e-9,
+        #1e-9,
         #1e-10,
         #1e-11,
         #1e-12,
         #1e-13,
     ]
 
-
     # Only compute gradient for estimated parameters.
     index_estimated = petab_problem.parameter_df[ESTIMATE] == 1
     df = petab_problem.parameter_df.loc[index_estimated]
     parameter_ids = df.index
-    # Set point to midpoint of bounds.
-    # Hopefully no gradients are zero at this point...
-    point = ((df[LOWER_BOUND] + df[UPPER_BOUND])/2).values
+
+    np.random.seed(0)
+
+    if scale:
+        point = np.asarray(list(
+            petab_problem.scale_parameters(dict(df.nominalValue)).values()
+        ))
+        point_noise = np.random.randn(len(point)) * 0.1
+    else:
+        point = df.nominalValue.values
+        point_noise = np.random.randn(len(point)) * point * 0.1
+    point += point_noise  # avoid small gradients at nominal value
 
     # Setup AMICI objects.
     amici_model = amici.petab_import.import_petab_problem(petab_problem)
     amici_solver = amici_model.getSolver()
     amici_solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    amici_solver.setAbsoluteTolerance(1e-12)
+    amici_solver.setRelativeTolerance(1e-12)
+
+    #if amici_model.getName() == 'Bachmann_MSB2011':
+    #    amici_solver.setMaxSteps(int(1e5))
 
     function, gradient = simulate_petab_to_cached_functions(
         simulate_petab=amici.petab_objective.simulate_petab,
@@ -80,6 +94,8 @@ def test_benchmark_gradient(petab_yaml):
         petab_problem=petab_problem,
         amici_model=amici_model,
         solver=amici_solver,
+        scaled_parameters=scale,
+        scaled_gradients=scale,
         # TODO check if caching speeds up this test
         #      with either disk or ram caching
         cache=False,
@@ -96,6 +112,7 @@ def test_benchmark_gradient(petab_yaml):
         point=point,
         gradient=gradient,
         sizes=sizes,
+        relative_sizes=not scale,
     )
 
     success, result_df = gradient_check_partial(
