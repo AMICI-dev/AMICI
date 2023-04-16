@@ -57,6 +57,7 @@ def simulate_petab(
         log_level: int = logging.WARNING,
         num_threads: int = 1,
         failfast: bool = True,
+        scaled_gradients: bool = False,
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
 
@@ -95,6 +96,9 @@ def simulate_petab(
     :param failfast:
         Returns as soon as an integration failure is encountered, skipping
         any remaining simulations.
+    :param scaled_gradients:
+        Whether to compute gradients on parameter scale (``True``) or not
+        (``False``).
 
     :return:
         Dictionary of
@@ -169,6 +173,18 @@ def simulate_petab(
             petab_problem=petab_problem,
             edatas=edatas,
         )
+        if not scaled_gradients:
+            sllh = {
+                parameter_id: rescale_sensitivity(
+                    sensitivity=sensitivity,
+                    parameter_value=problem_parameters[parameter_id],
+                    old_scale=petab_problem.parameter_df.loc[
+                        parameter_id, PARAMETER_SCALE
+                    ],
+                    new_scale=LIN,
+                )
+                for parameter_id, sensitivity in sllh.items()
+            }
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -182,7 +198,8 @@ def simulate_petab(
     return {
         LLH: llh,
         SLLH: sllh,
-        RDATAS: rdatas
+        RDATAS: rdatas,
+        EDATAS: edatas,
     }
 
 
@@ -208,8 +225,8 @@ def aggregate_sllh(
     :param edatas:
         Experimental data used for simulation.
     :param petab_scale:
-        Sensitivities are returned on PEtab scale if `True`, else AMICI model
-        scale.
+        Whether to check that sensitivities were computed with parameters on
+        the scales provided in the PEtab parameters table.
     :param petab_problem:
         The PEtab problem that defines the parameter scales.
 
@@ -221,8 +238,8 @@ def aggregate_sllh(
 
     if petab_scale and petab_problem is None:
         raise ValueError(
-            'Please provide a PEtab problem if scaled SLLH is desired, or set '
-            '`petab_scale=False`.'
+            'Please provide the PEtab problem, when using '
+            '`petab_scale=True`.'
         )
 
     # Check for issues in all condition simulation results.
@@ -258,7 +275,7 @@ def aggregate_sllh(
             if petab_parameter_id not in accumulated_sllh:
                 accumulated_sllh[petab_parameter_id] = 0
 
-            # Check scale
+            # Check that the scale is consistent
             if petab_scale:
                 # `ParameterMappingForCondition` objects provide the scale in
                 # terms of `petab.C` constants already, not AMICI equivalents.
@@ -283,6 +300,54 @@ def aggregate_sllh(
             accumulated_sllh[petab_parameter_id] += condition_parameter_sllh
 
     return accumulated_sllh
+
+
+def rescale_sensitivity(
+    sensitivity: float,
+    parameter_value: float,
+    old_scale: str,
+    new_scale: str,
+) -> float:
+    """Rescale a sensitivity between parameter scales.
+
+    :param sensitivity:
+        The sensitivity corresponding to the parameter value.
+    :param parameter_value:
+        The parameter vector element, on ``old_scale``.
+    :param old_scale:
+        The scale of the parameter value.
+    :param new_scale:
+        The parameter scale on which to rescale the sensitivity.
+
+    :return:
+        The rescaled sensitivity.
+    """
+    LOG_E_10 = np.log(10)
+
+    if old_scale == new_scale:
+        return sensitivity
+
+    unscaled_parameter_value = petab.parameters.unscale(
+        parameter=parameter_value,
+        scale_str=old_scale,
+    )
+
+    scale = {
+        (LIN, LOG): lambda s: s * unscaled_parameter_value,
+        (LOG, LIN): lambda s: s / unscaled_parameter_value,
+        (LIN, LOG10): lambda s: s * (unscaled_parameter_value * LOG_E_10),
+        (LOG10, LIN): lambda s: s / (unscaled_parameter_value * LOG_E_10),
+    }
+
+    scale[(LOG, LOG10)] = lambda s: scale[(LIN, LOG10)](scale[(LOG, LIN)](s))
+    scale[(LOG10, LOG)] = lambda s: scale[(LIN, LOG)](scale[(LOG10, LIN)](s))
+
+    if (old_scale, new_scale) not in scale:
+        raise NotImplementedError(
+            f"Old scale: {old_scale}. New scale: {new_scale}."
+        )
+
+    return scale[(old_scale, new_scale)](sensitivity)
 
 
 def create_parameterized_edatas(
@@ -996,11 +1061,12 @@ def check_grad(
     verbosity: int = 1,
     detailed: bool = False,
     ignore_missing_parameters: bool = False,
+    scaled_gradients: bool = True,
 ) -> pd.DataFrame:
     """
     Compare gradient evaluation.
 
-    Based on the equivalent method in `pypesto.objective.ObjectiveBase`.
+    Based on the equivalent method in ``pypesto.objective.ObjectiveBase``.
 
     Firstly approximate via finite differences, and secondly use the
     objective gradient.
@@ -1016,11 +1082,11 @@ def check_grad(
         defined in the PEtab parameter table. Defaults to the nominal values in
         the PEtab parameter table.
     :param scaled_parameters:
-        Whether `problem_parameters` are on the scale defined in the PEtab
+        Whether ``problem_parameters`` are on the scale defined in the PEtab
         parameter table.
     :param parameter_ids:
         IDs of parameters that will have gradients computed. Default: all
-        parameter IDs in `problem_parameters`.
+        parameter IDs in ``problem_parameters``.
     :param eps:
         Finite differences step size.
     :param verbosity:
@@ -1035,17 +1101,23 @@ def check_grad(
         mean).
     :param ignore_missing_parameters:
         Whether to ignore a parameter that is missing from the gradients.
+    :param scaled_gradients:
+        Compute gradients with scaled parameters.
 
     :return:
         Gradient, finite difference approximations and error estimates.
     """
-    # Switch to scaled parameters.
-    problem_parameters = _default_scaled_parameters(
-        petab_problem=petab_problem,
-        problem_parameters=problem_parameters,
-        scaled_parameters=scaled_parameters,
-    )
-    scaled_parameters = True
+    if scaled_gradients:
+        # Switch to scaled parameters.
+        problem_parameters = _default_scaled_parameters(
+            petab_problem=petab_problem,
+            problem_parameters=problem_parameters,
+            scaled_parameters=scaled_parameters,
+        )
+        scaled_parameters = True
+    elif scaled_parameters:
+        problem_parameters = petab_problem.unscale_parameters(problem_parameters)
+        scaled_parameters = False
 
     if parameter_ids is None:
         parameter_ids = list(problem_parameters)
@@ -1062,9 +1134,8 @@ def check_grad(
             amici_model=amici_model,
             solver=amici_solver,
             problem_parameters=vector,
-            # If unscaled parameters are provided, they are scaled, so this is
-            # always true.
-            scaled_parameters=True,
+            scaled_parameters=scaled_parameters,
+            scaled_gradients=scaled_gradients,
         )
         if sllh:
             return _result[LLH], _result[SLLH]
