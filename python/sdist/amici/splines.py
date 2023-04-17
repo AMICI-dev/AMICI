@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from . import sbml_import
+    from numbers import Real
     from typing import (
         Sequence,
         Union,
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
 
     NormalizedBC = Tuple[Union[None, str], Union[None, str]]
 
+import logging
 import collections.abc
 import xml.etree.ElementTree as ET
 import numpy as np
@@ -38,6 +40,7 @@ import libsbml
 from abc import abstractmethod, ABC
 from itertools import count
 from sympy.core.parameters import evaluate
+from .logging import get_logger
 from .import_utils import (
     sbml_time_symbol,
     amici_time_symbol,
@@ -56,6 +59,9 @@ from .sbml_utils import (
 from numbers import Integral
 
 
+logger = get_logger(__name__, logging.WARNING)
+
+
 def sympify_noeval(x):
     with evaluate(False):
         return sp.sympify(x)
@@ -72,29 +78,44 @@ class UniformGrid(collections.abc.Sequence):
     converted to a :py:class:`numpy.ndarray` (conversion to float can be
     specified with ``dtype=float``).
 
-    TODO: document attributes
+    :ivar start: first point.
+
+    :ivar stop: last point.
+
+    :ivar step: distance between consecutive points.
     """
 
     def __init__(
-            self, start, stop, step=None, *,
-            length: Optional[Integral] = None,
-            include_stop: bool = True
+        self,
+        start: Union[Real, sp.Basic],
+        stop: Union[Real, sp.Basic],
+        step: Optional[Union[Real, sp.Basic]] = None,
+        *,
+        length: Optional[Integral] = None,
+        always_include_stop: bool = True
     ):
         """Create a new ``UniformGrid``.
+        Note: ``UniformGrid``s with a single node cannot be created.
 
         :param start:
             First point in the grid
         :param stop:
-            Last point in the grid (some caveats apply, see ``include_stop``)
+            Last point in the grid (some caveats apply, see ``always_include_stop``)
         :param step:
             Desired step size of the grid. Mutually exclusive with ``length``.
         :param length:
-            Desired length of the grid. Mutually exclusive with ``step``.
-        :param include_stop:
-            Controls the behaviour when ``step`` is not ``None`` and
-            ``stop - start`` is not an integer multiple of ``step``.
-            If ``True`` (default), the actual endpoint of the grid will be
-            larger than ``stop``. Otherwise, it will be smaller.
+            Desired length of the grid, i.e.
+            the number of grid nodes.
+            It must be greater than or equal to 2.
+            Mutually exclusive with ``step``.
+        :param always_include_stop:
+            Controls the behaviour when ``step`` is not ``None``.
+            If ``True`` (default), the endpoint is the smallest
+            ``start + k * step``, with ``k`` integer, which is
+            greater than or equal to ``stop``.
+            Otherwise, the endpoint is the largest
+            ``start + k * step``, with ``k`` integer, which is
+            smaller than or equal to ``stop``.
         """
         start = sp.nsimplify(sp.sympify(start))
         stop = sp.nsimplify(sp.sympify(stop))
@@ -122,11 +143,19 @@ class UniformGrid(collections.abc.Sequence):
         xx = []
         for i in count():
             x = start + i * step
-            if not include_stop and x > stop:
+            if not always_include_stop and x > stop:
                 break
             xx.append(x)
-            if include_stop and x >= stop:
+            if always_include_stop and x >= stop:
                 break
+        
+        if len(xx) == 1:
+            raise ValueError(
+                f"Step size {step} is less than (stop - start) = {stop - start} "
+                "and always_include_stop is set to False, "
+                "leading to a UniformGrid with a single node, "
+                "which is unsupported!"
+            )
 
         self._xx = np.asarray(xx)
 
@@ -143,9 +172,7 @@ class UniformGrid(collections.abc.Sequence):
     @property
     def step(self) -> sp.Basic:
         """Distance between consecutive points."""
-        if len(self._xx) > 1:
-            return self._xx[1] - self._xx[0]
-        return sp.core.numbers.Zero()
+        return self._xx[1] - self._xx[0]
 
     def __getitem__(self, i: Integral) -> sp.Basic:
         return self._xx[i]
@@ -201,13 +228,13 @@ class AbstractSpline(ABC):
 
         :param xx:
             The points at which the spline values are known.
-            Currently, they can only depend on constant parameters.
+            Currently, they must be numeric or only depend on constant parameters.
             These points should be strictly increasing.
             This argument will be sympified.
 
         :param yy:
             The spline values at each of the points in ``xx``.
-            They may not depend on model species.
+            They must not depend on model species.
             This argument will be sympified.
 
         :param bc:
@@ -268,13 +295,20 @@ class AbstractSpline(ABC):
         elif not isinstance(sbml_id, sp.Symbol):
             raise TypeError(
                 'sbml_id must be either a string or a SymPy symbol, '
-                f'got {type(sbml_id)} instead!'
+                f'got {sbml_id} of type {type(sbml_id)} instead!'
             )
 
         x = sympify_noeval(x)
         if not isinstance(x, sp.Basic):
             # It may still be e.g. a list!
             raise ValueError(f'Invalid x = {x}!')
+        if x != amici_time_symbol and x != sbml_time_symbol:
+            logger.warning(
+                "At the moment AMICI only supports x = time. "
+                "Annotations with correct piecewise MathML formulas "
+                "can still be created and used in other tools, "
+                "but they will raise an error when imported by AMICI."
+            )
 
         if not isinstance(xx, UniformGrid):
             xx = np.asarray([sympify_noeval(x) for x in xx])
@@ -510,7 +544,11 @@ class AbstractSpline(ABC):
         be implemented by AMICI. E.g., check whether the formulas
         for spline grid points, values, ... contain species symbols.
         """
-        # TODO this is very much a draft
+        # At the moment only basic checks are done.
+        # There may still be some edge cases that break
+        # the AMICI spline implementation.
+        # If found, they should be checked for here
+        # until (if at all) they are accounted for.
         from .de_export import SymbolId
         fixed_parameters: List[sp.Symbol] = list(
             importer.symbols[SymbolId.FIXED_PARAMETER].keys())
@@ -538,7 +576,7 @@ class AbstractSpline(ABC):
         if not np.all(np.diff(xx_values) >= 0):
             raise ValueError('xx should be strictly increasing!')
 
-    def poly(self, i: Integral, *, x=None) -> sp.Basic:
+    def poly(self, i: Integral, *, x: Union[Real, sp.Basic] = None) -> sp.Basic:
         """
         Get the polynomial interpolant on the ``(xx[i], xx[i+1])`` interval.
         The polynomial is written in Horner form with respect to the scaled
@@ -576,7 +614,7 @@ class AbstractSpline(ABC):
         with evaluate(False):
             return poly.subs(t, t_value)
 
-    def poly_variable(self, x, i: Integral) -> sp.Basic:
+    def poly_variable(self, x: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
         """
         Given an evaluation point, return the value of the variable
         in which the polynomial on the ``i``-th interval is expressed.
@@ -586,20 +624,20 @@ class AbstractSpline(ABC):
         return self._poly_variable(x, i)
 
     @abstractmethod
-    def _poly_variable(self, x, i: Integral) -> sp.Basic:
+    def _poly_variable(self, x: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
         """This function (and not poly_variable) should be implemented by the
         subclasses"""
         raise NotImplementedError()
 
     @abstractmethod
-    def _poly(self, t, i: Integral) -> sp.Basic:
+    def _poly(self, t: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
         """
         Return the symbolic expression for the spline restricted to the `i`-th
         interval as a polynomial in the scaled variable `t`.
         """
         raise NotImplementedError()
 
-    def segment_formula(self, i: Integral, *, x=None) -> sp.Basic:
+    def segment_formula(self, i: Integral, *, x: Union[Real, sp.Basic] = None) -> sp.Basic:
         """
         Return the formula for the actual value of the spline expression
         on the ``(xx[i], xx[i+1])`` interval.
@@ -634,7 +672,7 @@ class AbstractSpline(ABC):
         return self._extrapolation_formulas(self.x)
 
     def _extrapolation_formulas(
-        self, x,
+        self, x: Union[Real, sp.Basic],
         extrapolate: Optional[NormalizedBC] = None,
     ) -> Tuple[Union[None, sp.Expr], Union[None, sp.Expr]]:
         if extrapolate is None:
@@ -694,7 +732,7 @@ class AbstractSpline(ABC):
     def _formula(
             self,
             *,
-            x=None,
+            x: Union[Real, sp.Basic] = None,
             sbml_syms: bool = False,
             sbml_ops: bool = False,
             cache: bool = True,
@@ -773,7 +811,7 @@ class AbstractSpline(ABC):
             return self.xx[-1] - self.xx[0]
         return None
 
-    def _to_base_interval(self, x, *, with_interval_number: bool = False) \
+    def _to_base_interval(self, x: Union[Real, sp.Basic], *, with_interval_number: bool = False) \
             -> Union[sp.Basic, Tuple[sp.core.numbers.Integer, sp.Basic]]:
         """For periodic splines, maps the real point `x` to the reference
         period."""
@@ -795,24 +833,24 @@ class AbstractSpline(ABC):
             return k, z
         return z
 
-    def evaluate(self, x) -> sp.Basic:
+    def evaluate(self, x: Union[Real, sp.Basic]) -> sp.Basic:
         """Evaluate the spline at the point `x`."""
         _x = sp.Dummy('x')
         return self._formula(x=_x, cache=False).subs(_x, x)
 
-    def derivative(self, x, **kwargs) -> sp.Expr:
+    def derivative(self, x: Union[Real, sp.Basic], **kwargs) -> sp.Expr:
         """Evaluate the spline derivative at the point `x`."""
         # NB kwargs are used to pass on extrapolate=None
         #    when called from .extrapolation_formulas()
         _x = sp.Dummy('x')
         return self._formula(x=_x, cache=False, **kwargs).diff(_x).subs(_x, x)
 
-    def second_derivative(self, x) -> sp.Basic:
+    def second_derivative(self, x: Union[Real, sp.Basic]) -> sp.Basic:
         """Evaluate the spline second derivative at the point `x`."""
         _x = sp.Dummy('x')
         return self._formula(x=_x, cache=False).diff(_x).diff(_x).subs(_x, x)
 
-    def integrate(self, x0, x1) -> sp.Basic:
+    def integrate(self, x0: Union[Real, sp.Basic], x1: Union[Real, sp.Basic]) -> sp.Basic:
         """Integrate the spline between the points `x0` and `x1`."""
         x = sp.Dummy('x')
         x0, x1 = sp.sympify((x0, x1))
@@ -1041,7 +1079,10 @@ class AbstractSpline(ABC):
             raise SbmlAnnotationError('Could not set SBML annotation!')
 
         # Create additional assignment rule for periodic extrapolation
-        # NB mod is not in the subset of MathML supported by SBML
+        # TODO <rem/> is supported in SBML Level 3 (but not in Level 2).
+        #      Consider simplifying the formulas using it
+        #      (after checking it actually works as expected),
+        #      checking what level the input SBML model is.
         if any(extr == 'periodic' for extr in self.extrapolate):
             parameter_id = self.sbml_id.name + '_x_in_fundamental_period'
             T = self.xx[-1] - self.xx[0]
@@ -1414,18 +1455,18 @@ class CubicHermiteSpline(AbstractSpline):
 
         :param xx:
             The points at which the spline values are known.
-            Currently, they can only depend on constant parameters.
+            Currently, they must be numeric or only depend on constant parameters.
             These points should be strictly increasing.
             This argument will be sympified.
 
         :param yy:
             The spline values at each of the points in `xx`.
-            They may not depend on model species.
+            They must not depend on model species.
             This argument will be sympified.
 
         :param dd:
             The spline derivatives at each of the points in `xx`.
-            They may not depend on model species.
+            They must not depend on model species.
             This argument will be sympified.
             If not specified, it will be computed by finite differences.
 
@@ -1537,13 +1578,13 @@ class CubicHermiteSpline(AbstractSpline):
             return self.dd[i] / self.yy[i]
         return self.dd[i]
 
-    def _poly_variable(self, x, i: Integral) -> sp.Basic:
+    def _poly_variable(self, x: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
         assert 0 <= i < len(self.xx) - 1
         dx = self.xx[i + 1] - self.xx[i]
         with evaluate(False):
             return (x - self.xx[i]) / dx
 
-    def _poly(self, t, i: Integral) -> sp.Basic:
+    def _poly(self, t: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
         """
         Return the symbolic expression for the spline restricted to the `i`-th
         interval as polynomial in the scaled variable `t`.

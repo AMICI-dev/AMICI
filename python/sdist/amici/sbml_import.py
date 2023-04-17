@@ -24,6 +24,8 @@ from . import has_clibs
 from .constants import SymbolId
 from .import_utils import (RESERVED_SYMBOLS,
                            annotation_namespace,
+                           amici_time_symbol,
+                           sbml_time_symbol,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
@@ -1167,11 +1169,16 @@ class SbmlImporter:
                             "Spline AssignmentRules are only supported for "
                             "SBML parameters at the moment."
                         )
-                    self.splines.append(
-                        AbstractSpline.from_annotation(
-                            sym_id, annotation, locals_=self._local_symbols
-                        )
+                    spline = AbstractSpline.from_annotation(
+                        sym_id, annotation,
+                        locals_=self._local_symbols,
                     )
+                    if spline.x != amici_time_symbol and spline.x != sbml_time_symbol:
+                        raise NotImplementedError(
+                            "AMICI at the moment does not support splines "
+                            "whose evaluation point is not the model time."
+                        )
+                    self.splines.append(spline)
                     return
 
         formula = self._sympy_from_sbml_math(rule)

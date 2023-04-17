@@ -129,11 +129,3 @@ def test_splines_plist():
         check_adjoint=True, # plist cannot be checked, but complex parameter dependence can
         parameter_lists=[[0, 1, 4], [2, 3]],
     )
-    # Debug
-    # # res = check_splines(
-    #     [spline1, spline2, spline3, spline4], params,
-    #     use_adjoint=False,
-    #     parameter_lists=[[0, 1, 4], [2, 3]],
-    #     #folder='debug',
-    #     #debug='print',
-    # )

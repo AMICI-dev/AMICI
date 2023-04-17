@@ -25,8 +25,6 @@ import libsbml
 from sympy.printing.mathml import MathMLContentPrinter
 from sympy.core.parameters import evaluate
 
-###############################################################################
-
 
 class SbmlInvalidIdSyntax(SBMLException):
     pass
@@ -46,9 +44,6 @@ class SbmlMathError(SBMLException):
 
 class SbmlAnnotationError(SBMLException):
     pass
-
-
-###############################################################################
 
 
 def create_sbml_model(model_id: str, level: int = 2, version: int = 5) \
@@ -73,8 +68,6 @@ def create_sbml_model(model_id: str, level: int = 2, version: int = 5) \
     model.setId(model_id)
     return doc, model
 
-
-###############################################################################
 
 def add_compartment(
     model: libsbml.Model,
@@ -366,9 +359,6 @@ def add_inflow(
     return reaction
 
 
-###############################################################################
-
-
 def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
         -> Union[None, str]:
     """Try to get the units for expression `x`.
@@ -395,10 +385,6 @@ def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
     if units == '':
         return None
     return units
-
-
-###############################################################################
-# SymPy to SBML MathML/AST conversion
 
 
 def pretty_xml(ugly_xml: str) -> str:
@@ -495,10 +481,6 @@ def set_sbml_math(obj: libsbml.SBase, expr, **kwargs) -> None:
             f'expression:\n{expr}\n'
             f'MathML:\n{pretty_xml(mathml)}'
         )
-
-
-###############################################################################
-# MathML to Sympy conversion
 
 
 def mathml2sympy(
