@@ -975,12 +975,6 @@ class DEModel:
         spline_subs = {}
 
         for ispl, spl in enumerate(si.splines):
-            # HACK remove real=True assumptions from spline symbols
-            #   must be done as the first thing because it modifies the SbmlImporter
-            old_sbml_id = spl.sbml_id
-            new_sbml_id = sp.Symbol(spl.sbml_id.name)
-            si._replace_in_all_expressions(old_sbml_id, new_sbml_id)
-
             spline_expr = spl.ode_model_symbol(si)
             spline_subs[spl.sbml_id] = spline_expr
             self.add_component(Expression(

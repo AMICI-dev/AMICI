@@ -42,6 +42,7 @@ from .import_utils import (
     sbml_time_symbol,
     amici_time_symbol,
     annotation_namespace,
+    symbol_with_assumptions,
 )
 from .sbml_utils import (
     pretty_xml,
@@ -263,7 +264,7 @@ class AbstractSpline(ABC):
         """
 
         if isinstance(sbml_id, str):
-            sbml_id = sp.Symbol(sbml_id)
+            sbml_id = symbol_with_assumptions(sbml_id)
         elif not isinstance(sbml_id, sp.Symbol):
             raise TypeError(
                 'sbml_id must be either a string or a SymPy symbol, '
@@ -723,7 +724,9 @@ class AbstractSpline(ABC):
         if extrapolate[0] == 'periodic' or extrapolate[1] == 'periodic':
             if sbml_ops:
                 # NB mod is not supported in SBML
-                x = sp.Symbol(self.sbml_id.name + '_x_in_fundamental_period')
+                x = symbol_with_assumptions(
+                    self.sbml_id.name + '_x_in_fundamental_period'
+                )
                 # NB we will do the parameter substitution in SBML
                 #    because the formula for x will be a piecewise
                 #    and sympy handles Piecewises inside other Piecewises
