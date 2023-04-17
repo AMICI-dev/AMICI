@@ -793,32 +793,6 @@ Targeted inhibition of oncogenic pathways can be highly effective in halting the
   url       = {https://doi.org/10.21105/joss.03215},
 }
 
-@article {Froehlich2021.05.20.445065,
-	author = {Fr{\"o}hlich, Fabian and Sorger, Peter K.},
-	title = {Fides: Reliable Trust-Region Optimization for Parameter Estimation of Ordinary Differential Equation Models},
-	elocation-id = {2021.05.20.445065},
-	year = {2021},
-	doi = {10.1101/2021.05.20.445065},
-	publisher = {Cold Spring Harbor Laboratory},
-	abstract = {Motivation Because they effectively represent mass action kinetics, ordinary differential equation models are widely used to describe biochemical processes. Optimization-based calibration of these models on experimental data can be challenging, even for low-dimensional problems. However, reliable model calibration is a prerequisite for many subsequent analysis steps, including uncertainty analysis, model selection and biological interpretation. Although multiple hypothesis have been advanced to explain why optimization based calibration of biochemical models is challenging, there are few comprehensive studies that test these hypothesis and tools for performing such studies are also lacking.Results We implemented an established trust-region method as a modular python framework (fides) to enable structured comparison of different approaches to ODE model calibration involving Hessian approximation schemes and trust-region subproblem solvers. We evaluate fides on a set of benchmark problems that include experimental data. We find a high variability in optimizer performance among different implementations of the same algorithm, with fides performing more reliably that other implementations investigated. Our investigation of possible sources of poor optimizer performance identify shortcomings in the widely used Gauss-Newton approximation. We address these shortcomings by proposing a novel hybrid Hessian approximation scheme that enhances optimizer performance.Availability Fides is published under the permissive BSD-3-Clause license with source code publicly available at https://github.com/fides-dev/fides. Citeable releases are archived on Zenodo.Contact fabian_froehlich{at}hms.harvard.edu and peter_sorger{at}hms.harvard.eduSupplementary information Supplementary data are available at Bioinformatics online and at https://github.com/fides-dev/fides-benchmark.Competing Interest StatementPKS is a member of the SAB or BOD member of Applied Biomath, RareCyte Inc., and Glencoe Software, which distributes a commercial version of the OMERO database; PKS is also a member of the NanoString SAB. In the last five years the Sorger lab has received research funding from Novartis and Merck. Sorger declares that none of these relationships have related to the content of this manuscript.},
-	URL = {https://www.biorxiv.org/content/early/2021/05/22/2021.05.20.445065},
-	eprint = {https://www.biorxiv.org/content/early/2021/05/22/2021.05.20.445065.full.pdf},
-	journal = {bioRxiv}
-}
-
-@Article{ErdemMut2021,
-  author       = {Erdem, Cemal and Mutsuddy, Arnab and Bensman, Ethan M. and Dodd, William B. and Saint-Antoine, Michael M. and Bouhaddou, Mehdi and Blake, Robert C. and Gross, Sean M. and Heiser, Laura M. and Alex Feltus, F. and Birtwistle, Marc R.},
-  journal      = {bioRxiv},
-  title        = {A Scalable, Open-Source Implementation of a Large-Scale Mechanistic Model for Single Cell Proliferation and Death Signaling},
-  year         = {2021},
-  abstract     = {Mechanistic models of how single cells respond to different perturbagens can help integrate disparate big data sets or predict response to varied drug combinations. However, the construction and simulation of such models have proved challenging. Our lab previously constructed one of the largest mechanistic models for single mammalian cell regulation of proliferation and death (774 species, 141 genes, 8 ligands, 2400 reactions). However, this, as many other large-scale models, was written using licensed software (MATLAB) with intricate programming structure, impeding alteration, expansion, and sharing. Here, we generated a new foundation for this model, which includes a python-based creation and simulation pipeline converting a few structured text files into an SBML-compatible format. This new open-source model (named SPARCED) is high-performance- and cloud-computing compatible and enables the study of virtual cell population responses at the single-cell level. We applied this new model to a subset of the LINCS MCF10A Data Cube, which observed that IFNγ acts as an anti-proliferative factor, but the reasons why were unknown. After expanding the SPARCED model with an IFNγ signaling module (to 950 species, 150 genes, 9 ligands, 2500 reactions), we ran stochastic single-cell simulations for two different putative crosstalk mechanisms and looked at the number of cycling cells in each case. Our model-based analysis suggested, and experiments support that these observations are better explained by IFNγ-induced SOCS1 expression sequestering activated EGF receptors, thereby downregulating AKT activity, as opposed to direct IFNγ-induced upregulation of p21 expression. This work forms a foundation for increased mechanistic model-based data integration on a single-cell level, an important building block for clinically predictive mechanistic models.Competing Interest StatementThe authors have declared no competing interest.},
-  doi          = {10.1101/2020.11.09.373407},
-  elocation-id = {2020.11.09.373407},
-  eprint       = {https://www.biorxiv.org/content/early/2021/07/15/2020.11.09.373407.full.pdf},
-  publisher    = {Cold Spring Harbor Laboratory},
-  url          = {https://www.biorxiv.org/content/early/2021/07/15/2020.11.09.373407},
-}
-
 @Article{BastBuc2021,
   author   = {Lisa Bast and Michèle C. Buck and Judith S. Hecker and Robert A.J. Oostendorp and Katharina S. Götze and Carsten Marr},
   journal  = {iScience},
@@ -867,19 +841,6 @@ Classically, hematopoietic stem cell (HSC) differentiation is assumed to occur v
   school      = {Universit{\"a}t Potsdam},
   doi       = {10.25932/publishup-51587},
   year        = {2021},
-}
-
-@article {Contento2021.10.01.21263052,
-	author = {Contento, Lorenzo and Castelletti, Noemi and Raim{\'u}ndez, Elba and Le Gleut, Ronan and Sch{\"a}lte, Yannik and Stapor, Paul and Hinske, Ludwig Christian and H{\"o}lscher, Michael and Wieser, Andreas and Radon, Katja and Fuchs, Christiane and Hasenauer, Jan and the KoCo19 study group},
-	title = {Integrative modelling of reported case numbers and seroprevalence reveals time-dependent test efficiency and infection rates},
-	elocation-id = {2021.10.01.21263052},
-	year = {2021},
-	doi = {10.1101/2021.10.01.21263052},
-	publisher = {Cold Spring Harbor Laboratory Press},
-	abstract = {Mathematical models have been widely used during the ongoing SARS-CoV-2 pandemic for data interpretation, forecasting, and policy making. However, most models are based on officially reported case numbers, which depend on test availability and test strategies. The time dependence of these factors renders interpretation difficult and might even result in estimation biases.Here, we present a computational modelling framework that allows for the integration of reported case numbers with seroprevalence estimates obtained from representative population cohorts. To account for the time dependence of infection and testing rates, we embed flexible splines in an epidemiological model. The parameters of these splines are estimated, along with the other parameters, from the available data using a Bayesian approach.The application of this approach to the official case numbers reported for Munich (Germany) and the seroprevalence reported by the prospective COVID-19 Cohort Munich (KoCo19) provides first estimates for the time dependence of the under-reporting factor. Furthermore, we estimate how the effectiveness of non-pharmaceutical interventions and of the testing strategy evolves over time. Overall, our results show that the integration of temporally highly resolved and representative data is beneficial for accurate epidemiological analyses.Competing Interest StatementThe authors have declared no competing interest.Funding StatementThis study was funded by the Bavarian State Ministry of Science and the Arts, the University Hospital of Ludwig-Maximilians-University Munich, the Helmholtz Centre Munich, the University of Bonn (via the Transdiciplinary Research Areas), the University of Bielefeld, Munich Center of Health (McHealth) and the German Ministry for Education and Research (MoKoCo19, reference number 01KI20271), German Research Foundation (SEPAN, reference number HA7376/3-1), Volkswagen Stiftung (reference number: 99 450). This work was supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany{\textquoteright}s Excellence Strategy EXC 2047/1 - 390685813 and EXC 2151 - 390873048. The ORCHESTRA project has received funding from the European Union{\textquoteright}s Horizon 2020 research and innovation programme under grant agreement No 101016167. The views expressed in this paper are the sole responsibility of the authors and the Commission is not responsible for any use that may be made of the information it contains. The funders had no role in study design, data collection, data analyses, data interpretation, writing, or submission of this manuscript.Author DeclarationsI confirm all relevant ethical guidelines have been followed, and any necessary IRB and/or ethics committee approvals have been obtained.YesThe details of the IRB/oversight body that provided approval or exemption for the research described are given below:The study protocol was approved by the Institutional Review Board at the Ludwig-Maximilians-University in Munich, Germany (opinion date 31 March 2020, number 20-275, opinion date amendment: 10 October 2020), prior to study initiation.All necessary patient/participant consent has been obtained and the appropriate institutional forms have been archived.YesI understand that all clinical trials and any other prospective interventional studies must be registered with an ICMJE-approved registry, such as ClinicalTrials.gov. I confirm that any such study reported in the manuscript has been registered and the trial registration ID is provided (note: if posting a prospective study registered retrospectively, please provide a statement in the trial ID field explaining why the study was not registered in advance).YesI have followed all appropriate research reporting guidelines and uploaded the relevant EQUATOR Network research reporting checklist(s) and other pertinent material as supplementary files, if applicable.YesThe data used in this manuscript (except data from public sources such as the Robert Koch Institute) cannot be made public due to patient consent.},
-	URL = {https://www.medrxiv.org/content/early/2021/10/01/2021.10.01.21263052},
-	eprint = {https://www.medrxiv.org/content/early/2021/10/01/2021.10.01.21263052.full.pdf},
-	journal = {medRxiv}
 }
 
 @Article{GudinaAli2021,
@@ -999,19 +960,6 @@ Survival or apoptosis is a binary decision in individual cells. However, at the 
   url      = {https://www.sciencedirect.com/science/article/pii/S2211124721009372},
 }
 
-@article {Froehlich2022.02.17.480899,
-	author = {Fr{\"o}hlich, Fabian and Gerosa, Luca and Muhlich, Jeremy and Sorger, Peter K.},
-	title = {Mechanistic model of MAPK signaling reveals how allostery and rewiring contribute to drug resistance},
-	elocation-id = {2022.02.17.480899},
-	year = {2022},
-	doi = {10.1101/2022.02.17.480899},
-	publisher = {Cold Spring Harbor Laboratory},
-	abstract = {BRAFV600E is prototypical of oncogenic mutations that can be targeted therapeutically and treatment of BRAF-mutant melanomas with RAF and MEK inhibitors results in rapid tumor regression. However, drug-induced rewiring causes BRAFV600E melanoma cells to rapidly acquire a drug-adapted state. In patients this is thought to promote acquisition or selection for resistance mutations and disease recurrence. In this paper we use an energy-based implementation of ordinary differential equations in combination with proteomic, transcriptomic and imaging data from melanoma cells, to model the precise mechanisms responsible for adaptive rewiring. We demonstrate the presence of two parallel MAPK (RAF-MEK-ERK kinase) reaction channels in BRAFV600E melanoma cells that are differentially sensitive to RAF and MEK inhibitors. This arises from differences in protein oligomerization and allosteric regulation induced by oncogenic mutations and drug binding. As a result, the RAS-regulated MAPK channel can be active under conditions in which the BRAFV600E-driven channel is fully inhibited. Causal tracing demonstrates that this provides a sufficient quantitative explanation for initial and acquired responses to multiple different RAF and MEK inhibitors individually and in combination.HighlightsA thermodynamic framework enables structure-based description of allosteric interactions in the EGFR and MAPK pathwaysCausal decomposition of efficacy of targeted drugs elucidates rewiring of MAPK channelsModel-based extrapolation from type I{\textonehalf} RAF inhibitors to type II RAF inhibitorsA unified mechanistic explanation for adaptive and genetic resistance across BRAF-cancersCompeting Interest StatementPKS is a member of the SAB or Board of Directors of Glencoe Software, Applied Biomath, and RareCyte Inc. and has equity in these companies; PKS is also a member of the SAB of NanoString and a consultant for Montai Health and Merck. LG is currently an employee of Genentech. PKS and LG declare that none of these relationships are directly or indirectly related to the content of this manuscript.},
-	URL = {https://www.biorxiv.org/content/early/2022/02/18/2022.02.17.480899},
-	eprint = {https://www.biorxiv.org/content/early/2022/02/18/2022.02.17.480899.full.pdf},
-	journal = {bioRxiv}
-}
-
 @Article{SluijsMaa2022,
   author   = {van Sluijs, Bob and Maas, Roel J. M. and van der Linden, Ardjan J. and de Greef, Tom F. A. and Huck, Wilhelm T. S.},
   journal  = {Nature Communications},
@@ -1044,7 +992,7 @@ Survival or apoptosis is a binary decision in individual cells. However, at the 
   pages    = {12-18},
   volume   = {75},
   abstract = {Lipid biosynthesis plays a vital role in living cells and has been increasingly engineered to overproduce various lipid-based chemicals. However, owing to the tightly constrained and interconnected nature of lipid biosynthesis, both understanding and engineering of lipid metabolism remain challenging, even with the help of mathematical models. Here we report the development of a kinetic metabolic model of lipid metabolism in Saccharomyces cerevisiae that integrates fatty acid biosynthesis, glycerophospholipid metabolism, sphingolipid metabolism, storage lipids, lumped sterol synthesis, and the synthesis and transport of relevant target-chemicals, such as fatty acids and fatty alcohols. The model was trained on lipidomic data of a reference S. cerevisiae strain, single knockout mutants, and lipid overproduction strains reported in literature. The model was used to design mutants for fatty alcohol overproduction and the lipidomic analysis of the resultant mutant strains coupled with model-guided hypothesis led to discovery of a futile cycle in the triacylglycerol biosynthesis pathway. In addition, the model was used to explain successful and unsuccessful mutant designs in metabolic engineering literature. Thus, this kinetic model of lipid metabolism can not only enable the discovery of new phenomenon in lipid metabolism but also the engineering of mutant strains for overproduction of lipids.},
-  doi      = {https://doi.org/10.1016/j.ymben.2022.11.003},
+  doi      = {10.1016/j.ymben.2022.11.003},
   keywords = {Lipid metabolism, Kinetic model, Free fatty acid, Fatty alcohol},
   url      = {https://www.sciencedirect.com/science/article/pii/S1096717622001380},
 }
@@ -1131,6 +1079,69 @@ Survival or apoptosis is a binary decision in individual cells. However, at the 
   doi          = {10.1371/journal.pcbi.1010783},
   publisher    = {Public Library of Science},
   url          = {https://doi.org/10.1371/journal.pcbi.1010783},
+}
+
+@Article{ContentoCas2023,
+  author       = {Lorenzo Contento and Noemi Castelletti and Elba Raimúndez and Ronan {Le Gleut} and Yannik Schälte and Paul Stapor and Ludwig Christian Hinske and Michael Hoelscher and Andreas Wieser and Katja Radon and Christiane Fuchs and Jan Hasenauer},
+  journal      = {Epidemics},
+  title        = {Integrative modelling of reported case numbers and seroprevalence reveals time-dependent test efficiency and infectious contacts},
+  year         = {2023},
+  issn         = {1755-4365},
+  pages        = {100681},
+  volume       = {43},
+  abstract     = {Mathematical models have been widely used during the ongoing SARS-CoV-2 pandemic for data interpretation, forecasting, and policy making. However, most models are based on officially reported case numbers, which depend on test availability and test strategies. The time dependence of these factors renders interpretation difficult and might even result in estimation biases. Here, we present a computational modelling framework that allows for the integration of reported case numbers with seroprevalence estimates obtained from representative population cohorts. To account for the time dependence of infection and testing rates, we embed flexible splines in an epidemiological model. The parameters of these splines are estimated, along with the other parameters, from the available data using a Bayesian approach. The application of this approach to the official case numbers reported for Munich (Germany) and the seroprevalence reported by the prospective COVID-19 Cohort Munich (KoCo19) provides first estimates for the time dependence of the under-reporting factor. Furthermore, we estimate how the effectiveness of non-pharmaceutical interventions and of the testing strategy evolves over time. Overall, our results show that the integration of temporally highly resolved and representative data is beneficial for accurate epidemiological analyses.},
+  creationdate = {2023-04-15T07:59:57},
+  doi          = {10.1016/j.epidem.2023.100681},
+  keywords     = {Compartmental model, Parameter estimation, Uncertainty quantification, COVID-19},
+  url          = {https://www.sciencedirect.com/science/article/pii/S1755436523000178},
+}
+
+@Article{FroehlichGer2023,
+  author       = {Fröhlich, Fabian and Gerosa, Luca and Muhlich, Jeremy and Sorger, Peter K},
+  journal      = {Molecular Systems Biology},
+  title        = {Mechanistic model of MAPK signaling reveals how allostery and rewiring contribute to drug resistance},
+  year         = {2023},
+  number       = {2},
+  pages        = {e10988},
+  volume       = {19},
+  abstract     = {Abstract BRAF is prototypical of oncogenes that can be targeted therapeutically and the treatment of BRAFV600E melanomas with RAF and MEK inhibitors results in rapid tumor regression. However, drug-induced rewiring generates a drug adapted state thought to be involved in acquired resistance and disease recurrence. In this article, we study mechanisms of adaptive rewiring in BRAFV600E melanoma cells using an energy-based implementation of ordinary differential equation (ODE) modeling in combination with proteomic, transcriptomic and imaging data. We develop a method for causal tracing of ODE models and identify two parallel MAPK reaction channels that are differentially sensitive to RAF and MEK inhibitors due to differences in protein oligomerization and drug binding. We describe how these channels, and timescale separation between immediate-early signaling and transcriptional feedback, create a state in which the RAS-regulated MAPK channel can be activated by growth factors under conditions in which the BRAFV600E-driven channel is fully inhibited. Further development of the approaches in this article is expected to yield a unified model of adaptive drug resistance in melanoma.},
+  creationdate = {2023-04-15T08:11:24},
+  doi          = {10.15252/msb.202210988},
+  eprint       = {https://www.embopress.org/doi/pdf/10.15252/msb.202210988},
+  keywords     = {allosteric interactions, drug resistance, kinetic modeling, MAPK pathway, rewiring},
+  url          = {https://www.embopress.org/doi/abs/10.15252/msb.202210988},
+}
+
+@Article{FroehlichSor2022,
+  author       = {Fröhlich, Fabian AND Sorger, Peter K.},
+  journal      = {PLOS Computational Biology},
+  title        = {Fides: Reliable trust-region optimization for parameter estimation of ordinary differential equation models},
+  year         = {2022},
+  month        = {07},
+  number       = {7},
+  pages        = {1-28},
+  volume       = {18},
+  abstract     = {Ordinary differential equation (ODE) models are widely used to study biochemical reactions in cellular networks since they effectively describe the temporal evolution of these networks using mass action kinetics. The parameters of these models are rarely known a priori and must instead be estimated by calibration using experimental data. Optimization-based calibration of ODE models on is often challenging, even for low-dimensional problems. Multiple hypotheses have been advanced to explain why biochemical model calibration is challenging, including non-identifiability of model parameters, but there are few comprehensive studies that test these hypotheses, likely because tools for performing such studies are also lacking. Nonetheless, reliable model calibration is essential for uncertainty analysis, model comparison, and biological interpretation. We implemented an established trust-region method as a modular Python framework (fides) to enable systematic comparison of different approaches to ODE model calibration involving a variety of Hessian approximation schemes. We evaluated fides on a recently developed corpus of biologically realistic benchmark problems for which real experimental data are available. Unexpectedly, we observed high variability in optimizer performance among different implementations of the same mathematical instructions (algorithms). Analysis of possible sources of poor optimizer performance identified limitations in the widely used Gauss-Newton, BFGS and SR1 Hessian approximation schemes. We addressed these drawbacks with a novel hybrid Hessian approximation scheme that enhances optimizer performance and outperforms existing hybrid approaches. When applied to the corpus of test models, we found that fides was on average more reliable and efficient than existing methods using a variety of criteria. We expect fides to be broadly useful for ODE constrained optimization problems in biochemical models and to be a foundation for future methods development.},
+  creationdate = {2023-04-15T08:12:41},
+  doi          = {10.1371/journal.pcbi.1010322},
+  publisher    = {Public Library of Science},
+  url          = {https://doi.org/10.1371/journal.pcbi.1010322},
+}
+
+@Article{ErdemMut2022,
+  author       = {Erdem, Cemal and Mutsuddy, Arnab and Bensman, Ethan M. and Dodd, William B. and Saint-Antoine, Michael M. and Bouhaddou, Mehdi and Blake, Robert C. and Gross, Sean M. and Heiser, Laura M. and Feltus, F. Alex and Birtwistle, Marc R.},
+  journal      = {Nature Communications},
+  title        = {A scalable, open-source implementation of a large-scale mechanistic model for single cell proliferation and death signaling},
+  year         = {2022},
+  issn         = {2041-1723},
+  number       = {1},
+  pages        = {3555},
+  volume       = {13},
+  abstract     = {Mechanistic models of how single cells respond to different perturbations can help integrate disparate big data sets or predict response to varied drug combinations. However, the construction and simulation of such models have proved challenging. Here, we developed a python-based model creation and simulation pipeline that converts a few structured text files into an SBML standard and is high-performance- and cloud-computing ready. We applied this pipeline to our large-scale, mechanistic pan-cancer signaling model (named SPARCED) and demonstrate it by adding an IFNγ pathway submodel. We then investigated whether a putative crosstalk mechanism could be consistent with experimental observations from the LINCS MCF10A Data Cube that IFNγ acts as an anti-proliferative factor. The analyses suggested this observation can be explained by IFNγ-induced SOCS1 sequestering activated EGF receptors. This work forms a foundational recipe for increased mechanistic model-based data integration on a single-cell level, an important building block for clinically-predictive mechanistic models.},
+  creationdate = {2023-04-15T08:13:58},
+  doi          = {10.1038/s41467-022-31138-1},
+  refid        = {Erdem2022},
+  url          = {https://doi.org/10.1038/s41467-022-31138-1},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
