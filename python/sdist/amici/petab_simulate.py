@@ -84,9 +84,12 @@ class PetabSimulator(petab.simulate.Simulator):
                 SensitivityMethod_none)
 
         result = _subset_call(simulate_petab, kwargs)
-        return rdatas_to_measurement_df(result[RDATAS],
+        df = rdatas_to_measurement_df(result[RDATAS],
                                         self.amici_model,
                                         self.petab_problem.measurement_df)
+        # rename measurement column to simulation
+        df = df.rename(columns={"measurement": "simulation"})
+        return df
 
 
 def _subset_call(method: Callable, kwargs: dict):
