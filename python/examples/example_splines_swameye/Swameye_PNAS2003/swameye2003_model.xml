@@ -13,7 +13,7 @@
       <compartment id="nuc" spatialDimensions="3" size="0.45" constant="true"/>
     </listOfCompartments>
     <listOfSpecies>
-      <species id="log_pEpoR" compartment="cyt" initialConcentration="-7.0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="pEpoR" compartment="cyt" initialConcentration="0.0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="STAT5" compartment="cyt" initialConcentration="1" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="pSTAT5" compartment="cyt" initialConcentration="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
       <species id="pSTAT5_pSTAT5" compartment="cyt" initialConcentration="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
@@ -33,34 +33,18 @@
       <parameter id="k2" value="0.11" constant="true"/>
       <parameter id="k3" value="98400" constant="true"/>
       <parameter id="k4" value="1.49" constant="true"/>
-      <parameter id="log_pEpoR_t0" value="-7.0" constant="true"/>
-      <parameter id="derivative_log_pEpoR" value="0.0" constant="false"/>
     </listOfParameters>
-    <listOfInitialAssignments>
-      <initialAssignment symbol="log_pEpoR">
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <ci> log_pEpoR_t0 </ci>
-        </math>
-      </initialAssignment>
-    </listOfInitialAssignments>
-    <listOfRules>
-      <rateRule variable="log_pEpoR">
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <ci> derivative_log_pEpoR </ci>
-        </math>
-      </rateRule>
-    </listOfRules>
     <listOfReactions>
       <reaction id="reaction1" reversible="false">
         <listOfReactants>
           <speciesReference species="STAT5" stoichiometry="1"/>
         </listOfReactants>
-        <listOfModifiers>
-          <modifierSpeciesReference species="log_pEpoR"/>
-        </listOfModifiers>
         <listOfProducts>
           <speciesReference species="pSTAT5" stoichiometry="1"/>
         </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="pEpoR"/>
+        </listOfModifiers>
         <kineticLaw>
           <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
@@ -68,10 +52,7 @@
               <ci> cyt </ci>
               <ci> k1 </ci>
               <ci> STAT5 </ci>
-              <apply>
-                <exp/>
-                <ci> log_pEpoR </ci>
-              </apply>
+              <ci> pEpoR </ci>
             </apply>
           </math>
         </kineticLaw>
