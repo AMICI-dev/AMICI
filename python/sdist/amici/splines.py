@@ -850,6 +850,20 @@ class AbstractSpline(ABC):
         _x = sp.Dummy('x')
         return self._formula(x=_x, cache=False).diff(_x).diff(_x).subs(_x, x)
 
+    def squared_L2_norm_of_curvature(self) -> sp.Basic:
+        """
+        Return the squared L2 norm of the spline's curvature
+        (commonly used as a regularizer).
+        This is always computed in the spline native scale
+        (i.e., in log-scale for positivity enforcing splines).
+        """
+        x = sp.Dummy('x')
+        integral = sp.sympify(0)
+        for i in range(len(self.xx) - 1):
+            formula = self.poly(i, x=x).diff(x, 2)**2
+            integral += sp.integrate(formula, (x, self.xx[i], self.xx[i+1]))
+        return sp.simplify(integral)
+
     def integrate(self, x0: Union[Real, sp.Basic], x1: Union[Real, sp.Basic]) -> sp.Basic:
         """Integrate the spline between the points `x0` and `x1`."""
         x = sp.Dummy('x')
@@ -1015,7 +1029,7 @@ class AbstractSpline(ABC):
 
         # Autoadd parameters
         if auto_add is True or auto_add == 'spline':
-            if not model.getParameter(str(self.sbml_id)):
+            if not model.getParameter(str(self.sbml_id)) and not model.getSpecies(str(self.sbml_id)):
                 add_parameter(model, self.sbml_id, constant=False,
                               units=y_units)
 

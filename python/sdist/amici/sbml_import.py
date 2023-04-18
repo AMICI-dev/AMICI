@@ -1164,11 +1164,6 @@ class SbmlImporter:
             if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
                 annotation = AbstractSpline.get_annotation(rule)
                 if annotation is not None:
-                    if sbml_var not in self.sbml.getListOfParameters():
-                        raise NotImplementedError(
-                            "Spline AssignmentRules are only supported for "
-                            "SBML parameters at the moment."
-                        )
                     spline = AbstractSpline.from_annotation(
                         sym_id, annotation,
                         locals_=self._local_symbols,
