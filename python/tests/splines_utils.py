@@ -161,7 +161,7 @@ def create_petab_problem(
     """
 
     for spline in splines:
-        if spline.x != amici_time_symbol:
+        if spline.evaluate_at != amici_time_symbol:
             raise ValueError(
                 'the given splines must be evaluated at the simulation time'
             )
@@ -189,7 +189,7 @@ def create_petab_problem(
     # plus something extra for extrapolated or periodic splines
     T = 0
     for spline in splines:
-        if spline.extrapolate[0] is None and spline.xx[0] > 0:
+        if spline.extrapolate[0] is None and spline.nodes[0] > 0:
             raise ValueError(
                 'if no left-extrapolation is defined for a spline, '
                 'its interval of definition should contain zero'
@@ -197,13 +197,13 @@ def create_petab_problem(
         if spline.extrapolate[1] is not None:
             f = t_extrapolate if spline.extrapolate[
                                     1] != 'periodic' else 1 + t_extrapolate
-            DT = f * (spline.xx[-1] - spline.xx[0])
+            DT = f * (spline.nodes[-1] - spline.nodes[0])
         else:
             DT = 0
-        T = max(T, spline.xx[-1] + DT)
+        T = max(T, spline.nodes[-1] + DT)
 
     # Compute synthetic measurements
-    dt = min(np.diff(spline.xx).min() for spline in splines)
+    dt = min(np.diff(spline.nodes).min() for spline in splines)
     dt /= measure_upsample
     n_obs = math.ceil(T / dt) + 1
     tt_obs = np.linspace(0, float(T), n_obs)
@@ -394,7 +394,7 @@ def simulate_splines(
 
     # Compute and set timepoints
     # NB not working, will always be equal to the observation times
-    # n = max(len(spline.xx) for spline in splines) * simulate_upsample
+    # n = max(len(spline.nodes) for spline in splines) * simulate_upsample
     # tt = np.linspace(0, float(T), n)
     # model.setTimepoints(tt)
 
@@ -810,7 +810,7 @@ def example_spline_1(
         assert 1 < num_nodes <= len(yy_true)
         yy_true = yy_true[:num_nodes]
     yy_true = scale * yy_true + offset
-    xx = UniformGrid(0, 25, length=len(yy_true))
+    xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f'y{idx}_0:{len(yy_true)}'))
 
     if fixed_values is None:
@@ -828,8 +828,9 @@ def example_spline_1(
                 params[yy[i]] = yy_true[i]
 
     spline = CubicHermiteSpline(
-        f'y{idx}', amici_time_symbol,
-        xx, yy,
+        f'y{idx}',
+        nodes=xx,
+        values_at_nodes=yy,
         bc=None, extrapolate=extrapolate
     )
 
@@ -852,13 +853,14 @@ def example_spline_1(
 def example_spline_2(idx: int = 0):
     """A simple periodic spline."""
     yy_true = [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0]
-    xx = UniformGrid(0, 25, length=len(yy_true))
+    xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f'y{idx}_0:{len(yy_true) - 1}'))
     yy.append(yy[0])
     params = dict(zip(yy, yy_true))
     spline = CubicHermiteSpline(
-        f'y{idx}', amici_time_symbol,
-        xx, yy,
+        f'y{idx}',
+        nodes=xx,
+        values_at_nodes=yy,
         bc='periodic', extrapolate='periodic'
     )
     tols = (
@@ -872,12 +874,13 @@ def example_spline_2(idx: int = 0):
 def example_spline_3(idx: int = 0):
     """A simple spline with extrapolation on the right side."""
     yy_true = [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0]
-    xx = UniformGrid(0, 25, length=len(yy_true))
+    xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
     yy = list(sp.symbols(f'y{idx}_0:{len(yy_true)}'))
     params = dict(zip(yy, yy_true))
     spline = CubicHermiteSpline(
-        f'y{idx}', amici_time_symbol,
-        xx, yy,
+        f'y{idx}',
+        nodes=xx,
+        values_at_nodes=yy,
         bc=(None, 'zeroderivative'), extrapolate=(None, 'constant')
     )
     tols = {}

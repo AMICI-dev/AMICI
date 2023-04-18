@@ -7,7 +7,6 @@ ground truth.
 
 import numpy as np
 import sympy as sp
-from amici.sbml_utils import amici_time_symbol
 from amici.splines import CubicHermiteSpline, UniformGrid
 from splines_utils import (
     example_spline_1,
@@ -77,23 +76,25 @@ def test_splines_plist():
     handles correctly a change in the parameter list.
     """
     # Dummy spline #1
-    xx = UniformGrid(0, 5, length=3)
+    xx = UniformGrid(0, 5, number_of_nodes=3)
     yy = np.asarray([0.0, 1.0, 0.5])
     spline1 = CubicHermiteSpline(
-        f'y1', amici_time_symbol,
-        xx, yy,
+        f'y1',
+        nodes=xx,
+        values_at_nodes=yy,
         bc='auto', extrapolate=(None, 'constant'),
     )
     # Dummy spline #2
-    xx = UniformGrid(0, 5, length=4)
+    xx = UniformGrid(0, 5, number_of_nodes=4)
     yy = np.asarray([0.0, 0.5, -0.5, 0.5])
     spline2 = CubicHermiteSpline(
-        f'y2', amici_time_symbol,
-        xx, yy,
+        f'y2',
+        nodes=xx,
+        values_at_nodes=yy,
         bc='auto', extrapolate=(None, 'constant'),
     )
     # Real spline #3
-    xx = UniformGrid(0, 5, length=6)
+    xx = UniformGrid(0, 5, number_of_nodes=6)
     p1, p2, p3, p4, p5 = sp.symbols('p1 p2 p3 p4 p5')
     yy = np.asarray([p1 + p2, p2 * p3, p4, sp.cos(p1 + p3), p4 * sp.log(p1), p3])
     dd = np.asarray([-0.75, -0.875, p5, 0.125, 1.15057181, 0.0])
@@ -102,16 +103,19 @@ def test_splines_plist():
     }
     # print([y.subs(params).evalf() for y in yy])
     spline3 = CubicHermiteSpline(
-        f'y3', amici_time_symbol,
-        xx, yy, dd,
+        f'y3', 
+        nodes=xx,
+        values_at_nodes=yy,
+        derivatives_at_nodes=dd,
         bc='auto', extrapolate=(None, 'constant'),
     )
     # Dummy spline 4
-    xx = UniformGrid(0, 5, length=3)
+    xx = UniformGrid(0, 5, number_of_nodes=3)
     yy = np.asarray([0.0, -0.5, 0.5])
     spline4 = CubicHermiteSpline(
-        f'y4', amici_time_symbol,
-        xx, yy,
+        f'y4',
+        nodes=xx,
+        values_at_nodes=yy,
         bc='auto', extrapolate=(None, 'constant'),
     )
     tols = dict(

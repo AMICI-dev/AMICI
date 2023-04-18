@@ -1168,7 +1168,7 @@ class SbmlImporter:
                         sym_id, annotation,
                         locals_=self._local_symbols,
                     )
-                    if spline.x != amici_time_symbol and spline.x != sbml_time_symbol:
+                    if spline.evaluate_at != amici_time_symbol and spline.evaluate_at != sbml_time_symbol:
                         raise NotImplementedError(
                             "AMICI at the moment does not support splines "
                             "whose evaluation point is not the model time."

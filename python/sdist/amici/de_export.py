@@ -1866,18 +1866,18 @@ class DEModel:
         elif name == 'spline_values':
             # force symbols
             self._eqs[name] = sp.Matrix([
-                yy for spline in self.splines
-                for yy in spline.yy
+                y for spline in self.splines
+                for y in spline.values_at_nodes
             ])
 
         elif name == 'spline_slopes':
             # force symbols
             self._eqs[name] = sp.Matrix([
-                dd for spline in self.splines
-                for dd in (
-                    sp.zeros(len(spline.dd), 1)
+                d for spline in self.splines
+                for d in (
+                    sp.zeros(len(spline.derivatives_at_nodes), 1)
                     if spline.derivatives_by_fd
-                    else spline.dd
+                    else spline.derivatives_at_nodes
                 )
             ])
 
@@ -3272,18 +3272,18 @@ class DEExporter:
 
         body = ["return {"]
         for ispl, spline in enumerate(self.model.splines):
-            if isinstance(spline.xx, splines.UniformGrid):
-                nodes = f"{ind8}{{{spline.xx.start}, {spline.xx.stop}}}, "
+            if isinstance(spline.nodes, splines.UniformGrid):
+                nodes = f"{ind8}{{{spline.nodes.start}, {spline.nodes.stop}}}, "
             else:
-                nodes = f"{ind8}{{{', '.join(map(str, spline.xx))}}}, "
+                nodes = f"{ind8}{{{', '.join(map(str, spline.nodes))}}}, "
 
             # vector with the node values
-            values = f"{ind8}{{{', '.join(map(str, spline.yy))}}}, "
+            values = f"{ind8}{{{', '.join(map(str, spline.values_at_nodes))}}}, "
             # vector with the slopes
             if spline.derivatives_by_fd:
                 slopes = f"{ind8}{{}},"
             else:
-                slopes = f"{ind8}{{{', '.join(map(str, spline.dd))}}},"
+                slopes = f"{ind8}{{{', '.join(map(str, spline.derivatives_at_nodes))}}},"
 
             body.extend([
                 f"{ind4}HermiteSpline(",
@@ -3321,7 +3321,7 @@ class DEExporter:
                                      "found in spline object")
             line = ind8
             line += 'true, ' if spline.derivatives_by_fd else 'false, '
-            line += 'true, ' if isinstance(spline.xx, splines.UniformGrid) \
+            line += 'true, ' if isinstance(spline.nodes, splines.UniformGrid) \
                 else 'false, '
             line += 'true' if spline.logarithmic_parametrization \
                 else 'false'
