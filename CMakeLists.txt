@@ -251,10 +251,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE "${AMICI_CXX_OPTIONS}")
 
 add_dependencies(${PROJECT_NAME} version)
 
-file(
-  GLOB PUBLIC_HEADERS
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  include/amici/*.h)
+file(GLOB PUBLIC_HEADERS include/amici/*.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER
                                                  "${PUBLIC_HEADERS}")
 target_include_directories(
@@ -285,7 +282,7 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
 endif()
 
 target_compile_definitions(
-    ${PROJECT_NAME} PRIVATE $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
+  ${PROJECT_NAME} PRIVATE $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
 
 target_link_libraries(
   ${PROJECT_NAME}
