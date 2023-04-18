@@ -14,7 +14,7 @@ def test_SplineUniform():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
     )
     assert math.isclose(float(spline.evaluate(0.0)), 0.0)
@@ -46,7 +46,7 @@ def test_SplineExplicit():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=5),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=5),
         values_at_nodes=[0.0, 2.0, 0.5,  1.0, 0.75],
         derivatives_at_nodes=[1.0, 0.0, 0.1, -0.1, 0.0],
     )
@@ -65,7 +65,7 @@ def test_SplineZeroBC():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         bc='zeroderivative',
     )
@@ -80,7 +80,7 @@ def test_SplineLogarithmic():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=5),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=5),
         values_at_nodes=[0.2, 2.0, 0.5, 1.0, 0.75],
         logarithmic_parametrization=True,
     )
@@ -99,7 +99,7 @@ def test_SplineUniformConstantExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         extrapolate='constant',
     )
@@ -120,7 +120,7 @@ def test_SplineUniformLinearExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         extrapolate='linear',
     )
@@ -141,7 +141,7 @@ def test_SplineUniformPolynomialExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         extrapolate='polynomial',
     )
@@ -162,7 +162,7 @@ def test_SplineUniformPeriodicExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[1.0, 2.0, 0.5, 1.0],
         extrapolate='periodic',
     )
@@ -213,7 +213,7 @@ def test_SplineUniformSensitivity():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[3*a + b, c**2 - 3, 1, sp.log(b) + 3*c - 6*a],
     )
     check_gradient(spline, 0.00, params, params_values, [3.0, 1.0, 0.0])
@@ -249,7 +249,7 @@ def test_SplineExplicitSensitivity():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[3*a + b, c**2 - 3, 1, sp.log(b) + 3*c - 6*a],
         derivatives_at_nodes=[c**3 - 2, sp.sqrt(b) * sp.log(b) + 3*c, 4*a - sp.sin(b), 1],
     )
@@ -268,7 +268,7 @@ def test_SplineLogarithmicSensitivity():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id='f',
         evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, length=4),
+        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[3*a + b, c**2 - 3, 1, sp.log(b) + 3*c - 6*a],
         logarithmic_parametrization=True,
     )
