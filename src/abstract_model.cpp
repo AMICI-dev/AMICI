@@ -643,7 +643,8 @@ AbstractModel::fdwdw(realtype */*dwdw*/,
                      const realtype */*k*/,
                      const realtype */*h*/,
                      const realtype */*w*/,
-                     const realtype */*tcl*/) {
+                     const realtype */*tcl*/,
+                     const realtype */*spl*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__);
