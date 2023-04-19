@@ -2797,7 +2797,8 @@ class DEExporter:
             if self._build_hints:
                 print("Note:")
                 print('\n'.join(self._build_hints))
-            raise
+            #raise
+            raise Exception(e.output.decode('utf-8'))
 
         if verbose:
             print(result.stdout.decode('utf-8'))
