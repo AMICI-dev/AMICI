@@ -42,6 +42,7 @@ S2LLH = 's2llh'
 RES = 'res'
 SRES = 'sres'
 RDATAS = 'rdatas'
+EDATAS = 'edatas'
 
 
 @log_execution_time('Simulating PEtab model', logger)
@@ -727,7 +728,7 @@ def create_edatas(
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,
-            measurement_df=measurement_dfs[measurement_index],
+            measurement_df=measurement_dfs[(measurement_index,)],
             petab_problem=petab_problem,
             observable_ids=observable_ids,
         )
