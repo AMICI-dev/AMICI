@@ -116,6 +116,8 @@ need to be included:
   This is part of multiple packages, including Desktop Development with C++.
 * Windows Universal C Runtime.
   This is an individual component and installs some DLLs that we need.
+* cmake
+   This is need to build OpenBLAS. Available at https://cmake.org/download/
 
 OpenBLAS
 ^^^^^^^^
@@ -133,27 +135,30 @@ The first script needs to be called in Powershell, and it needs to call
 
     cmd /c "scripts\compileBLAS.cmd $version"
 
+Additionally, in ``compileBLAS.cmd`` make sure that you point to your Visual Studio installation  on line 3. 
+Newer installations could be located under ``C:\Program Files\Microsoft Visual Studio\...\VC\Auxiliary\Build\vcvars64.bat"``.
+
 so that it matches your directory structure.
 This will download OpenBLAS and compile it, creating
 
-    C:\\BLAS\\lib\\openblas.lib
-    C:\\BLAS\\bin\\openblas.dll
+    C:\\BLAS\\OpenBLAS\\lib\\openblas.lib
+    C:\\BLAS\\OpenBLAS\\bin\\openblas.dll
 
 You will also need to define two environment variables:
 
 .. code-block:: text
 
-   BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"
-   BLAS_CFLAGS="/IC:/BLAS/OpenBLAS-0.3.19/OpenBLAS-0.3.19"
+   BLAS_LIBS="/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
+   BLAS_CFLAGS="/IC:/BLAS/OpenBLAS"
 
 One way to do that is to run a PowerShell script with the following commands:
 
 .. code-block:: text
 
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
-   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS-0.3.19/OpenBLAS-0.3.19", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS-0.3.19/OpenBLAS-0.3.19", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::Process)
 
 The call ending in ``Process`` sets the environment variable in the current
 process, and it is no longer in effect in the next process. The call ending in
@@ -163,7 +168,7 @@ Now you need to make sure that all required DLLs are within the scope of the
 ``PATH`` variable. In particular, the following directories need to be included
 in ``PATH``:
 
-    C:\\BLAS\\bin
+    C:\\BLAS\\OpenBLAS\\bin
     C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\\DLLs\\x64
 
 The first one is needed for ``openblas.dll`` and the second is needed for the
@@ -205,10 +210,10 @@ by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
 
         import os
         # directory containing `openblas.dll`
-        os.add_dll_directory("C:\\BLAS\\bin")
+        os.add_dll_directory("C:\\BLAS\\OpenBLAS\\bin")
         import amici
 
-    or via the environment variable ``AMICI_DLL_DIRS``.
+    or via the environment variable ``AMICI_DLL_DIRS="C:\BLAS\OpenBLAS\bin"``.
 
 If Python returns the following error upon ``import amici``, try updating to the latest Python version.
 
