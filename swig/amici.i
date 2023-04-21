@@ -330,7 +330,7 @@ def __repr__(self):
 import sys
 import os
 
-if sys.platform == 'win32':
+if sys.platform == 'win32' and os.environ.get('AMICI_DLL_DIRS', ''):
     for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
         os.add_dll_directory(dll_dir)
 
