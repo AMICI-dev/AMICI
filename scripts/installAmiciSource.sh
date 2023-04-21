@@ -29,8 +29,9 @@ fi
 
 pip install -U "setuptools<64"
 pip install --upgrade pip wheel
-pip install --upgrade pip scipy matplotlib numpy
-# TODO: remove
+pip install --upgrade pip scipy matplotlib coverage pytest \
+   pytest-cov cmake_build_extension numpy
+# TODO: remove after merge
 pip install git+https://github.com/ICB-DCM/fiddy@redesign
 pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test,pysb] --no-build-isolation
 deactivate
