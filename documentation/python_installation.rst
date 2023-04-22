@@ -217,9 +217,6 @@ by MSVC (see Visual Studio above). ``KERNEL32.dll`` is part of Windows and in
 
     or via the environment variable ``AMICI_DLL_DIRS="C:\BLAS\OpenBLAS\bin"``.
 
-If Python returns the following error upon ``import amici``, try updating to the latest Python version.
-
-    OSError: [WinError 87] The parameter is incorrect: ''
 
 Further topics
 ++++++++++++++
