@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eou pipefail
 
+export CC=$(command -v clang)
+export CXX=$(command -v clang)
+
 pip install -e "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab"
 pip install -e python/sdist[petab,pysb]
 

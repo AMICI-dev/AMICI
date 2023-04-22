@@ -1,4 +1,4 @@
-clang
+clang-10
 libatlas-base-dev
 libboost-serialization-dev
 libhdf5-serial-dev

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eou pipefail
 
+export CC=$(command -v clang)
+export CXX=$(command -v clang)
+
 export BNGPATH="$(pwd)/ThirdParty/BioNetGen-2.7.0"
 
 exec "$@"
