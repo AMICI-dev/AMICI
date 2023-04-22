@@ -106,8 +106,6 @@ Some general remarks:
 Using the Microsoft Visual Studio
 ---------------------------------
 
-.. note:: Support for MSVC is experimental.
-
 We assume that Visual Studio (not to be confused with Visual Studio Code)
 is already installed. Using Visual Studio Installer, the following components
 need to be included:
@@ -116,14 +114,16 @@ need to be included:
   This is part of multiple packages, including Desktop Development with C++.
 * Windows Universal C Runtime.
   This is an individual component and installs some DLLs that we need.
-* cmake
-   This is need to build OpenBLAS. Available at https://cmake.org/download/
 
 OpenBLAS
 ^^^^^^^^
 
 There are prebuilt OpenBLAS binaries available, but they did not seem to work
-well here. Therefore, we recommend building OpenBLAS from scratch.
+well here. Therefore, we recommend building OpenBLAS from scratch. This
+requires an installation of CMake. CMake can be installed from
+https://cmake.org/download/ (system-wide), or via ``pip install cmake``
+(in the current Python environment).
+
 
 To build OpenBLAS, download the following scripts from the AMICI repository:
 
@@ -135,8 +135,10 @@ The first script needs to be called in Powershell, and it needs to call
 
     cmd /c "scripts\compileBLAS.cmd $version"
 
-Additionally, in ``compileBLAS.cmd`` make sure that you point to your Visual Studio installation  on line 3. 
-Newer installations could be located under ``C:\Program Files\Microsoft Visual Studio\...\VC\Auxiliary\Build\vcvars64.bat"``.
+Additionally, in ``compileBLAS.cmd`` make sure that you point to your
+Visual Studio installation on line 3.
+Newer installations could be located under
+``C:\Program Files\Microsoft Visual Studio\...\VC\Auxiliary\Build\vcvars64.bat``.
 
 so that it matches your directory structure.
 This will download OpenBLAS and compile it, creating

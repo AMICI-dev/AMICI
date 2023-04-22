@@ -86,7 +86,7 @@ import_array();
 %pythoncode %{
 def __repr__(self):
     return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.float64)) + ' >'
-    
+
 %}
 };
 %template(IntVector) std::vector<int>;
@@ -330,13 +330,13 @@ def __repr__(self):
 import sys
 import os
 
-if sys.platform == 'win32' and os.environ.get('AMICI_DLL_DIRS', ''):
-    for dll_dir in os.environ.get("AMICI_DLL_DIRS", "").split(os.pathsep):
+if sys.platform == 'win32' and (dll_dirs := os.environ.get('AMICI_DLL_DIRS')):
+    for dll_dir in dll_dirs.split(os.pathsep):
         os.add_dll_directory(dll_dir)
 
 %}
 
-// import additional types for typehintsn
+// import additional types for typehints
 // also import np for use in __repr__ functions
 %pythonbegin %{
 from typing import TYPE_CHECKING, Iterable, List, Tuple, Sequence
