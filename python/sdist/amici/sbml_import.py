@@ -2519,7 +2519,7 @@ def _non_const_conservation_laws_supported(sbml_model: sbml.Model):
            for rule in sbml_model.getListOfRules()):
         # see SBML semantic test suite, case 33 for an example
         warnings.warn("Conservation laws for non-constant species in "
-                      "models with RateRules are not currently supported "
+                      "models with RateRules are currently not supported "
                       "and will be turned off.")
         return False
 
@@ -2528,6 +2528,6 @@ def _non_const_conservation_laws_supported(sbml_model: sbml.Model):
            for rule in sbml_model.getListOfRules()):
         # see SBML semantic test suite, case 33 for an example
         warnings.warn("Conservation laws for non-constant species in "
-                      "models with Species-AssignmentRules are not currently "
+                      "models with Species-AssignmentRules are currently not "
                       "supported and will be turned off.")
         return False
