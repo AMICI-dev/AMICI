@@ -94,12 +94,126 @@ jobs:
       run: |
         scripts/installAmiciSource.sh
 
+    - name: Python tests
+      run: |
+        source build/venv/bin/activate \
+        && pytest \
+          --ignore-glob=*petab* \
+          --ignore-glob=*test_splines.py \
+          --cov=amici \
+          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
+          --cov-append \
+          ${AMICI_DIR}/python/tests
+
+    # TODO <REMOVE BEFORE MERGE>
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'develop' || github.event.merge_group.base_ref == 'develop'}}
+      run: |
+        source build/venv/bin/activate \
+        && pytest \
+          --cov=amici \
+          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
+          --cov-append \
+          ${AMICI_DIR}/python/tests/test_splines.py
+    # TODO </REMOVE BEFORE MERGE>
+
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
+      run: |
+        source build/venv/bin/activate \
+        && pytest \
+          --cov=amici \
+          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
+          --cov-append \
+          ${AMICI_DIR}/python/tests/test_splines.py
+
     - name: example notebooks
       run: |
-        scripts/runNotebook.sh python/examples/example_splines_swameye/
+        scripts/runNotebook.sh python/examples/example_*/
 
-    - name: "Upload artifact"
-      uses: actions/upload-artifact@v3
+    - name: doc notebooks
+      run: |
+        scripts/runNotebook.sh documentation/GettingStarted.ipynb
+
+    - name: Codecov Python
+      uses: codecov/codecov-action@v3.1.0
       with:
-        name: models
-        path: '**/amici_models/'
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: build/coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
+
+    - name: lcov
+      run: |
+        lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR} -c -o coverage_cpp.info \
+        && lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/python/sdist/build/$(python -c "import sys, sysconfig; print(f'temp.{sysconfig.get_platform()}-{sys.implementation.cache_tag}_amici')")/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
+        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+
+    - name: Codecov CPP
+      uses: codecov/codecov-action@v3.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage.info
+        flags: cpp
+        fail_ci_if_error: true
+
+    - name: Run sonar-scanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        sonar-scanner \
+         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
+
+  osx:
+    name: Tests OSX
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
+    - uses: actions/checkout@v3
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
+
+    # install amici dependencies
+    - name: homebrew
+      run: |
+        brew install hdf5 swig gcc cppcheck libomp boost \
+          && brew ls -v boost \
+          && brew ls -v libomp \
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
+
+    - name: Build AMICI
+      run: |
+        scripts/buildAll.sh
+
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
+
+    - name: cppcheck
+      run: |
+        scripts/run-cppcheck.sh
+
+    - name: Python tests
+      run: |
+        scripts/run-python-tests.sh
+
+    - name: C++ tests
+      run: |
+        scripts/run-cpp-tests.sh
