@@ -199,7 +199,7 @@ functions = {
         _FunctionInfo(
             'realtype *dwdw, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *spl',
+            'const realtype *w, const realtype *tcl',
             assume_pow_positivity=True, sparse=True
         ),
     'dxdotdw':

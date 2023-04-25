@@ -867,12 +867,10 @@ class AbstractModel {
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
-     * @param spl spline value vector
      */
     virtual void fdwdw(realtype *dwdw, realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w, const realtype *tcl,
-                       const realtype *spl);
+                       const realtype *w, const realtype *tcl);
 
     /**
      * @brief Model-specific implementation of fdwdw, colptrs part

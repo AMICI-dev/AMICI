@@ -2690,8 +2690,7 @@ void Model::fdwdw(const realtype t, const realtype *x) {
     fdwdw_rowvals(dwdw_);
     fdwdw(dwdw_.data(), t, x, state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(),
-          derived_state_.w_.data(), state_.total_cl.data(),
-          state_.spl_.data());
+          derived_state_.w_.data(), state_.total_cl.data());
 
     if (always_check_finite_) {
         checkFinite(dwdw_.get(), ModelQuantity::dwdw, t);
