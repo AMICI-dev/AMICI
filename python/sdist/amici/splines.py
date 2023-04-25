@@ -97,7 +97,8 @@ class UniformGrid(collections.abc.Sequence):
         always_include_stop: bool = True
     ):
         """Create a new ``UniformGrid``.
-        Note: ``UniformGrid``s with a single node cannot be created.
+
+        Note: A ``UniformGrid`` with a single node cannot be created.
 
         :param start:
             First point in the grid
@@ -149,7 +150,7 @@ class UniformGrid(collections.abc.Sequence):
             xx.append(x)
             if always_include_stop and x >= stop:
                 break
-        
+
         if len(xx) == 1:
             raise ValueError(
                 f"Step size {step} is less than (stop - start) = {stop - start} "
@@ -217,7 +218,7 @@ class AbstractSpline(ABC):
             nodes: Sequence,
             values_at_nodes: Sequence,
             *,
-            evaluate_at: Optional[Union[str, sp.Basic]] = None, 
+            evaluate_at: Optional[Union[str, sp.Basic]] = None,
             bc: BClike = None,
             extrapolate: BClike = None,
             logarithmic_parametrization: bool = False
