@@ -1,6 +1,0 @@
-#!/bin/bash
-set -eou pipefail
-
-export BNGPATH="$(pwd)/ThirdParty/BioNetGen-2.7.0"
-
-exec "$@"
