@@ -2551,22 +2551,23 @@ def _check_symbol_nesting(symbols: Dict[sp.Symbol, Dict[str, sp.Expr]],
             )
 
 
-def _non_const_conservation_laws_supported(sbml_model: sbml.Model):
+def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
     """Check whether non-constant conservation laws can be handled for the
     given model."""
     if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
            for rule in sbml_model.getListOfRules()):
         # see SBML semantic test suite, case 33 for an example
         warnings.warn("Conservation laws for non-constant species in "
-                      "models with RateRules are not currently supported "
+                      "models with RateRules are currently not supported "
                       "and will be turned off.")
         return False
 
     if any(rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE and
-        sbml_model.getSpecies(rule.getVariable())
+           sbml_model.getSpecies(rule.getVariable())
            for rule in sbml_model.getListOfRules()):
-        # see SBML semantic test suite, case 33 for an example
         warnings.warn("Conservation laws for non-constant species in "
-                      "models with Species-AssignmentRules are not currently "
+                      "models with Species-AssignmentRules are currently not "
                       "supported and will be turned off.")
         return False
+
+    return True
