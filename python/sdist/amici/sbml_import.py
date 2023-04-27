@@ -481,13 +481,12 @@ class SbmlImporter:
             # the "required" attribute is only available in SBML Level 3
             for i_plugin in range(self.sbml.getNumPlugins()):
                 plugin = self.sbml.getPlugin(i_plugin)
-                if plugin.getPackageName() in ('layout',):
-                    # 'layout' plugin does not have the 'required' attribute
-                    continue
-                if hasattr(plugin, 'getRequired') and not plugin.getRequired():
+                if self.sbml_doc.getPkgRequired(plugin.getPackageName()) \
+                        is False:
                     # if not "required", this has no impact on model
                     #  simulation, and we can safely ignore it
                     continue
+
                 # Check if there are extension elements. If not, we can safely
                 #  ignore the enabled package
                 if plugin.getListOfAllElements():
@@ -633,7 +632,7 @@ class SbmlImporter:
                 continue
             self.add_local_symbol(
                 r.getId(),
-                self._sympy_from_sbml_math(r.getKineticLaw())
+                self._sympy_from_sbml_math(r.getKineticLaw() or sp.Float(0))
             )
 
     def add_local_symbol(self, key: str, value: sp.Expr):
@@ -961,7 +960,9 @@ class SbmlImporter:
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
-                sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
+                sym_math = self._sympy_from_sbml_math(
+                    reaction.getKineticLaw() or sp.Float(0)
+                )
 
             self.flux_vector[reaction_index] = sym_math
             if any(
