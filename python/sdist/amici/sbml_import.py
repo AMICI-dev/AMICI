@@ -1743,12 +1743,7 @@ class SbmlImporter:
                           "and will be turned off.")
             return []
 
-        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
-               for rule in self.sbml.getListOfRules()):
-            # see SBML semantic test suite, case 33 for an example
-            warnings.warn("Conservation laws for non-constant species in "
-                          "models with RateRules are not currently supported "
-                          "and will be turned off.")
+        if not _non_const_conservation_laws_supported(self.sbml):
             return []
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
@@ -1815,12 +1810,7 @@ class SbmlImporter:
                           "and will be turned off.")
             return []
 
-        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
-               for rule in self.sbml.getListOfRules()):
-            # see SBML semantic test suite, case 33 for an example
-            warnings.warn("Conservation laws for non-constant species in "
-                          "models with RateRules are not currently supported "
-                          "and will be turned off.")
+        if not _non_const_conservation_laws_supported(self.sbml):
             return []
 
         # Determine rank via SVD
@@ -2515,3 +2505,25 @@ def _check_symbol_nesting(symbols: Dict[sp.Symbol, Dict[str, sp.Expr]],
                 f"but {symbol_type} `{obs['name']} = {obs['value']}` "
                 "references another observable."
             )
+
+
+def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
+    """Check whether non-constant conservation laws can be handled for the
+    given model."""
+    if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+           for rule in sbml_model.getListOfRules()):
+        # see SBML semantic test suite, case 33 for an example
+        warnings.warn("Conservation laws for non-constant species in "
+                      "models with RateRules are currently not supported "
+                      "and will be turned off.")
+        return False
+
+    if any(rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE and
+           sbml_model.getSpecies(rule.getVariable())
+           for rule in sbml_model.getListOfRules()):
+        warnings.warn("Conservation laws for non-constant species in "
+                      "models with Species-AssignmentRules are currently not "
+                      "supported and will be turned off.")
+        return False
+
+    return True
