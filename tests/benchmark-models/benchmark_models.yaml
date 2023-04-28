@@ -99,8 +99,8 @@ Sneyd_PNAS2002:
 Smith_BMCSystBiol2013:
   llh: -888198.436541014
   t_sim: 1.0
-  t_fwd: 100.0
-  t_adj: 10.0
+  t_fwd: 500.0
+  t_adj: 50.0
   note: not part of original benchmark collection
 
 Weber_BMC2015:
