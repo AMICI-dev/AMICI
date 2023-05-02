@@ -2410,7 +2410,7 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
                         &derived_state_.dJrzdsigma_.at(izt * nz * nJ), nJ,
                         derived_state_.dsigmazdp_.data(), nz,
                         1.0, derived_state_.dJzdp_.data(), nJ);
-            
+
             setNaNtoZero(derived_state_.dJrzdz_);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
