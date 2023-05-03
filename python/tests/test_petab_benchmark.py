@@ -14,10 +14,12 @@ from petab.C import NOMINAL_VALUE, LOWER_BOUND, UPPER_BOUND, ESTIMATE
 import pytest
 
 import fiddy
+from fiddy import get_derivative, MethodId
+from fiddy.success import Consistency
+from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import (
     simulate_petab_to_cached_functions,
 )
-from fiddy.gradient_check import keep_lowest_error
 
 
 # Absolute and relative tolerances for finite difference gradient checks.
@@ -29,7 +31,7 @@ benchmark_yamls = [
     petab_path / (petab_path.stem + ".yaml")
     for petab_path in benchmark_path.glob("*") if petab_path.is_dir()
 ]
-# sbenchmark_yamls = benchmark_yamls[:] # FIXME remove
+#benchmark_yamls = [benchmark_yamls[0]]  # FIXME remove
 
 debug = True
 if debug:
@@ -62,21 +64,12 @@ def test_benchmark_gradient(petab_yaml, scale):
     ]
 
     # Only compute gradient for estimated parameters.
-    index_estimated = petab_problem.parameter_df[ESTIMATE] == 1
-    df = petab_problem.parameter_df.loc[index_estimated]
-    parameter_ids = df.index
-
-    np.random.seed(0)
-
-    if scale:
-        point = np.asarray(list(
-            petab_problem.scale_parameters(dict(df.nominalValue)).values()
-        ))
-        point_noise = np.random.randn(len(point)) * 0.1
-    else:
-        point = df.nominalValue.values
-        point_noise = np.random.randn(len(point)) * point * 0.1
-    point += point_noise  # avoid small gradients at nominal value
+    parameter_df_free = petab_problem.parameter_df.loc[petab_problem.x_free_ids]
+    parameter_ids = list(parameter_df_free.index)
+    parameter_scales = dict(parameter_df_free.parameterScale)
+    # Set point to midpoint of bounds.
+    # Hopefully no gradients are zero at this point...
+    point = ((parameter_df_free[LOWER_BOUND] + parameter_df_free[UPPER_BOUND])/2).values
 
     # Setup AMICI objects.
     amici_model = amici.petab_import.import_petab_problem(petab_problem)
@@ -88,8 +81,15 @@ def test_benchmark_gradient(petab_yaml, scale):
     #if amici_model.getName() == 'Bachmann_MSB2011':
     #    amici_solver.setMaxSteps(int(1e5))
 
-    function, gradient = simulate_petab_to_cached_functions(
-        simulate_petab=amici.petab_objective.simulate_petab,
+
+
+
+
+
+
+
+
+    amici_function, amici_derivative = simulate_petab_to_cached_functions(
         parameter_ids=parameter_ids,
         petab_problem=petab_problem,
         amici_model=amici_model,
@@ -101,28 +101,29 @@ def test_benchmark_gradient(petab_yaml, scale):
         cache=False,
     )
 
-    if (gradient(point) == 0).any():
+    expected_derivative = amici_derivative(point)
+    if (expected_derivative == 0).any():
         raise ValueError(
-            "The chosen point may be an issue: an expected gradient is zero."
+            "The chosen point may be an issue: an expected gradient value is zero."
         )
 
-    gradient_check_partial = partial(
-        fiddy.gradient_check,
-        function=function,
+    derivative = get_derivative(
+        function=amici_function,
         point=point,
-        gradient=gradient,
         sizes=sizes,
-        relative_sizes=not scale,
+        direction_ids=parameter_ids,
+        method_ids=[MethodId.FORWARD, MethodId.BACKWARD, MethodId.CENTRAL],
+        #analysis_classes=[
+        #    lambda: TransformByDirectionScale(scales=parameter_scales),
+        #],
+        success_checker=Consistency(),
     )
+    test_value = derivative.value
 
-    success, result_df = gradient_check_partial(
-        fd_gradient_method='central',
+    check = NumpyIsCloseDerivativeCheck(
+        derivative=derivative,
+        expectation=expected_derivative,
+        point=point,
     )
-
-    if debug:
-        result_df.to_csv(debug_full_path / (petab_yaml.stem + ".tsv"), sep='\t')
-        minimal_result_df = keep_lowest_error(result_df, inplace=False)
-        minimal_result_df.to_csv(debug_minimal_path / (petab_yaml.stem + ".tsv"), sep='\t')
-
-    # The gradients for all parameters are correct.
-    assert success, result_df
+    result = check(rtol=1e-2)
+    assert result.success
