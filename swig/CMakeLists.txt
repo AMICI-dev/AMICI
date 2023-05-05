@@ -63,6 +63,11 @@ set_target_properties(
              INSTALL_RPATH ThirdParty/SuiteSparse/lib
              BUILD_RPATH ThirdParty/SuiteSparse/lib)
 
+get_target_property(AMICI_HEADERS amici PUBLIC_HEADER)
+file(GLOB SWIG_FILES *.i *.h)
+
+set_property(TARGET _amici PROPERTY SWIG_DEPENDS ${AMICI_HEADERS} ${SWIG_FILES})
+
 # Python extension suffix
 execute_process(
   COMMAND ${Python3_EXECUTABLE} -c

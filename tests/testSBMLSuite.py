@@ -261,11 +261,11 @@ def get_amount_and_variables(settings):
 
 def apply_settings(settings, solver, model):
     """Apply model and solver settings as specified in the test case"""
-
-    ts = np.linspace(float(settings['start']),
-                     float(settings['start'])
-                     + float(settings['duration']),
-                     int(settings['steps']) + 1)
+    # start/duration/steps may be empty
+    ts = np.linspace(float(settings['start'] or 0),
+                     float(settings['start'] or 0)
+                     + float(settings['duration'] or 0),
+                     int(settings['steps'] or 0) + 1)
     atol = float(settings['absolute'])
     rtol = float(settings['relative'])
 
@@ -324,7 +324,7 @@ def read_settings_file(current_test_path: Path, test_id: str):
         for line in f:
             if line != '\n':
                 (key, val) = line.split(':')
-                settings[key] = val
+                settings[key] = val.strip()
     return settings
 
 
