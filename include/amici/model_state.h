@@ -250,6 +250,11 @@ struct ModelStateDerived {
      * (dimension: `nx_solver` x `nplist`, row-major)
      */
     std::vector<realtype> sx_;
+    
+    /** temporary storage for sy,
+     * (dimension: `ny` x `nplist`, row-major)
+     */
+    std::vector<realtype> sy_;
 
     /** temporary storage for `x_rdata` (dimension: `nx_rdata`) */
     std::vector<realtype> x_rdata_;
