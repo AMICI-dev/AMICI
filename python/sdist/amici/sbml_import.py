@@ -485,6 +485,22 @@ class SbmlImporter:
                         is False:
                     # if not "required", this has no impact on model
                     #  simulation, and we can safely ignore it
+
+                    if plugin.getPackageName() == "fbc" \
+                            and plugin.getListOfAllElements():
+                        # fbc is labeled not-required, but in fact it is.
+                        # we don't care about the extra attributes of core
+                        # elements, such as fbc:chemicalFormula, but we can't
+                        # do anything meaningful with fbc:objective or
+                        # fbc:fluxBounds
+                        raise SBMLException(
+                            "The following fbc extension elements are "
+                            "currently not supported: "
+                            + ', '.join(
+                                list(map(str, plugin.getListOfAllElements()))
+                            )
+                        )
+
                     continue
 
                 # Check if there are extension elements. If not, we can safely
