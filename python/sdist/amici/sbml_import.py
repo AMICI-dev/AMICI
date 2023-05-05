@@ -751,11 +751,6 @@ class SbmlImporter:
                 species_variable.getId()
             )
             if ia_initial is not None:
-                if species and species['amount'] \
-                        and 'compartment' in species:
-                    ia_initial *= self.compartments.get(
-                        species['compartment'], species['compartment']
-                    )
                 initial = ia_initial
             if species:
                 species['init'] = initial

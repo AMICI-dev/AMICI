@@ -67,7 +67,6 @@ def main():
     """Simulate the model specified on the command line"""
 
     args = parse_cli_args()
-
     loglevel = logging.DEBUG if args.verbose else logging.INFO
     logger.setLevel(loglevel)
 
@@ -99,7 +98,7 @@ def main():
     for label, sensi_mode in {
         't_sim': amici.SensitivityMethod.none,
         't_fwd': amici.SensitivityMethod.forward,
-        't_adj': amici.SensitivityOrder.second
+        't_adj': amici.SensitivityMethod.adjoint
     }.items():
         amici_solver.setSensitivityMethod(sensi_mode)
         if sensi_mode == amici.SensitivityMethod.none:
@@ -140,7 +139,7 @@ def main():
     sim_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION}, inplace=True)
 
     if args.simulation_file:
-        sim_df.to_csv(index=False, sep="\t")
+        sim_df.to_csv(args.simulation_file, index=False, sep="\t")
 
     if args.plot:
         with contextlib.suppress(NotImplementedError):
