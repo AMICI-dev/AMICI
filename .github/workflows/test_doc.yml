@@ -1,0 +1,94 @@
+name: Documentation Tests
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron:  '48 4 * * *'
+
+jobs:
+  doxygen:
+    name: Test Doxygen
+
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v3
+    - run: git fetch --prune --unshallow
+
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+          bison \
+          ragel \
+          graphviz \
+          texlive-latex-extra
+
+    - name: Build doxygen
+      run: |
+        sudo scripts/downloadAndBuildDoxygen.sh
+
+    - name: Run doxygen
+      run: |
+        scripts/run-doxygen.sh
+
+  sphinx:
+    name: Test Sphinx
+
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/checkout@v3
+      - run: git fetch --prune --unshallow
+
+      - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+      - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.1.1/install/bin/swig" >> $GITHUB_ENV
+
+      - name: Build doxygen
+        run: |
+          sudo scripts/downloadAndBuildDoxygen.sh
+
+      # install amici dependencies
+      - name: apt
+        run: |
+          sudo apt-get update \
+            && sudo apt-get install -y \
+              g++ \
+              libatlas-base-dev \
+              libboost-serialization-dev \
+              pandoc \
+              python3-venv \
+
+      - name: Build swig
+        run: |
+          sudo scripts/downloadAndBuildSwig.sh
+
+      - name: sphinx
+        run: |
+          scripts/run-sphinx.sh
