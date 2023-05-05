@@ -20,6 +20,7 @@ Fujita_SciSignal2010
 Isensee_JCB2018
 Lucarelli_CellSystems2018
 Schwen_PONE2014
+Smith_BMCSystBiol2013
 Sneyd_PNAS2002
 Weber_BMC2015
 Zheng_PNAS2012"
