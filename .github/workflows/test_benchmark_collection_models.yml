@@ -60,6 +60,11 @@ jobs:
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
           && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
+          
+    # run gradient checks
+    - name: Run Gradient Checks
+      run: |
+        cd tests/benchmark-models && pytest ./test_petab_benchmark.py
 
     # upload results
     - uses: actions/upload-artifact@v3

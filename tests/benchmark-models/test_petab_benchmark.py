@@ -32,7 +32,7 @@ benchmark_yamls = [
 
 debug = False
 if debug:
-    debug_path = Path('debug')
+    debug_path = Path('../../python/tests/debug')
     debug_path.mkdir(exist_ok=True, parents=True)
 
 
