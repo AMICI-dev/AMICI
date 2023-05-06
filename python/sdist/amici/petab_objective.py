@@ -175,7 +175,7 @@ def simulate_petab(
             petab_problem=petab_problem,
             edatas=edatas,
         )
-        if not scaled_gradients:
+        if not scaled_gradients and sllh is not None:
             sllh = {
                 parameter_id: rescale_sensitivity(
                     sensitivity=sensitivity,

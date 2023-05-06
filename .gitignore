@@ -198,3 +198,5 @@ Benchmark-Models-PEtab/
 /test_bmc/
 
 CS_Signalling_ERBB_RAS_AKT/
+cache_fiddy/*
+debug/*
