@@ -65,7 +65,7 @@ jobs:
     - name: Run Gradient Checks
       run: |
         pip install git+https://github.com/ICB-DCM/fiddy.git@fixes_ff#egg=fiddy \
-        cd tests/benchmark-models && pytest ./test_petab_benchmark.py
+          && cd tests/benchmark-models && pytest ./test_petab_benchmark.py
 
     # upload results
     - uses: actions/upload-artifact@v3
