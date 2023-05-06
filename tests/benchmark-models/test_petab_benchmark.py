@@ -22,7 +22,8 @@ from fiddy.extensions.amici import (
 ATOL: float = 1e-3
 RTOL: float = 1e-2
 
-benchmark_path = Path(__file__).parent.parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
+benchmark_path = Path(__file__).parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
+benchmark_outdir = Path(__file__).parent.parent.parent / "test_bmc"
 benchmark_yamls = [
     petab_path / (petab_path.stem + ".yaml")
     for petab_path in benchmark_path.glob("*") if petab_path.is_dir()
@@ -60,7 +61,10 @@ def test_benchmark_gradient(petab_yaml, scale):
     parameter_ids = list(parameter_df_free.index)
 
     # Setup AMICI objects.
-    amici_model = amici.petab_import.import_petab_problem(petab_problem)
+    amici_model = amici.petab_import.import_petab_problem(
+        petab_problem,
+        model_output_dir=benchmark_outdir / petab_yaml.stem,
+    )
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(1e-10)
     amici_solver.setRelativeTolerance(1e-10)
