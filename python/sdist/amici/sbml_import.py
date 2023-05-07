@@ -179,23 +179,44 @@ class SbmlImporter:
         """
         # Ensure we got a valid SBML model, otherwise further processing
         # might lead to undefined results
-        log_execution_time(f'validating SBML', logger)(
+        log_execution_time('validating SBML', logger)(
             self.sbml_doc.validateSBML
         )()
         _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+
+        # Flatten "comp" model? Do that before any other converters are run
+        if any(self.sbml_doc.getPlugin(i_plugin).getPackageName() == 'comp'
+               for i_plugin in range(self.sbml_doc.getNumPlugins())):
+            # see libsbml CompFlatteningConverter for options
+            conversion_properties = sbml.ConversionProperties()
+            conversion_properties.addOption("flatten comp", True)
+            conversion_properties.addOption("leave_ports", False)
+            conversion_properties.addOption("performValidation", False)
+            conversion_properties.addOption("abortIfUnflattenable", "none")
+            if log_execution_time('converting SBML local parameters', logger)(
+                self.sbml_doc.convert)(conversion_properties) \
+                    != sbml.LIBSBML_OPERATION_SUCCESS:
+                raise SBMLException(
+                    'Required SBML comp extension is currently not supported '
+                    'and flattening the model failed.')
+                # check the flattened model is still valid
+            log_execution_time('re-validating SBML', logger)(
+                self.sbml_doc.validateSBML
+            )()
+            _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # apply several model simplifications that make our life substantially
         # easier
         if self.sbml_doc.getModel().getNumFunctionDefinitions():
             convert_config = sbml.SBMLFunctionDefinitionConverter()\
                 .getDefaultProperties()
-            log_execution_time(f'converting SBML functions', logger)(
+            log_execution_time('converting SBML functions', logger)(
                 self.sbml_doc.convert
             )(convert_config)
 
         convert_config = sbml.SBMLLocalParameterConverter().\
             getDefaultProperties()
-        dec_fun = log_execution_time(f'converting SBML local parameters', logger)(
+        log_execution_time('converting SBML local parameters', logger)(
             self.sbml_doc.convert
         )(convert_config)
 
@@ -203,6 +224,9 @@ class SbmlImporter:
         # the SBMLError log in the sbml document. Thus, it is sufficient to
         # check the error log just once after all conversion/validation calls.
         _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+
+        # need to reload the converted model
+        self.sbml = self.sbml_doc.getModel()
 
     def _reset_symbols(self) -> None:
         """
@@ -481,13 +505,28 @@ class SbmlImporter:
             # the "required" attribute is only available in SBML Level 3
             for i_plugin in range(self.sbml.getNumPlugins()):
                 plugin = self.sbml.getPlugin(i_plugin)
-                if plugin.getPackageName() in ('layout',):
-                    # 'layout' plugin does not have the 'required' attribute
-                    continue
-                if hasattr(plugin, 'getRequired') and not plugin.getRequired():
+                if self.sbml_doc.getPkgRequired(plugin.getPackageName()) \
+                        is False:
                     # if not "required", this has no impact on model
                     #  simulation, and we can safely ignore it
+
+                    if plugin.getPackageName() == "fbc" \
+                            and plugin.getListOfAllElements():
+                        # fbc is labeled not-required, but in fact it is.
+                        # we don't care about the extra attributes of core
+                        # elements, such as fbc:chemicalFormula, but we can't
+                        # do anything meaningful with fbc:objective or
+                        # fbc:fluxBounds
+                        raise SBMLException(
+                            "The following fbc extension elements are "
+                            "currently not supported: "
+                            + ', '.join(
+                                list(map(str, plugin.getListOfAllElements()))
+                            )
+                        )
+
                     continue
+
                 # Check if there are extension elements. If not, we can safely
                 #  ignore the enabled package
                 if plugin.getListOfAllElements():
@@ -633,7 +672,7 @@ class SbmlImporter:
                 continue
             self.add_local_symbol(
                 r.getId(),
-                self._sympy_from_sbml_math(r.getKineticLaw())
+                self._sympy_from_sbml_math(r.getKineticLaw() or sp.Float(0))
             )
 
     def add_local_symbol(self, key: str, value: sp.Expr):
@@ -736,11 +775,6 @@ class SbmlImporter:
                 species_variable.getId()
             )
             if ia_initial is not None:
-                if species and species['amount'] \
-                        and 'compartment' in species:
-                    ia_initial *= self.compartments.get(
-                        species['compartment'], species['compartment']
-                    )
                 initial = ia_initial
             if species:
                 species['init'] = initial
@@ -961,7 +995,9 @@ class SbmlImporter:
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
-                sym_math = self._sympy_from_sbml_math(reaction.getKineticLaw())
+                sym_math = self._sympy_from_sbml_math(
+                    reaction.getKineticLaw() or sp.Float(0)
+                )
 
             self.flux_vector[reaction_index] = sym_math
             if any(
@@ -1748,12 +1784,7 @@ class SbmlImporter:
                           "and will be turned off.")
             return []
 
-        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
-               for rule in self.sbml.getListOfRules()):
-            # see SBML semantic test suite, case 33 for an example
-            warnings.warn("Conservation laws for non-constant species in "
-                          "models with RateRules are not currently supported "
-                          "and will be turned off.")
+        if not _non_const_conservation_laws_supported(self.sbml):
             return []
 
         cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
@@ -1820,12 +1851,7 @@ class SbmlImporter:
                           "and will be turned off.")
             return []
 
-        if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
-               for rule in self.sbml.getListOfRules()):
-            # see SBML semantic test suite, case 33 for an example
-            warnings.warn("Conservation laws for non-constant species in "
-                          "models with RateRules are not currently supported "
-                          "and will be turned off.")
+        if not _non_const_conservation_laws_supported(self.sbml):
             return []
 
         # Determine rank via SVD
@@ -2520,3 +2546,25 @@ def _check_symbol_nesting(symbols: Dict[sp.Symbol, Dict[str, sp.Expr]],
                 f"but {symbol_type} `{obs['name']} = {obs['value']}` "
                 "references another observable."
             )
+
+
+def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
+    """Check whether non-constant conservation laws can be handled for the
+    given model."""
+    if any(rule.getTypeCode() == sbml.SBML_RATE_RULE
+           for rule in sbml_model.getListOfRules()):
+        # see SBML semantic test suite, case 33 for an example
+        warnings.warn("Conservation laws for non-constant species in "
+                      "models with RateRules are currently not supported "
+                      "and will be turned off.")
+        return False
+
+    if any(rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE and
+           sbml_model.getSpecies(rule.getVariable())
+           for rule in sbml_model.getListOfRules()):
+        warnings.warn("Conservation laws for non-constant species in "
+                      "models with Species-AssignmentRules are currently not "
+                      "supported and will be turned off.")
+        return False
+
+    return True
