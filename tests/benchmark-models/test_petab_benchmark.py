@@ -53,8 +53,7 @@ def test_benchmark_gradient(petab_yaml, scale):
         pytest.skip()
 
     petab_problem = petab.Problem.from_yaml(petab_yaml)
-    if str(petab_yaml.stem) == 'Fiedler_BMC2016':
-        petab.flatten_timepoint_specific_output_overrides(petab_problem)
+    petab.flatten_timepoint_specific_output_overrides(petab_problem)
 
     # Only compute gradient for estimated parameters.
     parameter_df_free = petab_problem.parameter_df.loc[petab_problem.x_free_ids]
