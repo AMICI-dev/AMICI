@@ -98,7 +98,7 @@ def test_benchmark_gradient(petab_yaml, scale):
         cache=not debug,
     )
 
-    noise_level = 0.1
+    noise_level = 0.01
 
     np.random.seed(0)
     if scale:
@@ -120,11 +120,6 @@ def test_benchmark_gradient(petab_yaml, scale):
         1e-4,
         1e-5,
     ]
-
-    if amici_model.getName() == 'Smith_BMCSystBiol2013':
-        sizes.insert(0, 0.5)
-        if scale:
-            sizes = sizes[:-3]
 
     derivative = get_derivative(
         function=amici_function,
