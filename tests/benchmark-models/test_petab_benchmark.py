@@ -24,8 +24,8 @@ RTOL: float = 1e-2
 
 benchmark_path = Path(__file__).parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
 benchmark_outdir = Path(__file__).parent.parent.parent / "test_bmc"
-benchmark_yamls = [
-    petab_path / (petab_path.stem + ".yaml")
+models = [
+    str(petab_path.stem)
     for petab_path in benchmark_path.glob("*") if petab_path.is_dir()
     if str(petab_path.stem) not in (
         # excluded due to excessive runtime
@@ -48,9 +48,9 @@ if debug:
 
 
 @pytest.mark.parametrize("scale", (True, False))
-@pytest.mark.parametrize("petab_yaml", benchmark_yamls)
-def test_benchmark_gradient(petab_yaml, scale):
-    if not scale and str(petab_yaml.stem) in (
+@pytest.mark.parametrize("model", models)
+def test_benchmark_gradient(model, scale):
+    if not scale and model in (
         'Smith_BMCSystBiol2013',
         'Alkan_SciSignal2018',
         'Brannmark_JBC2010',
@@ -60,7 +60,7 @@ def test_benchmark_gradient(petab_yaml, scale):
         # only fail on linear scale
         pytest.skip()
 
-    petab_problem = petab.Problem.from_yaml(petab_yaml)
+    petab_problem = petab.Problem.from_yaml(benchmark_path / model / (model + ".yaml"))
     petab.flatten_timepoint_specific_output_overrides(petab_problem)
 
     # Only compute gradient for estimated parameters.
@@ -70,7 +70,7 @@ def test_benchmark_gradient(petab_yaml, scale):
     # Setup AMICI objects.
     amici_model = amici.petab_import.import_petab_problem(
         petab_problem,
-        model_output_dir=benchmark_outdir / petab_yaml.stem,
+        model_output_dir=benchmark_outdir / model,
     )
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(1e-12)
@@ -151,7 +151,7 @@ def test_benchmark_gradient(petab_yaml, scale):
         df[('fd', 'full', '')] = derivative.series.values
         df[('amici', '', '')] = expected_derivative
 
-        file_name = f"{petab_yaml.stem}_scale={scale}.tsv"
+        file_name = f"{model}_scale={scale}.tsv"
         df.to_csv(debug_path / file_name, sep='\t')
 
     # The gradients for all parameters are correct.
