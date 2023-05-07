@@ -27,8 +27,18 @@ benchmark_outdir = Path(__file__).parent.parent.parent / "test_bmc"
 benchmark_yamls = [
     petab_path / (petab_path.stem + ".yaml")
     for petab_path in benchmark_path.glob("*") if petab_path.is_dir()
-    # excluded due to excessive runtime
-    if not str(petab_path.stem).startswith(('Chen_MSB', 'Froehlich_CellSystems'))
+    if str(petab_path.stem) not in (
+        # excluded due to excessive runtime
+        'Bachmann_MSB2011',
+        'Chen_MSB2009',
+        'Froehlich_CellSystems2018',
+        'Raimundez_PCB2020',
+        'Lucarelli_CellSystems2018',
+        'Isensee_JCB2018',
+        'Beer_MolBioSystems2014',
+        # excluded due to excessive numerical failures
+        'Crauste_CellSystems2017',
+    )
 ]
 
 debug = False
@@ -43,8 +53,6 @@ def test_benchmark_gradient(petab_yaml, scale):
     if not scale and str(petab_yaml.stem) in (
         'Smith_BMCSystBiol2013',
         'Alkan_SciSignal2018',
-        'Lucarelli_CellSystems2018',
-        'Isensee_JCB2018',
         'Brannmark_JBC2010',
         'Elowitz_Nature2000',
     ):
@@ -65,18 +73,18 @@ def test_benchmark_gradient(petab_yaml, scale):
         model_output_dir=benchmark_outdir / petab_yaml.stem,
     )
     amici_solver = amici_model.getSolver()
-    amici_solver.setAbsoluteTolerance(1e-10)
-    amici_solver.setRelativeTolerance(1e-10)
+    amici_solver.setAbsoluteTolerance(1e-12)
+    amici_solver.setRelativeTolerance(1e-12)
     if amici_model.getName() in (
-            'Smith_BMCSystBiol2013',
-            'Raimundez_PCB2020',
-            'Elowitz_Nature2000',
+        'Smith_BMCSystBiol2013',
+        'Oliveira_NatCommun2021',
     ):
-        amici_solver.setAbsoluteTolerance(1e-12)
-        amici_solver.setRelativeTolerance(1e-12)
+        amici_solver.setAbsoluteTolerance(1e-10)
+        amici_solver.setRelativeTolerance(1e-10)
+    amici_solver.setMaxSteps(int(1e5))
 
     if amici_model.getName() in (
-        'Raimundez_PCB2020', 'Brannmark_JBC2010', 'Isensee_JCB2018'
+        'Brannmark_JBC2010',
     ):
         amici_model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrationOnly)
 
@@ -91,8 +99,6 @@ def test_benchmark_gradient(petab_yaml, scale):
     )
 
     noise_level = 0.1
-    if amici_model.getName() == 'Crauste_CellSystems2017':
-        noise_level = 0.0
 
     np.random.seed(0)
     if scale:
