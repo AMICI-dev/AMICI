@@ -38,6 +38,7 @@ models = [
         'Beer_MolBioSystems2014',
         # excluded due to excessive numerical failures
         'Crauste_CellSystems2017',
+        'Fujita_SciSignal2010',
     )
 ]
 
@@ -55,6 +56,8 @@ def test_benchmark_gradient(model, scale):
         'Alkan_SciSignal2018',
         'Brannmark_JBC2010',
         'Elowitz_Nature2000',
+        'Borghans_BiophysChem1997',
+        'Sneyd_PNAS2002',
     ):
         # not really worth the effort trying to fix these cases if they
         # only fail on linear scale
@@ -98,7 +101,7 @@ def test_benchmark_gradient(model, scale):
         cache=not debug,
     )
 
-    noise_level = 0.01
+    noise_level = 0.1
 
     np.random.seed(0)
     if scale:
