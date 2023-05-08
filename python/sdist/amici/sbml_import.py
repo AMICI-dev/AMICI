@@ -436,11 +436,16 @@ class SbmlImporter:
             sbml.L3P_PARSE_LOG_AS_LN
         )
         self._process_sbml(constant_parameters)
-        if self.symbols.get(SymbolId.EVENT, False):
+
+        if self.symbols.get(SymbolId.EVENT, False) \
+                or any(x['value'].has(sp.Heaviside, sp.Piecewise)
+                       for x in self.symbols[SymbolId.EXPRESSION].values())\
+                or self.flux_vector.has(sp.Heaviside, sp.Piecewise):
             if compute_conservation_laws:
                 logger.warning(
                     'Conservation laws are currently not supported for models '
-                    'with events, and will be turned off.'
+                    'with events, piecewise or Heaviside functions, '
+                    'and will be turned off.'
                 )
             compute_conservation_laws = False
 
