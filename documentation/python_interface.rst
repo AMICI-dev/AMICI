@@ -26,7 +26,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 1116 out of the 1821 (~61%) test cases** from
+Python-AMICI currently **passes 1215 out of the 1821 (~67%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -39,16 +39,25 @@ The following SBML test suite tags are currently supported
 
 * AlgebraicRule
 * AssignmentRule
+* comp
 * Compartment
 * CSymbolAvogadro
 * CSymbolTime
+* Deletion
 * EventNoDelay
+* ExternalModelDefinition
 * FunctionDefinition
 * InitialAssignment
+* ModelDefinition
 * Parameter
+* Port
 * RateRule
 * Reaction
+* ReplacedBy
+* ReplacedElement
+* SBaseRef
 * Species
+* Submodel
 
 **Test tags:**
 
@@ -58,11 +67,14 @@ The following SBML test suite tags are currently supported
 * AssignedVariableStoichiometry
 * BoolNumericSwap
 * BoundaryCondition
+* comp
 * Concentration
 * ConstantSpecies
+* ConversionFactor
 * ConversionFactors
 * DefaultValue
 * EventT0Firing
+* ExtentConversionFactor
 * HasOnlySubstanceUnits
 * InitialValueReassigned
 * L3v2MathML
@@ -75,13 +87,14 @@ The following SBML test suite tags are currently supported
 * NonUnityStoichiometry
 * ReversibleReaction
 * SpeciesReferenceInMath
+* SubmodelOutput
+* TimeConversionFactor
 * UncommonMathML
 * VolumeConcentrationRates
 
-Additional support may be added in the future. However, the following features are 
+Additional support may be added in the future. However, the following features are
 unlikely to be supported:
 
-- any SBML extensions
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
 - `delay()` due to missing :term:`SUNDIALS` solver support
