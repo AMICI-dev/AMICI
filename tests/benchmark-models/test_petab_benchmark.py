@@ -41,7 +41,6 @@ models = [
         'Crauste_CellSystems2017',
         'Fujita_SciSignal2010',
     )
-    and str(petab_path.stem) == 'Okuonghae_ChaosSolitonsFractals2020'
 ]
 
 debug = False
