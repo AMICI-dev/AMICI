@@ -1,13 +1,16 @@
 """Tests for petab_objective.py."""
 
+from functools import partial
 from pathlib import Path
 
 import amici
 import amici.petab_import
 import amici.petab_objective
 import numpy as np
+import pandas as pd
 import petab
 import pytest
+from amici.petab_objective import SLLH
 
 
 # Absolute and relative tolerances for finite difference gradient checks.
@@ -32,6 +35,7 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     amici_solver = amici_model.getSolver()
 
     amici_solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    amici_solver.setMaxSteps(int(1e5))
 
     problem_parameters = dict(zip(
         petab_problem.x_ids,
@@ -41,40 +45,43 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     results = {}
     for scaled_parameters in [True, False]:
         for scaled_gradients in [True, False]:
-            results[(scaled_parameters, scaled_gradients)] = (
-                amici.petab_objective.check_grad_multi_eps(
+            _problem_parameters = problem_parameters.copy()
+            if scaled_parameters:
+                _problem_parameters = \
+                    petab_problem.scale_parameters(problem_parameters)
+            results[(scaled_parameters, scaled_gradients)] = pd.Series(
+                amici.petab_objective.simulate_petab(
                     petab_problem=petab_problem,
                     amici_model=amici_model,
-                    amici_solver=amici_solver,
-                    problem_parameters=(
-                        petab_problem.scale_parameters(problem_parameters)
-                        if scaled_parameters
-                        else problem_parameters
-                    ),
+                    solver=amici_solver,
+                    problem_parameters=_problem_parameters,
                     scaled_parameters=scaled_parameters,
                     scaled_gradients=scaled_gradients,
-                )
+                )[SLLH]
             )
 
-    # Each combination of `scaled_parameters` and `scaled_gradients` passes the
-    # gradient check.
-    for result_id, result in results.items():
-        assert (result.rel_err < ATOL).all(), result_id
-        assert (result.abs_err < RTOL).all(), result_id
+    # Computed previously, is the same as a central difference gradient
+    # check, to >4 s.f.
+    expected_results_scaled = pd.Series({
+        "alpha": -2.112626,
+        "gamma": 21.388535,
+    })
+    expected_results_unscaled = pd.Series({
+        "alpha": -0.458800,
+        "gamma": 3.096308,
+    })
 
-    # `scaled_parameters` does not affect the output gradients, just
-    # `scaled_gradients` in the gradient check (which affects `unscaled_gradients`
-    # in `simulate_petab`)
-    for scaled_gradients in [True, False]:
-        assert np.isclose(
-            results[(True, scaled_gradients)].grad,
-            results[(False, scaled_gradients)].grad,
-        ).all()
+    assert_equal = partial(pd.testing.assert_series_equal, rtol=1e-3)
 
-    # The gradient is transformed as expected.
-    transformation_factor = np.array(petab_problem.x_nominal) * np.log(10)
-    for scaled_parameters in [True, False]:
-        assert np.isclose(
-            results[(scaled_parameters, True)].grad,
-            results[(scaled_parameters, False)].grad * transformation_factor,
-        ).all()
+    # `scaled_gradients` affects gradients, `scaled_parameters` does not.
+    assert_equal(results[(True, True)], expected_results_scaled)
+    assert_equal(results[(False, True)], expected_results_scaled)
+
+    assert_equal(results[(True, False)], expected_results_unscaled)
+    assert_equal(results[(False, False)], expected_results_unscaled)
+
+    # The test gradients are scaled correctly.
+    assert_equal(
+        results[(True, True)],
+        results[(True, False)] * pd.Series(problem_parameters) * np.log(10),
+    )
