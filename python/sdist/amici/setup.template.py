@@ -71,7 +71,7 @@ setup(
     packages=find_namespace_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     package_data={},
     zip_safe=False,
     classifiers=CLASSIFIERS,
