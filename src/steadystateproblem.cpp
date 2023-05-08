@@ -707,7 +707,8 @@ void SteadystateProblem::runSteadystateSimulation(
             if (wrms_ < conv_thresh && check_sensi_conv_ &&
                 sensitivityFlag == SensitivityMethod::forward) {
                 updateSensiSimulation(solver);
-                wrms_ = getWrmsFSA(model);
+                if (getWrmsFSA(model) < conv_thresh)
+                    break; // converged
             }
         }
 
