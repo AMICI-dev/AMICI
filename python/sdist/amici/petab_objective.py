@@ -61,8 +61,8 @@ def simulate_petab(
     """Simulate PEtab model.
 
     .. note::
-        Regardless of `scaled_parameters`, sensitivities are returned on the
-        scales defined in the PEtab parameters table.
+        Regardless of `scaled_parameters`, unscaled sensitivities are returned,
+        unless `scaled_gradients=True`.
 
     :param petab_problem:
         PEtab problem to work on.
