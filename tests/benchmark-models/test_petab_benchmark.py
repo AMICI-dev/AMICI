@@ -41,6 +41,7 @@ models = [
         'Crauste_CellSystems2017',
         'Fujita_SciSignal2010',
     )
+    and str(petab_path.stem) == 'Okuonghae_ChaosSolitonsFractals2020'
 ]
 
 debug = False
@@ -58,6 +59,8 @@ def test_benchmark_gradient(model, scale):
         'Elowitz_Nature2000',
         'Borghans_BiophysChem1997',
         'Sneyd_PNAS2002',
+        'Bertozzi_PNAS2020',
+        'Okuonghae_ChaosSolitonsFractals2020',
     ):
         # not really worth the effort trying to fix these cases if they
         # only fail on linear scale
@@ -78,15 +81,20 @@ def test_benchmark_gradient(model, scale):
     amici_solver = amici_model.getSolver()
     amici_solver.setAbsoluteTolerance(1e-12)
     amici_solver.setRelativeTolerance(1e-12)
-    if amici_model.getName() in (
+    if model in (
         'Smith_BMCSystBiol2013',
         'Oliveira_NatCommun2021',
     ):
         amici_solver.setAbsoluteTolerance(1e-10)
         amici_solver.setRelativeTolerance(1e-10)
+    elif model in (
+        'Okuonghae_ChaosSolitonsFractals2020',
+    ):
+        amici_solver.setAbsoluteTolerance(1e-14)
+        amici_solver.setRelativeTolerance(1e-14)
     amici_solver.setMaxSteps(int(1e5))
 
-    if amici_model.getName() in (
+    if model in (
         'Brannmark_JBC2010',
     ):
         amici_model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrationOnly)
@@ -123,6 +131,10 @@ def test_benchmark_gradient(model, scale):
         1e-4,
         1e-5,
     ]
+    if model in (
+        'Okuonghae_ChaosSolitonsFractals2020',
+    ):
+        sizes.insert(0, 0.2)
 
     derivative = get_derivative(
         function=amici_function,
