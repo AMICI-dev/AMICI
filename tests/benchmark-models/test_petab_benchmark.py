@@ -23,6 +23,7 @@ ATOL: float = 1e-3
 RTOL: float = 1e-2
 
 benchmark_path = Path(__file__).parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
+# reuse compiled models from test_benchmark_collection.sh
 benchmark_outdir = Path(__file__).parent.parent.parent / "test_bmc"
 models = [
     str(petab_path.stem)
@@ -45,7 +46,7 @@ models = [
 
 debug = False
 if debug:
-    debug_path = Path('../../python/tests/debug')
+    debug_path = Path(__file__).parent / "debug"
     debug_path.mkdir(exist_ok=True, parents=True)
 
 

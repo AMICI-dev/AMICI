@@ -222,8 +222,7 @@ def aggregate_sllh(
     :param rdatas:
         Simulation results.
     :param parameter_mapping:
-        PEtab parameter mapping to condition-specific
-            simulation parameters
+        PEtab parameter mapping to condition-specific simulation parameters.
     :param edatas:
         Experimental data used for simulation.
     :param petab_scale:

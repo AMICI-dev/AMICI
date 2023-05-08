@@ -60,7 +60,7 @@ def test_simulate_petab_sensitivities(lotka_volterra):
     # gradient check.
     for result_id, result in results.items():
         assert (result.rel_err < ATOL).all(), result_id
-        assert (result.rel_err < RTOL).all(), result_id
+        assert (result.abs_err < RTOL).all(), result_id
 
     # `scaled_parameters` does not affect the output gradients, just
     # `scaled_gradients` in the gradient check (which affects `unscaled_gradients`
