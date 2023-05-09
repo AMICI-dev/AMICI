@@ -717,7 +717,7 @@ import_model = import_model_sbml
 
 def get_observation_model(
         observable_df: pd.DataFrame,
-) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str],
+) -> Tuple[Dict[str, Dict[str, str]], Dict[str, Dict[str, Union[str, list]]],
            Dict[str, Union[str, float]]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
@@ -765,7 +765,8 @@ def get_observation_model(
 
 
 def petab_noise_distributions_to_amici(observable_df: pd.DataFrame
-                                       ) -> Dict[str, str]:
+                                       ) -> Dict[str,
+                                                 Dict[str, Union[str, list]]]:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
@@ -791,7 +792,13 @@ def petab_noise_distributions_to_amici(observable_df: pd.DataFrame
             amici_val += observable[NOISE_DISTRIBUTION]
         else:
             amici_val += 'normal'
-        amici_distrs[observable.name] = amici_val
+        amici_distrs[observable.name] = {'type': amici_val, 'parameters': []}
+
+        DISTRIBUTION_PARAMETERS = 'distributionParameters'  # TODO
+        if DISTRIBUTION_PARAMETERS in observable \
+                and str(observable[DISTRIBUTION_PARAMETERS]):
+            amici_distrs[observable.name]['parameters'] = \
+                str(observable[DISTRIBUTION_PARAMETERS]).split(';')
 
     return amici_distrs
 
