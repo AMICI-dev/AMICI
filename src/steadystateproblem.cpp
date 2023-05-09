@@ -665,9 +665,6 @@ void SteadystateProblem::runSteadystateSimulation(
     if (backward)
         sensitivityFlag = SensitivityMethod::adjoint;
 
-    /* If run after Newton's method checks again if it converged */
-    wrms_ = getWrms(model, sensitivityFlag);
-
     int &sim_steps = backward ? numstepsB_ : numsteps_.at(1);
 
     int convergence_check_frequency = 1;
@@ -676,10 +673,30 @@ void SteadystateProblem::runSteadystateSimulation(
         convergence_check_frequency = 25;
 
     while (true) {
+        if (sim_steps % convergence_check_frequency == 0) {
+            // Check for convergence (already before simulation, since we might
+            // start in steady state)
+            wrms_ = getWrms(model, sensitivityFlag);
+            if (wrms_ < conv_thresh) {
+                if(check_sensi_conv_
+                    && sensitivityFlag == SensitivityMethod::forward) {
+                    updateSensiSimulation(solver);
+                    // getWrms needs to be called before getWrmsFSA
+                    // such that the linear system is prepared for newton-type
+                    // convergence check
+                    if (getWrmsFSA(model) < conv_thresh)
+                        break; // converged
+                } else {
+                    break; // converged
+                }
+            }
+        }
+
         /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
             throw IntegrationFailure(AMICI_TOO_MUCH_WORK, state_.t);
         }
+
         /* increase counter */
         sim_steps++;
         /* One step of ODE integration
@@ -698,21 +715,6 @@ void SteadystateProblem::runSteadystateSimulation(
                                   xQ_);
             flagUpdatedState();
         }
-
-        /* Check for convergence */
-        if (sim_steps % convergence_check_frequency == 0) {
-            wrms_ = getWrms(model, sensitivityFlag);
-            /* getWrms needs to be called before getWrmsFSA such that the linear
-             system is prepared for newton type convergence check */
-            if (wrms_ < conv_thresh && check_sensi_conv_ &&
-                sensitivityFlag == SensitivityMethod::forward) {
-                updateSensiSimulation(solver);
-                wrms_ = getWrmsFSA(model);
-            }
-        }
-
-        if (wrms_ < conv_thresh)
-            break; // converged
     }
 
     // if check_sensi_conv_ is deactivated, we still have to update sensis
