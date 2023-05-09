@@ -846,14 +846,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * simulation.
      * @param mode Steadystate computation mode
      */
-    void setSteadyStateMode(SteadyStateMode mode);
+    void setSteadyStateComputationMode(SteadyStateComputationMode mode);
 
     /**
      * @brief Gets the mode how steady state is computed in the steadystate
      * simulation.
      * @return Mode
      */
-    SteadyStateMode getSteadyStateMode() const;
+    SteadyStateComputationMode getSteadyStateComputationMode() const;
 
     /**
      * @brief Set the mode how sensitivities are computed in the steadystate
