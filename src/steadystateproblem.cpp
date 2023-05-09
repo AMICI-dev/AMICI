@@ -110,7 +110,7 @@ void SteadystateProblem::findSteadyState(
     chosen for sensitivity computation it is enforced that steady state is
     computed only by numerical integration as well. */
     bool turnOffNewton = model.getSteadyStateComputationMode() ==
-        SteadyStateComputationMode::integrationOnly && 
+        SteadyStateComputationMode::integrationOnly ||
         solver.getNewtonMaxSteps() == 0 || (
         model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly &&
