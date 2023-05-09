@@ -665,9 +665,6 @@ void SteadystateProblem::runSteadystateSimulation(
     if (backward)
         sensitivityFlag = SensitivityMethod::adjoint;
 
-    /* If run after Newton's method checks again if it converged */
-    wrms_ = getWrms(model, sensitivityFlag);
-
     int &sim_steps = backward ? numstepsB_ : numsteps_.at(1);
 
     int convergence_check_frequency = 1;
@@ -676,7 +673,8 @@ void SteadystateProblem::runSteadystateSimulation(
         convergence_check_frequency = 25;
 
     while (true) {
-        /* Check for convergence */
+        // Check for convergence (already before simulation, since we might
+        // start in steady state)
         if (sim_steps % convergence_check_frequency == 0) {
             wrms_ = getWrms(model, sensitivityFlag);
             /* getWrms needs to be called before getWrmsFSA such that the linear
