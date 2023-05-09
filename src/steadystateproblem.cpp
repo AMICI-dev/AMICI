@@ -673,19 +673,22 @@ void SteadystateProblem::runSteadystateSimulation(
         convergence_check_frequency = 25;
 
     while (true) {
-        // Check for convergence (already before simulation, since we might
-        // start in steady state)
         if (sim_steps % convergence_check_frequency == 0) {
+            // Check for convergence (already before simulation, since we might
+            // start in steady state)
             wrms_ = getWrms(model, sensitivityFlag);
-            /* getWrms needs to be called before getWrmsFSA such that the linear
-             system is prepared for newton type convergence check */
-            if (wrms_ < conv_thresh && check_sensi_conv_ &&
-                sensitivityFlag == SensitivityMethod::forward) {
-                updateSensiSimulation(solver);
-                if (getWrmsFSA(model) < conv_thresh)
+            if (wrms_ < conv_thresh) {
+                if(check_sensi_conv_
+                    && sensitivityFlag == SensitivityMethod::forward) {
+                    updateSensiSimulation(solver);
+                    // getWrms needs to be called before getWrmsFSA
+                    // such that the linear system is prepared for newton-type
+                    // convergence check
+                    if (getWrmsFSA(model) < conv_thresh)
+                        break; // converged
+                } else {
                     break; // converged
-            } else if (wrms_ < conv_thresh) {
-                break; // converged
+                }
             }
         }
 
