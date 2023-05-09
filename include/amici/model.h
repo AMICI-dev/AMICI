@@ -1921,6 +1921,9 @@ class Model : public AbstractModel, public ModelDimensions {
     /** maximal number of events to track */
     int nmaxevent_ {10};
 
+    /** method for steady-state computation */
+    SteadyStateComputationMode steadystate_computation_mode_ {SteadyStateComputationMode::integrateIfNewtonFails};
+
     /**
      * flag indicating whether steadystate sensitivities are to be computed
      * via FSA when steadyStateSimulation is used
