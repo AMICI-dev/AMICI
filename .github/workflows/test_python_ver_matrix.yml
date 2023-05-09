@@ -20,11 +20,12 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
+      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
         experimental: [false]
 
     steps:

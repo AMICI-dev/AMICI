@@ -252,6 +252,12 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# autodoc
+autodoc_default_options = {
+    'special-members': '__init__',
+    'inherited-members': True,
+}
+
 # sphinx-autodoc-typehints
 typehints_fully_qualified = True
 typehints_document_rtype = True
@@ -301,7 +307,7 @@ mtocpp_filter = os.path.join(amici_dir, 'matlab', 'mtoc',
 exhale_projects_args = {
     "AMICI_CPP": {
         "exhaleDoxygenStdin": "\n".join([
-            "INPUT = ../include",
+            "INPUT = ../include/amici",
             "BUILTIN_STL_SUPPORT    = YES",
             "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
             "EXCLUDE += ../include/amici/interface_matlab.h",

@@ -53,8 +53,8 @@ Crauste_CellSystems2017:
 Elowitz_Nature2000:
   llh: 63.20279991419332
   t_sim: 0.005
-  t_fwd: 0.1
-  t_adj: 0.1
+  t_fwd: 0.11
+  t_adj: 0.11
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10))) / 2
 
 Fiedler_BMC2016:
@@ -95,6 +95,13 @@ Sneyd_PNAS2002:
   t_fwd: 0.1
   t_adj: 0.5
   note: benchmark collection reference ignores factor 1/2
+
+Smith_BMCSystBiol2013:
+  llh: -888198.436541014
+  t_sim: 1.0
+  t_fwd: 50.0
+  t_adj: 5.0
+  note: not part of original benchmark collection
 
 Weber_BMC2015:
   llh: -296.2017922646865

@@ -71,23 +71,29 @@ struct ModelStateDerived {
      */
     explicit ModelStateDerived(ModelDimensions const& dim);
 
-    /** Sparse Jacobian (dimension: `amici::Model::nnz`) */
+    /** Sparse Jacobian (dimension: `nx_solver` x `nx_solver`, nnz:  `amici::Model::nnz`) */
     SUNMatrixWrapper J_;
 
-    /** Sparse Backwards Jacobian (dimension: `amici::Model::nnz`) */
+    /** Sparse Backwards Jacobian (dimension: `nx_solver` x `nx_solver`, nnz:`amici::Model::nnz`) */
     SUNMatrixWrapper JB_;
 
-    /** Sparse dxdotdw temporary storage (dimension: `ndxdotdw`) */
+    /** Sparse dxdotdw temporary storage (dimension: `nx_solver` x `nw`, nnz:  `ndxdotdw`) */
     SUNMatrixWrapper dxdotdw_;
 
-    /** Sparse dwdx temporary storage (dimension: `ndwdx`) */
+    /** Sparse dwdx temporary storage (dimension: `nw` x `nx_solver`, nnz:`ndwdx`) */
     SUNMatrixWrapper dwdx_;
 
-    /** Sparse dwdp temporary storage (dimension: `ndwdp`) */
+    /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
     SUNMatrixWrapper dwdp_;
 
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     SUNMatrixWrapper M_;
+    
+    /** Sparse Mass matrix (dimension: `nx_solver` x `nx_solver`, nnz: `sum(amici::Model::idlist)`) */
+    SUNMatrixWrapper MSparse_;
+    
+    /** JSparse intermediate matrix (dimension: `nx_solver` x `nx_solver`, nnz: dynamic) */
+    SUNMatrixWrapper dfdx_;
 
     /**
      * Temporary storage of `dxdotdp_full` data across functions (Python only)
@@ -244,6 +250,11 @@ struct ModelStateDerived {
      * (dimension: `nx_solver` x `nplist`, row-major)
      */
     std::vector<realtype> sx_;
+    
+    /** temporary storage for sy,
+     * (dimension: `ny` x `nplist`, row-major)
+     */
+    std::vector<realtype> sy_;
 
     /** temporary storage for `x_rdata` (dimension: `nx_rdata`) */
     std::vector<realtype> x_rdata_;

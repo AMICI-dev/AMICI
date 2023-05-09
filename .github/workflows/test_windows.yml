@@ -1,7 +1,7 @@
 name: Windows Tests
 on:
   push:
-  pull_request:
+  merge_group:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
@@ -23,7 +23,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.8" ]
+        python-version: [ "3.9" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}

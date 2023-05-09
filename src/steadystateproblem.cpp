@@ -9,7 +9,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <ctime>
 #include <cvodes/cvodes.h>
 #include <memory>
 #include <sundials/sundials_dense.h>
@@ -67,9 +66,8 @@ void SteadystateProblem::workSteadyStateProblem(
     initializeForwardProblem(it, solver, model);
 
     /* Compute steady state, track computation time */
-    clock_t starttime = clock();
+    CpuTimer cpu_timer;
     findSteadyState(solver, model, it);
-    cpu_time_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
     if (getSensitivityFlag(model, solver, it,
@@ -84,6 +82,7 @@ void SteadystateProblem::workSteadyStateProblem(
                 "to unsuccessful factorization of RHS Jacobian");
         }
     }
+    cpu_time_ = cpu_timer.elapsed_milliseconds();
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(
@@ -94,23 +93,23 @@ void SteadystateProblem::workSteadyStateBackwardProblem(
         return;
 
     /* compute quadratures, track computation time */
-    clock_t starttime = clock();
+    CpuTimer cpu_timer;
     computeSteadyStateQuadrature(solver, model);
-    cpu_timeB_ = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    cpu_timeB_ = cpu_timer.elapsed_milliseconds();
 }
 
 void SteadystateProblem::findSteadyState(
     Solver const& solver, Model& model, int it
 ) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    /* Turn off Newton's method if newton_maxsteps is set to 0 or 
-    if 'integrationOnly' approach is chosen for sensitivity computation 
-    in combination with forward sensitivities approach. The latter is necessary 
-    as numerical integration of the model ODEs and corresponding 
-    forward sensitivities ODEs is coupled. If 'integrationOnly' approach is 
-    chosen for sensitivity computation it is enforced that steady state is 
+    /* Turn off Newton's method if newton_maxsteps is set to 0 or
+    if 'integrationOnly' approach is chosen for sensitivity computation
+    in combination with forward sensitivities approach. The latter is necessary
+    as numerical integration of the model ODEs and corresponding
+    forward sensitivities ODEs is coupled. If 'integrationOnly' approach is
+    chosen for sensitivity computation it is enforced that steady state is
     computed only by numerical integration as well. */
-    bool turnOffNewton = solver.getNewtonMaxSteps() == 0 || ( 
+    bool turnOffNewton = solver.getNewtonMaxSteps() == 0 || (
         model.getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::integrationOnly &&
         ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
@@ -666,9 +665,6 @@ void SteadystateProblem::runSteadystateSimulation(
     if (backward)
         sensitivityFlag = SensitivityMethod::adjoint;
 
-    /* If run after Newton's method checks again if it converged */
-    wrms_ = getWrms(model, sensitivityFlag);
-
     int &sim_steps = backward ? numstepsB_ : numsteps_.at(1);
 
     int convergence_check_frequency = 1;
@@ -677,10 +673,30 @@ void SteadystateProblem::runSteadystateSimulation(
         convergence_check_frequency = 25;
 
     while (true) {
+        if (sim_steps % convergence_check_frequency == 0) {
+            // Check for convergence (already before simulation, since we might
+            // start in steady state)
+            wrms_ = getWrms(model, sensitivityFlag);
+            if (wrms_ < conv_thresh) {
+                if(check_sensi_conv_
+                    && sensitivityFlag == SensitivityMethod::forward) {
+                    updateSensiSimulation(solver);
+                    // getWrms needs to be called before getWrmsFSA
+                    // such that the linear system is prepared for newton-type
+                    // convergence check
+                    if (getWrmsFSA(model) < conv_thresh)
+                        break; // converged
+                } else {
+                    break; // converged
+                }
+            }
+        }
+
         /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
             throw IntegrationFailure(AMICI_TOO_MUCH_WORK, state_.t);
         }
+
         /* increase counter */
         sim_steps++;
         /* One step of ODE integration
@@ -699,21 +715,6 @@ void SteadystateProblem::runSteadystateSimulation(
                                   xQ_);
             flagUpdatedState();
         }
-
-        /* Check for convergence */
-        if (sim_steps % convergence_check_frequency == 0) {
-            wrms_ = getWrms(model, sensitivityFlag);
-            /* getWrms needs to be called before getWrmsFSA such that the linear
-             system is prepared for newton type convergence check */
-            if (wrms_ < conv_thresh && check_sensi_conv_ &&
-                sensitivityFlag == SensitivityMethod::forward) {
-                updateSensiSimulation(solver);
-                wrms_ = getWrmsFSA(model);
-            }
-        }
-
-        if (wrms_ < conv_thresh)
-            break; // converged
     }
 
     // if check_sensi_conv_ is deactivated, we still have to update sensis
@@ -726,7 +727,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 ) const {
     /* Create new CVode solver object */
     auto sim_solver = std::unique_ptr<Solver>(solver.clone());
-    
+
     sim_solver->logger = solver.logger;
 
     switch (solver.getLinearSolver()) {

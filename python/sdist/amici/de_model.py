@@ -1,5 +1,5 @@
-"""Objects for AMICI's internal ODE model representation"""
-
+"""Objects for AMICI's internal differential equation model representation"""
+import abc
 
 import sympy as sp
 import numbers
@@ -13,10 +13,12 @@ from .import_utils import ObservableTransformation, \
     RESERVED_SYMBOLS
 from .import_utils import cast_to_sym
 
+
 __all__ = [
     'ConservationLaw', 'Constant', 'Event', 'Expression', 'LogLikelihoodY',
     'LogLikelihoodZ', 'LogLikelihoodRZ', 'ModelQuantity', 'Observable',
-    'Parameter', 'SigmaY', 'SigmaZ', 'State', 'EventObservable'
+    'Parameter', 'SigmaY', 'SigmaZ', 'DifferentialState', 'EventObservable',
+    'AlgebraicState', 'AlgebraicEquation', 'State'
 ]
 
 
@@ -164,7 +166,109 @@ class ConservationLaw(ModelQuantity):
         return self._state_expr
 
 
+class AlgebraicEquation(ModelQuantity):
+    """
+    An AlgebraicEquation defines an algebraic equation.
+    """
+    def __init__(self, identifier: str, value: sp.Expr):
+        """
+        Create a new AlgebraicEquation instance.
+
+        :param value:
+            formula of the algebraic equation, solution is given by
+            ``formula == 0``
+        """
+        super(AlgebraicEquation, self).__init__(
+            sp.Symbol(identifier), identifier, value
+        )
+
+    def get_free_symbols(self):
+        return self._value.free_symbols
+
+    def __repr__(self):
+        return str(self._value)
+
+
 class State(ModelQuantity):
+    """
+    Base class for differential and algebraic model states
+    """
+    _conservation_law: Optional[ConservationLaw] = None
+
+    def get_x_rdata(self):
+        """
+        Returns the expression that allows computation of x_rdata for this
+        state, accounting for conservation laws.
+
+        :return: x_rdata expression
+        """
+        if self._conservation_law is None:
+            return self.get_id()
+        else:
+            return self._conservation_law.get_x_rdata()
+
+    def get_dx_rdata_dx_solver(self, state_id):
+        """
+        Returns the expression that allows computation of
+        ``dx_rdata_dx_solver`` for this state, accounting for conservation
+        laws.
+
+        :return: dx_rdata_dx_solver expression
+        """
+        if self._conservation_law is None:
+            return sp.Integer(self._identifier == state_id)
+        else:
+            return -self._conservation_law.get_ncoeff(state_id)
+
+    @abc.abstractmethod
+    def has_conservation_law(self):
+        """
+        Checks whether this state has a conservation law assigned.
+
+        :return: True if assigned, False otherwise
+        """
+        ...
+
+
+class AlgebraicState(State):
+    """
+    An AlgebraicState defines an entity that is algebraically determined
+    """
+
+    def __init__(self,
+                 identifier: sp.Symbol,
+                 name: str,
+                 init: sp.Expr):
+        """
+        Create a new AlgebraicState instance.
+
+        :param identifier:
+            unique identifier of the AlgebraicState
+
+        :param name:
+            individual name of the AlgebraicState (does not need to be unique)
+
+        :param init:
+            initial value of the AlgebraicState
+        """
+        super(AlgebraicState, self).__init__(identifier, name, init)
+
+    def has_conservation_law(self):
+        """
+        Checks whether this state has a conservation law assigned.
+
+        :return: True if assigned, False otherwise
+        """
+        return False
+
+    def get_free_symbols(self):
+        return self._value.free_symbols
+
+    def get_x_rdata(self):
+        return self._identifier
+
+
+class DifferentialState(State):
     """
     A State variable defines an entity that evolves with time according to
     the provided time derivative, abbreviated by ``x``.
@@ -198,7 +302,7 @@ class State(ModelQuantity):
         :param dt:
             time derivative
         """
-        super(State, self).__init__(identifier, name, init)
+        super(DifferentialState, self).__init__(identifier, name, init)
         self._dt = cast_to_sym(dt, 'dt')
         self._conservation_law: Union[ConservationLaw, None] = None
 
@@ -254,31 +358,6 @@ class State(ModelQuantity):
         :return: True if assigned, False otherwise
         """
         return self._conservation_law is not None
-
-    def get_x_rdata(self):
-        """
-        Returns the expression that allows computation of x_rdata for this
-        state, accounting for conservation laws.
-
-        :return: x_rdata expression
-        """
-        if self._conservation_law is None:
-            return self.get_id()
-        else:
-            return self._conservation_law.get_x_rdata()
-
-    def get_dx_rdata_dx_solver(self, state_id):
-        """
-        Returns the expression that allows computation of
-        ``dx_rdata_dx_solver`` for this state, accounting for conservation
-        laws.
-
-        :return: dx_rdata_dx_solver expression
-        """
-        if self._conservation_law is None:
-            return sp.Integer(self._identifier == state_id)
-        else:
-            return -self._conservation_law.get_ncoeff(state_id)
 
 
 class Observable(ModelQuantity):
@@ -565,7 +644,7 @@ class Event(ModelQuantity):
     """
     An Event defines either a SBML event or a root of the argument of a
     Heaviside function. The Heaviside functions will be tracked via the
-    vector ``h`` during simulation and are needed to inform the ODE solver
+    vector ``h`` during simulation and are needed to inform the solver
     about a discontinuity in either the right-hand side or the states
     themselves, causing a reinitialization of the solver.
     """

@@ -1,5 +1,5 @@
 name: Deploy Branch
-on: [push, pull_request, workflow_dispatch]
+on: [push, merge_group, workflow_dispatch]
 
 jobs:
   sdist:
@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}

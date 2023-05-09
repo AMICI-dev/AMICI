@@ -56,7 +56,7 @@ process described below:
    -  Run ``scripts/run-doxygen.sh`` to check completeness of your
       documentation
 
--  Make sure your code is compatible with C++14, ``gcc`` and ``clang``
+-  Make sure your code is compatible with C++17, ``gcc`` and ``clang``
    (our CI pipeline will do this for you)
 
 -  When adding new functionality, please also provide test cases (see
@@ -99,7 +99,8 @@ General
 Python
 ^^^^^^
 
--  We want to be compatible with Python 3.8
+-  In terms of Python compatibility, we follow numpy's
+   `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__.
 
 -  For the Python code we want to follow
    `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__. Although this

@@ -2,10 +2,13 @@
 
 import itertools
 
-import amici
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
+
+import amici
 from test_pysb import get_data
+
 
 @pytest.fixture
 def preeq_fixture(pysb_example_presimulation_module):
@@ -115,11 +118,12 @@ def test_manual_preequilibration(preeq_fixture):
         assert rdata_sim.status == amici.AMICI_SUCCESS
 
         for variable in ['x', 'sx']:
-            assert np.isclose(
+            assert_allclose(
                 rdata_auto[variable],
                 rdata_sim[variable],
-                1e-6, 1e-6
-            ).all(), dict(pscale=pscale, plist=plist, variable=variable)
+                atol=1e-6, rtol=1e-6,
+                err_msg=str(dict(pscale=pscale, plist=plist, variable=variable))
+            )
 
 
 def test_parameter_reordering(preeq_fixture):
@@ -172,11 +176,12 @@ def test_data_replicates(preeq_fixture):
     rdata_double = amici.runAmiciSimulation(model, solver, edata)
 
     for variable in ['llh', 'sllh']:
-        assert np.isclose(
-            2*rdata_single[variable],
+        assert_allclose(
+            2 * rdata_single[variable],
             rdata_double[variable],
-            1e-6, 1e-6
-        ).all(), dict(variable=variable, sensi_meth=sensi_meth)
+            atol=1e-6, rtol=1e-6,
+            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth))
+        )
 
 
 def test_parameter_in_expdata(preeq_fixture):

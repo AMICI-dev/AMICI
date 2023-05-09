@@ -8,6 +8,8 @@ on:
   pull_request:
     paths:
       - container/Dockerfile
+      # ensure all relevant files are still included in sdist
+      - python/sdist/MANIFEST.in
   workflow_dispatch:
 
 jobs:
@@ -19,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}

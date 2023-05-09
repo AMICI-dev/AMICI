@@ -110,7 +110,7 @@ if not _imported_from_setup():
 
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
-    from .ode_export import ODEModel, ODEExporter
+    from .de_export import DEModel, DEExporter
 
     from typing import Protocol, runtime_checkable
 

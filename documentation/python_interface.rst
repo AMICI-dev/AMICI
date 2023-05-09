@@ -26,7 +26,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 1030 out of the 1821 (~57%) test cases** from
+Python-AMICI currently **passes 1215 out of the 1821 (~67%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -37,17 +37,27 @@ The following SBML test suite tags are currently supported
 
 **Component tags:**
 
+* AlgebraicRule
 * AssignmentRule
+* comp
 * Compartment
 * CSymbolAvogadro
 * CSymbolTime
+* Deletion
 * EventNoDelay
+* ExternalModelDefinition
 * FunctionDefinition
 * InitialAssignment
+* ModelDefinition
 * Parameter
+* Port
 * RateRule
 * Reaction
+* ReplacedBy
+* ReplacedElement
+* SBaseRef
 * Species
+* Submodel
 
 **Test tags:**
 
@@ -57,11 +67,14 @@ The following SBML test suite tags are currently supported
 * AssignedVariableStoichiometry
 * BoolNumericSwap
 * BoundaryCondition
+* comp
 * Concentration
 * ConstantSpecies
+* ConversionFactor
 * ConversionFactors
 * DefaultValue
 * EventT0Firing
+* ExtentConversionFactor
 * HasOnlySubstanceUnits
 * InitialValueReassigned
 * L3v2MathML
@@ -74,18 +87,14 @@ The following SBML test suite tags are currently supported
 * NonUnityStoichiometry
 * ReversibleReaction
 * SpeciesReferenceInMath
+* SubmodelOutput
+* TimeConversionFactor
 * UncommonMathML
 * VolumeConcentrationRates
 
-In addition, we currently plan to add support for the following features
-(see corresponding `issues <https://github.com/AMICI-dev/AMICI/milestone/14>`_
-for details and progress):
+Additional support may be added in the future. However, the following features are
+unlikely to be supported:
 
-- Algebraic rules (`#760 <https://github.com/AMICI-dev/AMICI/issues/760>`_)
-
-However, the following features are unlikely to be supported:
-
-- any SBML extensions
 - `factorial()`, `ceil()`, `floor()`, due to incompatibility with
   symbolic sensitivity computations
 - `delay()` due to missing :term:`SUNDIALS` solver support

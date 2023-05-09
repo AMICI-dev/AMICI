@@ -21,8 +21,8 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     % folder
     if(isempty(funs))
         ls = dir(fullfile(modelSourceFolder, '*.cpp'));
-        % wrapfunctions is handled separately
         ls = {ls.name};
+        % wrapfunctions is handled separately
         ls = ls(cellfun(@(x) ~strcmp(x, "wrapfunctions.cpp"), ls));
         % extract funs from filename (strip of modelname_ and .cpp
         funs = cellfun(@(x) x(1:(length(x)-4)), ls, 'UniformOutput', false);
@@ -34,9 +34,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     % compile flags
-    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++14'''];
+    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++17'''];
     if(debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++14 -Wno-unused-function -Wno-unused-variable'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++17 -Wno-unused-function -Wno-unused-variable'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
