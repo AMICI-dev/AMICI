@@ -27,6 +27,7 @@ from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
 from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from petab.parameters import get_valid_parameters_for_parameter_table
+from sympy.abc import _clash
 
 from .petab_util import get_states_in_condition_table, PREEQ_INDICATOR_ID
 
@@ -598,7 +599,7 @@ def import_model_sbml(
     output_parameters = OrderedDict()
     for formula in formulas:
         # we want reproducible parameter ordering upon repeated import
-        free_syms = sorted(sp.sympify(formula).free_symbols,
+        free_syms = sorted(sp.sympify(formula, locals=_clash).free_symbols,
                            key=lambda symbol: symbol.name)
         for free_sym in free_syms:
             sym = str(free_sym)
@@ -751,11 +752,12 @@ def get_observation_model(
     #  cannot handle states in sigma expressions. Therefore, where possible,
     #  replace species occurring in error model definition by observableIds.
     replacements = {
-        sp.sympify(observable['formula']): sp.Symbol(observable_id)
+        sp.sympify(observable['formula'], locals=_clash):
+            sp.Symbol(observable_id)
         for observable_id, observable in observables.items()
     }
     for observable_id, formula in sigmas.items():
-        repl = sp.sympify(formula).subs(replacements)
+        repl = sp.sympify(formula, locals=_clash).subs(replacements)
         sigmas[observable_id] = str(repl)
 
     noise_distrs = petab_noise_distributions_to_amici(observable_df)

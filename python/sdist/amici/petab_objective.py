@@ -19,15 +19,19 @@ import petab
 import sympy as sp
 from petab.C import *  # noqa: F403
 from petab.models import MODEL_TYPE_SBML, MODEL_TYPE_PYSB
+from sympy.abc import _clash
 
 import amici
 from amici.sbml_import import get_species_initial
 from . import AmiciExpData, AmiciModel
 from .logging import get_logger, log_execution_time
-from .parameter_mapping import (ParameterMapping, ParameterMappingForCondition,
-                                fill_in_parameters)
-from .petab_import import PREEQ_INDICATOR_ID
+from .parameter_mapping import (
+    fill_in_parameters,
+    ParameterMappingForCondition,
+    ParameterMapping,
+)
 from .petab_util import get_states_in_condition_table
+from .petab_import import PREEQ_INDICATOR_ID, element_is_state
 
 try:
     import pysb
@@ -61,8 +65,13 @@ def simulate_petab(
         log_level: int = logging.WARNING,
         num_threads: int = 1,
         failfast: bool = True,
+        scaled_gradients: bool = False,
 ) -> Dict[str, Any]:
     """Simulate PEtab model.
+
+    .. note::
+        Regardless of `scaled_parameters`, unscaled sensitivities are returned,
+        unless `scaled_gradients=True`.
 
     :param petab_problem:
         PEtab problem to work on.
@@ -95,6 +104,9 @@ def simulate_petab(
     :param failfast:
         Returns as soon as an integration failure is encountered, skipping
         any remaining simulations.
+    :param scaled_gradients:
+        Whether to compute gradients on parameter scale (``True``) or not
+        (``False``).
 
     :return:
         Dictionary of
@@ -112,15 +124,13 @@ def simulate_petab(
     if solver is None:
         solver = amici_model.getSolver()
 
-    # Get parameters
-    if problem_parameters is None:
-        # Use PEtab nominal values as default
-        problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
-                              petab_problem.parameter_df.itertuples()}
-        if scaled_parameters:
-            raise NotImplementedError(
-                "scaled_parameters=True in combination with "
-                "problem_parameters=None is currently not supported.")
+    # Switch to scaled parameters.
+    problem_parameters = _default_scaled_parameters(
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        scaled_parameters=scaled_parameters,
+    )
+    scaled_parameters = True
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
@@ -164,6 +174,29 @@ def simulate_petab(
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
+    # Compute total sllh
+    sllh = None
+    if solver.getSensitivityOrder() != amici.SensitivityOrder.none:
+        sllh = aggregate_sllh(
+            amici_model=amici_model,
+            rdatas=rdatas,
+            parameter_mapping=parameter_mapping,
+            petab_scale=scaled_parameters,
+            petab_problem=petab_problem,
+            edatas=edatas,
+        )
+        if not scaled_gradients and sllh is not None:
+            sllh = {
+                parameter_id: rescale_sensitivity(
+                    sensitivity=sensitivity,
+                    parameter_value=problem_parameters[parameter_id],
+                    old_scale=petab_problem.parameter_df.loc[
+                        parameter_id, PARAMETER_SCALE
+                    ],
+                    new_scale=LIN,
+                )
+                for parameter_id, sensitivity in sllh.items()
+            }
 
     # Log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -176,9 +209,156 @@ def simulate_petab(
 
     return {
         LLH: llh,
+        SLLH: sllh,
         RDATAS: rdatas,
         EDATAS: edatas,
     }
+
+
+def aggregate_sllh(
+        amici_model: AmiciModel,
+        rdatas: Sequence[amici.ReturnDataView],
+        parameter_mapping: Optional[ParameterMapping],
+        edatas: List[AmiciExpData],
+        petab_scale: bool = True,
+        petab_problem: petab.Problem = None,
+) -> Union[None, Dict[str, float]]:
+    """
+    Aggregate likelihood gradient for all conditions, according to PEtab
+    parameter mapping.
+
+    :param amici_model:
+        AMICI model from which ``rdatas`` were obtained.
+    :param rdatas:
+        Simulation results.
+    :param parameter_mapping:
+        PEtab parameter mapping to condition-specific simulation parameters.
+    :param edatas:
+        Experimental data used for simulation.
+    :param petab_scale:
+        Whether to check that sensitivities were computed with parameters on
+        the scales provided in the PEtab parameters table.
+    :param petab_problem:
+        The PEtab problem that defines the parameter scales.
+
+    :return:
+        Aggregated likelihood sensitivities.
+    """
+    accumulated_sllh = {}
+    model_parameter_ids = amici_model.getParameterIds()
+
+    if petab_scale and petab_problem is None:
+        raise ValueError(
+            'Please provide the PEtab problem, when using '
+            '`petab_scale=True`.'
+        )
+
+    # Check for issues in all condition simulation results.
+    for rdata in rdatas:
+        # Condition failed during simulation.
+        if rdata.status != amici.AMICI_SUCCESS:
+            return None
+        # Condition simulation result does not provide SLLH.
+        if rdata.sllh is None:
+            raise ValueError(
+                'The sensitivities of the likelihood for a condition were '
+                'not computed.'
+            )
+
+    for condition_parameter_mapping, edata, rdata in \
+            zip(parameter_mapping, edatas, rdatas):
+        for sllh_parameter_index, condition_parameter_sllh in \
+                enumerate(rdata.sllh):
+            # Get PEtab parameter ID
+            # Use ExpData if it provides a parameter list, else default to
+            # Model.
+            if edata.plist:
+                model_parameter_index = edata.plist[sllh_parameter_index]
+            else:
+                model_parameter_index = amici_model.plist(sllh_parameter_index)
+            model_parameter_id = model_parameter_ids[model_parameter_index]
+            petab_parameter_id = (
+                condition_parameter_mapping
+                .map_sim_var[model_parameter_id]
+            )
+
+            # Initialize
+            if petab_parameter_id not in accumulated_sllh:
+                accumulated_sllh[petab_parameter_id] = 0
+
+            # Check that the scale is consistent
+            if petab_scale:
+                # `ParameterMappingForCondition` objects provide the scale in
+                # terms of `petab.C` constants already, not AMICI equivalents.
+                model_parameter_scale = (
+                    condition_parameter_mapping
+                    .scale_map_sim_var[model_parameter_id]
+                )
+                petab_parameter_scale = (
+                    petab_problem
+                    .parameter_df
+                    .loc[petab_parameter_id, PARAMETER_SCALE]
+                )
+                if model_parameter_scale != petab_parameter_scale:
+                    raise ValueError(
+                        f'The scale of the parameter `{petab_parameter_id}` '
+                        'differs between the AMICI model '
+                        f'({model_parameter_scale}) and the PEtab problem '
+                        f'({petab_parameter_scale}).'
+                    )
+
+            # Accumulate
+            accumulated_sllh[petab_parameter_id] += condition_parameter_sllh
+
+    return accumulated_sllh
+
+
+def rescale_sensitivity(
+    sensitivity: float,
+    parameter_value: float,
+    old_scale: str,
+    new_scale: str,
+) -> float:
+    """Rescale a sensitivity between parameter scales.
+
+    :param sensitivity:
+        The sensitivity corresponding to the parameter value.
+    :param parameter_value:
+        The parameter vector element, on ``old_scale``.
+    :param old_scale:
+        The scale of the parameter value.
+    :param new_scale:
+        The parameter scale on which to rescale the sensitivity.
+
+    :return:
+        The rescaled sensitivity.
+    """
+    LOG_E_10 = np.log(10)
+
+    if old_scale == new_scale:
+        return sensitivity
+
+    unscaled_parameter_value = petab.parameters.unscale(
+        parameter=parameter_value,
+        scale_str=old_scale,
+    )
+
+    scale = {
+        (LIN, LOG): lambda s: s * unscaled_parameter_value,
+        (LOG, LIN): lambda s: s / unscaled_parameter_value,
+        (LIN, LOG10): lambda s: s * (unscaled_parameter_value * LOG_E_10),
+        (LOG10, LIN): lambda s: s / (unscaled_parameter_value * LOG_E_10),
+    }
+
+    scale[(LOG, LOG10)] = lambda s: scale[(LIN, LOG10)](scale[(LOG, LIN)](s))
+    scale[(LOG10, LOG)] = lambda s: scale[(LIN, LOG)](scale[(LOG10, LIN)](s))
+
+    if (old_scale, new_scale) not in scale:
+        raise NotImplementedError(
+            f"Old scale: {old_scale}. New scale: {new_scale}."
+        )
+
+    return scale[(old_scale, new_scale)](sensitivity)
 
 
 def create_parameterized_edatas(
@@ -487,8 +667,62 @@ def create_parameter_mapping_for_condition(
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-        for element_id, (value, preeq_value) in \
-                states_in_condition_table.items():
+        def _set_initial_state(condition_id, element_id, init_par_id,
+                               par_map, scale_map):
+            value = petab.to_float_if_float(
+                petab_problem.condition_df.loc[condition_id, element_id])
+            if pd.isna(value):
+                element = petab_problem.sbml_model.getElementBySId(element_id)
+                type_code = element.getTypeCode()
+                initial_assignment = petab_problem.sbml_model\
+                    .getInitialAssignmentBySymbol(element_id)
+                if initial_assignment:
+                    initial_assignment = sp.sympify(
+                        libsbml.formulaToL3String(initial_assignment.getMath()),
+                        locals=_clash
+                    )
+                if type_code == libsbml.SBML_SPECIES:
+                    value = get_species_initial(element) \
+                        if initial_assignment is None else initial_assignment
+                elif type_code == libsbml.SBML_PARAMETER:
+                    value = element.getValue()\
+                        if initial_assignment is None else initial_assignment
+                elif type_code == libsbml.SBML_COMPARTMENT:
+                    value = element.getSize()\
+                        if initial_assignment is None else initial_assignment
+                else:
+                    raise NotImplementedError(
+                        f"Don't know what how to handle {element_id} in "
+                        "condition table.")
+
+                try:
+                    value = float(value)
+                except (ValueError, TypeError):
+                    if sp.nsimplify(value).is_Atom:
+                        # Get rid of multiplication with one
+                        value = sp.nsimplify(value)
+                    else:
+                        raise NotImplementedError(
+                            "Cannot handle non-trivial initial state "
+                            f"expression for {element_id}: {value}")
+                    # this should be a parameter ID
+                    value = str(value)
+                logger.debug(f'The species {element_id} has no initial value '
+                             f'defined for the condition {condition_id} in '
+                             'the PEtab conditions table. The initial value is '
+                             f'now set to {value}, which is the initial value '
+                             'defined in the SBML model.')
+            par_map[init_par_id] = value
+            if isinstance(value, float):
+                # numeric initial state
+                scale_map[init_par_id] = petab.LIN
+            else:
+                # parametric initial state
+                scale_map[init_par_id] = \
+                    petab_problem.parameter_df[PARAMETER_SCALE]\
+                        .get(value, petab.LIN)
+
+        for element_id in states_in_condition_table:
             # for preequilibration
             init_par_id = f'initial_{element_id}_preeq'
             if condition.get(PREEQUILIBRATION_CONDITION_ID):
@@ -868,3 +1102,39 @@ def rdatas_to_simulation_df(
                                   measurement_df=measurement_df)
 
     return df.rename(columns={MEASUREMENT: SIMULATION})
+
+
+def _default_scaled_parameters(
+    petab_problem: petab.Problem,
+    problem_parameters: Optional[Dict[str, float]] = None,
+    scaled_parameters: bool = False,
+) -> Optional[Dict[str, float]]:
+    """
+    Helper method to handle an unscaled or unspecified parameter vector.
+
+    The parameter vector defaults to the nominal values in the PEtab
+    parameter table.
+
+    Unscaled parameter values are scaled.
+
+    :param petab_problem:
+        The PEtab problem.
+    :param problem_parameters:
+        Keys are PEtab parameter IDs, values are parameter values on the scale
+        defined in the PEtab parameter table. Defaults to the nominal values in
+        the PEtab parameter table.
+    :param scaled_parameters:
+        Whether `problem_parameters` are on the scale defined in the PEtab
+        parameter table.
+
+    :return:
+        The scaled parameter vector.
+    """
+    if problem_parameters is None:
+        problem_parameters = dict(zip(
+            petab_problem.x_ids,
+            petab_problem.x_nominal_scaled,
+        ))
+    elif not scaled_parameters:
+        problem_parameters = petab_problem.scale_parameters(problem_parameters)
+    return problem_parameters
