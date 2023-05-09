@@ -709,11 +709,11 @@ void SteadystateProblem::runSteadystateSimulation(
                 updateSensiSimulation(solver);
                 if (getWrmsFSA(model) < conv_thresh)
                     break; // converged
+            } else if (wrms_ < conv_thresh) {
+                    break; // converged
             }
         }
 
-        if (wrms_ < conv_thresh)
-            break; // converged
     }
 
     // if check_sensi_conv_ is deactivated, we still have to update sensis

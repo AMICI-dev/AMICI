@@ -19,7 +19,6 @@ def preeq_fixture(pysb_example_presimulation_module):
     solver = model.getSolver()
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    solver.setRelativeTolerance(1e-10)
 
     edata = get_data(model)
     edata.t_presim = 2
