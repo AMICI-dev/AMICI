@@ -71,9 +71,9 @@ def simulate_petab(
     :param solver:
         An AMICI solver. Will use default options if None.
     :param problem_parameters:
-        Run simulation with these parameters. If None, PEtab `nominalValues`
-        will be used). To be provided as dict,  mapping PEtab problem
-        parameters to SBML IDs.
+        Run simulation with these parameters. If ``None``, PEtab
+        ``nominalValues`` will be used. To be provided as dict, mapping PEtab
+        problem parameters to SBML IDs.
     :param simulation_conditions:
         Result of :py:func:`petab.get_simulation_conditions`. Can be provided
         to save time if this has be obtained before.
@@ -104,6 +104,7 @@ def simulate_petab(
 
         * cost function value (``LLH``),
         * list of :class:`amici.amici.ReturnData` (``RDATAS``),
+        * list of :class:`amici.amici.ExpData` (``EDATAS``),
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see
@@ -363,9 +364,9 @@ def create_parameterized_edatas(
     :param petab_problem:
         PEtab problem to work on.
     :param problem_parameters:
-        Run simulation with these parameters. If None, PEtab `nominalValues`
-        will be used). To be provided as dict, mapping PEtab problem
-        parameters to SBML IDs.
+        Run simulation with these parameters. If ``None``, PEtab
+        ``nominalValues`` will be used. To be provided as dict, mapping PEtab
+        problem parameters to SBML IDs.
     :param scaled_parameters:
         If ``True``, ``problem_parameters`` are assumed to be on the scale
         provided in the PEtab parameter table and will be unscaled.
@@ -475,7 +476,7 @@ def create_parameter_mapping(
             measurement_df=petab_problem.measurement_df,
             parameter_df=petab_problem.parameter_df,
             observable_df=petab_problem.observable_df,
-            sbml_model=petab_problem.sbml_model,
+            model=petab_problem.model,
             **dict(default_parameter_mapping_kwargs,
                    **parameter_mapping_kwargs)
         )
@@ -642,16 +643,16 @@ def create_parameter_mapping_for_condition(
     fixed_par_ids = amici_model.getFixedParameterIds()
 
     condition_map_preeq_var, condition_map_preeq_fix = \
-        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
 
     condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
-        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
 
     condition_map_sim_var, condition_map_sim_fix = \
-        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
 
     condition_scale_map_sim_var, condition_scale_map_sim_fix = \
-        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
+        _subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
 
     logger.debug("Fixed parameters preequilibration: "
                  f"{condition_map_preeq_fix}")
@@ -705,11 +706,13 @@ def create_edatas(
 
     observable_ids = amici_model.getObservableIds()
 
-    measurement_groupvar = [petab.SIMULATION_CONDITION_ID]
-    if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
-        measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
     measurement_dfs = dict(list(
-        petab_problem.measurement_df.groupby(measurement_groupvar)
+        petab_problem.measurement_df.groupby(
+            [petab.SIMULATION_CONDITION_ID,
+             petab.PREEQUILIBRATION_CONDITION_ID]
+            if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions
+            else petab.SIMULATION_CONDITION_ID
+        )
     ))
 
     edatas = []
@@ -725,7 +728,7 @@ def create_edatas(
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,
-            measurement_df=measurement_dfs[(measurement_index,)],
+            measurement_df=measurement_dfs[measurement_index],
             petab_problem=petab_problem,
             observable_ids=observable_ids,
         )
@@ -807,8 +810,8 @@ def create_edata_for_condition(
     return edata
 
 
-def subset_dict(full: Dict[Any, Any],
-                *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
+def _subset_dict(full: Dict[Any, Any],
+                 *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
     """Get subset of dictionary based on provided keys
 
     :param full:
@@ -943,9 +946,9 @@ def rdatas_to_measurement_df(
     # iterate over conditions
     for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
-        y = rdata['y']
+        y = rdata.y
         # time array used in rdata
-        t = list(rdata['t'])
+        t = list(rdata.ts)
 
         # extract rows for condition
         cur_measurement_df = petab.get_rows_for_condition(
