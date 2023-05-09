@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
+  <model id="lotka_volterra" name="lotka_volterra">
+    <listOfCompartments>
+      <compartment id="Compartment" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="prey" compartment="Compartment" initialAmount="2" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="predator" compartment="Compartment" initialAmount="2" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="alpha" name="alpha" value="2" constant="true"/>
+      <parameter id="beta" name="beta" value="4" constant="true"/>
+      <parameter id="gamma" name="gamma" value="3" constant="true"/>
+      <parameter id="delta" name="delta" value="3" constant="true"/>
+      <parameter id="departure_prey" name="departure_prey" value="3" constant="true"/>
+      <parameter id="arrival_predator" name="arrival_predator" value="3" constant="true"/>
+    </listOfParameters>
+    <listOfRules>
+      <rateRule variable="prey">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <minus/>
+            <apply>
+              <minus/>
+              <apply>
+                <times/>
+                <ci> alpha </ci>
+                <ci> prey </ci>
+              </apply>
+              <apply>
+                <times/>
+                <ci> beta </ci>
+                <ci> prey </ci>
+                <ci> predator </ci>
+              </apply>
+            </apply>
+            <apply>
+              <times/>
+              <ci> departure_prey </ci>
+              <ci> prey </ci>
+              <ci> prey </ci>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+      <rateRule variable="predator">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <minus/>
+              <apply>
+                <times/>
+                <ci> delta </ci>
+                <ci> prey </ci>
+                <ci> predator </ci>
+              </apply>
+              <apply>
+                <times/>
+                <ci> gamma </ci>
+                <ci> predator </ci>
+              </apply>
+            </apply>
+            <apply>
+              <times/>
+              <ci> arrival_predator </ci>
+              <ci> prey </ci>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+    </listOfRules>
+  </model>
+</sbml>
