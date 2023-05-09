@@ -676,10 +676,26 @@ void SteadystateProblem::runSteadystateSimulation(
         convergence_check_frequency = 25;
 
     while (true) {
+        /* Check for convergence */
+        if (sim_steps % convergence_check_frequency == 0) {
+            wrms_ = getWrms(model, sensitivityFlag);
+            /* getWrms needs to be called before getWrmsFSA such that the linear
+             system is prepared for newton type convergence check */
+            if (wrms_ < conv_thresh && check_sensi_conv_ &&
+                sensitivityFlag == SensitivityMethod::forward) {
+                updateSensiSimulation(solver);
+                if (getWrmsFSA(model) < conv_thresh)
+                    break; // converged
+            } else if (wrms_ < conv_thresh) {
+                break; // converged
+            }
+        }
+
         /* check for maxsteps  */
         if (sim_steps >= solver.getMaxSteps()) {
             throw IntegrationFailure(AMICI_TOO_MUCH_WORK, state_.t);
         }
+
         /* increase counter */
         sim_steps++;
         /* One step of ODE integration
@@ -698,22 +714,6 @@ void SteadystateProblem::runSteadystateSimulation(
                                   xQ_);
             flagUpdatedState();
         }
-
-        /* Check for convergence */
-        if (sim_steps % convergence_check_frequency == 0) {
-            wrms_ = getWrms(model, sensitivityFlag);
-            /* getWrms needs to be called before getWrmsFSA such that the linear
-             system is prepared for newton type convergence check */
-            if (wrms_ < conv_thresh && check_sensi_conv_ &&
-                sensitivityFlag == SensitivityMethod::forward) {
-                updateSensiSimulation(solver);
-                if (getWrmsFSA(model) < conv_thresh)
-                    break; // converged
-            } else if (wrms_ < conv_thresh) {
-                    break; // converged
-            }
-        }
-
     }
 
     // if check_sensi_conv_ is deactivated, we still have to update sensis
