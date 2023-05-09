@@ -8,20 +8,23 @@ function as defined by a PEtab problem
 import copy
 import logging
 import numbers
-from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
-                    Collection, Iterator)
+from typing import (Any, Collection, Dict, Iterator, List, Optional, Sequence,
+                    Tuple, Union)
 
-import amici
-from amici.sbml_import import get_species_initial
 import libsbml
 import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
 from petab.C import *  # noqa: F403
+from sympy.abc import _clash
 
-from . import AmiciModel, AmiciExpData
+import amici
+from amici.sbml_import import get_species_initial
+from . import AmiciExpData, AmiciModel
 from .logging import get_logger, log_execution_time
+from .parameter_mapping import (ParameterMapping, ParameterMappingForCondition,
+                                fill_in_parameters)
 from .petab_import import PREEQ_INDICATOR_ID, element_is_state
 from .parameter_mapping import (
     fill_in_parameters,
@@ -568,7 +571,8 @@ def create_parameter_mapping_for_condition(
                     .getInitialAssignmentBySymbol(element_id)
                 if initial_assignment:
                     initial_assignment = sp.sympify(
-                        libsbml.formulaToL3String(initial_assignment.getMath())
+                        libsbml.formulaToL3String(initial_assignment.getMath()),
+                        locals=_clash
                     )
                 if type_code == libsbml.SBML_SPECIES:
                     value = get_species_initial(element) \
