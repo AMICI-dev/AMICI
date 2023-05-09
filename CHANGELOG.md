@@ -2,6 +2,62 @@
 
 ## v0.X Series
 
+### v0.17.0 (2023-05-09)
+
+AMICI v0.17.0 requires Python>=3.9 and a C++17 compatible compiler
+
+Features
+* DAE support in SBML
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2017
+* SBML import: flatten SBML-comp models
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2063
+* Added sllh computation back to `petab_objective.simulate_petab`
+  by @dilpath in https://github.com/AMICI-dev/AMICI/pull/1548
+* CMake-based Python extension builds
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1992
+
+Fixes
+* Fixed CPU time tracking with multi-threading (partially)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2023
+* Fixed HDF5 ambiguous overload
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2031
+* Fixed varying cmake libdir lib(64)/
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2033
+* Fixed Equilibration cpu time computation
+  by @plakrisenko in https://github.com/AMICI-dev/AMICI/pull/2035
+* CMake: add header files to library sources for generated models
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2047
+* CMake: Handle header-dependency of swig files
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2046
+* Don't try to detect conservation laws for models with Species-AssignmentRules
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2056
+* Smith benchmark and SBML initialization fix
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2034
+* SBML import: Fixed check for required packages
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2064
+* Nan observables
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2065
+* Fixed check for discontinuities for conservation law computation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2068
+* Specify visualization dependencies
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2070
+* Fixed sympy symbol name clashes during PEtab import
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2069
+* Fixed ReturnData::{preeq_wrms,posteq_wrms} with FSA and check_sensi_steadystate_conv_=True
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2071
+
+Extended / updated documentation, for example:
+* Jax example notebook
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1996
+* Updated Windows/MSVC installation instructions
+  by @Podde1 in https://github.com/AMICI-dev/AMICI/pull/2053
+
+New Contributors
+* @Podde1 made their first contribution in https://github.com/AMICI-dev/AMICI/pull/2053
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.16.1...v0.17.0
+
+
 ### v0.16.1 (2023-02-24)
 
 Fixes:
