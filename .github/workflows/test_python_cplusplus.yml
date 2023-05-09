@@ -96,6 +96,11 @@ jobs:
           --cov-append \
           ${AMICI_DIR}/python/tests
 
+    - name: Install notebook dependencies
+      run: |
+        source build/venv/bin/activate \
+        && pip install jax[cpu]
+
     - name: example notebooks
       run: |
         scripts/runNotebook.sh python/examples/example_*/
