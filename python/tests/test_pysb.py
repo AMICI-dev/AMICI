@@ -19,7 +19,7 @@ from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
 from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
-
+from numpy.testing import assert_allclose
 
 @skip_on_valgrind
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
@@ -82,10 +82,11 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
         elif np.isnan(rdata_pysb[field]).all():
             assert np.isnan(rdata_sbml[field]).all(), field
         else:
-            assert np.isclose(
+            assert_allclose(
                 rdata_sbml[field], rdata_pysb[field],
-                atol=1e-6, rtol=1e-6
-            ).all(), field
+                atol=1e-6, rtol=1e-6,
+                err_msg=field
+            )
 
 
 pysb_models = [
