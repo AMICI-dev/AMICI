@@ -840,6 +840,21 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void setUnscaledInitialStateSensitivities(std::vector<realtype> const &sx0);
 
+
+    /**
+     * @brief Set the mode how steady state is computed in the steadystate
+     * simulation.
+     * @param mode Steadystate computation mode
+     */
+    void setSteadyStateMode(SteadyStateMode mode);
+
+    /**
+     * @brief Gets the mode how steady state is computed in the steadystate
+     * simulation.
+     * @return Mode
+     */
+    SteadyStateMode getSteadyStateMode() const;
+
     /**
      * @brief Set the mode how sensitivities are computed in the steadystate
      * simulation.
