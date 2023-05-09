@@ -1924,11 +1924,8 @@ class Model : public AbstractModel, public ModelDimensions {
     /** method for steady-state computation */
     SteadyStateComputationMode steadystate_computation_mode_ {SteadyStateComputationMode::integrateIfNewtonFails};
 
-    /**
-     * flag indicating whether steadystate sensitivities are to be computed
-     * via FSA when steadyStateSimulation is used
-     */
-    SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
+    /** method for steadystate sensitivities computation */
+    SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::integrateIfNewtonFails};
 
     /**
      * Indicates whether the result of every call to `Model::f*` should be
