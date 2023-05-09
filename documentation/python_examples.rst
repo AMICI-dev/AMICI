@@ -16,5 +16,6 @@ Various example notebooks.
    ExampleEquilibrationLogic.ipynb
    example_errors.ipynb
    example_large_models/example_performance_optimization.ipynb
+   ExampleJax.ipynb
    ExampleSplines.ipynb
    ExampleSplinesSwameye2003.ipynb
