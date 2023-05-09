@@ -179,23 +179,44 @@ class SbmlImporter:
         """
         # Ensure we got a valid SBML model, otherwise further processing
         # might lead to undefined results
-        log_execution_time(f'validating SBML', logger)(
+        log_execution_time('validating SBML', logger)(
             self.sbml_doc.validateSBML
         )()
         _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+
+        # Flatten "comp" model? Do that before any other converters are run
+        if any(self.sbml_doc.getPlugin(i_plugin).getPackageName() == 'comp'
+               for i_plugin in range(self.sbml_doc.getNumPlugins())):
+            # see libsbml CompFlatteningConverter for options
+            conversion_properties = sbml.ConversionProperties()
+            conversion_properties.addOption("flatten comp", True)
+            conversion_properties.addOption("leave_ports", False)
+            conversion_properties.addOption("performValidation", False)
+            conversion_properties.addOption("abortIfUnflattenable", "none")
+            if log_execution_time('converting SBML local parameters', logger)(
+                self.sbml_doc.convert)(conversion_properties) \
+                    != sbml.LIBSBML_OPERATION_SUCCESS:
+                raise SBMLException(
+                    'Required SBML comp extension is currently not supported '
+                    'and flattening the model failed.')
+                # check the flattened model is still valid
+            log_execution_time('re-validating SBML', logger)(
+                self.sbml_doc.validateSBML
+            )()
+            _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
         # apply several model simplifications that make our life substantially
         # easier
         if self.sbml_doc.getModel().getNumFunctionDefinitions():
             convert_config = sbml.SBMLFunctionDefinitionConverter()\
                 .getDefaultProperties()
-            log_execution_time(f'converting SBML functions', logger)(
+            log_execution_time('converting SBML functions', logger)(
                 self.sbml_doc.convert
             )(convert_config)
 
         convert_config = sbml.SBMLLocalParameterConverter().\
             getDefaultProperties()
-        dec_fun = log_execution_time(f'converting SBML local parameters', logger)(
+        log_execution_time('converting SBML local parameters', logger)(
             self.sbml_doc.convert
         )(convert_config)
 
@@ -203,6 +224,9 @@ class SbmlImporter:
         # the SBMLError log in the sbml document. Thus, it is sufficient to
         # check the error log just once after all conversion/validation calls.
         _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
+
+        # need to reload the converted model
+        self.sbml = self.sbml_doc.getModel()
 
     def _reset_symbols(self) -> None:
         """
@@ -412,11 +436,16 @@ class SbmlImporter:
             sbml.L3P_PARSE_LOG_AS_LN
         )
         self._process_sbml(constant_parameters)
-        if self.symbols.get(SymbolId.EVENT, False):
+
+        if self.symbols.get(SymbolId.EVENT, False) \
+                or any(x['value'].has(sp.Heaviside, sp.Piecewise)
+                       for x in self.symbols[SymbolId.EXPRESSION].values())\
+                or self.flux_vector.has(sp.Heaviside, sp.Piecewise):
             if compute_conservation_laws:
                 logger.warning(
                     'Conservation laws are currently not supported for models '
-                    'with events, and will be turned off.'
+                    'with events, piecewise or Heaviside functions, '
+                    'and will be turned off.'
                 )
             compute_conservation_laws = False
 

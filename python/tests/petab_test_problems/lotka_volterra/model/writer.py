@@ -5,7 +5,7 @@ import yaml2sbml
 
 
 yaml2sbml_yaml = 'lotka_volterra.yaml'
-petab_path = Path('..') / 'petab'
+petab_path = Path(__file__).parent.parent / 'petab'
 petab_yaml = 'problem.yaml'
 measurements_tsv = 'measurements.tsv'
 model_name = 'lotka_volterra'
