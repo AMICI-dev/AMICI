@@ -31,7 +31,7 @@ from .parameter_mapping import (
     ParameterMapping,
 )
 from .petab_util import get_states_in_condition_table
-from .petab_import import PREEQ_INDICATOR_ID, element_is_state
+from .petab_import import PREEQ_INDICATOR_ID
 
 try:
     import pysb
