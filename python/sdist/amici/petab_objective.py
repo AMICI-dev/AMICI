@@ -671,11 +671,11 @@ def create_parameter_mapping_for_condition(
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-        for element_id in states_in_condition_table:
+        for element_id, (value, preeq_value) in \
+                states_in_condition_table.items():
             # for preequilibration
             init_par_id = f'initial_{element_id}_preeq'
-            if condition.get(PREEQUILIBRATION_CONDITION_ID):
-                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+            if (condition_id := condition.get(PREEQUILIBRATION_CONDITION_ID)) is not None:
                 _set_initial_state(
                     petab_problem, condition_id, element_id, init_par_id,
                     condition_map_preeq, condition_scale_map_preeq, preeq_value
