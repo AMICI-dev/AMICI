@@ -9,7 +9,7 @@ nbsphinx>=0.8.9
 nbformat==5.4.0
 recommonmark>=0.6.0
 sphinx_rtd_theme>=1.0.0
-petab>=0.1.20
+petab[vis]>=0.1.20
 sphinx-autodoc-typehints==1.19.2
 git+https://github.com/readthedocs/sphinx-hoverxref@main
 ipython==8.10.0

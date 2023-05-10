@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -50,14 +50,14 @@ jobs:
       run: |
         scripts/installAmiciArchive.sh
 
-  sdist:
-    name: sdist Install
+  sdist_ubuntu:
+    name: sdist Install Ubuntu
 
     runs-on: ubuntu-22.04
 
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -80,6 +80,48 @@ jobs:
             libboost-serialization-dev \
             libhdf5-serial-dev \
             swig
+
+    - name: Create AMICI sdist
+      run: |
+        scripts/buildSdist.sh
+
+    - name: Install python sdist
+      run: |
+        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+
+    - name: Test import
+      run: |
+        python -m amici
+
+
+  sdist_macos:
+    name: sdist Install macos
+
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v3
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+
+    # install amici dependencies
+    - name: homebrew
+      run: |
+        brew install hdf5 swig gcc cppcheck libomp boost \
+          && brew ls -v boost \
+          && brew ls -v libomp \
+          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
+          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
 
     - name: Create AMICI sdist
       run: |

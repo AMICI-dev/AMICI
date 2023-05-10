@@ -9,9 +9,8 @@ import logging
 import os
 from itertools import chain
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple, Union
+from typing import Dict, Iterable, Optional, Union
 
-import libsbml
 import petab
 import pysb
 import sympy as sp
@@ -19,6 +18,7 @@ from petab.C import (CONDITION_FILES, CONDITION_NAME, FORMAT_VERSION,
                      MEASUREMENT_FILES, NOISE_FORMULA, OBSERVABLE_FILES,
                      OBSERVABLE_FORMULA, PARAMETER_FILE, SBML_FILES,
                      VISUALIZATION_FILES)
+from petab.models.sbml_model import SbmlModel
 
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -56,7 +56,7 @@ class PysbPetabProblem(petab.Problem):
         self._add_observation_model()
 
         if self.pysb_model is not None:
-            self.sbml_document, self.sbml_model = \
+            self.model = \
                 create_dummy_sbml(
                     self.pysb_model,
                     observable_ids=self.observable_df.index.values
@@ -252,7 +252,7 @@ class PysbPetabProblem(petab.Problem):
 def create_dummy_sbml(
         pysb_model: 'pysb.Model',
         observable_ids: Optional[Iterable[str]] = None
-) -> Tuple['libsbml.Model', 'libsbml.SBMLDocument']:
+) -> SbmlModel:
     """Create SBML dummy model for to use PySB models with PEtab.
 
     Model must at least contain PEtab problem parameter and noise parameters
@@ -260,9 +260,8 @@ def create_dummy_sbml(
 
     :param pysb_model: PySB model
     :param observable_ids: Observable IDs
-    :return: A dummy SBML model and document.
+    :return: A dummy petab SBML model.
     """
-
     import libsbml
 
     document = libsbml.SBMLDocument(3, 1)
@@ -305,7 +304,7 @@ def create_dummy_sbml(
         s.setCompartment('dummy_compartment')
         s.setConstant(False)
 
-    return document, dummy_sbml_model
+    return SbmlModel(sbml_model=dummy_sbml_model, sbml_document=document)
 
 
 @log_execution_time('Importing PEtab model', logger)
