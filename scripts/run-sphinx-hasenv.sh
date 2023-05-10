@@ -7,8 +7,6 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 source ${AMICI_PATH}/doc-venv/bin/activate
 
-pip3 install -e git+https://github.com/PEtab-dev/libpetab-python.git@model_pysb
-
 cd ${AMICI_PATH}/documentation
 
 rm -rf ${AMICI_PATH}/documentation/generated
