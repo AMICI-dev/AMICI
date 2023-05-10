@@ -293,10 +293,12 @@ def import_petab_problem(
         raise NotImplementedError("Unsupported model type "
                                   + petab_problem.model.type_id)
 
+    model_name = model_name or petab_problem.model.model_id
+
     if petab_problem.model.type_id == MODEL_TYPE_PYSB\
             and model_name is None:
         model_name = petab_problem.pysb_model.name
-    elif model_name is None:
+    elif model_name is None and model_output_dir:
         model_name = _create_model_name(model_output_dir)
 
     # generate folder and model name if necessary
