@@ -43,8 +43,6 @@ jobs:
         sudo apt-get update \
           && sudo apt-get install -y swig libatlas-base-dev
 
-    - run: pip3 install git+https://github.com/PEtab-dev/libpetab-python.git@develop#egg=petab[vis]
-
     - run: echo "${HOME}/.local/bin/" >> $GITHUB_PATH
 
     # install AMICI
@@ -63,7 +61,7 @@ jobs:
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
           && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
-          
+
     # run gradient checks
     - name: Run Gradient Checks
       run: |
