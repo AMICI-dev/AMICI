@@ -2,6 +2,15 @@
 
 ## v0.X Series
 
+### v0.17.1 (2023-05-10)
+
+This release fixes two bugs:
+
+* One bug introduced in v0.17.0, that causes an `ImportError`
+  on macOS (https://github.com/AMICI-dev/AMICI/issues/2075).
+* An AttributeError in petab_import_pysb with petab>=0.2.0
+  https://github.com/AMICI-dev/AMICI/pull/2079
+
 ### v0.17.0 (2023-05-09)
 
 AMICI v0.17.0 requires Python>=3.9 and a C++17 compatible compiler
