@@ -515,7 +515,8 @@ def _get_initial_state_sbml(petab_problem: petab.Problem,
         .getInitialAssignmentBySymbol(element_id)
     if initial_assignment:
         initial_assignment = sp.sympify(
-            libsbml.formulaToL3String(initial_assignment.getMath())
+            libsbml.formulaToL3String(initial_assignment.getMath()),
+            locals=_clash
         )
     if type_code == libsbml.SBML_SPECIES:
         value = get_species_initial(element) \
@@ -536,17 +537,20 @@ def _get_initial_state_sbml(petab_problem: petab.Problem,
 
 def _get_initial_state_pysb(petab_problem: petab.Problem,
                             element_id: str) -> Union[float, sp.Symbol]:
-    species_idx = int(re.match(r'__s(\d+)$', element_id).group(1))
+    species_idx = int(re.match(r'__s(\d+)$', element_id)[1])
     species_pattern = petab_problem.model.model.species[species_idx]
     from pysb.pattern import match_complex_pattern
 
-    value = 0.0
-
-    for initial in petab_problem.model.model.initials:
-        if match_complex_pattern(initial.pattern, species_pattern, exact=True):
-            value = initial.value
-            break
-
+    value = next(
+        (
+            initial.value
+            for initial in petab_problem.model.model.initials
+            if match_complex_pattern(
+                initial.pattern, species_pattern, exact=True
+            )
+        ),
+        0.0,
+    )
     if isinstance(value, pysb.Parameter):
         if value.name in petab_problem.parameter_df.index:
             value = value.name
@@ -666,61 +670,6 @@ def create_parameter_mapping_for_condition(
 
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
-
-        def _set_initial_state(condition_id, element_id, init_par_id,
-                               par_map, scale_map):
-            value = petab.to_float_if_float(
-                petab_problem.condition_df.loc[condition_id, element_id])
-            if pd.isna(value):
-                element = petab_problem.sbml_model.getElementBySId(element_id)
-                type_code = element.getTypeCode()
-                initial_assignment = petab_problem.sbml_model\
-                    .getInitialAssignmentBySymbol(element_id)
-                if initial_assignment:
-                    initial_assignment = sp.sympify(
-                        libsbml.formulaToL3String(initial_assignment.getMath()),
-                        locals=_clash
-                    )
-                if type_code == libsbml.SBML_SPECIES:
-                    value = get_species_initial(element) \
-                        if initial_assignment is None else initial_assignment
-                elif type_code == libsbml.SBML_PARAMETER:
-                    value = element.getValue()\
-                        if initial_assignment is None else initial_assignment
-                elif type_code == libsbml.SBML_COMPARTMENT:
-                    value = element.getSize()\
-                        if initial_assignment is None else initial_assignment
-                else:
-                    raise NotImplementedError(
-                        f"Don't know what how to handle {element_id} in "
-                        "condition table.")
-
-                try:
-                    value = float(value)
-                except (ValueError, TypeError):
-                    if sp.nsimplify(value).is_Atom:
-                        # Get rid of multiplication with one
-                        value = sp.nsimplify(value)
-                    else:
-                        raise NotImplementedError(
-                            "Cannot handle non-trivial initial state "
-                            f"expression for {element_id}: {value}")
-                    # this should be a parameter ID
-                    value = str(value)
-                logger.debug(f'The species {element_id} has no initial value '
-                             f'defined for the condition {condition_id} in '
-                             'the PEtab conditions table. The initial value is '
-                             f'now set to {value}, which is the initial value '
-                             'defined in the SBML model.')
-            par_map[init_par_id] = value
-            if isinstance(value, float):
-                # numeric initial state
-                scale_map[init_par_id] = petab.LIN
-            else:
-                # parametric initial state
-                scale_map[init_par_id] = \
-                    petab_problem.parameter_df[PARAMETER_SCALE]\
-                        .get(value, petab.LIN)
 
         for element_id in states_in_condition_table:
             # for preequilibration
