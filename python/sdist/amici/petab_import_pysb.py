@@ -6,22 +6,20 @@ Import a model in the PySB-adapted :mod:`petab`
 """
 
 import logging
+import re
 from pathlib import Path
 from typing import Optional, Union
 
 import petab
 import pysb
 import pysb.bng
-from pysb.pattern import SpeciesPatternMatcher
-import re
 import sympy as sp
 from petab.C import (CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA)
 from petab.models.pysb_model import PySBModel
 
-
 from .logging import get_logger, log_execution_time, set_log_level
 from .petab_util import (
-    get_states_in_condition_table, PREEQ_INDICATOR_ID, _element_is_pysb_pattern
+    get_states_in_condition_table, PREEQ_INDICATOR_ID
 )
 
 logger = get_logger(__name__, logging.WARNING)
@@ -116,7 +114,7 @@ def _add_initialization_variables(
             pysb_model.add_component(p)
 
 
-        species_idx = int(re.match(r'__s(\d+)$', assignee_id).group(1))
+        species_idx = int(re.match(r'__s(\d+)$', assignee_id)[1])
         # use original model here since that's what was used to generate
         # the ids in initial_states
         species_pattern = petab_problem.model.model.species[species_idx]

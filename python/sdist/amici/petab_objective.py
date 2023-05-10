@@ -835,7 +835,7 @@ def create_edatas(
                 condition.get(PREEQUILIBRATION_CONDITION_ID)
             )
         else:
-            measurement_index = condition.get(SIMULATION_CONDITION_ID)
+            measurement_index = condition.get(SIMULATION_CONDITION_ID),
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,

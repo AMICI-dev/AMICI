@@ -293,6 +293,10 @@ def import_petab_problem(
         raise NotImplementedError("Unsupported model type "
                                   + petab_problem.model.type_id)
 
+    if petab_problem.mapping_df is not None:
+        # It's partially supported. Remove at your own risk...
+        raise NotImplementedError("PEtab v2.0.0 mapping tables are not yet supported.")
+
     model_name = model_name or petab_problem.model.model_id
 
     if petab_problem.model.type_id == MODEL_TYPE_PYSB\
