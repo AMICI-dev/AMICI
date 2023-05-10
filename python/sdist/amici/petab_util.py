@@ -1,3 +1,4 @@
+"""Various helper functions for working with PEtab problems."""
 import petab
 import re
 import libsbml
@@ -19,9 +20,13 @@ def get_states_in_condition_table(
         condition: Union[Dict, pd.Series] = None,
         return_patterns: bool = False,
 ) -> Dict[str, Tuple[Union[float, str, None], Union[float, str, None]]]:
-    """Get list of states in the condition table"""
+    """Get states and their initial condition as specified in the condition table.
+
+    Returns: Dictionary: ``stateId -> (initial condition simulation, initial condition preequilibration)``
+    """
     if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
         raise NotImplementedError()
+
     species_check_funs = {
         MODEL_TYPE_SBML:
             lambda x: _element_is_sbml_state(petab_problem.sbml_model, x),
@@ -68,9 +73,7 @@ def get_states_in_condition_table(
 def _element_is_pysb_pattern(model: 'pysb.Model', element: str) -> bool:
     """Check if element is a pysb pattern"""
     if match := re.match(r'[a-zA-Z_][\w_]*\(', element):
-        return match.group(0)[:-1] in [
-            m.name for m in model.monomers
-        ]
+        return match[0][:-1] in [m.name for m in model.monomers]
     return False
 
 
