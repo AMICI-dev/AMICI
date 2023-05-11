@@ -231,6 +231,24 @@ enum class RDataReporting {
     likelihood,
 };
 
+/** boundary conditions for splines */
+enum class SplineBoundaryCondition {
+    given                 = -1,
+    zeroDerivative        =  0,
+    natural               =  1,
+    naturalZeroDerivative =  2,
+    periodic              =  3,
+};
+
+/** extrapolation methods for splines */
+enum class SplineExtrapolation {
+    noExtrapolation = -1,
+    constant        =  0,
+    linear          =  1,
+    polynomial      =  2,
+    periodic        =  3,
+};
+
 // clang-format on
 
 } // namespace amici

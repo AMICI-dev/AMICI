@@ -175,6 +175,7 @@ add_custom_target(
 # Library source files
 set(AMICI_SRC_LIST
     src/symbolic_functions.cpp
+    src/splinefunctions.cpp
     src/cblas.cpp
     src/amici.cpp
     src/misc.cpp
@@ -223,6 +224,7 @@ set(AMICI_SRC_LIST
     include/amici/solver.h
     include/amici/solver_idas.h
     include/amici/spline.h
+    include/amici/splinefunctions.h
     include/amici/steadystateproblem.h
     include/amici/sundials_linsol_wrapper.h
     include/amici/sundials_matrix_wrapper.h

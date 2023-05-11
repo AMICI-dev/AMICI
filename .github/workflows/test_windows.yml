@@ -5,12 +5,17 @@ on:
   workflow_dispatch:
   schedule:
     - cron:  '48 4 * * *'
+  pull_request:
+    branches:
+      - master
+      # TODO: remove before merge
+      - develop
 
 jobs:
   build:
     name: Tests Windows
 
-    runs-on: windows-2019
+    runs-on: windows-latest
 
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
@@ -74,4 +79,20 @@ jobs:
     - run: python -m amici
 
     - name: Run Python tests
-      run: python -m pytest --ignore-glob=*petab* --ignore-glob=*special* python/tests
+      shell: bash
+      run: |
+        python -m pytest \
+          --ignore-glob=*petab* \
+          --ignore-glob=*special* \
+          --ignore-glob=*test_splines.py \
+          python/tests
+
+    # TODO <REMOVE BEFORE MERGE>
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'develop' || github.event.merge_group.base_ref == 'develop'}}
+      run: python -m pytest python/tests/test_splines.py
+    # TODO </REMOVE BEFORE MERGE>
+
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
+      run: python -m pytest python/tests/test_splines.py

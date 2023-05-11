@@ -47,6 +47,12 @@ setattr(sys.modules["toposort"],  "CircularDependencyError",
         CircularDependencyError)
 
 
+sbml_time_symbol = sp.Symbol('time', real=True)
+amici_time_symbol = sp.Symbol('t', real=True)
+
+annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
+
+
 class ObservableTransformation(str, enum.Enum):
     """
     Different modes of observable transformation.

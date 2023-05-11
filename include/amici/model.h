@@ -8,6 +8,7 @@
 #include "amici/simulation_parameters.h"
 #include "amici/model_dimensions.h"
 #include "amici/model_state.h"
+#include "amici/splinefunctions.h"
 #include "amici/logging.h"
 
 #include <map>
@@ -256,6 +257,16 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x Reference to state variables
      */
     void initializeStateSensitivities(AmiVectorArray &sx, const AmiVector &x);
+
+    /**
+     * @brief Initialization of spline functions
+     */
+    void initializeSplines();
+
+    /**
+     * @brief Initialization of spline sensitivity functions
+     */
+    void initializeSplineSensitivities();
 
     /**
      * @brief Initialize the Heaviside variables `h` at the initial time `t0`.
@@ -1725,6 +1736,18 @@ class Model : public AbstractModel, public ModelDimensions {
                      const AmiVector &x, const ExpData &edata);
 
     /**
+     * @brief Spline functions
+     * @param t timepoint
+     */
+    void fspl(realtype t);
+
+    /**
+     * @brief Parametric derivatives of splines functions
+     * @param t timepoint
+     */
+    void fsspl(realtype t);
+
+    /**
      * @brief Compute recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
@@ -1881,6 +1904,9 @@ class Model : public AbstractModel, public ModelDimensions {
      * Storage for model quantities beyond ModelState for the current timepoint
      */
     ModelStateDerived derived_state_;
+
+    /** Storage for splines of the model */
+    std::vector<HermiteSpline> splines_;
 
     /** index indicating to which event an event output belongs */
     std::vector<int> z2event_;

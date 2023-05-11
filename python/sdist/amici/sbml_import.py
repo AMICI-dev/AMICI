@@ -12,6 +12,7 @@ import math
 import os
 import re
 import warnings
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple,
                     Union, Set, List)
@@ -22,6 +23,9 @@ import sympy as sp
 from . import has_clibs
 from .constants import SymbolId
 from .import_utils import (RESERVED_SYMBOLS,
+                           annotation_namespace,
+                           amici_time_symbol,
+                           sbml_time_symbol,
                            _check_unsupported_functions,
                            _get_str_symbol_identifiers,
                            _parse_special_functions,
@@ -29,13 +33,14 @@ from .import_utils import (RESERVED_SYMBOLS,
                            generate_regularization_symbol,
                            noise_distribution_to_cost_function,
                            noise_distribution_to_observable_transformation,
-                           smart_subs, smart_subs_dict, toposort_symbols,
-                           SBMLException)
+                           smart_subs, smart_subs_dict, toposort_symbols)
+from .sbml_utils import SBMLException, _parse_logical_operators
 from .logging import get_logger, log_execution_time, set_log_level
 from .de_export import (
     DEExporter, DEModel, symbol_with_assumptions, _default_simplify,
     smart_is_zero_matrix
 )
+from .splines import AbstractSpline
 
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
@@ -117,7 +122,8 @@ class SbmlImporter:
     def __init__(self,
                  sbml_source: Union[str, Path, sbml.Model],
                  show_sbml_warnings: bool = False,
-                 from_file: bool = True) -> None:
+                 from_file: bool = True,
+                 discard_annotations: bool = False) -> None:
         """
         Create a new Model instance.
 
@@ -132,6 +138,9 @@ class SbmlImporter:
         :param from_file:
             Whether `sbml_source` is a file name (True, default), or an SBML
             string
+
+        :param discard_annotations:
+            discard information contained in AMICI SBML annotations (debug).
         """
         if isinstance(sbml_source, sbml.Model):
             self.sbml_doc: sbml.Document = sbml_source.getSBMLDocument()
@@ -159,6 +168,7 @@ class SbmlImporter:
         self.species_assignment_rules: SymbolicFormula = {}
         self.parameter_assignment_rules: SymbolicFormula = {}
         self.initial_assignments: SymbolicFormula = {}
+        self.splines = []
 
         self._reset_symbols()
 
@@ -171,6 +181,8 @@ class SbmlImporter:
             sbml.L3P_COMPARE_BUILTINS_CASE_INSENSITIVE, None,
             sbml.L3P_MODULO_IS_PIECEWISE
         )
+
+        self._discard_annotations : bool = discard_annotations
 
     @log_execution_time('loading SBML', logger)
     def _process_document(self) -> None:
@@ -276,7 +288,7 @@ class SbmlImporter:
             name of the model/model directory
 
         :param output_dir:
-            see :meth:`amici.ode_export.ODEExporter.set_paths`
+            see :meth:`amici.de_export.ODEExporter.set_paths`
 
         :param observables:
             dictionary( observableId:{'name':observableName
@@ -323,7 +335,7 @@ class SbmlImporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.ode_export.ODEExporter`
+            see :class:`amici.de_export.ODEExporter`
 
         :param compile:
             If ``True``, compile the generated Python package,
@@ -482,6 +494,8 @@ class SbmlImporter:
         :param constant_parameters:
             SBML Ids identifying constant parameters
         """
+        if not self._discard_annotations:
+            self._process_annotations()
         self.check_support()
         self._gather_locals()
         self._process_parameters(constant_parameters)
@@ -890,6 +904,29 @@ class SbmlImporter:
                 'dt': d_dt,
             }
 
+    @log_execution_time('processing SBML annotations', logger)
+    def _process_annotations(self) -> None:
+        """
+        Process annotations that make modifications to the
+        SBML model and thus have to be run before everything else
+        """
+        # Remove all parameters (and corresponding rules)
+        # for which amici:discard is set
+        parameter_ids_to_remove = []
+        for p in self.sbml.getListOfParameters():
+            annotation = p.getAnnotationString()
+            assert isinstance(annotation, str)
+            if len(annotation) != 0:
+                annotation = ET.fromstring(annotation)
+                for child in annotation:
+                    if child.tag == f'{{{annotation_namespace}}}discard':
+                        parameter_ids_to_remove.append(p.getIdAttribute())
+        for parameter_id in parameter_ids_to_remove:
+            # Remove corresponding rules
+            self.sbml.removeRuleByVariable(parameter_id)
+            # Remove parameter
+            self.sbml.removeParameter(parameter_id)
+
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
                             constant_parameters: List[str] = None) -> None:
@@ -1162,6 +1199,24 @@ class SbmlImporter:
     def _process_rule_assignment(self, rule: sbml.AssignmentRule):
         sbml_var = self.sbml.getElementBySId(rule.getVariable())
         sym_id = symbol_with_assumptions(rule.getVariable())
+
+        # Check whether this rule is a spline rule.
+        if not self._discard_annotations:
+            if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                annotation = AbstractSpline.get_annotation(rule)
+                if annotation is not None:
+                    spline = AbstractSpline.from_annotation(
+                        sym_id, annotation,
+                        locals_=self._local_symbols,
+                    )
+                    if spline.evaluate_at != amici_time_symbol and spline.evaluate_at != sbml_time_symbol:
+                        raise NotImplementedError(
+                            "AMICI at the moment does not support splines "
+                            "whose evaluation point is not the model time."
+                        )
+                    self.splines.append(spline)
+                    return
+
         formula = self._sympy_from_sbml_math(rule)
         if formula is None:
             return
@@ -2075,6 +2130,10 @@ class SbmlImporter:
                              smart_subs(v, old, self._make_initial(new))
                              for c, v in self.compartments.items()}
 
+        # Substitute inside spline definitions
+        for spline in self.splines:
+            spline._replace_in_all_expressions(old, new)
+
     def _clean_reserved_symbols(self) -> None:
         """
         Remove all reserved symbols from self.symbols
@@ -2092,8 +2151,9 @@ class SbmlImporter:
                         for k, v in symbols.items()
                     }
 
-    def _sympy_from_sbml_math(self, var_or_math: [sbml.SBase, str]
-                              ) -> Union[sp.Expr, float, None]:
+    def _sympy_from_sbml_math(
+            self, var_or_math: [sbml.SBase, str]
+    ) -> Union[sp.Expr, float, None]:
         """
         Sympify Math of SBML variables with all sanity checks and
         transformations
@@ -2282,27 +2342,6 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         'AMICI can not parse piecewise/event trigger functions with argument '
         f'{trigger}.'
     )
-
-
-def _parse_logical_operators(math_str: Union[str, float, None]
-                             ) -> Union[str, float, None]:
-    """
-    Parses a math string in order to replace logical operators by a form
-    parsable for sympy
-
-    :param math_str:
-        str with mathematical expression
-    :param math_str:
-        parsed math_str
-    """
-    if not isinstance(math_str, str):
-        return math_str
-
-    if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported as logical '
-                            'operation.')
-
-    return (math_str.replace('&&', '&')).replace('||', '|')
 
 
 def assignmentRules2observables(sbml_model: sbml.Model,

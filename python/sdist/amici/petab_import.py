@@ -447,6 +447,7 @@ def import_model_sbml(
         validate: bool = True,
         non_estimated_parameters_as_constants=True,
         output_parameter_defaults: Optional[Dict[str, float]] = None,
+        discard_sbml_annotations: bool = False,
         **kwargs) -> amici.SbmlImporter:
     """
     Create AMICI model from PEtab problem
@@ -483,7 +484,7 @@ def import_model_sbml(
         Print/log extra information.
 
     :param allow_reinit_fixpar_initcond:
-        See :class:`amici.ode_export.ODEExporter`. Must be enabled if initial
+        See :class:`amici.de_export.ODEExporter`. Must be enabled if initial
         states are to be reset after preequilibration.
 
     :param validate:
@@ -499,6 +500,9 @@ def import_model_sbml(
         Optional default parameter values for output parameters introduced in
         the PEtab observables table, in particular for placeholder parameters.
         Dictionary mapping parameter IDs to default values.
+
+    :param discard_sbml_annotations:
+        Discard information contained in AMICI SBML annotations (debug).
 
     :param kwargs:
         Additional keyword arguments to be passed to
@@ -564,7 +568,10 @@ def import_model_sbml(
 
     show_model_info(sbml_model)
 
-    sbml_importer = amici.SbmlImporter(sbml_model)
+    sbml_importer = amici.SbmlImporter(
+        sbml_model,
+        discard_annotations=discard_sbml_annotations,
+    )
     sbml_model = sbml_importer.sbml
 
     allow_n_noise_pars = \
