@@ -148,13 +148,13 @@ if(isfield(this.fun,'J'))
     fprintf('sparse | ')
     M = double(logical(this.fun.J.sym~=sym(zeros(size(this.fun.J.sym)))));
     this.sparseidx = find(M);
-    
+
     [ubw,lbw] = ami_bandwidth(M);
-    
+
     this.ubw = ubw;
     this.lbw = lbw;
     this.nnz = length(find(M(:)));
-    
+
     I = arrayfun(@(x) find(M(:,x))-1,1:nx,'UniformOutput',false);
     this.rowvals = [];
     this.colptrs = [];
@@ -163,7 +163,7 @@ if(isfield(this.fun,'J'))
         this.rowvals = [this.rowvals; I{ix}];
     end
     this.colptrs(ix+1) = length(this.rowvals);
-    
+
     if(this.adjoint)
         if(isfield(this.fun,'JB'))
             fprintf('sparseB | ')
@@ -186,7 +186,7 @@ if(strcmp(this.wtype, 'iw'))
         this.getFun([], 'M');
         this.id = double(any(this.fun.M.sym));
     else
-        
+
     end
 else
     this.id = zeros(1, nx);

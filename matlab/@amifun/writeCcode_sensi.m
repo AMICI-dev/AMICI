@@ -5,10 +5,10 @@ function writeCcode_sensi(this,model,fid)
 % Parameters:
 %  model: model defintion object @type amimodel
 %  fid: file id in which the final expression is written @type fileid
-% 
+%
 % Return values:
 %  void
-      
+
 np = model.np;
 ng = model.ng;
 
@@ -69,7 +69,7 @@ elseif(strcmp(this.funstr,'qBdot'))
             end
         end
     end
-else 
+else
     nonzero = this.sym ~=0;
     if(any(any(nonzero)))
         tmpfun = this;

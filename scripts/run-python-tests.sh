@@ -16,4 +16,3 @@ pip install scipy h5py pytest pytest-cov
 
 # PEtab tests are run separately
 pytest --ignore-glob=*petab* --ignore-glob=*test_splines.py
-

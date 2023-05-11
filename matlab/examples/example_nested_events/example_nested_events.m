@@ -70,7 +70,7 @@ if(usejava('jvm'))
     legend('error x1','Location','NorthEastOutside')
     legend boxoff
     ylabel('x')
-    
+
     set(gcf,'Position',[100 300 1200 300])
 end
 
@@ -111,7 +111,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('sx')
         box on
-        
+
         subplot(5,2,ip*2)
         plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'--')
         legend('error sx1','Location','NorthEastOutside')
@@ -123,7 +123,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 end

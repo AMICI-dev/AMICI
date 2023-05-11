@@ -10,4 +10,3 @@ function fun = am_piecewise( piece,condition,default )
 %  fun: return value, piece if condition is true, default if not
     fun = am_if(condition,piece,default);
 end
-

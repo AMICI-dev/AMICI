@@ -17,8 +17,7 @@ import yaml
 
 import amici
 from amici.logging import get_logger
-from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
-                                   LLH, RDATAS)
+from amici.petab_objective import simulate_petab, rdatas_to_measurement_df, LLH, RDATAS
 from petab.visualize import plot_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -32,33 +31,64 @@ def parse_cli_args():
     """
 
     parser = argparse.ArgumentParser(
-        description='Simulate PEtab-format model using AMICI.')
+        description="Simulate PEtab-format model using AMICI."
+    )
 
     # General options:
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                        help='More verbose output')
-    parser.add_argument('-c', '--check', dest='check', action='store_true',
-                        help='Compare to reference value')
-    parser.add_argument('-p', '--plot', dest='plot', action='store_true',
-                        help='Plot measurement and simulation results')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="More verbose output",
+    )
+    parser.add_argument(
+        "-c",
+        "--check",
+        dest="check",
+        action="store_true",
+        help="Compare to reference value",
+    )
+    parser.add_argument(
+        "-p",
+        "--plot",
+        dest="plot",
+        action="store_true",
+        help="Plot measurement and simulation results",
+    )
 
     # PEtab problem
-    parser.add_argument('-y', '--yaml', dest='yaml_file_name',
-                        required=True,
-                        help='PEtab YAML problem filename')
+    parser.add_argument(
+        "-y",
+        "--yaml",
+        dest="yaml_file_name",
+        required=True,
+        help="PEtab YAML problem filename",
+    )
 
     # Corresponding AMICI model
-    parser.add_argument('-m', '--model-name', dest='model_name',
-                        help='Name of the AMICI module of the model to '
-                             'simulate.', required=True)
-    parser.add_argument('-d', '--model-dir', dest='model_directory',
-                        help='Directory containing the AMICI module of the '
-                             'model to simulate. Required if model is not '
-                             'in python path.')
+    parser.add_argument(
+        "-m",
+        "--model-name",
+        dest="model_name",
+        help="Name of the AMICI module of the model to " "simulate.",
+        required=True,
+    )
+    parser.add_argument(
+        "-d",
+        "--model-dir",
+        dest="model_directory",
+        help="Directory containing the AMICI module of the "
+        "model to simulate. Required if model is not "
+        "in python path.",
+    )
 
-    parser.add_argument('-o', '--simulation-file', dest='simulation_file',
-                        help='File to write simulation result to, in PEtab'
-                        'measurement table format.')
+    parser.add_argument(
+        "-o",
+        "--simulation-file",
+        dest="simulation_file",
+        help="File to write simulation result to, in PEtab" "measurement table format.",
+    )
 
     return parser.parse_args()
 
@@ -70,9 +100,11 @@ def main():
     loglevel = logging.DEBUG if args.verbose else logging.INFO
     logger.setLevel(loglevel)
 
-    logger.info(f"Simulating '{args.model_name}' "
-                f"({args.model_directory}) using PEtab data from "
-                f"{args.yaml_file_name}")
+    logger.info(
+        f"Simulating '{args.model_name}' "
+        f"({args.model_directory}) using PEtab data from "
+        f"{args.yaml_file_name}"
+    )
 
     # load PEtab files
     problem = petab.Problem.from_yaml(args.yaml_file_name)
@@ -88,7 +120,7 @@ def main():
     amici_solver.setAbsoluteTolerance(1e-8)
     amici_solver.setRelativeTolerance(1e-8)
     amici_solver.setMaxSteps(int(1e4))
-    if args.model_name in ('Brannmark_JBC2010', 'Isensee_JCB2018'):
+    if args.model_name in ("Brannmark_JBC2010", "Isensee_JCB2018"):
         amici_model.setSteadyStateSensitivityMode(
             amici.SteadyStateSensitivityMode.integrationOnly
         )
@@ -96,9 +128,9 @@ def main():
     times = dict()
 
     for label, sensi_mode in {
-        't_sim': amici.SensitivityMethod.none,
-        't_fwd': amici.SensitivityMethod.forward,
-        't_adj': amici.SensitivityMethod.adjoint
+        "t_sim": amici.SensitivityMethod.none,
+        "t_fwd": amici.SensitivityMethod.forward,
+        "t_adj": amici.SensitivityMethod.adjoint,
     }.items():
         amici_solver.setSensitivityMethod(sensi_mode)
         if sensi_mode == amici.SensitivityMethod.none:
@@ -107,35 +139,39 @@ def main():
             amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
         res_repeats = [
-            simulate_petab(petab_problem=problem, amici_model=amici_model,
-                           solver=amici_solver, log_level=loglevel)
+            simulate_petab(
+                petab_problem=problem,
+                amici_model=amici_model,
+                solver=amici_solver,
+                log_level=loglevel,
+            )
             for _ in range(3)  # repeat to get more stable timings
         ]
         res = res_repeats[0]
 
-        times[label] = np.mean([
-            sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
-            # only forwards/backwards simulation
-            for res in res_repeats
-        ])
+        times[label] = np.mean(
+            [
+                sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
+                # only forwards/backwards simulation
+                for res in res_repeats
+            ]
+        )
 
         if sensi_mode == amici.SensitivityMethod.none:
             rdatas = res[RDATAS]
             llh = res[LLH]
 
-    times['np'] = sum(problem.parameter_df[petab.ESTIMATE])
+    times["np"] = sum(problem.parameter_df[petab.ESTIMATE])
 
-    pd.Series(times).to_csv(
-        f'./tests/benchmark-models/{args.model_name}_benchmark.csv'
-    )
+    pd.Series(times).to_csv(f"./tests/benchmark-models/{args.model_name}_benchmark.csv")
 
     for rdata in rdatas:
-        assert rdata.status == amici.AMICI_SUCCESS, \
-            f"Simulation failed for {rdata.id}"
+        assert rdata.status == amici.AMICI_SUCCESS, f"Simulation failed for {rdata.id}"
 
     # create simulation PEtab table
-    sim_df = rdatas_to_measurement_df(rdatas=rdatas, model=amici_model,
-                                      measurement_df=problem.measurement_df)
+    sim_df = rdatas_to_measurement_df(
+        rdatas=rdatas, model=amici_model, measurement_df=problem.measurement_df
+    )
     sim_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION}, inplace=True)
 
     if args.simulation_file:
@@ -148,14 +184,16 @@ def main():
 
             # save figure
             for plot_id, ax in axs.items():
-                fig_path = os.path.join(args.model_directory,
-                                        f"{args.model_name}_{plot_id}_vis.png")
+                fig_path = os.path.join(
+                    args.model_directory, f"{args.model_name}_{plot_id}_vis.png"
+                )
                 logger.info(f"Saving figure to {fig_path}")
                 ax.get_figure().savefig(fig_path, dpi=150)
 
     if args.check:
-        references_yaml = os.path.join(os.path.dirname(__file__),
-                                       "benchmark_models.yaml")
+        references_yaml = os.path.join(
+            os.path.dirname(__file__), "benchmark_models.yaml"
+        )
         with open(references_yaml) as f:
             refs = yaml.full_load(f)
 
@@ -166,14 +204,15 @@ def main():
             rtol = 1e-3
             adiff = np.abs(llh - ref_llh)
             atol = 1e-3
-            tolstr = f' Absolute difference is {adiff:.2e} ' \
-                     f'(tol {atol:.2e}) and relative difference is ' \
-                     f'{rdiff:.2e} (tol {rtol:.2e}).'
+            tolstr = (
+                f" Absolute difference is {adiff:.2e} "
+                f"(tol {atol:.2e}) and relative difference is "
+                f"{rdiff:.2e} (tol {rtol:.2e})."
+            )
 
             if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
                 logger.info(
-                    f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
-                    + tolstr
+                    f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}." + tolstr
                 )
             else:
                 logger.error(
@@ -182,13 +221,15 @@ def main():
                 )
                 sys.exit(1)
         except KeyError:
-            logger.error("No reference likelihood found for "
-                         f"{args.model_name} in {references_yaml}")
+            logger.error(
+                "No reference likelihood found for "
+                f"{args.model_name} in {references_yaml}"
+            )
 
         for label, key in {
-            'simulation': 't_sim',
-            'adjoint sensitivity': 't_adj',
-            'forward sensitivity': 't_fwd',
+            "simulation": "t_sim",
+            "adjoint sensitivity": "t_adj",
+            "forward sensitivity": "t_fwd",
         }.items():
             try:
                 ref = refs[args.model_name][key]
@@ -204,8 +245,10 @@ def main():
                         f"within reference ({ref:.2e})."
                     )
             except KeyError:
-                logger.error(f"No reference time for {label} found for "
-                             f"{args.model_name} in {references_yaml}")
+                logger.error(
+                    f"No reference time for {label} found for "
+                    f"{args.model_name} in {references_yaml}"
+                )
 
 
 if __name__ == "__main__":

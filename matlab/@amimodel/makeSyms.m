@@ -103,7 +103,7 @@ else
     catch
         error('Could not transform model.sym.k into a symbolic variable, please check the definition!')
     end
-    
+
 end
 
 if(isfield(this.sym,'root'))
@@ -141,4 +141,3 @@ end
 %         error(['The symbolic variable ' char(symvars(find(svaridx,1))) ' is used in the differential equation right hand side but was not specified as parameter/state/constant!']);
 %     end
 end
-

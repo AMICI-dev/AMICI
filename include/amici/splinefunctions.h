@@ -18,8 +18,7 @@ class Model;
  * Upon call to a spline function, only the evaluation of the spline polynomial
  * is carried out.
  */
-class AbstractSpline
-{
+class AbstractSpline {
   public:
     /** default constructor */
     AbstractSpline() = default;
@@ -37,15 +36,16 @@ class AbstractSpline
      * will occur in log-space in order to ensure positivity of the interpolant
      * (which strictly speaking will no longer be a spline)
      */
-    AbstractSpline(std::vector<realtype> nodes,
-                   std::vector<realtype> node_values,
-                   bool equidistant_spacing,
-                   bool logarithmic_parametrization);
+    AbstractSpline(
+        std::vector<realtype> nodes, std::vector<realtype> node_values,
+        bool equidistant_spacing, bool logarithmic_parametrization
+    );
 
     virtual ~AbstractSpline() = default;
 
     /**
-     * @brief Compute the coefficients for all polynomial segments of this spline
+     * @brief Compute the coefficients for all polynomial segments of this
+     * spline
      */
     virtual void compute_coefficients() = 0;
 
@@ -62,10 +62,10 @@ class AbstractSpline
      * @remark The contents of `dvaluesdp` and `dslopesdp` may be modified
      * by this function.
      */
-    virtual void compute_coefficients_sensi(int nplist,
-                                            int spline_offset,
-                                            gsl::span<realtype> dvaluesdp,
-                                            gsl::span<realtype> dslopesdp) = 0;
+    virtual void compute_coefficients_sensi(
+        int nplist, int spline_offset, gsl::span<realtype> dvaluesdp,
+        gsl::span<realtype> dslopesdp
+    ) = 0;
 
     /**
      * @brief Get the value of this spline at a given point
@@ -87,7 +87,7 @@ class AbstractSpline
      * @param i index of the node at which the spline is to be evaluated
      * @return value of the spline at the `i`-th node
      */
-    realtype get_node_value(const int i) const;
+    realtype get_node_value(int const i) const;
 
     /**
      * @brief Get the value of this spline at a given node
@@ -95,7 +95,7 @@ class AbstractSpline
      * @param i index of the node at which the spline is to be evaluated
      * @return scaled value of the spline at the `i`-th node
      */
-    realtype get_node_value_scaled(const int i) const;
+    realtype get_node_value_scaled(int const i) const;
 
     /**
      * @brief Get the derivative of this spline with respect to a given
@@ -105,7 +105,7 @@ class AbstractSpline
      * @return sensitivity of the spline with respect to the `ip`th parameter
      * at `t`
      */
-    realtype get_sensitivity(const realtype t, const int ip) const;
+    realtype get_sensitivity(const realtype t, int const ip) const;
 
     /**
      * @brief Get the derivative of this spline with respect to a given
@@ -118,7 +118,8 @@ class AbstractSpline
      * @return sensitivity of the spline with respect to the `ip`th parameter
      * at `t`
      */
-    realtype get_sensitivity(const realtype t, const int ip, const realtype value) const;
+    realtype
+    get_sensitivity(const realtype t, int const ip, const realtype value) const;
 
     /**
      * @brief Get the derivative of this spline with respect to a given
@@ -126,10 +127,12 @@ class AbstractSpline
      * in the scale in which interpolation is carried out (e.g., log-scale)
      * @param t point at which the sensitivity is to be evaluated
      * @param ip index of the parameter
-     * @return scaled sensitivity of the spline with respect to the `ip`th parameter
-     * at `t`
+     * @return scaled sensitivity of the spline with respect to the `ip`th
+     * parameter at `t`
      */
-    virtual realtype get_sensitivity_scaled(const realtype t, const int ip) const = 0;
+    virtual realtype
+    get_sensitivity_scaled(const realtype t, int const ip) const
+        = 0;
 
     /**
      * @brief Compute the limit value of the spline
@@ -150,10 +153,9 @@ class AbstractSpline
      * one)
      */
     virtual void compute_final_sensitivity(
-      int nplist,
-      int spline_offset,
-      gsl::span<realtype> dspline_valuesdp,
-      gsl::span<realtype> dspline_slopesdp) = 0;
+        int nplist, int spline_offset, gsl::span<realtype> dspline_valuesdp,
+        gsl::span<realtype> dspline_slopesdp
+    ) = 0;
 
     /**
      * @brief Get the limit value of the spline
@@ -177,7 +179,7 @@ class AbstractSpline
      * @param ip parameter index
      * @return limit value
      */
-    realtype get_final_sensitivity(const int ip) const;
+    realtype get_final_sensitivity(int const ip) const;
 
     /**
      * @brief Get the limit value of the sensitivity
@@ -187,7 +189,7 @@ class AbstractSpline
      * @param ip parameter index
      * @return limit value
      */
-    realtype get_final_sensitivity_scaled(const int ip) const;
+    realtype get_final_sensitivity_scaled(int const ip) const;
 
     /**
      * @brief Whether nodes are uniformly spaced
@@ -278,8 +280,7 @@ class AbstractSpline
  * Optionally, the spline can be defined in log-space in order
  * to ensure positivity.
  */
-class HermiteSpline : public AbstractSpline
-{
+class HermiteSpline : public AbstractSpline {
   public:
     HermiteSpline() = default;
 
@@ -305,31 +306,28 @@ class HermiteSpline : public AbstractSpline
      * will occur in log-space in order to ensure positivity of the interpolant
      * (which strictly speaking will no longer be a spline)
      */
-    HermiteSpline(std::vector<realtype> nodes,
-                  std::vector<realtype> node_values,
-                  std::vector<realtype> node_values_derivative,
-                  SplineBoundaryCondition firstNodeBC,
-                  SplineBoundaryCondition lastNodeBC,
-                  SplineExtrapolation firstNodeExtrapol,
-                  SplineExtrapolation lastNodeExtrapol,
-                  bool node_derivative_by_FD,
-                  bool equidistant_spacing,
-                  bool logarithmic_parametrization);
+    HermiteSpline(
+        std::vector<realtype> nodes, std::vector<realtype> node_values,
+        std::vector<realtype> node_values_derivative,
+        SplineBoundaryCondition firstNodeBC, SplineBoundaryCondition lastNodeBC,
+        SplineExtrapolation firstNodeExtrapol,
+        SplineExtrapolation lastNodeExtrapol, bool node_derivative_by_FD,
+        bool equidistant_spacing, bool logarithmic_parametrization
+    );
 
     void compute_coefficients() override;
 
-    void compute_coefficients_sensi(int nplist,
-                                    int spline_offset,
-                                    gsl::span<realtype> dvaluesdp,
-                                    gsl::span<realtype> dslopesdp) override;
+    void compute_coefficients_sensi(
+        int nplist, int spline_offset, gsl::span<realtype> dvaluesdp,
+        gsl::span<realtype> dslopesdp
+    ) override;
 
     void compute_final_value() override;
 
     void compute_final_sensitivity(
-      int nplist,
-      int spline_offset,
-      gsl::span<realtype> dspline_valuesdp,
-      gsl::span<realtype> dspline_slopesdp) override;
+        int nplist, int spline_offset, gsl::span<realtype> dspline_valuesdp,
+        gsl::span<realtype> dspline_slopesdp
+    ) override;
 
     realtype get_value_scaled(const realtype t) const override;
 
@@ -338,7 +336,7 @@ class HermiteSpline : public AbstractSpline
      * @param i index of the node at which the spline is to be evaluated
      * @return value of the derivative at the `i`-th node
      */
-    realtype get_node_derivative(const int i) const;
+    realtype get_node_derivative(int const i) const;
 
     /**
      * @brief Get the derivative of the spline at a given node
@@ -346,9 +344,10 @@ class HermiteSpline : public AbstractSpline
      * @param i index of the node at which the spline is to be evaluated
      * @return scaled value of the derivative at the `i`-th node
      */
-    realtype get_node_derivative_scaled(const int i) const;
+    realtype get_node_derivative_scaled(int const i) const;
 
-    realtype get_sensitivity_scaled(const realtype t, const int ip) const override;
+    realtype
+    get_sensitivity_scaled(const realtype t, int const ip) const override;
 
     /**
      * @brief Whether derivatives of this spline are computed
@@ -359,22 +358,15 @@ class HermiteSpline : public AbstractSpline
 
   private:
     void compute_slope_sensitivities_by_fd(
-      int nplist,
-      int spline_offset,
-      int ip,
-      gsl::span<realtype> dvaluesdp,
-      gsl::span<realtype> dslopesdp
+        int nplist, int spline_offset, int ip, gsl::span<realtype> dvaluesdp,
+        gsl::span<realtype> dslopesdp
     );
 
-    void get_coeffs_sensi_lowlevel(int ip,
-                                   int i_node,
-                                   int nplist,
-                                   int n_spline_coefficients,
-                                   int spline_offset,
-                                   realtype len,
-                                   gsl::span<realtype> dnodesdp,
-                                   gsl::span<realtype> dslopesdp,
-                                   gsl::span<realtype> coeffs) const;
+    void get_coeffs_sensi_lowlevel(
+        int ip, int i_node, int nplist, int n_spline_coefficients,
+        int spline_offset, realtype len, gsl::span<realtype> dnodesdp,
+        gsl::span<realtype> dslopesdp, gsl::span<realtype> coeffs
+    ) const;
 
     void handle_inner_derivatives();
 
@@ -383,10 +375,9 @@ class HermiteSpline : public AbstractSpline
     void compute_coefficients_extrapolation();
 
     void compute_coefficients_extrapolation_sensi(
-      int nplist,
-      int spline_offset,
-      gsl::span<realtype> dspline_valuesdp,
-      gsl::span<realtype> dspline_slopesdp);
+        int nplist, int spline_offset, gsl::span<realtype> dspline_valuesdp,
+        gsl::span<realtype> dspline_slopesdp
+    );
 
     std::vector<realtype> node_values_derivative_;
 

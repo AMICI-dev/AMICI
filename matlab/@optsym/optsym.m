@@ -4,12 +4,12 @@
 %
 classdef optsym<sym
     %OPTSYM is an auxiliary class to gain access to the private symbolic
-    %property 's' which is necessary to be able to call symobj::optimize 
+    %property 's' which is necessary to be able to call symobj::optimize
     %on it
 
     properties
     end
-    
+
     methods
         function obj=optsym(symbol)
             %optsym converts the symbolic object into a optsym object
@@ -21,7 +21,7 @@ classdef optsym<sym
             %  obj: cast symbolic object @type optsym
             obj=obj@sym(symbol);
         end
-        function out=getoptimized(obj)    
+        function out=getoptimized(obj)
             %getoptimized calls symobj::optimize on the optsym object
             %
             % Parameters:
@@ -31,5 +31,5 @@ classdef optsym<sym
             out = mupadmex('symobj::optimize',obj.s);
         end
     end
-    
+
 end

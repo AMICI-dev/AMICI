@@ -2,9 +2,9 @@
 #define AMICI_STEADYSTATEPROBLEM_H
 
 #include <amici/defines.h>
-#include <amici/vector.h>
-#include <amici/newton_solver.h>
 #include <amici/model_state.h>
+#include <amici/newton_solver.h>
+#include <amici/vector.h>
 
 #include <nvector/nvector_serial.h>
 
@@ -28,7 +28,7 @@ class SteadystateProblem {
      * @param solver Solver instance
      * @param model Model instance
      */
-    explicit SteadystateProblem(const Solver &solver, const Model &model);
+    explicit SteadystateProblem(Solver const& solver, Model const& model);
 
     /**
      * @brief Handles steady state computation in the forward case:
@@ -38,7 +38,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void workSteadyStateProblem(const Solver &solver, Model &model, int it);
+    void workSteadyStateProblem(Solver const& solver, Model& model, int it);
 
     /**
      * Integrates over the adjoint state backward in time by solving a linear
@@ -48,37 +48,38 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param bwd backward problem
      */
-    void workSteadyStateBackwardProblem(const Solver &solver, Model &model,
-                                        const BackwardProblem *bwd);
+    void workSteadyStateBackwardProblem(
+        Solver const& solver, Model& model, BackwardProblem const* bwd
+    );
 
     /**
      * @brief Returns the stored SimulationState
      * @return stored SimulationState
      */
-    const SimulationState &getFinalSimulationState() const { return state_; };
+    SimulationState const& getFinalSimulationState() const { return state_; };
 
     /**
      * @brief Returns the quadratures from pre- or postequilibration
      * @return xQB Vector with quadratures
      */
-    const AmiVector &getEquilibrationQuadratures() const { return xQB_; }
+    AmiVector const& getEquilibrationQuadratures() const { return xQB_; }
     /**
      * @brief Returns state at steadystate
      * @return x
      */
-    const AmiVector &getState() const { return state_.x; };
+    AmiVector const& getState() const { return state_.x; };
 
     /**
      * @brief Returns state sensitivity at steadystate
      * @return sx
      */
-    const AmiVectorArray &getStateSensitivity() const { return state_.sx; };
+    AmiVectorArray const& getStateSensitivity() const { return state_.sx; };
 
     /**
      * @brief Accessor for dJydx
      * @return dJydx
      */
-    std::vector<realtype> const &getDJydx() const { return dJydx_; }
+    std::vector<realtype> const& getDJydx() const { return dJydx_; }
 
     /**
      * @brief Accessor for run_time of the forward problem
@@ -96,7 +97,7 @@ class SteadystateProblem {
      * @brief Accessor for steady_state_status
      * @return steady_state_status
      */
-    std::vector<SteadyStateStatus> const &getSteadyStateStatus() const {
+    std::vector<SteadyStateStatus> const& getSteadyStateStatus() const {
         return steady_state_status_;
     }
 
@@ -116,7 +117,7 @@ class SteadystateProblem {
      * @brief Accessor for numsteps
      * @return numsteps
      */
-    const std::vector<int> &getNumSteps() const { return numsteps_; }
+    std::vector<int> const& getNumSteps() const { return numsteps_; }
 
     /**
      * @brief Accessor for numstepsB
@@ -130,19 +131,19 @@ class SteadystateProblem {
      * @param model Model instance
      * @param edata experimental data
      */
-    void getAdjointUpdates(Model &model, const ExpData &edata);
+    void getAdjointUpdates(Model& model, ExpData const& edata);
 
     /**
      * @brief Return the adjoint state
      * @return xB adjoint state
      */
-    AmiVector const &getAdjointState() const { return xB_; }
+    AmiVector const& getAdjointState() const { return xB_; }
 
     /**
      * @brief Accessor for xQB
      * @return xQB
      */
-    AmiVector const &getAdjointQuadrature() const { return xQB_; }
+    AmiVector const& getAdjointQuadrature() const { return xQB_; }
 
     /**
      * @brief Accessor for hasQuadrature_
@@ -165,14 +166,14 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void findSteadyState(const Solver &solver, Model &model, int it);
+    void findSteadyState(Solver const& solver, Model& model, int it);
 
     /**
      * @brief Tries to determine the steady state by using Newton's method
      * @param model pointer to the model object
      * @param newton_retry bool flag indicating whether being relaunched
      */
-    void findSteadyStateByNewtonsMethod(Model &model, bool newton_retry);
+    void findSteadyStateByNewtonsMethod(Model& model, bool newton_retry);
 
     /**
      * @brief Tries to determine the steady state by using forward simulation
@@ -180,22 +181,22 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void findSteadyStateBySimulation(const Solver &solver, Model &model,
-                                     int it);
+    void
+    findSteadyStateBySimulation(Solver const& solver, Model& model, int it);
 
     /**
      * @brief Handles the computation of quadratures in adjoint mode
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void computeSteadyStateQuadrature(const Solver &solver, Model &model);
+    void computeSteadyStateQuadrature(Solver const& solver, Model& model);
 
     /**
      * @brief Computes the quadrature in steady state backward mode by
      * solving the linear system defined by the backward Jacobian
      * @param model pointer to the model object
      */
-    void getQuadratureByLinSolve(Model &model);
+    void getQuadratureByLinSolve(Model& model);
 
     /**
      * @brief Computes the quadrature in steady state backward mode by
@@ -203,7 +204,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void getQuadratureBySimulation(const Solver &solver, Model &model);
+    void getQuadratureBySimulation(Solver const& solver, Model& model);
 
     /**
      * @brief Stores state and throws an exception if equilibration failed
@@ -215,8 +216,8 @@ class SteadystateProblem {
      * @param errorString const pointer to string with error message
      * @param status Entry of steady_state_status to be processed
      */
-    void writeErrorString(std::string *errorString,
-                          SteadyStateStatus status) const;
+    void
+    writeErrorString(std::string* errorString, SteadyStateStatus status) const;
 
     /**
      * @brief Checks depending on the status of the Newton solver,
@@ -228,8 +229,10 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return flag telling how to process state sensitivities
      */
-    bool getSensitivityFlag(const Model &model, const Solver &solver, int it,
-                            SteadyStateContext context);
+    bool getSensitivityFlag(
+        Model const& model, Solver const& solver, int it,
+        SteadyStateContext context
+    );
 
     /**
      * @brief Computes the weighted root mean square of xdot
@@ -242,8 +245,10 @@ class SteadystateProblem {
      * @param ewt error weight vector
      * @return root-mean-square norm
      */
-    realtype getWrmsNorm(AmiVector const &x, AmiVector const &xdot,
-                         realtype atol, realtype rtol, AmiVector &ewt) const;
+    realtype getWrmsNorm(
+        AmiVector const& x, AmiVector const& xdot, realtype atol, realtype rtol,
+        AmiVector& ewt
+    ) const;
 
     /**
      * @brief Checks convergence for state or adjoint quadratures, depending on
@@ -252,14 +257,14 @@ class SteadystateProblem {
      * @param sensi_method sensitivity method
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrms(Model &model, SensitivityMethod sensi_method);
+    realtype getWrms(Model& model, SensitivityMethod sensi_method);
 
     /**
      * @brief Checks convergence for state sensitivities
      * @param model Model instance
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrmsFSA(Model &model);
+    realtype getWrmsFSA(Model& model);
 
     /**
      * @brief Runs the Newton solver iterations and checks for convergence
@@ -267,7 +272,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param newton_retry flag indicating if Newton solver is rerun
      */
-    void applyNewtonsMethod(Model &model, bool newton_retry);
+    void applyNewtonsMethod(Model& model, bool newton_retry);
 
     /**
      * @brief Simulation is launched, if Newton solver or linear system solve
@@ -276,8 +281,8 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param backward flag indicating adjoint mode (including quadrature)
      */
-    void runSteadystateSimulation(const Solver &solver, Model &model,
-                                  bool backward);
+    void
+    runSteadystateSimulation(Solver const& solver, Model& model, bool backward);
 
     /**
      * @brief Initialize CVodeSolver instance for preequilibration simulation
@@ -287,10 +292,9 @@ class SteadystateProblem {
      * @param backward flag switching on quadratures computation
      * @return solver instance
      */
-    std::unique_ptr<Solver> createSteadystateSimSolver(const Solver &solver,
-                                                       Model &model,
-                                                       bool forwardSensis,
-                                                       bool backward) const;
+    std::unique_ptr<Solver> createSteadystateSimSolver(
+        Solver const& solver, Model& model, bool forwardSensis, bool backward
+    ) const;
 
     /**
      * @brief Initialize forward computation
@@ -298,7 +302,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void initializeForwardProblem(int it, const Solver &solver, Model &model);
+    void initializeForwardProblem(int it, Solver const& solver, Model& model);
 
     /**
      * @brief Initialize backward computation
@@ -307,8 +311,9 @@ class SteadystateProblem {
      * @param bwd pointer to backward problem
      * @return flag indicating whether backward computation to be carried out
      */
-    bool initializeBackwardProblem(const Solver &solver, Model &model,
-                                   const BackwardProblem *bwd);
+    bool initializeBackwardProblem(
+        Solver const& solver, Model& model, BackwardProblem const* bwd
+    );
 
     /**
      * @brief Compute the backward quadratures, which contribute to the
@@ -317,15 +322,15 @@ class SteadystateProblem {
      * @param yQ vector to be multiplied with dxdotdp
      * @param yQB resulting vector after multiplication
      */
-    void computeQBfromQ(Model &model, const AmiVector &yQ,
-                        AmiVector &yQB) const;
+    void
+    computeQBfromQ(Model& model, AmiVector const& yQ, AmiVector& yQB) const;
 
     /**
      * @brief Ensures state positivity, if requested and repeats convergence
      * check, if necessary
      * @param model pointer to the model object
      */
-    bool makePositiveAndCheckConvergence(Model &model);
+    bool makePositiveAndCheckConvergence(Model& model);
 
     /**
      * @brief Updates the damping factor gamma that determines step size
@@ -339,31 +344,31 @@ class SteadystateProblem {
     bool updateDampingFactor(bool step_successful);
 
     /**
-     * @brief Updates member variables to indicate that state_.x has been updated and xdot_, delta_, etc.
-     * need to be recomputed.
+     * @brief Updates member variables to indicate that state_.x has been
+     * updated and xdot_, delta_, etc. need to be recomputed.
      */
     void flagUpdatedState();
 
     /**
-     * @brief Retrieves simulation sensitivities from the provided solver and sets the corresponding flag
-     * to indicate they are up to date
+     * @brief Retrieves simulation sensitivities from the provided solver and
+     * sets the corresponding flag to indicate they are up to date
      * @param solver simulation solver instance
      */
-    void updateSensiSimulation(const Solver &solver);
+    void updateSensiSimulation(Solver const& solver);
 
     /**
-     * @brief Computes the right hand side for the current state_.x and sets the corresponding flag to
-     * indicate xdot_ is up to date.
+     * @brief Computes the right hand side for the current state_.x and sets the
+     * corresponding flag to indicate xdot_ is up to date.
      * @param model model instance
      */
-    void updateRightHandSide(Model &model);
+    void updateRightHandSide(Model& model);
 
     /**
-     * @brief Computes the newton step for the current state_.x and sets the corresponding flag to
-     * indicate delta_ is up to date.
+     * @brief Computes the newton step for the current state_.x and sets the
+     * corresponding flag to indicate delta_ is up to date.
      * @param model model instance
      */
-    void getNewtonStep(Model &model);
+    void getNewtonStep(Model& model);
 
     /** newton step */
     AmiVector delta_;
@@ -444,17 +449,19 @@ class SteadystateProblem {
     /** damping factor lower bound */
     realtype damping_factor_lower_bound_{1e-8};
     /** whether newton step should be used for convergence steps */
-    bool newton_step_conv_ {false};
-    /** whether sensitivities should be checked for convergence to steadystate */
-    bool check_sensi_conv_ {true};
+    bool newton_step_conv_{false};
+    /** whether sensitivities should be checked for convergence to steadystate
+     */
+    bool check_sensi_conv_{true};
 
     /** flag indicating whether xdot_ has been computed for the current state */
-    bool xdot_updated_ {false};
-    /** flag indicating whether delta_ has been computed for the current state */
-    bool delta_updated_ {false};
-    /** flag indicating whether simulation sensitivities have been retrieved for the current state */
-    bool sensis_updated_ {false};
-
+    bool xdot_updated_{false};
+    /** flag indicating whether delta_ has been computed for the current state
+     */
+    bool delta_updated_{false};
+    /** flag indicating whether simulation sensitivities have been retrieved for
+     * the current state */
+    bool sensis_updated_{false};
 };
 
 } // namespace amici

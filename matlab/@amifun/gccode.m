@@ -8,17 +8,17 @@ function this = gccode(this,model,fid)
     %
     % Return values:
     %  this: function definition object @type amifun
-    
-    
+
+
     if(any(any(any(this.sym~=0))))
-        
+
         % replace unknown partial derivatives
         if(model.maxflag)
             this.sym = subs(this.sym,sym('D([1], am_max)'),sym('D1max'));
             this.sym = subs(this.sym,sym('D([2], am_max)'),sym('D2max'));
             this.sym = subs(this.sym,sym('am_max'),sym('max'));
         end
-        
+
         % If we have spline, we need to parse them to get derivatives
         if (model.splineflag)
             symstr = char(this.sym);
@@ -31,7 +31,7 @@ function this = gccode(this,model,fid)
             else
                 isDSpline = false;
             end
-            
+
             if (isDSpline)
                 [~, nCol] = size(this.sym);
                 for iCol = 1 : nCol
@@ -48,7 +48,7 @@ function this = gccode(this,model,fid)
                 end
             end
         end
-        
+
         cstr = ccode(this.sym);
         if(~strcmp(cstr(3:4),'t0'))
             if(any(strcmp(this.funstr,{'J','JB','JDiag','dJydsigma','dJydy','dJzdsigma','dJzdz','dJrzdsigma','dJrzdz','dydx','dzdx','drzdx','M','dfdx'}) ))
@@ -60,13 +60,13 @@ function this = gccode(this,model,fid)
         else
             cstr = strrep(cstr,'t0',[this.cvar '_0']);
         end
-        
+
         cstr = strrep(cstr,'log','amici::log');
         % fix derivatives again (we cant do this before as this would yield
         % incorrect symbolic expressions
         cstr = regexprep(regexprep(cstr,'D([0-9]*)([\w]*)\(','D$2\($1,'),'DD([0-9]*)([\w]*)\(','DD$2\($1,');
         cstr = strrep(strrep(cstr, 'DDspline', 'DDspline'), 'Dspline', 'Dspline');
-        
+
         if (model.splineflag)
             if (strfind(symstr, 'spline'))
                 % The floating numbers after 't' must be converted to integers
@@ -75,11 +75,11 @@ function this = gccode(this,model,fid)
                 cstr = regexprep(cstr, '([D]*(spline|spline_pos))\((\w+)\,(\w+)\,t\,\w+\.\w+\,', ['amici::$1\($2\,$3\,t\,', num2str(nNodes), '\,']);
             end
         end
-        
+
         if(numel(cstr)>1)
-            
+
             % fix various function specific variable names/indexes
-            
+
             cstr = regexprep(cstr,'var_x_([0-9]+)','x[$1]');
             cstr = regexprep(cstr,'var_dx_([0-9]+)','dx[$1]');
             cstr = regexprep(cstr,'var_sx_([0-9]+)','sx[$1]');
@@ -101,7 +101,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_sx0_([0-9]+)','sx0[$1]');
             cstr = regexprep(cstr,'var_sdx0_([0-9]+)','sdx0[$1]');
             cstr = regexprep(cstr,'var_root_([0-9]+)', 'root[$1]');
-            
+
             cstr = regexprep(cstr,'var_p_([0-9]+)','p[$1]');
             cstr = regexprep(cstr,'var_k_([0-9]+)','k[$1]');
             cstr = regexprep(cstr,'h_([0-9]+)','h[$1]');
@@ -114,7 +114,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dwdp_([0-9]+)','dwdp[$1]');
             cstr = regexprep(cstr,'tmp_J_([0-9]+)','J->data[$1]');
             cstr = regexprep(cstr,'tmp_dxdotdp_([0-9]+)','dxdotdp[$1]');
-            
+
             cstr = regexprep(cstr,'var_y_([0-9]+)','y[$1]');
             cstr = regexprep(cstr,'my_([0-9]+)','my[$1]');
             cstr = regexprep(cstr,'var_z_([0-9]+)','z[$1]');
@@ -123,7 +123,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_srz_([0-9]+)','srz[$1]');
             cstr = regexprep(cstr,'var_sy_([0-9]+)','sy[$1]');
             cstr = regexprep(cstr,'var_sz_([0-9]+)','sz[$1]');
-           
+
             cstr = regexprep(cstr,'var_dydx[_\[]*([0-9\+\*]+)[\]]*','dydx[$1]'); % matches both _... and [...]
             cstr = regexprep(cstr,'var_dzdx[_\[]*([0-9\+\*]+)[\]]*','dzdx[$1]');
             cstr = regexprep(cstr,'var_drzdx[_\[]*([0-9\+\*]+)[\]]*','drzdx[$1]');
@@ -139,7 +139,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_sigma_z_([0-9]+)','sigmaz[$1]');
             cstr = regexprep(cstr,'var_dsigma_zdp_([0-9]+)',['dsigmazdp[$1]']);
             cstr = regexprep(cstr,'var_dsigma_ydp_([0-9]+)',['dsigmaydp[$1]']);
-            
+
             cstr = regexprep(cstr,'var_dsdydp_([0-9]+)',['dsigmaydp[ip*' num2str(model.ny) ' + $1]']);
             cstr = regexprep(cstr,'var_dsdzdp_([0-9]+)',['dsigmazdp[ip*' num2str(model.nz) ' + $1]']);
             cstr = regexprep(cstr,'var_Jy_([0-9]+)','nllh[$1]');
@@ -153,7 +153,7 @@ function this = gccode(this,model,fid)
             cstr = regexprep(cstr,'var_dJrzdsigma[_\[]*([0-9\+\*]+)[\]]*','dJrzdsigma[$1]');
             cstr = regexprep(cstr,'var_JDiag[_\[]*([0-9\+\*]+)[\]]*','JDiag[$1]');
         end
-        
+
         %%
         % print to file
         fprintf(fid,[cstr '\n']);
