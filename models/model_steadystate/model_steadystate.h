@@ -18,12 +18,12 @@ extern void JSparse_model_steadystate(SUNMatrixContent_Sparse JSparse, const rea
 extern void Jy_model_steadystate(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydsigma_model_steadystate(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydy_model_steadystate(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
-extern void dwdp_model_steadystate(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl);
-extern void dwdx_model_steadystate(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
+extern void dwdp_model_steadystate(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl, const realtype *spl, const realtype *sspl);
+extern void dwdx_model_steadystate(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl);
 extern void dxdotdp_model_steadystate(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
 extern void dydx_model_steadystate(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void sigmay_model_steadystate(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y);
-extern void w_model_steadystate(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
+extern void w_model_steadystate(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl);
 extern void x0_model_steadystate(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void xdot_model_steadystate(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_model_steadystate(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
@@ -42,6 +42,7 @@ public:
                   4,
                   3,
                   3,
+                  0,
                   0,
                   0,
                   0,
@@ -130,12 +131,12 @@ public:
     void fdsigmazdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
 
-    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl) override {
-        dwdp_model_steadystate(dwdp, t, x, p, k, h, w, tcl, stcl);
+    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl, const realtype *spl, const realtype *sspl) override {
+        dwdp_model_steadystate(dwdp, t, x, p, k, h, w, tcl, stcl, spl, sspl);
     }
 
-    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
-        dwdx_model_steadystate(dwdx, t, x, p, k, h, w, tcl);
+    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl) override {
+        dwdx_model_steadystate(dwdx, t, x, p, k, h, w, tcl, spl);
     }
 
     void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) override {
@@ -180,8 +181,8 @@ public:
     void fsz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
     }
 
-    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
-        w_model_steadystate(w, t, x, p, k, h, tcl);
+    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl) override {
+        w_model_steadystate(w, t, x, p, k, h, tcl, spl);
     }
 
     void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {

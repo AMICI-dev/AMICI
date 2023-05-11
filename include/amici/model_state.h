@@ -44,6 +44,9 @@ struct ModelState {
      * (dimension: nplist)
      */
     std::vector<int> plist;
+
+    /** temporary storage for spline values */
+    std::vector<realtype> spl_;
 };
 
 inline bool operator==(const ModelState &a, const ModelState &b) {
@@ -307,6 +310,9 @@ struct ModelStateDerived {
      * (dimension: nJ x nplist, row-major)
      */
     std::vector<realtype> deltaqB_;
+
+    /** temporary storage for sensitivity values of splines */
+    SUNMatrixWrapper sspl_;
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: `nx_solver`) */

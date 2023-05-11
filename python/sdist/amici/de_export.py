@@ -30,7 +30,7 @@ from sympy.matrices.dense import MutableDenseMatrix
 from sympy.matrices.immutable import ImmutableDenseMatrix
 
 from . import (__commit__, __version__, amiciModulePath, amiciSrcPath,
-               amiciSwigPath, sbml_import)
+               amiciSwigPath, sbml_import, splines)
 from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 from .import_utils import (ObservableTransformation, generate_flux_symbol,
@@ -157,15 +157,43 @@ functions = {
         _FunctionInfo(
             'realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *dtcldp',
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp, '
+            'const realtype *spl, const realtype *sspl',
             assume_pow_positivity=True, sparse=True
         ),
     'dwdx':
         _FunctionInfo(
             'realtype *dwdx, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl',
+            'const realtype *w, const realtype *tcl, const realtype *spl',
             assume_pow_positivity=True, sparse=True
+        ),
+    'create_splines':
+        _FunctionInfo(
+            'const realtype *p, const realtype *k',
+            return_type='std::vector<HermiteSpline>',
+        ),
+    'spl':
+        _FunctionInfo(generate_body=False),
+    'sspl':
+        _FunctionInfo(generate_body=False),
+    'spline_values':
+        _FunctionInfo(
+            'const realtype *p, const realtype *k',
+            generate_body=False
+        ),
+    'spline_slopes':
+        _FunctionInfo(
+            'const realtype *p, const realtype *k',
+            generate_body=False
+        ),
+    'dspline_valuesdp':
+        _FunctionInfo(
+            'realtype *dspline_valuesdp, const realtype *p, const realtype *k, const int ip'
+        ),
+    'dspline_slopesdp':
+        _FunctionInfo(
+            'realtype *dspline_slopesdp, const realtype *p, const realtype *k, const int ip'
         ),
     'dwdw':
         _FunctionInfo(
@@ -215,7 +243,7 @@ functions = {
             'realtype *dydp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ip, const realtype *w, const realtype *tcl, '
-            'const realtype *dtcldp',
+            'const realtype *dtcldp, const realtype *spl, const realtype *sspl'
         ),
     'dzdx':
         _FunctionInfo(
@@ -328,7 +356,7 @@ functions = {
         _FunctionInfo(
             'realtype *w, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, '
-            'const realtype *h, const realtype *tcl',
+            'const realtype *h, const realtype *tcl, const realtype *spl',
             assume_pow_positivity=True
         ),
     'x0':
@@ -780,6 +808,7 @@ class DEModel:
         self._expressions: List[Expression] = []
         self._conservation_laws: List[ConservationLaw] = []
         self._events: List[Event] = []
+        self.splines = []
         self._symboldim_funs: Dict[str, Callable[[], int]] = {
             'sx': self.num_states_solver,
             'v': self.num_states_solver,
@@ -956,6 +985,20 @@ class DEModel:
             whether to compute conservation laws
         """
 
+        # add splines as expressions to the model
+        # saved for later substituting into the fluxes
+        spline_subs = {}
+
+        for ispl, spl in enumerate(si.splines):
+            spline_expr = spl.ode_model_symbol(si)
+            spline_subs[spl.sbml_id] = spline_expr
+            self.add_component(Expression(
+                identifier=spl.sbml_id,
+                name=str(spl.sbml_id),
+                value=spline_expr
+            ))
+        self.splines = si.splines
+
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
 
@@ -1077,6 +1120,8 @@ class DEModel:
         # add fluxes as expressions, this needs to happen after base
         # expressions from symbols have been parsed
         for flux_id, flux in zip(fluxes, si.flux_vector):
+            # replace splines inside fluxes
+            flux = flux.subs(spline_subs)
             self.add_component(Expression(
                 identifier=flux_id,
                 name=str(flux_id),
@@ -1517,6 +1562,20 @@ class DEModel:
             length = self.eq(name)[0].shape[1]
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
+        elif name == 'spl':
+            # placeholders for the numeric spline values.
+            # Need to create symbols
+            self._syms[name] = sp.Matrix([
+                [f'spl_{isp}' for isp in range(len(self.splines))]
+            ])
+            return
+        elif name == 'sspl':
+            # placeholders for spline sensitivities. Need to create symbols
+            self._syms[name] = sp.Matrix([
+                [f'sspl_{isp}_{ip}' for ip in range(len(self._syms['p']))]
+                for isp in range(len(self.splines))
+            ])
+            return
         else:
             length = len(self.eq(name))
         self._syms[name] = sp.Matrix([
@@ -1536,6 +1595,9 @@ class DEModel:
         for var in self._variable_prototype:
             if var not in self._syms:
                 self._generate_symbol(var)
+        # symbols for spline values need to be created in addition
+        for var in ['spl', 'sspl']:
+            self._generate_symbol(var)
 
         self._generate_symbol('x')
 
@@ -1810,6 +1872,31 @@ class DEModel:
         elif name == 'dxdotdp_explicit':
             # force symbols
             self._derivative('xdot', 'p', name=name)
+
+        elif name == 'spl':
+            self._eqs[name] = self.sym(name)
+
+        elif name == 'sspl':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
+        elif name == 'spline_values':
+            # force symbols
+            self._eqs[name] = sp.Matrix([
+                y for spline in self.splines
+                for y in spline.values_at_nodes
+            ])
+
+        elif name == 'spline_slopes':
+            # force symbols
+            self._eqs[name] = sp.Matrix([
+                d for spline in self.splines
+                for d in (
+                    sp.zeros(len(spline.derivatives_at_nodes), 1)
+                    if spline.derivatives_by_fd
+                    else spline.derivatives_at_nodes
+                )
+            ])
 
         elif name == 'drootdt':
             self._eqs[name] = smart_jacobian(self.eq('root'), time_symbol)
@@ -2650,7 +2737,7 @@ class DEExporter:
             DE model definition
 
         :param outdir:
-            see :meth:`amici.ode_export.DEExporter.set_paths`
+            see :meth:`amici.de_export.DEExporter.set_paths`
 
         :param verbose:
             verbosity level for logging, ``True``/``False`` default to
@@ -2665,7 +2752,7 @@ class DEExporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see :class:`amici.ode_export.DEExporter`
+            see :class:`amici.de_export.DEExporter`
 
         :param generate_sensitivity_code:
             specifies whether code required for sensitivity computation will be
@@ -2689,6 +2776,9 @@ class DEExporter:
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
         self.model: DEModel = de_model
+        self.model._code_printer.known_functions.update(
+            splines.spline_user_functions(
+                self.model.splines, self._get_index('p')))
 
         # To only generate a subset of functions, apply subselection here
         self.functions: Dict[str, _FunctionInfo] = copy.deepcopy(functions)
@@ -2858,6 +2948,27 @@ class DEExporter:
         with open(compile_script, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
+    def _get_index(self, name: str) -> Dict[sp.Symbol, int]:
+        """
+        Compute indices for a symbolic array.
+        :param name:
+            key in self.model._syms for which to obtain the index.
+        :return:
+            a dictionary of symbol/index pairs.
+        """
+        if name in self.model.sym_names():
+            if name in sparse_functions:
+                symbols = self.model.sparsesym(name)
+            else:
+                symbols = self.model.sym(name).T
+        else:
+            raise ValueError(f'Unknown symbolic array: {name}')
+
+        return {
+            strip_pysb(symbol).name: index
+            for index, symbol in enumerate(symbols)
+        }
+
     def _write_index_files(self, name: str) -> None:
         """
         Write index file for a symbolic array.
@@ -2909,6 +3020,9 @@ class DEExporter:
                 and function == 'sx0_fixedParameters':
             # Not required. Will create empty function body.
             equations = sp.Matrix()
+        elif function == 'create_splines':
+            # nothing to do
+            pass
         else:
             equations = self.model.eq(function)
 
@@ -2922,6 +3036,9 @@ class DEExporter:
             '#include <algorithm>',
             ''
         ]
+        if function == 'create_splines':
+            lines += ['#include "amici/splinefunctions.h"',
+                      '#include <vector>']
 
         func_info = self.functions[function]
 
@@ -2963,7 +3080,10 @@ class DEExporter:
         ])
 
         # function body
-        body = self._get_function_body(function, equations)
+        if function == 'create_splines':
+            body = self._get_create_splines_body()
+        else:
+            body = self._get_function_body(function, equations)
         if not body:
             return
 
@@ -3254,6 +3374,74 @@ class DEExporter:
 
         return [line for line in lines if line]
 
+    def _get_create_splines_body(self):
+        if not self.model.splines:
+            return ["    return {};"]
+
+        ind4 = ' ' * 4
+        ind8 = ' ' * 8
+
+        body = ["return {"]
+        for ispl, spline in enumerate(self.model.splines):
+            if isinstance(spline.nodes, splines.UniformGrid):
+                nodes = f"{ind8}{{{spline.nodes.start}, {spline.nodes.stop}}}, "
+            else:
+                nodes = f"{ind8}{{{', '.join(map(str, spline.nodes))}}}, "
+
+            # vector with the node values
+            values = f"{ind8}{{{', '.join(map(str, spline.values_at_nodes))}}}, "
+            # vector with the slopes
+            if spline.derivatives_by_fd:
+                slopes = f"{ind8}{{}},"
+            else:
+                slopes = f"{ind8}{{{', '.join(map(str, spline.derivatives_at_nodes))}}},"
+
+            body.extend([
+                f"{ind4}HermiteSpline(",
+                nodes,
+                values,
+                slopes,
+            ])
+
+            bc_to_cpp = {
+                None: 'SplineBoundaryCondition::given, ',
+                'zeroderivative': 'SplineBoundaryCondition::zeroDerivative, ',
+                'natural': 'SplineBoundaryCondition::natural, ',
+                'zeroderivative+natural':
+                    'SplineBoundaryCondition::naturalZeroDerivative, ',
+                'periodic': 'SplineBoundaryCondition::periodic, '
+            }
+            for bc in spline.bc:
+                try:
+                    body.append(ind8 + bc_to_cpp[bc])
+                except KeyError:
+                    raise ValueError(f"Unknown boundary condition '{bc}' "
+                                     "found in spline object")
+            extrapolate_to_cpp = {
+                None: 'SplineExtrapolation::noExtrapolation, ',
+                'polynomial': 'SplineExtrapolation::polynomial, ',
+                'constant': 'SplineExtrapolation::constant, ',
+                'linear': 'SplineExtrapolation::linear, ',
+                'periodic': 'SplineExtrapolation::periodic, ',
+            }
+            for extr in spline.extrapolate:
+                try:
+                    body.append(ind8 + extrapolate_to_cpp[extr])
+                except KeyError:
+                    raise ValueError(f"Unknown extrapolation '{extr}' "
+                                     "found in spline object")
+            line = ind8
+            line += 'true, ' if spline.derivatives_by_fd else 'false, '
+            line += 'true, ' if isinstance(spline.nodes, splines.UniformGrid) \
+                else 'false, '
+            line += 'true' if spline.logarithmic_parametrization \
+                else 'false'
+            body.append(line)
+            body.append(f"{ind4}),")
+
+        body.append('};')
+        return ['    ' + line for line in body]
+
     def _write_wrapfunctions_cpp(self) -> None:
         """
         Write model-specific 'wrapper' file (``wrapfunctions.cpp``).
@@ -3296,6 +3484,7 @@ class DEExporter:
             'NZTRUE': self.model.num_eventobs(),
             'NEVENT': self.model.num_events(),
             'NOBJECTIVE': '1',
+            'NSPL': len(self.model.splines),
             'NW': len(self.model.sym('w')),
             'NDWDP': len(self.model.sparsesym(
                 'dwdp', force_generate=self.generate_sensitivity_code

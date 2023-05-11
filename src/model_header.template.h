@@ -5,6 +5,7 @@
 #include <gsl/gsl-lite.hpp>
 
 #include "amici/model_TPL_MODEL_TYPE_LOWER.h"
+#include "amici/splinefunctions.h"
 
 namespace amici {
 
@@ -95,6 +96,10 @@ TPL_DTOTAL_CLDP_DEF
 TPL_DTOTAL_CLDX_RDATA_DEF
 TPL_DTOTAL_CLDX_RDATA_COLPTRS_DEF
 TPL_DTOTAL_CLDX_RDATA_ROWVALS_DEF
+TPL_CREATE_SPLINES_DEF
+TPL_DSPLINE_VALUESDP_DEF
+TPL_DSPLINE_SLOPESDP_DEF
+
 /**
  * @brief AMICI-generated model subclass.
  */
@@ -118,6 +123,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   TPL_NZ,                                  // nz
                   TPL_NZTRUE,                              // nztrue
                   TPL_NEVENT,                              // nevent
+                  TPL_NSPL,                                // nspl
                   TPL_NOBJECTIVE,                          // nobjective
                   TPL_NW,                                  // nw
                   TPL_NDWDX,                               // ndwdx
@@ -194,6 +200,10 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     TPL_DJYDY_IMPL
     TPL_DJYDY_COLPTRS_IMPL
     TPL_DJYDY_ROWVALS_IMPL
+
+    TPL_CREATE_SPLINES_IMPL
+    TPL_DSPLINE_VALUESDP_IMPL
+    TPL_DSPLINE_SLOPESDP_IMPL
 
     TPL_DWDP_IMPL
     TPL_DWDP_COLPTRS_IMPL

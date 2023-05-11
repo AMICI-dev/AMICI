@@ -7,6 +7,7 @@
 
 namespace amici {
 /************************************************/
+/*  Legacy implementation of spline functions   */
 /*  adapted from                                */
 /*  CMATH.  Copyright (c) 1989 Design Software  */
 /*                                              */

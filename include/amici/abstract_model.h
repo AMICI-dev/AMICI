@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
+#include "amici/splinefunctions.h"
 
 #include <sunmatrix/sunmatrix_band.h>
 #include <sunmatrix/sunmatrix_dense.h>
@@ -347,11 +348,14 @@ class AbstractModel {
      * @param w repeating elements vector
      * @param tcl total abundances for conservation laws
      * @param dtcldp Sensitivities of total abundances for conservation laws
+     * @param spl spline value vector
+     * @param sspl sensitivities of spline values vector w.r.t. parameters \f$ p \f$
      */
     virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        int ip, const realtype *w, const realtype *tcl,
-                       const realtype *dtcldp);
+                       const realtype *dtcldp, const realtype *spl,
+                       const realtype *sspl);
 
     /**
      * @brief Model-specific implementation of fdydx
@@ -783,10 +787,11 @@ class AbstractModel {
      * @param k constants vector
      * @param h Heaviside vector
      * @param tcl total abundances for conservation laws
+     * @param spl spline value vector
      */
     virtual void fw(realtype *w, const realtype t, const realtype *x,
                     const realtype *p, const realtype *k, const realtype *h,
-                    const realtype *tcl);
+                    const realtype *tcl, const realtype *spl);
 
     /**
      * @brief Model-specific sparse implementation of dwdp
@@ -799,11 +804,14 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
      * @param stcl sensitivities of total abundances for conservation laws
+     * @param spl spline value vector
+     * @param sspl sensitivities of spline values vector w.r.t. parameters \f$ p \f$
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
-                       const realtype *stcl);
+                       const realtype *stcl, const realtype *spl,
+                       const realtype *sspl);
 
     /**
      * @brief Model-specific implementation for dwdp, column pointers
@@ -828,12 +836,15 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
      * @param stcl sensitivities of total abundances for conservation laws
+     * @param spl spline value vector
+     * @param sspl sensitivities of spline values vector
      * @param ip sensitivity parameter index
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
-                       const realtype *stcl, int ip);
+                       const realtype *stcl, const realtype *spl,
+                       const realtype *sspl, int ip);
 
     /**
      * @brief Model-specific implementation of dwdx, data part
@@ -845,10 +856,12 @@ class AbstractModel {
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
+     * @param spl spline value vector
      */
     virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w, const realtype *tcl);
+                       const realtype *w, const realtype *tcl,
+                       const realtype *spl);
 
     /**
      * @brief Model-specific implementation for dwdx, column pointers
@@ -988,6 +1001,38 @@ class AbstractModel {
     virtual void fdtotal_cldx_rdata_rowvals(
         SUNMatrixWrapper &dtotal_cldx_rdata);
 
+    /**
+     * @brief Model-specific implementation of spline creation
+     * @param p parameter vector
+     * @param k constants vector
+     * @return Vector of splines used in the model
+     */
+    virtual std::vector<HermiteSpline> fcreate_splines(const realtype *p,
+                                                      const realtype *k);
+
+    /**
+     * @brief Model-specific implementation the parametric derivatives
+     * of spline node values
+     * @param dspline_valuesdp vector to which derivatives will be written
+     * @param p parameter vector
+     * @param k constants vector
+     * @param ip Sensitivity index
+     */
+    virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
+                                   const realtype *p, const realtype *k,
+                                   const int ip);
+
+    /**
+     * @brief Model-specific implementation the parametric derivatives
+     * of slopevalues at spline nodes
+     * @param dspline_slopesdp vector to which derivatives will be written
+     * @param p parameter vector
+     * @param k constants vector
+     * @param ip Sensitivity index
+     */
+    virtual void fdspline_slopesdp(realtype *dspline_slopesdp,
+                                   const realtype *p, const realtype *k,
+                                   const int ip);
 };
 
 } // namespace amici

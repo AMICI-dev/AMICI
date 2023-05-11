@@ -69,4 +69,5 @@
 %ignore fdx_rdatadx_solver_rowvals;
 %ignore fdtotal_cldx_rdata_colptrs;
 %ignore fdtotal_cldx_rdata_rowvals;
+%ignore fcreate_splines;
 %include "amici/abstract_model.h"

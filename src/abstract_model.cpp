@@ -123,7 +123,8 @@ void AbstractModel::fdydp(realtype */*dydp*/, const realtype /*t*/,
                           const realtype */*x*/, const realtype */*p*/,
                           const realtype */*k*/, const realtype */*h*/,
                           int /*ip*/, const realtype */*w*/,
-                          const realtype */*tcl*/, const realtype */*dtcldp*/)
+                          const realtype */*tcl*/, const realtype */*dtcldp*/,
+                          const realtype */*spl*/, const realtype */*sspl*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
@@ -544,7 +545,8 @@ AbstractModel::fw(realtype* /*w*/,
                   const realtype* /*p*/,
                   const realtype* /*k*/,
                   const realtype* /*h*/,
-                  const realtype* /*tcl*/)
+                  const realtype* /*tcl*/,
+                  const realtype* /*spl*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
@@ -560,7 +562,9 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*h*/,
                      const realtype* /*w*/,
                      const realtype* /*tcl*/,
-                     const realtype* /*stcl*/)
+                     const realtype* /*stcl*/,
+                     const realtype* /*spl*/,
+                     const realtype* /*sspl*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
@@ -593,6 +597,8 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*w*/,
                      const realtype* /*tcl*/,
                      const realtype* /*stcl*/,
+                     const realtype* /*spl*/,
+                     const realtype* /*sspl*/,
                      const int /*ip*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
@@ -608,7 +614,8 @@ AbstractModel::fdwdx(realtype* /*dwdx*/,
                      const realtype* /*k*/,
                      const realtype* /*h*/,
                      const realtype* /*w*/,
-                     const realtype* /*tcl*/)
+                     const realtype* /*tcl*/,
+                     const realtype* /*spl*/)
 {
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
@@ -748,6 +755,30 @@ void AbstractModel::fdtotal_cldx_rdata_rowvals(
     throw AmiException("Requested functionality is not supported as %s is "
                        "not implemented for this model!",
                        __func__);
+}
+
+std::vector<HermiteSpline>
+AbstractModel::fcreate_splines(const realtype */*p*/,
+                                    const realtype */*k*/) {
+    return std::vector<HermiteSpline>();
+}
+
+void
+AbstractModel::fdspline_valuesdp(realtype* /*dspline_valuesdp*/,
+                                 const realtype* /*p*/,
+                                 const realtype* /*k*/,
+                                 const int /*ip*/)
+{
+    // no-op default implementation
+}
+
+void
+AbstractModel::fdspline_slopesdp(realtype* /*dspline_slopesdp*/,
+                                 const realtype* /*p*/,
+                                 const realtype* /*k*/,
+                                 const int /*ip*/)
+{
+    // no-op default implementation
 }
 
 } // namespace amici

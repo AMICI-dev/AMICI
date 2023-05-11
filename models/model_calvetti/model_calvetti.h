@@ -19,11 +19,11 @@ extern void Jy_model_calvetti(double *nllh, const int iy, const realtype *p, con
 extern void M_model_calvetti(realtype *M, const realtype t, const realtype *x, const realtype *p, const realtype *k);
 extern void dJydsigma_model_calvetti(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydy_model_calvetti(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
-extern void dwdx_model_calvetti(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
+extern void dwdx_model_calvetti(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl);
 extern void dydx_model_calvetti(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void root_model_calvetti(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx);
 extern void sigmay_model_calvetti(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y);
-extern void w_model_calvetti(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
+extern void w_model_calvetti(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl);
 extern void x0_model_calvetti(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void xdot_model_calvetti(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w);
 extern void y_model_calvetti(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
@@ -45,6 +45,7 @@ public:
                   0,
                   0,
                   4,
+                  0,
                   1,
                   38,
                   53,
@@ -134,11 +135,11 @@ public:
     void fdsigmazdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
 
-    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl) override {
+    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl, const realtype *spl, const realtype *sspl) override {
     }
 
-    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
-        dwdx_model_calvetti(dwdx, t, x, p, k, h, w, tcl);
+    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl) override {
+        dwdx_model_calvetti(dwdx, t, x, p, k, h, w, tcl, spl);
     }
 
     void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) override {
@@ -183,8 +184,8 @@ public:
     void fsz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
     }
 
-    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
-        w_model_calvetti(w, t, x, p, k, h, tcl);
+    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl) override {
+        w_model_calvetti(w, t, x, p, k, h, tcl, spl);
     }
 
     void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {

@@ -49,6 +49,7 @@ class ExpDataTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             nmaxevent, // ne
+            0,         // nspl
             0,         // nJ
             0,         // nw
             0,         // ndwdx
