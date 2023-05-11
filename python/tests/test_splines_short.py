@@ -7,12 +7,13 @@ ground truth.
 
 import numpy as np
 import sympy as sp
+
 from amici.splines import CubicHermiteSpline, UniformGrid
 from splines_utils import (
     example_spline_1,
     check_splines_full,
 )
-    
+
 
 def test_spline_piecewise(**kwargs):
     """
@@ -79,7 +80,7 @@ def test_splines_plist():
     xx = UniformGrid(0, 5, number_of_nodes=3)
     yy = np.asarray([0.0, 1.0, 0.5])
     spline1 = CubicHermiteSpline(
-        f'y1',
+        'y1',
         nodes=xx,
         values_at_nodes=yy,
         bc='auto', extrapolate=(None, 'constant'),
@@ -88,7 +89,7 @@ def test_splines_plist():
     xx = UniformGrid(0, 5, number_of_nodes=4)
     yy = np.asarray([0.0, 0.5, -0.5, 0.5])
     spline2 = CubicHermiteSpline(
-        f'y2',
+        'y2',
         nodes=xx,
         values_at_nodes=yy,
         bc='auto', extrapolate=(None, 'constant'),
@@ -103,7 +104,7 @@ def test_splines_plist():
     }
     # print([y.subs(params).evalf() for y in yy])
     spline3 = CubicHermiteSpline(
-        f'y3', 
+        'y3',
         nodes=xx,
         values_at_nodes=yy,
         derivatives_at_nodes=dd,
@@ -113,7 +114,7 @@ def test_splines_plist():
     xx = UniformGrid(0, 5, number_of_nodes=3)
     yy = np.asarray([0.0, -0.5, 0.5])
     spline4 = CubicHermiteSpline(
-        f'y4',
+        'y4',
         nodes=xx,
         values_at_nodes=yy,
         bc='auto', extrapolate=(None, 'constant'),
@@ -130,6 +131,6 @@ def test_splines_plist():
         [spline1, spline2, spline3, spline4], params, tols,
         check_piecewise=False,
         check_forward=False,
-        check_adjoint=True, # plist cannot be checked, but complex parameter dependence can
+        check_adjoint=True,  # plist cannot be checked, but complex parameter dependence can
         parameter_lists=[[0, 1, 4], [2, 3]],
     )
