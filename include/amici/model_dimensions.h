@@ -31,6 +31,7 @@ struct ModelDimensions {
      * @param nz Number of event observables
      * @param nztrue Number of event observables of the non-augmented model
      * @param ne Number of events
+     * @param nspl Number of splines
      * @param nJ Number of objective functions
      * @param nw Number of repeating elements
      * @param ndwdx Number of nonzero elements in the `x` derivative of the
@@ -58,6 +59,7 @@ struct ModelDimensions {
             const int nxtrue_solver, const int nx_solver_reinit, const int np,
             const int nk, const int ny,
             const int nytrue, const int nz, const int nztrue, const int ne,
+            const int nspl,
             const int nJ, const int nw, const int ndwdx, const int ndwdp,
             const int ndwdw, const int ndxdotdw, std::vector<int> ndJydy,
             const int ndxrdatadxsolver, const int ndxrdatadtcl,
@@ -67,7 +69,7 @@ struct ModelDimensions {
           nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit),
           np(np), nk(nk),
           ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue),
-          ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp), ndwdw(ndwdw),
+          ne(ne), nspl(nspl), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp), ndwdw(ndwdw),
           ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)),
           ndxrdatadxsolver(ndxrdatadxsolver), ndxrdatadtcl(ndxrdatadtcl),
           ndtotal_cldx_rdata(ndtotal_cldx_rdata),
@@ -86,6 +88,7 @@ struct ModelDimensions {
         Expects(nztrue >= 0);
         Expects(nztrue <= nz);
         Expects(ne >= 0);
+        Expects(nspl >= 0);
         Expects(nw >= 0);
         Expects(ndwdx >= 0);
         Expects(ndwdx <= nw * nx_solver);
@@ -144,6 +147,9 @@ struct ModelDimensions {
 
     /** Number of events */
     int ne{0};
+
+    /** numer of spline functions in the model */
+    int nspl{0};
 
     /** Number of common expressions */
     int nw{0};

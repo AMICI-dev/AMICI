@@ -26,3 +26,5 @@ AMICI Python API
    amici.conserved_quantities_demartino
    amici.conserved_quantities_rref
    amici.numpy
+   amici.sbml_utils
+   amici.splines

@@ -72,7 +72,7 @@ def pysb2amici(
         generated module
 
     :param output_dir:
-        see :meth:`amici.ode_export.ODEExporter.set_paths`
+        see :meth:`amici.de_export.ODEExporter.set_paths`
 
     :param observables:
         list of :class:`pysb.core.Expression` or :class:`pysb.core.Observable`
@@ -1269,7 +1269,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            ode_model: DEModel) -> bool:
     """
     Wrapper to interface
-    :meth:`ode_export.DEModel.state_has_fixed_parameter_initial_condition`
+    :meth:`de_export.DEModel.state_has_fixed_parameter_initial_condition`
     from a pysb specie/model arguments
 
     :param specie:
@@ -1284,7 +1284,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
     :return:
         ``False`` if the species does not have an initial condition at all.
         Otherwise the return value of
-        :meth:`ode_export.DEModel.state_has_fixed_parameter_initial_condition`
+        :meth:`de_export.DEModel.state_has_fixed_parameter_initial_condition`
     """
     # ComplexPatterns are not hashable, so we have to compare by string
     ic_index = next(
