@@ -2,10 +2,13 @@
 
 import itertools
 
-import amici
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
+
+import amici
 from test_pysb import get_data
+
 
 @pytest.fixture
 def preeq_fixture(pysb_example_presimulation_module):
@@ -115,11 +118,12 @@ def test_manual_preequilibration(preeq_fixture):
         assert rdata_sim.status == amici.AMICI_SUCCESS
 
         for variable in ['x', 'sx']:
-            assert np.isclose(
+            assert_allclose(
                 rdata_auto[variable],
                 rdata_sim[variable],
-                1e-6, 1e-6
-            ).all(), dict(pscale=pscale, plist=plist, variable=variable)
+                atol=1e-6, rtol=1e-6,
+                err_msg=str(dict(pscale=pscale, plist=plist, variable=variable))
+            )
 
 
 def test_parameter_reordering(preeq_fixture):
@@ -172,11 +176,12 @@ def test_data_replicates(preeq_fixture):
     rdata_double = amici.runAmiciSimulation(model, solver, edata)
 
     for variable in ['llh', 'sllh']:
-        assert np.isclose(
-            2*rdata_single[variable],
+        assert_allclose(
+            2 * rdata_single[variable],
             rdata_double[variable],
-            1e-6, 1e-6
-        ).all(), dict(variable=variable, sensi_meth=sensi_meth)
+            atol=1e-6, rtol=1e-6,
+            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth))
+        )
 
 
 def test_parameter_in_expdata(preeq_fixture):
@@ -403,6 +408,49 @@ def test_newton_steadystate_check(preeq_fixture):
             rdatas[False][variable],
             1e-6, 1e-6
         ).all(), variable
+
+
+def test_simulation_errors(preeq_fixture):
+    model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, \
+        plists = preeq_fixture
+
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.setSensitivityMethodPreequilibration(amici.SensitivityMethod.forward)
+    model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrationOnly)
+    solver.setMaxSteps(1)
+
+    # exceeded maxsteps
+    # preeq & posteq
+    for e in [edata, edata_preeq]:
+        rdata = amici.runAmiciSimulation(model, solver, e)
+        assert rdata['status'] != amici.AMICI_SUCCESS
+        assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[0].identifier == 'EQUILIBRATION_FAILURE'
+        assert 'exceeded maximum number of integration steps' in rdata._swigptr.messages[0].message
+        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_error
+        assert rdata._swigptr.messages[1].identifier == 'OTHER'
+        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[2].identifier == 'BACKTRACE'
+
+    # too long simulations
+    solver.setMaxSteps(int(1e4))
+    solver.setRelativeToleranceSteadyState(0.0)
+    solver.setAbsoluteToleranceSteadyState(0.0)
+    # preeq & posteq
+    for e in [edata_preeq, edata]:
+        rdata = amici.runAmiciSimulation(model, solver, e)
+        assert rdata['status'] != amici.AMICI_SUCCESS
+        assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[0].identifier == 'CVODES:CVode:RHSFUNC_FAIL'
+        assert rdata._swigptr.messages[1].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[1].identifier == 'EQUILIBRATION_FAILURE'
+        assert 'exceedingly long simulation time' in rdata._swigptr.messages[1].message
+        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_error
+        assert rdata._swigptr.messages[2].identifier == 'OTHER'
+        assert rdata._swigptr.messages[3].severity == amici.LogSeverity_debug
+        assert rdata._swigptr.messages[3].identifier == 'BACKTRACE'
+
+
 
 
 

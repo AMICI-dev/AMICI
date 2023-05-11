@@ -1,0 +1,11 @@
+format_version: 1
+parameter_file: parameters_lotka_volterra.tsv
+problems:
+- condition_files:
+  - experimental_conditions_lotka_volterra.tsv
+  measurement_files:
+  - measurements.tsv
+  observable_files:
+  - observables_lotka_volterra.tsv
+  sbml_files:
+  - lotka_volterra.xml

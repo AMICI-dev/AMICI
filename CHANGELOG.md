@@ -2,6 +2,151 @@
 
 ## v0.X Series
 
+### v0.17.1 (2023-05-10)
+
+This release fixes two bugs:
+
+* One bug introduced in v0.17.0, that causes an `ImportError`
+  on macOS (https://github.com/AMICI-dev/AMICI/issues/2075).
+* An AttributeError in petab_import_pysb with petab>=0.2.0
+  https://github.com/AMICI-dev/AMICI/pull/2079
+
+### v0.17.0 (2023-05-09)
+
+AMICI v0.17.0 requires Python>=3.9 and a C++17 compatible compiler
+
+Features
+* DAE support in SBML
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2017
+* SBML import: flatten SBML-comp models
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2063
+* Added sllh computation back to `petab_objective.simulate_petab`
+  by @dilpath in https://github.com/AMICI-dev/AMICI/pull/1548
+* CMake-based Python extension builds
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1992
+
+Fixes
+* Fixed CPU time tracking with multi-threading (partially)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2023
+* Fixed HDF5 ambiguous overload
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2031
+* Fixed varying cmake libdir lib(64)/
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2033
+* Fixed Equilibration cpu time computation
+  by @plakrisenko in https://github.com/AMICI-dev/AMICI/pull/2035
+* CMake: add header files to library sources for generated models
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2047
+* CMake: Handle header-dependency of swig files
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2046
+* Don't try to detect conservation laws for models with Species-AssignmentRules
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2056
+* Smith benchmark and SBML initialization fix
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2034
+* SBML import: Fixed check for required packages
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2064
+* Nan observables
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2065
+* Fixed check for discontinuities for conservation law computation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2068
+* Specify visualization dependencies
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2070
+* Fixed sympy symbol name clashes during PEtab import
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2069
+* Fixed ReturnData::{preeq_wrms,posteq_wrms} with FSA and check_sensi_steadystate_conv_=True
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2071
+
+Extended / updated documentation, for example:
+* Jax example notebook
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1996
+* Updated Windows/MSVC installation instructions
+  by @Podde1 in https://github.com/AMICI-dev/AMICI/pull/2053
+
+New Contributors
+* @Podde1 made their first contribution in https://github.com/AMICI-dev/AMICI/pull/2053
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.16.1...v0.17.0
+
+
+### v0.16.1 (2023-02-24)
+
+Fixes:
+* Additional package names for finding blas via pkg-config
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1959
+* Changed default interpolation type from hermite to polynomial
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1960
+* PySB import: Change default simplify to work with multiprocessing
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1961
+* Add --no-validate to amici_import_petab
+  @dweindl in https://github.com/AMICI-dev/AMICI/pull/1963
+* Fix get_model for direct import of swig interface
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1969
+* Fix PytestReturnNotNoneWarning in test_conserved_quantities_demartino.py
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1968
+* Fix MSVC builds / remove -W* flags
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1972
+* Add option to use IDs when plotting trajectories
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1974
+* Fix assignmentRules2observables - skip non-assignment-rule targets
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1973
+* Use std::clock for measuring solver time
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1982
+  (*Note that this uses cpu-time consumed by all threads*)
+* Fix narrowing-conversion-warning
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1983
+* PEtab import: allow specifying default values for output parameters
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1987
+* Print stacktraces only with debug logging level
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1985
+* Change default ReturnData::status to AMICI_NOT_RUN
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1984
+* Reduce time-tracking overhead
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1988
+* Fix equilibraton status discrepancy
+  by @plakrisenko in https://github.com/AMICI-dev/AMICI/pull/1991
+* Pass model_name to _create_model_output_dir_name
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1994
+* CMake: Build with OpenMP support if available
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2000
+* Fix SuiteSparse Makefiles for compiler-paths
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2003
+* CMake: Build with HDF5 support if available
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1999
+* CMake: Fix reading version file on Windows
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2001
+* CMake: raise minimum required version to 3.15
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2002
+* Fix/extend runtime logging
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2005
+* Fix error logging in steadystate solver
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2008
+* Don't pass `-py3` to swig after 4.1.0
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2010
+* SWIG __repr__s for different templated vector classes
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2009
+* Matlab: If mex fails, print mex arguments
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2013
+* Simplify OpenBLAS installation on Windows
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2016
+* Remove model name prefix in generated model files
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2015
+* ...
+
+Documentation:
+* Restructure sphinx doc
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1978
+* Instructions for AMICI with singularity
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1964
+* Illustrate options for potentially speeding up model import/simulation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1965
+* ...
+
+Dependencies:
+* Updated SuiteSparse to v7.0.1
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2018
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.16.0...v0.16.1
+
+
 ### v0.16.0 (2023-01-25)
 
 Features
@@ -453,7 +598,7 @@ https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
 
 ### v0.11.22 (2021-12-02)
 
-* **Require sympy>=1.9,pysb>=1.13.1** by @FFroehlich, @dweindl
+* **Require sympy>=1.9,pysb>=1.13.1*  by @FFroehlich, @dweindl
   in https://github.com/AMICI-dev/AMICI/pull/1599
 * Fixed sympy deprecation warning by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1600

@@ -41,7 +41,7 @@ def data_demartino2014():
 
     # stoichiometric matrix
     response = urllib.request.urlopen(
-        r'https://chimera.roma1.infn.it/SYSBIO/test-ecoli.dat.gz',
+        r'https://github.com/AMICI-dev/AMICI/files/11430971/DeMartinoDe2014_test-ecoli.dat.gz',
         timeout=10
     )
     data = gzip.GzipFile(fileobj=io.BytesIO(response.read()))
@@ -51,7 +51,7 @@ def data_demartino2014():
 
     # metabolite / row names
     response = urllib.request.urlopen(
-        r'https://chimera.roma1.infn.it/SYSBIO/test-ecoli-met.txt',
+        r'https://github.com/AMICI-dev/AMICI/files/11430970/test-ecoli-met.txt',
         timeout=10
     )
     row_names = [entry.decode('ascii').strip()

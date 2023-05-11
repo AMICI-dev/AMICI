@@ -78,6 +78,15 @@ const std::map<ModelQuantity, std::string> model_quantity_to_str {
 
 };
 
+
+static void setNaNtoZero(std::vector<realtype> &vec) {
+    std::for_each(vec.begin(), vec.end(), [](double& val) {
+        if (std::isnan(val)) {
+            val = 0.0;
+        }
+    });
+}
+
 /**
  * @brief local helper function to get parameters
  * @param ids vector of name/ids of (fixed)Parameters
@@ -904,6 +913,8 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
     //        M  K                 K  N                     M  N
     //        lda                  ldb                      ldc
+    setNaNtoZero(derived_state_.dydx_);
+    setNaNtoZero(derived_state_.sx_);
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, ny, nplist(), nx_solver, 1.0,
                 derived_state_.dydx_.data(), ny,
@@ -939,10 +950,13 @@ void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
         // dsigmaydp C[ny,nplist] += dsigmaydy A[ny,ny] * sy B[ny,nplist]
         //             M  N                      M  K          K  N
         //             ldc                       lda           ldb
+        setNaNtoZero(derived_state_.dsigmaydy_);
+        derived_state_.sy_.assign(sy.begin(), sy.end());
+        setNaNtoZero(derived_state_.sy_);
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, ny, nplist(), ny, 1.0,
                     derived_state_.dsigmaydy_.data(), ny,
-                    sy.data(), ny, 1.0, ssigmay.data(), ny);
+                    derived_state_.sy_.data(), ny, 1.0, ssigmay.data(), ny);
     }
 
     if (always_check_finite_)
@@ -986,6 +1000,8 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     sx.flatten_to_vector(derived_state_.sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
+    setNaNtoZero(derived_state_.dJydx_);
+    setNaNtoZero(derived_state_.sx_);
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
                 derived_state_.dJydx_.data(), nJ,
@@ -1037,6 +1053,8 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
         // dzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = sz C[nz,nplist]
         //        M  K                 K  N                     M  N
         //        lda                  ldb                      ldc
+        setNaNtoZero(derived_state_.dzdx_);
+        setNaNtoZero(derived_state_.sx_);
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
                     derived_state_.dzdx_.data(), nz,
@@ -1091,6 +1109,8 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
         // drzdx A[nz,nx_solver] * sx B[nx_solver,nplist] = srz C[nz,nplist]
         //         M  K                 K  N                      M  N
         //         lda                  ldb                       ldc
+        setNaNtoZero(derived_state_.drzdx_);
+        setNaNtoZero(derived_state_.sx_);
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                     BLASTranspose::noTrans, nz, nplist(), nx_solver, 1.0,
                     derived_state_.drzdx_.data(), nz,
@@ -1188,6 +1208,8 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
     sx.flatten_to_vector(derived_state_.sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
+    setNaNtoZero(derived_state_.dJzdx_);
+    setNaNtoZero(derived_state_.sx_);
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
                 derived_state_.dJzdx_.data(), nJ,
@@ -1986,6 +2008,8 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
         fdsigmaydy(it, &edata);
         SUNMatrixWrapper tmp_dense(nJ, ny);
 
+        setNaNtoZero(derived_state_.dJydsigma_);
+        setNaNtoZero(derived_state_.dsigmaydy_);
         for (int iyt = 0; iyt < nytrue; iyt++) {
             if (!derived_state_.dJydy_.at(iyt).capacity())
                 continue;
@@ -2091,6 +2115,8 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
     fdJydsigma(it, x, edata);
     fdsigmaydp(it, &edata);
 
+    setNaNtoZero(derived_state_.dJydsigma_);
+    setNaNtoZero(derived_state_.dsigmaydp_);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (!edata.isSetObservedData(it, iyt))
             continue;
@@ -2370,19 +2396,25 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
 
     derived_state_.dJzdp_.assign(nJ * nplist(), 0.0);
 
-    fdJzdz(ie, nroots, t, x, edata);
     fdzdp(ie, t, x);
-
-    fdJzdsigma(ie, nroots, t, x, edata);
     fdsigmazdp(ie, nroots, t, &edata);
+    fdJzdz(ie, nroots, t, x, edata);
+    fdJrzdz(ie, nroots, t, x, edata);
+    fdJzdsigma(ie, nroots, t, x, edata);
+    fdJrzdsigma(ie, nroots, t, x, edata);
 
+    setNaNtoZero(derived_state_.dzdp_);
+    setNaNtoZero(derived_state_.dsigmazdp_);
+    setNaNtoZero(derived_state_.dJzdz_);
+    setNaNtoZero(derived_state_.dJrzdz_);
+    setNaNtoZero(derived_state_.dJzdsigma_);
+    setNaNtoZero(derived_state_.dJrzdsigma_);
     for (int izt = 0; izt < nztrue; ++izt) {
         if (!edata.isSetObservedEvents(nroots, izt))
             continue;
 
         if (t < edata.getTimepoint(edata.nt() - 1)) {
             // with z
-            fdJzdz(ie, nroots, t, x, edata);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
                         &derived_state_.dJzdz_.at(izt * nz * nJ), nJ,
@@ -2390,9 +2422,6 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
                         derived_state_.dJzdp_.data(), nJ);
         } else {
             // with rz
-            fdJrzdz(ie, nroots, t, x, edata);
-            fdJrzdsigma(ie, nroots, t, x, edata);
-
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
                         &derived_state_.dJrzdsigma_.at(izt * nz * nJ), nJ,
@@ -2425,6 +2454,14 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
     derived_state_.dJzdx_.assign(nJ * nx_solver, 0.0);
 
     fdJzdz(ie, nroots, t, x, edata);
+    fdJrzdz(ie, nroots, t, x, edata);
+    fdzdx(ie, t, x);
+    fdrzdx(ie, t, x);
+    
+    setNaNtoZero(derived_state_.dJzdz_);
+    setNaNtoZero(derived_state_.dJrzdz_);
+    setNaNtoZero(derived_state_.dzdx_);
+    setNaNtoZero(derived_state_.drzdx_);
 
     for (int izt = 0; izt < nztrue; ++izt) {
         if (!edata.isSetObservedEvents(nroots, izt))
@@ -2432,7 +2469,6 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
 
         if (t < edata.getTimepoint(edata.nt() - 1)) {
             // z
-            fdzdx(ie, t, x);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
                         &derived_state_.dJzdz_.at(izt * nz * nJ), nJ,
@@ -2440,8 +2476,6 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
                         derived_state_.dJzdx_.data(), nJ);
         } else {
             // rz
-            fdJrzdz(ie, nroots, t, x, edata);
-            fdrzdx(ie, t, x);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
                         &derived_state_.dJrzdz_.at(izt * nz * nJ), nJ,

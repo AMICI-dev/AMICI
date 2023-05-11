@@ -1,139 +1,41 @@
 """AMICI model package setup"""
-
-
-import contextlib
 import os
-import sys
-from typing import List
+from pathlib import Path
 
-from amici import amici_path, hdf5_enabled, compiledWithOpenMP
-from amici.custom_commands import (set_compiler_specific_extension_options,
-                                   compile_parallel)
-from amici.setuptools import (get_blas_config,
-                              get_hdf5_config,
-                              add_coverage_flags_if_required,
-                              add_debug_flags_if_required,
-                              add_openmp_flags,
-                              )
-from setuptools import find_namespace_packages, setup, Extension
-from setuptools.command.build_ext import build_ext
+from cmake_build_extension import CMakeExtension
+from setuptools import find_namespace_packages, setup
+
+from amici import _get_amici_path
+from amici.custom_commands import AmiciBuildCMakeExtension
 
 
-class ModelBuildExt(build_ext):
-    """Custom build_ext"""
-
-    def build_extension(self, ext):
-        # Work-around for compiler-specific build options
-        set_compiler_specific_extension_options(
-            ext, self.compiler.compiler_type)
-
-
-        # Monkey-patch compiler instance method for parallel compilation
-        #  except for Windows, where this seems to be incompatible with
-        #  providing swig files. Not investigated further...
-        if sys.platform != 'win32':
-            import setuptools._distutils.ccompiler
-            self.compiler.compile = compile_parallel.__get__(
-                self.compiler, setuptools._distutils.ccompiler.CCompiler)
-
-        print(f"Building model extension in {os.getcwd()}")
-
-        build_ext.build_extension(self, ext)
-
-    def find_swig(self) -> str:
-        """Find SWIG executable
-
-        Overrides horribly outdated distutils function."""
-
-        from amici.swig import find_swig
-        return find_swig()
-
-
-def get_model_sources() -> List[str]:
-    """Get list of source files for the amici base library"""
-    import glob
-    model_sources = glob.glob('*.cpp')
-    with contextlib.suppress(ValueError):
-        model_sources.remove('main.cpp')
-    return model_sources
-
-
-def get_amici_libs() -> List[str]:
-    """
-    Get list of libraries for the amici base library
-    """
-    return ['amici', 'sundials', 'suitesparse']
-
-
-def get_extension() -> Extension:
+def get_extension() -> CMakeExtension:
     """Get setuptools extension object for this AMICI model package"""
 
-    cxx_flags = []
-    linker_flags = []
-
-    if compiledWithOpenMP():
-        # Only build model with OpenMP support if AMICI base packages was built
-        #  that way
-        add_openmp_flags(cxx_flags=cxx_flags, ldflags=linker_flags)
-
-    add_coverage_flags_if_required(cxx_flags, linker_flags)
-    add_debug_flags_if_required(cxx_flags, linker_flags)
-
-    h5pkgcfg = get_hdf5_config()
-
-    blaspkgcfg = get_blas_config()
-    linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
-
-    libraries = [*get_amici_libs(), *blaspkgcfg['libraries']]
-    if hdf5_enabled:
-        libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
-
-    sources = [os.path.join("swig", "TPL_MODELNAME.i"), *get_model_sources()]
-
-    # compiler and linker flags for libamici
-    if 'AMICI_CXXFLAGS' in os.environ:
-        cxx_flags.extend(os.environ['AMICI_CXXFLAGS'].split(' '))
-    if 'AMICI_LDFLAGS' in os.environ:
-        linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
-
-    ext_include_dirs = [
-        os.getcwd(),
-        os.path.join(amici_path, 'include'),
-        os.path.join(amici_path, "ThirdParty", "gsl"),
-        os.path.join(amici_path, "ThirdParty", "sundials", "include"),
-        os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
-        *h5pkgcfg['include_dirs'],
-        *blaspkgcfg['include_dirs']
-    ]
-
-    ext_library_dirs = [
-        *h5pkgcfg['library_dirs'],
-        *blaspkgcfg['library_dirs'],
-        os.path.join(amici_path, 'libs')
-    ]
-
     # Build shared object
-    ext = Extension(
-        'TPL_MODELNAME._TPL_MODELNAME',
-        sources=sources,
-        include_dirs=ext_include_dirs,
-        libraries=libraries,
-        library_dirs=ext_library_dirs,
-        swig_opts=[
-            '-c++', '-modern', '-outdir', 'TPL_MODELNAME',
-            '-I%s' % os.path.join(amici_path, 'swig'),
-            '-I%s' % os.path.join(amici_path, 'include'),
+    prefix_path = Path(_get_amici_path())
+    AmiciBuildCMakeExtension.extend_cmake_prefix_path(str(prefix_path))
+
+    # handle parallel building
+    # Note: can be empty to use all hardware threads
+    if (parallel_jobs := os.environ.get('AMICI_PARALLEL_COMPILE')) is not None:
+        os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = parallel_jobs
+    else:
+        os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = "1"
+
+    return CMakeExtension(
+        name='model_ext',
+        source_dir=os.getcwd(),
+        install_prefix='TPL_MODELNAME',
+        cmake_configure_options=[
+            "-DCMAKE_VERBOSE_MAKEFILE=ON",
+            "-DCMAKE_MODULE_PATH="
+            f"{prefix_path.as_posix()}/lib/cmake/SuiteSparse;"
+            f"{prefix_path.as_posix()}/lib64/cmake/SuiteSparse",
+            f"-DKLU_ROOT={prefix_path.as_posix()}",
+            "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
         ],
-        extra_compile_args=cxx_flags,
-        extra_link_args=linker_flags
     )
-
-    # see `set_compiler_specific_extension_options`
-    ext.extra_compile_args_mingw32 = ['-std=c++14']
-    ext.extra_compile_args_unix = ['-std=c++14']
-    ext.extra_compile_args_msvc = ['/std:c++14']
-
-    return ext
 
 
 # Change working directory to setup.py location
@@ -152,8 +54,8 @@ CLASSIFIERS = [
 ]
 
 CMDCLASS = {
-    # For parallel compilation and custom swig finder
-    'build_ext': ModelBuildExt,
+    # for CMake-based builds
+    'build_ext': AmiciBuildCMakeExtension,
 }
 
 # Install
@@ -165,12 +67,11 @@ setup(
     url='https://github.com/AMICI-dev/AMICI',
     author='model-author-todo',
     author_email='model-author-todo',
-    # license = 'BSD',
     ext_modules=[MODEL_EXT],
     packages=find_namespace_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     package_data={},
     zip_safe=False,
     classifiers=CLASSIFIERS,

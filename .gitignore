@@ -154,6 +154,7 @@ python/examples/example_presimulation/model_presimulation/*
 python/examples/example_presimulation/model_presimulation_re/*
 python/examples/example_constant_species/model_constant_species_reduced/*
 python/examples/example_constant_species/model_constant_species/*
+python/examples/example_jax/amici_models/*
 python/tests/sbml_test_models/*
 python/tests/piecewise_test/*
 
@@ -163,7 +164,9 @@ python/sdist/amici/amici.py
 python/sdist/amici/amici_wrap.cxx
 python/sdist/amici/amici_without_hdf5.py
 python/sdist/amici/amici_wrap_without_hdf5.cxx
-
+python/sdist/amici/include/
+python/sdist/amici/lib/
+python/sdist/amici/share/
 python/sdist/build/*
 python/sdist/amici/git_version.txt
 
@@ -177,6 +180,7 @@ ThirdParty/doxygen/*
 ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
+ThirdParty/SuiteSparse/include/
 ThirdParty/SuiteSparse/share/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
@@ -195,3 +199,6 @@ Benchmark-Models-PEtab/
 /test_bmc/
 
 CS_Signalling_ERBB_RAS_AKT/
+cache_fiddy/*
+debug/*
+tests/benchmark-models/cache_fiddy/*

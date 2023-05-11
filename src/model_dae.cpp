@@ -26,13 +26,40 @@ void Model_DAE::fJSparse(realtype t, realtype cj, const_N_Vector x,
                          const_N_Vector dx, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointerConst(x_pos));
-    SUNMatZero(J);
-    fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
-             N_VGetArrayPointerConst(x_pos),
-             state_.unscaledParameters.data(),
-             state_.fixedParameters.data(), state_.h.data(), cj,
-             N_VGetArrayPointerConst(dx),
-             derived_state_.w_.data(), derived_state_.dwdx_.data());
+    if (pythonGenerated) {
+        auto JSparse = SUNMatrixWrapper(J);
+        // python generated
+        derived_state_.dxdotdx_explicit.zero();
+        derived_state_.dxdotdx_implicit.zero();
+        if (derived_state_.dxdotdx_explicit.capacity()) {
+            fdxdotdx_explicit_colptrs(derived_state_.dxdotdx_explicit);
+            fdxdotdx_explicit_rowvals(derived_state_.dxdotdx_explicit);
+            fdxdotdx_explicit(
+                derived_state_.dxdotdx_explicit.data(), t,
+                N_VGetArrayPointerConst(x_pos),
+                state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                state_.h.data(), N_VGetArrayPointerConst(dx),
+                derived_state_.w_.data());
+        }
+        fdxdotdw(t, x_pos, dx);
+        /* Sparse matrix multiplication
+         dxdotdx_implicit += dxdotdw * dwdx */
+        derived_state_.dxdotdw_.sparse_multiply(derived_state_.dxdotdx_implicit,
+                                                derived_state_.dwdx_);
+
+        derived_state_.dfdx_.sparse_add(derived_state_.dxdotdx_explicit, 1.0,
+                                        derived_state_.dxdotdx_implicit, 1.0);
+        fM(t, x_pos);
+        JSparse.sparse_add(derived_state_.MSparse_, -cj,
+                           derived_state_.dfdx_, 1.0);
+    } else {
+        fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
+                 N_VGetArrayPointerConst(x_pos),
+                 state_.unscaledParameters.data(),
+                 state_.fixedParameters.data(), state_.h.data(), cj,
+                 N_VGetArrayPointerConst(dx),
+                 derived_state_.w_.data(), derived_state_.dwdx_.data());
+    }
 }
 
 void Model_DAE::fJv(const realtype t, const AmiVector &x, const AmiVector &dx,
@@ -91,6 +118,21 @@ void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
         throw AmiException("Evaluation of fJDiag failed!");
 }
 
+void Model_DAE::fdxdotdw(const realtype t, const_N_Vector x,
+                         const const_N_Vector dx) {
+    derived_state_.dxdotdw_.zero();
+    if (nw > 0 && derived_state_.dxdotdw_.capacity()) {
+        auto x_pos = computeX_pos(x);
+
+        fdxdotdw_colptrs(derived_state_.dxdotdw_);
+        fdxdotdw_rowvals(derived_state_.dxdotdw_);
+        fdxdotdw(derived_state_.dxdotdw_.data(), t, N_VGetArrayPointerConst(x_pos),
+                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
+                 state_.h.data(), N_VGetArrayPointerConst(dx),
+                 derived_state_.w_.data());
+    }
+}
+
 void Model_DAE::fdxdotdp(const realtype t, const const_N_Vector x,
                          const const_N_Vector dx) {
     auto x_pos = computeX_pos(x);
@@ -116,14 +158,43 @@ void Model_DAE::fdxdotdp(const realtype t, const const_N_Vector x,
 
 void Model_DAE::fM(realtype t, const_N_Vector x) {
     derived_state_.M_.zero();
-    auto x_pos = computeX_pos(x);
-    fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
-       state_.unscaledParameters.data(),
-       state_.fixedParameters.data());
+    if (pythonGenerated) {
+        /*
+         * non-algebraic states in python generated code always have factor
+         * 1 in the mass matrix, so we can easily construct this matrix here
+         * and avoid having to generate c++ code
+         */
+        int ndiff = 0;
+        for (int ix = 0; ix < nx_solver; ix++) {
+            derived_state_.MSparse_.set_indexptr(ix, ndiff);
+            if (this->idlist.at(ix) == 1.0){
+                derived_state_.MSparse_.set_data(ndiff, 1.0);
+                derived_state_.MSparse_.set_indexval(ndiff, ix);
+                ndiff++;
+            }
+        }
+        derived_state_.MSparse_.set_indexptr(nx_solver, ndiff);
+        assert(ndiff == derived_state_.MSparse_.capacity());
+    } else {
+        auto x_pos = computeX_pos(x);
+        fM(derived_state_.M_.data(), t, N_VGetArrayPointerConst(x_pos),
+           state_.unscaledParameters.data(),
+           state_.fixedParameters.data());
+    }
 }
 
 std::unique_ptr<Solver> Model_DAE::getSolver() {
     return std::unique_ptr<Solver>(new amici::IDASolver());
+}
+
+void Model_DAE::fJSparse(SUNMatrixContent_Sparse /*JSparse*/, realtype /*t*/,
+                         const realtype * /*x*/, const double * /*p*/,
+                         const double * /*k*/, const realtype * /*h*/,
+                         realtype  /*cj*/, const realtype * /*dx*/,
+                         const realtype * /*w*/, const realtype * /*dwdx*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
 }
 
 void Model_DAE::froot(realtype * /*root*/, const realtype /*t*/,
@@ -142,6 +213,69 @@ void Model_DAE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
     throw AmiException("Requested functionality is not supported as %s is not "
                        "implemented for this model!",
                        __func__);
+}
+
+void Model_DAE::fdxdotdp_explicit(realtype * /*dxdotdp_explicit*/, const realtype /*t*/,
+                                  const realtype * /*x*/, const realtype * /*p*/,
+                                  const realtype * /*k*/, const realtype * /*h*/,
+                                  const realtype * /*dx*/, const realtype * /*w*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdp_explicit_colptrs(SUNMatrixWrapper &/*dxdotdp*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdp_explicit_rowvals(SUNMatrixWrapper &/*dxdotdp*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdx_explicit(realtype * /*dxdotdx_explicit*/, const realtype /*t*/,
+                                  const realtype * /*x*/, const realtype * /*p*/,
+                                  const realtype * /*k*/, const realtype * /*h*/,
+                                  const realtype * /*dx*/, const realtype * /*w*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdx_explicit_colptrs(SUNMatrixWrapper &/*dxdotdx*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdx_explicit_rowvals(SUNMatrixWrapper &/*dxdotdx*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdw(realtype * /*dxdotdw*/, const realtype /*t*/,
+                         const realtype * /*x*/, const realtype * /*p*/,
+                         const realtype * /*k*/, const realtype * /*h*/,
+                         const realtype * /*dx*/, const realtype * /*w*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdw_colptrs(SUNMatrixWrapper &/*dxdotdw*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_DAE::fdxdotdw_rowvals(SUNMatrixWrapper &/*dxdotdw*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
 }
 
 void Model_DAE::fM(realtype */*M*/, const realtype /*t*/, const realtype */*x*/,

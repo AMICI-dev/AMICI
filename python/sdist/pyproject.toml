@@ -9,5 +9,6 @@ requires = [
     # cf. discussion at https://github.com/numpy/numpy/issues/5888
     # (https://github.com/scipy/oldest-supported-numpy/)
     "oldest-supported-numpy",
+    "cmake-build-extension==0.5.1",
 ]
 build-backend = "setuptools.build_meta"

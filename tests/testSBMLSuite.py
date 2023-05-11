@@ -20,6 +20,7 @@ import libsbml as sbml
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 
 import amici
 from amici.constants import SymbolId
@@ -81,14 +82,17 @@ def test_sbml_testsuite_case(
             generate_sensitivity_code=test_id in sensitivity_check_cases)
         settings = read_settings_file(current_test_path, test_id)
 
-        atol, rtol = apply_settings(settings, solver, model)
+        atol, rtol = apply_settings(settings, solver, model, test_id)
 
         # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
-        if rdata['status'] != amici.AMICI_SUCCESS and test_id in [
-            '00748', '00374', '00369'
-        ]:
-            raise amici.sbml_import.SBMLException('Simulation Failed')
+        if rdata['status'] != amici.AMICI_SUCCESS:
+            if test_id in (
+                '00748', '00374', '00369'
+            ):
+                pytest.skip('Simulation Failed expectedly')
+            else:
+                raise RuntimeError('Simulation failed unexpectedly')
 
         # verify
         simulated = verify_results(settings, rdata, results, wrapper,
@@ -117,16 +121,21 @@ def verify_results(
     """Verify test results"""
     amount_species, variables = get_amount_and_variables(settings)
 
-    # verify states
+    # collect states
     simulated = pd.DataFrame(
         rdata['y'],
         columns=[obs['name']
                  for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()]
     )
     simulated['time'] = rdata['ts']
+    # collect parameters
     for par in model.getParameterIds():
         simulated[par] = rdata['ts'] * 0 + model.getParameterById(par)
-
+    # collect fluxes
+    for expr_idx, expr_id in enumerate(model.getExpressionIds()):
+        if expr_id.startswith("flux_"):
+            simulated[expr_id.removeprefix("flux_")] = rdata.w[:, expr_idx]
+    # handle renamed reserved symbols
     simulated.rename(columns={c: c.replace('amici_', '')
                               for c in simulated.columns}, inplace=True)
 
@@ -139,9 +148,12 @@ def verify_results(
     ]
     # We only need to convert species that have only substance units
     concentration_species = [
-        str(species_id)
-        for species_id, species in wrapper.symbols[SymbolId.SPECIES].items()
-        if str(species_id) in requested_concentrations and species['amount']
+        str(state_id)
+        for state_id, state in {
+            **wrapper.symbols[SymbolId.SPECIES],
+            **wrapper.symbols[SymbolId.ALGEBRAIC_STATE],
+        }.items()
+        if str(state_id) in requested_concentrations and state.get('amount', False)
     ]
     amounts_to_concentrations(concentration_species, wrapper,
                               simulated, requested_concentrations)
@@ -152,11 +164,15 @@ def verify_results(
     # simulated may contain `object` dtype columns and `expected` may
     # contain `np.int64` columns, so we cast everything to `np.float64`.
     for variable in variables:
-        assert np.isclose(
-            simulated[variable].astype(np.float64).values,
-            expected[variable].astype(np.float64).values,
-            atol, rtol, equal_nan=True
-        ).all(), variable
+        expectation = expected[variable].astype(np.float64).values
+        try:
+            actual = simulated[variable].astype(np.float64).values
+        except KeyError as e:
+            raise KeyError(f"Missing simulated value for `{variable}`") from e
+        assert_allclose(
+            actual, expectation, atol, rtol, equal_nan=True,
+            err_msg=f"Mismatch for {variable}"
+        )
 
     return simulated[variables + ['time']]
 
@@ -253,20 +269,24 @@ def get_amount_and_variables(settings):
     return amount_species, variables
 
 
-def apply_settings(settings, solver, model):
+def apply_settings(settings, solver, model, test_id: str):
     """Apply model and solver settings as specified in the test case"""
-
-    ts = np.linspace(float(settings['start']),
-                     float(settings['start'])
-                     + float(settings['duration']),
-                     int(settings['steps']) + 1)
+    # start/duration/steps may be empty
+    ts = np.linspace(float(settings['start'] or 0),
+                     float(settings['start'] or 0)
+                     + float(settings['duration'] or 0),
+                     int(settings['steps'] or 0) + 1)
     atol = float(settings['absolute'])
     rtol = float(settings['relative'])
 
     model.setTimepoints(ts)
     solver.setMaxSteps(int(1e6))
     solver.setRelativeTolerance(rtol / 1e4)
-    solver.setAbsoluteTolerance(atol / 1e4)
+
+    if test_id == "01148":
+        solver.setAbsoluteTolerance(atol / 1e6)
+    else:
+        solver.setAbsoluteTolerance(atol / 1e4)
 
     return atol, rtol
 
@@ -318,7 +338,7 @@ def read_settings_file(current_test_path: Path, test_id: str):
         for line in f:
             if line != '\n':
                 (key, val) = line.split(':')
-                settings[key] = val
+                settings[key] = val.strip()
     return settings
 
 

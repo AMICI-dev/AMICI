@@ -1,6 +1,6 @@
 function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, o_suffix, COPT, DEBUG)
     %COMPILEAMICIDEPENDENCIES Compiles Sundials and SuiteSparse libraries required by AMICI
-
+    COPT = ['CFLAGS=''$CFLAGS -std=c99'' ' COPT];
     sundials_path = fullfile(dependencyPath,'sundials');
     sundials_ver = '5.2.0';
 
@@ -43,14 +43,17 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
         end
     end
 
-    % sundials compatible int type for suitesparse
-    COPT = [COPT ' -DDLONG'];
-
     % compile
     if(~strcmp(sourcesToCompile, ''))
-        eval(['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
+        cmd = ['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
             objectFolder '" ' ...
-            includesstr ' ' sourcesToCompile ]);
+            includesstr ' ' sourcesToCompile];
+        try
+            eval(cmd);
+        catch ME
+            disp(cmd);
+            rethrow(ME);
+        end
     end
 
     % only write versions.txt if we are done compiling
@@ -171,40 +174,39 @@ end
 
 function sources_ssparse = getSourcesSSparse()
     sources_ssparse = {
-        fullfile('KLU','Source','klu_analyze_given.c');
-        fullfile('KLU','Source','klu_analyze.c');
-        fullfile('KLU','Source','klu_defaults.c');
-        fullfile('KLU','Source','klu_diagnostics.c');
-        fullfile('KLU','Source','klu_dump.c');
-        fullfile('KLU','Source','klu_extract.c');
-        fullfile('KLU','Source','klu_factor.c');
-        fullfile('KLU','Source','klu_free_numeric.c');
-        fullfile('KLU','Source','klu_free_symbolic.c');
-        fullfile('KLU','Source','klu_kernel.c');
-        fullfile('KLU','Source','klu_memory.c');
-        fullfile('KLU','Source','klu_refactor.c');
-        fullfile('KLU','Source','klu_scale.c');
-        fullfile('KLU','Source','klu_sort.c');
-        fullfile('KLU','Source','klu_solve.c');
-        fullfile('KLU','Source','klu_tsolve.c');
-        fullfile('KLU','Source','klu.c');
-        fullfile('AMD','Source','amd_1.c');
-        fullfile('AMD','Source','amd_2.c');
-        fullfile('AMD','Source','amd_aat.c');
-        fullfile('AMD','Source','amd_control.c');
-        fullfile('AMD','Source','amd_defaults.c');
-        fullfile('AMD','Source','amd_dump.c');
-        fullfile('AMD','Source','amd_global.c');
-        fullfile('AMD','Source','amd_info.c');
-        fullfile('AMD','Source','amd_order.c');
-        fullfile('AMD','Source','amd_post_tree.c');
-        fullfile('AMD','Source','amd_postorder.c');
-        fullfile('AMD','Source','amd_preprocess.c');
-        fullfile('AMD','Source','amd_valid.c');
-        fullfile('COLAMD','Source','colamd.c');
-        fullfile('BTF','Source','btf_maxtrans.c');
-        fullfile('BTF','Source','btf_order.c');
-        fullfile('BTF','Source','btf_strongcomp.c');
+        fullfile('KLU','Source','klu_l_analyze_given.c');
+        fullfile('KLU','Source','klu_l_analyze.c');
+        fullfile('KLU','Source','klu_l_defaults.c');
+        fullfile('KLU','Source','klu_l_diagnostics.c');
+        fullfile('KLU','Source','klu_l_dump.c');
+        fullfile('KLU','Source','klu_l_extract.c');
+        fullfile('KLU','Source','klu_l_factor.c');
+        fullfile('KLU','Source','klu_l_free_numeric.c');
+        fullfile('KLU','Source','klu_l_free_symbolic.c');
+        fullfile('KLU','Source','klu_l_kernel.c');
+        fullfile('KLU','Source','klu_l_memory.c');
+        fullfile('KLU','Source','klu_l_refactor.c');
+        fullfile('KLU','Source','klu_l_scale.c');
+        fullfile('KLU','Source','klu_l_sort.c');
+        fullfile('KLU','Source','klu_l_solve.c');
+        fullfile('KLU','Source','klu_l_tsolve.c');
+        fullfile('KLU','Source','klu_l.c');
+        fullfile('AMD','Source','amd_l1.c');
+        fullfile('AMD','Source','amd_l2.c');
+        fullfile('AMD','Source','amd_l_aat.c');
+        fullfile('AMD','Source','amd_l_control.c');
+        fullfile('AMD','Source','amd_l_defaults.c');
+        fullfile('AMD','Source','amd_l_dump.c');
+        fullfile('AMD','Source','amd_l_info.c');
+        fullfile('AMD','Source','amd_l_order.c');
+        fullfile('AMD','Source','amd_l_postorder.c');
+        fullfile('AMD','Source','amd_l_post_tree.c');
+        fullfile('AMD','Source','amd_l_preprocess.c');
+        fullfile('AMD','Source','amd_l_valid.c');
+        fullfile('COLAMD','Source','colamd_l.c');
+        fullfile('BTF','Source','btf_l_maxtrans.c');
+        fullfile('BTF','Source','btf_l_order.c');
+        fullfile('BTF','Source','btf_l_strongcomp.c');
         fullfile('SuiteSparse_config','SuiteSparse_config.c');
         };
 end
@@ -212,40 +214,39 @@ end
 function objects_ssparse = getObjectsSSparse(o_suffix)
 
     objects_ssparse = {
-        'klu_analyze_given.o';
-        'klu_analyze.o';
-        'klu_defaults.o';
-        'klu_diagnostics.o';
-        'klu_dump.o';
-        'klu_extract.o';
-        'klu_factor.o';
-        'klu_free_numeric.o';
-        'klu_free_symbolic.o';
-        'klu_kernel.o';
-        'klu_memory.o';
-        'klu_refactor.o';
-        'klu_scale.o';
-        'klu_sort.o';
-        'klu_solve.o';
-        'klu_tsolve.o';
-        'klu.o';
-        'amd_1.o';
-        'amd_2.o';
-        'amd_aat.o';
-        'amd_control.o';
-        'amd_defaults.o';
-        'amd_dump.o';
-        'amd_global.o';
-        'amd_info.o';
-        'amd_order.o';
-        'amd_post_tree.o';
-        'amd_postorder.o';
-        'amd_preprocess.o';
-        'amd_valid.o';
-        'colamd.o';
-        'btf_maxtrans.o';
-        'btf_order.o';
-        'btf_strongcomp.o';
+        'klu_l_analyze_given.o';
+        'klu_l_analyze.o';
+        'klu_l_defaults.o';
+        'klu_l_diagnostics.o';
+        'klu_l_dump.o';
+        'klu_l_extract.o';
+        'klu_l_factor.o';
+        'klu_l_free_numeric.o';
+        'klu_l_free_symbolic.o';
+        'klu_l_kernel.o';
+        'klu_l_memory.o';
+        'klu_l_refactor.o';
+        'klu_l_scale.o';
+        'klu_l_sort.o';
+        'klu_l_solve.o';
+        'klu_l_tsolve.o';
+        'klu_l.o';
+        'amd_l1.o';
+        'amd_l2.o';
+        'amd_l_aat.o';
+        'amd_l_control.o';
+        'amd_l_defaults.o';
+        'amd_l_dump.o';
+        'amd_l_info.o';
+        'amd_l_order.o';
+        'amd_l_post_tree.o';
+        'amd_l_postorder.o';
+        'amd_l_preprocess.o';
+        'amd_l_valid.o';
+        'colamd_l.o';
+        'btf_l_maxtrans.o';
+        'btf_l_order.o';
+        'btf_l_strongcomp.o';
         'SuiteSparse_config.o';
         };
 

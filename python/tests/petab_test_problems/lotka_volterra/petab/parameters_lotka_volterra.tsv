@@ -1,0 +1,3 @@
+parameterId	parameterScale	lowerBound	upperBound	estimate	nominalValue
+alpha	log10	0.1	10.0	1.0	2.0
+gamma	log10	0.1	10.0	1.0	3.0

@@ -23,6 +23,7 @@ import petab
 import sympy as sp
 from petab.C import *
 from petab.parameters import get_valid_parameters_for_parameter_table
+from sympy.abc import _clash
 
 import amici
 from amici.logging import get_logger, log_execution_time, set_log_level
@@ -287,20 +288,22 @@ def import_petab_problem(
     :return:
         The imported model.
     """
+    # extract model name from pysb
+    if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem) \
+            and model_name is None:
+        model_name = petab_problem.pysb_model.name
+
     # generate folder and model name if necessary
     if model_output_dir is None:
         if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
             raise ValueError("Parameter `model_output_dir` is required.")
 
         model_output_dir = \
-            _create_model_output_dir_name(petab_problem.sbml_model)
+            _create_model_output_dir_name(petab_problem.sbml_model, model_name)
     else:
         model_output_dir = os.path.abspath(model_output_dir)
 
-    if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem) \
-            and model_name is None:
-        model_name = petab_problem.pysb_model.name
-    elif model_name is None:
+    if model_name is None:
         model_name = _create_model_name(model_output_dir)
 
     # create folder
@@ -374,7 +377,7 @@ def check_model(
         )
 
 
-def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
+def _create_model_output_dir_name(sbml_model: 'libsbml.Model', model_name: Optional[str] = None) -> Path:
     """
     Find a folder for storing the compiled amici model.
     If possible, use the sbml model id, otherwise create a random folder.
@@ -383,6 +386,10 @@ def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> Path:
     """
     BASE_DIR = Path("amici_models").absolute()
     BASE_DIR.mkdir(exist_ok=True)
+    # try model_name
+    if model_name:
+        return BASE_DIR / model_name
+
     # try sbml model id
     if sbml_model_id := sbml_model.getId():
         return BASE_DIR / sbml_model_id
@@ -589,7 +596,7 @@ def import_model_sbml(
     output_parameters = OrderedDict()
     for formula in formulas:
         # we want reproducible parameter ordering upon repeated import
-        free_syms = sorted(sp.sympify(formula).free_symbols,
+        free_syms = sorted(sp.sympify(formula, locals=_clash).free_symbols,
                            key=lambda symbol: symbol.name)
         for free_sym in free_syms:
             sym = str(free_sym)
@@ -744,11 +751,12 @@ def get_observation_model(
     #  cannot handle states in sigma expressions. Therefore, where possible,
     #  replace species occurring in error model definition by observableIds.
     replacements = {
-        sp.sympify(observable['formula']): sp.Symbol(observable_id)
+        sp.sympify(observable['formula'], locals=_clash):
+            sp.Symbol(observable_id)
         for observable_id, observable in observables.items()
     }
     for observable_id, formula in sigmas.items():
-        repl = sp.sympify(formula).subs(replacements)
+        repl = sp.sympify(formula, locals=_clash).subs(replacements)
         sigmas[observable_id] = str(repl)
 
     noise_distrs = petab_noise_distributions_to_amici(observable_df)

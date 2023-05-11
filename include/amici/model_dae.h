@@ -10,6 +10,7 @@
 #include <sunmatrix/sunmatrix_sparse.h>
 
 #include <utility>
+#include <numeric>
 #include <vector>
 
 namespace amici {
@@ -38,17 +39,27 @@ class Model_DAE : public Model {
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
+     * @param w_recursion_depth Recursion depth of fw
      */
     Model_DAE(const ModelDimensions &model_dimensions,
               SimulationParameters simulation_parameters,
               const SecondOrderMode o2mode,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
-              const int ndxdotdp_explicit=0)
+              const int ndxdotdp_explicit=0, const int ndxdotdx_explicit=0,
+              const int w_recursion_depth=0)
         : Model(model_dimensions, simulation_parameters,
                 o2mode, idlist, z2event, pythonGenerated,
-                ndxdotdp_explicit) {
+                ndxdotdp_explicit, ndxdotdx_explicit, w_recursion_depth) {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
+        auto M_nnz = static_cast<sunindextype>(
+            std::reduce(idlist.begin(), idlist.end())
+        );
+        derived_state_.MSparse_ = SUNMatrixWrapper(nx_solver, nx_solver,
+                                                   M_nnz, CSC_MAT);
+        derived_state_.dfdx_ = SUNMatrixWrapper(nx_solver, nx_solver,
+                                                0, CSC_MAT);
     }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
@@ -313,7 +324,7 @@ class Model_DAE : public Model {
     virtual void fJSparse(SUNMatrixContent_Sparse JSparse, realtype t,
                           const realtype *x, const double *p, const double *k,
                           const realtype *h, realtype cj, const realtype *dx,
-                          const realtype *w, const realtype *dwdx) = 0;
+                          const realtype *w, const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for froot
@@ -361,6 +372,105 @@ class Model_DAE : public Model {
                           const realtype *p, const realtype *k,
                           const realtype *h, int ip, const realtype *dx,
                           const realtype *w, const realtype *dwdp);
+    
+    /**
+     * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule (Py)
+     *
+     * @param dxdotdp_explicit partial derivative xdot wrt p
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h Heaviside vector
+     * @param dx Vector with the derivative states
+     * @param w vector with helper variables
+     */
+    virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
+                                   const realtype *x, const realtype *p,
+                                   const realtype *k, const realtype *h,
+                                   const realtype *dx, const realtype *w);
+
+    /**
+     * @brief Model specific implementation of fdxdotdp_explicit, colptrs part
+     *
+     * @param dxdotdp sparse matrix to which colptrs will be written
+     */
+    virtual void fdxdotdp_explicit_colptrs(SUNMatrixWrapper &dxdotdp);
+
+    /**
+     * @brief Model specific implementation of fdxdotdp_explicit, rowvals part
+     *
+     * @param dxdotdp sparse matrix to which rowvals will be written
+     */
+    virtual void fdxdotdp_explicit_rowvals(SUNMatrixWrapper &dxdotdp);
+
+    /**
+     * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule (Py)
+     *
+     * @param dxdotdx_explicit partial derivative xdot wrt x
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h heavyside vector
+     * @param dx Vector with the derivative states
+     * @param w vector with helper variables
+     */
+    virtual void fdxdotdx_explicit(realtype *dxdotdx_explicit, realtype t,
+                                   const realtype *x, const realtype *p,
+                                   const realtype *k, const realtype *h,
+                                   const realtype *dx, const realtype *w);
+
+    /**
+     * @brief Model specific implementation of fdxdotdx_explicit, colptrs part
+     *
+     * @param dxdotdx sparse matrix to which colptrs will be written
+     */
+    virtual void fdxdotdx_explicit_colptrs(SUNMatrixWrapper &dxdotdx);
+
+    /**
+     * @brief Model specific implementation of fdxdotdx_explicit, rowvals part
+     *
+     * @param dxdotdx sparse matrix to which rowvals will be written
+     */
+    virtual void fdxdotdx_explicit_rowvals(SUNMatrixWrapper &dxdotdx);
+
+    /**
+     * @brief Model specific implementation of fdxdotdw, data part
+     * @param dxdotdw partial derivative xdot wrt w
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h Heaviside vector
+     * @param dx Vector with the derivative states
+     * @param w vector with helper variables
+     */
+    virtual void fdxdotdw(realtype *dxdotdw, realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, const realtype *dx,
+                          const realtype *w);
+
+    /**
+     * @brief Model specific implementation of fdxdotdw, colptrs part
+     * @param dxdotdw sparse matrix to which colptrs will be written
+     */
+    virtual void fdxdotdw_colptrs(SUNMatrixWrapper &dxdotdw);
+
+    /**
+     * @brief Model specific implementation of fdxdotdw, rowvals part
+     * @param dxdotdw sparse matrix to which rowvals will be written
+     */
+    virtual void fdxdotdw_rowvals(SUNMatrixWrapper &dxdotdw);
+
+    /**
+     * @brief Sensitivity of dx/dt wrt model parameters w
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param dx Vector with the derivative states
+     */
+    void fdxdotdw(realtype t, const_N_Vector x,
+                  const_N_Vector dx);
 
     /**
      * @brief Model specific implementation of fM

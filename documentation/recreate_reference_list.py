@@ -45,12 +45,12 @@ def get_sub_bibliography(year, by_year, bibfile):
                   f'nocite: "{entries}"\n...\n' \
                   f'# {year}'
 
-    out = subprocess.run(['pandoc', '--filter=pandoc-citeproc',
-                          '-f', 'markdown'],
+    out = subprocess.run(['pandoc', '--citeproc', '-f', 'markdown'],
                          input=stdin_input, capture_output=True,
                          encoding='utf-8')
     if out.returncode != 0:
         raise AssertionError(out.stderr)
+
     return out.stdout
 
 
@@ -66,8 +66,16 @@ def main():
         f.write('List of publications using AMICI. '
                 f'Total number is {num_total}.\n\n')
         f.write('If you applied AMICI in your work and your publication is '
-                'missing, please let us know via a new Github issue.\n\n')
-
+                'missing, please let us know via a new GitHub issue.\n\n')
+        f.write(
+"""
+<style>
+.csl-entry {
+    padding: 5px
+}
+</style>\n
+"""
+                )
         for year in reversed(sorted(by_year.keys())):
             cur_bib = get_sub_bibliography(year, by_year, bibfile)
             f.write(cur_bib)

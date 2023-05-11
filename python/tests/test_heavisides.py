@@ -9,7 +9,7 @@ from util import (check_trajectories_with_adjoint_sensitivities,
 
 
 @pytest.fixture(params=[
-    'state_and_parameter_dependent_heavisides',
+    'state_and_param_dep_heavisides',
     'piecewise_with_boolean_operations',
     'piecewise_many_conditions',
 ])
@@ -69,7 +69,7 @@ def test_models(model):
 
 
 def get_model_definition(model_name):
-    if model_name == 'state_and_parameter_dependent_heavisides':
+    if model_name == 'state_and_param_dep_heavisides':
         return model_definition_state_and_parameter_dependent_heavisides()
     elif model_name == 'piecewise_with_boolean_operations':
         return model_definition_piecewise_with_boolean_operations()
