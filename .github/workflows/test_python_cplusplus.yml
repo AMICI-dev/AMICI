@@ -6,8 +6,6 @@ on:
   pull_request:
     branches:
       - master
-      # TODO: remove before merge
-      - develop
 
 jobs:
   build:
@@ -105,17 +103,6 @@ jobs:
           --cov-append \
           ${AMICI_DIR}/python/tests
 
-    # TODO <REMOVE BEFORE MERGE>
-    - name: Python tests splines
-      if: ${{ github.base_ref == 'develop' || github.event.merge_group.base_ref == 'develop'}}
-      run: |
-        source build/venv/bin/activate \
-        && pytest \
-          --cov=amici \
-          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
-          --cov-append \
-          ${AMICI_DIR}/python/tests/test_splines.py
-    # TODO </REMOVE BEFORE MERGE>
 
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
