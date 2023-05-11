@@ -19,10 +19,7 @@ void test_spline_values(
     HermiteSpline const& spline,
     std::vector<std::tuple<double, double>> const& expectations)
 {
-  for (auto const& expected : expectations) {
-    double time;
-    double expected_value;
-    std::tie(time, expected_value) = expected;
+  for (auto const& [time, expected_value] : expectations) {
     ASSERT_DOUBLE_EQ(spline.get_value(time), expected_value);
   }
 }
@@ -32,10 +29,7 @@ void test_spline_values(
     std::vector<std::tuple<double, double>> const& expectations,
     const double rtol, const double atol)
 {
-  for (auto expected : expectations) {
-    double time;
-    double expected_value;
-    std::tie(time, expected_value) = expected;
+  for (auto const& [time, expected_value] : expectations) {
     ASSERT_APPROX(spline.get_value(time), expected_value, rtol, atol);
   }
 }
@@ -44,10 +38,7 @@ void test_spline_sensitivities(
     HermiteSpline const& spline,
     std::vector<std::tuple<double, std::vector<double>>> const& expectations)
 {
-  for (auto expected : expectations) {
-    double time;
-    std::vector<double> expected_values;
-    std::tie(time, expected_values) = expected;
+  for (auto const& [time, expected_values] : expectations) {
     for (std::vector<double>::size_type ip = 0; ip < expected_values.size(); ip++)
       ASSERT_DOUBLE_EQ(spline.get_sensitivity(time, ip), expected_values[ip]);
   }
@@ -58,10 +49,7 @@ void test_spline_sensitivities(
     std::vector<std::tuple<double, std::vector<double>>> const& expectations,
     const double rtol, const double atol)
 {
-  for (auto const& expected : expectations) {
-    double time;
-    std::vector<double> expected_values;
-    std::tie(time, expected_values) = expected;
+  for (auto const& [time, expected_values] : expectations) {
     for (std::vector<double>::size_type ip = 0; ip < expected_values.size(); ip++)
       ASSERT_APPROX(spline.get_sensitivity(time, ip), expected_values[ip], rtol, atol);
   }
