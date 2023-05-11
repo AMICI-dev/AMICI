@@ -95,7 +95,7 @@ def create_measurement_table(**columns) -> pd.DataFrame:
 
 
 def species(i) -> str:
-    "Name to use for the `i`-th species."
+    """Name to use for the `i`-th species."""
     return f'z{i}'
 
 
@@ -109,7 +109,7 @@ def observable(i) -> str:
 
 
 def species_to_index(name) -> int:
-    "Get the species index from a species name."
+    """Get the species index from a species name."""
     assert name[0] == 'z'
     return int(name[1:])
 
@@ -442,12 +442,11 @@ def simulate_splines(
 
 
 def compute_ground_truth(splines, initial_values, times, params_true, params_sorted):
-    groundtruth = {}
     x_true_sym = sp.Matrix([
         integrate_spline(spline, None, times, iv)
         for (spline, iv) in zip(splines, initial_values)
     ]).transpose()
-    groundtruth['x_true'] = np.asarray(x_true_sym.subs(params_true), dtype=float)
+    groundtruth = {'x_true': np.asarray(x_true_sym.subs(params_true), dtype=float)}
     sx_by_state = [
         x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
         for i in range(x_true_sym.shape[1])
@@ -516,7 +515,6 @@ def check_splines(
     :param kwargs:
         passed to `simulate_splines`
     """
-
     if isinstance(splines, AbstractSpline):
         splines = [splines]
 
