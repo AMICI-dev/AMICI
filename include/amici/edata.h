@@ -59,8 +59,10 @@ class ExpData : public SimulationParameters {
      * @param ts Timepoints (dimension: nt)
      * @param fixedParameters Model constants (dimension: nk)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-            std::vector<realtype> fixedParameters);
+    ExpData(
+        int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
+        std::vector<realtype> fixedParameters
+    );
 
     /**
      * @brief constructor that initializes timepoints and data from vectors
@@ -77,11 +79,13 @@ class ExpData : public SimulationParameters {
      * @param observedEventsStdDev standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-            std::vector<realtype> const &observedData,
-            std::vector<realtype> const &observedDataStdDev,
-            std::vector<realtype> const &observedEvents,
-            std::vector<realtype> const &observedEventsStdDev);
+    ExpData(
+        int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
+        std::vector<realtype> const& observedData,
+        std::vector<realtype> const& observedDataStdDev,
+        std::vector<realtype> const& observedEvents,
+        std::vector<realtype> const& observedEventsStdDev
+    );
 
     /**
      * @brief constructor that initializes with Model
@@ -159,7 +163,7 @@ class ExpData : public SimulationParameters {
      *
      * @return ExpData::ts
      */
-    std::vector<realtype> const &getTimepoints() const;
+    std::vector<realtype> const& getTimepoints() const;
 
     /**
      * @brief Get timepoint for the given index
@@ -201,7 +205,7 @@ class ExpData : public SimulationParameters {
      *
      * @return observed data (dimension: nt x nytrue, row-major)
      */
-    std::vector<realtype> const &getObservedData() const;
+    std::vector<realtype> const& getObservedData() const;
 
     /**
      * @brief Get measurements for a given timepoint index.
@@ -263,7 +267,7 @@ class ExpData : public SimulationParameters {
      *
      * @return standard deviation of observed data
      */
-    std::vector<realtype> const &getObservedDataStdDev() const;
+    std::vector<realtype> const& getObservedDataStdDev() const;
 
     /**
      * @brief Get pointer to measurement standard deviations.
@@ -306,7 +310,7 @@ class ExpData : public SimulationParameters {
      *
      * @return observed event data
      */
-    std::vector<realtype> const &getObservedEvents() const;
+    std::vector<realtype> const& getObservedEvents() const;
 
     /**
      * @brief get function that returns a pointer to observed data at ieth
@@ -372,7 +376,7 @@ class ExpData : public SimulationParameters {
      *
      * @return standard deviation of observed event data
      */
-    std::vector<realtype> const &getObservedEventsStdDev() const;
+    std::vector<realtype> const& getObservedEventsStdDev() const;
 
     /**
      * @brief get function that returns a pointer to standard deviation of
@@ -536,7 +540,7 @@ class ConditionContext : public ContextManager {
     void restore();
 
   private:
-    Model *model_ = nullptr;
+    Model* model_ = nullptr;
     std::vector<realtype> original_x0_;
     std::vector<realtype> original_sx0_;
     std::vector<realtype> original_parameters_;
