@@ -7,11 +7,16 @@ computed ground truth.
 import math
 import os
 import uuid
+from tempfile import mkdtemp
 from typing import List, Optional, Union, Dict, Any, Sequence
 
-import amici
+import numpy as np
+import pandas as pd
 import petab
 import sympy as sp
+from petab.models.sbml_model import SbmlModel
+
+import amici
 from amici.gradient_check import _check_results
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (LLH, RDATAS, SLLH, EDATAS, simulate_petab)
@@ -20,10 +25,6 @@ from amici.sbml_utils import (add_compartment, add_inflow, add_parameter,
                               create_sbml_model)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-from tempfile import mkdtemp
-
-import numpy as np
-import pandas as pd
 
 
 def evaluate_spline(
@@ -238,8 +239,10 @@ def create_petab_problem(
 
     # Create and validate PEtab problem
     problem = petab.Problem(
-        sbml_document=doc,
-        sbml_model=model,
+        model=SbmlModel(
+            sbml_document=doc,
+            sbml_model=model,
+        ),
         condition_df=condition_df,
         measurement_df=measurement_df,
         parameter_df=parameter_df,
@@ -784,7 +787,7 @@ def check_splines_full(
             use_adjoint=True,
             groundtruth=(None if groundtruth == 'compute' else groundtruth), # do not compute sensitivities if possible
         )
-    
+
     if return_groundtruth:
         if groundtruth is not None and not isinstance(groundtruth, str):
             return groundtruth
