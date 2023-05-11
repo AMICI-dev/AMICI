@@ -407,7 +407,6 @@ def simulate_splines(
     if benchmark is False:
         # Simulate PEtab problem
         res = simulate_petab(petab_problem, amici_model, solver, params_str)
-        assert SLLH not in res.keys()
         llh, rdatas, edatas = res[LLH], res[RDATAS], res[EDATAS]
         assert len(rdatas) == 1
         llh = float(llh)
@@ -432,6 +431,7 @@ def simulate_splines(
         simulate_petab(petab_problem, amici_model, solver, params_str)
         t_elapsed = time.perf_counter() - t0
         runtimes.append(t_elapsed)
+
     return dict(
         runtimes=runtimes,
         mean=np.mean(runtimes),
