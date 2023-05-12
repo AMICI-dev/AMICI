@@ -15,12 +15,12 @@ import typing
 import exhale.deploy
 import exhale_multiproject_monkeypatch
 import mock
-from exhale import configs as exhale_configs
-from sphinx.transforms.post_transforms import ReferencesResolver
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
 import pandas as pd
 import sympy as sp
+from exhale import configs as exhale_configs
+from sphinx.transforms.post_transforms import ReferencesResolver
 
 exhale_multiproject_monkeypatch, pd, sp  # to avoid removal of unused import
 
@@ -60,7 +60,7 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     if domain != "mat":
         return old_breathe_DomainDirectiveFactory_create(domain, args)
 
-    from sphinxcontrib.matlab import MATLABDomain, MatClassmember
+    from sphinxcontrib.matlab import MatClassmember, MATLABDomain
 
     matlab_classes = {k: (v, k) for k, v in MATLABDomain.directives.items()}
     matlab_classes["variable"] = (MatClassmember, "attribute")
