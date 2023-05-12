@@ -54,7 +54,7 @@ for iTest = 1:size(TestData, 1)
       error(['*** ', FuncName, ': Failed for string:', ...
             char(10), '[', TestData{iTest, 1}, ']']);
    end
-   
+
    % Check file input:
    FID = fopen(TestFile, 'wb+');
    if FID < 0
@@ -63,7 +63,7 @@ for iTest = 1:size(TestData, 1)
    end
    fwrite(FID, TestData{iTest, 1}, 'uchar');
    fclose(FID);
-   
+
    Str2 = CalcMD5(TestFile, 'file');
    if strcmpi(Str2, TestData{iTest, 2}) == 0
       fprintf('\n');
@@ -83,14 +83,14 @@ for i = 1:N
    upHexOut  = CalcMD5(data, 'char', 'HEX');
    decOut    = CalcMD5(data, 'char', 'Dec');
    b64Out    = CalcMD5(data, 'char', 'Base64');
-   
+
    if not(strcmpi(lowHexOut, upHexOut) && ...
          isequal(sscanf(lowHexOut, '%2x'), decOut(:)) && ...
          isequal(Base64decode(b64Out), decOut))
       fprintf('\n');
       error(['*** ', FuncName, ': Different results for output types.']);
    end
-   
+
    % Check unicode, if the data length is a multiple of 2:
    if rem(length(data), 2) == 0
       doubleData = double(data);
@@ -110,12 +110,12 @@ if doSpeed
    disp('== Test speed:');
    disp('(Short data: mainly the overhead of calling the function)');
    Delay = 2;
-   
+
    for Len = [10, 100, 1000, 10000, 1e5, 1e6, 1e7]
       [Number, Unit] = UnitPrint(Len);
       fprintf('  Data length: %s %s:\n', Number, Unit);
       data = uint8(fix(rand(1, Len) * 256));
-      
+
       % Measure java time:
       iniTime  = cputime;
       finTime  = iniTime + Delay;
@@ -129,7 +129,7 @@ if doSpeed
       javaLoopPerSec = javaLoop / (cputime - iniTime);
       [Number, Unit] = UnitPrint(javaLoopPerSec * Len);
       fprintf('    java: %6s %s/sec\n', Number, Unit);
-      
+
       % Measure Mex time:
       iniTime = cputime;
       finTime = iniTime + Delay;
@@ -142,7 +142,7 @@ if doSpeed
       [Number, Unit] = UnitPrint(mexLoopPerSec * Len);
       fprintf('    mex:  %6s %s/sec: %.1f times faster\n', ...
          Number, Unit, mexLoopPerSec / javaLoopPerSec);
-      
+
       % Compare the results:
       if ~isequal(javaHash(:), mexHash(:))
          error(['*** ', FuncName, ': Different results from java and Mex.']);
@@ -151,7 +151,7 @@ if doSpeed
 end
 
 fprintf('\nCalcMD5 seems to work well.\n');
-   
+
 return;
 
 % ******************************************************************************

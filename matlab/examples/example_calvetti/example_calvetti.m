@@ -26,13 +26,13 @@ disp(['Time elapsed with cvodes: ' num2str(toc) ])
 % ODE15S
 
 y0 = [k(1); k(3); k(5); 1; 1; 1;];
-M = [1 0 0 0 0 0 
+M = [1 0 0 0 0 0
      0 1 0 0 0 0
      0 0 1 0 0 0
      0 0 0 0 0 0
      0 0 0 0 0 0
      0 0 0 0 0 0];
- 
+
 function [xdot] = dae_system(t,x,p,k,it)
     if it<3
         h0 = 0;
@@ -95,7 +95,7 @@ if(usejava('jvm'))
     legend('error x1','error x2','error x3','error x4','error x5','error x6','Location','NorthEastOutside')
     legend boxoff
     ylabel('x')
-    
+
     set(gcf,'Position',[100 300 1200 500])
 end
 end

@@ -14,21 +14,16 @@ import petab
 import pysb
 import pysb.bng
 import sympy as sp
-from petab.C import (CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA)
+from petab.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
 from petab.models.pysb_model import PySBModel
 
 from .logging import get_logger, log_execution_time, set_log_level
-from .petab_util import (
-    get_states_in_condition_table, PREEQ_INDICATOR_ID
-)
+from .petab_util import get_states_in_condition_table, PREEQ_INDICATOR_ID
 
 logger = get_logger(__name__, logging.WARNING)
 
 
-def _add_observation_model(
-        pysb_model: pysb.Model,
-        petab_problem: petab.Problem
-):
+def _add_observation_model(pysb_model: pysb.Model, petab_problem: petab.Problem):
     """Extend PySB model by observation model as defined in the PEtab
     observables table"""
 
@@ -38,8 +33,10 @@ def _add_observation_model(
         for comp in pysb_model.components
         if isinstance(comp, sp.Symbol)
     }
-    for formula in [*petab_problem.observable_df[OBSERVABLE_FORMULA],
-                    *petab_problem.observable_df[NOISE_FORMULA]]:
+    for formula in [
+        *petab_problem.observable_df[OBSERVABLE_FORMULA],
+        *petab_problem.observable_df[NOISE_FORMULA],
+    ]:
         sym = sp.sympify(formula, locals=local_syms)
         for s in sym.free_symbols:
             if not isinstance(s, pysb.Component):
@@ -48,10 +45,11 @@ def _add_observation_model(
                 local_syms[sp.Symbol.__str__(p)] = p
 
     # add observables and sigmas to pysb model
-    for (observable_id, observable_formula, noise_formula) \
-            in zip(petab_problem.observable_df.index,
-                   petab_problem.observable_df[OBSERVABLE_FORMULA],
-                   petab_problem.observable_df[NOISE_FORMULA]):
+    for observable_id, observable_formula, noise_formula in zip(
+        petab_problem.observable_df.index,
+        petab_problem.observable_df[OBSERVABLE_FORMULA],
+        petab_problem.observable_df[NOISE_FORMULA],
+    ):
         obs_symbol = sp.sympify(observable_formula, locals=local_syms)
         if observable_id in pysb_model.expressions.keys():
             obs_expr = pysb_model.expressions[observable_id]
@@ -61,20 +59,14 @@ def _add_observation_model(
         local_syms[observable_id] = obs_expr
 
         sigma_id = f"{observable_id}_sigma"
-        sigma_symbol = sp.sympify(
-            noise_formula,
-            locals=local_syms
-        )
+        sigma_symbol = sp.sympify(noise_formula, locals=local_syms)
         sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
         pysb_model.add_component(sigma_expr)
         local_syms[sigma_id] = sigma_expr
 
 
-def _add_initialization_variables(
-        pysb_model: pysb.Model,
-        petab_problem: petab.Problem
-):
-    """ Add initialization variables to the PySB model to support initial
+def _add_initialization_variables(pysb_model: pysb.Model, petab_problem: petab.Problem):
+    """Add initialization variables to the PySB model to support initial
     conditions specified in the PEtab condition table.
 
     To parameterize initial states, we currently need initial assignments.
@@ -89,16 +81,19 @@ def _add_initialization_variables(
         # NOTE: would only be required if we actually have preequilibration
         #  adding it anyways. can be optimized-out later
         if PREEQ_INDICATOR_ID in [c.name for c in pysb_model.components]:
-            raise AssertionError("Model already has a component with ID "
-                                 f"{PREEQ_INDICATOR_ID}. Cannot handle "
-                                 "species and compartments in condition table "
-                                 "then.")
+            raise AssertionError(
+                "Model already has a component with ID "
+                f"{PREEQ_INDICATOR_ID}. Cannot handle "
+                "species and compartments in condition table "
+                "then."
+            )
         preeq_indicator = pysb.Parameter(PREEQ_INDICATOR_ID)
         pysb_model.add_component(preeq_indicator)
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
-        logger.debug("Adding preequilibration indicator constant "
-                     f"{PREEQ_INDICATOR_ID}")
+        logger.debug(
+            "Adding preequilibration indicator constant " f"{PREEQ_INDICATOR_ID}"
+        )
     logger.debug(f"Adding initial assignments for {initial_states.keys()}")
 
     for assignee_id in initial_states:
@@ -109,12 +104,12 @@ def _add_initialization_variables(
                 raise ValueError(
                     "Cannot create parameter for initial assignment "
                     f"for {assignee_id} because an entity named "
-                    f"{init_par_id} exists already in the model.")
+                    f"{init_par_id} exists already in the model."
+                )
             p = pysb.Parameter(init_par_id)
             pysb_model.add_component(p)
 
-
-        species_idx = int(re.match(r'__s(\d+)$', assignee_id)[1])
+        species_idx = int(re.match(r"__s(\d+)$", assignee_id)[1])
         # use original model here since that's what was used to generate
         # the ids in initial_states
         species_pattern = petab_problem.model.model.species[species_idx]
@@ -127,23 +122,23 @@ def _add_initialization_variables(
         species_pattern = pysb.as_complex_pattern(eval(str(species_pattern)))
 
         from pysb.pattern import match_complex_pattern
+
         formula = pysb.Expression(
-            f'initial_{assignee_id}_formula',
-            preeq_indicator * pysb_model.parameters[init_par_id_preeq] +
-            (1 - preeq_indicator) * pysb_model.parameters[init_par_id_sim],
+            f"initial_{assignee_id}_formula",
+            preeq_indicator * pysb_model.parameters[init_par_id_preeq]
+            + (1 - preeq_indicator) * pysb_model.parameters[init_par_id_sim],
         )
         pysb_model.add_component(formula)
 
         for initial in pysb_model.initials:
-            if match_complex_pattern(initial.pattern, species_pattern,
-                                     exact=True):
+            if match_complex_pattern(initial.pattern, species_pattern, exact=True):
                 logger.debug(
-                    'The PySB model has an initial defined for species '
-                    f'{assignee_id}, but this species  also has an initial '
-                    'value defined in the PEtab  condition table. The SBML '
-                    'initial assignment will be overwritten to handle '
-                    'preequilibration and  initial values specified by the '
-                    'PEtab problem.'
+                    "The PySB model has an initial defined for species "
+                    f"{assignee_id}, but this species  also has an initial "
+                    "value defined in the PEtab  condition table. The SBML "
+                    "initial assignment will be overwritten to handle "
+                    "preequilibration and  initial values specified by the "
+                    "PEtab problem."
                 )
                 initial.value = formula
                 break
@@ -155,13 +150,13 @@ def _add_initialization_variables(
     return fixed_parameters
 
 
-@log_execution_time('Importing PEtab model', logger)
+@log_execution_time("Importing PEtab model", logger)
 def import_model_pysb(
-        petab_problem: petab.Problem,
-        model_output_dir: Optional[Union[str, Path]] = None,
-        verbose: Optional[Union[bool, int]] = True,
-        model_name: Optional[str] = None,
-        **kwargs
+    petab_problem: petab.Problem,
+    model_output_dir: Optional[Union[str, Path]] = None,
+    verbose: Optional[Union[bool, int]] = True,
+    model_name: Optional[str] = None,
+    **kwargs,
 ) -> None:
     """
     Create AMICI model from PySB-PEtab problem
@@ -231,32 +226,35 @@ def import_model_pysb(
             f"column: {x}"
         )
 
-    from .petab_import import (
-        get_fixed_parameters, petab_noise_distributions_to_amici
-    )
-    constant_parameters = get_fixed_parameters(petab_problem) + \
-        fixed_parameters
+    from .petab_import import get_fixed_parameters, petab_noise_distributions_to_amici
+
+    constant_parameters = get_fixed_parameters(petab_problem) + fixed_parameters
 
     if petab_problem.observable_df is None:
         observables = None
         sigmas = None
         noise_distrs = None
     else:
-        observables = [expr.name for expr in pysb_model.expressions
-                       if expr.name in petab_problem.observable_df.index]
+        observables = [
+            expr.name
+            for expr in pysb_model.expressions
+            if expr.name in petab_problem.observable_df.index
+        ]
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
-        noise_distrs = petab_noise_distributions_to_amici(
-            petab_problem.observable_df)
+        noise_distrs = petab_noise_distributions_to_amici(petab_problem.observable_df)
 
     from amici.pysb_import import pysb2amici
-    pysb2amici(model=pysb_model,
-               output_dir=model_output_dir,
-               model_name=model_name,
-               verbose=True,
-               observables=observables,
-               sigmas=sigmas,
-               constant_parameters=constant_parameters,
-               noise_distributions=noise_distrs,
-               **kwargs)
+
+    pysb2amici(
+        model=pysb_model,
+        output_dir=model_output_dir,
+        model_name=model_name,
+        verbose=True,
+        observables=observables,
+        sigmas=sigmas,
+        constant_parameters=constant_parameters,
+        noise_distributions=noise_distrs,
+        **kwargs,
+    )

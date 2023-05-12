@@ -34,7 +34,7 @@ D.Z = sol.z(sol.z<t(end));
 t = linspace(0,D.Z(end)-0.1,100);
 D.Z = D.Z + 0.5*randn(size(D.Z));
 D.Z(3) = NaN;
-D.Sigma_Z = 0.5*ones(size(D.Z)); 
+D.Sigma_Z = 0.5*ones(size(D.Z));
 D.Z = D.Z + D.Sigma_Z.*randn(size(D.Z));
 
 D.t = t;
@@ -64,7 +64,7 @@ if(usejava('jvm'))
         hold on
     end
     stem(sol.z,zeros(size(sol.z)))
-    
+
     legend('x1','x2','events','Location','NorthEastOutside')
     legend boxoff
     xlabel('time t')
@@ -135,7 +135,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,4)
     plot(abs(sol.sz(:)),abs(sol.sz(:)-sz_fd(:)),'ro')
     hold on
@@ -149,7 +149,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,2)
     hold on
     plot(abs(sol.srz(:)),abs(srz_fd(:)),'bo')
@@ -164,7 +164,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,5)
     plot(abs(sol.srz(:)),abs(sol.srz(:)-srz_fd(:)),'ro')
     hold on
@@ -178,7 +178,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,3)
     hold on
     plot(abs(sol.sllh),abs(sllh_fd),'ko')
@@ -193,7 +193,7 @@ if(usejava('jvm'))
     title('abs llh sensitivity')
     box on
     axis square
-        
+
     subplot(2,3,6)
     plot(abs(sol.sllh),abs(sol.sllh-sllh_fd),'ro')
     hold on
@@ -208,7 +208,7 @@ if(usejava('jvm'))
     box on
     axis square
     set(gcf,'Position',[100 300 1200 500])
-    
+
     figure
     subplot(2,3,1)
     hold on
@@ -224,7 +224,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,4)
     plot(abs(sol.s2z(:)),abs(sol.s2z(:)-s2z_fd(:)),'ro')
     hold on
@@ -238,7 +238,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,2)
     hold on
     plot(abs(sol.s2rz(:)),abs(s2rz_fd(:)),'bo')
@@ -253,7 +253,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,5)
     plot(abs(sol.s2rz(:)),abs(sol.s2rz(:)-s2rz_fd(:)),'ro')
     hold on
@@ -267,7 +267,7 @@ if(usejava('jvm'))
     set(gca,'XScale','log')
     box on
     axis square
-    
+
     subplot(2,3,3)
     hold on
     plot(abs(sol.s2llh),abs(s2llh_fd),'ko')
@@ -282,7 +282,7 @@ if(usejava('jvm'))
     title('abs llh sensitivity')
     box on
     axis square
-        
+
     subplot(2,3,6)
     plot(abs(sol.s2llh),abs(sol.s2llh-s2llh_fd),'ro')
     hold on
@@ -297,7 +297,7 @@ if(usejava('jvm'))
     box on
     axis square
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 

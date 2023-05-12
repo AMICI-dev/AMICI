@@ -1,7 +1,7 @@
 classdef SBMLode < handle
     %SBMLMODEL provides an intermediate container between the SBML
     %definition and an amimodel object
-    
+
     properties
         % states
         state = sym.empty();
@@ -11,7 +11,7 @@ classdef SBMLode < handle
         observable_name = sym.empty();
         % parameter names
         param = sym.empty();
-        % parameter expressions 
+        % parameter expressions
         parameter = sym.empty();
         % constants
         constant = sym.empty();
@@ -48,7 +48,7 @@ classdef SBMLode < handle
         % nominal conditions
         knom = double.empty();
     end
-    
+
     methods
         function model = SBMLode(filename)
             % SBMLode extracts information from an SBML definition and
@@ -63,14 +63,13 @@ classdef SBMLode < handle
             model.importSBML(filename);
             model.checkODE();
         end
-        
+
         importSBML(this,filename)
 
         checkODE(this)
-        
-        writeAMICI(this,modelname)
-        
-    end
-    
-end
 
+        writeAMICI(this,modelname)
+
+    end
+
+end

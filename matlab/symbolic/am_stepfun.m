@@ -1,5 +1,5 @@
 function fun = am_stepfun(t,tstart,vstart,tend,vend)
-% am_stepfun is the amici implementation of the step function 
+% am_stepfun is the amici implementation of the step function
 %
 % Parameters:
 %  t: input variable @type sym

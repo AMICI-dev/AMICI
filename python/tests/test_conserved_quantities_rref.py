@@ -39,7 +39,10 @@ def test_nullspace_by_rref(mat):
         assert np.allclose(mat.dot(actual.T), 0)
 
     expected = sp.Matrix(mat).nullspace()
-    expected = np.hstack(np.asarray(expected, dtype=float)).T \
-        if len(expected) else np.array([])
+    expected = (
+        np.hstack(np.asarray(expected, dtype=float)).T
+        if len(expected)
+        else np.array([])
+    )
 
     assert np.allclose(actual, expected, rtol=1e-8)

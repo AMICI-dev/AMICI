@@ -4,7 +4,7 @@
 %
 classdef amimodel < handle
     % AMIMODEL carries all model definitions including functions and events
-    
+
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % symbolic definition struct @type struct
         sym = struct.empty();
@@ -82,7 +82,7 @@ classdef amimodel < handle
         % storage for flags determining recompilation of individual
         % functions
         cfun = struct.empty();
-        % flag which identifies augmented models 
+        % flag which identifies augmented models
         %  0 indicates no augmentation
         %  1 indicates augmentation by first order sensitivities (yields
         %  second order sensitivities)
@@ -90,7 +90,7 @@ classdef amimodel < handle
         %  order sensitivities (yields hessian-vector product)
         o2flag = 0;
     end
-    
+
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % vector that maps outputs to events
         z2event = double.empty();
@@ -108,7 +108,7 @@ classdef amimodel < handle
         % number of derivatives of derived variables w, dwdp @type int
         ndwdp = 0;
     end
-    
+
     methods
         function AM = amimodel(symfun,modelname)
             % amimodel initializes the model object based on the provided
@@ -138,17 +138,17 @@ classdef amimodel < handle
                 else
                     error('invalid input symfun')
                 end
-                
+
                 if(isfield(model,'sym'))
                     AM.sym = model.sym;
                 else
                     error('symbolic definitions missing in struct returned by symfun')
                 end
-                
-                
-                
+
+
+
                 props = fields(model);
-                
+
                 for j = 1:length(props)
                     if(~strcmp(props{j},'sym')) % we already checked for the sym field
                         if(isfield(model,props{j}))
@@ -174,7 +174,7 @@ classdef amimodel < handle
                         end
                     end
                 end
-                
+
                 AM.modelname = modelname;
                 % set path and create folder
                 AM.wrap_path=fileparts(fileparts(fileparts(mfilename('fullpath'))));
@@ -192,7 +192,7 @@ classdef amimodel < handle
                     AM.nztrue = AM.nz;
                 end
                 AM.nevent = length(AM.event);
-                
+
                 % check whether we have a DAE or ODE
                 if(isfield(AM.sym,'M'))
                     AM.wtype = 'iw'; % DAE
@@ -201,7 +201,7 @@ classdef amimodel < handle
                 end
             end
         end
-        
+
         function updateRHS(this,xdot)
             % updateRHS updates the private fun property .fun.xdot.sym
             % (right hand side of the differential equation)
@@ -214,7 +214,7 @@ classdef amimodel < handle
             this.fun.xdot.sym_noopt = this.fun.xdot.sym;
             this.fun.xdot.sym = xdot;
         end
-        
+
         function updateModelName(this,modelname)
             % updateModelName updates the modelname
             %
@@ -225,7 +225,7 @@ classdef amimodel < handle
             %  void
             this.modelname = modelname;
         end
-        
+
         function updateWrapPath(this,wrap_path)
             % updateModelName updates the modelname
             %
@@ -236,38 +236,37 @@ classdef amimodel < handle
             %  void
             this.wrap_path = wrap_path;
         end
-        
+
         parseModel(this)
-        
+
         generateC(this)
-        
+
         generateRebuildM(this)
 
         compileC(this)
-        
+
         generateM(this,amimodelo2)
-        
+
         getFun(this,HTable,funstr)
-        
+
         makeEvents(this)
-        
+
         makeSyms(this)
-        
+
         cflag = checkDeps(this,HTable,deps)
-        
+
         HTable = loadOldHashes(this)
-        
+
         modelo2 = augmento2(this)
-        
+
         modelo2vec = augmento2vec(this)
-        
+
     end
-    
+
     methods(Static)
         compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, cfun)
-        
+
         generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFilename, modelname, pscale, forward, adjoint)
     end
 
 end
-
