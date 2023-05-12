@@ -853,7 +853,6 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void setUnscaledInitialStateSensitivities(std::vector<realtype> const& sx0);
 
-
     /**
      * @brief Set the mode how steady state is computed in the steadystate
      * simulation.
@@ -1993,10 +1992,12 @@ class Model : public AbstractModel, public ModelDimensions {
     int nmaxevent_{10};
 
     /** method for steady-state computation */
-    SteadyStateComputationMode steadystate_computation_mode_ {SteadyStateComputationMode::integrateIfNewtonFails};
+    SteadyStateComputationMode steadystate_computation_mode_{
+        SteadyStateComputationMode::integrateIfNewtonFails};
 
     /** method for steadystate sensitivities computation */
-    SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::integrateIfNewtonFails};
+    SteadyStateSensitivityMode steadystate_sensitivity_mode_{
+        SteadyStateSensitivityMode::integrateIfNewtonFails};
 
     /**
      * Indicates whether the result of every call to `Model::f*` should be

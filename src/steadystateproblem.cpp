@@ -111,18 +111,20 @@ void SteadystateProblem::findSteadyState(
     forward sensitivities ODEs is coupled. If 'integrationOnly' approach is
     chosen for sensitivity computation it is enforced that steady state is
     computed only by numerical integration as well. */
-    bool turnOffNewton = model.getSteadyStateComputationMode() ==
-        SteadyStateComputationMode::integrationOnly ||
-        solver.getNewtonMaxSteps() == 0 || (
-        model.getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::integrationOnly &&
-        ((it == -1 && solver.getSensitivityMethodPreequilibration() ==
-         SensitivityMethod::forward) || solver.getSensitivityMethod() ==
-        SensitivityMethod::forward));
+    bool turnOffNewton
+        = model.getSteadyStateComputationMode()
+              == SteadyStateComputationMode::integrationOnly
+          || solver.getNewtonMaxSteps() == 0
+          || (model.getSteadyStateSensitivityMode()
+                  == SteadyStateSensitivityMode::integrationOnly
+              && ((it == -1
+                   && solver.getSensitivityMethodPreequilibration()
+                          == SensitivityMethod::forward)
+                  || solver.getSensitivityMethod() == SensitivityMethod::forward
+              ));
 
-
-    bool turnOffSimulation = model.getSteadyStateComputationMode() ==
-        SteadyStateComputationMode::newtonOnly;
+    bool turnOffSimulation = model.getSteadyStateComputationMode()
+                             == SteadyStateComputationMode::newtonOnly;
 
     /* First, try to run the Newton solver */
     if (!turnOffNewton)
