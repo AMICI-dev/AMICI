@@ -1,17 +1,15 @@
 import os
 
+import amici
 import numpy as np
 import pytest
-
-import amici
 
 pysb = pytest.importorskip("pysb")
 
 from amici.bngl_import import bngl2amici
-from pysb.simulator import ScipyOdeSimulator
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from pysb.importers.bngl import model_from_bngl
-from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
-
+from pysb.simulator import ScipyOdeSimulator
 
 tests = [
     "CaOscillate_Func",

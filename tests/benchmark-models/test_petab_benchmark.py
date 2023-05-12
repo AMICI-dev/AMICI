@@ -9,14 +9,10 @@ import numpy as np
 import pandas as pd
 import petab
 import pytest
-
-from fiddy import get_derivative, MethodId
-from fiddy.success import Consistency
+from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
-from fiddy.extensions.amici import (
-    simulate_petab_to_cached_functions,
-)
-
+from fiddy.extensions.amici import simulate_petab_to_cached_functions
+from fiddy.success import Consistency
 
 # Absolute and relative tolerances for finite difference gradient checks.
 ATOL: float = 1e-3

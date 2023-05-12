@@ -5,21 +5,22 @@ This module provides functions to automatically check correctness of amici
 computed sensitivities using finite difference approximations
 """
 
-from . import (
-    runAmiciSimulation,
-    SensitivityOrder,
-    AMICI_SUCCESS,
-    SensitivityMethod,
-    Model,
-    Solver,
-    ExpData,
-    ReturnData,
-    ParameterScaling,
-)
-import numpy as np
 import copy
+from typing import Callable, List, Optional, Sequence
 
-from typing import Callable, Optional, List, Sequence
+import numpy as np
+
+from . import (
+    AMICI_SUCCESS,
+    ExpData,
+    Model,
+    ParameterScaling,
+    ReturnData,
+    SensitivityMethod,
+    SensitivityOrder,
+    Solver,
+    runAmiciSimulation,
+)
 
 
 def check_finite_difference(

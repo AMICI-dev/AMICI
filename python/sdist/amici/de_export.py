@@ -39,18 +39,17 @@ from . import (
 )
 from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
+from .de_model import *
 from .import_utils import (
     ObservableTransformation,
+    SBMLException,
     generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
     symbol_with_assumptions,
     toposort_symbols,
-    SBMLException,
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .de_model import *
-
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, "main.template.cpp")
@@ -3963,9 +3962,10 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
         return obj.applyfunc(func)
 
     # parallel
-    from pickle import PicklingError
-    from sympy.matrices.dense import DenseMatrix
     from multiprocessing import get_context
+    from pickle import PicklingError
+
+    from sympy.matrices.dense import DenseMatrix
 
     # "spawn" should avoid potential deadlocks occurring with fork
     #  see e.g. https://stackoverflow.com/a/66113051

@@ -16,15 +16,14 @@ import shutil
 import sys
 from pathlib import Path
 
+import amici
 import libsbml as sbml
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_allclose
-
-import amici
 from amici.constants import SymbolId
 from amici.gradient_check import check_derivatives
+from numpy.testing import assert_allclose
 
 
 @pytest.fixture(scope="session")

@@ -8,18 +8,16 @@ import math
 import os
 import uuid
 from tempfile import mkdtemp
-from typing import List, Optional, Union, Dict, Any, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Union
 
+import amici
 import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
-from petab.models.sbml_model import SbmlModel
-
-import amici
 from amici.gradient_check import _check_results
 from amici.petab_import import import_petab_problem
-from amici.petab_objective import LLH, RDATAS, SLLH, EDATAS, simulate_petab
+from amici.petab_objective import EDATAS, LLH, RDATAS, SLLH, simulate_petab
 from amici.sbml_utils import (
     add_compartment,
     add_inflow,
@@ -31,6 +29,7 @@ from amici.sbml_utils import (
 )
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from petab.models.sbml_model import SbmlModel
 
 
 def evaluate_spline(

@@ -4,13 +4,14 @@ C++ object views
 This module provides views on C++ objects for efficient access.
 """
 
-import numpy as np
-import copy
 import collections
+import copy
+from typing import Dict, Iterator, List, Literal, Union
 
 import amici
-from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData, Model
-from typing import Union, List, Dict, Iterator, Literal
+import numpy as np
+
+from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
 
 
 class SwigPtrView(collections.abc.Mapping):

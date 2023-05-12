@@ -5,16 +5,11 @@ from time import perf_counter
 import numpy as np
 import pytest
 import sympy as sp
-
-from amici.conserved_quantities_demartino import (
-    _fill,
-    _kernel,
-    _output as output,
-    compute_moiety_conservation_laws,
-)
+from amici.conserved_quantities_demartino import _fill, _kernel
+from amici.conserved_quantities_demartino import _output as output
+from amici.conserved_quantities_demartino import compute_moiety_conservation_laws
 from amici.logging import get_logger, log_execution_time
 from amici.testing import skip_on_valgrind
-
 
 logger = get_logger(__name__)
 
@@ -157,9 +152,9 @@ demartino2014_kernel_engaged_species = [
 @pytest.fixture(scope="session")
 def data_demartino2014():
     """Get tests from DeMartino2014 Suppl. Material"""
-    import urllib.request
-    import io
     import gzip
+    import io
+    import urllib.request
 
     # stoichiometric matrix
     response = urllib.request.urlopen(

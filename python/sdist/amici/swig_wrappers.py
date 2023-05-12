@@ -2,10 +2,11 @@
 import logging
 import sys
 from contextlib import contextmanager, suppress
-from typing import List, Optional, Union, Sequence, Dict, Any
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import amici
 import amici.amici as amici_swig
+
 from . import numpy
 from .logging import get_logger
 
