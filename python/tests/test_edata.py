@@ -6,6 +6,7 @@ from amici.testing import skip_on_valgrind
 
 from test_sbml_import import model_units_module
 
+
 @skip_on_valgrind
 def test_edata_sensi_unscaling(model_units_module):
     """
@@ -17,10 +18,10 @@ def test_edata_sensi_unscaling(model_units_module):
 
     sx0 = (3, 3, 3, 3)
 
-    parameter_scales_log10 = \
-        [amici.ParameterScaling.log10.value]*len(parameters0)
-    amici_parameter_scales_log10 = \
-        amici.parameterScalingFromIntVector(parameter_scales_log10)
+    parameter_scales_log10 = [amici.ParameterScaling.log10.value] * len(parameters0)
+    amici_parameter_scales_log10 = amici.parameterScalingFromIntVector(
+        parameter_scales_log10
+    )
 
     model = model_units_module.getModel()
     model.setTimepoints(np.linspace(0, 1, 3))

@@ -10,18 +10,18 @@ import pytest
 def _modify_solver_attrs(solver):
     # change to non-default values
     for attr in dir(solver):
-        if not attr.startswith('set'):
+        if not attr.startswith("set"):
             continue
 
-        val = getattr(solver, attr.replace('set', 'get'))()
+        val = getattr(solver, attr.replace("set", "get"))()
 
         if isinstance(val, bool):
             cval = not val
-        elif attr == 'setStabilityLimitFlag':
+        elif attr == "setStabilityLimitFlag":
             cval = 0
-        elif attr == 'setReturnDataReportingMode':
+        elif attr == "setReturnDataReportingMode":
             cval = amici.RDataReporting.likelihood
-        elif attr == 'setMaxTime':
+        elif attr == "setMaxTime":
             # default value is the maximum, must not add to that
             cval = random.random()
         elif isinstance(val, int):
@@ -32,8 +32,7 @@ def _modify_solver_attrs(solver):
         getattr(solver, attr)(cval)
 
 
-@pytest.mark.skipif(not amici.hdf5_enabled,
-                    reason='AMICI was compiled without HDF5')
+@pytest.mark.skipif(not amici.hdf5_enabled, reason="AMICI was compiled without HDF5")
 def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
     """TestCase class for AMICI HDF5 I/O"""
 
@@ -41,29 +40,31 @@ def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
     solver = model.getSolver()
     _modify_solver_attrs(solver)
 
-    hdf5file = 'solverSettings.hdf5'
+    hdf5file = "solverSettings.hdf5"
 
-    amici.writeSolverSettingsToHDF5(solver, hdf5file, 'ssettings')
+    amici.writeSolverSettingsToHDF5(solver, hdf5file, "ssettings")
 
     new_solver = model.getSolver()
 
     # check that we changed everything
     for attr in dir(solver):
-        if not attr.startswith('set'):
+        if not attr.startswith("set"):
             continue
 
-        assert getattr(solver, attr.replace('set', 'get'))() \
-            != getattr(new_solver, attr.replace('set', 'get'))(), attr
+        assert (
+            getattr(solver, attr.replace("set", "get"))()
+            != getattr(new_solver, attr.replace("set", "get"))()
+        ), attr
 
-    amici.readSolverSettingsFromHDF5(hdf5file, new_solver, 'ssettings')
+    amici.readSolverSettingsFromHDF5(hdf5file, new_solver, "ssettings")
 
     # check that reading in settings worked
     for attr in dir(solver):
-        if not attr.startswith('set'):
+        if not attr.startswith("set"):
             continue
 
-        assert getattr(solver, attr.replace('set', 'get'))() \
-            == pytest.approx(
-                getattr(new_solver, attr.replace('set', 'get'))()), attr
+        assert getattr(solver, attr.replace("set", "get"))() == pytest.approx(
+            getattr(new_solver, attr.replace("set", "get"))()
+        ), attr
 
     os.remove(hdf5file)

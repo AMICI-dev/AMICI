@@ -7,7 +7,7 @@ function robj = am_setdefault(obj,dobj)
     %
     % Return values:
     %  robj: updated obj @type struct
-    
+
     fieldlist = fieldnames(obj);
     for i = 1:length(fieldlist)
         dobj.(fieldlist{i}) = obj.(fieldlist{i});

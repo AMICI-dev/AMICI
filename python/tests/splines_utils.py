@@ -19,19 +19,22 @@ from petab.models.sbml_model import SbmlModel
 import amici
 from amici.gradient_check import _check_results
 from amici.petab_import import import_petab_problem
-from amici.petab_objective import (LLH, RDATAS, SLLH, EDATAS, simulate_petab)
-from amici.sbml_utils import (add_compartment, add_inflow, add_parameter,
-                              add_rate_rule, add_species, amici_time_symbol,
-                              create_sbml_model)
+from amici.petab_objective import LLH, RDATAS, SLLH, EDATAS, simulate_petab
+from amici.sbml_utils import (
+    add_compartment,
+    add_inflow,
+    add_parameter,
+    add_rate_rule,
+    add_species,
+    amici_time_symbol,
+    create_sbml_model,
+)
 from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 
 
 def evaluate_spline(
-    spline: AbstractSpline,
-    params: dict,
-    tt: Sequence[float],
-    **kwargs
+    spline: AbstractSpline, params: dict, tt: Sequence[float], **kwargs
 ):
     """
     Evaluate the `AbstractSpline` `spline` at timepoints `tt`
@@ -45,7 +48,7 @@ def integrate_spline(
     params: Union[Dict, None],
     tt: Sequence[float],
     initial_value: float = 0,
-    **kwargs
+    **kwargs,
 ):
     """
     Integrate the `AbstractSpline` `spline` at timepoints `tt`
@@ -59,44 +62,44 @@ def integrate_spline(
 
 def create_condition_table() -> pd.DataFrame:
     """Create a PEtab condition table."""
-    condition_df = pd.DataFrame({'conditionId': ['condition1']})
-    condition_df.set_index(['conditionId'], inplace=True)
+    condition_df = pd.DataFrame({"conditionId": ["condition1"]})
+    condition_df.set_index(["conditionId"], inplace=True)
     return condition_df
 
 
 def create_parameter_table(**columns) -> pd.DataFrame:
     """Create a PEtab parameter table."""
-    if isinstance(columns['parameterId'], str):
-        columns['parameterId'] = [columns['parameterId']]
-    columns.setdefault('parameterScale', 'lin')
-    columns.setdefault('estimate', 1)
+    if isinstance(columns["parameterId"], str):
+        columns["parameterId"] = [columns["parameterId"]]
+    columns.setdefault("parameterScale", "lin")
+    columns.setdefault("estimate", 1)
     parameter_df = pd.DataFrame(columns)
-    parameter_df.set_index(['parameterId'], inplace=True)
+    parameter_df.set_index(["parameterId"], inplace=True)
     return parameter_df
 
 
 def create_observable_table(**columns) -> pd.DataFrame:
     """Create a PEtab observable table."""
-    if isinstance(columns['observableId'], str):
-        columns['observableId'] = [columns['observableId']]
-    columns.setdefault('observableTransformation', 'lin')
-    columns.setdefault('noiseDistribution', 'normal')
+    if isinstance(columns["observableId"], str):
+        columns["observableId"] = [columns["observableId"]]
+    columns.setdefault("observableTransformation", "lin")
+    columns.setdefault("noiseDistribution", "normal")
     observable_df = pd.DataFrame(columns)
-    observable_df.set_index(['observableId'], inplace=True)
+    observable_df.set_index(["observableId"], inplace=True)
     return observable_df
 
 
 def create_measurement_table(**columns) -> pd.DataFrame:
     """Create a PEtab measurement table."""
-    if isinstance(columns['observableId'], str):
-        columns['observableId'] = [columns['observableId']]
-    columns.setdefault('simulationConditionId', 'condition1')
+    if isinstance(columns["observableId"], str):
+        columns["observableId"] = [columns["observableId"]]
+    columns.setdefault("simulationConditionId", "condition1")
     return pd.DataFrame(columns)
 
 
 def species(i) -> str:
     """Name to use for the `i`-th species."""
-    return f'z{i}'
+    return f"z{i}"
 
 
 def observable(i) -> str:
@@ -105,25 +108,25 @@ def observable(i) -> str:
     i.e., the observable associated to the
     `i`-th species.
     """
-    return f'{species(i)}_obs'
+    return f"{species(i)}_obs"
 
 
 def species_to_index(name) -> int:
     """Get the species index from a species name."""
-    assert name[0] == 'z'
+    assert name[0] == "z"
     return int(name[1:])
 
 
 def create_petab_problem(
-        splines: List[AbstractSpline],
-        params_true: Dict,
-        initial_values: Optional[np.ndarray] = None,
-        use_reactions: bool = False,
-        measure_upsample: int = 6,
-        sigma: float = 1.0,
-        t_extrapolate: float = 0.25,
-        folder: Optional[str] = None,
-        model_name: str = 'test_splines',
+    splines: List[AbstractSpline],
+    params_true: Dict,
+    initial_values: Optional[np.ndarray] = None,
+    use_reactions: bool = False,
+    measure_upsample: int = 6,
+    sigma: float = 1.0,
+    t_extrapolate: float = 0.25,
+    folder: Optional[str] = None,
+    model_name: str = "test_splines",
 ):
     """
     Given a list of `AbstractSplines`, create a PEtab problem for the system of
@@ -164,7 +167,7 @@ def create_petab_problem(
     for spline in splines:
         if spline.evaluate_at != amici_time_symbol:
             raise ValueError(
-                'the given splines must be evaluated at the simulation time'
+                "the given splines must be evaluated at the simulation time"
             )
 
     if initial_values is None:
@@ -172,15 +175,15 @@ def create_petab_problem(
 
     # Create SBML document
     doc, model = create_sbml_model(model_name)
-    add_compartment(model, 'compartment')
-    for (i, spline) in enumerate(splines):
+    add_compartment(model, "compartment")
+    for i, spline in enumerate(splines):
         spline.add_to_sbml_model(model)
         add_species(model, species(i), initial_amount=initial_values[i])
         if use_reactions:
             add_inflow(model, species(i), splines[i].sbml_id)
         else:
             add_rate_rule(model, species(i), splines[i].sbml_id)
-    for (parId, value) in params_true.items():
+    for parId, value in params_true.items():
         add_parameter(model, parId, value=value, constant=True)
     for spline in splines:
         add_parameter(model, spline.sbml_id, constant=False)
@@ -192,12 +195,15 @@ def create_petab_problem(
     for spline in splines:
         if spline.extrapolate[0] is None and spline.nodes[0] > 0:
             raise ValueError(
-                'if no left-extrapolation is defined for a spline, '
-                'its interval of definition should contain zero'
+                "if no left-extrapolation is defined for a spline, "
+                "its interval of definition should contain zero"
             )
         if spline.extrapolate[1] is not None:
-            f = t_extrapolate if spline.extrapolate[
-                                    1] != 'periodic' else 1 + t_extrapolate
+            f = (
+                t_extrapolate
+                if spline.extrapolate[1] != "periodic"
+                else 1 + t_extrapolate
+            )
             DT = f * (spline.nodes[-1] - spline.nodes[0])
         else:
             DT = 0
@@ -232,7 +238,8 @@ def create_petab_problem(
     )
     measurement_df = create_measurement_table(
         observableId=np.concatenate(
-            [len(tt_obs) * [observable(i)] for i in range(len(splines))]),
+            [len(tt_obs) * [observable(i)] for i in range(len(splines))]
+        ),
         time=len(splines) * list(tt_obs),
         measurement=np.concatenate(zz_obs),
     )
@@ -249,7 +256,7 @@ def create_petab_problem(
         observable_df=observable_df,
     )
     if petab.lint_problem(problem):
-        raise RuntimeError('PEtab lint failed')
+        raise RuntimeError("PEtab lint failed")
 
     # Write PEtab problem to disk
     if folder is None:
@@ -257,35 +264,33 @@ def create_petab_problem(
     folder = os.path.abspath(folder)
     os.makedirs(folder, exist_ok=True)
     problem.to_files(
-        sbml_file=os.path.join(folder, f'{model_name}_model.xml'),
-        condition_file=os.path.join(folder, f'{model_name}_conditions.tsv'),
-        measurement_file=os.path.join(folder,
-                                      f'{model_name}_measurements.tsv'),
-        parameter_file=os.path.join(folder, f'{model_name}_parameters.tsv'),
-        observable_file=os.path.join(folder,
-                                     f'{model_name}_observables.tsv'),
-        yaml_file=os.path.join(folder, f'{model_name}.yaml'),
+        sbml_file=os.path.join(folder, f"{model_name}_model.xml"),
+        condition_file=os.path.join(folder, f"{model_name}_conditions.tsv"),
+        measurement_file=os.path.join(folder, f"{model_name}_measurements.tsv"),
+        parameter_file=os.path.join(folder, f"{model_name}_parameters.tsv"),
+        observable_file=os.path.join(folder, f"{model_name}_observables.tsv"),
+        yaml_file=os.path.join(folder, f"{model_name}.yaml"),
     )
-    return os.path.join(folder, f'{model_name}.yaml'), initial_values, T
+    return os.path.join(folder, f"{model_name}.yaml"), initial_values, T
 
 
 def simulate_splines(
-        splines,
-        params_true,
-        initial_values=None,
-        *,
-        folder: Optional[str] = None,
-        keep_temporary: bool = False,
-        benchmark: Union[bool, int] = False,
-        rtol: float = 1e-12,
-        atol: float = 1e-12,
-        maxsteps: int = 500_000,
-        discard_annotations: bool = False,
-        use_adjoint: bool = False,
-        skip_sensitivity: bool = False,
-        petab_problem=None,
-        amici_model=None,
-        **kwargs
+    splines,
+    params_true,
+    initial_values=None,
+    *,
+    folder: Optional[str] = None,
+    keep_temporary: bool = False,
+    benchmark: Union[bool, int] = False,
+    rtol: float = 1e-12,
+    atol: float = 1e-12,
+    maxsteps: int = 500_000,
+    discard_annotations: bool = False,
+    use_adjoint: bool = False,
+    skip_sensitivity: bool = False,
+    petab_problem=None,
+    amici_model=None,
+    **kwargs,
 ):
     """
     Create a PEtab problem using `create_petab_problem` and simulate it with
@@ -347,40 +352,43 @@ def simulate_splines(
         else:
             with TemporaryDirectory() as folder:
                 return simulate_splines(
-                    splines, params_true, initial_values, folder=folder,
-                    benchmark=benchmark, rtol=rtol, atol=atol,
-                    maxsteps=maxsteps, discard_annotations=discard_annotations,
-                    use_adjoint=use_adjoint, skip_sensitivity=skip_sensitivity,
-                    petab_problem=petab_problem, amici_model=amici_model,
-                    **kwargs
+                    splines,
+                    params_true,
+                    initial_values,
+                    folder=folder,
+                    benchmark=benchmark,
+                    rtol=rtol,
+                    atol=atol,
+                    maxsteps=maxsteps,
+                    discard_annotations=discard_annotations,
+                    use_adjoint=use_adjoint,
+                    skip_sensitivity=skip_sensitivity,
+                    petab_problem=petab_problem,
+                    amici_model=amici_model,
+                    **kwargs,
                 )
 
     if petab_problem is None and amici_model is not None:
-        raise ValueError(
-            "if amici_model is given, petab_problem must be given too"
-        )
+        raise ValueError("if amici_model is given, petab_problem must be given too")
 
     if petab_problem is not None and initial_values is None:
-        raise ValueError(
-            "if petab_problem is given, initial_values must be given too"
-        )
+        raise ValueError("if petab_problem is given, initial_values must be given too")
 
     if petab_problem is None:
         # Create PEtab problem
         path, initial_values, T = create_petab_problem(
-            splines, params_true, initial_values,
-            sigma=0.0, folder=folder, **kwargs
+            splines, params_true, initial_values, sigma=0.0, folder=folder, **kwargs
         )
         petab_problem = petab.Problem.from_yaml(path)
 
     if amici_model is None:
         # Create and compile AMICI model
-        model_id = uuid.uuid4().hex[-5:] # to prevent folder/module collisions
+        model_id = uuid.uuid4().hex[-5:]  # to prevent folder/module collisions
         amici_model = import_petab_problem(
             petab_problem,
             discard_sbml_annotations=discard_annotations,
-            model_output_dir=os.path.join(folder, f'amici_models_{model_id}'),
-            model_name=f'splinetest_{model_id}',
+            model_output_dir=os.path.join(folder, f"amici_models_{model_id}"),
+            model_name=f"splinetest_{model_id}",
         )
 
     # Set solver options
@@ -420,11 +428,23 @@ def simulate_splines(
         state_ids = amici_model.getStateIds()
         param_ids = amici_model.getParameterIds()
 
-        return initial_values, petab_problem, amici_model, solver, llh, sllh, rdata, edata, state_ids, param_ids
+        return (
+            initial_values,
+            petab_problem,
+            amici_model,
+            solver,
+            llh,
+            sllh,
+            rdata,
+            edata,
+            state_ids,
+            param_ids,
+        )
 
     if benchmark is True:
         benchmark = 50
     import time
+
     runtimes = []
     for _ in range(int(benchmark)):
         t0 = time.perf_counter()
@@ -442,42 +462,44 @@ def simulate_splines(
 
 
 def compute_ground_truth(splines, initial_values, times, params_true, params_sorted):
-    x_true_sym = sp.Matrix([
-        integrate_spline(spline, None, times, iv)
-        for (spline, iv) in zip(splines, initial_values)
-    ]).transpose()
-    groundtruth = {'x_true': np.asarray(x_true_sym.subs(params_true), dtype=float)}
+    x_true_sym = sp.Matrix(
+        [
+            integrate_spline(spline, None, times, iv)
+            for (spline, iv) in zip(splines, initial_values)
+        ]
+    ).transpose()
+    groundtruth = {"x_true": np.asarray(x_true_sym.subs(params_true), dtype=float)}
     sx_by_state = [
         x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
         for i in range(x_true_sym.shape[1])
     ]
     sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
-    groundtruth['sx_true'] = np.concatenate([
-        sx[:, :, np.newaxis] for sx in sx_by_state
-    ], axis=2)
+    groundtruth["sx_true"] = np.concatenate(
+        [sx[:, :, np.newaxis] for sx in sx_by_state], axis=2
+    )
     return groundtruth
 
 
 def check_splines(
-        splines,
-        params_true,
-        initial_values=None,
-        *,
-        discard_annotations: bool = False,
-        use_adjoint: bool = False,
-        skip_sensitivity: bool = False,
-        debug: Union[bool, str] = False,
-        parameter_lists: Optional[Sequence[Sequence[int]]] = None,
-        llh_rtol: float = 1e-8,
-        sllh_atol: float = 1e-8,
-        x_rtol: float = 1e-11,
-        x_atol: float = 1e-11,
-        w_rtol: float = 1e-11,
-        w_atol: float = 1e-11,
-        sx_rtol: float = 1e-10,
-        sx_atol: float = 1e-10,
-        groundtruth: Optional[Union[str, Dict[str, Any]]] = None,
-        **kwargs
+    splines,
+    params_true,
+    initial_values=None,
+    *,
+    discard_annotations: bool = False,
+    use_adjoint: bool = False,
+    skip_sensitivity: bool = False,
+    debug: Union[bool, str] = False,
+    parameter_lists: Optional[Sequence[Sequence[int]]] = None,
+    llh_rtol: float = 1e-8,
+    sllh_atol: float = 1e-8,
+    x_rtol: float = 1e-11,
+    x_atol: float = 1e-11,
+    w_rtol: float = 1e-11,
+    w_atol: float = 1e-11,
+    sx_rtol: float = 1e-10,
+    sx_atol: float = 1e-10,
+    groundtruth: Optional[Union[str, Dict[str, Any]]] = None,
+    **kwargs,
 ):
     """
     Create a PEtab problem using `create_petab_problem`,
@@ -519,20 +541,32 @@ def check_splines(
         splines = [splines]
 
     # Simulate PEtab problem
-    initial_values, petab_problem, amici_model, amici_solver, llh, sllh, rdata, edata, state_ids, param_ids = simulate_splines(
-        splines, params_true, initial_values,
+    (
+        initial_values,
+        petab_problem,
+        amici_model,
+        amici_solver,
+        llh,
+        sllh,
+        rdata,
+        edata,
+        state_ids,
+        param_ids,
+    ) = simulate_splines(
+        splines,
+        params_true,
+        initial_values,
         discard_annotations=discard_annotations,
         skip_sensitivity=skip_sensitivity,
         use_adjoint=use_adjoint,
-        **kwargs
+        **kwargs,
     )
 
-    tt = rdata['ts']
+    tt = rdata["ts"]
 
     # Sort splines/ics/parameters as in the AMICI model
     splines = [splines[species_to_index(name)] for name in state_ids]
-    initial_values = [initial_values[species_to_index(name)] for name in
-                      state_ids]
+    initial_values = [initial_values[species_to_index(name)] for name in state_ids]
 
     def param_by_name(id):
         for p in params_true.keys():
@@ -543,27 +577,27 @@ def check_splines(
     params_sorted = [param_by_name(id) for id in param_ids]
 
     # Check states
-    if groundtruth == 'compute':
-        groundtruth = compute_ground_truth(splines, initial_values, tt, params_true, params_sorted)
+    if groundtruth == "compute":
+        groundtruth = compute_ground_truth(
+            splines, initial_values, tt, params_true, params_sorted
+        )
     if groundtruth is None:
-        x_true_sym = sp.Matrix([
-            integrate_spline(spline, None, tt, iv)
-            for (spline, iv) in zip(splines, initial_values)
-        ]).transpose()
+        x_true_sym = sp.Matrix(
+            [
+                integrate_spline(spline, None, tt, iv)
+                for (spline, iv) in zip(splines, initial_values)
+            ]
+        ).transpose()
         x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
     else:
-        x_true = groundtruth['x_true']
+        x_true = groundtruth["x_true"]
     if not debug:
         assert rdata.x.shape == x_true.shape
-        _check_results(rdata, 'x', x_true, atol=x_atol, rtol=x_rtol)
-    elif debug == 'print':
-        x_err_abs = abs(rdata['x'] - x_true)
-        x_err_rel = np.where(
-            x_err_abs == 0,
-            0,
-            x_err_abs / abs(x_true)
-        )
-        print(f'x_atol={x_atol} x_rtol={x_rtol}')
+        _check_results(rdata, "x", x_true, atol=x_atol, rtol=x_rtol)
+    elif debug == "print":
+        x_err_abs = abs(rdata["x"] - x_true)
+        x_err_rel = np.where(x_err_abs == 0, 0, x_err_abs / abs(x_true))
+        print(f"x_atol={x_atol} x_rtol={x_rtol}")
         print("x_err_abs:")
         print(np.squeeze(x_err_abs))
         print("x_err_abs (maximum):")
@@ -576,24 +610,25 @@ def check_splines(
     # Check spline evaluations
     # TODO can we know how the splines are ordered inside w?
     if False and discard_annotations and len(splines) == 1:
-        assert rdata['w'].shape[1] == 1
-        w_true = np.column_stack([
-            evaluate_spline(spline, params_true, tt, dtype=float)
-            for spline in splines
-        ])
+        assert rdata["w"].shape[1] == 1
+        w_true = np.column_stack(
+            [
+                evaluate_spline(spline, params_true, tt, dtype=float)
+                for spline in splines
+            ]
+        )
         if not debug:
             _check_results(
-                rdata, 'w', w_true,
-                atol=w_atol, rtol=w_rtol,
+                rdata,
+                "w",
+                w_true,
+                atol=w_atol,
+                rtol=w_rtol,
             )
-        elif debug == 'print':
-            w_err_abs = abs(rdata['w'] - w_true)
-            w_err_rel = np.where(
-                w_err_abs == 0,
-                0,
-                w_err_abs / abs(w_true)
-            )
-            print(f'w_atol={w_atol} w_rtol={w_rtol}')
+        elif debug == "print":
+            w_err_abs = abs(rdata["w"] - w_true)
+            w_err_rel = np.where(w_err_abs == 0, 0, w_err_abs / abs(w_true))
+            print(f"w_atol={w_atol} w_rtol={w_rtol}")
             print("w_err_abs:")
             print(np.squeeze(w_err_abs))
             print("w_err_abs (maximum):")
@@ -615,25 +650,24 @@ def check_splines(
                 for i in range(x_true_sym.shape[1])
             ]
             sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
-            sx_true = np.concatenate([
-                sx[:, :, np.newaxis] for sx in sx_by_state
-            ], axis=2)
+            sx_true = np.concatenate(
+                [sx[:, :, np.newaxis] for sx in sx_by_state], axis=2
+            )
         else:
-            sx_true = groundtruth['sx_true']
+            sx_true = groundtruth["sx_true"]
         if not debug:
             assert rdata.sx.shape == sx_true.shape
             _check_results(
-                rdata, 'sx', sx_true,
-                atol=sx_atol, rtol=sx_rtol,
+                rdata,
+                "sx",
+                sx_true,
+                atol=sx_atol,
+                rtol=sx_rtol,
             )
-        elif debug == 'print':
-            sx_err_abs = abs(rdata['sx'] - sx_true)
-            sx_err_rel = np.where(
-                sx_err_abs == 0,
-                0,
-                sx_err_abs / abs(sx_true)
-            )
-            print(f'sx_atol={sx_atol} sx_rtol={sx_rtol}')
+        elif debug == "print":
+            sx_err_abs = abs(rdata["sx"] - sx_true)
+            sx_err_rel = np.where(sx_err_abs == 0, 0, sx_err_abs / abs(sx_true))
+            print(f"sx_atol={sx_atol} sx_rtol={sx_rtol}")
             print("sx_err_abs:")
             print(np.squeeze(sx_err_abs))
             print("sx_err_abs (maximum):")
@@ -643,14 +677,14 @@ def check_splines(
             print("sx_err_rel (maximum):")
             print(sx_err_rel.max())
     else:
-        assert rdata['sx'] is None
+        assert rdata["sx"] is None
 
     # Check log-likelihood
-    llh_true = - 0.5 * rdata['y'].size * np.log(2 * np.pi)
+    llh_true = -0.5 * rdata["y"].size * np.log(2 * np.pi)
     llh_error_rel = abs(llh - llh_true) / abs(llh_true)
-    if (llh_error_rel > llh_rtol and debug is not True) or debug == 'print':
-        print(f'{llh_rtol=}')
-        print(f'{llh_error_rel=}')
+    if (llh_error_rel > llh_rtol and debug is not True) or debug == "print":
+        print(f"{llh_rtol=}")
+        print(f"{llh_error_rel=}")
     if not debug:
         assert llh_error_rel <= llh_rtol
 
@@ -661,9 +695,9 @@ def check_splines(
             if sllh_atol is None:
                 sllh_atol = np.finfo(float).eps
             sllh_err_abs = abs(sllh).max()
-            if (sllh_err_abs > sllh_atol and debug is not True) or debug == 'print':
-                print(f'sllh_atol={sllh_atol}')
-                print(f'sllh_err_abs = {sllh_err_abs}')
+            if (sllh_err_abs > sllh_atol and debug is not True) or debug == "print":
+                print(f"sllh_atol={sllh_atol}")
+                print(f"sllh_err_abs = {sllh_err_abs}")
             if not debug:
                 assert sllh_err_abs <= sllh_atol
     else:
@@ -703,14 +737,17 @@ def check_splines(
 
 
 def check_splines_full(
-    splines, params, tols, *args,
+    splines,
+    params,
+    tols,
+    *args,
     check_piecewise: bool = True,
     check_forward: bool = True,
     check_adjoint: bool = True,
     folder: Optional[str] = None,
-    groundtruth: Optional[Union[dict, str]] = 'compute',
+    groundtruth: Optional[Union[dict, str]] = "compute",
     return_groundtruth: bool = False,
-    **kwargs
+    **kwargs,
 ):
     """
     Check example PEtab problem with `check_splines`
@@ -720,14 +757,17 @@ def check_splines_full(
     if folder is None:
         with TemporaryDirectory() as folder:
             return check_splines_full(
-                splines, params, tols, *args,
+                splines,
+                params,
+                tols,
+                *args,
                 check_piecewise=check_piecewise,
                 check_forward=check_forward,
                 check_adjoint=check_adjoint,
                 folder=folder,
                 groundtruth=groundtruth,
                 return_groundtruth=return_groundtruth,
-                **kwargs
+                **kwargs,
             )
 
     if isinstance(tols, dict):
@@ -739,8 +779,7 @@ def check_splines_full(
         splines = [splines]
 
     contains_periodic = any(
-        spline.extrapolate == ('periodic', 'periodic')
-        for spline in splines
+        spline.extrapolate == ("periodic", "periodic") for spline in splines
     )
 
     # Amortize creation of PEtab and AMICI objects
@@ -751,7 +790,11 @@ def check_splines_full(
 
     if check_piecewise and not contains_periodic:
         results = check_splines(
-            splines, params, *args, **kwargs, **tols1,
+            splines,
+            params,
+            *args,
+            **kwargs,
+            **tols1,
             folder=folder,
             discard_annotations=True,
             use_adjoint=False,
@@ -763,7 +806,11 @@ def check_splines_full(
 
     if check_forward:
         results = check_splines(
-            splines, params, *args, **kwargs, **tols2,
+            splines,
+            params,
+            *args,
+            **kwargs,
+            **tols2,
             initial_values=initial_values,
             folder=folder,
             petab_problem=petab_problem,
@@ -777,13 +824,19 @@ def check_splines_full(
 
     if check_adjoint:
         results = check_splines(
-            splines, params, *args, **kwargs, **tols3,
+            splines,
+            params,
+            *args,
+            **kwargs,
+            **tols3,
             initial_values=initial_values,
             folder=folder,
             petab_problem=petab_problem,
             amici_model=amici_model,
             use_adjoint=True,
-            groundtruth=(None if groundtruth == 'compute' else groundtruth), # do not compute sensitivities if possible
+            groundtruth=(
+                None if groundtruth == "compute" else groundtruth
+            ),  # do not compute sensitivities if possible
         )
 
     if return_groundtruth:
@@ -792,31 +845,32 @@ def check_splines_full(
         elif results is None:
             return None
         else:
-            return results['groundtruth']
+            return results["groundtruth"]
 
 
 def example_spline_1(
-        idx: int = 0,
-        offset: float = 0,
-        scale: float = 1,
-        num_nodes: int = 9,
-        fixed_values=None,  # a list of indices or 'all'
-        extrapolate=None,
+    idx: int = 0,
+    offset: float = 0,
+    scale: float = 1,
+    num_nodes: int = 9,
+    fixed_values=None,  # a list of indices or 'all'
+    extrapolate=None,
 ):
     """A simple spline with no extrapolation."""
 
     yy_true = np.asarray(
-        [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0, 7.0, 7.5, 6.5, 4.0])
+        [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0, 7.0, 7.5, 6.5, 4.0]
+    )
     if num_nodes is not None:
         assert 1 < num_nodes <= len(yy_true)
         yy_true = yy_true[:num_nodes]
     yy_true = scale * yy_true + offset
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
-    yy = list(sp.symbols(f'y{idx}_0:{len(yy_true)}'))
+    yy = list(sp.symbols(f"y{idx}_0:{len(yy_true)}"))
 
     if fixed_values is None:
         params = dict(zip(yy, yy_true))
-    elif fixed_values == 'all':
+    elif fixed_values == "all":
         params = {}
         for i in range(len(yy_true)):
             yy[i] = yy_true[i]
@@ -829,13 +883,10 @@ def example_spline_1(
                 params[yy[i]] = yy_true[i]
 
     spline = CubicHermiteSpline(
-        f'y{idx}',
-        nodes=xx,
-        values_at_nodes=yy,
-        bc=None, extrapolate=extrapolate
+        f"y{idx}", nodes=xx, values_at_nodes=yy, bc=None, extrapolate=extrapolate
     )
 
-    if os.name == 'nt':
+    if os.name == "nt":
         tols = (
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
             dict(llh_rtol=1e-15, x_rtol=1e-8, x_atol=1e-7),
@@ -855,19 +906,16 @@ def example_spline_2(idx: int = 0):
     """A simple periodic spline."""
     yy_true = [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0]
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
-    yy = list(sp.symbols(f'y{idx}_0:{len(yy_true) - 1}'))
+    yy = list(sp.symbols(f"y{idx}_0:{len(yy_true) - 1}"))
     yy.append(yy[0])
     params = dict(zip(yy, yy_true))
     spline = CubicHermiteSpline(
-        f'y{idx}',
-        nodes=xx,
-        values_at_nodes=yy,
-        bc='periodic', extrapolate='periodic'
+        f"y{idx}", nodes=xx, values_at_nodes=yy, bc="periodic", extrapolate="periodic"
     )
     tols = (
         dict(llh_rtol=1e-15),
         dict(llh_rtol=1e-15),
-        dict(llh_rtol=1e-15, sllh_atol=5e-8, x_rtol=1e-10, x_atol=5e-10)
+        dict(llh_rtol=1e-15, sllh_atol=5e-8, x_rtol=1e-10, x_atol=5e-10),
     )
     return spline, params, tols
 
@@ -876,13 +924,14 @@ def example_spline_3(idx: int = 0):
     """A simple spline with extrapolation on the right side."""
     yy_true = [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0]
     xx = UniformGrid(0, 25, number_of_nodes=len(yy_true))
-    yy = list(sp.symbols(f'y{idx}_0:{len(yy_true)}'))
+    yy = list(sp.symbols(f"y{idx}_0:{len(yy_true)}"))
     params = dict(zip(yy, yy_true))
     spline = CubicHermiteSpline(
-        f'y{idx}',
+        f"y{idx}",
         nodes=xx,
         values_at_nodes=yy,
-        bc=(None, 'zeroderivative'), extrapolate=(None, 'constant')
+        bc=(None, "zeroderivative"),
+        extrapolate=(None, "constant"),
     )
     tols = {}
     return spline, params, tols

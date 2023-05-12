@@ -14,11 +14,11 @@ from . import Model, ReturnDataView
 
 
 def plot_state_trajectories(
-        rdata: ReturnDataView,
-        state_indices: Optional[Iterable[int]] = None,
-        ax: Optional[Axes] = None,
-        model: Model = None,
-        prefer_names: bool = True,
+    rdata: ReturnDataView,
+    state_indices: Optional[Iterable[int]] = None,
+    ax: Optional[Axes] = None,
+    model: Model = None,
+    prefer_names: bool = True,
 ) -> None:
     """
     Plot state trajectories
@@ -42,27 +42,27 @@ def plot_state_trajectories(
     if not ax:
         fig, ax = plt.subplots()
     if not state_indices:
-        state_indices = range(rdata['x'].shape[1])
+        state_indices = range(rdata["x"].shape[1])
     for ix in state_indices:
         if model is None:
-            label = f'$x_{{{ix}}}$'
+            label = f"$x_{{{ix}}}$"
         elif prefer_names and model.getStateNames()[ix]:
             label = model.getStateNames()[ix]
         else:
             label = model.getStateIds()[ix]
-        ax.plot(rdata['t'], rdata['x'][:, ix], label=label)
-        ax.set_xlabel('$t$')
-        ax.set_ylabel('$x(t)$')
+        ax.plot(rdata["t"], rdata["x"][:, ix], label=label)
+        ax.set_xlabel("$t$")
+        ax.set_ylabel("$x(t)$")
         ax.legend()
-        ax.set_title('State trajectories')
+        ax.set_title("State trajectories")
 
 
 def plot_observable_trajectories(
-        rdata: ReturnDataView,
-        observable_indices: Optional[Iterable[int]] = None,
-        ax: Optional[Axes] = None,
-        model: Model = None,
-        prefer_names: bool = True,
+    rdata: ReturnDataView,
+    observable_indices: Optional[Iterable[int]] = None,
+    ax: Optional[Axes] = None,
+    model: Model = None,
+    prefer_names: bool = True,
 ) -> None:
     """
     Plot observable trajectories
@@ -86,19 +86,19 @@ def plot_observable_trajectories(
     if not ax:
         fig, ax = plt.subplots()
     if not observable_indices:
-        observable_indices = range(rdata['y'].shape[1])
+        observable_indices = range(rdata["y"].shape[1])
     for iy in observable_indices:
         if model is None:
-            label = f'$y_{{{iy}}}$'
+            label = f"$y_{{{iy}}}$"
         elif prefer_names and model.getObservableNames()[iy]:
             label = model.getObservableNames()[iy]
         else:
             label = model.getObservableIds()[iy]
-        ax.plot(rdata['t'], rdata['y'][:, iy], label=label)
-        ax.set_xlabel('$t$')
-        ax.set_ylabel('$y(t)$')
+        ax.plot(rdata["t"], rdata["y"][:, iy], label=label)
+        ax.set_xlabel("$t$")
+        ax.set_ylabel("$y(t)$")
         ax.legend()
-        ax.set_title('Observable trajectories')
+        ax.set_title("Observable trajectories")
 
 
 def plot_jacobian(rdata: ReturnDataView):
@@ -110,6 +110,7 @@ def plot_jacobian(rdata: ReturnDataView):
     )
     sns.heatmap(df, center=0.0)
     plt.title("Jacobian")
+
 
 # backwards compatibility
 plotStateTrajectories = plot_state_trajectories

@@ -1,5 +1,5 @@
 function varargout = struct2xml( s, varargin )
-%Convert a MATLAB structure into a xml file 
+%Convert a MATLAB structure into a xml file
 % [ ] = struct2xml( s, file )
 % xml = struct2xml( s )
 %
@@ -26,7 +26,7 @@ function varargout = struct2xml( s, varargin )
 % On-screen output functionality added by P. Orth, 01-12-2010
 % Multiple space to single space conversion adapted for speed by T. Lohuis, 11-04-2011
 % Val2str subfunction bugfix by H. Gsenger, 19-9-2011
-    
+
     if (nargin ~= 2)
         if(nargout ~= 1 || nargin ~= 1)
             error(['Supported function calls:' sprintf('\n')...
@@ -46,17 +46,17 @@ function varargout = struct2xml( s, varargin )
             file = [file '.xml'];
         end
     end
-    
+
     if (~isstruct(s))
         error([inputname(1) ' is not a structure']);
     end
-    
+
     if (length(fieldnames(s)) > 1)
         error(['Error processing the structure:' sprintf('\n') 'There should be a single field in the main structure.']);
     end
     xmlname = fieldnames(s);
     xmlname = xmlname{1};
-    
+
     %substitute special characters
     xmlname_sc = xmlname;
     xmlname_sc = strrep(xmlname_sc,'_dash_','-');
@@ -77,35 +77,35 @@ function varargout = struct2xml( s, varargin )
         xmlwrite(file,docNode);
     else
         varargout{1} = xmlwrite(docNode);
-    end  
+    end
 end
 
 % ----- Subfunction parseStruct -----
 function [] = parseStruct(s,docNode,curNode,pName)
-    
+
     fnames = fieldnames(s);
     for i = 1:length(fnames)
         curfield = fnames{i};
-        
+
         %substitute special characters
         curfield_sc = curfield;
         curfield_sc = strrep(curfield_sc,'_dash_','-');
         curfield_sc = strrep(curfield_sc,'_colon_',':');
         curfield_sc = strrep(curfield_sc,'_dot_','.');
-        
+
         if (strcmp(curfield,'Attributes'))
             %Attribute data
             if (isstruct(s.(curfield)))
                 attr_names = fieldnames(s.Attributes);
                 for a = 1:length(attr_names)
                     cur_attr = attr_names{a};
-                    
+
                     %substitute special characters
                     cur_attr_sc = cur_attr;
                     cur_attr_sc = strrep(cur_attr_sc,'_dash_','-');
                     cur_attr_sc = strrep(cur_attr_sc,'_colon_',':');
                     cur_attr_sc = strrep(cur_attr_sc,'_dot_','.');
-                    
+
                     [cur_str,succes] = val2str(s.Attributes.(cur_attr));
                     if (succes)
                         curNode.setAttribute(cur_attr_sc,cur_str);
@@ -161,10 +161,10 @@ end
 
 %----- Subfunction val2str -----
 function [str,succes] = val2str(val)
-    
+
     succes = true;
     str = [];
-    
+
     if (isempty(val))
         return; %bugfix from H. Gsenger
     elseif (ischar(val))
@@ -174,16 +174,16 @@ function [str,succes] = val2str(val)
     else
         succes = false;
     end
-    
+
     if (ischar(val))
         %add line breaks to all lines except the last (for multiline strings)
         lines = size(val,1);
         val = [val char(sprintf('\n')*[ones(lines-1,1);0])];
-        
-        %transpose is required since indexing (i.e., val(nonspace) or val(:)) produces a 1-D vector. 
+
+        %transpose is required since indexing (i.e., val(nonspace) or val(:)) produces a 1-D vector.
         %This should be row based (line based) and not column based.
         valt = val';
-        
+
         remove_multiple_white_spaces = true;
         if (remove_multiple_white_spaces)
             %remove multiple white spaces using isspace, suggestion of T. Lohuis

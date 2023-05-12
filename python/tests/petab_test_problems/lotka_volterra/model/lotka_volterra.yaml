@@ -7,14 +7,14 @@ odes:
       rightHandSide: delta * prey * predator - gamma * predator + arrival_predator * prey
       initialValue: 2
 
-parameters: 
+parameters:
     - parameterId: alpha
       nominalValue: 2
       parameterScale: log10
       lowerBound: 0.1
       upperBound: 10
       estimate: 1
-  
+
     - parameterId: beta
       nominalValue: 4
       parameterScale: log10
@@ -26,17 +26,17 @@ parameters:
       lowerBound: 0.1
       upperBound: 10
       estimate: 1
-     
+
     - parameterId: delta
       nominalValue: 3
       parameterScale: log10
       estimate: 0
-     
+
     - parameterId: departure_prey
       nominalValue: 3
       parameterScale: log10
       estimate: 0
-     
+
     - parameterId: arrival_predator
       nominalValue: 3
       parameterScale: log10

@@ -9,7 +9,7 @@ function [ commit_hash,branch,url ] = getCommitHash( wrap_path )
     %  commit_hash: extracted hash value @type char
     %  branch: branch of the repository @type char
     %  url: employed remote origin @type char
-    
+
     try
         fid = fopen(fullfile(wrap_path,'..','.git','FETCH_HEAD'));
         str = fgetl(fid);
@@ -25,11 +25,11 @@ function [ commit_hash,branch,url ] = getCommitHash( wrap_path )
             fid = fopen(fullfile(wrap_path,'.git','ORIG_HEAD'));
             commit_hash = ['dev_' fgetl(fid)];
             fclose(fid);
-            
+
             fid = fopen(fullfile(wrap_path,'.git','HEAD'));
             branch = strrep(fgetl(fid),'ref: refs/heads/','');
             fclose(fid);
-            
+
             url = 'local';
         end
     catch
@@ -38,4 +38,3 @@ function [ commit_hash,branch,url ] = getCommitHash( wrap_path )
         url = 'unknown repository';
     end
 end
-

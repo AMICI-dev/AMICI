@@ -1,17 +1,17 @@
 function example_jakstat_adjoint()
-    
+
     % compile the model
     [exdir,~,~]=fileparts(which('example_jakstat_adjoint.m'));
     amiwrap('model_jakstat_adjoint','model_jakstat_adjoint_syms',exdir,1)
-    
+
     num = xlsread(fullfile(exdir,'pnas_data_original.xls'));
-    
+
     D.t = num(:,1);
     D.condition= [1.4,0.45];
     D.Y = num(:,[2,4,6]);
     D.Sigma_Y = NaN(size(D.Y));
     D = amidata(D);
-    
+
     xi =  [0.60
         3
         -0.95
@@ -29,10 +29,10 @@ function example_jakstat_adjoint()
         -0.5
         0
         -0.5];
-    
+
     options.sensi = 0;
     sol = simulate_model_jakstat_adjoint([],xi,[],D,options);
-    
+
     if(usejava('jvm'))
     figure
     for iy = 1:3
@@ -54,7 +54,7 @@ function example_jakstat_adjoint()
     end
     set(gcf,'Position',[100 300 1200 500])
     end
-    
+
     % generate new
     xi_rand = xi + 0.1;
     options.sensi = 2;
@@ -62,7 +62,7 @@ function example_jakstat_adjoint()
     sol = simulate_model_jakstat_adjoint([],xi_rand,[],D,options);
     options.sensi_meth = 'forward';
     solf = simulate_model_jakstat_adjoint([],xi_rand,[],D,options);
-    
+
     options.sensi = 1;
     eps = 1e-4;
     fd_grad = NaN(length(xi),1);
@@ -73,7 +73,7 @@ function example_jakstat_adjoint()
         fd_grad(ip) = (psol.llh-sol.llh)/eps;
         fd_hess(:,ip) = (psol.sllh-sol.sllh)/eps;
     end
-    
+
     if(usejava('jvm'))
     figure
     subplot(1,2,1)
@@ -91,7 +91,7 @@ function example_jakstat_adjoint()
     axis square
     xlabel('absolute value forward sensitivity gradient entries')
     ylabel('absolute value gradient entries')
-    
+
     subplot(1,2,2)
     plot(abs(solf.s2llh(:)),abs(fd_hess(:)),'rx')
     hold on
@@ -107,11 +107,11 @@ function example_jakstat_adjoint()
     axis square
     xlabel('absolute value forward sensitivity hessian entries')
     ylabel('absolute value hessian entries')
-    
+
     set(gcf,'Position',[100 300 1200 500])
     end
-    
-    
+
+
     drawnow
-    
+
 end

@@ -23,7 +23,7 @@ def _get_amici_path():
     repository, get repository root
     """
     basedir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    if os.path.exists(os.path.join(basedir, '.git')):
+    if os.path.exists(os.path.join(basedir, ".git")):
         return os.path.abspath(basedir)
     return os.path.dirname(__file__)
 
@@ -33,18 +33,20 @@ def _get_commit_hash():
     basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
     commitfile = next(
         (
-            file for file in [
-                os.path.join(basedir, '.git', 'FETCH_HEAD'),
-                os.path.join(basedir, '.git', 'ORIG_HEAD'), ]
+            file
+            for file in [
+                os.path.join(basedir, ".git", "FETCH_HEAD"),
+                os.path.join(basedir, ".git", "ORIG_HEAD"),
+            ]
             if os.path.isfile(file)
         ),
-        None
+        None,
     )
 
     if commitfile:
         with open(commitfile) as f:
-            return str(re.search(r'^([\w]*)', f.read().strip()).group())
-    return 'unknown'
+            return str(re.search(r"^([\w]*)", f.read().strip()).group())
+    return "unknown"
 
 
 def _imported_from_setup() -> bool:
@@ -64,8 +66,8 @@ def _imported_from_setup() -> bool:
         # requires the AMICI extension during its installation, but seems
         # unlikely...
         frame_path = os.path.realpath(os.path.expanduser(frame.filename))
-        if (frame_path == os.path.join(package_root, 'setup.py')
-                or frame_path.endswith(f"{sep}setuptools{sep}build_meta.py")
+        if frame_path == os.path.join(package_root, "setup.py") or frame_path.endswith(
+            f"{sep}setuptools{sep}build_meta.py"
         ):
             return True
 
@@ -76,20 +78,22 @@ def _imported_from_setup() -> bool:
 #: absolute root path of the amici repository or Python package
 amici_path = _get_amici_path()
 #: absolute path of the amici swig directory
-amiciSwigPath = os.path.join(amici_path, 'swig')
+amiciSwigPath = os.path.join(amici_path, "swig")
 #: absolute path of the amici source directory
-amiciSrcPath = os.path.join(amici_path, 'src')
+amiciSrcPath = os.path.join(amici_path, "src")
 #: absolute root path of the amici module
 amiciModulePath = os.path.dirname(__file__)
 #: boolean indicating if this is the full package with swig interface or
 #  the raw package without extension
-has_clibs: bool = any(os.path.isfile(os.path.join(amici_path, wrapper))
-                      for wrapper in ['amici.py', 'amici_without_hdf5.py'])
+has_clibs: bool = any(
+    os.path.isfile(os.path.join(amici_path, wrapper))
+    for wrapper in ["amici.py", "amici_without_hdf5.py"]
+)
 #: boolean indicating if amici was compiled with hdf5 support
 hdf5_enabled: bool = False
 
 # Get version number from file
-with open(os.path.join(amici_path, 'version.txt')) as f:
+with open(os.path.join(amici_path, "version.txt")) as f:
     __version__ = f.read().strip()
 
 __commit__ = _get_commit_hash()
@@ -99,9 +103,10 @@ if not _imported_from_setup():
     if has_clibs:
         from . import amici
         from .amici import *
+
         # has to be done before importing readSolverSettingsFromHDF5
         #  from .swig_wrappers
-        hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
+        hdf5_enabled = "readSolverSettingsFromHDF5" in dir()
         from .swig_wrappers import *
 
         # These modules require the swig interface and other dependencies
@@ -113,7 +118,6 @@ if not _imported_from_setup():
     from .de_export import DEModel, DEExporter
 
     from typing import Protocol, runtime_checkable
-
 
     @runtime_checkable
     class ModelModule(Protocol):
@@ -146,8 +150,7 @@ class add_path:
 
 
 def import_model_module(
-        module_name: str,
-        module_path: Optional[Union[Path, str]] = None
+    module_name: str, module_path: Optional[Union[Path, str]] = None
 ) -> ModelModule:
     """
     Import Python module of an AMICI model
@@ -177,9 +180,11 @@ def import_model_module(
         # be imported.
         del sys.modules[module_name]
         # collect first, don't delete while iterating
-        to_unload = {loaded_module_name for loaded_module_name in
-                     sys.modules.keys() if
-                     loaded_module_name.startswith(f"{module_name}.")}
+        to_unload = {
+            loaded_module_name
+            for loaded_module_name in sys.modules.keys()
+            if loaded_module_name.startswith(f"{module_name}.")
+        }
         for m in to_unload:
             del sys.modules[m]
 
@@ -190,12 +195,14 @@ def import_model_module(
 class AmiciVersionError(RuntimeError):
     """Error thrown if an AMICI model is loaded that is incompatible with
     the installed AMICI base package"""
+
     pass
 
 
 def _get_default_argument(func: Callable, arg: str) -> Any:
     """Get the default value of the given argument in the given function."""
     import inspect
+
     signature = inspect.signature(func)
     if (default := signature.parameters[arg].default) is not inspect.Parameter.empty:
         return default

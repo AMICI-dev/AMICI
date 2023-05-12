@@ -462,4 +462,3 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fclose(fid);
 
 end
-

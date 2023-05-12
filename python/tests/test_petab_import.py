@@ -19,7 +19,7 @@ def simple_sbml_model():
     model.setId("simple_sbml_model")
     model.setTimeUnits("second")
     model.setExtentUnits("mole")
-    model.setSubstanceUnits('mole')
+    model.setSubstanceUnits("mole")
 
     for par_idx in range(1, 6):
         p = model.createParameter()
@@ -30,7 +30,7 @@ def simple_sbml_model():
     c.setId("c1")
 
     s = model.createSpecies()
-    s.setId('x1')
+    s.setId("x1")
     s.setConstant(True)
     s.setInitialConcentration(1.0)
     s.setCompartment(c.getId())
@@ -49,55 +49,63 @@ def test_get_fixed_parameters(simple_sbml_model):
     p5: fixed (implicitly, because not listed as estimated)
     """
     from petab.models.sbml_model import SbmlModel
+
     sbml_doc, sbml_model = simple_sbml_model
     condition_df = petab.get_condition_df(
-        pd.DataFrame({
-            petab.CONDITION_ID: ["condition0"],
-            "p1": [1.0],
-            "p2": ["p1"],
-        })
+        pd.DataFrame(
+            {
+                petab.CONDITION_ID: ["condition0"],
+                "p1": [1.0],
+                "p2": ["p1"],
+            }
+        )
     )
     parameter_df = petab.get_parameter_df(
-        pd.DataFrame({
-            petab.PARAMETER_ID: ["p3", "p4"],
-            petab.ESTIMATE: [0, 1]
-        })
+        pd.DataFrame({petab.PARAMETER_ID: ["p3", "p4"], petab.ESTIMATE: [0, 1]})
     )
     print(condition_df)
     print(parameter_df)
-    petab_problem = petab.Problem(model=SbmlModel(sbml_model),
-                                  parameter_df=parameter_df,
-                                  condition_df=condition_df)
-    assert set(amici_petab_import.get_fixed_parameters(petab_problem)) \
-        == {"p1", "p3", "p5"}
+    petab_problem = petab.Problem(
+        model=SbmlModel(sbml_model),
+        parameter_df=parameter_df,
+        condition_df=condition_df,
+    )
+    assert set(amici_petab_import.get_fixed_parameters(petab_problem)) == {
+        "p1",
+        "p3",
+        "p5",
+    }
 
-    assert set(amici_petab_import.get_fixed_parameters(
-        petab_problem,
-        non_estimated_parameters_as_constants=False)) \
-        == {"p1", "p5"}
+    assert set(
+        amici_petab_import.get_fixed_parameters(
+            petab_problem, non_estimated_parameters_as_constants=False
+        )
+    ) == {"p1", "p5"}
 
 
 @skip_on_valgrind
 def test_default_output_parameters(simple_sbml_model):
     from petab.models.sbml_model import SbmlModel
+
     sbml_doc, sbml_model = simple_sbml_model
     condition_df = petab.get_condition_df(
-        pd.DataFrame({
-            petab.CONDITION_ID: ["condition0"],
-        })
+        pd.DataFrame(
+            {
+                petab.CONDITION_ID: ["condition0"],
+            }
+        )
     )
     parameter_df = petab.get_parameter_df(
-        pd.DataFrame({
-            petab.PARAMETER_ID: [],
-            petab.ESTIMATE: []
-        })
+        pd.DataFrame({petab.PARAMETER_ID: [], petab.ESTIMATE: []})
     )
     observable_df = petab.get_observable_df(
-        pd.DataFrame({
-            petab.OBSERVABLE_ID: ["obs1"],
-            petab.OBSERVABLE_FORMULA: ["observableParameter1_obs1"],
-            petab.NOISE_FORMULA: [1],
-        })
+        pd.DataFrame(
+            {
+                petab.OBSERVABLE_ID: ["obs1"],
+                petab.OBSERVABLE_FORMULA: ["observableParameter1_obs1"],
+                petab.NOISE_FORMULA: [1],
+            }
+        )
     )
     petab_problem = petab.Problem(
         model=SbmlModel(sbml_model),
@@ -109,17 +117,19 @@ def test_default_output_parameters(simple_sbml_model):
     with TemporaryDirectoryWinSafe() as outdir:
         sbml_importer = amici_petab_import.import_model(
             petab_problem=petab_problem,
-            output_parameter_defaults={'observableParameter1_obs1': 1.0},
+            output_parameter_defaults={"observableParameter1_obs1": 1.0},
             compile=False,
             model_output_dir=outdir,
         )
-        assert 1.0 == sbml_importer.sbml\
-            .getParameter("observableParameter1_obs1").getValue()
+        assert (
+            1.0
+            == sbml_importer.sbml.getParameter("observableParameter1_obs1").getValue()
+        )
 
         with pytest.raises(ValueError):
             amici_petab_import.import_model(
                 petab_problem=petab_problem,
-                output_parameter_defaults={'nonExistentParameter': 1.0},
+                output_parameter_defaults={"nonExistentParameter": 1.0},
                 compile=False,
                 model_output_dir=outdir,
             )

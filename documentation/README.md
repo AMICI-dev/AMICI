@@ -78,12 +78,12 @@ Graphics for documentation are kept in `documentation/gfx/`.
   for offline use.
 
 * Please stick to the limit of 80 characters per line for readability of raw
-  Markdown files where possible. 
+  Markdown files where possible.
 
   However, note that some Markdown interpreters can handle line breaks within
   links and headings, whereas others cannot. Here, compatibility is preferred
-  over linebreaks. 
-  
+  over linebreaks.
+
 * Avoid trailing whitespace
 
 ## Maintaining the list of publications

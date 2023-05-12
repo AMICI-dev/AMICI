@@ -15,21 +15,21 @@ from .numpy import ExpDataView
 import amici
 
 __all__ = [
-    'get_expressions_as_dataframe',
-    'getEdataFromDataFrame',
-    'getDataObservablesAsDataFrame',
-    'getSimulationObservablesAsDataFrame',
-    'getSimulationStatesAsDataFrame',
-    'getResidualsAsDataFrame'
+    "get_expressions_as_dataframe",
+    "getEdataFromDataFrame",
+    "getDataObservablesAsDataFrame",
+    "getSimulationObservablesAsDataFrame",
+    "getSimulationStatesAsDataFrame",
+    "getResidualsAsDataFrame",
 ]
 
 ExpDatas = Union[
-    List[amici.amici.ExpData], List[amici.ExpDataPtr],
-    amici.amici.ExpData, amici.ExpDataPtr
+    List[amici.amici.ExpData],
+    List[amici.ExpDataPtr],
+    amici.amici.ExpData,
+    amici.ExpDataPtr,
 ]
-ReturnDatas = Union[
-    List[amici.ReturnDataView], amici.ReturnDataView
-]
+ReturnDatas = Union[List[amici.ReturnDataView], amici.ReturnDataView]
 
 AmiciModel = Union[amici.ModelPtr, amici.Model]
 
@@ -69,9 +69,8 @@ def _process_rdata_list(rdata_list: ReturnDatas) -> List[amici.ReturnDataView]:
 
 
 def getDataObservablesAsDataFrame(
-        model: AmiciModel,
-        edata_list: ExpDatas,
-        by_id: Optional[bool] = False) -> pd.DataFrame:
+    model: AmiciModel, edata_list: ExpDatas, by_id: Optional[bool] = False
+) -> pd.DataFrame:
     """
     Write Observables from experimental data as DataFrame.
 
@@ -101,16 +100,13 @@ def getDataObservablesAsDataFrame(
     for edata in edata_list:
         npdata = ExpDataView(edata)
         for i_time, timepoint in enumerate(edata.getTimepoints()):
-            datadict = {
-                'time': timepoint,
-                'datatype': 'data'
-            }
+            datadict = {"time": timepoint, "datatype": "data"}
             # add observables and noises
-            for i_obs, obs in enumerate(_get_names_or_ids(
-                    model, 'Observable', by_id=by_id)):
-                datadict[obs] = npdata['observedData'][i_time, i_obs]
-                datadict[obs + '_std'] = \
-                    npdata['observedDataStdDev'][i_time, i_obs]
+            for i_obs, obs in enumerate(
+                _get_names_or_ids(model, "Observable", by_id=by_id)
+            ):
+                datadict[obs] = npdata["observedData"][i_time, i_obs]
+                datadict[obs + "_std"] = npdata["observedDataStdDev"][i_time, i_obs]
 
             # add conditions
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
@@ -121,10 +117,10 @@ def getDataObservablesAsDataFrame(
 
 
 def getSimulationObservablesAsDataFrame(
-        model: amici.Model,
-        edata_list: ExpDatas,
-        rdata_list: ReturnDatas,
-        by_id: Optional[bool] = False
+    model: amici.Model,
+    edata_list: ExpDatas,
+    rdata_list: ReturnDatas,
+    by_id: Optional[bool] = False,
 ) -> pd.DataFrame:
     """
     Write Observables from simulation results as DataFrame.
@@ -157,16 +153,17 @@ def getSimulationObservablesAsDataFrame(
     # aggregate records
     dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
-        for i_time, timepoint in enumerate(rdata['t']):
+        for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
-                'time': timepoint,
-                'datatype': 'simulation',
+                "time": timepoint,
+                "datatype": "simulation",
             }
             # append simulations
-            for i_obs, obs in enumerate(_get_names_or_ids(
-                    model, 'Observable', by_id=by_id)):
-                datadict[obs] = rdata['y'][i_time, i_obs]
-                datadict[obs + '_std'] = rdata['sigmay'][i_time, i_obs]
+            for i_obs, obs in enumerate(
+                _get_names_or_ids(model, "Observable", by_id=by_id)
+            ):
+                datadict[obs] = rdata["y"][i_time, i_obs]
+                datadict[obs + "_std"] = rdata["sigmay"][i_time, i_obs]
 
             # use edata to fill conditions columns
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
@@ -178,10 +175,11 @@ def getSimulationObservablesAsDataFrame(
 
 
 def getSimulationStatesAsDataFrame(
-        model: amici.Model,
-        edata_list: ExpDatas,
-        rdata_list: ReturnDatas,
-        by_id: Optional[bool] = False) -> pd.DataFrame:
+    model: amici.Model,
+    edata_list: ExpDatas,
+    rdata_list: ReturnDatas,
+    by_id: Optional[bool] = False,
+) -> pd.DataFrame:
     """
     Get model state according to lists of ReturnData and ExpData.
 
@@ -212,15 +210,16 @@ def getSimulationStatesAsDataFrame(
     # aggregate records
     dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
-        for i_time, timepoint in enumerate(rdata['t']):
+        for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
-                'time': timepoint,
+                "time": timepoint,
             }
 
             # append states
             for i_state, state in enumerate(
-                    _get_names_or_ids(model, 'State', by_id=by_id)):
-                datadict[state] = rdata['x'][i_time, i_state]
+                _get_names_or_ids(model, "State", by_id=by_id)
+            ):
+                datadict[state] = rdata["x"][i_time, i_state]
 
             # use data to fill condition columns
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
@@ -232,10 +231,11 @@ def getSimulationStatesAsDataFrame(
 
 
 def get_expressions_as_dataframe(
-        model: amici.Model,
-        edata_list: ExpDatas,
-        rdata_list: ReturnDatas,
-        by_id: Optional[bool] = False) -> pd.DataFrame:
+    model: amici.Model,
+    edata_list: ExpDatas,
+    rdata_list: ReturnDatas,
+    by_id: Optional[bool] = False,
+) -> pd.DataFrame:
     """
     Get values of model expressions from lists of ReturnData as DataFrame.
 
@@ -266,15 +266,16 @@ def get_expressions_as_dataframe(
     # aggregate records
     dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
-        for i_time, timepoint in enumerate(rdata['t']):
+        for i_time, timepoint in enumerate(rdata["t"]):
             datadict = {
-                'time': timepoint,
+                "time": timepoint,
             }
 
             # append expressions
             for i_expr, expr in enumerate(
-                    _get_names_or_ids(model, 'Expression', by_id=by_id)):
-                datadict[expr] = rdata['w'][i_time, i_expr]
+                _get_names_or_ids(model, "Expression", by_id=by_id)
+            ):
+                datadict[expr] = rdata["w"][i_time, i_expr]
 
             # use data to fill condition columns
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
@@ -285,10 +286,12 @@ def get_expressions_as_dataframe(
     return pd.DataFrame.from_records(dicts, columns=cols)
 
 
-def getResidualsAsDataFrame(model: amici.Model,
-                            edata_list: ExpDatas,
-                            rdata_list: ReturnDatas,
-                            by_id: Optional[bool] = False) -> pd.DataFrame:
+def getResidualsAsDataFrame(
+    model: amici.Model,
+    edata_list: ExpDatas,
+    rdata_list: ReturnDatas,
+    by_id: Optional[bool] = False,
+) -> pd.DataFrame:
     """
     Convert a list of ReturnData and ExpData to pandas DataFrame with
     residuals.
@@ -315,10 +318,10 @@ def getResidualsAsDataFrame(model: amici.Model,
     rdata_list = _process_rdata_list(rdata_list)
 
     # create observable and simulation dataframes
-    df_edata = getDataObservablesAsDataFrame(
-        model, edata_list, by_id=by_id)
+    df_edata = getDataObservablesAsDataFrame(model, edata_list, by_id=by_id)
     df_rdata = getSimulationObservablesAsDataFrame(
-        model, edata_list, rdata_list, by_id=by_id)
+        model, edata_list, rdata_list, by_id=by_id
+    )
 
     # get all column names using names or ids
     cols = _get_observable_cols(model, by_id=by_id)
@@ -327,23 +330,24 @@ def getResidualsAsDataFrame(model: amici.Model,
     dicts = []
     for row in df_rdata.index:
         datadict = {
-            'time': df_rdata.loc[row]['time'],
-            't_presim': df_rdata.loc[row]['t_presim']
+            "time": df_rdata.loc[row]["time"],
+            "t_presim": df_rdata.loc[row]["t_presim"],
         }
 
         # iterate over observables
-        for obs in _get_names_or_ids(model, 'Observable', by_id=by_id):
+        for obs in _get_names_or_ids(model, "Observable", by_id=by_id):
             # compute residual and append to dict
             datadict[obs] = abs(
-                (df_edata.loc[row][obs] - df_rdata.loc[row][obs]) /
-                df_rdata.loc[row][obs + '_std'])
+                (df_edata.loc[row][obs] - df_rdata.loc[row][obs])
+                / df_rdata.loc[row][obs + "_std"]
+            )
 
         # iterate over fixed parameters
-        for par in _get_names_or_ids(model, 'FixedParameter', by_id=by_id):
+        for par in _get_names_or_ids(model, "FixedParameter", by_id=by_id):
             # fill in conditions
             datadict[par] = df_rdata.loc[row][par]
-            datadict[par + '_preeq'] = df_rdata.loc[row][par + '_preeq']
-            datadict[par + '_presim'] = df_rdata.loc[row][par + '_presim']
+            datadict[par + "_preeq"] = df_rdata.loc[row][par + "_preeq"]
+            datadict[par + "_presim"] = df_rdata.loc[row][par + "_presim"]
 
         # append to dataframe
         dicts.append(datadict)
@@ -351,10 +355,12 @@ def getResidualsAsDataFrame(model: amici.Model,
     return pd.DataFrame.from_records(dicts, columns=cols)
 
 
-def _fill_conditions_dict(datadict: Dict[str, float],
-                          model: AmiciModel,
-                          edata: amici.amici.ExpData,
-                          by_id: bool) -> Dict[str, float]:
+def _fill_conditions_dict(
+    datadict: Dict[str, float],
+    model: AmiciModel,
+    edata: amici.amici.ExpData,
+    by_id: bool,
+) -> Dict[str, float]:
     """
     Helper function that fills in condition parameters from model and
     edata.
@@ -377,32 +383,30 @@ def _fill_conditions_dict(datadict: Dict[str, float],
         dictionary with filled condition parameters.
 
     """
-    datadict['condition_id'] = edata.id
-    datadict['t_presim'] = edata.t_presim
+    datadict["condition_id"] = edata.id
+    datadict["t_presim"] = edata.t_presim
 
     for i_par, par in enumerate(
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)):
+        _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+    ):
         if len(edata.fixedParameters):
             datadict[par] = edata.fixedParameters[i_par]
         else:
             datadict[par] = model.getFixedParameters()[i_par]
 
         if len(edata.fixedParametersPreequilibration):
-            datadict[par + '_preeq'] = \
-                edata.fixedParametersPreequilibration[i_par]
+            datadict[par + "_preeq"] = edata.fixedParametersPreequilibration[i_par]
         else:
-            datadict[par + '_preeq'] = np.nan
+            datadict[par + "_preeq"] = np.nan
 
         if len(edata.fixedParametersPresimulation):
-            datadict[par + '_presim'] = \
-                edata.fixedParametersPresimulation[i_par]
+            datadict[par + "_presim"] = edata.fixedParametersPresimulation[i_par]
         else:
-            datadict[par + '_presim'] = np.nan
+            datadict[par + "_presim"] = np.nan
     return datadict
 
 
-def _get_extended_observable_cols(model: AmiciModel,
-                                  by_id: bool) -> List[str]:
+def _get_extended_observable_cols(model: AmiciModel, by_id: bool) -> List[str]:
     """
     Construction helper for extended observable dataframe headers.
 
@@ -416,20 +420,26 @@ def _get_extended_observable_cols(model: AmiciModel,
     :return:
         column names as list.
     """
-    return \
-        ['condition_id', 'time', 'datatype', 't_presim'] + \
-        _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        [name + '_presim' for name in
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        _get_names_or_ids(model, 'Observable', by_id=by_id) + \
-        [name + '_std' for name in
-            _get_names_or_ids(model, 'Observable', by_id=by_id)]
+    return (
+        ["condition_id", "time", "datatype", "t_presim"]
+        + _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        + [
+            name + "_preeq"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + [
+            name + "_presim"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "Observable", by_id=by_id)
+        + [
+            name + "_std"
+            for name in _get_names_or_ids(model, "Observable", by_id=by_id)
+        ]
+    )
 
 
-def _get_observable_cols(model: AmiciModel,
-                         by_id: bool) -> List[str]:
+def _get_observable_cols(model: AmiciModel, by_id: bool) -> List[str]:
     """
     Construction helper for observable dataframe headers.
 
@@ -443,18 +453,22 @@ def _get_observable_cols(model: AmiciModel,
     :return:
         column names as list.
     """
-    return \
-        ['condition_id', 'time', 't_presim'] + \
-        _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in
-         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        [name + '_presim' for name in
-         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        _get_names_or_ids(model, 'Observable', by_id=by_id)
+    return (
+        ["condition_id", "time", "t_presim"]
+        + _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        + [
+            name + "_preeq"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + [
+            name + "_presim"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "Observable", by_id=by_id)
+    )
 
 
-def _get_state_cols(model: AmiciModel,
-                    by_id: bool) -> List[str]:
+def _get_state_cols(model: AmiciModel, by_id: bool) -> List[str]:
     """
     Construction helper for state dataframe headers.
 
@@ -468,14 +482,19 @@ def _get_state_cols(model: AmiciModel,
     :return:
         column names as list.
     """
-    return \
-        ['condition_id', 'time', 't_presim'] + \
-        _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        [name + '_presim' for name in
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        _get_names_or_ids(model, 'State', by_id=by_id)
+    return (
+        ["condition_id", "time", "t_presim"]
+        + _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        + [
+            name + "_preeq"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + [
+            name + "_presim"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "State", by_id=by_id)
+    )
 
 
 def _get_expression_cols(model: AmiciModel, by_id: bool) -> List[str]:
@@ -491,19 +510,22 @@ def _get_expression_cols(model: AmiciModel, by_id: bool) -> List[str]:
     :return:
         column names as list.
     """
-    return \
-        ['condition_id', 'time', 't_presim'] + \
-        _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        [name + '_presim' for name in
-            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        _get_names_or_ids(model, 'Expression', by_id=by_id)
+    return (
+        ["condition_id", "time", "t_presim"]
+        + _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        + [
+            name + "_preeq"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + [
+            name + "_presim"
+            for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "Expression", by_id=by_id)
+    )
 
 
-def _get_names_or_ids(model: AmiciModel,
-                      variable: str,
-                      by_id: bool) -> List[str]:
+def _get_names_or_ids(model: AmiciModel, variable: str, by_id: bool) -> List[str]:
     """
     Obtains a unique list of identifiers for the specified variable.
     First tries model.getVariableNames and then uses model.getVariableIds.
@@ -523,18 +545,22 @@ def _get_names_or_ids(model: AmiciModel,
     """
     # check whether variable type permitted
     variable_options = [
-        'Parameter', 'FixedParameter', 'Observable', 'State', 'Expression'
+        "Parameter",
+        "FixedParameter",
+        "Observable",
+        "State",
+        "Expression",
     ]
     if variable not in variable_options:
-        raise ValueError('Variable must be in ' + str(variable_options))
+        raise ValueError("Variable must be in " + str(variable_options))
 
     # extract attributes
-    names = list(getattr(model, f'get{variable}Names')())
-    ids = list(getattr(model, f'get{variable}Ids')())
+    names = list(getattr(model, f"get{variable}Names")())
+    ids = list(getattr(model, f"get{variable}Ids")())
 
     # find out if model has names and ids
-    has_names = getattr(model, f'has{variable}Names')()
-    has_ids = getattr(model, f'has{variable}Ids')()
+    has_names = getattr(model, f"has{variable}Names")()
+    has_ids = getattr(model, f"has{variable}Ids")()
 
     # extract labels
     if not by_id and has_names and len(set(names)) == len(names):
@@ -548,16 +574,18 @@ def _get_names_or_ids(model: AmiciModel,
         if by_id:
             msg = f"Model {variable} ids are not set."
         else:
-            msg = f"Model {variable} names are not unique and " \
-                  f"{variable} ids are not set."
+            msg = (
+                f"Model {variable} names are not unique and "
+                f"{variable} ids are not set."
+            )
         raise ValueError(msg)
 
 
 def _get_specialized_fixed_parameters(
-        model: AmiciModel,
-        condition: Union[Dict[str, SupportsFloat], pd.Series],
-        overwrite: Union[Dict[str, SupportsFloat], pd.Series],
-        by_id: bool
+    model: AmiciModel,
+    condition: Union[Dict[str, SupportsFloat], pd.Series],
+    overwrite: Union[Dict[str, SupportsFloat], pd.Series],
+    by_id: bool,
 ) -> List[float]:
     """
     Copies values in condition and overwrites them according to key
@@ -580,15 +608,17 @@ def _get_specialized_fixed_parameters(
     cond = copy.deepcopy(condition)
     for field in overwrite:
         cond[field] = overwrite[field]
-    return [float(cond[name]) for name in _get_names_or_ids(
-        model, 'FixedParameter', by_id=by_id)]
+    return [
+        float(cond[name])
+        for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+    ]
 
 
 def constructEdataFromDataFrame(
-        df: pd.DataFrame,
-        model: AmiciModel,
-        condition: pd.Series,
-        by_id: Optional[bool] = False
+    df: pd.DataFrame,
+    model: AmiciModel,
+    condition: pd.Series,
+    by_id: Optional[bool] = False,
 ) -> amici.amici.ExpData:
     """
     Constructs an ExpData instance according to the provided Model
@@ -619,68 +649,67 @@ def constructEdataFromDataFrame(
     edata = amici.ExpData(model.get())
 
     # timepoints
-    df = df.sort_values(by='time', ascending=True)
-    edata.setTimepoints(df['time'].values.astype(float))
+    df = df.sort_values(by="time", ascending=True)
+    edata.setTimepoints(df["time"].values.astype(float))
 
     # get fixed parameters from condition
     overwrite_preeq = {}
     overwrite_presim = {}
-    for par in list(_get_names_or_ids(model, 'FixedParameter', by_id=by_id)):
-        if par + '_preeq' in condition.keys() \
-                and not math.isnan(condition[par + '_preeq'].astype(float)):
-            overwrite_preeq[par] = condition[par + '_preeq'].astype(float)
-        if par + '_presim' in condition.keys() \
-                and not math.isnan(condition[par + '_presim'].astype(float)):
-            overwrite_presim[par] = condition[par + '_presim'].astype(float)
+    for par in list(_get_names_or_ids(model, "FixedParameter", by_id=by_id)):
+        if par + "_preeq" in condition.keys() and not math.isnan(
+            condition[par + "_preeq"].astype(float)
+        ):
+            overwrite_preeq[par] = condition[par + "_preeq"].astype(float)
+        if par + "_presim" in condition.keys() and not math.isnan(
+            condition[par + "_presim"].astype(float)
+        ):
+            overwrite_presim[par] = condition[par + "_presim"].astype(float)
 
     # fill in fixed parameters
-    edata.fixedParameters = condition[
-        _get_names_or_ids(model, 'FixedParameter', by_id=by_id)
-    ].astype(float).values
+    edata.fixedParameters = (
+        condition[_get_names_or_ids(model, "FixedParameter", by_id=by_id)]
+        .astype(float)
+        .values
+    )
 
     # fill in preequilibration parameters
-    if any([overwrite_preeq[key] != condition[key] for key in
-            overwrite_preeq]):
-        edata.fixedParametersPreequilibration = \
-            _get_specialized_fixed_parameters(
-                model, condition, overwrite_preeq, by_id=by_id)
-    elif len(overwrite_preeq):
-        edata.fixedParametersPreequilibration = copy.deepcopy(
-            edata.fixedParameters
+    if any([overwrite_preeq[key] != condition[key] for key in overwrite_preeq]):
+        edata.fixedParametersPreequilibration = _get_specialized_fixed_parameters(
+            model, condition, overwrite_preeq, by_id=by_id
         )
+    elif len(overwrite_preeq):
+        edata.fixedParametersPreequilibration = copy.deepcopy(edata.fixedParameters)
 
     # fill in presimulation parameters
-    if any([overwrite_presim[key] != condition[key] for key in
-            overwrite_presim.keys()]):
+    if any(
+        [overwrite_presim[key] != condition[key] for key in overwrite_presim.keys()]
+    ):
         edata.fixedParametersPresimulation = _get_specialized_fixed_parameters(
             model, condition, overwrite_presim, by_id=by_id
         )
     elif len(overwrite_presim.keys()):
-        edata.fixedParametersPresimulation = copy.deepcopy(
-            edata.fixedParameters
-        )
+        edata.fixedParametersPresimulation = copy.deepcopy(edata.fixedParameters)
 
     # fill in presimulation time
-    if 't_presim' in condition.keys():
-        edata.t_presim = float(condition['t_presim'])
+    if "t_presim" in condition.keys():
+        edata.t_presim = float(condition["t_presim"])
 
     # fill in data and stds
     for obs_index, obs in enumerate(
-            _get_names_or_ids(model, 'Observable', by_id=by_id)):
+        _get_names_or_ids(model, "Observable", by_id=by_id)
+    ):
         if obs in df.keys():
             edata.setObservedData(df[obs].values.astype(float), obs_index)
-        if obs + '_std' in df.keys():
+        if obs + "_std" in df.keys():
             edata.setObservedDataStdDev(
-                df[obs + '_std'].values.astype(float), obs_index
+                df[obs + "_std"].values.astype(float), obs_index
             )
 
     return edata
 
 
 def getEdataFromDataFrame(
-        model: AmiciModel,
-        df: pd.DataFrame,
-        by_id: Optional[bool] = False
+    model: AmiciModel, df: pd.DataFrame, by_id: Optional[bool] = False
 ) -> List[amici.amici.ExpData]:
     """
     Constructs a ExpData instances according to the provided Model and
@@ -709,17 +738,16 @@ def getEdataFromDataFrame(
     # aggregate features that define a condition
 
     # fixed parameters
-    condition_parameters = _get_names_or_ids(model, 'FixedParameter',
-                                             by_id=by_id)
+    condition_parameters = _get_names_or_ids(model, "FixedParameter", by_id=by_id)
     # preeq and presim parameters
-    for par in _get_names_or_ids(model, 'FixedParameter', by_id=by_id):
-        if par + '_preeq' in df.columns:
-            condition_parameters.append(par + '_preeq')
-        if par + '_presim' in df.columns:
-            condition_parameters.append(par + '_presim')
+    for par in _get_names_or_ids(model, "FixedParameter", by_id=by_id):
+        if par + "_preeq" in df.columns:
+            condition_parameters.append(par + "_preeq")
+        if par + "_presim" in df.columns:
+            condition_parameters.append(par + "_presim")
     # presimulation time
-    if 't_presim' in df.columns:
-        condition_parameters.append('t_presim')
+    if "t_presim" in df.columns:
+        condition_parameters.append("t_presim")
     # drop duplicates to create final conditions
     conditions = df[condition_parameters].drop_duplicates()
 
@@ -729,9 +757,7 @@ def getEdataFromDataFrame(
         selected = np.ones((len(df),), dtype=bool)
         for par_label, par in row.items():
             if math.isnan(par):
-                selected = selected & np.isnan(
-                    df[par_label].astype(float).values
-                )
+                selected = selected & np.isnan(df[par_label].astype(float).values)
             else:
                 selected = selected & (df[par_label] == par)
         edata_df = df[selected]

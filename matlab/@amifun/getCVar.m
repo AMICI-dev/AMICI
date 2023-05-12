@@ -5,7 +5,7 @@ function [ this ] = getCVar(this)
     %
     % Return values:
     %  this: updated function definition object @type amifun
-    
+
     switch(this.funstr)
         case 'JSparse'
             this.cvar =  'var_JSparse';
@@ -17,4 +17,3 @@ function [ this ] = getCVar(this)
             this.cvar = ['var_' this.funstr];
     end
 end
-

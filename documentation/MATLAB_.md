@@ -2,7 +2,7 @@
 
 In the following we will give a detailed overview how to specify models in MATLAB and how to call the generated simulation files.
 
-## Model Definition 
+## Model Definition
 
 This guide will guide the user on how to specify models in MATLAB. For example implementations see the examples in the matlab/examples directory.
 
@@ -120,7 +120,7 @@ Specifying events is optional. Events are specified in terms of a trigger functi
 
 Events may depend on states, parameters and constants but __not__ on observables.
 
-For more details about event support see https://doi.org/10.1093/bioinformatics/btw764 
+For more details about event support see https://doi.org/10.1093/bioinformatics/btw764
 
 ### Standard Deviation
 
@@ -139,7 +139,7 @@ They can depend on time and parameters but must not depend on the states or obse
 
 ### Objective Function
 
-By default, AMICI assumes a normal noise model and uses the corresponding negative log-likelihood 
+By default, AMICI assumes a normal noise model and uses the corresponding negative log-likelihood
 
     J = 1/2*sum(((y_i(t)-my_ti)/sigma_y_i)^2 + log(2*pi*sigma_y^2)
 
@@ -193,7 +193,7 @@ Here for proof of concept:
 * Install the python package as described in the documentation
 * Ensure `pyversion` shows the correct python version (3.6 or 3.7)
 * Then, from within the AMICI `matlab/` directory:
-    
+
     ```
     sbml_importer = py.amici.SbmlImporter('../python/examples/example_steadystate/model_steadystate_scaled.xml')
     sbml_importer.sbml2amici('steadystate', 'steadystate_example_from_python')

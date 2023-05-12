@@ -8,9 +8,9 @@ function [modelo2] = augmento2(this)
     % Return values:
     %  this: augmented system which contains symbolic definition of the
     %  original system and its sensitivities @type amimodel
-    
+
     syms Sx Sdot Sy S0
-   
+
     augmodel.nxtrue = length(this.sym.x); % number of states
     augmodel.nytrue = length(this.sym.y); % number of observables
     if(this.nevent>0)
@@ -19,7 +19,7 @@ function [modelo2] = augmento2(this)
         augmodel.nztrue = 0;
     end
     np = this.np;
-    
+
     % augment states
     Sx = sym(zeros(length(this.sym.x),np));
     for j = 1:length(this.sym.x)
@@ -29,10 +29,10 @@ function [modelo2] = augmento2(this)
         end
     end
     Sdot = jacobian(this.sym.xdot,this.sym.x)*Sx+jacobian(this.sym.xdot,this.sym.p);
-    
+
     % augment output
     Sy = jacobian(this.sym.y,this.sym.x)*Sx+jacobian(this.sym.y,this.sym.p);
-   
+
     % generate deltasx
     this.getFun([],'deltasx');
     this.getFun([],'sz');
@@ -64,7 +64,7 @@ function [modelo2] = augmento2(this)
         end
         augmodel.event(ievent) = amievent(this.event(ievent).trigger,bolusnew,znew);
     end
-    
+
     % augment likelihood
     this.getFun([],'dsigma_ydp');
     this.getFun([],'y');
@@ -79,7 +79,7 @@ function [modelo2] = augmento2(this)
     SJy = jacobian(this.fun.Jy.sym,this.sym.p) ...
         + jacobian(this.fun.Jy.sym,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym ...
         + jacobian(this.fun.Jy.sym,this.fun.y.strsym)*aug_y_strsym;
-    
+
     this.getFun([],'dsigma_zdp');
     this.getFun([],'rz');
     this.getFun([],'Jz');
@@ -92,7 +92,7 @@ function [modelo2] = augmento2(this)
     SJz = jacobian(this.fun.Jz.sym,this.sym.p);
     if(~isempty(this.fun.sigma_z.strsym))
         SJz = SJz + jacobian(this.fun.Jz.sym,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-              + jacobian(this.fun.Jz.sym,this.fun.z.strsym)*aug_z_strsym;   
+              + jacobian(this.fun.Jz.sym,this.fun.z.strsym)*aug_z_strsym;
     end
     this.getFun([],'Jrz');
     tmp = arrayfun(@(x) sym(['var_rz_' num2str(x)]),0:(augmodel.nztrue*(1+np)-1),'UniformOutput',false);
@@ -104,14 +104,14 @@ function [modelo2] = augmento2(this)
     SJrz = jacobian(this.fun.Jrz.sym,this.sym.p);
     if(~isempty(this.fun.sigma_z.strsym))
         SJrz = SJrz + jacobian(this.fun.Jrz.sym,this.fun.sigma_z.strsym)*this.fun.dsigma_zdp.sym ...
-              + jacobian(this.fun.Jrz.sym,this.fun.rz.strsym)*aug_rz_strsym;   
+              + jacobian(this.fun.Jrz.sym,this.fun.rz.strsym)*aug_rz_strsym;
     end
-    
+
     % augment sigmas
     this.getFun([],'sigma_y');
     this.getFun([],'sigma_z');
     S0 = jacobian(this.sym.x0,this.sym.p);
-    
+
     augmodel.sym.x = [this.sym.x;Sx(:)];
     augmodel.sym.xdot = [this.sym.xdot;Sdot(:)];
     augmodel.sym.f = augmodel.sym.xdot;
@@ -127,7 +127,7 @@ function [modelo2] = augmento2(this)
     augmodel.sym.k = this.sym.k;
     augmodel.sym.sigma_y = [transpose(this.sym.sigma_y(:)), reshape(transpose(this.fun.dsigma_ydp.sym), [1,numel(this.fun.dsigma_ydp.sym)])];
     augmodel.sym.sigma_z = [transpose(this.sym.sigma_z(:)), reshape(transpose(this.fun.dsigma_zdp.sym), [1,numel(this.fun.dsigma_zdp.sym)])];
-    
+
     modelo2 = amimodel(augmodel,[this.modelname '_o2']);
     modelo2.o2flag = 1;
     modelo2.debug = this.debug;

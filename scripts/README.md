@@ -1,9 +1,9 @@
 # Contents of `scripts/`
 
-This directory contains a number of build, installation, and CI scripts. 
+This directory contains a number of build, installation, and CI scripts.
 
 * `buildAll.sh`
-   
+
    Build AMICI along with dependencies and test suite
 
 * `buildAmici.sh`
@@ -12,14 +12,14 @@ This directory contains a number of build, installation, and CI scripts.
 
 * `buildBNGL.sh`
 
-   Download and build 
+   Download and build
    [BioNetGen](https://github.com/RuleWorld/bionetgen) (required for some tests)
-  
+
 * `buildSuiteSparse.sh`
 
    Build [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html)
    included in this repository
-   
+
 * `buildSundials.sh`
 
    Build [Sundials](https://computation.llnl.gov/projects/sundials/)
@@ -41,14 +41,14 @@ This directory contains a number of build, installation, and CI scripts.
 
 * `downloadAndBuildSwig.sh`
 
-  Download and build [SWIG](http://www.swig.org/) 
+  Download and build [SWIG](http://www.swig.org/)
 
 * `installAmiciArchive.sh`
 
   Create a Python virtual environment and do an AMICI development installation
 
 * `installAmiciSource.sh`
-  
+
   Create a Python virtual environment and do a regular AMICI installation
 
 * `run-codecov.sh`
@@ -78,10 +78,10 @@ This directory contains a number of build, installation, and CI scripts.
 
 * `run-SBMLTestsuite.sh`
 
-  Download and run the semantic 
+  Download and run the semantic
   [SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
 
 * `run-valgrind.sh`
 
   Run memory leak check using valgrind for all unit and integration tests.
-  Assumes they have been built before in the default location. 
+  Assumes they have been built before in the default location.
