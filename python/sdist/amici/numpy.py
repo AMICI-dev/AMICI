@@ -41,23 +41,21 @@ class SwigPtrView(collections.abc.Mapping):
         :return: value
         """
         if self._swigptr is None:
-            raise NotImplementedError('Cannot get items from abstract class.')
+            raise NotImplementedError("Cannot get items from abstract class.")
 
-        if item == 'ptr':
+        if item == "ptr":
             return self._swigptr
 
         if item in self._cache:
             return self._cache[item]
 
-        if item == 'id':
+        if item == "id":
             return getattr(self._swigptr, item)
 
         if item not in self._field_names:
             self.__missing__(item)
 
-        value = _field_as_numpy(
-            self._field_dimensions, item, self._swigptr
-        )
+        value = _field_as_numpy(self._field_dimensions, item, self._swigptr)
         self._cache[item] = value
         return value
 
@@ -67,7 +65,7 @@ class SwigPtrView(collections.abc.Mapping):
 
         :param key: field name
         """
-        raise KeyError(f'Unknown field name {key}.')
+        raise KeyError(f"Unknown field name {key}.")
 
     def __getattr__(self, item) -> Union[np.ndarray, float]:
         """
@@ -147,7 +145,7 @@ class SwigPtrView(collections.abc.Mapping):
 
         :returns: string representation
         """
-        return f'<{self.__class__.__name__}({self._swigptr})>'
+        return f"<{self.__class__.__name__}({self._swigptr})>"
 
 
 class ReturnDataView(SwigPtrView):
@@ -157,17 +155,60 @@ class ReturnDataView(SwigPtrView):
     """
 
     _field_names = [
-        'ts', 'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss', 'y', 'sigmay',
-        'sy', 'ssigmay', 'z', 'rz', 'sigmaz', 'sz', 'srz',
-        'ssigmaz', 'sllh', 's2llh', 'J', 'xdot', 'status', 'llh',
-        'chi2', 'res', 'sres', 'FIM', 'w', 'preeq_wrms', 'preeq_t',
-        'preeq_numsteps', 'preeq_numstepsB', 'preeq_status', 'preeq_cpu_time',
-        'preeq_cpu_timeB', 'posteq_wrms', 'posteq_t', 'posteq_numsteps',
-        'posteq_numstepsB', 'posteq_status', 'posteq_cpu_time',
-        'posteq_cpu_timeB', 'numsteps', 'numrhsevals',
-        'numerrtestfails', 'numnonlinsolvconvfails', 'order', 'cpu_time',
-        'numstepsB', 'numrhsevalsB', 'numerrtestfailsB',
-        'numnonlinsolvconvfailsB', 'cpu_timeB', 'cpu_time_total'
+        "ts",
+        "x",
+        "x0",
+        "x_ss",
+        "sx",
+        "sx0",
+        "sx_ss",
+        "y",
+        "sigmay",
+        "sy",
+        "ssigmay",
+        "z",
+        "rz",
+        "sigmaz",
+        "sz",
+        "srz",
+        "ssigmaz",
+        "sllh",
+        "s2llh",
+        "J",
+        "xdot",
+        "status",
+        "llh",
+        "chi2",
+        "res",
+        "sres",
+        "FIM",
+        "w",
+        "preeq_wrms",
+        "preeq_t",
+        "preeq_numsteps",
+        "preeq_numstepsB",
+        "preeq_status",
+        "preeq_cpu_time",
+        "preeq_cpu_timeB",
+        "posteq_wrms",
+        "posteq_t",
+        "posteq_numsteps",
+        "posteq_numstepsB",
+        "posteq_status",
+        "posteq_cpu_time",
+        "posteq_cpu_timeB",
+        "numsteps",
+        "numrhsevals",
+        "numerrtestfails",
+        "numnonlinsolvconvfails",
+        "order",
+        "cpu_time",
+        "numstepsB",
+        "numrhsevalsB",
+        "numerrtestfailsB",
+        "numnonlinsolvconvfailsB",
+        "cpu_timeB",
+        "cpu_time_total",
     ]
 
     def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
@@ -177,65 +218,63 @@ class ReturnDataView(SwigPtrView):
         :param rdata: pointer to the ``ReturnData`` instance
         """
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
-            raise TypeError(f'Unsupported pointer {type(rdata)}, must be'
-                            f'amici.ExpDataPtr!')
+            raise TypeError(
+                f"Unsupported pointer {type(rdata)}, must be" f"amici.ExpDataPtr!"
+            )
         self._field_dimensions = {
-            'ts': [rdata.nt],
-            'x': [rdata.nt, rdata.nx],
-            'x0': [rdata.nx],
-            'x_ss': [rdata.nx],
-            'sx': [rdata.nt, rdata.nplist, rdata.nx],
-            'sx0': [rdata.nplist, rdata.nx],
-            'sx_ss': [rdata.nplist, rdata.nx],
-
+            "ts": [rdata.nt],
+            "x": [rdata.nt, rdata.nx],
+            "x0": [rdata.nx],
+            "x_ss": [rdata.nx],
+            "sx": [rdata.nt, rdata.nplist, rdata.nx],
+            "sx0": [rdata.nplist, rdata.nx],
+            "sx_ss": [rdata.nplist, rdata.nx],
             # observables
-            'y': [rdata.nt, rdata.ny],
-            'sigmay': [rdata.nt, rdata.ny],
-            'sy': [rdata.nt, rdata.nplist, rdata.ny],
-            'ssigmay': [rdata.nt, rdata.nplist, rdata.ny],
-
+            "y": [rdata.nt, rdata.ny],
+            "sigmay": [rdata.nt, rdata.ny],
+            "sy": [rdata.nt, rdata.nplist, rdata.ny],
+            "ssigmay": [rdata.nt, rdata.nplist, rdata.ny],
             # event observables
-            'z': [rdata.nmaxevent, rdata.nz],
-            'rz': [rdata.nmaxevent, rdata.nz],
-            'sigmaz': [rdata.nmaxevent, rdata.nz],
-            'sz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-            'srz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-            'ssigmaz': [rdata.nmaxevent, rdata.nplist, rdata.nz],
-
+            "z": [rdata.nmaxevent, rdata.nz],
+            "rz": [rdata.nmaxevent, rdata.nz],
+            "sigmaz": [rdata.nmaxevent, rdata.nz],
+            "sz": [rdata.nmaxevent, rdata.nplist, rdata.nz],
+            "srz": [rdata.nmaxevent, rdata.nplist, rdata.nz],
+            "ssigmaz": [rdata.nmaxevent, rdata.nplist, rdata.nz],
             # objective function
-            'sllh': [rdata.nplist],
-            's2llh': [rdata.np, rdata.nplist],
-
-            'res': [rdata.nt * rdata.nytrue *
-                    (2 if rdata.sigma_res else 1)],
-            'sres': [rdata.nt * rdata.nytrue *
-                     (2 if rdata.sigma_res else 1), rdata.nplist],
-            'FIM': [rdata.nplist, rdata.nplist],
-
+            "sllh": [rdata.nplist],
+            "s2llh": [rdata.np, rdata.nplist],
+            "res": [rdata.nt * rdata.nytrue * (2 if rdata.sigma_res else 1)],
+            "sres": [
+                rdata.nt * rdata.nytrue * (2 if rdata.sigma_res else 1),
+                rdata.nplist,
+            ],
+            "FIM": [rdata.nplist, rdata.nplist],
             # diagnosis
-            'J': [rdata.nx_solver, rdata.nx_solver],
-            'w': [rdata.nt, rdata.nw],
-            'xdot': [rdata.nx_solver],
-            'preeq_numlinsteps': [rdata.newton_maxsteps, 2],
-            'preeq_numsteps': [1, 3],
-            'preeq_status': [1, 3],
-            'posteq_numlinsteps': [rdata.newton_maxsteps, 2],
-            'posteq_numsteps': [1, 3],
-            'posteq_status': [1, 3],
-            'numsteps': [rdata.nt],
-            'numrhsevals': [rdata.nt],
-            'numerrtestfails': [rdata.nt],
-            'numnonlinsolvconvfails': [rdata.nt],
-            'order': [rdata.nt],
-            'numstepsB': [rdata.nt],
-            'numrhsevalsB': [rdata.nt],
-            'numerrtestfailsB': [rdata.nt],
-            'numnonlinsolvconvfailsB': [rdata.nt],
+            "J": [rdata.nx_solver, rdata.nx_solver],
+            "w": [rdata.nt, rdata.nw],
+            "xdot": [rdata.nx_solver],
+            "preeq_numlinsteps": [rdata.newton_maxsteps, 2],
+            "preeq_numsteps": [1, 3],
+            "preeq_status": [1, 3],
+            "posteq_numlinsteps": [rdata.newton_maxsteps, 2],
+            "posteq_numsteps": [1, 3],
+            "posteq_status": [1, 3],
+            "numsteps": [rdata.nt],
+            "numrhsevals": [rdata.nt],
+            "numerrtestfails": [rdata.nt],
+            "numnonlinsolvconvfails": [rdata.nt],
+            "order": [rdata.nt],
+            "numstepsB": [rdata.nt],
+            "numrhsevalsB": [rdata.nt],
+            "numerrtestfailsB": [rdata.nt],
+            "numnonlinsolvconvfailsB": [rdata.nt],
         }
         super(ReturnDataView, self).__init__(rdata)
 
-    def __getitem__(self, item: str) -> Union[np.ndarray, ReturnDataPtr,
-                                              ReturnData, float]:
+    def __getitem__(
+        self, item: str
+    ) -> Union[np.ndarray, ReturnDataPtr, ReturnData, float]:
         """
         Access fields by name.s
 
@@ -245,20 +284,15 @@ class ReturnDataView(SwigPtrView):
 
         :returns: self[item]
         """
-        if item == 'status':
+        if item == "status":
             return int(super().__getitem__(item))
 
-        if item == 't':
-            item = 'ts'
+        if item == "t":
+            item = "ts"
 
         return super().__getitem__(item)
 
-    def by_id(
-            self,
-            entity_id: str,
-            field: str = None,
-            model: Model = None
-    ) -> np.array:
+    def by_id(self, entity_id: str, field: str = None, model: Model = None) -> np.array:
         """
         Get the value of a given field for a named entity.
 
@@ -273,17 +307,14 @@ class ReturnDataView(SwigPtrView):
         if field is None:
             field = _entity_type_from_id(entity_id, self, model)
 
-        if field in {'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss'}:
+        if field in {"x", "x0", "x_ss", "sx", "sx0", "sx_ss"}:
             ids = (model and model.getStateIds()) or self._swigptr.state_ids
-        elif field in {'w'}:
-            ids = (model and model.getExpressionIds()) \
-                  or self._swigptr.expression_ids
-        elif field in {'y', 'sy', 'sigmay'}:
-            ids = (model and model.getObservableIds()) \
-                  or self._swigptr.observable_ids
-        elif field in {'sllh'}:
-            ids = (model and model.getParameterIds()) \
-                  or self._swigptr.parameter_ids
+        elif field in {"w"}:
+            ids = (model and model.getExpressionIds()) or self._swigptr.expression_ids
+        elif field in {"y", "sy", "sigmay"}:
+            ids = (model and model.getObservableIds()) or self._swigptr.observable_ids
+        elif field in {"sllh"}:
+            ids = (model and model.getParameterIds()) or self._swigptr.parameter_ids
         else:
             raise NotImplementedError(
                 f"Subsetting {field} by ID is not implemented or not possible."
@@ -299,10 +330,13 @@ class ExpDataView(SwigPtrView):
     """
 
     _field_names = [
-        'observedData', 'observedDataStdDev', 'observedEvents',
-        'observedEventsStdDev', 'fixedParameters',
-        'fixedParametersPreequilibration',
-        'fixedParametersPresimulation'
+        "observedData",
+        "observedDataStdDev",
+        "observedEvents",
+        "observedEventsStdDev",
+        "fixedParameters",
+        "fixedParametersPreequilibration",
+        "fixedParametersPresimulation",
     ]
 
     def __init__(self, edata: Union[ExpDataPtr, ExpData]):
@@ -312,22 +346,23 @@ class ExpDataView(SwigPtrView):
         :param edata: pointer to the ExpData instance
         """
         if not isinstance(edata, (ExpDataPtr, ExpData)):
-            raise TypeError(f'Unsupported pointer {type(edata)}, must be'
-                            f'amici.ExpDataPtr!')
+            raise TypeError(
+                f"Unsupported pointer {type(edata)}, must be" f"amici.ExpDataPtr!"
+            )
         self._field_dimensions = {  # observables
-            'observedData': [edata.nt(), edata.nytrue()],
-            'observedDataStdDev': [edata.nt(), edata.nytrue()],
-
+            "observedData": [edata.nt(), edata.nytrue()],
+            "observedDataStdDev": [edata.nt(), edata.nytrue()],
             # event observables
-            'observedEvents': [edata.nmaxevent(), edata.nztrue()],
-            'observedEventsStdDev': [edata.nmaxevent(), edata.nztrue()],
-
+            "observedEvents": [edata.nmaxevent(), edata.nztrue()],
+            "observedEventsStdDev": [edata.nmaxevent(), edata.nztrue()],
             # fixed parameters
-            'fixedParameters': [len(edata.fixedParameters)],
-            'fixedParametersPreequilibration': [
-                len(edata.fixedParametersPreequilibration)],
-            'fixedParametersPresimulation': [
-                len(edata.fixedParametersPreequilibration)],
+            "fixedParameters": [len(edata.fixedParameters)],
+            "fixedParametersPreequilibration": [
+                len(edata.fixedParametersPreequilibration)
+            ],
+            "fixedParametersPresimulation": [
+                len(edata.fixedParametersPreequilibration)
+            ],
         }
         edata.observedData = edata.getObservedData()
         edata.observedDataStdDev = edata.getObservedDataStdDev()
@@ -337,8 +372,7 @@ class ExpDataView(SwigPtrView):
 
 
 def _field_as_numpy(
-        field_dimensions: Dict[str, List[int]],
-        field: str, data: SwigPtrView
+    field_dimensions: Dict[str, List[int]], field: str, data: SwigPtrView
 ) -> Union[np.ndarray, float, None]:
     """
     Convert data object field to numpy array with dimensions according to
@@ -359,26 +393,26 @@ def _field_as_numpy(
 
 
 def _entity_type_from_id(
-        entity_id: str,
-        rdata: Union[amici.ReturnData, 'amici.ReturnDataView'] = None,
-        model: amici.Model = None,
-) -> Literal['x', 'y', 'w', 'p', 'k']:
+    entity_id: str,
+    rdata: Union[amici.ReturnData, "amici.ReturnDataView"] = None,
+    model: amici.Model = None,
+) -> Literal["x", "y", "w", "p", "k"]:
     """Guess the type of some entity by its ID."""
     for entity_type, symbol in (
-            ('State', 'x'),
-            ('Observable', 'y'),
-            ('Expression', 'w'),
-            ('Parameter', 'p'),
-            ('FixedParameter', 'k')
+        ("State", "x"),
+        ("Observable", "y"),
+        ("Expression", "w"),
+        ("Parameter", "p"),
+        ("FixedParameter", "k"),
     ):
         if model:
-            if entity_id in getattr(model, f'get{entity_type}Ids')():
+            if entity_id in getattr(model, f"get{entity_type}Ids")():
                 return symbol
         else:
             if entity_id in getattr(
-                    rdata if isinstance(rdata, amici.ReturnData)
-                    else rdata._swigptr,
-                    f'{entity_type.lower()}_ids'):
+                rdata if isinstance(rdata, amici.ReturnData) else rdata._swigptr,
+                f"{entity_type.lower()}_ids",
+            ):
                 return symbol
 
     raise KeyError(f"Unknown symbol {entity_id}.")

@@ -2,14 +2,13 @@
 #define AMICI_MODEL_STATE_H
 
 #include "amici/defines.h"
-#include "amici/sundials_matrix_wrapper.h"
-#include "amici/model_dimensions.h"
 #include "amici/misc.h"
+#include "amici/model_dimensions.h"
+#include "amici/sundials_matrix_wrapper.h"
 
 #include <vector>
 
 namespace amici {
-
 
 /**
  * @brief Exchange format to store and transfer the state of the
@@ -49,15 +48,13 @@ struct ModelState {
     std::vector<realtype> spl_;
 };
 
-inline bool operator==(const ModelState &a, const ModelState &b) {
-    return is_equal(a.h, b.h)
-           && is_equal(a.total_cl, b.total_cl)
+inline bool operator==(ModelState const& a, ModelState const& b) {
+    return is_equal(a.h, b.h) && is_equal(a.total_cl, b.total_cl)
            && is_equal(a.stotal_cl, b.stotal_cl)
            && is_equal(a.unscaledParameters, b.unscaledParameters)
            && is_equal(a.fixedParameters, b.fixedParameters)
            && a.plist == b.plist;
 }
-
 
 /**
  * @brief Storage for `amici::Model` quantities computed based on
@@ -74,16 +71,20 @@ struct ModelStateDerived {
      */
     explicit ModelStateDerived(ModelDimensions const& dim);
 
-    /** Sparse Jacobian (dimension: `nx_solver` x `nx_solver`, nnz:  `amici::Model::nnz`) */
+    /** Sparse Jacobian (dimension: `nx_solver` x `nx_solver`, nnz:
+     * `amici::Model::nnz`) */
     SUNMatrixWrapper J_;
 
-    /** Sparse Backwards Jacobian (dimension: `nx_solver` x `nx_solver`, nnz:`amici::Model::nnz`) */
+    /** Sparse Backwards Jacobian (dimension: `nx_solver` x `nx_solver`,
+     * nnz:`amici::Model::nnz`) */
     SUNMatrixWrapper JB_;
 
-    /** Sparse dxdotdw temporary storage (dimension: `nx_solver` x `nw`, nnz:  `ndxdotdw`) */
+    /** Sparse dxdotdw temporary storage (dimension: `nx_solver` x `nw`, nnz:
+     * `ndxdotdw`) */
     SUNMatrixWrapper dxdotdw_;
 
-    /** Sparse dwdx temporary storage (dimension: `nw` x `nx_solver`, nnz:`ndwdx`) */
+    /** Sparse dwdx temporary storage (dimension: `nw` x `nx_solver`,
+     * nnz:`ndwdx`) */
     SUNMatrixWrapper dwdx_;
 
     /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
@@ -91,11 +92,13 @@ struct ModelStateDerived {
 
     /** Dense Mass matrix (dimension: `nx_solver` x `nx_solver`) */
     SUNMatrixWrapper M_;
-    
-    /** Sparse Mass matrix (dimension: `nx_solver` x `nx_solver`, nnz: `sum(amici::Model::idlist)`) */
+
+    /** Sparse Mass matrix (dimension: `nx_solver` x `nx_solver`, nnz:
+     * `sum(amici::Model::idlist)`) */
     SUNMatrixWrapper MSparse_;
-    
-    /** JSparse intermediate matrix (dimension: `nx_solver` x `nx_solver`, nnz: dynamic) */
+
+    /** JSparse intermediate matrix (dimension: `nx_solver` x `nx_solver`, nnz:
+     * dynamic) */
     SUNMatrixWrapper dfdx_;
 
     /**
@@ -106,9 +109,9 @@ struct ModelStateDerived {
     SUNMatrixWrapper dxdotdp_full;
 
     /**
-     * Temporary storage of `dxdotdp_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`,
-     *  type `CSC_MAT`)
+     * Temporary storage of `dxdotdp_explicit` data across functions (Python
+     * only) (dimension: `nplist` x `nx_solver`, nnz:  `ndxdotdp_explicit`, type
+     * `CSC_MAT`)
      */
     SUNMatrixWrapper dxdotdp_explicit;
 
@@ -121,8 +124,8 @@ struct ModelStateDerived {
     SUNMatrixWrapper dxdotdp_implicit;
 
     /**
-     * Temporary storage of `dxdotdx_explicit` data across functions (Python only)
-     * (dimension: `nplist` x `nx_solver`, nnz: `nxdotdotdx_explicit`,
+     * Temporary storage of `dxdotdx_explicit` data across functions (Python
+     * only) (dimension: `nplist` x `nx_solver`, nnz: `nxdotdotdx_explicit`,
      *  type `CSC_MAT`)
      */
     SUNMatrixWrapper dxdotdx_explicit;
@@ -137,7 +140,8 @@ struct ModelStateDerived {
 
     /**
      * Temporary storage for `dx_rdatadx_solver`
-     * (dimension: `nx_rdata` x `nx_solver`, nnz: `ndxrdatadxsolver`, type: `CSC_MAT`)
+     * (dimension: `nx_rdata` x `nx_solver`, nnz: `ndxrdatadxsolver`, type:
+     * `CSC_MAT`)
      */
     SUNMatrixWrapper dx_rdatadx_solver;
 
@@ -158,7 +162,7 @@ struct ModelStateDerived {
      * Temporary storage of `dxdotdp` data across functions, Matlab only
      * (dimension: `nplist` x `nx_solver` , row-major)
      */
-    AmiVectorArray dxdotdp {0, 0};
+    AmiVectorArray dxdotdp{0, 0};
 
     /** Sparse observable derivative of data likelihood, only used if
      * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
@@ -253,7 +257,7 @@ struct ModelStateDerived {
      * (dimension: `nx_solver` x `nplist`, row-major)
      */
     std::vector<realtype> sx_;
-    
+
     /** temporary storage for sy,
      * (dimension: `ny` x `nplist`, row-major)
      */
@@ -295,7 +299,8 @@ struct ModelStateDerived {
      */
     std::vector<realtype> dsigmazdp_;
 
-    /** temporary storage for change in x after event (dimension: `nx_solver`) */
+    /** temporary storage for change in x after event (dimension: `nx_solver`)
+     */
     std::vector<realtype> deltax_;
 
     /** temporary storage for change in sx after event
@@ -303,7 +308,8 @@ struct ModelStateDerived {
      */
     std::vector<realtype> deltasx_;
 
-    /** temporary storage for change in xB after event (dimension: `nx_solver`) */
+    /** temporary storage for change in xB after event (dimension: `nx_solver`)
+     */
     std::vector<realtype> deltaxB_;
 
     /** temporary storage for change in qB after event
@@ -316,15 +322,14 @@ struct ModelStateDerived {
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: `nx_solver`) */
-    AmiVector x_pos_tmp_ {0};
+    AmiVector x_pos_tmp_{0};
 };
 
-
 /**
- * @brief implements an exchange format to store and transfer the state of a simulation at a
- * specific timepoint.
+ * @brief implements an exchange format to store and transfer the state of a
+ * simulation at a specific timepoint.
  */
-struct SimulationState{
+struct SimulationState {
     /** timepoint */
     realtype t;
     /** state variables */
@@ -336,7 +341,6 @@ struct SimulationState{
     /** state of the model that was used for simulation */
     ModelState state;
 };
-
 
 } // namespace amici
 

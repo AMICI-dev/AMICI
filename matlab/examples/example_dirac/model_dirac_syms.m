@@ -15,12 +15,12 @@ model.sym.x = [ x1 x2 ];
 % create parameter syms
 syms p1 p2 p3 p4
 
-% create parameter vector 
+% create parameter vector
 model.sym.p = [p1,p2,p3,p4];
 
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
-model.param = 'log10'; 
+model.param = 'log10';
 
 %%
 % SYSTEM EQUATIONS

@@ -69,10 +69,10 @@ if(nevent>0)
         tmp_bolus{ievent} = sym(zeros([nx,1]));
     end
     syms polydirac
-    
+
     % initialise hflag
     hflags = zeros([nx,nevent]);
-    
+
     % heaviside
     event_dependency = zeros(nevent);
     for ievent = 1:nevent
@@ -91,14 +91,14 @@ if(nevent>0)
             end
         end
     end
-    
+
     % check for loops
     if(any(any(event_dependency^(size(event_dependency,1)))))
         error('Found loop in trigger dependency. This can lead to the simulation getting stuck and is thus currently not supported. Please check your model definition!')
     end
-    
+
     P = 1:size(event_dependency,1);
-    
+
     % make matrix upper triangular, this is to ensure that we dont end
     % up with partially replaced trigger functions that we no longer recognise
     while(~isempty(find(triu(event_dependency(P,P))-event_dependency(P,P))))
@@ -115,9 +115,9 @@ if(nevent>0)
     trigger = trigger(P);
     bolus = bolus(P);
     z = z(P);
-    
-    
-    
+
+
+
     for ix = 1:nx
         symchar = char(this.sym.xdot(ix));
         symvariable = this.sym.xdot(ix);
@@ -140,18 +140,18 @@ if(nevent>0)
             end
         end
         if(strfind(symchar,'heaviside'))
-            
+
             for ievent = 1:nevent
                 % remove the heaviside function and replace by h
                 % variable which is updated upon event occurrence in the
                 % solver
-                
+
                 % h variables only change for one sign change but heaviside
-                % needs updating for both, thus we should 
+                % needs updating for both, thus we should
                 symvariable = subs(symvariable,heaviside( trigger{ievent}),betterSym(['h_' num2str(ievent-1)']));
                 symvariable = subs(symvariable,heaviside(-trigger{ievent}),betterSym(['(1-h_' num2str(ievent-1) ')']));
                 % set hflag
-                
+
                 % we can check whether dividing cfp(2) by
                 % trigger{ievent} reduced the length of the symbolic
                 % expression. If it does, this suggests that
@@ -172,7 +172,7 @@ if(nevent>0)
         % update xdot
         this.sym.xdot(ix) = symvariable;
     end
-    
+
     % loop until we no longer found any dynamic heaviside functions in the triggers in the previous loop
     nheavy = 1;
     while nheavy>0
@@ -196,13 +196,13 @@ if(nevent>0)
             trigger{ievent} = betterSym(symchar);
         end
     end
-    
+
     % compute dtriggerdt and constant trigger functions
     for ievent = 1:nevent
         dtriggerdt(ievent) = diff(trigger{ievent},sym('t')) + jacobian(trigger{ievent},this.sym.x)*this.sym.xdot(:);
     end
     triggeridx = logical(dtriggerdt~=0);
-    
+
     % multiply by the dtriggerdt factor, this should stay here as we
     % want the xdot to be cleaned of any dirac functions
     ievent = 1;
@@ -221,7 +221,7 @@ if(nevent>0)
             ievent = ievent+1;
         end
     end
-    
+
     % update hflags according to bolus
     for ievent = 1:nevent
         if(any(double(bolus{ievent}~=0)))
@@ -236,9 +236,9 @@ if(nevent>0)
             end
         end
     end
-    
+
     this.event = amievent.empty();
-    
+
     % update events
     for ievent = 1:nevent
         this.event(ievent) = amievent(trigger{ievent},bolus{ievent}(:),z{ievent});
@@ -279,11 +279,10 @@ if(~isfield(this.sym,'Jrz'))
     this.sym.Jrz = sym(zeros(size(this.sym.Jz)));
     for iz = 1:length([this.event.z])
         tmp = subs(this.sym.Jz(iz,:),var_z,var_rz);
-        this.sym.Jrz(iz,:) = subs(tmp,mz,sym(zeros(size(mz)))); 
+        this.sym.Jrz(iz,:) = subs(tmp,mz,sym(zeros(size(mz))));
     end
 end
 
 this.sym.Jrz = subs(this.sym.Jrz,rz,var_rz);
 
 end
-

@@ -64,7 +64,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('x')
         box on
-        
+
         subplot(4,2,ip*2)
         plot(t,abs(sol.s2x(:,:,ip)-s2x_fd(:,:,ip)),'r--')
         legend('error x1','error x2','Location','NorthEastOutside')
@@ -77,7 +77,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     figure
     for ip = 1:4
         subplot(4,2,ip*2-1)
@@ -93,7 +93,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('y')
         box on
-        
+
         subplot(4,2,ip*2)
         plot(t,abs(sol.s2y(:,:,ip)-s2y_fd(:,:,ip)),'r--')
         legend('error y1','Location','NorthEastOutside')
@@ -106,7 +106,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 
