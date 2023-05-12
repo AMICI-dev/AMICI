@@ -5,10 +5,10 @@
 
 #include "amici/amici.h"
 
-#include "amici/steadystateproblem.h"
 #include "amici/backwardproblem.h"
 #include "amici/forwardproblem.h"
 #include "amici/logging.h"
+#include "amici/steadystateproblem.h"
 
 #include <cvodes/cvodes.h>           //return codes
 #include <sundials/sundials_types.h> //realtype
@@ -23,24 +23,36 @@
 #include <type_traits>
 
 // ensure definitions are in sync
-static_assert(amici::AMICI_SUCCESS == CV_SUCCESS,
-              "AMICI_SUCCESS != CV_SUCCESS");
-static_assert(amici::AMICI_DATA_RETURN == CV_TSTOP_RETURN,
-              "AMICI_DATA_RETURN != CV_TSTOP_RETURN");
-static_assert(amici::AMICI_ROOT_RETURN == CV_ROOT_RETURN,
-              "AMICI_ROOT_RETURN != CV_ROOT_RETURN");
-static_assert(amici::AMICI_ILL_INPUT == CV_ILL_INPUT,
-              "AMICI_ILL_INPUT != CV_ILL_INPUT");
-static_assert(amici::AMICI_NORMAL == CV_NORMAL,
-              "AMICI_NORMAL != CV_NORMAL");
-static_assert(amici::AMICI_ONE_STEP == CV_ONE_STEP,
-              "AMICI_ONE_STEP != CV_ONE_STEP");
-static_assert(amici::AMICI_SINGULAR_JACOBIAN == SUNLS_PACKAGE_FAIL_UNREC,
-              "AMICI_SINGULAR_JACOBIAN != SUNLS_PACKAGE_FAIL_UNREC");
-static_assert(amici::AMICI_SINGULAR_JACOBIAN == SUNLS_PACKAGE_FAIL_UNREC,
-              "AMICI_SINGULAR_JACOBIAN != SUNLS_PACKAGE_FAIL_UNREC");
-static_assert(std::is_same<amici::realtype, realtype>::value,
-              "Definition of realtype does not match");
+static_assert(
+    amici::AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS"
+);
+static_assert(
+    amici::AMICI_DATA_RETURN == CV_TSTOP_RETURN,
+    "AMICI_DATA_RETURN != CV_TSTOP_RETURN"
+);
+static_assert(
+    amici::AMICI_ROOT_RETURN == CV_ROOT_RETURN,
+    "AMICI_ROOT_RETURN != CV_ROOT_RETURN"
+);
+static_assert(
+    amici::AMICI_ILL_INPUT == CV_ILL_INPUT, "AMICI_ILL_INPUT != CV_ILL_INPUT"
+);
+static_assert(amici::AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
+static_assert(
+    amici::AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP"
+);
+static_assert(
+    amici::AMICI_SINGULAR_JACOBIAN == SUNLS_PACKAGE_FAIL_UNREC,
+    "AMICI_SINGULAR_JACOBIAN != SUNLS_PACKAGE_FAIL_UNREC"
+);
+static_assert(
+    amici::AMICI_SINGULAR_JACOBIAN == SUNLS_PACKAGE_FAIL_UNREC,
+    "AMICI_SINGULAR_JACOBIAN != SUNLS_PACKAGE_FAIL_UNREC"
+);
+static_assert(
+    std::is_same<amici::realtype, realtype>::value,
+    "Definition of realtype does not match"
+);
 
 namespace amici {
 
@@ -73,8 +85,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     solver.logger = &logger;
     model.logger = &logger;
     // prevent dangling pointer
-    auto _ = gsl::finally([&solver, &model]
-                          { solver.logger = model.logger = nullptr; });
+    auto _ = gsl::finally([&solver, &model] {
+        solver.logger = model.logger = nullptr;
+    });
 
     CpuTimer cpu_timer;
     solver.startTimer();
@@ -83,16 +96,16 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
      * out of scope */
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
 
-    std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
-                                                                     model);
-    if(edata) {
+    std::unique_ptr<ReturnData> rdata
+        = std::make_unique<ReturnData>(solver, model);
+    if (edata) {
         rdata->id = edata->id;
     }
 
-    std::unique_ptr<SteadystateProblem> preeq {};
-    std::unique_ptr<ForwardProblem> fwd {};
-    std::unique_ptr<BackwardProblem> bwd {};
-    std::unique_ptr<SteadystateProblem> posteq {};
+    std::unique_ptr<SteadystateProblem> preeq{};
+    std::unique_ptr<ForwardProblem> fwd{};
+    std::unique_ptr<BackwardProblem> bwd{};
+    std::unique_ptr<SteadystateProblem> posteq{};
     // tracks whether backwards integration finished without exceptions
     bool bwd_success = true;
 
@@ -106,25 +119,25 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             preeq->workSteadyStateProblem(solver, model, -1);
         }
 
-
-        fwd = std::make_unique<ForwardProblem>(edata, &model, &solver,
-                                               preeq.get());
+        fwd = std::make_unique<ForwardProblem>(
+            edata, &model, &solver, preeq.get()
+        );
         fwd->workForwardProblem();
-
 
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::make_unique<SteadystateProblem>(solver, model);
-            posteq->workSteadyStateProblem(solver, model,
-                                           fwd->getCurrentTimeIteration());
+            posteq->workSteadyStateProblem(
+                solver, model, fwd->getCurrentTimeIteration()
+            );
         }
-
 
         if (edata && solver.computingASA()) {
             fwd->getAdjointUpdates(model, *edata);
             if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
-                posteq->workSteadyStateBackwardProblem(solver, model,
-                                                       bwd.get());
+                posteq->workSteadyStateBackwardProblem(
+                    solver, model, bwd.get()
+                );
             }
 
             bwd_success = false;
@@ -135,19 +148,19 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             bwd_success = true;
 
             if (preeq) {
-                ConditionContext cc2(&model, edata,
-                                     FixedParameterContext::preequilibration);
-                preeq->workSteadyStateBackwardProblem(solver, model,
-                                                      bwd.get());
+                ConditionContext cc2(
+                    &model, edata, FixedParameterContext::preequilibration
+                );
+                preeq->workSteadyStateBackwardProblem(solver, model, bwd.get());
             }
         }
 
         rdata->status = AMICI_SUCCESS;
 
     } catch (amici::IntegrationFailure const& ex) {
-        if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+        if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
-            if(rethrow)
+            if (rethrow)
                 throw;
             logger.log(
                 LogSeverity::error, "MAXTIME_EXCEEDED",
@@ -166,7 +179,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             );
         }
     } catch (amici::IntegrationFailureB const& ex) {
-        if(ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
+        if (ex.error_code == AMICI_RHSFUNC_FAIL && solver.timeExceeded()) {
             rdata->status = AMICI_MAX_TIME_EXCEEDED;
             if (rethrow)
                 throw;
@@ -194,13 +207,13 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         if (rethrow)
             throw;
         logger.log(
-            LogSeverity::error, "OTHER",
-            "AMICI simulation failed: %s", ex.what()
+            LogSeverity::error, "OTHER", "AMICI simulation failed: %s",
+            ex.what()
         );
         logger.log(
             LogSeverity::debug, "BACKTRACE",
             "The previous error occurred at:\n%s", ex.getBacktrace()
-            );
+        );
 
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
@@ -213,9 +226,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     }
 
     rdata->processSimulationObjects(
-        preeq.get(), fwd.get(),
-        bwd_success ? bwd.get() : nullptr,
-        posteq.get(), model, solver, edata);
+        preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr, posteq.get(),
+        model, solver, edata
+    );
 
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
@@ -266,8 +279,8 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
          interface */
         if (skipThrough) {
             ConditionContext conditionContext(myModel.get(), edatas[i]);
-            results[i] =
-              std::unique_ptr<ReturnData>(new ReturnData(solver, model));
+            results[i]
+                = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
         } else {
             results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
         }
@@ -278,8 +291,7 @@ std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
     return results;
 }
 
-std::string simulation_status_to_str(int status)
-{
+std::string simulation_status_to_str(int status) {
     try {
         return simulation_status_to_str_map.at(status);
     } catch (std::out_of_range const&) {

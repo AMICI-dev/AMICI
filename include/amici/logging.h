@@ -20,8 +20,7 @@ enum class LogSeverity {
 /**
  * @brief A logger, holding a list of error messages.
  */
-class Logger
-{
+class Logger {
   public:
     Logger() = default;
     /**
@@ -30,11 +29,9 @@ class Logger
      * @param identifier Short identifier for the logged event
      * @param message A more detailed message
      */
-    void log(
-        LogSeverity severity,
-        std::string const& identifier,
-        std::string const& message
-        );
+    void
+    log(LogSeverity severity, std::string const& identifier,
+        std::string const& message);
 
 #if SWIG_VERSION >= 0x040002
     /**
@@ -62,12 +59,10 @@ class Logger
     std::vector<LogItem> items;
 };
 
-
 /**
  * @brief A log item.
  */
-struct LogItem
-{
+struct LogItem {
     /**
      * @brief Default ctor.
      */
@@ -80,14 +75,12 @@ struct LogItem
      * @param message
      */
     LogItem(
-        LogSeverity severity,
-        std::string const& identifier,
+        LogSeverity severity, std::string const& identifier,
         std::string const& message
-        ):
-                  severity(severity)
-                  ,identifier(identifier)
-                  ,message(message)
-                  {};
+    )
+        : severity(severity)
+        , identifier(identifier)
+        , message(message){};
 
     /** Severity level */
     LogSeverity severity;

@@ -1,9 +1,11 @@
-#include <array>
 #include <amici/defines.h>
+#include <array>
 
 namespace amici {
 
 namespace model_TPL_MODELNAME {
+
+// clang-format off
 
 std::array<const char*, TPL_NP> parameterNames = {
     TPL_PARAMETER_NAMES_INITIALIZER_LIST
@@ -56,6 +58,8 @@ std::array<int, TPL_NX_SOLVER> stateIdxsSolver = {
 std::array<bool, TPL_NEVENT> rootInitialValues = {
     TPL_ROOT_INITIAL_VALUES
 };
+
+// clang-format on
 
 } // namespace model_TPL_MODELNAME
 
