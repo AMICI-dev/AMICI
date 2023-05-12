@@ -1,4 +1,6 @@
 """Tests for SBML events, including piecewise expressions."""
+import sys
+import tempfile
 from pathlib import Path
 
 import libsbml
@@ -19,12 +21,17 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     """
     Import an sbml file and create an AMICI model from it
     """
-    sbml_test_models = Path("sbml_test_models")
-    sbml_test_models_output_dir = sbml_test_models / "amici_models"
+    sbml_test_models_output_dir = Path("amici_models")
     sbml_test_models_output_dir.mkdir(parents=True, exist_ok=True)
 
     sbml_importer = SbmlImporter(sbml_model)
-    output_dir = sbml_test_models_output_dir / model_name
+    # try not to exceed the stupid maximum path length on windows 💩
+    output_dir = (
+        sbml_test_models_output_dir / model_name
+        if sys.platform != "win32"
+        else tempfile.mkdtemp()
+    )
+
     sbml_importer.sbml2amici(model_name=model_name, output_dir=output_dir, **kwargs)
 
     model_module = import_model_module(model_name, output_dir)
