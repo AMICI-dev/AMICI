@@ -97,7 +97,7 @@ def create_sbml_model(
         trigger.setPersistent(True)
         trigger.setInitialValue(True)
 
-        def creat_event_assignment(target, assignment):
+        def create_event_assignment(target, assignment):
             ea = event.createEventAssignment()
             ea.setVariable(target)
             ea.setMath(libsbml.parseL3Formula(assignment))
@@ -106,11 +106,11 @@ def create_sbml_model(
             for event_target, event_assignment in zip(
                     event_def['target'], event_def['assignment']
             ):
-                creat_event_assignment(event_target, event_assignment)
+                create_event_assignment(event_target, event_assignment)
 
         else:
-            creat_event_assignment(event_def['target'],
-                                   event_def['assignment'])
+            create_event_assignment(event_def['target'],
+                                    event_def['assignment'])
 
     if to_file:
         libsbml.writeSBMLToFile(document, to_file)
