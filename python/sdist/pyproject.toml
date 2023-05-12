@@ -12,3 +12,6 @@ requires = [
     "cmake-build-extension==0.5.1",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 80
