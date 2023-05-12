@@ -1,46 +1,46 @@
 function example_steadystate
     %%
     % COMPILATION
-    
+
     [exdir,~,~]=fileparts(which('example_steadystate.m'));
     % compile the model
     amiwrap('model_steadystate','model_steadystate_syms',exdir)
-    
+
     %%
     % SIMULATION
-    
+
     % time vector
     t = linspace(0,100,50);
     p = [1;0.5;0.4;2;0.1];
     k = [0.1,0.4,0.7,1];
-    
+
     options = amioption(...
         'sensi', 0, ...
         'maxsteps', 1e4 ...
         );
-    
+
     % load mex into memory
     simulate_model_steadystate(t,log10(p),k,[],options);
-    
+
     tic;
     sol = simulate_model_steadystate([t, inf],log10(p),k,[],options);
     display(['Time elapsed with cvodes: ' num2str(toc) ' seconds']);
-    
+
     %%
     % ODE15S
-    
+
     ode_system = @(t,x,p,k) [-2*p(1)*x(1)^2 - p(2)*x(1)*x(2) + 2*p(3)*x(2) + p(4)*x(3) + p(5);
         + p(1)*x(1)^2 - p(2)*x(1)*x(2) - p(3)*x(2) + p(4)*x(3);
         + p(2)*x(1)*x(2) - p(4)*x(3) - k(4)*x(3)];
     options_ode15s = odeset('RelTol',options.rtol,'AbsTol',options.atol,'MaxStep',options.maxsteps);
-    
+
     tic;
     [~, X_ode15s] = ode15s(@(t,x) ode_system(t,x,p,k),t,k(1:3),options_ode15s);
     disp(['Time elapsed with ode15s: ' num2str(toc) ' seconds'])
-    
+
     %%
     % PLOTTING
-    
+
     if(usejava('jvm'))
         figure('Name', 'Example SteadyState');
         c_x = get(gca,'ColorOrder');
@@ -63,19 +63,19 @@ function example_steadystate
         legend boxoff;
         set(gcf,'Position',[100 300 1200 500]);
     end
-    
+
     %%
     % FORWARD SENSITIVITY ANALYSIS
-    
+
     options.sensi = 1;
     options.sens_ind = [3,1,2,4];
     sol = simulate_model_steadystate([t, inf],log10(p),k,[],options);
-    
+
     %%
     % FINITE DIFFERENCES
-    
+
     eps = 1e-3;
-    
+
     xi = log10(p);
     sx_ffd = zeros(length(t)+1, 3, length(p));
     sx_bfd = zeros(length(t)+1, 3, length(p));
@@ -91,7 +91,7 @@ function example_steadystate
         sx_bfd(:,:,ip) = (sol.x - solm.x) / eps;
         sx_cfd(:,:,ip) = (solp.x - solm.x) / (2*eps);
     end
-    
+
     %%
     % PLOTTING
     if(usejava('jvm'))
@@ -122,10 +122,10 @@ function example_steadystate
             box on;
         end
         set(gcf,'Position',[100 300 1200 500]);
-        
+
         sxss = squeeze(sol.sx(length(t),:,:));
         sxss_fd = squeeze(sx_cfd(length(t),:,options.sens_ind));
-        
+
         % Sensitivities for steady state
         figure('Name', 'Example SteadyState');
         subplot(1,2,1);
@@ -148,8 +148,8 @@ function example_steadystate
         xlabel('Steady state sensitivities');
         ylabel('finite differences');
         box on;
-        
-        
+
+
         subplot(1,2,2);
         hold on;
         for ip = 1:4
@@ -172,10 +172,10 @@ function example_steadystate
         set(gca,'YScale','log');
         set(gcf,'Position',[100 300 1200 500]);
     end
-    
+
     %%
     % XDOT FOR DIFFERENT TIME POINTS
-    
+
     t = [10,25,100,250,1000];
     options.sensi = 0;
     ssxdot = NaN(length(t), size(sol.x, 2));
@@ -187,13 +187,13 @@ function example_steadystate
 
     % Compute steady state wihtout integration before
     sol = simulate_model_steadystate(inf,log10(p),k,[],options);
-    
+
 
     % Test recapturing in the case of Newton solver failing
     options.newton_maxsteps = 4;
     options.maxsteps = 300;
     sol_newton_fail = simulate_model_steadystate(inf,log10(p),k,[],options);
-    
+
     %%
     % PLOTTING
     if(usejava('jvm'))
@@ -216,7 +216,7 @@ function example_steadystate
         box on;
         set(gca,'YScale','log');
         set(gca,'XScale','log');
-        
+
         subplot(1,3,3);
         hold on;
         bar(sol_newton_fail.diagnosis.posteq_numsteps([1, 3]));
@@ -229,10 +229,8 @@ function example_steadystate
         a = gca();
         a.Children.BarWidth = 0.6;
         box on;
-        
+
         set(gcf,'Position',[100 300 1200 500]);
     end
-    
+
 end
-
-

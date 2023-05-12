@@ -56,4 +56,3 @@ FD_HVP = (sol_p.sllh - sol_m.sllh)/(2*delta);
 
 fprintf('Finite differences, HVP: \n');
 disp(FD_HVP);
-

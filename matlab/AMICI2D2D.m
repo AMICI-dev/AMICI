@@ -1,9 +1,9 @@
 function AMICI2D2D( filename, modelname )
-    
+
     eval(['model = ' filename '();'])
-    
+
     fid = fopen([modelname '.def'],'w');
-    
+
     fprintf(fid,'DESCRIPTION\n');
     fprintf(fid,['"' modelname '"\n']);
     fprintf(fid,'\n');

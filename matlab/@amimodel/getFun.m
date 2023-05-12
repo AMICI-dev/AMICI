@@ -8,11 +8,11 @@ function getFun(this,HTable,funstr)
     %
     % Return values:
     %  void
-    
+
     [wrap_path,~,~]=fileparts(fileparts(which('amiwrap.m')));
-    
+
     fun = amifun(funstr,this);
-    
+
 
     if(~isfield(this.fun,funstr)) % check whether we already computed the respective fun
         if(~all(strcmp(fun.deps,funstr))) % prevent infinite loops
@@ -35,12 +35,12 @@ function getFun(this,HTable,funstr)
     else
         cflag = 0;
     end
-        
-    
+
+
     if(cflag)
         fun = amifun(funstr,this);
         [fun,this] = fun.getSyms(this);
         this.fun(1).(funstr) = fun;
     end
-    
+
 end

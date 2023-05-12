@@ -4,15 +4,24 @@ import enum
 import itertools as itt
 import numbers
 import sys
-from typing import (Any, Callable, Dict, Iterable, Optional, Sequence,
-                    SupportsFloat, Tuple, Union)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Optional,
+    Sequence,
+    SupportsFloat,
+    Tuple,
+    Union,
+)
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanAtom
 from toposort import toposort
 
-RESERVED_SYMBOLS = ['x', 'k', 'p', 'y', 'w', 'h', 't', 'AMICI_EMPTY_BOLUS']
+RESERVED_SYMBOLS = ["x", "k", "p", "y", "w", "h", "t", "AMICI_EMPTY_BOLUS"]
 
 try:
     import pysb
@@ -35,31 +44,31 @@ class CircularDependencyError(ValueError):
         #  error messages.  That's convenient for doctests.
         s = "Circular dependencies exist among these items: {{{}}}".format(
             ", ".join(
-                "{!r}:{!r}".format(key, value) for key, value in sorted(
-                    {str(k): v for k, v in data.items()}.items())
+                "{!r}:{!r}".format(key, value)
+                for key, value in sorted({str(k): v for k, v in data.items()}.items())
             )
         )
         super(CircularDependencyError, self).__init__(s)
         self.data = data
 
 
-setattr(sys.modules["toposort"],  "CircularDependencyError",
-        CircularDependencyError)
+setattr(sys.modules["toposort"], "CircularDependencyError", CircularDependencyError)
 
 
-sbml_time_symbol = sp.Symbol('time', real=True)
-amici_time_symbol = sp.Symbol('t', real=True)
+sbml_time_symbol = sp.Symbol("time", real=True)
+amici_time_symbol = sp.Symbol("t", real=True)
 
-annotation_namespace = 'https://github.com/AMICI-dev/AMICI'
+annotation_namespace = "https://github.com/AMICI-dev/AMICI"
 
 
 class ObservableTransformation(str, enum.Enum):
     """
     Different modes of observable transformation.
     """
-    LOG10 = 'log10'
-    LOG = 'log'
-    LIN = 'lin'
+
+    LOG10 = "log10"
+    LOG = "log"
+    LIN = "lin"
 
 
 def noise_distribution_to_observable_transformation(
@@ -75,16 +84,16 @@ def noise_distribution_to_observable_transformation(
         observable transformation
     """
     if isinstance(noise_distribution, str):
-        if noise_distribution.startswith('log-'):
+        if noise_distribution.startswith("log-"):
             return ObservableTransformation.LOG
-        if noise_distribution.startswith('log10-'):
+        if noise_distribution.startswith("log10-"):
             return ObservableTransformation.LOG10
 
     return ObservableTransformation.LIN
 
 
 def noise_distribution_to_cost_function(
-        noise_distribution: Union[str, Callable]
+    noise_distribution: Union[str, Callable]
 ) -> Callable[[str], str]:
     """
     Parse noise distribution string to a cost function definition amici can
@@ -192,38 +201,46 @@ def noise_distribution_to_cost_function(
     if isinstance(noise_distribution, Callable):
         return noise_distribution
 
-    if noise_distribution in ['normal', 'lin-normal']:
-        y_string = '0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2'
-    elif noise_distribution == 'log-normal':
-        y_string = '0.5*log(2*pi*{sigma}**2*{m}**2) ' \
-                   '+ 0.5*((log({y}) - log({m})) / {sigma})**2'
-    elif noise_distribution == 'log10-normal':
-        y_string = '0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
-                   '+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
-    elif noise_distribution in ['laplace', 'lin-laplace']:
-        y_string = 'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
-    elif noise_distribution == 'log-laplace':
-        y_string = 'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
-    elif noise_distribution == 'log10-laplace':
-        y_string = 'log(2*{sigma}*{m}*log(10)) ' \
-                   '+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
-    elif noise_distribution in ['binomial', 'lin-binomial']:
+    if noise_distribution in ["normal", "lin-normal"]:
+        y_string = "0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2"
+    elif noise_distribution == "log-normal":
+        y_string = (
+            "0.5*log(2*pi*{sigma}**2*{m}**2) "
+            "+ 0.5*((log({y}) - log({m})) / {sigma})**2"
+        )
+    elif noise_distribution == "log10-normal":
+        y_string = (
+            "0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) "
+            "+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2"
+        )
+    elif noise_distribution in ["laplace", "lin-laplace"]:
+        y_string = "log(2*{sigma}) + Abs({y} - {m}) / {sigma}"
+    elif noise_distribution == "log-laplace":
+        y_string = "log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}"
+    elif noise_distribution == "log10-laplace":
+        y_string = (
+            "log(2*{sigma}*{m}*log(10)) " "+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}"
+        )
+    elif noise_distribution in ["binomial", "lin-binomial"]:
         # Binomial noise model parameterized via success probability p
-        y_string = '- log(Heaviside({y} - {m})) - loggamma({y}+1) ' \
-                   '+ loggamma({m}+1) + loggamma({y}-{m}+1) ' \
-                   '- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
-    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
+        y_string = (
+            "- log(Heaviside({y} - {m})) - loggamma({y}+1) "
+            "+ loggamma({m}+1) + loggamma({y}-{m}+1) "
+            "- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})"
+        )
+    elif noise_distribution in ["negative-binomial", "lin-negative-binomial"]:
         # Negative binomial noise model of the number of successes m
         # (data) before r=(1-sigma)/sigma * y failures occur,
         # with mean number of successes y (simulation),
         # parameterized via success probability p = sigma.
-        r = '{y} * (1-{sigma}) / {sigma}'
-        y_string = f'- loggamma({{m}}+{r}) + loggamma({{m}}+1) ' \
-                   f'+ loggamma({r}) - {r} * log(1-{{sigma}}) ' \
-                   f'- {{m}} * log({{sigma}})'
+        r = "{y} * (1-{sigma}) / {sigma}"
+        y_string = (
+            f"- loggamma({{m}}+{r}) + loggamma({{m}}+1) "
+            f"+ loggamma({r}) - {r} * log(1-{{sigma}}) "
+            f"- {{m}} * log({{sigma}})"
+        )
     else:
-        raise ValueError(
-            f"Cost identifier {noise_distribution} not recognized.")
+        raise ValueError(f"Cost identifier {noise_distribution} not recognized.")
 
     def nllh_y_string(str_symbol):
         y, m, sigma = _get_str_symbol_identifiers(str_symbol)
@@ -238,10 +255,9 @@ def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
     return y, m, sigma
 
 
-def smart_subs_dict(sym: sp.Expr,
-                    subs: SymbolDef,
-                    field: Optional[str] = None,
-                    reverse: bool = True) -> sp.Expr:
+def smart_subs_dict(
+    sym: sp.Expr, subs: SymbolDef, field: Optional[str] = None, reverse: bool = True
+) -> sp.Expr:
     """
     Substitutes expressions completely flattening them out. Requires
     sorting of expressions with toposort.
@@ -263,8 +279,7 @@ def smart_subs_dict(sym: sp.Expr,
         Substituted symbolic expression
     """
     s = [
-        (eid, expr[field] if field is not None else expr)
-        for eid, expr in subs.items()
+        (eid, expr[field] if field is not None else expr) for eid, expr in subs.items()
     ]
     if reverse:
         s.reverse()
@@ -295,8 +310,7 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
     return element.subs(old, new) if element.has(old) else element
 
 
-def toposort_symbols(symbols: SymbolDef,
-                     field: Optional[str] = None) -> SymbolDef:
+def toposort_symbols(symbols: SymbolDef, field: Optional[str] = None) -> SymbolDef:
     """
     Topologically sort symbol definitions according to their interdependency
 
@@ -309,16 +323,18 @@ def toposort_symbols(symbols: SymbolDef,
     :return:
         ordered symbol definitions
     """
-    sorted_symbols = toposort({
-        identifier: {
-            s for s in (
-                definition[field] if field is not None else definition
-            ).free_symbols
-            if s in symbols
+    sorted_symbols = toposort(
+        {
+            identifier: {
+                s
+                for s in (
+                    definition[field] if field is not None else definition
+                ).free_symbols
+                if s in symbols
+            }
+            for identifier, definition in symbols.items()
         }
-        for identifier, definition
-        in symbols.items()
-    })
+    )
     return {
         s: symbols[s]
         for symbol_group in sorted_symbols
@@ -337,40 +353,42 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
-    args = tuple(arg if arg.__class__.__name__ == 'piecewise'
-                 and sym.__class__.__name__ == 'piecewise'
-                 else _parse_special_functions(arg, False)
-                 for arg in sym.args)
+    args = tuple(
+        arg
+        if arg.__class__.__name__ == "piecewise"
+        and sym.__class__.__name__ == "piecewise"
+        else _parse_special_functions(arg, False)
+        for arg in sym.args
+    )
 
     fun_mappings = {
-        'times': sp.Mul,
-        'xor': sp.Xor,
-        'abs': sp.Abs,
-        'min': sp.Min,
-        'max': sp.Max,
-        'ceil': sp.functions.ceiling,
-        'floor': sp.functions.floor,
-        'factorial': sp.functions.factorial,
-        'arcsin': sp.functions.asin,
-        'arccos': sp.functions.acos,
-        'arctan': sp.functions.atan,
-        'arccot': sp.functions.acot,
-        'arcsec': sp.functions.asec,
-        'arccsc': sp.functions.acsc,
-        'arcsinh': sp.functions.asinh,
-        'arccosh': sp.functions.acosh,
-        'arctanh': sp.functions.atanh,
-        'arccoth': sp.functions.acoth,
-        'arcsech': sp.functions.asech,
-        'arccsch': sp.functions.acsch,
+        "times": sp.Mul,
+        "xor": sp.Xor,
+        "abs": sp.Abs,
+        "min": sp.Min,
+        "max": sp.Max,
+        "ceil": sp.functions.ceiling,
+        "floor": sp.functions.floor,
+        "factorial": sp.functions.factorial,
+        "arcsin": sp.functions.asin,
+        "arccos": sp.functions.acos,
+        "arctan": sp.functions.atan,
+        "arccot": sp.functions.acot,
+        "arcsec": sp.functions.asec,
+        "arccsc": sp.functions.acsc,
+        "arcsinh": sp.functions.asinh,
+        "arccosh": sp.functions.acosh,
+        "arctanh": sp.functions.atanh,
+        "arccoth": sp.functions.acoth,
+        "arcsech": sp.functions.asech,
+        "arccsch": sp.functions.acsch,
     }
 
     if sym.__class__.__name__ in fun_mappings:
         return fun_mappings[sym.__class__.__name__](*args)
 
-    elif sym.__class__.__name__ == 'piecewise' \
-            or isinstance(sym,  sp.Piecewise):
-        if isinstance(sym,  sp.Piecewise):
+    elif sym.__class__.__name__ == "piecewise" or isinstance(sym, sp.Piecewise):
+        if isinstance(sym, sp.Piecewise):
             # this is sympy piecewise, can't be nested
             denested_args = args
         else:
@@ -378,7 +396,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
             denested_args = _denest_piecewise(args)
         return _parse_piecewise_to_heaviside(denested_args)
 
-    if sym.__class__.__name__ == 'plus' and not sym.args:
+    if sym.__class__.__name__ == "plus" and not sym.args:
         return sp.Float(0.0)
 
     if isinstance(sym, (sp.Function, sp.Mul, sp.Add, sp.Pow)):
@@ -394,7 +412,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 
 def _denest_piecewise(
-        args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
+    args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
 ) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
     """
     Denest piecewise functions that contain piecewise as condition
@@ -411,23 +429,19 @@ def _denest_piecewise(
         # handling of this case is explicitely disabled in
         # _parse_special_functions as keeping track of coeff/cond
         # arguments is tricky. Simpler to just parse them out here
-        if coeff.__class__.__name__ == 'piecewise':
+        if coeff.__class__.__name__ == "piecewise":
             coeff = _parse_special_functions(coeff, False)
 
         # we can have conditions that are piecewise function
         # returning True or False
-        if cond.__class__.__name__ == 'piecewise':
+        if cond.__class__.__name__ == "piecewise":
             # this keeps track of conditional that the previous
             # piece was picked
             previous_was_picked = sp.false
             # recursively denest those first
-            for sub_coeff, sub_cond in grouper(
-                    _denest_piecewise(cond.args), 2, True
-            ):
+            for sub_coeff, sub_cond in grouper(_denest_piecewise(cond.args), 2, True):
                 # flatten the individual pieces
-                pick_this = sp.And(
-                    sp.Not(previous_was_picked), sub_cond
-                )
+                pick_this = sp.And(sp.Not(previous_was_picked), sub_cond)
                 if sub_coeff == sp.true:
                     args_out.extend([coeff, pick_this])
                 previous_was_picked = pick_this
@@ -469,7 +483,7 @@ def _parse_piecewise_to_heaviside(args: Iterable[sp.Expr]) -> sp.Expr:
 
         tmp = _parse_heaviside_trigger(trigger)
         formula += coeff * sp.simplify(not_condition * tmp)
-        not_condition *= (1-tmp)
+        not_condition *= 1 - tmp
 
     return formula
 
@@ -484,7 +498,7 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     """
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
-        _check_unsupported_functions(root, 'sympy.Expression')
+        _check_unsupported_functions(root, "sympy.Expression")
 
         # normalize such that we always implement <,
         # this ensures that we can correctly evaluate the condition if
@@ -506,21 +520,18 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return 1-sp.Mul(*[1-_parse_heaviside_trigger(arg)
-                        for arg in trigger.args])
+        return 1 - sp.Mul(*[1 - _parse_heaviside_trigger(arg) for arg in trigger.args])
 
     if isinstance(trigger, sp.And):
-        return sp.Mul(*[_parse_heaviside_trigger(arg)
-                        for arg in trigger.args])
+        return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
 
     raise RuntimeError(
-        'AMICI can not parse piecewise/event trigger functions with argument '
-        f'{trigger}.'
+        "AMICI can not parse piecewise/event trigger functions with argument "
+        f"{trigger}."
     )
 
 
-def grouper(iterable: Iterable, n: int,
-            fillvalue: Any = None) -> Iterable[Tuple[Any]]:
+def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterable[Tuple[Any]]:
     """
     Collect data into fixed-length chunks or blocks
 
@@ -541,9 +552,9 @@ def grouper(iterable: Iterable, n: int,
     return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
-def _check_unsupported_functions(sym: sp.Expr,
-                                 expression_type: str,
-                                 full_sym: Optional[sp.Expr] = None):
+def _check_unsupported_functions(
+    sym: sp.Expr, expression_type: str, full_sym: Optional[sp.Expr] = None
+):
     """
     Recursively checks the symbolic expression for unsupported symbolic
     functions
@@ -564,25 +575,37 @@ def _check_unsupported_functions(sym: sp.Expr,
     # sp.functions.floor applied to numbers should be simplified out and
     # thus pass this test
     unsupported_functions = (
-        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.functions.sec, sp.functions.csc, sp.functions.cot,
-        sp.functions.asec, sp.functions.acsc, sp.functions.acot,
-        sp.functions.acsch, sp.functions.acoth,
-        sp.Mod, sp.core.function.UndefinedFunction
+        sp.functions.factorial,
+        sp.functions.ceiling,
+        sp.functions.floor,
+        sp.functions.sec,
+        sp.functions.csc,
+        sp.functions.cot,
+        sp.functions.asec,
+        sp.functions.acsc,
+        sp.functions.acot,
+        sp.functions.acsch,
+        sp.functions.acoth,
+        sp.Mod,
+        sp.core.function.UndefinedFunction,
     )
 
-    if isinstance(sym.func, unsupported_functions) \
-            or isinstance(sym, unsupported_functions):
-        raise RuntimeError(f'Encountered unsupported expression '
-                           f'"{sym.func}" of type '
-                           f'"{type(sym.func)}" as part of a '
-                           f'{expression_type}: "{full_sym}"!')
+    if isinstance(sym.func, unsupported_functions) or isinstance(
+        sym, unsupported_functions
+    ):
+        raise RuntimeError(
+            f"Encountered unsupported expression "
+            f'"{sym.func}" of type '
+            f'"{type(sym.func)}" as part of a '
+            f'{expression_type}: "{full_sym}"!'
+        )
     for arg in list(sym.args):
         _check_unsupported_functions(arg, expression_type)
 
 
-def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
-                input_name: str) -> sp.Expr:
+def cast_to_sym(
+    value: Union[SupportsFloat, sp.Expr, BooleanAtom], input_name: str
+) -> sp.Expr:
     """
     Typecasts the value to :py:class:`sympy.Float` if possible, and ensures the
     value is a symbolic expression.
@@ -602,8 +625,9 @@ def cast_to_sym(value: Union[SupportsFloat, sp.Expr, BooleanAtom],
         value = sp.Float(float(bool(value)))
 
     if not isinstance(value, sp.Expr):
-        raise TypeError(f"Couldn't cast {input_name} to sympy.Expr, was "
-                        f"{type(value)}")
+        raise TypeError(
+            f"Couldn't cast {input_name} to sympy.Expr, was " f"{type(value)}"
+        )
 
     return value
 
@@ -620,7 +644,7 @@ def generate_measurement_symbol(observable_id: Union[str, sp.Symbol]):
     """
     if not isinstance(observable_id, str):
         observable_id = strip_pysb(observable_id)
-    return symbol_with_assumptions(f'm{observable_id}')
+    return symbol_with_assumptions(f"m{observable_id}")
 
 
 def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
@@ -635,13 +659,10 @@ def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
     """
     if not isinstance(observable_id, str):
         observable_id = strip_pysb(observable_id)
-    return symbol_with_assumptions(f'r{observable_id}')
+    return symbol_with_assumptions(f"r{observable_id}")
 
 
-def generate_flux_symbol(
-        reaction_index: int,
-        name: Optional[str] = None
-) -> sp.Symbol:
+def generate_flux_symbol(reaction_index: int, name: Optional[str] = None) -> sp.Symbol:
     """
     Generate identifier symbol for a reaction flux.
     This function will always return the same unique python object for a
@@ -657,7 +678,7 @@ def generate_flux_symbol(
     if name is not None:
         return symbol_with_assumptions(name)
 
-    return symbol_with_assumptions(f'flux_r{reaction_index}')
+    return symbol_with_assumptions(f"flux_r{reaction_index}")
 
 
 def symbol_with_assumptions(name: str):

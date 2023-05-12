@@ -70,7 +70,7 @@ if(usejava('jvm'))
     legend('error x1','error x2','error x3','Location','NorthEastOutside')
     legend boxoff
     ylabel('x')
-    
+
     set(gcf,'Position',[100 300 1200 500])
 end
 
@@ -111,7 +111,7 @@ if(usejava('jvm'))
         set(gca,'XScale','log')
         ylabel('sx')
         box on
-        
+
         subplot(length(p),2,ip*2)
         plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'--')
         legend('error sy1','error sy2','error sy3','Location','NorthEastOutside')
@@ -124,8 +124,8 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
-    
+
+
     drawnow
 end
 end

@@ -1,4 +1,4 @@
-# Changelog 
+# Changelog
 
 ## v0.X Series
 
@@ -244,7 +244,7 @@ Fixes
 * Added equality operator for ExpData
 
   by @dweindl in  https://github.com/AMICI-dev/AMICI/pull/1881
-  
+
 * Updated base image for Dockerfile to Ubuntu 22.04/Python 3.10
 
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1896
@@ -272,7 +272,7 @@ Fixes
 
 #### Documentation:
 
-* Update reference list 
+* Update reference list
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/1874, https://github.com/AMICI-dev/AMICI/pull/1884
 
 **Full Changelog**:
@@ -492,7 +492,7 @@ https://github.com/AMICI-dev/AMICI/compare/v0.11.26...v0.11.27
 ### v0.11.26 (2022-03-14)
 
 New features:
-* Import of BioNetGenLanguage (BNGL) models by @FFroehlich in 
+* Import of BioNetGenLanguage (BNGL) models by @FFroehlich in
   https://github.com/AMICI-dev/AMICI/pull/1709
 * Added support for observable-dependent sigmas by @dweindl, @FFroehlich in
   https://github.com/AMICI-dev/AMICI/pull/1692
@@ -572,26 +572,26 @@ Fixes:
 Features:
 * Added overload for Model::setParameterScale with vector<int> by @dilpath in
   https://github.com/AMICI-dev/AMICI/pull/1614
-* Removed assert_fun argument from gradient checking, improve output 
+* Removed assert_fun argument from gradient checking, improve output
   by @dweindl, @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1609
 * Added get_expressions_as_dataframe by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1621
-* Added `id` field to ExpData and ReturnData by @dweindl in 
+* Added `id` field to ExpData and ReturnData by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1622
-* Included condition id in dataframes by @dweindl in 
+* Included condition id in dataframes by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1623
 
 Fixes:
-* C++: Fixed SUNMatrixWrapper ctor for size 0 matrices by @dweindl in 
+* C++: Fixed SUNMatrixWrapper ctor for size 0 matrices by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1608
-* Python: Handle TemporaryDirectory cleanup failures on Windows by @dweindl in 
+* Python: Handle TemporaryDirectory cleanup failures on Windows by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1617
-* Python: pysb.Model.initial_conditions throws a DeprecationWarning by 
+* Python: pysb.Model.initial_conditions throws a DeprecationWarning by
   @PaulJonasJost in https://github.com/AMICI-dev/AMICI/pull/1620
 * Fixed wrong array size in warnings by @dweindl in
   https://github.com/AMICI-dev/AMICI/pull/1624
 
-NOTE: AMICI 0.11.23 requires numpy<1.22.0 
+NOTE: AMICI 0.11.23 requires numpy<1.22.0
 
 **Full Changelog**:
 https://github.com/AMICI-dev/AMICI/compare/v0.11.22...v0.11.23
@@ -626,7 +626,7 @@ New:
 
 ### v0.11.20 (2021-11-12)
 
-New: 
+New:
  * Changed parameter mappings such that unassigned values have non-nan default values. This fixes erroneous evaluation of `llh` as `NaN` in some situations (#1574)
  * Added support for Python 3.10 (#1555)
 
@@ -760,7 +760,7 @@ Misc:
 
 Breaking changes:
 * AMICI requires Python>=3.7
-* Updated package installation (PEP517/518): 
+* Updated package installation (PEP517/518):
   Creating source distributions requires https://github.com/pypa/build (#1384)
   (but now handles all package building dependencies properly)
 
@@ -794,7 +794,7 @@ Other:
 
 ### v0.11.12 (2021-01-26)
 
-Features: 
+Features:
 * Add expression IDs and names to generated models (#1374)
 
 Fixes:
@@ -882,7 +882,7 @@ Bugfix release that restores compatibility with sympy 1.7
 * Overload python interface functions for amici.{Model,Solver,ExpData} and amici.{Model,Solver,ExpData}Ptr (#1271)
 
 #### C++
-* Fix and extend use of sparse matrix operations (#1230, #1240, #1244, #1247, #1271) 
+* Fix and extend use of sparse matrix operations (#1230, #1240, #1244, #1247, #1271)
 * **Fix application of maximal number of steps**, MaxNumStep parameter now limit total number of steps, not number of steps between output times. (#1267)
 
 #### Doc
@@ -913,7 +913,7 @@ Bugfix release that restores compatibility with sympy 1.7
 * Create sdist on GHA using swig4.0.1 (#1204)  (Fixing broken pypi package)
 * Fix links after repository move
 * Speed-up swig build: disable all languages except python (#1211)
-* Fix doc generation on readthedocs (#1196) 
+* Fix doc generation on readthedocs (#1196)
 
 
 ### v0.11.5 (2020-08-07)
@@ -977,7 +977,7 @@ Bugfix release that restores compatibility with sympy 1.7
 
 #### Python
 * Upgrade to sympy 1.6.0, which is now required minimum version  (#1098, #1103)
-* Speed up model import 
+* Speed up model import
   * Speed-up computation of sx0, reduce file size (#1109)
   * Replace terribly slow sympy.MutableDenseMatrix.is_zero_matrix by custom implementation (#1104)
 * speedup dataframe creation in `get*AsDataFrame` (#1088)
@@ -1103,11 +1103,11 @@ CI:
 
 ### v0.10.17 (2020-01-15)
 
-- **added python 3.8 support, dropped python 3.6 support** (#898) 
+- **added python 3.8 support, dropped python 3.6 support** (#898)
 - Added logging functionality (#900)
 - Fixes PySB import (#879, #902)
 - Fixes symbolic processing (#899)
-- Improved build scripts (#894, 
+- Improved build scripts (#894,
 - Improved petab support (#886, #888, #891)
 - CI related fixes (#865, #896)
 
@@ -1130,15 +1130,15 @@ No other changes.
 
 **NOTE: For Python-imported SBML-models this release may compute incorrect sensitivities w.r.t. sigma. Bug introduced in 0.10.14, fixed in 0.10.15.**
 
-Python: 
+Python:
 
 * Don't require use of ModelPtr.get to call ExpData(Model)
 * Fix import in generated model Python package
 * Setup AMICI standalone scripts as setuptools entrypoints
 * Simplify symbolic sensitivity expressions during Python SBML import
         Fixes Infs in the Jacobian when using Hill-functions with states of 0.0.
-* Extended Newton solver #848  
-    The changes that allow performing Newton tests from the paper:    
+* Extended Newton solver #848
+    The changes that allow performing Newton tests from the paper:
     G. T. Lines, Ł. Paszkowski, L. Schmiester, D. Weindl, P. Stapor, and J. Hasenauer. Efficient computation of steady states in large-scale ODE models of biochemical reaction networks. accepted for Proceedings of the 8th IFAC Conference on Foundations of Systems Biology in Engineering (FOSBE), Valencia, Spain, October 2019.
 * Use SWIG>=4.0 on travis to include PyDoc in sdist / pypi package (#841)
 * **Fix choice of likelihood formula; failed if observable names were not equal to observable IDs**
@@ -1183,8 +1183,8 @@ Misc:
 
 ### v0.10.11 (2019-08-31)
 
-* Fixed setting initial conditions for preequilibration (#784) 
-* Fixed species->parameter conversion during PEtab import (#782) 
+* Fixed setting initial conditions for preequilibration (#784)
+* Fixed species->parameter conversion during PEtab import (#782)
 * Set correct Matlab include directories in CMake (#793)
 * Extended and updated documentation (#785, #787)
 * Fix various SBML import issues
@@ -1216,7 +1216,7 @@ Detaills:
     * feature(python) Use MKL from environment modules to provide cblas
     * fix(python) Fix define_macros not being passed to setuptools for Extension
     * fix(python) Fix define_macros not being passed to setuptools for clibs
-    * Do not always add 'cblas' library since users may want to override that by a cblas-compatible library with a different name (closes #736)   
+    * Do not always add 'cblas' library since users may want to override that by a cblas-compatible library with a different name (closes #736)
     * Update HDF5 path hints; use shared library if static is not available.
     * Check for HDF5_BASE from environment module
     * Fix system-dependent sundials library directory (Fixes #749) (#750)
@@ -1240,7 +1240,7 @@ All:
 - Fix reuse of  `Solver` instances (#541)
 
 C++:
--  Check for correct AMICI version for model in CMake 
+-  Check for correct AMICI version for model in CMake
 - Add reporting of computation times (#699)
 
 Python:
@@ -1277,12 +1277,12 @@ Doc
 C++
 - Fix missing source files in CMakeLists.txt (#658)
 - Set CMake policies to prevent warnings (Closes #676) (#677)
-- Start using gsl::span instead of raw pointers (#393) (#678) 
+- Start using gsl::span instead of raw pointers (#393) (#678)
 
 Python
 - PySB parsing fix (#669)
-- Fix failure to propagate BLAS_LIBS contents (#665) 
-- Require setuptools at setup (#673) 
+- Fix failure to propagate BLAS_LIBS contents (#665)
+- Require setuptools at setup (#673)
 - Updated PEtab import to allow for different noise models
 
 
@@ -1355,7 +1355,7 @@ Bugfixes:
 
 Maintenance:
 
-- use newer CI images 
+- use newer CI images
 
 ### v0.9.4 (2019-02-11)
 
@@ -1387,9 +1387,9 @@ Bugfixes:
 - fixes a critical bug in the newton solver
 - fixes multiple bugs in sbml import for degenerate models, empty stoichiometry assignments and conversion factors
 - improved error messages for sbml import
-- #560 
-- #557 
-- #559 
+- #560
+- #557
+- #559
 
 
 ### v0.9.1 (2019-01-21)
@@ -1418,7 +1418,7 @@ Features / improvements:
 - Allow more detailed finiteness checks (#514)
 
 Bugfixes:
- - #491 
+ - #491
 
 Maintenance:
 - Several improvements to travis log sizes and folding
@@ -1475,7 +1475,7 @@ Maintenance:
 ### v0.7.11 (2018-10-15)
 
 - [python] Added numpy and python wrappers that provide a more user friendly python API
-- [python] Enable import of SBML models with non-float assignment rules 
+- [python] Enable import of SBML models with non-float assignment rules
 - [python] Enable handling of exceptions in python
 - [python] Enable nativ python access to std::vector data-structures
 - [core] Provide an API for more fine-grained control over sensitivity tolerances and steady-state tolerances
@@ -1555,7 +1555,7 @@ Features:
 
 Major bugfixes:
 - Fix python sbml model import / compilation error (undefined function)
-- Fix model preequilibration 
+- Fix model preequilibration
 
 Minor fixes:
 - Various fixes for mingw compilation of python source distribution
@@ -1585,8 +1585,8 @@ WARNING:
 Implement experimental support for python via swig.
 Python interface is now usable, but API will still receive some updates in the future.
 
-WARNING: 
-- There is a bug in sensitivity computation for  Python-generated models 
+WARNING:
+- There is a bug in sensitivity computation for  Python-generated models
 - Matlab C++ compilation will fail due to undefined M_PI
 -> Please use v0.7.0
 

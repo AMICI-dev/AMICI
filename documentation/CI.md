@@ -12,7 +12,7 @@ This includes the following steps:
 More details are provided in the sections below.
 
 The CI scripts and tests can be found in `tests/` and `scripts/`. Some of the
-tests are integrated with CMake, see `make help` in the build directory. 
+tests are integrated with CMake, see `make help` in the build directory.
 
 
 ## C++ unit and integration tests
@@ -61,7 +61,7 @@ obtained from the Python and C++ are compared to results saved in an HDF5 file
 (`tests/cpp/expectedResults.h5`).
 Settings and data for the test simulations are also specified in this file.
 
-**Note:** The C++ code for the models is included in the repository under 
+**Note:** The C++ code for the models is included in the repository under
 `models/`.
 This code is to be updated whenever `amici::Model` changes.
 
@@ -72,23 +72,23 @@ Regeneration of the model code has to be done whenever `amici::Model` or
 the Matlab model import routines change.
 
 This is done with
-  
+
     tests/cpp/wrapTestModels.m
 
 **Note:** This is currently only possible from Matlab < R2018a. This should
 change as soon as 1) all second-order sensitivity code is ported to C++/Python,
 2) a non-SBML import exists for Python and 3) support for events has been added
 for Python.
-    
-    
+
+
 ### Regenerating expected results
 
 To update test results, run `make test` in the build directory,
-replace `tests/cpp/expectedResults.h5` by 
-`tests/cpp/writeResults.h5.bak` 
+replace `tests/cpp/expectedResults.h5` by
+`tests/cpp/writeResults.h5.bak`
 [ONLY DO THIS AFTER TRIPLE CHECKING CORRECTNESS OF RESULTS]
 Before replacing the test results, confirm that only expected datasets have
-changed, e.g. using 
+changed, e.g. using
 
     h5diff -v --relative 1e-8 tests/cpp/expectedResults.h5 tests/cpp/writeResults.h5.bak | less
 
@@ -96,6 +96,6 @@ changed, e.g. using
 ## Adding/Updating tests
 
 To add new tests add a new corresponding python script (see, e.g.,
-`./tests/generateTestConfig/example_dirac.py`) and add it to and run 
+`./tests/generateTestConfig/example_dirac.py`) and add it to and run
 `tests/generateTestConfigurationForExamples.sh`.
 Then regenerate the expected test results (see above).

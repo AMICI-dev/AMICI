@@ -2,7 +2,7 @@
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
-## About 
+## About
 
 AMICI provides a multi-language (Python, C++, Matlab) interface for the
 [SUNDIALS](https://computing.llnl.gov/projects/sundials/) solvers
@@ -143,8 +143,8 @@ When using AMICI in your project, please cite
   eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btab227/36866220/btab227.pdf},
 }
 ```
-  
-When presenting work that employs AMICI, feel free to use one of the icons in 
+
+When presenting work that employs AMICI, feel free to use one of the icons in
 [documentation/gfx/](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx),
 which are available under a
 [CC0](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx/LICENSE.md)

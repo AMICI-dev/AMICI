@@ -6,28 +6,28 @@ model.param = 'lin';
 
 %%
 % STATES
-% create state syms 
+% create state syms
 syms V1 V2 V3 f1 f2 f3
 % create state vector
 model.sym.x = [V1, V2, V3, f1, f2, f3];
 %%
 % PARAMETERS ( for these sensitivities will be computed )
 
-% create parameter syms                                                                
-% create parameter vector 
+% create parameter syms
+% create parameter vector
 model.sym.p = [ ];
-%%  
+%%
 % CONSTANTS ( for these no sensitivities will be computed )
 % this part is optional and can be ommited
 
 % create parameter syms
 syms V1ss R1ss V2ss R2ss V3ss R3ss
-% create parameter vector 
+% create parameter vector
 model.sym.k = [V1ss, R1ss, V2ss, R2ss, V3ss, R3ss];
 %%
 % SYSTEM EQUATIONS
 % create symbolic variable for time
-syms t f0 
+syms t f0
 model.sym.xdot = sym(zeros(size(model.sym.x)));
 p1=1;
 p2=1-R1ss;
@@ -72,4 +72,3 @@ model.sym.y(4)=f0;
 model.sym.y(5)=f1;
 model.sym.y(6)=f2;
 end
-

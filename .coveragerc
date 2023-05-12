@@ -16,4 +16,3 @@ exclude_lines =
     raise
     except:
     import
-

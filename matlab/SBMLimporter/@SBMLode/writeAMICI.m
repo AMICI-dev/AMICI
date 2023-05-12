@@ -7,10 +7,10 @@ function writeAMICI(this,modelname)
     %
     % Return values:
     % void
-    
+
     fprintf('writing file ...\n')
     fid = fopen([modelname '_syms.m'],'w');
-    
+
     fprintf(fid,['function model = ' modelname '_syms()\n']);
     fprintf(fid,'\n');
     if(strcmp(this.time_symbol,''))
@@ -20,7 +20,7 @@ function writeAMICI(this,modelname)
     end
     fprintf(fid,'\n');
     fprintf(fid,'avogadro = 6.02214179e23;');
-    
+
 %     fprintf(fid,'model.debug = true;\n');
     writeDefinition('STATES','x','state',this,fid)
     writeDefinition('PARAMETERS','p','parameter',this,fid)
@@ -54,7 +54,7 @@ function writeAMICI(this,modelname)
     fprintf(fid,'\n');
     fprintf(fid,'end\n');
     fprintf(fid,'\n');
-    
+
     for ifun = 1:length(this.funmath)
         fprintf(fid,['function r = ' this.funarg{ifun} '\n']);
         fprintf(fid,'\n');
@@ -62,12 +62,12 @@ function writeAMICI(this,modelname)
         fprintf(fid,'\n');
         fprintf(fid,'end\n');
         fprintf(fid,'\n');
-    end 
-    
+    end
+
     for fun = {'factorial','cei','psi'}
         fprintUnsupportedFunctionError(fun{1},fid)
     end
-    
+
     fclose(fid);
 end
 

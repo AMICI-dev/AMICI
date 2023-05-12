@@ -4,7 +4,7 @@
 %
 classdef amised < handle
     % AMISED is a container for SED-ML objects
-    
+
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % amimodel from the specified model
         model = struct('event',[],'sym',[]);
@@ -20,16 +20,16 @@ classdef amised < handle
         varsym = sym([]);
         % symbolic expressions for data
         datasym = sym([]);
-        
+
     end
-    
+
     properties ( GetAccess = 'public', SetAccess = 'public' )
- 
+
     end
-    
+
     methods
         function ASED = amised(sedname)
-            %amised reads in an SEDML document using the JAVA binding of 
+            %amised reads in an SEDML document using the JAVA binding of
             % of libSEDML
             %
             % Parameters:
@@ -38,7 +38,7 @@ classdef amised < handle
             % Return values:
             %  ASED: amised object which contains all the information from
             %        the SEDML document
-            
+
             % get models
             for imodel = 1:length(ASED.sedml.listOfModels.model)
                 % get the model sbml
@@ -115,11 +115,10 @@ classdef amised < handle
                     ASED.varsym(idata,ivar) = sym(variable.Attributes.id);
                 end
                 ASED.datasym(idata) = sym(variable.Attributes.id);
-                
+
             end
 
-            
+
         end
     end
 end
-

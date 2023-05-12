@@ -8,38 +8,38 @@ function [modelo2vec] = augmento2vec(this)
     % Return values:
     %  modelo2vec: augmented system which contains symbolic definition of the
     %  original system and its sensitivities @type amimodel
-    
-    syms Sx Sdot Sy S0
-    
 
-   
+    syms Sx Sdot Sy S0
+
+
+
     augmodel.nxtrue = length(this.sym.x); % number of states
     augmodel.nytrue = length(this.sym.y); % number of observables
     augmodel.nztrue = this.nz;
     augmodel.coptim = this.coptim;
     augmodel.debug = this.debug;
-    
+
     % multiplication vector (extension of kappa
     vecs = cell([length(this.sym.p),1]);
     for ivec = 1:length(this.sym.p)
         vecs{ivec} = sprintf('k_%i', length(this.sym.k) + ivec-1);
     end
     vec = sym(vecs);
-    
+
     if(this.nevent>0)
         augmodel.nztrue = length([this.event.z]); % number of observables
     else
         augmodel.nztrue = 0;
     end
     np = this.np;
-    
+
     % augment states
     sv = sym('sv',[length(this.sym.x),1]);
     Sdot = jacobian(this.sym.xdot,this.sym.x)*sv+jacobian(this.sym.xdot,this.sym.p)*vec;
-    
+
     % augment output
     Sy = jacobian(this.sym.y,this.sym.x)*sv+jacobian(this.sym.y,this.sym.p)*vec;
-   
+
     % generate deltasx
     this.getFun([],'deltasx');
     for ievent = 1:this.nevent;
@@ -60,7 +60,7 @@ function [modelo2vec] = augmento2vec(this)
         augmodel.event(ievent) = amievent(this.event(ievent).trigger,bolusnew,znew);
         augmodel.event(ievent) = augmodel.event(ievent).setHflag([hflagold;zeros([numel(sv),1])]);
     end
-    
+
     % augment likelihood
     this.getFun([],'dsigma_ydp');
     this.getFun([],'y');
@@ -75,7 +75,7 @@ function [modelo2vec] = augmento2vec(this)
         + jacobian(this.fun.Jy.sym,this.fun.sigma_y.strsym)*this.fun.dsigma_ydp.sym) ...
         * vec + jacobian(this.fun.Jy.sym,this.fun.y.strsym)*aug_y_strsym;
     this.getFun([],'dsigma_zdp');
-    
+
     this.getFun([],'dzdp');
     this.getFun([],'Jz');
     SJz = jacobian(this.fun.Jz.sym,this.sym.p);
@@ -87,9 +87,9 @@ function [modelo2vec] = augmento2vec(this)
     % augment sigmas
     this.getFun([],'sigma_y');
     this.getFun([],'sigma_z');
-    
+
     S0 = jacobian(this.sym.x0,this.sym.p)*vec;
-    
+
     augmodel.sym.x = [this.sym.x;sv];
     augmodel.sym.xdot = [this.sym.xdot;Sdot];
     augmodel.sym.f = augmodel.sym.xdot;
@@ -101,7 +101,7 @@ function [modelo2vec] = augmento2vec(this)
     augmodel.sym.p = this.sym.p;
     augmodel.sym.sigma_y = [this.sym.sigma_y, transpose(this.fun.dsigma_ydp.sym * vec)];
     augmodel.sym.sigma_z = [this.sym.sigma_z, transpose(this.fun.dsigma_zdp.sym * vec)];
-    
+
     modelo2vec = amimodel(augmodel,[this.modelname '_o2vec']);
     modelo2vec.o2flag = 2;
     modelo2vec.debug = this.debug;

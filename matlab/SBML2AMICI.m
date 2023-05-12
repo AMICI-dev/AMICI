@@ -27,4 +27,3 @@ function  SBML2AMICI( filename, modelname )
     save([modelname '_vnom.mat'],'vnom');
     save([modelname '_kvnom.mat'],'kvnom');
 end
-
