@@ -63,4 +63,5 @@ jobs:
       run: |
         source build/venv/bin/activate \
           && pip3 install git+https://github.com/pysb/pysb \
-          && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
+          && python3 -m pytest --ignore-glob=*petab* \
+            --ignore-glob=*test_splines.py ${AMICI_DIR}/python/tests

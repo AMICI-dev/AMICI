@@ -31,5 +31,5 @@ pip install -U "setuptools<64"
 pip install --upgrade pip wheel
 pip install --upgrade pip scipy matplotlib coverage pytest \
    pytest-cov cmake_build_extension numpy
-pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test,pysb] --no-build-isolation
+pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test,pysb,vis] --no-build-isolation
 deactivate

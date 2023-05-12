@@ -5,56 +5,55 @@
 #define _USE_MATH_DEFINES
 #endif
 
-#include <functional>
 #include <cmath>
+#include <functional>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
 #if defined(_USE_MATH_DEFINES)
 #if !defined(M_E)
-#define M_E        2.71828182845904523536
+#define M_E 2.71828182845904523536
 #endif
 #if !defined(M_LOG2E)
-#define M_LOG2E    1.44269504088896340736
+#define M_LOG2E 1.44269504088896340736
 #endif
 #if !defined(M_LOG10E)
-#define M_LOG10E   0.434294481903251827651
+#define M_LOG10E 0.434294481903251827651
 #endif
 #if !defined(M_LN2)
-#define M_LN2      0.693147180559945309417
+#define M_LN2 0.693147180559945309417
 #endif
 #if !defined(M_LN10)
-#define M_LN10     2.30258509299404568402
+#define M_LN10 2.30258509299404568402
 #endif
 #if !defined(M_PI)
-#define M_PI       3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 #if !defined(M_PI_2)
-#define M_PI_2     1.57079632679489661923
+#define M_PI_2 1.57079632679489661923
 #endif
 #if !defined(M_PI_4)
-#define M_PI_4     0.785398163397448309616
+#define M_PI_4 0.785398163397448309616
 #endif
 #if !defined(M_1_PI)
-#define M_1_PI     0.318309886183790671538
+#define M_1_PI 0.318309886183790671538
 #endif
 #if !defined(M_2_PI)
-#define M_2_PI     0.636619772367581343076
+#define M_2_PI 0.636619772367581343076
 #endif
 #if !defined(M_2_SQRTPI)
 #define M_2_SQRTPI 1.12837916709551257390
 #endif
 #if !defined(M_SQRT2)
-#define M_SQRT2    1.41421356237309504880
+#define M_SQRT2 1.41421356237309504880
 #endif
 #if !defined(M_SQRT1_2)
-#define M_SQRT1_2  0.707106781186547524401
+#define M_SQRT1_2 0.707106781186547524401
 #endif
 #endif
 
 namespace amici {
 
 constexpr double pi = M_PI;
-
 
 // clang-format off
 
@@ -236,6 +235,24 @@ enum class RDataReporting {
     full,
     residuals,
     likelihood,
+};
+
+/** boundary conditions for splines */
+enum class SplineBoundaryCondition {
+    given                 = -1,
+    zeroDerivative        =  0,
+    natural               =  1,
+    naturalZeroDerivative =  2,
+    periodic              =  3,
+};
+
+/** extrapolation methods for splines */
+enum class SplineExtrapolation {
+    noExtrapolation = -1,
+    constant        =  0,
+    linear          =  1,
+    polynomial      =  2,
+    periodic        =  3,
 };
 
 // clang-format on

@@ -20,8 +20,9 @@
 namespace amici {
 
 // Ensure AMICI options are in sync with Sundials options
-static_assert((int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS,
-              "");
+static_assert(
+    (int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS, ""
+);
 static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED, "");
 static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1, "");
 
@@ -33,68 +34,76 @@ static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
-
 /*
  * The following static members are callback function to CVODES.
  * Their signatures must not be changes.
  */
-static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+static int fxdot(realtype t, N_Vector x, N_Vector xdot, void* user_data);
 
-static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                    void *user_data, N_Vector tmp1, N_Vector tmp2,
-                    N_Vector tmp3);
+static int fJSparse(
+    realtype t, N_Vector x, N_Vector xdot, SUNMatrix J, void* user_data,
+    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+);
 
-static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-              void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+static int
+fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J, void* user_data,
+   N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
-static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-               SUNMatrix JB, void *user_data, N_Vector tmp1B,
-               N_Vector tmp2B, N_Vector tmp3B);
+static int
+fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B);
 
-static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                     SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                     N_Vector tmp2B, N_Vector tmp3B);
+static int fJSparseB(
+    realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B
+);
 
-static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                  void *user_data, N_Vector tmp1, N_Vector tmp2,
-                  N_Vector tmp3);
+static int fJBand(
+    realtype t, N_Vector x, N_Vector xdot, SUNMatrix J, void* user_data,
+    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+);
 
-static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                   SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B);
+static int fJBandB(
+    realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B
+);
 
-static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-               N_Vector xdot, void *user_data, N_Vector tmp);
+static int
+fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
+    void* user_data, N_Vector tmp);
 
-static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                N_Vector xB, N_Vector xBdot, void *user_data,
-                N_Vector tmpB);
+static int fJvB(
+    N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB,
+    N_Vector xBdot, void* user_data, N_Vector tmpB
+);
 
-static int froot(realtype t, N_Vector x, realtype *root, void *user_data);
+static int froot(realtype t, N_Vector x, realtype* root, void* user_data);
 
-static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                  void *user_data);
+static int
+fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void* user_data);
 
-static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                  void *user_data);
+static int
+fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void* user_data);
 
-static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void *user_data);
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void* user_data);
 
-static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void *user_data);
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void* user_data);
 
-static int fJSparseB_ss(realtype t, N_Vector x, N_Vector xBdot,
-                        SUNMatrix JB, void *user_data, N_Vector tmp1,
-                        N_Vector tmp2, N_Vector tmp3);
+static int fJSparseB_ss(
+    realtype t, N_Vector x, N_Vector xBdot, SUNMatrix JB, void* user_data,
+    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+);
 
-static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                  N_Vector sx, N_Vector sxdot, void *user_data,
-                  N_Vector tmp1, N_Vector tmp2);
-
+static int fsxdot(
+    int Ns, realtype t, N_Vector x, N_Vector xdot, int ip, N_Vector sx,
+    N_Vector sxdot, void* user_data, N_Vector tmp1, N_Vector tmp2
+);
 
 /* Function implementations */
 
-void CVodeSolver::init(const realtype t0, const AmiVector &x0,
-                       const AmiVector & /*dx0*/) const {
+void CVodeSolver::
+    init(const realtype t0, AmiVector const& x0, AmiVector const& /*dx0*/)
+        const {
     solver_was_called_F_ = false;
     force_reinit_postprocess_F_ = false;
     t_ = t0;
@@ -110,8 +119,9 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
         throw CvodeException(status, "CVodeInit");
 }
 
-void CVodeSolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/,
-                                  const AmiVector &/*dx0*/) const {
+void CVodeSolver::initSteadystate(
+    const realtype /*t0*/, AmiVector const& /*x0*/, AmiVector const& /*dx0*/
+) const {
     // We need to set the steadystate rhs function. Sundials doesn't have this
     // in its public API, so we have to change it in the solver memory,
     // as re-calling init would unset solver settings.
@@ -124,8 +134,8 @@ void CVodeSolver::initSteadystate(const realtype /*t0*/, const AmiVector &/*x0*/
     CVodeSetNlsRhsFn(solver_memory_.get(), fxBdot_ss);
 }
 
-void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
-                            const AmiVectorArray & /*sdx0*/) const {
+void CVodeSolver::
+    sensInit1(AmiVectorArray const& sx0, AmiVectorArray const& /*sdx0*/) const {
     int status = CV_SUCCESS;
     sx_ = sx0;
     if (getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0) {
@@ -133,12 +143,14 @@ void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
             status = CVodeSensReInit(
                 solver_memory_.get(),
                 static_cast<int>(getInternalSensitivityMethod()),
-                sx_.getNVectorArray());
+                sx_.getNVectorArray()
+            );
         } else {
-            status =
-                CVodeSensInit1(solver_memory_.get(), nplist(),
-                               static_cast<int>(getInternalSensitivityMethod()),
-                               fsxdot, sx_.getNVectorArray());
+            status = CVodeSensInit1(
+                solver_memory_.get(), nplist(),
+                static_cast<int>(getInternalSensitivityMethod()), fsxdot,
+                sx_.getNVectorArray()
+            );
             setSensInitDone();
         }
     }
@@ -146,32 +158,37 @@ void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
         throw CvodeException(status, "CVodeSensInit1");
 }
 
-void CVodeSolver::binit(const int which, const realtype tf,
-                        const AmiVector &xB0,
-                        const AmiVector & /*dxB0*/) const {
+void CVodeSolver::binit(
+    int const which, const realtype tf, AmiVector const& xB0,
+    AmiVector const& /*dxB0*/
+) const {
     solver_was_called_B_ = false;
     force_reinit_postprocess_B_ = false;
     xB_ = xB0;
     int status;
     if (getInitDoneB(which)) {
-        status = CVodeReInitB(solver_memory_.get(), which, tf, xB_.getNVector());
+        status
+            = CVodeReInitB(solver_memory_.get(), which, tf, xB_.getNVector());
     } else {
-        status =
-            CVodeInitB(solver_memory_.get(), which, fxBdot, tf, xB_.getNVector());
+        status = CVodeInitB(
+            solver_memory_.get(), which, fxBdot, tf, xB_.getNVector()
+        );
         setInitDoneB(which);
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInitB");
 }
 
-void CVodeSolver::qbinit(const int which, const AmiVector &xQB0) const {
+void CVodeSolver::qbinit(int const which, AmiVector const& xQB0) const {
     xQB_ = xQB0;
     int status;
     if (getQuadInitDoneB(which)) {
-        status = CVodeQuadReInitB(solver_memory_.get(), which, xQB_.getNVector());
+        status
+            = CVodeQuadReInitB(solver_memory_.get(), which, xQB_.getNVector());
     } else {
-        status =
-            CVodeQuadInitB(solver_memory_.get(), which, fqBdot, xQB_.getNVector());
+        status = CVodeQuadInitB(
+            solver_memory_.get(), which, fqBdot, xQB_.getNVector()
+        );
         setQuadInitDoneB(which);
     }
     if (status != CV_SUCCESS)
@@ -238,71 +255,76 @@ void CVodeSolver::setSparseJacFn_ss() const {
         throw CvodeException(status, "CVodeSetJacFn");
 }
 
-Solver *CVodeSolver::clone() const { return new CVodeSolver(*this); }
+Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {
     if (!solver_memory_)
-        solver_memory_ = std::unique_ptr<void, std::function<void(void *)>>(
+        solver_memory_ = std::unique_ptr<void, std::function<void(void*)>>(
             CVodeCreate(static_cast<int>(lmm_)),
-            [](void *ptr) { CVodeFree(&ptr); });
+            [](void* ptr) { CVodeFree(&ptr); }
+        );
 }
 
-void CVodeSolver::setSStolerances(const double rtol, const double atol) const {
+void CVodeSolver::setSStolerances(double const rtol, double const atol) const {
     int status = CVodeSStolerances(solver_memory_.get(), rtol, atol);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSStolerances");
 }
 
-void CVodeSolver::setSensSStolerances(const double rtol,
-                                      const double *atol) const {
-    int status = CVodeSensSStolerances(solver_memory_.get(), rtol,
-                                       const_cast<double *>(atol));
+void CVodeSolver::setSensSStolerances(double const rtol, double const* atol)
+    const {
+    int status = CVodeSensSStolerances(
+        solver_memory_.get(), rtol, const_cast<double*>(atol)
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSensEEtolerances");
 }
 
-void CVodeSolver::setSensErrCon(const bool error_corr) const {
+void CVodeSolver::setSensErrCon(bool const error_corr) const {
     int status = CVodeSetSensErrCon(solver_memory_.get(), error_corr);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetSensErrCon");
 }
 
-void CVodeSolver::setQuadErrConB(const int which, const bool flag) const {
+void CVodeSolver::setQuadErrConB(int const which, bool const flag) const {
     int status = CVodeSetQuadErrConB(solver_memory_.get(), which, flag);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetQuadErrConB");
 }
 
-void CVodeSolver::setQuadErrCon(const bool flag) const {
+void CVodeSolver::setQuadErrCon(bool const flag) const {
     int status = CVodeSetQuadErrCon(solver_memory_.get(), flag);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetQuadErrCon");
 }
 
-void CVodeSolver::getRootInfo(int *rootsfound) const {
+void CVodeSolver::getRootInfo(int* rootsfound) const {
     int status = CVodeGetRootInfo(solver_memory_.get(), rootsfound);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetRootInfo");
 }
 
 void CVodeSolver::setLinearSolver() const {
-    int status = CVodeSetLinearSolver(solver_memory_.get(), linear_solver_->get(),
-                                      linear_solver_->getMatrix());
+    int status = CVodeSetLinearSolver(
+        solver_memory_.get(), linear_solver_->get(), linear_solver_->getMatrix()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "setLinearSolver");
 }
 
 void CVodeSolver::setLinearSolverB(int which) const {
-    int status =
-        CVodeSetLinearSolverB(solver_memory_.get(), which, linear_solver_B_->get(),
-                              linear_solver_B_->getMatrix());
+    int status = CVodeSetLinearSolverB(
+        solver_memory_.get(), which, linear_solver_B_->get(),
+        linear_solver_B_->getMatrix()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "setLinearSolverB");
 }
 
 void CVodeSolver::setNonLinearSolver() const {
-    int status =
-        CVodeSetNonlinearSolver(solver_memory_.get(), non_linear_solver_->get());
+    int status = CVodeSetNonlinearSolver(
+        solver_memory_.get(), non_linear_solver_->get()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetNonlinearSolver");
 }
@@ -317,80 +339,82 @@ void CVodeSolver::setNonLinearSolverSens() const {
 
     switch (ism_) {
     case InternalSensitivityMethod::staggered:
-        status = CVodeSetNonlinearSolverSensStg(solver_memory_.get(),
-                                                non_linear_solver_sens_->get());
+        status = CVodeSetNonlinearSolverSensStg(
+            solver_memory_.get(), non_linear_solver_sens_->get()
+        );
         break;
     case InternalSensitivityMethod::simultaneous:
-        status = CVodeSetNonlinearSolverSensSim(solver_memory_.get(),
-                                                non_linear_solver_sens_->get());
+        status = CVodeSetNonlinearSolverSensSim(
+            solver_memory_.get(), non_linear_solver_sens_->get()
+        );
         break;
     case InternalSensitivityMethod::staggered1:
-        status = CVodeSetNonlinearSolverSensStg1(solver_memory_.get(),
-                                                 non_linear_solver_sens_->get());
+        status = CVodeSetNonlinearSolverSensStg1(
+            solver_memory_.get(), non_linear_solver_sens_->get()
+        );
         break;
     default:
         throw AmiException(
-            "Unsupported internal sensitivity method selected: %d", ism_);
+            "Unsupported internal sensitivity method selected: %d", ism_
+        );
     }
 
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSolver::setNonLinearSolverSens");
 }
 
-void CVodeSolver::setNonLinearSolverB(const int which) const {
-    int status = CVodeSetNonlinearSolverB(solver_memory_.get(), which,
-                                          non_linear_solver_B_->get());
+void CVodeSolver::setNonLinearSolverB(int const which) const {
+    int status = CVodeSetNonlinearSolverB(
+        solver_memory_.get(), which, non_linear_solver_B_->get()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetNonlinearSolverB");
 }
 
 void CVodeSolver::setErrHandlerFn() const {
-    int status =
-        CVodeSetErrHandlerFn(solver_memory_.get(), wrapErrHandlerFn,
-                             reinterpret_cast<void*>(
-                                 const_cast<CVodeSolver*>(this)));
+    int status = CVodeSetErrHandlerFn(
+        solver_memory_.get(), wrapErrHandlerFn,
+        reinterpret_cast<void*>(const_cast<CVodeSolver*>(this))
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetErrHandlerFn");
 }
 
 void CVodeSolver::setUserData() const {
-    int status = CVodeSetUserData(
-        solver_memory_.get(),
-        &user_data
-    );
+    int status = CVodeSetUserData(solver_memory_.get(), &user_data);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetUserData");
 }
 
-void CVodeSolver::setUserDataB(const int which) const {
+void CVodeSolver::setUserDataB(int const which) const {
     int status = CVodeSetUserDataB(solver_memory_.get(), which, &user_data);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetUserDataB");
 }
 
-void CVodeSolver::setMaxNumSteps(const long mxsteps) const {
+void CVodeSolver::setMaxNumSteps(long const mxsteps) const {
     int status = CVodeSetMaxNumSteps(solver_memory_.get(), mxsteps);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetMaxNumSteps");
 }
 
-void CVodeSolver::setStabLimDet(const int stldet) const {
+void CVodeSolver::setStabLimDet(int const stldet) const {
     int status = CVodeSetStabLimDet(solver_memory_.get(), stldet);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetStabLimDet");
 }
 
-void CVodeSolver::setStabLimDetB(const int which, const int stldet) const {
+void CVodeSolver::setStabLimDetB(int const which, int const stldet) const {
     int status = CVodeSetStabLimDetB(solver_memory_.get(), which, stldet);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetStabLimDetB");
 }
 
-void CVodeSolver::setId(const Model * /*model*/) const {}
+void CVodeSolver::setId(Model const* /*model*/) const {}
 
-void CVodeSolver::setSuppressAlg(const bool /*flag*/) const {}
+void CVodeSolver::setSuppressAlg(bool const /*flag*/) const {}
 
-void CVodeSolver::resetState(void *ami_mem, const_N_Vector y0) const {
+void CVodeSolver::resetState(void* ami_mem, const_N_Vector y0) const {
 
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     /* here we force the order in the next step to zero, and update the
@@ -441,16 +465,18 @@ void CVodeSolver::reInitPostProcessB(const realtype tnext) const {
         // store current backward problem in ca_mem to make it accessible in
         // adjoint rhs wrapper functions
         ca_mem->ca_bckpbCrt = cvB_mem;
-        reInitPostProcess(static_cast<void *>(cvB_mem->cv_mem), &tBret, &xB_,
-                          tnext);
+        reInitPostProcess(
+            static_cast<void*>(cvB_mem->cv_mem), &tBret, &xB_, tnext
+        );
         cvB_mem->cv_tout = tBret;
         cvB_mem = cvB_mem->cv_next;
     }
     force_reinit_postprocess_B_ = false;
 }
 
-void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
-                                    const realtype tout) const {
+void CVodeSolver::reInitPostProcess(
+    void* ami_mem, realtype* t, AmiVector* yout, const realtype tout
+) const {
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     auto nst_tmp = cv_mem->cv_nst;
     cv_mem->cv_nst = 0;
@@ -462,10 +488,13 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
     status = CVode(ami_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
 
     if (status == CV_ROOT_RETURN)
-        throw CvodeException(status, "CVode returned a root after "
+        throw CvodeException(
+            status,
+            "CVode returned a root after "
             "reinitialization. The initial step-size after the event or "
             "heaviside function is too small. To fix this, increase absolute "
-            "and relative tolerances!");
+            "and relative tolerances!"
+        );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "reInitPostProcess");
 
@@ -496,8 +525,9 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
     }
 }
 
-void CVodeSolver::reInit(const realtype t0, const AmiVector &yy0,
-                         const AmiVector & /*yp0*/) const {
+void CVodeSolver::
+    reInit(const realtype t0, AmiVector const& yy0, AmiVector const& /*yp0*/)
+        const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     cv_mem->cv_tn = t0;
     if (solver_was_called_F_)
@@ -506,8 +536,9 @@ void CVodeSolver::reInit(const realtype t0, const AmiVector &yy0,
     resetState(cv_mem, x_.getNVector());
 }
 
-void CVodeSolver::sensReInit(const AmiVectorArray &yyS0,
-                             const AmiVectorArray & /*ypS0*/) const {
+void CVodeSolver::
+    sensReInit(AmiVectorArray const& yyS0, AmiVectorArray const& /*ypS0*/)
+        const {
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)
@@ -515,17 +546,20 @@ void CVodeSolver::sensReInit(const AmiVectorArray &yyS0,
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;
     sx_.copy(yyS0);
-    int status = N_VScaleVectorArray(nplist(), cv_mem->cv_cvals,
-                                     sx_.getNVectorArray(), cv_mem->cv_znS[0]);
+    int status = N_VScaleVectorArray(
+        nplist(), cv_mem->cv_cvals, sx_.getNVectorArray(), cv_mem->cv_znS[0]
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(CV_VECTOROP_ERR, "CVodeSensReInit");
 }
 
-void CVodeSolver::reInitB(const int which, const realtype tB0,
-                          const AmiVector &yyB0,
-                          const AmiVector & /*ypB0*/) const {
-    auto cv_memB =
-        static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solver_memory_.get(), which));
+void CVodeSolver::reInitB(
+    int const which, const realtype tB0, AmiVector const& yyB0,
+    AmiVector const& /*ypB0*/
+) const {
+    auto cv_memB = static_cast<CVodeMem>(
+        CVodeGetAdjCVodeBmem(solver_memory_.get(), which)
+    );
     if (solver_was_called_B_)
         force_reinit_postprocess_B_ = true;
     cv_memB->cv_tn = tB0;
@@ -542,20 +576,23 @@ void CVodeSolver::sensToggleOff() const {
     sens_initialized_ = false;
 }
 
-void CVodeSolver::quadReInitB(int which, const AmiVector &yQB0) const {
-    auto cv_memB =
-        static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solver_memory_.get(), which));
+void CVodeSolver::quadReInitB(int which, AmiVector const& yQB0) const {
+    auto cv_memB = static_cast<CVodeMem>(
+        CVodeGetAdjCVodeBmem(solver_memory_.get(), which)
+    );
     if (solver_was_called_B_)
         force_reinit_postprocess_B_ = true;
     xQB_.copy(yQB0);
     N_VScale(ONE, xQB_.getNVector(), cv_memB->cv_znQ[0]);
 }
 
-void CVodeSolver::setSensParams(const realtype *p, const realtype *pbar,
-                                const int *plist) const {
+void CVodeSolver::setSensParams(
+    realtype const* p, realtype const* pbar, int const* plist
+) const {
     int status = CVodeSetSensParams(
-        solver_memory_.get(), const_cast<realtype *>(p),
-        const_cast<realtype *>(pbar), const_cast<int *>(plist));
+        solver_memory_.get(), const_cast<realtype*>(p),
+        const_cast<realtype*>(pbar), const_cast<int*>(plist)
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetSensParams");
 }
@@ -568,52 +605,55 @@ void CVodeSolver::getDky(realtype t, int k) const {
 
 void CVodeSolver::getSens() const {
     realtype tDummy = 0;
-    int status =
-        CVodeGetSens(solver_memory_.get(), &tDummy, sx_.getNVectorArray());
+    int status
+        = CVodeGetSens(solver_memory_.get(), &tDummy, sx_.getNVectorArray());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetSens");
 }
 
-void CVodeSolver::getSensDky(const realtype t, const int k) const {
-    int status =
-        CVodeGetSensDky(solver_memory_.get(), t, k, sx_.getNVectorArray());
+void CVodeSolver::getSensDky(const realtype t, int const k) const {
+    int status
+        = CVodeGetSensDky(solver_memory_.get(), t, k, sx_.getNVectorArray());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetSens");
 }
 
-void CVodeSolver::getDkyB(const realtype t, const int k,
-                          const int which) const {
-    int status = CVodeGetDky(CVodeGetAdjCVodeBmem(solver_memory_.get(), which), t,
-                             k, dky_.getNVector());
+void CVodeSolver::getDkyB(const realtype t, int const k, int const which)
+    const {
+    int status = CVodeGetDky(
+        CVodeGetAdjCVodeBmem(solver_memory_.get(), which), t, k,
+        dky_.getNVector()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetDkyB");
 }
 
 void CVodeSolver::getQuadB(int which) const {
     realtype tDummy = 0;
-    int status =
-        CVodeGetQuadB(solver_memory_.get(), which, &tDummy, xQB_.getNVector());
+    int status = CVodeGetQuadB(
+        solver_memory_.get(), which, &tDummy, xQB_.getNVector()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuadB");
 }
 
-void CVodeSolver::getQuad(realtype &t) const {
+void CVodeSolver::getQuad(realtype& t) const {
     int status = CVodeGetQuad(solver_memory_.get(), &t, xQ_.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuad");
 }
 
-void CVodeSolver::getQuadDkyB(const realtype t, const int k, int which) const {
-    int status =
-        CVodeGetQuadDky(CVodeGetAdjCVodeBmem(solver_memory_.get(), which), t, k,
-                        xQB_.getNVector());
+void CVodeSolver::getQuadDkyB(const realtype t, int const k, int which) const {
+    int status = CVodeGetQuadDky(
+        CVodeGetAdjCVodeBmem(solver_memory_.get(), which), t, k,
+        xQB_.getNVector()
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuadDkyB");
 }
 
-void CVodeSolver::getQuadDky(const realtype t, const int k) const {
-    int status =
-    CVodeGetQuadDky(solver_memory_.get(), t, k, xQ_.getNVector());
+void CVodeSolver::getQuadDky(const realtype t, int const k) const {
+    int status = CVodeGetQuadDky(solver_memory_.get(), t, k, xQ_.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuadDky");
 }
@@ -623,75 +663,86 @@ void CVodeSolver::adjInit() const {
     if (getAdjInitDone()) {
         status = CVodeAdjReInit(solver_memory_.get());
     } else {
-        status = CVodeAdjInit(solver_memory_.get(), static_cast<int>(maxsteps_),
-                              static_cast<int>(interp_type_));
+        status = CVodeAdjInit(
+            solver_memory_.get(), static_cast<int>(maxsteps_),
+            static_cast<int>(interp_type_)
+        );
         setAdjInitDone();
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeAdjInit");
 }
 
-void CVodeSolver::quadInit(const AmiVector &xQ0) const {
+void CVodeSolver::quadInit(AmiVector const& xQ0) const {
     int status;
     xQ_.copy(xQ0);
     if (getQuadInitDone()) {
-        status = CVodeQuadReInit(solver_memory_.get(),
-                                 const_cast<N_Vector>(xQ0.getNVector()));
+        status = CVodeQuadReInit(
+            solver_memory_.get(), const_cast<N_Vector>(xQ0.getNVector())
+        );
     } else {
-        status = CVodeQuadInit(solver_memory_.get(), fqBdot_ss, xQ_.getNVector());
+        status
+            = CVodeQuadInit(solver_memory_.get(), fqBdot_ss, xQ_.getNVector());
         setQuadInitDone();
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadInit");
 }
 
-void CVodeSolver::allocateSolverB(int *which) const {
+void CVodeSolver::allocateSolverB(int* which) const {
     if (!solver_memory_B_.empty()) {
         *which = 0;
         return;
     }
-    int status = CVodeCreateB(solver_memory_.get(), static_cast<int>(lmm_), which);
+    int status
+        = CVodeCreateB(solver_memory_.get(), static_cast<int>(lmm_), which);
     if (*which + 1 > static_cast<int>(solver_memory_B_.size()))
         solver_memory_B_.resize(*which + 1);
-    solver_memory_B_.at(*which) =
-        std::unique_ptr<void, std::function<void(void *)>>(
-            getAdjBmem(solver_memory_.get(), *which), [](void * /*ptr*/) {});
+    solver_memory_B_.at(*which)
+        = std::unique_ptr<void, std::function<void(void*)>>(
+            getAdjBmem(solver_memory_.get(), *which), [](void* /*ptr*/) {}
+        );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeCreateB");
 }
 
-void CVodeSolver::setSStolerancesB(const int which, const realtype relTolB,
-                                   const realtype absTolB) const {
-    int status =
-        CVodeSStolerancesB(solver_memory_.get(), which, relTolB, absTolB);
+void CVodeSolver::setSStolerancesB(
+    int const which, const realtype relTolB, const realtype absTolB
+) const {
+    int status
+        = CVodeSStolerancesB(solver_memory_.get(), which, relTolB, absTolB);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSStolerancesB");
 }
 
-void CVodeSolver::quadSStolerancesB(const int which, const realtype reltolQB,
-                                    const realtype abstolQB) const {
-    int status =
-        CVodeQuadSStolerancesB(solver_memory_.get(), which, reltolQB, abstolQB);
+void CVodeSolver::quadSStolerancesB(
+    int const which, const realtype reltolQB, const realtype abstolQB
+) const {
+    int status = CVodeQuadSStolerancesB(
+        solver_memory_.get(), which, reltolQB, abstolQB
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadSStolerancesB");
 }
 
-void CVodeSolver::quadSStolerances(const realtype reltolQB,
-                                   const realtype abstolQB) const {
-    int status =
-    CVodeQuadSStolerances(solver_memory_.get(), reltolQB, abstolQB);
+void CVodeSolver::quadSStolerances(
+    const realtype reltolQB, const realtype abstolQB
+) const {
+    int status
+        = CVodeQuadSStolerances(solver_memory_.get(), reltolQB, abstolQB);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadSStolerances");
 }
 
-void CVodeSolver::getB(const int which) const {
+void CVodeSolver::getB(int const which) const {
     realtype tDummy = 0;
-    int status = CVodeGetB(solver_memory_.get(), which, &tDummy, xB_.getNVector());
+    int status
+        = CVodeGetB(solver_memory_.get(), which, &tDummy, xB_.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetB");
 }
 
-int CVodeSolver::solve(const realtype tout, const int itask) const {
+int CVodeSolver::solve(const realtype tout, int const itask) const {
     if (force_reinit_postprocess_F_)
         reInitPostProcessF(tout);
     int status = CVode(solver_memory_.get(), tout, x_.getNVector(), &t_, itask);
@@ -701,19 +752,20 @@ int CVodeSolver::solve(const realtype tout, const int itask) const {
     return status;
 }
 
-int CVodeSolver::solveF(const realtype tout, const int itask,
-                        int *ncheckPtr) const {
+int CVodeSolver::solveF(const realtype tout, int const itask, int* ncheckPtr)
+    const {
     if (force_reinit_postprocess_F_)
         reInitPostProcessF(tout);
-    int status =
-        CVodeF(solver_memory_.get(), tout, x_.getNVector(), &t_, itask, ncheckPtr);
+    int status = CVodeF(
+        solver_memory_.get(), tout, x_.getNVector(), &t_, itask, ncheckPtr
+    );
     if (status < 0) // status > 0 is okay and is used for e.g. root return
         throw IntegrationFailure(status, t_);
     solver_was_called_F_ = true;
     return status;
 }
 
-void CVodeSolver::solveB(const realtype tBout, const int itaskB) const {
+void CVodeSolver::solveB(const realtype tBout, int const itaskB) const {
     if (force_reinit_postprocess_B_)
         reInitPostProcessB(tBout);
     int status = CVodeB(solver_memory_.get(), tBout, itaskB);
@@ -722,7 +774,7 @@ void CVodeSolver::solveB(const realtype tBout, const int itaskB) const {
     solver_was_called_B_ = true;
 }
 
-void CVodeSolver::setMaxNumStepsB(const int which, const long mxstepsB) const {
+void CVodeSolver::setMaxNumStepsB(int const which, long const mxstepsB) const {
     int status = CVodeSetMaxNumStepsB(solver_memory_.get(), which, mxstepsB);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetMaxNumStepsB");
@@ -734,54 +786,58 @@ void CVodeSolver::diag() const {
         throw CvodeException(status, "CVDiag");
 }
 
-void CVodeSolver::diagB(const int which) const {
+void CVodeSolver::diagB(int const which) const {
     int status = CVDiagB(solver_memory_.get(), which);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVDiagB");
 }
 
-void CVodeSolver::getNumSteps(const void *ami_mem, long int *numsteps) const {
-    int status = CVodeGetNumSteps(const_cast<void *>(ami_mem), numsteps);
+void CVodeSolver::getNumSteps(void const* ami_mem, long int* numsteps) const {
+    int status = CVodeGetNumSteps(const_cast<void*>(ami_mem), numsteps);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetNumSteps");
 }
 
-void CVodeSolver::getNumRhsEvals(const void *ami_mem,
-                                 long int *numrhsevals) const {
-    int status = CVodeGetNumRhsEvals(const_cast<void *>(ami_mem), numrhsevals);
+void CVodeSolver::getNumRhsEvals(void const* ami_mem, long int* numrhsevals)
+    const {
+    int status = CVodeGetNumRhsEvals(const_cast<void*>(ami_mem), numrhsevals);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetNumRhsEvals");
 }
 
-void CVodeSolver::getNumErrTestFails(const void *ami_mem,
-                                     long int *numerrtestfails) const {
-    int status =
-        CVodeGetNumErrTestFails(const_cast<void *>(ami_mem), numerrtestfails);
+void CVodeSolver::getNumErrTestFails(
+    void const* ami_mem, long int* numerrtestfails
+) const {
+    int status
+        = CVodeGetNumErrTestFails(const_cast<void*>(ami_mem), numerrtestfails);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetNumErrTestFails");
 }
 
 void CVodeSolver::getNumNonlinSolvConvFails(
-    const void *ami_mem, long int *numnonlinsolvconvfails) const {
-    int status = CVodeGetNumNonlinSolvConvFails(const_cast<void *>(ami_mem),
-                                                numnonlinsolvconvfails);
+    void const* ami_mem, long int* numnonlinsolvconvfails
+) const {
+    int status = CVodeGetNumNonlinSolvConvFails(
+        const_cast<void*>(ami_mem), numnonlinsolvconvfails
+    );
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetNumNonlinSolvConvFails");
 }
 
-void CVodeSolver::getLastOrder(const void *ami_mem, int *order) const {
-    int status = CVodeGetLastOrder(const_cast<void *>(ami_mem), order);
+void CVodeSolver::getLastOrder(void const* ami_mem, int* order) const {
+    int status = CVodeGetLastOrder(const_cast<void*>(ami_mem), order);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetLastOrder");
 }
 
-void *CVodeSolver::getAdjBmem(void *ami_mem, int which) const {
+void* CVodeSolver::getAdjBmem(void* ami_mem, int which) const {
     return CVodeGetAdjCVodeBmem(ami_mem, which);
 }
 
 void CVodeSolver::calcIC(const realtype /*tout1*/) const {};
 
-void CVodeSolver::calcICB(const int /*which*/, const realtype /*tout1*/) const {};
+void CVodeSolver::calcICB(int const /*which*/, const realtype /*tout1*/)
+    const {};
 
 void CVodeSolver::setStopTime(const realtype tstop) const {
     int status = CVodeSetStopTime(solver_memory_.get(), tstop);
@@ -789,25 +845,22 @@ void CVodeSolver::setStopTime(const realtype tstop) const {
         throw CvodeException(status, "CVodeSetStopTime");
 }
 
-
 void CVodeSolver::turnOffRootFinding() const {
     int status = CVodeRootInit(solver_memory_.get(), 0, nullptr);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeRootInit");
 }
 
-
-const Model *CVodeSolver::getModel() const {
+Model const* CVodeSolver::getModel() const {
     if (!solver_memory_)
         throw AmiException("Solver has not been allocated, information is not "
                            "available");
     auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
 
-    auto typed_udata = static_cast<user_data_type *>(cv_mem->cv_user_data);
+    auto typed_udata = static_cast<user_data_type*>(cv_mem->cv_user_data);
     Expects(typed_udata);
     return typed_udata->first;
 }
-
 
 /**
  * @brief Jacobian of xdot with respect to states x
@@ -821,18 +874,17 @@ const Model *CVodeSolver::getModel() const {
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  **/
-static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                    void *user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/,
-                    N_Vector /*tmp3*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int
+fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J, void* user_data,
+   N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJ(t, x, xdot, J);
     return model->checkFinite(J, ModelQuantity::J, t);
 }
-
 
 /**
  * @brief Jacobian of xBdot with respect to adjoint state xB
@@ -847,18 +899,18 @@ static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  **/
-static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                     SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
-                     N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int
+fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector /*tmp1B*/, N_Vector /*tmp2B*/,
+    N_Vector /*tmp3B*/) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJB(t, x, xB, xBdot, JB);
     return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB);
 }
-
 
 /**
  * @brief J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -872,18 +924,18 @@ static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
-                          SUNMatrix J, void *user_data, N_Vector /*tmp1*/,
-                          N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fJSparse(
+    realtype t, N_Vector x, N_Vector /*xdot*/, SUNMatrix J, void* user_data,
+    N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/
+) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJSparse(t, x, J);
     return model->checkFinite(J, ModelQuantity::J, t);
 }
-
 
 /**
  * @brief JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -898,18 +950,18 @@ static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                           SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
-                           N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fJSparseB(
+    realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector /*tmp1B*/, N_Vector /*tmp2B*/, N_Vector /*tmp3B*/
+) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJSparseB(t, x, xB, xBdot, JB);
     return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB);
 }
-
 
 /**
  * @brief J in banded form (for banded solvers)
@@ -923,11 +975,12 @@ static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-           void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+static int fJBand(
+    realtype t, N_Vector x, N_Vector xdot, SUNMatrix J, void* user_data,
+    N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+) {
     return fJ(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
-
 
 /**
  * @brief JB in banded form (for banded solvers)
@@ -942,12 +995,12 @@ static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B) {
+static int fJBandB(
+    realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector tmp1B, N_Vector tmp2B, N_Vector tmp3B
+) {
     return fJB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
-
 
 /**
  * @brief Matrix vector product of J with a vector v (for iterative solvers)
@@ -961,17 +1014,17 @@ static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp temporary storage vector
  * @return status flag indicating successful execution
  **/
-static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-        N_Vector /*xdot*/, void *user_data, N_Vector /*tmp*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int
+fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector /*xdot*/,
+    void* user_data, N_Vector /*tmp*/) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJv(v, Jv, t, x);
     return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv);
 }
-
 
 /**
  * @brief Matrix vector product of JB with a vector v (for iterative solvers)
@@ -986,18 +1039,18 @@ static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
  * @param tmpB temporary storage vector
  * @return status flag indicating successful execution
  **/
-static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-         N_Vector xB, N_Vector /*xBdot*/, void *user_data,
-         N_Vector /*tmpB*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fJvB(
+    N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB,
+    N_Vector /*xBdot*/, void* user_data, N_Vector /*tmpB*/
+) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJvB(vB, JvB, t, x, xB);
     return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB);
 }
-
 
 /**
  * @brief Event trigger function for events
@@ -1007,18 +1060,17 @@ static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
  * @param user_data object with user input
  * @return status flag indicating successful execution
  */
-static int froot(realtype t, N_Vector x, realtype *root,
-                       void *user_data) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int froot(realtype t, N_Vector x, realtype* root, void* user_data) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
-    return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
-                              ModelQuantity::root);
+    return model->checkFinite(
+        gsl::make_span<realtype>(root, model->ne), ModelQuantity::root
+    );
 }
-
 
 /**
  * @brief residual function of the ODE
@@ -1028,12 +1080,12 @@ static int froot(realtype t, N_Vector x, realtype *root,
  * @param user_data object with user input
  * @return status flag indicating successful execution
  */
-static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fxdot(realtype t, N_Vector x, N_Vector xdot, void* user_data) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
-    auto solver = dynamic_cast<CVodeSolver const *>(typed_udata->second);
+    auto solver = dynamic_cast<CVodeSolver const*>(typed_udata->second);
     Expects(model);
 
     if (solver->timeExceeded(500)) {
@@ -1053,7 +1105,6 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot);
 }
 
-
 /**
  * @brief Right hand side of differential equation for adjoint state xB
  * @param t timepoint
@@ -1063,11 +1114,11 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
  * @param user_data object with user input
  * @return status flag indicating successful execution
  */
-static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                        void *user_data) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int
+fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void* user_data) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
     auto solver = dynamic_cast<CVodeSolver const*>(typed_udata->second);
     Expects(model);
@@ -1080,7 +1131,6 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot);
 }
 
-
 /**
  * @brief Right hand side of integral equation for quadrature states qB
  * @param t timepoint
@@ -1090,17 +1140,16 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param user_data pointer to temp data object
  * @return status flag indicating successful execution
  */
-static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                        void *user_data) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int
+fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void* user_data) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fqBdot(t, x, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot);
 }
-
 
 /**
  * @brief Right hand side of differential equation for adjoint state xB
@@ -1111,17 +1160,15 @@ static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
  * @param user_data object with user input
  * @return status flag indicating successful execution
  */
-static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
-                     void *user_data) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void* user_data) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fxBdot_ss(t, xB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot_ss);
 }
-
 
 /**
  * @brief Right hand side of integral equation for quadrature states qB
@@ -1132,11 +1179,10 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
  * @param user_data pointer to temp data object
  * @return status flag indicating successful execution
  */
-static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
-                     void *user_data) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void* user_data) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fqBdot_ss(t, xB, qBdot);
@@ -1155,19 +1201,20 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
-                        SUNMatrix JB, void *user_data, N_Vector /*tmp1*/,
-                        N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fJSparseB_ss(
+    realtype /*t*/, N_Vector /*x*/, N_Vector xBdot, SUNMatrix JB,
+    void* user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/
+) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fJSparseB_ss(JB);
-    return model->checkFinite(gsl::make_span(xBdot),
-                              ModelQuantity::JSparseB_ss);
+    return model->checkFinite(
+        gsl::make_span(xBdot), ModelQuantity::JSparseB_ss
+    );
 }
-
 
 /**
  * @brief Right hand side of differential equation for state sensitivities sx
@@ -1184,20 +1231,21 @@ static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-static int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
-                        int ip, N_Vector sx, N_Vector sxdot, void *user_data,
-                        N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
-    auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+static int fsxdot(
+    int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/, int ip, N_Vector sx,
+    N_Vector sxdot, void* user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/
+) {
+    auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
-    auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+    auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
     model->fsxdot(t, x, ip, sx, sxdot);
     return model->checkFinite(gsl::make_span(sxdot), ModelQuantity::sxdot);
 }
 
-bool operator==(const CVodeSolver &a, const CVodeSolver &b) {
-    return static_cast<Solver const &>(a) == static_cast<Solver const &>(b);
+bool operator==(CVodeSolver const& a, CVodeSolver const& b) {
+    return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
 }
 
 } // namespace amici
