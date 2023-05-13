@@ -17,14 +17,13 @@ from __future__ import annotations
 
 import numbers
 import warnings
-from typing import Any, Dict, List, Union, Set
 from collections.abc import Sequence
 from itertools import chain
+from typing import Any, Dict, List, Set, Union
 
 import amici
 import numpy as np
 from petab.C import *  # noqa: F403
-
 
 SingleParameterMapping = Dict[str, Union[numbers.Number, str]]
 SingleScaleMapping = Dict[str, str]

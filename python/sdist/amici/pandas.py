@@ -5,14 +5,15 @@ This module contains convenience wrappers that allow for easy interconversion
 between C++ objects from :mod:`amici.amici` and pandas DataFrames
 """
 
-import pandas as pd
-import numpy as np
-import math
 import copy
+import math
+from typing import Dict, List, Optional, SupportsFloat, Union
 
-from typing import List, Union, Optional, Dict, SupportsFloat
-from .numpy import ExpDataView
 import amici
+import numpy as np
+import pandas as pd
+
+from .numpy import ExpDataView
 
 __all__ = [
     "get_expressions_as_dataframe",

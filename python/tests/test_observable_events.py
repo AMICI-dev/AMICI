@@ -1,14 +1,14 @@
-import amici
-import pytest
 import os
 
-from util import create_sbml_model, create_amici_model
+import amici
+import pytest
 from test_pregenerated_models import (
-    options_file,
     expected_results,
     expected_results_file,
+    options_file,
     verify_simulation_results,
 )
+from util import create_amici_model, create_sbml_model
 
 
 def model_neuron_def():

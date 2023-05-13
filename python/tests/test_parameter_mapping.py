@@ -2,7 +2,6 @@
 import os
 
 import pytest
-
 from amici.parameter_mapping import ParameterMapping, ParameterMappingForCondition
 from amici.testing import skip_on_valgrind
 

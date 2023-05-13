@@ -3,10 +3,9 @@
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Set
+from typing import List, Set, Tuple
 
 import pytest
-
 
 # stores passed SBML semantic test suite IDs
 passed_ids = []

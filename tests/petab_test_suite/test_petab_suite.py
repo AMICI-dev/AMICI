@@ -4,13 +4,12 @@
 import logging
 import sys
 
+import amici
 import pandas as pd
 import petab
 import petabtests
 import pytest
 from _pytest.outcomes import Skipped
-
-import amici
 from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level

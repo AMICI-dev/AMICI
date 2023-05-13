@@ -12,7 +12,6 @@ import petab
 import pytest
 from amici.petab_objective import SLLH
 
-
 # Absolute and relative tolerances for finite difference gradient checks.
 ATOL: float = 1e-3
 RTOL: float = 1e-3

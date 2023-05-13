@@ -2,11 +2,10 @@
 import os
 from pathlib import Path
 
-from cmake_build_extension import CMakeExtension
-from setuptools import find_namespace_packages, setup
-
 from amici import _get_amici_path
 from amici.custom_commands import AmiciBuildCMakeExtension
+from cmake_build_extension import CMakeExtension
+from setuptools import find_namespace_packages, setup
 
 
 def get_extension() -> CMakeExtension:

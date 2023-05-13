@@ -1,15 +1,15 @@
 """Tests for SBML events, including piecewise expressions."""
-import libsbml
-import numpy as np
 from pathlib import Path
 
+import libsbml
+import numpy as np
 from amici import (
     AmiciModel,
-    import_model_module,
-    runAmiciSimulation,
     SbmlImporter,
     SensitivityMethod,
     SensitivityOrder,
+    import_model_module,
+    runAmiciSimulation,
 )
 from amici.gradient_check import _check_close
 

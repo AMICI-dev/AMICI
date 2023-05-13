@@ -21,7 +21,18 @@ from dataclasses import dataclass
 from itertools import chain, starmap
 from pathlib import Path
 from string import Template
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import sympy as sp
@@ -34,22 +45,24 @@ from . import (
     amiciModulePath,
     amiciSrcPath,
     amiciSwigPath,
-    sbml_import,
     splines,
 )
 from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
+from .de_model import *
 from .import_utils import (
     ObservableTransformation,
+    SBMLException,
     generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
     symbol_with_assumptions,
     toposort_symbols,
-    SBMLException,
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .de_model import *
+
+if TYPE_CHECKING:
+    from . import sbml_import
 
 
 # Template for model simulation main.cpp file
@@ -541,7 +554,8 @@ def smart_jacobian(
 
 @log_execution_time("running smart_multiply", logger)
 def smart_multiply(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix], y: sp.MutableDenseMatrix
+    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
+    y: sp.MutableDenseMatrix,
 ) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
     """
     Wrapper around symbolic multiplication with some additional checks that
@@ -761,7 +775,11 @@ class DEModel:
         }
         self._eqs: Dict[
             str,
-            Union[sp.Matrix, sp.SparseMatrix, List[Union[sp.Matrix, sp.SparseMatrix]]],
+            Union[
+                sp.Matrix,
+                sp.SparseMatrix,
+                List[Union[sp.Matrix, sp.SparseMatrix]],
+            ],
         ] = dict()
         self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
         self._vals: Dict[str, List[sp.Expr]] = dict()
@@ -939,7 +957,9 @@ class DEModel:
             spline_subs[spl.sbml_id] = spline_expr
             self.add_component(
                 Expression(
-                    identifier=spl.sbml_id, name=str(spl.sbml_id), value=spline_expr
+                    identifier=spl.sbml_id,
+                    name=str(spl.sbml_id),
+                    value=spline_expr,
                 )
             )
         self.splines = si.splines
@@ -1050,7 +1070,10 @@ class DEModel:
                 args += ["event"]
 
             comp_kwargs = [
-                {"identifier": var_id, **{k: v for k, v in var.items() if k in args}}
+                {
+                    "identifier": var_id,
+                    **{k: v for k, v in var.items() if k in args},
+                }
                 for var_id, var in symbols[symbol_name].items()
             ]
 
@@ -1177,7 +1200,11 @@ class DEModel:
         )
 
         cl = ConservationLaw(
-            total_abundance, f"total_{state_id}", abundance_expr, coefficients, state_id
+            total_abundance,
+            f"total_{state_id}",
+            abundance_expr,
+            coefficients,
+            state_id,
         )
 
         self.add_component(cl)
@@ -1662,7 +1689,10 @@ class DEModel:
                     symbol_list,
                     sparse_matrix,
                 ) = self._code_printer.csc_matrix(
-                    matrix[iy, :], rownames=rownames, colnames=colnames, identifier=iy
+                    matrix[iy, :],
+                    rownames=rownames,
+                    colnames=colnames,
+                    identifier=iy,
                 )
                 self._colptrs[name].append(symbol_col_ptrs)
                 self._rowvals[name].append(symbol_row_vals)
@@ -1970,7 +2000,8 @@ class DEModel:
                 # symbols
                 if not smart_is_zero_matrix(self.eq("stau")[ie]):
                     tmp_eq += smart_multiply(
-                        (self.sym("xdot_old") - self.sym("xdot")), self.sym("stau").T
+                        (self.sym("xdot_old") - self.sym("xdot")),
+                        self.sym("stau").T,
                     )
 
                 # only add deltax part if there is state update
@@ -3396,7 +3427,8 @@ class DEExporter:
             "NDXDOTDW": len(self.model.sparsesym("dxdotdw")),
             "NDXDOTDP_EXPLICIT": len(
                 self.model.sparsesym(
-                    "dxdotdp_explicit", force_generate=self.generate_sensitivity_code
+                    "dxdotdp_explicit",
+                    force_generate=self.generate_sensitivity_code,
                 )
             ),
             "NDXDOTDX_EXPLICIT": len(self.model.sparsesym("dxdotdx_explicit")),
@@ -3493,7 +3525,10 @@ class DEExporter:
                     impl = ""
                 else:
                     impl = get_model_override_implementation(
-                        func_name, self.model_name, self.model.is_ode(), nobody=True
+                        func_name,
+                        self.model_name,
+                        self.model.is_ode(),
+                        nobody=True,
                     )
 
                 tpl_data[f"{func_name.upper()}_IMPL"] = impl
@@ -3507,7 +3542,10 @@ class DEExporter:
                             impl = ""
                         else:
                             impl = get_sunindex_override_implementation(
-                                func_name, self.model_name, indexfield, nobody=True
+                                func_name,
+                                self.model_name,
+                                indexfield,
+                                nobody=True,
                             )
                         tpl_data[f"{func_name.upper()}_{indexfield.upper()}_DEF"] = ""
                         tpl_data[
@@ -3625,7 +3663,8 @@ class DEExporter:
             template_data,
         )
         shutil.copy(
-            SWIG_CMAKE_TEMPLATE_FILE, Path(self.model_swig_path, "CMakeLists.txt")
+            SWIG_CMAKE_TEMPLATE_FILE,
+            Path(self.model_swig_path, "CMakeLists.txt"),
         )
 
     def _write_module_setup(self) -> None:
@@ -3963,9 +4002,10 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
         return obj.applyfunc(func)
 
     # parallel
-    from pickle import PicklingError
-    from sympy.matrices.dense import DenseMatrix
     from multiprocessing import get_context
+    from pickle import PicklingError
+
+    from sympy.matrices.dense import DenseMatrix
 
     # "spawn" should avoid potential deadlocks occurring with fork
     #  see e.g. https://stackoverflow.com/a/66113051
