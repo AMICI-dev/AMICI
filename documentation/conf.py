@@ -10,13 +10,12 @@ import os
 import re
 import subprocess
 import sys
-import typing
 
+# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+import amici
 import exhale.deploy
 import exhale_multiproject_monkeypatch
 import mock
-
-# need to import before setting typing.TYPE_CHECKING=True, fails otherwise
 import pandas as pd
 import sympy as sp
 from exhale import configs as exhale_configs
@@ -124,12 +123,6 @@ if "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]:
 
 # Required for matlab doxygen processing
 install_mtocpp()
-
-# Install AMICI if not already present
-typing.TYPE_CHECKING = True
-import amici
-
-typing.TYPE_CHECKING = False
 
 
 # -- Project information -----------------------------------------------------
