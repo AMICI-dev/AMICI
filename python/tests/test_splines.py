@@ -7,12 +7,13 @@ time to complete.
 """
 
 import os
+
 import numpy as np
 from splines_utils import (
+    check_splines_full,
     example_spline_1,
     example_spline_2,
     example_spline_3,
-    check_splines_full,
 )
 
 

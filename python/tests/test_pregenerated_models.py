@@ -10,9 +10,8 @@ import amici
 import h5py
 import numpy as np
 import pytest
-from amici.gradient_check import check_derivatives, _check_results
+from amici.gradient_check import _check_results, check_derivatives
 from amici.testing import skip_on_valgrind
-
 
 cpp_test_dir = Path(__file__).parents[2] / "tests" / "cpp"
 options_file = str(cpp_test_dir / "testOptions.h5")

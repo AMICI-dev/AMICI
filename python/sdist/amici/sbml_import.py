@@ -6,7 +6,6 @@ in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
 import copy
 import itertools as itt
-import numpy as np
 import logging
 import math
 import os
@@ -14,51 +13,40 @@ import re
 import warnings
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    Set,
-    List,
-)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import libsbml as sbml
+import numpy as np
 import sympy as sp
 
 from . import has_clibs
 from .constants import SymbolId
+from .de_export import (
+    DEExporter,
+    DEModel,
+    _default_simplify,
+    smart_is_zero_matrix,
+    symbol_with_assumptions,
+)
 from .import_utils import (
     RESERVED_SYMBOLS,
-    annotation_namespace,
-    amici_time_symbol,
-    sbml_time_symbol,
     _check_unsupported_functions,
     _get_str_symbol_identifiers,
     _parse_special_functions,
+    amici_time_symbol,
+    annotation_namespace,
     generate_measurement_symbol,
     generate_regularization_symbol,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
+    sbml_time_symbol,
     smart_subs,
     smart_subs_dict,
     toposort_symbols,
 )
-from .sbml_utils import SBMLException, _parse_logical_operators
 from .logging import get_logger, log_execution_time, set_log_level
-from .de_export import (
-    DEExporter,
-    DEModel,
-    symbol_with_assumptions,
-    _default_simplify,
-    smart_is_zero_matrix,
-)
+from .sbml_utils import SBMLException, _parse_logical_operators
 from .splines import AbstractSpline
-
 
 SymbolicFormula = Dict[sp.Symbol, sp.Expr]
 
@@ -1935,6 +1923,7 @@ class SbmlImporter:
         """
         import numpy as np
         from numpy.linalg import matrix_rank
+
         from .conserved_quantities_rref import nullspace_by_rref, rref
 
         try:

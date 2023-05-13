@@ -2,11 +2,10 @@
 
 import itertools
 
+import amici
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
-
-import amici
 from test_pysb import get_data
 
 

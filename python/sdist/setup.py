@@ -21,12 +21,12 @@ from setuptools import setup
 sys.path.insert(0, os.path.dirname(__file__))
 
 from amici.custom_commands import (
-    AmiciInstall,
+    AmiciBuildCMakeExtension,
+    AmiciBuildPy,
     AmiciDevelop,
+    AmiciInstall,
     AmiciInstallLib,
     AmiciSDist,
-    AmiciBuildPy,
-    AmiciBuildCMakeExtension,
 )
 
 

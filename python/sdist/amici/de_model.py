@@ -1,19 +1,17 @@
 """Objects for AMICI's internal differential equation model representation"""
 import abc
+import numbers
+from typing import Dict, Optional, Set, SupportsFloat, Union
 
 import sympy as sp
-import numbers
-
-from typing import Optional, Union, Dict, SupportsFloat, Set
 
 from .import_utils import (
+    RESERVED_SYMBOLS,
     ObservableTransformation,
+    cast_to_sym,
     generate_measurement_symbol,
     generate_regularization_symbol,
-    RESERVED_SYMBOLS,
 )
-from .import_utils import cast_to_sym
-
 
 __all__ = [
     "ConservationLaw",

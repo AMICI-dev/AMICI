@@ -1,8 +1,9 @@
 """Pytest configuration for PEtab test suite"""
 
-from typing import List
 import re
 import sys
+from typing import List
+
 from petabtests.core import get_cases
 
 

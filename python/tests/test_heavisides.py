@@ -1,13 +1,11 @@
 """Tests for SBML events, including piecewise expressions."""
 import numpy as np
 import pytest
-
-
 from util import (
-    create_sbml_model,
-    create_amici_model,
-    check_trajectories_without_sensitivities,
     check_trajectories_with_forward_sensitivities,
+    check_trajectories_without_sensitivities,
+    create_amici_model,
+    create_sbml_model,
 )
 
 
