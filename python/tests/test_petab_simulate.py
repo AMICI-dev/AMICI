@@ -1,11 +1,11 @@
 """Tests for petab_simulate.py."""
-from pathlib import Path
-import pytest
 import tempfile
+from pathlib import Path
 
-from amici.petab_simulate import PetabSimulator
 import petab
 import petabtests
+import pytest
+from amici.petab_simulate import PetabSimulator
 from amici.testing import skip_on_valgrind
 
 

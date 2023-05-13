@@ -1,7 +1,6 @@
 """Tests for SBML events, including piecewise expressions."""
 import numpy as np
 import pytest
-
 from util import (
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,

@@ -2,10 +2,10 @@
 import itertools
 import os
 import re
-from typing import Dict, List, Optional, Tuple, Iterable
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import sympy as sp
-from sympy.codegen.rewriting import optimize, Optimization
+from sympy.codegen.rewriting import Optimization, optimize
 from sympy.printing.cxx import CXX11CodePrinter
 from sympy.utilities.iterables import numbered_symbols
 from toposort import toposort

@@ -4,9 +4,10 @@
 Aggregate computation times from different benchmarks and plot
 """
 import os
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 
 # read benchmark results for different models
 

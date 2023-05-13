@@ -5,18 +5,15 @@ from numbers import Number
 from pathlib import Path
 from urllib.request import urlopen
 
+import amici
 import libsbml
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
-
-import amici
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
-from amici.testing import (
-    TemporaryDirectoryWinSafe as TemporaryDirectory,
-    skip_on_valgrind,
-)
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import skip_on_valgrind
+from numpy.testing import assert_allclose, assert_array_equal
 
 EXAMPLES_DIR = Path(__file__).parent / ".." / "examples"
 STEADYSTATE_MODEL_FILE = (

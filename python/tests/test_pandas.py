@@ -6,7 +6,6 @@ import amici
 import numpy as np
 import pytest
 
-
 # test parameters for test_pandas_import_export
 combos = itertools.product([(10, 5), (5, 10), ()], repeat=3)
 cases = [

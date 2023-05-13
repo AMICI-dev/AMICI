@@ -7,12 +7,8 @@ ground truth.
 
 import numpy as np
 import sympy as sp
-
 from amici.splines import CubicHermiteSpline, UniformGrid
-from splines_utils import (
-    example_spline_1,
-    check_splines_full,
-)
+from splines_utils import check_splines_full, example_spline_1
 
 
 def test_spline_piecewise(**kwargs):

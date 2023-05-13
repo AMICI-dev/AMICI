@@ -1,9 +1,7 @@
 """Tests related to amici.ExpData via Python"""
-import numpy as np
-
 import amici
+import numpy as np
 from amici.testing import skip_on_valgrind
-
 from test_sbml_import import model_units_module
 
 

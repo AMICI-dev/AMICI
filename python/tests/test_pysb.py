@@ -10,16 +10,15 @@ pysb = pytest.importorskip("pysb")
 
 import amici
 import numpy as np
-import sympy as sp
 import pysb.examples
 import pytest
-from amici.pysb_import import pysb2amici
+import sympy as sp
 from amici import ParameterScaling, parameterScalingFromIntVector
-from pysb.simulator import ScipyOdeSimulator
-
 from amici.gradient_check import check_derivatives
-from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
+from amici.pysb_import import pysb2amici
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
+from pysb.simulator import ScipyOdeSimulator
 
 
 @skip_on_valgrind

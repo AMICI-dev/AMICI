@@ -4,6 +4,7 @@ http://bionetgen.org/index.php/Egfr_simple
 """
 
 from __future__ import print_function
+
 from pysb import *
 
 Model()

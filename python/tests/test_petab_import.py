@@ -1,10 +1,9 @@
 """Tests related to amici.petab_import"""
 
 import libsbml
-import pytest
 import pandas as pd
-from amici.testing import skip_on_valgrind, TemporaryDirectoryWinSafe
-
+import pytest
+from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 
 petab = pytest.importorskip("petab", reason="Missing petab")
 amici_petab_import = pytest.importorskip("amici.petab_import")

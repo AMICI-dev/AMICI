@@ -3,7 +3,6 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-
 from amici.testing import skip_on_valgrind
 from util import (
     check_trajectories_with_forward_sensitivities,
