@@ -3,14 +3,13 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-
+from amici.testing import skip_on_valgrind
 from util import (
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,
     create_amici_model,
     create_sbml_model,
 )
-from amici.testing import skip_on_valgrind
 
 
 @pytest.fixture(

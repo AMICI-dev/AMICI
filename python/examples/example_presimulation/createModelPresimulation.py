@@ -1,7 +1,7 @@
-from pysb.core import Rule, Parameter, Model, Monomer, Expression, Initial, Observable
+import os
 
 import pysb.export
-import os
+from pysb.core import Expression, Initial, Model, Monomer, Observable, Parameter, Rule
 
 model = Model()
 

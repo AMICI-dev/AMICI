@@ -7,25 +7,27 @@ This module provides helper functions for working with SBML.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 import sympy as sp
 
 if TYPE_CHECKING:
-    from typing import Optional, Union, Tuple, Dict, Any
+    from typing import Any, Dict, Optional, Tuple, Union
 
     SbmlID = Union[str, sp.Symbol]
 
-from .import_utils import (
-    sbml_time_symbol,
-    amici_time_symbol,
-    _parse_special_functions,
-    _check_unsupported_functions,
-    SBMLException,
-)
 import xml.dom.minidom
-import libsbml
 
-from sympy.printing.mathml import MathMLContentPrinter
+import libsbml
 from sympy.core.parameters import evaluate
+from sympy.printing.mathml import MathMLContentPrinter
+
+from .import_utils import (
+    SBMLException,
+    _check_unsupported_functions,
+    _parse_special_functions,
+    amici_time_symbol,
+    sbml_time_symbol,
+)
 
 
 class SbmlInvalidIdSyntax(SBMLException):

@@ -20,16 +20,16 @@ from typing import (
     Union,
 )
 
+import amici
 import libsbml
 import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
+from amici.sbml_import import get_species_initial
 from petab.C import *  # noqa: F403
 from sympy.abc import _clash
 
-import amici
-from amici.sbml_import import get_species_initial
 from . import AmiciExpData, AmiciModel
 from .logging import get_logger, log_execution_time
 from .parameter_mapping import (
@@ -38,11 +38,6 @@ from .parameter_mapping import (
     fill_in_parameters,
 )
 from .petab_import import PREEQ_INDICATOR_ID, element_is_state
-from .parameter_mapping import (
-    fill_in_parameters,
-    ParameterMappingForCondition,
-    ParameterMapping,
-)
 
 logger = get_logger(__name__)
 

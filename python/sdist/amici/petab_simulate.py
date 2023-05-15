@@ -15,12 +15,10 @@ import sys
 from typing import Callable
 
 import pandas as pd
-
-from amici import SensitivityMethod_none
-from amici import AmiciModel
-from amici.petab_import import import_petab_problem
-from amici.petab_objective import simulate_petab, rdatas_to_measurement_df, RDATAS
 import petab
+from amici import AmiciModel, SensitivityMethod_none
+from amici.petab_import import import_petab_problem
+from amici.petab_objective import RDATAS, rdatas_to_measurement_df, simulate_petab
 
 AMICI_MODEL = "amici_model"
 AMICI_SOLVER = "solver"

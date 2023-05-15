@@ -208,9 +208,9 @@ class PysbPetabProblem(petab.Problem):
             Petab Problem
         """
         from petab.yaml import (
-            load_yaml,
-            is_composite_problem,
             assert_single_condition_and_sbml_file,
+            is_composite_problem,
+            load_yaml,
         )
 
         if isinstance(yaml_config, (str, Path)):

@@ -5,9 +5,8 @@ import os
 import shutil
 import sys
 
-import pytest
-
 import amici
+import pytest
 from amici.testing import TemporaryDirectoryWinSafe
 
 

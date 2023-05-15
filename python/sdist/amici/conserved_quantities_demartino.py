@@ -2,7 +2,7 @@ import logging
 import math
 import random
 import sys
-from typing import List, MutableSequence, Sequence, Tuple, Union, Optional
+from typing import List, MutableSequence, Optional, Sequence, Tuple, Union
 
 from .logging import get_logger
 

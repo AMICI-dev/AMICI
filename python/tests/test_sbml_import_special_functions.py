@@ -6,13 +6,12 @@ boost.
 
 import os
 
+import amici
 import numpy as np
 import pytest
-from scipy.special import loggamma
-
-import amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from scipy.special import loggamma
 
 
 @pytest.fixture(scope="session")

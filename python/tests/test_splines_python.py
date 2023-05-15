@@ -6,8 +6,9 @@ the true analytical values.
 """
 
 import math
-import sympy as sp
+
 import amici
+import sympy as sp
 
 
 def test_SplineUniform():

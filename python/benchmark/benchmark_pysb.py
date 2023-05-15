@@ -5,17 +5,17 @@ This file allows the benchmarking of AMICI vs PySB simulations. Simulations
 times are averages of N_REPEATS simulations at reference values.
 """
 
+import importlib
 import os
-import pysb
+import sys
+import timeit
+
 import amici
-from amici.pysb_import import pysb2amici
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import importlib
-import timeit
-import sys
-
+import pysb
+from amici.pysb_import import pysb2amici
 from pysb.simulator import ScipyOdeSimulator
 
 sys.path.insert(0, os.path.join("..", "tests"))

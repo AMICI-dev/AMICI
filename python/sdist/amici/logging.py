@@ -4,16 +4,16 @@ Logging
 This module provides custom logging functionality for other amici modules
 """
 
+import functools
 import logging
+import os
 import platform
 import socket
-import amici
-import os
-import warnings
 import time
-import functools
+import warnings
+from inspect import currentframe, getouterframes
 
-from inspect import getouterframes, currentframe
+import amici
 
 LOG_LEVEL_ENV_VAR = "AMICI_LOG"
 BASE_LOGGER_NAME = "amici"
@@ -27,7 +27,7 @@ NAMED_LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
 }
 
-from typing import Optional, Callable, Union
+from typing import Callable, Optional, Union
 
 
 def _setup_logger(

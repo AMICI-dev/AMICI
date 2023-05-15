@@ -1,8 +1,7 @@
 """Test amici.ReturnData(View)-related functionality"""
+import amici
 import numpy as np
 import pytest
-
-import amici
 from numpy.testing import assert_array_equal
 
 

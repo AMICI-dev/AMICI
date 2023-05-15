@@ -8,12 +8,13 @@ issues
 Requires pandoc
 """
 
+import os
+import subprocess
+import sys
+
+import biblib.algo
 import biblib.bib
 import biblib.messages
-import biblib.algo
-import os
-import sys
-import subprocess
 
 
 def get_keys_by_year(bibfile):

@@ -14,7 +14,7 @@ import re
 import sys
 from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Optional, Union, Callable, Any
+from typing import Any, Callable, Optional, Union
 
 
 def _get_amici_path():
@@ -52,7 +52,7 @@ def _get_commit_hash():
 def _imported_from_setup() -> bool:
     """Check whether this module is imported from `setup.py`"""
 
-    from inspect import getouterframes, currentframe
+    from inspect import currentframe, getouterframes
     from os import sep
 
     # in case we are imported from setup.py, this will be the AMICI package
@@ -107,17 +107,16 @@ if not _imported_from_setup():
         # has to be done before importing readSolverSettingsFromHDF5
         #  from .swig_wrappers
         hdf5_enabled = "readSolverSettingsFromHDF5" in dir()
+        # These modules require the swig interface and other dependencies
+        from .numpy import ExpDataView, ReturnDataView
+        from .pandas import *
         from .swig_wrappers import *
 
-        # These modules require the swig interface and other dependencies
-        from .numpy import ReturnDataView, ExpDataView
-        from .pandas import *
-
     # These modules don't require the swig interface
-    from .sbml_import import SbmlImporter, assignmentRules2observables
-    from .de_export import DEModel, DEExporter
-
     from typing import Protocol, runtime_checkable
+
+    from .de_export import DEExporter, DEModel
+    from .sbml_import import SbmlImporter, assignmentRules2observables
 
     @runtime_checkable
     class ModelModule(Protocol):

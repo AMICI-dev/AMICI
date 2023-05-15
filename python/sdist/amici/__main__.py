@@ -1,8 +1,9 @@
 """Package-level entrypoint"""
 
-from . import __version__, compiledWithOpenMP, has_clibs, hdf5_enabled
 import os
 import sys
+
+from . import __version__, compiledWithOpenMP, has_clibs, hdf5_enabled
 
 
 def print_info():

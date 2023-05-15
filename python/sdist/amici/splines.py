@@ -10,51 +10,43 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from . import sbml_import
     from numbers import Real
-    from typing import (
-        Sequence,
-        Union,
-        Tuple,
-        Optional,
-        Dict,
-        Any,
-        List,
-        Set,
-        Callable,
-    )
+    from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
+
+    from . import sbml_import
 
     BClike = Union[None, str, Tuple[Union[None, str], Union[None, str]]]
 
     NormalizedBC = Tuple[Union[None, str], Union[None, str]]
 
-import logging
 import collections.abc
+import logging
 import xml.etree.ElementTree as ET
-import numpy as np
-import sympy as sp
-import libsbml
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from itertools import count
-from sympy.core.parameters import evaluate
-from .logging import get_logger
-from .import_utils import (
-    sbml_time_symbol,
-    amici_time_symbol,
-    annotation_namespace,
-    symbol_with_assumptions,
-)
-from .sbml_utils import (
-    pretty_xml,
-    mathml2sympy,
-    sbml_mathml,
-    get_sbml_units,
-    add_parameter,
-    add_assignment_rule,
-    SbmlAnnotationError,
-)
 from numbers import Integral
 
+import libsbml
+import numpy as np
+import sympy as sp
+from sympy.core.parameters import evaluate
+
+from .import_utils import (
+    amici_time_symbol,
+    annotation_namespace,
+    sbml_time_symbol,
+    symbol_with_assumptions,
+)
+from .logging import get_logger
+from .sbml_utils import (
+    SbmlAnnotationError,
+    add_assignment_rule,
+    add_parameter,
+    get_sbml_units,
+    mathml2sympy,
+    pretty_xml,
+    sbml_mathml,
+)
 
 logger = get_logger(__name__, logging.WARNING)
 
