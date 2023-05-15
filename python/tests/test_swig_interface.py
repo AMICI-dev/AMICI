@@ -98,6 +98,10 @@ model_instance_settings0 = {
     # Skipped due to conservation laws in the test model
     # `pysb_example_presimulation_module.getModel()`.
     "StateIsNonNegative": None,
+    "SteadyStateComputationMode": [
+        1,
+        2,
+    ],
     "SteadyStateSensitivityMode": [
         0,
         1,
