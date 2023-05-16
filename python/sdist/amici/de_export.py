@@ -2899,6 +2899,8 @@ class DEExporter:
             if name in sparse_functions
             else self.model.sym(name).T
         )
+        if not len(symbols):
+            return
 
         # flatten multiobs
         if isinstance(next(iter(symbols), None), list):
