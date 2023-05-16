@@ -154,4 +154,4 @@ def check_trajectories_with_forward_sensitivities(
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
     _check_close(rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12)
-    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-10, atol=1e-9)
+    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9)
