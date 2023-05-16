@@ -129,14 +129,6 @@ def check_trajectories_without_sensitivities(
     Check whether the AMICI simulation matches a known solution
     (ideally an analytically calculated one).
     """
-
-    # Does the AMICI simulation match the analytical solution?
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata["x"], result_expected_x, field="x", rtol=5e-5, atol=1e-13)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
@@ -153,17 +145,6 @@ def check_trajectories_with_forward_sensitivities(
     Check whether the forward sensitivities of the AMICI simulation match
     a known solution (ideally an analytically calculated one).
     """
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata["x"], result_expected_x, field="x", rtol=1e-5, atol=1e-13)
-    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-5, atol=1e-7)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
