@@ -1,10 +1,10 @@
 """Tests for SBML events, including piecewise expressions."""
-
 import sys
 import tempfile
 from pathlib import Path
 
 import libsbml
+import numpy as np
 from amici import (
     AmiciModel,
     ExpData,
@@ -12,9 +12,8 @@ from amici import (
     SensitivityMethod,
     SensitivityOrder,
     import_model_module,
+    runAmiciSimulation,
 )
-from amici import numpy as np
-from amici import runAmiciSimulation
 from amici.gradient_check import _check_close
 from numpy.testing import assert_allclose
 

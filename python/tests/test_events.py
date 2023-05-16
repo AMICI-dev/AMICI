@@ -347,7 +347,6 @@ def model_definition_piecewise_plus_event_simple_case():
         - { 0,    otherwise
     """
     # Model components
-
     species = ["x_1"]
     initial_assignments = {"x_1": "x_1_0"}
     rate_rules = {"x_1": "piecewise(1, (alpha < time && time < beta), 0)"}
