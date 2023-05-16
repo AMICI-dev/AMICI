@@ -22,7 +22,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from amici.constants import SymbolId
-from amici.gradient_check import check_derivatives
+from fiddy import MethodId, get_derivative
+from fiddy.extensions.amici import reshape, run_amici_simulation_to_cached_functions
+from fiddy.success import Consistency
 from numpy.testing import assert_allclose
 
 
@@ -76,7 +78,7 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
             current_test_path,
             test_id,
             model_dir,
-            generate_sensitivity_code=test_id in sensitivity_check_cases,
+            generate_sensitivity_code=True,
         )
         settings = read_settings_file(current_test_path, test_id)
 
@@ -96,11 +98,50 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
         # record results
         write_result_file(simulated, test_id, result_path)
 
-        # check sensitivities for selected models
-        if epsilon := sensitivity_check_cases.get(test_id):
-            solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-            check_derivatives(model, solver, epsilon=epsilon)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        (
+            amici_function_f,
+            amici_derivative_f,
+            structures_f,
+        ) = run_amici_simulation_to_cached_functions(
+            amici_model=model,
+            amici_solver=solver,
+        )
+        rdata_f = amici.runAmiciSimulation(model, solver)
+
+        solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+        (
+            amici_function_a,
+            amici_derivative_a,
+            structures_a,
+        ) = run_amici_simulation_to_cached_functions(
+            amici_model=model,
+            amici_solver=solver,
+        )
+        rdata_a = amici.runAmiciSimulation(model, solver)
+
+        point = np.asarray(model.getParameters())
+
+        derivative = get_derivative(
+            # can use `_f` or `_a` here, should be no difference
+            function=amici_function_f,
+            point=point,
+            sizes=[1e-5, 1e-3, 1e-1],
+            direction_ids=model.getParameterIds(),
+            method_ids=[MethodId.FORWARD, MethodId.BACKWARD, MethodId.CENTRAL],
+            relative_sizes=True,
+            success_checker=Consistency(),
+        )
+
+        derivative_fd = reshape(derivative.value, structures_f["derivative"])["x"]
+        derivative_fsa = rdata_f.sx
+        derivative_asa = rdata_a.sllh  # currently None, define some objective?
+
+        # could alternatively use a `fiddy.DerivativeCheck` class
+        if not np.isclose(derivative_fd, derivative_fsa, rtol=1e-2).all():
+            raise ValueError("Gradients were not validated.")
 
     except amici.sbml_import.SBMLException as err:
         pytest.skip(str(err))
