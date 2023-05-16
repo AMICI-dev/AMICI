@@ -22,6 +22,7 @@ from util import (
             "piecewise_plus_event_trigger_depends_on_state", marks=skip_on_valgrind
         ),
         pytest.param("nested_events", marks=skip_on_valgrind),
+        pytest.param("event_state_dep_ddeltax_dtpx", marks=skip_on_valgrind),
     ]
 )
 def model(request):
@@ -69,6 +70,8 @@ def get_model_definition(model_name):
         return model_definition_events_plus_heavisides()
     if model_name == "nested_events":
         return model_definition_nested_events()
+    if model_name == "event_state_dep_ddeltax_dtpx":
+        return model_definition_event_state_dep_ddeltax_dtpx()
 
     raise NotImplementedError(f"Model with name {model_name} is not implemented.")
 
@@ -377,6 +380,81 @@ def model_definition_piecewise_plus_event_simple_case():
             x = gamma + t - t_event_1
         else:
             x = gamma + t_event_2 - t_event_1 + 2.5
+
+        return np.array((x,))
+
+    def sx_expected(t, parameters):
+        """get sx, w.r.t. parameters, via finite differences"""
+        sx = []
+        eps = 1e-6
+
+        for ip in parameters:
+            perturbed_params = deepcopy(parameters)
+            perturbed_params[ip] += eps
+            sx_p = np.array(x_expected(t, **perturbed_params))
+            perturbed_params[ip] -= 2 * eps
+            sx_m = np.array(x_expected(t, **perturbed_params))
+            sx.append((sx_p - sx_m) / (2 * eps))
+
+        return np.array(sx)
+
+    return (
+        initial_assignments,
+        parameters,
+        rate_rules,
+        species,
+        events,
+        timepoints,
+        x_expected,
+        sx_expected,
+    )
+
+
+def model_definition_event_state_dep_ddeltax_dtpx():
+    """Test model with state-dependent partial derivatives of update functions wrt parameters, time, and states."""
+    # Model components
+    species = ["x_1"]
+    initial_assignments = {"x_1": "x_1_0"}
+    rate_rules = {"x_1": "1"}
+    parameters = {
+        "alpha": 1.5,
+        "beta": 2.5,
+        "gamma": 3.5,
+        "delta": 5.5,
+        "x_1_0": 1,
+    }
+    timepoints = np.linspace(0.0, 5.0, 100)
+    events = {
+        # state-dependent ddeltaxdt
+        "event_1": {"trigger": "time > alpha", "target": "x_1", "assignment": "x_1 * time"},
+        # state-dependent ddeltaxdp
+        "event_2": {
+            "trigger": "time > beta",
+            "target": "x_1",
+            "assignment": "x_1 * delta",
+        },
+        # state-dependent ddeltaxdx
+        "event_3": {
+            "trigger": "time > gamma",
+            "target": "x_1",
+            "assignment": "2 * x_1 * x_1",
+        },
+    }
+
+    # Analytical solution
+    def x_expected(t, x_1_0, alpha, beta, gamma, delta):
+        if t < alpha:
+            # before first event triggered
+            x = x_1_0 + t
+        elif t < beta:
+            # after first event triggered
+            x = (x_1_0 + alpha) * alpha + (t - alpha)
+        elif t < gamma:
+            # after second event triggered
+            x = ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (t - beta)
+        else:
+            # after third event triggered
+            x = (((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (gamma - beta)) ** 2 * 2 + (t - gamma)
 
         return np.array((x,))
 
