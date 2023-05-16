@@ -1,14 +1,13 @@
 """Various helper functions for working with PEtab problems."""
-import petab
 import re
+from typing import Dict, Tuple, Union
+
 import libsbml
 import pandas as pd
-
-from typing import Union, Dict, Tuple
-
-from petab.models import MODEL_TYPE_SBML, MODEL_TYPE_PYSB
-from petab.C import SIMULATION_CONDITION_ID, PREEQUILIBRATION_CONDITION_ID
+import petab
+from petab.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 from petab.mapping import resolve_mapping
+from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 # ID of model parameter that is to be added to SBML model to indicate
 #  preequilibration
@@ -28,7 +27,9 @@ def get_states_in_condition_table(
         raise NotImplementedError()
 
     species_check_funs = {
-        MODEL_TYPE_SBML: lambda x: _element_is_sbml_state(petab_problem.sbml_model, x),
+        MODEL_TYPE_SBML: lambda x: _element_is_sbml_state(
+            petab_problem.sbml_model, x
+        ),
         MODEL_TYPE_PYSB: lambda x: _element_is_pysb_pattern(
             petab_problem.model.model, x
         ),
@@ -37,7 +38,9 @@ def get_states_in_condition_table(
         resolve_mapping(petab_problem.mapping_df, col): (None, None)
         if condition is None
         else (
-            petab_problem.condition_df.loc[condition[SIMULATION_CONDITION_ID], col],
+            petab_problem.condition_df.loc[
+                condition[SIMULATION_CONDITION_ID], col
+            ],
             petab_problem.condition_df.loc[
                 condition[PREEQUILIBRATION_CONDITION_ID], col
             ]
@@ -55,7 +58,16 @@ def get_states_in_condition_table(
             return states
         import pysb.pattern
 
-        spm = pysb.pattern.SpeciesPatternMatcher(model=petab_problem.model.model)
+        try:
+            spm = pysb.pattern.SpeciesPatternMatcher(
+                model=petab_problem.model.model
+            )
+        except NotImplementedError as e:
+            raise NotImplementedError(
+                "Requires https://github.com/pysb/pysb/pull/570. "
+                "To use this functionality, update pysb via "
+                "`pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching`"
+            )
 
         # expose model components as variables so we can evaluate patterns
         for c in petab_problem.model.model.components:
