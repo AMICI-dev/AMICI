@@ -164,7 +164,7 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     Check whether adjoint sensitivities match forward sensitivities and finite
     differences.
     """
-    # First compute a dummy experimental data to use adjoints
+    # First compute dummy experimental data to use adjoints
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     rdata = runAmiciSimulation(amici_model, solver=solver)
@@ -212,6 +212,24 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
 
     # test less strict in terms of absolute error, as the gradient are
     # typically in the order of 1e3
-    assert_allclose(rdata_fsa["sllh"], rdata_asa["sllh"], rtol=1e-5, atol=1e-3)
-    assert_allclose(sllh_fd, rdata_fsa["sllh"], rtol=1e-5, atol=1e-3)
-    assert_allclose(sllh_fd, rdata_asa["sllh"], rtol=1e-5, atol=1e-3)
+    assert_allclose(
+        rdata_fsa["sllh"],
+        rdata_asa["sllh"],
+        rtol=1e-5,
+        atol=1e-3,
+        err_msg="Adjoint and forward sensitivities do not match.",
+    )
+    assert_allclose(
+        sllh_fd,
+        rdata_fsa["sllh"],
+        rtol=1e-5,
+        atol=1e-3,
+        err_msg="Finite differences and forward sensitivities do not match.",
+    )
+    assert_allclose(
+        sllh_fd,
+        rdata_asa["sllh"],
+        rtol=1e-5,
+        atol=1e-3,
+        err_msg="Finite differences and adjoint sensitivities do not match.",
+    )
