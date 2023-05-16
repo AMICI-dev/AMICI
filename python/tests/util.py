@@ -193,7 +193,7 @@ def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     # Also test against finite differences
     parameters = amici_model.getUnscaledParameters()
     sllh_fd = []
-    eps = 1e-4
+    eps = 1e-5
     for i_par, par in enumerate(parameters):
         solver = amici_model.getSolver()
         solver.setSensitivityOrder(SensitivityOrder.none)
