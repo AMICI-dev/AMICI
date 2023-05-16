@@ -5,7 +5,7 @@
 classdef amievent
     % AMIEVENT defines events which later on will be transformed into appropriate
     % C code
-    
+
     properties ( GetAccess = 'public', SetAccess = 'private' )
         % the trigger function activates the event on every zero crossing @type symbolic
         trigger = sym.empty();
@@ -17,7 +17,7 @@ classdef amievent
         % to speed up symbolic computations
         hflag = logical.empty();
     end
-    
+
     methods
         function AE = amievent(trigger,bolus,z)
             % amievent constructs an amievent object from the provided input.
@@ -46,7 +46,7 @@ classdef amievent
             if(numel(AE.trigger)>1)
                 error('The trigger function must be scalar.')
             end
-            
+
             if(~isa(bolus,'sym'))
                 if(isa(bolus,'double'))
                     AE.bolus = sym(bolus(:));
@@ -56,7 +56,7 @@ classdef amievent
             else
                 AE.bolus = bolus;
             end
-            
+
             if(~isa(z,'sym'))
                 if(isa(z,'double'))
                     if(~isempty(z))
@@ -67,13 +67,12 @@ classdef amievent
                     end
                 else
                     error('output function must be a symbolic expression')
-                end      
+                end
             else
                 AE.z = z;
             end
         end
-        
+
         this = setHflag(this,hflag);
     end
 end
-

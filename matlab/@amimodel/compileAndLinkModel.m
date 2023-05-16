@@ -382,5 +382,3 @@ function versionstring = getCompilerVersionString()
     str = regexprep(str,'[\s\.\-]','_');
     versionstring = genvarname(str); % fix everything else we have missed
 end
-
-

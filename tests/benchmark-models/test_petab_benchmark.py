@@ -9,38 +9,38 @@ import numpy as np
 import pandas as pd
 import petab
 import pytest
-
-from fiddy import get_derivative, MethodId
-from fiddy.success import Consistency
+from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
-from fiddy.extensions.amici import (
-    simulate_petab_to_cached_functions,
-)
-
+from fiddy.extensions.amici import simulate_petab_to_cached_functions
+from fiddy.success import Consistency
 
 # Absolute and relative tolerances for finite difference gradient checks.
 ATOL: float = 1e-3
 RTOL: float = 1e-2
 
-benchmark_path = Path(__file__).parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
+benchmark_path = (
+    Path(__file__).parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
+)
 # reuse compiled models from test_benchmark_collection.sh
 benchmark_outdir = Path(__file__).parent.parent.parent / "test_bmc"
 models = [
     str(petab_path.stem)
-    for petab_path in benchmark_path.glob("*") if petab_path.is_dir()
-    if str(petab_path.stem) not in (
+    for petab_path in benchmark_path.glob("*")
+    if petab_path.is_dir()
+    if str(petab_path.stem)
+    not in (
         # excluded due to excessive runtime
-        'Bachmann_MSB2011',
-        'Chen_MSB2009',
-        'Froehlich_CellSystems2018',
-        'Raimundez_PCB2020',
-        'Lucarelli_CellSystems2018',
-        'Isensee_JCB2018',
-        'Beer_MolBioSystems2014',
-        'Alkan_SciSignal2018',
+        "Bachmann_MSB2011",
+        "Chen_MSB2009",
+        "Froehlich_CellSystems2018",
+        "Raimundez_PCB2020",
+        "Lucarelli_CellSystems2018",
+        "Isensee_JCB2018",
+        "Beer_MolBioSystems2014",
+        "Alkan_SciSignal2018",
         # excluded due to excessive numerical failures
-        'Crauste_CellSystems2017',
-        'Fujita_SciSignal2010',
+        "Crauste_CellSystems2017",
+        "Fujita_SciSignal2010",
     )
 ]
 
@@ -54,13 +54,13 @@ if debug:
 @pytest.mark.parametrize("model", models)
 def test_benchmark_gradient(model, scale):
     if not scale and model in (
-        'Smith_BMCSystBiol2013',
-        'Brannmark_JBC2010',
-        'Elowitz_Nature2000',
-        'Borghans_BiophysChem1997',
-        'Sneyd_PNAS2002',
-        'Bertozzi_PNAS2020',
-        'Okuonghae_ChaosSolitonsFractals2020',
+        "Smith_BMCSystBiol2013",
+        "Brannmark_JBC2010",
+        "Elowitz_Nature2000",
+        "Borghans_BiophysChem1997",
+        "Sneyd_PNAS2002",
+        "Bertozzi_PNAS2020",
+        "Okuonghae_ChaosSolitonsFractals2020",
     ):
         # not really worth the effort trying to fix these cases if they
         # only fail on linear scale
@@ -82,22 +82,20 @@ def test_benchmark_gradient(model, scale):
     amici_solver.setAbsoluteTolerance(1e-12)
     amici_solver.setRelativeTolerance(1e-12)
     if model in (
-        'Smith_BMCSystBiol2013',
-        'Oliveira_NatCommun2021',
+        "Smith_BMCSystBiol2013",
+        "Oliveira_NatCommun2021",
     ):
         amici_solver.setAbsoluteTolerance(1e-10)
         amici_solver.setRelativeTolerance(1e-10)
-    elif model in (
-        'Okuonghae_ChaosSolitonsFractals2020',
-    ):
+    elif model in ("Okuonghae_ChaosSolitonsFractals2020",):
         amici_solver.setAbsoluteTolerance(1e-14)
         amici_solver.setRelativeTolerance(1e-14)
     amici_solver.setMaxSteps(int(1e5))
 
-    if model in (
-        'Brannmark_JBC2010',
-    ):
-        amici_model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.integrationOnly)
+    if model in ("Brannmark_JBC2010",):
+        amici_model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.integrationOnly
+        )
 
     amici_function, amici_derivative = simulate_petab_to_cached_functions(
         petab_problem=petab_problem,
@@ -113,9 +111,13 @@ def test_benchmark_gradient(model, scale):
 
     np.random.seed(0)
     if scale:
-        point = np.asarray(list(
-            petab_problem.scale_parameters(dict(parameter_df_free.nominalValue)).values()
-        ))
+        point = np.asarray(
+            list(
+                petab_problem.scale_parameters(
+                    dict(parameter_df_free.nominalValue)
+                ).values()
+            )
+        )
         point_noise = np.random.randn(len(point)) * noise_level
     else:
         point = parameter_df_free.nominalValue.values
@@ -131,9 +133,7 @@ def test_benchmark_gradient(model, scale):
         1e-4,
         1e-5,
     ]
-    if model in (
-        'Okuonghae_ChaosSolitonsFractals2020',
-    ):
+    if model in ("Okuonghae_ChaosSolitonsFractals2020",):
         sizes.insert(0, 0.2)
 
     derivative = get_derivative(
@@ -156,18 +156,22 @@ def test_benchmark_gradient(model, scale):
         success = check(rtol=RTOL, atol=ATOL)
 
     if debug:
-        df = pd.DataFrame([
-            {
-                ('fd', r.metadata['size_absolute'], str(r.method_id)): r.value
-                for c in d.computers
-                for r in c.results
-            } for d in derivative.directional_derivatives
-        ], index=parameter_ids)
-        df[('fd', 'full', '')] = derivative.series.values
-        df[('amici', '', '')] = expected_derivative
+        df = pd.DataFrame(
+            [
+                {
+                    ("fd", r.metadata["size_absolute"], str(r.method_id)): r.value
+                    for c in d.computers
+                    for r in c.results
+                }
+                for d in derivative.directional_derivatives
+            ],
+            index=parameter_ids,
+        )
+        df[("fd", "full", "")] = derivative.series.values
+        df[("amici", "", "")] = expected_derivative
 
         file_name = f"{model}_scale={scale}.tsv"
-        df.to_csv(debug_path / file_name, sep='\t')
+        df.to_csv(debug_path / file_name, sep="\t")
 
     # The gradients for all parameters are correct.
     assert success, derivative.df

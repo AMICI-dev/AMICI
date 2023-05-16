@@ -27,8 +27,9 @@ class BackwardProblem {
      * @param fwd pointer to corresponding forward problem
      * @param posteq pointer to postequilibration problem, can be nullptr
      */
-    explicit BackwardProblem(const ForwardProblem &fwd,
-                             const SteadystateProblem *posteq);
+    explicit BackwardProblem(
+        ForwardProblem const& fwd, SteadystateProblem const* posteq
+    );
 
     /**
      * @brief Solve the backward problem.
@@ -43,51 +44,39 @@ class BackwardProblem {
      * @brief Accessor for current time t
      * @return t
      */
-    realtype gett() const {
-        return t_;
-    }
+    realtype gett() const { return t_; }
 
     /**
      * @brief Accessor for which
      * @return which
      */
-    int getwhich() const {
-        return which;
-    }
+    int getwhich() const { return which; }
 
     /**
      * @brief Accessor for pointer to which
      * @return which
      */
-    int *getwhichptr() {
-        return &which;
-    }
+    int* getwhichptr() { return &which; }
 
     /**
      * @brief Accessor for dJydx
      * @return dJydx
      */
-    std::vector<realtype> const& getdJydx() const {
-        return dJydx_;
-    }
+    std::vector<realtype> const& getdJydx() const { return dJydx_; }
 
     /**
      * @brief Accessor for xB
      * @return xB
      */
-    AmiVector const& getAdjointState() const {
-        return xB_;
-    }
+    AmiVector const& getAdjointState() const { return xB_; }
 
     /**
      * @brief Accessor for xQB
      * @return xQB
      */
-    AmiVector const& getAdjointQuadrature() const {
-        return xQB_;
-    }
+    AmiVector const& getAdjointQuadrature() const { return xQB_; }
 
-private:
+  private:
     /**
      * @brief Execute everything necessary for the handling of events
      * for the backward problem
@@ -102,7 +91,6 @@ private:
      */
     void handleDataPointB(int it);
 
-
     /**
      * @brief Compute the next timepoint to integrate to.
      *
@@ -114,9 +102,9 @@ private:
      */
     realtype getTnext(int it);
 
-    Model *model_;
-    Solver *solver_;
-    const ExpData *edata_;
+    Model* model_;
+    Solver* solver_;
+    ExpData const* edata_;
 
     /** current time */
     realtype t_;

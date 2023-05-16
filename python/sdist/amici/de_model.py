@@ -1,24 +1,36 @@
 """Objects for AMICI's internal differential equation model representation"""
 import abc
+import numbers
+from typing import Dict, Optional, Set, SupportsFloat, Union
 
 import sympy as sp
-import numbers
 
-from typing import (
-    Optional, Union, Dict, SupportsFloat, Set
+from .import_utils import (
+    RESERVED_SYMBOLS,
+    ObservableTransformation,
+    cast_to_sym,
+    generate_measurement_symbol,
+    generate_regularization_symbol,
 )
 
-from .import_utils import ObservableTransformation, \
-    generate_measurement_symbol, generate_regularization_symbol,\
-    RESERVED_SYMBOLS
-from .import_utils import cast_to_sym
-
-
 __all__ = [
-    'ConservationLaw', 'Constant', 'Event', 'Expression', 'LogLikelihoodY',
-    'LogLikelihoodZ', 'LogLikelihoodRZ', 'ModelQuantity', 'Observable',
-    'Parameter', 'SigmaY', 'SigmaZ', 'DifferentialState', 'EventObservable',
-    'AlgebraicState', 'AlgebraicEquation', 'State'
+    "ConservationLaw",
+    "Constant",
+    "Event",
+    "Expression",
+    "LogLikelihoodY",
+    "LogLikelihoodZ",
+    "LogLikelihoodRZ",
+    "ModelQuantity",
+    "Observable",
+    "Parameter",
+    "SigmaY",
+    "SigmaZ",
+    "DifferentialState",
+    "EventObservable",
+    "AlgebraicState",
+    "AlgebraicEquation",
+    "State",
 ]
 
 
@@ -26,10 +38,13 @@ class ModelQuantity:
     """
     Base class for model components
     """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: Union[SupportsFloat, numbers.Number, sp.Expr]):
+
+    def __init__(
+        self,
+        identifier: sp.Symbol,
+        name: str,
+        value: Union[SupportsFloat, numbers.Number, sp.Expr],
+    ):
         """
         Create a new ModelQuantity instance.
 
@@ -44,22 +59,24 @@ class ModelQuantity:
         """
 
         if not isinstance(identifier, sp.Symbol):
-            raise TypeError(f'identifier must be sympy.Symbol, was '
-                            f'{type(identifier)}')
+            raise TypeError(
+                f"identifier must be sympy.Symbol, was " f"{type(identifier)}"
+            )
 
-        if str(identifier) in RESERVED_SYMBOLS or \
-                (hasattr(identifier, 'name') and
-                 identifier.name in RESERVED_SYMBOLS):
-            raise ValueError(f'Cannot add model quantity with name "{name}", '
-                             f'please rename.')
+        if str(identifier) in RESERVED_SYMBOLS or (
+            hasattr(identifier, "name") and identifier.name in RESERVED_SYMBOLS
+        ):
+            raise ValueError(
+                f'Cannot add model quantity with name "{name}", ' f"please rename."
+            )
         self._identifier: sp.Symbol = identifier
 
         if not isinstance(name, str):
-            raise TypeError(f'name must be str, was {type(name)}')
+            raise TypeError(f"name must be str, was {type(name)}")
 
         self._name: str = name
 
-        self._value: sp.Expr = cast_to_sym(value, 'value')
+        self._value: sp.Expr = cast_to_sym(value, "value")
 
     def __repr__(self) -> str:
         """
@@ -104,7 +121,7 @@ class ModelQuantity:
         :return:
             value of the ModelQuantity
         """
-        self._value = cast_to_sym(val, 'value')
+        self._value = cast_to_sym(val, "value")
 
 
 class ConservationLaw(ModelQuantity):
@@ -113,12 +130,15 @@ class ConservationLaw(ModelQuantity):
     (weighted) sum of states
 
     """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr,
-                 coefficients: Dict[sp.Symbol, sp.Expr],
-                 state_id: sp.Symbol):
+
+    def __init__(
+        self,
+        identifier: sp.Symbol,
+        name: str,
+        value: sp.Expr,
+        coefficients: Dict[sp.Symbol, sp.Expr],
+        state_id: sp.Symbol,
+    ):
         """
         Create a new ConservationLaw instance.
 
@@ -170,6 +190,7 @@ class AlgebraicEquation(ModelQuantity):
     """
     An AlgebraicEquation defines an algebraic equation.
     """
+
     def __init__(self, identifier: str, value: sp.Expr):
         """
         Create a new AlgebraicEquation instance.
@@ -193,6 +214,7 @@ class State(ModelQuantity):
     """
     Base class for differential and algebraic model states
     """
+
     _conservation_law: Optional[ConservationLaw] = None
 
     def get_x_rdata(self):
@@ -235,10 +257,7 @@ class AlgebraicState(State):
     An AlgebraicState defines an entity that is algebraically determined
     """
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 init: sp.Expr):
+    def __init__(self, identifier: sp.Symbol, name: str, init: sp.Expr):
         """
         Create a new AlgebraicState instance.
 
@@ -281,11 +300,8 @@ class DifferentialState(State):
         algebraic formula that defines the temporal derivative of this state
 
     """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 init: sp.Expr,
-                 dt: sp.Expr):
+
+    def __init__(self, identifier: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
         by ``dt``
@@ -303,7 +319,7 @@ class DifferentialState(State):
             time derivative
         """
         super(DifferentialState, self).__init__(identifier, name, init)
-        self._dt = cast_to_sym(dt, 'dt')
+        self._dt = cast_to_sym(dt, "dt")
         self._conservation_law: Union[ConservationLaw, None] = None
 
     def set_conservation_law(self, law: ConservationLaw) -> None:
@@ -318,20 +334,20 @@ class DifferentialState(State):
             constant over time
         """
         if not isinstance(law, ConservationLaw):
-            raise TypeError(f'conservation law must have type ConservationLaw'
-                            f', was {type(law)}')
+            raise TypeError(
+                f"conservation law must have type ConservationLaw" f", was {type(law)}"
+            )
 
         self._conservation_law = law
 
-    def set_dt(self,
-               dt: sp.Expr) -> None:
+    def set_dt(self, dt: sp.Expr) -> None:
         """
         Sets the time derivative
 
         :param dt:
             time derivative
         """
-        self._dt = cast_to_sym(dt, 'dt')
+        self._dt = cast_to_sym(dt, "dt")
 
     def get_dt(self) -> sp.Expr:
         """
@@ -377,13 +393,14 @@ class Observable(ModelQuantity):
     _measurement_symbol: Union[sp.Symbol, None] = None
 
     def __init__(
-            self,
-            identifier: sp.Symbol,
-            name: str,
-            value: sp.Expr,
-            measurement_symbol: Optional[sp.Symbol] = None,
-            transformation: Optional[
-                ObservableTransformation] = ObservableTransformation.LIN
+        self,
+        identifier: sp.Symbol,
+        name: str,
+        value: sp.Expr,
+        measurement_symbol: Optional[sp.Symbol] = None,
+        transformation: Optional[
+            ObservableTransformation
+        ] = ObservableTransformation.LIN,
     ):
         """
         Create a new Observable instance.
@@ -408,17 +425,13 @@ class Observable(ModelQuantity):
 
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
-            self._measurement_symbol = generate_measurement_symbol(
-                self.get_id()
-            )
+            self._measurement_symbol = generate_measurement_symbol(self.get_id())
 
         return self._measurement_symbol
 
     def get_regularization_symbol(self) -> sp.Symbol:
         if self._regularization_symbol is None:
-            self._regularization_symbol = generate_regularization_symbol(
-                self.get_id()
-            )
+            self._regularization_symbol = generate_regularization_symbol(self.get_id())
 
         return self._regularization_symbol
 
@@ -432,13 +445,15 @@ class EventObservable(Observable):
         symbolic event identifier
     """
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr,
-                 event: sp.Symbol,
-                 measurement_symbol: Optional[sp.Symbol] = None,
-                 transformation: Optional[ObservableTransformation] = 'lin',):
+    def __init__(
+        self,
+        identifier: sp.Symbol,
+        name: str,
+        value: sp.Expr,
+        event: sp.Symbol,
+        measurement_symbol: Optional[sp.Symbol] = None,
+        transformation: Optional[ObservableTransformation] = "lin",
+    ):
         """
         Create a new EventObservable instance.
 
@@ -457,9 +472,9 @@ class EventObservable(Observable):
         :param event:
             Symbolic identifier of the corresponding event.
         """
-        super(EventObservable, self).__init__(identifier, name, value,
-                                              measurement_symbol,
-                                              transformation)
+        super(EventObservable, self).__init__(
+            identifier, name, value, measurement_symbol, transformation
+        )
         self._event: sp.Symbol = event
 
     def get_event(self) -> sp.Symbol:
@@ -477,10 +492,8 @@ class Sigma(ModelQuantity):
     and measurements when computing residuals or objective functions,
     abbreviated by ``sigma{y,z}``.
     """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr):
+
+    def __init__(self, identifier: sp.Symbol, name: str, value: sp.Expr):
         """
         Create a new Standard Deviation instance.
 
@@ -520,10 +533,8 @@ class Expression(ModelQuantity):
     shorter model compilation times, but may also reduce model simulation time.
     Abbreviated by ``w``.
     """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr):
+
+    def __init__(self, identifier: sp.Symbol, name: str, value: sp.Expr):
         """
         Create a new Expression instance.
 
@@ -545,10 +556,7 @@ class Parameter(ModelQuantity):
     sensitivities may be computed, abbreviated by ``p``.
     """
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: numbers.Number):
+    def __init__(self, identifier: sp.Symbol, name: str, value: numbers.Number):
         """
         Create a new Expression instance.
 
@@ -571,10 +579,7 @@ class Constant(ModelQuantity):
     sensitivities cannot be computed, abbreviated by ``k``.
     """
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: numbers.Number):
+    def __init__(self, identifier: sp.Symbol, name: str, value: numbers.Number):
         """
         Create a new Expression instance.
 
@@ -598,10 +603,7 @@ class LogLikelihood(ModelQuantity):
     instances evaluated at all timepoints, abbreviated by ``Jy``.
     """
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr):
+    def __init__(self, identifier: sp.Symbol, name: str, value: sp.Expr):
         """
         Create a new Expression instance.
 
@@ -649,12 +651,14 @@ class Event(ModelQuantity):
     themselves, causing a reinitialization of the solver.
     """
 
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Expr,
-                 state_update: Union[sp.Expr, None],
-                 initial_value: Optional[bool] = True):
+    def __init__(
+        self,
+        identifier: sp.Symbol,
+        name: str,
+        value: sp.Expr,
+        state_update: Union[sp.Expr, None],
+        initial_value: Optional[bool] = True,
+    ):
         """
         Create a new Event instance.
 
@@ -694,5 +698,6 @@ class Event(ModelQuantity):
         Check equality of events at the level of trigger/root functions, as we
         need to collect unique root functions for ``roots.cpp``
         """
-        return self.get_val() == other.get_val() and \
-            (self.get_initial_value() == other.get_initial_value())
+        return self.get_val() == other.get_val() and (
+            self.get_initial_value() == other.get_initial_value()
+        )

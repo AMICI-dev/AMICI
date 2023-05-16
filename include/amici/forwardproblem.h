@@ -2,14 +2,14 @@
 #define AMICI_FORWARDPROBLEM_H
 
 #include "amici/defines.h"
-#include "amici/vector.h"
-#include "amici/model.h"
 #include "amici/misc.h"
+#include "amici/model.h"
+#include "amici/vector.h"
 #include <amici/amici.h>
 
+#include <memory>
 #include <sundials/sundials_direct.h>
 #include <vector>
-#include <memory>
 
 namespace amici {
 
@@ -17,7 +17,6 @@ class ExpData;
 class Solver;
 class SteadystateProblem;
 class FinalStateStorer;
-
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
@@ -30,8 +29,8 @@ class ForwardProblem {
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
-     * @param preeq preequilibration with which to initialize the forward problem,
-     * pass nullptr for no initialization
+     * @param preeq preequilibration with which to initialize the forward
+     * problem, pass nullptr for no initialization
      */
     ForwardProblem(
         ExpData const* edata, Model* model, Solver* solver,
@@ -46,12 +45,14 @@ class ForwardProblem {
     /**
      * @brief Solve the forward problem.
      *
-     * If forward sensitivities are enabled this will also compute sensitivities.
+     * If forward sensitivities are enabled this will also compute
+     * sensitivities.
      */
     void workForwardProblem();
 
     /**
-     * @brief computes adjoint updates dJydx according to provided model and expdata
+     * @brief computes adjoint updates dJydx according to provided model and
+     * expdata
      * @param model Model instance
      * @param edata experimental data
      */
@@ -61,33 +62,25 @@ class ForwardProblem {
      * @brief Accessor for t
      * @return t
      */
-    realtype getTime() const {
-        return t_;
-    }
+    realtype getTime() const { return t_; }
 
     /**
      * @brief Accessor for x
      * @return x
      */
-    AmiVector const& getState() const {
-        return x_;
-    }
+    AmiVector const& getState() const { return x_; }
 
     /**
      * @brief Accessor for dx
      * @return dx
      */
-    AmiVector const& getStateDerivative() const {
-        return dx_;
-    }
+    AmiVector const& getStateDerivative() const { return dx_; }
 
     /**
      * @brief Accessor for sx
      * @return sx
      */
-    AmiVectorArray const& getStateSensitivity() const {
-        return sx_;
-    }
+    AmiVectorArray const& getStateSensitivity() const { return sx_; }
 
     /**
      * @brief Accessor for x_disc
@@ -125,17 +118,13 @@ class ForwardProblem {
      * @brief Accessor for nroots
      * @return nroots
      */
-    std::vector<int> const& getNumberOfRoots() const {
-        return nroots_;
-    }
+    std::vector<int> const& getNumberOfRoots() const { return nroots_; }
 
     /**
      * @brief Accessor for discs
      * @return discs
      */
-    std::vector<realtype> const& getDiscontinuities() const {
-        return discs_;
-    }
+    std::vector<realtype> const& getDiscontinuities() const { return discs_; }
 
     /**
      * @brief Accessor for rootidx
@@ -149,65 +138,49 @@ class ForwardProblem {
      * @brief Accessor for dJydx
      * @return dJydx
      */
-   std::vector<realtype> const& getDJydx() const {
-        return dJydx_;
-    }
+    std::vector<realtype> const& getDJydx() const { return dJydx_; }
 
     /**
      * @brief Accessor for dJzdx
      * @return dJzdx
      */
-    std::vector<realtype> const& getDJzdx() const {
-        return dJzdx_;
-    }
+    std::vector<realtype> const& getDJzdx() const { return dJzdx_; }
 
     /**
      * @brief Accessor for pointer to x
      * @return &x
      */
-    AmiVector *getStatePointer() {
-        return &x_;
-    }
+    AmiVector* getStatePointer() { return &x_; }
 
     /**
      * @brief Accessor for pointer to dx
      * @return &dx
      */
-    AmiVector *getStateDerivativePointer() {
-        return &dx_;
-    }
+    AmiVector* getStateDerivativePointer() { return &dx_; }
 
     /**
      * @brief accessor for pointer to sx
      * @return &sx
      */
-    AmiVectorArray *getStateSensitivityPointer() {
-        return &sx_;
-    }
+    AmiVectorArray* getStateSensitivityPointer() { return &sx_; }
 
     /**
      * @brief Accessor for pointer to sdx
      * @return &sdx
      */
-    AmiVectorArray *getStateDerivativeSensitivityPointer() {
-        return &sdx_;
-    }
+    AmiVectorArray* getStateDerivativeSensitivityPointer() { return &sdx_; }
 
     /**
      * @brief Accessor for it
      * @return it
      */
-    int getCurrentTimeIteration() const {
-        return it_;
-    }
+    int getCurrentTimeIteration() const { return it_; }
 
     /**
      * @brief Returns final time point for which simulations are available
      * @return time point
      */
-    realtype getFinalTime() const {
-        return final_state_.t;
-    }
+    realtype getFinalTime() const { return final_state_.t; }
 
     /**
      * @brief Returns maximal event index for which simulations are available
@@ -221,9 +194,7 @@ class ForwardProblem {
      * @brief Returns maximal event index for which the timepoint is available
      * @return index
      */
-    int getRootCounter() const {
-        return gsl::narrow<int>(discs_.size()) - 1;
-    }
+    int getRootCounter() const { return gsl::narrow<int>(discs_.size()) - 1; }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
@@ -266,16 +237,15 @@ class ForwardProblem {
     };
 
     /** pointer to model instance */
-    Model *model;
+    Model* model;
 
     /** pointer to solver instance */
-    Solver *solver;
+    Solver* solver;
 
     /** pointer to experimental data instance */
     ExpData const* edata;
 
   private:
-
     void handlePresimulation();
 
     /**
@@ -286,8 +256,7 @@ class ForwardProblem {
      * @param initial_event initial event flag
      */
 
-    void handleEvent(realtype *tlastroot, bool seflag,
-                     bool initial_event);
+    void handleEvent(realtype* tlastroot, bool seflag, bool initial_event);
 
     /**
      * @brief Extract output information for events
@@ -317,10 +286,10 @@ class ForwardProblem {
      * @param nmaxevent maximal number of events
      */
     bool checkEventsToFill(int nmaxevent) const {
-        return std::any_of(nroots_.cbegin(), nroots_.cend(),
-                           [nmaxevent](int curNRoots) {
-                return curNRoots < nmaxevent;
-        });
+        return std::any_of(
+            nroots_.cbegin(), nroots_.cend(),
+            [nmaxevent](int curNRoots) { return curNRoots < nmaxevent; }
+        );
     };
 
     /**
@@ -441,14 +410,14 @@ class ForwardProblem {
     std::vector<realtype> stau_;
 
     /** storage for last found root */
-    realtype tlastroot_ {0.0};
+    realtype tlastroot_{0.0};
 
-    /** flag to indicate whether solver was preeinitialized via preequilibration */
-    bool preequilibrated_ {false};
+    /** flag to indicate whether solver was preeinitialized via preequilibration
+     */
+    bool preequilibrated_{false};
 
     /** current iteration number for time index */
     int it_;
-
 };
 
 /**
@@ -460,8 +429,8 @@ class FinalStateStorer : public ContextManager {
      * @brief constructor, attaches problem pointer
      * @param fwd problem from which the simulation state is to be stored
      */
-    explicit FinalStateStorer(ForwardProblem *fwd) : fwd_(fwd) {
-    }
+    explicit FinalStateStorer(ForwardProblem* fwd)
+        : fwd_(fwd) {}
 
     FinalStateStorer& operator=(FinalStateStorer const& other) = delete;
 
@@ -469,11 +438,12 @@ class FinalStateStorer : public ContextManager {
      * @brief destructor, stores simulation state
      */
     ~FinalStateStorer() {
-        if(fwd_)
+        if (fwd_)
             fwd_->final_state_ = fwd_->getSimulationState();
     }
+
   private:
-    ForwardProblem *fwd_;
+    ForwardProblem* fwd_;
 };
 
 } // namespace amici

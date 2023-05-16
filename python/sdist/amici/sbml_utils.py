@@ -7,23 +7,27 @@ This module provides helper functions for working with SBML.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 import sympy as sp
+
 if TYPE_CHECKING:
-    from typing import Optional, Union, Tuple, Dict, Any
+    from typing import Any, Dict, Optional, Tuple, Union
+
     SbmlID = Union[str, sp.Symbol]
 
-from .import_utils import (
-    sbml_time_symbol,
-    amici_time_symbol,
-    _parse_special_functions,
-    _check_unsupported_functions,
-    SBMLException
-)
 import xml.dom.minidom
-import libsbml
 
-from sympy.printing.mathml import MathMLContentPrinter
+import libsbml
 from sympy.core.parameters import evaluate
+from sympy.printing.mathml import MathMLContentPrinter
+
+from .import_utils import (
+    SBMLException,
+    _check_unsupported_functions,
+    _parse_special_functions,
+    amici_time_symbol,
+    sbml_time_symbol,
+)
 
 
 class SbmlInvalidIdSyntax(SBMLException):
@@ -46,8 +50,9 @@ class SbmlAnnotationError(SBMLException):
     pass
 
 
-def create_sbml_model(model_id: str, level: int = 2, version: int = 5) \
-        -> Tuple[libsbml.SBMLDocument, libsbml.Model]:
+def create_sbml_model(
+    model_id: str, level: int = 2, version: int = 5
+) -> Tuple[libsbml.SBMLDocument, libsbml.Model]:
     """Helper for creating an empty SBML model.
 
     :param model_id:
@@ -96,12 +101,12 @@ def add_compartment(
     #      if other types of objects (e.g., parameter) have the same ID
     if model.getCompartment(compartment_id):
         raise SbmlDuplicateComponentIdError(
-            f'A compartment with ID {compartment_id} has already been defined'
+            f"A compartment with ID {compartment_id} has already been defined"
         )
 
     cmp = model.createCompartment()
     if cmp.setId(compartment_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{compartment_id} is not a valid SBML ID')
+        raise SbmlInvalidIdSyntax(f"{compartment_id} is not a valid SBML ID")
     cmp.setSize(size)
 
     return cmp
@@ -144,25 +149,23 @@ def add_species(
     # Check whether an element with the same ID already exists
     if model.getElementBySId(species_id):
         raise SbmlDuplicateComponentIdError(
-            f'An element with ID {species_id} has already been defined.'
+            f"An element with ID {species_id} has already been defined."
         )
 
     if compartment_id is None:
         compartments = model.getListOfCompartments()
         if len(compartments) != 1:
             raise ValueError(
-                'Compartment auto-selection is possible '
-                'only if there is one and only one compartment.'
+                "Compartment auto-selection is possible "
+                "only if there is one and only one compartment."
             )
         compartment_id = compartments[0].getId()
     elif not model.getCompartment(compartment_id):
-        raise SbmlMissingComponentIdError(
-            f'No compartment with ID {compartment_id}.'
-        )
+        raise SbmlMissingComponentIdError(f"No compartment with ID {compartment_id}.")
 
     sp = model.createSpecies()
     if sp.setIdAttribute(species_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{species_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{species_id} is not a valid SBML ID.")
     sp.setCompartment(compartment_id)
     sp.setInitialAmount(float(initial_amount))
     if units is not None:
@@ -212,12 +215,12 @@ def add_parameter(
     # Check whether an element with the same ID already exists
     if model.getElementBySId(parameter_id):
         raise SbmlDuplicateComponentIdError(
-            f'An element with ID {parameter_id} has already been defined.'
+            f"An element with ID {parameter_id} has already been defined."
         )
 
     par = model.createParameter()
     if par.setIdAttribute(parameter_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{parameter_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{parameter_id} is not a valid SBML ID.")
     if units is not None:
         par.setUnits(str(units))
     if constant is not None:
@@ -256,23 +259,23 @@ def add_assignment_rule(
     """
     variable_id = str(variable_id)
     if rule_id is None:
-        rule_id = 'assignment_' + variable_id
+        rule_id = "assignment_" + variable_id
 
     # Check whether rules exists for this parameter or with the same name
     if model.getRuleByVariable(variable_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule for parameter {variable_id} has already been defined.'
+            f"A rule for parameter {variable_id} has already been defined."
         )
     if model.getElementBySId(rule_id):
         raise SbmlDuplicateComponentIdError(
-            f'An element with SBML ID {rule_id} has already been defined.'
+            f"An element with SBML ID {rule_id} has already been defined."
         )
 
     rule = model.createAssignmentRule()
     if rule.setVariable(variable_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{variable_id} is not a valid SBML ID.")
     if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{rule_id} is not a valid SBML ID.")
     set_sbml_math(rule, formula)
 
     return rule
@@ -305,23 +308,23 @@ def add_rate_rule(
     """
     variable_id = str(variable_id)
     if rule_id is None:
-        rule_id = 'rate_' + variable_id
+        rule_id = "rate_" + variable_id
 
     # Check whether rules exists for this parameter or with the same name
     if model.getRuleByVariable(variable_id):
         raise SbmlDuplicateComponentIdError(
-            f'A rule for parameter {variable_id} has already been defined.'
+            f"A rule for parameter {variable_id} has already been defined."
         )
     if model.getElementBySId(rule_id):
         raise SbmlDuplicateComponentIdError(
-            f'An element with SBML ID {rule_id} has already been defined.'
+            f"An element with SBML ID {rule_id} has already been defined."
         )
 
     rule = model.createRateRule()
     if rule.setVariable(variable_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{variable_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{variable_id} is not a valid SBML ID.")
     if rule.setIdAttribute(rule_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{rule_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{rule_id} is not a valid SBML ID.")
     set_sbml_math(rule, formula)
 
     return rule
@@ -337,16 +340,16 @@ def add_inflow(
 ) -> libsbml.Reaction:
     species_id = str(species_id)
     if reaction_id is None:
-        reaction_id = f'inflow_of_{species_id}'
+        reaction_id = f"inflow_of_{species_id}"
 
     if model.getElementBySId(reaction_id):
         raise SbmlDuplicateComponentIdError(
-            f'An element with SBML ID {reaction_id} has already been defined.'
+            f"An element with SBML ID {reaction_id} has already been defined."
         )
 
     reaction = model.createReaction()
     if reaction.setId(reaction_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
-        raise SbmlInvalidIdSyntax(f'{reaction_id} is not a valid SBML ID.')
+        raise SbmlInvalidIdSyntax(f"{reaction_id} is not a valid SBML ID.")
     reaction.setReversible(reversible)
 
     spr = reaction.createProduct()
@@ -359,8 +362,9 @@ def add_inflow(
     return reaction
 
 
-def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
-        -> Union[None, str]:
+def get_sbml_units(
+    model: libsbml.Model, x: Union[SbmlID, sp.Basic]
+) -> Union[None, str]:
     """Try to get the units for expression `x`.
 
     :param model:
@@ -382,7 +386,7 @@ def get_sbml_units(model: libsbml.Model, x: Union[SbmlID, sp.Basic]) \
     if par is None:
         return None
     units = par.getUnits()
-    if units == '':
+    if units == "":
         return None
     return units
 
@@ -392,7 +396,7 @@ def pretty_xml(ugly_xml: str) -> str:
     dom = xml.dom.minidom.parseString(ugly_xml)
     pretty_xml = dom.toprettyxml()
     # We must delete the first line (xml header)
-    return pretty_xml[pretty_xml.index('\n') + 1:]
+    return pretty_xml[pretty_xml.index("\n") + 1 :]
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
@@ -411,11 +415,11 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
     def doprint(self, expr, *, pretty: bool = False) -> str:
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
         mathml += super().doprint(expr)
-        mathml += '</math>'
+        mathml += "</math>"
         mathml = mathml.replace(
-            '<ci>time</ci>',
+            "<ci>time</ci>",
             '<csymbol encoding="text" definitionURL='
-            '"http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
+            '"http://www.sbml.org/sbml/symbols/time"> time </csymbol>',
         )
         return pretty_xml(mathml) if pretty else mathml
 
@@ -454,9 +458,9 @@ def sbml_math_ast(expr, **kwargs) -> libsbml.ASTNode:
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise SbmlMathError(
-            f'error while converting the following expression to SBML AST.\n'
-            f'expression:\n{expr}\n'
-            f'MathML:\n{pretty_xml(mathml)}'
+            f"error while converting the following expression to SBML AST.\n"
+            f"expression:\n{expr}\n"
+            f"MathML:\n{pretty_xml(mathml)}"
         )
     return ast
 
@@ -477,9 +481,9 @@ def set_sbml_math(obj: libsbml.SBase, expr, **kwargs) -> None:
     mathml = sbml_math_ast(expr, **kwargs)
     if obj.setMath(mathml) != libsbml.LIBSBML_OPERATION_SUCCESS:
         raise SbmlMathError(
-            f'Could not set math attribute of SBML object {obj}\n'
-            f'expression:\n{expr}\n'
-            f'MathML:\n{pretty_xml(mathml)}'
+            f"Could not set math attribute of SBML object {obj}\n"
+            f"expression:\n{expr}\n"
+            f"MathML:\n{pretty_xml(mathml)}"
         )
 
 
@@ -488,12 +492,12 @@ def mathml2sympy(
     *,
     evaluate: bool = False,
     locals: Optional[Dict[str, Any]] = None,
-    expression_type: str = 'mathml2sympy',
+    expression_type: str = "mathml2sympy",
 ) -> sp.Basic:
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise ValueError(
-            f'libSBML could not parse MathML string:\n{pretty_xml(mathml)}'
+            f"libSBML could not parse MathML string:\n{pretty_xml(mathml)}"
         )
 
     formula = _parse_logical_operators(libsbml.formulaToL3String(ast))
@@ -512,8 +516,9 @@ def mathml2sympy(
     return expr
 
 
-def _parse_logical_operators(math_str: Union[str, float, None]
-                             ) -> Union[str, float, None]:
+def _parse_logical_operators(
+    math_str: Union[str, float, None]
+) -> Union[str, float, None]:
     """
     Parses a math string in order to replace logical operators by a form
     parsable for sympy
@@ -526,8 +531,7 @@ def _parse_logical_operators(math_str: Union[str, float, None]
     if not isinstance(math_str, str):
         return math_str
 
-    if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported as logical '
-                            'operation.')
+    if " xor(" in math_str or " Xor(" in math_str:
+        raise SBMLException("Xor is currently not supported as logical " "operation.")
 
-    return (math_str.replace('&&', '&')).replace('||', '|')
+    return (math_str.replace("&&", "&")).replace("||", "|")

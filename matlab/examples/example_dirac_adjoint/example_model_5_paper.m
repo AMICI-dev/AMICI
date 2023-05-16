@@ -63,7 +63,7 @@ syms xB1(t) xB2(t)
 eqn1B = diff(xB1) == p(1)*xB1 - p(3)*xB2;
 eqn3B = diff(xB2) == p(4)*xB2;
 
-syms sigma my 
+syms sigma my
 x = sym('x',[2,1]);
 J = -0.5*((x(2) - my)/sigma)^2;
 dJdx = jacobian(J,x);
@@ -241,9 +241,3 @@ ylim([-300,300])
 xlim([-0.1,4.1])
 set(gcf,'PaperPositionMode','auto','Position',[100 300 300 200])
 print('-depsc','-r300',['sJ_asa'])
-
-
-
-
-
-

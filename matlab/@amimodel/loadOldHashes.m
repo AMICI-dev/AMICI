@@ -4,7 +4,7 @@ function HTable = loadOldHashes(this)
     % Return values:
     %  HTable: struct with hashes of symbolic definition from the previous
     %  compilation @type struct
-    
+
     [wrap_path,~,~]=fileparts(fileparts(which('amiwrap.m')));
     try
         load(fullfile(wrap_path,'models',this.modelname,['hashes.mat']))
@@ -25,7 +25,7 @@ function HTable = loadOldHashes(this)
             this.sparseidxB = sparseidxB;
         catch err
         end
-        
+
     catch
         HTable = struct();
     end
@@ -47,7 +47,7 @@ function HTable = loadOldHashes(this)
     end
     DHTable.Jy = '';
     DHTable.Jz = '';
-    
+
     DHTable.generateC = '';
     DHTable.makeSyms = '';
     DHTable.makeEvents = '';
@@ -62,6 +62,6 @@ function HTable = loadOldHashes(this)
     DHTable.writeCcode_sensi = '';
     DHTable.tdata = '';
 
-    
+
     HTable = am_setdefault(HTable,DHTable);
 end

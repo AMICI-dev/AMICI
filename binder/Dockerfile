@@ -48,4 +48,3 @@ RUN . ./.profile && python3 -m build --sdist python/sdist && \
     scripts/buildBNGL.sh
 
 ENV BNGPATH="${HOME}/ThirdParty/BioNetGen-2.7.0"
-

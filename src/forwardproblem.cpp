@@ -1,10 +1,10 @@
 #include "amici/forwardproblem.h"
 
+#include "amici/edata.h"
+#include "amici/exception.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"
-#include "amici/exception.h"
-#include "amici/edata.h"
 #include "amici/steadystateproblem.h"
 
 #include <algorithm>
@@ -13,28 +13,29 @@
 
 namespace amici {
 
-ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
-                               Solver *solver, const SteadystateProblem *preeq)
-    : model(model),
-      solver(solver),
-      edata(edata),
-      nroots_(gsl::narrow<decltype (nroots_)::size_type>(model->ne), 0),
-      rootvals_(gsl::narrow<decltype (rootvals_)::size_type>(model->ne), 0.0),
-      rval_tmp_(gsl::narrow<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
-      dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0),
-      dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
-      t_(model->t0()),
-      roots_found_(model->ne, 0),
-      x_(model->nx_solver),
-      x_old_(model->nx_solver),
-      dx_(model->nx_solver),
-      dx_old_(model->nx_solver),
-      xdot_(model->nx_solver),
-      xdot_old_(model->nx_solver),
-      sx_(model->nx_solver,model->nplist()),
-      sdx_(model->nx_solver,model->nplist()),
-      stau_(model->nplist())
-{
+ForwardProblem::ForwardProblem(
+    ExpData const* edata, Model* model, Solver* solver,
+    SteadystateProblem const* preeq
+)
+    : model(model)
+    , solver(solver)
+    , edata(edata)
+    , nroots_(gsl::narrow<decltype(nroots_)::size_type>(model->ne), 0)
+    , rootvals_(gsl::narrow<decltype(rootvals_)::size_type>(model->ne), 0.0)
+    , rval_tmp_(gsl::narrow<decltype(rval_tmp_)::size_type>(model->ne), 0.0)
+    , dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0)
+    , dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0)
+    , t_(model->t0())
+    , roots_found_(model->ne, 0)
+    , x_(model->nx_solver)
+    , x_old_(model->nx_solver)
+    , dx_(model->nx_solver)
+    , dx_old_(model->nx_solver)
+    , xdot_(model->nx_solver)
+    , xdot_old_(model->nx_solver)
+    , sx_(model->nx_solver, model->nplist())
+    , sdx_(model->nx_solver, model->nplist())
+    , stau_(model->nplist()) {
     if (preeq) {
         x_ = preeq->getState();
         sx_ = preeq->getStateSensitivity();
@@ -49,10 +50,11 @@ void ForwardProblem::workForwardProblem() {
 
     /* if preequilibration was done, model was already initialized */
     if (!preequilibrated_)
-        model->initialize(x_, dx_, sx_, sdx_,
-                          solver->getSensitivityOrder() >=
-                          SensitivityOrder::first,
-                          roots_found_);
+        model->initialize(
+            x_, dx_, sx_, sdx_,
+            solver->getSensitivityOrder() >= SensitivityOrder::first,
+            roots_found_
+        );
     else if (model->ne) {
         model->initEvents(x_, dx_, roots_found_);
     }
@@ -63,8 +65,10 @@ void ForwardProblem::workForwardProblem() {
         t0 -= edata->t_presim;
     solver->setup(t0, model, x_, dx_, sx_, sdx_);
 
-    if (model->ne && std::any_of(roots_found_.begin(), roots_found_.end(),
-                                 [](int rf){return rf==1;}))
+    if (model->ne
+        && std::any_of(roots_found_.begin(), roots_found_.end(), [](int rf) {
+               return rf == 1;
+           }))
         handleEvent(&t0, false, true);
 
     /* perform presimulation if necessary */
@@ -76,8 +80,10 @@ void ForwardProblem::workForwardProblem() {
         t_ = model->t0();
         if (model->ne) {
             model->initEvents(x_, dx_, roots_found_);
-            if (std::any_of(roots_found_.begin(), roots_found_.end(),
-                            [](int rf){return rf==1;}))
+            if (std::any_of(
+                    roots_found_.begin(), roots_found_.end(),
+                    [](int rf) { return rf == 1; }
+                ))
                 handleEvent(&t0, false, true);
         }
     }
@@ -99,7 +105,7 @@ void ForwardProblem::workForwardProblem() {
      wont harm. when computing ASA, we only want to update here, if we didn't
      update before presimulation (if applicable).
     */
-    if (solver->computingFSA() || (solver->computingASA() && !presimulate ))
+    if (solver->computingFSA() || (solver->computingASA() && !presimulate))
         sx_ = solver->getStateSensitivity(model->t0());
 
     /* store initial state and sensitivity*/
@@ -136,8 +142,7 @@ void ForwardProblem::workForwardProblem() {
     }
 }
 
-void ForwardProblem::handlePresimulation()
-{
+void ForwardProblem::handlePresimulation() {
     // Are there dedicated condition preequilibration parameters provided?
     ConditionContext cond(model, edata, FixedParameterContext::presimulation);
     solver->updateAndReinitStatesAndSensitivities(model);
@@ -146,9 +151,9 @@ void ForwardProblem::handlePresimulation()
     solver->writeSolution(&t_, x_, dx_, sx_, dx_);
 }
 
-
-void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
-                                 const bool initial_event) {
+void ForwardProblem::handleEvent(
+    realtype* tlastroot, bool const seflag, bool const initial_event
+) {
     /* store Heaviside information at event occurrence */
     model->froot(t_, x_, dx_, rootvals_);
 
@@ -175,7 +180,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
         *tlastroot = t_;
     }
 
-    if(model->nz > 0)
+    if (model->nz > 0)
         storeEvent();
 
     /* if we need to do forward sensitivities later on we need to store the old
@@ -220,7 +225,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
         /* compute the new xdot  */
         model->fxdot(t_, x_, dx_, xdot_);
         applyEventSensiBolusFSA();
-    }  else if (solver->computingASA()) {
+    } else if (solver->computingASA()) {
         /* compute the new xdot  */
         model->fxdot(t_, x_, dx_, xdot_);
         xdot_disc_.push_back(xdot_);
@@ -256,8 +261,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag,
          * if the secondary event has a bolus... */
         if (solver->computingFSA() && solver->logger)
             solver->logger->log(
-                LogSeverity::warning,
-                "SECONDARY_EVENT",
+                LogSeverity::warning, "SECONDARY_EVENT",
                 "Secondary event was triggered. Depending on "
                 "the bolus of the secondary event, forward "
                 "sensitivities can be incorrect."
@@ -299,15 +303,16 @@ void ForwardProblem::storeEvent() {
             continue;
 
         /* only consider transitions false -> true or event filling */
-        if (roots_found_.at(ie) != 1 &&
-            t_ != model->getTimepoint(model->nt() - 1)) {
+        if (roots_found_.at(ie) != 1
+            && t_ != model->getTimepoint(model->nt() - 1)) {
             continue;
         }
 
         if (edata && solver->computingASA())
-            model->getAdjointStateEventUpdate(slice(dJzdx_, nroots_.at(ie),
-                                                    model->nx_solver * model->nJ),
-                                              ie, nroots_.at(ie), t_, x_, *edata);
+            model->getAdjointStateEventUpdate(
+                slice(dJzdx_, nroots_.at(ie), model->nx_solver * model->nJ), ie,
+                nroots_.at(ie), t_, x_, *edata
+            );
 
         nroots_.at(ie)++;
     }
@@ -338,12 +343,12 @@ void ForwardProblem::applyEventSensiBolusFSA() {
     for (int ie = 0; ie < model->ne; ie++)
         if (roots_found_.at(ie) == 1) // only consider transitions false -> true
             /*  */
-            model->addStateSensitivityEventUpdate(sx_, ie, t_, x_old_, xdot_,
-                                                  xdot_old_, stau_);
+            model->addStateSensitivityEventUpdate(
+                sx_, ie, t_, x_old_, xdot_, xdot_old_, stau_
+            );
 }
 
-void ForwardProblem::getAdjointUpdates(Model &model,
-                                       const ExpData &edata) {
+void ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
     for (int it = 0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it)))
             return;
