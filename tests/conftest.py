@@ -14,6 +14,12 @@ SBML_SEMANTIC_CASES_DIR = (
     Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
 )
 
+if not SBML_SEMANTIC_CASES_DIR.exists():
+    raise ValueError(
+        "The SBML semantic cases are missing. You can install them with "
+        "'AMICI/scripts/run-SBMLTestsuite.sh'."
+    )
+
 
 @pytest.fixture
 def sbml_semantic_cases_dir() -> Path:
