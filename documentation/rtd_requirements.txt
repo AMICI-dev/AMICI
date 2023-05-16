@@ -1,5 +1,5 @@
 # NOTE: relative paths are expected to be relative to the repository root
-sphinx==7.0.1
+sphinx<7
 mock>=5.0.2
 setuptools==67.7.2
 pysb>=1.11.0
