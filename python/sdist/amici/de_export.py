@@ -2021,10 +2021,7 @@ class DEModel:
                         )
 
                         # additional part of chain rule state variables
-                        # This part only works if we use self.eq('xdot')
-                        # instead of self.sym('xdot'). Not immediately clear
-                        # why that is.
-                        tmp_dxdp += smart_multiply(self.eq("xdot"), self.sym("stau").T)
+                        tmp_dxdp += smart_multiply(self.sym("xdot_old"), self.sym("stau").T)
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq("ddeltaxdx")[ie], tmp_dxdp)

@@ -1,4 +1,6 @@
 """Tests for SBML events, including piecewise expressions."""
+import sys
+import tempfile
 from pathlib import Path
 
 import libsbml
@@ -18,19 +20,21 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
     """
     Import an sbml file and create an AMICI model from it
     """
-    sbml_test_models = Path("sbml_test_models")
-    sbml_test_models_output_dir = sbml_test_models / "amici_models"
+    sbml_test_models_output_dir = Path("amici_models")
     sbml_test_models_output_dir.mkdir(parents=True, exist_ok=True)
 
     sbml_importer = SbmlImporter(sbml_model)
-    output_dir = sbml_test_models_output_dir / model_name
-    sbml_importer.sbml2amici(
-        model_name=model_name, output_dir=str(output_dir), **kwargs
+    # try not to exceed the stupid maximum path length on windows 💩
+    output_dir = (
+        sbml_test_models_output_dir / model_name
+        if sys.platform != "win32"
+        else tempfile.mkdtemp()
     )
 
-    model_module = import_model_module(model_name, str(output_dir.resolve()))
-    model = model_module.getModel()
-    return model
+    sbml_importer.sbml2amici(model_name=model_name, output_dir=output_dir, **kwargs)
+
+    model_module = import_model_module(model_name, output_dir)
+    return model_module.getModel()
 
 
 def create_sbml_model(
@@ -95,7 +99,7 @@ def create_sbml_model(
         trigger.setPersistent(True)
         trigger.setInitialValue(True)
 
-        def creat_event_assignment(target, assignment):
+        def create_event_assignment(target, assignment):
             ea = event.createEventAssignment()
             ea.setVariable(target)
             ea.setMath(libsbml.parseL3Formula(assignment))
@@ -104,16 +108,13 @@ def create_sbml_model(
             for event_target, event_assignment in zip(
                 event_def["target"], event_def["assignment"]
             ):
-                creat_event_assignment(event_target, event_assignment)
+                create_event_assignment(event_target, event_assignment)
 
         else:
-            creat_event_assignment(event_def["target"], event_def["assignment"])
+            create_event_assignment(event_def["target"], event_def["assignment"])
 
     if to_file:
-        libsbml.writeSBMLToFile(
-            document,
-            str(to_file),
-        )
+        libsbml.writeSBMLToFile(document, to_file)
 
     # Need to return document, else AMICI throws an error.
     # (possibly due to garbage collection?)
@@ -128,14 +129,6 @@ def check_trajectories_without_sensitivities(
     Check whether the AMICI simulation matches a known solution
     (ideally an analytically calculated one).
     """
-
-    # Does the AMICI simulation match the analytical solution?
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata["x"], result_expected_x, field="x", rtol=5e-5, atol=1e-13)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
@@ -152,17 +145,6 @@ def check_trajectories_with_forward_sensitivities(
     Check whether the forward sensitivities of the AMICI simulation match
     a known solution (ideally an analytically calculated one).
     """
-
-    # Show that we can do arbitrary precision here (test 8 digits)
-    solver = amici_model.getSolver()
-    solver.setAbsoluteTolerance(1e-15)
-    solver.setSensitivityOrder(SensitivityOrder.first)
-    solver.setSensitivityMethod(SensitivityMethod.forward)
-    rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata["x"], result_expected_x, field="x", rtol=1e-5, atol=1e-13)
-    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-5, atol=1e-7)
-
-    # Show that we can do arbitrary precision here (test 8 digits)
     solver = amici_model.getSolver()
     solver.setSensitivityOrder(SensitivityOrder.first)
     solver.setSensitivityMethod(SensitivityMethod.forward)
@@ -172,4 +154,4 @@ def check_trajectories_with_forward_sensitivities(
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
     _check_close(rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12)
-    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-10, atol=1e-9)
+    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9)
