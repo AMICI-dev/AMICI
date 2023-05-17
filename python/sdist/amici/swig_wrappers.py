@@ -1,6 +1,8 @@
 """Convenience wrappers for the swig interface"""
 import logging
 import sys
+
+import warnings
 from contextlib import contextmanager, suppress
 from typing import Any, Dict, List, Optional, Sequence, Union
 
@@ -102,6 +104,18 @@ def runAmiciSimulation(
     :returns:
         ReturnData object with simulation results
     """
+    if (
+        model.ne > 0
+        and solver.getSensitivityMethod()
+        == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
+    ):
+        warnings.warn(
+            "Adjoint sensitivity analysis for models with events with parameter-dependent trigger functions has not been thoroughly tested. "
+            "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
+            "If your model does not have parameter-dependent trigger functions, you can safely ignore this message."
+        )
+
     with _capture_cstdout():
         rdata = amici_swig.runAmiciSimulation(
             _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
@@ -152,6 +166,18 @@ def runAmiciSimulations(
 
     :returns: list of simulation results
     """
+    if (
+        model.ne > 0
+        and solver.getSensitivityMethod()
+        == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
+    ):
+        warnings.warn(
+            "Adjoint sensitivity analysis for models with events with parameter-dependent trigger functions has not been thoroughly tested. "
+            "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
+            "If your model does not have parameter-dependent trigger functions, you can safely ignore this message."
+        )
+
     with _capture_cstdout():
         edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
         rdata_ptr_list = amici_swig.runAmiciSimulations(
