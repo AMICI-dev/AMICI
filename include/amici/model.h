@@ -1254,11 +1254,10 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x Current state
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
-     * @param xBdot right hand side of adjoint state
      */
     void addAdjointStateEventUpdate(
         AmiVector& xB, int const ie, const realtype t, AmiVector const& x,
-        AmiVector const& xdot, AmiVector const& xdot_old, AmiVector const& xBdot
+        AmiVector const& xdot, AmiVector const& xdot_old
     );
 
     /**
@@ -1270,12 +1269,10 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xB Current adjoint state
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
-     * @param xBdot right hand side of adjoint state
      */
     void addAdjointQuadratureEventUpdate(
-        AmiVector& xQB, int const ie, const realtype t, AmiVector const& x,
-        AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
-        AmiVector const& xBdot
+        AmiVector xQB, int const ie, const realtype t, AmiVector const& x,
+        AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
     );
 
     /**

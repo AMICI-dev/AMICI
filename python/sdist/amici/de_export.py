@@ -324,14 +324,13 @@ functions = {
         "realtype *deltaxB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const int ie, const realtype *xdot, const realtype *xdot_old, "
-        "const realtype *xB, const realtype *xBdot, const realtype *tcl"
+        "const realtype *xB"
     ),
     "deltaqB": _FunctionInfo(
         "realtype *deltaqB, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const int ip, const int ie, const realtype *xdot, "
-        "const realtype *xdot_old, const realtype *xB, "
-        "const realtype *xBdot"
+        "const realtype *xdot_old, const realtype *xB"
     ),
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "
