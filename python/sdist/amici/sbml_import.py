@@ -693,18 +693,6 @@ class SbmlImporter:
 
             self.add_local_symbol(x_ref.getId(), value)
 
-        for r in self.sbml.getListOfReactions():
-            for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
-                if isinstance(e, sbml.SpeciesReference):
-                    continue
-
-                if not (
-                    e.isSetId() and e.isSetStoichiometry()
-                ) or self.is_assignment_rule_target(e):
-                    continue
-
-                self.add_local_symbol(e.getId(), sp.Float(e.getStoichiometry()))
-
     def _gather_dependent_locals(self):
         """
         Populate self.local_symbols with symbol definitions that may depend on
