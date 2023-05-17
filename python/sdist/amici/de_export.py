@@ -2017,7 +2017,6 @@ class DEModel:
                 for ie in range(self.num_events())
             ]
             if name == "dzdx":
-                # TODO minus?
                 dtaudx = self.eq("dtaudx")
                 for ie in range(self.num_events()):
                     for iz in range(self.num_eventobs()):
@@ -2043,7 +2042,6 @@ class DEModel:
 
         elif name == "stau":
             self._eqs[name] = [
-                # TODO(stephanmg) check removed minus
                 self.eq("sroot")[ie, :] / self.eq("drootdt_total")[ie]
                 if not self.eq("drootdt_total")[ie].is_zero
                 else sp.zeros(*self.eq("sroot")[ie, :].shape)
@@ -2071,7 +2069,6 @@ class DEModel:
                 # symbols
                 if not smart_is_zero_matrix(self.eq("stau")[ie]):
                     tmp_eq += smart_multiply(
-                        # TODO(stephanmg) check changed sign
                         # (self.sym('xdot_old') - self.sym('xdot')),
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.sym("stau").T,
@@ -2091,14 +2088,12 @@ class DEModel:
                         # chain rule for the time point
                         tmp_eq += smart_multiply(
                             self.eq("ddeltaxdt")[ie],
-                            # TODO(stephanmg) changed sign
                             -self.sym("stau").T,
                         )
 
                         # additional part of chain rule state variables
                         tmp_dxdp += smart_multiply(
                             self.sym("xdot_old"),
-                            # TODO(stephanmg) changed sign
                             -self.sym("stau").T,
                         )
 
@@ -2106,8 +2101,6 @@ class DEModel:
                     tmp_eq += smart_multiply(self.eq("ddeltaxdx")[ie], tmp_dxdp)
                 else:
                     tmp_eq = smart_multiply(
-                        # TODO(stephanmg) changed signs
-                        # (self.eq('xdot_old') - self.eq('xdot')),
                         self.sym("xdot") - self.sym("xdot_old"),
                         self.eq("stau")[ie],
                     )
@@ -2136,7 +2129,7 @@ class DEModel:
                             self.eq("ddeltaxdx")[ie], self.sym("xdot_old")
                         ),
                         self.eq("dtaudx")[ie],
-                    )  # TODO transpose? minus sign?
+                    )
                     # ==== 3rd group of terms : Dirac deltas ==================
                     tmp_eq += self.eq("ddeltaxdx")[ie]
                     tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
