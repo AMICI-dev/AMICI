@@ -1265,10 +1265,6 @@ class SbmlImporter:
         """
         Convert time_symbol into cpp variable.
         """
-        sbml_time_symbol = symbol_with_assumptions("time")
-        amici_time_symbol = symbol_with_assumptions("t")
-        self.amici_time_symbol = amici_time_symbol
-
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
     def _convert_event_assignment_parameter_targets_to_species(self):
