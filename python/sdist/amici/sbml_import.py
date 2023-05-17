@@ -2535,11 +2535,11 @@ def _get_list_of_species_references(
         ListOfSpeciesReferences
     """
     return [
-        reference
-        for element in sbml_model.all_elements
-        if isinstance(element, sbml.ListOfSpeciesReferences)
-        for reference in element
-    ]
+            reference
+            for reaction in sbml_model.getListOfReactions()
+            for reference in
+            itt.chain(reaction.getListOfReactants(), reaction.getListOfProducts(), reaction.getListOfModifiers())
+        ]
 
 
 def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
