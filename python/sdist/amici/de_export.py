@@ -1981,7 +1981,7 @@ class DEModel:
                         if ie != self._z2event[iz] - 1:
                             continue
                         dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
-                        self._eqs[name][ie][iz, :] += dzdt * dtaudx[ie]
+                        self._eqs[name][ie][iz, :] += dzdt * -dtaudx[ie]
 
         elif name in ["rz", "drzdx", "drzdp"]:
             eq_events = []
