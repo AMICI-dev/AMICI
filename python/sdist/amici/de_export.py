@@ -70,7 +70,9 @@ CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, "main.template.cpp")
 # Template for model/swig/CMakeLists.txt
 SWIG_CMAKE_TEMPLATE_FILE = os.path.join(amiciSwigPath, "CMakeLists_model.cmake")
 # Template for model/CMakeLists.txt
-MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath, "CMakeLists.template.cmake")
+MODEL_CMAKE_TEMPLATE_FILE = os.path.join(
+    amiciSrcPath, "CMakeLists.template.cmake"
+)
 
 IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_]\w*$")
 DERIVATIVE_PATTERN = re.compile(r"^d(x_rdata|xdot|\w+?)d(\w+?)(?:_explicit)?$")
@@ -283,7 +285,8 @@ functions = {
         " const realtype *k, const int ip",
     ),
     "sigmaz": _FunctionInfo(
-        "realtype *sigmaz, const realtype t, const realtype *p, " "const realtype *k",
+        "realtype *sigmaz, const realtype t, const realtype *p, "
+        "const realtype *k",
     ),
     "sroot": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
@@ -337,7 +340,8 @@ functions = {
         assume_pow_positivity=True,
     ),
     "x0": _FunctionInfo(
-        "realtype *x0, const realtype t, const realtype *p, " "const realtype *k"
+        "realtype *x0, const realtype t, const realtype *p, "
+        "const realtype *k"
     ),
     "x0_fixedParameters": _FunctionInfo(
         "realtype *x0_fixedParameters, const realtype t, "
@@ -1029,10 +1033,14 @@ class DEModel:
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
                 comp_rate_vars = [
-                    p for p in v.free_symbols if p in si.symbols[SymbolId.SPECIES]
+                    p
+                    for p in v.free_symbols
+                    if p in si.symbols[SymbolId.SPECIES]
                 ]
                 for var in comp_rate_vars:
-                    dv_dt += v.diff(var) * si.symbols[SymbolId.SPECIES][var]["dt"]
+                    dv_dt += (
+                        v.diff(var) * si.symbols[SymbolId.SPECIES][var]["dt"]
+                    )
                 dv_dx = v.diff(species_id)
                 xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
                 return xdot
@@ -1051,7 +1059,9 @@ class DEModel:
                 return dxdt / v
 
         # create dynamics without respecting conservation laws first
-        dxdt = smart_multiply(si.stoichiometric_matrix, MutableDenseMatrix(fluxes))
+        dxdt = smart_multiply(
+            si.stoichiometric_matrix, MutableDenseMatrix(fluxes)
+        )
         for ix, ((species_id, species), formula) in enumerate(
             zip(symbols[SymbolId.SPECIES].items(), dxdt)
         ):
@@ -1061,7 +1071,9 @@ class DEModel:
             if species["amount"]:
                 species["dt"] = formula
             else:
-                species["dt"] = transform_dxdt_to_concentration(species_id, formula)
+                species["dt"] = transform_dxdt_to_concentration(
+                    species_id, formula
+                )
 
         # create all basic components of the DE model and add them.
         for symbol_name in symbols:
@@ -1109,7 +1121,8 @@ class DEModel:
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables()
         self._has_quadratic_nllh = all(
-            llh["dist"] in ["normal", "lin-normal", "log-normal", "log10-normal"]
+            llh["dist"]
+            in ["normal", "lin-normal", "log-normal", "log10-normal"]
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
@@ -1191,14 +1204,21 @@ class DEModel:
             )[0]
         except StopIteration:
             raise ValueError(
-                f"Specified state {state} was not found in the " f"model states."
+                f"Specified state {state} was not found in the "
+                f"model states."
             )
 
         state_id = self._differential_states[ix].get_id()
 
         # \sum_{i≠j}(a_i * x_i)/a_j
         target_expression = (
-            sp.Add(*(c_i * x_i for x_i, c_i in coefficients.items() if x_i != state))
+            sp.Add(
+                *(
+                    c_i * x_i
+                    for x_i, c_i in coefficients.items()
+                    if x_i != state
+                )
+            )
             / coefficients[state]
         )
 
@@ -1395,7 +1415,9 @@ class DEModel:
             self._generate_sparse_symbol(name)
         return self._sparseeqs[name]
 
-    def colptrs(self, name: str) -> Union[List[sp.Number], List[List[sp.Number]]]:
+    def colptrs(
+        self, name: str
+    ) -> Union[List[sp.Number], List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
@@ -1412,7 +1434,9 @@ class DEModel:
             self._generate_sparse_symbol(name)
         return self._colptrs[name]
 
-    def rowvals(self, name: str) -> Union[List[sp.Number], List[List[sp.Number]]]:
+    def rowvals(
+        self, name: str
+    ) -> Union[List[sp.Number], List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
@@ -1666,7 +1690,9 @@ class DEModel:
 
         return [
             free_symbols_dt.count(str(self._differential_states[idx].get_id()))
-            + free_symbols_expr.count(str(self._differential_states[idx].get_id()))
+            + free_symbols_expr.count(
+                str(self._differential_states[idx].get_id())
+            )
             for idx in idxs
         ]
 
@@ -1751,7 +1777,9 @@ class DEModel:
         time_symbol = sp.Matrix([symbol_with_assumptions("t")])
 
         if name in self._equation_prototype:
-            self._equation_from_components(name, self._equation_prototype[name]())
+            self._equation_from_components(
+                name, self._equation_prototype[name]()
+            )
 
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
@@ -1841,7 +1869,9 @@ class DEModel:
                 if any(sym in eq.free_symbols for sym in k)
             ]
             eq = self.eq("x0")
-            self._eqs[name] = sp.Matrix([eq[ix] for ix in self._x0_fixedParameters_idx])
+            self._eqs[name] = sp.Matrix(
+                [eq[ix] for ix in self._x0_fixedParameters_idx]
+            )
 
         elif name == "dtotal_cldx_rdata":
             x_rdata = self.sym("x_rdata")
@@ -1854,7 +1884,9 @@ class DEModel:
 
         elif name == "dtcldx":
             # this is always zero
-            self._eqs[name] = sp.zeros(self.num_cons_law(), self.num_states_solver())
+            self._eqs[name] = sp.zeros(
+                self.num_cons_law(), self.num_states_solver()
+            )
 
         elif name == "dtcldp":
             # force symbols
@@ -1879,15 +1911,21 @@ class DEModel:
 
         elif name == "dx_rdatadp":
             if self.num_cons_law():
-                self._eqs[name] = smart_jacobian(self.eq("x_rdata"), self.sym("p"))
+                self._eqs[name] = smart_jacobian(
+                    self.eq("x_rdata"), self.sym("p")
+                )
             else:
                 # so far, dx_rdatadp is only required for sx_rdata
                 # in case of no conservation laws, C++ code will directly use
                 # sx, we don't need this
-                self._eqs[name] = sp.zeros(self.num_states_rdata(), self.num_par())
+                self._eqs[name] = sp.zeros(
+                    self.num_states_rdata(), self.num_par()
+                )
 
         elif name == "dx_rdatadtcl":
-            self._eqs[name] = smart_jacobian(self.eq("x_rdata"), self.sym("tcl"))
+            self._eqs[name] = smart_jacobian(
+                self.eq("x_rdata"), self.sym("tcl")
+            )
 
         elif name == "dxdotdx_explicit":
             # force symbols
@@ -1950,7 +1988,9 @@ class DEModel:
             self._eqs[name] = event_eqs
 
         elif name == "z":
-            event_observables = [sp.zeros(self.num_eventobs(), 1) for _ in self._events]
+            event_observables = [
+                sp.zeros(self.num_eventobs(), 1) for _ in self._events
+            ]
             event_ids = [e.get_id() for e in self._events]
             # TODO: get rid of this stupid 1-based indexing as soon as we can
             # the matlab interface
@@ -1958,7 +1998,9 @@ class DEModel:
                 event_ids.index(event_obs.get_event()) + 1
                 for event_obs in self._event_observables
             ]
-            for (iz, ie), event_obs in zip(enumerate(z2event), self._event_observables):
+            for (iz, ie), event_obs in zip(
+                enumerate(z2event), self._event_observables
+            ):
                 event_observables[ie - 1][iz] = event_obs.get_val()
 
             self._eqs[name] = event_observables
@@ -1975,13 +2017,14 @@ class DEModel:
                 for ie in range(self.num_events())
             ]
             if name == "dzdx":
+                # TODO minus?
+                dtaudx = self.eq("dtaudx")
                 for ie in range(self.num_events()):
-                    dtaudx = -self.eq("drootdx")[ie, :] / self.eq("drootdt_total")[ie]
                     for iz in range(self.num_eventobs()):
                         if ie != self._z2event[iz] - 1:
                             continue
                         dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
-                        self._eqs[name][ie][iz, :] += dzdt * dtaudx
+                        self._eqs[name][ie][iz, :] += dzdt * dtaudx[ie]
 
         elif name in ["rz", "drzdx", "drzdp"]:
             eq_events = []
@@ -2053,12 +2096,8 @@ class DEModel:
                         )
 
                         # additional part of chain rule state variables
-                        # This part only works if we use self.eq('xdot')
-                        # instead of self.sym('xdot'). Not immediately clear
-                        # why that is.
-                        # TODO(stephanmg) was `x_dot` before
                         tmp_dxdp += smart_multiply(
-                            self.eq("xdot_old"),
+                            self.sym("xdot_old"),
                             # TODO(stephanmg) changed sign
                             -self.sym("stau").T,
                         )
@@ -2083,7 +2122,8 @@ class DEModel:
                 if event._state_update is not None:
                     # ==== 1st group of terms : Heaviside functions ===========
                     tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"), self.eq("dtaudx")[ie]
+                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.eq("dtaudx")[ie],
                     )
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
@@ -2092,7 +2132,9 @@ class DEModel:
                     )
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
-                        smart_multiply(self.eq("ddeltaxdx")[ie], self.sym("xdot_old")),
+                        smart_multiply(
+                            self.eq("ddeltaxdx")[ie], self.sym("xdot_old")
+                        ),
                         self.eq("dtaudx")[ie],
                     )  # TODO transpose? minus sign?
                     # ==== 3rd group of terms : Dirac deltas ==================
@@ -2100,7 +2142,8 @@ class DEModel:
                     tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
                 else:
                     tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"), self.eq("dtaudx")[ie]
+                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.eq("dtaudx")[ie],
                     )
                     tmp_eq = smart_multiply(self.sym("xB").T, tmp_eq)
                 event_eqs.append(tmp_eq)
@@ -2112,7 +2155,8 @@ class DEModel:
                 if event._state_update is not None:
                     # ==== 1st group of terms : Heaviside functions ===========
                     tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"), self.eq("dtaudp")[ie]
+                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.eq("dtaudp")[ie],
                     )
                     # ==== 2nd group of terms : Derivatives of Dirac deltas ===
                     # Part 2a: explicit time dependence of bolus function
@@ -2121,14 +2165,17 @@ class DEModel:
                     )
                     # Part 2b: implicit time dependence of bolus function
                     tmp_eq -= smart_multiply(
-                        smart_multiply(self.eq("ddeltaxdx")[ie], self.sym("xdot_old")),
+                        smart_multiply(
+                            self.eq("ddeltaxdx")[ie], self.sym("xdot_old")
+                        ),
                         self.eq("dtaudp")[ie],
                     )
                     # ==== 3rd group of terms : Dirac deltas ==================
                     tmp_eq += self.eq("ddeltaxdp")[ie]
                 else:
                     tmp_eq = smart_multiply(
-                        self.sym("xdot") - self.sym("xdot_old"), self.eq("dtaudp")[ie]
+                        self.sym("xdot") - self.sym("xdot_old"),
+                        self.eq("dtaudp")[ie],
                     )
                 event_eqs.append(smart_multiply(self.sym("xB").T, tmp_eq))
             self._eqs[name] = event_eqs
@@ -2150,7 +2197,9 @@ class DEModel:
                     # that we need to reverse the order here
                     for cl in reversed(self._conservation_laws)
                 ]
-            ).col_join(smart_jacobian(self.eq("w")[self.num_cons_law() :, :], x))
+            ).col_join(
+                smart_jacobian(self.eq("w")[self.num_cons_law() :, :], x)
+            )
 
         elif match_deriv:
             self._derivative(match_deriv[1], match_deriv[2], name)
@@ -2224,7 +2273,10 @@ class DEModel:
             and cv not in self._lock_total_derivative
             and var != cv
             and min(self.sym(cv).shape)
-            and ((eq, var) not in ignore_chainrule or ignore_chainrule[(eq, var)] != cv)
+            and (
+                (eq, var) not in ignore_chainrule
+                or ignore_chainrule[(eq, var)] != cv
+            )
         ]
         if len(chainvars):
             self._lock_total_derivative += chainvars
@@ -2327,9 +2379,14 @@ class DEModel:
             dxdz = self.sym_or_eq(name, dxdz_name)
             # Save time for large models if one multiplicand is zero,
             # which is not checked for by sympy
-            if not smart_is_zero_matrix(dydx) and not smart_is_zero_matrix(dxdz):
+            if not smart_is_zero_matrix(dydx) and not smart_is_zero_matrix(
+                dxdz
+            ):
                 dydx_times_dxdz = smart_multiply(dydx, dxdz)
-                if dxdz.shape[1] == 1 and self._eqs[name].shape[1] != dxdz.shape[1]:
+                if (
+                    dxdz.shape[1] == 1
+                    and self._eqs[name].shape[1] != dxdz.shape[1]
+                ):
                     for iz in range(self._eqs[name].shape[1]):
                         self._eqs[name][:, iz] += dydx_times_dxdz
                 else:
@@ -2355,7 +2412,9 @@ class DEModel:
         # within a column may differ from the initialization of symbols here,
         # so those are not safe to use. Not removing them from signature as
         # this would break backwards compatibility.
-        if var_in_function_signature(name, varname, self.is_ode()) and varname not in [
+        if var_in_function_signature(
+            name, varname, self.is_ode()
+        ) and varname not in [
             "dwdx",
             "dwdp",
         ]:
@@ -2479,7 +2538,8 @@ class DEModel:
         if not isinstance(ic, sp.Basic):
             return False
         return any(
-            fp in (c.get_id() for c in self._constants) for fp in ic.free_symbols
+            fp in (c.get_id() for c in self._constants)
+            for fp in ic.free_symbols
         )
 
     def state_has_conservation_law(self, ix: int) -> bool:
@@ -2796,7 +2856,9 @@ class DEExporter:
         # include/amici/model.h for details)
         self.model: DEModel = de_model
         self.model._code_printer.known_functions.update(
-            splines.spline_user_functions(self.model.splines, self._get_index("p"))
+            splines.spline_user_functions(
+                self.model.splines, self._get_index("p")
+            )
         )
 
         # To only generate a subset of functions, apply subselection here
@@ -2812,7 +2874,9 @@ class DEExporter:
         Generates the native C++ code for the loaded model and a Matlab
         script that can be run to compile a mex file from the C++ code
         """
-        with _monkeypatched(sp.Pow, "_eval_derivative", _custom_pow_eval_derivative):
+        with _monkeypatched(
+            sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
+        ):
             self._prepare_model_folder()
             self._generate_c_code()
             self._generate_m_code()
@@ -2863,7 +2927,9 @@ class DEExporter:
                 name in self.functions
                 and not self.functions[name].body
                 and name not in nobody_functions
-            ) or (name not in self.functions and len(self.model.sym(name)) == 0):
+            ) or (
+                name not in self.functions and len(self.model.sym(name)) == 0
+            ):
                 continue
             self._write_index_files(name)
 
@@ -2874,7 +2940,9 @@ class DEExporter:
         self._write_swig_files()
         self._write_module_setup()
 
-        shutil.copy(CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp"))
+        shutil.copy(
+            CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
+        )
 
     def _compile_c_code(
         self,
@@ -2952,8 +3020,10 @@ class DEExporter:
         lines = [
             "% This compile script was automatically created from"
             " Python SBML import.",
-            "% If mex compiler is set up within MATLAB, it can be run" " from MATLAB ",
-            "% in order to compile a mex-file from the Python" " generated C++ files.",
+            "% If mex compiler is set up within MATLAB, it can be run"
+            " from MATLAB ",
+            "% in order to compile a mex-file from the Python"
+            " generated C++ files.",
             "",
             f"modelName = '{self.model_name}';",
             "amimodel.compileAndLinkModel(modelName, '', [], [], [], []);",
@@ -2985,7 +3055,10 @@ class DEExporter:
         else:
             raise ValueError(f"Unknown symbolic array: {name}")
 
-        return {strip_pysb(symbol).name: index for index, symbol in enumerate(symbols)}
+        return {
+            strip_pysb(symbol).name: index
+            for index, symbol in enumerate(symbols)
+        }
 
     def _write_index_files(self, name: str) -> None:
         """
@@ -3040,7 +3113,8 @@ class DEExporter:
         if function in sparse_functions:
             equations = self.model.sparseeq(function)
         elif (
-            not self.allow_reinit_fixpar_initcond and function == "sx0_fixedParameters"
+            not self.allow_reinit_fixpar_initcond
+            and function == "sx0_fixedParameters"
         ):
             # Not required. Will create empty function body.
             equations = sp.Matrix()
@@ -3089,7 +3163,10 @@ class DEExporter:
             lines.append(f'#include "{sym}.h"')
 
         # include return symbols
-        if function in self.model.sym_names() and function not in non_unique_id_symbols:
+        if (
+            function in self.model.sym_names()
+            and function not in non_unique_id_symbols
+        ):
             lines.append(f'#include "{function}.h"')
 
         lines.extend(
@@ -3116,7 +3193,9 @@ class DEExporter:
             body = [
                 # execute this twice to catch cases where the ending '(' would
                 #  be the starting (^|\W) for the following match
-                pow_rx.sub(r"\1amici::pos_pow(", pow_rx.sub(r"\1amici::pos_pow(", line))
+                pow_rx.sub(
+                    r"\1amici::pos_pow(", pow_rx.sub(r"\1amici::pos_pow(", line)
+                )
                 for line in body
             ]
 
@@ -3246,7 +3325,9 @@ class DEExporter:
         with open(filename, "w") as fileout:
             fileout.write("\n".join(lines))
 
-    def _get_function_body(self, function: str, equations: sp.Matrix) -> List[str]:
+    def _get_function_body(
+        self, function: str, equations: sp.Matrix
+    ) -> List[str]:
         """
         Generate C++ code for body of function ``function``.
 
@@ -3285,7 +3366,9 @@ class DEExporter:
                     + str(len(self.model._x0_fixedParameters_idx))
                     + "> _x0_fixedParameters_idxs = {",
                     "        "
-                    + ", ".join(str(x) for x in self.model._x0_fixedParameters_idx),
+                    + ", ".join(
+                        str(x) for x in self.model._x0_fixedParameters_idx
+                    ),
                     "    };",
                     "",
                     # Set all parameters that are to be reset to 0, so that the
@@ -3322,7 +3405,9 @@ class DEExporter:
             lines.extend(get_switch_statement("ip", cases, 1))
 
         elif function == "x0_fixedParameters":
-            for index, formula in zip(self.model._x0_fixedParameters_idx, equations):
+            for index, formula in zip(
+                self.model._x0_fixedParameters_idx, equations
+            ):
                 lines.append(
                     f"    if(std::find(reinitialization_state_idxs.cbegin(), "
                     f"reinitialization_state_idxs.cend(), {index}) != "
@@ -3356,7 +3441,10 @@ class DEExporter:
                 outer_cases[ie] = copy.copy(inner_lines)
             lines.extend(get_switch_statement("ie", outer_cases, 1))
 
-        elif function in sensi_functions and equations.shape[1] == self.model.num_par():
+        elif (
+            function in sensi_functions
+            and equations.shape[1] == self.model.num_par()
+        ):
             cases = {
                 ipar: self.model._code_printer._get_sym_lines_array(
                     equations[:, ipar], function, 0
@@ -3389,7 +3477,8 @@ class DEExporter:
             lines.extend(get_switch_statement(iterator, cases, 1))
 
         elif (
-            function in self.model.sym_names() and function not in non_unique_id_symbols
+            function in self.model.sym_names()
+            and function not in non_unique_id_symbols
         ):
             if function in sparse_functions:
                 symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
@@ -3421,14 +3510,14 @@ class DEExporter:
                 nodes = f"{ind8}{{{', '.join(map(str, spline.nodes))}}}, "
 
             # vector with the node values
-            values = f"{ind8}{{{', '.join(map(str, spline.values_at_nodes))}}}, "
+            values = (
+                f"{ind8}{{{', '.join(map(str, spline.values_at_nodes))}}}, "
+            )
             # vector with the slopes
             if spline.derivatives_by_fd:
                 slopes = f"{ind8}{{}},"
             else:
-                slopes = (
-                    f"{ind8}{{{', '.join(map(str, spline.derivatives_at_nodes))}}},"
-                )
+                slopes = f"{ind8}{{{', '.join(map(str, spline.derivatives_at_nodes))}}},"
 
             body.extend(
                 [
@@ -3451,7 +3540,8 @@ class DEExporter:
                     body.append(ind8 + bc_to_cpp[bc])
                 except KeyError:
                     raise ValueError(
-                        f"Unknown boundary condition '{bc}' " "found in spline object"
+                        f"Unknown boundary condition '{bc}' "
+                        "found in spline object"
                     )
             extrapolate_to_cpp = {
                 None: "SplineExtrapolation::noExtrapolation, ",
@@ -3465,12 +3555,15 @@ class DEExporter:
                     body.append(ind8 + extrapolate_to_cpp[extr])
                 except KeyError:
                     raise ValueError(
-                        f"Unknown extrapolation '{extr}' " "found in spline object"
+                        f"Unknown extrapolation '{extr}' "
+                        "found in spline object"
                     )
             line = ind8
             line += "true, " if spline.derivatives_by_fd else "false, "
             line += (
-                "true, " if isinstance(spline.nodes, splines.UniformGrid) else "false, "
+                "true, "
+                if isinstance(spline.nodes, splines.UniformGrid)
+                else "false, "
             )
             line += "true" if spline.logarithmic_parametrization else "false"
             body.append(line)
@@ -3549,10 +3642,12 @@ class DEExporter:
             "NK": self.model.num_const(),
             "O2MODE": "amici::SecondOrderMode::none",
             # using code printer ensures proper handling of nan/inf
-            "PARAMETERS": self.model._code_printer.doprint(self.model.val("p"))[1:-1],
-            "FIXED_PARAMETERS": self.model._code_printer.doprint(self.model.val("k"))[
+            "PARAMETERS": self.model._code_printer.doprint(self.model.val("p"))[
                 1:-1
             ],
+            "FIXED_PARAMETERS": self.model._code_printer.doprint(
+                self.model.val("k")
+            )[1:-1],
             "PARAMETER_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "p"
             ),
@@ -3567,12 +3662,16 @@ class DEExporter:
             ),
             "OBSERVABLE_TRAFO_INITIALIZER_LIST": "\n".join(
                 f"ObservableScaling::{trafo.value}, // y[{idx}]"
-                for idx, trafo in enumerate(self.model.get_observable_transformations())
+                for idx, trafo in enumerate(
+                    self.model.get_observable_transformations()
+                )
             ),
             "EXPRESSION_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "w"
             ),
-            "PARAMETER_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list("p"),
+            "PARAMETER_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
+                "p"
+            ),
             "STATE_IDS_INITIALIZER_LIST": self._get_symbol_id_initializer_list(
                 "x_rdata"
             ),
@@ -3653,16 +3752,22 @@ class DEExporter:
                                 indexfield,
                                 nobody=True,
                             )
-                        tpl_data[f"{func_name.upper()}_{indexfield.upper()}_DEF"] = ""
+                        tpl_data[
+                            f"{func_name.upper()}_{indexfield.upper()}_DEF"
+                        ] = ""
                         tpl_data[
                             f"{func_name.upper()}_{indexfield.upper()}_IMPL"
                         ] = impl
                 continue
 
-            tpl_data[f"{func_name.upper()}_DEF"] = get_function_extern_declaration(
+            tpl_data[
+                f"{func_name.upper()}_DEF"
+            ] = get_function_extern_declaration(
                 func_name, self.model_name, self.model.is_ode()
             )
-            tpl_data[f"{func_name.upper()}_IMPL"] = get_model_override_implementation(
+            tpl_data[
+                f"{func_name.upper()}_IMPL"
+            ] = get_model_override_implementation(
                 func_name, self.model_name, self.model.is_ode()
             )
             if func_name in sparse_functions:
