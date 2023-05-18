@@ -162,7 +162,6 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %ignore amici::backtraceString;
 %ignore amici::CpuTimer;
 %ignore amici::Logger;
-%ignore amici::SimulationParameters;
 %ignore amici::SimulationState;
 
 // Include before any other header which uses enums defined there
