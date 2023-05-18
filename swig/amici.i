@@ -154,6 +154,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_sim;
 %naturalvar amici::SimulationParameters::reinitialization_state_idxs_presim;
 
+// DO NOT IGNORE amici::SimulationParameters, amici::ModelDimensions
 %ignore amici::ModelContext;
 %ignore amici::ContextManager;
 %ignore amici::ModelState;
