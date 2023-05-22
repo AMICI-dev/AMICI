@@ -95,7 +95,7 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-        && pytest -s \
+        && pytest \
           --ignore-glob=*petab* \
           --ignore-glob=*test_splines.py \
           --cov=amici \
