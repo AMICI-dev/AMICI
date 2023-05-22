@@ -39,6 +39,21 @@ using namespace amici;
 %ignore turnOffRootFinding;
 %ignore getRootInfo;
 %ignore updateAndReinitStatesAndSensitivities;
+%ignore getCpuTime;
+%ignore getCpuTimeB;
+%ignore getLastOrder;
+%ignore getNumErrTestFails;
+%ignore getNumErrTestFailsB;
+%ignore getNumNonlinSolvConvFails;
+%ignore getNumNonlinSolvConvFailsB;
+%ignore getNumRhsEvals;
+%ignore getNumRhsEvalsB;
+%ignore getNumSteps;
+%ignore getNumStepsB;
+%ignore gett;
+%ignore startTimer;
+%ignore switchForwardSensisOff;
+%ignore timeExceeded;
 
 // Solver.__repr__
 %pythoncode %{
