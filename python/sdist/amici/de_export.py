@@ -51,6 +51,7 @@ from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 from .de_model import *
 from .import_utils import (
+    amici_time_symbol,
     ObservableTransformation,
     SBMLException,
     generate_flux_symbol,
@@ -1012,7 +1013,7 @@ class DEModel:
                 # we need to flatten out assignments in the compartment in
                 # order to ensure that we catch all species dependencies
                 v = smart_subs_dict(v, si.symbols[SymbolId.EXPRESSION], "value")
-                dv_dt = v.diff(si.amici_time_symbol)
+                dv_dt = v.diff(amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
                 comp_rate_vars = [
@@ -1733,7 +1734,7 @@ class DEModel:
             .replace("sigmarz", "sigmaz")
             .replace("dJrzdz", "dJrzdrz")
         )
-        time_symbol = sp.Matrix([symbol_with_assumptions("t")])
+        time_symbol = sp.Matrix([amici_time_symbol])
 
         if name in self._equation_prototype:
             self._equation_from_components(name, self._equation_prototype[name]())
@@ -2896,6 +2897,8 @@ class DEExporter:
             if name in sparse_functions
             else self.model.sym(name).T
         )
+        if not len(symbols):
+            return
 
         # flatten multiobs
         if isinstance(next(iter(symbols), None), list):
