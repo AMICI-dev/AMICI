@@ -95,6 +95,8 @@ endif()
 
 if(DEFINED ENV{SWIG})
   message(STATUS "Setting SWIG_EXECUTABLE to $ENV{SWIG} ($SWIG)")
+  unset(SWIG_VERSION CACHE)
+  unset(SWIG_DIR CACHE)
   set(SWIG_EXECUTABLE $ENV{SWIG})
 endif()
 
