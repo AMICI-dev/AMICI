@@ -1,5 +1,4 @@
 # NOTE: relative paths are expected to be relative to the repository root
-#git+https://github.com/PEtab-dev/libpetab-python@develop#egg=petab
 sphinx<7
 mock>=5.0.2
 setuptools==67.7.2
