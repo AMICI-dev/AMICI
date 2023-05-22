@@ -8,6 +8,7 @@ function as defined by a PEtab problem
 import copy
 import logging
 import numbers
+import re
 from typing import (
     Any,
     Collection,
@@ -28,6 +29,7 @@ import petab
 import sympy as sp
 from amici.sbml_import import get_species_initial
 from petab.C import *  # noqa: F403
+from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
 
 from . import AmiciExpData, AmiciModel
@@ -37,7 +39,13 @@ from .parameter_mapping import (
     ParameterMappingForCondition,
     fill_in_parameters,
 )
-from .petab_import import PREEQ_INDICATOR_ID, element_is_state
+from .petab_import import PREEQ_INDICATOR_ID
+from .petab_util import get_states_in_condition_table
+
+try:
+    import pysb
+except ImportError:
+    pysb = None
 
 logger = get_logger(__name__)
 
@@ -466,15 +474,18 @@ def create_parameter_mapping(
     # Because AMICI globalizes all local parameters during model import,
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
-    if petab_problem.sbml_document:
-        converter_config = libsbml.SBMLLocalParameterConverter().getDefaultProperties()
-        petab_problem.sbml_document.convert(converter_config)
-    else:
-        logger.debug(
-            "No petab_problem.sbml_document is set. Cannot convert "
-            "SBML LocalParameters. If the model contains "
-            "LocalParameters, parameter mapping will fail."
-        )
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        if petab_problem.sbml_document:
+            converter_config = (
+                libsbml.SBMLLocalParameterConverter().getDefaultProperties()
+            )
+            petab_problem.sbml_document.convert(converter_config)
+        else:
+            logger.debug(
+                "No petab_problem.sbml_document is set. Cannot "
+                "convert SBML LocalParameters. If the model contains "
+                "LocalParameters, parameter mapping will fail."
+            )
 
     default_parameter_mapping_kwargs = {
         "warn_unmapped": False,
@@ -491,6 +502,7 @@ def create_parameter_mapping(
         measurement_df=petab_problem.measurement_df,
         parameter_df=petab_problem.parameter_df,
         observable_df=petab_problem.observable_df,
+        mapping_df=petab_problem.mapping_df,
         model=petab_problem.model,
         **dict(default_parameter_mapping_kwargs, **parameter_mapping_kwargs),
     )
@@ -505,6 +517,108 @@ def create_parameter_mapping(
         parameter_mapping.append(mapping_for_condition)
 
     return parameter_mapping
+
+
+def _get_initial_state_sbml(
+    petab_problem: petab.Problem, element_id: str
+) -> Union[float, sp.Basic]:
+    element = petab_problem.sbml_model.getElementBySId(element_id)
+    type_code = element.getTypeCode()
+    initial_assignment = petab_problem.sbml_model.getInitialAssignmentBySymbol(
+        element_id
+    )
+    if initial_assignment:
+        initial_assignment = sp.sympify(
+            libsbml.formulaToL3String(initial_assignment.getMath()), locals=_clash
+        )
+    if type_code == libsbml.SBML_SPECIES:
+        value = (
+            get_species_initial(element)
+            if initial_assignment is None
+            else initial_assignment
+        )
+    elif type_code == libsbml.SBML_PARAMETER:
+        value = element.getValue() if initial_assignment is None else initial_assignment
+    elif type_code == libsbml.SBML_COMPARTMENT:
+        value = element.getSize() if initial_assignment is None else initial_assignment
+    else:
+        raise NotImplementedError(
+            f"Don't know what how to handle {element_id} in " "condition table."
+        )
+    return value
+
+
+def _get_initial_state_pysb(
+    petab_problem: petab.Problem, element_id: str
+) -> Union[float, sp.Symbol]:
+    species_idx = int(re.match(r"__s(\d+)$", element_id)[1])
+    species_pattern = petab_problem.model.model.species[species_idx]
+    from pysb.pattern import match_complex_pattern
+
+    value = next(
+        (
+            initial.value
+            for initial in petab_problem.model.model.initials
+            if match_complex_pattern(initial.pattern, species_pattern, exact=True)
+        ),
+        0.0,
+    )
+    if isinstance(value, pysb.Parameter):
+        if value.name in petab_problem.parameter_df.index:
+            value = value.name
+        else:
+            value = value.value
+
+    return value
+
+
+def _set_initial_state(
+    petab_problem,
+    condition_id,
+    element_id,
+    init_par_id,
+    par_map,
+    scale_map,
+    value,
+):
+    value = petab.to_float_if_float(value)
+    if pd.isna(value):
+        if petab_problem.model.type_id == MODEL_TYPE_SBML:
+            value = _get_initial_state_sbml(petab_problem, element_id)
+        elif petab_problem.model.type_id == MODEL_TYPE_PYSB:
+            value = _get_initial_state_pysb(petab_problem, element_id)
+
+        try:
+            value = float(value)
+        except (ValueError, TypeError):
+            if sp.nsimplify(value).is_Atom and (
+                pysb is None or not isinstance(value, pysb.Component)
+            ):
+                # Get rid of multiplication with one
+                value = sp.nsimplify(value)
+            else:
+                raise NotImplementedError(
+                    "Cannot handle non-trivial initial state "
+                    f"expression for {element_id}: {value}"
+                )
+            # this should be a parameter ID
+            value = str(value)
+        logger.debug(
+            f"The species {element_id} has no initial value "
+            f"defined for the condition {condition_id} in "
+            "the PEtab conditions table. The initial value is "
+            f"now set to {value}, which is the initial value "
+            "defined in the SBML model."
+        )
+    par_map[init_par_id] = value
+    if isinstance(value, float):
+        # numeric initial state
+        scale_map[init_par_id] = petab.LIN
+    else:
+        # parametric initial state
+        scale_map[init_par_id] = petab_problem.parameter_df[PARAMETER_SCALE].get(
+            value, petab.LIN
+        )
 
 
 def create_parameter_mapping_for_condition(
@@ -563,12 +677,9 @@ def create_parameter_mapping_for_condition(
     # ExpData.x0, but in the case of preequilibration this would not allow for
     # resetting initial states.
 
-    states_in_condition_table = [
-        col
-        for col in petab_problem.condition_df
-        if element_is_state(petab_problem.sbml_model, col)
-    ]
-    if states_in_condition_table:
+    if states_in_condition_table := get_states_in_condition_table(
+        petab_problem, condition
+    ):
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
         # that it was not added by the user with a different meaning...)
@@ -579,88 +690,20 @@ def create_parameter_mapping_for_condition(
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-        def _set_initial_state(
-            condition_id, element_id, init_par_id, par_map, scale_map
-        ):
-            value = petab.to_float_if_float(
-                petab_problem.condition_df.loc[condition_id, element_id]
-            )
-            if pd.isna(value):
-                element = petab_problem.sbml_model.getElementBySId(element_id)
-                type_code = element.getTypeCode()
-                initial_assignment = (
-                    petab_problem.sbml_model.getInitialAssignmentBySymbol(element_id)
-                )
-                if initial_assignment:
-                    initial_assignment = sp.sympify(
-                        libsbml.formulaToL3String(initial_assignment.getMath()),
-                        locals=_clash,
-                    )
-                if type_code == libsbml.SBML_SPECIES:
-                    value = (
-                        get_species_initial(element)
-                        if initial_assignment is None
-                        else initial_assignment
-                    )
-                elif type_code == libsbml.SBML_PARAMETER:
-                    value = (
-                        element.getValue()
-                        if initial_assignment is None
-                        else initial_assignment
-                    )
-                elif type_code == libsbml.SBML_COMPARTMENT:
-                    value = (
-                        element.getSize()
-                        if initial_assignment is None
-                        else initial_assignment
-                    )
-                else:
-                    raise NotImplementedError(
-                        f"Don't know what how to handle {element_id} in "
-                        "condition table."
-                    )
-
-                try:
-                    value = float(value)
-                except (ValueError, TypeError):
-                    if sp.nsimplify(value).is_Atom:
-                        # Get rid of multiplication with one
-                        value = sp.nsimplify(value)
-                    else:
-                        raise NotImplementedError(
-                            "Cannot handle non-trivial initial state "
-                            f"expression for {element_id}: {value}"
-                        )
-                    # this should be a parameter ID
-                    value = str(value)
-                logger.debug(
-                    f"The species {element_id} has no initial value "
-                    f"defined for the condition {condition_id} in "
-                    "the PEtab conditions table. The initial value is "
-                    f"now set to {value}, which is the initial value "
-                    "defined in the SBML model."
-                )
-            par_map[init_par_id] = value
-            if isinstance(value, float):
-                # numeric initial state
-                scale_map[init_par_id] = petab.LIN
-            else:
-                # parametric initial state
-                scale_map[init_par_id] = petab_problem.parameter_df[
-                    PARAMETER_SCALE
-                ].get(value, petab.LIN)
-
-        for element_id in states_in_condition_table:
+        for element_id, (value, preeq_value) in states_in_condition_table.items():
             # for preequilibration
             init_par_id = f"initial_{element_id}_preeq"
-            if condition.get(PREEQUILIBRATION_CONDITION_ID):
-                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+            if (
+                condition_id := condition.get(PREEQUILIBRATION_CONDITION_ID)
+            ) is not None:
                 _set_initial_state(
+                    petab_problem,
                     condition_id,
                     element_id,
                     init_par_id,
                     condition_map_preeq,
                     condition_scale_map_preeq,
+                    preeq_value,
                 )
             else:
                 # need to set dummy value for preeq parameter anyways, as it
@@ -673,11 +716,13 @@ def create_parameter_mapping_for_condition(
             condition_id = condition[SIMULATION_CONDITION_ID]
             init_par_id = f"initial_{element_id}_sim"
             _set_initial_state(
+                petab_problem,
                 condition_id,
                 element_id,
                 init_par_id,
                 condition_map_sim,
                 condition_scale_map_sim,
+                value,
             )
 
     ##########################################################################
@@ -757,26 +802,23 @@ def create_edatas(
 
     observable_ids = amici_model.getObservableIds()
 
+    measurement_groupvar = [SIMULATION_CONDITION_ID]
+    if PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
+        measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
     measurement_dfs = dict(
-        list(
-            petab_problem.measurement_df.groupby(
-                [petab.SIMULATION_CONDITION_ID, petab.PREEQUILIBRATION_CONDITION_ID]
-                if petab.PREEQUILIBRATION_CONDITION_ID in simulation_conditions
-                else petab.SIMULATION_CONDITION_ID
-            )
-        )
+        list(petab_problem.measurement_df.groupby(measurement_groupvar))
     )
 
     edatas = []
     for _, condition in simulation_conditions.iterrows():
         # Create amici.ExpData for each simulation
-        if petab.PREEQUILIBRATION_CONDITION_ID in condition:
+        if PREEQUILIBRATION_CONDITION_ID in condition:
             measurement_index = (
-                condition.get(petab.SIMULATION_CONDITION_ID),
-                condition.get(petab.PREEQUILIBRATION_CONDITION_ID),
+                condition.get(SIMULATION_CONDITION_ID),
+                condition.get(PREEQUILIBRATION_CONDITION_ID),
             )
         else:
-            measurement_index = condition.get(petab.SIMULATION_CONDITION_ID)
+            measurement_index = (condition.get(SIMULATION_CONDITION_ID),)
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,
@@ -828,18 +870,16 @@ def create_edata_for_condition(
         edata.id += "+" + condition.get(PREEQUILIBRATION_CONDITION_ID)
     ##########################################################################
     # enable initial parameters reinitialization
-    states_in_condition_table = [
-        col
-        for col in petab_problem.condition_df
-        if not pd.isna(
-            petab_problem.condition_df.loc[condition[SIMULATION_CONDITION_ID], col]
-        )
-        and element_is_state(petab_problem.sbml_model, col)
-    ]
+
+    states_in_condition_table = get_states_in_condition_table(
+        petab_problem, condition=condition
+    )
     if condition.get(PREEQUILIBRATION_CONDITION_ID) and states_in_condition_table:
         state_ids = amici_model.getStateIds()
         state_idx_reinitalization = [
-            state_ids.index(s) for s in states_in_condition_table
+            state_ids.index(s)
+            for s, (v, v_preeq) in states_in_condition_table.items()
+            if not np.isnan(v)
         ]
         edata.reinitialization_state_idxs_sim = state_idx_reinitalization
         logger.debug(

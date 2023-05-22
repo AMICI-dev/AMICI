@@ -248,6 +248,9 @@ def fill_in_parameters_for_condition(
                 # condition table overrides must have been handled already,
                 # e.g. by the PEtab parameter mapping, but parameters from
                 # InitialAssignments may still be present.
+                if mapping[value] == model_par:
+                    # prevent infinite recursion
+                    raise
                 return _get_par(value, mapping[value], mapping)
         if model_par in problem_parameters:
             # user-provided
