@@ -233,19 +233,19 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
     // verify that reported CPU times are plausible
-    gsl_Ensures(rdata->cpu_time <= rdata->cpu_time_total);
-    gsl_Ensures(rdata->cpu_timeB <= rdata->cpu_time_total);
-    gsl_Ensures(rdata->preeq_cpu_time <= rdata->cpu_time_total);
-    gsl_Ensures(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
-    gsl_Ensures(rdata->posteq_cpu_time <= rdata->cpu_time_total);
-    gsl_Ensures(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->preeq_cpu_timeB <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_time <= rdata->cpu_time_total);
+    gsl_EnsuresDebug(rdata->posteq_cpu_timeB <= rdata->cpu_time_total);
     if (!posteq)
-        gsl_Ensures(
+        gsl_EnsuresDebug(
             std::is_sorted(rdata->numsteps.begin(), rdata->numsteps.end())
             || rdata->status != AMICI_SUCCESS
         );
     if (!preeq)
-        gsl_Ensures(
+        gsl_EnsuresDebug(
             std::is_sorted(rdata->numstepsB.begin(), rdata->numstepsB.end())
             || rdata->status != AMICI_SUCCESS
         );
