@@ -12,7 +12,7 @@ jobs:
     name: Tests Ubuntu
 
     # TODO: prepare image with more deps preinstalled
-    runs-on: ubuntu-23.04
+    runs-on: ubuntu-22.04
 
     env:
       AMICI_PARALLEL_COMPILE: ""
