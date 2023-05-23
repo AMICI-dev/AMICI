@@ -85,8 +85,7 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
         )
         generate_sensitivity_code = not (has_events and has_algebraic_rules)
         # TODO https://github.com/AMICI-dev/AMICI/issues/2109
-        # TODO https://github.com/AMICI-dev/AMICI/issues/2110
-        generate_sensitivity_code &= test_id not in {"01240", "01355"}
+        generate_sensitivity_code &= test_id not in {"01240"}
         # ^^^^^^^^
 
         # setup model
