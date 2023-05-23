@@ -158,7 +158,7 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
             # can use `_f` or `_a` here, should be no difference
             function=amici_function_f,
             point=point,
-            sizes=[1e-9, 1e-7, 1e-5, 1e-3, 1e-1],
+            sizes=[1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1],
             direction_ids=model.getParameterIds(),
             method_ids=[MethodId.FORWARD, MethodId.BACKWARD, MethodId.CENTRAL],
             relative_sizes=True,
