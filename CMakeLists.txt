@@ -153,12 +153,18 @@ if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
         CACHE STRING "")
   endif()
 elseif(NOT DEFINED ENV{BLAS_LIBS} AND NOT DEFINED ENV{BLAS_CFLAGS})
-  set(BLAS_INCLUDE_DIRS
-      ""
-      CACHE STRING "")
-  set(BLAS_LIBRARIES
-      -lcblas
-      CACHE STRING "")
+  # if nothing is specified via environment variables, let's try FindBLAS
+  find_package(BLAS)
+  if(NOT BLAS_FOUND)
+    # Nothing specified by the user and FindBLAS didn't find anything; let's try
+    # if cblas is available on the system paths.
+    set(BLAS_INCLUDE_DIRS
+        ""
+        CACHE STRING "")
+    set(BLAS_LIBRARIES
+        -lcblas
+        CACHE STRING "")
+  endif()
 endif()
 add_compile_definitions(AMICI_BLAS_${BLAS})
 
