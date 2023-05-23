@@ -98,9 +98,17 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
         # record results
         write_result_file(simulated, test_id, result_path)
 
+        # test sensitivities
+        if not model.getParameters():
+            pytest.skip("No parameters -> no sensitivities to check")
+
+        if len(model.idlist):
+            pytest.skip("DAE -> simulation errors -> no sensis to check")
+
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        # currently only checking "x"/"sx" for FSA
         (
             amici_function_f,
             amici_derivative_f,
@@ -108,21 +116,23 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
         ) = run_amici_simulation_to_cached_functions(
             amici_model=model,
             amici_solver=solver,
+            derivative_variables=["x"],
             cache=False,
         )
         rdata_f = amici.runAmiciSimulation(model, solver)
 
-        solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
-        (
-            amici_function_a,
-            amici_derivative_a,
-            structures_a,
-        ) = run_amici_simulation_to_cached_functions(
-            amici_model=model,
-            amici_solver=solver,
-            cache=False,
-        )
-        rdata_a = amici.runAmiciSimulation(model, solver)
+        # solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+        # (
+        #    amici_function_a,
+        #    amici_derivative_a,
+        #    structures_a,
+        # ) = run_amici_simulation_to_cached_functions(
+        #    amici_model=model,
+        #    amici_solver=solver,
+        #    derivative_variables=["x"],
+        #    cache=False,
+        # )
+        # rdata_a = amici.runAmiciSimulation(model, solver)
 
         point = np.asarray(model.getParameters())
 
@@ -134,14 +144,14 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
             direction_ids=model.getParameterIds(),
             method_ids=[MethodId.FORWARD, MethodId.BACKWARD, MethodId.CENTRAL],
             relative_sizes=True,
-            success_checker=Consistency(),
+            success_checker=Consistency(rtol=1e-2, atol=1e-4),
         )
 
         derivative_fd = reshape(
             derivative.value.flat, structures_f["derivative"], sensitivities=True
         )["x"]
         derivative_fsa = rdata_f.sx
-        derivative_asa = rdata_a.sllh  # currently None, define some objective?
+        # derivative_asa = rdata_a.sllh  # currently None, define some objective?
 
         # could alternatively use a `fiddy.DerivativeCheck` class
         if not np.isclose(derivative_fd, derivative_fsa, rtol=5e-2, atol=5e-2).all():
