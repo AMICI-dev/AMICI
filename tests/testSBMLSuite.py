@@ -120,8 +120,10 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
             pytest.skip("No parameters -> no sensitivities to check")
 
         # TODO see https://github.com/AMICI-dev/AMICI/pull/2101
-        if not generate_sensitivity_code or sum(model.idlist):
+        if not generate_sensitivity_code:
             pytest.skip("Sensitivity analysis is known to fail.")
+        if any(id_ == 0 for id_ in model.idlist):
+            pytest.skip("Sensitivity analysis for DAE is known to fail.")
 
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
