@@ -72,13 +72,27 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
             columns={c: c.replace(" ", "") for c in results.columns}, inplace=True
         )
 
+        # TODO remove after https://github.com/AMICI-dev/AMICI/pull/2101
+        #   and https://github.com/AMICI-dev/AMICI/issues/2106
+        # Don't attempt to generate sensitivity code for models with events+algebraic rules, which will fail
+        sbml_file = find_model_file(current_test_path, test_id)
+        sbml_document = sbml.SBMLReader().readSBMLFromFile(str(sbml_file))
+        sbml_model = sbml_document.getModel()
+        has_events = sbml_model.getNumEvents() > 0
+        has_algebraic_rules = any(
+            rule.getTypeCode() == sbml.SBML_ALGEBRAIC_RULE
+            for rule in sbml_model.getListOfRules()
+        )
+        generate_sensitivity_code = not (has_events and has_algebraic_rules)
+        # ^^^^^^^^
+
         # setup model
         model_dir = Path(__file__).parent / "SBMLTestModels" / test_id
         model, solver, wrapper = compile_model(
             current_test_path,
             test_id,
             model_dir,
-            generate_sensitivity_code=True,
+            generate_sensitivity_code=generate_sensitivity_code,
         )
         settings = read_settings_file(current_test_path, test_id)
 
@@ -92,7 +106,7 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
             else:
                 raise RuntimeError("Simulation failed unexpectedly")
 
-        # verify
+        # verify simulation results
         simulated = verify_results(settings, rdata, results, wrapper, model, atol, rtol)
 
         # record results
@@ -102,11 +116,11 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
         if not model.getParameters():
             pytest.skip("No parameters -> no sensitivities to check")
 
-        if len(model.idlist):
+        # TODO see https://github.com/AMICI-dev/AMICI/pull/2101
+        if not generate_sensitivity_code or sum(model.idlist):
             pytest.skip("DAE -> simulation errors -> no sensis to check")
 
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
-
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
         # currently only checking "x"/"sx" for FSA
         (
