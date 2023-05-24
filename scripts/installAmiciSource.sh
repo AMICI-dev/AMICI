@@ -30,6 +30,7 @@ fi
 pip install -U "setuptools<64"
 pip install --upgrade pip wheel
 pip install --upgrade pip scipy matplotlib coverage pytest \
-   pytest-cov cmake_build_extension numpy
-pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test,pysb,vis] --no-build-isolation
+  pytest-cov cmake_build_extension numpy
+pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
+pip install --verbose -e ${AMICI_PATH}/python/sdist[petab,test,vis] --no-build-isolation
 deactivate

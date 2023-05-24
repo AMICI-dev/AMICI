@@ -43,8 +43,6 @@ jobs:
             libatlas-base-dev \
             python3-venv
 
-      - run: pip3 install pysb petab
-
       - name: Build BNGL
         run: |
           scripts/buildBNGL.sh
@@ -58,6 +56,11 @@ jobs:
       - name: Install python package
         run: |
           scripts/installAmiciSource.sh
+
+      - name: Install petab
+        run: |
+          source ./build/venv/bin/activate \
+            && pip3 install wheel pytest shyaml pytest-cov pysb
 
       # retrieve test models
       - name: Download and install PEtab test suite

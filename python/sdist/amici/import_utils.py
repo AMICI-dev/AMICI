@@ -54,10 +54,6 @@ class CircularDependencyError(ValueError):
 
 setattr(sys.modules["toposort"], "CircularDependencyError", CircularDependencyError)
 
-
-sbml_time_symbol = sp.Symbol("time", real=True)
-amici_time_symbol = sp.Symbol("t", real=True)
-
 annotation_namespace = "https://github.com/AMICI-dev/AMICI"
 
 
@@ -712,3 +708,7 @@ def strip_pysb(symbol: sp.Basic) -> sp.Basic:
     else:
         # in this case we will use sympy specific transform anyways
         return symbol
+
+
+sbml_time_symbol = symbol_with_assumptions("time")
+amici_time_symbol = symbol_with_assumptions("t")
