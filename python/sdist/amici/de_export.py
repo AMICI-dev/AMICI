@@ -1999,11 +1999,10 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(self.eq("stau")[ie]):
+                if not smart_is_zero_matrix(self.eq("stau")[ie]) \
+                        and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
-                        (self.sym("xdot_old") - self.sym("xdot"))
-                        if not smart_is_zero_matrix(self.eq("xdot"))
-                        else self.sym("xdot_old"),
+                        self.sym("xdot_old") - self.sym("xdot"),
                         self.sym("stau").T,
                     )
 
