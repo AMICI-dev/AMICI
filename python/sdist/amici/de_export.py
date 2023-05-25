@@ -2001,7 +2001,9 @@ class DEModel:
                 # symbols
                 if not smart_is_zero_matrix(self.eq("stau")[ie]):
                     tmp_eq += smart_multiply(
-                        (self.sym("xdot_old") - self.sym("xdot")),
+                        (self.sym("xdot_old") - self.sym("xdot"))
+                        if not smart_is_zero_matrix(self.eq("xdot"))
+                        else self.sym("xdot_old"),
                         self.sym("stau").T,
                     )
 
