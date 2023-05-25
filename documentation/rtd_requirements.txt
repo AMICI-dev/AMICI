@@ -4,7 +4,7 @@ mock>=5.0.2
 setuptools==67.7.2
 pysb>=1.11.0
 matplotlib==3.7.1
-nbsphinx>=0.9.1
+nbsphinx==0.9.1
 nbformat==5.8.0
 recommonmark>=0.7.1
 sphinx_rtd_theme>=1.2.0
