@@ -9,6 +9,7 @@ time to complete.
 import os
 
 import numpy as np
+from amici.testing import skip_on_valgrind
 from splines_utils import (
     check_splines_full,
     example_spline_1,
@@ -17,6 +18,7 @@ from splines_utils import (
 )
 
 
+@skip_on_valgrind
 def test_multiple_splines(**kwargs):
     """
     Test a SBML model containing multiple splines.
