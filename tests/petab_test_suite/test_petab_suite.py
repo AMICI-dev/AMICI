@@ -13,7 +13,7 @@ from _pytest.outcomes import Skipped
 from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import PysbPetabProblem, import_petab_problem
+from amici.petab_import import import_petab_problem
 from amici.petab_objective import (
     create_parameterized_edatas,
     rdatas_to_measurement_df,
@@ -55,7 +55,7 @@ def _test_case(case, model_type, version):
     problem = petab.Problem.from_yaml(yaml_file)
 
     # compile amici model
-    if case.startswith("0006") and model_type != "pysb":
+    if case.startswith("0006"):
         petab.flatten_timepoint_specific_output_overrides(problem)
     model_name = f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
     model_output_dir = f"amici_models/{model_name}"
@@ -174,7 +174,7 @@ def run():
     n_success = 0
     n_skipped = 0
     n_total = 0
-    for version in ("v1.0.0",):
+    for version in ("v1.0.0", "v2.0.0"):
         cases = petabtests.get_cases("sbml", version=version)
         n_total += len(cases)
         for case in cases:

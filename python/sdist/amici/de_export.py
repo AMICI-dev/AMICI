@@ -1993,15 +1993,20 @@ class DEModel:
             ]
 
         elif name == "deltasx":
+            if self.num_states_solver() * self.num_par() == 0:
+                self._eqs[name] = []
+                return
+
             event_eqs = []
             for ie, event in enumerate(self._events):
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(self.eq("stau")[ie]):
+                if not smart_is_zero_matrix(self.eq("stau")[ie]) \
+                        and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
-                        (self.sym("xdot_old") - self.sym("xdot")),
+                        self.sym("xdot_old") - self.sym("xdot"),
                         self.sym("stau").T,
                     )
 
