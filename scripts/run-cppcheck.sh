@@ -15,4 +15,3 @@ cppcheck \
   "-I${AMICI_PATH}/include/" \
   --enable=style \
   "--exitcode-suppressions=${AMICI_PATH}/.cppcheck-exitcode-suppressions"
-

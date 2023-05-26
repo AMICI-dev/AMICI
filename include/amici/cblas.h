@@ -25,10 +25,11 @@ namespace amici {
  * @param Y         vector Y
  * @param incY      increment for entries of Y
  */
-void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
-                 int M, int N, double alpha, const double *A,
-                 int lda, const double *X, int incX,
-                 double beta, double *Y, int incY);
+void amici_dgemv(
+    BLASLayout layout, BLASTranspose TransA, int M, int N, double alpha,
+    double const* A, int lda, double const* X, int incX, double beta, double* Y,
+    int incY
+);
 
 /**
  * @brief CBLAS matrix matrix multiplication (dgemm)
@@ -53,11 +54,11 @@ void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
  * @param C         matrix C
  * @param ldc       leading dimension of C (>=M or >= N)
  */
-void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
-                 BLASTranspose TransB, int M, int N,
-                 int K, double alpha, const double *A,
-                 int lda, const double *B, int ldb,
-                 double beta, double *C, int ldc);
+void amici_dgemm(
+    BLASLayout layout, BLASTranspose TransA, BLASTranspose TransB, int M, int N,
+    int K, double alpha, double const* A, int lda, double const* B, int ldb,
+    double beta, double* C, int ldc
+);
 
 /**
  * @brief Compute y = a*x + y
@@ -68,7 +69,9 @@ void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
  * @param y         vector of length n*incy
  * @param incy      y stride
  */
-void amici_daxpy(int n, double alpha, const double *x, int incx, double *y, int incy);
+void amici_daxpy(
+    int n, double alpha, double const* x, int incx, double* y, int incy
+);
 
 } // namespace amici
 

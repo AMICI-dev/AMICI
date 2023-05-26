@@ -3,16 +3,16 @@
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Set
+from typing import List, Set, Tuple
 
 import pytest
-
 
 # stores passed SBML semantic test suite IDs
 passed_ids = []
 
-SBML_SEMANTIC_CASES_DIR = \
-    Path(__file__).parent / 'sbml-test-suite' / 'cases' / 'semantic'
+SBML_SEMANTIC_CASES_DIR = (
+    Path(__file__).parent / "sbml-test-suite" / "cases" / "semantic"
+)
 
 
 @pytest.fixture
@@ -29,11 +29,11 @@ def parse_selection(selection_str: str, last: int) -> List[int]:
     Valid input e.g.: "1", "1,3", "-3,4,6-7"
     """
     indices = []
-    for group in selection_str.split(','):
-        if not re.match(r'^(?:-?\d+|\d+-\d*)$', group):
+    for group in selection_str.split(","):
+        if not re.match(r"^(?:-?\d+|\d+-\d*)$", group):
             print("Invalid selection", group)
             sys.exit()
-        spl = group.split('-')
+        spl = group.split("-")
         if len(spl) == 1:
             indices.append(int(spl[0]))
         elif len(spl) == 2:
@@ -46,9 +46,10 @@ def parse_selection(selection_str: str, last: int) -> List[int]:
 def get_all_semantic_case_ids():
     """Get iterator over test sorted IDs of all cases in the SBML semantic
     suite"""
-    pattern = re.compile(r'\d{5}')
-    return sorted(str(x.name) for x in SBML_SEMANTIC_CASES_DIR.iterdir()
-                  if pattern.match(x.name))
+    pattern = re.compile(r"\d{5}")
+    return sorted(
+        str(x.name) for x in SBML_SEMANTIC_CASES_DIR.iterdir() if pattern.match(x.name)
+    )
 
 
 def pytest_addoption(parser):
@@ -77,12 +78,12 @@ def pytest_generate_tests(metafunc):
 def pytest_sessionfinish(session, exitstatus):
     """Process test results"""
     global passed_ids
-    terminalreporter = session.config.pluginmanager.get_plugin(
-        'terminalreporter')
+    terminalreporter = session.config.pluginmanager.get_plugin("terminalreporter")
     terminalreporter.ensure_newline()
     # parse test names to get passed case IDs (don't know any better way to
     # access fixture values)
     from testSBMLSuite import format_test_id
+
     passed_ids = [format_test_id(_) for _ in passed_ids]
     if passed_ids:
         write_passed_tags(passed_ids, terminalreporter)
@@ -99,21 +100,22 @@ def write_passed_tags(passed_ids, out=sys.stdout):
         passed_component_tags |= cur_component_tags
         passed_test_tags |= cur_test_tags
 
-    out.write("\nAt least one test with the following component tags has "
-              "passed:\n")
-    out.write('  ' + '\n  '.join(sorted(passed_component_tags)))
-    out.write("\n\nAt least one test with the following test tags has "
-              "passed:\n")
-    out.write('  ' + '\n  '.join(sorted(passed_test_tags)))
+    out.write("\nAt least one test with the following component tags has " "passed:\n")
+    out.write("  " + "\n  ".join(sorted(passed_component_tags)))
+    out.write("\n\nAt least one test with the following test tags has " "passed:\n")
+    out.write("  " + "\n  ".join(sorted(passed_test_tags)))
 
 
 def pytest_runtest_logreport(report: "TestReport") -> None:
     """Collect test case IDs of passed SBML semantic test suite cases"""
-    if report.when == 'call'\
-            and report.outcome == 'passed'\
-            and '::test_sbml_testsuite_case[' in report.nodeid:
-        test_case_id = re.sub(r'^.*::test_sbml_testsuite_case\[(\d+)].*$',
-                              r'\1', report.nodeid)
+    if (
+        report.when == "call"
+        and report.outcome == "passed"
+        and "::test_sbml_testsuite_case[" in report.nodeid
+    ):
+        test_case_id = re.sub(
+            r"^.*::test_sbml_testsuite_case\[(\d+)].*$", r"\1", report.nodeid
+        )
         passed_ids.append(test_case_id)
 
 
@@ -124,19 +126,19 @@ def get_tags_for_test(test_id: str) -> Tuple[Set[str], Set[str]]:
         Tuple of set of strings for componentTags and testTags
     """
     current_test_path = SBML_SEMANTIC_CASES_DIR / test_id
-    info_file = current_test_path / f'{test_id}-model.m'
+    info_file = current_test_path / f"{test_id}-model.m"
     with open(info_file) as f:
         component_tags = set()
         test_tags = set()
         for line in f:
-            if line.startswith('testTags:'):
-                test_tags = set(
-                    re.split(r'[ ,:]', line[len('testTags:'):].strip()))
-                test_tags.discard('')
-            if line.startswith('componentTags:'):
+            if line.startswith("testTags:"):
+                test_tags = set(re.split(r"[ ,:]", line[len("testTags:") :].strip()))
+                test_tags.discard("")
+            if line.startswith("componentTags:"):
                 component_tags = set(
-                    re.split(r'[ ,:]', line[len('componentTags:'):].strip()))
-                component_tags.discard('')
+                    re.split(r"[ ,:]", line[len("componentTags:") :].strip())
+                )
+                component_tags.discard("")
             if test_tags and component_tags:
                 return component_tags, test_tags
     print(f"No componentTags or testTags found for test case {test_id}.")

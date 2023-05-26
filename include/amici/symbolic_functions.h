@@ -114,8 +114,6 @@ double getNaN();
  */
 double sign(double x);
 
-
-
 /* legacy spline implementation in C (MATLAB only) */
 
 /**

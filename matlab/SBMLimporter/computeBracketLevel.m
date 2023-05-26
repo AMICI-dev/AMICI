@@ -11,7 +11,7 @@ function [ brl ] = computeBracketLevel( cstr )
     %
     % Return values:
     %  brl: bracket levels @type *int
-    
+
     % compute bracket levels add one for each (, (before) remove 1 for each
     % ) (after)
     open = (cstr == '(');
@@ -24,6 +24,5 @@ function [ brl ] = computeBracketLevel( cstr )
     for ifun = 1:length(fun_startidx)
         brl(fun_startidx(ifun):(fun_endidx(ifun)-1)) = brl(fun_endidx(ifun));
     end
-    
-end
 
+end

@@ -15,25 +15,22 @@ import sys
 from typing import Callable
 
 import pandas as pd
-
-from amici import SensitivityMethod_none
-from amici import AmiciModel
-from amici.petab_import import import_petab_problem
-from amici.petab_objective import (simulate_petab,
-                                   rdatas_to_measurement_df,
-                                   RDATAS)
 import petab
+from amici import AmiciModel, SensitivityMethod_none
+from amici.petab_import import import_petab_problem
+from amici.petab_objective import RDATAS, rdatas_to_measurement_df, simulate_petab
 
-AMICI_MODEL = 'amici_model'
-AMICI_SOLVER = 'solver'
-MODEL_NAME = 'model_name'
-MODEL_OUTPUT_DIR = 'model_output_dir'
+AMICI_MODEL = "amici_model"
+AMICI_SOLVER = "solver"
+MODEL_NAME = "model_name"
+MODEL_OUTPUT_DIR = "model_output_dir"
 
-PETAB_PROBLEM = 'petab_problem'
+PETAB_PROBLEM = "petab_problem"
 
 
 class PetabSimulator(petab.simulate.Simulator):
     """Implementation of the PEtab `Simulator` class that uses AMICI."""
+
     def __init__(self, *args, amici_model: AmiciModel = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.amici_model = amici_model
@@ -52,11 +49,13 @@ class PetabSimulator(petab.simulate.Simulator):
         in the Simulator constructor (including the PEtab problem).
         """
         if AMICI_MODEL in {*kwargs, *dir(self)} and (
-                any(k in kwargs for k in
-                    inspect.signature(import_petab_problem).parameters)):
-            print('Arguments related to the PEtab import are unused if '
-                  f'`{AMICI_MODEL}` is specified, or the '
-                  '`PetabSimulator.simulate()` method was previously called.')
+            any(k in kwargs for k in inspect.signature(import_petab_problem).parameters)
+        ):
+            print(
+                "Arguments related to the PEtab import are unused if "
+                f"`{AMICI_MODEL}` is specified, or the "
+                "`PetabSimulator.simulate()` method was previously called."
+            )
 
         kwargs[PETAB_PROBLEM] = self.petab_problem
 
@@ -80,13 +79,12 @@ class PetabSimulator(petab.simulate.Simulator):
 
         if AMICI_SOLVER not in kwargs:
             kwargs[AMICI_SOLVER] = self.amici_model.getSolver()
-            kwargs[AMICI_SOLVER].setSensitivityMethod(
-                SensitivityMethod_none)
+            kwargs[AMICI_SOLVER].setSensitivityMethod(SensitivityMethod_none)
 
         result = _subset_call(simulate_petab, kwargs)
-        return rdatas_to_measurement_df(result[RDATAS],
-                                        self.amici_model,
-                                        self.petab_problem.measurement_df)
+        return rdatas_to_measurement_df(
+            result[RDATAS], self.amici_model, self.petab_problem.measurement_df
+        )
 
 
 def _subset_call(method: Callable, kwargs: dict):
@@ -104,7 +102,5 @@ def _subset_call(method: Callable, kwargs: dict):
         ``kwargs``.
     """
     method_args = inspect.signature(method).parameters
-    subset_kwargs = {k: v
-                     for k, v in kwargs.items()
-                     if k in method_args}
+    subset_kwargs = {k: v for k, v in kwargs.items() if k in method_args}
     return method(**subset_kwargs)

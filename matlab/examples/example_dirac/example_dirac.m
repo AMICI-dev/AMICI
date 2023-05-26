@@ -56,7 +56,7 @@ if(usejava('jvm'))
         hold on
         plot(t,X_ode45(:,ix),'--','Color',c_x(ix,:))
     end
-    
+
     legend('x1','x1_{ode45}','x2','x2_{ode15s}','Location','NorthEastOutside')
     legend boxoff
     xlabel('time t')
@@ -68,7 +68,7 @@ if(usejava('jvm'))
     ylim([1e-10,1e0])
     legend('error x1','error x2','Location','NorthEastOutside')
     legend boxoff
-    
+
     subplot(2,2,3)
     plot(t,sol.y,'.-','Color',c_x(1,:))
     hold on
@@ -78,7 +78,7 @@ if(usejava('jvm'))
     xlabel('time t')
     ylabel('y')
     box on
-    
+
     subplot(2,2,4)
     plot(t,abs(sol.y-X_ode45(:,2)),'--')
     set(gca,'YScale','log')
@@ -130,7 +130,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('x')
         box on
-        
+
         subplot(length(options.sens_ind),2,ip*2)
         plot(t,abs(sol.sx(:,:,ip)-sx_fd(:,:,ip)),'r--')
         legend('error x1','error x2','Location','NorthEastOutside')
@@ -143,7 +143,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     figure
     for ip = 1:length(options.sens_ind)
         subplot(length(options.sens_ind),2,ip*2-1)
@@ -159,7 +159,7 @@ if(usejava('jvm'))
         xlabel('time t')
         ylabel('y')
         box on
-        
+
         subplot(length(options.sens_ind),2,ip*2)
         plot(t,abs(sol.sy(:,:,ip)-sy_fd(:,:,ip)),'r--')
         legend('error y1','Location','NorthEastOutside')
@@ -172,7 +172,7 @@ if(usejava('jvm'))
         box on
     end
     set(gcf,'Position',[100 300 1200 500])
-    
+
     drawnow
 end
 

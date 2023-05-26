@@ -5,7 +5,7 @@
 classdef amifun
     % AMIFUN defines functions which later on will be transformed into
     % appropriate C code
-    
+
     properties ( GetAccess = 'public', SetAccess = 'public' )
         % symbolic definition struct @type symbolic
         sym = sym([]);
@@ -29,7 +29,7 @@ classdef amifun
         % with respect to parameters
         sensiflag = logical.empty();
     end
-    
+
     methods
         function AF = amifun(funstr,model)
             % amievent constructs an amifun object from the provided input.
@@ -38,7 +38,7 @@ classdef amifun
             %  funstr: name of the requested function
             %  model: amimodel object which carries all symbolic
             %  definitions to construct the function
-            %  
+            %
             %
             % Return values:
             %  AF: amifun object
@@ -50,26 +50,25 @@ classdef amifun
             AF = AF.getCVar();
             AF = AF.getSensiFlag();
         end
-        
+
         writeCcode_sensi(this,model,fid)
-        
+
         writeCcode(this,model,fid)
-        
+
         writeMcode(this,model)
-        
+
         gccode(this,model,fid)
-        
+
         [ this ] = getDeps(this,model)
-        
+
         [ this ] = getArgs(this,model)
-        
+
         [ this ] = getNVecs(this)
-        
+
         [ this ] = getCVar(this)
-        
+
         [ this ] = getSensiFlag(this)
 
         [ this, model ] = getSyms(this,model)
     end
 end
-

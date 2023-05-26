@@ -19,14 +19,14 @@ extern void Jy_model_jakstat_adjoint(double *nllh, const int iy, const realtype 
 extern void dJydsigma_model_jakstat_adjoint(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydy_model_jakstat_adjoint(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dsigmaydp_model_jakstat_adjoint(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const realtype *y, const int ip);
-extern void dwdp_model_jakstat_adjoint(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl);
-extern void dwdx_model_jakstat_adjoint(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
+extern void dwdp_model_jakstat_adjoint(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl, const realtype *spl, const realtype *sspl);
+extern void dwdx_model_jakstat_adjoint(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl);
 extern void dxdotdp_model_jakstat_adjoint(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
 extern void dydp_model_jakstat_adjoint(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
 extern void dydx_model_jakstat_adjoint(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void sigmay_model_jakstat_adjoint(double *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y);
 extern void sx0_model_jakstat_adjoint(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
-extern void w_model_jakstat_adjoint(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
+extern void w_model_jakstat_adjoint(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl);
 extern void x0_model_jakstat_adjoint(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void xdot_model_jakstat_adjoint(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_model_jakstat_adjoint(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
@@ -45,6 +45,7 @@ public:
                   2,
                   3,
                   3,
+                  0,
                   0,
                   0,
                   0,
@@ -134,12 +135,12 @@ public:
     void fdsigmazdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
 
-    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl) override {
-        dwdp_model_jakstat_adjoint(dwdp, t, x, p, k, h, w, tcl, stcl);
+    void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl, const realtype *spl, const realtype *sspl) override {
+        dwdp_model_jakstat_adjoint(dwdp, t, x, p, k, h, w, tcl, stcl, spl, sspl);
     }
 
-    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
-        dwdx_model_jakstat_adjoint(dwdx, t, x, p, k, h, w, tcl);
+    void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl) override {
+        dwdx_model_jakstat_adjoint(dwdx, t, x, p, k, h, w, tcl, spl);
     }
 
     void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) override {
@@ -186,8 +187,8 @@ public:
     void fsz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
     }
 
-    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
-        w_model_jakstat_adjoint(w, t, x, p, k, h, tcl);
+    void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl) override {
+        w_model_jakstat_adjoint(w, t, x, p, k, h, tcl, spl);
     }
 
     void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {

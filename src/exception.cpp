@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <cstring>
 
-
 namespace amici {
 
 AmiException::AmiException(int const first_frame) {
@@ -45,13 +44,15 @@ IDAException::IDAException(int const error_code, char const* function)
         "IDA routine %s failed with error code %i", function, error_code
     ) {}
 
-IntegrationFailure::IntegrationFailure(int code, realtype t) :
-    AmiException("AMICI failed to integrate the forward problem"),
-    error_code(code), time(t) {}
+IntegrationFailure::IntegrationFailure(int code, realtype t)
+    : AmiException("AMICI failed to integrate the forward problem")
+    , error_code(code)
+    , time(t) {}
 
-IntegrationFailureB::IntegrationFailureB(int code, realtype t) :
-    AmiException("AMICI failed to integrate the backward problem"),
-    error_code(code), time(t) {}
+IntegrationFailureB::IntegrationFailureB(int code, realtype t)
+    : AmiException("AMICI failed to integrate the backward problem")
+    , error_code(code)
+    , time(t) {}
 
 NewtonFailure::NewtonFailure(int code, char const* function)
     : AmiException(

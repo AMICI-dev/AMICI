@@ -220,7 +220,7 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
         'model', 'model_ode', 'model_dae', 'returndata_matlab', ...
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver', ...
         'abstract_model', 'sundials_matrix_wrapper', 'sundials_linsol_wrapper', ...
-        'vector'
+        'vector', 'splinefunctions'
     };
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy
@@ -382,5 +382,3 @@ function versionstring = getCompilerVersionString()
     str = regexprep(str,'[\s\.\-]','_');
     versionstring = genvarname(str); % fix everything else we have missed
 end
-
-

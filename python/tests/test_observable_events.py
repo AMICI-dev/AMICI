@@ -1,12 +1,14 @@
-import amici
-import pytest
 import os
 
-from util import create_sbml_model, create_amici_model
+import amici
+import pytest
 from test_pregenerated_models import (
-    options_file, expected_results, expected_results_file,
-    verify_simulation_results
+    expected_results,
+    expected_results_file,
+    options_file,
+    verify_simulation_results,
 )
+from util import create_amici_model, create_sbml_model
 
 
 def model_neuron_def():
@@ -28,45 +30,39 @@ def model_neuron_def():
         observable: t
     """
     # Model components
-    species = ['v', 'u']
+    species = ["v", "u"]
     initial_assignments = {
-        'v': 'v0',
-        'u': 'b*v0',
+        "v": "v0",
+        "u": "b*v0",
     }
     rate_rules = {
-        'v': '0.04*v^2 + 5*v + 140 - u + I0',
-        'u': 'a*(b*v - u)',
+        "v": "0.04*v^2 + 5*v + 140 - u + I0",
+        "u": "a*(b*v - u)",
     }
     parameters = {
-        'a': 0.02,
-        'b': 0.3,
-        'c': 65,
-        'd': 0.9,
-        'v0': -60,
-        'I0': 10,
+        "a": 0.02,
+        "b": 0.3,
+        "c": 65,
+        "d": 0.9,
+        "v0": -60,
+        "I0": 10,
     }
     events = {
-        'event_1': {
-            'trigger': 'v > 30',
-            'target': ['v', 'u'],
-            'assignment': ['-c', 'd+u']
+        "event_1": {
+            "trigger": "v > 30",
+            "target": ["v", "u"],
+            "assignment": ["-c", "d+u"],
         },
     }
 
     observables = {
-        'y1': {
-            'name': 'v',
-            'formula': 'v',
+        "y1": {
+            "name": "v",
+            "formula": "v",
         }
     }
 
-    event_observables = {
-        'z1': {
-            'name': 'z1',
-            'event': 'event_1',
-            'formula': 'time'
-        }
-    }
+    event_observables = {"z1": {"name": "z1", "event": "event_1", "formula": "time"}}
     return (
         initial_assignments,
         parameters,
@@ -74,7 +70,7 @@ def model_neuron_def():
         species,
         events,
         observables,
-        event_observables
+        event_observables,
     )
 
 
@@ -102,58 +98,42 @@ def model_events_def():
         observable: t
     """
     # Model components
-    species = ['x1', 'x2', 'x3']
+    species = ["x1", "x2", "x3"]
     initial_assignments = {
-        'x1': 'k1',
-        'x2': 'k2',
-        'x3': 'k3',
+        "x1": "k1",
+        "x2": "k2",
+        "x3": "k3",
     }
     rate_rules = {
-        'x1': '-p1*piecewise(1.0, time>p4, 0.0)*x1',
-        'x2': 'p2*x1*exp(-0.1*time)-p3*x2',
-        'x3': '-x3+piecewise(1.0, time>4, 0.0)'
+        "x1": "-p1*piecewise(1.0, time>p4, 0.0)*x1",
+        "x2": "p2*x1*exp(-0.1*time)-p3*x2",
+        "x3": "-x3+piecewise(1.0, time>4, 0.0)",
     }
     parameters = {
-        'p1': 0.5,
-        'p2': 2,
-        'p3': 0.5,
-        'p4': 0.5,
-        'k1': 4,
-        'k2': 8,
-        'k3': 10,
-        'k4': 4,
+        "p1": 0.5,
+        "p2": 2,
+        "p3": 0.5,
+        "p4": 0.5,
+        "k1": 4,
+        "k2": 8,
+        "k3": 10,
+        "k4": 4,
     }
     events = {
-        'event_1': {
-            'trigger': 'x2 > x3',
-            'target': [],
-            'assignment': []
-        },
-        'event_2': {
-            'trigger': 'x1 > x3',
-            'target': [],
-            'assignment': []
-        },
+        "event_1": {"trigger": "x2 > x3", "target": [], "assignment": []},
+        "event_2": {"trigger": "x1 > x3", "target": [], "assignment": []},
     }
 
     observables = {
-        'y1': {
-            'name': 'y1',
-            'formula': 'p4*(x1+x2+x3)',
+        "y1": {
+            "name": "y1",
+            "formula": "p4*(x1+x2+x3)",
         }
     }
 
     event_observables = {
-        'z1': {
-            'name': 'z1',
-            'event': 'event_1',
-            'formula': 'time'
-        },
-        'z2': {
-            'name': 'z2',
-            'event': 'event_2',
-            'formula': 'time'
-        }
+        "z1": {"name": "z1", "event": "event_1", "formula": "time"},
+        "z2": {"name": "z2", "event": "event_2", "formula": "time"},
     }
     return (
         initial_assignments,
@@ -162,18 +142,20 @@ def model_events_def():
         species,
         events,
         observables,
-        event_observables
+        event_observables,
     )
 
 
 models = [
-    (model_neuron_def, 'model_neuron', ['v0', 'I0']),
-    (model_events_def, 'model_events', ['k1', 'k2', 'k3', 'k4']),
+    (model_neuron_def, "model_neuron", ["v0", "I0"]),
+    (model_events_def, "model_events", ["k1", "k2", "k3", "k4"]),
 ]
 
 
-@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
-                    reason='skipping cmake based test')
+@pytest.mark.skipif(
+    os.environ.get("AMICI_SKIP_CMAKE_TESTS", "") == "TRUE",
+    reason="skipping cmake based test",
+)
 @pytest.mark.parametrize("model_def,model_name,constants", models)
 def test_models(model_def, model_name, constants):
     (
@@ -183,7 +165,7 @@ def test_models(model_def, model_name, constants):
         species,
         events,
         observables,
-        event_observables
+        event_observables,
     ) = model_def()
 
     sbml_document, sbml_model = create_sbml_model(
@@ -201,7 +183,7 @@ def test_models(model_def, model_name, constants):
         model_name=model_name,
         observables=observables,
         constant_parameters=constants,
-        event_observables=event_observables
+        event_observables=event_observables,
     )
 
     run_test_cases(model)
@@ -210,40 +192,36 @@ def test_models(model_def, model_name, constants):
 
 
 def run_test_cases(model):
-
     solver = model.getSolver()
 
     model_name = model.getName()
 
     for case in list(expected_results[model_name].keys()):
-
-        if case.startswith('sensi2'):
+        if case.startswith("sensi2"):
             continue
 
         amici.readModelDataFromHDF5(
-            options_file, model.get(),
-            f'/{model_name}/{case}/options'
+            options_file, model.get(), f"/{model_name}/{case}/options"
         )
         amici.readSolverSettingsFromHDF5(
-            options_file, solver.get(),
-            f'/{model_name}/{case}/options'
+            options_file, solver.get(), f"/{model_name}/{case}/options"
         )
 
         edata = None
-        if 'data' in expected_results[model.getName()][case].keys():
+        if "data" in expected_results[model.getName()][case].keys():
             edata = amici.readSimulationExpData(
-                str(expected_results_file),
-                f'/{model_name}/{case}/data', model.get()
+                str(expected_results_file), f"/{model_name}/{case}/data", model.get()
             )
         rdata = amici.runAmiciSimulation(model, solver, edata)
 
         verify_simulation_opts = dict()
 
-        if model_name.startswith('model_neuron'):
-            verify_simulation_opts['atol'] = 1e-5
-            verify_simulation_opts['rtol'] = 1e-2
+        if model_name.startswith("model_neuron"):
+            verify_simulation_opts["atol"] = 1e-5
+            verify_simulation_opts["rtol"] = 1e-2
 
         verify_simulation_results(
-            rdata, expected_results[model.getName()][case]['results'],
-            **verify_simulation_opts
+            rdata,
+            expected_results[model.getName()][case]["results"],
+            **verify_simulation_opts,
         )

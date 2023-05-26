@@ -4,34 +4,38 @@ Logging
 This module provides custom logging functionality for other amici modules
 """
 
+import functools
 import logging
+import os
 import platform
 import socket
-import amici
-import os
-import warnings
 import time
-import functools
+import warnings
+from inspect import currentframe, getouterframes
 
-from inspect import getouterframes, currentframe
+import amici
 
-LOG_LEVEL_ENV_VAR = 'AMICI_LOG'
-BASE_LOGGER_NAME = 'amici'
+LOG_LEVEL_ENV_VAR = "AMICI_LOG"
+BASE_LOGGER_NAME = "amici"
 # Supported values for LOG_LEVEL_ENV_VAR
-NAMED_LOG_LEVELS = {'NOTSET': logging.NOTSET,
-                    'DEBUG': logging.DEBUG,
-                    'INFO': logging.INFO,
-                    'WARNING': logging.WARNING,
-                    'ERROR': logging.ERROR,
-                    'CRITICAL': logging.CRITICAL}
+NAMED_LOG_LEVELS = {
+    "NOTSET": logging.NOTSET,
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "CRITICAL": logging.CRITICAL,
+}
 
-from typing import Optional, Callable, Union
+from typing import Callable, Optional, Union
 
 
-def _setup_logger(level: Optional[int] = logging.WARNING,
-                  console_output: Optional[bool] = True,
-                  file_output: Optional[bool] = False,
-                  capture_warnings: Optional[bool] = True) -> logging.Logger:
+def _setup_logger(
+    level: Optional[int] = logging.WARNING,
+    console_output: Optional[bool] = True,
+    file_output: Optional[bool] = False,
+    capture_warnings: Optional[bool] = True,
+) -> logging.Logger:
     """
     Set up a new logging.Logger for AMICI logging
 
@@ -67,20 +71,23 @@ def _setup_logger(level: Optional[int] = logging.WARNING,
             if level_name in NAMED_LOG_LEVELS.keys():
                 level = NAMED_LOG_LEVELS[level_name]
             else:
-                raise ValueError(f'Environment variable {LOG_LEVEL_ENV_VAR} '
-                                 f'contains an invalid value "{level_name}".'
-                                 f' If set, its value must be one of '
-                                 f'{", ".join(NAMED_LOG_LEVELS.keys())}'
-                                 f' (case-sensitive) or an integer log level.')
+                raise ValueError(
+                    f"Environment variable {LOG_LEVEL_ENV_VAR} "
+                    f'contains an invalid value "{level_name}".'
+                    f" If set, its value must be one of "
+                    f'{", ".join(NAMED_LOG_LEVELS.keys())}'
+                    f" (case-sensitive) or an integer log level."
+                )
 
     log.setLevel(level)
 
     # Remove default logging handler
     log.handlers = []
 
-    log_fmt = logging.Formatter('%(asctime)s.%(msecs).3d - %(name)s - '
-                                '%(levelname)s - %(message)s',
-                                datefmt='%Y-%m-%d %H:%M:%S')
+    log_fmt = logging.Formatter(
+        "%(asctime)s.%(msecs).3d - %(name)s - " "%(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
     if console_output:
         stream_handler = logging.StreamHandler()
@@ -92,11 +99,11 @@ def _setup_logger(level: Optional[int] = logging.WARNING,
         file_handler.setFormatter(log_fmt)
         log.addHandler(file_handler)
 
-    log.info('Logging started on AMICI version %s', amici.__version__)
+    log.info("Logging started on AMICI version %s", amici.__version__)
 
-    log.debug('OS Platform: %s', platform.platform())
-    log.debug('Python version: %s', platform.python_version())
-    log.debug('Hostname: %s', socket.getfqdn())
+    log.debug("OS Platform: %s", platform.platform())
+    log.debug("Python version: %s", platform.python_version())
+    log.debug("Hostname: %s", socket.getfqdn())
 
     logging.captureWarnings(capture_warnings)
 
@@ -108,17 +115,21 @@ def set_log_level(logger: logging.Logger, log_level: Union[int, bool]) -> None:
         if isinstance(log_level, bool):
             log_level = logging.DEBUG
         elif not isinstance(log_level, int):
-            raise ValueError('log_level must be a boolean, integer or None')
+            raise ValueError("log_level must be a boolean, integer or None")
 
         if logger.getEffectiveLevel() != log_level:
-            logger.debug('Changing log_level from %d to %d' % (
-                logger.getEffectiveLevel(), log_level))
+            logger.debug(
+                "Changing log_level from %d to %d"
+                % (logger.getEffectiveLevel(), log_level)
+            )
             logger.setLevel(log_level)
 
 
-def get_logger(logger_name: Optional[str] = BASE_LOGGER_NAME,
-               log_level: Optional[int] = None,
-               **kwargs) -> logging.Logger:
+def get_logger(
+    logger_name: Optional[str] = BASE_LOGGER_NAME,
+    log_level: Optional[int] = None,
+    **kwargs,
+) -> logging.Logger:
     """
     Returns (if extistant) or creates an AMICI logger
 
@@ -154,8 +165,9 @@ def get_logger(logger_name: Optional[str] = BASE_LOGGER_NAME,
     if BASE_LOGGER_NAME not in logging.Logger.manager.loggerDict.keys():
         _setup_logger(**kwargs)
     elif kwargs:
-        warnings.warn('AMICI logger already exists, ignoring keyword '
-                      'arguments to setup_logger')
+        warnings.warn(
+            "AMICI logger already exists, ignoring keyword " "arguments to setup_logger"
+        )
 
     logger = logging.getLogger(logger_name)
 
@@ -175,33 +187,41 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
     :param logger:
         Logger to which execution timing will be printed
     """
+
     def decorator_timer(func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
-
             # append pluses to indicate recursion level
             recursion_level = sum(
-                frame.function == 'wrapper_timer'
-                and frame.filename == __file__
+                frame.function == "wrapper_timer" and frame.filename == __file__
                 for frame in getouterframes(currentframe(), context=0)
             )
 
-            recursion = ''
+            recursion = ""
             level = logging.INFO
-            level_length = len('INFO')
+            level_length = len("INFO")
             if recursion_level > 1:
-                recursion = '+' * (recursion_level - 1)
+                recursion = "+" * (recursion_level - 1)
                 level = logging.DEBUG
-                level_length = len('DEBUG')
+                level_length = len("DEBUG")
 
             tstart = time.perf_counter()
             rval = func(*args, **kwargs)
             tend = time.perf_counter()
-            spacers = ' ' * max(59 - len(description) - len(logger.name) -
-                                len(recursion) - level_length, 0)
+            spacers = " " * max(
+                59
+                - len(description)
+                - len(logger.name)
+                - len(recursion)
+                - level_length,
+                0,
+            )
             logger.log(
-                level, f'Finished {description}{spacers}{recursion} ({(tend - tstart):.2E}s)'
+                level,
+                f"Finished {description}{spacers}{recursion} ({(tend - tstart):.2E}s)",
             )
             return rval
+
         return wrapper_timer
+
     return decorator_timer

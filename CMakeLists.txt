@@ -95,6 +95,8 @@ endif()
 
 if(DEFINED ENV{SWIG})
   message(STATUS "Setting SWIG_EXECUTABLE to $ENV{SWIG} ($SWIG)")
+  unset(SWIG_VERSION CACHE)
+  unset(SWIG_DIR CACHE)
   set(SWIG_EXECUTABLE $ENV{SWIG})
 endif()
 
@@ -151,12 +153,18 @@ if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
         CACHE STRING "")
   endif()
 elseif(NOT DEFINED ENV{BLAS_LIBS} AND NOT DEFINED ENV{BLAS_CFLAGS})
-  set(BLAS_INCLUDE_DIRS
-      ""
-      CACHE STRING "")
-  set(BLAS_LIBRARIES
-      -lcblas
-      CACHE STRING "")
+  # if nothing is specified via environment variables, let's try FindBLAS
+  find_package(BLAS)
+  if(NOT BLAS_FOUND)
+    # Nothing specified by the user and FindBLAS didn't find anything; let's try
+    # if cblas is available on the system paths.
+    set(BLAS_INCLUDE_DIRS
+        ""
+        CACHE STRING "")
+    set(BLAS_LIBRARIES
+        -lcblas
+        CACHE STRING "")
+  endif()
 endif()
 add_compile_definitions(AMICI_BLAS_${BLAS})
 
@@ -175,6 +183,7 @@ add_custom_target(
 # Library source files
 set(AMICI_SRC_LIST
     src/symbolic_functions.cpp
+    src/splinefunctions.cpp
     src/cblas.cpp
     src/amici.cpp
     src/misc.cpp
@@ -223,6 +232,7 @@ set(AMICI_SRC_LIST
     include/amici/solver.h
     include/amici/solver_idas.h
     include/amici/spline.h
+    include/amici/splinefunctions.h
     include/amici/steadystateproblem.h
     include/amici/sundials_linsol_wrapper.h
     include/amici/sundials_matrix_wrapper.h

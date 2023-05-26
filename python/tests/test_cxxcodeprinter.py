@@ -1,6 +1,6 @@
+import sympy as sp
 from amici.cxxcodeprinter import AmiciCxxCodePrinter
 from sympy.codegen.rewriting import optims_c99
-import sympy as sp
 
 
 def test_optimizations():

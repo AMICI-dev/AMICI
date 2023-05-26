@@ -1,8 +1,10 @@
 """Package-level entrypoint"""
 
-from . import __version__, compiledWithOpenMP, has_clibs, hdf5_enabled
 import os
 import sys
+
+from . import __version__, compiledWithOpenMP, has_clibs, hdf5_enabled
+
 
 def print_info():
     """Displays information on the current AMICI installation.
@@ -21,5 +23,6 @@ def print_info():
 
     print(f"AMICI ({sys.platform}) version {__version__} ({','.join(features)})")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print_info()

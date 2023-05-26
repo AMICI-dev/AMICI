@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from amici.swig import fix_typehints
 from cmake_build_extension import BuildExtension, CMakeExtension
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
@@ -12,16 +13,15 @@ from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
 
-from amici.swig import fix_typehints
-
 
 class AmiciInstall(install):
     """Custom `install` command to handle extra arguments"""
+
     print("running AmiciInstall")
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
-        ('no-clibs', None, "Don't build AMICI C++ extension"),
+        ("no-clibs", None, "Don't build AMICI C++ extension"),
     ]
 
     def initialize_options(self):
@@ -39,7 +39,7 @@ class AmiciDevelop(develop):
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = develop.user_options + [
-        ('no-clibs', None, "Don't build AMICI C++ extension"),
+        ("no-clibs", None, "Don't build AMICI C++ extension"),
     ]
 
     def initialize_options(self):
@@ -63,14 +63,21 @@ class AmiciInstallLib(install_lib):
         """
         print("running AmiciInstallLib")
 
-        if os.environ.get('ENABLE_AMICI_DEBUGGING') == 'TRUE' \
-                and sys.platform == 'darwin':
-            search_dir = os.path.join(os.getcwd(), self.build_dir, 'amici')
+        if (
+            os.environ.get("ENABLE_AMICI_DEBUGGING") == "TRUE"
+            and sys.platform == "darwin"
+        ):
+            search_dir = os.path.join(os.getcwd(), self.build_dir, "amici")
             for file in os.listdir(search_dir):
-                if file.endswith('.so'):
-                    subprocess.run(['dsymutil', os.path.join(search_dir, file),
-                                    '-o',
-                                    os.path.join(search_dir, f'{file}.dSYM')])
+                if file.endswith(".so"):
+                    subprocess.run(
+                        [
+                            "dsymutil",
+                            os.path.join(search_dir, file),
+                            "-o",
+                            os.path.join(search_dir, f"{file}.dSYM"),
+                        ]
+                    )
 
         # Continue with the actual installation
         super().run()
@@ -96,8 +103,14 @@ def save_git_version():
     """
     with open(os.path.join("amici", "git_version.txt"), "w") as f:
         try:
-            cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
-                   '--always', '--tags']
+            cmd = [
+                "git",
+                "describe",
+                "--abbrev=4",
+                "--dirty=-dirty",
+                "--always",
+                "--tags",
+            ]
             subprocess.run(cmd, stdout=f)
         except Exception as e:
             print(e)
@@ -120,10 +133,14 @@ class AmiciBuildCMakeExtension(BuildExtension):
         print(f"running {self.__class__.__name__}")
 
         # custom flag to build without extensions
-        no_clibs = 'develop' in self.distribution.command_obj \
-                       and self.get_finalized_command('develop').no_clibs
-        no_clibs |= 'install' in self.distribution.command_obj \
-                        and self.get_finalized_command('install').no_clibs
+        no_clibs = (
+            "develop" in self.distribution.command_obj
+            and self.get_finalized_command("develop").no_clibs
+        )
+        no_clibs |= (
+            "install" in self.distribution.command_obj
+            and self.get_finalized_command("install").no_clibs
+        )
 
         if no_clibs:
             # Nothing to build
@@ -144,9 +161,7 @@ class AmiciBuildCMakeExtension(BuildExtension):
 
         return result
 
-    def build_extension(
-            self, ext: CMakeExtension
-    ) -> None:
+    def build_extension(self, ext: CMakeExtension) -> None:
         # put some structure into CMake output
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
 
@@ -156,8 +171,8 @@ class AmiciBuildCMakeExtension(BuildExtension):
         build_dir = self.build_lib if self.inplace == 0 else os.getcwd()
         build_dir = Path(build_dir).absolute().as_posix()
         ext.cmake_configure_options = [
-            x.replace("${build_dir}", build_dir) for x in
-            ext.cmake_configure_options]
+            x.replace("${build_dir}", build_dir) for x in ext.cmake_configure_options
+        ]
 
         super().build_extension(ext)
 

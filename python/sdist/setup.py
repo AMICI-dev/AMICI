@@ -21,9 +21,13 @@ from setuptools import setup
 sys.path.insert(0, os.path.dirname(__file__))
 
 from amici.custom_commands import (
-    AmiciInstall, AmiciDevelop,
-    AmiciInstallLib, AmiciSDist, AmiciBuildPy,
-    AmiciBuildCMakeExtension)
+    AmiciBuildCMakeExtension,
+    AmiciBuildPy,
+    AmiciDevelop,
+    AmiciInstall,
+    AmiciInstallLib,
+    AmiciSDist,
+)
 
 
 def get_extensions():
@@ -41,63 +45,63 @@ def get_extensions():
 
     # SuiteSparse Config
     suitesparse_config = CMakeExtension(
-        name='SuiteSparse_config',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/SuiteSparse_config',
+        name="SuiteSparse_config",
+        install_prefix="amici",
+        source_dir="amici/ThirdParty/SuiteSparse/SuiteSparse_config",
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DBLA_VENDOR=All",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
-        ]
+        ],
     )
     # SuiteSparse AMD
     amd = CMakeExtension(
-        name='amd',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/AMD',
+        name="amd",
+        install_prefix="amici",
+        source_dir="amici/ThirdParty/SuiteSparse/AMD",
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DNFORTRAN=TRUE",
-        ]
+        ],
     )
     # SuiteSparse BTF
     btf = CMakeExtension(
-        name='btf',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/BTF',
+        name="btf",
+        install_prefix="amici",
+        source_dir="amici/ThirdParty/SuiteSparse/BTF",
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DNFORTRAN=TRUE",
-        ]
+        ],
     )
     # SuiteSparse COLAMD
     colamd = CMakeExtension(
-        name='colamd',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/COLAMD',
+        name="colamd",
+        install_prefix="amici",
+        source_dir="amici/ThirdParty/SuiteSparse/COLAMD",
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DNFORTRAN=TRUE",
-        ]
+        ],
     )
     # SuiteSparse KLU
     klu = CMakeExtension(
-        name='klu',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/SuiteSparse/KLU',
+        name="klu",
+        install_prefix="amici",
+        source_dir="amici/ThirdParty/SuiteSparse/KLU",
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DNCHOLMOD=ON",
             "-DENABLE_CUDA=FALSE",
             "-DNFORTRAN=TRUE",
-        ]
+        ],
     )
     # SUNDIALS
     sundials = CMakeExtension(
-        name='sundials',
-        install_prefix='amici',
-        source_dir='amici/ThirdParty/sundials',
+        name="sundials",
+        install_prefix="amici",
+        source_dir="amici/ThirdParty/sundials",
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DBUILD_ARKODE=OFF",
@@ -117,18 +121,18 @@ def get_extensions():
             #  before being passed to CMake.
             "-DKLU_LIBRARY_DIR='${build_dir}/amici/lib'",
             "-DKLU_INCLUDE_DIR='${build_dir}/amici/include'",
-        ]
+        ],
     )
     # AMICI
     amici_ext = CMakeExtension(
-        name='amici',
-        install_prefix='amici',
-        source_dir='amici',
+        name="amici",
+        install_prefix="amici",
+        source_dir="amici",
         cmake_configure_options=[
             *global_cmake_configure_options,
-            '-DAMICI_PYTHON_BUILD_EXT_ONLY=ON',
-            f'-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}',
-        ]
+            "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
+            f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
+        ],
     )
     # Order matters!
     return [suitesparse_config, amd, btf, colamd, klu, sundials, amici_ext]
@@ -137,28 +141,29 @@ def get_extensions():
 def main():
     # Readme as long package description to go on PyPi
     # (https://pypi.org/project/amici/)
-    with open(os.path.join(os.path.dirname(__file__), "README.md"),
-              "r", encoding="utf-8") as fh:
+    with open(
+        os.path.join(os.path.dirname(__file__), "README.md"), "r", encoding="utf-8"
+    ) as fh:
         long_description = fh.read()
 
     ext_modules = get_extensions()
 
     # handle parallel building
     # Note: can be empty to use all hardware threads
-    if (parallel_jobs := os.environ.get('AMICI_PARALLEL_COMPILE')) is not None:
-        os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = parallel_jobs
+    if (parallel_jobs := os.environ.get("AMICI_PARALLEL_COMPILE")) is not None:
+        os.environ["CMAKE_BUILD_PARALLEL_LEVEL"] = parallel_jobs
     else:
-        os.environ['CMAKE_BUILD_PARALLEL_LEVEL'] = "1"
+        os.environ["CMAKE_BUILD_PARALLEL_LEVEL"] = "1"
 
     # Install
     setup(
         cmdclass={
-            'install': AmiciInstall,
-            'sdist': AmiciSDist,
-            'build_ext': AmiciBuildCMakeExtension,
-            'install_lib': AmiciInstallLib,
-            'develop': AmiciDevelop,
-            'build_py': AmiciBuildPy,
+            "install": AmiciInstall,
+            "sdist": AmiciSDist,
+            "build_ext": AmiciBuildCMakeExtension,
+            "install_lib": AmiciInstallLib,
+            "develop": AmiciDevelop,
+            "build_py": AmiciBuildPy,
         },
         long_description=long_description,
         long_description_content_type="text/markdown",
@@ -166,5 +171,5 @@ def main():
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
