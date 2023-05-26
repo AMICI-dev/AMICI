@@ -111,9 +111,9 @@ def runAmiciSimulation(
         and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
     ):
         warnings.warn(
-            "Adjoint sensitivity analysis for models with events with parameter-dependent trigger functions has not been thoroughly tested. "
+            "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested."
             "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
-            "If your model does not have parameter-dependent trigger functions, you can safely ignore this message."
+            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients."
         )
 
     with _capture_cstdout():
@@ -173,9 +173,9 @@ def runAmiciSimulations(
         and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
     ):
         warnings.warn(
-            "Adjoint sensitivity analysis for models with events with parameter-dependent trigger functions has not been thoroughly tested. "
+            "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested. "
             "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
-            "If your model does not have parameter-dependent trigger functions, you can safely ignore this message."
+            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients."
         )
 
     with _capture_cstdout():
