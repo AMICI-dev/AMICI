@@ -1993,6 +1993,10 @@ class DEModel:
             ]
 
         elif name == "deltasx":
+            if self.num_states_solver() * self.num_par() == 0:
+                self._eqs[name] = []
+                return
+
             event_eqs = []
             for ie, event in enumerate(self._events):
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
