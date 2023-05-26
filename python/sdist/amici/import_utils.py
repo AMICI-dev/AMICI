@@ -586,9 +586,10 @@ def _check_unsupported_functions(
         sp.core.function.UndefinedFunction,
     )
 
-    if isinstance(sym.func, unsupported_functions) or isinstance(
-        sym, unsupported_functions
-    ):
+    if (
+        isinstance(sym.func, unsupported_functions)
+        or isinstance(sym, unsupported_functions)
+    ) and getattr(sym.func, "name", "") != "rateOf":
         raise RuntimeError(
             f"Encountered unsupported expression "
             f'"{sym.func}" of type '

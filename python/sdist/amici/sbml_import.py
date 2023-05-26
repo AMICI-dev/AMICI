@@ -1768,15 +1768,27 @@ class SbmlImporter:
         :return:
             transformed expression
         """
-
         if not isinstance(sym_math, sp.Expr):
             return sym_math
+
+        # if `rateOf(some_species)` is used in an initial assignment, we don't want to substitute the species argument
+        #  by its initial value
+        if rate_ofs := sym_math.find(
+                sp.core.function.UndefinedFunction("rateOf")
+        ):
+            # replace by dummies to avoid species substitution
+            rateof_dummies = {rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}") for rate_of in rate_ofs}
+            sym_math = sym_math.subs(rateof_dummies)
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
             if "init" in species:
                 sym_math = smart_subs(sym_math, species_id, species["init"])
 
         sym_math = smart_subs(sym_math, self._local_symbols["time"], sp.Float(0))
+
+        if rate_ofs:
+            # Back-substitution of dummies
+            sym_math = sym_math.subs({v: k for k, v in rateof_dummies.items()})
 
         return sym_math
 

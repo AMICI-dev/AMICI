@@ -1101,6 +1101,78 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
+        # Replace all rateOf(some_species) by their respective xdot equation
+        def get_rate(symbol: sp.Symbol):
+            nonlocal symbols
+            # # if the rateOf argument is a species, get its xdot equation
+            # try:
+            #     state_idx = [x.get_id() for x in self.states() if not x.has_conservation_law()].index(symbol)
+            # except ValueError:
+            #     pass
+            # else:
+            #     return self.eq("xdot")[state_idx]
+            try:
+                return symbols[SymbolId.SPECIES][symbol]["dt"]
+            except KeyError:
+                pass
+
+            # If it's an amici-parameter ID, rateOf is 0
+            if any(x.get_id() == symbol for x in self.parameters()):
+                return 0
+
+            raise AssertionError(f"RateOf argument '{symbol}' is neither a state nor a parameter.")
+
+        # replace rateOf occurrences in xdot
+        for i_state in range(len(self.eq("xdot"))):
+            if rate_ofs := self._eqs["xdot"][i_state].find(
+                sp.core.function.UndefinedFunction("rateOf")
+            ):
+                self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
+                    {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                )
+
+        for component in chain(self.observables(), self.expressions(), self.events(), self._algebraic_equations):
+            if rate_ofs := component.get_val().find(
+                sp.core.function.UndefinedFunction("rateOf")
+            ):
+                if isinstance(component, Event):
+                    # TODO froot(...) can currently not depend on `w`, so this substitution fails for non-zero rates
+                    #  see, e.g., sbml test case 01293
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside event trigger functions."
+                    )
+
+                if isinstance(component, AlgebraicEquation):
+                    # TODO IDACalcIC fails with
+                    #   "The linesearch algorithm failed: step too small or too many backtracks."
+                    #  see, e.g., sbml test case 01482
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside AlgebraicRules."
+                    )
+
+                component.set_val(
+                    component.get_val().subs(
+                        {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                    )
+                )
+
+        for event in self.events():
+            if event._state_update is None:
+                    continue
+
+            for i_state in range(len(event._state_update)):
+                if rate_ofs := event._state_update[i_state].find(
+                    sp.core.function.UndefinedFunction("rateOf")
+                ):
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside event state updates."
+                    )
+                    # TODO here we need xdot sym, not eqs
+                    # event._state_update[i_state] = event._state_update[i_state].subs(
+                    #     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                    # )
+
+
     def add_component(
         self, component: ModelQuantity, insert_first: Optional[bool] = False
     ) -> None:
@@ -2758,11 +2830,11 @@ class DEExporter:
             # only generate for those that have nontrivial implementation,
             # check for both basic variables (not in functions) and function
             # computed values
-            if (
+            if ((
                 name in self.functions
                 and not self.functions[name].body
                 and name not in nobody_functions
-            ) or (name not in self.functions and len(self.model.sym(name)) == 0):
+            ) or name not in self.functions) and len(self.model.sym(name)) == 0:
                 continue
             self._write_index_files(name)
 
@@ -2982,7 +3054,7 @@ class DEExporter:
             else:
                 iszero = len(self.model.sym(sym)) == 0
 
-            if iszero:
+            if iszero and not ((sym == "y" and "Jy" in function) or (sym == "w" and "xdot" in function)):
                 continue
 
             lines.append(f'#include "{sym}.h"')
