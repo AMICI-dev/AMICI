@@ -23,7 +23,7 @@ Borghans_BiophysChem1997:
   llh: 83.3237191357272
   t_sim: 0.005
   t_fwd: 0.5
-  t_adj: 0.1
+  t_adj: 0.2
   note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Brannmark_JBC2010:

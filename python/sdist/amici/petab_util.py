@@ -58,6 +58,11 @@ def get_states_in_condition_table(
             return states
         import pysb.pattern
 
+        if not petab_problem.model.model.species:
+            import pysb.bng
+
+            pysb.bng.generate_equations(petab_problem.model.model)
+
         try:
             spm = pysb.pattern.SpeciesPatternMatcher(
                 model=petab_problem.model.model
