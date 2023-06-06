@@ -8,8 +8,6 @@ on:
   pull_request:
     branches:
       - master
-      # TODO: remove before merge
-      - develop
 
 jobs:
   build:
@@ -86,12 +84,6 @@ jobs:
           --ignore-glob=*special* \
           --ignore-glob=*test_splines.py \
           python/tests
-
-    # TODO <REMOVE BEFORE MERGE>
-    - name: Python tests splines
-      if: ${{ github.base_ref == 'develop' || github.event.merge_group.base_ref == 'develop'}}
-      run: python -m pytest python/tests/test_splines.py
-    # TODO </REMOVE BEFORE MERGE>
 
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}

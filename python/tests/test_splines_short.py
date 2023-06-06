@@ -8,6 +8,7 @@ ground truth.
 import numpy as np
 import sympy as sp
 from amici.splines import CubicHermiteSpline, UniformGrid
+from amici.testing import skip_on_valgrind
 from splines_utils import check_splines_full, example_spline_1
 
 
@@ -20,6 +21,7 @@ def test_spline_piecewise(**kwargs):
     check_splines_full(spline, params, tols, **kwargs)
 
 
+@skip_on_valgrind
 def test_two_splines(**kwargs):
     """
     Test a SBML model containing two splines.
@@ -68,6 +70,7 @@ def test_two_splines(**kwargs):
     check_splines_full(splines, params, tols, check_piecewise=False, **kwargs)
 
 
+@skip_on_valgrind
 def test_splines_plist():
     """
     Test if AMICI's spline implementation

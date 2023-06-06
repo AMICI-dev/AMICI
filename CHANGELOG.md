@@ -2,6 +2,38 @@
 
 ## v0.X Series
 
+### v0.18.0 (2023-05-26)
+Features:
+* More efficient handling of splines in SBML models
+  by @paulstapor, @lcontento, @dweindl
+  in https://github.com/AMICI-dev/AMICI/pull/1515
+* Partial support of current PEtab2.0 draft, including support for PySB models
+  by @dweindl, @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1800
+
+Fixes
+* **Fixed incorrect forward sensitivities for models with events with**
+  **state-dependent trigger functions**
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2084
+* Model import: Don't create spl.h and sspl.h for models without splines
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2088
+* SBML import - faster processing of SpeciesReference IDs
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2094
+* Update swig ignores
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2098
+* CMake: Fixed choosing SWIG via `SWIG` env variable
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2100
+* CMake: Try FindBLAS if no other information was provided
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2104
+* Fixed cblas error for models without solver states in combination with
+  forward sensitivities
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2108
+* Fixed compilation error for models with events and xdot=0
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2111
+* Fixed import error for models with events and 0 states
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2112
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.17.1...v0.18.0
+
 ### v0.17.1 (2023-05-10)
 
 This release fixes two bugs:
