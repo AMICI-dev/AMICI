@@ -26,7 +26,7 @@ AMICI can import :term:`SBML` models via the
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 1215 out of the 1821 (~67%) test cases** from
+Python-AMICI currently **passes 1247 out of the 1821 (~68%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
@@ -42,6 +42,7 @@ The following SBML test suite tags are currently supported
 * comp
 * Compartment
 * CSymbolAvogadro
+* CSymbolRateOf
 * CSymbolTime
 * Deletion
 * EventNoDelay
