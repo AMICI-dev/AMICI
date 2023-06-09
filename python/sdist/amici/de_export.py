@@ -3054,7 +3054,10 @@ class DEExporter:
             else:
                 iszero = len(self.model.sym(sym)) == 0
 
-            if iszero and not ((sym == "y" and "Jy" in function) or (sym == "w" and "xdot" in function)):
+            if iszero and not (
+                    (sym == "y" and "Jy" in function)
+                    or (sym == "w" and "xdot" in function and len(self.model.sym(sym)))
+            ):
                 continue
 
             lines.append(f'#include "{sym}.h"')
