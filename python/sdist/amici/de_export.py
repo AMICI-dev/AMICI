@@ -1101,9 +1101,16 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
-        # Replace all rateOf(some_species) by their respective xdot equation
+        self._process_sbml_rate_of(symbols)# substitute SBML-rateOf constructs
+
+    def _process_sbml_rate_of(self, symbols) -> None:
+        """Substitute any SBML-rateOf constructs in the model equations"""
+        rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+
         def get_rate(symbol: sp.Symbol):
+            """Get rate of change of the given symbol"""
             nonlocal symbols
+            # Replace all rateOf(some_species) by their respective xdot equation
             # # if the rateOf argument is a species, get its xdot equation
             # try:
             #     state_idx = [x.get_id() for x in self.states() if not x.has_conservation_law()].index(symbol)
@@ -1122,19 +1129,15 @@ class DEModel:
 
             raise AssertionError(f"RateOf argument '{symbol}' is neither a state nor a parameter.")
 
-        # replace rateOf occurrences in xdot
+        # replace rateOf-instances in xdot
         for i_state in range(len(self.eq("xdot"))):
-            if rate_ofs := self._eqs["xdot"][i_state].find(
-                sp.core.function.UndefinedFunction("rateOf")
-            ):
+            if rate_ofs := self._eqs["xdot"][i_state].find(rate_of_func):
                 self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
                     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
                 )
 
         for component in chain(self.observables(), self.expressions(), self.events(), self._algebraic_equations):
-            if rate_ofs := component.get_val().find(
-                sp.core.function.UndefinedFunction("rateOf")
-            ):
+            if rate_ofs := component.get_val().find(rate_of_func):
                 if isinstance(component, Event):
                     # TODO froot(...) can currently not depend on `w`, so this substitution fails for non-zero rates
                     #  see, e.g., sbml test case 01293
@@ -1158,12 +1161,10 @@ class DEModel:
 
         for event in self.events():
             if event._state_update is None:
-                    continue
+                continue
 
             for i_state in range(len(event._state_update)):
-                if rate_ofs := event._state_update[i_state].find(
-                    sp.core.function.UndefinedFunction("rateOf")
-                ):
+                if rate_ofs := event._state_update[i_state].find(rate_of_func):
                     raise SBMLException(
                         "AMICI does currently not support rateOf(.) inside event state updates."
                     )
