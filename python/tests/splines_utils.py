@@ -47,7 +47,6 @@ def integrate_spline(
     params: Union[Dict, None],
     tt: Sequence[float],
     initial_value: float = 0,
-    **kwargs,
 ):
     """
     Integrate the `AbstractSpline` `spline` at timepoints `tt`
@@ -56,7 +55,7 @@ def integrate_spline(
     ispline = [initial_value + spline.integrate(0, t) for t in tt]
     if params is not None:
         ispline = [x.subs(params) for x in ispline]
-    return np.asarray(ispline, **kwargs)
+    return ispline
 
 
 def create_condition_table() -> pd.DataFrame:
@@ -214,7 +213,7 @@ def create_petab_problem(
     n_obs = math.ceil(T / dt) + 1
     tt_obs = np.linspace(0, float(T), n_obs)
     zz_true = [
-        integrate_spline(spline, params_true, tt_obs, iv, dtype=float).tolist()
+        integrate_spline(spline, params_true, tt_obs, iv)
         for (spline, iv) in zip(splines, initial_values)
     ]
     zz_obs = [zz + sigma * np.random.randn(len(zz)) for zz in zz_true]
@@ -463,7 +462,7 @@ def simulate_splines(
 def compute_ground_truth(splines, initial_values, times, params_true, params_sorted):
     x_true_sym = sp.Matrix(
         [
-            integrate_spline(spline, None, times, iv).tolist()
+            integrate_spline(spline, None, times, iv)
             for (spline, iv) in zip(splines, initial_values)
         ]
     ).transpose()
@@ -583,7 +582,7 @@ def check_splines(
     if groundtruth is None:
         x_true_sym = sp.Matrix(
             [
-                integrate_spline(spline, None, tt, iv).tolist()
+                integrate_spline(spline, None, tt, iv)
                 for (spline, iv) in zip(splines, initial_values)
             ]
         ).transpose()
