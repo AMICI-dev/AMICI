@@ -214,7 +214,7 @@ class SbmlImporter:
             conversion_properties.addOption("performValidation", False)
             conversion_properties.addOption("abortIfUnflattenable", "none")
             if (
-                log_execution_time("converting SBML local parameters", logger)(
+                log_execution_time("flattening hierarchical SBML", logger)(
                     self.sbml_doc.convert
                 )(conversion_properties)
                 != sbml.LIBSBML_OPERATION_SUCCESS
