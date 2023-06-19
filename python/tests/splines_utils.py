@@ -265,7 +265,7 @@ def create_petab_problem(
     folder = os.path.abspath(folder)
     os.makedirs(folder, exist_ok=True)
     problem.to_files(
-        sbml_file=os.path.join(folder, f"{model_name}_model.xml"),
+        model_file=os.path.join(folder, f"{model_name}_model.xml"),
         condition_file=os.path.join(folder, f"{model_name}_conditions.tsv"),
         measurement_file=os.path.join(folder, f"{model_name}_measurements.tsv"),
         parameter_file=os.path.join(folder, f"{model_name}_parameters.tsv"),
