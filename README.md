@@ -82,6 +82,8 @@ To install AMICI, first read the installation instructions for
 [Python](https://amici.readthedocs.io/en/latest/python_installation.html),
 [C++](https://amici.readthedocs.io/en/develop/cpp_installation.html) or
 [Matlab](https://amici.readthedocs.io/en/develop/matlab_installation.html).
+There are also instructions for using AMICI inside
+[containers](https://github.com/AMICI-dev/AMICI/tree/master/container).
 
 To get you started with Python-AMICI, the best way might be checking out this
 [Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/documentation/GettingStarted.ipynb)
