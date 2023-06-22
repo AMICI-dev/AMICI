@@ -164,7 +164,7 @@ def model_definition_events_plus_heavisides():
                 tmp_x = expm(event_1_time * A)
                 x1 = np.matmul(tmp_x, x0)
                 # apply bolus
-                delta_x = np.array([[float(-x1[2, :] / 2)], [0], [0]])
+                delta_x = np.array([[float(-x1[2, 0] / 2)], [0], [0]])
                 x1 += delta_x
                 # "simulate" on
                 tmp_x = expm((t - event_1_time) * A)
@@ -425,7 +425,11 @@ def model_definition_event_state_dep_ddeltax_dtpx():
     timepoints = np.linspace(0.0, 5.0, 100)
     events = {
         # state-dependent ddeltaxdt
-        "event_1": {"trigger": "time > alpha", "target": "x_1", "assignment": "x_1 * time"},
+        "event_1": {
+            "trigger": "time > alpha",
+            "target": "x_1",
+            "assignment": "x_1 * time",
+        },
         # state-dependent ddeltaxdp
         "event_2": {
             "trigger": "time > beta",
@@ -453,7 +457,9 @@ def model_definition_event_state_dep_ddeltax_dtpx():
             x = ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (t - beta)
         else:
             # after third event triggered
-            x = (((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (gamma - beta)) ** 2 * 2 + (t - gamma)
+            x = (
+                ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (gamma - beta)
+            ) ** 2 * 2 + (t - gamma)
 
         return np.array((x,))
 
