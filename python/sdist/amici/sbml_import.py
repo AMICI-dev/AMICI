@@ -18,6 +18,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Un
 import libsbml as sbml
 import numpy as np
 import sympy as sp
+from sympy.logic.boolalg import BooleanFalse, BooleanTrue
 
 from . import has_clibs
 from .constants import SymbolId
@@ -1047,7 +1048,12 @@ class SbmlImporter:
                     reaction.getKineticLaw() or sp.Float(0)
                 )
 
-            self.flux_vector[reaction_index] = sym_math
+            self.flux_vector[reaction_index] = sym_math.subs(
+                {
+                    BooleanTrue(): sp.Float(1.0),
+                    BooleanFalse(): sp.Float(0.0),
+                }
+            )
             if any(
                 str(symbol) in reaction_ids
                 for symbol in self.flux_vector[reaction_index].free_symbols
