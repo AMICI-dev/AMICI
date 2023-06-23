@@ -2205,7 +2205,12 @@ class SbmlImporter:
         try:
             try:
                 formula = sp.sympify(
-                    _parse_logical_operators(math_string), locals=self._local_symbols
+                    _parse_logical_operators(math_string),
+                    locals={
+                        "true": sp.Float(1.0),
+                        "false": sp.Float(0.0),
+                        **self._local_symbols,
+                    },
                 )
             except TypeError as err:
                 if str(err) == "BooleanAtom not allowed in this context.":
