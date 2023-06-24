@@ -144,11 +144,11 @@ def main():
                 solver=amici_solver,
                 log_level=loglevel,
             )
-            for _ in range(3)  # repeat to get more stable timings
+            for _ in range(10)  # repeat to get more stable timings
         ]
         res = res_repeats[0]
 
-        times[label] = np.mean(
+        times[label] = np.min(
             [
                 sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
                 # only forwards/backwards simulation
