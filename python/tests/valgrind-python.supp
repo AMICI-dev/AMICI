@@ -761,3 +761,17 @@
    Memcheck:Value8
    fun:dictkeys_get_index
 }
+
+{
+   Python os_stat / PyFloat_FromDouble
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:PyFloat_FromDouble
+   fun:fill_time
+   fun:_pystat_fromstructstat
+   fun:posix_do_stat.constprop.0
+   fun:os_stat_impl
+   fun:os_stat
+   ...
+}
