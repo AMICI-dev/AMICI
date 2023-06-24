@@ -214,7 +214,7 @@ class SbmlImporter:
             conversion_properties.addOption("performValidation", False)
             conversion_properties.addOption("abortIfUnflattenable", "none")
             if (
-                log_execution_time("converting SBML local parameters", logger)(
+                log_execution_time("flattening hierarchical SBML", logger)(
                     self.sbml_doc.convert
                 )(conversion_properties)
                 != sbml.LIBSBML_OPERATION_SUCCESS
@@ -692,18 +692,6 @@ class SbmlImporter:
                 value = ia_sym
 
             self.add_local_symbol(x_ref.getId(), value)
-
-        for r in self.sbml.getListOfReactions():
-            for e in itt.chain(r.getListOfReactants(), r.getListOfProducts()):
-                if isinstance(e, sbml.SpeciesReference):
-                    continue
-
-                if not (
-                    e.isSetId() and e.isSetStoichiometry()
-                ) or self.is_assignment_rule_target(e):
-                    continue
-
-                self.add_local_symbol(e.getId(), sp.Float(e.getStoichiometry()))
 
     def _gather_dependent_locals(self):
         """
@@ -1265,10 +1253,6 @@ class SbmlImporter:
         """
         Convert time_symbol into cpp variable.
         """
-        sbml_time_symbol = symbol_with_assumptions("time")
-        amici_time_symbol = symbol_with_assumptions("t")
-        self.amici_time_symbol = amici_time_symbol
-
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
     def _convert_event_assignment_parameter_targets_to_species(self):
@@ -2547,11 +2531,11 @@ def _get_list_of_species_references(
         ListOfSpeciesReferences
     """
     return [
-        reference
-        for element in sbml_model.all_elements
-        if isinstance(element, sbml.ListOfSpeciesReferences)
-        for reference in element
-    ]
+            reference
+            for reaction in sbml_model.getListOfReactions()
+            for reference in
+            itt.chain(reaction.getListOfReactants(), reaction.getListOfProducts(), reaction.getListOfModifiers())
+        ]
 
 
 def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:

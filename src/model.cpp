@@ -1078,15 +1078,17 @@ void Model::getObservableSensitivity(
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
     //        M  K                 K  N                     M  N
     //        lda                  ldb                      ldc
-    setNaNtoZero(derived_state_.dydx_);
-    setNaNtoZero(derived_state_.sx_);
-    amici_dgemm(
-        BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
-        ny, nplist(), nx_solver, 1.0, derived_state_.dydx_.data(), ny,
-        derived_state_.sx_.data(), nx_solver, 1.0, derived_state_.dydp_.data(),
-        ny
-    );
 
+    if (nx_solver) {
+        setNaNtoZero(derived_state_.dydx_);
+        setNaNtoZero(derived_state_.sx_);
+        amici_dgemm(
+            BLASLayout::colMajor, BLASTranspose::noTrans,
+            BLASTranspose::noTrans, ny, nplist(), nx_solver, 1.0,
+            derived_state_.dydx_.data(), ny, derived_state_.sx_.data(),
+            nx_solver, 1.0, derived_state_.dydp_.data(), ny
+        );
+    }
     writeSlice(derived_state_.dydp_, sy);
 
     if (always_check_finite_)

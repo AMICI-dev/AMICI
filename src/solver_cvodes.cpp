@@ -277,7 +277,7 @@ void CVodeSolver::setSensSStolerances(double const rtol, double const* atol)
         solver_memory_.get(), rtol, const_cast<double*>(atol)
     );
     if (status != CV_SUCCESS)
-        throw CvodeException(status, "CVodeSensEEtolerances");
+        throw CvodeException(status, "CVodeSensSStolerances");
 }
 
 void CVodeSolver::setSensErrCon(bool const error_corr) const {

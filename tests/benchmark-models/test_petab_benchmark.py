@@ -50,6 +50,7 @@ if debug:
     debug_path.mkdir(exist_ok=True, parents=True)
 
 
+@pytest.mark.filterwarnings("ignore:divide by zero encountered in log10")
 @pytest.mark.parametrize("scale", (True, False))
 @pytest.mark.parametrize("model", models)
 def test_benchmark_gradient(model, scale):

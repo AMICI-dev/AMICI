@@ -7,6 +7,7 @@ into AMICI.
 import argparse
 import importlib
 import logging
+import math
 import os
 import re
 import shutil
@@ -24,21 +25,19 @@ import sympy as sp
 from _collections import OrderedDict
 from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
+from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from petab.parameters import get_valid_parameters_for_parameter_table
 from sympy.abc import _clash
 
+from .petab_util import PREEQ_INDICATOR_ID, get_states_in_condition_table
+
 try:
-    from amici.petab_import_pysb import PysbPetabProblem, import_model_pysb
+    from amici.petab_import_pysb import import_model_pysb
 except ModuleNotFoundError:
     # pysb not available
-    PysbPetabProblem = None
     import_model_pysb = None
 
 logger = get_logger(__name__, logging.WARNING)
-
-# ID of model parameter that is to be added to SBML model to indicate
-#  preequilibration
-PREEQ_INDICATOR_ID = "preequilibration_indicator"
 
 
 def _add_global_parameter(
@@ -97,25 +96,26 @@ def get_fixed_parameters(
     :return:
         List of IDs of parameters which are to be considered constant.
     """
-    # initial concentrations for species or initial compartment sizes in
-    # condition table will need to be turned into fixed parameters
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        # initial concentrations for species or initial compartment sizes in
+        # condition table will need to be turned into fixed parameters
 
-    # if there is no initial assignment for that species, we'd need
-    # to create one. to avoid any naming collision right away, we don't
-    # allow that for now
+        # if there is no initial assignment for that species, we'd need
+        # to create one. to avoid any naming collision right away, we don't
+        # allow that for now
 
-    # we can't handle them yet
-    compartments = [
-        col
-        for col in petab_problem.condition_df
-        if petab_problem.sbml_model.getCompartment(col) is not None
-    ]
-    if compartments:
-        raise NotImplementedError(
-            "Can't handle initial compartment sizes "
-            "at the moment. Consider creating an "
-            f"initial assignment for {compartments}"
-        )
+        # we can't handle them yet
+        compartments = [
+            col
+            for col in petab_problem.condition_df
+            if petab_problem.model.sbml_model.getCompartment(col) is not None
+        ]
+        if compartments:
+            raise NotImplementedError(
+                "Can't handle initial compartment sizes "
+                "at the moment. Consider creating an "
+                f"initial assignment for {compartments}"
+            )
 
     # if we have a parameter table, all parameters that are allowed to be
     #  listed in the parameter table, but are not marked as estimated, can be
@@ -142,9 +142,6 @@ def get_fixed_parameters(
             estimated_parameters = petab_problem.parameter_df.index.values
         fixed_parameters = set(all_parameters) - set(estimated_parameters)
 
-    sbml_model = petab_problem.sbml_model
-    condition_df = petab_problem.condition_df
-
     # Column names are model parameter IDs, compartment IDs or species IDs.
     # Thereof, all parameters except for any overridden ones should be made
     # constant.
@@ -152,6 +149,7 @@ def get_fixed_parameters(
     # increase model reusability)
 
     # handle parameters in condition table
+    condition_df = petab_problem.condition_df
     if condition_df is not None:
         logger.debug(f"Condition table: {condition_df.shape}")
 
@@ -167,30 +165,31 @@ def get_fixed_parameters(
             #  of overriding
             if condition_df[p].dtype != "O"
             # p is a parameter
-            and sbml_model.getParameter(p) is not None
-            # but not a rule target
-            and sbml_model.getRuleByVariable(p) is None
+            and not petab_problem.model.is_state_variable(p)
         )
 
     # Ensure mentioned parameters exist in the model. Remove additional ones
     # from list
     for fixed_parameter in fixed_parameters.copy():
         # check global parameters
-        if not sbml_model.getParameter(fixed_parameter):
+        if not petab_problem.model.has_entity_with_id(fixed_parameter):
+            # TODO: could still exist as an output parameter?
             logger.warning(
-                f"Parameter or species '{fixed_parameter}'"
-                " provided in condition table but not present in"
-                " model. Ignoring."
+                f"Column '{fixed_parameter}' used in condition "
+                "table but not entity with the corresponding ID "
+                "exists. Ignoring."
             )
             fixed_parameters.remove(fixed_parameter)
 
-    # exclude targets of rules or initial assignments
-    for fixed_parameter in fixed_parameters.copy():
-        # check global parameters
-        if sbml_model.getInitialAssignmentBySymbol(
-            fixed_parameter
-        ) or sbml_model.getRuleByVariable(fixed_parameter):
-            fixed_parameters.remove(fixed_parameter)
+    if petab_problem.model.type_id == MODEL_TYPE_SBML:
+        # exclude targets of rules or initial assignments
+        sbml_model = petab_problem.model.sbml_model
+        for fixed_parameter in fixed_parameters.copy():
+            # check global parameters
+            if sbml_model.getInitialAssignmentBySymbol(
+                fixed_parameter
+            ) or sbml_model.getRuleByVariable(fixed_parameter):
+                fixed_parameters.remove(fixed_parameter)
 
     return list(sorted(fixed_parameters))
 
@@ -300,17 +299,25 @@ def import_petab_problem(
     :return:
         The imported model.
     """
-    # extract model name from pysb
-    if (
-        PysbPetabProblem
-        and isinstance(petab_problem, PysbPetabProblem)
-        and model_name is None
-    ):
+    if petab_problem.model.type_id not in (MODEL_TYPE_SBML, MODEL_TYPE_PYSB):
+        raise NotImplementedError(
+            "Unsupported model type " + petab_problem.model.type_id
+        )
+
+    if petab_problem.mapping_df is not None:
+        # It's partially supported. Remove at your own risk...
+        raise NotImplementedError("PEtab v2.0.0 mapping tables are not yet supported.")
+
+    model_name = model_name or petab_problem.model.model_id
+
+    if petab_problem.model.type_id == MODEL_TYPE_PYSB and model_name is None:
         model_name = petab_problem.pysb_model.name
+    elif model_name is None and model_output_dir:
+        model_name = _create_model_name(model_output_dir)
 
     # generate folder and model name if necessary
     if model_output_dir is None:
-        if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
+        if petab_problem.model.type_id == MODEL_TYPE_PYSB:
             raise ValueError("Parameter `model_output_dir` is required.")
 
         model_output_dir = _create_model_output_dir_name(
@@ -318,9 +325,6 @@ def import_petab_problem(
         )
     else:
         model_output_dir = os.path.abspath(model_output_dir)
-
-    if model_name is None:
-        model_name = _create_model_name(model_output_dir)
 
     # create folder
     if not os.path.exists(model_output_dir):
@@ -341,7 +345,7 @@ def import_petab_problem(
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
         # compile the model
-        if PysbPetabProblem and isinstance(petab_problem, PysbPetabProblem):
+        if petab_problem.model.type_id == MODEL_TYPE_PYSB:
             import_model_pysb(
                 petab_problem,
                 model_name=model_name,
@@ -664,13 +668,11 @@ def import_model_sbml(
 
     # TODO: to parameterize initial states or compartment sizes, we currently
     #  need initial assignments. if they occur in the condition table, we
-    #  create a new parameter initial_${startOrCompartmentID}.
+    #  create a new parameter initial_${speciesOrCompartmentID}.
     #  feels dirty and should be changed (see also #924)
     # <BeginWorkAround>
 
-    initial_states = [
-        col for col in petab_problem.condition_df if element_is_state(sbml_model, col)
-    ]
+    initial_states = get_states_in_condition_table(petab_problem)
     fixed_parameters = []
     if initial_states:
         # add preequilibration indicator variable
@@ -691,7 +693,7 @@ def import_model_sbml(
         logger.debug(
             "Adding preequilibration indicator " f"constant {PREEQ_INDICATOR_ID}"
         )
-    logger.debug(f"Adding initial assignments for {initial_states}")
+    logger.debug(f"Adding initial assignments for {initial_states.keys()}")
     for assignee_id in initial_states:
         init_par_id_preeq = f"initial_{assignee_id}_preeq"
         init_par_id_sim = f"initial_{assignee_id}_sim"
@@ -782,7 +784,6 @@ def get_observation_model(
     :return:
         Tuple of dicts with observables, noise distributions, and sigmas.
     """
-
     if observable_df is None:
         return {}, {}, {}
 
@@ -871,20 +872,6 @@ def show_model_info(sbml_model: "libsbml.Model"):
     logger.info(f"Reactions: {len(sbml_model.getListOfReactions())}")
 
 
-def element_is_state(sbml_model: libsbml.Model, sbml_id: str) -> bool:
-    """Does the element with ID `sbml_id` correspond to a state variable?"""
-    if sbml_model.getCompartment(sbml_id) is not None:
-        return True
-    if sbml_model.getSpecies(sbml_id) is not None:
-        return True
-    if (
-        rule := sbml_model.getRuleByVariable(sbml_id)
-    ) is not None and rule.getTypeCode() == libsbml.SBML_RATE_RULE:
-        return True
-
-    return False
-
-
 def _parse_cli_args():
     """
     Parse command line arguments
@@ -892,7 +879,6 @@ def _parse_cli_args():
     :return:
         Parsed CLI arguments from :mod:`argparse`.
     """
-
     parser = argparse.ArgumentParser(
         description="Import PEtab-format model into AMICI."
     )

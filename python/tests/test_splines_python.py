@@ -9,8 +9,10 @@ import math
 
 import amici
 import sympy as sp
+from amici.testing import skip_on_valgrind
 
 
+@skip_on_valgrind
 def test_SplineUniform():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -27,6 +29,7 @@ def test_SplineUniform():
     assert math.isclose(float(spline.evaluate(1.00)), 1.0)
 
 
+@skip_on_valgrind
 def test_SplineNonUniform():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -43,6 +46,7 @@ def test_SplineNonUniform():
     assert math.isclose(float(spline.evaluate(1.00)), 1.0)
 
 
+@skip_on_valgrind
 def test_SplineExplicit():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -62,6 +66,7 @@ def test_SplineExplicit():
     assert math.isclose(float(spline.evaluate(1.00)), 0.75)
 
 
+@skip_on_valgrind
 def test_SplineZeroBC():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -77,6 +82,7 @@ def test_SplineZeroBC():
     assert math.isclose(float(spline.evaluate(1.00)), 1.0)
 
 
+@skip_on_valgrind
 def test_SplineLogarithmic():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -96,6 +102,7 @@ def test_SplineLogarithmic():
     assert math.isclose(float(spline.evaluate(1.00)), 0.75)
 
 
+@skip_on_valgrind
 def test_SplineUniformConstantExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -117,6 +124,7 @@ def test_SplineUniformConstantExtrapolation():
     assert math.isclose(float(spline.evaluate(3.00)), 1.0)
 
 
+@skip_on_valgrind
 def test_SplineUniformLinearExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -138,6 +146,7 @@ def test_SplineUniformLinearExtrapolation():
     assert math.isclose(float(spline.evaluate(3.00)), 4.0)
 
 
+@skip_on_valgrind
 def test_SplineUniformPolynomialExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -159,6 +168,7 @@ def test_SplineUniformPolynomialExtrapolation():
     assert math.isclose(float(spline.evaluate(3.00)), -248.0)
 
 
+@skip_on_valgrind
 def test_SplineUniformPeriodicExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -180,6 +190,7 @@ def test_SplineUniformPeriodicExtrapolation():
     assert math.isclose(float(spline.evaluate(2.75)), 0.47265625)
 
 
+@skip_on_valgrind
 def test_SplineNonUniformPeriodicExtrapolation():
     spline = amici.splines.CubicHermiteSpline(
         sbml_id="f",
@@ -201,6 +212,7 @@ def test_SplineNonUniformPeriodicExtrapolation():
     assert math.isclose(float(spline.evaluate(2.05)), 1.5296875)
 
 
+@skip_on_valgrind
 def check_gradient(spline, t, params, params_values, expected, rel_tol=1e-9):
     value = spline.evaluate(t)
     subs = {pname: pvalue for (pname, pvalue) in zip(params, params_values)}
@@ -208,6 +220,7 @@ def check_gradient(spline, t, params, params_values, expected, rel_tol=1e-9):
         assert math.isclose(float(value.diff(p).subs(subs)), exp, rel_tol=rel_tol)
 
 
+@skip_on_valgrind
 def test_SplineUniformSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
@@ -230,6 +243,7 @@ def test_SplineUniformSensitivity():
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
 
 
+@skip_on_valgrind
 def test_SplineNonUniformSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
@@ -250,6 +264,7 @@ def test_SplineNonUniformSensitivity():
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
 
 
+@skip_on_valgrind
 def test_SplineExplicitSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
@@ -280,6 +295,7 @@ def test_SplineExplicitSensitivity():
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
 
 
+@skip_on_valgrind
 def test_SplineLogarithmicSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]

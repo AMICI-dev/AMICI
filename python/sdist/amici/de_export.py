@@ -51,6 +51,7 @@ from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 from .de_model import *
 from .import_utils import (
+    amici_time_symbol,
     ObservableTransformation,
     SBMLException,
     generate_flux_symbol,
@@ -1012,7 +1013,7 @@ class DEModel:
                 # we need to flatten out assignments in the compartment in
                 # order to ensure that we catch all species dependencies
                 v = smart_subs_dict(v, si.symbols[SymbolId.EXPRESSION], "value")
-                dv_dt = v.diff(si.amici_time_symbol)
+                dv_dt = v.diff(amici_time_symbol)
                 # we may end up with a time derivative of the compartment
                 # volume due to parameter rate rules
                 comp_rate_vars = [
@@ -1733,7 +1734,7 @@ class DEModel:
             .replace("sigmarz", "sigmaz")
             .replace("dJrzdz", "dJrzdrz")
         )
-        time_symbol = sp.Matrix([symbol_with_assumptions("t")])
+        time_symbol = sp.Matrix([amici_time_symbol])
 
         if name in self._equation_prototype:
             self._equation_from_components(name, self._equation_prototype[name]())
@@ -1992,15 +1993,20 @@ class DEModel:
             ]
 
         elif name == "deltasx":
+            if self.num_states_solver() * self.num_par() == 0:
+                self._eqs[name] = []
+                return
+
             event_eqs = []
             for ie, event in enumerate(self._events):
                 tmp_eq = sp.zeros(self.num_states_solver(), self.num_par())
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(self.eq("stau")[ie]):
+                if not smart_is_zero_matrix(self.eq("stau")[ie]) \
+                        and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
-                        (self.sym("xdot_old") - self.sym("xdot")),
+                        self.sym("xdot_old") - self.sym("xdot"),
                         self.sym("stau").T,
                     )
 
@@ -2021,10 +2027,7 @@ class DEModel:
                         )
 
                         # additional part of chain rule state variables
-                        # This part only works if we use self.eq('xdot')
-                        # instead of self.sym('xdot'). Not immediately clear
-                        # why that is.
-                        tmp_dxdp += smart_multiply(self.eq("xdot"), self.sym("stau").T)
+                        tmp_dxdp += smart_multiply(self.sym("xdot_old"), self.sym("stau").T)
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq("ddeltaxdx")[ie], tmp_dxdp)
@@ -2899,6 +2902,8 @@ class DEExporter:
             if name in sparse_functions
             else self.model.sym(name).T
         )
+        if not len(symbols):
+            return
 
         # flatten multiobs
         if isinstance(next(iter(symbols), None), list):

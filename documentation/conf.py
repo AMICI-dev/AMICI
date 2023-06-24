@@ -86,7 +86,7 @@ def install_mtocpp():
 
 def install_doxygen():
     """Get a more recent doxygen"""
-    version = "1.9.6"
+    version = "1.9.7"
     doxygen_exe = os.path.join(
         amici_dir, "ThirdParty", f"doxygen-{version}", "bin", "doxygen"
     )
