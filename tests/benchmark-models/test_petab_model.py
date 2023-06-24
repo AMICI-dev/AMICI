@@ -144,7 +144,7 @@ def main():
                 solver=amici_solver,
                 log_level=loglevel,
             )
-            for _ in range(10)  # repeat to get more stable timings
+            for _ in range(3)  # repeat to get more stable timings
         ]
         res = res_repeats[0]
 
