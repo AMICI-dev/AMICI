@@ -1106,6 +1106,8 @@ class DEModel:
     def _process_sbml_rate_of(self, symbols) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
         rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+        species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
+        species_sym_to_idx = {x: i for i, x in enumerate(self.sym("x"))}
 
         def get_rate(symbol: sp.Symbol):
             """Get rate of change of the given symbol"""
@@ -1115,17 +1117,8 @@ class DEModel:
                 raise SBMLException("Nesting rateOf() is not allowed.")
 
             # Replace all rateOf(some_species) by their respective xdot equation
-            # # if the rateOf argument is a species, get its xdot equation
-            # try:
-            #     state_idx = [x.get_id() for x in self.states() if not x.has_conservation_law()].index(symbol)
-            # except ValueError:
-            #     pass
-            # else:
-            #     return self.eq("xdot")[state_idx]
-            try:
-                return symbols[SymbolId.SPECIES][symbol]["dt"]
-            except KeyError:
-                pass
+            with contextlib.suppress(KeyError):
+                return self._eqs["xdot"][species_sym_to_idx[symbol]]
 
             # If it's an amici-parameter ID, rateOf is 0
             if any(x.get_id() == symbol for x in self.parameters()):
@@ -1133,10 +1126,24 @@ class DEModel:
 
             raise AssertionError(f"RateOf argument '{symbol}' is neither a state nor a parameter.")
 
-        # replace rateOf-instances in xdot
+        # replace rateOf-instances in xdot by xdot symbols
         for i_state in range(len(self.eq("xdot"))):
             if rate_ofs := self._eqs["xdot"][i_state].find(rate_of_func):
                 self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
+                    {
+                        # either the rateOf argument is a state, or it's 0
+                        rate_of: species_sym_to_xdot.get(rate_of.args[0], 0)
+                        for rate_of in rate_ofs
+                    }
+                )
+        # substitute in topological order
+        subs = toposort_symbols(dict(zip(self.sym("xdot"), self.eq("xdot"))))
+        self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
+
+        # replace rateOf-instances in x0 by xdot equation
+        for i_state in range(len(self.eq("x0"))):
+            if rate_ofs := self._eqs["x0"][i_state].find(rate_of_func):
+                self._eqs["x0"][i_state] = self._eqs["x0"][i_state].subs(
                     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
                 )
 
