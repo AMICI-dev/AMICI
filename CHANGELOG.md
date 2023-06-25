@@ -2,7 +2,27 @@
 
 ## v0.X Series
 
+### v0.18.1 (2023-06-26)
+
+Fixes:
+* Fixed pysb pattern matching during PEtab import
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2118
+* Fixed `sp.Matrix` errors with `numpy==1.25`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2124
+* Readme: added info containers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2125
+* Fixed deprecation warnings
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2122
+  https://github.com/AMICI-dev/AMICI/pull/2131
+* Fixed logging typo in SBML import
+  by @dilpath in https://github.com/AMICI-dev/AMICI/pull/2126
+* Added minimum version for `pandas`
+  by @dilpath in https://github.com/AMICI-dev/AMICI/pull/2129
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.18.0...v0.18.1
+
 ### v0.18.0 (2023-05-26)
+
 Features:
 * More efficient handling of splines in SBML models
   by @paulstapor, @lcontento, @dweindl
@@ -10,7 +30,7 @@ Features:
 * Partial support of current PEtab2.0 draft, including support for PySB models
   by @dweindl, @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/1800
 
-Fixes
+Fixes:
 * **Fixed incorrect forward sensitivities for models with events with**
   **state-dependent trigger functions**
   by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2084
