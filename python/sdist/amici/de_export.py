@@ -1120,11 +1120,8 @@ class DEModel:
             with contextlib.suppress(KeyError):
                 return self._eqs["xdot"][species_sym_to_idx[symbol]]
 
-            # If it's an amici-parameter ID, rateOf is 0
-            if any(x.get_id() == symbol for x in self.parameters()):
-                return 0
-
-            raise AssertionError(f"RateOf argument '{symbol}' is neither a state nor a parameter.")
+            # For anything other than a state, rateOf(.) is 0 or invalid
+            return 0
 
         # replace rateOf-instances in xdot by xdot symbols
         for i_state in range(len(self.eq("xdot"))):
