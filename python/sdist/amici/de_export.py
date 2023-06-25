@@ -1110,6 +1110,10 @@ class DEModel:
         def get_rate(symbol: sp.Symbol):
             """Get rate of change of the given symbol"""
             nonlocal symbols
+
+            if symbol.find(rate_of_func):
+                raise SBMLException("Nesting rateOf() is not allowed.")
+
             # Replace all rateOf(some_species) by their respective xdot equation
             # # if the rateOf argument is a species, get its xdot equation
             # try:
