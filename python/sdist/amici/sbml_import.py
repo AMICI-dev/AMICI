@@ -1000,19 +1000,15 @@ class SbmlImporter:
                     "value": par.getValue(),
                 }
 
-        # Parameters that need to be turned into solver states
+        # Parameters that need to be turned into expressions
         #  so far, this concerns parameters with initial assignments containing rateOf(.)
         #  (those have been skipped above)
         for par in self.sbml.getListOfParameters():
             if (ia := self._get_element_initial_assignment(par.getId())) is not None \
                     and ia.find(sp.core.function.UndefinedFunction("rateOf")):
-                self.symbols[SymbolId.SPECIES][_get_identifier_symbol(par)] = {
+                self.symbols[SymbolId.EXPRESSION][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "init": ia,
-                    "constant": False,
-                    "amount": True,
-                    "index": len(self.symbols[SymbolId.SPECIES]),
-                    "dt": ia,
+                    "value": ia,
                 }
 
 
