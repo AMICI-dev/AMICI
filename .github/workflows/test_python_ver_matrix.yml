@@ -49,7 +49,8 @@ jobs:
           swig \
           libatlas-base-dev \
           libhdf5-serial-dev \
-          libboost-math-dev
+          libboost-math-dev \
+          libncurses5
 
     # install AMICI
     - name: Build BNGL
