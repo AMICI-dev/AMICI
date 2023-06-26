@@ -47,7 +47,6 @@ def integrate_spline(
     params: Union[Dict, None],
     tt: Sequence[float],
     initial_value: float = 0,
-    **kwargs,
 ):
     """
     Integrate the `AbstractSpline` `spline` at timepoints `tt`
@@ -56,7 +55,7 @@ def integrate_spline(
     ispline = [initial_value + spline.integrate(0, t) for t in tt]
     if params is not None:
         ispline = [x.subs(params) for x in ispline]
-    return np.asarray(ispline, **kwargs)
+    return ispline
 
 
 def create_condition_table() -> pd.DataFrame:
@@ -213,10 +212,13 @@ def create_petab_problem(
     dt /= measure_upsample
     n_obs = math.ceil(T / dt) + 1
     tt_obs = np.linspace(0, float(T), n_obs)
-    zz_true = [
-        integrate_spline(spline, params_true, tt_obs, iv, dtype=float)
-        for (spline, iv) in zip(splines, initial_values)
-    ]
+    zz_true = np.array(
+        [
+            integrate_spline(spline, params_true, tt_obs, iv)
+            for (spline, iv) in zip(splines, initial_values)
+        ],
+        dtype=float,
+    )
     zz_obs = [zz + sigma * np.random.randn(len(zz)) for zz in zz_true]
 
     # Create PEtab tables
@@ -263,7 +265,7 @@ def create_petab_problem(
     folder = os.path.abspath(folder)
     os.makedirs(folder, exist_ok=True)
     problem.to_files(
-        sbml_file=os.path.join(folder, f"{model_name}_model.xml"),
+        model_file=os.path.join(folder, f"{model_name}_model.xml"),
         condition_file=os.path.join(folder, f"{model_name}_conditions.tsv"),
         measurement_file=os.path.join(folder, f"{model_name}_measurements.tsv"),
         parameter_file=os.path.join(folder, f"{model_name}_parameters.tsv"),
