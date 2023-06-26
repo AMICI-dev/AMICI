@@ -474,6 +474,47 @@ def test_newton_steadystate_check(preeq_fixture):
         ).all(), variable
 
 
+def test_steadystate_computation_mode(preeq_fixture):
+    """Test newtonOnly and integrationOnly steady-state computation modes"""
+    (
+        model,
+        solver,
+        edata,
+        edata_preeq,
+        edata_presim,
+        edata_sim,
+        pscales,
+        plists,
+    ) = preeq_fixture
+
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.setSensitivityMethodPreequilibration(
+        amici.SensitivityMethod.forward)
+    solver.setNewtonMaxSteps(10)
+
+    rdatas = {}
+    stst_computation_modes = [
+        amici.SteadyStateComputationMode.integrationOnly,
+        amici.SteadyStateComputationMode.newtonOnly,
+    ]
+    for mode in stst_computation_modes:
+        model.setSteadyStateComputationMode(mode)
+        rdatas[mode] = amici.runAmiciSimulation(model, solver, edata)
+
+        # assert successful simulation
+        assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
+
+    assert np.all(rdatas[amici.SteadyStateComputationMode.integrationOnly][
+                      'preeq_status'][0] == [0, 1, 0]) and \
+           rdatas[amici.SteadyStateComputationMode.integrationOnly][
+                      'preeq_numsteps'][0][0] == 0
+
+    assert np.all(rdatas[amici.SteadyStateComputationMode.newtonOnly][
+                      'preeq_status'][0] == [1, 0, 0]) and \
+           rdatas[amici.SteadyStateComputationMode.newtonOnly][
+                      'preeq_numsteps'][0][0] > 0
+
+
 def test_simulation_errors(preeq_fixture):
     (
         model,
