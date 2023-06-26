@@ -148,7 +148,7 @@ def main():
         ]
         res = res_repeats[0]
 
-        times[label] = np.mean(
+        times[label] = np.min(
             [
                 sum(r.cpu_time + r.cpu_timeB for r in res[RDATAS]) / 1000
                 # only forwards/backwards simulation

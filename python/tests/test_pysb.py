@@ -341,6 +341,7 @@ def test_heavyside_and_special_symbols():
 
 @skip_on_valgrind
 def test_energy():
+    pysb.SelfExporter.cleanup()
     model_pysb = pysb.Model("energy")
     pysb.Monomer("A", ["a", "b"])
     pysb.Monomer("B", ["a"])
