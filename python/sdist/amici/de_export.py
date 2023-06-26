@@ -1101,6 +1101,87 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
+        self._process_sbml_rate_of(symbols)# substitute SBML-rateOf constructs
+
+    def _process_sbml_rate_of(self, symbols) -> None:
+        """Substitute any SBML-rateOf constructs in the model equations"""
+        rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+        species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
+        species_sym_to_idx = {x: i for i, x in enumerate(self.sym("x"))}
+
+        def get_rate(symbol: sp.Symbol):
+            """Get rate of change of the given symbol"""
+            nonlocal symbols
+
+            if symbol.find(rate_of_func):
+                raise SBMLException("Nesting rateOf() is not allowed.")
+
+            # Replace all rateOf(some_species) by their respective xdot equation
+            with contextlib.suppress(KeyError):
+                return self._eqs["xdot"][species_sym_to_idx[symbol]]
+
+            # For anything other than a state, rateOf(.) is 0 or invalid
+            return 0
+
+        # replace rateOf-instances in xdot by xdot symbols
+        for i_state in range(len(self.eq("xdot"))):
+            if rate_ofs := self._eqs["xdot"][i_state].find(rate_of_func):
+                self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
+                    {
+                        # either the rateOf argument is a state, or it's 0
+                        rate_of: species_sym_to_xdot.get(rate_of.args[0], 0)
+                        for rate_of in rate_ofs
+                    }
+                )
+        # substitute in topological order
+        subs = toposort_symbols(dict(zip(self.sym("xdot"), self.eq("xdot"))))
+        self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
+
+        # replace rateOf-instances in x0 by xdot equation
+        for i_state in range(len(self.eq("x0"))):
+            if rate_ofs := self._eqs["x0"][i_state].find(rate_of_func):
+                self._eqs["x0"][i_state] = self._eqs["x0"][i_state].subs(
+                    {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                )
+
+        for component in chain(self.observables(), self.expressions(), self.events(), self._algebraic_equations):
+            if rate_ofs := component.get_val().find(rate_of_func):
+                if isinstance(component, Event):
+                    # TODO froot(...) can currently not depend on `w`, so this substitution fails for non-zero rates
+                    #  see, e.g., sbml test case 01293
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside event trigger functions."
+                    )
+
+                if isinstance(component, AlgebraicEquation):
+                    # TODO IDACalcIC fails with
+                    #   "The linesearch algorithm failed: step too small or too many backtracks."
+                    #  see, e.g., sbml test case 01482
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside AlgebraicRules."
+                    )
+
+                component.set_val(
+                    component.get_val().subs(
+                        {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                    )
+                )
+
+        for event in self.events():
+            if event._state_update is None:
+                continue
+
+            for i_state in range(len(event._state_update)):
+                if rate_ofs := event._state_update[i_state].find(rate_of_func):
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside event state updates."
+                    )
+                    # TODO here we need xdot sym, not eqs
+                    # event._state_update[i_state] = event._state_update[i_state].subs(
+                    #     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                    # )
+
+
     def add_component(
         self, component: ModelQuantity, insert_first: Optional[bool] = False
     ) -> None:
@@ -2758,11 +2839,11 @@ class DEExporter:
             # only generate for those that have nontrivial implementation,
             # check for both basic variables (not in functions) and function
             # computed values
-            if (
+            if ((
                 name in self.functions
                 and not self.functions[name].body
                 and name not in nobody_functions
-            ) or (name not in self.functions and len(self.model.sym(name)) == 0):
+            ) or name not in self.functions) and len(self.model.sym(name)) == 0:
                 continue
             self._write_index_files(name)
 
@@ -2982,7 +3063,10 @@ class DEExporter:
             else:
                 iszero = len(self.model.sym(sym)) == 0
 
-            if iszero:
+            if iszero and not (
+                    (sym == "y" and "Jy" in function)
+                    or (sym == "w" and "xdot" in function and len(self.model.sym(sym)))
+            ):
                 continue
 
             lines.append(f'#include "{sym}.h"')

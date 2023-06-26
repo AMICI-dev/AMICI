@@ -804,10 +804,20 @@ class SbmlImporter:
             if species:
                 species["init"] = initial
 
+        # hide rateOf-arguments from toposort and the substitution below
+        all_rateof_dummies = []
+        for species in self.symbols[SymbolId.SPECIES].values():
+            species["init"], rateof_dummies = _rateof_to_dummy(species["init"])
+            all_rateof_dummies.append(rateof_dummies)
+
         # don't assign this since they need to stay in order
         sorted_species = toposort_symbols(self.symbols[SymbolId.SPECIES], "init")
-        for species in self.symbols[SymbolId.SPECIES].values():
-            species["init"] = smart_subs_dict(species["init"], sorted_species, "init")
+        for species, rateof_dummies in zip(self.symbols[SymbolId.SPECIES].values(), all_rateof_dummies):
+            species["init"] = _dummy_to_rateof(
+                smart_subs_dict(species["init"], sorted_species, "init"),
+                rateof_dummies
+            )
+
 
     @log_execution_time("processing SBML rate rules", logger)
     def _process_rate_rules(self):
@@ -989,6 +999,18 @@ class SbmlImporter:
                     "name": par.getName() if par.isSetName() else par.getId(),
                     "value": par.getValue(),
                 }
+
+        # Parameters that need to be turned into expressions
+        #  so far, this concerns parameters with initial assignments containing rateOf(.)
+        #  (those have been skipped above)
+        for par in self.sbml.getListOfParameters():
+            if (ia := self._get_element_initial_assignment(par.getId())) is not None \
+                    and ia.find(sp.core.function.UndefinedFunction("rateOf")):
+                self.symbols[SymbolId.EXPRESSION][_get_identifier_symbol(par)] = {
+                    "name": par.getName() if par.isSetName() else par.getId(),
+                    "value": ia,
+                }
+
 
     @log_execution_time("processing SBML reactions", logger)
     def _process_reactions(self):
@@ -1774,15 +1796,18 @@ class SbmlImporter:
         :return:
             transformed expression
         """
-
         if not isinstance(sym_math, sp.Expr):
             return sym_math
+
+        sym_math, rateof_to_dummy = _rateof_to_dummy(sym_math)
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
             if "init" in species:
                 sym_math = smart_subs(sym_math, species_id, species["init"])
 
         sym_math = smart_subs(sym_math, self._local_symbols["time"], sp.Float(0))
+
+        sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 
         return sym_math
 
@@ -2663,3 +2688,31 @@ def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
         return False
 
     return True
+
+
+def _rateof_to_dummy(sym_math):
+    """Replace rateOf(...) by dummy variable
+
+    if `rateOf(some_species)` is used in an initial assignment, we don't want to substitute the species argument
+    by its initial value.
+
+    Usage:
+            sym_math, rateof_to_dummy = _rateof_to_dummy(sym_math)
+            [...substitute...]
+            sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
+    """
+    if rate_ofs := sym_math.find(
+            sp.core.function.UndefinedFunction("rateOf")
+    ):
+        # replace by dummies to avoid species substitution
+        rateof_dummies = {rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}") for rate_of in rate_ofs}
+
+        return sym_math.subs(rateof_dummies), rateof_dummies
+    return sym_math, {}
+
+
+def _dummy_to_rateof(sym_math, rateof_dummies):
+    """Back-substitution of dummies from `_rateof_to_dummy`"""
+    if rateof_dummies:
+        return sym_math.subs({v: k for k, v in rateof_dummies.items()})
+    return sym_math

@@ -6,12 +6,14 @@ boost.
 
 import os
 
-import amici
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal_nulp, assert_approx_equal
+from scipy.special import loggamma
+
+import amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
-from scipy.special import loggamma
 
 
 @pytest.fixture(scope="session")
@@ -153,3 +155,57 @@ def negative_binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
         - r * np.log(1 - p)
         - m * np.log(p)
     )
+
+@pytest.mark.filterwarnings("ignore:the imp module is deprecated:DeprecationWarning")
+def test_rateof():
+    """Test chained rateOf to verify that model expressions are evaluated in the correct order."""
+    import tellurium as te
+
+    ant_model = """
+    model test_chained_rateof
+        species S1, S2, S3, S4;
+        S1 = 0;
+        S3 = 0;
+        p2 = 1;
+        rate = 1;
+        S4 = 0.5 * rateOf(S3);
+        S2' = 2 * rateOf(S3);
+        S1' = S2 + rateOf(S2);
+        S3' = rate;
+        p1 = 2 * rateOf(S1);
+        p2' = rateOf(S1);
+        p3 = rateOf(rate);
+    end
+    """
+    sbml_str = te.antimonyToSBML(ant_model)
+    sbml_importer = amici.SbmlImporter(sbml_str, from_file=False)
+
+    module_name = "test_chained_rateof"
+    with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+        )
+        model_module = amici.import_model_module(module_name=module_name, module_path=outdir)
+        amici_model = model_module.getModel()
+        t = np.linspace(0, 10, 11)
+        amici_model.setTimepoints(t)
+        amici_solver = amici_model.getSolver()
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+
+        state_ids_solver = amici_model.getStateIdsSolver()
+        i_S1 = state_ids_solver.index("S1")
+        i_S2 = state_ids_solver.index("S2")
+        i_S3 = state_ids_solver.index("S3")
+        i_p2 = state_ids_solver.index("p2")
+        assert_approx_equal(rdata["xdot"][i_S3], 1)
+        assert_approx_equal(rdata["xdot"][i_S2], 2)
+        assert_approx_equal(rdata["xdot"][i_S1], rdata.by_id("S2")[-1] + rdata["xdot"][i_S2])
+        assert_approx_equal(rdata["xdot"][i_S1], rdata["xdot"][i_p2])
+
+        assert_array_almost_equal_nulp(rdata.by_id("S3"), t, 10)
+        assert_array_almost_equal_nulp(rdata.by_id("S2"), 2 * rdata.by_id("S3"))
+        assert_array_almost_equal_nulp(rdata.by_id("S4")[1:], 0.5 * np.diff(rdata.by_id("S3")), 10)
+        assert_array_almost_equal_nulp(rdata.by_id("p3"), 0)
+        assert_array_almost_equal_nulp(rdata.by_id("p2"), 1 + rdata.by_id("S1"))
+
