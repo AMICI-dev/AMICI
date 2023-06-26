@@ -1,4 +1,4 @@
-"""Tests for preequilibration"""
+"""Tests for pre- and post-equilibration"""
 
 import itertools
 
@@ -70,7 +70,8 @@ def preeq_fixture(pysb_example_presimulation_module):
         [1, 1, 1],
     ]
 
-    return (model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, plists)
+    return (model, solver, edata, edata_preeq, edata_presim, edata_sim,
+            pscales, plists)
 
 
 def test_manual_preequilibration(preeq_fixture):
@@ -369,7 +370,7 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
 
 
 def test_newton_solver_equilibration(preeq_fixture):
-    """Test data replicates"""
+    """Test newton solver for equilibration"""
 
     (
         model,
@@ -420,12 +421,13 @@ def test_newton_solver_equilibration(preeq_fixture):
     # assert correct results
     for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
         assert np.isclose(
-            rdatas[settings[0]][variable], rdatas[settings[1]][variable], 1e-5, 1e-5
+            rdatas[settings[0]][variable], rdatas[settings[1]][variable], 1e-5,
+            1e-5
         ).all(), variable
 
 
 def test_newton_steadystate_check(preeq_fixture):
-    """Test data replicates"""
+    """Test NewtonStepSteadyStateCheck solver flag"""
 
     (
         model,
