@@ -487,9 +487,9 @@ def test_steadystate_computation_mode(preeq_fixture):
         plists,
     ) = preeq_fixture
 
+    sensi_meth = amici.SensitivityMethod.forward
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    solver.setSensitivityMethodPreequilibration(
-        amici.SensitivityMethod.forward)
+    solver.setSensitivityMethodPreequilibration(sensi_meth)
     solver.setNewtonMaxSteps(10)
 
     rdatas = {}
@@ -505,22 +505,24 @@ def test_steadystate_computation_mode(preeq_fixture):
         assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
 
     assert np.all(rdatas[amici.SteadyStateComputationMode.integrationOnly][
-                      'preeq_status'][0] == [0, 1, 0]) and \
-           rdatas[amici.SteadyStateComputationMode.integrationOnly][
+                      'preeq_status'][0] == [0, 1, 0])
+    assert rdatas[amici.SteadyStateComputationMode.integrationOnly][
                       'preeq_numsteps'][0][0] == 0
 
     assert np.all(rdatas[amici.SteadyStateComputationMode.newtonOnly][
-                      'preeq_status'][0] == [1, 0, 0]) and \
-           rdatas[amici.SteadyStateComputationMode.newtonOnly][
+                      'preeq_status'][0] == [1, 0, 0])
+    assert rdatas[amici.SteadyStateComputationMode.newtonOnly][
                       'preeq_numsteps'][0][0] > 0
 
     # assert correct results
     for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
-        assert np.isclose(
+        assert_allclose(
             rdatas[stst_computation_modes[0]][variable],
-            rdatas[stst_computation_modes[1]][variable], 1e-5,
-            1e-5
-        ).all(), variable
+            rdatas[stst_computation_modes[1]][variable],
+            atol=1e-5,
+            rtol=1e-5,
+            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth))
+        )
 
 
 def test_simulation_errors(preeq_fixture):
