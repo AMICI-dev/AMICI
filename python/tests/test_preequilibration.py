@@ -159,12 +159,13 @@ def test_parameter_reordering(preeq_fixture):
         rdata_reordered = amici.runAmiciSimulation(model, solver, edata)
 
         for ip, p_index in enumerate(plist):
-            assert np.isclose(
+            assert_allclose(
                 rdata_ordered["sx"][:, p_index, :],
                 rdata_reordered["sx"][:, ip, :],
-                1e-6,
-                1e-6,
-            ).all(), plist
+                atol=1e-6,
+                rtol=1e-6,
+                err_msg=str(dict(variable="sx", plist=plist, p_index=p_index))
+            )
 
 
 def test_data_replicates(preeq_fixture):
@@ -269,9 +270,12 @@ def test_parameter_in_expdata(preeq_fixture):
 
     rdata_edata = amici.runAmiciSimulation(model, solver, edata)
     for variable in ["x", "sx"]:
-        assert np.isclose(
-            rdata[variable][0, :], rdata_edata[variable][0, :], 1e-6, 1e-6
-        ).all(), variable
+        assert_allclose(
+            rdata[variable][0, :], rdata_edata[variable][0, :],
+            atol=1e-6,
+            rtol=1e-6,
+            err_msg=str(dict(variable=variable))
+        )
 
 
 def test_raise_presimulation_with_adjoints(preeq_fixture):
@@ -364,9 +368,13 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
     for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
         for variable in ["llh", "sllh"]:
-            assert np.isclose(
-                rdatas[setting1][variable], rdatas[setting2][variable], 1e-6, 1e-6
-            ).all(), variable
+            assert_allclose(
+                rdatas[setting1][variable], rdatas[setting2][variable],
+                atol=1e-6,
+                rtol=1e-6,
+                err_msg=str(dict(variable=variable, setting1=setting1,
+                                 setting2=setting2))
+            )
 
 
 def test_newton_solver_equilibration(preeq_fixture):
@@ -420,10 +428,13 @@ def test_newton_solver_equilibration(preeq_fixture):
 
     # assert correct results
     for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
-        assert np.isclose(
-            rdatas[settings[0]][variable], rdatas[settings[1]][variable], 1e-5,
-            1e-5
-        ).all(), variable
+        assert_allclose(
+            rdatas[settings[0]][variable],
+            rdatas[settings[1]][variable],
+            atol=1e-5,
+            rtol=1e-5,
+            err_msg=str(dict(variable=variable))
+        )
 
 
 def test_newton_steadystate_check(preeq_fixture):
@@ -452,13 +463,14 @@ def test_newton_steadystate_check(preeq_fixture):
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
+    # set sensi method
+    sensi_meth = amici.SensitivityMethod.forward
+    solver.setSensitivityMethod(sensi_meth)
+
     solver.setNewtonMaxSteps(100)
 
     rdatas = {}
     for newton_check in [True, False]:
-        # set sensi method
-        sensi_meth = amici.SensitivityMethod.forward
-        solver.setSensitivityMethod(sensi_meth)
         solver.setNewtonStepSteadyStateCheck(newton_check)
 
         # add rdatas
@@ -469,9 +481,13 @@ def test_newton_steadystate_check(preeq_fixture):
 
     # assert correct results
     for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
-        assert np.isclose(
-            rdatas[True][variable], rdatas[False][variable], 1e-6, 1e-6
-        ).all(), variable
+        assert_allclose(
+            rdatas[True][variable],
+            rdatas[False][variable],
+            atol=1e-6,
+            rtol=1e-6,
+            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth))
+        )
 
 
 def test_steadystate_computation_mode(preeq_fixture):
