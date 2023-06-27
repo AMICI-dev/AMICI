@@ -58,6 +58,17 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
         throw AmiException("Preequilibration using adjoint sensitivities "
                            "is not compatible with using forward "
                            "sensitivities during simulation");
+    if (solver.getSensitivityMethod() == SensitivityMethod::forward
+        && model.getSteadyStateComputationMode()
+            == SteadyStateComputationMode::newtonOnly
+        && model.getSteadyStateSensitivityMode()
+            == SteadyStateSensitivityMode::integrationOnly)
+        throw AmiException("For forward sensitivity analysis steady-state "
+                           "computation mode 'newtonOnly' and steady-state "
+                           "sensitivity mode 'integrationOnly' are not "
+                           "compatible as numerical integration of the model "
+                           "ODEs and corresponding forward sensitivities ODEs "
+                           "is coupled");
 }
 
 void SteadystateProblem::workSteadyStateProblem(
@@ -104,7 +115,8 @@ void SteadystateProblem::findSteadyState(
     Solver const& solver, Model& model, int it
 ) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    /* Turn off Newton's method if newton_maxsteps is set to 0 or
+    /* Turn off Newton's method if 'integrationOnly' approach is chosen for
+    steady-state computation or newton_maxsteps is set to 0 or
     if 'integrationOnly' approach is chosen for sensitivity computation
     in combination with forward sensitivities approach. The latter is necessary
     as numerical integration of the model ODEs and corresponding
