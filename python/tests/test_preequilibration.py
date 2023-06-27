@@ -514,6 +514,14 @@ def test_steadystate_computation_mode(preeq_fixture):
            rdatas[amici.SteadyStateComputationMode.newtonOnly][
                       'preeq_numsteps'][0][0] > 0
 
+    # assert correct results
+    for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
+        assert np.isclose(
+            rdatas[stst_computation_modes[0]][variable],
+            rdatas[stst_computation_modes[1]][variable], 1e-5,
+            1e-5
+        ).all(), variable
+
 
 def test_simulation_errors(preeq_fixture):
     (
