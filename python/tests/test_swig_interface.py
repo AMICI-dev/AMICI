@@ -99,11 +99,11 @@ model_instance_settings0 = {
     # `pysb_example_presimulation_module.getModel()`.
     "StateIsNonNegative": None,
     "SteadyStateComputationMode": [
-        1,
         2,
+        1,
     ],
     "SteadyStateSensitivityMode": [
-        0,
+        2,
         1,
     ],
     ("t0", "setT0"): [
