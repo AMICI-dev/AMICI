@@ -64,6 +64,7 @@ jobs:
             libboost-serialization-dev \
             libboost-chrono-dev \
             libhdf5-serial-dev \
+            libncurses5 \
             python3-venv \
             swig \
             lcov \
