@@ -1169,6 +1169,14 @@ void readModelDataFromHDF5(
         );
     }
 
+    if (attributeExists(file, datasetPath, "steadyStateComputationMode")) {
+        model.setSteadyStateComputationMode(
+            static_cast<SteadyStateComputationMode>(getIntScalarAttribute(
+                file, datasetPath, "steadyStateComputationMode"
+                ))
+            );
+    }
+
     if (attributeExists(file, datasetPath, "steadyStateSensitivityMode")) {
         model.setSteadyStateSensitivityMode(
             static_cast<SteadyStateSensitivityMode>(getIntScalarAttribute(

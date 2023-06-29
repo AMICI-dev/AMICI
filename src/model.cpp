@@ -993,6 +993,15 @@ void Model::setUnscaledInitialStateSensitivities(
     sx0data_ = sx0;
 }
 
+void Model::setSteadyStateComputationMode(const SteadyStateComputationMode mode
+) {
+    steadystate_computation_mode_ = mode;
+}
+
+SteadyStateComputationMode Model::getSteadyStateComputationMode() const {
+    return steadystate_computation_mode_;
+}
+
 void Model::setSteadyStateSensitivityMode(const SteadyStateSensitivityMode mode
 ) {
     steadystate_sensitivity_mode_ = mode;

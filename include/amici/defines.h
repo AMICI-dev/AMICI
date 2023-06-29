@@ -186,6 +186,13 @@ enum class NonlinearSolverIteration {
     newton = 2
 };
 
+/** Steady-state computation mode in steadyStateProblem */
+enum class SteadyStateComputationMode {
+    newtonOnly,
+    integrationOnly,
+    integrateIfNewtonFails
+};
+
 /** Sensitivity computation mode in steadyStateProblem */
 enum class SteadyStateSensitivityMode {
     newtonOnly,
