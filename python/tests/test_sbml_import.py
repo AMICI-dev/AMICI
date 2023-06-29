@@ -41,10 +41,6 @@ def simple_sbml_model():
     p1.setValue(2.0)
     model.addParameter(p1)
 
-    r = model.createRateRule()
-    r.setVariable("S1")
-    r.setFormula("p1")
-
     return document, model
 
 
@@ -672,6 +668,10 @@ def test_hardcode_parameters(simple_sbml_model):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
+    r = sbml_model.createRateRule()
+    r.setVariable("S1")
+    r.setFormula("p1")
+    assert sbml_model.getParameter("p1").getValue() != 0
 
     ode_model = sbml_importer._build_ode_model()
     assert str(ode_model.parameters()) == "[p1]"
