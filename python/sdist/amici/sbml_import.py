@@ -812,12 +812,12 @@ class SbmlImporter:
 
         # don't assign this since they need to stay in order
         sorted_species = toposort_symbols(self.symbols[SymbolId.SPECIES], "init")
-        for species, rateof_dummies in zip(self.symbols[SymbolId.SPECIES].values(), all_rateof_dummies):
+        for species, rateof_dummies in zip(
+            self.symbols[SymbolId.SPECIES].values(), all_rateof_dummies
+        ):
             species["init"] = _dummy_to_rateof(
-                smart_subs_dict(species["init"], sorted_species, "init"),
-                rateof_dummies
+                smart_subs_dict(species["init"], sorted_species, "init"), rateof_dummies
             )
-
 
     @log_execution_time("processing SBML rate rules", logger)
     def _process_rate_rules(self):
@@ -1004,13 +1004,13 @@ class SbmlImporter:
         #  so far, this concerns parameters with initial assignments containing rateOf(.)
         #  (those have been skipped above)
         for par in self.sbml.getListOfParameters():
-            if (ia := self._get_element_initial_assignment(par.getId())) is not None \
-                    and ia.find(sp.core.function.UndefinedFunction("rateOf")):
+            if (
+                ia := self._get_element_initial_assignment(par.getId())
+            ) is not None and ia.find(sp.core.function.UndefinedFunction("rateOf")):
                 self.symbols[SymbolId.EXPRESSION][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
                     "value": ia,
                 }
-
 
     @log_execution_time("processing SBML reactions", logger)
     def _process_reactions(self):
@@ -2562,11 +2562,14 @@ def _get_list_of_species_references(
         ListOfSpeciesReferences
     """
     return [
-            reference
-            for reaction in sbml_model.getListOfReactions()
-            for reference in
-            itt.chain(reaction.getListOfReactants(), reaction.getListOfProducts(), reaction.getListOfModifiers())
-        ]
+        reference
+        for reaction in sbml_model.getListOfReactions()
+        for reference in itt.chain(
+            reaction.getListOfReactants(),
+            reaction.getListOfProducts(),
+            reaction.getListOfModifiers(),
+        )
+    ]
 
 
 def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
@@ -2701,11 +2704,12 @@ def _rateof_to_dummy(sym_math):
             [...substitute...]
             sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
     """
-    if rate_ofs := sym_math.find(
-            sp.core.function.UndefinedFunction("rateOf")
-    ):
+    if rate_ofs := sym_math.find(sp.core.function.UndefinedFunction("rateOf")):
         # replace by dummies to avoid species substitution
-        rateof_dummies = {rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}") for rate_of in rate_ofs}
+        rateof_dummies = {
+            rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}")
+            for rate_of in rate_ofs
+        }
 
         return sym_math.subs(rateof_dummies), rateof_dummies
     return sym_math, {}

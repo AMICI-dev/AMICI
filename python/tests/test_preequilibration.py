@@ -70,8 +70,7 @@ def preeq_fixture(pysb_example_presimulation_module):
         [1, 1, 1],
     ]
 
-    return (model, solver, edata, edata_preeq, edata_presim, edata_sim,
-            pscales, plists)
+    return (model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, plists)
 
 
 def test_manual_preequilibration(preeq_fixture):
@@ -164,7 +163,7 @@ def test_parameter_reordering(preeq_fixture):
                 rdata_reordered["sx"][:, ip, :],
                 atol=1e-6,
                 rtol=1e-6,
-                err_msg=str(dict(variable="sx", plist=plist, p_index=p_index))
+                err_msg=str(dict(variable="sx", plist=plist, p_index=p_index)),
             )
 
 
@@ -271,10 +270,11 @@ def test_parameter_in_expdata(preeq_fixture):
     rdata_edata = amici.runAmiciSimulation(model, solver, edata)
     for variable in ["x", "sx"]:
         assert_allclose(
-            rdata[variable][0, :], rdata_edata[variable][0, :],
+            rdata[variable][0, :],
+            rdata_edata[variable][0, :],
             atol=1e-6,
             rtol=1e-6,
-            err_msg=str(dict(variable=variable))
+            err_msg=str(dict(variable=variable)),
         )
 
 
@@ -369,11 +369,13 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
         # assert correctness of result
         for variable in ["llh", "sllh"]:
             assert_allclose(
-                rdatas[setting1][variable], rdatas[setting2][variable],
+                rdatas[setting1][variable],
+                rdatas[setting2][variable],
                 atol=1e-6,
                 rtol=1e-6,
-                err_msg=str(dict(variable=variable, setting1=setting1,
-                                 setting2=setting2))
+                err_msg=str(
+                    dict(variable=variable, setting1=setting1, setting2=setting2)
+                ),
             )
 
 
@@ -433,7 +435,7 @@ def test_newton_solver_equilibration(preeq_fixture):
             rdatas[settings[1]][variable],
             atol=1e-5,
             rtol=1e-5,
-            err_msg=str(dict(variable=variable))
+            err_msg=str(dict(variable=variable)),
         )
 
 
@@ -486,7 +488,7 @@ def test_newton_steadystate_check(preeq_fixture):
             rdatas[False][variable],
             atol=1e-6,
             rtol=1e-6,
-            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth))
+            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth)),
         )
 
 
@@ -520,15 +522,22 @@ def test_steadystate_computation_mode(preeq_fixture):
         # assert successful simulation
         assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
 
-    assert np.all(rdatas[amici.SteadyStateComputationMode.integrationOnly][
-                      'preeq_status'][0] == [0, 1, 0])
-    assert rdatas[amici.SteadyStateComputationMode.integrationOnly][
-                      'preeq_numsteps'][0][0] == 0
+    assert np.all(
+        rdatas[amici.SteadyStateComputationMode.integrationOnly]["preeq_status"][0]
+        == [0, 1, 0]
+    )
+    assert (
+        rdatas[amici.SteadyStateComputationMode.integrationOnly]["preeq_numsteps"][0][0]
+        == 0
+    )
 
-    assert np.all(rdatas[amici.SteadyStateComputationMode.newtonOnly][
-                      'preeq_status'][0] == [1, 0, 0])
-    assert rdatas[amici.SteadyStateComputationMode.newtonOnly][
-                      'preeq_numsteps'][0][0] > 0
+    assert np.all(
+        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_status"][0]
+        == [1, 0, 0]
+    )
+    assert (
+        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][0][0] > 0
+    )
 
     # assert correct results
     for variable in ["llh", "sllh", "sx0", "sx_ss", "x_ss"]:
@@ -537,7 +546,7 @@ def test_steadystate_computation_mode(preeq_fixture):
             rdatas[stst_computation_modes[1]][variable],
             atol=1e-5,
             rtol=1e-5,
-            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth))
+            err_msg=str(dict(variable=variable, sensi_meth=sensi_meth)),
         )
 
 

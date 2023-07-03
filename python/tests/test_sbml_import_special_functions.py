@@ -6,14 +6,13 @@ boost.
 
 import os
 
+import amici
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal_nulp, assert_approx_equal
-from scipy.special import loggamma
-
-import amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
+from numpy.testing import assert_approx_equal, assert_array_almost_equal_nulp
+from scipy.special import loggamma
 
 
 @pytest.fixture(scope="session")
@@ -156,6 +155,7 @@ def negative_binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
         - m * np.log(p)
     )
 
+
 @pytest.mark.filterwarnings("ignore:the imp module is deprecated:DeprecationWarning")
 def test_rateof():
     """Test chained rateOf to verify that model expressions are evaluated in the correct order."""
@@ -186,7 +186,9 @@ def test_rateof():
             model_name=module_name,
             output_dir=outdir,
         )
-        model_module = amici.import_model_module(module_name=module_name, module_path=outdir)
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
         amici_model = model_module.getModel()
         t = np.linspace(0, 10, 11)
         amici_model.setTimepoints(t)
@@ -200,12 +202,15 @@ def test_rateof():
         i_p2 = state_ids_solver.index("p2")
         assert_approx_equal(rdata["xdot"][i_S3], 1)
         assert_approx_equal(rdata["xdot"][i_S2], 2)
-        assert_approx_equal(rdata["xdot"][i_S1], rdata.by_id("S2")[-1] + rdata["xdot"][i_S2])
+        assert_approx_equal(
+            rdata["xdot"][i_S1], rdata.by_id("S2")[-1] + rdata["xdot"][i_S2]
+        )
         assert_approx_equal(rdata["xdot"][i_S1], rdata["xdot"][i_p2])
 
         assert_array_almost_equal_nulp(rdata.by_id("S3"), t, 10)
         assert_array_almost_equal_nulp(rdata.by_id("S2"), 2 * rdata.by_id("S3"))
-        assert_array_almost_equal_nulp(rdata.by_id("S4")[1:], 0.5 * np.diff(rdata.by_id("S3")), 10)
+        assert_array_almost_equal_nulp(
+            rdata.by_id("S4")[1:], 0.5 * np.diff(rdata.by_id("S3")), 10
+        )
         assert_array_almost_equal_nulp(rdata.by_id("p3"), 0)
         assert_array_almost_equal_nulp(rdata.by_id("p2"), 1 + rdata.by_id("S1"))
-
