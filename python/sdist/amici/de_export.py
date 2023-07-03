@@ -51,9 +51,9 @@ from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 from .de_model import *
 from .import_utils import (
-    amici_time_symbol,
     ObservableTransformation,
     SBMLException,
+    amici_time_symbol,
     generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
@@ -1101,7 +1101,7 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
-        self._process_sbml_rate_of(symbols)# substitute SBML-rateOf constructs
+        self._process_sbml_rate_of(symbols)  # substitute SBML-rateOf constructs
 
     def _process_sbml_rate_of(self, symbols) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
@@ -1144,7 +1144,12 @@ class DEModel:
                     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
                 )
 
-        for component in chain(self.observables(), self.expressions(), self.events(), self._algebraic_equations):
+        for component in chain(
+            self.observables(),
+            self.expressions(),
+            self.events(),
+            self._algebraic_equations,
+        ):
             if rate_ofs := component.get_val().find(rate_of_func):
                 if isinstance(component, Event):
                     # TODO froot(...) can currently not depend on `w`, so this substitution fails for non-zero rates
@@ -1180,7 +1185,6 @@ class DEModel:
                     # event._state_update[i_state] = event._state_update[i_state].subs(
                     #     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
                     # )
-
 
     def add_component(
         self, component: ModelQuantity, insert_first: Optional[bool] = False
@@ -2084,8 +2088,9 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(self.eq("stau")[ie]) \
-                        and not smart_is_zero_matrix(self.eq("xdot")):
+                if not smart_is_zero_matrix(
+                    self.eq("stau")[ie]
+                ) and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
                         self.sym("xdot_old") - self.sym("xdot"),
                         self.sym("stau").T,
@@ -2108,7 +2113,9 @@ class DEModel:
                         )
 
                         # additional part of chain rule state variables
-                        tmp_dxdp += smart_multiply(self.sym("xdot_old"), self.sym("stau").T)
+                        tmp_dxdp += smart_multiply(
+                            self.sym("xdot_old"), self.sym("stau").T
+                        )
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq("ddeltaxdx")[ie], tmp_dxdp)
@@ -2839,11 +2846,14 @@ class DEExporter:
             # only generate for those that have nontrivial implementation,
             # check for both basic variables (not in functions) and function
             # computed values
-            if ((
-                name in self.functions
-                and not self.functions[name].body
-                and name not in nobody_functions
-            ) or name not in self.functions) and len(self.model.sym(name)) == 0:
+            if (
+                (
+                    name in self.functions
+                    and not self.functions[name].body
+                    and name not in nobody_functions
+                )
+                or name not in self.functions
+            ) and len(self.model.sym(name)) == 0:
                 continue
             self._write_index_files(name)
 
@@ -3064,8 +3074,8 @@ class DEExporter:
                 iszero = len(self.model.sym(sym)) == 0
 
             if iszero and not (
-                    (sym == "y" and "Jy" in function)
-                    or (sym == "w" and "xdot" in function and len(self.model.sym(sym)))
+                (sym == "y" and "Jy" in function)
+                or (sym == "w" and "xdot" in function and len(self.model.sym(sym)))
             ):
                 continue
 

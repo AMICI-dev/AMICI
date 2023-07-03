@@ -27,9 +27,7 @@ def get_states_in_condition_table(
         raise NotImplementedError()
 
     species_check_funs = {
-        MODEL_TYPE_SBML: lambda x: _element_is_sbml_state(
-            petab_problem.sbml_model, x
-        ),
+        MODEL_TYPE_SBML: lambda x: _element_is_sbml_state(petab_problem.sbml_model, x),
         MODEL_TYPE_PYSB: lambda x: _element_is_pysb_pattern(
             petab_problem.model.model, x
         ),
@@ -38,9 +36,7 @@ def get_states_in_condition_table(
         resolve_mapping(petab_problem.mapping_df, col): (None, None)
         if condition is None
         else (
-            petab_problem.condition_df.loc[
-                condition[SIMULATION_CONDITION_ID], col
-            ],
+            petab_problem.condition_df.loc[condition[SIMULATION_CONDITION_ID], col],
             petab_problem.condition_df.loc[
                 condition[PREEQUILIBRATION_CONDITION_ID], col
             ]
@@ -64,9 +60,7 @@ def get_states_in_condition_table(
             pysb.bng.generate_equations(petab_problem.model.model)
 
         try:
-            spm = pysb.pattern.SpeciesPatternMatcher(
-                model=petab_problem.model.model
-            )
+            spm = pysb.pattern.SpeciesPatternMatcher(model=petab_problem.model.model)
         except NotImplementedError as e:
             raise NotImplementedError(
                 "Requires https://github.com/pysb/pysb/pull/570. "

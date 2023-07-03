@@ -1,7 +1,6 @@
 """Convenience wrappers for the swig interface"""
 import logging
 import sys
-
 import warnings
 from contextlib import contextmanager, suppress
 from typing import Any, Dict, List, Optional, Sequence, Union
@@ -106,8 +105,7 @@ def runAmiciSimulation(
     """
     if (
         model.ne > 0
-        and solver.getSensitivityMethod()
-        == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityMethod() == amici_swig.SensitivityMethod.adjoint
         and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
     ):
         warnings.warn(
@@ -168,8 +166,7 @@ def runAmiciSimulations(
     """
     if (
         model.ne > 0
-        and solver.getSensitivityMethod()
-        == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityMethod() == amici_swig.SensitivityMethod.adjoint
         and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
     ):
         warnings.warn(
@@ -181,7 +178,11 @@ def runAmiciSimulations(
     with _capture_cstdout():
         edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
         rdata_ptr_list = amici_swig.runAmiciSimulations(
-            _get_ptr(solver), edata_ptr_vector, _get_ptr(model), failfast, num_threads
+            _get_ptr(solver),
+            edata_ptr_vector,
+            _get_ptr(model),
+            failfast,
+            num_threads,
         )
     for rdata in rdata_ptr_list:
         _log_simulation(rdata)
@@ -240,6 +241,7 @@ model_instance_settings = [
     "ReinitializationStateIdxs",
     "ReinitializeFixedParameterInitialStates",
     "StateIsNonNegative",
+    "SteadyStateComputationMode",
     "SteadyStateSensitivityMode",
     ("t0", "setT0"),
     "Timepoints",
@@ -318,6 +320,10 @@ def _ids_and_names_to_rdata(rdata: amici_swig.ReturnData, model: amici_swig.Mode
     ):
         for name_or_id in ("Ids", "Names"):
             names_or_ids = getattr(model, f"get{entity_type}{name_or_id}")()
-            setattr(rdata, f"{entity_type.lower()}_{name_or_id.lower()}", names_or_ids)
+            setattr(
+                rdata,
+                f"{entity_type.lower()}_{name_or_id.lower()}",
+                names_or_ids,
+            )
     rdata.state_ids_solver = model.getStateIdsSolver()
     rdata.state_names_solver = model.getStateNamesSolver()
