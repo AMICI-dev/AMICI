@@ -715,9 +715,10 @@ class SbmlImporter:
             if not c.isSetId():
                 continue
             if c.getId() in hardcode_symbols:
-                if self.sbml.getRuleByVariable(c.getId()) is not None:
+                if c.getConstant() is not True:
+                    # disallow anything that can be changed by rules/reaction/events
                     raise ValueError(
-                        f"Cannot hardcode symbol `{c.getId()}` that is a rule target."
+                        f"Cannot hardcode non-constant symbol `{c.getId()}`."
                     )
                 if self.sbml.getInitialAssignment(c.getId()):
                     raise NotImplementedError(
