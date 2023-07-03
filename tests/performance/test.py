@@ -36,12 +36,19 @@ def check_results(rdata):
         "numerrtestfailsB",
         "numnonlinsolvconvfails",
         "numnonlinsolvconvfailsB",
+        "preeq_status",
+        "preeq_numsteps",
+        "preeq_numstepsB",
         "preeq_cpu_time",
         "preeq_cpu_timeB",
+        "cpu_time_total",
         "cpu_time",
         "cpu_timeB",
+        "posteq_status",
         "posteq_cpu_time",
         "posteq_cpu_timeB",
+        "posteq_numsteps",
+        "posteq_numstepsB",
     ]
     for d in diagnostics:
         print(d, rdata[d])
