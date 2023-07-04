@@ -13,7 +13,18 @@ import re
 import warnings
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import libsbml as sbml
 import numpy as np
@@ -281,6 +292,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         log_as_log10: bool = True,
         generate_sensitivity_code: bool = True,
+        hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -385,6 +397,12 @@ class SbmlImporter:
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
             not be generated
+
+        :param hardcode_symbols:
+            List of SBML entitiy IDs that are to be hardcoded in the generated model.
+            Their values cannot be changed anymore after model import.
+            Currently only parameters that are not targets of rules or
+            initial assignments are supported.
         """
         set_log_level(logger, verbose)
 
@@ -401,6 +419,7 @@ class SbmlImporter:
             simplify=simplify,
             cache_simplify=cache_simplify,
             log_as_log10=log_as_log10,
+            hardcode_symbols=hardcode_symbols,
         )
 
         exporter = DEExporter(
@@ -437,12 +456,20 @@ class SbmlImporter:
         simplify: Optional[Callable] = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = True,
+        hardcode_symbols: Sequence[str] = None,
     ) -> DEModel:
         """Generate an ODEModel from this SBML model.
 
         See :py:func:`sbml2amici` for parameters.
         """
         constant_parameters = list(constant_parameters) if constant_parameters else []
+
+        hardcode_symbols = set(hardcode_symbols) if hardcode_symbols else {}
+        if invalid := (set(constant_parameters) & set(hardcode_symbols)):
+            raise ValueError(
+                "The following parameters were selected as both constant "
+                f"and hard-coded which is not allowed: {invalid}"
+            )
 
         if sigmas is None:
             sigmas = {}
@@ -460,7 +487,9 @@ class SbmlImporter:
         self.sbml_parser_settings.setParseLog(
             sbml.L3P_PARSE_LOG_AS_LOG10 if log_as_log10 else sbml.L3P_PARSE_LOG_AS_LN
         )
-        self._process_sbml(constant_parameters)
+        self._process_sbml(
+            constant_parameters=constant_parameters, hardcode_symbols=hardcode_symbols
+        )
 
         if (
             self.symbols.get(SymbolId.EVENT, False)
@@ -496,18 +525,26 @@ class SbmlImporter:
         return ode_model
 
     @log_execution_time("importing SBML", logger)
-    def _process_sbml(self, constant_parameters: List[str] = None) -> None:
+    def _process_sbml(
+        self,
+        constant_parameters: List[str] = None,
+        hardcode_symbols: Sequence[str] = None,
+    ) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
 
         :param constant_parameters:
             SBML Ids identifying constant parameters
+        :param hardcode_parameters:
+            Parameter IDs to be replaced by their values in the generated model.
         """
         if not self._discard_annotations:
             self._process_annotations()
         self.check_support()
-        self._gather_locals()
-        self._process_parameters(constant_parameters)
+        self._gather_locals(hardcode_symbols=hardcode_symbols)
+        self._process_parameters(
+            constant_parameters=constant_parameters, hardcode_symbols=hardcode_symbols
+        )
         self._process_compartments()
         self._process_species()
         self._process_reactions()
@@ -639,7 +676,7 @@ class SbmlImporter:
                 )
 
     @log_execution_time("gathering local SBML symbols", logger)
-    def _gather_locals(self) -> None:
+    def _gather_locals(self, hardcode_symbols: Sequence[str] = None) -> None:
         """
         Populate self.local_symbols with all model entities.
 
@@ -647,10 +684,10 @@ class SbmlImporter:
         shadowing model entities as well as to avoid possibly costly
         symbolic substitutions
         """
-        self._gather_base_locals()
+        self._gather_base_locals(hardcode_symbols=hardcode_symbols)
         self._gather_dependent_locals()
 
-    def _gather_base_locals(self):
+    def _gather_base_locals(self, hardcode_symbols: Sequence[str] = None) -> None:
         """
         Populate self.local_symbols with pure symbol definitions that do not
         depend on any other symbol.
@@ -677,8 +714,20 @@ class SbmlImporter:
         ):
             if not c.isSetId():
                 continue
-
-            self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
+            if c.getId() in hardcode_symbols:
+                if c.getConstant() is not True:
+                    # disallow anything that can be changed by rules/reaction/events
+                    raise ValueError(
+                        f"Cannot hardcode non-constant symbol `{c.getId()}`."
+                    )
+                if self.sbml.getInitialAssignment(c.getId()):
+                    raise NotImplementedError(
+                        f"Cannot hardcode symbol `{c.getId()}` "
+                        "that is an initial assignment target."
+                    )
+                self.add_local_symbol(c.getId(), sp.Float(c.getValue()))
+            else:
+                self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
         for x_ref in _get_list_of_species_references(self.sbml):
             if not x_ref.isSetId():
@@ -940,7 +989,11 @@ class SbmlImporter:
             self.sbml.removeParameter(parameter_id)
 
     @log_execution_time("processing SBML parameters", logger)
-    def _process_parameters(self, constant_parameters: List[str] = None) -> None:
+    def _process_parameters(
+        self,
+        constant_parameters: List[str] = None,
+        hardcode_symbols: Sequence[str] = None,
+    ) -> None:
         """
         Get parameter information from SBML model.
 
@@ -983,6 +1036,7 @@ class SbmlImporter:
             if parameter.getId() not in constant_parameters
             and self._get_element_initial_assignment(parameter.getId()) is None
             and not self.is_assignment_rule_target(parameter)
+            and parameter.getId() not in hardcode_symbols
         ]
 
         loop_settings = {
