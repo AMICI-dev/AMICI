@@ -147,7 +147,7 @@ void SteadystateProblem::findSteadyState(
         findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
-    if (!turnOffNewton && !checkSteadyStateSuccess())
+    if (!turnOffNewton && !turnOffSimulation && !checkSteadyStateSuccess())
         findSteadyStateByNewtonsMethod(model, true);
 
     /* Nothing worked, throw an as informative error as possible */
