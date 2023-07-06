@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 74.
+List of publications using AMICI. Total number is 77.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -21,6 +21,21 @@ Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2023.
 Reveals Time-Dependent Test Efficiency and Infectious Contacts.”</span>
 <em>Epidemics</em> 43: 100681. <a
 href="https://doi.org/10.1016/j.epidem.2023.100681">https://doi.org/10.1016/j.epidem.2023.100681</a>.
+</div>
+<div id="ref-ContentoSta2023" class="csl-entry" role="doc-biblioentry">
+Contento, Lorenzo, Paul Stapor, Daniel Weindl, and Jan Hasenauer. 2023.
+<span>“A More Expressive Spline Representation for <span>SBML</span>
+Models Improves Code Generation Performance in
+<span>AMICI</span>.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2023.06.29.547120">https://doi.org/10.1101/2023.06.29.547120</a>.
+</div>
+<div id="ref-Froehlich2023" class="csl-entry" role="doc-biblioentry">
+Fröhlich, Fabian. 2023. <span>“A Practical Guide for the Efficient
+Formulation and Calibration of Large, Energy- and Rule-Based Models of
+Cellular Signal Transduction.”</span> In <em>Computational Modeling of
+Signaling Networks</em>, edited by Lan K. Nguyen, 59–86. New York, NY:
+Springer US. <a
+href="https://doi.org/10.1007/978-1-0716-3008-2_3">https://doi.org/10.1007/978-1-0716-3008-2_3</a>.
 </div>
 <div id="ref-FroehlichGer2023" class="csl-entry" role="doc-biblioentry">
 Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
@@ -44,6 +59,12 @@ Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023.
 Saccharomyces Cerevisiae.”</span> <em>Metabolic Engineering</em> 75:
 12–18. <a
 href="https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/10.1016/j.ymben.2022.11.003</a>.
+</div>
+<div id="ref-SluijsZho2023" class="csl-entry" role="doc-biblioentry">
+Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu Baltussen, Frank
+Nelissen, Hans Heus, and Wilhelm Huck. 2023. <span>“Inverse Design of
+Enzymatic Reaction Network States.”</span> <a
+href="https://doi.org/10.21203/rs.3.rs-2646906/v1">https://doi.org/10.21203/rs.3.rs-2646906/v1</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2022</h1>
