@@ -39,7 +39,4 @@ def test_antimony_example():
         amici_model.setTimepoints(np.linspace(0, 100, 200))
         amici_solver = amici_model.getSolver()
         rdata = amici.runAmiciSimulation(amici_model, amici_solver)
-
-        from amici.plotting import plot_state_trajectories
-
-        plot_state_trajectories(rdata, model=amici_model)
+        assert rdata.status == amici.AMICI_SUCCESS
