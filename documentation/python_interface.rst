@@ -134,8 +134,8 @@ Importing plain ODEs
 The AMICI Python interface does not currently support direct import of ODEs.
 However, it is straightforward to encode them as RateRules in an SBML model.
 The most convenient options to do that are maybe
-`Antimony <https://tellurium.readthedocs.io/en/latest/antimony.html
->`_  and `yaml2sbml <https://yaml2sbml.readthedocs.io/en/latest/index.html>`_.
+`Antimony <https://tellurium.readthedocs.io/en/latest/antimony.html>`_
+and `yaml2sbml <https://yaml2sbml.readthedocs.io/en/latest/index.html>`_.
 
 An example using Antimony to specify the Lotka-Volterra equations is shown below:
 
