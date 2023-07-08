@@ -133,9 +133,57 @@ Importing plain ODEs
 
 The AMICI Python interface does not currently support direct import of ODEs.
 However, it is straightforward to encode them as RateRules in an SBML model.
-The `yaml2sbml <https://github.com/yaml2sbml-dev/yaml2sbml>`_ package may come in
-handy, as it facilitates generating SBML models from a YAML-based specification
-of an ODE model. Besides the SBML model it can also create
+The most convenient options to do that are maybe
+`Antimony <https://tellurium.readthedocs.io/en/latest/antimony.html
+>`_  and `yaml2sbml <https://yaml2sbml.readthedocs.io/en/latest/index.html>`_.
+
+An example using Antimony to specify the Lotka-Volterra equations is shown below:
+
+.. code-block:: python
+
+    ant_model = """
+
+    model lotka_volterra
+        # see https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
+
+        # initial conditions
+        prey_density = 10;
+        predator_density = 10;
+
+        # parameters
+        prey_growth_rate = 1.1;
+        predator_effect_on_prey = 0.4;
+        predator_death_rate = 0.4;
+        prey_effect_on_predator = 0.1;
+
+        # dx/dt
+        prey_density' = prey_growth_rate * prey_density - predator_effect_on_prey * prey_density * predator_density;
+        predator_density' = prey_effect_on_predator * prey_density * predator_density - predator_death_rate * predator_density;
+    end
+    """
+    module_name = "test_antimony_example_lv"
+    from amici.antimony_import import antimony2amici
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=module_name,
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=outdir
+    )
+    amici_model = model_module.getModel()
+    amici_model.setTimepoints(np.linspace(0, 100, 200))
+    amici_solver = amici_model.getSolver()
+    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+
+    from amici.plotting import plot_state_trajectories
+    plot_state_trajectories(rdata, model=amici_model)
+
+
+The `yaml2sbml <https://yaml2sbml.readthedocs.io/en/latest/index.html>`_ package creates SBML models
+from a YAML-based specification of an ODE model. Various examples are
+`provided <https://yaml2sbml.readthedocs.io/en/latest/examples/examples.html>`_.
+Besides the SBML model, yaml2sbml can also create
 `PEtab <https://github.com/PEtab-dev/PEtab>`_ files.
 
 SED-ML import
