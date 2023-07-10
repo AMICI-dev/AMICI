@@ -26,7 +26,8 @@ if [ $# -eq 0 ]; then
 fi
 
 source ${AMICI_PATH}/build/venv/bin/activate
-pip3 show nbconvert || (pip3 install --upgrade nbconvert && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
+pip3 show nbconvert || pip3 install --upgrade nbconvert
+pip3 show ipykernel || (pip3 install --upgrade ipykernel && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
 
 for arg in "$@"; do
     if [ -d $arg ]; then

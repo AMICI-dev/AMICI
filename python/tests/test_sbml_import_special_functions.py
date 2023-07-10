@@ -9,6 +9,7 @@ import os
 import amici
 import numpy as np
 import pytest
+from amici.antimony_import import antimony2amici
 from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_approx_equal, assert_array_almost_equal_nulp
@@ -156,11 +157,9 @@ def negative_binomial_nllh(m: np.ndarray, y: np.ndarray, p: float):
     )
 
 
-@pytest.mark.filterwarnings("ignore:the imp module is deprecated:DeprecationWarning")
+@skip_on_valgrind
 def test_rateof():
     """Test chained rateOf to verify that model expressions are evaluated in the correct order."""
-    import tellurium as te
-
     ant_model = """
     model test_chained_rateof
         species S1, S2, S3, S4;
@@ -177,12 +176,10 @@ def test_rateof():
         p3 = rateOf(rate);
     end
     """
-    sbml_str = te.antimonyToSBML(ant_model)
-    sbml_importer = amici.SbmlImporter(sbml_str, from_file=False)
-
     module_name = "test_chained_rateof"
     with TemporaryDirectoryWinSafe(prefix=module_name) as outdir:
-        sbml_importer.sbml2amici(
+        antimony2amici(
+            ant_model,
             model_name=module_name,
             output_dir=outdir,
         )
