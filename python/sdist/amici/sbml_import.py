@@ -549,9 +549,9 @@ class SbmlImporter:
         self._process_species()
         self._process_reactions()
         self._process_rules()
+        self._process_events()
         self._process_initial_assignments()
         self._process_species_references()
-        self._process_events()
 
     def check_support(self) -> None:
         """
