@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 77.
+List of publications using AMICI. Total number is 78.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -14,6 +14,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2023</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="doc-bibliography">
+<div id="ref-BuckBas2023" class="csl-entry" role="doc-biblioentry">
+Buck, Michèle C., Lisa Bast, Judith S. Hecker, Jennifer Rivière, Maja
+Rothenberg-Thurley, Luisa Vogel, Dantong Wang, et al. 2023.
+<span>“Progressive Disruption of Hematopoietic Architecture from Clonal
+Hematopoiesis to <span>MDS</span>.”</span> <em>iScience</em>, 107328. <a
+href="https://doi.org/10.1016/j.isci.2023.107328">https://doi.org/10.1016/j.isci.2023.107328</a>.
+</div>
 <div id="ref-ContentoCas2023" class="csl-entry" role="doc-biblioentry">
 Contento, Lorenzo, Noemi Castelletti, Elba Raimúndez, Ronan Le Gleut,
 Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2023.
