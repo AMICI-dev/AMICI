@@ -295,6 +295,10 @@ environment variables:
 |                            | processes to be used for C(++)   |                                 |
 |                            | compilation (defaults to 1)      |                                 |
 +----------------------------+----------------------------------+---------------------------------+
+| ``AMICI_TRY_ENABLE_HDF5``  | Whether to build AMICI with      | ``AMICI_TRY_ENABLE_HDF5=OFF``   |
+|                            | HDF5-support if possible.        |                                 |
+|                            | Default: ``ON``                  |                                 |
++----------------------------+----------------------------------+---------------------------------+
 
 Installation under Anaconda
 ---------------------------

@@ -6,8 +6,13 @@ cmake_minimum_required(VERSION 3.15)
 project(amici)
 
 # misc options
+if(DEFINED ENV{AMICI_TRY_ENABLE_HDF5})
+  option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?"
+         $ENV{AMICI_TRY_ENABLE_HDF5})
+else()
+  option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
+endif()
 option(AMICI_PYTHON_BUILD_EXT_ONLY "Build only the Python extension?" OFF)
-option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
 option(ENABLE_HDF5 "Build with HDF5 support?" OFF)
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
@@ -324,7 +329,10 @@ if(HDF5_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC hdf5::hdf5_hl_cpp hdf5::hdf5_hl
                                                hdf5::hdf5_cpp hdf5::hdf5)
 else()
-  message(STATUS "HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
+  message(
+    STATUS
+      "HDF5 support disabled or HDF5 library not found. Building AMICI WITHOUT HDF5 support."
+  )
 endif()
 
 if(AMICI_PYTHON_BUILD_EXT_ONLY)
