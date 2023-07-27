@@ -6,6 +6,7 @@ Plotting related functions
 from typing import Iterable, Optional, Sequence, Union
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import sympy as sp
@@ -120,7 +121,7 @@ plotStateTrajectories = plot_state_trajectories
 plotObservableTrajectories = plot_observable_trajectories
 
 
-def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> "numpy.array":
+def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
     """Evaluate a symbolic expression based on the given simulation outputs.
 
     :param expr:
