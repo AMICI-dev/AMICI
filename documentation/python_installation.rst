@@ -150,15 +150,15 @@ You will also need to define two environment variables:
 
 .. code-block:: text
 
-   BLAS_LIBS="/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
-   BLAS_CFLAGS="/IC:/BLAS/OpenBLAS"
+   BLAS_LIBS="-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
+   BLAS_CFLAGS="-IC:/BLAS/OpenBLAS"
 
 One way to do that is to run a PowerShell script with the following commands:
 
 .. code-block:: text
 
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::User)
    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::Process)
 
