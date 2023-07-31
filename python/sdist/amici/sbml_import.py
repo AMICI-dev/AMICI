@@ -1388,7 +1388,7 @@ class SbmlImporter:
             # targets of events.
             self.symbols[SymbolId.SPECIES][parameter_target] = {
                 "name": parameter_def["name"],
-                "init": sp.Float(parameter_def["value"]),
+                "init": sp.sympify(parameter_def["value"]),
                 # 'compartment': None,  # can ignore for amounts
                 "constant": False,
                 "amount": True,
