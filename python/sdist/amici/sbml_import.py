@@ -1060,7 +1060,7 @@ class SbmlImporter:
             for par in settings["var"]:
                 self.symbols[partype][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": par.getValue(),
+                    "value": sp.Float(par.getValue()),
                 }
 
         # Parameters that need to be turned into expressions
