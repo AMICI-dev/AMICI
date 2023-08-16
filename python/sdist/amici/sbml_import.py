@@ -1382,7 +1382,7 @@ class SbmlImporter:
                 ia_init = self._get_element_initial_assignment(par.getId())
                 parameter_def = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": par.getValue() if ia_init is None else ia_init,
+                    "value": sp.Float(par.getValue()) if ia_init is None else ia_init,
                 }
             # Fixed parameters are added as species such that they can be
             # targets of events.
