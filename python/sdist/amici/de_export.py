@@ -3038,8 +3038,24 @@ class DEExporter:
         else:
             equations = self.model.eq(function)
 
+        # function body
+        if function == "create_splines":
+            body = self._get_create_splines_body()
+        else:
+            body = self._get_function_body(function, equations)
+        if not body:
+            return
+
+        # colptrs / rowvals for sparse matrices
+        if function in sparse_functions:
+            lines = self._generate_function_index(function, "colptrs")
+            lines.extend(self._generate_function_index(function, "rowvals"))
+            lines.append("\n\n")
+        else:
+            lines = []
+
         # function header
-        lines = [
+        lines.extend([
             '#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
@@ -3047,7 +3063,7 @@ class DEExporter:
             "#include <gsl/gsl-lite.hpp>",
             "#include <algorithm>",
             "",
-        ]
+        ])
         if function == "create_splines":
             lines += ['#include "amici/splinefunctions.h"', "#include <vector>"]
 
@@ -3094,14 +3110,6 @@ class DEExporter:
             ]
         )
 
-        # function body
-        if function == "create_splines":
-            body = self._get_create_splines_body()
-        else:
-            body = self._get_function_body(function, equations)
-        if not body:
-            return
-
         if self.assume_pow_positivity and func_info.assume_pow_positivity:
             pow_rx = re.compile(r"(^|\W)std::pow\(")
             body = [
@@ -3129,10 +3137,6 @@ class DEExporter:
                 if "build_hint" in fun:
                     self._build_hints.add(fun["build_hint"])
                 lines.insert(0, fun["include"])
-
-        if function in sparse_functions:
-            lines.extend(self._generate_function_index(function, "colptrs"))
-            lines.extend(self._generate_function_index(function, "rowvals"))
 
         # if not body is None:
         filename = os.path.join(self.model_path, f"{function}.cpp")
