@@ -2,6 +2,7 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(VERSION 3.15...3.27)
 
 project(amici)
 

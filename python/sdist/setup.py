@@ -130,6 +130,9 @@ def get_extensions():
         source_dir="amici",
         cmake_configure_options=[
             *global_cmake_configure_options,
+            "-Werror=dev"
+            if "GITHUB_ACTIONS" in os.environ
+            else "-Wno-error=dev",
             "-DAMICI_PYTHON_BUILD_EXT_ONLY=ON",
             f"-DPython3_EXECUTABLE={Path(sys.executable).as_posix()}",
         ],
@@ -142,7 +145,9 @@ def main():
     # Readme as long package description to go on PyPi
     # (https://pypi.org/project/amici/)
     with open(
-        os.path.join(os.path.dirname(__file__), "README.md"), "r", encoding="utf-8"
+        os.path.join(os.path.dirname(__file__), "README.md"),
+        "r",
+        encoding="utf-8",
     ) as fh:
         long_description = fh.read()
 
