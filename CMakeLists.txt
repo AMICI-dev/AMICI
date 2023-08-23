@@ -296,7 +296,7 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
 endif()
 
 target_compile_definitions(
-  ${PROJECT_NAME} PRIVATE $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
+  ${PROJECT_NAME} PUBLIC $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
 
 target_link_libraries(
   ${PROJECT_NAME}
