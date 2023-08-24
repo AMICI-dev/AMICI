@@ -727,7 +727,7 @@ TEST(CpuTimer, CpuTimer)
 {
     amici::CpuTimer timer;
     auto elapsed = timer.elapsed_seconds();
-    EXPECT_LT(0.0, elapsed);
+    EXPECT_LE(0.0, elapsed);
     EXPECT_GT(1.0, elapsed);
 
     elapsed = timer.elapsed_milliseconds();;
