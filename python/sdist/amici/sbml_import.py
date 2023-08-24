@@ -307,22 +307,27 @@ class SbmlImporter:
         defined for a particular species.
 
         Sensitivity analysis for local parameters is enabled by creating
-        global parameters _{reactionId}_{localParameterName}.
+        global parameters ``_{reactionId}_{localParameterName}``.
 
         :param model_name:
-            name of the model/model directory
+            Name of the generated model package.
+            Note that in a given Python session, only one model with a given
+            name can be loaded at a time.
+            The generated Python extensions cannot be unloaded. Therefore,
+            make sure to choose a unique name for each model.
 
         :param output_dir:
-            see :meth:`amici.de_export.ODEExporter.set_paths`
+            Directory where the generated model package will be stored.
 
         :param observables:
-            dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)}) to be added to the model
+            Observables to be added to the model:
+            ``dictionary( observableId:{'name':observableName
+            (optional), 'formula':formulaString)})``.
 
         :param event_observables:
-            dictionary( eventObservableId:{'name':eventObservableName
-            (optional), 'event':eventId, 'formula':formulaString)}) to be
-            added to the model
+            Event observables to be added to the model:
+            ``dictionary( eventObservableId:{'name':eventObservableName
+            (optional), 'event':eventId, 'formula':formulaString)})``
 
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
@@ -339,12 +344,16 @@ class SbmlImporter:
             If nothing is passed for some observable id, a normal model is
             assumed as default. Either pass a noise type identifier, or a
             callable generating a custom noise string.
+            For noise identifiers, see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`.
 
         :param event_noise_distributions:
             dictionary(eventObservableId: noise type).
             If nothing is passed for some observable id, a normal model is
             assumed as default. Either pass a noise type identifier, or a
             callable generating a custom noise string.
+            For noise identifiers, see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`.
 
         :param verbose:
             verbosity level for logging, ``True``/``False`` default to
@@ -392,14 +401,14 @@ class SbmlImporter:
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
             (default), if ``False``, log will be parsed as natural logarithm
-            ``ln``
+            ``ln``.
 
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
-            not be generated
+            not be generated.
 
         :param hardcode_symbols:
-            List of SBML entitiy IDs that are to be hardcoded in the generated model.
+            List of SBML entity IDs that are to be hardcoded in the generated model.
             Their values cannot be changed anymore after model import.
             Currently only parameters that are not targets of rules or
             initial assignments are supported.
@@ -1051,7 +1060,7 @@ class SbmlImporter:
             for par in settings["var"]:
                 self.symbols[partype][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": par.getValue(),
+                    "value": sp.Float(par.getValue()),
                 }
 
         # Parameters that need to be turned into expressions
@@ -1373,13 +1382,13 @@ class SbmlImporter:
                 ia_init = self._get_element_initial_assignment(par.getId())
                 parameter_def = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": par.getValue() if ia_init is None else ia_init,
+                    "value": sp.Float(par.getValue()) if ia_init is None else ia_init,
                 }
             # Fixed parameters are added as species such that they can be
             # targets of events.
             self.symbols[SymbolId.SPECIES][parameter_target] = {
                 "name": parameter_def["name"],
-                "init": sp.Float(parameter_def["value"]),
+                "init": parameter_def["value"],
                 # 'compartment': None,  # can ignore for amounts
                 "constant": False,
                 "amount": True,
@@ -1716,7 +1725,7 @@ class SbmlImporter:
             (False) or for event observables (True).
 
         :param event_reg:
-            indicates whether log-likelihoods definitons should be processed
+            indicates whether log-likelihood definitions should be processed
             for event observable regularization (Jrz). If this is activated,
             measurements are substituted by 0 and the observable by the
             respective regularization symbol.

@@ -16,18 +16,6 @@
 
 #include <hdf5_hl.h>
 
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-#ifdef AMI_HDF5_H_DEBUG
-#ifndef __APPLE__
-#include <cexecinfo>
-#else
-#include <execinfo.h>
-#endif
-#endif
-#include <cmath>
-#include <unistd.h>
 
 namespace amici {
 namespace hdf5 {
