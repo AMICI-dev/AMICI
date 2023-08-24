@@ -255,7 +255,7 @@ template <class T> bool is_equal(T const& a, T const& b) {
 }
 
 #ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
-/** Tracks elapsed CPU time. */
+/** Tracks elapsed CPU time using boost::chrono::thread_clock. */
 class CpuTimer {
     using clock = boost::chrono::thread_clock;
     using time_point = clock::time_point;
@@ -291,12 +291,14 @@ class CpuTimer {
         return d_milliseconds(clock::now() - start_).count();
     }
 
+    static const bool uses_thread_clock = true;
+
   private:
     /** Start time */
     time_point start_;
 };
 #else
-/** Tracks elapsed CPU time. */
+/** Tracks elapsed CPU time using std::clock. */
 class CpuTimer {
   public:
     /**
@@ -327,6 +329,8 @@ class CpuTimer {
         return static_cast<double>(std::clock() - start_) * 1000.0
                / CLOCKS_PER_SEC;
     }
+
+    static const bool uses_thread_clock = false;
 
   private:
     /** Start time */
