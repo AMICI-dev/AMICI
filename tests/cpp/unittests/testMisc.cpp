@@ -730,7 +730,7 @@ TEST(CpuTimer, CpuTimer)
     EXPECT_LE(0.0, elapsed);
     EXPECT_GT(1.0, elapsed);
 
-    elapsed = timer.elapsed_milliseconds();;
+    elapsed = timer.elapsed_milliseconds();
     EXPECT_LT(0.0, elapsed);
     EXPECT_GT(1000.0, elapsed);
 }
