@@ -2,6 +2,55 @@
 
 ## v0.X Series
 
+### v0.19.0 (2023-08-26)
+
+**Features**
+* SBML import now supports `rateOf`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2120
+* Added `Model.{get,set}SteadyStateComputationMode` (analogous to `SteadyStateSensitivityMode`)
+  which allows to choose how steady state is computed.
+  by @plakrisenko in https://github.com/AMICI-dev/AMICI/pull/2074
+
+  **Note: The default `SteadyStateSensitivityMode` changed from `newtonOnly` to `integrateIfNewtonFails`.**
+
+* SBML import: Allow hardcoding of numerical values
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2134
+* Added `antimony2amici` for more convenient antimony import
+  (simplifies working with raw ODEs, see documentation)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2142
+* Added `AMICI_TRY_ENABLE_HDF5` environment variable to control whether to search for HDF5 or not
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2148
+
+**Fixes**
+
+* Fixed SBML import for events with trigger functions depending on parameters that are initial
+  assignment targets
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2145
+* Fixed SBML import for event-assigned parameters with non-float initial assignments
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2156
+* Fixed `unistd.h` dependency of `hdf5.cpp` that led to compilation
+  failures on Windows
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2154
+* Set CMake policies for cmake 3.27 by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2162
+* Fixed a `lib/` vs `lib64/` issue, leading to `SUNDIALSConfig.cmake`-not-found issues
+  on some systems
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2165
+* CMake: fixed scope of `-DHAS_BOOST_CHRONO` which may have lead to a mix of
+  `boost::chrono::thread_clock` and `std::clock` being used in programs using amici,
+  and potentially segmentation faults
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2163
+
+Performance:
+* Combined code for sparse model functions and their index files for slightly faster
+  compilation of small models
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2159
+
+* Removed complex / complex long KLU functions for slightly faster amici package installation
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2160
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.18.1...v0.19.0
+
+
 ### v0.18.1 (2023-06-26)
 
 Fixes:
