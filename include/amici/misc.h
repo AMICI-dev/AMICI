@@ -258,7 +258,7 @@ template <class T> bool is_equal(T const& a, T const& b) {
 /** Tracks elapsed CPU time. */
 class CpuTimer {
     using clock = boost::chrono::thread_clock;
-    using time_point = boost::chrono::thread_clock::time_point;
+    using time_point = clock::time_point;
     using d_seconds = boost::chrono::duration<double>;
     using d_milliseconds = boost::chrono::duration<double, boost::milli>;
 
@@ -279,8 +279,7 @@ class CpuTimer {
      * @return CPU time in seconds
      */
     double elapsed_seconds() const {
-        return boost::chrono::duration_cast<d_seconds>(clock::now() - start_)
-            .count();
+        return d_seconds(clock::now() - start_).count();
     }
 
     /**
@@ -289,10 +288,7 @@ class CpuTimer {
      * @return CPU time in milliseconds
      */
     double elapsed_milliseconds() const {
-        return boost::chrono::duration_cast<d_milliseconds>(
-                   clock::now() - start_
-        )
-            .count();
+        return d_milliseconds(clock::now() - start_).count();
     }
 
   private:
