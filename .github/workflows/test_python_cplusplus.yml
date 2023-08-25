@@ -77,13 +77,6 @@ jobs:
       run: |
         CI_SONARCLOUD=TRUE scripts/buildAmici.sh
 
-    - name: Cache sonar files
-      id: cache-sonar
-      uses: actions/cache@v3
-      with:
-        path: sonar_cache
-        key: ${{ runner.os }}-sonar_cache
-
     - name: C++ tests
       run: |
         scripts/run-cpp-tests.sh
