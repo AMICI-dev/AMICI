@@ -2,6 +2,7 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(VERSION 3.15...3.27)
 
 project(amici)
 
@@ -125,7 +126,7 @@ set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 find_package(SUNDIALS REQUIRED PATHS
-             "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
+             "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
