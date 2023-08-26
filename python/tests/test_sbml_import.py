@@ -38,7 +38,7 @@ def simple_sbml_model():
     model.addSpecies(s1)
     p1 = model.createParameter()
     p1.setId("p1")
-    p1.setValue(0.0)
+    p1.setValue(2.0)
     model.addParameter(p1)
 
     return document, model
@@ -662,3 +662,34 @@ def test_code_gen_uses_lhs_symbol_ids():
         )
         dwdx = Path(tmpdir, "dwdx.cpp").read_text()
     assert "dobservable_x1_dx1 = " in dwdx
+
+
+def test_hardcode_parameters(simple_sbml_model):
+    """Test model generation works for model without observables"""
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
+    r = sbml_model.createRateRule()
+    r.setVariable("S1")
+    r.setFormula("p1")
+    assert sbml_model.getParameter("p1").getValue() != 0
+
+    ode_model = sbml_importer._build_ode_model()
+    assert str(ode_model.parameters()) == "[p1]"
+    assert ode_model.differential_states()[0].get_dt().name == "p1"
+
+    ode_model = sbml_importer._build_ode_model(
+        constant_parameters=[],
+        hardcode_symbols=["p1"],
+    )
+    assert str(ode_model.parameters()) == "[]"
+    assert (
+        ode_model.differential_states()[0].get_dt()
+        == sbml_model.getParameter("p1").getValue()
+    )
+
+    with pytest.raises(ValueError):
+        sbml_importer._build_ode_model(
+            # mutually exclusive
+            constant_parameters=["p1"],
+            hardcode_symbols=["p1"],
+        )

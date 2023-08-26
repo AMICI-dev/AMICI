@@ -150,15 +150,15 @@ You will also need to define two environment variables:
 
 .. code-block:: text
 
-   BLAS_LIBS="/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
-   BLAS_CFLAGS="/IC:/BLAS/OpenBLAS"
+   BLAS_LIBS="-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
+   BLAS_CFLAGS="-IC:/BLAS/OpenBLAS"
 
 One way to do that is to run a PowerShell script with the following commands:
 
 .. code-block:: text
 
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::User)
    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::Process)
 
@@ -294,6 +294,10 @@ environment variables:
 | ``AMICI_PARALLEL_COMPILE`` | Set to the number of parallel    | ``AMICI_PARALLEL_COMPILE=4``    |
 |                            | processes to be used for C(++)   |                                 |
 |                            | compilation (defaults to 1)      |                                 |
++----------------------------+----------------------------------+---------------------------------+
+| ``AMICI_TRY_ENABLE_HDF5``  | Whether to build AMICI with      | ``AMICI_TRY_ENABLE_HDF5=OFF``   |
+|                            | HDF5-support if possible.        |                                 |
+|                            | Default: ``ON``                  |                                 |
 +----------------------------+----------------------------------+---------------------------------+
 
 Installation under Anaconda

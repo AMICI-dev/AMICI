@@ -32,6 +32,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    Literal
 )
 
 import numpy as np
@@ -51,9 +52,9 @@ from .constants import SymbolId
 from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
 from .de_model import *
 from .import_utils import (
-    amici_time_symbol,
     ObservableTransformation,
     SBMLException,
+    amici_time_symbol,
     generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
@@ -1101,6 +1102,91 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
+        self._process_sbml_rate_of(symbols)  # substitute SBML-rateOf constructs
+
+    def _process_sbml_rate_of(self, symbols) -> None:
+        """Substitute any SBML-rateOf constructs in the model equations"""
+        rate_of_func = sp.core.function.UndefinedFunction("rateOf")
+        species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
+        species_sym_to_idx = {x: i for i, x in enumerate(self.sym("x"))}
+
+        def get_rate(symbol: sp.Symbol):
+            """Get rate of change of the given symbol"""
+            nonlocal symbols
+
+            if symbol.find(rate_of_func):
+                raise SBMLException("Nesting rateOf() is not allowed.")
+
+            # Replace all rateOf(some_species) by their respective xdot equation
+            with contextlib.suppress(KeyError):
+                return self._eqs["xdot"][species_sym_to_idx[symbol]]
+
+            # For anything other than a state, rateOf(.) is 0 or invalid
+            return 0
+
+        # replace rateOf-instances in xdot by xdot symbols
+        for i_state in range(len(self.eq("xdot"))):
+            if rate_ofs := self._eqs["xdot"][i_state].find(rate_of_func):
+                self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
+                    {
+                        # either the rateOf argument is a state, or it's 0
+                        rate_of: species_sym_to_xdot.get(rate_of.args[0], 0)
+                        for rate_of in rate_ofs
+                    }
+                )
+        # substitute in topological order
+        subs = toposort_symbols(dict(zip(self.sym("xdot"), self.eq("xdot"))))
+        self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
+
+        # replace rateOf-instances in x0 by xdot equation
+        for i_state in range(len(self.eq("x0"))):
+            if rate_ofs := self._eqs["x0"][i_state].find(rate_of_func):
+                self._eqs["x0"][i_state] = self._eqs["x0"][i_state].subs(
+                    {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                )
+
+        for component in chain(
+            self.observables(),
+            self.expressions(),
+            self.events(),
+            self._algebraic_equations,
+        ):
+            if rate_ofs := component.get_val().find(rate_of_func):
+                if isinstance(component, Event):
+                    # TODO froot(...) can currently not depend on `w`, so this substitution fails for non-zero rates
+                    #  see, e.g., sbml test case 01293
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside event trigger functions."
+                    )
+
+                if isinstance(component, AlgebraicEquation):
+                    # TODO IDACalcIC fails with
+                    #   "The linesearch algorithm failed: step too small or too many backtracks."
+                    #  see, e.g., sbml test case 01482
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside AlgebraicRules."
+                    )
+
+                component.set_val(
+                    component.get_val().subs(
+                        {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                    )
+                )
+
+        for event in self.events():
+            if event._state_update is None:
+                continue
+
+            for i_state in range(len(event._state_update)):
+                if rate_ofs := event._state_update[i_state].find(rate_of_func):
+                    raise SBMLException(
+                        "AMICI does currently not support rateOf(.) inside event state updates."
+                    )
+                    # TODO here we need xdot sym, not eqs
+                    # event._state_update[i_state] = event._state_update[i_state].subs(
+                    #     {rate_of: get_rate(rate_of.args[0]) for rate_of in rate_ofs}
+                    # )
+
     def add_component(
         self, component: ModelQuantity, insert_first: Optional[bool] = False
     ) -> None:
@@ -2003,8 +2089,9 @@ class DEModel:
 
                 # need to check if equations are zero since we are using
                 # symbols
-                if not smart_is_zero_matrix(self.eq("stau")[ie]) \
-                        and not smart_is_zero_matrix(self.eq("xdot")):
+                if not smart_is_zero_matrix(
+                    self.eq("stau")[ie]
+                ) and not smart_is_zero_matrix(self.eq("xdot")):
                     tmp_eq += smart_multiply(
                         self.sym("xdot_old") - self.sym("xdot"),
                         self.sym("stau").T,
@@ -2027,7 +2114,9 @@ class DEModel:
                         )
 
                         # additional part of chain rule state variables
-                        tmp_dxdp += smart_multiply(self.sym("xdot_old"), self.sym("stau").T)
+                        tmp_dxdp += smart_multiply(
+                            self.sym("xdot_old"), self.sym("stau").T
+                        )
 
                     # finish chain rule for the state variables
                     tmp_eq += smart_multiply(self.eq("ddeltaxdx")[ie], tmp_dxdp)
@@ -2750,19 +2839,19 @@ class DEExporter:
             if func_info.generate_body:
                 dec = log_execution_time(f"writing {func_name}.cpp", logger)
                 dec(self._write_function_file)(func_name)
-            if func_name in sparse_functions and func_info.body:
-                self._write_function_index(func_name, "colptrs")
-                self._write_function_index(func_name, "rowvals")
 
         for name in self.model.sym_names():
             # only generate for those that have nontrivial implementation,
             # check for both basic variables (not in functions) and function
             # computed values
             if (
-                name in self.functions
-                and not self.functions[name].body
-                and name not in nobody_functions
-            ) or (name not in self.functions and len(self.model.sym(name)) == 0):
+                (
+                    name in self.functions
+                    and not self.functions[name].body
+                    and name not in nobody_functions
+                )
+                or name not in self.functions
+            ) and len(self.model.sym(name)) == 0:
                 continue
             self._write_index_files(name)
 
@@ -2949,8 +3038,24 @@ class DEExporter:
         else:
             equations = self.model.eq(function)
 
+        # function body
+        if function == "create_splines":
+            body = self._get_create_splines_body()
+        else:
+            body = self._get_function_body(function, equations)
+        if not body:
+            return
+
+        # colptrs / rowvals for sparse matrices
+        if function in sparse_functions:
+            lines = self._generate_function_index(function, "colptrs")
+            lines.extend(self._generate_function_index(function, "rowvals"))
+            lines.append("\n\n")
+        else:
+            lines = []
+
         # function header
-        lines = [
+        lines.extend([
             '#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
@@ -2958,7 +3063,7 @@ class DEExporter:
             "#include <gsl/gsl-lite.hpp>",
             "#include <algorithm>",
             "",
-        ]
+        ])
         if function == "create_splines":
             lines += ['#include "amici/splinefunctions.h"', "#include <vector>"]
 
@@ -2982,7 +3087,10 @@ class DEExporter:
             else:
                 iszero = len(self.model.sym(sym)) == 0
 
-            if iszero:
+            if iszero and not (
+                (sym == "y" and "Jy" in function)
+                or (sym == "w" and "xdot" in function and len(self.model.sym(sym)))
+            ):
                 continue
 
             lines.append(f'#include "{sym}.h"')
@@ -3001,14 +3109,6 @@ class DEExporter:
                 f"({func_info.arguments(self.model.is_ode())}){{",
             ]
         )
-
-        # function body
-        if function == "create_splines":
-            body = self._get_create_splines_body()
-        else:
-            body = self._get_function_body(function, equations)
-        if not body:
-            return
 
         if self.assume_pow_positivity and func_info.assume_pow_positivity:
             pow_rx = re.compile(r"(^|\W)std::pow\(")
@@ -3043,16 +3143,20 @@ class DEExporter:
         with open(filename, "w") as fileout:
             fileout.write("\n".join(lines))
 
-    def _write_function_index(self, function: str, indextype: str) -> None:
+    def _generate_function_index(
+            self, function: str, indextype: Literal["colptrs", "rowvals"]
+    ) -> List[str]:
         """
-        Generate equations and write the C++ code for the function
-        ``function``.
+        Generate equations and C++ code for the function ``function``.
 
         :param function:
             name of the function to be written (see ``self.functions``)
 
         :param indextype:
             type of index {'colptrs', 'rowvals'}
+
+        :returns:
+            The code lines for the respective function index file
         """
         if indextype == "colptrs":
             values = self.model.colptrs(function)
@@ -3139,11 +3243,7 @@ class DEExporter:
             ]
         )
 
-        filename = f"{function}_{indextype}.cpp"
-        filename = os.path.join(self.model_path, filename)
-
-        with open(filename, "w") as fileout:
-            fileout.write("\n".join(lines))
+        return lines
 
     def _get_function_body(self, function: str, equations: sp.Matrix) -> List[str]:
         """

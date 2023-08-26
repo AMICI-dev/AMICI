@@ -42,7 +42,7 @@ set_target_properties(SUNDIALS::KLU PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                                                "${KLU_INCLUDE_DIR}")
 
 find_package(SUNDIALS REQUIRED PATHS
-             "@CMAKE_SOURCE_DIR@/ThirdParty/sundials/build/lib/cmake/sundials/")
+             "@CMAKE_SOURCE_DIR@/ThirdParty/sundials/build/@CMAKE_INSTALL_LIBDIR@/cmake/sundials/")
 
 if(@Boost_CHRONO_FOUND@)
   find_package(Boost COMPONENTS chrono REQUIRED)

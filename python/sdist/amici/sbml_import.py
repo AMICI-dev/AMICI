@@ -13,7 +13,18 @@ import re
 import warnings
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import libsbml as sbml
 import numpy as np
@@ -281,6 +292,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         log_as_log10: bool = True,
         generate_sensitivity_code: bool = True,
+        hardcode_symbols: Sequence[str] = None,
     ) -> None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -295,22 +307,27 @@ class SbmlImporter:
         defined for a particular species.
 
         Sensitivity analysis for local parameters is enabled by creating
-        global parameters _{reactionId}_{localParameterName}.
+        global parameters ``_{reactionId}_{localParameterName}``.
 
         :param model_name:
-            name of the model/model directory
+            Name of the generated model package.
+            Note that in a given Python session, only one model with a given
+            name can be loaded at a time.
+            The generated Python extensions cannot be unloaded. Therefore,
+            make sure to choose a unique name for each model.
 
         :param output_dir:
-            see :meth:`amici.de_export.ODEExporter.set_paths`
+            Directory where the generated model package will be stored.
 
         :param observables:
-            dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)}) to be added to the model
+            Observables to be added to the model:
+            ``dictionary( observableId:{'name':observableName
+            (optional), 'formula':formulaString)})``.
 
         :param event_observables:
-            dictionary( eventObservableId:{'name':eventObservableName
-            (optional), 'event':eventId, 'formula':formulaString)}) to be
-            added to the model
+            Event observables to be added to the model:
+            ``dictionary( eventObservableId:{'name':eventObservableName
+            (optional), 'event':eventId, 'formula':formulaString)})``
 
         :param constant_parameters:
             list of SBML Ids identifying constant parameters
@@ -327,12 +344,16 @@ class SbmlImporter:
             If nothing is passed for some observable id, a normal model is
             assumed as default. Either pass a noise type identifier, or a
             callable generating a custom noise string.
+            For noise identifiers, see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`.
 
         :param event_noise_distributions:
             dictionary(eventObservableId: noise type).
             If nothing is passed for some observable id, a normal model is
             assumed as default. Either pass a noise type identifier, or a
             callable generating a custom noise string.
+            For noise identifiers, see
+            :func:`amici.import_utils.noise_distribution_to_cost_function`.
 
         :param verbose:
             verbosity level for logging, ``True``/``False`` default to
@@ -380,11 +401,17 @@ class SbmlImporter:
         :param log_as_log10:
             If ``True``, log in the SBML model will be parsed as ``log10``
             (default), if ``False``, log will be parsed as natural logarithm
-            ``ln``
+            ``ln``.
 
         :param generate_sensitivity_code:
             If ``False``, the code required for sensitivity computation will
-            not be generated
+            not be generated.
+
+        :param hardcode_symbols:
+            List of SBML entity IDs that are to be hardcoded in the generated model.
+            Their values cannot be changed anymore after model import.
+            Currently only parameters that are not targets of rules or
+            initial assignments are supported.
         """
         set_log_level(logger, verbose)
 
@@ -401,6 +428,7 @@ class SbmlImporter:
             simplify=simplify,
             cache_simplify=cache_simplify,
             log_as_log10=log_as_log10,
+            hardcode_symbols=hardcode_symbols,
         )
 
         exporter = DEExporter(
@@ -437,12 +465,20 @@ class SbmlImporter:
         simplify: Optional[Callable] = _default_simplify,
         cache_simplify: bool = False,
         log_as_log10: bool = True,
+        hardcode_symbols: Sequence[str] = None,
     ) -> DEModel:
         """Generate an ODEModel from this SBML model.
 
         See :py:func:`sbml2amici` for parameters.
         """
         constant_parameters = list(constant_parameters) if constant_parameters else []
+
+        hardcode_symbols = set(hardcode_symbols) if hardcode_symbols else {}
+        if invalid := (set(constant_parameters) & set(hardcode_symbols)):
+            raise ValueError(
+                "The following parameters were selected as both constant "
+                f"and hard-coded which is not allowed: {invalid}"
+            )
 
         if sigmas is None:
             sigmas = {}
@@ -460,7 +496,9 @@ class SbmlImporter:
         self.sbml_parser_settings.setParseLog(
             sbml.L3P_PARSE_LOG_AS_LOG10 if log_as_log10 else sbml.L3P_PARSE_LOG_AS_LN
         )
-        self._process_sbml(constant_parameters)
+        self._process_sbml(
+            constant_parameters=constant_parameters, hardcode_symbols=hardcode_symbols
+        )
 
         if (
             self.symbols.get(SymbolId.EVENT, False)
@@ -496,25 +534,33 @@ class SbmlImporter:
         return ode_model
 
     @log_execution_time("importing SBML", logger)
-    def _process_sbml(self, constant_parameters: List[str] = None) -> None:
+    def _process_sbml(
+        self,
+        constant_parameters: List[str] = None,
+        hardcode_symbols: Sequence[str] = None,
+    ) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
 
         :param constant_parameters:
             SBML Ids identifying constant parameters
+        :param hardcode_parameters:
+            Parameter IDs to be replaced by their values in the generated model.
         """
         if not self._discard_annotations:
             self._process_annotations()
         self.check_support()
-        self._gather_locals()
-        self._process_parameters(constant_parameters)
+        self._gather_locals(hardcode_symbols=hardcode_symbols)
+        self._process_parameters(
+            constant_parameters=constant_parameters, hardcode_symbols=hardcode_symbols
+        )
         self._process_compartments()
         self._process_species()
         self._process_reactions()
         self._process_rules()
+        self._process_events()
         self._process_initial_assignments()
         self._process_species_references()
-        self._process_events()
 
     def check_support(self) -> None:
         """
@@ -639,7 +685,7 @@ class SbmlImporter:
                 )
 
     @log_execution_time("gathering local SBML symbols", logger)
-    def _gather_locals(self) -> None:
+    def _gather_locals(self, hardcode_symbols: Sequence[str] = None) -> None:
         """
         Populate self.local_symbols with all model entities.
 
@@ -647,10 +693,10 @@ class SbmlImporter:
         shadowing model entities as well as to avoid possibly costly
         symbolic substitutions
         """
-        self._gather_base_locals()
+        self._gather_base_locals(hardcode_symbols=hardcode_symbols)
         self._gather_dependent_locals()
 
-    def _gather_base_locals(self):
+    def _gather_base_locals(self, hardcode_symbols: Sequence[str] = None) -> None:
         """
         Populate self.local_symbols with pure symbol definitions that do not
         depend on any other symbol.
@@ -677,8 +723,20 @@ class SbmlImporter:
         ):
             if not c.isSetId():
                 continue
-
-            self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
+            if c.getId() in hardcode_symbols:
+                if c.getConstant() is not True:
+                    # disallow anything that can be changed by rules/reaction/events
+                    raise ValueError(
+                        f"Cannot hardcode non-constant symbol `{c.getId()}`."
+                    )
+                if self.sbml.getInitialAssignment(c.getId()):
+                    raise NotImplementedError(
+                        f"Cannot hardcode symbol `{c.getId()}` "
+                        "that is an initial assignment target."
+                    )
+                self.add_local_symbol(c.getId(), sp.Float(c.getValue()))
+            else:
+                self.add_local_symbol(c.getId(), _get_identifier_symbol(c))
 
         for x_ref in _get_list_of_species_references(self.sbml):
             if not x_ref.isSetId():
@@ -804,10 +862,20 @@ class SbmlImporter:
             if species:
                 species["init"] = initial
 
+        # hide rateOf-arguments from toposort and the substitution below
+        all_rateof_dummies = []
+        for species in self.symbols[SymbolId.SPECIES].values():
+            species["init"], rateof_dummies = _rateof_to_dummy(species["init"])
+            all_rateof_dummies.append(rateof_dummies)
+
         # don't assign this since they need to stay in order
         sorted_species = toposort_symbols(self.symbols[SymbolId.SPECIES], "init")
-        for species in self.symbols[SymbolId.SPECIES].values():
-            species["init"] = smart_subs_dict(species["init"], sorted_species, "init")
+        for species, rateof_dummies in zip(
+            self.symbols[SymbolId.SPECIES].values(), all_rateof_dummies
+        ):
+            species["init"] = _dummy_to_rateof(
+                smart_subs_dict(species["init"], sorted_species, "init"), rateof_dummies
+            )
 
     @log_execution_time("processing SBML rate rules", logger)
     def _process_rate_rules(self):
@@ -930,7 +998,11 @@ class SbmlImporter:
             self.sbml.removeParameter(parameter_id)
 
     @log_execution_time("processing SBML parameters", logger)
-    def _process_parameters(self, constant_parameters: List[str] = None) -> None:
+    def _process_parameters(
+        self,
+        constant_parameters: List[str] = None,
+        hardcode_symbols: Sequence[str] = None,
+    ) -> None:
         """
         Get parameter information from SBML model.
 
@@ -973,6 +1045,7 @@ class SbmlImporter:
             if parameter.getId() not in constant_parameters
             and self._get_element_initial_assignment(parameter.getId()) is None
             and not self.is_assignment_rule_target(parameter)
+            and parameter.getId() not in hardcode_symbols
         ]
 
         loop_settings = {
@@ -987,7 +1060,19 @@ class SbmlImporter:
             for par in settings["var"]:
                 self.symbols[partype][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": par.getValue(),
+                    "value": sp.Float(par.getValue()),
+                }
+
+        # Parameters that need to be turned into expressions
+        #  so far, this concerns parameters with initial assignments containing rateOf(.)
+        #  (those have been skipped above)
+        for par in self.sbml.getListOfParameters():
+            if (
+                ia := self._get_element_initial_assignment(par.getId())
+            ) is not None and ia.find(sp.core.function.UndefinedFunction("rateOf")):
+                self.symbols[SymbolId.EXPRESSION][_get_identifier_symbol(par)] = {
+                    "name": par.getName() if par.isSetName() else par.getId(),
+                    "value": ia,
                 }
 
     @log_execution_time("processing SBML reactions", logger)
@@ -1297,13 +1382,13 @@ class SbmlImporter:
                 ia_init = self._get_element_initial_assignment(par.getId())
                 parameter_def = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": par.getValue() if ia_init is None else ia_init,
+                    "value": sp.Float(par.getValue()) if ia_init is None else ia_init,
                 }
             # Fixed parameters are added as species such that they can be
             # targets of events.
             self.symbols[SymbolId.SPECIES][parameter_target] = {
                 "name": parameter_def["name"],
-                "init": sp.Float(parameter_def["value"]),
+                "init": parameter_def["value"],
                 # 'compartment': None,  # can ignore for amounts
                 "constant": False,
                 "amount": True,
@@ -1640,7 +1725,7 @@ class SbmlImporter:
             (False) or for event observables (True).
 
         :param event_reg:
-            indicates whether log-likelihoods definitons should be processed
+            indicates whether log-likelihood definitions should be processed
             for event observable regularization (Jrz). If this is activated,
             measurements are substituted by 0 and the observable by the
             respective regularization symbol.
@@ -1774,15 +1859,18 @@ class SbmlImporter:
         :return:
             transformed expression
         """
-
         if not isinstance(sym_math, sp.Expr):
             return sym_math
+
+        sym_math, rateof_to_dummy = _rateof_to_dummy(sym_math)
 
         for species_id, species in self.symbols[SymbolId.SPECIES].items():
             if "init" in species:
                 sym_math = smart_subs(sym_math, species_id, species["init"])
 
         sym_math = smart_subs(sym_math, self._local_symbols["time"], sp.Float(0))
+
+        sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 
         return sym_math
 
@@ -2537,11 +2625,14 @@ def _get_list_of_species_references(
         ListOfSpeciesReferences
     """
     return [
-            reference
-            for reaction in sbml_model.getListOfReactions()
-            for reference in
-            itt.chain(reaction.getListOfReactants(), reaction.getListOfProducts(), reaction.getListOfModifiers())
-        ]
+        reference
+        for reaction in sbml_model.getListOfReactions()
+        for reference in itt.chain(
+            reaction.getListOfReactants(),
+            reaction.getListOfProducts(),
+            reaction.getListOfModifiers(),
+        )
+    ]
 
 
 def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
@@ -2663,3 +2754,32 @@ def _non_const_conservation_laws_supported(sbml_model: sbml.Model) -> bool:
         return False
 
     return True
+
+
+def _rateof_to_dummy(sym_math):
+    """Replace rateOf(...) by dummy variable
+
+    if `rateOf(some_species)` is used in an initial assignment, we don't want to substitute the species argument
+    by its initial value.
+
+    Usage:
+            sym_math, rateof_to_dummy = _rateof_to_dummy(sym_math)
+            [...substitute...]
+            sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
+    """
+    if rate_ofs := sym_math.find(sp.core.function.UndefinedFunction("rateOf")):
+        # replace by dummies to avoid species substitution
+        rateof_dummies = {
+            rate_of: sp.Dummy(f"Dummy_RateOf_{rate_of.args[0].name}")
+            for rate_of in rate_ofs
+        }
+
+        return sym_math.subs(rateof_dummies), rateof_dummies
+    return sym_math, {}
+
+
+def _dummy_to_rateof(sym_math, rateof_dummies):
+    """Back-substitution of dummies from `_rateof_to_dummy`"""
+    if rateof_dummies:
+        return sym_math.subs({v: k for k, v in rateof_dummies.items()})
+    return sym_math
