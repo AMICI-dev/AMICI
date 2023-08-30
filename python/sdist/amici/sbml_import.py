@@ -365,8 +365,8 @@ class SbmlImporter:
             negative due to numerical errors
 
         :param compiler:
-            distutils/setuptools compiler selection to build the
-            python extension
+            Absolute path to the compiler executable to be used to build the Python
+            extension, e.g. ``/usr/bin/clang``.
 
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.de_export.ODEExporter`

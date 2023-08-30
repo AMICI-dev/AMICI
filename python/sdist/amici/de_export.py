@@ -2692,7 +2692,8 @@ class DEExporter:
         due to numerical errors
 
     :ivar compiler:
-        distutils/setuptools compiler selection to build the Python extension
+        Absolute path to the compiler executable to be used to build the Python
+        extension, e.g. ``/usr/bin/clang``.
 
     :ivar functions:
         carries C++ function signatures and other specifications
@@ -2755,8 +2756,8 @@ class DEExporter:
             used to avoid problems with state variables that may become
             negative due to numerical errors
 
-        :param compiler: distutils/setuptools compiler selection to build the
-            python extension
+        :param compiler: Absolute path to the compiler executable to be used
+            to build the Python extension, e.g. ``/usr/bin/clang``.
 
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.de_export.DEExporter`
@@ -2876,8 +2877,8 @@ class DEExporter:
             Make model compilation verbose
 
         :param compiler:
-            distutils/setuptools compiler selection to build the python
-            extension
+            Absolute path to the compiler executable to be used to build the Python
+            extension, e.g. ``/usr/bin/clang``.
         """
         # setup.py assumes it is run from within the model directory
         module_dir = self.model_path
@@ -2900,8 +2901,10 @@ class DEExporter:
             ]
         )
 
+        env = os.environ.copy()
         if compiler is not None:
-            script_args.extend([f"--compiler={compiler}"])
+            # CMake will use the compiler specified in the CXX environment variable
+            env["CXX"] = compiler
 
         # distutils.core.run_setup looks nicer, but does not let us check the
         # result easily
@@ -2912,6 +2915,7 @@ class DEExporter:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 check=True,
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             print(e.output.decode("utf-8"))
