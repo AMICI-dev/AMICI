@@ -10,7 +10,17 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pysb
@@ -255,8 +265,12 @@ def ode_model_from_pysb_importer(
     _process_pysb_parameters(model, ode, constant_parameters)
     if compute_conservation_laws:
         _process_pysb_conservation_laws(model, ode)
-    _process_pysb_observables(model, ode, observables, sigmas, noise_distributions)
-    _process_pysb_expressions(model, ode, observables, sigmas, noise_distributions)
+    _process_pysb_observables(
+        model, ode, observables, sigmas, noise_distributions
+    )
+    _process_pysb_expressions(
+        model, ode, observables, sigmas, noise_distributions
+    )
     ode._has_quadratic_nllh = not noise_distributions or all(
         noise_distr in ["normal", "lin-normal", "log-normal", "log10-normal"]
         for noise_distr in noise_distributions.values()
@@ -382,7 +396,9 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
     for ix, specie in enumerate(pysb_model.species):
         init = sp.sympify("0.0")
         for ic in pysb_model.odes.model.initials:
-            if pysb.pattern.match_complex_pattern(ic.pattern, specie, exact=True):
+            if pysb.pattern.match_complex_pattern(
+                ic.pattern, specie, exact=True
+            ):
                 # we don't want to allow expressions in initial conditions
                 if ic.value in pysb_model.expressions:
                     init = pysb_model.expressions[ic.value.name].expand_expr()
@@ -390,7 +406,9 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
                     init = ic.value
 
         ode_model.add_component(
-            DifferentialState(sp.Symbol(f"__s{ix}"), f"{specie}", init, xdot[ix])
+            DifferentialState(
+                sp.Symbol(f"__s{ix}"), f"{specie}", init, xdot[ix]
+            )
         )
     logger.debug(f"Finished Processing PySB species ")
 
@@ -464,7 +482,8 @@ def _process_pysb_expressions(
         include_derived=True
     ) | pysb_model.expressions_dynamic(include_derived=True):
         if any(
-            isinstance(symbol, pysb.Tag) for symbol in expr.expand_expr().free_symbols
+            isinstance(symbol, pysb.Tag)
+            for symbol in expr.expand_expr().free_symbols
         ):
             # we only need explicit instantiations of expressions with tags,
             # which are defined in the derived expressions. The abstract
@@ -521,11 +540,15 @@ def _add_expression(
     :param ode_model:
         see :py:func:`_process_pysb_expressions`
     """
-    ode_model.add_component(Expression(sym, name, _parse_special_functions(expr)))
+    ode_model.add_component(
+        Expression(sym, name, _parse_special_functions(expr))
+    )
 
     if name in observables:
         noise_dist = (
-            noise_distributions.get(name, "normal") if noise_distributions else "normal"
+            noise_distributions.get(name, "normal")
+            if noise_distributions
+            else "normal"
         )
 
         y = sp.Symbol(f"{name}")
@@ -533,7 +556,9 @@ def _add_expression(
         obs = Observable(y, name, sym, transformation=trafo)
         ode_model.add_component(obs)
 
-        sigma_name, sigma_value = _get_sigma_name_and_value(pysb_model, name, sigmas)
+        sigma_name, sigma_value = _get_sigma_name_and_value(
+            pysb_model, name, sigmas
+        )
 
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f"{sigma_name}", sigma_value))
@@ -542,10 +567,14 @@ def _add_expression(
         my = generate_measurement_symbol(obs.get_id())
         cost_fun_expr = sp.sympify(
             cost_fun_str,
-            locals=dict(zip(_get_str_symbol_identifiers(name), (y, my, sigma))),
+            locals=dict(
+                zip(_get_str_symbol_identifiers(name), (y, my, sigma))
+            ),
         )
         ode_model.add_component(
-            LogLikelihoodY(sp.Symbol(f"llh_{name}"), f"llh_{name}", cost_fun_expr)
+            LogLikelihoodY(
+                sp.Symbol(f"llh_{name}"), f"llh_{name}", cost_fun_expr
+            )
         )
 
 
@@ -575,7 +604,9 @@ def _get_sigma_name_and_value(
         sigma_name = sigmas[obs_name]
         try:
             # find corresponding Expression instance
-            sigma_expr = next(x for x in pysb_model.expressions if x.name == sigma_name)
+            sigma_expr = next(
+                x for x in pysb_model.expressions if x.name == sigma_name
+            )
         except StopIteration:
             raise ValueError(
                 f"value of sigma {obs_name} is not a " f"valid expression."
@@ -633,7 +664,9 @@ def _process_pysb_observables(
 
 
 @log_execution_time("computing PySB conservation laws", logger)
-def _process_pysb_conservation_laws(pysb_model: pysb.Model, ode_model: DEModel) -> None:
+def _process_pysb_conservation_laws(
+    pysb_model: pysb.Model, ode_model: DEModel
+) -> None:
     """
     Removes species according to conservation laws to ensure that the
     jacobian has full rank
@@ -647,7 +680,9 @@ def _process_pysb_conservation_laws(pysb_model: pysb.Model, ode_model: DEModel) 
 
     monomers_without_conservation_law = set()
     for rule in pysb_model.rules:
-        monomers_without_conservation_law |= _get_unconserved_monomers(rule, pysb_model)
+        monomers_without_conservation_law |= _get_unconserved_monomers(
+            rule, pysb_model
+        )
 
     monomers_without_conservation_law |= (
         _compute_monomers_with_fixed_initial_conditions(pysb_model)
@@ -667,7 +702,9 @@ def _process_pysb_conservation_laws(pysb_model: pysb.Model, ode_model: DEModel) 
         ode_model.add_conservation_law(**cl)
 
 
-def _compute_monomers_with_fixed_initial_conditions(pysb_model: pysb.Model) -> Set[str]:
+def _compute_monomers_with_fixed_initial_conditions(
+    pysb_model: pysb.Model,
+) -> Set[str]:
     """
     Computes the set of monomers in a model with species that have fixed
     initial conditions
@@ -696,7 +733,9 @@ def _compute_monomers_with_fixed_initial_conditions(pysb_model: pysb.Model) -> S
 
 
 def _generate_cl_prototypes(
-    excluded_monomers: Iterable[str], pysb_model: pysb.Model, ode_model: DEModel
+    excluded_monomers: Iterable[str],
+    pysb_model: pysb.Model,
+    ode_model: DEModel,
 ) -> CL_Prototype:
     """
     Constructs a dict that contains preprocessed information for the
@@ -717,7 +756,9 @@ def _generate_cl_prototypes(
     """
     cl_prototypes = dict()
 
-    _compute_possible_indices(cl_prototypes, pysb_model, ode_model, excluded_monomers)
+    _compute_possible_indices(
+        cl_prototypes, pysb_model, ode_model, excluded_monomers
+    )
     _compute_dependency_idx(cl_prototypes)
     _compute_target_index(cl_prototypes, ode_model)
 
@@ -825,7 +866,9 @@ def _compute_dependency_idx(cl_prototypes: CL_Prototype) -> None:
                 prototype_j["dependency_idx"][idx] |= {monomer_i}
 
 
-def _compute_target_index(cl_prototypes: CL_Prototype, ode_model: DEModel) -> None:
+def _compute_target_index(
+    cl_prototypes: CL_Prototype, ode_model: DEModel
+) -> None:
     """
     Computes the target index for every monomer
 
@@ -885,7 +928,9 @@ def _compute_target_index(cl_prototypes: CL_Prototype, ode_model: DEModel) -> No
         # multimers has a low upper bound and the species count does not
         # vary too much across conservation laws, this approximation
         # should be fine
-        prototype["fillin"] = prototype["appearance_count"] * prototype["species_count"]
+        prototype["fillin"] = (
+            prototype["appearance_count"] * prototype["species_count"]
+        )
 
     # we might end up with the same index for multiple monomers, so loop until
     # we have a set of unique target indices
@@ -936,7 +981,9 @@ def _cl_has_cycle(monomer: str, cl_prototypes: CL_Prototype) -> bool:
     root = monomer
     return any(
         _is_in_cycle(connecting_monomer, cl_prototypes, visited, root)
-        for connecting_monomer in prototype["dependency_idx"][prototype["target_index"]]
+        for connecting_monomer in prototype["dependency_idx"][
+            prototype["target_index"]
+        ]
     )
 
 
@@ -980,7 +1027,9 @@ def _is_in_cycle(
 
     return any(
         _is_in_cycle(connecting_monomer, cl_prototypes, visited, root)
-        for connecting_monomer in prototype["dependency_idx"][prototype["target_index"]]
+        for connecting_monomer in prototype["dependency_idx"][
+            prototype["target_index"]
+        ]
     )
 
 
@@ -997,9 +1046,9 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
     target_indices = _get_target_indices(cl_prototypes)
 
     for monomer, prototype in cl_prototypes.items():
-        if target_indices.count(prototype["target_index"]) > 1 or _cl_has_cycle(
-            monomer, cl_prototypes
-        ):
+        if target_indices.count(
+            prototype["target_index"]
+        ) > 1 or _cl_has_cycle(monomer, cl_prototypes):
             # compute how much fillin the next best target_index would yield
 
             # we exclude already existing target indices to avoid that
@@ -1008,7 +1057,9 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
             # solution but prevents infinite loops
             for target_index in list(set(target_indices)):
                 try:
-                    local_idx = prototype["possible_indices"].index(target_index)
+                    local_idx = prototype["possible_indices"].index(
+                        target_index
+                    )
                 except ValueError:
                     local_idx = None
 
@@ -1023,13 +1074,16 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
             idx = np.argmin(prototype["appearance_counts"])
 
             prototype["local_index"] = idx
-            prototype["alternate_target_index"] = prototype["possible_indices"][idx]
-            prototype["alternate_appearance_count"] = prototype["appearance_counts"][
-                idx
-            ]
+            prototype["alternate_target_index"] = prototype[
+                "possible_indices"
+            ][idx]
+            prototype["alternate_appearance_count"] = prototype[
+                "appearance_counts"
+            ][idx]
 
             prototype["alternate_fillin"] = (
-                prototype["alternate_appearance_count"] * prototype["species_count"]
+                prototype["alternate_appearance_count"]
+                * prototype["species_count"]
             )
 
             prototype["diff_fillin"] = (
@@ -1038,13 +1092,18 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
         else:
             prototype["diff_fillin"] = -1
 
-    if all(prototype["diff_fillin"] == -1 for prototype in cl_prototypes.values()):
+    if all(
+        prototype["diff_fillin"] == -1 for prototype in cl_prototypes.values()
+    ):
         raise RuntimeError(
-            "Could not compute a valid set of conservation " "laws for this model!"
+            "Could not compute a valid set of conservation "
+            "laws for this model!"
         )
 
     # this puts prototypes with high diff_fillin last
-    cl_prototypes = sorted(cl_prototypes.items(), key=lambda kv: kv[1]["diff_fillin"])
+    cl_prototypes = sorted(
+        cl_prototypes.items(), key=lambda kv: kv[1]["diff_fillin"]
+    )
     cl_prototypes = {proto[0]: proto[1] for proto in cl_prototypes}
 
     for monomer in cl_prototypes:
@@ -1058,12 +1117,15 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
         # are recomputed on the fly)
 
         if prototype["diff_fillin"] > -1 and (
-            _get_target_indices(cl_prototypes).count(prototype["target_index"]) > 1
+            _get_target_indices(cl_prototypes).count(prototype["target_index"])
+            > 1
             or _cl_has_cycle(monomer, cl_prototypes)
         ):
             prototype["fillin"] = prototype["alternate_fillin"]
             prototype["target_index"] = prototype["alternate_target_index"]
-            prototype["appearance_count"] = prototype["alternate_appearance_count"]
+            prototype["appearance_count"] = prototype[
+                "alternate_appearance_count"
+            ]
 
             del prototype["possible_indices"][prototype["local_index"]]
             del prototype["appearance_counts"][prototype["local_index"]]
@@ -1146,7 +1208,9 @@ def _add_conservation_for_constant_species(
             )
 
 
-def _flatten_conservation_laws(conservation_laws: List[ConservationLaw]) -> None:
+def _flatten_conservation_laws(
+    conservation_laws: List[ConservationLaw],
+) -> None:
     """
     Flatten the conservation laws such that the state_expr not longer
     depend on any states that are replaced by conservation laws
@@ -1160,9 +1224,12 @@ def _flatten_conservation_laws(conservation_laws: List[ConservationLaw]) -> None
         for cl in conservation_laws:
             # only update if we changed something
             if any(
-                _apply_conseration_law_sub(cl, sub) for sub in conservation_law_subs
+                _apply_conseration_law_sub(cl, sub)
+                for sub in conservation_law_subs
             ):
-                conservation_law_subs = _get_conservation_law_subs(conservation_laws)
+                conservation_law_subs = _get_conservation_law_subs(
+                    conservation_laws
+                )
 
 
 def _apply_conseration_law_sub(
@@ -1245,7 +1312,9 @@ def _get_conservation_law_subs(
 
 
 def has_fixed_parameter_ic(
-    specie: pysb.core.ComplexPattern, pysb_model: pysb.Model, ode_model: DEModel
+    specie: pysb.core.ComplexPattern,
+    pysb_model: pysb.Model,
+    ode_model: DEModel,
 ) -> bool:
     """
     Wrapper to interface
@@ -1271,7 +1340,9 @@ def has_fixed_parameter_ic(
         (
             ic
             for ic, condition in enumerate(pysb_model.initials)
-            if pysb.pattern.match_complex_pattern(condition[0], specie, exact=True)
+            if pysb.pattern.match_complex_pattern(
+                condition[0], specie, exact=True
+            )
         ),
         None,
     )
@@ -1304,7 +1375,9 @@ def extract_monomers(
     ]
 
 
-def _get_unconserved_monomers(rule: pysb.Rule, pysb_model: pysb.Model) -> Set[str]:
+def _get_unconserved_monomers(
+    rule: pysb.Rule, pysb_model: pysb.Model
+) -> Set[str]:
     """
     Constructs the set of monomer names for which the specified rule changes
     the stoichiometry of the monomer in the specified model.
@@ -1320,11 +1393,16 @@ def _get_unconserved_monomers(rule: pysb.Rule, pysb_model: pysb.Model) -> Set[st
     """
     unconserved_monomers = set()
 
-    if not rule.delete_molecules and len(rule.product_pattern.complex_patterns) == 0:
+    if (
+        not rule.delete_molecules
+        and len(rule.product_pattern.complex_patterns) == 0
+    ):
         # if delete_molecules is not True but we have a degradation rule,
         # we have to actually go through the reactions that are created by
         # the rule
-        for reaction in [r for r in pysb_model.reactions if rule.name in r["rule"]]:
+        for reaction in [
+            r for r in pysb_model.reactions if rule.name in r["rule"]
+        ]:
             unconserved_monomers |= _get_changed_stoichiometries(
                 [pysb_model.species[ix] for ix in reaction["reactants"]],
                 [pysb_model.species[ix] for ix in reaction["products"]],
@@ -1377,7 +1455,9 @@ def pysb_model_from_path(pysb_model_file: Union[str, Path]) -> pysb.Model:
     :return: The pysb Model instance
     """
 
-    pysb_model_module_name = os.path.splitext(os.path.split(pysb_model_file)[-1])[0]
+    pysb_model_module_name = os.path.splitext(
+        os.path.split(pysb_model_file)[-1]
+    )[0]
 
     import importlib.util
 

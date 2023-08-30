@@ -51,7 +51,9 @@ def model_special_likelihoods():
             noise_distributions=noise_distributions,
         )
 
-        yield amici.import_model_module(module_name=module_name, module_path=outdir)
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
 
 
 @skip_on_valgrind
@@ -111,7 +113,12 @@ def test_special_likelihoods(model_special_likelihoods):
         solver.setSensitivityMethod(sensi_method)
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
         check_derivatives(
-            model, solver, edata, atol=1e-4, rtol=1e-3, check_least_squares=False
+            model,
+            solver,
+            edata,
+            atol=1e-4,
+            rtol=1e-3,
+            check_least_squares=False,
         )
 
     # Test for m > y, i.e. in region with 0 density
@@ -205,9 +212,13 @@ def test_rateof():
         assert_approx_equal(rdata["xdot"][i_S1], rdata["xdot"][i_p2])
 
         assert_array_almost_equal_nulp(rdata.by_id("S3"), t, 10)
-        assert_array_almost_equal_nulp(rdata.by_id("S2"), 2 * rdata.by_id("S3"))
+        assert_array_almost_equal_nulp(
+            rdata.by_id("S2"), 2 * rdata.by_id("S3")
+        )
         assert_array_almost_equal_nulp(
             rdata.by_id("S4")[1:], 0.5 * np.diff(rdata.by_id("S3")), 10
         )
         assert_array_almost_equal_nulp(rdata.by_id("p3"), 0)
-        assert_array_almost_equal_nulp(rdata.by_id("p2"), 1 + rdata.by_id("S1"))
+        assert_array_almost_equal_nulp(
+            rdata.by_id("p2"), 1 + rdata.by_id("S1")
+        )

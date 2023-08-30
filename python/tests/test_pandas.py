@@ -49,8 +49,12 @@ def test_pandas_import_export(sbml_example_presimulation_module, case):
             assert case[fp] == getattr(edata_reconstructed[0], fp)
 
         else:
-            assert model.getFixedParameters() == getattr(edata_reconstructed[0], fp)
+            assert model.getFixedParameters() == getattr(
+                edata_reconstructed[0], fp
+            )
 
-            assert model.getFixedParameters() == getattr(edata_reconstructed[0], fp)
+            assert model.getFixedParameters() == getattr(
+                edata_reconstructed[0], fp
+            )
 
         assert getattr(edata[0], fp) == case[fp]

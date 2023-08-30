@@ -166,7 +166,8 @@ def get_logger(
         _setup_logger(**kwargs)
     elif kwargs:
         warnings.warn(
-            "AMICI logger already exists, ignoring keyword " "arguments to setup_logger"
+            "AMICI logger already exists, ignoring keyword "
+            "arguments to setup_logger"
         )
 
     logger = logging.getLogger(logger_name)
@@ -193,7 +194,8 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
         def wrapper_timer(*args, **kwargs):
             # append pluses to indicate recursion level
             recursion_level = sum(
-                frame.function == "wrapper_timer" and frame.filename == __file__
+                frame.function == "wrapper_timer"
+                and frame.filename == __file__
                 for frame in getouterframes(currentframe(), context=0)
             )
 

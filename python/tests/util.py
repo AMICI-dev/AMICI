@@ -31,7 +31,9 @@ def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
         else tempfile.mkdtemp()
     )
 
-    sbml_importer.sbml2amici(model_name=model_name, output_dir=output_dir, **kwargs)
+    sbml_importer.sbml2amici(
+        model_name=model_name, output_dir=output_dir, **kwargs
+    )
 
     model_module = import_model_module(model_name, output_dir)
     return model_module.getModel()
@@ -111,7 +113,9 @@ def create_sbml_model(
                 create_event_assignment(event_target, event_assignment)
 
         else:
-            create_event_assignment(event_def["target"], event_def["assignment"])
+            create_event_assignment(
+                event_def["target"], event_def["assignment"]
+            )
 
     if to_file:
         libsbml.writeSBMLToFile(document, to_file)
@@ -133,7 +137,9 @@ def check_trajectories_without_sensitivities(
     solver.setAbsoluteTolerance(1e-15)
     solver.setRelativeTolerance(1e-12)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata["x"], result_expected_x, field="x", rtol=5e-9, atol=1e-13)
+    _check_close(
+        rdata["x"], result_expected_x, field="x", rtol=5e-9, atol=1e-13
+    )
 
 
 def check_trajectories_with_forward_sensitivities(
@@ -153,5 +159,9 @@ def check_trajectories_with_forward_sensitivities(
     solver.setAbsoluteToleranceFSA(1e-15)
     solver.setRelativeToleranceFSA(1e-13)
     rdata = runAmiciSimulation(amici_model, solver=solver)
-    _check_close(rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12)
-    _check_close(rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9)
+    _check_close(
+        rdata["x"], result_expected_x, field="x", rtol=1e-10, atol=1e-12
+    )
+    _check_close(
+        rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9
+    )

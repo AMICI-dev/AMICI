@@ -107,7 +107,9 @@ def getDataObservablesAsDataFrame(
                 _get_names_or_ids(model, "Observable", by_id=by_id)
             ):
                 datadict[obs] = npdata["observedData"][i_time, i_obs]
-                datadict[obs + "_std"] = npdata["observedDataStdDev"][i_time, i_obs]
+                datadict[obs + "_std"] = npdata["observedDataStdDev"][
+                    i_time, i_obs
+                ]
 
             # add conditions
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
@@ -396,12 +398,16 @@ def _fill_conditions_dict(
             datadict[par] = model.getFixedParameters()[i_par]
 
         if len(edata.fixedParametersPreequilibration):
-            datadict[par + "_preeq"] = edata.fixedParametersPreequilibration[i_par]
+            datadict[par + "_preeq"] = edata.fixedParametersPreequilibration[
+                i_par
+            ]
         else:
             datadict[par + "_preeq"] = np.nan
 
         if len(edata.fixedParametersPresimulation):
-            datadict[par + "_presim"] = edata.fixedParametersPresimulation[i_par]
+            datadict[par + "_presim"] = edata.fixedParametersPresimulation[
+                i_par
+            ]
         else:
             datadict[par + "_presim"] = np.nan
     return datadict
@@ -526,7 +532,9 @@ def _get_expression_cols(model: AmiciModel, by_id: bool) -> List[str]:
     )
 
 
-def _get_names_or_ids(model: AmiciModel, variable: str, by_id: bool) -> List[str]:
+def _get_names_or_ids(
+    model: AmiciModel, variable: str, by_id: bool
+) -> List[str]:
     """
     Obtains a unique list of identifiers for the specified variable.
     First tries model.getVariableNames and then uses model.getVariableIds.
@@ -674,22 +682,33 @@ def constructEdataFromDataFrame(
     )
 
     # fill in preequilibration parameters
-    if any([overwrite_preeq[key] != condition[key] for key in overwrite_preeq]):
-        edata.fixedParametersPreequilibration = _get_specialized_fixed_parameters(
-            model, condition, overwrite_preeq, by_id=by_id
+    if any(
+        [overwrite_preeq[key] != condition[key] for key in overwrite_preeq]
+    ):
+        edata.fixedParametersPreequilibration = (
+            _get_specialized_fixed_parameters(
+                model, condition, overwrite_preeq, by_id=by_id
+            )
         )
     elif len(overwrite_preeq):
-        edata.fixedParametersPreequilibration = copy.deepcopy(edata.fixedParameters)
+        edata.fixedParametersPreequilibration = copy.deepcopy(
+            edata.fixedParameters
+        )
 
     # fill in presimulation parameters
     if any(
-        [overwrite_presim[key] != condition[key] for key in overwrite_presim.keys()]
+        [
+            overwrite_presim[key] != condition[key]
+            for key in overwrite_presim.keys()
+        ]
     ):
         edata.fixedParametersPresimulation = _get_specialized_fixed_parameters(
             model, condition, overwrite_presim, by_id=by_id
         )
     elif len(overwrite_presim.keys()):
-        edata.fixedParametersPresimulation = copy.deepcopy(edata.fixedParameters)
+        edata.fixedParametersPresimulation = copy.deepcopy(
+            edata.fixedParameters
+        )
 
     # fill in presimulation time
     if "t_presim" in condition.keys():
@@ -739,7 +758,9 @@ def getEdataFromDataFrame(
     # aggregate features that define a condition
 
     # fixed parameters
-    condition_parameters = _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+    condition_parameters = _get_names_or_ids(
+        model, "FixedParameter", by_id=by_id
+    )
     # preeq and presim parameters
     for par in _get_names_or_ids(model, "FixedParameter", by_id=by_id):
         if par + "_preeq" in df.columns:
@@ -758,7 +779,9 @@ def getEdataFromDataFrame(
         selected = np.ones((len(df),), dtype=bool)
         for par_label, par in row.items():
             if math.isnan(par):
-                selected = selected & np.isnan(df[par_label].astype(float).values)
+                selected = selected & np.isnan(
+                    df[par_label].astype(float).values
+                )
             else:
                 selected = selected & (df[par_label] == par)
         edata_df = df[selected]

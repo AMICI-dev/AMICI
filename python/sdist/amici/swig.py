@@ -16,21 +16,29 @@ class TypeHintFixer(ast.NodeTransformer):
         "size_t": ast.Name("int"),
         "bool": ast.Name("bool"),
         "std::unique_ptr< amici::Solver >": ast.Constant("Solver"),
-        "amici::InternalSensitivityMethod": ast.Constant("InternalSensitivityMethod"),
+        "amici::InternalSensitivityMethod": ast.Constant(
+            "InternalSensitivityMethod"
+        ),
         "amici::InterpolationType": ast.Constant("InterpolationType"),
         "amici::LinearMultistepMethod": ast.Constant("LinearMultistepMethod"),
         "amici::LinearSolver": ast.Constant("LinearSolver"),
         "amici::Model *": ast.Constant("Model"),
         "amici::Model const *": ast.Constant("Model"),
-        "amici::NewtonDampingFactorMode": ast.Constant("NewtonDampingFactorMode"),
-        "amici::NonlinearSolverIteration": ast.Constant("NonlinearSolverIteration"),
+        "amici::NewtonDampingFactorMode": ast.Constant(
+            "NewtonDampingFactorMode"
+        ),
+        "amici::NonlinearSolverIteration": ast.Constant(
+            "NonlinearSolverIteration"
+        ),
         "amici::ObservableScaling": ast.Constant("ObservableScaling"),
         "amici::ParameterScaling": ast.Constant("ParameterScaling"),
         "amici::RDataReporting": ast.Constant("RDataReporting"),
         "amici::SensitivityMethod": ast.Constant("SensitivityMethod"),
         "amici::SensitivityOrder": ast.Constant("SensitivityOrder"),
         "amici::Solver *": ast.Constant("Solver"),
-        "amici::SteadyStateSensitivityMode": ast.Constant("SteadyStateSensitivityMode"),
+        "amici::SteadyStateSensitivityMode": ast.Constant(
+            "SteadyStateSensitivityMode"
+        ),
         "amici::realtype": ast.Name("float"),
         "DoubleVector": ast.Constant("Sequence[float]"),
         "IntVector": ast.Name("Sequence[int]"),
@@ -72,7 +80,9 @@ class TypeHintFixer(ast.NodeTransformer):
         # std::vector value type
         if (
             value_type := re.sub(
-                r"std::vector< (.*) >::value_type(?: const &)?", r"\1", old_annot
+                r"std::vector< (.*) >::value_type(?: const &)?",
+                r"\1",
+                old_annot,
             )
         ) in self.mapping:
             return self.mapping[value_type]

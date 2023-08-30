@@ -70,7 +70,16 @@ def preeq_fixture(pysb_example_presimulation_module):
         [1, 1, 1],
     ]
 
-    return (model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, plists)
+    return (
+        model,
+        solver,
+        edata,
+        edata_preeq,
+        edata_presim,
+        edata_sim,
+        pscales,
+        plists,
+    )
 
 
 def test_manual_preequilibration(preeq_fixture):
@@ -133,7 +142,9 @@ def test_manual_preequilibration(preeq_fixture):
                 rdata_sim[variable],
                 atol=1e-6,
                 rtol=1e-6,
-                err_msg=str(dict(pscale=pscale, plist=plist, variable=variable)),
+                err_msg=str(
+                    dict(pscale=pscale, plist=plist, variable=variable)
+                ),
             )
 
 
@@ -349,7 +360,10 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
         amici.SteadyStateSensitivityMode.integrationOnly,
         amici.SteadyStateSensitivityMode.integrateIfNewtonFails,
     ]
-    sensi_meths = [amici.SensitivityMethod.forward, amici.SensitivityMethod.adjoint]
+    sensi_meths = [
+        amici.SensitivityMethod.forward,
+        amici.SensitivityMethod.adjoint,
+    ]
     settings = itertools.product(equil_meths, sensi_meths)
 
     for setting in settings:
@@ -374,7 +388,9 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
                 atol=1e-6,
                 rtol=1e-6,
                 err_msg=str(
-                    dict(variable=variable, setting1=setting1, setting2=setting2)
+                    dict(
+                        variable=variable, setting1=setting1, setting2=setting2
+                    )
                 ),
             )
 
@@ -523,11 +539,15 @@ def test_steadystate_computation_mode(preeq_fixture):
         assert rdatas[mode]["status"] == amici.AMICI_SUCCESS
 
     assert np.all(
-        rdatas[amici.SteadyStateComputationMode.integrationOnly]["preeq_status"][0]
+        rdatas[amici.SteadyStateComputationMode.integrationOnly][
+            "preeq_status"
+        ][0]
         == [0, 1, 0]
     )
     assert (
-        rdatas[amici.SteadyStateComputationMode.integrationOnly]["preeq_numsteps"][0][0]
+        rdatas[amici.SteadyStateComputationMode.integrationOnly][
+            "preeq_numsteps"
+        ][0][0]
         == 0
     )
 
@@ -536,7 +556,10 @@ def test_steadystate_computation_mode(preeq_fixture):
         == [1, 0, 0]
     )
     assert (
-        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][0][0] > 0
+        rdatas[amici.SteadyStateComputationMode.newtonOnly]["preeq_numsteps"][
+            0
+        ][0]
+        > 0
     )
 
     # assert correct results
@@ -563,7 +586,9 @@ def test_simulation_errors(preeq_fixture):
     ) = preeq_fixture
 
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    solver.setSensitivityMethodPreequilibration(amici.SensitivityMethod.forward)
+    solver.setSensitivityMethodPreequilibration(
+        amici.SensitivityMethod.forward
+    )
     model.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode.integrationOnly
     )
@@ -594,10 +619,16 @@ def test_simulation_errors(preeq_fixture):
         rdata = amici.runAmiciSimulation(model, solver, e)
         assert rdata["status"] != amici.AMICI_SUCCESS
         assert rdata._swigptr.messages[0].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[0].identifier == "CVODES:CVode:RHSFUNC_FAIL"
+        assert (
+            rdata._swigptr.messages[0].identifier
+            == "CVODES:CVode:RHSFUNC_FAIL"
+        )
         assert rdata._swigptr.messages[1].severity == amici.LogSeverity_debug
         assert rdata._swigptr.messages[1].identifier == "EQUILIBRATION_FAILURE"
-        assert "exceedingly long simulation time" in rdata._swigptr.messages[1].message
+        assert (
+            "exceedingly long simulation time"
+            in rdata._swigptr.messages[1].message
+        )
         assert rdata._swigptr.messages[2].severity == amici.LogSeverity_error
         assert rdata._swigptr.messages[2].identifier == "OTHER"
         assert rdata._swigptr.messages[3].severity == amici.LogSeverity_debug

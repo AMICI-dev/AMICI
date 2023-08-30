@@ -220,7 +220,8 @@ class ReturnDataView(SwigPtrView):
         """
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(
-                f"Unsupported pointer {type(rdata)}, must be" f"amici.ExpDataPtr!"
+                f"Unsupported pointer {type(rdata)}, must be"
+                f"amici.ExpDataPtr!"
             )
         self._field_dimensions = {
             "ts": [rdata.nt],
@@ -293,7 +294,9 @@ class ReturnDataView(SwigPtrView):
 
         return super().__getitem__(item)
 
-    def by_id(self, entity_id: str, field: str = None, model: Model = None) -> np.array:
+    def by_id(
+        self, entity_id: str, field: str = None, model: Model = None
+    ) -> np.array:
         """
         Get the value of a given field for a named entity.
 
@@ -311,11 +314,17 @@ class ReturnDataView(SwigPtrView):
         if field in {"x", "x0", "x_ss", "sx", "sx0", "sx_ss"}:
             ids = (model and model.getStateIds()) or self._swigptr.state_ids
         elif field in {"w"}:
-            ids = (model and model.getExpressionIds()) or self._swigptr.expression_ids
+            ids = (
+                model and model.getExpressionIds()
+            ) or self._swigptr.expression_ids
         elif field in {"y", "sy", "sigmay"}:
-            ids = (model and model.getObservableIds()) or self._swigptr.observable_ids
+            ids = (
+                model and model.getObservableIds()
+            ) or self._swigptr.observable_ids
         elif field in {"sllh"}:
-            ids = (model and model.getParameterIds()) or self._swigptr.parameter_ids
+            ids = (
+                model and model.getParameterIds()
+            ) or self._swigptr.parameter_ids
         else:
             raise NotImplementedError(
                 f"Subsetting {field} by ID is not implemented or not possible."
@@ -348,7 +357,8 @@ class ExpDataView(SwigPtrView):
         """
         if not isinstance(edata, (ExpDataPtr, ExpData)):
             raise TypeError(
-                f"Unsupported pointer {type(edata)}, must be" f"amici.ExpDataPtr!"
+                f"Unsupported pointer {type(edata)}, must be"
+                f"amici.ExpDataPtr!"
             )
         self._field_dimensions = {  # observables
             "observedData": [edata.nt(), edata.nytrue()],
@@ -411,7 +421,9 @@ def _entity_type_from_id(
                 return symbol
         else:
             if entity_id in getattr(
-                rdata if isinstance(rdata, amici.ReturnData) else rdata._swigptr,
+                rdata
+                if isinstance(rdata, amici.ReturnData)
+                else rdata._swigptr,
                 f"{entity_type.lower()}_ids",
             ):
                 return symbol

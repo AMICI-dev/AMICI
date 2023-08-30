@@ -16,7 +16,9 @@ def test_edata_sensi_unscaling(model_units_module):
 
     sx0 = (3, 3, 3, 3)
 
-    parameter_scales_log10 = [amici.ParameterScaling.log10.value] * len(parameters0)
+    parameter_scales_log10 = [amici.ParameterScaling.log10.value] * len(
+        parameters0
+    )
     amici_parameter_scales_log10 = amici.parameterScalingFromIntVector(
         parameter_scales_log10
     )

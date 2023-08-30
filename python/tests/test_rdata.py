@@ -23,7 +23,9 @@ def test_rdata_by_id(rdata_by_id_fixture):
 
     assert_array_equal(rdata.by_id(model.getStateIds()[1]), rdata.x[:, 1])
     assert_array_equal(rdata.by_id(model.getStateIds()[1], "x"), rdata.x[:, 1])
-    assert_array_equal(rdata.by_id(model.getStateIds()[1], "x", model), rdata.x[:, 1])
+    assert_array_equal(
+        rdata.by_id(model.getStateIds()[1], "x", model), rdata.x[:, 1]
+    )
 
     assert_array_equal(
         rdata.by_id(model.getObservableIds()[0], "y", model), rdata.y[:, 0]

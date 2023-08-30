@@ -161,7 +161,9 @@ def add_species(
             )
         compartment_id = compartments[0].getId()
     elif not model.getCompartment(compartment_id):
-        raise SbmlMissingComponentIdError(f"No compartment with ID {compartment_id}.")
+        raise SbmlMissingComponentIdError(
+            f"No compartment with ID {compartment_id}."
+        )
 
     sp = model.createSpecies()
     if sp.setIdAttribute(species_id) != libsbml.LIBSBML_OPERATION_SUCCESS:
@@ -532,6 +534,8 @@ def _parse_logical_operators(
         return math_str
 
     if " xor(" in math_str or " Xor(" in math_str:
-        raise SBMLException("Xor is currently not supported as logical " "operation.")
+        raise SBMLException(
+            "Xor is currently not supported as logical " "operation."
+        )
 
     return (math_str.replace("&&", "&")).replace("||", "|")

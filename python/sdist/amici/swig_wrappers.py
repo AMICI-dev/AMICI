@@ -84,7 +84,9 @@ def _get_ptr(
 
 
 def runAmiciSimulation(
-    model: AmiciModel, solver: AmiciSolver, edata: Optional[AmiciExpData] = None
+    model: AmiciModel,
+    solver: AmiciSolver,
+    edata: Optional[AmiciExpData] = None,
 ) -> "numpy.ReturnDataView":
     """
     Convenience wrapper around :py:func:`amici.amici.runAmiciSimulation`
@@ -105,7 +107,8 @@ def runAmiciSimulation(
     """
     if (
         model.ne > 0
-        and solver.getSensitivityMethod() == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityMethod()
+        == amici_swig.SensitivityMethod.adjoint
         and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
     ):
         warnings.warn(
@@ -166,7 +169,8 @@ def runAmiciSimulations(
     """
     if (
         model.ne > 0
-        and solver.getSensitivityMethod() == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityMethod()
+        == amici_swig.SensitivityMethod.adjoint
         and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
     ):
         warnings.warn(
@@ -309,7 +313,9 @@ def _log_simulation(rdata: amici_swig.ReturnData):
         )
 
 
-def _ids_and_names_to_rdata(rdata: amici_swig.ReturnData, model: amici_swig.Model):
+def _ids_and_names_to_rdata(
+    rdata: amici_swig.ReturnData, model: amici_swig.Model
+):
     """Copy entity IDs and names from a Model to ReturnData."""
     for entity_type in (
         "State",

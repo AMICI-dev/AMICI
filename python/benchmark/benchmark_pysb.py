@@ -33,7 +33,9 @@ for example in pysb_models:
 
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(
-            os.path.join(os.path.dirname(__file__), "..", "tests", "pysb_test_models")
+            os.path.join(
+                os.path.dirname(__file__), "..", "tests", "pysb_test_models"
+            )
         ):
             pysb.SelfExporter.cleanup()  # reset pysb
             pysb.SelfExporter.do_export = True
@@ -52,9 +54,9 @@ for example in pysb_models:
                 integrator_options={"rtol": rtol, "atol": atol},
             )
             time_pysb = (
-                timeit.Timer("pysb_simres = sim.run()", globals={"sim": sim}).timeit(
-                    number=N_REPEATS
-                )
+                timeit.Timer(
+                    "pysb_simres = sim.run()", globals={"sim": sim}
+                ).timeit(number=N_REPEATS)
                 / N_REPEATS
             )
 
@@ -76,7 +78,9 @@ for example in pysb_models:
                 observables=list(pysb_model.observables.keys()),
             )
 
-            amici_model_module = amici.import_model_module(pysb_model.name, outdir)
+            amici_model_module = amici.import_model_module(
+                pysb_model.name, outdir
+            )
 
             model_pysb = amici_model_module.getModel()
 
@@ -89,7 +93,11 @@ for example in pysb_models:
             time_amici = (
                 timeit.Timer(
                     "rdata = amici.runAmiciSimulation(model, solver)",
-                    globals={"model": model_pysb, "solver": solver, "amici": amici},
+                    globals={
+                        "model": model_pysb,
+                        "solver": solver,
+                        "amici": amici,
+                    },
                 ).timeit(number=N_REPEATS)
                 / N_REPEATS
             )
