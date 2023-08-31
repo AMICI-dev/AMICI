@@ -112,8 +112,8 @@ def pysb2amici(
         errors
 
     :param compiler:
-        distutils/setuptools compiler selection to build the python
-        extension
+        Absolute path to the compiler executable to be used to build the Python
+        extension, e.g. ``/usr/bin/clang``.
 
     :param compute_conservation_laws:
         if set to ``True``, conservation laws are automatically computed and
