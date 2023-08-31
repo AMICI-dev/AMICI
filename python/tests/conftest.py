@@ -41,7 +41,9 @@ def sbml_example_presimulation_module():
             constant_parameters=constant_parameters,
         )
 
-        yield amici.import_model_module(module_name=module_name, module_path=outdir)
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
 
 
 @pytest.fixture(scope="session")

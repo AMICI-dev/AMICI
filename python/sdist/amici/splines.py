@@ -11,7 +11,17 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from numbers import Real
-    from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
+    from typing import (
+        Any,
+        Callable,
+        Dict,
+        List,
+        Optional,
+        Sequence,
+        Set,
+        Tuple,
+        Union,
+    )
 
     from . import sbml_import
 
@@ -112,19 +122,25 @@ class UniformGrid(collections.abc.Sequence):
         stop = sp.nsimplify(sp.sympify(stop))
         if step is None:
             if number_of_nodes is None:
-                raise ValueError("One of step/number_of_nodes must be specified!")
+                raise ValueError(
+                    "One of step/number_of_nodes must be specified!"
+                )
             if not isinstance(number_of_nodes, Integral):
                 raise TypeError("Length must be an integer!")
             if number_of_nodes < 2:
                 raise ValueError("Length must be at least 2!")
             step = (stop - start) / (number_of_nodes - 1)
         elif number_of_nodes is not None:
-            raise ValueError("Only one of step/number_of_nodes can be specified!")
+            raise ValueError(
+                "Only one of step/number_of_nodes can be specified!"
+            )
         else:
             step = sp.nsimplify(sp.sympify(step))
 
         if start > stop:
-            raise ValueError(f"Start point {start} greater than stop point {stop}!")
+            raise ValueError(
+                f"Start point {start} greater than stop point {stop}!"
+            )
 
         if step <= 0:
             raise ValueError(f"Step size {step} must be strictly positive!")
@@ -181,7 +197,8 @@ class UniformGrid(collections.abc.Sequence):
 
     def __repr__(self) -> str:
         return (
-            f"UniformGrid(start={self.start}, stop={self.stop}, " f"step={self.step})"
+            f"UniformGrid(start={self.start}, stop={self.stop}, "
+            f"step={self.step})"
         )
 
 
@@ -301,7 +318,10 @@ class AbstractSpline(ABC):
             if not isinstance(evaluate_at, sp.Basic):
                 # It may still be e.g. a list!
                 raise ValueError(f"Invalid evaluate_at = {evaluate_at}!")
-        if evaluate_at != amici_time_symbol and evaluate_at != sbml_time_symbol:
+        if (
+            evaluate_at != amici_time_symbol
+            and evaluate_at != sbml_time_symbol
+        ):
             logger.warning(
                 "At the moment AMICI only supports evaluate_at = (model time). "
                 "Annotations with correct piecewise MathML formulas "
@@ -311,7 +331,9 @@ class AbstractSpline(ABC):
 
         if not isinstance(nodes, UniformGrid):
             nodes = np.asarray([sympify_noeval(x) for x in nodes])
-        values_at_nodes = np.asarray([sympify_noeval(y) for y in values_at_nodes])
+        values_at_nodes = np.asarray(
+            [sympify_noeval(y) for y in values_at_nodes]
+        )
 
         if len(nodes) != len(values_at_nodes):
             raise ValueError(
@@ -333,7 +355,10 @@ class AbstractSpline(ABC):
             )
 
         bc, extrapolate = self._normalize_bc_and_extrapolate(bc, extrapolate)
-        if bc == ("periodic", "periodic") and values_at_nodes[0] != values_at_nodes[-1]:
+        if (
+            bc == ("periodic", "periodic")
+            and values_at_nodes[0] != values_at_nodes[-1]
+        ):
             raise ValueError(
                 "If the spline is to be periodic, "
                 "the first and last elements of values_at_nodes must be equal!"
@@ -554,15 +579,21 @@ class AbstractSpline(ABC):
         fixed_parameters: List[sp.Symbol] = list(
             importer.symbols[SymbolId.FIXED_PARAMETER].keys()
         )
-        species: List[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES].keys())
+        species: List[sp.Symbol] = list(
+            importer.symbols[SymbolId.SPECIES].keys()
+        )
 
         for x in self.nodes:
             if not x.free_symbols.issubset(fixed_parameters):
-                raise ValueError("nodes should only depend on constant parameters!")
+                raise ValueError(
+                    "nodes should only depend on constant parameters!"
+                )
 
         for y in self.values_at_nodes:
             if y.free_symbols.intersection(species):
-                raise ValueError("values_at_nodes should not depend on model species!")
+                raise ValueError(
+                    "values_at_nodes should not depend on model species!"
+                )
 
         fixed_parameters_values = [
             importer.symbols[SymbolId.FIXED_PARAMETER][fp]["value"]
@@ -575,7 +606,9 @@ class AbstractSpline(ABC):
         if not np.all(np.diff(nodes_values) >= 0):
             raise ValueError("nodes should be strictly increasing!")
 
-    def poly(self, i: Integral, *, x: Union[Real, sp.Basic] = None) -> sp.Basic:
+    def poly(
+        self, i: Integral, *, x: Union[Real, sp.Basic] = None
+    ) -> sp.Basic:
         """
         Get the polynomial interpolant on the ``(nodes[i], nodes[i+1])`` interval.
         The polynomial is written in Horner form with respect to the scaled
@@ -623,7 +656,9 @@ class AbstractSpline(ABC):
         return self._poly_variable(x, i)
 
     @abstractmethod
-    def _poly_variable(self, x: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
+    def _poly_variable(
+        self, x: Union[Real, sp.Basic], i: Integral
+    ) -> sp.Basic:
         """This function (and not poly_variable) should be implemented by the
         subclasses"""
         raise NotImplementedError()
@@ -776,13 +811,17 @@ class AbstractSpline(ABC):
                 x = self._to_base_interval(x)
             extr_left, extr_right = None, None
         else:
-            extr_left, extr_right = self._extrapolation_formulas(x, extrapolate)
+            extr_left, extr_right = self._extrapolation_formulas(
+                x, extrapolate
+            )
 
         if extr_left is not None:
             pieces.append((extr_left, x < self.nodes[0]))
 
         for i in range(len(self.nodes) - 2):
-            pieces.append((self.segment_formula(i, x=x), x < self.nodes[i + 1]))
+            pieces.append(
+                (self.segment_formula(i, x=x), x < self.nodes[i + 1])
+            )
 
         if extr_right is not None:
             pieces.append((self.segment_formula(-1, x=x), x < self.nodes[-1]))
@@ -818,7 +857,9 @@ class AbstractSpline(ABC):
         """For periodic splines, maps the real point `x` to the reference
         period."""
         if self.bc != ("periodic", "periodic"):
-            raise ValueError("_to_base_interval makes no sense with non-periodic bc")
+            raise ValueError(
+                "_to_base_interval makes no sense with non-periodic bc"
+            )
 
         xA = self.nodes[0]
         xB = self.nodes[-1]
@@ -861,7 +902,9 @@ class AbstractSpline(ABC):
         integral = sp.sympify(0)
         for i in range(len(self.nodes) - 1):
             formula = self.poly(i, x=x).diff(x, 2) ** 2
-            integral += sp.integrate(formula, (x, self.nodes[i], self.nodes[i + 1]))
+            integral += sp.integrate(
+                formula, (x, self.nodes[i], self.nodes[i + 1])
+            )
         return sp.simplify(integral)
 
     def integrate(
@@ -892,7 +935,9 @@ class AbstractSpline(ABC):
             return formula.integrate((x, z0, z1))
 
         if k0 + 1 == k1:
-            return formula.integrate((x, z0, xB)) + formula.integrate((x, xA, z1))
+            return formula.integrate((x, z0, xB)) + formula.integrate(
+                (x, xA, z1)
+            )
 
         return (
             formula.integrate((x, z0, xB))
@@ -969,7 +1014,9 @@ class AbstractSpline(ABC):
                 assert amici_time_symbol not in x.free_symbols
             children["spline_grid"] = [sbml_mathml(x) for x in self.nodes]
 
-        children["spline_values"] = [sbml_mathml(y) for y in self.values_at_nodes]
+        children["spline_values"] = [
+            sbml_mathml(y) for y in self.values_at_nodes
+        ]
 
         return children
 
@@ -1032,10 +1079,12 @@ class AbstractSpline(ABC):
 
         # Autoadd parameters
         if auto_add is True or auto_add == "spline":
-            if not model.getParameter(str(self.sbml_id)) and not model.getSpecies(
+            if not model.getParameter(
                 str(self.sbml_id)
-            ):
-                add_parameter(model, self.sbml_id, constant=False, units=y_units)
+            ) and not model.getSpecies(str(self.sbml_id)):
+                add_parameter(
+                    model, self.sbml_id, constant=False, units=y_units
+                )
 
             if auto_add is True:
                 if isinstance(x_nominal, collections.abc.Sequence):
@@ -1046,7 +1095,9 @@ class AbstractSpline(ABC):
                         )
                     for i in range(len(x_nominal) - 1):
                         if x[i] >= x[i + 1]:
-                            raise ValueError("x_nominal must be strictly increasing!")
+                            raise ValueError(
+                                "x_nominal must be strictly increasing!"
+                            )
                 elif x_nominal is None:
                     x_nominal = len(self.nodes) * [None]
                 else:
@@ -1055,7 +1106,9 @@ class AbstractSpline(ABC):
                     raise TypeError("x_nominal must be a Sequence!")
                 for _x, _val in zip(self.nodes, x_nominal):
                     if _x.is_Symbol and not model.getParameter(_x.name):
-                        add_parameter(model, _x.name, value=_val, units=x_units)
+                        add_parameter(
+                            model, _x.name, value=_val, units=x_units
+                        )
 
                 if isinstance(y_nominal, collections.abc.Sequence):
                     if len(y_nominal) != len(self.values_at_nodes):
@@ -1109,7 +1162,9 @@ class AbstractSpline(ABC):
             k = sp.Piecewise((3, sp.cos(s) < 0), (1, True))
             formula = x0 + T * (sp.atan(sp.tan(s)) / (2 * sp.pi) + k / 4)
             assert amici_time_symbol not in formula.free_symbols
-            par = add_parameter(model, parameter_id, constant=False, units=x_units)
+            par = add_parameter(
+                model, parameter_id, constant=False, units=x_units
+            )
             retcode = par.setAnnotation(
                 f'<amici:discard xmlns:amici="{annotation_namespace}" />'
             )
@@ -1117,13 +1172,17 @@ class AbstractSpline(ABC):
                 raise SbmlAnnotationError("Could not set SBML annotation!")
             add_assignment_rule(model, parameter_id, formula)
 
-    def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol) -> None:
+    def _replace_in_all_expressions(
+        self, old: sp.Symbol, new: sp.Symbol
+    ) -> None:
         if self.sbml_id == old:
             self._sbml_id = new
         self._x = self.evaluate_at.subs(old, new)
         if not isinstance(self.nodes, UniformGrid):
             self._nodes = [x.subs(old, new) for x in self.nodes]
-        self._values_at_nodes = [y.subs(old, new) for y in self.values_at_nodes]
+        self._values_at_nodes = [
+            y.subs(old, new) for y in self.values_at_nodes
+        ]
 
     @staticmethod
     def is_spline(rule: libsbml.AssignmentRule) -> bool:
@@ -1135,7 +1194,9 @@ class AbstractSpline(ABC):
         return AbstractSpline.get_annotation(rule) is not None
 
     @staticmethod
-    def get_annotation(rule: libsbml.AssignmentRule) -> Union[ET.Element, None]:
+    def get_annotation(
+        rule: libsbml.AssignmentRule,
+    ) -> Union[ET.Element, None]:
         """
         Extract AMICI spline annotation from an SBML assignment rule
         (given as a :py:class:`libsbml.AssignmentRule` object).
@@ -1167,7 +1228,9 @@ class AbstractSpline(ABC):
         must be hard-coded into this function here (at the moment).
         """
         if annotation.tag != f"{{{annotation_namespace}}}spline":
-            raise ValueError("The given annotation is not an AMICI spline annotation!")
+            raise ValueError(
+                "The given annotation is not an AMICI spline annotation!"
+            )
 
         attributes = {}
         for key, value in annotation.items():
@@ -1203,14 +1266,17 @@ class AbstractSpline(ABC):
         if attributes["spline_method"] == "cubic_hermite":
             cls = CubicHermiteSpline
         else:
-            raise ValueError(f"Unknown spline method {attributes['spline_method']}!")
+            raise ValueError(
+                f"Unknown spline method {attributes['spline_method']}!"
+            )
 
         del attributes["spline_method"]
         kwargs = cls._from_annotation(attributes, children)
 
         if attributes:
             raise ValueError(
-                "Unprocessed attributes in spline annotation!\n" + str(attributes)
+                "Unprocessed attributes in spline annotation!\n"
+                + str(attributes)
             )
 
         if children:
@@ -1281,7 +1347,9 @@ class AbstractSpline(ABC):
             )
 
         if "spline_values" not in children:
-            raise ValueError("Required spline annotation 'spline_values' missing!")
+            raise ValueError(
+                "Required spline annotation 'spline_values' missing!"
+            )
         kwargs["values_at_nodes"] = children.pop("spline_values")
 
         return kwargs
@@ -1300,7 +1368,9 @@ class AbstractSpline(ABC):
             parameters.update(y.free_symbols)
         return parameters
 
-    def ode_model_symbol(self, importer: sbml_import.SbmlImporter) -> sp.Function:
+    def ode_model_symbol(
+        self, importer: sbml_import.SbmlImporter
+    ) -> sp.Function:
         """
         Returns the `sympy` object to be used by
         :py:class:`amici.de_export.ODEModel`.
@@ -1368,7 +1438,10 @@ class AbstractSpline(ABC):
                         return True
 
                 return AmiciSplineSensitivity(
-                    self.args[0], self.args[1], parameters[pindex], *self.args[2:]
+                    self.args[0],
+                    self.args[1],
+                    parameters[pindex],
+                    *self.args[2:],
                 )
 
             def _eval_is_real(self):
@@ -1397,9 +1470,13 @@ class AbstractSpline(ABC):
             nodes = np.asarray(self.nodes)
             xlim = (float(nodes[0]), float(nodes[-1]))
         nodes = np.linspace(*xlim, npoints)
-        ax.plot(nodes, [float(self.evaluate(x).subs(parameters)) for x in nodes])
         ax.plot(
-            self.nodes, [float(y.subs(parameters)) for y in self.values_at_nodes], "o"
+            nodes, [float(self.evaluate(x).subs(parameters)) for x in nodes]
+        )
+        ax.plot(
+            self.nodes,
+            [float(y.subs(parameters)) for y in self.values_at_nodes],
+            "o",
         )
         if xlabel is not None:
             ax.set_xlabel(xlabel)
@@ -1500,7 +1577,9 @@ class CubicHermiteSpline(AbstractSpline):
 
         if not isinstance(nodes, UniformGrid):
             nodes = np.asarray([sympify_noeval(x) for x in nodes])
-        values_at_nodes = np.asarray([sympify_noeval(y) for y in values_at_nodes])
+        values_at_nodes = np.asarray(
+            [sympify_noeval(y) for y in values_at_nodes]
+        )
 
         if len(nodes) != len(values_at_nodes):
             # NB this would be checked in AbstractSpline.__init__()
@@ -1512,13 +1591,19 @@ class CubicHermiteSpline(AbstractSpline):
             )
 
         bc, extrapolate = self._normalize_bc_and_extrapolate(bc, extrapolate)
-        if bc[0] == "zeroderivative+natural" or bc[1] == "zeroderivative+natural":
+        if (
+            bc[0] == "zeroderivative+natural"
+            or bc[1] == "zeroderivative+natural"
+        ):
             raise ValueError(
-                "zeroderivative+natural bc not supported by " "CubicHermiteSplines!"
+                "zeroderivative+natural bc not supported by "
+                "CubicHermiteSplines!"
             )
 
         if derivatives_at_nodes is None:
-            derivatives_at_nodes = _finite_differences(nodes, values_at_nodes, bc)
+            derivatives_at_nodes = _finite_differences(
+                nodes, values_at_nodes, bc
+            )
             self._derivatives_by_fd = True
         else:
             derivatives_at_nodes = np.asarray(
@@ -1603,7 +1688,9 @@ class CubicHermiteSpline(AbstractSpline):
             return self.derivatives_at_nodes[i] / self.values_at_nodes[i]
         return self.derivatives_at_nodes[i]
 
-    def _poly_variable(self, x: Union[Real, sp.Basic], i: Integral) -> sp.Basic:
+    def _poly_variable(
+        self, x: Union[Real, sp.Basic], i: Integral
+    ) -> sp.Basic:
         assert 0 <= i < len(self.nodes) - 1
         dx = self.nodes[i + 1] - self.nodes[i]
         with evaluate(False):
@@ -1645,7 +1732,9 @@ class CubicHermiteSpline(AbstractSpline):
             parameters.update(d.free_symbols)
         return parameters
 
-    def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol) -> None:
+    def _replace_in_all_expressions(
+        self, old: sp.Symbol, new: sp.Symbol
+    ) -> None:
         super()._replace_in_all_expressions(old, new)
         self._derivatives_at_nodes = [
             d.subs(old, new) for d in self.derivatives_at_nodes
@@ -1680,7 +1769,9 @@ class CubicHermiteSpline(AbstractSpline):
         return s + " [" + ", ".join(cmps) + "]"
 
 
-def _finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) -> np.ndarray:
+def _finite_differences(
+    xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC
+) -> np.ndarray:
     dd = []
 
     if bc[0] == "periodic":
@@ -1701,7 +1792,11 @@ def _finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) -> np.
     for i in range(1, len(xx) - 1):
         dd.append(
             _centered_fd(
-                yy[i - 1], yy[i], yy[i + 1], xx[i] - xx[i - 1], xx[i + 1] - xx[i]
+                yy[i - 1],
+                yy[i],
+                yy[i + 1],
+                xx[i] - xx[i - 1],
+                xx[i + 1] - xx[i],
             )
         )
 
@@ -1715,7 +1810,9 @@ def _finite_differences(xx: np.ndarray, yy: np.ndarray, bc: NormalizedBC) -> np.
                 "At least 3 nodes are needed "
                 "for computing finite differences with natural bc!"
             )
-        fd = _natural_fd(yy[-1], xx[-2] - xx[-1], yy[-2], xx[-3] - xx[-2], yy[-3])
+        fd = _natural_fd(
+            yy[-1], xx[-2] - xx[-1], yy[-2], xx[-3] - xx[-2], yy[-3]
+        )
     else:
         fd = _onesided_fd(yy[-2], yy[-1], xx[-1] - xx[-2])
     dd.append(fd)

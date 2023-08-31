@@ -76,7 +76,9 @@ Rule(
 )
 
 # Transphosphorylation of EGFR by RTK
-Rule("egfr_transphos", EGFR(CR1=ANY, Y1068="U") >> EGFR(CR1=ANY, Y1068="P"), kp3)
+Rule(
+    "egfr_transphos", EGFR(CR1=ANY, Y1068="U") >> EGFR(CR1=ANY, Y1068="P"), kp3
+)
 
 # Dephosphorylation
 Rule("egfr_dephos", EGFR(Y1068="P") >> EGFR(Y1068="U"), km3)

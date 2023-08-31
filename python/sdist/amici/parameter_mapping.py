@@ -126,7 +126,9 @@ class ParameterMapping(Sequence):
         List of parameter mappings for specific conditions.
     """
 
-    def __init__(self, parameter_mappings: List[ParameterMappingForCondition] = None):
+    def __init__(
+        self, parameter_mappings: List[ParameterMappingForCondition] = None
+    ):
         super().__init__()
         if parameter_mappings is None:
             parameter_mappings = []
@@ -146,7 +148,9 @@ class ParameterMapping(Sequence):
     def __len__(self):
         return len(self.parameter_mappings)
 
-    def append(self, parameter_mapping_for_condition: ParameterMappingForCondition):
+    def append(
+        self, parameter_mapping_for_condition: ParameterMappingForCondition
+    ):
         """Append a condition specific parameter mapping."""
         self.parameter_mappings.append(parameter_mapping_for_condition)
 
@@ -188,7 +192,8 @@ def fill_in_parameters(
         set(problem_parameters.keys()) - parameter_mapping.free_symbols
     ):
         warnings.warn(
-            "The following problem parameters were not used: " + str(unused_parameters),
+            "The following problem parameters were not used: "
+            + str(unused_parameters),
             RuntimeWarning,
         )
 
@@ -262,10 +267,12 @@ def fill_in_parameters_for_condition(
         return value
 
     map_preeq_fix = {
-        key: _get_par(key, val, map_preeq_fix) for key, val in map_preeq_fix.items()
+        key: _get_par(key, val, map_preeq_fix)
+        for key, val in map_preeq_fix.items()
     }
     map_sim_fix = {
-        key: _get_par(key, val, map_sim_fix) for key, val in map_sim_fix.items()
+        key: _get_par(key, val, map_sim_fix)
+        for key, val in map_sim_fix.items()
     }
     map_sim_var = {
         key: _get_par(key, val, dict(map_sim_fix, **map_sim_var))
@@ -289,7 +296,9 @@ def fill_in_parameters_for_condition(
     # variable parameters and parameter scale
 
     # parameter list from mapping dict
-    parameters = [map_sim_var[par_id] for par_id in amici_model.getParameterIds()]
+    parameters = [
+        map_sim_var[par_id] for par_id in amici_model.getParameterIds()
+    ]
 
     # scales list from mapping dict
     scales = [
@@ -317,7 +326,8 @@ def fill_in_parameters_for_condition(
     # fixed parameters preequilibration
     if map_preeq_fix:
         fixed_pars_preeq = [
-            map_preeq_fix[par_id] for par_id in amici_model.getFixedParameterIds()
+            map_preeq_fix[par_id]
+            for par_id in amici_model.getFixedParameterIds()
         ]
         edata.fixedParametersPreequilibration = fixed_pars_preeq
 
@@ -325,7 +335,8 @@ def fill_in_parameters_for_condition(
     # fixed parameters simulation
     if map_sim_fix:
         fixed_pars_sim = [
-            map_sim_fix[par_id] for par_id in amici_model.getFixedParameterIds()
+            map_sim_fix[par_id]
+            for par_id in amici_model.getFixedParameterIds()
         ]
         edata.fixedParameters = fixed_pars_sim
 
@@ -370,11 +381,14 @@ def scale_parameter(value: numbers.Number, petab_scale: str) -> numbers.Number:
     if petab_scale == LOG:
         return np.log(value)
     raise ValueError(
-        f"Unknown parameter scale {petab_scale}. " f"Must be from {(LIN, LOG, LOG10)}"
+        f"Unknown parameter scale {petab_scale}. "
+        f"Must be from {(LIN, LOG, LOG10)}"
     )
 
 
-def unscale_parameter(value: numbers.Number, petab_scale: str) -> numbers.Number:
+def unscale_parameter(
+    value: numbers.Number, petab_scale: str
+) -> numbers.Number:
     """Bring parameter from scale to linear scale.
 
     :param value:
@@ -392,7 +406,8 @@ def unscale_parameter(value: numbers.Number, petab_scale: str) -> numbers.Number
     if petab_scale == LOG:
         return np.exp(value)
     raise ValueError(
-        f"Unknown parameter scale {petab_scale}. " f"Must be from {(LIN, LOG, LOG10)}"
+        f"Unknown parameter scale {petab_scale}. "
+        f"Must be from {(LIN, LOG, LOG10)}"
     )
 
 

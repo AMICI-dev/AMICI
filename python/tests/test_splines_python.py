@@ -217,7 +217,9 @@ def check_gradient(spline, t, params, params_values, expected, rel_tol=1e-9):
     value = spline.evaluate(t)
     subs = {pname: pvalue for (pname, pvalue) in zip(params, params_values)}
     for p, exp in zip(params, expected):
-        assert math.isclose(float(value.diff(p).subs(subs)), exp, rel_tol=rel_tol)
+        assert math.isclose(
+            float(value.diff(p).subs(subs)), exp, rel_tol=rel_tol
+        )
 
 
 @skip_on_valgrind
@@ -232,13 +234,25 @@ def test_SplineUniformSensitivity():
     )
     check_gradient(spline, 0.00, params, params_values, [3.0, 1.0, 0.0])
     check_gradient(
-        spline, 0.25, params, params_values, [0.539062, 0.179688, 4.45312], rel_tol=1e-5
+        spline,
+        0.25,
+        params,
+        params_values,
+        [0.539062, 0.179688, 4.45312],
+        rel_tol=1e-5,
     )
     check_gradient(spline, 1.0 / 3, params, params_values, [0.0, 0.0, 5.0])
-    check_gradient(spline, 0.50, params, params_values, [0.1875, -0.125, 2.625])
+    check_gradient(
+        spline, 0.50, params, params_values, [0.1875, -0.125, 2.625]
+    )
     check_gradient(spline, 2.0 / 3, params, params_values, [0.0, 0.0, 0.0])
     check_gradient(
-        spline, 0.75, params, params_values, [-1.07812, 0.179688, 0.1875], rel_tol=1e-5
+        spline,
+        0.75,
+        params,
+        params_values,
+        [-1.07812, 0.179688, 0.1875],
+        rel_tol=1e-5,
     )
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
 
@@ -255,12 +269,19 @@ def test_SplineNonUniformSensitivity():
     )
     check_gradient(spline, 0.00, params, params_values, [3.0, 1.0, 0.0])
     check_gradient(
-        spline, 0.05, params, params_values, [1.3125, 0.4375, 2.89062], rel_tol=1e-5
+        spline,
+        0.05,
+        params,
+        params_values,
+        [1.3125, 0.4375, 2.89062],
+        rel_tol=1e-5,
     )
     check_gradient(spline, 0.10, params, params_values, [0.0, 0.0, 5.0])
     check_gradient(spline, 0.30, params, params_values, [-0.45, -0.3, 3.6])
     check_gradient(spline, 0.50, params, params_values, [0.0, 0.0, 0.0])
-    check_gradient(spline, 0.75, params, params_values, [-2.625, 0.4375, 0.921875])
+    check_gradient(
+        spline, 0.75, params, params_values, [-2.625, 0.4375, 0.921875]
+    )
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
 
 
@@ -282,15 +303,30 @@ def test_SplineExplicitSensitivity():
     )
     check_gradient(spline, 0.00, params, params_values, [3.0, 1.0, 0.0])
     check_gradient(
-        spline, 0.25, params, params_values, [0.46875, 0.109375, 4.37109], rel_tol=1e-6
+        spline,
+        0.25,
+        params,
+        params_values,
+        [0.46875, 0.109375, 4.37109],
+        rel_tol=1e-6,
     )
     check_gradient(spline, 1.0 / 3, params, params_values, [0.0, 0.0, 5.0])
     check_gradient(
-        spline, 0.50, params, params_values, [-0.166667, 0.0641793, 2.625], rel_tol=1e-5
+        spline,
+        0.50,
+        params,
+        params_values,
+        [-0.166667, 0.0641793, 2.625],
+        rel_tol=1e-5,
     )
     check_gradient(spline, 2.0 / 3, params, params_values, [0.0, 0.0, 0.0])
     check_gradient(
-        spline, 0.75, params, params_values, [-0.75, 0.130923, 0.46875], rel_tol=1e-5
+        spline,
+        0.75,
+        params,
+        params_values,
+        [-0.75, 0.130923, 0.46875],
+        rel_tol=1e-5,
     )
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
 
@@ -308,7 +344,12 @@ def test_SplineLogarithmicSensitivity():
     )
     check_gradient(spline, 0.00, params, params_values, [3.0, 1.0, 0.0])
     check_gradient(
-        spline, 0.25, params, params_values, [0.585881, 0.195294, 4.38532], rel_tol=1e-5
+        spline,
+        0.25,
+        params,
+        params_values,
+        [0.585881, 0.195294, 4.38532],
+        rel_tol=1e-5,
     )
     check_gradient(spline, 1.0 / 3, params, params_values, [0.0, 0.0, 5.0])
     check_gradient(

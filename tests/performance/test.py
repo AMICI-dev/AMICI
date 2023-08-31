@@ -121,7 +121,9 @@ def prepare_simulation(arg, model, solver, edata):
         model.setParameters([0.1 for _ in tmp_par])
         solver.setSensitivityMethod(amici.SensitivityMethod.forward)
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
-        model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.newtonOnly)
+        model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.newtonOnly
+        )
         edata.setTimepoints([float("inf")])
     elif arg == "adjoint_steadystate_sensitivities_non_optimal_parameters":
         tmp_par = model.getParameters()
@@ -151,7 +153,9 @@ def main():
         compile_model(model_dir_source, model_dir_compiled)
         return
     else:
-        model_module = amici.import_model_module(model_name, model_dir_compiled)
+        model_module = amici.import_model_module(
+            model_name, model_dir_compiled
+        )
         model = model_module.getModel()
         solver = model.getSolver()
         # TODO

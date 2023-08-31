@@ -171,7 +171,8 @@ class AmiciBuildCMakeExtension(BuildExtension):
         build_dir = self.build_lib if self.inplace == 0 else os.getcwd()
         build_dir = Path(build_dir).absolute().as_posix()
         ext.cmake_configure_options = [
-            x.replace("${build_dir}", build_dir) for x in ext.cmake_configure_options
+            x.replace("${build_dir}", build_dir)
+            for x in ext.cmake_configure_options
         ]
 
         super().build_extension(ext)

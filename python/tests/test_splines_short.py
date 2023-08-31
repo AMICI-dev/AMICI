@@ -99,7 +99,9 @@ def test_splines_plist():
     # Real spline #3
     xx = UniformGrid(0, 5, number_of_nodes=6)
     p1, p2, p3, p4, p5 = sp.symbols("p1 p2 p3 p4 p5")
-    yy = np.asarray([p1 + p2, p2 * p3, p4, sp.cos(p1 + p3), p4 * sp.log(p1), p3])
+    yy = np.asarray(
+        [p1 + p2, p2 * p3, p4, sp.cos(p1 + p3), p4 * sp.log(p1), p3]
+    )
     dd = np.asarray([-0.75, -0.875, p5, 0.125, 1.15057181, 0.0])
     params = {p1: 1.0, p2: 0.5, p3: 1.5, p4: -0.25, p5: -0.5}
     # print([y.subs(params).evalf() for y in yy])

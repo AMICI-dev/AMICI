@@ -7,7 +7,11 @@ from pathlib import Path
 import amici
 import pytest
 import sympy as sp
-from amici.de_export import _custom_pow_eval_derivative, _monkeypatched, smart_subs_dict
+from amici.de_export import (
+    _custom_pow_eval_derivative,
+    _monkeypatched,
+    smart_subs_dict,
+)
 from amici.testing import skip_on_valgrind
 
 
@@ -71,7 +75,11 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
     try:
         subprocess.run(
-            cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
     except subprocess.CalledProcessError as e:
         print(e.stdout.decode())
@@ -111,7 +119,9 @@ def test_monkeypatch():
     assert (t**n).diff(t).subs(vals) is sp.nan
 
     # check that we can monkeypatch it out
-    with _monkeypatched(sp.Pow, "_eval_derivative", _custom_pow_eval_derivative):
+    with _monkeypatched(
+        sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
+    ):
         assert (t**n).diff(t).subs(vals) is not sp.nan
 
     # check that the monkeypatch is transient

@@ -50,7 +50,9 @@ def test_simulate_petab_sensitivities(lotka_volterra):
         for scaled_gradients in [True, False]:
             _problem_parameters = problem_parameters.copy()
             if scaled_parameters:
-                _problem_parameters = petab_problem.scale_parameters(problem_parameters)
+                _problem_parameters = petab_problem.scale_parameters(
+                    problem_parameters
+                )
             results[(scaled_parameters, scaled_gradients)] = pd.Series(
                 amici.petab_objective.simulate_petab(
                     petab_problem=petab_problem,
