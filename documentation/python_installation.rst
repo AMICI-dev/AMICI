@@ -66,6 +66,43 @@ Install AMICI:
 
    pip3 install amici
 
+Arch Linux
+----------
+
+Install the AMICI dependencies via ``pacman``
+(this requires superuser privileges):
+
+.. code-block:: bash
+
+   sudo pacman -S python swig openblas gcc hdf5 boost-libs
+
+Install AMICI:
+
+.. code-block:: bash
+
+   pip3 install amici
+
+Alternatively:
+
+1. Check if packages are already installed with the required versions for AMICI installation.
+
+.. code-block:: bash
+
+   sudo pacman -Si python swig openblas gcc hdf5 boost-libs 
+
+2. Upgrade installed packages if required mininum versions are not satisfied for AMICI installation.
+
+.. code-block:: bash
+
+   sudo pacman -Su python swig openblas gcc hdf5 boost-libs 
+
+3. Install AMICI:
+
+.. code-block:: bash
+
+   pip3 install amici
+
+
 Installation on OSX
 +++++++++++++++++++
 
