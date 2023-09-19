@@ -66,8 +66,8 @@ Install AMICI:
 
    pip3 install amici
 
-Archlinux
----------
+Arch Linux
+----------
 
 Install the AMICI dependencies via ``pacman``
 (this requires superuser privileges):
@@ -101,9 +101,6 @@ Alternatively:
 .. code-block:: bash
 
    pip3 install amici
-
-Note: boost-libs provides boost chrono on Archlinux.
-
 
 
 Installation on OSX
