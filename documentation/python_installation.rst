@@ -74,7 +74,7 @@ Install the AMICI dependencies via ``pacman``
 
 .. code-block:: bash
 
-   sudo pacman -S python swig openblas gcc hdf5
+   sudo pacman -S python swig openblas gcc hdf5 boost-libs
 
 Install AMICI:
 
@@ -88,19 +88,21 @@ Alternatively:
 
 .. code-block:: bash
 
-   sudo pacman -Si python swig openblas gcc hdf5
+   sudo pacman -Si python swig openblas gcc hdf5 boost-libs 
 
 2. Upgrade installed packages if required mininum versions are not satisfied for AMICI installation.
 
 .. code-block:: bash
 
-   sudo pacman -Su python swig openblas gcc hdf5
+   sudo pacman -Su python swig openblas gcc hdf5 boost-libs 
 
 3. Install AMICI:
 
 .. code-block:: bash
 
    pip3 install amici
+
+Note: boost-libs provides boost chrono on Archlinux.
 
 
 
