@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 79.
+List of publications using AMICI. Total number is 80.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -50,6 +50,13 @@ Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
 Rewiring Contribute to Drug Resistance.”</span> <em>Molecular Systems
 Biology</em> 19 (2): e10988. <a
 href="https://doi.org/10.15252/msb.202210988">https://doi.org/10.15252/msb.202210988</a>.
+</div>
+<div id="ref-HasenauerMer2023" class="csl-entry" role="doc-biblioentry">
+Hasenauer, Jan, Simon Merkt, Solomon Ali, Esayas Gudina, Wondimagegn
+Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
+<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
+Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
+href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
 </div>
 <div id="ref-LakrisenkoSta2023" class="csl-entry"
 role="doc-biblioentry">
