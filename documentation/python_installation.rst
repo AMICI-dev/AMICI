@@ -66,6 +66,20 @@ Install AMICI:
 
    pip3 install amici
 
+Archlinux
+---------
+
+Install the AMICI dependencies via ``pacman``
+(this requires superuser privileges):
+
+.. code-block:: bash
+
+   sudo pacman -Si python swig openblas gcc hdf5
+
+.. code-block:: bash
+
+   pip3 install amici
+
 Installation on OSX
 +++++++++++++++++++
 
