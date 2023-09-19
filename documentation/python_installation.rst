@@ -74,7 +74,17 @@ Install the AMICI dependencies via ``pacman``
 
 .. code-block:: bash
 
+   sudo pacman -S python swig openblas gcc hdf5
+
+(Check if packages are already installed with the required versions for AMICI installation):
+
+.. code-block:: bash
    sudo pacman -Si python swig openblas gcc hdf5
+
+(Upgrade installed packages if required mininum versions are not satisfied) for AMICI installation:
+
+.. code-block:: bash
+   sudo pacman -Su python swig openblas gcc hdf5
 
 .. code-block:: bash
 
