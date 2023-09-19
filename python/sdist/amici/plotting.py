@@ -6,15 +6,12 @@ Plotting related functions
 from typing import Iterable, Optional, Sequence, Union
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
-import sympy as sp
 from matplotlib.axes import Axes
 
 from . import Model, ReturnDataView
-
-StrOrExpr = Union[str, sp.Expr]
+from .numpy import StrOrExpr, evaluate
 
 
 def plot_state_trajectories(
@@ -119,31 +116,6 @@ def plot_jacobian(rdata: ReturnDataView):
 # backwards compatibility
 plotStateTrajectories = plot_state_trajectories
 plotObservableTrajectories = plot_observable_trajectories
-
-
-def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
-    """Evaluate a symbolic expression based on the given simulation outputs.
-
-    :param expr:
-        A symbolic expression, e.g. a sympy expression or a string that can be sympified.
-        Can include state variable, expression, and observable IDs, depending on whether
-        the respective data is available in the simulation results.
-        Parameters are not yet supported.
-    :param rdata:
-        The simulation results.
-
-    :return:
-        The evaluated expression for the simulation output timepoints.
-    """
-    from sympy.utilities.lambdify import lambdify
-
-    if isinstance(expr, str):
-        expr = sp.sympify(expr)
-
-    arg_names = list(sorted(expr.free_symbols, key=lambda x: x.name))
-    func = lambdify(arg_names, expr, "numpy")
-    args = [rdata.by_id(arg.name) for arg in arg_names]
-    return func(*args)
 
 
 def plot_expressions(

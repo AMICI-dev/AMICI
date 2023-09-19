@@ -10,8 +10,11 @@ from typing import Dict, Iterator, List, Literal, Union
 
 import amici
 import numpy as np
+import sympy as sp
 
 from . import ExpData, ExpDataPtr, Model, ReturnData, ReturnDataPtr
+
+StrOrExpr = Union[str, sp.Expr]
 
 
 class SwigPtrView(collections.abc.Mapping):
@@ -429,3 +432,28 @@ def _entity_type_from_id(
                 return symbol
 
     raise KeyError(f"Unknown symbol {entity_id}.")
+
+
+def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.array:
+    """Evaluate a symbolic expression based on the given simulation outputs.
+
+    :param expr:
+        A symbolic expression, e.g. a sympy expression or a string that can be sympified.
+        Can include state variable, expression, and observable IDs, depending on whether
+        the respective data is available in the simulation results.
+        Parameters are not yet supported.
+    :param rdata:
+        The simulation results.
+
+    :return:
+        The evaluated expression for the simulation output timepoints.
+    """
+    from sympy.utilities.lambdify import lambdify
+
+    if isinstance(expr, str):
+        expr = sp.sympify(expr)
+
+    arg_names = list(sorted(expr.free_symbols, key=lambda x: x.name))
+    func = lambdify(arg_names, expr, "numpy")
+    args = [rdata.by_id(arg.name) for arg in arg_names]
+    return func(*args)
