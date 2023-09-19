@@ -76,6 +76,10 @@ Install the AMICI dependencies via ``pacman``
 
    sudo pacman -S python swig openblas gcc hdf5
 
+.. code-block:: bash
+
+   pip3 install amici
+
 (Check if packages are already installed with the required versions for AMICI installation):
 
 .. code-block:: bash
@@ -86,9 +90,7 @@ Install the AMICI dependencies via ``pacman``
 .. code-block:: bash
    sudo pacman -Su python swig openblas gcc hdf5
 
-.. code-block:: bash
 
-   pip3 install amici
 
 Installation on OSX
 +++++++++++++++++++
