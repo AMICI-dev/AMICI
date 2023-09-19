@@ -96,6 +96,12 @@ Alternatively:
 
    sudo pacman -Su python swig openblas gcc hdf5
 
+3. Install AMICI:
+
+.. code-block:: bash
+
+   pip3 install amici
+
 
 
 Installation on OSX
