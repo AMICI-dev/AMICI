@@ -131,7 +131,7 @@ def plot_expressions(
     :param rdata:
         The simulation results.
     """
-    if not isinstance(exprs, Sequence):
+    if not isinstance(exprs, Sequence) or isinstance(exprs, str):
         exprs = [exprs]
 
     for expr in exprs:
