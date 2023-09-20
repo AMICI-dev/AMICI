@@ -136,4 +136,6 @@ def plot_expressions(
 
     for expr in exprs:
         plt.plot(rdata.t, evaluate(expr, rdata), label=str(expr))
+
     plt.legend()
+    plt.gca().set_xlabel("$t$")
