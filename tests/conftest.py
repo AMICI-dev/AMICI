@@ -48,7 +48,9 @@ def get_all_semantic_case_ids():
     suite"""
     pattern = re.compile(r"\d{5}")
     return sorted(
-        str(x.name) for x in SBML_SEMANTIC_CASES_DIR.iterdir() if pattern.match(x.name)
+        str(x.name)
+        for x in SBML_SEMANTIC_CASES_DIR.iterdir()
+        if pattern.match(x.name)
     )
 
 
@@ -85,7 +87,9 @@ def pytest_generate_tests(metafunc):
 def pytest_sessionfinish(session, exitstatus):
     """Process test results"""
     global passed_ids
-    terminalreporter = session.config.pluginmanager.get_plugin("terminalreporter")
+    terminalreporter = session.config.pluginmanager.get_plugin(
+        "terminalreporter"
+    )
     terminalreporter.ensure_newline()
     # parse test names to get passed case IDs (don't know any better way to
     # access fixture values)
@@ -107,9 +111,14 @@ def write_passed_tags(passed_ids, out=sys.stdout):
         passed_component_tags |= cur_component_tags
         passed_test_tags |= cur_test_tags
 
-    out.write("\nAt least one test with the following component tags has " "passed:\n")
+    out.write(
+        "\nAt least one test with the following component tags has "
+        "passed:\n"
+    )
     out.write("  " + "\n  ".join(sorted(passed_component_tags)))
-    out.write("\n\nAt least one test with the following test tags has " "passed:\n")
+    out.write(
+        "\n\nAt least one test with the following test tags has " "passed:\n"
+    )
     out.write("  " + "\n  ".join(sorted(passed_test_tags)))
 
 
@@ -139,7 +148,9 @@ def get_tags_for_test(test_id: str) -> Tuple[Set[str], Set[str]]:
         test_tags = set()
         for line in f:
             if line.startswith("testTags:"):
-                test_tags = set(re.split(r"[ ,:]", line[len("testTags:") :].strip()))
+                test_tags = set(
+                    re.split(r"[ ,:]", line[len("testTags:") :].strip())
+                )
                 test_tags.discard("")
             if line.startswith("componentTags:"):
                 component_tags = set(

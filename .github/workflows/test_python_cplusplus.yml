@@ -36,7 +36,7 @@ jobs:
     - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
     # sonar cloud
-    - run: echo "SONAR_SCANNER_VERSION=4.7.0.2747" >> $GITHUB_ENV
+    - run: echo "SONAR_SCANNER_VERSION=5.0.1.3006" >> $GITHUB_ENV
     - run: echo "SONAR_SCANNER_HOME=${HOME}/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux" >> $GITHUB_ENV
     - run: echo "SONAR_SCANNER_OPTS=-server" >> $GITHUB_ENV
     - run: echo "${SONAR_SCANNER_HOME}/bin" >> $GITHUB_PATH
@@ -76,13 +76,6 @@ jobs:
     - name: Build AMICI
       run: |
         CI_SONARCLOUD=TRUE scripts/buildAmici.sh
-
-    - name: Cache sonar files
-      id: cache-sonar
-      uses: actions/cache@v3
-      with:
-        path: sonar_cache
-        key: ${{ runner.os }}-sonar_cache
 
     - name: C++ tests
       run: |
@@ -157,6 +150,7 @@ jobs:
     - name: Run sonar-scanner
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
          -Dsonar.cfamily.build-wrapper-output=bw-output \

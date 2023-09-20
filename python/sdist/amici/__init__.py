@@ -66,9 +66,9 @@ def _imported_from_setup() -> bool:
         # requires the AMICI extension during its installation, but seems
         # unlikely...
         frame_path = os.path.realpath(os.path.expanduser(frame.filename))
-        if frame_path == os.path.join(package_root, "setup.py") or frame_path.endswith(
-            f"{sep}setuptools{sep}build_meta.py"
-        ):
+        if frame_path == os.path.join(
+            package_root, "setup.py"
+        ) or frame_path.endswith(f"{sep}setuptools{sep}build_meta.py"):
             return True
 
     return False
@@ -203,6 +203,8 @@ def _get_default_argument(func: Callable, arg: str) -> Any:
     import inspect
 
     signature = inspect.signature(func)
-    if (default := signature.parameters[arg].default) is not inspect.Parameter.empty:
+    if (
+        default := signature.parameters[arg].default
+    ) is not inspect.Parameter.empty:
         return default
     raise ValueError(f"No default value for argument {arg} of {func}.")

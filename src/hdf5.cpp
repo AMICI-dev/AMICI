@@ -16,18 +16,6 @@
 
 #include <hdf5_hl.h>
 
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-#ifdef AMI_HDF5_H_DEBUG
-#ifndef __APPLE__
-#include <cexecinfo>
-#else
-#include <execinfo.h>
-#endif
-#endif
-#include <cmath>
-#include <unistd.h>
 
 namespace amici {
 namespace hdf5 {
@@ -1167,6 +1155,14 @@ void readModelDataFromHDF5(
     if (attributeExists(file, datasetPath, "nmaxevent")) {
         model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent")
         );
+    }
+
+    if (attributeExists(file, datasetPath, "steadyStateComputationMode")) {
+        model.setSteadyStateComputationMode(
+            static_cast<SteadyStateComputationMode>(getIntScalarAttribute(
+                file, datasetPath, "steadyStateComputationMode"
+                ))
+            );
     }
 
     if (attributeExists(file, datasetPath, "steadyStateSensitivityMode")) {

@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 74.
+List of publications using AMICI. Total number is 79.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -14,6 +14,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2023</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="doc-bibliography">
+<div id="ref-BuckBas2023" class="csl-entry" role="doc-biblioentry">
+Buck, Michèle C., Lisa Bast, Judith S. Hecker, Jennifer Rivière, Maja
+Rothenberg-Thurley, Luisa Vogel, Dantong Wang, et al. 2023.
+<span>“Progressive Disruption of Hematopoietic Architecture from Clonal
+Hematopoiesis to <span>MDS</span>.”</span> <em>iScience</em>, 107328. <a
+href="https://doi.org/10.1016/j.isci.2023.107328">https://doi.org/10.1016/j.isci.2023.107328</a>.
+</div>
 <div id="ref-ContentoCas2023" class="csl-entry" role="doc-biblioentry">
 Contento, Lorenzo, Noemi Castelletti, Elba Raimúndez, Ronan Le Gleut,
 Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2023.
@@ -21,6 +28,21 @@ Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2023.
 Reveals Time-Dependent Test Efficiency and Infectious Contacts.”</span>
 <em>Epidemics</em> 43: 100681. <a
 href="https://doi.org/10.1016/j.epidem.2023.100681">https://doi.org/10.1016/j.epidem.2023.100681</a>.
+</div>
+<div id="ref-ContentoSta2023" class="csl-entry" role="doc-biblioentry">
+Contento, Lorenzo, Paul Stapor, Daniel Weindl, and Jan Hasenauer. 2023.
+<span>“A More Expressive Spline Representation for <span>SBML</span>
+Models Improves Code Generation Performance in
+<span>AMICI</span>.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2023.06.29.547120">https://doi.org/10.1101/2023.06.29.547120</a>.
+</div>
+<div id="ref-Froehlich2023" class="csl-entry" role="doc-biblioentry">
+Fröhlich, Fabian. 2023. <span>“A Practical Guide for the Efficient
+Formulation and Calibration of Large, Energy- and Rule-Based Models of
+Cellular Signal Transduction.”</span> In <em>Computational Modeling of
+Signaling Networks</em>, edited by Lan K. Nguyen, 59–86. New York, NY:
+Springer US. <a
+href="https://doi.org/10.1007/978-1-0716-3008-2_3">https://doi.org/10.1007/978-1-0716-3008-2_3</a>.
 </div>
 <div id="ref-FroehlichGer2023" class="csl-entry" role="doc-biblioentry">
 Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
@@ -44,6 +66,21 @@ Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023.
 Saccharomyces Cerevisiae.”</span> <em>Metabolic Engineering</em> 75:
 12–18. <a
 href="https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/10.1016/j.ymben.2022.11.003</a>.
+</div>
+<div id="ref-SluijsZho2023" class="csl-entry" role="doc-biblioentry">
+Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu Baltussen, Frank
+Nelissen, Hans Heus, and Wilhelm Huck. 2023. <span>“Inverse Design of
+Enzymatic Reaction Network States.”</span> <a
+href="https://doi.org/10.21203/rs.3.rs-2646906/v1">https://doi.org/10.21203/rs.3.rs-2646906/v1</a>.
+</div>
+<div id="ref-TunedalVio2023" class="csl-entry" role="doc-biblioentry">
+Tunedal, Kajsa, Federica Viola, Belén Casas Garcia, Ann Bolger, Fredrik
+H. Nyström, Carl Johan Östgren, Jan Engvall, et al. 2023.
+<span>“Haemodynamic Effects of Hypertension and Type 2 Diabetes:
+Insights from a <span>4d</span> Flow <span
+class="nocase">MRI-based</span> Personalized Cardiovascular Mathematical
+Model.”</span> <em>The Journal of Physiology</em> n/a (n/a). <a
+href="https://doi.org/10.1113/JP284652">https://doi.org/10.1113/JP284652</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2022</h1>

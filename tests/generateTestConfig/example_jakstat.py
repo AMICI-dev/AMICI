@@ -54,7 +54,9 @@ class ExampleJakStatAdjoint(AmiciExample):
         self.solverOptions["sensi"] = 0
         self.solverOptions["sensi_meth"] = 1
 
-        self.data["Y"] = np.array(xls.loc[:, ["pSTAT_au", "tSTAT_au", "pEpoR_au"]])
+        self.data["Y"] = np.array(
+            xls.loc[:, ["pSTAT_au", "tSTAT_au", "pEpoR_au"]]
+        )
         self.data["Sigma_Y"] = np.full(self.data["Y"].shape, np.nan)
         self.data["Sigma_Z"] = []
         self.data["Z"] = []
@@ -97,7 +99,9 @@ def writeSensiForwardEmptySensInd(filename):
     ex.solverOptions["sensi"] = 1
     ex.solverOptions["sensi_meth"] = 1
 
-    ex.writeToFile(filename, "/model_jakstat_adjoint/sensiforwardemptysensind/")
+    ex.writeToFile(
+        filename, "/model_jakstat_adjoint/sensiforwardemptysensind/"
+    )
 
 
 def writeSensiAdjointEmptySensInd(filename):
@@ -107,7 +111,9 @@ def writeSensiAdjointEmptySensInd(filename):
     ex.solverOptions["sensi"] = 1
     ex.solverOptions["sensi_meth"] = 2
 
-    ex.writeToFile(filename, "/model_jakstat_adjoint/sensiadjointemptysensind/")
+    ex.writeToFile(
+        filename, "/model_jakstat_adjoint/sensiadjointemptysensind/"
+    )
 
 
 def writeSensi2Forward(filename):
@@ -137,7 +143,9 @@ def writeSensi2Adjoint(filename):
 def writeSensiForwardLogParam(filename):
     ex = ExampleJakStatAdjoint()
 
-    ex.modelOptions["theta"] = np.log(np.power(10.0, ex.modelOptions["theta"] + 0.1))
+    ex.modelOptions["theta"] = np.log(
+        np.power(10.0, ex.modelOptions["theta"] + 0.1)
+    )
     ex.modelOptions["pscale"] = 1
 
     ex.solverOptions["sens_ind"] = np.arange(0, ex.numP)

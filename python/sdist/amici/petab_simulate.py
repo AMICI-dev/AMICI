@@ -18,7 +18,11 @@ import pandas as pd
 import petab
 from amici import AmiciModel, SensitivityMethod_none
 from amici.petab_import import import_petab_problem
-from amici.petab_objective import RDATAS, rdatas_to_measurement_df, simulate_petab
+from amici.petab_objective import (
+    RDATAS,
+    rdatas_to_measurement_df,
+    simulate_petab,
+)
 
 AMICI_MODEL = "amici_model"
 AMICI_SOLVER = "solver"
@@ -49,7 +53,10 @@ class PetabSimulator(petab.simulate.Simulator):
         in the Simulator constructor (including the PEtab problem).
         """
         if AMICI_MODEL in {*kwargs, *dir(self)} and (
-            any(k in kwargs for k in inspect.signature(import_petab_problem).parameters)
+            any(
+                k in kwargs
+                for k in inspect.signature(import_petab_problem).parameters
+            )
         ):
             print(
                 "Arguments related to the PEtab import are unused if "

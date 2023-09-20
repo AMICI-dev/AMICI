@@ -2,12 +2,18 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(VERSION 3.15...3.27)
 
 project(amici)
 
 # misc options
+if(DEFINED ENV{AMICI_TRY_ENABLE_HDF5})
+  option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?"
+         $ENV{AMICI_TRY_ENABLE_HDF5})
+else()
+  option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
+endif()
 option(AMICI_PYTHON_BUILD_EXT_ONLY "Build only the Python extension?" OFF)
-option(AMICI_TRY_ENABLE_HDF5 "Build with HDF5 support if available?" ON)
 option(ENABLE_HDF5 "Build with HDF5 support?" OFF)
 option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
 option(EXPORT_PACKAGE "Export AMICI library to CMake package registry?" ON)
@@ -120,7 +126,7 @@ set(VENDORED_SUNDIALS_BUILD_DIR ${VENDORED_SUNDIALS_DIR}/build)
 set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 set(SUNDIALS_PRIVATE_INCLUDE_DIRS "${VENDORED_SUNDIALS_DIR}/src")
 find_package(SUNDIALS REQUIRED PATHS
-             "${VENDORED_SUNDIALS_INSTALL_DIR}/lib/cmake/sundials/")
+             "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
@@ -290,7 +296,7 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
 endif()
 
 target_compile_definitions(
-  ${PROJECT_NAME} PRIVATE $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
+  ${PROJECT_NAME} PUBLIC $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
 
 target_link_libraries(
   ${PROJECT_NAME}
@@ -324,7 +330,10 @@ if(HDF5_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC hdf5::hdf5_hl_cpp hdf5::hdf5_hl
                                                hdf5::hdf5_cpp hdf5::hdf5)
 else()
-  message(STATUS "HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
+  message(
+    STATUS
+      "HDF5 support disabled or HDF5 library not found. Building AMICI WITHOUT HDF5 support."
+  )
 endif()
 
 if(AMICI_PYTHON_BUILD_EXT_ONLY)

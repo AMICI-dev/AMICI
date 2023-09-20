@@ -60,7 +60,9 @@ def test_get_fixed_parameters(simple_sbml_model):
         )
     )
     parameter_df = petab.get_parameter_df(
-        pd.DataFrame({petab.PARAMETER_ID: ["p3", "p4"], petab.ESTIMATE: [0, 1]})
+        pd.DataFrame(
+            {petab.PARAMETER_ID: ["p3", "p4"], petab.ESTIMATE: [0, 1]}
+        )
     )
     print(condition_df)
     print(parameter_df)
@@ -122,7 +124,9 @@ def test_default_output_parameters(simple_sbml_model):
         )
         assert (
             1.0
-            == sbml_importer.sbml.getParameter("observableParameter1_obs1").getValue()
+            == sbml_importer.sbml.getParameter(
+                "observableParameter1_obs1"
+            ).getValue()
         )
 
         with pytest.raises(ValueError):

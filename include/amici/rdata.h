@@ -361,14 +361,14 @@ class ReturnData : public ModelDimensions {
     /** initial state (shape `nx`) */
     std::vector<realtype> x0;
 
-    /** preequilibration steady state found by Newton solver (shape `nx`) */
+    /** preequilibration steady state (shape `nx`) */
     std::vector<realtype> x_ss;
 
     /** initial sensitivities (shape `nplist` x `nx`, row-major) */
     std::vector<realtype> sx0;
 
     /**
-     * preequilibration sensitivities found by Newton solver
+     * preequilibration sensitivities
      * (shape `nplist` x `nx`, row-major)
      */
     std::vector<realtype> sx_ss;

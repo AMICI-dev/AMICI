@@ -23,7 +23,9 @@ from .petab_util import PREEQ_INDICATOR_ID, get_states_in_condition_table
 logger = get_logger(__name__, logging.WARNING)
 
 
-def _add_observation_model(pysb_model: pysb.Model, petab_problem: petab.Problem):
+def _add_observation_model(
+    pysb_model: pysb.Model, petab_problem: petab.Problem
+):
     """Extend PySB model by observation model as defined in the PEtab
     observables table"""
 
@@ -65,7 +67,9 @@ def _add_observation_model(pysb_model: pysb.Model, petab_problem: petab.Problem)
         local_syms[sigma_id] = sigma_expr
 
 
-def _add_initialization_variables(pysb_model: pysb.Model, petab_problem: petab.Problem):
+def _add_initialization_variables(
+    pysb_model: pysb.Model, petab_problem: petab.Problem
+):
     """Add initialization variables to the PySB model to support initial
     conditions specified in the PEtab condition table.
 
@@ -92,7 +96,8 @@ def _add_initialization_variables(pysb_model: pysb.Model, petab_problem: petab.P
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug(
-            "Adding preequilibration indicator constant " f"{PREEQ_INDICATOR_ID}"
+            "Adding preequilibration indicator constant "
+            f"{PREEQ_INDICATOR_ID}"
         )
     logger.debug(f"Adding initial assignments for {initial_states.keys()}")
 
@@ -131,7 +136,9 @@ def _add_initialization_variables(pysb_model: pysb.Model, petab_problem: petab.P
         pysb_model.add_component(formula)
 
         for initial in pysb_model.initials:
-            if match_complex_pattern(initial.pattern, species_pattern, exact=True):
+            if match_complex_pattern(
+                initial.pattern, species_pattern, exact=True
+            ):
                 logger.debug(
                     "The PySB model has an initial defined for species "
                     f"{assignee_id}, but this species  also has an initial "
@@ -226,9 +233,14 @@ def import_model_pysb(
             f"column: {x}"
         )
 
-    from .petab_import import get_fixed_parameters, petab_noise_distributions_to_amici
+    from .petab_import import (
+        get_fixed_parameters,
+        petab_noise_distributions_to_amici,
+    )
 
-    constant_parameters = get_fixed_parameters(petab_problem) + fixed_parameters
+    constant_parameters = (
+        get_fixed_parameters(petab_problem) + fixed_parameters
+    )
 
     if petab_problem.observable_df is None:
         observables = None
@@ -243,7 +255,9 @@ def import_model_pysb(
 
         sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
-        noise_distrs = petab_noise_distributions_to_amici(petab_problem.observable_df)
+        noise_distrs = petab_noise_distributions_to_amici(
+            petab_problem.observable_df
+        )
 
     from amici.pysb_import import pysb2amici
 

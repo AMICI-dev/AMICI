@@ -37,6 +37,10 @@ publications:
   of Biochemical Reaction Networks.** *bioRxiv* 2022.08.08.503176.
   DOI: `10.1101/2022.08.08.503176 <https://doi.org/10.1101/2022.08.08.503176>`_.
 
+* L. Contento, P. Stapor, D. Weindl, and J. Hasenauer, "A more expressive spline
+  representation for SBML models improves code generation performance in AMICI,"
+  bioRxiv, 2023, DOI: `10.1101/2023.06.29.547120 <https://doi.org/10.1101/2023.06.29.547120>`_.
+
 .. note::
 
    Implementation details of the latest AMICI versions may differ from the ones

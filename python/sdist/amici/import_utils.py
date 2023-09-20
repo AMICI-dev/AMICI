@@ -45,14 +45,18 @@ class CircularDependencyError(ValueError):
         s = "Circular dependencies exist among these items: {{{}}}".format(
             ", ".join(
                 "{!r}:{!r}".format(key, value)
-                for key, value in sorted({str(k): v for k, v in data.items()}.items())
+                for key, value in sorted(
+                    {str(k): v for k, v in data.items()}.items()
+                )
             )
         )
         super(CircularDependencyError, self).__init__(s)
         self.data = data
 
 
-setattr(sys.modules["toposort"], "CircularDependencyError", CircularDependencyError)
+setattr(
+    sys.modules["toposort"], "CircularDependencyError", CircularDependencyError
+)
 
 annotation_namespace = "https://github.com/AMICI-dev/AMICI"
 
@@ -215,7 +219,8 @@ def noise_distribution_to_cost_function(
         y_string = "log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}"
     elif noise_distribution == "log10-laplace":
         y_string = (
-            "log(2*{sigma}*{m}*log(10)) " "+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}"
+            "log(2*{sigma}*{m}*log(10)) "
+            "+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}"
         )
     elif noise_distribution in ["binomial", "lin-binomial"]:
         # Binomial noise model parameterized via success probability p
@@ -236,7 +241,9 @@ def noise_distribution_to_cost_function(
             f"- {{m}} * log({{sigma}})"
         )
     else:
-        raise ValueError(f"Cost identifier {noise_distribution} not recognized.")
+        raise ValueError(
+            f"Cost identifier {noise_distribution} not recognized."
+        )
 
     def nllh_y_string(str_symbol):
         y, m, sigma = _get_str_symbol_identifiers(str_symbol)
@@ -252,7 +259,10 @@ def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
 
 
 def smart_subs_dict(
-    sym: sp.Expr, subs: SymbolDef, field: Optional[str] = None, reverse: bool = True
+    sym: sp.Expr,
+    subs: SymbolDef,
+    field: Optional[str] = None,
+    reverse: bool = True,
 ) -> sp.Expr:
     """
     Substitutes expressions completely flattening them out. Requires
@@ -275,7 +285,8 @@ def smart_subs_dict(
         Substituted symbolic expression
     """
     s = [
-        (eid, expr[field] if field is not None else expr) for eid, expr in subs.items()
+        (eid, expr[field] if field is not None else expr)
+        for eid, expr in subs.items()
     ]
     if reverse:
         s.reverse()
@@ -306,7 +317,9 @@ def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
     return element.subs(old, new) if element.has(old) else element
 
 
-def toposort_symbols(symbols: SymbolDef, field: Optional[str] = None) -> SymbolDef:
+def toposort_symbols(
+    symbols: SymbolDef, field: Optional[str] = None
+) -> SymbolDef:
     """
     Topologically sort symbol definitions according to their interdependency
 
@@ -383,7 +396,9 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     if sym.__class__.__name__ in fun_mappings:
         return fun_mappings[sym.__class__.__name__](*args)
 
-    elif sym.__class__.__name__ == "piecewise" or isinstance(sym, sp.Piecewise):
+    elif sym.__class__.__name__ == "piecewise" or isinstance(
+        sym, sp.Piecewise
+    ):
         if isinstance(sym, sp.Piecewise):
             # this is sympy piecewise, can't be nested
             denested_args = args
@@ -435,7 +450,9 @@ def _denest_piecewise(
             # piece was picked
             previous_was_picked = sp.false
             # recursively denest those first
-            for sub_coeff, sub_cond in grouper(_denest_piecewise(cond.args), 2, True):
+            for sub_coeff, sub_cond in grouper(
+                _denest_piecewise(cond.args), 2, True
+            ):
                 # flatten the individual pieces
                 pick_this = sp.And(sp.Not(previous_was_picked), sub_cond)
                 if sub_coeff == sp.true:
@@ -516,7 +533,9 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
     # or(x,y) = not(and(not(x),not(y))
     if isinstance(trigger, sp.Or):
-        return 1 - sp.Mul(*[1 - _parse_heaviside_trigger(arg) for arg in trigger.args])
+        return 1 - sp.Mul(
+            *[1 - _parse_heaviside_trigger(arg) for arg in trigger.args]
+        )
 
     if isinstance(trigger, sp.And):
         return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
@@ -527,7 +546,9 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     )
 
 
-def grouper(iterable: Iterable, n: int, fillvalue: Any = None) -> Iterable[Tuple[Any]]:
+def grouper(
+    iterable: Iterable, n: int, fillvalue: Any = None
+) -> Iterable[Tuple[Any]]:
     """
     Collect data into fixed-length chunks or blocks
 
@@ -586,9 +607,10 @@ def _check_unsupported_functions(
         sp.core.function.UndefinedFunction,
     )
 
-    if isinstance(sym.func, unsupported_functions) or isinstance(
-        sym, unsupported_functions
-    ):
+    if (
+        isinstance(sym.func, unsupported_functions)
+        or isinstance(sym, unsupported_functions)
+    ) and getattr(sym.func, "name", "") != "rateOf":
         raise RuntimeError(
             f"Encountered unsupported expression "
             f'"{sym.func}" of type '
@@ -658,7 +680,9 @@ def generate_regularization_symbol(observable_id: Union[str, sp.Symbol]):
     return symbol_with_assumptions(f"r{observable_id}")
 
 
-def generate_flux_symbol(reaction_index: int, name: Optional[str] = None) -> sp.Symbol:
+def generate_flux_symbol(
+    reaction_index: int, name: Optional[str] = None
+) -> sp.Symbol:
     """
     Generate identifier symbol for a reaction flux.
     This function will always return the same unique python object for a

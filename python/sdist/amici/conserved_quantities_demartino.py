@@ -60,7 +60,9 @@ def compute_moiety_conservation_laws(
 
     if not done:
         # construct interaction matrix
-        J, J2, fields = _fill(stoichiometric_list, engaged_species, num_species)
+        J, J2, fields = _fill(
+            stoichiometric_list, engaged_species, num_species
+        )
 
         # seed random number generator
         if rng_seed is not False:
@@ -87,7 +89,10 @@ def compute_moiety_conservation_laws(
 
             if timer == max_num_monte_carlo:
                 done = _relax(
-                    stoichiometric_list, conserved_moieties, num_reactions, num_species
+                    stoichiometric_list,
+                    conserved_moieties,
+                    num_reactions,
+                    num_species,
                 )
                 timer = 0
     _reduce(int_kernel_dim, cls_species_idxs, cls_coefficients, num_species)
@@ -139,14 +144,23 @@ def _output(
             if not engaged_species_idxs:
                 continue
             log(
-                f"Moiety number {i + 1} engages {len(engaged_species_idxs)} " "species:"
+                f"Moiety number {i + 1} engages {len(engaged_species_idxs)} "
+                "species:"
             )
-            for species_idx, coefficient in zip(engaged_species_idxs, coefficients):
-                name = species_names[species_idx] if species_names else species_idx
+            for species_idx, coefficient in zip(
+                engaged_species_idxs, coefficients
+            ):
+                name = (
+                    species_names[species_idx]
+                    if species_names
+                    else species_idx
+                )
                 log(f"\t{name}\t{coefficient}")
 
 
-def _qsort(k: int, km: int, order: MutableSequence[int], pivots: Sequence[int]) -> None:
+def _qsort(
+    k: int, km: int, order: MutableSequence[int], pivots: Sequence[int]
+) -> None:
     """Quicksort
 
     Recursive implementation of the quicksort algorithm
@@ -230,7 +244,9 @@ def _kernel(
         matrix2[i].append(1)
 
     order: List[int] = list(range(num_species))
-    pivots = [matrix[i][0] if len(matrix[i]) else _MAX for i in range(num_species)]
+    pivots = [
+        matrix[i][0] if len(matrix[i]) else _MAX for i in range(num_species)
+    ]
 
     done = False
     while not done:
@@ -241,7 +257,8 @@ def _kernel(
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(
-                            min1, abs(matrix2[order[j]][0] / matrix2[order[j]][i])
+                            min1,
+                            abs(matrix2[order[j]][0] / matrix2[order[j]][i]),
                         )
 
                 min2 = _MAX
@@ -249,7 +266,10 @@ def _kernel(
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(
                             min2,
-                            abs(matrix2[order[j + 1]][0] / matrix2[order[j + 1]][i]),
+                            abs(
+                                matrix2[order[j + 1]][0]
+                                / matrix2[order[j + 1]][i]
+                            ),
                         )
 
                 if min2 > min1:
@@ -289,7 +309,9 @@ def _kernel(
     kernel_dim = 0
 
     for i in range(num_species):
-        done = all(matrix[i][j] >= num_reactions for j in range(len(matrix[i])))
+        done = all(
+            matrix[i][j] >= num_reactions for j in range(len(matrix[i]))
+        )
         if done and len(matrix[i]):
             for j in range(len(matrix[i])):
                 RSolutions[kernel_dim].append(matrix[i][j] - num_reactions)
@@ -330,7 +352,8 @@ def _kernel(
 
     assert int_kernel_dim <= kernel_dim
     assert len(cls_species_idxs) == len(cls_coefficients), (
-        "Inconsistent number of conserved quantities in coefficients and " "species"
+        "Inconsistent number of conserved quantities in coefficients and "
+        "species"
     )
     return (
         kernel_dim,
@@ -343,7 +366,9 @@ def _kernel(
 
 
 def _fill(
-    stoichiometric_list: Sequence[float], matched: Sequence[int], num_species: int
+    stoichiometric_list: Sequence[float],
+    matched: Sequence[int],
+    num_species: int,
 ) -> Tuple[List[List[int]], List[List[int]], List[int]]:
     """Construct interaction matrix
 
@@ -460,14 +485,18 @@ def _is_linearly_dependent(
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(
-                            min1, abs(matrix2[order[j]][0] / matrix2[order[j]][i])
+                            min1,
+                            abs(matrix2[order[j]][0] / matrix2[order[j]][i]),
                         )
                 min2 = _MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(
                             min2,
-                            abs(matrix2[order[j + 1]][0] / matrix2[order[j + 1]][i]),
+                            abs(
+                                matrix2[order[j + 1]][0]
+                                / matrix2[order[j + 1]][i]
+                            ),
                         )
                 if min2 > min1:
                     # swap
@@ -549,7 +578,9 @@ def _monte_carlo(
         considered otherwise the algorithm retries Monte Carlo up to max_iter
     """
     dim = len(matched)
-    num = [int(2 * random.uniform(0, 1)) if len(J[i]) else 0 for i in range(dim)]
+    num = [
+        int(2 * random.uniform(0, 1)) if len(J[i]) else 0 for i in range(dim)
+    ]
     numtot = sum(num)
 
     def compute_h():
@@ -611,7 +642,12 @@ def _monte_carlo(
 
     # founds MCLS? need to check for linear independence
     if len(int_matched) and not _is_linearly_dependent(
-        num, int_kernel_dim, cls_species_idxs, cls_coefficients, matched, num_species
+        num,
+        int_kernel_dim,
+        cls_species_idxs,
+        cls_coefficients,
+        matched,
+        num_species,
     ):
         logger.debug("Found a moiety but it is linearly dependent... next.")
         return False, int_kernel_dim, int_matched
@@ -708,14 +744,18 @@ def _relax(
                 if len(matrix[order[j]]) > 1:
                     for i in range(len(matrix[order[j]])):
                         min1 = min(
-                            min1, abs(matrix2[order[j]][0] / matrix2[order[j]][i])
+                            min1,
+                            abs(matrix2[order[j]][0] / matrix2[order[j]][i]),
                         )
                 min2 = _MAX
                 if len(matrix[order[j + 1]]) > 1:
                     for i in range(len(matrix[order[j + 1]])):
                         min2 = min(
                             min2,
-                            abs(matrix2[order[j + 1]][0] / matrix2[order[j + 1]][i]),
+                            abs(
+                                matrix2[order[j + 1]][0]
+                                / matrix2[order[j + 1]][i]
+                            ),
                         )
                 if min2 > min1:
                     # swap
@@ -774,7 +814,9 @@ def _relax(
                     row_k[matrix[j][a]] -= matrix2[j][a] * matrix2[k][i]
                 # filter
                 matrix[k] = [
-                    row_idx for row_idx, row_val in enumerate(row_k) if row_val != 0
+                    row_idx
+                    for row_idx, row_val in enumerate(row_k)
+                    if row_val != 0
                 ]
                 matrix2[k] = [row_val for row_val in row_k if row_val != 0]
 

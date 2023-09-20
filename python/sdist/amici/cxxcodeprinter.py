@@ -68,7 +68,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
     def _print_min_max(self, expr, cpp_fun: str, sympy_fun):
         # C++ doesn't like mixing int and double for arguments for min/max,
         #  therefore, we just always convert to float
-        arg0 = sp.Float(expr.args[0]) if expr.args[0].is_number else expr.args[0]
+        arg0 = (
+            sp.Float(expr.args[0]) if expr.args[0].is_number else expr.args[0]
+        )
         if len(expr.args) == 1:
             return self._print(arg0)
         return "%s%s(%s, %s)" % (
@@ -108,13 +110,18 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
             C++ code as list of lines
         """
         return [
-            " " * indent_level + f"{variable}[{index}] = " f"{self.doprint(math)};"
+            " " * indent_level + f"{variable}[{index}] = "
+            f"{self.doprint(math)};"
             for index, math in enumerate(equations)
             if math not in [0, 0.0]
         ]
 
     def _get_sym_lines_symbols(
-        self, symbols: sp.Matrix, equations: sp.Matrix, variable: str, indent_level: int
+        self,
+        symbols: sp.Matrix,
+        equations: sp.Matrix,
+        variable: str,
+        indent_level: int,
     ) -> List[str]:
         """
         Generate C++ code for where array elements are directly replaced with
@@ -146,7 +153,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         if self.extract_cse:
             # Extract common subexpressions
             cse_sym_prefix = "__amici_cse_"
-            symbol_generator = numbered_symbols(cls=sp.Symbol, prefix=cse_sym_prefix)
+            symbol_generator = numbered_symbols(
+                cls=sp.Symbol, prefix=cse_sym_prefix
+            )
             replacements, reduced_exprs = sp.cse(
                 equations,
                 symbols=symbol_generator,
@@ -162,7 +171,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                 sorted_symbols = toposort(
                     {
                         identifier: {
-                            s for s in definition.free_symbols if s in expr_dict
+                            s
+                            for s in definition.free_symbols
+                            if s in expr_dict
                         }
                         for (identifier, definition) in expr_dict.items()
                     }
@@ -178,7 +189,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                             f"= {self.doprint(math)};"
                         )
                     elif math not in [0, 0.0]:
-                        return format_regular_line(symbol, math, symbol_to_idx[symbol])
+                        return format_regular_line(
+                            symbol, math, symbol_to_idx[symbol]
+                        )
 
                 return [
                     line
@@ -247,7 +260,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
                 symbol_row_vals.append(row)
                 idx += 1
-                symbol_name = f"d{rownames[row].name}" f"_d{colnames[col].name}"
+                symbol_name = (
+                    f"d{rownames[row].name}" f"_d{colnames[col].name}"
+                )
                 if identifier:
                     symbol_name += f"_{identifier}"
                 symbol_list.append(symbol_name)
@@ -267,7 +282,13 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         else:
             sparse_list = sp.Matrix(sparse_list)
 
-        return symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix
+        return (
+            symbol_col_ptrs,
+            symbol_row_vals,
+            sparse_list,
+            symbol_list,
+            sparse_matrix,
+        )
 
     @staticmethod
     def print_bool(expr) -> str:

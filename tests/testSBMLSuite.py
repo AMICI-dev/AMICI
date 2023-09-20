@@ -46,7 +46,9 @@ def sbml_test_dir():
     sys.path = old_path
 
 
-def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
+def test_sbml_testsuite_case(
+    test_number, result_path, sbml_semantic_cases_dir
+):
     test_id = format_test_id(test_number)
     model_dir = None
 
@@ -69,7 +71,8 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
         results_file = current_test_path / f"{test_id}-results.csv"
         results = pd.read_csv(results_file, delimiter=",")
         results.rename(
-            columns={c: c.replace(" ", "") for c in results.columns}, inplace=True
+            columns={c: c.replace(" ", "") for c in results.columns},
+            inplace=True,
         )
 
         # TODO remove after https://github.com/AMICI-dev/AMICI/pull/2101
@@ -109,7 +112,9 @@ def test_sbml_testsuite_case(test_number, result_path, sbml_semantic_cases_dir):
                 raise RuntimeError("Simulation failed unexpectedly")
 
         # verify simulation results
-        simulated = verify_results(settings, rdata, results, wrapper, model, atol, rtol)
+        simulated = verify_results(
+            settings, rdata, results, wrapper, model, atol, rtol
+        )
 
         # record results
         write_result_file(simulated, test_id, result_path)
@@ -189,7 +194,10 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
     # collect states
     simulated = pd.DataFrame(
         rdata["y"],
-        columns=[obs["name"] for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()],
+        columns=[
+            obs["name"]
+            for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()
+        ],
     )
     simulated["time"] = rdata["ts"]
     # collect parameters
@@ -201,14 +209,18 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
             simulated[expr_id.removeprefix("flux_")] = rdata.w[:, expr_idx]
     # handle renamed reserved symbols
     simulated.rename(
-        columns={c: c.replace("amici_", "") for c in simulated.columns}, inplace=True
+        columns={c: c.replace("amici_", "") for c in simulated.columns},
+        inplace=True,
     )
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
     requested_concentrations = [
         s
-        for s in settings["concentration"].replace(" ", "").replace("\n", "").split(",")
+        for s in settings["concentration"]
+        .replace(" ", "")
+        .replace("\n", "")
+        .split(",")
         if s
     ]
     # We only need to convert species that have only substance units
@@ -218,7 +230,8 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
             **wrapper.symbols[SymbolId.SPECIES],
             **wrapper.symbols[SymbolId.ALGEBRAIC_STATE],
         }.items()
-        if str(state_id) in requested_concentrations and state.get("amount", False)
+        if str(state_id) in requested_concentrations
+        and state.get("amount", False)
     ]
     amounts_to_concentrations(
         concentration_species, wrapper, simulated, requested_concentrations
@@ -291,7 +304,9 @@ def concentrations_to_amounts(
         # Species with OnlySubstanceUnits don't have to be converted as long
         # as we don't request concentrations for them. Only applies when
         # called from amounts_to_concentrations.
-        if (is_amt and species not in requested_concentrations) or comp is None:
+        if (
+            is_amt and species not in requested_concentrations
+        ) or comp is None:
             continue
 
         simulated.loc[:, species] *= simulated.loc[
@@ -299,7 +314,9 @@ def concentrations_to_amounts(
         ]
 
 
-def write_result_file(simulated: pd.DataFrame, test_id: str, result_path: Path):
+def write_result_file(
+    simulated: pd.DataFrame, test_id: str, result_path: Path
+):
     """
     Create test result file for upload to
     http://raterule.caltech.edu/Facilities/Database
@@ -316,10 +333,14 @@ def get_amount_and_variables(settings):
     """Read amount and species from settings file"""
 
     # species for which results are expected as amounts
-    amount_species = settings["amount"].replace(" ", "").replace("\n", "").split(",")
+    amount_species = (
+        settings["amount"].replace(" ", "").replace("\n", "").split(",")
+    )
 
     # IDs of all variables for which results are expected/provided
-    variables = settings["variables"].replace(" ", "").replace("\n", "").split(",")
+    variables = (
+        settings["variables"].replace(" ", "").replace("\n", "").split(",")
+    )
 
     return amount_species, variables
 

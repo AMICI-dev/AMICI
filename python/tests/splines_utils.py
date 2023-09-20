@@ -267,7 +267,9 @@ def create_petab_problem(
     problem.to_files(
         model_file=os.path.join(folder, f"{model_name}_model.xml"),
         condition_file=os.path.join(folder, f"{model_name}_conditions.tsv"),
-        measurement_file=os.path.join(folder, f"{model_name}_measurements.tsv"),
+        measurement_file=os.path.join(
+            folder, f"{model_name}_measurements.tsv"
+        ),
         parameter_file=os.path.join(folder, f"{model_name}_parameters.tsv"),
         observable_file=os.path.join(folder, f"{model_name}_observables.tsv"),
         yaml_file=os.path.join(folder, f"{model_name}.yaml"),
@@ -370,15 +372,24 @@ def simulate_splines(
                 )
 
     if petab_problem is None and amici_model is not None:
-        raise ValueError("if amici_model is given, petab_problem must be given too")
+        raise ValueError(
+            "if amici_model is given, petab_problem must be given too"
+        )
 
     if petab_problem is not None and initial_values is None:
-        raise ValueError("if petab_problem is given, initial_values must be given too")
+        raise ValueError(
+            "if petab_problem is given, initial_values must be given too"
+        )
 
     if petab_problem is None:
         # Create PEtab problem
         path, initial_values, T = create_petab_problem(
-            splines, params_true, initial_values, sigma=0.0, folder=folder, **kwargs
+            splines,
+            params_true,
+            initial_values,
+            sigma=0.0,
+            folder=folder,
+            **kwargs,
         )
         petab_problem = petab.Problem.from_yaml(path)
 
@@ -462,14 +473,18 @@ def simulate_splines(
     )
 
 
-def compute_ground_truth(splines, initial_values, times, params_true, params_sorted):
+def compute_ground_truth(
+    splines, initial_values, times, params_true, params_sorted
+):
     x_true_sym = sp.Matrix(
         [
             integrate_spline(spline, None, times, iv)
             for (spline, iv) in zip(splines, initial_values)
         ]
     ).transpose()
-    groundtruth = {"x_true": np.asarray(x_true_sym.subs(params_true), dtype=float)}
+    groundtruth = {
+        "x_true": np.asarray(x_true_sym.subs(params_true), dtype=float)
+    }
     sx_by_state = [
         x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
         for i in range(x_true_sym.shape[1])
@@ -567,7 +582,9 @@ def check_splines(
 
     # Sort splines/ics/parameters as in the AMICI model
     splines = [splines[species_to_index(name)] for name in state_ids]
-    initial_values = [initial_values[species_to_index(name)] for name in state_ids]
+    initial_values = [
+        initial_values[species_to_index(name)] for name in state_ids
+    ]
 
     def param_by_name(id):
         for p in params_true.keys():
@@ -667,7 +684,9 @@ def check_splines(
             )
         elif debug == "print":
             sx_err_abs = abs(rdata["sx"] - sx_true)
-            sx_err_rel = np.where(sx_err_abs == 0, 0, sx_err_abs / abs(sx_true))
+            sx_err_rel = np.where(
+                sx_err_abs == 0, 0, sx_err_abs / abs(sx_true)
+            )
             print(f"sx_atol={sx_atol} sx_rtol={sx_rtol}")
             print("sx_err_abs:")
             print(np.squeeze(sx_err_abs))
@@ -696,7 +715,9 @@ def check_splines(
             if sllh_atol is None:
                 sllh_atol = np.finfo(float).eps
             sllh_err_abs = abs(sllh).max()
-            if (sllh_err_abs > sllh_atol and debug is not True) or debug == "print":
+            if (
+                sllh_err_abs > sllh_atol and debug is not True
+            ) or debug == "print":
                 print(f"sllh_atol={sllh_atol}")
                 print(f"sllh_err_abs = {sllh_err_abs}")
             if not debug:
@@ -705,7 +726,11 @@ def check_splines(
         assert sllh is None
 
     # Try different parameter lists
-    if not skip_sensitivity and (not use_adjoint) and parameter_lists is not None:
+    if (
+        not skip_sensitivity
+        and (not use_adjoint)
+        and parameter_lists is not None
+    ):
         for plist in parameter_lists:
             amici_model.setParameterList(plist)
             amici_model.setTimepoints(rdata.t)
@@ -884,7 +909,11 @@ def example_spline_1(
                 params[yy[i]] = yy_true[i]
 
     spline = CubicHermiteSpline(
-        f"y{idx}", nodes=xx, values_at_nodes=yy, bc=None, extrapolate=extrapolate
+        f"y{idx}",
+        nodes=xx,
+        values_at_nodes=yy,
+        bc=None,
+        extrapolate=extrapolate,
     )
 
     if os.name == "nt":
@@ -911,7 +940,11 @@ def example_spline_2(idx: int = 0):
     yy.append(yy[0])
     params = dict(zip(yy, yy_true))
     spline = CubicHermiteSpline(
-        f"y{idx}", nodes=xx, values_at_nodes=yy, bc="periodic", extrapolate="periodic"
+        f"y{idx}",
+        nodes=xx,
+        values_at_nodes=yy,
+        bc="periodic",
+        extrapolate="periodic",
     )
     tols = (
         dict(llh_rtol=1e-15),
