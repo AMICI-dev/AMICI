@@ -74,6 +74,13 @@ Saccharomyces Cerevisiae.”</span> <em>Metabolic Engineering</em> 75:
 12–18. <a
 href="https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/10.1016/j.ymben.2022.11.003</a>.
 </div>
+<div id="ref-RaimundezFed2023" class="csl-entry" role="doc-biblioentry">
+Raimúndez, Elba, Michael Fedders, and Jan Hasenauer. 2023.
+<span>“Posterior Marginalization Accelerates Bayesian Inference for
+Dynamical Models of Biological Processes.”</span>
+<em><span>iScience</span></em>, September, 108083. <a
+href="https://doi.org/10.1016/j.isci.2023.108083">https://doi.org/10.1016/j.isci.2023.108083</a>.
+</div>
 <div id="ref-SluijsZho2023" class="csl-entry" role="doc-biblioentry">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu Baltussen, Frank
 Nelissen, Hans Heus, and Wilhelm Huck. 2023. <span>“Inverse Design of
@@ -130,12 +137,6 @@ Chromatography Development Using Discontinuous Galerkin Methods Coupled
 with Forward Sensitivity Analysis.”</span> <em>Journal of Chromatography
 A</em>, 463741. <a
 href="https://doi.org/10.1016/j.chroma.2022.463741">https://doi.org/10.1016/j.chroma.2022.463741</a>.
-</div>
-<div id="ref-RaimundezFed2022" class="csl-entry" role="doc-biblioentry">
-Raimundez, Elba, Michael Fedders, and Jan Hasenauer. 2022.
-<span>“Posterior Marginalization Accelerates Bayesian Inference for
-Dynamical Systems.”</span> <em>bioRxiv</em>. <a
-href="https://doi.org/10.1101/2022.12.02.518841">https://doi.org/10.1101/2022.12.02.518841</a>.
 </div>
 <div id="ref-SchmuckerFar2022" class="csl-entry" role="doc-biblioentry">
 Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali
