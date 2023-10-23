@@ -56,12 +56,12 @@ jobs:
       run: |
         scripts/buildBNGL.sh
 
-    # until https://github.com/dateutil/dateutil >2.8.2 is released
-    - run: pip install git+https://github.com/dateutil/dateutil.git@296d419fe6bf3b22897f8f210735ac9c4e1cb796
-
     - name: Install python package
       run: |
         scripts/installAmiciSource.sh
+
+    # until https://github.com/dateutil/dateutil >2.8.2 is released
+    - run: source build/venv/bin/activate && pip3 install git+https://github.com/dateutil/dateutil.git@296d419fe6bf3b22897f8f210735ac9c4e1cb796
 
     - name: Python tests
       run: |
