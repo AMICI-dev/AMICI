@@ -57,7 +57,7 @@ jobs:
         scripts/buildBNGL.sh
 
     # until https://github.com/dateutil/dateutil >2.8.2 is released
-    - run: pip install https://github.com/dateutil/dateutil/archive/296d419fe6bf3b22897f8f210735ac9c4e1cb796.zip
+    - run: pip install git+https://github.com/dateutil/dateutil.git@296d419fe6bf3b22897f8f210735ac9c4e1cb796
 
     - name: Install python package
       run: |
