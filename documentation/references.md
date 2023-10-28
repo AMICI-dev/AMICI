@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 80.
+List of publications using AMICI. Total number is 81.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -66,6 +66,12 @@ Hasenauer. 2023. <span>“Efficient Computation of Adjoint Sensitivities
 at Steady-State in ODE Models of Biochemical Reaction Networks.”</span>
 <em>PLOS Computational Biology</em> 19 (1): 1–19. <a
 href="https://doi.org/10.1371/journal.pcbi.1010783">https://doi.org/10.1371/journal.pcbi.1010783</a>.
+</div>
+<div id="ref-Mendes2023" class="csl-entry" role="doc-biblioentry">
+Mendes, Pedro. 2023. <span>“Reproducibility and FAIR Principles: The
+Case of a Segment Polarity Network Model.”</span> <em>Frontiers in Cell
+and Developmental Biology</em> 11. <a
+href="https://doi.org/10.3389/fcell.2023.1201673">https://doi.org/10.3389/fcell.2023.1201673</a>.
 </div>
 <div id="ref-MishraWan2023" class="csl-entry" role="doc-biblioentry">
 Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023.
