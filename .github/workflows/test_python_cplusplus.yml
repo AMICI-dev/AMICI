@@ -94,6 +94,7 @@ jobs:
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
+          --durations=10 \
           ${AMICI_DIR}/python/tests
 
 
@@ -105,6 +106,7 @@ jobs:
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
+          --durations=10 \
           ${AMICI_DIR}/python/tests/test_splines.py
 
     - name: Install notebook dependencies
