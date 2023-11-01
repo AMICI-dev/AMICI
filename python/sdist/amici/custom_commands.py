@@ -178,3 +178,9 @@ class AmiciBuildCMakeExtension(BuildExtension):
         super().build_extension(ext)
 
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
+
+    def finalize_options(self):
+        super().finalize_options()
+
+        if os.getenv("AMICI_BUILD_TEMP"):
+            self.build_temp = os.getenv("AMICI_BUILD_TEMP")
