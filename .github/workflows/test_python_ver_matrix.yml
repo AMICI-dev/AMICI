@@ -60,7 +60,7 @@ jobs:
       run: |
         scripts/installAmiciSource.sh
 
-    # until https://github.com/dateutil/dateutil >2.8.2 is released
+    # until https://github.com/dateutil/dateutil >2.8.2 is released https://github.com/dateutil/dateutil/issues/1314
     - run: source build/venv/bin/activate && pip3 install git+https://github.com/dateutil/dateutil.git@296d419fe6bf3b22897f8f210735ac9c4e1cb796
 
     - name: Python tests
