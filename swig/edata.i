@@ -77,6 +77,10 @@ def __repr__(self):
 
 def __eq__(self, other):
     return isinstance(other, self.__class__) and __eq__(self, other)
+
+def __deepcopy__(self, memo):
+    # invoke copy constructor
+    return type(self)(self)
 %}
 };
 %extend std::unique_ptr<amici::ExpData> {
