@@ -343,6 +343,7 @@ class ExpDataView(SwigPtrView):
     """
 
     _field_names = [
+        "ts",
         "observedData",
         "observedDataStdDev",
         "observedEvents",
@@ -363,7 +364,9 @@ class ExpDataView(SwigPtrView):
                 f"Unsupported pointer {type(edata)}, must be"
                 f"amici.ExpDataPtr!"
             )
-        self._field_dimensions = {  # observables
+        self._field_dimensions = {
+            "ts": [edata.nt()],
+            # observables
             "observedData": [edata.nt(), edata.nytrue()],
             "observedDataStdDev": [edata.nt(), edata.nytrue()],
             # event observables
@@ -378,6 +381,7 @@ class ExpDataView(SwigPtrView):
                 len(edata.fixedParametersPreequilibration)
             ],
         }
+        edata.ts = edata.ts_
         edata.observedData = edata.getObservedData()
         edata.observedDataStdDev = edata.getObservedDataStdDev()
         edata.observedEvents = edata.getObservedEvents()
