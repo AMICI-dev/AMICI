@@ -310,6 +310,10 @@ class ReturnDataView(SwigPtrView):
 
         return super().__getitem__(item)
 
+    def __repr__(self):
+        status = amici.simulation_status_to_str(self._swigptr.status)
+        return f"<{self.__class__.__name__}(id={self._swigptr.id!r}, status={status})>"
+
     def by_id(
         self, entity_id: str, field: str = None, model: Model = None
     ) -> np.array:
@@ -359,6 +363,7 @@ class ExpDataView(SwigPtrView):
     """
 
     _field_names = [
+        "ts",
         "observedData",
         "observedDataStdDev",
         "observedEvents",
@@ -379,7 +384,9 @@ class ExpDataView(SwigPtrView):
                 f"Unsupported pointer {type(edata)}, must be"
                 f"amici.ExpDataPtr!"
             )
-        self._field_dimensions = {  # observables
+        self._field_dimensions = {
+            "ts": [edata.nt()],
+            # observables
             "observedData": [edata.nt(), edata.nytrue()],
             "observedDataStdDev": [edata.nt(), edata.nytrue()],
             # event observables
@@ -394,6 +401,7 @@ class ExpDataView(SwigPtrView):
                 len(edata.fixedParametersPreequilibration)
             ],
         }
+        edata.ts = edata.ts_
         edata.observedData = edata.getObservedData()
         edata.observedDataStdDev = edata.getObservedDataStdDev()
         edata.observedEvents = edata.getObservedEvents()
