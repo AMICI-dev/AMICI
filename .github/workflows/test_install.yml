@@ -22,17 +22,15 @@ jobs:
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
-    # install amici dependencies
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
     - name: apt
       run: |
         sudo apt-get update \
           && sudo apt-get install -y \
             cmake \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
+            g++
 
     - name: Build suitesparse
       run: |
