@@ -21,7 +21,8 @@ jobs:
       with:
         fetch-depth: 20
 
-    - uses: ./.github/actions/setup-swig
+    - name: Set up SWIG
+      uses: ./.github/actions/setup-swig
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 

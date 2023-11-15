@@ -16,5 +16,5 @@ runs:
       run: scripts/downloadAndBuildSwig.sh
       shell: bash
 
-    - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-${INPUT_SWIG_VERSION}/install/bin/swig" >> $GITHUB_ENV
+    - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-${{ inputs.swig_version }}/install/bin/swig" >> $GITHUB_ENV
       shell: bash
