@@ -442,3 +442,12 @@ def test_edata_repr():
             assert expected_str in repr(e)
     # avoid double delete!!
     edata_ptr.release()
+
+
+def test_edata_equality_operator():
+    e1 = amici.ExpData(1, 2, 3, [3])
+    e2 = amici.ExpData(1, 2, 3, [3])
+    assert e1 == e2
+    # check that comparison with other types works
+    # this is not implemented by swig by default
+    assert e1 != 1
