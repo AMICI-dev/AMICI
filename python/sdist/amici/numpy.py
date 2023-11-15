@@ -297,6 +297,10 @@ class ReturnDataView(SwigPtrView):
 
         return super().__getitem__(item)
 
+    def __repr__(self):
+        status = amici.simulation_status_to_str(self._swigptr.status)
+        return f"<{self.__class__.__name__}(id={self._swigptr.id!r}, status={status})>"
+
     def by_id(
         self, entity_id: str, field: str = None, model: Model = None
     ) -> np.array:
