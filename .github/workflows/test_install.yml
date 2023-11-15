@@ -29,8 +29,7 @@ jobs:
       run: |
         sudo apt-get update \
           && sudo apt-get install -y \
-            cmake \
-            g++
+            cmake
 
     - name: Build suitesparse
       run: |
@@ -68,16 +67,8 @@ jobs:
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
-    # install amici dependencies
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
 
     - name: Create AMICI sdist
       run: |
