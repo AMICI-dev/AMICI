@@ -44,8 +44,7 @@ jobs:
             && sudo apt-get install -y python3-venv
 
       - name: Build BNGL
-        run: |
-          scripts/buildBNGL.sh
+        run: scripts/buildBNGL.sh
 
       - run: |
           echo "${HOME}/.local/bin/" >> $GITHUB_PATH
@@ -54,8 +53,7 @@ jobs:
 
       # install AMICI
       - name: Install python package
-        run: |
-          scripts/installAmiciSource.sh
+        run: scripts/installAmiciSource.sh
 
       - name: Install petab
         run: |

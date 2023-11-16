@@ -59,18 +59,18 @@ jobs:
       - name: Set up doxygen
         uses: ./.github/actions/setup-doxygen
 
-      # install amici dependencies
-      - name: apt
+      - name: Install apt dependencies
+        uses: ./.github/actions/install-apt-dependencies
+
+      - name: Install further dependencies
         run: |
           sudo apt-get update \
             && sudo apt-get install -y \
-              g++ \
-              libatlas-base-dev \
-              libboost-serialization-dev \
               pandoc \
-              python3-venv \
+              python3-venv
 
-      - uses: ./.github/actions/setup-swig
+      - name: Set up SWIG
+        uses: ./.github/actions/setup-swig
 
-      - name: sphinx
+      - name: Run sphinx
         run: scripts/run-sphinx.sh
