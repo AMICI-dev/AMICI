@@ -7,6 +7,7 @@ import copy
 import numbers
 
 import amici
+import numpy as np
 
 
 def test_version_number(pysb_example_presimulation_module):
@@ -451,3 +452,21 @@ def test_edata_equality_operator():
     # check that comparison with other types works
     # this is not implemented by swig by default
     assert e1 != 1
+
+
+def test_expdata_and_expdataview_are_deepcopyable():
+    edata1 = amici.ExpData(3, 2, 3, range(4))
+    edata1.setObservedData(np.zeros((3, 4)).flatten())
+
+    # ExpData
+    edata2 = copy.deepcopy(edata1)
+    assert edata1 == edata2
+    assert edata1.this != edata2.this
+    edata2.setTimepoints([0])
+    assert edata1 != edata2
+
+    # ExpDataView
+    ev1 = amici.ExpDataView(edata1)
+    ev2 = copy.deepcopy(ev1)
+    assert ev2._swigptr.this != ev1._swigptr.this
+    assert ev1 == ev2
