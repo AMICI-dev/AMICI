@@ -55,7 +55,6 @@ jobs:
       - run: git fetch --prune --unshallow
 
       - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-      - run: echo "SWIG=${AMICI_DIR}/ThirdParty/swig-4.1.1/install/bin/swig" >> $GITHUB_ENV
 
       - name: Set up doxygen
         uses: ./.github/actions/setup-doxygen
@@ -71,9 +70,7 @@ jobs:
               pandoc \
               python3-venv \
 
-      - name: Build swig
-        run: |
-          sudo scripts/downloadAndBuildSwig.sh
+      - uses: ./.github/actions/setup-swig
 
       - name: sphinx
         run: scripts/run-sphinx.sh
