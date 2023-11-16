@@ -44,8 +44,8 @@ jobs:
 
     # install AMICI
     - name: Create AMICI sdist
-      run: |
-        pip3 install build && cd python/sdist && python3 -m build --sdist
+      run: pip3 install build && cd python/sdist && python3 -m build --sdist
+
     - name: Install AMICI sdist
       run: |
         pip3 install --user petab[vis] && \
