@@ -30,8 +30,7 @@ jobs:
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
     - name: sdist
-      run: |
-        scripts/buildSdist.sh
+      run: scripts/buildSdist.sh
 
     - name: Publish a Python distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1

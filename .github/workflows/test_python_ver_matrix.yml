@@ -46,11 +46,9 @@ jobs:
 
     # install AMICI
     - name: Build BNGL
-      run: |
-        scripts/buildBNGL.sh
+      run: scripts/buildBNGL.sh
     - name: Install python package
-      run: |
-        scripts/installAmiciSource.sh
+      run: scripts/installAmiciSource.sh
 
     - name: Python tests
       run: |

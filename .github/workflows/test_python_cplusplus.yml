@@ -47,26 +47,20 @@ jobs:
         sudo apt-get update \
           && sudo apt-get install -y \
             cmake \
-            g++ \
             python3-venv \
-            lcov \
-            libboost-math-dev
+            lcov
 
     - name: Build AMICI dependencies
-      run: |
-        scripts/buildDependencies.sh
+      run: scripts/buildDependencies.sh
 
     - name: Build AMICI
-      run: |
-        CI_SONARCLOUD=TRUE scripts/buildAmici.sh
+      run: CI_SONARCLOUD=TRUE scripts/buildAmici.sh
 
     - name: C++ tests
-      run: |
-        scripts/run-cpp-tests.sh
+      run: scripts/run-cpp-tests.sh
 
     - name: Install python package
-      run: |
-        scripts/installAmiciSource.sh
+      run: scripts/installAmiciSource.sh
 
     - name: Python tests
       run: |
@@ -98,12 +92,10 @@ jobs:
         && pip install jax[cpu]
 
     - name: example notebooks
-      run: |
-        scripts/runNotebook.sh python/examples/example_*/
+      run: scripts/runNotebook.sh python/examples/example_*/
 
     - name: doc notebooks
-      run: |
-        scripts/runNotebook.sh documentation/GettingStarted.ipynb
+      run: scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
     - name: Codecov Python
       uses: codecov/codecov-action@v3.1.0
@@ -143,7 +135,6 @@ jobs:
 
   osx:
     name: Tests OSX
-
     runs-on: macos-latest
 
     steps:
@@ -170,21 +161,16 @@ jobs:
           && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
 
     - name: Build AMICI
-      run: |
-        scripts/buildAll.sh
+      run: scripts/buildAll.sh
 
     - name: Install python package
-      run: |
-        scripts/installAmiciSource.sh
+      run: scripts/installAmiciSource.sh
 
     - name: cppcheck
-      run: |
-        scripts/run-cppcheck.sh
+      run: scripts/run-cppcheck.sh
 
     - name: Python tests
-      run: |
-        scripts/run-python-tests.sh
+      run: scripts/run-python-tests.sh
 
     - name: C++ tests
-      run: |
-        scripts/run-cpp-tests.sh
+      run: scripts/run-cpp-tests.sh
