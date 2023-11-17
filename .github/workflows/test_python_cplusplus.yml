@@ -207,33 +207,7 @@ jobs:
     - name: doc notebooks
       run: scripts/runNotebook.sh documentation/GettingStarted.ipynb
 
-    - name: Codecov Python
-      uses: codecov/codecov-action@v3.1.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: build/coverage_py.xml
-        flags: python
-        fail_ci_if_error: true
-        verbose: true
-
-    - name: Capture coverage info (lcov)
-      run: |
-        lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
-        -b ${AMICI_DIR} -c -o coverage_cpp.info \
-        && lcov --compat-libtool --no-external \
-        -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
-        -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
-        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
-
-    - name: Run sonar-scanner
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
-         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
+    # TODO: Include notebooks in coverage report
 
   osx:
     name: Tests OSX
