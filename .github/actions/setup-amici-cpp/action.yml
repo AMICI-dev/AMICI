@@ -24,6 +24,15 @@ runs:
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies
 
+    - name: Install additional apt dependencies
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+            cmake \
+            python3-venv \
+            lcov
+      shell: bash
+
     - name: Build AMICI dependencies
       run: scripts/buildDependencies.sh
       shell: bash
