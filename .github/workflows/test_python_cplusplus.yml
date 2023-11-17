@@ -8,20 +8,13 @@ on:
       - master
 
 jobs:
-  build:
+  ubuntu-cpp-tests:
     name: Tests Ubuntu
-
-    # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-22.04
-
-    env:
-      AMICI_PARALLEL_COMPILE: ""
-      ENABLE_GCOV_COVERAGE: "TRUE"
-      CI_SONARCLOUD: "TRUE"
 
     strategy:
       matrix:
-        python-version: [ 3.9 ]
+        python-version: [ "3.9" ]
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
@@ -33,31 +26,51 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - run: echo "BNGPATH=${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
 
-    - name: Set up Sonar tools
-      uses: ./.github/actions/setup-sonar-tools
-
-    - name: Install apt dependencies
-      uses: ./.github/actions/install-apt-dependencies
-
-    # install amici dependencies
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-            cmake \
-            python3-venv \
-            lcov
-
-    - name: Build AMICI dependencies
-      run: scripts/buildDependencies.sh
-
-    - name: Build AMICI
-      run: CI_SONARCLOUD=TRUE scripts/buildAmici.sh
+    - name: Set up AMICI C++ libraries
+      uses: ./.github/actions/setup-amici-cpp
 
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
+
+    - name: Codecov CPP
+      uses: codecov/codecov-action@v3.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage.info
+        flags: cpp
+        fail_ci_if_error: true
+
+    - name: Run sonar-scanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        sonar-scanner \
+         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
+
+  ubuntu-python-tests:
+    name: Tests Ubuntu
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [ "3.9" ]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v3
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+
+    - name: Set up AMICI C++ libraries
+      uses: ./.github/actions/setup-amici-cpp
 
     - name: Install python package
       run: scripts/installAmiciSource.sh
@@ -74,7 +87,6 @@ jobs:
           --durations=10 \
           ${AMICI_DIR}/python/tests
 
-
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
       run: |
@@ -85,6 +97,68 @@ jobs:
           --cov-append \
           --durations=10 \
           ${AMICI_DIR}/python/tests/test_splines.py
+
+    - name: Codecov Python
+      uses: codecov/codecov-action@v3.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: build/coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
+
+    - name: lcov
+      run: |
+        lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR} -c -o coverage_cpp.info \
+        && lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
+        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+
+    - name: Codecov CPP
+      uses: codecov/codecov-action@v3.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage.info
+        flags: cpp_python
+        fail_ci_if_error: true
+
+    - name: Run sonar-scanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        sonar-scanner \
+         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
+
+
+  ubuntu-notebook-tests:
+    name: Tests Ubuntu
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        python-version: [ "3.9" ]
+
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v3
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+
+    - name: Set up AMICI C++ libraries
+      uses: ./.github/actions/setup-amici-cpp
+
+    - name: Install python package
+      run: scripts/installAmiciSource.sh
 
     - name: Install notebook dependencies
       run: |
@@ -115,14 +189,6 @@ jobs:
         -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
-
-    - name: Codecov CPP
-      uses: codecov/codecov-action@v3.1.0
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage.info
-        flags: cpp
-        fail_ci_if_error: true
 
     - name: Run sonar-scanner
       env:
