@@ -8,8 +8,8 @@ on:
       - master
 
 jobs:
-  ubuntu-cpp-tests:
-    name: C++ tests Ubuntu
+  ubuntu-cpp-python-tests:
+    name: C++/Python tests Ubuntu
     runs-on: ubuntu-22.04
 
     strategy:
@@ -33,11 +33,59 @@ jobs:
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
+
+    - name: Install python package
+      run: scripts/installAmiciSource.sh
+
+    - name: Python tests (part 1)
+      run: |
+        source build/venv/bin/activate \
+        && pytest \
+          --ignore-glob=*petab* \
+          --ignore-glob=*test_splines.py \
+          --ignore-glob=*test_splines_short.py \
+          --ignore-glob=*test_pysb.py \
+          --cov=amici \
+          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
+          --cov-append \
+          --durations=10 \
+          ${AMICI_DIR}/python/tests
+
+    - name: Python tests splines
+      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
+      run: |
+        source build/venv/bin/activate \
+        && pytest \
+          --cov=amici \
+          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
+          --cov-append \
+          --durations=10 \
+          ${AMICI_DIR}/python/tests/test_splines.py
+
+    - name: Codecov Python
+      uses: codecov/codecov-action@v3.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: build/coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        verbose: true
+
+    - name: Capture coverage info (lcov)
+      run: |
+        lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR} -c -o coverage_cpp.info \
+        && lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
+        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+
     - name: Codecov CPP
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage.info
+        file: coverage_cpp.info
         flags: cpp
         fail_ci_if_error: true
 
@@ -79,24 +127,12 @@ jobs:
       run: |
         source build/venv/bin/activate \
         && pytest \
-          --ignore-glob=*petab* \
-          --ignore-glob=*test_splines.py \
           --cov=amici \
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           --durations=10 \
-          ${AMICI_DIR}/python/tests
-
-    - name: Python tests splines
-      if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
-      run: |
-        source build/venv/bin/activate \
-        && pytest \
-          --cov=amici \
-          --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
-          --cov-append \
-          --durations=10 \
-          ${AMICI_DIR}/python/tests/test_splines.py
+          ${AMICI_DIR}/python/tests/test_pysb.py \
+          ${AMICI_DIR}/python/tests/test_splines_short.py
 
     - name: Codecov Python
       uses: codecov/codecov-action@v3.1.0
@@ -107,7 +143,7 @@ jobs:
         fail_ci_if_error: true
         verbose: true
 
-    - name: lcov
+    - name: Capture coverage info (lcov)
       run: |
         lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
@@ -180,7 +216,7 @@ jobs:
         fail_ci_if_error: true
         verbose: true
 
-    - name: lcov
+    - name: Capture coverage info (lcov)
       run: |
         lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
