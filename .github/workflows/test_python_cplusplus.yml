@@ -33,7 +33,6 @@ jobs:
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
-
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
@@ -85,7 +84,7 @@ jobs:
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: coverage_cpp.info
+        file: coverage.info
         flags: cpp
         fail_ci_if_error: true
 
