@@ -8,7 +8,7 @@ on:
       - master
 
 jobs:
-  ubuntu-cpp-tests:
+  build:
     name: C++ tests Ubuntu
     runs-on: ubuntu-22.04
 
