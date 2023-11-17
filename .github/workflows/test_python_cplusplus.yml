@@ -9,7 +9,7 @@ on:
 
 jobs:
   ubuntu-cpp-tests:
-    name: Tests Ubuntu
+    name: C++ tests Ubuntu
     runs-on: ubuntu-22.04
 
     strategy:
@@ -51,7 +51,7 @@ jobs:
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
   ubuntu-python-tests:
-    name: Tests Ubuntu
+    name: Python tests Ubuntu
     runs-on: ubuntu-22.04
 
     strategy:
@@ -136,7 +136,7 @@ jobs:
 
 
   ubuntu-notebook-tests:
-    name: Tests Ubuntu
+    name: Notebook tests Ubuntu
     runs-on: ubuntu-22.04
 
     strategy:
