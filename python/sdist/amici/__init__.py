@@ -6,7 +6,6 @@ The AMICI Python module provides functionality for importing SBML or PySB
 models and turning them into C++ Python extensions.
 """
 
-
 import contextlib
 import importlib
 import os
@@ -131,6 +130,8 @@ if not _imported_from_setup():
         def get_model(self) -> amici.Model:
             """Create a model instance."""
             ...
+
+    AmiciModel = Union[amici.Model, amici.ModelPtr]
 
 
 class add_path:

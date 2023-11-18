@@ -29,7 +29,8 @@ from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from petab.parameters import get_valid_parameters_for_parameter_table
 from sympy.abc import _clash
 
-from .petab_util import PREEQ_INDICATOR_ID, get_states_in_condition_table
+from .petab import PREEQ_INDICATOR_ID
+from .petab.util import get_states_in_condition_table
 
 try:
     from amici.petab_import_pysb import import_model_pysb
