@@ -40,7 +40,6 @@ from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 from sympy.abc import _clash
 
 from .. import AmiciModel
-from ..parameter_mapping import ParameterMapping, ParameterMappingForCondition
 from . import PREEQ_INDICATOR_ID
 from .util import get_states_in_condition_table
 
