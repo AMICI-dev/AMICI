@@ -28,6 +28,12 @@ from petab.C import *  # noqa: F403
 SingleParameterMapping = Dict[str, Union[numbers.Number, str]]
 SingleScaleMapping = Dict[str, str]
 
+# some extra imports for backward-compatibility
+from .petab.conditions import (  # noqa # pylint: disable=unused-import
+    fill_in_parameters,
+    fill_in_parameters_for_condition,
+)
+
 
 class ParameterMappingForCondition:
     """Parameter mapping for condition.
