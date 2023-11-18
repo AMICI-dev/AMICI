@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 81.
+List of publications using AMICI. Total number is 82.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -57,6 +57,13 @@ Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
 <span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
 Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
 href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
+</div>
+<div id="ref-HuckBal2023" class="csl-entry" role="doc-biblioentry">
+Huck, Wilhelm, Mathieu Baltussen, Thijs de Jong, Quentin Duez, and
+William Robinson. 2023. <span>“Chemical Reservoir Computation in a
+Self-Organizing Reaction Network.”</span> Research Square Platform LLC.
+<a
+href="https://doi.org/10.21203/rs.3.rs-3487081/v1">https://doi.org/10.21203/rs.3.rs-3487081/v1</a>.
 </div>
 <div id="ref-LakrisenkoSta2023" class="csl-entry"
 role="doc-biblioentry">
