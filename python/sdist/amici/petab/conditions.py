@@ -18,7 +18,7 @@ from petab.C import (
     TIME,
 )
 
-from ..parameter_mapping import (
+from .parameter_mapping import (
     ParameterMapping,
     ParameterMappingForCondition,
     petab_to_amici_scale,
