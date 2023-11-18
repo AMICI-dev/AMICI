@@ -25,7 +25,6 @@ from ..parameter_mapping import (
     scale_parameters_dict,
     unscale_parameters_dict,
 )
-from .parameter_mapping import create_parameter_mapping
 from .util import get_states_in_condition_table
 
 logger = logging.getLogger(__name__)
@@ -255,6 +254,8 @@ def create_parameterized_edatas(
 
     # Get parameter mapping
     if parameter_mapping is None:
+        from .parameter_mapping import create_parameter_mapping
+
         parameter_mapping = create_parameter_mapping(
             petab_problem=petab_problem,
             simulation_conditions=simulation_conditions,
