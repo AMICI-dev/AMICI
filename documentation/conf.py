@@ -260,6 +260,7 @@ autodoc_default_options = {
 typehints_fully_qualified = True
 typehints_document_rtype = True
 set_type_checking_flag = True
+autodoc_typehints = "description"
 
 # hoverxref
 hoverxref_auto_ref = True
