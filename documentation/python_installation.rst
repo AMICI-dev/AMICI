@@ -13,7 +13,7 @@ Installation of the AMICI Python package has the following prerequisites:
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
 * a C++17 compatible C++ compiler and a C compiler
-  (e.g., g++, clang, Intel C++ compiler, mingw)
+  (e.g., g++>=9.1, clang>=12, Intel C++ compiler, mingw)
 
 If these requirements are fulfilled and all relevant paths are setup properly,
 AMICI can be installed using:
@@ -43,6 +43,9 @@ Install the AMICI dependencies via ``apt``
 
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
+
+    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+    libboost-chrono-dev libboost-math-dev libboost-serialization-dev
 
 Install AMICI:
 
@@ -88,13 +91,13 @@ Alternatively:
 
 .. code-block:: bash
 
-   sudo pacman -Si python swig openblas gcc hdf5 boost-libs 
+   sudo pacman -Si python swig openblas gcc hdf5 boost-libs
 
 2. Upgrade installed packages if required mininum versions are not satisfied for AMICI installation.
 
 .. code-block:: bash
 
-   sudo pacman -Su python swig openblas gcc hdf5 boost-libs 
+   sudo pacman -Su python swig openblas gcc hdf5 boost-libs
 
 3. Install AMICI:
 
@@ -116,7 +119,10 @@ Install the AMICI dependencies using homebrew:
     brew install hdf5
 
     # optionally for parallel simulations:
-    brew install libomp
+    brew install libomp && export OpenMP_ROOT=$(brew --prefix)/opt/libomp"
+
+    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+    brew install boost && export BOOST_ROOT=$(brew --prefix)/opt/boost
 
 Install AMICI:
 
