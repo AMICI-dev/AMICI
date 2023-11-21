@@ -4,6 +4,11 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(VERSION 3.15...3.27)
 
+# cmake >=3.27
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif(POLICY CMP0144)
+
 project(amici)
 
 # misc options
