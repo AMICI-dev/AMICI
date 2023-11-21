@@ -36,6 +36,9 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
+    - name: Check OpenMP support
+      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+
     - name: Python tests (part 1)
       run: |
         source build/venv/bin/activate \
@@ -225,21 +228,21 @@ jobs:
     - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
     # Ensure CMake is using the python version that we will use for the python tests later on
     - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
+    - run: echo "OpenMP_ROOT=$(brew --prefix)/opt/libomp" >> $GITHUB_ENV
+    - run: echo "BOOST_ROOT=$(brew --prefix)/opt/boost" >> $GITHUB_ENV
 
     # install amici dependencies
     - name: homebrew
-      run: |
-        brew install hdf5 swig gcc cppcheck libomp boost \
-          && brew ls -v boost \
-          && brew ls -v libomp \
-          && echo LDFLAGS="-L/usr/local/lib/ -L/usr/local/Cellar/boost/1.81.0_1/lib/" >> $GITHUB_ENV \
-          && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
+      run: brew install hdf5 swig gcc cppcheck libomp boost
 
     - name: Build AMICI
       run: scripts/buildAll.sh
 
     - name: Install python package
       run: scripts/installAmiciSource.sh
+
+    - name: Check OpenMP support
+      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: cppcheck
       run: scripts/run-cppcheck.sh
