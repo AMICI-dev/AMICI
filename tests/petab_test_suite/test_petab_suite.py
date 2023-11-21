@@ -13,7 +13,7 @@ from _pytest.outcomes import Skipped
 from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import import_petab_problem
+from amici.petab.petab_import import import_petab_problem
 from amici.petab_objective import (
     create_parameterized_edatas,
     rdatas_to_measurement_df,
