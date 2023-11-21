@@ -2,6 +2,46 @@
 
 ## v0.X Series
 
+### v0.20.0 (2023-11-23)
+
+**Fixes**
+
+* Fixed CMake cmake_minimum_required deprecation warning
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2183
+* Fixed misleading preequilibration failure messages
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2181
+* Removed setuptools<64 restriction
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2180
+* Fixed ExpData equality operator for Python
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2194
+* Enabled deepcopy for ExpData(View)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2196
+* Allowed subsetting simulation conditions in simulate_petab
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2199
+* Set CMake CMP0144 to prevent warning
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2209
+
+**Features**
+
+* Possibility to evaluate and plot symbolic expressions based on simulation results
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2152
+* Easier access to timepoints via ExpDataView
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2193
+* Nicer `__repr__` for ReturnDataView
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2192
+
+**Documentation**
+
+* Added installation instructions for Arch Linux
+  by @stephanmg in https://github.com/AMICI-dev/AMICI/pull/2173
+* Updated reference list
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2172
+* Installation guide: optional requirements
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2207
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.19.0...v0.20.0
+
+
 ### v0.19.0 (2023-08-26)
 
 **Features**
