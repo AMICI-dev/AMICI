@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 79.
+List of publications using AMICI. Total number is 82.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -51,6 +51,20 @@ Rewiring Contribute to Drug Resistance.”</span> <em>Molecular Systems
 Biology</em> 19 (2): e10988. <a
 href="https://doi.org/10.15252/msb.202210988">https://doi.org/10.15252/msb.202210988</a>.
 </div>
+<div id="ref-HasenauerMer2023" class="csl-entry" role="doc-biblioentry">
+Hasenauer, Jan, Simon Merkt, Solomon Ali, Esayas Gudina, Wondimagegn
+Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
+<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
+Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
+href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
+</div>
+<div id="ref-HuckBal2023" class="csl-entry" role="doc-biblioentry">
+Huck, Wilhelm, Mathieu Baltussen, Thijs de Jong, Quentin Duez, and
+William Robinson. 2023. <span>“Chemical Reservoir Computation in a
+Self-Organizing Reaction Network.”</span> Research Square Platform LLC.
+<a
+href="https://doi.org/10.21203/rs.3.rs-3487081/v1">https://doi.org/10.21203/rs.3.rs-3487081/v1</a>.
+</div>
 <div id="ref-LakrisenkoSta2023" class="csl-entry"
 role="doc-biblioentry">
 Lakrisenko, Polina, Paul Stapor, Stephan Grein, Łukasz Paszkowski, Dilan
@@ -60,12 +74,25 @@ at Steady-State in ODE Models of Biochemical Reaction Networks.”</span>
 <em>PLOS Computational Biology</em> 19 (1): 1–19. <a
 href="https://doi.org/10.1371/journal.pcbi.1010783">https://doi.org/10.1371/journal.pcbi.1010783</a>.
 </div>
+<div id="ref-Mendes2023" class="csl-entry" role="doc-biblioentry">
+Mendes, Pedro. 2023. <span>“Reproducibility and FAIR Principles: The
+Case of a Segment Polarity Network Model.”</span> <em>Frontiers in Cell
+and Developmental Biology</em> 11. <a
+href="https://doi.org/10.3389/fcell.2023.1201673">https://doi.org/10.3389/fcell.2023.1201673</a>.
+</div>
 <div id="ref-MishraWan2023" class="csl-entry" role="doc-biblioentry">
 Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023.
 <span>“Design and Application of a Kinetic Model of Lipid Metabolism in
 Saccharomyces Cerevisiae.”</span> <em>Metabolic Engineering</em> 75:
 12–18. <a
 href="https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/10.1016/j.ymben.2022.11.003</a>.
+</div>
+<div id="ref-RaimundezFed2023" class="csl-entry" role="doc-biblioentry">
+Raimúndez, Elba, Michael Fedders, and Jan Hasenauer. 2023.
+<span>“Posterior Marginalization Accelerates Bayesian Inference for
+Dynamical Models of Biological Processes.”</span>
+<em><span>iScience</span></em>, September, 108083. <a
+href="https://doi.org/10.1016/j.isci.2023.108083">https://doi.org/10.1016/j.isci.2023.108083</a>.
 </div>
 <div id="ref-SluijsZho2023" class="csl-entry" role="doc-biblioentry">
 Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu Baltussen, Frank
@@ -123,12 +150,6 @@ Chromatography Development Using Discontinuous Galerkin Methods Coupled
 with Forward Sensitivity Analysis.”</span> <em>Journal of Chromatography
 A</em>, 463741. <a
 href="https://doi.org/10.1016/j.chroma.2022.463741">https://doi.org/10.1016/j.chroma.2022.463741</a>.
-</div>
-<div id="ref-RaimundezFed2022" class="csl-entry" role="doc-biblioentry">
-Raimundez, Elba, Michael Fedders, and Jan Hasenauer. 2022.
-<span>“Posterior Marginalization Accelerates Bayesian Inference for
-Dynamical Systems.”</span> <em>bioRxiv</em>. <a
-href="https://doi.org/10.1101/2022.12.02.518841">https://doi.org/10.1101/2022.12.02.518841</a>.
 </div>
 <div id="ref-SchmuckerFar2022" class="csl-entry" role="doc-biblioentry">
 Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali
