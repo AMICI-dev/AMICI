@@ -7,7 +7,9 @@ import pytest
 import sympy as sp
 from amici.conserved_quantities_demartino import _fill, _kernel
 from amici.conserved_quantities_demartino import _output as output
-from amici.conserved_quantities_demartino import compute_moiety_conservation_laws
+from amici.conserved_quantities_demartino import (
+    compute_moiety_conservation_laws,
+)
 from amici.logging import get_logger, log_execution_time
 from amici.testing import skip_on_valgrind
 
@@ -165,7 +167,8 @@ def data_demartino2014():
     S = [
         int(item)
         for sl in [
-            entry.decode("ascii").strip().split("\t") for entry in data.readlines()
+            entry.decode("ascii").strip().split("\t")
+            for entry in data.readlines()
         ]
         for item in sl
     ]
@@ -175,7 +178,9 @@ def data_demartino2014():
         r"https://github.com/AMICI-dev/AMICI/files/11430970/test-ecoli-met.txt",
         timeout=10,
     )
-    row_names = [entry.decode("ascii").strip() for entry in io.BytesIO(response.read())]
+    row_names = [
+        entry.decode("ascii").strip() for entry in io.BytesIO(response.read())
+    ]
 
     return S, row_names
 
@@ -192,7 +197,9 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
     ), "Unexpected dimension of stoichiometric matrix"
 
     # Expected number of metabolites per conservation law found after kernel()
-    expected_num_species = [53] + [2] * 11 + [6] + [3] * 2 + [2] * 15 + [3] + [2] * 5
+    expected_num_species = (
+        [53] + [2] * 11 + [6] + [3] * 2 + [2] * 15 + [3] + [2] * 5
+    )
 
     (
         kernel_dim,
@@ -220,7 +227,9 @@ def test_kernel_demartino2014(data_demartino2014, quiet=True):
     assert (
         engaged_species == demartino2014_kernel_engaged_species
     ), "Wrong engaged metabolites reported"
-    assert len(conserved_moieties) == 128, "Wrong number of conserved moieties reported"
+    assert (
+        len(conserved_moieties) == 128
+    ), "Wrong number of conserved moieties reported"
 
     # Assert that each conserved moiety has the correct number of metabolites
     for i in range(int_kernel_dim - 2):
@@ -768,7 +777,9 @@ def test_fill_demartino2014(data_demartino2014):
     assert not any(fields[len(ref_for_fields) :])
 
 
-def compute_moiety_conservation_laws_demartino2014(data_demartino2014, quiet=False):
+def compute_moiety_conservation_laws_demartino2014(
+    data_demartino2014, quiet=False
+):
     """Compute conserved quantities for De Martino's published results
     for E. coli network"""
     stoichiometric_list, row_names = data_demartino2014
@@ -781,7 +792,9 @@ def compute_moiety_conservation_laws_demartino2014(data_demartino2014, quiet=Fal
 
     start = perf_counter()
     cls_state_idxs, cls_coefficients = compute_moiety_conservation_laws(
-        stoichiometric_list, num_species=num_species, num_reactions=num_reactions
+        stoichiometric_list,
+        num_species=num_species,
+        num_reactions=num_reactions,
     )
     runtime = perf_counter() - start
     if not quiet:
@@ -795,7 +808,9 @@ def compute_moiety_conservation_laws_demartino2014(data_demartino2014, quiet=Fal
 def test_compute_moiety_conservation_laws_demartino2014(data_demartino2014):
     """Invoke test case and benchmarking for De Martino's published results
     for E. coli network"""
-    compute_moiety_conservation_laws_demartino2014(data_demartino2014, quiet=False)
+    compute_moiety_conservation_laws_demartino2014(
+        data_demartino2014, quiet=False
+    )
 
 
 @skip_on_valgrind
@@ -826,7 +841,9 @@ def test_compute_moiety_conservation_laws_simple():
     stoichiometric_matrix = sp.Matrix(
         [[-1.0, 1.0], [-1.0, 1.0], [1.0, -1.0], [1.0, -1.0]]
     )
-    stoichiometric_list = [float(entry) for entry in stoichiometric_matrix.T.flat()]
+    stoichiometric_list = [
+        float(entry) for entry in stoichiometric_matrix.T.flat()
+    ]
 
     num_tries = 1000
     found_all_n_times = 0

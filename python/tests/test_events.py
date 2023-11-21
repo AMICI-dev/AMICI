@@ -15,10 +15,15 @@ from util import (
 @pytest.fixture(
     params=[
         pytest.param("events_plus_heavisides", marks=skip_on_valgrind),
-        pytest.param("piecewise_plus_event_simple_case", marks=skip_on_valgrind),
-        pytest.param("piecewise_plus_event_semi_complicated", marks=skip_on_valgrind),
         pytest.param(
-            "piecewise_plus_event_trigger_depends_on_state", marks=skip_on_valgrind
+            "piecewise_plus_event_simple_case", marks=skip_on_valgrind
+        ),
+        pytest.param(
+            "piecewise_plus_event_semi_complicated", marks=skip_on_valgrind
+        ),
+        pytest.param(
+            "piecewise_plus_event_trigger_depends_on_state",
+            marks=skip_on_valgrind,
         ),
         pytest.param("nested_events", marks=skip_on_valgrind),
         pytest.param("event_state_dep_ddeltax_dtpx", marks=skip_on_valgrind),
@@ -72,7 +77,9 @@ def get_model_definition(model_name):
     if model_name == "event_state_dep_ddeltax_dtpx":
         return model_definition_event_state_dep_ddeltax_dtpx()
 
-    raise NotImplementedError(f"Model with name {model_name} is not implemented.")
+    raise NotImplementedError(
+        f"Model with name {model_name} is not implemented."
+    )
 
 
 def model_definition_events_plus_heavisides():
@@ -289,7 +296,9 @@ def model_definition_nested_events():
 
         def get_early_x(t):
             # compute dynamics before event
-            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1 * np.exp(-decay_1 * t)
+            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1 * np.exp(
+                -decay_1 * t
+            )
             x_2 = k2 * np.exp(-decay_2 * t)
             return np.array([[x_1], [x_2]])
 
@@ -303,9 +312,9 @@ def model_definition_nested_events():
 
             # compute dynamics after event
             inhom = np.exp(decay_1 * event_time) * tau_x1
-            x_1 = equil * (1 - np.exp(decay_1 * (event_time - t))) + inhom * np.exp(
-                -decay_1 * t
-            )
+            x_1 = equil * (
+                1 - np.exp(decay_1 * (event_time - t))
+            ) + inhom * np.exp(-decay_1 * t)
             x_2 = tau_x2 * np.exp(decay_2 * event_time) * np.exp(-decay_2 * t)
 
             x = np.array([[x_1], [x_2]])
@@ -360,7 +369,11 @@ def model_definition_piecewise_plus_event_simple_case():
     }
     timepoints = np.linspace(0.0, 5.0, 100)  # np.array((0.0, 4.0,))
     events = {
-        "event_1": {"trigger": "time > alpha", "target": "x_1", "assignment": "gamma"},
+        "event_1": {
+            "trigger": "time > alpha",
+            "target": "x_1",
+            "assignment": "gamma",
+        },
         "event_2": {
             "trigger": "time > beta",
             "target": "x_1",
@@ -458,7 +471,8 @@ def model_definition_event_state_dep_ddeltax_dtpx():
         else:
             # after third event triggered
             x = (
-                ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (gamma - beta)
+                ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta
+                + (gamma - beta)
             ) ** 2 * 2 + (t - gamma)
 
         return np.array((x,))
@@ -541,7 +555,9 @@ def model_definition_piecewise_plus_event_semi_complicated():
             x_1 = x_1_heaviside_1 * np.exp(delta * (t - heaviside_1))
         else:
             x_1_heaviside_1 = gamma * np.exp(-(heaviside_1 - t_event_1))
-            x_1_at_event_2 = x_1_heaviside_1 * np.exp(delta * (t_event_2 - heaviside_1))
+            x_1_at_event_2 = x_1_heaviside_1 * np.exp(
+                delta * (t_event_2 - heaviside_1)
+            )
             x_2_at_event_2 = x_2_0 * np.exp(-eta * t_event_2)
             x1_after_event_2 = x_1_at_event_2 + x_2_at_event_2
             x_1 = x1_after_event_2 * np.exp(-(t - t_event_2))
@@ -666,8 +682,12 @@ def model_definition_piecewise_plus_event_trigger_depends_on_state():
 def test_models(model):
     amici_model, parameters, timepoints, x_expected, sx_expected = model
 
-    result_expected_x = np.array([x_expected(t, **parameters) for t in timepoints])
-    result_expected_sx = np.array([sx_expected(t, parameters) for t in timepoints])
+    result_expected_x = np.array(
+        [x_expected(t, **parameters) for t in timepoints]
+    )
+    result_expected_sx = np.array(
+        [sx_expected(t, parameters) for t in timepoints]
+    )
 
     # assert correctness of trajectories
     check_trajectories_without_sensitivities(amici_model, result_expected_x)

@@ -306,7 +306,9 @@ def import_petab_problem(
 
     if petab_problem.mapping_df is not None:
         # It's partially supported. Remove at your own risk...
-        raise NotImplementedError("PEtab v2.0.0 mapping tables are not yet supported.")
+        raise NotImplementedError(
+            "PEtab v2.0.0 mapping tables are not yet supported."
+        )
 
     model_name = model_name or petab_problem.model.model_id
 
@@ -366,7 +368,9 @@ def import_petab_problem(
     model = model_module.getModel()
     check_model(amici_model=model, petab_problem=petab_problem)
 
-    logger.info(f"Successfully loaded model {model_name} " f"from {model_output_dir}.")
+    logger.info(
+        f"Successfully loaded model {model_name} " f"from {model_output_dir}."
+    )
 
     return model
 
@@ -383,7 +387,9 @@ def check_model(
     amici_ids = amici_ids_free | set(amici_model.getFixedParameterIds())
 
     petab_ids_free = set(
-        petab_problem.parameter_df.loc[petab_problem.parameter_df[ESTIMATE] == 1].index
+        petab_problem.parameter_df.loc[
+            petab_problem.parameter_df[ESTIMATE] == 1
+        ].index
     )
 
     amici_ids_free_required = petab_ids_free.intersection(amici_ids)
@@ -429,7 +435,9 @@ def _create_model_name(folder: Union[str, Path]) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str, model_output_dir: Union[str, Path]) -> bool:
+def _can_import_model(
+    model_name: str, model_output_dir: Union[str, Path]
+) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
@@ -555,7 +563,8 @@ def import_model_sbml(
 
     if petab_problem.observable_df is None:
         raise NotImplementedError(
-            "PEtab import without observables table " "is currently not supported."
+            "PEtab import without observables table "
+            "is currently not supported."
         )
 
     assert isinstance(petab_problem.model, SbmlModel)
@@ -596,8 +605,10 @@ def import_model_sbml(
     )
     sbml_model = sbml_importer.sbml
 
-    allow_n_noise_pars = not petab.lint.observable_table_has_nontrivial_noise_formula(
-        petab_problem.observable_df
+    allow_n_noise_pars = (
+        not petab.lint.observable_table_has_nontrivial_noise_formula(
+            petab_problem.observable_df
+        )
     )
     if (
         petab_problem.measurement_df is not None
@@ -632,7 +643,9 @@ def import_model_sbml(
     #  so we add any output parameters to the SBML model.
     #  this should be changed to something more elegant
     # <BeginWorkAround>
-    formulas = chain((val["formula"] for val in observables.values()), sigmas.values())
+    formulas = chain(
+        (val["formula"] for val in observables.values()), sigmas.values()
+    )
     output_parameters = OrderedDict()
     for formula in formulas:
         # we want reproducible parameter ordering upon repeated import
@@ -649,10 +662,13 @@ def import_model_sbml(
             ):
                 output_parameters[sym] = None
     logger.debug(
-        "Adding output parameters to model: " f"{list(output_parameters.keys())}"
+        "Adding output parameters to model: "
+        f"{list(output_parameters.keys())}"
     )
     output_parameter_defaults = output_parameter_defaults or {}
-    if extra_pars := (set(output_parameter_defaults) - set(output_parameters.keys())):
+    if extra_pars := (
+        set(output_parameter_defaults) - set(output_parameters.keys())
+    ):
         raise ValueError(
             f"Default output parameter values were given for {extra_pars}, "
             "but they those are not output parameters."
@@ -691,7 +707,8 @@ def import_model_sbml(
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
         logger.debug(
-            "Adding preequilibration indicator " f"constant {PREEQ_INDICATOR_ID}"
+            "Adding preequilibration indicator "
+            f"constant {PREEQ_INDICATOR_ID}"
         )
     logger.debug(f"Adding initial assignments for {initial_states.keys()}")
     for assignee_id in initial_states:
@@ -756,7 +773,8 @@ def import_model_sbml(
     )
 
     if kwargs.get(
-        "compile", amici._get_default_argument(sbml_importer.sbml2amici, "compile")
+        "compile",
+        amici._get_default_argument(sbml_importer.sbml2amici, "compile"),
     ):
         # check that the model extension was compiled successfully
         model_module = amici.import_model_module(model_name, model_output_dir)
@@ -772,7 +790,9 @@ import_model = import_model_sbml
 
 def get_observation_model(
     observable_df: pd.DataFrame,
-) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str], Dict[str, Union[str, float]]]:
+) -> Tuple[
+    Dict[str, Dict[str, str]], Dict[str, str], Dict[str, Union[str, float]]
+]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
     table in a format suitable for
@@ -804,7 +824,9 @@ def get_observation_model(
     #  cannot handle states in sigma expressions. Therefore, where possible,
     #  replace species occurring in error model definition by observableIds.
     replacements = {
-        sp.sympify(observable["formula"], locals=_clash): sp.Symbol(observable_id)
+        sp.sympify(observable["formula"], locals=_clash): sp.Symbol(
+            observable_id
+        )
         for observable_id, observable in observables.items()
     }
     for observable_id, formula in sigmas.items():
@@ -816,7 +838,9 @@ def get_observation_model(
     return observables, noise_distrs, sigmas
 
 
-def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict[str, str]:
+def petab_noise_distributions_to_amici(
+    observable_df: pd.DataFrame,
+) -> Dict[str, str]:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
@@ -868,7 +892,9 @@ def show_model_info(sbml_model: "libsbml.Model"):
     """Log some model quantities"""
 
     logger.info(f"Species: {len(sbml_model.getListOfSpecies())}")
-    logger.info("Global parameters: " + str(len(sbml_model.getListOfParameters())))
+    logger.info(
+        "Global parameters: " + str(len(sbml_model.getListOfParameters()))
+    )
     logger.info(f"Reactions: {len(sbml_model.getListOfReactions())}")
 
 
@@ -930,20 +956,35 @@ def _parse_cli_args():
         "-s", "--sbml", dest="sbml_file_name", help="SBML model filename"
     )
     parser.add_argument(
-        "-m", "--measurements", dest="measurement_file_name", help="Measurement table"
+        "-m",
+        "--measurements",
+        dest="measurement_file_name",
+        help="Measurement table",
     )
     parser.add_argument(
-        "-c", "--conditions", dest="condition_file_name", help="Conditions table"
+        "-c",
+        "--conditions",
+        dest="condition_file_name",
+        help="Conditions table",
     )
     parser.add_argument(
-        "-p", "--parameters", dest="parameter_file_name", help="Parameter table"
+        "-p",
+        "--parameters",
+        dest="parameter_file_name",
+        help="Parameter table",
     )
     parser.add_argument(
-        "-b", "--observables", dest="observable_file_name", help="Observable table"
+        "-b",
+        "--observables",
+        dest="observable_file_name",
+        help="Observable table",
     )
 
     parser.add_argument(
-        "-y", "--yaml", dest="yaml_file_name", help="PEtab YAML problem filename"
+        "-y",
+        "--yaml",
+        dest="yaml_file_name",
+        help="PEtab YAML problem filename",
     )
 
     parser.add_argument(
@@ -956,7 +997,11 @@ def _parse_cli_args():
     args = parser.parse_args()
 
     if not args.yaml_file_name and not all(
-        (args.sbml_file_name, args.condition_file_name, args.observable_file_name)
+        (
+            args.sbml_file_name,
+            args.condition_file_name,
+            args.observable_file_name,
+        )
     ):
         parser.error(
             "When not specifying a model name or YAML file, then "

@@ -67,7 +67,8 @@ class ModelQuantity:
             hasattr(identifier, "name") and identifier.name in RESERVED_SYMBOLS
         ):
             raise ValueError(
-                f'Cannot add model quantity with name "{name}", ' f"please rename."
+                f'Cannot add model quantity with name "{name}", '
+                f"please rename."
             )
         self._identifier: sp.Symbol = identifier
 
@@ -301,7 +302,9 @@ class DifferentialState(State):
 
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr):
+    def __init__(
+        self, identifier: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr
+    ):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
         by ``dt``
@@ -335,7 +338,8 @@ class DifferentialState(State):
         """
         if not isinstance(law, ConservationLaw):
             raise TypeError(
-                f"conservation law must have type ConservationLaw" f", was {type(law)}"
+                f"conservation law must have type ConservationLaw"
+                f", was {type(law)}"
             )
 
         self._conservation_law = law
@@ -425,13 +429,17 @@ class Observable(ModelQuantity):
 
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
-            self._measurement_symbol = generate_measurement_symbol(self.get_id())
+            self._measurement_symbol = generate_measurement_symbol(
+                self.get_id()
+            )
 
         return self._measurement_symbol
 
     def get_regularization_symbol(self) -> sp.Symbol:
         if self._regularization_symbol is None:
-            self._regularization_symbol = generate_regularization_symbol(self.get_id())
+            self._regularization_symbol = generate_regularization_symbol(
+                self.get_id()
+            )
 
         return self._regularization_symbol
 
@@ -556,7 +564,9 @@ class Parameter(ModelQuantity):
     sensitivities may be computed, abbreviated by ``p``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: numbers.Number):
+    def __init__(
+        self, identifier: sp.Symbol, name: str, value: numbers.Number
+    ):
         """
         Create a new Expression instance.
 
@@ -579,7 +589,9 @@ class Constant(ModelQuantity):
     sensitivities cannot be computed, abbreviated by ``k``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: numbers.Number):
+    def __init__(
+        self, identifier: sp.Symbol, name: str, value: numbers.Number
+    ):
         """
         Create a new Expression instance.
 

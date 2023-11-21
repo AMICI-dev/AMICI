@@ -53,7 +53,9 @@ def test_subset_call(petab_problem):
 
     simulator0 = PetabSimulator(petab_problem)
     assert not (Path(model_output_dir) / model_name).is_dir()
-    simulator0.simulate(model_name=model_name, model_output_dir=model_output_dir)
+    simulator0.simulate(
+        model_name=model_name, model_output_dir=model_output_dir
+    )
     # Model name is handled correctly
     assert simulator0.amici_model.getName() == model_name
     # Check model output directory is created, by

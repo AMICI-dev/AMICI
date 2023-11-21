@@ -7,6 +7,7 @@ import copy
 import numbers
 
 import amici
+import numpy as np
 
 
 def test_version_number(pysb_example_presimulation_module):
@@ -49,7 +50,9 @@ def test_copy_constructors(pysb_example_presimulation_module):
 
             obj_clone = obj.clone()
 
-            assert get_val(obj, attr) == get_val(obj_clone, attr), f"{obj} - {attr}"
+            assert get_val(obj, attr) == get_val(
+                obj_clone, attr
+            ), f"{obj} - {attr}"
 
 
 # `None` values are skipped in `test_model_instance_settings`.
@@ -165,16 +168,22 @@ def test_model_instance_settings(pysb_example_presimulation_module):
     # The new model has the default settings.
     model_default_settings = amici.get_model_settings(model)
     for name in model_instance_settings:
-        if (name == "InitialStates" and not model.hasCustomInitialStates()) or (
+        if (
+            name == "InitialStates" and not model.hasCustomInitialStates()
+        ) or (
             name
-            == ("getInitialStateSensitivities", "setUnscaledInitialStateSensitivities")
+            == (
+                "getInitialStateSensitivities",
+                "setUnscaledInitialStateSensitivities",
+            )
             and not model.hasCustomInitialStateSensitivities()
         ):
             # Here the expected value differs from what the getter would return
             assert model_default_settings[name] == []
         else:
             assert (
-                model_default_settings[name] == model_instance_settings[name][i_default]
+                model_default_settings[name]
+                == model_instance_settings[name][i_default]
             ), name
 
     # The grouped setter method works.
@@ -221,7 +230,9 @@ def test_interdependent_settings(pysb_example_presimulation_module):
     # Some values need to be transformed to be tested in Python
     # (e.g. SWIG objects). Default transformer is no transformation
     # (the identity function).
-    getter_transformers = {setting: (lambda x: x) for setting in original_settings}
+    getter_transformers = {
+        setting: (lambda x: x) for setting in original_settings
+    }
     getter_transformers.update(
         {
             # Convert from SWIG object.
@@ -311,7 +322,9 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         name
         for names in model_instance_settings
         for name in (
-            names if isinstance(names, tuple) else (f"get{names}", f"set{names}")
+            names
+            if isinstance(names, tuple)
+            else (f"get{names}", f"set{names}")
         )
     ]
 
@@ -375,7 +388,9 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert not model.hasCustomInitialStateSensitivities()
     settings = amici.get_model_settings(model)
     model.setInitialStates(model.getInitialStates())
-    model.setUnscaledInitialStateSensitivities(model.getInitialStateSensitivities())
+    model.setUnscaledInitialStateSensitivities(
+        model.getInitialStateSensitivities()
+    )
     amici.set_model_settings(model, settings)
     assert not model.hasCustomInitialStates()
     assert not model.hasCustomInitialStateSensitivities()
@@ -428,3 +443,30 @@ def test_edata_repr():
             assert expected_str in repr(e)
     # avoid double delete!!
     edata_ptr.release()
+
+
+def test_edata_equality_operator():
+    e1 = amici.ExpData(1, 2, 3, [3])
+    e2 = amici.ExpData(1, 2, 3, [3])
+    assert e1 == e2
+    # check that comparison with other types works
+    # this is not implemented by swig by default
+    assert e1 != 1
+
+
+def test_expdata_and_expdataview_are_deepcopyable():
+    edata1 = amici.ExpData(3, 2, 3, range(4))
+    edata1.setObservedData(np.zeros((3, 4)).flatten())
+
+    # ExpData
+    edata2 = copy.deepcopy(edata1)
+    assert edata1 == edata2
+    assert edata1.this != edata2.this
+    edata2.setTimepoints([0])
+    assert edata1 != edata2
+
+    # ExpDataView
+    ev1 = amici.ExpDataView(edata1)
+    ev2 = copy.deepcopy(ev1)
+    assert ev2._swigptr.this != ev1._swigptr.this
+    assert ev1 == ev2

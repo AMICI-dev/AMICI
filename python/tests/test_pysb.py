@@ -141,7 +141,9 @@ def test_compare_to_pysb_simulation(example):
 
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(
-            os.path.join(os.path.dirname(__file__), "..", "tests", "pysb_test_models")
+            os.path.join(
+                os.path.dirname(__file__), "..", "tests", "pysb_test_models"
+            )
         ):
             # load example
             pysb.SelfExporter.cleanup()  # reset pysb
@@ -185,7 +187,9 @@ def test_compare_to_pysb_simulation(example):
                     observables=list(pysb_model.observables.keys()),
                 )
 
-                amici_model_module = amici.import_model_module(pysb_model.name, outdir)
+                amici_model_module = amici.import_model_module(
+                    pysb_model.name, outdir
+                )
                 model_pysb = amici_model_module.getModel()
                 model_pysb.setTimepoints(tspan)
 
@@ -196,7 +200,9 @@ def test_compare_to_pysb_simulation(example):
                 rdata = amici.runAmiciSimulation(model_pysb, solver)
 
                 # check agreement of species simulations
-                assert np.isclose(rdata["x"], pysb_simres.species, 1e-4, 1e-4).all()
+                assert np.isclose(
+                    rdata["x"], pysb_simres.species, 1e-4, 1e-4
+                ).all()
 
                 if example not in [
                     "fricker_2010_apoptosis",
@@ -325,7 +331,8 @@ def test_heavyside_and_special_symbols():
         "deg",
         a() >> None,
         pysb.Expression(
-            "rate", sp.Piecewise((1, pysb.Observable("a", a()) < 1), (0.0, True))
+            "rate",
+            sp.Piecewise((1, pysb.Observable("a", a()) < 1), (0.0, True)),
         ),
     )
 
@@ -374,4 +381,6 @@ def test_energy():
         solver.setRelativeTolerance(1e-14)
         solver.setAbsoluteTolerance(1e-14)
 
-        check_derivatives(amici_model, solver, epsilon=1e-4, rtol=1e-2, atol=1e-2)
+        check_derivatives(
+            amici_model, solver, epsilon=1e-4, rtol=1e-2, atol=1e-2
+        )

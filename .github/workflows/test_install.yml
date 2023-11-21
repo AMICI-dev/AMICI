@@ -22,33 +22,26 @@ jobs:
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
-    # install amici dependencies
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
     - name: apt
       run: |
         sudo apt-get update \
           && sudo apt-get install -y \
-            cmake \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
+            cmake
 
     - name: Build suitesparse
-      run: |
-        scripts/buildSuiteSparse.sh
+      run: scripts/buildSuiteSparse.sh
 
     - name: Build sundials
-      run: |
-        scripts/buildSundials.sh
+      run: scripts/buildSundials.sh
 
     - name: Build AMICI
-      run: |
-        scripts/buildAmici.sh
+      run: scripts/buildAmici.sh
 
     - name: Install python archive
-      run: |
-        scripts/installAmiciArchive.sh
+      run: scripts/installAmiciArchive.sh
 
   sdist_ubuntu:
     name: sdist Install Ubuntu
@@ -70,28 +63,17 @@ jobs:
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
-    # install amici dependencies
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
 
     - name: Create AMICI sdist
-      run: |
-        scripts/buildSdist.sh
+      run: scripts/buildSdist.sh
 
     - name: Install python sdist
-      run: |
-        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+      run: pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
 
     - name: Test import
-      run: |
-        python -m amici
+      run: python -m amici
 
 
   sdist_macos:
@@ -124,13 +106,10 @@ jobs:
           && echo CPPFLAGS="-I /usr/local/Cellar/boost/1.81.0_1/include/" >> $GITHUB_ENV
 
     - name: Create AMICI sdist
-      run: |
-        scripts/buildSdist.sh
+      run: scripts/buildSdist.sh
 
     - name: Install python sdist
-      run: |
-        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+      run: pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
 
     - name: Test import
-      run: |
-        python -m amici
+      run: python -m amici

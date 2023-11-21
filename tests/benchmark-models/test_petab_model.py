@@ -16,7 +16,12 @@ import pandas as pd
 import petab
 import yaml
 from amici.logging import get_logger
-from amici.petab_objective import LLH, RDATAS, rdatas_to_measurement_df, simulate_petab
+from amici.petab_objective import (
+    LLH,
+    RDATAS,
+    rdatas_to_measurement_df,
+    simulate_petab,
+)
 from petab.visualize import plot_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -86,7 +91,8 @@ def parse_cli_args():
         "-o",
         "--simulation-file",
         dest="simulation_file",
-        help="File to write simulation result to, in PEtab" "measurement table format.",
+        help="File to write simulation result to, in PEtab"
+        "measurement table format.",
     )
 
     return parser.parse_args()
@@ -162,10 +168,14 @@ def main():
 
     times["np"] = sum(problem.parameter_df[petab.ESTIMATE])
 
-    pd.Series(times).to_csv(f"./tests/benchmark-models/{args.model_name}_benchmark.csv")
+    pd.Series(times).to_csv(
+        f"./tests/benchmark-models/{args.model_name}_benchmark.csv"
+    )
 
     for rdata in rdatas:
-        assert rdata.status == amici.AMICI_SUCCESS, f"Simulation failed for {rdata.id}"
+        assert (
+            rdata.status == amici.AMICI_SUCCESS
+        ), f"Simulation failed for {rdata.id}"
 
     # create simulation PEtab table
     sim_df = rdatas_to_measurement_df(
@@ -184,7 +194,8 @@ def main():
             # save figure
             for plot_id, ax in axs.items():
                 fig_path = os.path.join(
-                    args.model_directory, f"{args.model_name}_{plot_id}_vis.png"
+                    args.model_directory,
+                    f"{args.model_name}_{plot_id}_vis.png",
                 )
                 logger.info(f"Saving figure to {fig_path}")
                 ax.get_figure().savefig(fig_path, dpi=150)
@@ -211,7 +222,8 @@ def main():
 
             if np.isclose(llh, ref_llh, rtol=rtol, atol=atol):
                 logger.info(
-                    f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}." + tolstr
+                    f"Computed llh {llh:.4e} matches reference {ref_llh:.4e}."
+                    + tolstr
                 )
             else:
                 logger.error(

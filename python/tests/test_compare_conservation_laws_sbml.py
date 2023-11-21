@@ -28,7 +28,9 @@ def edata_fixture():
         2,
         0,
         0,
-        np.array([0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 4.0, float("inf"), float("inf")]),
+        np.array(
+            [0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 4.0, float("inf"), float("inf")]
+        ),
     )
     edata_full.setObservedData([3.14] * 18)
     edata_full.fixedParameters = np.array([1.0, 2.0])
@@ -129,7 +131,9 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
     assert model_without_cl.nx_rdata == model_with_cl.nx_rdata
     assert model_with_cl.nx_solver < model_without_cl.nx_solver
     assert len(model_with_cl.getStateIdsSolver()) == model_with_cl.nx_solver
-    assert len(model_without_cl.getStateIdsSolver()) == model_without_cl.nx_solver
+    assert (
+        len(model_without_cl.getStateIdsSolver()) == model_without_cl.nx_solver
+    )
 
     # ----- compare simulations wo edata, sensi = 0, states ------------------
     # run simulations
@@ -140,7 +144,11 @@ def test_compare_conservation_laws_sbml(models, edata_fixture):
 
     # compare state trajectories
     assert_allclose(
-        rdata["x"], rdata_cl["x"], rtol=1.0e-5, atol=1.0e-8, err_msg="rdata.x mismatch"
+        rdata["x"],
+        rdata_cl["x"],
+        rtol=1.0e-5,
+        atol=1.0e-8,
+        err_msg="rdata.x mismatch",
     )
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
@@ -254,9 +262,15 @@ def test_adjoint_pre_and_post_equilibration(models, edata_fixture):
             )
 
             # assert all are close
-            assert_allclose(rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8)
-            assert_allclose(rfa_cl["sllh"], raa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8)
-            assert_allclose(raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8)
+            assert_allclose(
+                rff_cl["sllh"], rfa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+            )
+            assert_allclose(
+                rfa_cl["sllh"], raa_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+            )
+            assert_allclose(
+                raa_cl["sllh"], rff_cl["sllh"], rtol=1.0e-5, atol=1.0e-8
+            )
 
             # compare fully adjoint approach to simulation with singular
             #  Jacobian

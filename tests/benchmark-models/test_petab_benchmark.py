@@ -19,7 +19,9 @@ ATOL: float = 1e-3
 RTOL: float = 1e-2
 
 benchmark_path = (
-    Path(__file__).parent.parent.parent / "Benchmark-Models-PEtab" / "Benchmark-Models"
+    Path(__file__).parent.parent.parent
+    / "Benchmark-Models-PEtab"
+    / "Benchmark-Models"
 )
 # reuse compiled models from test_benchmark_collection.sh
 benchmark_outdir = Path(__file__).parent.parent.parent / "test_bmc"
@@ -67,11 +69,15 @@ def test_benchmark_gradient(model, scale):
         # only fail on linear scale
         pytest.skip()
 
-    petab_problem = petab.Problem.from_yaml(benchmark_path / model / (model + ".yaml"))
+    petab_problem = petab.Problem.from_yaml(
+        benchmark_path / model / (model + ".yaml")
+    )
     petab.flatten_timepoint_specific_output_overrides(petab_problem)
 
     # Only compute gradient for estimated parameters.
-    parameter_df_free = petab_problem.parameter_df.loc[petab_problem.x_free_ids]
+    parameter_df_free = petab_problem.parameter_df.loc[
+        petab_problem.x_free_ids
+    ]
     parameter_ids = list(parameter_df_free.index)
 
     # Setup AMICI objects.
@@ -160,7 +166,11 @@ def test_benchmark_gradient(model, scale):
         df = pd.DataFrame(
             [
                 {
-                    ("fd", r.metadata["size_absolute"], str(r.method_id)): r.value
+                    (
+                        "fd",
+                        r.metadata["size_absolute"],
+                        str(r.method_id),
+                    ): r.value
                     for c in d.computers
                     for r in c.results
                 }
