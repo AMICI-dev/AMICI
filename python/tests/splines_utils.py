@@ -16,7 +16,7 @@ import pandas as pd
 import petab
 import sympy as sp
 from amici.gradient_check import _check_results
-from amici.petab_import import import_petab_problem
+from amici.petab.petab_import import import_petab_problem
 from amici.petab_objective import EDATAS, LLH, RDATAS, SLLH, simulate_petab
 from amici.sbml_utils import (
     add_compartment,

@@ -3,12 +3,12 @@
 from pathlib import Path
 
 import amici
-import amici.petab_import
 import amici.petab_objective
 import numpy as np
 import pandas as pd
 import petab
 import pytest
+from amici.petab.petab_import import import_petab_problem
 from fiddy import MethodId, get_derivative
 from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
 from fiddy.extensions.amici import simulate_petab_to_cached_functions
@@ -81,7 +81,7 @@ def test_benchmark_gradient(model, scale):
     parameter_ids = list(parameter_df_free.index)
 
     # Setup AMICI objects.
-    amici_model = amici.petab_import.import_petab_problem(
+    amici_model = import_petab_problem(
         petab_problem,
         model_output_dir=benchmark_outdir / model,
     )
