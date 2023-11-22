@@ -7,6 +7,7 @@ warnings.warn(
     DeprecationWarning,
 )
 
+from .petab.parameter_mapping import create_parameter_mapping  # noqa: F401
 from .petab.simulations import create_edatas  # noqa: F401
 from .petab.simulations import (  # noqa: F401
     aggregate_sllh,
