@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import amici
-import amici.petab_objective
 import numpy as np
 import pandas as pd
 import petab

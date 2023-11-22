@@ -1,7 +1,8 @@
 import argparse
 
 import petab
-from amici.petab_import import import_model
+
+from ..petab_import import import_model_sbml
 
 
 def _parse_cli_args():
@@ -142,7 +143,7 @@ def _main():
     if args.flatten:
         petab.flatten_timepoint_specific_output_overrides(pp)
 
-    import_model(
+    import_model_sbml(
         model_name=args.model_name,
         sbml_model=pp.sbml_model,
         condition_table=pp.condition_df,

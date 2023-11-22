@@ -11,7 +11,7 @@ warnings.warn(
     DeprecationWarning,
 )
 
-from .petab.import_helpers import (
+from .petab.import_helpers import (  # noqa # pylint: disable=unused-import
     get_fixed_parameters,
     get_observation_model,
     petab_noise_distributions_to_amici,
@@ -19,7 +19,7 @@ from .petab.import_helpers import (
 )
 
 # DEPRECATED - DON'T ADD ANYTHING NEW HERE
-from .petab.petab_import import (
+from .petab.petab_import import (  # noqa # pylint: disable=unused-import
     check_model,
     import_model,
     import_model_sbml,

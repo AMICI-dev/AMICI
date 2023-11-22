@@ -1,7 +1,5 @@
 """Test for ``amici.parameter_mapping``"""
-import os
 
-import pytest
 from amici.petab.parameter_mapping import (
     ParameterMapping,
     ParameterMappingForCondition,
