@@ -10,6 +10,14 @@ warnings.warn(
 from .petab.parameter_mapping import create_parameter_mapping  # noqa: F401
 from .petab.simulations import create_edatas  # noqa: F401
 from .petab.simulations import (  # noqa: F401
+    EDATAS,
+    FIM,
+    LLH,
+    RDATAS,
+    RES,
+    S2LLH,
+    SLLH,
+    SRES,
     aggregate_sllh,
     rdatas_to_measurement_df,
     rdatas_to_simulation_df,
