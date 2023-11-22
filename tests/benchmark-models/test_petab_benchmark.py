@@ -51,6 +51,10 @@ if debug:
     debug_path.mkdir(exist_ok=True, parents=True)
 
 
+# until fiddy is updated
+@pytest.mark.filterwarnings(
+    "ignore:Importing amici.petab_objective is deprecated."
+)
 @pytest.mark.filterwarnings("ignore:divide by zero encountered in log10")
 @pytest.mark.parametrize("scale", (True, False))
 @pytest.mark.parametrize("model", models)
