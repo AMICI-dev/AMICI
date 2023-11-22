@@ -322,7 +322,7 @@ def import_model_sbml(
     # <EndWorkAround>
 
     fixed_parameters.extend(
-        get_fixed_parameters(
+        _get_fixed_parameters_sbml(
             petab_problem=petab_problem,
             non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
         )
