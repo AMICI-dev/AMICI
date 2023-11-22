@@ -18,6 +18,7 @@ AMICI Python API
    amici.petab.pysb_import
    amici.petab.sbml_import
    amici.petab.simulations
+   amici.petab.simulator
    amici.petab_import
    amici.petab_import_pysb
    amici.petab_objective
