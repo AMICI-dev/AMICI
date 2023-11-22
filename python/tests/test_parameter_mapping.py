@@ -2,7 +2,7 @@
 import os
 
 import pytest
-from amici.parameter_mapping import (
+from amici.petab.parameter_mapping import (
     ParameterMapping,
     ParameterMappingForCondition,
 )
