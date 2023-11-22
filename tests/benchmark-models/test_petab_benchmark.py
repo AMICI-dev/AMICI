@@ -53,7 +53,7 @@ if debug:
 
 # until fiddy is updated
 @pytest.mark.filterwarnings(
-    "ignore:Importing amici.petab_objective is deprecated."
+    "ignore:Importing amici.petab_objective is deprecated.*:DeprecationWarning"
 )
 @pytest.mark.filterwarnings("ignore:divide by zero encountered in log10")
 @pytest.mark.parametrize("scale", (True, False))

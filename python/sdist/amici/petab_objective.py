@@ -7,6 +7,7 @@ warnings.warn(
     DeprecationWarning,
 )
 
+from .petab.simulations import create_edatas  # noqa: F401
 from .petab.simulations import (  # noqa: F401
     aggregate_sllh,
     rdatas_to_measurement_df,
