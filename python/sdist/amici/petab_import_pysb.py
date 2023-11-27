@@ -18,7 +18,8 @@ from petab.C import CONDITION_NAME, NOISE_FORMULA, OBSERVABLE_FORMULA
 from petab.models.pysb_model import PySBModel
 
 from .logging import get_logger, log_execution_time, set_log_level
-from .petab_util import PREEQ_INDICATOR_ID, get_states_in_condition_table
+from .petab import PREEQ_INDICATOR_ID
+from .petab.util import get_states_in_condition_table
 
 logger = get_logger(__name__, logging.WARNING)
 
