@@ -79,11 +79,12 @@ Install the AMICI dependencies via ``pacman``
 
    sudo pacman -S python swig openblas gcc hdf5 boost-libs
 
-Export the bash variable ``BLAS_CFLAGS`` to point to where blas was installed, e.g.:
+Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
 
 .. code-block:: bash
 
   export BLAS_CFLAGS="-I/usr/include/openblas/"
+  export BLAS_LIBS="-lopenblas"
 
 Install AMICI:
 
@@ -105,11 +106,12 @@ Alternatively:
 
    sudo pacman -Su python swig openblas gcc hdf5 boost-libs
 
-3. Export the bash variable ``BLAS_CFLAGS`` to point to where blas was installed, e.g.:
+3. Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
 
 .. code-block:: bash
 
   export BLAS_CFLAGS="-I/usr/include/openblas/"
+  export BLAS_LIBS="-lopenblas"
 
 4. Install AMICI:
 
