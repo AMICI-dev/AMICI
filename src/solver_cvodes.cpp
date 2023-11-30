@@ -1066,9 +1066,17 @@ static int froot(realtype t, N_Vector x, realtype* root, void* user_data) {
     auto model = dynamic_cast<Model_ODE*>(typed_udata->first);
     Expects(model);
 
-    model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
+    if (model->ne != model->ne_solver) {
+        // temporary buffer to store all root function values, not only the ones
+        // tracked by the solver
+        static std::vector<realtype> root_buffer(model->ne, 0.0);
+        model->froot(t, x, root_buffer);
+        std::copy_n(root_buffer.begin(), model->ne_solver, root);
+    } else {
+        model->froot(t, x, gsl::make_span<realtype>(root, model->ne_solver));
+    }
     return model->checkFinite(
-        gsl::make_span<realtype>(root, model->ne), ModelQuantity::root
+        gsl::make_span<realtype>(root, model->ne_solver), ModelQuantity::root
     );
 }
 

@@ -197,7 +197,9 @@ class ForwardProblem {
     SimulationState const& getSimulationStateTimepoint(int it) const {
         if (model->getTimepoint(it) == initial_state_.t)
             return getInitialSimulationState();
-        return timepoint_states_.find(model->getTimepoint(it))->second;
+        auto map_iter = timepoint_states_.find(model->getTimepoint(it));
+        assert(map_iter != timepoint_states_.end());
+        return map_iter->second;
     };
 
     /**

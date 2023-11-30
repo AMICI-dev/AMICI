@@ -46,6 +46,7 @@ public:
                   0,
                   2,
                   0,
+                  0,
                   1,
                   0,
                   0,
@@ -204,6 +205,6 @@ public:
 
 } // namespace model_model_dirac
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_dirac_h */

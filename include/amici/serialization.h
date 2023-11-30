@@ -260,6 +260,7 @@ void serialize(
     ar& m.nz;
     ar& m.nztrue;
     ar& m.ne;
+    ar& m.ne_solver;
     ar& m.nspl;
     ar& m.nw;
     ar& m.ndwdx;

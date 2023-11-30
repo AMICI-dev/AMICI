@@ -65,6 +65,7 @@ public:
                   1,
                   1,
                   0,
+                  0,
                   5,
                   2,
                   2,
@@ -242,6 +243,6 @@ public:
 
 } // namespace model_model_neuron_o2
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_neuron_o2_h */

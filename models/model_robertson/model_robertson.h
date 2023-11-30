@@ -47,6 +47,7 @@ public:
                   0,
                   0,
                   0,
+                  0,
                   1,
                   1,
                   2,
@@ -209,6 +210,6 @@ public:
 
 } // namespace model_model_robertson
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_robertson_h */

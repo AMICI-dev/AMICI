@@ -8,6 +8,7 @@ import sympy as sp
 from .import_utils import (
     RESERVED_SYMBOLS,
     ObservableTransformation,
+    amici_time_symbol,
     cast_to_sym,
     generate_measurement_symbol,
     generate_regularization_symbol,
@@ -713,3 +714,20 @@ class Event(ModelQuantity):
         return self.get_val() == other.get_val() and (
             self.get_initial_value() == other.get_initial_value()
         )
+
+    def triggers_at_fixed_timepoint(self) -> bool:
+        """Check whether the event triggers at a (single) fixed time-point."""
+        return (amici_time_symbol - self.get_val()).is_Number
+
+    def get_trigger_time(self) -> sp.Float:
+        """Get the time at which the event triggers.
+
+        Only for events that trigger at a single fixed time-point.
+        """
+
+        if not self.triggers_at_fixed_timepoint():
+            raise NotImplementedError(
+                "This event does not trigger at a fixed timepoint."
+            )
+
+        return amici_time_symbol - self.get_val()

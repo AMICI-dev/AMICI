@@ -704,3 +704,49 @@ def expm(x):
     from mpmath import expm
 
     return np.array(expm(x).tolist()).astype(float)
+
+
+import amici
+from amici.antimony_import import antimony2amici
+from amici.gradient_check import check_derivatives
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+
+
+def test_handling_of_fixed_time_point_event_triggers():
+    """If this example requires changes, please also update documentation/python_interface.rst."""
+    import os
+
+    os.environ["ENABLE_AMICI_DEBUGGING"] = "TRUE"
+    ant_model = """
+    model test_events_time_based
+        event_target = 0
+        bolus = 1
+        at (time > 1): event_target = 1
+        at (time > 2): event_target = event_target + bolus
+        at (time > 3): event_target = 3
+
+    end
+    """
+    module_name = "test_events_time_based"
+    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+        antimony2amici(
+            ant_model,
+            model_name=module_name,
+            output_dir=outdir,
+            verbose=True,
+        )
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
+        amici_model = model_module.getModel()
+        amici_model.setTimepoints(np.linspace(0, 4, 200))
+        amici_solver = amici_model.getSolver()
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert (rdata.x[rdata.ts < 1] == 0).all()
+        assert (rdata.x[(rdata.ts >= 1) & (rdata.ts < 2)] == 1).all()
+        assert (rdata.x[(rdata.ts >= 2) & (rdata.ts < 3)] == 2).all()
+        assert (rdata.x[(rdata.ts >= 3)] == 3).all()
+
+        # TODO sensitivities
+        check_derivatives(amici_model, amici_solver, edata=None)
