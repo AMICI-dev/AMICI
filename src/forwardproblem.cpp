@@ -183,36 +183,7 @@ void ForwardProblem::handleEvent(
     if (model->nz > 0)
         storeEvent();
 
-    /* if we need to do forward sensitivities later on we need to store the old
-     * x and the old xdot */
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        /* store x and xdot to compute jump in sensitivities */
-        x_old_.copy(x_);
-    }
-    if (solver->computingFSA()) {
-        model->fxdot(t_, x_, dx_, xdot_);
-        xdot_old_.copy(xdot_);
-        dx_old_.copy(dx_);
-        /* compute event-time derivative only for primary events, we get
-         * into trouble with multiple simultaneously firing events here (but
-         * is this really well defined then?), in that case just use the
-         * last ie and hope for the best. */
-        if (!seflag && !initial_event) {
-            for (int ie = 0; ie < model->ne; ie++) {
-                if (roots_found_.at(ie) == 1) {
-                    /* only consider transitions false -> true */
-                    model->getEventTimeSensitivity(stau_, t_, ie, x_, sx_);
-                }
-            }
-        }
-        if (initial_event) // t0 has no parameter dependency
-            std::fill(stau_.begin(), stau_.end(), 0.0);
-    } else if (solver->computingASA()) {
-        /* store x to compute jump in discontinuity */
-        x_disc_.push_back(x_);
-        xdot_disc_.push_back(xdot_);
-        xdot_old_disc_.push_back(xdot_old_);
-    }
+    store_pre_event_state(seflag, initial_event);
 
     if (!initial_event)
         model->updateHeaviside(roots_found_);
@@ -225,42 +196,7 @@ void ForwardProblem::handleEvent(
         applyEventSensiBolusFSA();
     }
 
-    int secondevent = 0;
-
-    /* check whether we need to fire a secondary event */
-    model->froot(t_, x_, dx_, rootvals_);
-    for (int ie = 0; ie < model->ne; ie++) {
-        /* the same event should not trigger itself */
-        if (roots_found_.at(ie) == 0) {
-            /* check whether there was a zero-crossing */
-            if (0 > rval_tmp_.at(ie) * rootvals_.at(ie)) {
-                if (rval_tmp_.at(ie) < rootvals_.at(ie)) {
-                    roots_found_.at(ie) = 1;
-                } else {
-                    roots_found_.at(ie) = -1;
-                }
-                secondevent++;
-            } else {
-                roots_found_.at(ie) = 0;
-            }
-        } else {
-            /* don't fire the same event again */
-            roots_found_.at(ie) = 0;
-        }
-    }
-    /* fire the secondary event */
-    if (secondevent > 0) {
-        /* Secondary events may result in wrong forward sensitivities,
-         * if the secondary event has a bolus... */
-        if (solver->computingFSA() && solver->logger)
-            solver->logger->log(
-                LogSeverity::warning, "SECONDARY_EVENT",
-                "Secondary event was triggered. Depending on "
-                "the bolus of the secondary event, forward "
-                "sensitivities can be incorrect."
-            );
-        handleEvent(tlastroot, true, false);
-    }
+    handle_secondary_event(tlastroot);
 
     /* only reinitialise in the first event fired */
     if (!seflag) {
@@ -314,6 +250,78 @@ void ForwardProblem::storeEvent() {
         // call from fillEvent at last timepoint
         // loop until all events are filled
         fillEvents(model->nMaxEvent());
+    }
+}
+
+void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
+    /* if we need to do forward sensitivities later on we need to store the old
+     * x and the old xdot */
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
+        /* store x and xdot to compute jump in sensitivities */
+        x_old_.copy(x_);
+    }
+    if (solver->computingFSA()) {
+        model->fxdot(t_, x_, dx_, xdot_);
+        xdot_old_.copy(xdot_);
+        dx_old_.copy(dx_);
+        /* compute event-time derivative only for primary events, we get
+         * into trouble with multiple simultaneously firing events here (but
+         * is this really well defined then?), in that case just use the
+         * last ie and hope for the best. */
+        if (!seflag && !initial_event) {
+            for (int ie = 0; ie < model->ne; ie++) {
+                if (roots_found_.at(ie) == 1) {
+                    /* only consider transitions false -> true */
+                    model->getEventTimeSensitivity(stau_, t_, ie, x_, sx_);
+                }
+            }
+        }
+        if (initial_event) // t0 has no parameter dependency
+            std::fill(stau_.begin(), stau_.end(), 0.0);
+    } else if (solver->computingASA()) {
+        /* store x to compute jump in discontinuity */
+        x_disc_.push_back(x_);
+        xdot_disc_.push_back(xdot_);
+        xdot_old_disc_.push_back(xdot_old_);
+    }
+}
+
+void ForwardProblem::handle_secondary_event(realtype* tlastroot) {
+    int secondevent = 0;
+
+    /* check whether we need to fire a secondary event */
+    model->froot(t_, x_, dx_, rootvals_);
+    for (int ie = 0; ie < model->ne; ie++) {
+        /* the same event should not trigger itself */
+        if (roots_found_.at(ie) == 0) {
+            /* check whether there was a zero-crossing */
+            if (0 > rval_tmp_.at(ie) * rootvals_.at(ie)) {
+                if (rval_tmp_.at(ie) < rootvals_.at(ie)) {
+                    roots_found_.at(ie) = 1;
+                } else {
+                    roots_found_.at(ie) = -1;
+                }
+                secondevent++;
+            } else {
+                roots_found_.at(ie) = 0;
+            }
+        } else {
+            /* don't fire the same event again */
+            roots_found_.at(ie) = 0;
+        }
+    }
+    /* fire the secondary event */
+    if (secondevent > 0) {
+        /* Secondary events may result in wrong forward sensitivities,
+         * if the secondary event has a bolus... */
+        if (solver->computingFSA() && solver->logger)
+            solver->logger->log(
+                LogSeverity::warning, "SECONDARY_EVENT",
+                "Secondary event was triggered. Depending on "
+                "the bolus of the secondary event, forward "
+                "sensitivities can be incorrect."
+            );
+        handleEvent(tlastroot, true, false);
     }
 }
 
