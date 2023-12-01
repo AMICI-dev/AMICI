@@ -3,7 +3,6 @@
 
 #include <cstdarg>
 #include <cstdio>
-#include <cstring>
 
 namespace amici {
 

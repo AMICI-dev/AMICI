@@ -5,7 +5,7 @@
 #include "testfunctions.h"
 
 #include <cmath>
-
+#include <fstream>
 #include <gtest/gtest.h>
 
 void
