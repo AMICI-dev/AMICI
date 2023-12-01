@@ -567,7 +567,8 @@ def process_signature(
         return
 
     # only apply in the amici.amici module
-    if name.split(".")[1] != "amici":
+    split_name = name.split(".")
+    if len(split_name) < 2 or split_name[1] != "amici":
         return
 
     signature = fix_typehints(signature)

@@ -16,7 +16,7 @@ import pandas as pd
 import petab
 import yaml
 from amici.logging import get_logger
-from amici.petab_objective import (
+from amici.petab.simulations import (
     LLH,
     RDATAS,
     rdatas_to_measurement_df,
