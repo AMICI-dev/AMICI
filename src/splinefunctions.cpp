@@ -2,9 +2,9 @@
 #include "amici/amici.h"
 #include "amici/defines.h"
 #include "amici/exception.h"
-#include "amici/vector.h"
 
 #include <algorithm> // std::min
+#include <cassert>
 #include <cmath>
 #include <vector>
 

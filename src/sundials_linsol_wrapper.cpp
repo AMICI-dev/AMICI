@@ -2,7 +2,6 @@
 
 #include <amici/exception.h>
 
-#include <new> // bad_alloc
 #include <utility>
 
 namespace amici {
