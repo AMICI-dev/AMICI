@@ -251,6 +251,21 @@ class ForwardProblem {
     void handleEvent(realtype* tlastroot, bool seflag, bool initial_event);
 
     /**
+     * @brief Store pre-event model state
+     *
+     * @param seflag Secondary event flag
+     * @param initial_event initial event flag
+     */
+    void store_pre_event_state(bool seflag, bool initial_event);
+
+    /**
+     * @brief Check for, and if applicable, handle any secondary events
+     *
+     * @param tlastroot pointer to the timepoint of the last event
+     */
+    void handle_secondary_event(realtype* tlastroot);
+
+    /**
      * @brief Extract output information for events
      */
     void storeEvent();
