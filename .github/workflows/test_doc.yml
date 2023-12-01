@@ -67,10 +67,10 @@ jobs:
           sudo apt-get update \
             && sudo apt-get install -y \
               pandoc \
-              python3-venv
+            && pip install tox
 
       - name: Set up SWIG
         uses: ./.github/actions/setup-swig
 
       - name: Run sphinx
-        run: scripts/run-sphinx.sh
+        run: tox -e doc

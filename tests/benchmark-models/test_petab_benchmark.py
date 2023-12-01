@@ -3,16 +3,11 @@
 from pathlib import Path
 
 import amici
-import amici.petab_import
-import amici.petab_objective
 import numpy as np
 import pandas as pd
 import petab
 import pytest
-from fiddy import MethodId, get_derivative
-from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
-from fiddy.extensions.amici import simulate_petab_to_cached_functions
-from fiddy.success import Consistency
+from amici.petab.petab_import import import_petab_problem
 
 # Absolute and relative tolerances for finite difference gradient checks.
 ATOL: float = 1e-3
@@ -52,10 +47,19 @@ if debug:
     debug_path.mkdir(exist_ok=True, parents=True)
 
 
+# until fiddy is updated
+@pytest.mark.filterwarnings(
+    "ignore:Importing amici.petab_objective is deprecated.:DeprecationWarning"
+)
 @pytest.mark.filterwarnings("ignore:divide by zero encountered in log10")
 @pytest.mark.parametrize("scale", (True, False))
 @pytest.mark.parametrize("model", models)
 def test_benchmark_gradient(model, scale):
+    from fiddy import MethodId, get_derivative
+    from fiddy.derivative_check import NumpyIsCloseDerivativeCheck
+    from fiddy.extensions.amici import simulate_petab_to_cached_functions
+    from fiddy.success import Consistency
+
     if not scale and model in (
         "Smith_BMCSystBiol2013",
         "Brannmark_JBC2010",
@@ -81,7 +85,7 @@ def test_benchmark_gradient(model, scale):
     parameter_ids = list(parameter_df_free.index)
 
     # Setup AMICI objects.
-    amici_model = amici.petab_import.import_petab_problem(
+    amici_model = import_petab_problem(
         petab_problem,
         model_output_dir=benchmark_outdir / model,
     )
