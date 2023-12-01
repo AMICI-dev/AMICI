@@ -1,5 +1,5 @@
 name: Installation
-on: [push, merge_group, workflow_dispatch]
+on: [push, pull_request, merge_group, workflow_dispatch]
 
 jobs:
   archive:
