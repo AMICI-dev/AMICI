@@ -10,7 +10,6 @@
 #include "amici/symbolic_functions.h"
 
 #include <cmath>
-#include <cstring>
 
 namespace amici {
 

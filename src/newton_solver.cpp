@@ -8,10 +8,6 @@
 #include <sunlinsol/sunlinsol_dense.h> // dense solver
 #include <sunlinsol/sunlinsol_klu.h>   // sparse solver
 
-#include <cmath>
-#include <cstring>
-#include <ctime>
-
 namespace amici {
 
 NewtonSolver::NewtonSolver(Model const& model)

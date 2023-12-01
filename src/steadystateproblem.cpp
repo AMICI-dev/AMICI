@@ -8,7 +8,6 @@
 #include "amici/solver.h"
 
 #include <cmath>
-#include <cstring>
 #include <cvodes/cvodes.h>
 #include <memory>
 #include <sundials/sundials_dense.h>

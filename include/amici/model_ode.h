@@ -10,7 +10,6 @@
 #include <sunmatrix/sunmatrix_dense.h>
 #include <sunmatrix/sunmatrix_sparse.h>
 
-#include <utility>
 #include <vector>
 
 namespace amici {

@@ -6,10 +6,7 @@
 #include "amici/solver.h"
 #include "amici/solver_cvodes.h"
 
-#include <cassert>
 #include <chrono>
-#include <fstream>
-#include <iostream>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -35,7 +32,7 @@ template <class Archive, typename T>
 void archiveVector(Archive& ar, T** p, int size) {
     if (Archive::is_loading::value) {
         if (*p != nullptr)
-            delete[] * p;
+            delete[] *p;
         ar& size;
         *p = size ? new T[size] : nullptr;
     } else {

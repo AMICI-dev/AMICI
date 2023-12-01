@@ -10,7 +10,6 @@
 #include <sunmatrix/sunmatrix_sparse.h>
 
 #include <numeric>
-#include <utility>
 #include <vector>
 
 namespace amici {

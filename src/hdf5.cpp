@@ -16,7 +16,6 @@
 
 #include <hdf5_hl.h>
 
-
 namespace amici {
 namespace hdf5 {
 
@@ -1161,8 +1160,8 @@ void readModelDataFromHDF5(
         model.setSteadyStateComputationMode(
             static_cast<SteadyStateComputationMode>(getIntScalarAttribute(
                 file, datasetPath, "steadyStateComputationMode"
-                ))
-            );
+            ))
+        );
     }
 
     if (attributeExists(file, datasetPath, "steadyStateSensitivityMode")) {

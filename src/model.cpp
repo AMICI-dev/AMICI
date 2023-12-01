@@ -6,7 +6,7 @@
 #include <amici/symbolic_functions.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <numeric>

@@ -5,8 +5,6 @@
 #include "amici/symbolic_functions.h"
 
 #include <cstdio>
-#include <cstring>
-#include <ctime>
 #include <memory>
 
 namespace amici {
