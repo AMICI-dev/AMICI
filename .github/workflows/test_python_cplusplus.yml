@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - master
+      - develop
 
 jobs:
   ubuntu-cpp-python-tests:
@@ -65,6 +66,7 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines.py
 
     - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -84,6 +86,7 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -92,6 +95,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Run sonar-scanner
+      if: ${{ env.SONAR_TOKEN != '' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -137,6 +141,7 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines_short.py
 
     - name: Codecov Python
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -156,6 +161,7 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -164,6 +170,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Run sonar-scanner
+      if: ${{ env.SONAR_TOKEN != '' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
