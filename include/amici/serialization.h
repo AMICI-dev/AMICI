@@ -15,8 +15,8 @@
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/serialization/array.hpp>
-#include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
 
 /** @file serialization.h Helper functions and forward declarations for
  * boost::serialization */

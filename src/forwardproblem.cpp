@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 
 namespace amici {
 
@@ -152,10 +151,8 @@ void ForwardProblem::workForwardProblem() {
                     // check if we are at a trigger timepoint.
                     // if so, set the root-found flag
                     if (t_ == next_t_event) {
-                        std::cout << "..." << std::endl;
                         for (auto ie : model->state_independent_events_[t_]) {
                             roots_found_[ie] = 1;
-                            std::cout << "ie: " << ie << std::endl;
                         }
                         ++it_trigger_timepoints;
                     }
