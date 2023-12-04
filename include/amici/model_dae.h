@@ -40,6 +40,8 @@ class Model_DAE : public Model {
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
      * @param ndxdotdx_explicit number of nonzero elements dxdotdx_explicit
      * @param w_recursion_depth Recursion depth of fw
+     * @param state_independent_events Map of events with state-independent
+     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model_DAE(
         ModelDimensions const& model_dimensions,
@@ -47,12 +49,13 @@ class Model_DAE : public Model {
         const SecondOrderMode o2mode, std::vector<realtype> const& idlist,
         std::vector<int> const& z2event, bool const pythonGenerated = false,
         int const ndxdotdp_explicit = 0, int const ndxdotdx_explicit = 0,
-        int const w_recursion_depth = 0
+        int const w_recursion_depth = 0,
+        std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
             model_dimensions, simulation_parameters, o2mode, idlist, z2event,
             pythonGenerated, ndxdotdp_explicit, ndxdotdx_explicit,
-            w_recursion_depth
+            w_recursion_depth, state_independent_events
         ) {
         derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver);
         auto M_nnz = static_cast<sunindextype>(

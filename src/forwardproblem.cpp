@@ -113,7 +113,10 @@ void ForwardProblem::workForwardProblem() {
 
     // get list of trigger timepoints for fixed-time triggered events
     auto trigger_timepoints = model->get_trigger_timepoints();
-    auto it_trigger_timepoints = trigger_timepoints.begin();
+    auto it_trigger_timepoints = std::find_if(
+        trigger_timepoints.begin(), trigger_timepoints.end(),
+        [this](auto t) { return t > this->t_; }
+    );
 
     /* loop over timepoints */
     for (it_ = 0; it_ < model->nt(); it_++) {
