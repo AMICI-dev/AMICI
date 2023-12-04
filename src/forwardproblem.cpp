@@ -128,15 +128,15 @@ void ForwardProblem::workForwardProblem() {
         if (next_t_out > model->t0()) {
             // Solve for next output timepoint
             while (t_ < next_t_out) {
-                // next stop time is either next output timepoint or next
+                // next stop time is next output timepoint or next
                 // time-triggered event
                 auto next_t_event
                     = it_trigger_timepoints != trigger_timepoints.end()
                           ? *it_trigger_timepoints
                           : std::numeric_limits<realtype>::infinity();
                 auto next_t_stop = std::min(next_t_out, next_t_event);
-                int status = solver->run(next_t_stop);
 
+                int status = solver->run(next_t_stop);
                 /* sx will be copied from solver on demand if sensitivities
                  are computed */
                 solver->writeSolution(&t_, x_, dx_, sx_, dx_);

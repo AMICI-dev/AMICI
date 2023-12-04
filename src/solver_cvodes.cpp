@@ -13,6 +13,8 @@
 #include <colamd.h>
 #include <klu.h>
 
+#include <sstream>
+
 #define ZERO RCONST(0.0)
 #define ONE RCONST(1.0)
 #define FOUR RCONST(4.0)
