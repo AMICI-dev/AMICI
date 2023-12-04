@@ -1451,6 +1451,13 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     SUNMatrixWrapper const& get_dxdotdp_full() const;
 
+    /**
+     * @brief Get trigger times for events that don't require root-finding.
+     *
+     * @return List of unique trigger points for events that don't require
+     * root-finding (i.e. that trigger at predetermined timepoints),
+     * in ascending order.
+     */
     virtual std::vector<double> get_trigger_timepoints() const;
 
     /**
@@ -1466,6 +1473,10 @@ class Model : public AbstractModel, public ModelDimensions {
     /** Logger */
     Logger* logger = nullptr;
 
+    /**
+     * @brief Map of trigger timepoints to event indices for events that don't
+     * require root-finding.
+     */
     std::map<realtype, std::vector<int>> state_independent_events_ = {};
 
   protected:
