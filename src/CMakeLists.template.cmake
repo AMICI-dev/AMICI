@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable -Werror)
+set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND MY_CXX_FLAGS -Wno-unused-but-set-variable)
 endif()
