@@ -49,8 +49,7 @@ class Model_ODE : public Model {
         std::vector<int> const& z2event, bool const pythonGenerated = false,
         int const ndxdotdp_explicit = 0, int const ndxdotdx_explicit = 0,
         int const w_recursion_depth = 0,
-        std::map<realtype, std::vector<int>> state_independent_events
-        = {}
+        std::map<realtype, std::vector<int>> state_independent_events = {}
     )
         : Model(
             model_dimensions, simulation_parameters, o2mode, idlist, z2event,

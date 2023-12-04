@@ -128,9 +128,10 @@ void ForwardProblem::workForwardProblem() {
             while (t_ < next_t_out) {
                 // next stop time is either next output timepoint or next
                 // time-triggered event
-                auto next_t_event = it_trigger_timepoints != trigger_timepoints.end()
-                                        ? *it_trigger_timepoints
-                                        : std::numeric_limits<realtype>::infinity();
+                auto next_t_event
+                    = it_trigger_timepoints != trigger_timepoints.end()
+                          ? *it_trigger_timepoints
+                          : std::numeric_limits<realtype>::infinity();
                 auto next_t_stop = std::min(next_t_out, next_t_event);
                 int status = solver->run(next_t_stop);
 
