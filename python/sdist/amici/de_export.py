@@ -3895,22 +3895,24 @@ class DEExporter:
         )
 
     def _get_state_independent_event_intializer(self) -> str:
-        tmp_map = {}
+        """Get initializer list for state independent events in amici::Model."""
+        map_time_to_event_idx = {}
         for event_idx, event in enumerate(self.model.events()):
             if not event.triggers_at_fixed_timepoint():
                 continue
             trigger_time = float(event.get_trigger_time())
             try:
-                tmp_map[trigger_time].append(event_idx)
+                map_time_to_event_idx[trigger_time].append(event_idx)
             except KeyError:
-                tmp_map[trigger_time] = [event_idx]
+                map_time_to_event_idx[trigger_time] = [event_idx]
 
         def vector_initializer(v):
+            """std::vector initializer list with elements from `v`"""
             return f"{{{', '.join(map(str, v))}}}"
 
         return ", ".join(
             f"{{{trigger_time}, {vector_initializer(event_idxs)}}}"
-            for trigger_time, event_idxs in tmp_map.items()
+            for trigger_time, event_idxs in map_time_to_event_idx.items()
         )
 
     def _write_c_make_file(self):

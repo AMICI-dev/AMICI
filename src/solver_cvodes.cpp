@@ -490,13 +490,16 @@ void CVodeSolver::reInitPostProcess(
     if (status == CV_ROOT_RETURN)
         throw CvodeException(
             status,
-            "CVode returned a root after "
-            "reinitialization. The initial step-size after the event or "
-            "heaviside function is too small. To fix this, increase absolute "
+            "CVode returned a root after reinitialization. "
+            "The initial step-size after the event or "
+            "Heaviside function is too small. To fix this, increase absolute "
             "and relative tolerances!"
         );
-    if (status != CV_SUCCESS)
-        throw CvodeException(status, "reInitPostProcess");
+    if (status != CV_SUCCESS) {
+        std::stringstream msg;
+        msg<<"tout: "<<tout<<", t: "<<*t<<".";
+        throw CvodeException(status, "reInitPostProcess", msg.str().c_str());
+    }
 
     cv_mem->cv_nst = nst_tmp + 1;
     if (cv_mem->cv_adjMallocDone == SUNTRUE) {
@@ -515,7 +518,7 @@ void CVodeSolver::reInitPostProcess(
         dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]->t = *t;
         ca_mem->ca_IMstore(cv_mem, dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]);
 
-        /* Set t1 field of the current ckeck point structure
+        /* Set t1 field of the current check point structure
          for the case in which there will be no future
          check points */
         ca_mem->ck_mem->ck_t1 = *t;
