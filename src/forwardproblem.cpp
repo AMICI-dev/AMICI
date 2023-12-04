@@ -12,6 +12,28 @@
 
 namespace amici {
 
+/**
+ * @brief Check if the next timepoint is too close to the current timepoint.
+ *
+ * Based on CVODES' `cvHin`.
+ * @param cur_t Current time.
+ * @param t_next Next stop time.
+ * @return True if too close, false otherwise.
+ */
+bool is_next_t_too_close(realtype cur_t, realtype t_next) {
+    // Based on cvHin
+    auto tdiff = t_next - cur_t;
+    if(tdiff == 0.0)
+        return true;
+
+    auto tdist = std::fabs(tdiff);
+    auto tround = std::numeric_limits<realtype>::epsilon() * std::max(std::fabs(cur_t), std::fabs(t_next));
+    if (tdist < 2.0 * tround)
+        return true;
+
+    return false;
+}
+
 ForwardProblem::ForwardProblem(
     ExpData const* edata, Model* model, Solver* solver,
     SteadystateProblem const* preeq
@@ -128,6 +150,13 @@ void ForwardProblem::workForwardProblem() {
         if (next_t_out > model->t0()) {
             // Solve for next output timepoint
             while (t_ < next_t_out) {
+                if (is_next_t_too_close(t_, next_t_out)) {
+                    // next timepoint is too close to current timepoint
+                    // update `t_`, required by `handleDataPoint`
+                    t_ = next_t_out;
+                    break;
+                }
+
                 // next stop time is next output timepoint or next
                 // time-triggered event
                 auto next_t_event
