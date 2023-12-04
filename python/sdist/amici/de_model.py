@@ -717,17 +717,18 @@ class Event(ModelQuantity):
 
     def triggers_at_fixed_timepoint(self) -> bool:
         """Check whether the event triggers at a (single) fixed time-point."""
-        return (amici_time_symbol - self.get_val()).is_Number
+        t_root = sp.solve(self.get_val(), amici_time_symbol)
+        if len(t_root) != 1:
+            return False
+        return t_root[0].is_Number
 
     def get_trigger_time(self) -> sp.Float:
         """Get the time at which the event triggers.
 
         Only for events that trigger at a single fixed time-point.
         """
-
         if not self.triggers_at_fixed_timepoint():
             raise NotImplementedError(
                 "This event does not trigger at a fixed timepoint."
             )
-
-        return amici_time_symbol - self.get_val()
+        return sp.solve(self.get_val(), amici_time_symbol)[0]
