@@ -7,7 +7,6 @@
 #include "amici/vector.h"
 #include <amici/amici.h>
 
-#include <memory>
 #include <sundials/sundials_direct.h>
 #include <vector>
 

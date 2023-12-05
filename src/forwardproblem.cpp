@@ -130,6 +130,8 @@ void ForwardProblem::workForwardProblem() {
 
     /* store initial state and sensitivity*/
     initial_state_ = getSimulationState();
+    // store root information at t0
+    model->froot(t_, x_, dx_, rootvals_);
 
     // get list of trigger timepoints for fixed-time triggered events
     auto trigger_timepoints = model->get_trigger_timepoints();
