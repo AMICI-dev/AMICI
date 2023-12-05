@@ -21,7 +21,6 @@ namespace amici {
  * @return True if too close, false otherwise.
  */
 bool is_next_t_too_close(realtype cur_t, realtype t_next) {
-    // Based on cvHin
     auto tdiff = t_next - cur_t;
     if(tdiff == 0.0)
         return true;
@@ -181,7 +180,9 @@ void ForwardProblem::workForwardProblem() {
                     // if so, set the root-found flag
                     if (t_ == next_t_event) {
                         for (auto ie : model->state_independent_events_[t_]) {
-                            roots_found_[ie] = 1;
+                            // determine direction of root crossing from
+                            // root function value at the previous event
+                            roots_found_[ie] = std::copysign(1, -rootvals_[ie]);
                         }
                         ++it_trigger_timepoints;
                     }

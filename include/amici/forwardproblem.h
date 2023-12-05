@@ -370,7 +370,8 @@ class ForwardProblem {
      * @brief Array of flags indicating which root has been found.
      *
      * Array of length nr (ne) with the indices of the user functions gi found
-     * to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
+     * to have a root. For i = 0, . . . ,nr 1 or -1 if gi has a root, and = 0
+     * if not. See CVodeGetRootInfo for details.
      */
     std::vector<int> roots_found_;
 
