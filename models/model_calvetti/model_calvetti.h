@@ -45,6 +45,7 @@ public:
                   0,
                   0,
                   4,
+                  4,
                   0,
                   1,
                   38,
@@ -207,6 +208,6 @@ public:
 
 } // namespace model_model_calvetti
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_calvetti_h */

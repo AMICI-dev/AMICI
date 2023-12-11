@@ -315,6 +315,7 @@ def test_unhandled_settings(pysb_example_presimulation_module):
         "setParametersByIdRegex",
         "setParametersByNameRegex",
         "setInitialStateSensitivities",
+        "get_trigger_timepoints",
     ]
     from amici.swig_wrappers import model_instance_settings
 

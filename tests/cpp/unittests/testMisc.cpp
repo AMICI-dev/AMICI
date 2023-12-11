@@ -65,6 +65,7 @@ class ModelTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             nmaxevent, // ne
+            0,         // ne_solver
             0,         // nspl
             0,         // nJ
             0,         // nw
@@ -303,6 +304,7 @@ class SolverTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
             0,         // nspl
             0,         // nJ
             0,         // nw

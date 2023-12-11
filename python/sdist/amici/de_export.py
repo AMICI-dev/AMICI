@@ -1426,12 +1426,23 @@ class DEModel:
 
     def num_events(self) -> int:
         """
+        Total number of Events (those for which root-functions are added and those without).
+
+        :return:
+            number of events
+        """
+        return len(self.sym("h"))
+
+    def num_events_solver(self) -> int:
+        """
         Number of Events.
 
         :return:
             number of event symbols (length of the root vector in AMICI)
         """
-        return len(self.sym("h"))
+        return sum(
+            not event.triggers_at_fixed_timepoint() for event in self.events()
+        )
 
     def sym(self, name: str) -> sp.Matrix:
         """
@@ -1749,6 +1760,16 @@ class DEModel:
                 continue
             # add roots of heaviside functions
             self.add_component(root)
+
+        # re-order events - first those that require root tracking, then the others
+        self._events = list(
+            chain(
+                itertools.filterfalse(
+                    Event.triggers_at_fixed_timepoint, self._events
+                ),
+                filter(Event.triggers_at_fixed_timepoint, self._events),
+            )
+        )
 
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
         """
@@ -3642,6 +3663,7 @@ class DEExporter:
             "NZ": self.model.num_eventobs(),
             "NZTRUE": self.model.num_eventobs(),
             "NEVENT": self.model.num_events(),
+            "NEVENT_SOLVER": self.model.num_events_solver(),
             "NOBJECTIVE": "1",
             "NSPL": len(self.model.splines),
             "NW": len(self.model.sym("w")),
@@ -3736,6 +3758,7 @@ class DEExporter:
                 )
             ),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
+            "STATE_INDEPENDENT_EVENTS": self._get_state_independent_event_intializer(),
             "ID": ", ".join(
                 (
                     str(float(isinstance(s, DifferentialState)))
@@ -3869,6 +3892,27 @@ class DEExporter:
         return "\n".join(
             f'"{self.model._code_printer.doprint(symbol)}", // {name}[{idx}]'
             for idx, symbol in enumerate(self.model.sym(name))
+        )
+
+    def _get_state_independent_event_intializer(self) -> str:
+        """Get initializer list for state independent events in amici::Model."""
+        map_time_to_event_idx = {}
+        for event_idx, event in enumerate(self.model.events()):
+            if not event.triggers_at_fixed_timepoint():
+                continue
+            trigger_time = float(event.get_trigger_time())
+            try:
+                map_time_to_event_idx[trigger_time].append(event_idx)
+            except KeyError:
+                map_time_to_event_idx[trigger_time] = [event_idx]
+
+        def vector_initializer(v):
+            """std::vector initializer list with elements from `v`"""
+            return f"{{{', '.join(map(str, v))}}}"
+
+        return ", ".join(
+            f"{{{trigger_time}, {vector_initializer(event_idxs)}}}"
+            for trigger_time, event_idxs in map_time_to_event_idx.items()
         )
 
     def _write_c_make_file(self):
