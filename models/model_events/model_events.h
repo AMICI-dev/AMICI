@@ -59,6 +59,7 @@ public:
                   2,
                   2,
                   6,
+                  6,
                   0,
                   1,
                   0,
@@ -232,6 +233,6 @@ public:
 
 } // namespace model_model_events
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_events_h */

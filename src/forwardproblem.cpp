@@ -12,6 +12,27 @@
 
 namespace amici {
 
+/**
+ * @brief Check if the next timepoint is too close to the current timepoint.
+ *
+ * Based on CVODES' `cvHin`.
+ * @param cur_t Current time.
+ * @param t_next Next stop time.
+ * @return True if too close, false otherwise.
+ */
+bool is_next_t_too_close(realtype cur_t, realtype t_next) {
+    auto tdiff = t_next - cur_t;
+    if(tdiff == 0.0)
+        return true;
+
+    auto tdist = std::fabs(tdiff);
+    auto tround = std::numeric_limits<realtype>::epsilon() * std::max(std::fabs(cur_t), std::fabs(t_next));
+    if (tdist < 2.0 * tround)
+        return true;
+
+    return false;
+}
+
 ForwardProblem::ForwardProblem(
     ExpData const* edata, Model* model, Solver* solver,
     SteadystateProblem const* preeq
@@ -109,30 +130,69 @@ void ForwardProblem::workForwardProblem() {
 
     /* store initial state and sensitivity*/
     initial_state_ = getSimulationState();
+    // store root information at t0
+    model->froot(t_, x_, dx_, rootvals_);
+
+    // get list of trigger timepoints for fixed-time triggered events
+    auto trigger_timepoints = model->get_trigger_timepoints();
+    auto it_trigger_timepoints = std::find_if(
+        trigger_timepoints.begin(), trigger_timepoints.end(),
+        [this](auto t) { return t > this->t_; }
+    );
 
     /* loop over timepoints */
     for (it_ = 0; it_ < model->nt(); it_++) {
-        auto nextTimepoint = model->getTimepoint(it_);
+        // next output time-point
+        auto next_t_out = model->getTimepoint(it_);
 
-        if (std::isinf(nextTimepoint))
+        if (std::isinf(next_t_out))
             break;
 
-        if (nextTimepoint > model->t0()) {
-            // Solve for nextTimepoint
-            while (t_ < nextTimepoint) {
-                int status = solver->run(nextTimepoint);
-                solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+        if (next_t_out > model->t0()) {
+            // Solve for next output timepoint
+            while (t_ < next_t_out) {
+                if (is_next_t_too_close(t_, next_t_out)) {
+                    // next timepoint is too close to current timepoint.
+                    // we use the state of the current timepoint.
+                    break;
+                }
+
+                // next stop time is next output timepoint or next
+                // time-triggered event
+                auto next_t_event
+                    = it_trigger_timepoints != trigger_timepoints.end()
+                          ? *it_trigger_timepoints
+                          : std::numeric_limits<realtype>::infinity();
+                auto next_t_stop = std::min(next_t_out, next_t_event);
+
+                int status = solver->run(next_t_stop);
                 /* sx will be copied from solver on demand if sensitivities
                  are computed */
+                solver->writeSolution(&t_, x_, dx_, sx_, dx_);
+
                 if (status == AMICI_ILL_INPUT) {
-                    /* clustering of roots => turn off rootfinding */
+                    /* clustering of roots => turn off root-finding */
                     solver->turnOffRootFinding();
-                } else if (status == AMICI_ROOT_RETURN) {
+                } else if (status == AMICI_ROOT_RETURN || t_ == next_t_event) {
+                    // solver-tracked or time-triggered event
+                    solver->getRootInfo(roots_found_.data());
+
+                    // check if we are at a trigger timepoint.
+                    // if so, set the root-found flag
+                    if (t_ == next_t_event) {
+                        for (auto ie : model->state_independent_events_[t_]) {
+                            // determine direction of root crossing from
+                            // root function value at the previous event
+                            roots_found_[ie] = std::copysign(1, -rootvals_[ie]);
+                        }
+                        ++it_trigger_timepoints;
+                    }
+
                     handleEvent(&tlastroot_, false, false);
                 }
             }
         }
-        handleDataPoint(it_);
+        handleDataPoint(next_t_out);
     }
 
     /* fill events */
@@ -156,13 +216,9 @@ void ForwardProblem::handleEvent(
     /* store Heaviside information at event occurrence */
     model->froot(t_, x_, dx_, rootvals_);
 
-    /* store timepoint at which the event occurred*/
+    /* store timepoint at which the event occurred */
     discs_.push_back(t_);
 
-    /* extract and store which events occurred */
-    if (!seflag && !initial_event) {
-        solver->getRootInfo(roots_found_.data());
-    }
     root_idx_.push_back(roots_found_);
 
     rval_tmp_ = rootvals_;
@@ -324,11 +380,11 @@ void ForwardProblem::handle_secondary_event(realtype* tlastroot) {
     }
 }
 
-void ForwardProblem::handleDataPoint(int /*it*/) {
+void ForwardProblem::handleDataPoint(realtype t) {
     /* We only store the simulation state if it's not the initial state, as the
        initial state is stored anyway and we want to avoid storing it twice */
-    if (t_ != model->t0() && timepoint_states_.count(t_) == 0)
-        timepoint_states_[t_] = getSimulationState();
+    if (t != model->t0() && timepoint_states_.count(t) == 0)
+        timepoint_states_[t] = getSimulationState();
     /* store diagnosis information for debugging */
     solver->storeDiagnosis();
 }
