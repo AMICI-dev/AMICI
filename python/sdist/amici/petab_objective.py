@@ -7,8 +7,8 @@ warnings.warn(
     DeprecationWarning,
 )
 
+from .petab.conditions import fill_in_parameters  # noqa: F401
 from .petab.parameter_mapping import create_parameter_mapping  # noqa: F401
-from .petab.simulations import create_edatas  # noqa: F401
 from .petab.simulations import (  # noqa: F401
     EDATAS,
     FIM,
@@ -19,6 +19,7 @@ from .petab.simulations import (  # noqa: F401
     SLLH,
     SRES,
     aggregate_sllh,
+    create_edatas,
     rdatas_to_measurement_df,
     rdatas_to_simulation_df,
     rescale_sensitivity,
