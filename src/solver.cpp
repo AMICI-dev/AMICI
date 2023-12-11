@@ -5,8 +5,6 @@
 #include "amici/symbolic_functions.h"
 
 #include <cstdio>
-#include <cstring>
-#include <ctime>
 #include <memory>
 
 namespace amici {
@@ -161,7 +159,7 @@ void Solver::setup(
     /* activates stability limit detection */
     setStabLimDet(stldet_);
 
-    rootInit(model->ne);
+    rootInit(model->ne_solver);
 
     if (nx() == 0)
         return;
