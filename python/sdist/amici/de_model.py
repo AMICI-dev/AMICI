@@ -697,6 +697,9 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._initial_value = initial_value
 
+        # expression(s) for the timepoint(s) at which the event triggers
+        self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+
     def get_initial_value(self) -> bool:
         """
         Return the initial value for the root function.
@@ -717,10 +720,9 @@ class Event(ModelQuantity):
 
     def triggers_at_fixed_timepoint(self) -> bool:
         """Check whether the event triggers at a (single) fixed time-point."""
-        t_root = sp.solve(self.get_val(), amici_time_symbol)
-        if len(t_root) != 1:
+        if len(self._t_root) != 1:
             return False
-        return t_root[0].is_Number
+        return self._t_root[0].is_Number
 
     def get_trigger_time(self) -> sp.Float:
         """Get the time at which the event triggers.
@@ -731,4 +733,4 @@ class Event(ModelQuantity):
             raise NotImplementedError(
                 "This event does not trigger at a fixed timepoint."
             )
-        return sp.solve(self.get_val(), amici_time_symbol)[0]
+        return self._t_root[0]
