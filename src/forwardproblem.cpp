@@ -152,9 +152,8 @@ void ForwardProblem::workForwardProblem() {
             // Solve for next output timepoint
             while (t_ < next_t_out) {
                 if (is_next_t_too_close(t_, next_t_out)) {
-                    // next timepoint is too close to current timepoint
-                    // update `t_`, required by `handleDataPoint`
-                    t_ = next_t_out;
+                    // next timepoint is too close to current timepoint.
+                    // we use the state of the current timepoint.
                     break;
                 }
 
@@ -193,7 +192,7 @@ void ForwardProblem::workForwardProblem() {
                 }
             }
         }
-        handleDataPoint(it_);
+        handleDataPoint(next_t_out);
     }
 
     /* fill events */
@@ -381,11 +380,11 @@ void ForwardProblem::handle_secondary_event(realtype* tlastroot) {
     }
 }
 
-void ForwardProblem::handleDataPoint(int /*it*/) {
+void ForwardProblem::handleDataPoint(realtype t) {
     /* We only store the simulation state if it's not the initial state, as the
        initial state is stored anyway and we want to avoid storing it twice */
-    if (t_ != model->t0() && timepoint_states_.count(t_) == 0)
-        timepoint_states_[t_] = getSimulationState();
+    if (t != model->t0() && timepoint_states_.count(t) == 0)
+        timepoint_states_[t] = getSimulationState();
     /* store diagnosis information for debugging */
     solver->storeDiagnosis();
 }

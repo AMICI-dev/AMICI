@@ -274,9 +274,9 @@ class ForwardProblem {
     /**
      * @brief Execute everything necessary for the handling of data points
      *
-     * @param it index of data point
+     * @param t measurement timepoint
      */
-    void handleDataPoint(int it);
+    void handleDataPoint(realtype t);
 
     /**
      * @brief Applies the event bolus to the current state
