@@ -6,7 +6,6 @@
 #endif
 
 #include <cmath>
-#include <functional>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
 #if defined(_USE_MATH_DEFINES)
@@ -184,6 +183,13 @@ enum class NonlinearSolverIteration {
     functional = 1, /** deprecated */
     fixedpoint = 1,
     newton = 2
+};
+
+/** Steady-state computation mode in steadyStateProblem */
+enum class SteadyStateComputationMode {
+    newtonOnly,
+    integrationOnly,
+    integrateIfNewtonFails
 };
 
 /** Sensitivity computation mode in steadyStateProblem */

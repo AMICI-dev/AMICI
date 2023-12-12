@@ -49,6 +49,7 @@ public:
                   0,
                   0,
                   0,
+                  0,
                   18,
                   10,
                   2,
@@ -210,6 +211,6 @@ public:
 
 } // namespace model_model_jakstat_adjoint_o2
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_jakstat_adjoint_o2_h */

@@ -40,10 +40,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 1
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y swig4.0 libatlas-base-dev
+
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/installAmiciSource.sh
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
@@ -54,6 +54,7 @@ jobs:
         path: tests/amici-semantic-results
 
     - name: Codecov SBMLSuite
+      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v3.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

@@ -5,7 +5,6 @@
 #include "amici/symbolic_functions.h" // getNaN
 
 #include <algorithm>
-#include <cstring>
 #include <random>
 #include <utility>
 

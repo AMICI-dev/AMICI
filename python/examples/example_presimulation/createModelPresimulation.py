@@ -1,7 +1,15 @@
 import os
 
 import pysb.export
-from pysb.core import Expression, Initial, Model, Monomer, Observable, Parameter, Rule
+from pysb.core import (
+    Expression,
+    Initial,
+    Model,
+    Monomer,
+    Observable,
+    Parameter,
+    Rule,
+)
 
 model = Model()
 
@@ -41,7 +49,8 @@ Rule(
 
 Rule(
     "PROT_dephospho",
-    prot(phospho="p", drug=None, kin=None) >> prot(phospho="u", drug=None, kin=None),
+    prot(phospho="p", drug=None, kin=None)
+    >> prot(phospho="u", drug=None, kin=None),
     Parameter("kdephospho_prot", 0.1),
 )
 

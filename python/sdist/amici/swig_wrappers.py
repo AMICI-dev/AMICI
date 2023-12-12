@@ -1,6 +1,7 @@
 """Convenience wrappers for the swig interface"""
 import logging
 import sys
+import warnings
 from contextlib import contextmanager, suppress
 from typing import Any, Dict, List, Optional, Sequence, Union
 
@@ -83,7 +84,9 @@ def _get_ptr(
 
 
 def runAmiciSimulation(
-    model: AmiciModel, solver: AmiciSolver, edata: Optional[AmiciExpData] = None
+    model: AmiciModel,
+    solver: AmiciSolver,
+    edata: Optional[AmiciExpData] = None,
 ) -> "numpy.ReturnDataView":
     """
     Convenience wrapper around :py:func:`amici.amici.runAmiciSimulation`
@@ -102,6 +105,18 @@ def runAmiciSimulation(
     :returns:
         ReturnData object with simulation results
     """
+    if (
+        model.ne > 0
+        and solver.getSensitivityMethod()
+        == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
+    ):
+        warnings.warn(
+            "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested."
+            "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
+            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients."
+        )
+
     with _capture_cstdout():
         rdata = amici_swig.runAmiciSimulation(
             _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
@@ -152,10 +167,26 @@ def runAmiciSimulations(
 
     :returns: list of simulation results
     """
+    if (
+        model.ne > 0
+        and solver.getSensitivityMethod()
+        == amici_swig.SensitivityMethod.adjoint
+        and solver.getSensitivityOrder() == amici_swig.SensitivityOrder.first
+    ):
+        warnings.warn(
+            "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested. "
+            "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
+            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients."
+        )
+
     with _capture_cstdout():
         edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
         rdata_ptr_list = amici_swig.runAmiciSimulations(
-            _get_ptr(solver), edata_ptr_vector, _get_ptr(model), failfast, num_threads
+            _get_ptr(solver),
+            edata_ptr_vector,
+            _get_ptr(model),
+            failfast,
+            num_threads,
         )
     for rdata in rdata_ptr_list:
         _log_simulation(rdata)
@@ -214,6 +245,7 @@ model_instance_settings = [
     "ReinitializationStateIdxs",
     "ReinitializeFixedParameterInitialStates",
     "StateIsNonNegative",
+    "SteadyStateComputationMode",
     "SteadyStateSensitivityMode",
     ("t0", "setT0"),
     "Timepoints",
@@ -281,7 +313,9 @@ def _log_simulation(rdata: amici_swig.ReturnData):
         )
 
 
-def _ids_and_names_to_rdata(rdata: amici_swig.ReturnData, model: amici_swig.Model):
+def _ids_and_names_to_rdata(
+    rdata: amici_swig.ReturnData, model: amici_swig.Model
+):
     """Copy entity IDs and names from a Model to ReturnData."""
     for entity_type in (
         "State",
@@ -292,6 +326,10 @@ def _ids_and_names_to_rdata(rdata: amici_swig.ReturnData, model: amici_swig.Mode
     ):
         for name_or_id in ("Ids", "Names"):
             names_or_ids = getattr(model, f"get{entity_type}{name_or_id}")()
-            setattr(rdata, f"{entity_type.lower()}_{name_or_id.lower()}", names_or_ids)
+            setattr(
+                rdata,
+                f"{entity_type.lower()}_{name_or_id.lower()}",
+                names_or_ids,
+            )
     rdata.state_ids_solver = model.getStateIdsSolver()
     rdata.state_names_solver = model.getStateNamesSolver()

@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <ctime>
 #include <functional>
-#include <memory>
 #include <regex>
 #include <vector>
 
@@ -255,10 +254,10 @@ template <class T> bool is_equal(T const& a, T const& b) {
 }
 
 #ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
-/** Tracks elapsed CPU time. */
+/** Tracks elapsed CPU time using boost::chrono::thread_clock. */
 class CpuTimer {
     using clock = boost::chrono::thread_clock;
-    using time_point = boost::chrono::thread_clock::time_point;
+    using time_point = clock::time_point;
     using d_seconds = boost::chrono::duration<double>;
     using d_milliseconds = boost::chrono::duration<double, boost::milli>;
 
@@ -279,8 +278,7 @@ class CpuTimer {
      * @return CPU time in seconds
      */
     double elapsed_seconds() const {
-        return boost::chrono::duration_cast<d_seconds>(clock::now() - start_)
-            .count();
+        return d_seconds(clock::now() - start_).count();
     }
 
     /**
@@ -289,18 +287,17 @@ class CpuTimer {
      * @return CPU time in milliseconds
      */
     double elapsed_milliseconds() const {
-        return boost::chrono::duration_cast<d_milliseconds>(
-                   clock::now() - start_
-        )
-            .count();
+        return d_milliseconds(clock::now() - start_).count();
     }
+
+    static bool const uses_thread_clock = true;
 
   private:
     /** Start time */
     time_point start_;
 };
 #else
-/** Tracks elapsed CPU time. */
+/** Tracks elapsed CPU time using std::clock. */
 class CpuTimer {
   public:
     /**
@@ -331,6 +328,8 @@ class CpuTimer {
         return static_cast<double>(std::clock() - start_) * 1000.0
                / CLOCKS_PER_SEC;
     }
+
+    static bool const uses_thread_clock = false;
 
   private:
     /** Start time */

@@ -6,7 +6,6 @@ import pytest
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 
 petab = pytest.importorskip("petab", reason="Missing petab")
-amici_petab_import = pytest.importorskip("amici.petab_import")
 
 
 @pytest.fixture
@@ -47,6 +46,9 @@ def test_get_fixed_parameters(simple_sbml_model):
     p4: not fixed (via parameter table `estimate=1`)
     p5: fixed (implicitly, because not listed as estimated)
     """
+    from amici.petab.sbml_import import (
+        _get_fixed_parameters_sbml as get_fixed_parameters,
+    )
     from petab.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = simple_sbml_model
@@ -60,7 +62,9 @@ def test_get_fixed_parameters(simple_sbml_model):
         )
     )
     parameter_df = petab.get_parameter_df(
-        pd.DataFrame({petab.PARAMETER_ID: ["p3", "p4"], petab.ESTIMATE: [0, 1]})
+        pd.DataFrame(
+            {petab.PARAMETER_ID: ["p3", "p4"], petab.ESTIMATE: [0, 1]}
+        )
     )
     print(condition_df)
     print(parameter_df)
@@ -69,14 +73,14 @@ def test_get_fixed_parameters(simple_sbml_model):
         parameter_df=parameter_df,
         condition_df=condition_df,
     )
-    assert set(amici_petab_import.get_fixed_parameters(petab_problem)) == {
+    assert set(get_fixed_parameters(petab_problem)) == {
         "p1",
         "p3",
         "p5",
     }
 
     assert set(
-        amici_petab_import.get_fixed_parameters(
+        get_fixed_parameters(
             petab_problem, non_estimated_parameters_as_constants=False
         )
     ) == {"p1", "p5"}
@@ -84,6 +88,7 @@ def test_get_fixed_parameters(simple_sbml_model):
 
 @skip_on_valgrind
 def test_default_output_parameters(simple_sbml_model):
+    from amici.petab.petab_import import import_model
     from petab.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = simple_sbml_model
@@ -114,7 +119,7 @@ def test_default_output_parameters(simple_sbml_model):
     )
 
     with TemporaryDirectoryWinSafe() as outdir:
-        sbml_importer = amici_petab_import.import_model(
+        sbml_importer = import_model(
             petab_problem=petab_problem,
             output_parameter_defaults={"observableParameter1_obs1": 1.0},
             compile=False,
@@ -122,11 +127,13 @@ def test_default_output_parameters(simple_sbml_model):
         )
         assert (
             1.0
-            == sbml_importer.sbml.getParameter("observableParameter1_obs1").getValue()
+            == sbml_importer.sbml.getParameter(
+                "observableParameter1_obs1"
+            ).getValue()
         )
 
         with pytest.raises(ValueError):
-            amici_petab_import.import_model(
+            import_model(
                 petab_problem=petab_problem,
                 output_parameter_defaults={"nonExistentParameter": 1.0},
                 compile=False,

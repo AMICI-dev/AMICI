@@ -34,18 +34,17 @@ jobs:
         with:
           fetch-depth: 20
 
+      - name: Install apt dependencies
+        uses: ./.github/actions/install-apt-dependencies
+
       # install dependencies
       - name: apt
         run: |
           sudo apt-get update \
-            && sudo apt-get install -y \
-            swig \
-            libatlas-base-dev \
-            python3-venv
+            && sudo apt-get install -y python3-venv
 
       - name: Build BNGL
-        run: |
-          scripts/buildBNGL.sh
+        run: scripts/buildBNGL.sh
 
       - run: |
           echo "${HOME}/.local/bin/" >> $GITHUB_PATH
@@ -54,8 +53,7 @@ jobs:
 
       # install AMICI
       - name: Install python package
-        run: |
-          scripts/installAmiciSource.sh
+        run: scripts/installAmiciSource.sh
 
       - name: Install petab
         run: |
@@ -87,6 +85,7 @@ jobs:
             tests/petab_test_suite/
 
       - name: Codecov
+        if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
         uses: codecov/codecov-action@v3.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

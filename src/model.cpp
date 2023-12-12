@@ -6,7 +6,7 @@
 #include <amici/symbolic_functions.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <numeric>
@@ -178,12 +178,14 @@ Model::Model(
     SimulationParameters simulation_parameters, SecondOrderMode o2mode,
     std::vector<realtype> idlist, std::vector<int> z2event,
     bool const pythonGenerated, int const ndxdotdp_explicit,
-    int const ndxdotdx_explicit, int const w_recursion_depth
+    int const ndxdotdx_explicit, int const w_recursion_depth,
+    std::map<realtype, std::vector<int>> state_independent_events
 )
     : ModelDimensions(model_dimensions)
     , pythonGenerated(pythonGenerated)
     , o2mode(o2mode)
     , idlist(std::move(idlist))
+    , state_independent_events_(std::move(state_independent_events))
     , derived_state_(model_dimensions)
     , z2event_(std::move(z2event))
     , state_is_non_negative_(nx_solver, false)
@@ -297,6 +299,7 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
            && (a.nx_solver_reinit == b.nx_solver_reinit) && (a.np == b.np)
            && (a.nk == b.nk) && (a.ny == b.ny) && (a.nytrue == b.nytrue)
            && (a.nz == b.nz) && (a.nztrue == b.nztrue) && (a.ne == b.ne)
+           && (a.ne_solver == b.ne_solver) && (a.nspl == b.nspl)
            && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) && (a.ndwdp == b.ndwdp)
            && (a.ndwdw == b.ndwdw) && (a.ndxdotdw == b.ndxdotdw)
            && (a.ndJydy == b.ndJydy) && (a.nnz == b.nnz) && (a.nJ == b.nJ)
@@ -991,6 +994,15 @@ void Model::setUnscaledInitialStateSensitivities(
     }
 
     sx0data_ = sx0;
+}
+
+void Model::setSteadyStateComputationMode(const SteadyStateComputationMode mode
+) {
+    steadystate_computation_mode_ = mode;
+}
+
+SteadyStateComputationMode Model::getSteadyStateComputationMode() const {
+    return steadystate_computation_mode_;
 }
 
 void Model::setSteadyStateSensitivityMode(const SteadyStateSensitivityMode mode
@@ -1807,7 +1819,7 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t)
         if (hasExpressionIds())
             row_id += " " + getExpressionIds()[row];
         if (hasParameterIds())
-            col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
+            col_id += " " + getParameterIds()[col];
         break;
     default:
         break;
@@ -3061,6 +3073,20 @@ void Model::fstotal_cl(
     derived_state_.dtotal_cldx_rdata.multiply(
         gsl::make_span(stotal_cl, ncl()), gsl::make_span(sx_rdata, nx_rdata)
     );
+}
+
+std::vector<double> Model::get_trigger_timepoints() const {
+    std::vector<double> trigger_timepoints(
+        state_independent_events_.size(), 0.0
+    );
+    // collect keys from state_independent_events_ which are the trigger
+    // timepoints
+    auto it = trigger_timepoints.begin();
+    for (auto const& kv : state_independent_events_) {
+        *(it++) = kv.first;
+    }
+    std::sort(trigger_timepoints.begin(), trigger_timepoints.end());
+    return trigger_timepoints;
 }
 
 const_N_Vector Model::computeX_pos(const_N_Vector x) {

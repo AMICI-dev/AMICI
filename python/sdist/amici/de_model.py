@@ -8,6 +8,7 @@ import sympy as sp
 from .import_utils import (
     RESERVED_SYMBOLS,
     ObservableTransformation,
+    amici_time_symbol,
     cast_to_sym,
     generate_measurement_symbol,
     generate_regularization_symbol,
@@ -67,7 +68,8 @@ class ModelQuantity:
             hasattr(identifier, "name") and identifier.name in RESERVED_SYMBOLS
         ):
             raise ValueError(
-                f'Cannot add model quantity with name "{name}", ' f"please rename."
+                f'Cannot add model quantity with name "{name}", '
+                f"please rename."
             )
         self._identifier: sp.Symbol = identifier
 
@@ -301,7 +303,9 @@ class DifferentialState(State):
 
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr):
+    def __init__(
+        self, identifier: sp.Symbol, name: str, init: sp.Expr, dt: sp.Expr
+    ):
         """
         Create a new State instance. Extends :meth:`ModelQuantity.__init__`
         by ``dt``
@@ -335,7 +339,8 @@ class DifferentialState(State):
         """
         if not isinstance(law, ConservationLaw):
             raise TypeError(
-                f"conservation law must have type ConservationLaw" f", was {type(law)}"
+                f"conservation law must have type ConservationLaw"
+                f", was {type(law)}"
             )
 
         self._conservation_law = law
@@ -425,13 +430,17 @@ class Observable(ModelQuantity):
 
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
-            self._measurement_symbol = generate_measurement_symbol(self.get_id())
+            self._measurement_symbol = generate_measurement_symbol(
+                self.get_id()
+            )
 
         return self._measurement_symbol
 
     def get_regularization_symbol(self) -> sp.Symbol:
         if self._regularization_symbol is None:
-            self._regularization_symbol = generate_regularization_symbol(self.get_id())
+            self._regularization_symbol = generate_regularization_symbol(
+                self.get_id()
+            )
 
         return self._regularization_symbol
 
@@ -556,7 +565,9 @@ class Parameter(ModelQuantity):
     sensitivities may be computed, abbreviated by ``p``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: numbers.Number):
+    def __init__(
+        self, identifier: sp.Symbol, name: str, value: numbers.Number
+    ):
         """
         Create a new Expression instance.
 
@@ -579,7 +590,9 @@ class Constant(ModelQuantity):
     sensitivities cannot be computed, abbreviated by ``k``.
     """
 
-    def __init__(self, identifier: sp.Symbol, name: str, value: numbers.Number):
+    def __init__(
+        self, identifier: sp.Symbol, name: str, value: numbers.Number
+    ):
         """
         Create a new Expression instance.
 
@@ -684,6 +697,9 @@ class Event(ModelQuantity):
         self._state_update = state_update
         self._initial_value = initial_value
 
+        # expression(s) for the timepoint(s) at which the event triggers
+        self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+
     def get_initial_value(self) -> bool:
         """
         Return the initial value for the root function.
@@ -701,3 +717,20 @@ class Event(ModelQuantity):
         return self.get_val() == other.get_val() and (
             self.get_initial_value() == other.get_initial_value()
         )
+
+    def triggers_at_fixed_timepoint(self) -> bool:
+        """Check whether the event triggers at a (single) fixed time-point."""
+        if len(self._t_root) != 1:
+            return False
+        return self._t_root[0].is_Number
+
+    def get_trigger_time(self) -> sp.Float:
+        """Get the time at which the event triggers.
+
+        Only for events that trigger at a single fixed time-point.
+        """
+        if not self.triggers_at_fixed_timepoint():
+            raise NotImplementedError(
+                "This event does not trigger at a fixed timepoint."
+            )
+        return self._t_root[0]

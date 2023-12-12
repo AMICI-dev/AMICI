@@ -48,6 +48,7 @@ public:
                   0,
                   0,
                   4,
+                  4,
                   0,
                   1,
                   0,
@@ -210,6 +211,6 @@ public:
 
 } // namespace model_model_nested_events
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_nested_events_h */

@@ -193,7 +193,8 @@ def check_derivatives(
         fields.append("x")
 
     leastsquares_applicable = (
-        solver.getSensitivityMethod() == SensitivityMethod.forward and edata is not None
+        solver.getSensitivityMethod() == SensitivityMethod.forward
+        and edata is not None
     )
 
     if (
@@ -208,10 +209,18 @@ def check_derivatives(
         fields += ["res", "y"]
 
         _check_results(
-            rdata, "FIM", np.dot(rdata["sres"].T, rdata["sres"]), atol=1e-8, rtol=1e-4
+            rdata,
+            "FIM",
+            np.dot(rdata["sres"].T, rdata["sres"]),
+            atol=1e-8,
+            rtol=1e-4,
         )
         _check_results(
-            rdata, "sllh", -np.dot(rdata["res"].T, rdata["sres"]), atol=1e-8, rtol=1e-4
+            rdata,
+            "sllh",
+            -np.dot(rdata["res"].T, rdata["sres"]),
+            atol=1e-8,
+            rtol=1e-4,
         )
 
     if edata is not None:
@@ -221,7 +230,15 @@ def check_derivatives(
         if pval == 0.0 and skip_zero_pars:
             continue
         check_finite_difference(
-            p, model, solver, edata, ip, fields, atol=atol, rtol=rtol, epsilon=epsilon
+            p,
+            model,
+            solver,
+            edata,
+            ip,
+            fields,
+            atol=atol,
+            rtol=rtol,
+            epsilon=epsilon,
         )
 
 
@@ -317,4 +334,6 @@ def _check_results(
     if type(result) is float:
         result = np.array(result)
 
-    _check_close(result=result, expected=expected, atol=atol, rtol=rtol, field=field)
+    _check_close(
+        result=result, expected=expected, atol=atol, rtol=rtol, field=field
+    )

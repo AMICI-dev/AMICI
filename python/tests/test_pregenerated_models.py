@@ -97,12 +97,17 @@ def test_pregenerated_model(sub_test, case):
         verify_simulation_opts["atol"] = 1e-5
         verify_simulation_opts["rtol"] = 1e-2
 
-    if model_name.startswith("model_robertson") and case == "sensiforwardSPBCG":
+    if (
+        model_name.startswith("model_robertson")
+        and case == "sensiforwardSPBCG"
+    ):
         verify_simulation_opts["atol"] = 1e-3
         verify_simulation_opts["rtol"] = 1e-3
 
     verify_simulation_results(
-        rdata, expected_results[sub_test][case]["results"], **verify_simulation_opts
+        rdata,
+        expected_results[sub_test][case]["results"],
+        **verify_simulation_opts,
     )
 
     if model_name == "model_steadystate" and case == "sensiforwarderrorint":
@@ -113,7 +118,9 @@ def test_pregenerated_model(sub_test, case):
     if (
         edata
         and model_name != "model_neuron_o2"
-        and not (model_name == "model_robertson" and case == "sensiforwardSPBCG")
+        and not (
+            model_name == "model_robertson" and case == "sensiforwardSPBCG"
+        )
     ):
         if isinstance(edata, amici.amici.ExpData):
             edatas = [edata, edata]
@@ -222,14 +229,18 @@ def verify_simulation_results(
             subfields = expected_results["diagnosis"].keys()
 
     else:
-        attrs = [field for field in fields if field in expected_results.attrs.keys()]
+        attrs = [
+            field for field in fields if field in expected_results.attrs.keys()
+        ]
         if "diagnosis" in expected_results.keys():
             subfields = [
                 field
                 for field in fields
                 if field in expected_results["diagnosis"].keys()
             ]
-        fields = [field for field in fields if field in expected_results.keys()]
+        fields = [
+            field for field in fields if field in expected_results.keys()
+        ]
 
     if expected_results.attrs["status"][0] != 0:
         assert rdata["status"] == expected_results.attrs["status"][0]
@@ -254,12 +265,22 @@ def verify_simulation_results(
                 continue
             if field == "s2llh":
                 _check_results(
-                    rdata, field, expected_results[field][()], atol=1e-4, rtol=1e-3
+                    rdata,
+                    field,
+                    expected_results[field][()],
+                    atol=1e-4,
+                    rtol=1e-3,
                 )
             else:
                 _check_results(
-                    rdata, field, expected_results[field][()], atol=atol, rtol=rtol
+                    rdata,
+                    field,
+                    expected_results[field][()],
+                    atol=atol,
+                    rtol=rtol,
                 )
 
     for attr in attrs:
-        _check_results(rdata, attr, expected_results.attrs[attr], atol=atol, rtol=rtol)
+        _check_results(
+            rdata, attr, expected_results.attrs[attr], atol=atol, rtol=rtol
+        )

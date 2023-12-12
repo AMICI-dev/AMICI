@@ -6,10 +6,7 @@
 #include "amici/solver.h"
 #include "amici/solver_cvodes.h"
 
-#include <cassert>
 #include <chrono>
-#include <fstream>
-#include <iostream>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -18,6 +15,7 @@
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/serialization/array.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 
 /** @file serialization.h Helper functions and forward declarations for
@@ -35,7 +33,7 @@ template <class Archive, typename T>
 void archiveVector(Archive& ar, T** p, int size) {
     if (Archive::is_loading::value) {
         if (*p != nullptr)
-            delete[] * p;
+            delete[] *p;
         ar& size;
         *p = size ? new T[size] : nullptr;
     } else {
@@ -144,6 +142,9 @@ void serialize(Archive& ar, amici::Model& m, unsigned int const /*version*/) {
     ar& m.pythonGenerated;
     ar& m.min_sigma_;
     ar& m.sigma_res_;
+    ar& m.steadystate_computation_mode_;
+    ar& m.steadystate_sensitivity_mode_;
+    ar& m.state_independent_events_;
 }
 
 /**
@@ -261,6 +262,7 @@ void serialize(
     ar& m.nz;
     ar& m.nztrue;
     ar& m.ne;
+    ar& m.ne_solver;
     ar& m.nspl;
     ar& m.nw;
     ar& m.ndwdx;

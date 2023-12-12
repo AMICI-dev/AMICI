@@ -6,7 +6,7 @@ repos:
   hooks:
     - id: isort
       name: isort (python)
-      args: ["--profile", "black", "--filter-files"]
+      args: ["--profile", "black", "--filter-files", "--line-length", "79"]
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.4.0
   hooks:
@@ -17,12 +17,14 @@ repos:
   - id: end-of-file-fixer
   - id: trailing-whitespace
 - repo: https://github.com/psf/black
-  rev: 23.3.0
+  rev: 23.7.0
   hooks:
-    - id: black
+    - id: black-jupyter
       # It is recommended to specify the latest version of Python
       # supported by your project here, or alternatively use
       # pre-commit's default_language_version, see
       # https://pre-commit.com/#top_level-default_language_version
       language_version: python3.11
+      args: ["--line-length", "79"]
+
 exclude: '^(ThirdParty|models)/'

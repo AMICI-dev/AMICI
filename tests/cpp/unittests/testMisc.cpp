@@ -65,6 +65,7 @@ class ModelTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             nmaxevent, // ne
+            0,         // ne_solver
             0,         // nspl
             0,         // nJ
             0,         // nw
@@ -303,6 +304,7 @@ class SolverTest : public ::testing::Test {
             nz,        // nz
             nz,        // nztrue
             ne,        // ne
+            0,         // ne_solver
             0,         // nspl
             0,         // nJ
             0,         // nw
@@ -721,6 +723,18 @@ TEST(SpanEqual, SpanEqual)
     EXPECT_TRUE(is_equal(a, a));
     EXPECT_TRUE(is_equal(b, b));
     EXPECT_FALSE(is_equal(a, b));
+}
+
+TEST(CpuTimer, CpuTimer)
+{
+    amici::CpuTimer timer;
+    auto elapsed = timer.elapsed_seconds();
+    EXPECT_LE(0.0, elapsed);
+    EXPECT_GT(1.0, elapsed);
+
+    elapsed = timer.elapsed_milliseconds();
+    EXPECT_LT(0.0, elapsed);
+    EXPECT_GT(1000.0, elapsed);
 }
 
 } // namespace

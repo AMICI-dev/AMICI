@@ -13,7 +13,7 @@ Installation of the AMICI Python package has the following prerequisites:
 * CBLAS compatible BLAS library
   (e.g., OpenBLAS, CBLAS, Atlas, Accelerate, Intel MKL)
 * a C++17 compatible C++ compiler and a C compiler
-  (e.g., g++, clang, Intel C++ compiler, mingw)
+  (e.g., g++>=9.1, clang>=12, Intel C++ compiler, mingw)
 
 If these requirements are fulfilled and all relevant paths are setup properly,
 AMICI can be installed using:
@@ -44,6 +44,9 @@ Install the AMICI dependencies via ``apt``
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
 
+    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+    libboost-chrono-dev libboost-math-dev libboost-serialization-dev
+
 Install AMICI:
 
 .. code-block:: bash
@@ -66,6 +69,57 @@ Install AMICI:
 
    pip3 install amici
 
+Arch Linux
+----------
+
+Install the AMICI dependencies via ``pacman``
+(this requires superuser privileges):
+
+.. code-block:: bash
+
+   sudo pacman -S python swig openblas gcc hdf5 boost-libs
+
+Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
+
+.. code-block:: bash
+
+  export BLAS_CFLAGS="-I/usr/include/openblas/"
+  export BLAS_LIBS="-lopenblas"
+
+Install AMICI:
+
+.. code-block:: bash
+
+   pip3 install amici
+
+Alternatively:
+
+1. Check if packages are already installed with the required versions for AMICI installation.
+
+.. code-block:: bash
+
+   sudo pacman -Si python swig openblas gcc hdf5 boost-libs
+
+2. Upgrade installed packages if required mininum versions are not satisfied for AMICI installation.
+
+.. code-block:: bash
+
+   sudo pacman -Su python swig openblas gcc hdf5 boost-libs
+
+3. Export the bash variables ``BLAS_CFLAGS`` and ``BLAS_LIBS`` to point to where BLAS was installed, e.g.:
+
+.. code-block:: bash
+
+  export BLAS_CFLAGS="-I/usr/include/openblas/"
+  export BLAS_LIBS="-lopenblas"
+
+4. Install AMICI:
+
+.. code-block:: bash
+
+   pip3 install amici
+
+
 Installation on OSX
 +++++++++++++++++++
 
@@ -80,6 +134,13 @@ Install the AMICI dependencies using homebrew:
 
     # optionally for parallel simulations:
     brew install libomp
+    # followed by either `brew link openmp` once,
+    # or `export OpenMP_ROOT=$(brew --prefix)/opt/libomp"` where `OpenMP_ROOT` will have to be set during every re-installation of AMICI or any new model import
+
+    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+    brew install boost && export BOOST_ROOT=$(brew --prefix)/opt/boost
+    # followed by either `brew link boost` once,
+    # or `export BOOST_ROOT=$(brew --prefix)/opt/boost"` where `BOOST_ROOT` will have to be set during every re-installation of AMICI or any new model import
 
 Install AMICI:
 
@@ -150,15 +211,15 @@ You will also need to define two environment variables:
 
 .. code-block:: text
 
-   BLAS_LIBS="/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
-   BLAS_CFLAGS="/IC:/BLAS/OpenBLAS"
+   BLAS_LIBS="-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib"
+   BLAS_CFLAGS="-IC:/BLAS/OpenBLAS"
 
 One way to do that is to run a PowerShell script with the following commands:
 
 .. code-block:: text
 
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
-   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+   [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "-LIBPATH:C:/BLAS/OpenBLAS/lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::User)
    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:/BLAS/OpenBLAS/include/openblas", [System.EnvironmentVariableTarget]::Process)
 
@@ -294,6 +355,10 @@ environment variables:
 | ``AMICI_PARALLEL_COMPILE`` | Set to the number of parallel    | ``AMICI_PARALLEL_COMPILE=4``    |
 |                            | processes to be used for C(++)   |                                 |
 |                            | compilation (defaults to 1)      |                                 |
++----------------------------+----------------------------------+---------------------------------+
+| ``AMICI_TRY_ENABLE_HDF5``  | Whether to build AMICI with      | ``AMICI_TRY_ENABLE_HDF5=OFF``   |
+|                            | HDF5-support if possible.        |                                 |
+|                            | Default: ``ON``                  |                                 |
 +----------------------------+----------------------------------+---------------------------------+
 
 Installation under Anaconda

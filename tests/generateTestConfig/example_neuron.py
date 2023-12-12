@@ -130,7 +130,9 @@ class ExampleNeuron(AmiciExample):
         self.solverOptions["sensi_meth"] = 1
 
         self.data["Y"] = np.full((len(self.modelOptions["ts"]), 1), np.nan)
-        self.data["Sigma_Y"] = np.full((len(self.modelOptions["ts"]), 1), np.nan)
+        self.data["Sigma_Y"] = np.full(
+            (len(self.modelOptions["ts"]), 1), np.nan
+        )
 
         self.data["Z"] = np.transpose(
             [

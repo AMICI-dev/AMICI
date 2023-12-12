@@ -1,6 +1,5 @@
 """Package-level entrypoint"""
 
-import os
 import sys
 
 from . import __version__, compiledWithOpenMP, has_clibs, hdf5_enabled
@@ -21,7 +20,9 @@ def print_info():
     if hdf5_enabled:
         features.append("HDF5")
 
-    print(f"AMICI ({sys.platform}) version {__version__} ({','.join(features)})")
+    print(
+        f"AMICI ({sys.platform}) version {__version__} ({','.join(features)})"
+    )
 
 
 if __name__ == "__main__":

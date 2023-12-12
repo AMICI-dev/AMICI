@@ -42,7 +42,10 @@ def get_sub_bibliography(year, by_year, bibfile):
 
     entries = ",".join(["@" + x for x in by_year[year]])
     stdin_input = (
-        "---\n" f"bibliography: {bibfile}\n" f'nocite: "{entries}"\n...\n' f"# {year}"
+        "---\n"
+        f"bibliography: {bibfile}\n"
+        f'nocite: "{entries}"\n...\n'
+        f"# {year}"
     )
 
     out = subprocess.run(
@@ -67,7 +70,8 @@ def main():
     with open(outfile, "w") as f:
         f.write("# References\n\n")
         f.write(
-            "List of publications using AMICI. " f"Total number is {num_total}.\n\n"
+            "List of publications using AMICI. "
+            f"Total number is {num_total}.\n\n"
         )
         f.write(
             "If you applied AMICI in your work and your publication is "

@@ -126,6 +126,16 @@ class AmiciBuildPy(build_py):
 
 
 class AmiciBuildCMakeExtension(BuildExtension):
+    def finalize_options(self):
+        # Allow overriding the - since setuptools version 64 randomly named -
+        #  setuptools/distutils temporary build directory via environment variable.
+        # This is useful for CI builds where we need the files in this directory
+        #  for code coverage analysis.
+        if os.getenv("AMICI_BUILD_TEMP"):
+            self.build_temp = os.getenv("AMICI_BUILD_TEMP")
+
+        super().finalize_options()
+
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in
         the wheel
@@ -171,7 +181,8 @@ class AmiciBuildCMakeExtension(BuildExtension):
         build_dir = self.build_lib if self.inplace == 0 else os.getcwd()
         build_dir = Path(build_dir).absolute().as_posix()
         ext.cmake_configure_options = [
-            x.replace("${build_dir}", build_dir) for x in ext.cmake_configure_options
+            x.replace("${build_dir}", build_dir)
+            for x in ext.cmake_configure_options
         ]
 
         super().build_extension(ext)

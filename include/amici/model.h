@@ -12,7 +12,6 @@
 #include "amici/vector.h"
 
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace amici {
@@ -117,6 +116,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
      * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
      * @param w_recursion_depth Recursion depth of fw
+     * @param state_independent_events Map of events with state-independent
+     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model(
         ModelDimensions const& model_dimensions,
@@ -124,7 +125,8 @@ class Model : public AbstractModel, public ModelDimensions {
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
         std::vector<int> z2event, bool pythonGenerated = false,
         int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
-        int w_recursion_depth = 0
+        int w_recursion_depth = 0,
+        std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
     /** Destructor. */
@@ -854,6 +856,20 @@ class Model : public AbstractModel, public ModelDimensions {
     void setUnscaledInitialStateSensitivities(std::vector<realtype> const& sx0);
 
     /**
+     * @brief Set the mode how steady state is computed in the steadystate
+     * simulation.
+     * @param mode Steadystate computation mode
+     */
+    void setSteadyStateComputationMode(SteadyStateComputationMode mode);
+
+    /**
+     * @brief Gets the mode how steady state is computed in the steadystate
+     * simulation.
+     * @return Mode
+     */
+    SteadyStateComputationMode getSteadyStateComputationMode() const;
+
+    /**
      * @brief Set the mode how sensitivities are computed in the steadystate
      * simulation.
      * @param mode Steadystate sensitivity mode
@@ -1439,6 +1455,15 @@ class Model : public AbstractModel, public ModelDimensions {
     SUNMatrixWrapper const& get_dxdotdp_full() const;
 
     /**
+     * @brief Get trigger times for events that don't require root-finding.
+     *
+     * @return List of unique trigger points for events that don't require
+     * root-finding (i.e. that trigger at predetermined timepoints),
+     * in ascending order.
+     */
+    virtual std::vector<double> get_trigger_timepoints() const;
+
+    /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
      * directional or full second order derivative will be computed
@@ -1450,6 +1475,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** Logger */
     Logger* logger = nullptr;
+
+    /**
+     * @brief Map of trigger timepoints to event indices for events that don't
+     * require root-finding.
+     */
+    std::map<realtype, std::vector<int>> state_independent_events_ = {};
 
   protected:
     /**
@@ -1980,12 +2011,13 @@ class Model : public AbstractModel, public ModelDimensions {
     /** maximal number of events to track */
     int nmaxevent_{10};
 
-    /**
-     * flag indicating whether steadystate sensitivities are to be computed
-     * via FSA when steadyStateSimulation is used
-     */
+    /** method for steady-state computation */
+    SteadyStateComputationMode steadystate_computation_mode_{
+        SteadyStateComputationMode::integrateIfNewtonFails};
+
+    /** method for steadystate sensitivities computation */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_{
-        SteadyStateSensitivityMode::newtonOnly};
+        SteadyStateSensitivityMode::integrateIfNewtonFails};
 
     /**
      * Indicates whether the result of every call to `Model::f*` should be

@@ -8,7 +8,6 @@
 #include "amici/solver.h"
 
 #include <cmath>
-#include <cstring>
 #include <cvodes/cvodes.h>
 #include <memory>
 #include <sundials/sundials_dense.h>
@@ -58,6 +57,17 @@ SteadystateProblem::SteadystateProblem(Solver const& solver, Model const& model)
         throw AmiException("Preequilibration using adjoint sensitivities "
                            "is not compatible with using forward "
                            "sensitivities during simulation");
+    if (solver.getSensitivityMethod() == SensitivityMethod::forward
+        && model.getSteadyStateComputationMode()
+               == SteadyStateComputationMode::newtonOnly
+        && model.getSteadyStateSensitivityMode()
+               == SteadyStateSensitivityMode::integrationOnly)
+        throw AmiException("For forward sensitivity analysis steady-state "
+                           "computation mode 'newtonOnly' and steady-state "
+                           "sensitivity mode 'integrationOnly' are not "
+                           "compatible as numerical integration of the model "
+                           "ODEs and corresponding forward sensitivities ODEs "
+                           "is coupled");
 }
 
 void SteadystateProblem::workSteadyStateProblem(
@@ -104,7 +114,8 @@ void SteadystateProblem::findSteadyState(
     Solver const& solver, Model& model, int it
 ) {
     steady_state_status_.resize(3, SteadyStateStatus::not_run);
-    /* Turn off Newton's method if newton_maxsteps is set to 0 or
+    /* Turn off Newton's method if 'integrationOnly' approach is chosen for
+    steady-state computation or newton_maxsteps is set to 0 or
     if 'integrationOnly' approach is chosen for sensitivity computation
     in combination with forward sensitivities approach. The latter is necessary
     as numerical integration of the model ODEs and corresponding
@@ -112,7 +123,9 @@ void SteadystateProblem::findSteadyState(
     chosen for sensitivity computation it is enforced that steady state is
     computed only by numerical integration as well. */
     bool turnOffNewton
-        = solver.getNewtonMaxSteps() == 0
+        = model.getSteadyStateComputationMode()
+              == SteadyStateComputationMode::integrationOnly
+          || solver.getNewtonMaxSteps() == 0
           || (model.getSteadyStateSensitivityMode()
                   == SteadyStateSensitivityMode::integrationOnly
               && ((it == -1
@@ -121,21 +134,27 @@ void SteadystateProblem::findSteadyState(
                   || solver.getSensitivityMethod() == SensitivityMethod::forward
               ));
 
+    bool turnOffSimulation = model.getSteadyStateComputationMode()
+                             == SteadyStateComputationMode::newtonOnly;
+
     /* First, try to run the Newton solver */
     if (!turnOffNewton)
         findSteadyStateByNewtonsMethod(model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
-    if (!checkSteadyStateSuccess())
+    if (!turnOffSimulation && !checkSteadyStateSuccess())
         findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
-    if (!turnOffNewton && !checkSteadyStateSuccess())
+    if (!turnOffNewton && !turnOffSimulation && !checkSteadyStateSuccess())
         findSteadyStateByNewtonsMethod(model, true);
 
     /* Nothing worked, throw an as informative error as possible */
     if (!checkSteadyStateSuccess())
-        handleSteadyStateFailure();
+        handleSteadyStateFailure(
+            !turnOffNewton, !turnOffSimulation,
+            !turnOffNewton && !turnOffSimulation
+        );
 }
 
 void SteadystateProblem::findSteadyStateByNewtonsMethod(
@@ -377,16 +396,23 @@ void SteadystateProblem::getQuadratureBySimulation(
     }
 }
 
-[[noreturn]] void SteadystateProblem::handleSteadyStateFailure() {
+[[noreturn]] void SteadystateProblem::handleSteadyStateFailure(
+    bool tried_newton_1, bool tried_simulation, bool tried_newton_2
+) {
     /* Throw error message according to error codes */
-    std::string errorString = "Steady state computation failed. "
-                              "First run of Newton solver failed";
-    writeErrorString(&errorString, steady_state_status_[0]);
-    errorString.append(" Simulation to steady state failed");
-    writeErrorString(&errorString, steady_state_status_[1]);
-    errorString.append(" Second run of Newton solver failed");
-    writeErrorString(&errorString, steady_state_status_[2]);
-
+    std::string errorString = "Steady state computation failed.";
+    if (tried_newton_1) {
+        errorString.append(" First run of Newton solver failed");
+        writeErrorString(&errorString, steady_state_status_[0]);
+    }
+    if (tried_simulation) {
+        errorString.append(" Simulation to steady state failed");
+        writeErrorString(&errorString, steady_state_status_[1]);
+    }
+    if (tried_newton_2) {
+        errorString.append(" Second run of Newton solver failed");
+        writeErrorString(&errorString, steady_state_status_[2]);
+    }
     throw AmiException(errorString.c_str());
 }
 

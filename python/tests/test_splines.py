@@ -9,6 +9,7 @@ time to complete.
 import os
 
 import numpy as np
+from amici.testing import skip_on_valgrind
 from splines_utils import (
     check_splines_full,
     example_spline_1,
@@ -17,6 +18,7 @@ from splines_utils import (
 )
 
 
+@skip_on_valgrind
 def test_multiple_splines(**kwargs):
     """
     Test a SBML model containing multiple splines.
@@ -59,7 +61,9 @@ def test_multiple_splines(**kwargs):
         tols5 = (tols5, tols5, tols5)
 
     tols = []
-    for t0, t1, t2, t3, t4, t5 in zip(tols0, tols1, tols2, tols3, tols4, tols5):
+    for t0, t1, t2, t3, t4, t5 in zip(
+        tols0, tols1, tols2, tols3, tols4, tols5
+    ):
         keys = set().union(
             t0.keys(), t1.keys(), t2.keys(), t3.keys(), t4.keys(), t5.keys()
         )
@@ -96,7 +100,8 @@ def test_multiple_splines(**kwargs):
     #     groundtruth = test_multiple_splines(return_groundtruth=True)
     # They should be recomputed only if the splines used in the test change
     precomputed_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "test_splines_precomputed.npz"
+        os.path.dirname(os.path.abspath(__file__)),
+        "test_splines_precomputed.npz",
     )
     kwargs["groundtruth"] = dict(np.load(precomputed_path))
 

@@ -52,7 +52,9 @@ from breathe.renderer.sphinxrenderer import (
     DomainDirectiveFactory as breathe_DomainDirectiveFactory,
 )
 
-old_breathe_DomainDirectiveFactory_create = breathe_DomainDirectiveFactory.create
+old_breathe_DomainDirectiveFactory_create = (
+    breathe_DomainDirectiveFactory.create
+)
 
 
 def my_breathe_DomainDirectiveFactory_create(domain: str, args):
@@ -67,7 +69,9 @@ def my_breathe_DomainDirectiveFactory_create(domain: str, args):
     return cls(domain + ":" + name, *args[1:])
 
 
-breathe_DomainDirectiveFactory.create = my_breathe_DomainDirectiveFactory_create
+breathe_DomainDirectiveFactory.create = (
+    my_breathe_DomainDirectiveFactory_create
+)
 
 
 # END Monkeypatch breathe
@@ -102,7 +106,9 @@ def install_doxygen():
     subprocess.run(cmd, shell=True, check=True)
     assert os.path.islink(os.path.join(some_dir_on_path, "doxygen"))
     # verify it's available
-    res = subprocess.run(["doxygen", "--version"], check=False, capture_output=True)
+    res = subprocess.run(
+        ["doxygen", "--version"], check=False, capture_output=True
+    )
     print(res.stdout.decode(), res.stderr.decode())
     assert version in res.stdout.decode()
 
@@ -176,7 +182,10 @@ extensions = [
 
 intersphinx_mapping = {
     "pysb": ("https://pysb.readthedocs.io/en/stable/", None),
-    "petab": ("https://petab.readthedocs.io/projects/libpetab-python/en/latest/", None),
+    "petab": (
+        "https://petab.readthedocs.io/projects/libpetab-python/en/latest/",
+        None,
+    ),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "numpy": ("https://numpy.org/devdocs/", None),
     "sympy": ("https://docs.sympy.org/latest/", None),
@@ -291,7 +300,9 @@ exhale_args = {
     "verboseBuild": True,
 }
 
-mtocpp_filter = os.path.join(amici_dir, "matlab", "mtoc", "config", "mtocpp_filter.sh")
+mtocpp_filter = os.path.join(
+    amici_dir, "matlab", "mtoc", "config", "mtocpp_filter.sh"
+)
 exhale_projects_args = {
     "AMICI_CPP": {
         "exhaleDoxygenStdin": "\n".join(
@@ -504,10 +515,14 @@ def process_docstring(app, what, name, obj, options, lines):
         for old, new in typemaps.items():
             lines[i] = lines[i].replace(old, new)
         lines[i] = re.sub(
-            r"amici::(Model|Solver|ExpData) ", r":class:`amici\.amici\.\1\`", lines[i]
+            r"amici::(Model|Solver|ExpData) ",
+            r":class:`amici\.amici\.\1\`",
+            lines[i],
         )
         lines[i] = re.sub(
-            r"amici::(runAmiciSimulation[s]?)", r":func:`amici\.amici\.\1`", lines[i]
+            r"amici::(runAmiciSimulation[s]?)",
+            r":func:`amici\.amici\.\1`",
+            lines[i],
         )
 
 
@@ -552,7 +567,8 @@ def process_signature(
         return
 
     # only apply in the amici.amici module
-    if name.split(".")[1] != "amici":
+    split_name = name.split(".")
+    if len(split_name) < 2 or split_name[1] != "amici":
         return
 
     signature = fix_typehints(signature)

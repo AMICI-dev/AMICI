@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 74.
+List of publications using AMICI. Total number is 82.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -14,6 +14,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2023</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="doc-bibliography">
+<div id="ref-BuckBas2023" class="csl-entry" role="doc-biblioentry">
+Buck, Michèle C., Lisa Bast, Judith S. Hecker, Jennifer Rivière, Maja
+Rothenberg-Thurley, Luisa Vogel, Dantong Wang, et al. 2023.
+<span>“Progressive Disruption of Hematopoietic Architecture from Clonal
+Hematopoiesis to <span>MDS</span>.”</span> <em>iScience</em>, 107328. <a
+href="https://doi.org/10.1016/j.isci.2023.107328">https://doi.org/10.1016/j.isci.2023.107328</a>.
+</div>
 <div id="ref-ContentoCas2023" class="csl-entry" role="doc-biblioentry">
 Contento, Lorenzo, Noemi Castelletti, Elba Raimúndez, Ronan Le Gleut,
 Yannik Schälte, Paul Stapor, Ludwig Christian Hinske, et al. 2023.
@@ -22,12 +29,41 @@ Reveals Time-Dependent Test Efficiency and Infectious Contacts.”</span>
 <em>Epidemics</em> 43: 100681. <a
 href="https://doi.org/10.1016/j.epidem.2023.100681">https://doi.org/10.1016/j.epidem.2023.100681</a>.
 </div>
+<div id="ref-ContentoSta2023" class="csl-entry" role="doc-biblioentry">
+Contento, Lorenzo, Paul Stapor, Daniel Weindl, and Jan Hasenauer. 2023.
+<span>“A More Expressive Spline Representation for <span>SBML</span>
+Models Improves Code Generation Performance in
+<span>AMICI</span>.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.1101/2023.06.29.547120">https://doi.org/10.1101/2023.06.29.547120</a>.
+</div>
+<div id="ref-Froehlich2023" class="csl-entry" role="doc-biblioentry">
+Fröhlich, Fabian. 2023. <span>“A Practical Guide for the Efficient
+Formulation and Calibration of Large, Energy- and Rule-Based Models of
+Cellular Signal Transduction.”</span> In <em>Computational Modeling of
+Signaling Networks</em>, edited by Lan K. Nguyen, 59–86. New York, NY:
+Springer US. <a
+href="https://doi.org/10.1007/978-1-0716-3008-2_3">https://doi.org/10.1007/978-1-0716-3008-2_3</a>.
+</div>
 <div id="ref-FroehlichGer2023" class="csl-entry" role="doc-biblioentry">
 Fröhlich, Fabian, Luca Gerosa, Jeremy Muhlich, and Peter K Sorger. 2023.
 <span>“Mechanistic Model of MAPK Signaling Reveals How Allostery and
 Rewiring Contribute to Drug Resistance.”</span> <em>Molecular Systems
 Biology</em> 19 (2): e10988. <a
 href="https://doi.org/10.15252/msb.202210988">https://doi.org/10.15252/msb.202210988</a>.
+</div>
+<div id="ref-HasenauerMer2023" class="csl-entry" role="doc-biblioentry">
+Hasenauer, Jan, Simon Merkt, Solomon Ali, Esayas Gudina, Wondimagegn
+Adissu, Maximilian Münchhoff, Alexander Graf, et al. 2023.
+<span>“Long-Term Monitoring of SARS-CoV-2 Seroprevalence and Variants in
+Ethiopia Provides Prediction for Immunity and Cross-Immunity.”</span> <a
+href="https://doi.org/10.21203/rs.3.rs-3307821/v1">https://doi.org/10.21203/rs.3.rs-3307821/v1</a>.
+</div>
+<div id="ref-HuckBal2023" class="csl-entry" role="doc-biblioentry">
+Huck, Wilhelm, Mathieu Baltussen, Thijs de Jong, Quentin Duez, and
+William Robinson. 2023. <span>“Chemical Reservoir Computation in a
+Self-Organizing Reaction Network.”</span> Research Square Platform LLC.
+<a
+href="https://doi.org/10.21203/rs.3.rs-3487081/v1">https://doi.org/10.21203/rs.3.rs-3487081/v1</a>.
 </div>
 <div id="ref-LakrisenkoSta2023" class="csl-entry"
 role="doc-biblioentry">
@@ -38,12 +74,40 @@ at Steady-State in ODE Models of Biochemical Reaction Networks.”</span>
 <em>PLOS Computational Biology</em> 19 (1): 1–19. <a
 href="https://doi.org/10.1371/journal.pcbi.1010783">https://doi.org/10.1371/journal.pcbi.1010783</a>.
 </div>
+<div id="ref-Mendes2023" class="csl-entry" role="doc-biblioentry">
+Mendes, Pedro. 2023. <span>“Reproducibility and FAIR Principles: The
+Case of a Segment Polarity Network Model.”</span> <em>Frontiers in Cell
+and Developmental Biology</em> 11. <a
+href="https://doi.org/10.3389/fcell.2023.1201673">https://doi.org/10.3389/fcell.2023.1201673</a>.
+</div>
 <div id="ref-MishraWan2023" class="csl-entry" role="doc-biblioentry">
 Mishra, Shekhar, Ziyu Wang, Michael J. Volk, and Huimin Zhao. 2023.
 <span>“Design and Application of a Kinetic Model of Lipid Metabolism in
 Saccharomyces Cerevisiae.”</span> <em>Metabolic Engineering</em> 75:
 12–18. <a
 href="https://doi.org/10.1016/j.ymben.2022.11.003">https://doi.org/10.1016/j.ymben.2022.11.003</a>.
+</div>
+<div id="ref-RaimundezFed2023" class="csl-entry" role="doc-biblioentry">
+Raimúndez, Elba, Michael Fedders, and Jan Hasenauer. 2023.
+<span>“Posterior Marginalization Accelerates Bayesian Inference for
+Dynamical Models of Biological Processes.”</span>
+<em><span>iScience</span></em>, September, 108083. <a
+href="https://doi.org/10.1016/j.isci.2023.108083">https://doi.org/10.1016/j.isci.2023.108083</a>.
+</div>
+<div id="ref-SluijsZho2023" class="csl-entry" role="doc-biblioentry">
+Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu Baltussen, Frank
+Nelissen, Hans Heus, and Wilhelm Huck. 2023. <span>“Inverse Design of
+Enzymatic Reaction Network States.”</span> <a
+href="https://doi.org/10.21203/rs.3.rs-2646906/v1">https://doi.org/10.21203/rs.3.rs-2646906/v1</a>.
+</div>
+<div id="ref-TunedalVio2023" class="csl-entry" role="doc-biblioentry">
+Tunedal, Kajsa, Federica Viola, Belén Casas Garcia, Ann Bolger, Fredrik
+H. Nyström, Carl Johan Östgren, Jan Engvall, et al. 2023.
+<span>“Haemodynamic Effects of Hypertension and Type 2 Diabetes:
+Insights from a <span>4d</span> Flow <span
+class="nocase">MRI-based</span> Personalized Cardiovascular Mathematical
+Model.”</span> <em>The Journal of Physiology</em> n/a (n/a). <a
+href="https://doi.org/10.1113/JP284652">https://doi.org/10.1113/JP284652</a>.
 </div>
 </div>
 <h1 class="unnumbered" id="section">2022</h1>
@@ -86,12 +150,6 @@ Chromatography Development Using Discontinuous Galerkin Methods Coupled
 with Forward Sensitivity Analysis.”</span> <em>Journal of Chromatography
 A</em>, 463741. <a
 href="https://doi.org/10.1016/j.chroma.2022.463741">https://doi.org/10.1016/j.chroma.2022.463741</a>.
-</div>
-<div id="ref-RaimundezFed2022" class="csl-entry" role="doc-biblioentry">
-Raimundez, Elba, Michael Fedders, and Jan Hasenauer. 2022.
-<span>“Posterior Marginalization Accelerates Bayesian Inference for
-Dynamical Systems.”</span> <em>bioRxiv</em>. <a
-href="https://doi.org/10.1101/2022.12.02.518841">https://doi.org/10.1101/2022.12.02.518841</a>.
 </div>
 <div id="ref-SchmuckerFar2022" class="csl-entry" role="doc-biblioentry">
 Schmucker, Robin, Gabriele Farina, James Faeder, Fabian Fröhlich, Ali

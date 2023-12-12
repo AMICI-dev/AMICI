@@ -1,8 +1,9 @@
 """Test for ``amici.parameter_mapping``"""
-import os
 
-import pytest
-from amici.parameter_mapping import ParameterMapping, ParameterMappingForCondition
+from amici.petab.parameter_mapping import (
+    ParameterMapping,
+    ParameterMappingForCondition,
+)
 from amici.testing import skip_on_valgrind
 
 
@@ -25,16 +26,25 @@ def test_parameter_mapping_for_condition_default_args():
     map_preeq_fix = {"sim_par2": "opt_par1"}
     map_sim_fix = {"sim_par2": "opt_par2"}
     par_map_for_condition = ParameterMappingForCondition(
-        map_sim_var=map_sim_var, map_preeq_fix=map_preeq_fix, map_sim_fix=map_sim_fix
+        map_sim_var=map_sim_var,
+        map_preeq_fix=map_preeq_fix,
+        map_sim_fix=map_sim_fix,
     )
 
     expected_scale_map_sim_var = {"sim_par0": "lin", "sim_par1": "lin"}
     expected_scale_map_preeq_fix = {"sim_par2": "lin"}
     expected_scale_map_sim_fix = {"sim_par2": "lin"}
 
-    assert par_map_for_condition.scale_map_sim_var == expected_scale_map_sim_var
-    assert par_map_for_condition.scale_map_preeq_fix == expected_scale_map_preeq_fix
-    assert par_map_for_condition.scale_map_sim_fix == expected_scale_map_sim_fix
+    assert (
+        par_map_for_condition.scale_map_sim_var == expected_scale_map_sim_var
+    )
+    assert (
+        par_map_for_condition.scale_map_preeq_fix
+        == expected_scale_map_preeq_fix
+    )
+    assert (
+        par_map_for_condition.scale_map_sim_fix == expected_scale_map_sim_fix
+    )
 
 
 @skip_on_valgrind
@@ -48,7 +58,9 @@ def test_parameter_mapping():
     map_preeq_fix = {"sim_par2": "opt_par1"}
     map_sim_fix = {"sim_par2": "opt_par2"}
     par_map_for_condition = ParameterMappingForCondition(
-        map_sim_var=map_sim_var, map_preeq_fix=map_preeq_fix, map_sim_fix=map_sim_fix
+        map_sim_var=map_sim_var,
+        map_preeq_fix=map_preeq_fix,
+        map_sim_fix=map_sim_fix,
     )
 
     parameter_mapping.append(par_map_for_condition)

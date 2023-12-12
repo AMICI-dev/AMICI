@@ -54,8 +54,12 @@ def model(request):
 def test_models(model):
     amici_model, parameters, timepoints, x_expected, sx_expected = model
 
-    result_expected_x = np.array([x_expected(t, **parameters) for t in timepoints])
-    result_expected_sx = np.array([sx_expected(t, **parameters) for t in timepoints])
+    result_expected_x = np.array(
+        [x_expected(t, **parameters) for t in timepoints]
+    )
+    result_expected_sx = np.array(
+        [sx_expected(t, **parameters) for t in timepoints]
+    )
 
     # Does the AMICI simulation match the analytical solution?
     check_trajectories_without_sensitivities(amici_model, result_expected_x)
@@ -73,7 +77,9 @@ def get_model_definition(model_name):
     elif model_name == "piecewise_many_conditions":
         return model_definition_piecewise_many_conditions()
     else:
-        raise NotImplementedError(f"Model with name {model_name} is not implemented.")
+        raise NotImplementedError(
+            f"Model with name {model_name} is not implemented."
+        )
 
 
 def model_definition_state_and_parameter_dependent_heavisides():
@@ -138,8 +144,12 @@ def model_definition_state_and_parameter_dependent_heavisides():
             sx_1_zeta = np.exp(alpha * t)
         else:
             # Never trust Wolfram Alpha...
-            sx_1_alpha = zeta * tau_1 * np.exp(alpha * tau_1 - beta * (t - tau_1))
-            sx_1_beta = zeta * (tau_1 - t) * np.exp(alpha * tau_1 - beta * (t - tau_1))
+            sx_1_alpha = (
+                zeta * tau_1 * np.exp(alpha * tau_1 - beta * (t - tau_1))
+            )
+            sx_1_beta = (
+                zeta * (tau_1 - t) * np.exp(alpha * tau_1 - beta * (t - tau_1))
+            )
             sx_1_gamma = (
                 zeta
                 * (alpha + beta)
@@ -178,8 +188,22 @@ def model_definition_state_and_parameter_dependent_heavisides():
             sx_2_delta = gamma * np.exp(gamma * delta) - eta
             sx_2_eta = t - delta
 
-        sx_1 = (sx_1_alpha, sx_1_beta, sx_1_gamma, sx_1_delta, sx_1_eta, sx_1_zeta)
-        sx_2 = (sx_2_alpha, sx_2_beta, sx_2_gamma, sx_2_delta, sx_2_eta, sx_2_zeta)
+        sx_1 = (
+            sx_1_alpha,
+            sx_1_beta,
+            sx_1_gamma,
+            sx_1_delta,
+            sx_1_eta,
+            sx_1_zeta,
+        )
+        sx_2 = (
+            sx_2_alpha,
+            sx_2_beta,
+            sx_2_gamma,
+            sx_2_delta,
+            sx_2_eta,
+            sx_2_zeta,
+        )
 
         return np.array((sx_1, sx_2)).transpose()
 

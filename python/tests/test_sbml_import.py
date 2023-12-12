@@ -38,7 +38,7 @@ def simple_sbml_model():
     model.addSpecies(s1)
     p1 = model.createParameter()
     p1.setId("p1")
-    p1.setValue(0.0)
+    p1.setValue(2.0)
     model.addParameter(p1)
 
     return document, model
@@ -73,7 +73,10 @@ def test_sbml2amici_nested_observables_fail(simple_sbml_model):
             sbml_importer.sbml2amici(
                 model_name=model_name,
                 output_dir=tmpdir,
-                observables={"outer": {"formula": "inner"}, "inner": {"formula": "S1"}},
+                observables={
+                    "outer": {"formula": "inner"},
+                    "inner": {"formula": "S1"},
+                },
                 compute_conservation_laws=False,
                 generate_sensitivity_code=False,
                 compile=False,
@@ -135,11 +138,15 @@ def observable_dependent_error_model(simple_sbml_model):
                 "observable_s1_scaled": "0.02 * observable_s1_scaled",
             },
         )
-        yield amici.import_model_module(module_name=model_name, module_path=tmpdir)
+        yield amici.import_model_module(
+            module_name=model_name, module_path=tmpdir
+        )
 
 
 @skip_on_valgrind
-def test_sbml2amici_observable_dependent_error(observable_dependent_error_model):
+def test_sbml2amici_observable_dependent_error(
+    observable_dependent_error_model,
+):
     """Check gradients for model with observable-dependent error"""
     model_module = observable_dependent_error_model
     model = model_module.getModel()
@@ -149,9 +156,14 @@ def test_sbml2amici_observable_dependent_error(observable_dependent_error_model)
     # generate artificial data
     rdata = amici.runAmiciSimulation(model, solver)
     assert_allclose(
-        rdata.sigmay[:, 0], 0.1 + 0.05 * rdata.y[:, 0], rtol=1.0e-5, atol=1.0e-8
+        rdata.sigmay[:, 0],
+        0.1 + 0.05 * rdata.y[:, 0],
+        rtol=1.0e-5,
+        atol=1.0e-8,
     )
-    assert_allclose(rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1], rtol=1.0e-5, atol=1.0e-8)
+    assert_allclose(
+        rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1], rtol=1.0e-5, atol=1.0e-8
+    )
     edata = amici.ExpData(rdata, 1.0, 0.0)
     edata.setObservedDataStdDev(np.nan)
 
@@ -196,7 +208,9 @@ def model_steadystate_module():
 
     observables = amici.assignmentRules2observables(
         sbml_importer.sbml,
-        filter_function=lambda variable: variable.getId().startswith("observable_")
+        filter_function=lambda variable: variable.getId().startswith(
+            "observable_"
+        )
         and not variable.getId().endswith("_sigma"),
     )
 
@@ -210,7 +224,9 @@ def model_steadystate_module():
             sigmas={"observable_x1withsigma": "observable_x1withsigma_sigma"},
         )
 
-        yield amici.import_model_module(module_name=module_name, module_path=outdir)
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
 
 
 @pytest.fixture(scope="session")
@@ -223,7 +239,9 @@ def model_units_module():
     with TemporaryDirectory() as outdir:
         sbml_importer.sbml2amici(model_name=module_name, output_dir=outdir)
 
-        yield amici.import_model_module(module_name=module_name, module_path=outdir)
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
 
 
 def test_presimulation(sbml_example_presimulation_module):
@@ -323,7 +341,9 @@ def test_steadystate_simulation(model_steadystate_module):
 
     solver.setRelativeTolerance(1e-12)
     solver.setAbsoluteTolerance(1e-12)
-    check_derivatives(model, solver, edata[0], atol=1e-3, rtol=1e-3, epsilon=1e-4)
+    check_derivatives(
+        model, solver, edata[0], atol=1e-3, rtol=1e-3, epsilon=1e-4
+    )
 
     # Run some additional tests which need a working Model,
     # but don't need precomputed expectations.
@@ -406,7 +426,9 @@ def model_test_likelihoods():
             noise_distributions=noise_distributions,
         )
 
-        yield amici.import_model_module(module_name=module_name, module_path=outdir)
+        yield amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
 
 
 @skip_on_valgrind
@@ -512,7 +534,9 @@ def test_units(model_units_module):
 
 
 @skip_on_valgrind
-@pytest.mark.skipif(os.name == "nt", reason="Avoid `CERTIFICATE_VERIFY_FAILED` error")
+@pytest.mark.skipif(
+    os.name == "nt", reason="Avoid `CERTIFICATE_VERIFY_FAILED` error"
+)
 def test_sympy_exp_monkeypatch():
     """
     This model contains a removeable discontinuity at t=0 that requires
@@ -557,7 +581,9 @@ def test_sympy_exp_monkeypatch():
 
         # print sensitivity-related results
         assert rdata["status"] == amici.AMICI_SUCCESS
-        check_derivatives(model, solver, None, atol=1e-2, rtol=1e-2, epsilon=1e-3)
+        check_derivatives(
+            model, solver, None, atol=1e-2, rtol=1e-2, epsilon=1e-3
+        )
 
 
 def normal_nllh(m, y, sigma):
@@ -594,7 +620,8 @@ def log_laplace_nllh(m, y, sigma):
 
 def log10_laplace_nllh(m, y, sigma):
     return sum(
-        np.log(2 * sigma * m * np.log(10)) + np.abs(np.log10(y) - np.log10(m)) / sigma
+        np.log(2 * sigma * m * np.log(10))
+        + np.abs(np.log10(y) - np.log10(m)) / sigma
     )
 
 
@@ -662,3 +689,34 @@ def test_code_gen_uses_lhs_symbol_ids():
         )
         dwdx = Path(tmpdir, "dwdx.cpp").read_text()
     assert "dobservable_x1_dx1 = " in dwdx
+
+
+def test_hardcode_parameters(simple_sbml_model):
+    """Test model generation works for model without observables"""
+    sbml_doc, sbml_model = simple_sbml_model
+    sbml_importer = SbmlImporter(sbml_source=sbml_model, from_file=False)
+    r = sbml_model.createRateRule()
+    r.setVariable("S1")
+    r.setFormula("p1")
+    assert sbml_model.getParameter("p1").getValue() != 0
+
+    ode_model = sbml_importer._build_ode_model()
+    assert str(ode_model.parameters()) == "[p1]"
+    assert ode_model.differential_states()[0].get_dt().name == "p1"
+
+    ode_model = sbml_importer._build_ode_model(
+        constant_parameters=[],
+        hardcode_symbols=["p1"],
+    )
+    assert str(ode_model.parameters()) == "[]"
+    assert (
+        ode_model.differential_states()[0].get_dt()
+        == sbml_model.getParameter("p1").getValue()
+    )
+
+    with pytest.raises(ValueError):
+        sbml_importer._build_ode_model(
+            # mutually exclusive
+            constant_parameters=["p1"],
+            hardcode_symbols=["p1"],
+        )

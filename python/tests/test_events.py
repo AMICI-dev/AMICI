@@ -1,8 +1,12 @@
 """Tests for SBML events, including piecewise expressions."""
 from copy import deepcopy
 
+import amici
 import numpy as np
 import pytest
+from amici.antimony_import import antimony2amici
+from amici.gradient_check import check_derivatives
+from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from util import (
     check_trajectories_with_adjoint_sensitivities,
@@ -16,10 +20,15 @@ from util import (
 @pytest.fixture(
     params=[
         pytest.param("events_plus_heavisides", marks=skip_on_valgrind),
-        pytest.param("piecewise_plus_event_simple_case", marks=skip_on_valgrind),
-        pytest.param("piecewise_plus_event_semi_complicated", marks=skip_on_valgrind),
         pytest.param(
-            "piecewise_plus_event_trigger_depends_on_state", marks=skip_on_valgrind
+            "piecewise_plus_event_simple_case", marks=skip_on_valgrind
+        ),
+        pytest.param(
+            "piecewise_plus_event_semi_complicated", marks=skip_on_valgrind
+        ),
+        pytest.param(
+            "piecewise_plus_event_trigger_depends_on_state",
+            marks=skip_on_valgrind,
         ),
         pytest.param("nested_events", marks=skip_on_valgrind),
         pytest.param("event_state_dep_ddeltax_dtpx", marks=skip_on_valgrind),
@@ -73,7 +82,9 @@ def get_model_definition(model_name):
     if model_name == "event_state_dep_ddeltax_dtpx":
         return model_definition_event_state_dep_ddeltax_dtpx()
 
-    raise NotImplementedError(f"Model with name {model_name} is not implemented.")
+    raise NotImplementedError(
+        f"Model with name {model_name} is not implemented."
+    )
 
 
 def model_definition_events_plus_heavisides():
@@ -165,7 +176,7 @@ def model_definition_events_plus_heavisides():
                 tmp_x = expm(event_1_time * A)
                 x1 = np.matmul(tmp_x, x0)
                 # apply bolus
-                delta_x = np.array([[float(-x1[2, :] / 2)], [0], [0]])
+                delta_x = np.array([[float(-x1[2, 0] / 2)], [0], [0]])
                 x1 += delta_x
                 # "simulate" on
                 tmp_x = expm((t - event_1_time) * A)
@@ -290,7 +301,9 @@ def model_definition_nested_events():
 
         def get_early_x(t):
             # compute dynamics before event
-            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1 * np.exp(-decay_1 * t)
+            x_1 = equil * (1 - np.exp(-decay_1 * t)) + k1 * np.exp(
+                -decay_1 * t
+            )
             x_2 = k2 * np.exp(-decay_2 * t)
             return np.array([[x_1], [x_2]])
 
@@ -304,9 +317,9 @@ def model_definition_nested_events():
 
             # compute dynamics after event
             inhom = np.exp(decay_1 * event_time) * tau_x1
-            x_1 = equil * (1 - np.exp(decay_1 * (event_time - t))) + inhom * np.exp(
-                -decay_1 * t
-            )
+            x_1 = equil * (
+                1 - np.exp(decay_1 * (event_time - t))
+            ) + inhom * np.exp(-decay_1 * t)
             x_2 = tau_x2 * np.exp(decay_2 * event_time) * np.exp(-decay_2 * t)
 
             x = np.array([[x_1], [x_2]])
@@ -361,7 +374,11 @@ def model_definition_piecewise_plus_event_simple_case():
     }
     timepoints = np.linspace(0.0, 5.0, 100)  # np.array((0.0, 4.0,))
     events = {
-        "event_1": {"trigger": "time > alpha", "target": "x_1", "assignment": "gamma"},
+        "event_1": {
+            "trigger": "time > alpha",
+            "target": "x_1",
+            "assignment": "gamma",
+        },
         "event_2": {
             "trigger": "time > beta",
             "target": "x_1",
@@ -426,7 +443,11 @@ def model_definition_event_state_dep_ddeltax_dtpx():
     timepoints = np.linspace(0.0, 5.0, 100)
     events = {
         # state-dependent ddeltaxdt
-        "event_1": {"trigger": "time > alpha", "target": "x_1", "assignment": "x_1 * time"},
+        "event_1": {
+            "trigger": "time > alpha",
+            "target": "x_1",
+            "assignment": "x_1 * time",
+        },
         # state-dependent ddeltaxdp
         "event_2": {
             "trigger": "time > beta",
@@ -454,7 +475,10 @@ def model_definition_event_state_dep_ddeltax_dtpx():
             x = ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (t - beta)
         else:
             # after third event triggered
-            x = (((x_1_0 + alpha) * alpha + (beta - alpha)) * delta + (gamma - beta)) ** 2 * 2 + (t - gamma)
+            x = (
+                ((x_1_0 + alpha) * alpha + (beta - alpha)) * delta
+                + (gamma - beta)
+            ) ** 2 * 2 + (t - gamma)
 
         return np.array((x,))
 
@@ -536,7 +560,9 @@ def model_definition_piecewise_plus_event_semi_complicated():
             x_1 = x_1_heaviside_1 * np.exp(delta * (t - heaviside_1))
         else:
             x_1_heaviside_1 = gamma * np.exp(-(heaviside_1 - t_event_1))
-            x_1_at_event_2 = x_1_heaviside_1 * np.exp(delta * (t_event_2 - heaviside_1))
+            x_1_at_event_2 = x_1_heaviside_1 * np.exp(
+                delta * (t_event_2 - heaviside_1)
+            )
             x_2_at_event_2 = x_2_0 * np.exp(-eta * t_event_2)
             x1_after_event_2 = x_1_at_event_2 + x_2_at_event_2
             x_1 = x1_after_event_2 * np.exp(-(t - t_event_2))
@@ -661,8 +687,12 @@ def model_definition_piecewise_plus_event_trigger_depends_on_state():
 def test_models(model):
     amici_model, parameters, timepoints, x_expected, sx_expected = model
 
-    result_expected_x = np.array([x_expected(t, **parameters) for t in timepoints])
-    result_expected_sx = np.array([sx_expected(t, parameters) for t in timepoints])
+    result_expected_x = np.array(
+        [x_expected(t, **parameters) for t in timepoints]
+    )
+    result_expected_sx = np.array(
+        [sx_expected(t, parameters) for t in timepoints]
+    )
 
     # assert correctness of trajectories
     check_trajectories_without_sensitivities(amici_model, result_expected_x)
@@ -680,3 +710,40 @@ def expm(x):
     from mpmath import expm
 
     return np.array(expm(x).tolist()).astype(float)
+
+
+def test_handling_of_fixed_time_point_event_triggers():
+    """Test handling of events without solver-tracked root functions."""
+    ant_model = """
+    model test_events_time_based
+        event_target = 0
+        bolus = 1
+        at (time > 1): event_target = 1
+        at (time > 2): event_target = event_target + bolus
+        at (time > 3): event_target = 3
+    end
+    """
+    module_name = "test_events_time_based"
+    with TemporaryDirectory(prefix=module_name, delete=False) as outdir:
+        antimony2amici(
+            ant_model,
+            model_name=module_name,
+            output_dir=outdir,
+            verbose=True,
+        )
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
+        amici_model = model_module.getModel()
+        assert amici_model.ne == 3
+        assert amici_model.ne_solver == 0
+        amici_model.setTimepoints(np.linspace(0, 4, 200))
+        amici_solver = amici_model.getSolver()
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert (rdata.x[rdata.ts < 1] == 0).all()
+        assert (rdata.x[(rdata.ts >= 1) & (rdata.ts < 2)] == 1).all()
+        assert (rdata.x[(rdata.ts >= 2) & (rdata.ts < 3)] == 2).all()
+        assert (rdata.x[(rdata.ts >= 3)] == 3).all()
+
+        check_derivatives(amici_model, amici_solver, edata=None)

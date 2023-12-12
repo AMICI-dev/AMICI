@@ -13,12 +13,9 @@ from _pytest.outcomes import Skipped
 from amici import SteadyStateSensitivityMode
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import import_petab_problem
-from amici.petab_objective import (
-    create_parameterized_edatas,
-    rdatas_to_measurement_df,
-    simulate_petab,
-)
+from amici.petab.conditions import create_parameterized_edatas
+from amici.petab.petab_import import import_petab_problem
+from amici.petab.simulations import rdatas_to_measurement_df, simulate_petab
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -57,7 +54,9 @@ def _test_case(case, model_type, version):
     # compile amici model
     if case.startswith("0006"):
         petab.flatten_timepoint_specific_output_overrides(problem)
-    model_name = f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
+    model_name = (
+        f"petab_{model_type}_test_case_{case}" f"_{version.replace('.', '_')}"
+    )
     model_output_dir = f"amici_models/{model_name}"
     model = import_petab_problem(
         petab_problem=problem,
@@ -79,9 +78,13 @@ def _test_case(case, model_type, version):
     rdatas = ret["rdatas"]
     chi2 = sum(rdata["chi2"] for rdata in rdatas)
     llh = ret["llh"]
-    simulation_df = rdatas_to_measurement_df(rdatas, model, problem.measurement_df)
+    simulation_df = rdatas_to_measurement_df(
+        rdatas, model, problem.measurement_df
+    )
     petab.check_measurement_df(simulation_df, problem.observable_df)
-    simulation_df = simulation_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION})
+    simulation_df = simulation_df.rename(
+        columns={petab.MEASUREMENT: petab.SIMULATION}
+    )
     simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
     solution = petabtests.load_solution(case, model_type, version=version)
     gt_chi2 = solution[petabtests.CHI2]
@@ -109,17 +112,26 @@ def _test_case(case, model_type, version):
     )
     if not simulations_match:
         with pd.option_context(
-            "display.max_rows", None, "display.max_columns", None, "display.width", 200
+            "display.max_rows",
+            None,
+            "display.max_columns",
+            None,
+            "display.width",
+            200,
         ):
             logger.log(
                 logging.DEBUG,
-                f"x_ss: {model.getStateIds()} " f"{[rdata.x_ss for rdata in rdatas]}",
+                f"x_ss: {model.getStateIds()} "
+                f"{[rdata.x_ss for rdata in rdatas]}",
             )
-            logger.log(logging.ERROR, f"Expected simulations:\n{gt_simulation_dfs}")
+            logger.log(
+                logging.ERROR, f"Expected simulations:\n{gt_simulation_dfs}"
+            )
             logger.log(logging.ERROR, f"Actual simulations:\n{simulation_df}")
     logger.log(
         logging.DEBUG if chi2s_match else logging.ERROR,
-        f"CHI2: simulated: {chi2}, expected: {gt_chi2}," f" match = {chi2s_match}",
+        f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
+        f" match = {chi2s_match}",
     )
     logger.log(
         logging.DEBUG if simulations_match else logging.ERROR,
@@ -130,7 +142,9 @@ def _test_case(case, model_type, version):
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
-        raise AssertionError(f"Case {case}: Test results do not match " "expectations")
+        raise AssertionError(
+            f"Case {case}: Test results do not match " "expectations"
+        )
 
     logger.info(f"Case {case} passed.")
 
@@ -159,7 +173,9 @@ def check_derivatives(
     )
 
     for edata in create_parameterized_edatas(
-        amici_model=model, petab_problem=problem, problem_parameters=problem_parameters
+        amici_model=model,
+        petab_problem=problem,
+        problem_parameters=problem_parameters,
     ):
         # check_derivatives does currently not support parameters in ExpData
         model.setParameters(edata.parameters)

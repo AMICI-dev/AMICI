@@ -62,7 +62,9 @@ def model_neuron_def():
         }
     }
 
-    event_observables = {"z1": {"name": "z1", "event": "event_1", "formula": "time"}}
+    event_observables = {
+        "z1": {"name": "z1", "event": "event_1", "formula": "time"}
+    }
     return (
         initial_assignments,
         parameters,
@@ -210,7 +212,9 @@ def run_test_cases(model):
         edata = None
         if "data" in expected_results[model.getName()][case].keys():
             edata = amici.readSimulationExpData(
-                str(expected_results_file), f"/{model_name}/{case}/data", model.get()
+                str(expected_results_file),
+                f"/{model_name}/{case}/data",
+                model.get(),
             )
         rdata = amici.runAmiciSimulation(model, solver, edata)
 

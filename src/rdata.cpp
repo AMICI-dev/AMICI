@@ -10,7 +10,6 @@
 #include "amici/symbolic_functions.h"
 
 #include <cmath>
-#include <cstring>
 
 namespace amici {
 
@@ -206,7 +205,7 @@ void ReturnData::processPreEquilibration(
         for (int ip = 0; ip < nplist; ip++)
             writeSlice(sx_rdata_[ip], slice(sx_ss, ip, nx));
     }
-    /* Get cpu time for Newton solve in milliseconds */
+    /* Get cpu time for pre-equilibration in milliseconds */
     preeq_cpu_time = preeq.getCPUTime();
     preeq_cpu_timeB = preeq.getCPUTimeB();
     preeq_numstepsB = preeq.getNumStepsB();

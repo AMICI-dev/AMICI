@@ -46,6 +46,7 @@ public:
                   0,
                   0,
                   0,
+                  0,
                   1,
                   2,
                   2,
@@ -204,6 +205,6 @@ public:
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 
 #endif /* _amici_model_steadystate_h */
