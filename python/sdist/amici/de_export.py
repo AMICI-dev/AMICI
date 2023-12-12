@@ -2227,7 +2227,9 @@ class DEModel:
                         )
 
                     # finish chain rule for the state variables
-                    tmp_eq += smart_multiply(self.eq("ddeltaxdx")[ie], tmp_dxdp)
+                    tmp_eq += smart_multiply(
+                        self.eq("ddeltaxdx")[ie], tmp_dxdp
+                    )
                 else:
                     tmp_eq = smart_multiply(
                         self.sym("xdot") - self.sym("xdot_old"),
