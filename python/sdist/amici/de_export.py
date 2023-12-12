@@ -2757,11 +2757,12 @@ class DEModel:
         for tmp_old in set(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
-            heavisides.append((sp.Heaviside(tmp_old), tmp_new))
-
             # `tmp_new` is None if the root is not time-dependent.
             if tmp_new is None:
                 continue
+
+            heavisides.append((sp.Heaviside(tmp_old), tmp_new))
+
             # For Heavisides, we need to add the negative function as well
             self._get_unique_root(sp.sympify(-tmp_old), roots)
 
