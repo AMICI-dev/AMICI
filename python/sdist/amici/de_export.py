@@ -58,8 +58,8 @@ from .import_utils import (
     generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
-    symbol_with_assumptions,
     toposort_symbols,
+    unique_preserve_order,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -2754,7 +2754,7 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
-        for tmp_old in set(tmp_roots_old):
+        for tmp_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
             # `tmp_new` is None if the root is not time-dependent.
