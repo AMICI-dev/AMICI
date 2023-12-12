@@ -2754,7 +2754,7 @@ class DEModel:
         heavisides = []
         # run through the expression tree and get the roots
         tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
-        for tmp_old in tmp_roots_old:
+        for tmp_old in set(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
             heavisides.append((sp.Heaviside(tmp_old), tmp_new))
