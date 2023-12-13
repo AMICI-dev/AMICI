@@ -2745,15 +2745,11 @@ class DEModel:
         :returns:
             dxdt with Heaviside functions replaced by amici helper variables
         """
-
-        # expanding the rhs will in general help to collect the same
-        # heaviside function
-        dt_expanded = dxdt.expand()
         # track all the old Heaviside expressions in tmp_roots_old
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
+        tmp_roots_old = self._collect_heaviside_roots(dxdt.args)
         for tmp_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
@@ -2767,11 +2763,9 @@ class DEModel:
         if heavisides:
             # only apply subs if necessary
             for heaviside_sympy, heaviside_amici in heavisides:
-                dt_expanded = dt_expanded.subs(
-                    heaviside_sympy, heaviside_amici
-                )
+                dxdt = dxdt.subs(heaviside_sympy, heaviside_amici)
 
-        return dt_expanded
+        return dxdt
 
 
 class DEExporter:
