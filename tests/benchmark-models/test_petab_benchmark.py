@@ -38,8 +38,6 @@ models = [
         # excluded due to excessive numerical failures
         "Crauste_CellSystems2017",
         "Fujita_SciSignal2010",
-        # fails for unclear reasons on GHA
-        "Giordano_Nature2020",
     )
 ]
 
