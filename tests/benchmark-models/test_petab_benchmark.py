@@ -120,7 +120,7 @@ def test_benchmark_gradient(model, scale):
 
     noise_level = 0.1
 
-    np.random.seed(0)
+    np.random.seed(1)
     if scale:
         point = np.asarray(
             list(
