@@ -52,6 +52,11 @@ jobs:
 
     # until https://github.com/dateutil/dateutil >2.8.2 is released https://github.com/dateutil/dateutil/issues/1314
     - run: source build/venv/bin/activate && pip3 install git+https://github.com/dateutil/dateutil.git@296d419fe6bf3b22897f8f210735ac9c4e1cb796
+      if: matrix.python-version == '3.12'
+
+    # until sympy>1.12 is released
+    - run: source build/venv/bin/activate && pip3 install git+https://github.com/sympy/sympy.git@master
+      if: matrix.python-version == '3.12'
 
     - name: Python tests
       run: |
