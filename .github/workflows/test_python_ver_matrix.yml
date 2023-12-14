@@ -55,7 +55,7 @@ jobs:
       if: matrix.python-version == '3.12'
 
     # until sympy>1.12 is released
-    - run: pip3 install git+https://github.com/sympy/sympy.git@master
+    - run: source build/venv/bin/activate && pip3 install git+https://github.com/sympy/sympy.git@master
       if: matrix.python-version == '3.12'
 
     - name: Python tests
