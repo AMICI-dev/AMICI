@@ -734,5 +734,20 @@ def strip_pysb(symbol: sp.Basic) -> sp.Basic:
         return symbol
 
 
+def unique_preserve_order(seq: Sequence) -> list:
+    """Return a list of unique elements in Sequence, keeping only the first
+    occurrence of each element
+
+    Parameters:
+        seq: Sequence to prune
+
+    Returns:
+        List of unique elements in ``seq``
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+
 sbml_time_symbol = symbol_with_assumptions("time")
 amici_time_symbol = symbol_with_assumptions("t")

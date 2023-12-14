@@ -38,7 +38,6 @@ from .de_export import (
     DEModel,
     _default_simplify,
     smart_is_zero_matrix,
-    symbol_with_assumptions,
 )
 from .import_utils import (
     RESERVED_SYMBOLS,
@@ -54,6 +53,7 @@ from .import_utils import (
     sbml_time_symbol,
     smart_subs,
     smart_subs_dict,
+    symbol_with_assumptions,
     toposort_symbols,
 )
 from .logging import get_logger, log_execution_time, set_log_level
