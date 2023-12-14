@@ -64,5 +64,7 @@ jobs:
     - name: Python tests
       run: |
         source build/venv/bin/activate \
-          && python3 -m pytest --ignore-glob=*petab* \
+          && python3 -m pytest \
+            --durations=10 \
+            --ignore-glob=*petab* \
             --ignore-glob=*test_splines.py ${AMICI_DIR}/python/tests
