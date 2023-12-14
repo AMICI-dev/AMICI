@@ -1818,7 +1818,7 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t)
         if (hasExpressionIds())
             row_id += " " + getExpressionIds()[row];
         if (hasParameterIds())
-            col_id += " " + getParameterIds()[plist(gsl::narrow<int>(col))];
+            col_id += " " + getParameterIds()[col];
         break;
     default:
         break;
