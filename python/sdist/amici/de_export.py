@@ -2674,7 +2674,7 @@ class DEModel:
             return None
 
         for root in roots:
-            if (root_found - root.get_val()).is_zero:
+            if sp.simplify(root_found - root.get_val()) == 0:
                 return root.get_id()
 
         # create an event for a new root function
