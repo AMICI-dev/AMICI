@@ -303,7 +303,9 @@ def get_switch_statement(
     indentation_step: Optional[str] = " " * 4,
 ):
     """
-    Generate code for switch statement
+    Generate code for a C++ switch statement.
+
+    Generate code for a C++ switch statements with a ``break`` after each case.
 
     :param condition:
         Condition for switch
@@ -321,26 +323,43 @@ def get_switch_statement(
     :return:
         Code for switch expression as list of strings
     """
-    lines = []
-
     if not cases:
-        return lines
+        return []
 
     indent0 = indentation_level * indentation_step
     indent1 = (indentation_level + 1) * indentation_step
     indent2 = (indentation_level + 2) * indentation_step
+
+    # try to find redundant statements and collapse those cases
+    # map statements to case expressions
+    cases_map: dict[tuple[str, ...], list[str]] = {}
     for expression, statements in cases.items():
         if statements:
-            lines.extend(
+            statement_code = tuple(
                 [
-                    f"{indent1}case {expression}:",
                     *(f"{indent2}{statement}" for statement in statements),
                     f"{indent2}break;",
                 ]
             )
+            case_code = f"{indent1}case {expression}:"
 
-    if lines:
-        lines.insert(0, f"{indent0}switch({condition}) {{")
-        lines.append(indent0 + "}")
+            try:
+                # there is already a case with the same statement, append
+                cases_map[statement_code].append(case_code)
+            except KeyError:
+                # add new case + statement
+                cases_map[statement_code] = [case_code]
 
-    return lines
+    if not cases_map:
+        return []
+
+    def get_lines():
+        for statements, case_code in cases_map.items():
+            yield from case_code
+            yield from statements
+
+    return [
+        f"{indent0}switch({condition}) {{",
+        *(get_lines()),
+        indent0 + "}",
+    ]
