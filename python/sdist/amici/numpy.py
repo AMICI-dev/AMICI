@@ -91,6 +91,15 @@ class SwigPtrView(collections.abc.Mapping):
         self._cache = {}
         super(SwigPtrView, self).__init__()
 
+        # create properties for all fields
+        for field in self._field_names:
+            if not hasattr(self, field):
+                setattr(
+                    self,
+                    field,
+                    property(lambda self_: self_.__getitem__(field)),
+                )
+
     def __len__(self) -> int:
         """
         Returns the number of available keys/fields
@@ -237,7 +246,7 @@ class ReturnDataView(SwigPtrView):
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(
                 f"Unsupported pointer {type(rdata)}, must be"
-                f"amici.ExpDataPtr!"
+                f"amici.ReturnDataPtr or amici.ReturnData!"
             )
         self._field_dimensions = {
             "ts": [rdata.nt],
