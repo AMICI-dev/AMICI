@@ -93,7 +93,7 @@ class SwigPtrView(collections.abc.Mapping):
 
         # create properties for all fields
         for field in self._field_names:
-            if not hasattr(self, field):
+            if field not in dir(self):
                 setattr(
                     self,
                     field,
