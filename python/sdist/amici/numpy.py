@@ -95,7 +95,7 @@ class SwigPtrView(collections.abc.Mapping):
         for field in self._field_names:
             if field not in dir(self):
                 setattr(
-                    self,
+                    self.__class__,
                     field,
                     property(lambda self_: self_.__getitem__(field)),
                 )
