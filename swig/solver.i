@@ -116,6 +116,12 @@ def __repr__(self):
 %}
 };
 
+%extend amici::Solver {
+%pythoncode %{
+def __deepcopy__(self, memo):
+    return self.clone()
+%}
+};
 
 %newobject amici::Solver::clone;
 // Process symbols in header
