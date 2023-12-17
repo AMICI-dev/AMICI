@@ -113,6 +113,9 @@ def __repr__(self):
 %pythoncode %{
 def __repr__(self):
     return _solver_repr(self)
+
+def __deepcopy__(self, memo):
+    return self.clone()
 %}
 };
 

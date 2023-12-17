@@ -475,9 +475,15 @@ def test_expdata_and_expdataview_are_deepcopyable():
 
 def test_solvers_are_deepcopyable():
     for solver_type in (amici.CVodeSolver, amici.IDASolver):
-        solver1 = solver_type()
-        solver2 = copy.deepcopy(solver1)
-        assert solver1.this != solver2.this
-        assert solver1.getRelativeTolerance() == solver2.getRelativeTolerance()
-        solver2.setRelativeTolerance(100 * solver2.getRelativeTolerance())
-        assert solver1.getRelativeTolerance() != solver2.getRelativeTolerance()
+        for solver1 in (solver_type(), amici.SolverPtr(solver_type())):
+            solver2 = copy.deepcopy(solver1)
+            assert solver1.this != solver2.this
+            assert (
+                solver1.getRelativeTolerance()
+                == solver2.getRelativeTolerance()
+            )
+            solver2.setRelativeTolerance(100 * solver2.getRelativeTolerance())
+            assert (
+                solver1.getRelativeTolerance()
+                != solver2.getRelativeTolerance()
+            )
