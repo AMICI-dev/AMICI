@@ -471,3 +471,16 @@ def test_expdata_and_expdataview_are_deepcopyable():
     ev2 = copy.deepcopy(ev1)
     assert ev2._swigptr.this != ev1._swigptr.this
     assert ev1 == ev2
+
+
+def test_model_is_deepcopyable(pysb_example_presimulation_module):
+    model_module = pysb_example_presimulation_module
+    for model1 in (
+        model_module.getModel(),
+        amici.ModelPtr(model_module.getModel()),
+    ):
+        model2 = copy.deepcopy(model1)
+        assert model1.this != model2.this
+        assert model1.getT0() == model2.getT0()
+        model2.setT0(100 * model2.getT0())
+        assert model1.getT0() != model2.getT0()
