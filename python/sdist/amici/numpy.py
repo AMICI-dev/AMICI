@@ -6,6 +6,7 @@ This module provides views on C++ objects for efficient access.
 
 import collections
 import copy
+import itertools
 from typing import Dict, Iterator, List, Literal, Union
 
 import amici
@@ -91,15 +92,6 @@ class SwigPtrView(collections.abc.Mapping):
         self._cache = {}
         super(SwigPtrView, self).__init__()
 
-        # create properties for all fields
-        for field in self._field_names:
-            if field not in dir(self):
-                setattr(
-                    self.__class__,
-                    field,
-                    property(lambda self_: self_.__getitem__(field)),
-                )
-
     def __len__(self) -> int:
         """
         Returns the number of available keys/fields
@@ -172,6 +164,13 @@ class SwigPtrView(collections.abc.Mapping):
         if not isinstance(other, self.__class__):
             return False
         return self._swigptr == other._swigptr
+
+    def __dir__(self):
+        return sorted(
+            set(
+                itertools.chain(dir(super()), self.__dict__, self._field_names)
+            )
+        )
 
 
 class ReturnDataView(SwigPtrView):
@@ -297,7 +296,7 @@ class ReturnDataView(SwigPtrView):
             "numerrtestfailsB": [rdata.nt],
             "numnonlinsolvconvfailsB": [rdata.nt],
         }
-        super(ReturnDataView, self).__init__(rdata)
+        super().__init__(rdata)
 
     def __getitem__(
         self, item: str
@@ -415,7 +414,7 @@ class ExpDataView(SwigPtrView):
         edata.observedDataStdDev = edata.getObservedDataStdDev()
         edata.observedEvents = edata.getObservedEvents()
         edata.observedEventsStdDev = edata.getObservedEventsStdDev()
-        super(ExpDataView, self).__init__(edata)
+        super().__init__(edata)
 
 
 def _field_as_numpy(
