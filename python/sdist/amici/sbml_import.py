@@ -2776,15 +2776,17 @@ def replace_logx(math_str: Union[str, float, None]) -> Union[str, float, None]:
     return re.sub(r"(^|\W)log(\d+)\(", r"\g<1>1/ln(\2)*ln(", math_str)
 
 
-def _collect_event_assignment_parameter_targets(sbml_model: sbml.Model):
-    targets = set()
+def _collect_event_assignment_parameter_targets(
+    sbml_model: sbml.Model,
+) -> list[sp.Symbol]:
+    targets = []
     sbml_parameters = sbml_model.getListOfParameters()
     sbml_parameter_ids = [p.getId() for p in sbml_parameters]
     for event in sbml_model.getListOfEvents():
         for event_assignment in event.getListOfEventAssignments():
             target_id = event_assignment.getVariable()
             if target_id in sbml_parameter_ids:
-                targets.add(
+                targets.append(
                     _get_identifier_symbol(
                         sbml_parameters[sbml_parameter_ids.index(target_id)]
                     )
