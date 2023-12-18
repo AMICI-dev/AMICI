@@ -305,7 +305,7 @@ def get_switch_statement(
     """
     Generate code for a C++ switch statement.
 
-    Generate code for a C++ switch statements with a ``break`` after each case.
+    Generate code for a C++ switch statement with a ``break`` after each case.
 
     :param condition:
         Condition for switch
@@ -343,12 +343,7 @@ def get_switch_statement(
             )
             case_code = f"{indent1}case {expression}:"
 
-            try:
-                # there is already a case with the same statement, append
-                cases_map[statement_code].append(case_code)
-            except KeyError:
-                # add new case + statement
-                cases_map[statement_code] = [case_code]
+            cases_map[statement_code] = cases_map.get(statement_code, []) + [case_code]
 
     if not cases_map:
         return []
