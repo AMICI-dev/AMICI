@@ -473,6 +473,23 @@ def test_expdata_and_expdataview_are_deepcopyable():
     assert ev1 == ev2
 
 
+def test_solvers_are_deepcopyable():
+    for solver_type in (amici.CVodeSolver, amici.IDASolver):
+        for solver1 in (solver_type(), amici.SolverPtr(solver_type())):
+            solver2 = copy.deepcopy(solver1)
+            assert solver1.this != solver2.this
+            assert (
+                solver1.getRelativeTolerance()
+                == solver2.getRelativeTolerance()
+            )
+            solver2.setRelativeTolerance(100 * solver2.getRelativeTolerance())
+            assert (
+                solver1.getRelativeTolerance()
+                != solver2.getRelativeTolerance()
+            )
+
+
+
 def test_model_is_deepcopyable(pysb_example_presimulation_module):
     model_module = pysb_example_presimulation_module
     for model1 in (
