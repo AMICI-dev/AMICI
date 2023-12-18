@@ -343,18 +343,19 @@ def get_switch_statement(
             )
             case_code = f"{indent1}case {expression}:"
 
-            cases_map[statement_code] = cases_map.get(statement_code, []) + [case_code]
+            cases_map[statement_code] = cases_map.get(statement_code, []) + [
+                case_code
+            ]
 
     if not cases_map:
         return []
 
-    def get_lines():
-        for statements, case_code in cases_map.items():
-            yield from case_code
-            yield from statements
-
     return [
         f"{indent0}switch({condition}) {{",
-        *(get_lines()),
+        *(
+            code
+            for codes in cases_map.items()
+            for code in itertools.chain.from_iterable(reversed(codes))
+        ),
         indent0 + "}",
     ]
