@@ -20,6 +20,7 @@ def plot_state_trajectories(
     ax: Optional[Axes] = None,
     model: Model = None,
     prefer_names: bool = True,
+    marker=None,
 ) -> None:
     """
     Plot state trajectories
@@ -27,31 +28,38 @@ def plot_state_trajectories(
     :param rdata:
         AMICI simulation results as returned by
         :func:`amici.amici.runAmiciSimulation`
-
     :param state_indices:
         Indices of states for which trajectories are to be plotted
-
     :param ax:
         matplotlib Axes instance to plot into
-
     :param model:
         amici model instance
-
     :param prefer_names:
         Whether state names should be preferred over IDs, if available.
+    :param marker:
+        Point marker for plotting.
     """
     if not ax:
         fig, ax = plt.subplots()
     if not state_indices:
         state_indices = range(rdata["x"].shape[1])
+
+    if marker is None:
+        # Show marker if only one time point is available,
+        #  otherwise nothing will be shown
+        marker = "o" if len(rdata.t) == 1 else None
+
     for ix in state_indices:
-        if model is None:
+        if model is None and rdata._swigptr.state_ids is None:
             label = f"$x_{{{ix}}}$"
-        elif prefer_names and model.getStateNames()[ix]:
+        elif model is not None and prefer_names and model.getStateNames()[ix]:
             label = model.getStateNames()[ix]
-        else:
+        elif model is not None:
             label = model.getStateIds()[ix]
-        ax.plot(rdata["t"], rdata["x"][:, ix], label=label)
+        else:
+            label = rdata._swigptr.state_ids[ix]
+
+        ax.plot(rdata["t"], rdata["x"][:, ix], marker=marker, label=label)
         ax.set_xlabel("$t$")
         ax.set_ylabel("$x(t)$")
         ax.legend()
