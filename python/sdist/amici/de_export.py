@@ -2232,6 +2232,23 @@ class DEModel:
         else:
             raise ValueError(f"Unknown equation {name}")
 
+        if name in ("sigmay", "sigmaz"):
+            # check for states in sigma{y,z}, which is currently not supported
+            syms_x = self.sym("x")
+            syms_yz = self.sym(name.removeprefix("sigma"))
+            xs_in_sigma = {}
+            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name]):
+                yz_free_syms = eq_yz.free_symbols
+                if tmp := {x for x in syms_x if x in yz_free_syms}:
+                    xs_in_sigma[sym_yz] = tmp
+            if xs_in_sigma:
+                msg = ", ".join(
+                    [f"{yz} depends on {xs}" for yz, xs in xs_in_sigma.items()]
+                )
+                raise NotImplementedError(
+                    f"State-dependent observables are not supported, but {msg}."
+                )
+
         if name == "root":
             # Events are processed after the model has been set up.
             # Equations are there, but symbols for roots must be added
