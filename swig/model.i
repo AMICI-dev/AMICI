@@ -110,6 +110,5 @@ def __deepcopy__(self, memo):
 %}
 };
 
-
 // Process symbols in header
 %include "amici/model.h"

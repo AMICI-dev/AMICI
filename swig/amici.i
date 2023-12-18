@@ -16,6 +16,7 @@ nonstandard type conversions.
 
 // typemaps for docstrings
 %typemap(doctype) std::unique_ptr< amici::ExpData >::pointer "ExpData";
+%typemap(doctype) std::unique_ptr< amici::Model > "ModelPtr";
 %typemap(doctype) std::unique_ptr< amici::Solver > "SolverPtr";
 %typemap(doctype) std::vector< amici::realtype,std::allocator< amici::realtype > > "DoubleVector";
 %typemap(doctype) std::vector< double,std::allocator< double > > "DoubleVector";

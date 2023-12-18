@@ -489,7 +489,6 @@ def test_solvers_are_deepcopyable():
             )
 
 
-
 def test_model_is_deepcopyable(pysb_example_presimulation_module):
     model_module = pysb_example_presimulation_module
     for model1 in (
@@ -499,5 +498,5 @@ def test_model_is_deepcopyable(pysb_example_presimulation_module):
         model2 = copy.deepcopy(model1)
         assert model1.this != model2.this
         assert model1.t0() == model2.t0()
-        model2.setT0(100 * model2.t0())
+        model2.setT0(100 + model2.t0())
         assert model1.t0() != model2.t0()
