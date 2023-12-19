@@ -6,7 +6,7 @@ import amici
 import numpy as np
 import pytest
 from amici.debugging import get_model_for_preeq
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from test_pysb import get_data
 
 
@@ -651,17 +651,14 @@ def test_get_model_for_preeq(preeq_fixture):
         amici.SteadyStateSensitivityMode.integrationOnly
     )
     model_preeq = get_model_for_preeq(model, edata)
+    # the exactly same settings are used, so results should match exactly
     rdata1 = amici.runAmiciSimulation(model_preeq, solver)
     rdata2 = amici.runAmiciSimulation(model, solver, edata_preeq)
-    assert_allclose(
+    assert_equal(
         rdata1.x,
         rdata2.x,
-        atol=solver.getAbsoluteTolerance(),
-        rtol=solver.getRelativeTolerance(),
     )
-    assert_allclose(
+    assert_equal(
         rdata1.sx,
         rdata2.sx,
-        atol=solver.getAbsoluteTolerance(),
-        rtol=solver.getRelativeTolerance(),
     )
