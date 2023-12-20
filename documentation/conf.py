@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+from enum import EnumType
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
 import amici
@@ -254,6 +255,7 @@ todo_include_todos = False
 autodoc_default_options = {
     "special-members": "__init__",
     "inherited-members": True,
+    "undoc-members": True,
 }
 
 # sphinx-autodoc-typehints
@@ -606,7 +608,7 @@ def process_missing_ref(app, env, node, contnode):
 
 
 def skip_member(app, what, name, obj, skip, options):
-    ignored = [
+    ignored_names = {
         "AbstractModel",
         "CVodeSolver",
         "IDASolver",
@@ -614,7 +616,6 @@ def skip_member(app, what, name, obj, skip, options):
         "Model_DAE",
         "ConditionContext",
         "checkSigmaPositivity",
-        "createGroup",
         "createGroup",
         "equals",
         "printErrMsgIdAndTxt",
@@ -640,24 +641,38 @@ def skip_member(app, what, name, obj, skip, options):
         "stdVec2ndarray",
         "SwigPyIterator",
         "thisown",
-    ]
+    }
 
-    if name in ignored:
+    if name in ignored_names:
         return True
 
     if name.startswith("_") and name != "__init__":
         return True
 
+    obj_str = str(obj)
+
     # ignore various functions for std::vector<> types
-    if re.match(r"^<function [\w]+Vector\.", str(obj)):
+    if re.match(r"^<function [\w]+Vector\.", obj_str):
         return True
 
     # ignore various functions for smart pointer types
-    if re.match(r"^<function [\w]+Ptr\.", str(obj)):
+    if re.match(r"^<function [\w]+Ptr\.", obj_str):
         return True
 
     # ignore various functions for StringDoubleMap
-    if str(obj).startswith("<function StringDoubleMap"):
+    if obj_str.startswith("<function StringDoubleMap"):
+        return True
+
+    # Avoid the following issue for all enum types:
+    # > python/sdist/amici/amici.py:docstring of amici.amici.FixedParameterContext.from_bytes:9:
+    #   WARNING: Inline interpreted text or phrase reference start-string without end-string.
+    if (
+        (qualname := getattr(obj, "__qualname__", ""))
+        and qualname == "int.to_bytes"
+    ) or (
+        isinstance(getattr(obj, "__self__", None), EnumType)
+        and name == "from_bytes"
+    ):
         return True
 
     return None
