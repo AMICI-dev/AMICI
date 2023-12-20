@@ -663,6 +663,13 @@ def skip_member(app, what, name, obj, skip, options):
     if obj_str.startswith("<function StringDoubleMap"):
         return True
 
+    # Skip inherited members from builtins
+    #  (skips, for example, all the int/str-derived methods of enums
+    if (
+        objclass := getattr(obj, "__objclass__", None)
+    ) and objclass.__module__ == "builtins":
+        return True
+
     # Avoid the following issue for all enum types:
     # > python/sdist/amici/amici.py:docstring of amici.amici.FixedParameterContext.from_bytes:9:
     #   WARNING: Inline interpreted text or phrase reference start-string without end-string.
