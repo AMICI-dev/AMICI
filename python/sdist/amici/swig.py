@@ -97,9 +97,9 @@ class TypeHintFixer(ast.NodeTransformer):
         ) in self.mapping:
             value_type_annot = self.mapping[value_type]
             if isinstance(value_type_annot, ast.Constant):
-                return ast.Name(f"Tuple['{value_type_annot.value}']")
+                return ast.Name(f"tuple['{value_type_annot.value}']")
             if isinstance(value_type_annot, ast.Name):
-                return ast.Name(f"Tuple[{value_type_annot.id}]")
+                return ast.Name(f"tuple[{value_type_annot.id}]")
 
         return ast.Constant(old_annot)
 
