@@ -290,6 +290,10 @@ class CpuTimer {
         return d_milliseconds(clock::now() - start_).count();
     }
 
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
     static bool const uses_thread_clock = true;
 
   private:
