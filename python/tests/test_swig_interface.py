@@ -487,3 +487,16 @@ def test_solvers_are_deepcopyable():
                 solver1.getRelativeTolerance()
                 != solver2.getRelativeTolerance()
             )
+
+
+def test_model_is_deepcopyable(pysb_example_presimulation_module):
+    model_module = pysb_example_presimulation_module
+    for model1 in (
+        model_module.getModel(),
+        amici.ModelPtr(model_module.getModel()),
+    ):
+        model2 = copy.deepcopy(model1)
+        assert model1.this != model2.this
+        assert model1.t0() == model2.t0()
+        model2.setT0(100 + model2.t0())
+        assert model1.t0() != model2.t0()
