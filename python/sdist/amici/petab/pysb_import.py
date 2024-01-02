@@ -188,7 +188,7 @@ def import_model_pysb(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :meth:`amici.pysb_import.pysb2amici`.
+        :func:`amici.pysb_import.pysb2amici`.
     """
     set_log_level(logger, verbose)
 
