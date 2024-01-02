@@ -94,10 +94,21 @@ using namespace amici;
 %ignore fdx_rdatadx_solver;
 %ignore fdsigmaydy;
 
-
-
-
 %newobject amici::Model::clone;
+
+%extend amici::Model {
+%pythoncode %{
+def __deepcopy__(self, memo):
+    return self.clone()
+%}
+};
+
+%extend std::unique_ptr<amici::Model> {
+%pythoncode %{
+def __deepcopy__(self, memo):
+    return self.clone()
+%}
+};
 
 // Process symbols in header
 %include "amici/model.h"

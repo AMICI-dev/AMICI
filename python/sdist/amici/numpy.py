@@ -6,6 +6,7 @@ This module provides views on C++ objects for efficient access.
 
 import collections
 import copy
+import itertools
 from typing import Dict, Iterator, List, Literal, Union
 
 import amici
@@ -164,6 +165,13 @@ class SwigPtrView(collections.abc.Mapping):
             return False
         return self._swigptr == other._swigptr
 
+    def __dir__(self):
+        return sorted(
+            set(
+                itertools.chain(dir(super()), self.__dict__, self._field_names)
+            )
+        )
+
 
 class ReturnDataView(SwigPtrView):
     """
@@ -237,7 +245,7 @@ class ReturnDataView(SwigPtrView):
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(
                 f"Unsupported pointer {type(rdata)}, must be"
-                f"amici.ExpDataPtr!"
+                f"amici.ReturnDataPtr or amici.ReturnData!"
             )
         self._field_dimensions = {
             "ts": [rdata.nt],
@@ -288,7 +296,7 @@ class ReturnDataView(SwigPtrView):
             "numerrtestfailsB": [rdata.nt],
             "numnonlinsolvconvfailsB": [rdata.nt],
         }
-        super(ReturnDataView, self).__init__(rdata)
+        super().__init__(rdata)
 
     def __getitem__(
         self, item: str
@@ -406,7 +414,7 @@ class ExpDataView(SwigPtrView):
         edata.observedDataStdDev = edata.getObservedDataStdDev()
         edata.observedEvents = edata.getObservedEvents()
         edata.observedEventsStdDev = edata.getObservedEventsStdDev()
-        super(ExpDataView, self).__init__(edata)
+        super().__init__(edata)
 
 
 def _field_as_numpy(
