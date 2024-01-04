@@ -1,19 +1,11 @@
 """PEtab-problem based simulations."""
 import copy
-from typing import Optional, Sequence, Union
+from typing import Optional, Union
 
 import amici
 import pandas as pd
 import petab
-from petab.C import (
-    DATASET_ID,
-    NOISE_PARAMETERS,
-    OBSERVABLE_ID,
-    PREEQUILIBRATION_CONDITION_ID,
-    SIMULATION,
-    SIMULATION_CONDITION_ID,
-    TIME,
-)
+from petab.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 
 from .conditions import create_edatas, fill_in_parameters
 from .parameter_mapping import create_parameter_mapping
@@ -27,8 +19,6 @@ class AmiciPetabProblem:
 
     :param petab_problem: PEtab problem definition.
     :param amici_model: AMICI model
-    :param amici_solver: AMICI solver (Solver with default options will be
-        used if not provided).
     :param problem_parameters: Problem parameters to use for simulation
         (default: PEtab nominal values and model values).
     :param scaled_parameters: Whether the provided parameters are on PEtab
@@ -48,15 +38,12 @@ class AmiciPetabProblem:
         petab_problem: petab.Problem,
         amici_model: amici.Model,
         problem_parameters: Optional[dict[str, float]] = None,
-        # move to a separate AmiciPetabProblemSimulator class?
-        amici_solver: Optional[amici.Solver] = None,
         scaled_parameters: Optional[bool] = False,
         simulation_conditions: Union[pd.DataFrame, list[dict]] = None,
         store_edatas: bool = True,
     ):
-        self._petab_problem = petab_problem
+        self._petab_problem = copy.deepcopy(petab_problem)
         self._amici_model = amici_model
-        self._amici_solver = amici_solver
         self._scaled_parameters = scaled_parameters
 
         self._simulation_conditions = simulation_conditions or (
@@ -94,7 +81,6 @@ class AmiciPetabProblem:
                 scaled_parameters=self._scaled_parameters,
                 amici_model=self._amici_model,
             )
-
             self._create_edatas()
         else:
             self._parameter_mapping = None
@@ -222,11 +208,6 @@ class AmiciPetabProblem:
         if len(edatas) != 1:
             raise AssertionError("Expected exactly one ExpData object.")
         return edatas[0]
-
-    @property
-    def solver(self):
-        """Get the solver."""
-        return self._amici_solver or self._amici_model.getSolver()
 
     def _create_edatas(
         self,
