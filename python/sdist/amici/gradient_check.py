@@ -331,7 +331,7 @@ def _check_results(
     """
 
     result = rdata[field]
-    if type(result) is float:
+    if type(result) is float:  # noqa E721
         result = np.array(result)
 
     _check_close(
