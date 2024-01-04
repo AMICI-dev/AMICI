@@ -410,7 +410,7 @@ def _process_pysb_species(pysb_model: pysb.Model, ode_model: DEModel) -> None:
                 sp.Symbol(f"__s{ix}"), f"{specie}", init, xdot[ix]
             )
         )
-    logger.debug(f"Finished Processing PySB species ")
+    logger.debug("Finished Processing PySB species ")
 
 
 @log_execution_time("processing PySB parameters", logger)
@@ -1353,7 +1353,7 @@ def has_fixed_parameter_ic(
 
 
 def extract_monomers(
-    complex_patterns: Union[pysb.ComplexPattern, List[pysb.ComplexPattern]]
+    complex_patterns: Union[pysb.ComplexPattern, List[pysb.ComplexPattern]],
 ) -> List[str]:
     """
     Constructs a list of monomer names contained in complex patterns.

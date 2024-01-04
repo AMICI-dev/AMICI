@@ -6,7 +6,7 @@ computed sensitivities using finite difference approximations
 """
 
 import copy
-from typing import Callable, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
 import numpy as np
 

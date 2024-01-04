@@ -66,7 +66,7 @@ def get_states_in_condition_table(
             spm = pysb.pattern.SpeciesPatternMatcher(
                 model=petab_problem.model.model
             )
-        except NotImplementedError as e:
+        except NotImplementedError:
             raise NotImplementedError(
                 "Requires https://github.com/pysb/pysb/pull/570. "
                 "To use this functionality, update pysb via "

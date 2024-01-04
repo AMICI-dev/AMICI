@@ -21,7 +21,6 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -1165,7 +1164,7 @@ class SbmlImporter:
                     # accounts for possibly variable compartments.
                     self.stoichiometric_matrix[
                         species["index"], reaction_index
-                    ] += (sign * stoichiometry * species["conversion_factor"])
+                    ] += sign * stoichiometry * species["conversion_factor"]
             if reaction.isSetId():
                 sym_math = self._local_symbols[reaction.getId()]
             else:
@@ -2360,9 +2359,9 @@ class SbmlImporter:
         # rule (at the end of the _process_species method), hence needs to be
         # processed here too.
         self.compartments = {
-            smart_subs(c, old, new)
-            if replace_identifiers
-            else c: smart_subs(v, old, self._make_initial(new))
+            smart_subs(c, old, new) if replace_identifiers else c: smart_subs(
+                v, old, self._make_initial(new)
+            )
             for c, v in self.compartments.items()
         }
 

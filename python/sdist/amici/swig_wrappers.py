@@ -54,7 +54,7 @@ def _capture_cstdout():
 
 
 def _get_ptr(
-    obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData]
+    obj: Union[AmiciModel, AmiciExpData, AmiciSolver, AmiciReturnData],
 ) -> Union[
     "amici_swig.Model",
     "amici_swig.ExpData",
