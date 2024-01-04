@@ -48,7 +48,8 @@ class Solver {
   public:
     /** Type of what is passed to Sundials solvers as user_data */
     using user_data_type = std::pair<Model*, Solver const*>;
-
+    /** Type of the function to free a raw sundials solver pointer */
+    using free_solver_ptr = std::function<void(void*)>;
     /**
      * @brief Default constructor
      */
@@ -1608,10 +1609,10 @@ class Solver {
     void applySensitivityTolerances() const;
 
     /** pointer to solver memory block */
-    mutable std::unique_ptr<void, std::function<void(void*)>> solver_memory_;
+    mutable std::unique_ptr<void, free_solver_ptr> solver_memory_;
 
     /** pointer to solver memory block */
-    mutable std::vector<std::unique_ptr<void, std::function<void(void*)>>>
+    mutable std::vector<std::unique_ptr<void,free_solver_ptr>>
         solver_memory_B_;
 
     /** Sundials user_data */
