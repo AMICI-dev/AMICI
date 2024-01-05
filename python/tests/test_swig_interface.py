@@ -509,13 +509,15 @@ def test_rdataview(sbml_example_presimulation_module):
     model_module = sbml_example_presimulation_module
     model = model_module.getModel()
     rdata = amici.runAmiciSimulation(model, model.getSolver())
-
     assert isinstance(rdata, amici.ReturnDataView)
 
     # fields are accessible via dot notation and [] operator,
     #  __contains__ and __getattr__ are implemented correctly
     with pytest.raises(AttributeError):
         _ = rdata.nonexisting_attribute
+
+    with pytest.raises(KeyError):
+        _ = rdata["nonexisting_attribute"]
 
     assert not hasattr(rdata, "nonexisting_attribute")
     assert "x" in rdata
