@@ -297,6 +297,9 @@ jobs:
     - name: Check OpenMP support
       run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
+    - name: Get BioNetGen
+      run: scripts/buildBNGL.sh
+
     - name: Python tests
       run: |
         scripts/run-python-tests.sh \
