@@ -218,8 +218,8 @@ jobs:
 
     # TODO: Include notebooks in coverage report
 
-  osx:
-    name: Tests OSX
+  macos_cpp:
+    name: Tests MacOS C++
     runs-on: macos-latest
 
     steps:
@@ -254,8 +254,41 @@ jobs:
     - name: cppcheck
       run: scripts/run-cppcheck.sh
 
-    - name: Python tests
-      run: scripts/run-python-tests.sh
-
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
+
+  macos_python:
+    name: Tests MacOS Python
+    runs-on: macos-latest
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - uses: actions/checkout@v3
+    - run: git fetch --prune --unshallow
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
+    - run: echo "OpenMP_ROOT=$(brew --prefix)/opt/libomp" >> $GITHUB_ENV
+    - run: echo "BOOST_ROOT=$(brew --prefix)/opt/boost" >> $GITHUB_ENV
+
+    # install amici dependencies
+    - name: homebrew
+      run: brew install hdf5 swig gcc cppcheck libomp boost
+
+    - name: Build AMICI
+      run: scripts/buildAll.sh
+
+    - name: Install python package
+      run: scripts/installAmiciSource.sh
+
+    - name: Check OpenMP support
+      run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+
+    - name: Python tests
+      run: scripts/run-python-tests.sh
