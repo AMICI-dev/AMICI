@@ -260,7 +260,7 @@ jobs:
       run: scripts/run-cpp-tests.sh
 
     - name: Python tests
-      run: scripts/run-python-tests.sh test_pregenerated_models.py test_bngl.py test_pysb.py
+      run: scripts/run-python-tests.sh test_pregenerated_models.py test_splines_short.py
 
 
   macos_python:
@@ -299,5 +299,4 @@ jobs:
       run: |
         scripts/run-python-tests.sh \
           --ignore=test_pregenerated_models.py \
-          --ignore=test_bngl.py \
-          --ignore=test_pysb.py
+          --ignore=test_splines_short.py
