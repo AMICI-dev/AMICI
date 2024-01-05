@@ -3,9 +3,12 @@
 import re
 import sys
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import TYPE_CHECKING, List, Set, Tuple
 
 import pytest
+
+if TYPE_CHECKING:
+    from _pytest.reports import TestReport
 
 # stores passed SBML semantic test suite IDs
 passed_ids = []

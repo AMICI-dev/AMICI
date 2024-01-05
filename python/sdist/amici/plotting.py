@@ -56,8 +56,7 @@ def plot_state_trajectories(
     elif model is not None and prefer_names:
         labels = np.asarray(model.getStateNames())[list(state_indices)]
         labels = [
-            l if l else model.getStateIds()[ix]
-            for ix, l in enumerate(labels)
+            l if l else model.getStateIds()[ix] for ix, l in enumerate(labels)
         ]
     elif model is not None:
         labels = np.asarray(model.getStateIds())[list(state_indices)]
