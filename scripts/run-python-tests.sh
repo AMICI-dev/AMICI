@@ -1,5 +1,6 @@
 #!/bin/bash
-# Test python model wrapping inside virtual environment
+# Run Python test suite inside virtual environment
+# Usage: ./run-python-tests.sh [additional pytest arguments]
 
 script_path=$(dirname "${BASH_SOURCE[0]}")
 amici_path=$(cd "$script_path"/.. && pwd)
@@ -17,4 +18,5 @@ source "${amici_path}"/build/venv/bin/activate
 pytest \
   --ignore-glob=*petab* \
   --ignore-glob=*test_splines.py \
-  --durations=10
+  --durations=10 \
+  $@

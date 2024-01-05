@@ -218,8 +218,8 @@ jobs:
 
     # TODO: Include notebooks in coverage report
 
-  macos_cpp:
-    name: Tests MacOS C++
+  macos_cpp_py:
+    name: Tests MacOS C++/Python
     runs-on: macos-latest
 
     steps:
@@ -257,6 +257,10 @@ jobs:
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
+    - name: Python tests
+      run: scripts/run-python-tests.sh test_pregenerated_models.py test_bngl.py test_pysb.py
+
+
   macos_python:
     name: Tests MacOS Python
     runs-on: macos-latest
@@ -281,9 +285,6 @@ jobs:
     - name: homebrew
       run: brew install hdf5 swig gcc cppcheck libomp boost
 
-    - name: Build AMICI
-      run: scripts/buildAll.sh
-
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
@@ -291,4 +292,8 @@ jobs:
       run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
 
     - name: Python tests
-      run: scripts/run-python-tests.sh
+      run: |
+        scripts/run-python-tests.sh \
+          --ignore=test_pregenerated_models.py \
+          --ignore=test_bngl.py \
+          --ignore=test_pysb.py
