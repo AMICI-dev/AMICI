@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test python model wrapping inside virtual environment
 
-script_path=$(dirname $BASH_SOURCE)
+script_path=$(dirname "$BASH_SOURCE")
 amici_path=$(cd "$script_path"/.. && pwd)
 
 set -e
@@ -15,4 +15,7 @@ source "${amici_path}"/build/venv/bin/activate
 pip install scipy h5py pytest pytest-cov
 
 # PEtab tests are run separately
-pytest --ignore-glob=*petab* --ignore-glob=*test_splines.py
+pytest \
+  --ignore-glob=*petab* \
+  --ignore-glob=*test_splines.py \
+  --durations=10
