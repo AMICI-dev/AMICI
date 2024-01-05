@@ -290,7 +290,9 @@ jobs:
       run: brew install hdf5 swig gcc cppcheck libomp boost
 
     - name: Install python package
-      run: scripts/installAmiciSource.sh
+      run: |
+        pip show numpy > /dev/null || python3 -m pip install numpy
+        scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
       run: source build/venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
