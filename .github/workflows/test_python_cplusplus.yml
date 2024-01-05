@@ -12,6 +12,8 @@ jobs:
   ubuntu-cpp-python-tests:
     name: C++/Python tests Ubuntu
     runs-on: ubuntu-22.04
+    env:
+      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       matrix:
@@ -107,6 +109,8 @@ jobs:
   ubuntu-python-tests:
     name: Python tests Ubuntu
     runs-on: ubuntu-22.04
+    env:
+      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       matrix:
@@ -183,6 +187,8 @@ jobs:
   ubuntu-notebook-tests:
     name: Notebook tests Ubuntu
     runs-on: ubuntu-22.04
+    env:
+      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       matrix:
@@ -221,6 +227,8 @@ jobs:
   macos_cpp_py:
     name: Tests MacOS C++/Python
     runs-on: macos-latest
+    env:
+      AMICI_PARALLEL_COMPILE: ""
 
     steps:
     - name: Set up Python
@@ -264,6 +272,8 @@ jobs:
   macos_python:
     name: Tests MacOS Python
     runs-on: macos-latest
+    env:
+      AMICI_PARALLEL_COMPILE: ""
 
     steps:
     - name: Set up Python
