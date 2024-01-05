@@ -6,7 +6,7 @@ computed sensitivities using finite difference approximations
 """
 
 import copy
-from typing import Callable, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
 import numpy as np
 
@@ -331,7 +331,7 @@ def _check_results(
     """
 
     result = rdata[field]
-    if type(result) is float:
+    if type(result) is float:  # noqa E721
         result = np.array(result)
 
     _check_close(

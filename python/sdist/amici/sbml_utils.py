@@ -519,7 +519,7 @@ def mathml2sympy(
 
 
 def _parse_logical_operators(
-    math_str: Union[str, float, None]
+    math_str: Union[str, float, None],
 ) -> Union[str, float, None]:
     """
     Parses a math string in order to replace logical operators by a form

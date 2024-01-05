@@ -5,7 +5,6 @@
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
-
 import os
 import re
 import subprocess
@@ -18,6 +17,7 @@ import exhale.deploy
 import exhale_multiproject_monkeypatch
 import mock
 import pandas as pd
+import sphinx
 import sympy as sp
 from exhale import configs as exhale_configs
 from sphinx.transforms.post_transforms import ReferencesResolver

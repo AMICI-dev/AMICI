@@ -587,7 +587,7 @@ def smart_multiply(
 
 
 def smart_is_zero_matrix(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]
+    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
 ) -> bool:
     """A faster implementation of sympy's is_zero_matrix
 
