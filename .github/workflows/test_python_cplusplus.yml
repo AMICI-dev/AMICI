@@ -12,8 +12,6 @@ jobs:
   ubuntu-cpp-python-tests:
     name: C++/Python tests Ubuntu
     runs-on: ubuntu-22.04
-    env:
-      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       matrix:
@@ -109,8 +107,6 @@ jobs:
   ubuntu-python-tests:
     name: Python tests Ubuntu
     runs-on: ubuntu-22.04
-    env:
-      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       matrix:
@@ -187,8 +183,6 @@ jobs:
   ubuntu-notebook-tests:
     name: Notebook tests Ubuntu
     runs-on: ubuntu-22.04
-    env:
-      AMICI_PARALLEL_COMPILE: ""
 
     strategy:
       matrix:

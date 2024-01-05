@@ -29,9 +29,9 @@ else
     source "${venv_dir}/bin/activate"
 fi
 
-pip install --upgrade pip wheel
-pip install --upgrade pip setuptools cmake_build_extension numpy
-pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
+python -m pip install --upgrade pip wheel
+python -m pip install --upgrade pip setuptools cmake_build_extension numpy
+python -m pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
-  pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis]" --no-build-isolation
+  python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis]" --no-build-isolation
 deactivate
