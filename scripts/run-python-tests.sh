@@ -1,7 +1,7 @@
 #!/bin/bash
 # Test python model wrapping inside virtual environment
 
-script_path=$(dirname "$BASH_SOURCE")
+script_path=$(dirname "${BASH_SOURCE[0]}")
 amici_path=$(cd "$script_path"/.. && pwd)
 
 set -e
@@ -12,7 +12,6 @@ fi
 
 cd "${amici_path}"/python/tests
 source "${amici_path}"/build/venv/bin/activate
-pip install scipy h5py pytest pytest-cov
 
 # PEtab tests are run separately
 pytest \
