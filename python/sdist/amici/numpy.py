@@ -80,7 +80,10 @@ class SwigPtrView(collections.abc.Mapping):
 
         :returns: value
         """
-        return self.__getitem__(item)
+        try:
+            return self.__getitem__(item)
+        except KeyError as e:
+            raise AttributeError(item) from e
 
     def __init__(self, swigptr):
         """
