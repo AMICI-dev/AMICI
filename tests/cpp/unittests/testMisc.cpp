@@ -689,7 +689,7 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     // [2, 0]
     // data [1, 2, 3]
     // colptrs [0, 2, 3]
-    // rowidxs [2, 3, 1]
+    // rowidxs [2, 3, 0]
     D.set_data(0, 0, 0);
     D.set_data(1, 0, 0);
     D.set_data(2, 0, 1);
@@ -707,6 +707,16 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
 
     SUNMatDestroy(S);
 }
+
+
+TEST(UnravelIndex, UnravelIndexSunMatSparseMissingIndices)
+{
+    // Sparse matrix without any indices set
+    SUNMatrixWrapper mat = SUNMatrixWrapper(2, 3, 2, CSC_MAT);
+    EXPECT_EQ(unravel_index(0, mat.get()), std::make_pair((sunindextype) -1, (sunindextype) -1));
+    EXPECT_EQ(unravel_index(1, mat.get()), std::make_pair((sunindextype) -1, (sunindextype) -1));
+}
+
 
 TEST(ReturnCodeToStr, ReturnCodeToStr)
 {
