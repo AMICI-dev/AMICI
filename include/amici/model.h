@@ -1437,7 +1437,7 @@ class Model : public AbstractModel, public ModelDimensions {
     std::vector<int> const& getReinitializationStateIdxs() const;
 
     /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated;
+    bool pythonGenerated = false;
 
     /**
      * @brief getter for dxdotdp (matlab generated)

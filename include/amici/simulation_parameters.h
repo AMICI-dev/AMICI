@@ -35,6 +35,11 @@ class SimulationParameters {
               this->parameters.size(), ParameterScaling::none
           )) {}
 
+#ifndef SWIGPYTHON
+    /*
+     * include/amici/simulation_parameters.h:71: Warning 509: Overloaded method amici::SimulationParameters::SimulationParameters(std::vector< amici::realtype,std::allocator< amici::realtype > >,std::vector< amici::realtype,std::allocator< amici::realtype > >,std::vector< amici::realtype,std::allocator< amici::realtype > >) effectively ignored,
+     * include/amici/simulation_parameters.h:54: Warning 509: as it is shadowed by amici::SimulationParameters::SimulationParameters(std::vector< amici::realtype,std::allocator< amici::realtype > >,std::vector< amici::realtype,std::allocator< amici::realtype > >,std::vector< int,std::allocator< int > >).
+     */
     /**
      * @brief Constructor
      * @param fixedParameters Model constants
@@ -69,6 +74,7 @@ class SimulationParameters {
               this->parameters.size(), ParameterScaling::none
           ))
         , ts_(std::move(timepoints)) {}
+#endif
 
     /**
      * @brief Set reinitialization of all states based on model constants for
