@@ -1,0 +1,20 @@
+name: Install AMICI dependencies for MacOS
+description: Install AMICI dependencies for MacOS
+
+runs:
+  using: "composite"
+  steps:
+    # use all available cores
+    - run: echo "AMICI_PARALLEL_COMPILE=" >> $GITHUB_ENV
+      shell: bash
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    # Ensure CMake is using the python version that we will use for the python tests later on
+    - run: echo "PYTHON_EXECUTABLE=${Python3_ROOT_DIR}/bin/python3" >> $GITHUB_ENV
+    - run: echo "OpenMP_ROOT=$(brew --prefix)/opt/libomp" >> $GITHUB_ENV
+    - run: echo "BOOST_ROOT=$(brew --prefix)/opt/boost" >> $GITHUB_ENV
+
+    # install amici dependencies
+    - name: homebrew
+      run: brew install hdf5 swig gcc cppcheck libomp boost
