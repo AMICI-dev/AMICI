@@ -68,10 +68,7 @@ def test_copy_constructors(pysb_example_presimulation_module):
 model_instance_settings0 = {
     # setting name: [default value, custom value]
     "AddSigmaResiduals": [False, True],
-    "AlwaysCheckFinite": [
-        False,
-        True,
-    ],
+    "AlwaysCheckFinite": [False, True],
     # Skipped due to model dependency in `'InitialStates'`.
     "FixedParameters": None,
     "InitialStates": [
@@ -131,6 +128,13 @@ def test_model_instance_settings(pysb_example_presimulation_module):
 
     i_getter = 0
     i_setter = 1
+
+    # the default setting for AlwaysCheckFinite depends on whether the amici
+    # extension has been built in debug mode
+    model_instance_settings0["AlwaysCheckFinite"] = [
+        model0.getAlwaysCheckFinite(),
+        not model0.getAlwaysCheckFinite(),
+    ]
 
     # All settings are tested.
     assert set(model_instance_settings0) == set(
