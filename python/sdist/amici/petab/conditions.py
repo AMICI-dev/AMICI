@@ -395,7 +395,11 @@ def create_edatas(
     if PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
         measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
     measurement_dfs = dict(
-        list(petab_problem.measurement_df.groupby(measurement_groupvar))
+        list(
+            petab_problem.measurement_df.fillna(
+                {PREEQUILIBRATION_CONDITION_ID: ""}
+            ).groupby(measurement_groupvar)
+        )
     )
 
     edatas = []
@@ -404,10 +408,11 @@ def create_edatas(
         if PREEQUILIBRATION_CONDITION_ID in condition:
             measurement_index = (
                 condition.get(SIMULATION_CONDITION_ID),
-                condition.get(PREEQUILIBRATION_CONDITION_ID),
+                condition.get(PREEQUILIBRATION_CONDITION_ID) or "",
             )
         else:
             measurement_index = (condition.get(SIMULATION_CONDITION_ID),)
+
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,

@@ -36,14 +36,21 @@ class AmiciPetabProblem:
     def __init__(
         self,
         petab_problem: petab.Problem,
-        amici_model: amici.Model,
+        amici_model: Optional[amici.Model] = None,
         problem_parameters: Optional[dict[str, float]] = None,
         scaled_parameters: Optional[bool] = False,
         simulation_conditions: Union[pd.DataFrame, list[dict]] = None,
         store_edatas: bool = True,
     ):
         self._petab_problem = copy.deepcopy(petab_problem)
-        self._amici_model = amici_model
+
+        if amici_model is not None:
+            self._amici_model = amici_model
+        else:
+            from .petab_import import import_petab_problem
+
+            self._amici_model = import_petab_problem(petab_problem)
+
         self._scaled_parameters = scaled_parameters
 
         self._simulation_conditions = simulation_conditions or (
@@ -93,6 +100,7 @@ class AmiciPetabProblem:
         """Set problem parameters.
 
         :param problem_parameters: Problem parameters to use for simulation.
+            This may be a subset of all parameters.
         :param scaled_parameters: Whether the provided parameters are on PEtab
             `parameterScale` or not.
         """
@@ -105,7 +113,25 @@ class AmiciPetabProblem:
                 amici_model=self._amici_model,
             )
 
-        self._problem_parameters = problem_parameters
+        if set(self._problem_parameters) - set(problem_parameters):
+            # not all parameters are provided - update
+            # bring previously set parameters to the same scale if necessary
+            if scaled_parameters and not self._scaled_parameters:
+                self._problem_parameters = (
+                    self._petab_problem.scale_parameters(
+                        self._problem_parameters,
+                    )
+                )
+            elif not scaled_parameters and self._scaled_parameters:
+                self._problem_parameters = (
+                    self._petab_problem.unscale_parameters(
+                        self._problem_parameters,
+                    )
+                )
+            self._problem_parameters |= problem_parameters
+        else:
+            self._problem_parameters = problem_parameters
+
         self._scaled_parameters = scaled_parameters
 
         if self._edatas:
@@ -118,7 +144,7 @@ class AmiciPetabProblem:
             )
 
     def get_edata(
-        self, condition_id: str, preequilibration_condition_id: str
+        self, condition_id: str, preequilibration_condition_id: str = None
     ) -> amici.ExpData:
         """Get ExpData object for a given condition.
 
@@ -160,6 +186,12 @@ class AmiciPetabProblem:
             return self._edatas.copy()
 
         # not storing edatas - create and return
+        self._parameter_mapping = create_parameter_mapping(
+            petab_problem=self._petab_problem,
+            simulation_conditions=self._simulation_conditions,
+            scaled_parameters=self._scaled_parameters,
+            amici_model=self._amici_model,
+        )
         self._create_edatas()
         result = self._edatas
         self._edatas = []
@@ -179,7 +211,7 @@ class AmiciPetabProblem:
                 {
                     SIMULATION_CONDITION_ID: condition_id,
                     PREEQUILIBRATION_CONDITION_ID: preequilibration_condition_id
-                    or "",
+                    or None,
                 }
             ]
         )
@@ -198,7 +230,11 @@ class AmiciPetabProblem:
         # Fill parameters in ExpDatas (in-place)
         fill_in_parameters(
             edatas=edatas,
-            problem_parameters=self._problem_parameters,
+            problem_parameters={
+                p: self._problem_parameters[p]
+                for p in parameter_mapping.free_symbols
+                if p in self._problem_parameters
+            },
             scaled_parameters=self._scaled_parameters,
             parameter_mapping=parameter_mapping,
             amici_model=self._amici_model,
@@ -227,7 +263,15 @@ class AmiciPetabProblem:
         )
 
     def _default_parameters(self) -> dict[str, float]:
+        """Get unscaled default parameters."""
         return {
             t.Index: getattr(t, petab.NOMINAL_VALUE)
-            for t in self._petab_problem.parameter_df.itertuples()
+            for t in self._petab_problem.parameter_df[
+                self._petab_problem.parameter_df[petab.ESTIMATE] == 1
+            ].itertuples()
         }
+
+    @property
+    def model(self) -> amici.Model:
+        """AMICI model."""
+        return self._amici_model
