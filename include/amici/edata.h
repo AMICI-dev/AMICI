@@ -391,6 +391,13 @@ class ExpData : public SimulationParameters {
     realtype const* getObservedEventsStdDevPtr(int ie) const;
 
     /**
+     * @brief Set all observations and their standard deviations to NaN.
+     *
+     * Useful, e.g., after calling ExpData::setTimepoints.
+     */
+    void clear_observations();
+
+    /**
      * @brief Arbitrary (not necessarily unique) identifier.
      */
     std::string id;

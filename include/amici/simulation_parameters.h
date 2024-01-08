@@ -175,7 +175,14 @@ class SimulationParameters {
      */
     std::vector<int> plist;
 
-    /** starting time */
+    /**
+     * @brief Starting time of the simulation.
+     *
+     * Output timepoints are absolute timepoints, independent of
+     * \f$ t_{start} \f$.
+     * For output timepoints \f$ t <  t_{start} \f$, the initial state will be
+     * returned.
+     */
     realtype tstart_{0.0};
 
     /**
