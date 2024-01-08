@@ -55,8 +55,7 @@ class AmiciPetabProblem:
             )
         if (
             preeq_id := PREEQUILIBRATION_CONDITION_ID
-            in self._simulation_conditions
-        ):
+        ) in self._simulation_conditions:
             self._simulation_conditions[
                 preeq_id
             ] = self._simulation_conditions[preeq_id].fillna("")
