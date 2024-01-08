@@ -1437,7 +1437,7 @@ class Model : public AbstractModel, public ModelDimensions {
     std::vector<int> const& getReinitializationStateIdxs() const;
 
     /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated;
+    bool pythonGenerated = false;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
@@ -2020,7 +2020,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness
      */
+#ifdef NDEBUG
     bool always_check_finite_{false};
+#else
+    bool always_check_finite_{true};
+#endif
 
     /** indicates whether sigma residuals are to be added for every datapoint */
     bool sigma_res_{false};

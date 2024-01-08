@@ -72,7 +72,7 @@ class ObservableTransformation(str, enum.Enum):
 
 
 def noise_distribution_to_observable_transformation(
-    noise_distribution: Union[str, Callable]
+    noise_distribution: Union[str, Callable],
 ) -> ObservableTransformation:
     """
     Parse noise distribution string and extract observable transformation
@@ -93,7 +93,7 @@ def noise_distribution_to_observable_transformation(
 
 
 def noise_distribution_to_cost_function(
-    noise_distribution: Union[str, Callable]
+    noise_distribution: Union[str, Callable],
 ) -> Callable[[str], str]:
     """
     Parse noise distribution string to a cost function definition amici can
@@ -423,7 +423,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 
 def _denest_piecewise(
-    args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]
+    args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]],
 ) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
     """
     Denest piecewise functions that contain piecewise as condition

@@ -6,6 +6,8 @@ Test getters, setters, etc.
 import copy
 import numbers
 
+import pytest
+
 import amici
 import numpy as np
 
@@ -66,10 +68,7 @@ def test_copy_constructors(pysb_example_presimulation_module):
 model_instance_settings0 = {
     # setting name: [default value, custom value]
     "AddSigmaResiduals": [False, True],
-    "AlwaysCheckFinite": [
-        False,
-        True,
-    ],
+    "AlwaysCheckFinite": [False, True],
     # Skipped due to model dependency in `'InitialStates'`.
     "FixedParameters": None,
     "InitialStates": [
@@ -129,6 +128,13 @@ def test_model_instance_settings(pysb_example_presimulation_module):
 
     i_getter = 0
     i_setter = 1
+
+    # the default setting for AlwaysCheckFinite depends on whether the amici
+    # extension has been built in debug mode
+    model_instance_settings0["AlwaysCheckFinite"] = [
+        model0.getAlwaysCheckFinite(),
+        not model0.getAlwaysCheckFinite(),
+    ]
 
     # All settings are tested.
     assert set(model_instance_settings0) == set(
@@ -500,3 +506,26 @@ def test_model_is_deepcopyable(pysb_example_presimulation_module):
         assert model1.t0() == model2.t0()
         model2.setT0(100 + model2.t0())
         assert model1.t0() != model2.t0()
+
+
+def test_rdataview(sbml_example_presimulation_module):
+    """Test some SwigPtrView functionality via ReturnDataView."""
+    model_module = sbml_example_presimulation_module
+    model = model_module.getModel()
+    rdata = amici.runAmiciSimulation(model, model.getSolver())
+    assert isinstance(rdata, amici.ReturnDataView)
+
+    # fields are accessible via dot notation and [] operator,
+    #  __contains__ and __getattr__ are implemented correctly
+    with pytest.raises(AttributeError):
+        _ = rdata.nonexisting_attribute
+
+    with pytest.raises(KeyError):
+        _ = rdata["nonexisting_attribute"]
+
+    assert not hasattr(rdata, "nonexisting_attribute")
+    assert "x" in rdata
+    assert rdata.x == rdata["x"]
+
+    # field names are included by dir()
+    assert "x" in dir(rdata)

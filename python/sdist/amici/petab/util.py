@@ -1,6 +1,6 @@
 """Various helper functions for working with PEtab problems."""
 import re
-from typing import Dict, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Tuple, Union
 
 import libsbml
 import pandas as pd
@@ -8,6 +8,9 @@ import petab
 from petab.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 from petab.mapping import resolve_mapping
 from petab.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
+
+if TYPE_CHECKING:
+    pysb = None
 
 
 def get_states_in_condition_table(
@@ -63,7 +66,7 @@ def get_states_in_condition_table(
             spm = pysb.pattern.SpeciesPatternMatcher(
                 model=petab_problem.model.model
             )
-        except NotImplementedError as e:
+        except NotImplementedError:
             raise NotImplementedError(
                 "Requires https://github.com/pysb/pysb/pull/570. "
                 "To use this functionality, update pysb via "
