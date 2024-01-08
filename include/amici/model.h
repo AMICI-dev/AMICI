@@ -704,6 +704,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set simulation start time.
+     *
+     * Output timepoints are absolute timepoints, independent of
+     * \f$ t_{0} \f$.
+     * For output timepoints \f$ t <  t_{0} \f$, the initial state will be
+     * returned.
+
      * @param t0 Simulation start time
      */
     void setT0(double t0);
