@@ -14,7 +14,7 @@ from .parameter_mapping import create_parameter_mapping
 class AmiciPetabProblem:
     """Manage experimental conditions based on a PEtab problem definition.
 
-    Create :class:`ExpData` objects from a PEtab problem definition, handle
+    Create :class:`ExpData` objects from a PEtab problem definition, and handle
     parameter scales and parameter mapping.
 
     :param petab_problem: PEtab problem definition.
@@ -24,13 +24,13 @@ class AmiciPetabProblem:
     :param scaled_parameters: Whether the provided parameters are on PEtab
         `parameterScale` or not.
     :param simulation_conditions: Simulation conditions to use for simulation.
-        It Can be used to subset the conditions in the PEtab problem.
-        All subsequent operations will only be performed based on that subset.
+        It can be used to subset the conditions in the PEtab problem.
+        All subsequent operations will only be performed on that subset.
         By default, all conditions are used.
-    :param store_edatas: Whether to create and store all ExpData objects for
-        all conditions upfront. If set to False, ExpData objects will be
-        created and disposed of on the fly during simulation. This can save
-        memory if many conditions are simulated.
+    :param store_edatas: Whether to create and store all `ExpData` objects for
+        all conditions upfront. If set to ``False``, `ExpData` objects will be
+        created and disposed of on the fly during simulation. The latter saves
+        memory if the given PEtab problem comprises many simulation conditions.
     """
 
     def __init__(
@@ -148,14 +148,14 @@ class AmiciPetabProblem:
     ) -> amici.ExpData:
         """Get ExpData object for a given condition.
 
-        NOTE: If `store_edatas=True` was passed to the constructor and the
+        NOTE: If ``store_edatas=True`` was passed to the constructor and the
         returned object is modified, the changes will be reflected in the
-        internal ExpData objects. Also, if parameter values of
-        AmiciPetabProblem are changed, all ExpData objects will be updated.
+        internal `ExpData` objects. Also, if parameter values of
+        `AmiciPetabProblem` are changed, all `ExpData` objects will be updated.
         Create a deep copy if you want to avoid this.
 
-        :param condition_id: PEtab Condition ID
-        :param preequilibration_condition_id: PEtab Preequilibration condition ID
+        :param condition_id: PEtab condition ID
+        :param preequilibration_condition_id: PEtab preequilibration condition ID
         :return: ExpData object
         """
         # exists or has to be created?
@@ -173,10 +173,10 @@ class AmiciPetabProblem:
     def get_edatas(self):
         """Get all ExpData objects.
 
-        NOTE: If `store_edatas=True` was passed to the constructor and the
+        NOTE: If ``store_edatas=True`` was passed to the constructor and the
         returned objects are modified, the changes will be reflected in the
-        internal ExpData objects. Also, if parameter values of
-        AmiciPetabProblem are changed, all ExpData objects will be updated.
+        internal `ExpData` objects. Also, if parameter values of
+        `AmiciPetabProblem` are changed, all `ExpData` objects will be updated.
         Create a deep copy if you want to avoid this.
 
         :return: List of ExpData objects
@@ -202,8 +202,8 @@ class AmiciPetabProblem:
     ) -> amici.ExpData:
         """Create ExpData object for a given condition.
 
-        :param condition_id: PEtab Condition ID
-        :param preequilibration_condition_id: PEtab Preequilibration condition ID
+        :param condition_id: PEtab condition ID
+        :param preequilibration_condition_id: PEtab preequilibration condition ID
         :return: ExpData object
         """
         simulation_condition = pd.DataFrame(
