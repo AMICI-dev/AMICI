@@ -111,7 +111,7 @@ def fix_typehints(infilename, outfilename):
         return
 
     # file -> AST
-    with open(infilename, "r") as f:
+    with open(infilename) as f:
         source = f.read()
     parsed_source = ast.parse(source)
 

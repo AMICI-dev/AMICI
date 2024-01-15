@@ -8,7 +8,8 @@ import math
 import os
 import uuid
 from tempfile import mkdtemp
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Optional, Union
+from collections.abc import Sequence
 
 import amici
 import numpy as np
@@ -44,7 +45,7 @@ def evaluate_spline(
 
 def integrate_spline(
     spline: AbstractSpline,
-    params: Union[Dict, None],
+    params: Union[dict, None],
     tt: Sequence[float],
     initial_value: float = 0,
 ):
@@ -116,8 +117,8 @@ def species_to_index(name) -> int:
 
 
 def create_petab_problem(
-    splines: List[AbstractSpline],
-    params_true: Dict,
+    splines: list[AbstractSpline],
+    params_true: dict,
     initial_values: Optional[np.ndarray] = None,
     use_reactions: bool = False,
     measure_upsample: int = 6,
@@ -514,7 +515,7 @@ def check_splines(
     w_atol: float = 1e-11,
     sx_rtol: float = 1e-10,
     sx_atol: float = 1e-10,
-    groundtruth: Optional[Union[str, Dict[str, Any]]] = None,
+    groundtruth: Optional[Union[str, dict[str, Any]]] = None,
     **kwargs,
 ):
     """

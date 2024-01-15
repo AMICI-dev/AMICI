@@ -3,7 +3,8 @@ import logging
 import sys
 import warnings
 from contextlib import contextmanager, suppress
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Optional, Union
+from collections.abc import Sequence
 
 import amici
 import amici.amici as amici_swig
@@ -154,7 +155,7 @@ def runAmiciSimulations(
     edata_list: AmiciExpDataVector,
     failfast: bool = True,
     num_threads: int = 1,
-) -> List["numpy.ReturnDataView"]:
+) -> list["numpy.ReturnDataView"]:
     """
     Convenience wrapper for loops of amici.runAmiciSimulation
 
@@ -254,7 +255,7 @@ model_instance_settings = [
 
 def get_model_settings(
     model: AmiciModel,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get model settings that are set independently of the compiled model.
 
     :param model: The AMICI model instance.
@@ -285,7 +286,7 @@ def get_model_settings(
 
 def set_model_settings(
     model: AmiciModel,
-    settings: Dict[str, Any],
+    settings: dict[str, Any],
 ) -> None:
     """Set model settings.
 

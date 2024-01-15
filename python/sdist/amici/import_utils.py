@@ -7,14 +7,11 @@ import sys
 from typing import (
     Any,
     Callable,
-    Dict,
-    Iterable,
     Optional,
-    Sequence,
     SupportsFloat,
-    Tuple,
     Union,
 )
+from collections.abc import Iterable, Sequence
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
@@ -33,7 +30,7 @@ class SBMLException(Exception):
     pass
 
 
-SymbolDef = Dict[sp.Symbol, Union[Dict[str, sp.Expr], sp.Expr]]
+SymbolDef = dict[sp.Symbol, Union[dict[str, sp.Expr], sp.Expr]]
 
 
 # Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
@@ -44,13 +41,13 @@ class CircularDependencyError(ValueError):
         #  error messages.  That's convenient for doctests.
         s = "Circular dependencies exist among these items: {{{}}}".format(
             ", ".join(
-                "{!r}:{!r}".format(key, value)
+                f"{key!r}:{value!r}"
                 for key, value in sorted(
                     {str(k): v for k, v in data.items()}.items()
                 )
             )
         )
-        super(CircularDependencyError, self).__init__(s)
+        super().__init__(s)
         self.data = data
 
 
@@ -424,7 +421,7 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
 
 def _denest_piecewise(
     args: Sequence[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]],
-) -> Tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
+) -> tuple[Union[sp.Expr, sp.logic.boolalg.Boolean, bool]]:
     """
     Denest piecewise functions that contain piecewise as condition
 
@@ -548,7 +545,7 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
 def grouper(
     iterable: Iterable, n: int, fillvalue: Any = None
-) -> Iterable[Tuple[Any]]:
+) -> Iterable[tuple[Any]]:
     """
     Collect data into fixed-length chunks or blocks
 

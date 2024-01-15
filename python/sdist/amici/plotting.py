@@ -3,7 +3,8 @@ Plotting
 --------
 Plotting related functions
 """
-from typing import Iterable, Optional, Sequence, Union
+from typing import Optional, Union
+from collections.abc import Iterable, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np

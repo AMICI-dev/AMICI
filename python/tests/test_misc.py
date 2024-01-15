@@ -78,8 +78,7 @@ def test_cmake_compilation(sbml_example_presimulation_module):
             cmd,
             shell=True,
             check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
         )
     except subprocess.CalledProcessError as e:
         print(e.stdout.decode())
