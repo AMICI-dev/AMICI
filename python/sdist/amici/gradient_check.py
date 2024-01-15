@@ -6,7 +6,8 @@ computed sensitivities using finite difference approximations
 """
 
 import copy
-from typing import List, Optional, Sequence
+from typing import Optional
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -29,7 +30,7 @@ def check_finite_difference(
     solver: Solver,
     edata: ExpData,
     ip: int,
-    fields: List[str],
+    fields: list[str],
     atol: Optional[float] = 1e-4,
     rtol: Optional[float] = 1e-4,
     epsilon: Optional[float] = 1e-3,

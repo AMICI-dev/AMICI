@@ -3,7 +3,7 @@
 import re
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Set, Tuple
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -24,7 +24,7 @@ def sbml_semantic_cases_dir() -> Path:
     return SBML_SEMANTIC_CASES_DIR
 
 
-def parse_selection(selection_str: str, last: int) -> List[int]:
+def parse_selection(selection_str: str, last: int) -> list[int]:
     """
     Parse comma-separated list of integer ranges, return selected indices as
     integer list
@@ -131,7 +131,7 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
         passed_ids.append(test_case_id)
 
 
-def get_tags_for_test(test_id: str) -> Tuple[Set[str], Set[str]]:
+def get_tags_for_test(test_id: str) -> tuple[set[str], set[str]]:
     """Get sbml test suite tags for the given test ID
 
     Returns:

@@ -21,7 +21,8 @@ import numbers
 import re
 from collections.abc import Sequence
 from itertools import chain
-from typing import Any, Collection, Iterator, Union
+from typing import Any, Union
+from collections.abc import Collection, Iterator
 
 import amici
 import numpy as np
@@ -164,7 +165,7 @@ class ParameterMapping(Sequence):
 
     def __getitem__(
         self, item
-    ) -> Union[ParameterMapping, ParameterMappingForCondition]:
+    ) -> ParameterMapping | ParameterMappingForCondition:
         result = self.parameter_mappings[item]
         if isinstance(result, ParameterMappingForCondition):
             return result
@@ -306,7 +307,7 @@ def unscale_parameters_dict(
 
 def create_parameter_mapping(
     petab_problem: petab.Problem,
-    simulation_conditions: Union[pd.DataFrame, list[dict]],
+    simulation_conditions: pd.DataFrame | list[dict],
     scaled_parameters: bool,
     amici_model: AmiciModel,
     **parameter_mapping_kwargs,
@@ -396,7 +397,7 @@ def create_parameter_mapping(
 
 def create_parameter_mapping_for_condition(
     parameter_mapping_for_condition: petab.ParMappingDictQuadruple,
-    condition: Union[pd.Series, dict],
+    condition: pd.Series | dict,
     petab_problem: petab.Problem,
     amici_model: AmiciModel,
 ) -> ParameterMappingForCondition:
@@ -631,7 +632,7 @@ def _subset_dict(
 
 def _get_initial_state_sbml(
     petab_problem: petab.Problem, element_id: str
-) -> Union[float, sp.Basic]:
+) -> float | sp.Basic:
     import libsbml
 
     element = petab_problem.sbml_model.getElementBySId(element_id)
@@ -672,7 +673,7 @@ def _get_initial_state_sbml(
 
 def _get_initial_state_pysb(
     petab_problem: petab.Problem, element_id: str
-) -> Union[float, sp.Symbol]:
+) -> float | sp.Symbol:
     species_idx = int(re.match(r"__s(\d+)$", element_id)[1])
     species_pattern = petab_problem.model.model.species[species_idx]
     from pysb.pattern import match_complex_pattern

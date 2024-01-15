@@ -2,7 +2,8 @@
 import itertools
 import os
 import re
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Optional
+from collections.abc import Iterable
 
 import sympy as sp
 from sympy.codegen.rewriting import Optimization, optimize
@@ -73,7 +74,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         )
         if len(expr.args) == 1:
             return self._print(arg0)
-        return "%s%s(%s, %s)" % (
+        return "{}{}({}, {})".format(
             self._ns,
             cpp_fun,
             self._print(arg0),
@@ -92,7 +93,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
     def _get_sym_lines_array(
         self, equations: sp.Matrix, variable: str, indent_level: int
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate C++ code for assigning symbolic terms in symbols to C++ array
         `variable`.
@@ -122,7 +123,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         equations: sp.Matrix,
         variable: str,
         indent_level: int,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate C++ code for where array elements are directly replaced with
         their corresponding macro symbol
@@ -209,11 +210,11 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
     def csc_matrix(
         self,
         matrix: sp.Matrix,
-        rownames: List[sp.Symbol],
-        colnames: List[sp.Symbol],
+        rownames: list[sp.Symbol],
+        colnames: list[sp.Symbol],
         identifier: Optional[int] = 0,
         pattern_only: Optional[bool] = False,
-    ) -> Tuple[List[int], List[int], sp.Matrix, List[str], sp.Matrix]:
+    ) -> tuple[list[int], list[int], sp.Matrix, list[str], sp.Matrix]:
         """
         Generates the sparse symbolic identifiers, symbolic identifiers,
         sparse matrix, column pointers and row values for a symbolic
@@ -298,7 +299,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
 def get_switch_statement(
     condition: str,
-    cases: Dict[int, List[str]],
+    cases: dict[int, list[str]],
     indentation_level: Optional[int] = 0,
     indentation_step: Optional[str] = " " * 4,
 ):

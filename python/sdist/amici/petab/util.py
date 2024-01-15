@@ -1,6 +1,6 @@
 """Various helper functions for working with PEtab problems."""
 import re
-from typing import TYPE_CHECKING, Dict, Tuple, Union
+from typing import TYPE_CHECKING, Union
 
 import libsbml
 import pandas as pd
@@ -15,9 +15,9 @@ if TYPE_CHECKING:
 
 def get_states_in_condition_table(
     petab_problem: petab.Problem,
-    condition: Union[Dict, pd.Series] = None,
+    condition: Union[dict, pd.Series] = None,
     return_patterns: bool = False,
-) -> Dict[str, Tuple[Union[float, str, None], Union[float, str, None]]]:
+) -> dict[str, tuple[Union[float, str, None], Union[float, str, None]]]:
     """Get states and their initial condition as specified in the condition table.
 
     Returns: Dictionary: ``stateId -> (initial condition simulation, initial condition preequilibration)``
