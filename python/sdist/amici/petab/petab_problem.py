@@ -102,7 +102,7 @@ class PetabProblem:
         :param scaled_parameters: Whether the provided parameters are on PEtab
             `parameterScale` or not.
         """
-        if scaled_parameters != self._scaled_parameters:
+        if scaled_parameters != self._scaled_parameters and self._parameter_mapping is not None:
             # redo parameter mapping if scale changed
             self._parameter_mapping = create_parameter_mapping(
                 petab_problem=self._petab_problem,
