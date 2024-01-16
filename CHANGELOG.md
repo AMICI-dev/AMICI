@@ -2,6 +2,10 @@
 
 ## v0.X Series
 
+### v0.21.1 (2024-01-17)
+
+Fixed package configuration for PyPI upload. No further changes.
+
 ### v0.21.0 (2024-01-16)
 
 **Deprecations**

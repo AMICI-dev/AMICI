@@ -29,6 +29,11 @@ jobs:
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
 
+    - name: Remove direct dependencies from setup.cfg
+      # Remove any "git+https"-based dependencies that are not supported
+      #  by PyPI and are only required for testing.
+      run: sed -i '/git+https/d' python/sdist/setup.cfg
+
     - name: sdist
       run: scripts/buildSdist.sh
 
