@@ -12,7 +12,6 @@
 #include "amici/vector.h"
 
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace amici {
@@ -117,6 +116,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param ndxdotdp_explicit Number of nonzero elements in `dxdotdp_explicit`
      * @param ndxdotdx_explicit Number of nonzero elements in `dxdotdx_explicit`
      * @param w_recursion_depth Recursion depth of fw
+     * @param state_independent_events Map of events with state-independent
+     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model(
         ModelDimensions const& model_dimensions,
@@ -124,7 +125,8 @@ class Model : public AbstractModel, public ModelDimensions {
         amici::SecondOrderMode o2mode, std::vector<amici::realtype> idlist,
         std::vector<int> z2event, bool pythonGenerated = false,
         int ndxdotdp_explicit = 0, int ndxdotdx_explicit = 0,
-        int w_recursion_depth = 0
+        int w_recursion_depth = 0,
+        std::map<realtype, std::vector<int>> state_independent_events = {}
     );
 
     /** Destructor. */
@@ -702,6 +704,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set simulation start time.
+     *
+     * Output timepoints are absolute timepoints, independent of
+     * \f$ t_{0} \f$.
+     * For output timepoints \f$ t <  t_{0} \f$, the initial state will be
+     * returned.
+
      * @param t0 Simulation start time
      */
     void setT0(double t0);
@@ -1435,7 +1443,7 @@ class Model : public AbstractModel, public ModelDimensions {
     std::vector<int> const& getReinitializationStateIdxs() const;
 
     /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated;
+    bool pythonGenerated = false;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
@@ -1450,6 +1458,15 @@ class Model : public AbstractModel, public ModelDimensions {
     SUNMatrixWrapper const& get_dxdotdp_full() const;
 
     /**
+     * @brief Get trigger times for events that don't require root-finding.
+     *
+     * @return List of unique trigger points for events that don't require
+     * root-finding (i.e. that trigger at predetermined timepoints),
+     * in ascending order.
+     */
+    virtual std::vector<double> get_trigger_timepoints() const;
+
+    /**
      * Flag indicating whether for
      * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
      * directional or full second order derivative will be computed
@@ -1461,6 +1478,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** Logger */
     Logger* logger = nullptr;
+
+    /**
+     * @brief Map of trigger timepoints to event indices for events that don't
+     * require root-finding.
+     */
+    std::map<realtype, std::vector<int>> state_independent_events_ = {};
 
   protected:
     /**
@@ -2003,7 +2026,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness
      */
+#ifdef NDEBUG
     bool always_check_finite_{false};
+#else
+    bool always_check_finite_{true};
+#endif
 
     /** indicates whether sigma residuals are to be added for every datapoint */
     bool sigma_res_{false};

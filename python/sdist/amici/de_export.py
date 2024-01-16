@@ -25,15 +25,11 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
-    List,
     Literal,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
     Union,
 )
+from collections.abc import Sequence
 
 import numpy as np
 import sympy as sp
@@ -58,8 +54,8 @@ from .import_utils import (
     generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
-    symbol_with_assumptions,
     toposort_symbols,
+    unique_preserve_order,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -587,7 +583,7 @@ def smart_multiply(
 
 
 def smart_is_zero_matrix(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]
+    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
 ) -> bool:
     """A faster implementation of sympy's is_zero_matrix
 
@@ -757,23 +753,23 @@ class DEModel:
             Whether to cache calls to the simplify method. Can e.g. decrease
             import times for models with events.
         """
-        self._differential_states: List[DifferentialState] = []
-        self._algebraic_states: List[AlgebraicState] = []
-        self._algebraic_equations: List[AlgebraicEquation] = []
-        self._observables: List[Observable] = []
-        self._event_observables: List[EventObservable] = []
-        self._sigma_ys: List[SigmaY] = []
-        self._sigma_zs: List[SigmaZ] = []
-        self._parameters: List[Parameter] = []
-        self._constants: List[Constant] = []
-        self._log_likelihood_ys: List[LogLikelihoodY] = []
-        self._log_likelihood_zs: List[LogLikelihoodZ] = []
-        self._log_likelihood_rzs: List[LogLikelihoodRZ] = []
-        self._expressions: List[Expression] = []
-        self._conservation_laws: List[ConservationLaw] = []
-        self._events: List[Event] = []
+        self._differential_states: list[DifferentialState] = []
+        self._algebraic_states: list[AlgebraicState] = []
+        self._algebraic_equations: list[AlgebraicEquation] = []
+        self._observables: list[Observable] = []
+        self._event_observables: list[EventObservable] = []
+        self._sigma_ys: list[SigmaY] = []
+        self._sigma_zs: list[SigmaZ] = []
+        self._parameters: list[Parameter] = []
+        self._constants: list[Constant] = []
+        self._log_likelihood_ys: list[LogLikelihoodY] = []
+        self._log_likelihood_zs: list[LogLikelihoodZ] = []
+        self._log_likelihood_rzs: list[LogLikelihoodRZ] = []
+        self._expressions: list[Expression] = []
+        self._conservation_laws: list[ConservationLaw] = []
+        self._events: list[Event] = []
         self.splines = []
-        self._symboldim_funs: Dict[str, Callable[[], int]] = {
+        self._symboldim_funs: dict[str, Callable[[], int]] = {
             "sx": self.num_states_solver,
             "v": self.num_states_solver,
             "vB": self.num_states_solver,
@@ -781,23 +777,23 @@ class DEModel:
             "sigmay": self.num_obs,
             "sigmaz": self.num_eventobs,
         }
-        self._eqs: Dict[
+        self._eqs: dict[
             str,
             Union[
                 sp.Matrix,
                 sp.SparseMatrix,
-                List[Union[sp.Matrix, sp.SparseMatrix]],
+                list[Union[sp.Matrix, sp.SparseMatrix]],
             ],
         ] = dict()
-        self._sparseeqs: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
-        self._vals: Dict[str, List[sp.Expr]] = dict()
-        self._names: Dict[str, List[str]] = dict()
-        self._syms: Dict[str, Union[sp.Matrix, List[sp.Matrix]]] = dict()
-        self._sparsesyms: Dict[str, Union[List[str], List[List[str]]]] = dict()
-        self._colptrs: Dict[str, Union[List[int], List[List[int]]]] = dict()
-        self._rowvals: Dict[str, Union[List[int], List[List[int]]]] = dict()
+        self._sparseeqs: dict[str, Union[sp.Matrix, list[sp.Matrix]]] = dict()
+        self._vals: dict[str, list[sp.Expr]] = dict()
+        self._names: dict[str, list[str]] = dict()
+        self._syms: dict[str, Union[sp.Matrix, list[sp.Matrix]]] = dict()
+        self._sparsesyms: dict[str, Union[list[str], list[list[str]]]] = dict()
+        self._colptrs: dict[str, Union[list[int], list[list[int]]]] = dict()
+        self._rowvals: dict[str, Union[list[int], list[list[int]]]] = dict()
 
-        self._equation_prototype: Dict[str, Callable] = {
+        self._equation_prototype: dict[str, Callable] = {
             "total_cl": self.conservation_laws,
             "x0": self.states,
             "y": self.observables,
@@ -809,7 +805,7 @@ class DEModel:
             "sigmay": self.sigma_ys,
             "sigmaz": self.sigma_zs,
         }
-        self._variable_prototype: Dict[str, Callable] = {
+        self._variable_prototype: dict[str, Callable] = {
             "tcl": self.conservation_laws,
             "x_rdata": self.states,
             "y": self.observables,
@@ -821,12 +817,12 @@ class DEModel:
             "sigmaz": self.sigma_zs,
             "h": self.events,
         }
-        self._value_prototype: Dict[str, Callable] = {
+        self._value_prototype: dict[str, Callable] = {
             "p": self.parameters,
             "k": self.constants,
         }
-        self._total_derivative_prototypes: Dict[
-            str, Dict[str, Union[str, List[str]]]
+        self._total_derivative_prototypes: dict[
+            str, dict[str, Union[str, list[str]]]
         ] = {
             "sroot": {
                 "eq": "root",
@@ -836,13 +832,13 @@ class DEModel:
             },
         }
 
-        self._lock_total_derivative: List[str] = list()
+        self._lock_total_derivative: list[str] = list()
         self._simplify: Callable = simplify
         if cache_simplify and simplify is not None:
 
             def cached_simplify(
                 expr: sp.Expr,
-                _simplified: Dict[str, sp.Expr] = {},
+                _simplified: dict[str, sp.Expr] = {},
                 _simplify: Callable = simplify,
             ) -> sp.Expr:
                 """Speed up expression simplification with caching.
@@ -878,59 +874,59 @@ class DEModel:
         for fun in CUSTOM_FUNCTIONS:
             self._code_printer.known_functions[fun["sympy"]] = fun["c++"]
 
-    def differential_states(self) -> List[DifferentialState]:
+    def differential_states(self) -> list[DifferentialState]:
         """Get all differential states."""
         return self._differential_states
 
-    def algebraic_states(self) -> List[AlgebraicState]:
+    def algebraic_states(self) -> list[AlgebraicState]:
         """Get all algebraic states."""
         return self._algebraic_states
 
-    def observables(self) -> List[Observable]:
+    def observables(self) -> list[Observable]:
         """Get all observables."""
         return self._observables
 
-    def parameters(self) -> List[Parameter]:
+    def parameters(self) -> list[Parameter]:
         """Get all parameters."""
         return self._parameters
 
-    def constants(self) -> List[Constant]:
+    def constants(self) -> list[Constant]:
         """Get all constants."""
         return self._constants
 
-    def expressions(self) -> List[Expression]:
+    def expressions(self) -> list[Expression]:
         """Get all expressions."""
         return self._expressions
 
-    def events(self) -> List[Event]:
+    def events(self) -> list[Event]:
         """Get all events."""
         return self._events
 
-    def event_observables(self) -> List[EventObservable]:
+    def event_observables(self) -> list[EventObservable]:
         """Get all event observables."""
         return self._event_observables
 
-    def sigma_ys(self) -> List[SigmaY]:
+    def sigma_ys(self) -> list[SigmaY]:
         """Get all observable sigmas."""
         return self._sigma_ys
 
-    def sigma_zs(self) -> List[SigmaZ]:
+    def sigma_zs(self) -> list[SigmaZ]:
         """Get all event observable sigmas."""
         return self._sigma_zs
 
-    def conservation_laws(self) -> List[ConservationLaw]:
+    def conservation_laws(self) -> list[ConservationLaw]:
         """Get all conservation laws."""
         return self._conservation_laws
 
-    def log_likelihood_ys(self) -> List[LogLikelihoodY]:
+    def log_likelihood_ys(self) -> list[LogLikelihoodY]:
         """Get all observable log likelihoodss."""
         return self._log_likelihood_ys
 
-    def log_likelihood_zs(self) -> List[LogLikelihoodZ]:
+    def log_likelihood_zs(self) -> list[LogLikelihoodZ]:
         """Get all event observable log likelihoods."""
         return self._log_likelihood_zs
 
-    def log_likelihood_rzs(self) -> List[LogLikelihoodRZ]:
+    def log_likelihood_rzs(self) -> list[LogLikelihoodRZ]:
         """Get all event observable regularization log likelihoods."""
         return self._log_likelihood_rzs
 
@@ -938,7 +934,7 @@ class DEModel:
         """Check if model is ODE model."""
         return len(self._algebraic_equations) == 0
 
-    def states(self) -> List[State]:
+    def states(self) -> list[State]:
         """Get all states."""
         return self._differential_states + self._algebraic_states
 
@@ -1265,7 +1261,7 @@ class DEModel:
         self,
         state: sp.Symbol,
         total_abundance: sp.Symbol,
-        coefficients: Dict[sp.Symbol, sp.Expr],
+        coefficients: dict[sp.Symbol, sp.Expr],
     ) -> None:
         r"""
         Adds a new conservation law to the model. A conservation law is defined
@@ -1331,7 +1327,7 @@ class DEModel:
         self.add_component(cl)
         self._differential_states[ix].set_conservation_law(cl)
 
-    def get_observable_transformations(self) -> List[ObservableTransformation]:
+    def get_observable_transformations(self) -> list[ObservableTransformation]:
         """
         List of observable transformations
 
@@ -1426,12 +1422,23 @@ class DEModel:
 
     def num_events(self) -> int:
         """
+        Total number of Events (those for which root-functions are added and those without).
+
+        :return:
+            number of events
+        """
+        return len(self.sym("h"))
+
+    def num_events_solver(self) -> int:
+        """
         Number of Events.
 
         :return:
             number of event symbols (length of the root vector in AMICI)
         """
-        return len(self.sym("h"))
+        return sum(
+            not event.triggers_at_fixed_timepoint() for event in self.events()
+        )
 
     def sym(self, name: str) -> sp.Matrix:
         """
@@ -1449,7 +1456,7 @@ class DEModel:
 
         return self._syms[name]
 
-    def sparsesym(self, name: str, force_generate: bool = True) -> List[str]:
+    def sparsesym(self, name: str, force_generate: bool = True) -> list[str]:
         """
         Returns (and constructs if necessary) the sparsified identifiers for
         a sparsified symbolic variable.
@@ -1505,7 +1512,7 @@ class DEModel:
 
     def colptrs(
         self, name: str
-    ) -> Union[List[sp.Number], List[List[sp.Number]]]:
+    ) -> Union[list[sp.Number], list[list[sp.Number]]]:
         """
         Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
@@ -1524,7 +1531,7 @@ class DEModel:
 
     def rowvals(
         self, name: str
-    ) -> Union[List[sp.Number], List[List[sp.Number]]]:
+    ) -> Union[list[sp.Number], list[list[sp.Number]]]:
         """
         Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
@@ -1541,7 +1548,7 @@ class DEModel:
             self._generate_sparse_symbol(name)
         return self._rowvals[name]
 
-    def val(self, name: str) -> List[sp.Number]:
+    def val(self, name: str) -> list[sp.Number]:
         """
         Returns (and constructs if necessary) the numeric values of a
         symbolic entity
@@ -1556,7 +1563,7 @@ class DEModel:
             self._generate_value(name)
         return self._vals[name]
 
-    def name(self, name: str) -> List[str]:
+    def name(self, name: str) -> list[str]:
         """
         Returns (and constructs if necessary) the names of a symbolic
         variable
@@ -1571,7 +1578,7 @@ class DEModel:
             self._generate_name(name)
         return self._names[name]
 
-    def free_symbols(self) -> Set[sp.Basic]:
+    def free_symbols(self) -> set[sp.Basic]:
         """
         Returns list of free symbols that appear in RHS and initial
         conditions.
@@ -1750,7 +1757,17 @@ class DEModel:
             # add roots of heaviside functions
             self.add_component(root)
 
-    def get_appearance_counts(self, idxs: List[int]) -> List[int]:
+        # re-order events - first those that require root tracking, then the others
+        self._events = list(
+            chain(
+                itertools.filterfalse(
+                    Event.triggers_at_fixed_timepoint, self._events
+                ),
+                filter(Event.triggers_at_fixed_timepoint, self._events),
+            )
+        )
+
+    def get_appearance_counts(self, idxs: list[int]) -> list[int]:
         """
         Counts how often a state appears in the time derivative of
         another state and expressions for a subset of states
@@ -2211,6 +2228,23 @@ class DEModel:
         else:
             raise ValueError(f"Unknown equation {name}")
 
+        if name in ("sigmay", "sigmaz"):
+            # check for states in sigma{y,z}, which is currently not supported
+            syms_x = self.sym("x")
+            syms_yz = self.sym(name.removeprefix("sigma"))
+            xs_in_sigma = {}
+            for sym_yz, eq_yz in zip(syms_yz, self._eqs[name]):
+                yz_free_syms = eq_yz.free_symbols
+                if tmp := {x for x in syms_x if x in yz_free_syms}:
+                    xs_in_sigma[sym_yz] = tmp
+            if xs_in_sigma:
+                msg = ", ".join(
+                    [f"{yz} depends on {xs}" for yz, xs in xs_in_sigma.items()]
+                )
+                raise NotImplementedError(
+                    f"State-dependent observables are not supported, but {msg}."
+                )
+
         if name == "root":
             # Events are processed after the model has been set up.
             # Equations are there, but symbols for roots must be added
@@ -2237,7 +2271,7 @@ class DEModel:
                     self._eqs[name], self._simplify
                 )
 
-    def sym_names(self) -> List[str]:
+    def sym_names(self) -> list[str]:
         """
         Returns a list of names of generated symbolic variables
 
@@ -2330,7 +2364,7 @@ class DEModel:
         self,
         name: str,
         eq: str,
-        chainvars: List[str],
+        chainvars: list[str],
         var: str,
         dydx_name: str = None,
         dxdz_name: str = None,
@@ -2469,7 +2503,7 @@ class DEModel:
         self._eqs[name] = sign * smart_multiply(xx, yy)
 
     def _equation_from_components(
-        self, name: str, components: List[ModelQuantity]
+        self, name: str, components: list[ModelQuantity]
     ) -> None:
         """
         Generates the formulas of a symbolic variable from the attributes
@@ -2482,7 +2516,7 @@ class DEModel:
         """
         self._eqs[name] = sp.Matrix([comp.get_val() for comp in components])
 
-    def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Expr]]:
+    def get_conservation_laws(self) -> list[tuple[sp.Symbol, sp.Expr]]:
         """Returns a list of states with conservation law set
 
         :return:
@@ -2559,7 +2593,7 @@ class DEModel:
         """
         return self.states()[ix].has_conservation_law()
 
-    def get_solver_indices(self) -> Dict[int, int]:
+    def get_solver_indices(self) -> dict[int, int]:
         """
         Returns a mapping that maps rdata species indices to solver indices
 
@@ -2633,7 +2667,7 @@ class DEModel:
     def _get_unique_root(
         self,
         root_found: sp.Expr,
-        roots: List[Event],
+        roots: list[Event],
     ) -> Union[sp.Symbol, None]:
         """
         Collects roots of Heaviside functions and events and stores them in
@@ -2671,7 +2705,7 @@ class DEModel:
     def _collect_heaviside_roots(
         self,
         args: Sequence[sp.Expr],
-    ) -> List[sp.Expr]:
+    ) -> list[sp.Expr]:
         """
         Recursively checks an expression for the occurrence of Heaviside
         functions and return all roots found
@@ -2708,7 +2742,7 @@ class DEModel:
     def _process_heavisides(
         self,
         dxdt: sp.Expr,
-        roots: List[Event],
+        roots: list[Event],
     ) -> sp.Expr:
         """
         Parses the RHS of a state variable, checks for Heaviside functions,
@@ -2724,16 +2758,12 @@ class DEModel:
         :returns:
             dxdt with Heaviside functions replaced by amici helper variables
         """
-
-        # expanding the rhs will in general help to collect the same
-        # heaviside function
-        dt_expanded = dxdt.expand()
         # track all the old Heaviside expressions in tmp_roots_old
         # replace them later by the new expressions
         heavisides = []
         # run through the expression tree and get the roots
-        tmp_roots_old = self._collect_heaviside_roots(dt_expanded.args)
-        for tmp_old in tmp_roots_old:
+        tmp_roots_old = self._collect_heaviside_roots(dxdt.args)
+        for tmp_old in unique_preserve_order(tmp_roots_old):
             # we want unique identifiers for the roots
             tmp_new = self._get_unique_root(tmp_old, roots)
             # `tmp_new` is None if the root is not time-dependent.
@@ -2867,7 +2897,7 @@ class DEExporter:
         )
 
         # To only generate a subset of functions, apply subselection here
-        self.functions: Dict[str, _FunctionInfo] = copy.deepcopy(functions)
+        self.functions: dict[str, _FunctionInfo] = copy.deepcopy(functions)
 
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
         self._build_hints = set()
@@ -3045,7 +3075,7 @@ class DEExporter:
         with open(compile_script, "w") as fileout:
             fileout.write("\n".join(lines))
 
-    def _get_index(self, name: str) -> Dict[sp.Symbol, int]:
+    def _get_index(self, name: str) -> dict[sp.Symbol, int]:
         """
         Compute indices for a symbolic array.
         :param name:
@@ -3252,7 +3282,7 @@ class DEExporter:
 
     def _generate_function_index(
         self, function: str, indextype: Literal["colptrs", "rowvals"]
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate equations and C++ code for the function ``function``.
 
@@ -3354,7 +3384,7 @@ class DEExporter:
 
     def _get_function_body(
         self, function: str, equations: sp.Matrix
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate C++ code for body of function ``function``.
 
@@ -3642,6 +3672,7 @@ class DEExporter:
             "NZ": self.model.num_eventobs(),
             "NZTRUE": self.model.num_eventobs(),
             "NEVENT": self.model.num_events(),
+            "NEVENT_SOLVER": self.model.num_events_solver(),
             "NOBJECTIVE": "1",
             "NSPL": len(self.model.splines),
             "NW": len(self.model.sym("w")),
@@ -3736,12 +3767,11 @@ class DEExporter:
                 )
             ),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
+            "STATE_INDEPENDENT_EVENTS": self._get_state_independent_event_intializer(),
             "ID": ", ".join(
-                (
-                    str(float(isinstance(s, DifferentialState)))
-                    for s in self.model.states()
-                    if not s.has_conservation_law()
-                )
+                str(float(isinstance(s, DifferentialState)))
+                for s in self.model.states()
+                if not s.has_conservation_law()
             ),
         }
 
@@ -3871,6 +3901,27 @@ class DEExporter:
             for idx, symbol in enumerate(self.model.sym(name))
         )
 
+    def _get_state_independent_event_intializer(self) -> str:
+        """Get initializer list for state independent events in amici::Model."""
+        map_time_to_event_idx = {}
+        for event_idx, event in enumerate(self.model.events()):
+            if not event.triggers_at_fixed_timepoint():
+                continue
+            trigger_time = float(event.get_trigger_time())
+            try:
+                map_time_to_event_idx[trigger_time].append(event_idx)
+            except KeyError:
+                map_time_to_event_idx[trigger_time] = [event_idx]
+
+        def vector_initializer(v):
+            """std::vector initializer list with elements from `v`"""
+            return f"{{{', '.join(map(str, v))}}}"
+
+        return ", ".join(
+            f"{{{trigger_time}, {vector_initializer(event_idxs)}}}"
+            for trigger_time, event_idxs in map_time_to_event_idx.items()
+        )
+
     def _write_c_make_file(self):
         """Write CMake ``CMakeLists.txt`` file for this model."""
         sources = "\n".join(
@@ -3986,7 +4037,7 @@ class TemplateAmici(Template):
 def apply_template(
     source_file: Union[str, Path],
     target_file: Union[str, Path],
-    template_data: Dict[str, str],
+    template_data: dict[str, str],
 ) -> None:
     """
     Load source file, apply template substitution as provided in

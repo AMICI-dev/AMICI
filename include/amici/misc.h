@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <ctime>
 #include <functional>
-#include <memory>
 #include <regex>
 #include <vector>
 
@@ -291,7 +290,11 @@ class CpuTimer {
         return d_milliseconds(clock::now() - start_).count();
     }
 
-    static const bool uses_thread_clock = true;
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
+    static bool const uses_thread_clock = true;
 
   private:
     /** Start time */
@@ -330,7 +333,11 @@ class CpuTimer {
                / CLOCKS_PER_SEC;
     }
 
-    static const bool uses_thread_clock = false;
+    /**
+     * @brief Whether the timer uses a thread clock (i.e. provides proper,
+     * thread-specific CPU time).
+     */
+    static bool const uses_thread_clock = false;
 
   private:
     /** Start time */

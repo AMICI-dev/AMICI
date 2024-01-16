@@ -5,7 +5,6 @@
 #include "amici/symbolic_functions.h" // getNaN
 
 #include <algorithm>
-#include <cstring>
 #include <random>
 #include <utility>
 
@@ -337,6 +336,18 @@ realtype const* ExpData::getObservedEventsStdDevPtr(int ie) const {
         return &observed_events_std_dev_.at(ie * nztrue_);
 
     return nullptr;
+}
+
+void ExpData::clear_observations() {
+    std::fill(observed_data_.begin(), observed_data_.end(), getNaN());
+    std::fill(
+        observed_data_std_dev_.begin(), observed_data_std_dev_.end(), getNaN()
+    );
+    std::fill(observed_events_.begin(), observed_events_.end(), getNaN());
+    std::fill(
+        observed_events_std_dev_.begin(), observed_events_std_dev_.end(),
+        getNaN()
+    );
 }
 
 void ExpData::applyDimensions() {

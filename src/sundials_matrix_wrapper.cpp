@@ -793,20 +793,25 @@ unravel_index(sunindextype i, SUNMatrix m) {
     }
 
     if (mat_id == SUNMATRIX_SPARSE) {
-        gsl_ExpectsDebug(i < SM_NNZ_S(m));
-        sunindextype row = SM_INDEXVALS_S(m)[i];
-        sunindextype i_colptr = 0;
-        while (SM_INDEXPTRS_S(m)[i_colptr] < SM_NNZ_S(m)) {
-            if (SM_INDEXPTRS_S(m)[i_colptr + 1] > i) {
-                sunindextype col = i_colptr;
-                gsl_EnsuresDebug(row >= 0);
-                gsl_EnsuresDebug(row < SM_ROWS_S(m));
-                gsl_EnsuresDebug(col >= 0);
-                gsl_EnsuresDebug(col < SM_COLUMNS_S(m));
-                return {row, col};
-            }
-            ++i_colptr;
-        }
+        auto nnz = SM_NNZ_S(m);
+        auto ncols = SM_COLUMNS_S(m);
+        auto index_vals = SM_INDEXVALS_S(m);
+        auto index_ptrs = SM_INDEXPTRS_S(m);
+        gsl_ExpectsDebug(i < nnz);
+        sunindextype row = index_vals[i];
+        sunindextype col = 0;
+        while (col < ncols && index_ptrs[col + 1] <= i)
+            ++col;
+
+        // This can happen if indexvals / indexptrs haven't been set.
+        if(col == ncols)
+            return {-1, -1};
+
+        gsl_EnsuresDebug(row >= 0);
+        gsl_EnsuresDebug(row < SM_ROWS_S(m));
+        gsl_EnsuresDebug(col >= 0);
+        gsl_EnsuresDebug(col < ncols);
+        return {row, col};
     }
 
     throw amici::AmiException("Unimplemented SUNMatrix type for unravel_index");
