@@ -38,7 +38,7 @@ class PetabProblem:
         petab_problem: petab.Problem,
         amici_model: Optional[amici.Model] = None,
         problem_parameters: Optional[dict[str, float]] = None,
-        scaled_parameters: Optional[bool] = False,
+        scaled_parameters: bool = False,
         simulation_conditions: Union[pd.DataFrame, list[dict]] = None,
         store_edatas: bool = True,
     ):
@@ -70,15 +70,13 @@ class PetabProblem:
         if problem_parameters is None:
             # Use PEtab nominal values as default
             self._problem_parameters = self._default_parameters()
-            if scaled_parameters is True:
+            if scaled_parameters:
                 raise NotImplementedError(
                     "scaled_parameters=True in combination with default "
                     "parameters is not implemented yet."
                 )
-            scaled_parameters = False
         else:
             self._problem_parameters = problem_parameters
-        self._scaled_parameters = scaled_parameters
 
         if store_edatas:
             self._parameter_mapping = create_parameter_mapping(
