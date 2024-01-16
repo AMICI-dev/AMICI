@@ -146,7 +146,6 @@ def main():
     # (https://pypi.org/project/amici/)
     with open(
         os.path.join(os.path.dirname(__file__), "README.md"),
-        "r",
         encoding="utf-8",
     ) as fh:
         long_description = fh.read()

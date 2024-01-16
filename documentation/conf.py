@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
 #
@@ -15,7 +14,7 @@ from enum import EnumType
 import amici
 import exhale.deploy
 import exhale_multiproject_monkeypatch
-import mock
+from unittest import mock
 import pandas as pd
 import sphinx
 import sympy as sp

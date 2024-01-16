@@ -5,7 +5,8 @@ function as defined by a PEtab problem.
 """
 import copy
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Optional, Union
+from collections.abc import Sequence
 
 import amici
 import numpy as np
@@ -72,16 +73,16 @@ def simulate_petab(
     petab_problem: petab.Problem,
     amici_model: AmiciModel,
     solver: Optional[amici.Solver] = None,
-    problem_parameters: Optional[Dict[str, float]] = None,
-    simulation_conditions: Union[pd.DataFrame, Dict] = None,
-    edatas: List[AmiciExpData] = None,
+    problem_parameters: Optional[dict[str, float]] = None,
+    simulation_conditions: Union[pd.DataFrame, dict] = None,
+    edatas: list[AmiciExpData] = None,
     parameter_mapping: ParameterMapping = None,
     scaled_parameters: Optional[bool] = False,
     log_level: int = logging.WARNING,
     num_threads: int = 1,
     failfast: bool = True,
     scaled_gradients: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Simulate PEtab model.
 
     .. note::
@@ -262,10 +263,10 @@ def aggregate_sllh(
     amici_model: AmiciModel,
     rdatas: Sequence[amici.ReturnDataView],
     parameter_mapping: Optional[ParameterMapping],
-    edatas: List[AmiciExpData],
+    edatas: list[AmiciExpData],
     petab_scale: bool = True,
     petab_problem: petab.Problem = None,
-) -> Union[None, Dict[str, float]]:
+) -> Union[None, dict[str, float]]:
     """
     Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.

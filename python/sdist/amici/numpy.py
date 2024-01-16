@@ -7,7 +7,8 @@ This module provides views on C++ objects for efficient access.
 import collections
 import copy
 import itertools
-from typing import Dict, Iterator, List, Literal, Union
+from typing import Literal, Union
+from collections.abc import Iterator
 
 import amici
 import numpy as np
@@ -33,8 +34,8 @@ class SwigPtrView(collections.abc.Mapping):
     """
 
     _swigptr = None
-    _field_names: List[str] = []
-    _field_dimensions: Dict[str, List[int]] = dict()
+    _field_names: list[str] = []
+    _field_dimensions: dict[str, list[int]] = dict()
 
     def __getitem__(self, item: str) -> Union[np.ndarray, float]:
         """
@@ -93,7 +94,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         self._swigptr = swigptr
         self._cache = {}
-        super(SwigPtrView, self).__init__()
+        super().__init__()
 
     def __len__(self) -> int:
         """
@@ -421,7 +422,7 @@ class ExpDataView(SwigPtrView):
 
 
 def _field_as_numpy(
-    field_dimensions: Dict[str, List[int]], field: str, data: SwigPtrView
+    field_dimensions: dict[str, list[int]], field: str, data: SwigPtrView
 ) -> Union[np.ndarray, float, None]:
     """
     Convert data object field to numpy array with dimensions according to
