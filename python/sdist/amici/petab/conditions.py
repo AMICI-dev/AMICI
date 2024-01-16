@@ -2,7 +2,8 @@
 import logging
 import numbers
 import warnings
-from typing import Dict, Sequence, Union
+from typing import Union
+from collections.abc import Sequence
 
 import amici
 import numpy as np
@@ -29,8 +30,8 @@ from .util import get_states_in_condition_table
 
 logger = logging.getLogger(__name__)
 
-SingleParameterMapping = Dict[str, Union[numbers.Number, str]]
-SingleScaleMapping = Dict[str, str]
+SingleParameterMapping = dict[str, Union[numbers.Number, str]]
+SingleScaleMapping = dict[str, str]
 
 
 def fill_in_parameters(
@@ -79,7 +80,7 @@ def fill_in_parameters(
 
 def fill_in_parameters_for_condition(
     edata: amici.ExpData,
-    problem_parameters: Dict[str, numbers.Number],
+    problem_parameters: dict[str, numbers.Number],
     scaled_parameters: bool,
     parameter_mapping: ParameterMappingForCondition,
     amici_model: AmiciModel,
@@ -214,10 +215,10 @@ def fill_in_parameters_for_condition(
 def create_parameterized_edatas(
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
-    problem_parameters: Dict[str, numbers.Number],
+    problem_parameters: dict[str, numbers.Number],
     scaled_parameters: bool = False,
     parameter_mapping: ParameterMapping = None,
-    simulation_conditions: Union[pd.DataFrame, Dict] = None,
+    simulation_conditions: Union[pd.DataFrame, dict] = None,
 ) -> list[amici.ExpData]:
     """Create list of :class:amici.ExpData objects with parameters filled in.
 
@@ -283,7 +284,7 @@ def create_parameterized_edatas(
 
 
 def create_edata_for_condition(
-    condition: Union[Dict, pd.Series],
+    condition: Union[dict, pd.Series],
     measurement_df: pd.DataFrame,
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
@@ -368,7 +369,7 @@ def create_edata_for_condition(
 def create_edatas(
     amici_model: AmiciModel,
     petab_problem: petab.Problem,
-    simulation_conditions: Union[pd.DataFrame, Dict] = None,
+    simulation_conditions: Union[pd.DataFrame, dict] = None,
 ) -> list[amici.ExpData]:
     """Create list of :class:`amici.amici.ExpData` objects for PEtab problem.
 
@@ -395,7 +396,11 @@ def create_edatas(
     if PREEQUILIBRATION_CONDITION_ID in simulation_conditions:
         measurement_groupvar.append(petab.PREEQUILIBRATION_CONDITION_ID)
     measurement_dfs = dict(
-        list(petab_problem.measurement_df.groupby(measurement_groupvar))
+        list(
+            petab_problem.measurement_df.fillna(
+                {PREEQUILIBRATION_CONDITION_ID: ""}
+            ).groupby(measurement_groupvar)
+        )
     )
 
     edatas = []
@@ -404,10 +409,11 @@ def create_edatas(
         if PREEQUILIBRATION_CONDITION_ID in condition:
             measurement_index = (
                 condition.get(SIMULATION_CONDITION_ID),
-                condition.get(PREEQUILIBRATION_CONDITION_ID),
+                condition.get(PREEQUILIBRATION_CONDITION_ID) or "",
             )
         else:
             measurement_index = (condition.get(SIMULATION_CONDITION_ID),)
+
         edata = create_edata_for_condition(
             condition=condition,
             amici_model=amici_model,

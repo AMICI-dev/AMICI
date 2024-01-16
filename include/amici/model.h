@@ -704,6 +704,12 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /**
      * @brief Set simulation start time.
+     *
+     * Output timepoints are absolute timepoints, independent of
+     * \f$ t_{0} \f$.
+     * For output timepoints \f$ t <  t_{0} \f$, the initial state will be
+     * returned.
+
      * @param t0 Simulation start time
      */
     void setT0(double t0);
@@ -1440,7 +1446,7 @@ class Model : public AbstractModel, public ModelDimensions {
     std::vector<int> const& getReinitializationStateIdxs() const;
 
     /** Flag indicating Matlab- or Python-based model generation */
-    bool pythonGenerated;
+    bool pythonGenerated = false;
 
     /**
      * @brief getter for dxdotdp (matlab generated)
@@ -2023,7 +2029,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * Indicates whether the result of every call to `Model::f*` should be
      * checked for finiteness
      */
+#ifdef NDEBUG
     bool always_check_finite_{false};
+#else
+    bool always_check_finite_{true};
+#endif
 
     /** indicates whether sigma residuals are to be added for every datapoint */
     bool sigma_res_{false};

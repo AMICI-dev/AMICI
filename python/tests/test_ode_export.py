@@ -93,6 +93,7 @@ def test_csc_matrix_vector():
     assert str(sparse_matrix) == "Matrix([[0], [da2_db_1]])"
 
 
+@skip_on_valgrind
 def test_match_deriv():
     from amici.de_export import DERIVATIVE_PATTERN as pat
 

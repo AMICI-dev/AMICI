@@ -531,6 +531,14 @@
 }
 
 {
+   other
+   Memcheck:Leak
+   fun:calloc
+   ...
+   fun:_dl_catch_exception
+}
+
+{
    Pandas
    Memcheck:Leak
    fun:malloc

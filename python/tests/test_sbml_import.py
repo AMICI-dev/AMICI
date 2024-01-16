@@ -654,6 +654,7 @@ def _test_set_parameters_by_dict(model_module):
     assert model.getParameters() == old_parameter_values
 
 
+@skip_on_valgrind
 @pytest.mark.parametrize("extract_cse", [True, False])
 def test_code_gen_uses_cse(extract_cse):
     """Check that code generation honors AMICI_EXTRACT_CSE"""
@@ -675,6 +676,7 @@ def test_code_gen_uses_cse(extract_cse):
         os.environ = old_environ
 
 
+@skip_on_valgrind
 def test_code_gen_uses_lhs_symbol_ids():
     """Check that code generation uses symbol IDs instead of plain array
     indices"""
@@ -691,6 +693,7 @@ def test_code_gen_uses_lhs_symbol_ids():
     assert "dobservable_x1_dx1 = " in dwdx
 
 
+@skip_on_valgrind
 def test_hardcode_parameters(simple_sbml_model):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model

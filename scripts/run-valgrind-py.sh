@@ -2,7 +2,7 @@
 # Without arguments: run Python test suite under valgrind
 # With arguments: run whatever was passed as arguments under valgrind
 
-script_path=$(dirname $BASH_SOURCE)
+script_path=$(dirname "${BASH_SOURCE[0]}")
 amici_path=$(cd "$script_path"/.. && pwd)
 
 set -e
@@ -16,7 +16,6 @@ if [ $# -eq 0 ]
     # No arguments supplied, run all tests
     cd "${amici_path}"/python/tests
     source "${amici_path}"/build/venv/bin/activate
-    pip install scipy h5py pytest pytest-rerunfailures
     command=(python -m pytest -vv --ignore-glob=*petab* -W 'ignore:Signature ')
     #                                                    ^ ignores the following warning that occurs only under valgrind,
     # e.g. `valgrind python -c "import h5py"`:

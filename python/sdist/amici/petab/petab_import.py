@@ -25,6 +25,9 @@ except ModuleNotFoundError:
     # pysb not available
     import_model_pysb = None
 
+
+__all__ = ["import_petab_problem"]
+
 logger = get_logger(__name__, logging.WARNING)
 
 
@@ -37,19 +40,18 @@ def import_petab_problem(
     **kwargs,
 ) -> "amici.Model":
     """
-    Import model from petab problem.
+    Create an AMICI model for a PEtab problem.
 
     :param petab_problem:
         A petab problem containing all relevant information on the model.
 
     :param model_output_dir:
-        Directory to write the model code to. Will be created if doesn't
+        Directory to write the model code to. It will be created if it doesn't
         exist. Defaults to current directory.
 
     :param model_name:
-        Name of the generated model. If model file name was provided,
-        this defaults to the file name without extension, otherwise
-        the model ID will be used.
+        Name of the generated model module. Defaults to the ID of the model
+        or the model file name without the extension.
 
     :param force_compile:
         Whether to compile the model even if the target folder is not empty,
@@ -63,7 +65,8 @@ def import_petab_problem(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici` or
+        :func:`amici.pysb_import.pysb2amici`, depending on the model type.
 
     :return:
         The imported model.
