@@ -1,13 +1,13 @@
-from amici.petab.petab_problem import AmiciPetabProblem
+from amici.petab.petab_problem import PetabProblem
 from benchmark_models_petab import get_problem
 
 
 def test_amici_petab_problem_pregenerate():
-    """AmiciPetabProblem with pre-generated ExpDatas"""
+    """PetabProblem with pre-generated ExpDatas"""
     # any example is fine - the only assumption is that we don't have
     #  preequilibration
     petab_problem = get_problem("Boehm_JProteomeRes2014")
-    app = AmiciPetabProblem(petab_problem, store_edatas=True)
+    app = PetabProblem(petab_problem, store_edatas=True)
 
     # ensure all edatas are generated upon construction
     assert len(app._edatas) == len(
@@ -30,11 +30,11 @@ def test_amici_petab_problem_pregenerate():
 
 
 def test_amici_petab_problem_on_demand():
-    """AmiciPetabProblem with on-demand ExpDatas"""
+    """PetabProblem with on-demand ExpDatas"""
     # any example is fine - the only assumption is that we don't have
     #  preequilibration
     petab_problem = get_problem("Boehm_JProteomeRes2014")
-    app = AmiciPetabProblem(petab_problem, store_edatas=False)
+    app = PetabProblem(petab_problem, store_edatas=False)
 
     # ensure no edatas are generated upon construction
     assert not app._edatas
@@ -65,12 +65,12 @@ def test_amici_petab_problem_on_demand():
 
 
 def test_amici_petab_problem_pregenerate_equals_on_demand():
-    """Check that AmiciPetabProblem produces the same ExpDatas
+    """Check that PetabProblem produces the same ExpDatas
     independent of the `store_edatas` parameter."""
     # any example is fine
     petab_problem = get_problem("Boehm_JProteomeRes2014")
-    app_store_true = AmiciPetabProblem(petab_problem, store_edatas=True)
-    app_store_false = AmiciPetabProblem(petab_problem, store_edatas=False)
+    app_store_true = PetabProblem(petab_problem, store_edatas=True)
+    app_store_false = PetabProblem(petab_problem, store_edatas=False)
 
     parameter_update = {app_store_true.model.getParameterIds()[0]: 0.12345}
     app_store_true.set_parameters(parameter_update, scaled_parameters=True)

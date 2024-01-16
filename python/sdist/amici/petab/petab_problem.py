@@ -11,7 +11,7 @@ from .conditions import create_edatas, fill_in_parameters
 from .parameter_mapping import create_parameter_mapping
 
 
-class AmiciPetabProblem:
+class PetabProblem:
     """Manage experimental conditions based on a PEtab problem definition.
 
     Create :class:`ExpData` objects from a PEtab problem definition, and handle
@@ -151,7 +151,7 @@ class AmiciPetabProblem:
         NOTE: If ``store_edatas=True`` was passed to the constructor and the
         returned object is modified, the changes will be reflected in the
         internal `ExpData` objects. Also, if parameter values of
-        `AmiciPetabProblem` are changed, all `ExpData` objects will be updated.
+        `PetabProblem` are changed, all `ExpData` objects will be updated.
         Create a deep copy if you want to avoid this.
 
         :param condition_id: PEtab condition ID
@@ -176,7 +176,7 @@ class AmiciPetabProblem:
         NOTE: If ``store_edatas=True`` was passed to the constructor and the
         returned objects are modified, the changes will be reflected in the
         internal `ExpData` objects. Also, if parameter values of
-        `AmiciPetabProblem` are changed, all `ExpData` objects will be updated.
+        `PetabProblem` are changed, all `ExpData` objects will be updated.
         Create a deep copy if you want to avoid this.
 
         :return: List of ExpData objects
