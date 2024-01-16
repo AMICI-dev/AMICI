@@ -427,8 +427,6 @@ def test_solver_repr():
         for s in (solver, solver_ptr):
             assert "maxsteps" in str(s)
             assert "maxsteps" in repr(s)
-        # avoid double delete!!
-        solver_ptr.release()
 
 
 def test_edata_repr():
@@ -448,8 +446,6 @@ def test_edata_repr():
         for expected_str in expected_strs:
             assert expected_str in str(e)
             assert expected_str in repr(e)
-    # avoid double delete!!
-    edata_ptr.release()
 
 
 def test_edata_equality_operator():
