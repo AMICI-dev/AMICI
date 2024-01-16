@@ -47,6 +47,7 @@ using namespace amici;
 %ignore get_dxdotdp;
 %ignore get_dxdotdp_full;
 %ignore checkFinite;
+%ignore fxBdot;
 %ignore fJrz;
 %ignore fJy;
 %ignore fJz;

@@ -7,6 +7,7 @@ import libsbml
 import numpy as np
 from amici import (
     AmiciModel,
+    ExpData,
     SbmlImporter,
     SensitivityMethod,
     SensitivityOrder,
@@ -14,6 +15,7 @@ from amici import (
     runAmiciSimulation,
 )
 from amici.gradient_check import _check_close
+from numpy.testing import assert_allclose
 
 
 def create_amici_model(sbml_model, model_name, **kwargs) -> AmiciModel:
@@ -164,4 +166,80 @@ def check_trajectories_with_forward_sensitivities(
     )
     _check_close(
         rdata["sx"], result_expected_sx, field="sx", rtol=1e-7, atol=1e-9
+    )
+
+
+def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
+    """
+    Check whether adjoint sensitivities match forward sensitivities and finite
+    differences.
+    """
+    # First compute dummy experimental data to use adjoints
+    solver = amici_model.getSolver()
+    solver.setAbsoluteTolerance(1e-15)
+    rdata = runAmiciSimulation(amici_model, solver=solver)
+    edata = ExpData(rdata, 1.0, 1.0)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = amici_model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.forward)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-10)
+    rdata_fsa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+
+    # Show that we can do arbitrary precision here (test 8 digits)
+    solver = amici_model.getSolver()
+    solver.setSensitivityOrder(SensitivityOrder.first)
+    solver.setSensitivityMethod(SensitivityMethod.adjoint)
+    solver.setAbsoluteTolerance(1e-15)
+    solver.setRelativeTolerance(1e-10)
+    solver.setAbsoluteToleranceB(1e-15)
+    solver.setRelativeToleranceB(1e-10)
+    solver.setAbsoluteToleranceQuadratures(1e-15)
+    solver.setRelativeToleranceQuadratures(1e-8)
+    rdata_asa = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+
+    # Also test against finite differences
+    parameters = amici_model.getUnscaledParameters()
+    sllh_fd = []
+    eps = 1e-5
+    for i_par, par in enumerate(parameters):
+        solver = amici_model.getSolver()
+        solver.setSensitivityOrder(SensitivityOrder.none)
+        solver.setSensitivityMethod(SensitivityMethod.none)
+        solver.setAbsoluteTolerance(1e-15)
+        solver.setRelativeTolerance(1e-13)
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] += eps
+        amici_model.setParameters(tmp_par)
+        rdata_p = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        tmp_par = np.array(parameters[:])
+        tmp_par[i_par] -= eps
+        amici_model.setParameters(tmp_par)
+        rdata_m = runAmiciSimulation(amici_model, solver=solver, edata=edata)
+        sllh_fd.append((rdata_p["llh"] - rdata_m["llh"]) / (2 * eps))
+
+    # test less strict in terms of absolute error, as the gradient are
+    # typically in the order of 1e3
+    assert_allclose(
+        rdata_fsa["sllh"],
+        rdata_asa["sllh"],
+        rtol=1e-5,
+        atol=1e-3,
+        err_msg="Adjoint and forward sensitivities do not match.",
+    )
+    assert_allclose(
+        sllh_fd,
+        rdata_fsa["sllh"],
+        rtol=1e-5,
+        atol=1e-3,
+        err_msg="Finite differences and forward sensitivities do not match.",
+    )
+    assert_allclose(
+        sllh_fd,
+        rdata_asa["sllh"],
+        rtol=1e-5,
+        atol=1e-3,
+        err_msg="Finite differences and adjoint sensitivities do not match.",
     )

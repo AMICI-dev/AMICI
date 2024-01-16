@@ -9,6 +9,7 @@ from amici.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from amici.testing import skip_on_valgrind
 from util import (
+    check_trajectories_with_adjoint_sensitivities,
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,
     create_amici_model,
@@ -698,6 +699,7 @@ def test_models(model):
     check_trajectories_with_forward_sensitivities(
         amici_model, result_expected_x, result_expected_sx
     )
+    check_trajectories_with_adjoint_sensitivities(amici_model)
 
 
 def expm(x):

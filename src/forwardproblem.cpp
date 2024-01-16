@@ -249,6 +249,11 @@ void ForwardProblem::handleEvent(
         /* compute the new xdot  */
         model->fxdot(t_, x_, dx_, xdot_);
         applyEventSensiBolusFSA();
+    } else if (solver->computingASA()) {
+        /* compute the new xdot  */
+        model->fxdot(t_, x_, dx_, xdot_);
+        xdot_disc_.push_back(xdot_);
+        x_disc_.push_back(x_);
     }
 
     handle_secondary_event(tlastroot);
@@ -334,9 +339,11 @@ void ForwardProblem::store_pre_event_state(bool seflag, bool initial_event) {
         if (initial_event) // t0 has no parameter dependency
             std::fill(stau_.begin(), stau_.end(), 0.0);
     } else if (solver->computingASA()) {
+        model->fxdot(t_, x_, dx_, xdot_);
+        xdot_old_ = xdot_;
+        dx_old_ = dx_;
         /* store x to compute jump in discontinuity */
-        x_disc_.push_back(x_);
-        xdot_disc_.push_back(xdot_);
+        x_old_disc_.push_back(x_old_);
         xdot_old_disc_.push_back(xdot_old_);
     }
 }

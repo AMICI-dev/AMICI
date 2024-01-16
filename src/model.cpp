@@ -1498,7 +1498,7 @@ void Model::addStateSensitivityEventUpdate(
 
 void Model::addAdjointStateEventUpdate(
     AmiVector& xB, int const ie, const realtype t, AmiVector const& x,
-    AmiVector const& xdot, AmiVector const& xdot_old
+    AmiVector const& xdot, AmiVector const& xdot_old, AmiVector const& xBdot
 ) {
 
     derived_state_.deltaxB_.assign(nx_solver, 0.0);
@@ -1507,9 +1507,9 @@ void Model::addAdjointStateEventUpdate(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, computeX_pos(x),
         state_.unscaledParameters.data(), state_.fixedParameters.data(),
-        state_.h.data(), ie, xdot.data(), xdot_old.data(), xB.data()
+        state_.h.data(), ie, xdot.data(), xdot_old.data(), xB.data(),
+        xBdot.data(), state_.total_cl.data()
     );
-
     if (always_check_finite_) {
         checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB);
     }
@@ -1522,8 +1522,9 @@ void Model::addAdjointStateEventUpdate(
 }
 
 void Model::addAdjointQuadratureEventUpdate(
-    AmiVector xQB, int const ie, const realtype t, AmiVector const& x,
-    AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old
+    AmiVector& xQB, int const ie, const realtype t, AmiVector const& x,
+    AmiVector const& xB, AmiVector const& xdot, AmiVector const& xdot_old,
+    AmiVector const& xBdot
 ) {
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
@@ -1532,11 +1533,11 @@ void Model::addAdjointQuadratureEventUpdate(
             derived_state_.deltaqB_.data(), t, computeX_pos(x),
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), plist(ip), ie, xdot.data(), xdot_old.data(),
-            xB.data()
+            xB.data(), xBdot.data()
         );
 
         for (int iJ = 0; iJ < nJ; ++iJ)
-            xQB.at(iJ) += derived_state_.deltaqB_.at(iJ);
+            xQB.at(iJ * nplist() + ip) += derived_state_.deltaqB_.at(iJ);
     }
 
     if (always_check_finite_) {
