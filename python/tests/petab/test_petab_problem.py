@@ -1,7 +1,9 @@
 from amici.petab.petab_problem import PetabProblem
 from benchmark_models_petab import get_problem
+from amici.testing import skip_on_valgrind
 
 
+@skip_on_valgrind
 def test_amici_petab_problem_pregenerate():
     """PetabProblem with pre-generated ExpDatas"""
     # any example is fine - the only assumption is that we don't have
@@ -29,6 +31,7 @@ def test_amici_petab_problem_pregenerate():
         assert edata.parameters[0] == 0.12345
 
 
+@skip_on_valgrind
 def test_amici_petab_problem_on_demand():
     """PetabProblem with on-demand ExpDatas"""
     # any example is fine - the only assumption is that we don't have
@@ -64,6 +67,7 @@ def test_amici_petab_problem_on_demand():
     )
 
 
+@skip_on_valgrind
 def test_amici_petab_problem_pregenerate_equals_on_demand():
     """Check that PetabProblem produces the same ExpDatas
     independent of the `store_edatas` parameter."""

@@ -1,8 +1,10 @@
 import sympy as sp
 from amici.de_model import Event
 from amici.import_utils import amici_time_symbol
+from amici.testing import skip_on_valgrind
 
 
+@skip_on_valgrind
 def test_event_trigger_time():
     e = Event(
         sp.Symbol("event1"), "event name", amici_time_symbol - 10, sp.Float(0)
