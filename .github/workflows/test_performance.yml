@@ -51,7 +51,7 @@ jobs:
 
     - name: Install AMICI sdist
       run: |
-        AMICI_PARALLEL_COMPILE=2 check_time.sh \
+        AMICI_PARALLEL_COMPILE="" check_time.sh \
             install_sdist pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
 

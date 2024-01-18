@@ -78,7 +78,7 @@ jobs:
       - name: Run PEtab test suite
         run: |
           source ./build/venv/bin/activate \
-          && AMICI_PARALLEL_COMPILE=2 pytest -v \
+          && AMICI_PARALLEL_COMPILE="" pytest -v \
             --cov-report=xml:coverage.xml \
             --cov-append \
             --cov=amici \
