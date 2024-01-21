@@ -13,7 +13,7 @@ sphinx-autodoc-typehints
 git+https://github.com/readthedocs/sphinx-hoverxref@main
 ipython>=8.13.2
 breathe>=4.35.0
-#exhale>=0.3.5
+exhale>=0.3.7
 -e git+https://github.com/mithro/sphinx-contrib-mithro#egg=sphinx-contrib-exhale-multiproject&subdirectory=sphinx-contrib-exhale-multiproject
 sphinxcontrib-matlabdomain>=0.20.0
 sphinxcontrib-napoleon>=0.7
