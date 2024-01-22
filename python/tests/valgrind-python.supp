@@ -737,6 +737,23 @@
 }
 
 {
+   _dl_catch_exception
+   Memcheck:Addr8
+   fun:strncmp
+   fun:is_dst
+   fun:_dl_dst_count
+   fun:expand_dynamic_string_token
+   fun:fillin_rpath.isra.0
+   fun:decompose_rpath
+   fun:cache_rpath
+   fun:cache_rpath
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_exception
+   ...
+}
+
+{
    Python dictkeys_get_index
    Memcheck:Value8
    fun:dictkeys_get_index
