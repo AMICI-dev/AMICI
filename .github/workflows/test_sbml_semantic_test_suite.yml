@@ -44,8 +44,8 @@ jobs:
     - name: Install apt dependencies
       uses: ./.github/actions/install-apt-dependencies
 
-    - run: AMICI_PARALLEL_COMPILE=2 ./scripts/installAmiciSource.sh
-    - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
+    - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
+    - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v3
