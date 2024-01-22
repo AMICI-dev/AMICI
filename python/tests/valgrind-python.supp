@@ -548,6 +548,14 @@
 }
 
 {
+   Pandas 2.2.0
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:*site-packages/pandas/*
+}
+
+{
    Scipy extensions
    Memcheck:Leak
    match-leak-kinds: definite
