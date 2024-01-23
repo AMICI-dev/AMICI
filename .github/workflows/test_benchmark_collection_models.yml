@@ -49,7 +49,7 @@ jobs:
     - name: Install AMICI sdist
       run: |
         pip3 install --user petab[vis] && \
-        AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \
+        AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis]
 
     # retrieve test models
@@ -57,7 +57,7 @@ jobs:
       run: |
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
-          && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
+          && AMICI_PARALLEL_COMPILE="" tests/benchmark-models/test_benchmark_collection.sh
 
     # run gradient checks
     - name: Run Gradient Checks
