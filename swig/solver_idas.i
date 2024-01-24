@@ -11,7 +11,9 @@ using namespace amici;
 
 // Required for SWIG 4.2.0 https://github.com/AMICI-dev/AMICI/issues/2275
 %extend amici::IDASolver {
-    IDASolver() : Solver() {}
+    IDASolver() {
+        return new IDASolver();
+    }
 
     IDASolver(Solver const& solver) {
         return new IDASolver(dynamic_cast<IDASolver const&>(solver));
