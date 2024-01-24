@@ -11,6 +11,8 @@ using namespace amici;
 
 // Required with SWIG 4.2.0 https://github.com/AMICI-dev/AMICI/issues/2275
 %extend amici::CVodeSolver {
+    CVodeSolver() : Solver() {}
+
     CVodeSolver(Solver const& solver) {
         return new CVodeSolver(dynamic_cast<CVodeSolver const&>(solver));
     }
