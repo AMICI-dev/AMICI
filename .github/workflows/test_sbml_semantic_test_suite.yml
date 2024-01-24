@@ -50,7 +50,7 @@ jobs:
     - name: "Upload artifact: SBML semantic test suite results"
       uses: actions/upload-artifact@v4
       with:
-        name: amici-semantic-results
+        name: amici-semantic-results-${{ matrix.cases }}
         path: tests/amici-semantic-results
 
     - name: Codecov SBMLSuite
