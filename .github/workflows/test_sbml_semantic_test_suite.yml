@@ -33,11 +33,11 @@ jobs:
 
     steps:
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 1
 
@@ -48,7 +48,7 @@ jobs:
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: amici-semantic-results
         path: tests/amici-semantic-results
