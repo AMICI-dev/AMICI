@@ -261,6 +261,13 @@ TEST(SolverIdasTest, DefaultConstructableAndNotLeaky)
     IDASolver solver;
 }
 
+TEST(SolverIdasTest, CopyCtor)
+{
+    IDASolver solver1;
+    IDASolver solver2(solver1);
+}
+
+
 
 class SolverTest : public ::testing::Test {
   protected:
