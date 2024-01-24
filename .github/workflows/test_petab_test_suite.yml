@@ -86,7 +86,7 @@ jobs:
 
       - name: Codecov
         if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: coverage.xml
