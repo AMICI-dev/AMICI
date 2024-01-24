@@ -68,7 +68,7 @@ jobs:
     # upload results
     - uses: actions/upload-artifact@v4
       with:
-        name: computation times
+        name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
         path: |
           tests/benchmark-models/computation_times.csv
           tests/benchmark-models/computation_times.png
