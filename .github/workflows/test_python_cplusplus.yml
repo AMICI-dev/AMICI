@@ -66,7 +66,6 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines.py
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -86,7 +85,6 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -141,7 +139,6 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines_short.py
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -161,7 +158,6 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
       uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

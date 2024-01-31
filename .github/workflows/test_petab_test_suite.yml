@@ -85,7 +85,6 @@ jobs:
             tests/petab_test_suite/
 
       - name: Codecov
-        if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
         uses: codecov/codecov-action@v4-beta
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
