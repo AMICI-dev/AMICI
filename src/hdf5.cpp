@@ -655,7 +655,7 @@ void createAndWriteDouble2DDataset(
     const H5::H5File& file, std::string const& datasetName,
     gsl::span<double const> buffer, hsize_t m, hsize_t n
 ) {
-    const hsize_t adims[]{m, n};
+    hsize_t const adims[]{m, n};
     H5::DataSpace dataspace(2, adims);
     auto dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_DOUBLE, dataspace
@@ -667,7 +667,7 @@ void createAndWriteInt2DDataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<int const> buffer, hsize_t m, hsize_t n
 ) {
-    const hsize_t adims[]{m, n};
+    hsize_t const adims[]{m, n};
     H5::DataSpace dataspace(2, adims);
     auto dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_INT, dataspace
@@ -679,7 +679,7 @@ void createAndWriteDouble3DDataset(
     H5::H5File const& file, std::string const& datasetName,
     gsl::span<double const> buffer, hsize_t m, hsize_t n, hsize_t o
 ) {
-    const hsize_t adims[]{m, n, o};
+    hsize_t const adims[]{m, n, o};
     H5::DataSpace dataspace(3, adims);
     auto dataset = file.createDataSet(
         datasetName.c_str(), H5::PredType::NATIVE_DOUBLE, dataspace
