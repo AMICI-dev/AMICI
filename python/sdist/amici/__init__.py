@@ -13,7 +13,7 @@ import re
 import sys
 from pathlib import Path
 from types import ModuleType as ModelModule
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Union
 
 
 def _get_amici_path():
@@ -153,7 +153,7 @@ class add_path:
 
 
 def import_model_module(
-    module_name: str, module_path: Optional[Union[Path, str]] = None
+    module_name: str, module_path: Union[Path, str]
 ) -> ModelModule:
     """
     Import Python module of an AMICI model
