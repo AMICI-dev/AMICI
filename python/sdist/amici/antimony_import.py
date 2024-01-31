@@ -32,7 +32,9 @@ def antimony2sbml(ant_model: Union[str, Path]) -> str:
     else:
         status = ant.loadAntimonyString(ant_model)
     if status < 0:
-        raise RuntimeError("Antimony model could not be loaded.")
+        raise RuntimeError(
+            f"Antimony model could not be loaded: {ant.getLastError()}"
+        )
 
     if (main_module_name := ant.getMainModuleName()) is None:
         raise AssertionError("There is no Antimony module.")
