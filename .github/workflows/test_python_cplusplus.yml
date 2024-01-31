@@ -67,7 +67,7 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: build/coverage_py.xml
@@ -87,7 +87,7 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.info
@@ -142,7 +142,7 @@ jobs:
 
     - name: Codecov Python
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: build/coverage_py.xml
@@ -162,7 +162,7 @@ jobs:
 
     - name: Codecov CPP
       if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v4-beta
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: coverage.info
