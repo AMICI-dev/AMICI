@@ -28,7 +28,7 @@ def antimony2sbml(ant_model: Union[str, Path]) -> str:
         is_file = False
 
     if is_file:
-        status = ant.loadAntimonyFile(ant_model)
+        status = ant.loadAntimonyFile(str(ant_model))
     else:
         status = ant.loadAntimonyString(ant_model)
     if status < 0:
