@@ -46,7 +46,7 @@ class Model_DAE : public Model {
     Model_DAE(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
-        const SecondOrderMode o2mode, std::vector<realtype> const& idlist,
+        SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
         std::vector<int> const& z2event, bool const pythonGenerated = false,
         int const ndxdotdp_explicit = 0, int const ndxdotdx_explicit = 0,
         int const w_recursion_depth = 0,
@@ -85,7 +85,7 @@ class Model_DAE : public Model {
        const_N_Vector xdot, SUNMatrix J);
 
     void
-    fJB(const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    fJB(realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB) override;
 
@@ -122,7 +122,7 @@ class Model_DAE : public Model {
     );
 
     void fJSparseB(
-        const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot,
         SUNMatrix JB
     ) override;
@@ -253,7 +253,7 @@ class Model_DAE : public Model {
     );
 
     void fxBdot_ss(
-        const realtype t, AmiVector const& xB, AmiVector const& dxB,
+        realtype const t, AmiVector const& xB, AmiVector const& dxB,
         AmiVector& xBdot
     ) override;
 
@@ -298,7 +298,7 @@ class Model_DAE : public Model {
      * @param xBdot Vector with the adjoint state right hand side
      */
     void writeSteadystateJB(
-        const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+        realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;
 
@@ -308,8 +308,8 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param dx Vector with the derivative states
      */
-    void fdxdotdp(realtype t, const const_N_Vector x, const const_N_Vector dx);
-    void fdxdotdp(const realtype t, AmiVector const& x, AmiVector const& dx)
+    void fdxdotdp(realtype t, const_N_Vector const x, const_N_Vector const dx);
+    void fdxdotdp(realtype const t, AmiVector const& x, AmiVector const& dx)
         override {
         fdxdotdp(t, x.getNVector(), dx.getNVector());
     };
@@ -526,7 +526,7 @@ class Model_DAE : public Model {
      * @param k constants vector
      */
     virtual void
-    fM(realtype* M, const realtype t, realtype const* x, realtype const* p,
+    fM(realtype* M, realtype const t, realtype const* x, realtype const* p,
        realtype const* k);
 };
 } // namespace amici

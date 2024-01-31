@@ -688,7 +688,7 @@ class ReturnData : public ModelDimensions {
      * @param edata ExpData instance carrying experimental data
      */
     void getEventOutput(
-        realtype t, const std::vector<int> rootidx, Model& model,
+        realtype t, std::vector<int> const rootidx, Model& model,
         ExpData const* edata
     );
 

@@ -22,11 +22,12 @@ namespace amici {
  */
 bool is_next_t_too_close(realtype cur_t, realtype t_next) {
     auto tdiff = t_next - cur_t;
-    if(tdiff == 0.0)
+    if (tdiff == 0.0)
         return true;
 
     auto tdist = std::fabs(tdiff);
-    auto tround = std::numeric_limits<realtype>::epsilon() * std::max(std::fabs(cur_t), std::fabs(t_next));
+    auto tround = std::numeric_limits<realtype>::epsilon()
+                  * std::max(std::fabs(cur_t), std::fabs(t_next));
     if (tdist < 2.0 * tround)
         return true;
 

@@ -194,7 +194,7 @@ void ExpData::setObservedDataStdDev(
         observed_data_std_dev_.clear();
 }
 
-void ExpData::setObservedDataStdDev(const realtype stdDev) {
+void ExpData::setObservedDataStdDev(realtype const stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
     std::fill(
         observed_data_std_dev_.begin(), observed_data_std_dev_.end(), stdDev
@@ -216,7 +216,7 @@ void ExpData::setObservedDataStdDev(
             = observedDataStdDev.at(it);
 }
 
-void ExpData::setObservedDataStdDev(const realtype stdDev, int iy) {
+void ExpData::setObservedDataStdDev(realtype const stdDev, int iy) {
     checkSigmaPositivity(stdDev, "stdDev");
     for (int it = 0; it < nt(); ++it)
         observed_data_std_dev_.at(iy + it * nytrue_) = stdDev;
@@ -290,7 +290,7 @@ void ExpData::setObservedEventsStdDev(
         observed_events_std_dev_.clear();
 }
 
-void ExpData::setObservedEventsStdDev(const realtype stdDev) {
+void ExpData::setObservedEventsStdDev(realtype const stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
     std::fill(
         observed_events_std_dev_.begin(), observed_events_std_dev_.end(), stdDev
@@ -313,7 +313,7 @@ void ExpData::setObservedEventsStdDev(
             = observedEventsStdDev.at(ie);
 }
 
-void ExpData::setObservedEventsStdDev(const realtype stdDev, int iz) {
+void ExpData::setObservedEventsStdDev(realtype const stdDev, int iz) {
     checkSigmaPositivity(stdDev, "stdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
@@ -392,7 +392,7 @@ void checkSigmaPositivity(
         checkSigmaPositivity(sigma, vectorName);
 }
 
-void checkSigmaPositivity(const realtype sigma, char const* sigmaName) {
+void checkSigmaPositivity(realtype const sigma, char const* sigmaName) {
     if (sigma <= 0.0)
         throw AmiException(
             "Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma
