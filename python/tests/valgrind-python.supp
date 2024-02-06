@@ -548,6 +548,14 @@
 }
 
 {
+   Pandas 2.2.0
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:*site-packages/pandas/*
+}
+
+{
    Scipy extensions
    Memcheck:Leak
    match-leak-kinds: definite
@@ -726,6 +734,16 @@
    fun:dlopen_implementation
    fun:dlopen@@GLIBC_2.34
    fun:_PyImport_FindSharedFuncptr
+}
+
+{
+   _dl_catch_exception
+   Memcheck:Addr8
+   fun:strncmp
+   fun:is_dst
+   ...
+   fun:_dl_catch_exception
+   ...
 }
 
 {

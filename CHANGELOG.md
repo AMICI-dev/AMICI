@@ -2,6 +2,18 @@
 
 ## v0.X Series
 
+### v0.21.2 (2024-02-06)
+
+* Fixed `Solver` copyctor issues with swig4.2 that resulted in installation
+  errors
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2276
+* Fixed error when calling `amici.ExpData()`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2280
+* Fixed invalid-type-error when loading an antimony model from file
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2281
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.21.1...v0.21.2
+
 ### v0.21.1 (2024-01-17)
 
 Fixed package configuration for PyPI upload. No further changes.
