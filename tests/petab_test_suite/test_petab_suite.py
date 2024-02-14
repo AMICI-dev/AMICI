@@ -62,7 +62,7 @@ def _test_case(case, model_type, version):
         petab_problem=problem,
         model_output_dir=model_output_dir,
         model_name=model_name,
-        force_compile=True,
+        compile_=True,
     )
     solver = model.getSolver()
     solver.setSteadyStateToleranceFactor(1.0)
