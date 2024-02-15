@@ -4,7 +4,7 @@
 namespace amici {
 
 void Model_DAE::fJ(
-    const realtype t, const realtype cj, AmiVector const& x,
+    realtype const t, realtype const cj, AmiVector const& x,
     AmiVector const& dx, AmiVector const& xdot, SUNMatrix J
 ) {
     fJ(t, cj, x.getNVector(), dx.getNVector(), xdot.getNVector(), J);
@@ -21,7 +21,7 @@ void Model_DAE::fJ(
 }
 
 void Model_DAE::fJSparse(
-    const realtype t, const realtype cj, AmiVector const& x,
+    realtype const t, realtype const cj, AmiVector const& x,
     AmiVector const& dx, AmiVector const& /*xdot*/, SUNMatrix J
 ) {
     fJSparse(t, cj, x.getNVector(), dx.getNVector(), J);
@@ -75,9 +75,9 @@ void Model_DAE::fJSparse(
 }
 
 void Model_DAE::fJv(
-    const realtype t, AmiVector const& x, AmiVector const& dx,
+    realtype const t, AmiVector const& x, AmiVector const& dx,
     AmiVector const& /*xdot*/, AmiVector const& v, AmiVector& Jv,
-    const realtype cj
+    realtype const cj
 ) {
     fJv(t, x.getNVector(), dx.getNVector(), v.getNVector(), Jv.getNVector(),
         cj);
@@ -94,7 +94,7 @@ void Model_DAE::fJv(
 }
 
 void Model_DAE::froot(
-    const realtype t, AmiVector const& x, AmiVector const& dx,
+    realtype const t, AmiVector const& x, AmiVector const& dx,
     gsl::span<realtype> root
 ) {
     froot(t, x.getNVector(), dx.getNVector(), root);
@@ -113,7 +113,7 @@ void Model_DAE::froot(
 }
 
 void Model_DAE::fxdot(
-    const realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& xdot
+    realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& xdot
 ) {
     fxdot(t, x.getNVector(), dx.getNVector(), xdot.getNVector());
 }
@@ -132,7 +132,7 @@ void Model_DAE::fxdot(
 }
 
 void Model_DAE::fJDiag(
-    const realtype t, AmiVector& JDiag, const realtype /*cj*/,
+    realtype const t, AmiVector& JDiag, realtype const /*cj*/,
     AmiVector const& x, AmiVector const& dx
 ) {
     fJSparse(t, 0.0, x.getNVector(), dx.getNVector(), derived_state_.J_.get());
@@ -143,7 +143,7 @@ void Model_DAE::fJDiag(
 }
 
 void Model_DAE::fdxdotdw(
-    const realtype t, const_N_Vector x, const const_N_Vector dx
+    realtype const t, const_N_Vector x, const_N_Vector const dx
 ) {
     derived_state_.dxdotdw_.zero();
     if (nw > 0 && derived_state_.dxdotdw_.capacity()) {
@@ -161,7 +161,7 @@ void Model_DAE::fdxdotdw(
 }
 
 void Model_DAE::fdxdotdp(
-    const realtype t, const const_N_Vector x, const const_N_Vector dx
+    realtype const t, const_N_Vector const x, const_N_Vector const dx
 ) {
     auto x_pos = computeX_pos(x);
 
@@ -230,7 +230,7 @@ void Model_DAE::fJSparse(
 }
 
 void Model_DAE::froot(
-    realtype* /*root*/, const realtype /*t*/, realtype const* /*x*/,
+    realtype* /*root*/, realtype const /*t*/, realtype const* /*x*/,
     double const* /*p*/, double const* /*k*/, realtype const* /*h*/,
     realtype const* /*dx*/
 ) {
@@ -242,7 +242,7 @@ void Model_DAE::froot(
 }
 
 void Model_DAE::fdxdotdp(
-    realtype* /*dxdotdp*/, const realtype /*t*/, realtype const* /*x*/,
+    realtype* /*dxdotdp*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     int const /*ip*/, realtype const* /*dx*/, realtype const* /*w*/,
     realtype const* /*dwdp*/
@@ -255,7 +255,7 @@ void Model_DAE::fdxdotdp(
 }
 
 void Model_DAE::fdxdotdp_explicit(
-    realtype* /*dxdotdp_explicit*/, const realtype /*t*/, realtype const* /*x*/,
+    realtype* /*dxdotdp_explicit*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*dx*/, realtype const* /*w*/
 ) {
@@ -283,7 +283,7 @@ void Model_DAE::fdxdotdp_explicit_rowvals(SUNMatrixWrapper& /*dxdotdp*/) {
 }
 
 void Model_DAE::fdxdotdx_explicit(
-    realtype* /*dxdotdx_explicit*/, const realtype /*t*/, realtype const* /*x*/,
+    realtype* /*dxdotdx_explicit*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*dx*/, realtype const* /*w*/
 ) {
@@ -311,7 +311,7 @@ void Model_DAE::fdxdotdx_explicit_rowvals(SUNMatrixWrapper& /*dxdotdx*/) {
 }
 
 void Model_DAE::fdxdotdw(
-    realtype* /*dxdotdw*/, const realtype /*t*/, realtype const* /*x*/,
+    realtype* /*dxdotdw*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*dx*/, realtype const* /*w*/
 ) {
@@ -339,11 +339,11 @@ void Model_DAE::fdxdotdw_rowvals(SUNMatrixWrapper& /*dxdotdw*/) {
 }
 
 void Model_DAE::
-    fM(realtype* /*M*/, const realtype /*t*/, realtype const* /*x*/,
+    fM(realtype* /*M*/, realtype const /*t*/, realtype const* /*x*/,
        realtype const* /*p*/, realtype const* /*k*/) {}
 
 void Model_DAE::fJB(
-    const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
     AmiVector const& xB, AmiVector const& /*dxB*/, AmiVector const& /*xBdot*/,
     SUNMatrix JB
 ) {
@@ -362,7 +362,7 @@ void Model_DAE::fJB(
 }
 
 void Model_DAE::fJSparseB(
-    const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
     AmiVector const& xB, AmiVector const& dxB, AmiVector const& /*xBdot*/,
     SUNMatrix JB
 ) {
@@ -427,7 +427,7 @@ void Model_DAE::fqBdot(
 }
 
 void Model_DAE::fxBdot_ss(
-    const realtype t, AmiVector const& xB, AmiVector const& dxB,
+    realtype const t, AmiVector const& xB, AmiVector const& dxB,
     AmiVector& xBdot
 ) {
     fxBdot_ss(t, xB.getNVector(), dxB.getNVector(), xBdot.getNVector());
@@ -459,7 +459,7 @@ void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
 }
 
 void Model_DAE::writeSteadystateJB(
-    const realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
+    realtype const t, realtype cj, AmiVector const& x, AmiVector const& dx,
     AmiVector const& xB, AmiVector const& dxB, AmiVector const& /*xBdot*/
 ) {
     /* Get backward Jacobian */
@@ -473,7 +473,7 @@ void Model_DAE::writeSteadystateJB(
 }
 
 void Model_DAE::fsxdot(
-    const realtype t, AmiVector const& x, AmiVector const& dx, int const ip,
+    realtype const t, AmiVector const& x, AmiVector const& dx, int const ip,
     AmiVector const& sx, AmiVector const& sdx, AmiVector& sxdot
 ) {
     fsxdot(

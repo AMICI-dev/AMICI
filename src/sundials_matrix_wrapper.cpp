@@ -214,7 +214,7 @@ void SUNMatrixWrapper::scale(realtype a) {
 }
 
 void SUNMatrixWrapper::multiply(
-    N_Vector c, const_N_Vector b, const realtype alpha
+    N_Vector c, const_N_Vector b, realtype const alpha
 ) const {
     multiply(
         gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
@@ -233,7 +233,7 @@ inline static void check_csc(SUNMatrixWrapper const* /*mat*/) {}
 #endif
 
 void SUNMatrixWrapper::multiply(
-    gsl::span<realtype> c, gsl::span<realtype const> b, const realtype alpha
+    gsl::span<realtype> c, gsl::span<realtype const> b, realtype const alpha
 ) const {
 
     if (!matrix_)
@@ -522,8 +522,8 @@ void SUNMatrixWrapper::sparse_sum(std::vector<SUNMatrixWrapper> const& mats) {
 }
 
 sunindextype SUNMatrixWrapper::scatter(
-    const sunindextype acol, const realtype beta, sunindextype* w,
-    gsl::span<realtype> x, const sunindextype mark, SUNMatrixWrapper* C,
+    sunindextype const acol, realtype const beta, sunindextype* w,
+    gsl::span<realtype> x, sunindextype const mark, SUNMatrixWrapper* C,
     sunindextype nnz
 ) const {
     if (!matrix_)
@@ -576,7 +576,7 @@ static void cumsum(gsl::span<sunindextype> p, std::vector<sunindextype>& c) {
 }
 
 void SUNMatrixWrapper::transpose(
-    SUNMatrixWrapper& C, const realtype alpha, sunindextype blocksize
+    SUNMatrixWrapper& C, realtype const alpha, sunindextype blocksize
 ) const {
     if (!matrix_ || !C.matrix_)
         return;
@@ -804,7 +804,7 @@ unravel_index(sunindextype i, SUNMatrix m) {
             ++col;
 
         // This can happen if indexvals / indexptrs haven't been set.
-        if(col == ncols)
+        if (col == ncols)
             return {-1, -1};
 
         gsl_EnsuresDebug(row >= 0);
