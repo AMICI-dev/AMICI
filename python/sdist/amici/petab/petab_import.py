@@ -75,6 +75,7 @@ def import_petab_problem(
     if "force_compile" in kwargs:
         if kwargs["force_compile"]:
             compile_ = True
+            del kwargs["force_compile"]
         warn(
             "The `force_compile` option is deprecated, please use the "
             "new `compile_` option, which also supports 'do not compile'.",
