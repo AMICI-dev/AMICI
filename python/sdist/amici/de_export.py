@@ -768,7 +768,7 @@ class DEModel:
         self._expressions: list[Expression] = []
         self._conservation_laws: list[ConservationLaw] = []
         self._events: list[Event] = []
-        self.splines = []
+        self._splines = []
         self._symboldim_funs: dict[str, Callable[[], int]] = {
             "sx": self.num_states_solver,
             "v": self.num_states_solver,
@@ -968,7 +968,7 @@ class DEModel:
                     value=spline_expr,
                 )
             )
-        self.splines = si.splines
+        self._splines = si.splines
 
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
@@ -1690,7 +1690,7 @@ class DEModel:
             # placeholders for the numeric spline values.
             # Need to create symbols
             self._syms[name] = sp.Matrix(
-                [[f"spl_{isp}" for isp in range(len(self.splines))]]
+                [[f"spl_{isp}" for isp in range(len(self._splines))]]
             )
             return
         elif name == "sspl":
@@ -1698,7 +1698,7 @@ class DEModel:
             self._syms[name] = sp.Matrix(
                 [
                     [f"sspl_{isp}_{ip}" for ip in range(len(self._syms["p"]))]
-                    for isp in range(len(self.splines))
+                    for isp in range(len(self._splines))
                 ]
             )
             return
@@ -2050,7 +2050,7 @@ class DEModel:
         elif name == "spline_values":
             # force symbols
             self._eqs[name] = sp.Matrix(
-                [y for spline in self.splines for y in spline.values_at_nodes]
+                [y for spline in self._splines for y in spline.values_at_nodes]
             )
 
         elif name == "spline_slopes":
@@ -2058,7 +2058,7 @@ class DEModel:
             self._eqs[name] = sp.Matrix(
                 [
                     d
-                    for spline in self.splines
+                    for spline in self._splines
                     for d in (
                         sp.zeros(len(spline.derivatives_at_nodes), 1)
                         if spline.derivatives_by_fd
@@ -2892,7 +2892,7 @@ class DEExporter:
         self.model: DEModel = de_model
         self.model._code_printer.known_functions.update(
             splines.spline_user_functions(
-                self.model.splines, self._get_index("p")
+                self.model._splines, self._get_index("p")
             )
         )
 
@@ -3553,14 +3553,14 @@ class DEExporter:
         return [line for line in lines if line]
 
     def _get_create_splines_body(self):
-        if not self.model.splines:
+        if not self.model._splines:
             return ["    return {};"]
 
         ind4 = " " * 4
         ind8 = " " * 8
 
         body = ["return {"]
-        for ispl, spline in enumerate(self.model.splines):
+        for ispl, spline in enumerate(self.model._splines):
             if isinstance(spline.nodes, splines.UniformGrid):
                 nodes = (
                     f"{ind8}{{{spline.nodes.start}, {spline.nodes.stop}}}, "
@@ -3674,7 +3674,7 @@ class DEExporter:
             "NEVENT": self.model.num_events(),
             "NEVENT_SOLVER": self.model.num_events_solver(),
             "NOBJECTIVE": "1",
-            "NSPL": len(self.model.splines),
+            "NSPL": len(self.model._splines),
             "NW": len(self.model.sym("w")),
             "NDWDP": len(
                 self.model.sparsesym(
