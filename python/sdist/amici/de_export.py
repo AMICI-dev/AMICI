@@ -2724,6 +2724,9 @@ class DEModel:
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
+        if not root_funs:
+            return []
+
         # substitute 'w' expressions into root expressions now, to avoid
         # rewriting 'root.cpp' and 'stau.cpp' headers
         # to include 'w.h'
