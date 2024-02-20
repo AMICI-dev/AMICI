@@ -14,8 +14,6 @@ void Model_ODE::fJ(
 void Model_ODE::fJ(
     realtype t, const_N_Vector x, const_N_Vector /*xdot*/, SUNMatrix J
 ) {
-    auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointerConst(x_pos));
     fJSparse(t, x, derived_state_.J_.get());
     derived_state_.J_.refresh();
     auto JDense = SUNMatrixWrapper(J);
