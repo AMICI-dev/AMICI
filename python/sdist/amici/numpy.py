@@ -359,7 +359,8 @@ class ReturnDataView(SwigPtrView):
             ) or self._swigptr.parameter_ids
         else:
             raise NotImplementedError(
-                f"Subsetting {field} by ID is not implemented or not possible."
+                f"Subsetting `{field}` by ID (`{entity_id}`) "
+                "is not implemented or not possible."
             )
         col_index = ids.index(entity_id)
         return getattr(self, field)[:, ..., col_index]
