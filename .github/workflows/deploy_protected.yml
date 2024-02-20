@@ -15,7 +15,7 @@ on:
 jobs:
   dockerhub:
     name: Deploy Dockerhub
-    if: secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD
+    if: github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-22.04
 
     strategy:
