@@ -17,12 +17,16 @@ from setuptools.command.sdist import sdist
 class AmiciInstall(install):
     """Custom `install` command to handle extra arguments"""
 
-    print("running AmiciInstall")
-
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
         ("no-clibs", None, "Don't build AMICI C++ extension"),
     ]
+
+    def run(self):
+        """Setuptools entry-point"""
+        print(f"running {self.__class__.__name__}")
+
+        super().run()
 
     def initialize_options(self):
         super().initialize_options()
@@ -174,6 +178,12 @@ class AmiciBuildCMakeExtension(BuildExtension):
     def build_extension(self, ext: CMakeExtension) -> None:
         # put some structure into CMake output
         print("-" * 30, ext.name, "-" * 30, file=sys.stderr)
+
+        # since switching to pyproject.toml, we are already in amici/
+        # for editable installs, but not for regular installs. therefore,
+        # we need to remove the install prefix for editable installs
+        if self.editable_mode and ext.install_prefix == "amici":
+            ext.install_prefix = ""
 
         # Some hack to be able to use distutils' potentially temporary build
         # directory in CMake options:
