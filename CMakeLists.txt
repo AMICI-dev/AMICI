@@ -84,7 +84,12 @@ endif()
 
 # Debug build?
 if("$ENV{ENABLE_AMICI_DEBUGGING}" OR "$ENV{ENABLE_GCOV_COVERAGE}")
-  add_compile_options(-UNDEBUG -O0 -g)
+  add_compile_options(-UNDEBUG)
+  if(MSVC)
+    add_compile_options(-DEBUG)
+  else()
+    add_compile_options(-O0 -g)
+  endif()
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
