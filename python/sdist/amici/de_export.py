@@ -3035,6 +3035,7 @@ class DEExporter:
         self._write_c_make_file()
         self._write_swig_files()
         self._write_module_setup()
+        _write_gitignore(Path(self.model_path))
 
         shutil.copy(
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
@@ -4385,3 +4386,17 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
                 "to a module-level function or disable parallelization by "
                 "setting `AMICI_IMPORT_NPROCS=1`."
             ) from e
+
+
+def _write_gitignore(dest_dir: Path) -> None:
+    """Write .gitignore file.
+
+    Generate a `.gitignore` file to ignore a model directory.
+
+    :param dest_dir:
+        Path to the directory to write the `.gitignore` file to.
+    """
+    dest_dir.mkdir(exist_ok=True, parents=True)
+
+    with open(dest_dir / ".gitignore", "w") as f:
+        f.write("**")
