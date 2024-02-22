@@ -30,7 +30,6 @@ from typing import (
     Union,
 )
 from collections.abc import Sequence
-
 import numpy as np
 import sympy as sp
 from sympy.matrices.dense import MutableDenseMatrix
@@ -1117,11 +1116,10 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
-        self._process_sbml_rate_of(
-            symbols
-        )  # substitute SBML-rateOf constructs
+        # substitute SBML-rateOf constructs
+        self._process_sbml_rate_of()
 
-    def _process_sbml_rate_of(self, symbols) -> None:
+    def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
         rate_of_func = sp.core.function.UndefinedFunction("rateOf")
         species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
@@ -1129,8 +1127,6 @@ class DEModel:
 
         def get_rate(symbol: sp.Symbol):
             """Get rate of change of the given symbol"""
-            nonlocal symbols
-
             if symbol.find(rate_of_func):
                 raise SBMLException("Nesting rateOf() is not allowed.")
 
@@ -1142,6 +1138,7 @@ class DEModel:
             return 0
 
         # replace rateOf-instances in xdot by xdot symbols
+        made_substitutions = False
         for i_state in range(len(self.eq("xdot"))):
             if rate_ofs := self._eqs["xdot"][i_state].find(rate_of_func):
                 self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
@@ -1151,9 +1148,14 @@ class DEModel:
                         for rate_of in rate_ofs
                     }
                 )
-        # substitute in topological order
-        subs = toposort_symbols(dict(zip(self.sym("xdot"), self.eq("xdot"))))
-        self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
+                made_substitutions = True
+
+        if made_substitutions:
+            # substitute in topological order
+            subs = toposort_symbols(
+                dict(zip(self.sym("xdot"), self.eq("xdot")))
+            )
+            self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
         # replace rateOf-instances in x0 by xdot equation
         for i_state in range(len(self.eq("x0"))):
@@ -1165,9 +1167,55 @@ class DEModel:
                     }
                 )
 
+        # replace rateOf-instances in w by xdot equation
+        #  here we may need toposort, as xdot may depend on w
+        made_substitutions = False
+        for i_expr in range(len(self.eq("w"))):
+            if rate_ofs := self._eqs["w"][i_expr].find(rate_of_func):
+                self._eqs["w"][i_expr] = self._eqs["w"][i_expr].subs(
+                    {
+                        rate_of: get_rate(rate_of.args[0])
+                        for rate_of in rate_ofs
+                    }
+                )
+                made_substitutions = True
+
+        if made_substitutions:
+            # Sort expressions in self._expressions, w symbols, and w equations
+            #  in topological order. Ideally, this would already happen before
+            #  adding the expressions to the model, but at that point, we don't
+            #  have access to xdot yet.
+            # NOTE: elsewhere, conservations law expressions are expected to
+            #  occur before any other w expressions, so we must maintain their
+            #  position
+            # toposort everything but conservation law expressions,
+            #  then prepend conservation laws
+            w_sorted = toposort_symbols(
+                dict(
+                    zip(
+                        self.sym("w")[self.num_cons_law() :, :],
+                        self.eq("w")[self.num_cons_law() :, :],
+                    )
+                )
+            )
+            w_sorted = (
+                dict(
+                    zip(
+                        self.sym("w")[: self.num_cons_law(), :],
+                        self.eq("w")[: self.num_cons_law(), :],
+                    )
+                )
+                | w_sorted
+            )
+            old_syms = tuple(self._syms["w"])
+            topo_expr_syms = tuple(w_sorted.keys())
+            new_order = [old_syms.index(s) for s in topo_expr_syms]
+            self._expressions = [self._expressions[i] for i in new_order]
+            self._syms["w"] = sp.Matrix(topo_expr_syms)
+            self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
+
         for component in chain(
             self.observables(),
-            self.expressions(),
             self.events(),
             self._algebraic_equations,
         ):
@@ -2210,6 +2258,18 @@ class DEModel:
             self._eqs[name] = self.sym(name)
 
         elif name == "dwdx":
+            if (
+                expected := list(
+                    map(
+                        ConservationLaw.get_x_rdata,
+                        reversed(self.conservation_laws()),
+                    )
+                )
+            ) != (actual := self.eq("w")[: self.num_cons_law()]):
+                raise AssertionError(
+                    "Conservation laws are not at the beginning of 'w'. "
+                    f"Got {actual}, expected {expected}."
+                )
             x = self.sym("x")
             self._eqs[name] = sp.Matrix(
                 [
@@ -2723,6 +2783,9 @@ class DEModel:
                 root_funs.append(arg.args[0])
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
+
+        if not root_funs:
+            return []
 
         # substitute 'w' expressions into root expressions now, to avoid
         # rewriting 'root.cpp' and 'stau.cpp' headers
