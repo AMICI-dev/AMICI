@@ -15,10 +15,10 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="list">
 <div id="ref-LangPen2024" class="csl-entry" role="listitem">
-Lang, David R. AND Banga, Paul F. AND Penas. 2024. <span>“Reusable
-Rule-Based Cell Cycle Model Explains Compartment-Resolved Dynamics of 16
-Observables in RPE-1 Cells.”</span> <em>PLOS Computational Biology</em>
-20 (1): 1–24. <a
+Lang, Paul F., David R. Penas, Julio R. Banga, Daniel Weindl, and Bela
+Novak. 2024. <span>“Reusable Rule-Based Cell Cycle Model Explains
+Compartment-Resolved Dynamics of 16 Observables in RPE-1 Cells.”</span>
+<em>PLOS Computational Biology</em> 20 (1): 1–24. <a
 href="https://doi.org/10.1371/journal.pcbi.1011151">https://doi.org/10.1371/journal.pcbi.1011151</a>.
 </div>
 <div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
@@ -141,7 +141,7 @@ Signaling.”</span> <em>Nature Communications</em> 13 (1): 3555. <a
 href="https://doi.org/10.1038/s41467-022-31138-1">https://doi.org/10.1038/s41467-022-31138-1</a>.
 </div>
 <div id="ref-FroehlichSor2022" class="csl-entry" role="listitem">
-Fröhlich, Peter K., Fabian AND Sorger. 2022. <span>“Fides: Reliable
+Fröhlich, Fabian, and Peter K. Sorger. 2022. <span>“Fides: Reliable
 Trust-Region Optimization for Parameter Estimation of Ordinary
 Differential Equation Models.”</span> <em>PLOS Computational
 Biology</em> 18 (7): 1–28. <a
