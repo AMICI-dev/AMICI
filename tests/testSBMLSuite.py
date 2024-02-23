@@ -134,7 +134,7 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
     for expr_idx, expr_id in enumerate(model.getExpressionIds()):
         if expr_id.startswith("flux_"):
             simulated[expr_id.removeprefix("flux_")] = rdata.w[:, expr_idx]
-        else:
+        elif expr_id.removeprefix("amici_") not in simulated.columns:
             simulated[expr_id] = rdata.w[:, expr_idx]
     # handle renamed reserved symbols
     simulated.rename(
