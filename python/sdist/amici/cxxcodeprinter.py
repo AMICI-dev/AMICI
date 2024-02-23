@@ -231,7 +231,7 @@ def get_switch_statement(
     cases: dict[int, list[str]],
     indentation_level: int | None = 0,
     indentation_step: str | None = " " * 4,
-):
+) -> list[str]:
     """
     Generate code for a C++ switch statement.
 
@@ -289,7 +289,6 @@ def get_switch_statement(
         ),
         indent0 + "}",
     ]
-
 
 def csc_matrix(
     matrix: sp.Matrix,
@@ -370,3 +369,13 @@ def csc_matrix(
         symbol_list,
         sparse_matrix,
     )
+
+def get_initializer_list(values: Iterable) -> str:
+    """Generate C++ initializer list for given values.
+
+    :param values:
+        Values to be included in the initializer list.
+        They will be converted to strings, assuming :func:`str` will yield
+        valid C++ expressions.
+    """
+    return f"{{{', '.join(map(str, values))}}}"
