@@ -31,9 +31,8 @@ from .constants import SymbolId
 from .de_export import (
     DEExporter,
     DEModel,
-    _default_simplify,
-    smart_is_zero_matrix,
 )
+from .sympy_utils import smart_is_zero_matrix
 from .import_utils import (
     RESERVED_SYMBOLS,
     _check_unsupported_functions,
@@ -50,6 +49,7 @@ from .import_utils import (
     smart_subs_dict,
     symbol_with_assumptions,
     toposort_symbols,
+    _default_simplify,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import SBMLException, _parse_logical_operators
