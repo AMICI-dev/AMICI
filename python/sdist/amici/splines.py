@@ -52,6 +52,7 @@ from .sbml_utils import (
     pretty_xml,
     sbml_mathml,
 )
+from .constants import SymbolId
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -569,8 +570,6 @@ class AbstractSpline(ABC):
         # the AMICI spline implementation.
         # If found, they should be checked for here
         # until (if at all) they are accounted for.
-        from .de_export import SymbolId
-
         fixed_parameters: list[sp.Symbol] = list(
             importer.symbols[SymbolId.FIXED_PARAMETER].keys()
         )
@@ -1345,8 +1344,6 @@ class AbstractSpline(ABC):
 
     def parameters(self, importer: sbml_import.SbmlImporter) -> set[sp.Symbol]:
         """Returns the SBML parameters used by this spline"""
-        from .de_export import SymbolId
-
         return self._parameters().intersection(
             set(importer.symbols[SymbolId.PARAMETER].keys())
         )
@@ -1659,7 +1656,6 @@ class CubicHermiteSpline(AbstractSpline):
         for spline grid points, values, ... contain species symbols.
         """
         # TODO this is very much a draft
-        from .de_export import SymbolId
 
         species: list[sp.Symbol] = list(importer.symbols[SymbolId.SPECIES])
         for d in self.derivatives_at_nodes:
