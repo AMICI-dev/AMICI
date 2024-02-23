@@ -21,6 +21,13 @@ Observables in RPE-1 Cells.”</span> <em>PLOS Computational Biology</em>
 20 (1): 1–24. <a
 href="https://doi.org/10.1371/journal.pcbi.1011151">https://doi.org/10.1371/journal.pcbi.1011151</a>.
 </div>
+<div id="ref-SluijsZho2024" class="csl-entry" role="listitem">
+Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu G. Baltussen, Frank H.
+T. Nelissen, Hans A. Heus, and Wilhelm T. S. Huck. 2024.
+<span>“Iterative Design of Training Data to Control Intricate Enzymatic
+Reaction Networks.”</span> <em>Nature Communications</em> 15 (1). <a
+href="https://doi.org/10.1038/s41467-024-45886-9">https://doi.org/10.1038/s41467-024-45886-9</a>.
+</div>
 </div>
 <h1 class="unnumbered" id="section">2023</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
@@ -103,12 +110,6 @@ Raimúndez, Elba, Michael Fedders, and Jan Hasenauer. 2023.
 Dynamical Models of Biological Processes.”</span>
 <em><span>iScience</span></em>, September, 108083. <a
 href="https://doi.org/10.1016/j.isci.2023.108083">https://doi.org/10.1016/j.isci.2023.108083</a>.
-</div>
-<div id="ref-SluijsZho2023" class="csl-entry" role="listitem">
-Sluijs, Bob van, Tao Zhou, Britta Helwig, Mathieu Baltussen, Frank
-Nelissen, Hans Heus, and Wilhelm Huck. 2023. <span>“Inverse Design of
-Enzymatic Reaction Network States.”</span> <a
-href="https://doi.org/10.21203/rs.3.rs-2646906/v1">https://doi.org/10.21203/rs.3.rs-2646906/v1</a>.
 </div>
 <div id="ref-TunedalVio2023" class="csl-entry" role="listitem">
 Tunedal, Kajsa, Federica Viola, Belén Casas Garcia, Ann Bolger, Fredrik
