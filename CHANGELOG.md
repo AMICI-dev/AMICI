@@ -2,6 +2,36 @@
 
 ## v0.X Series
 
+### v0.22.0 (2024-02-23)
+
+**Features**
+
+* PEtab import: User option to fail if model needs to be compiled
+  by @dilpath in https://github.com/AMICI-dev/AMICI/pull/2289
+
+  The `force_compile` argument is now **deprecated**. Use `compile_` instead.
+
+* Model import now adds a `.gitignore` file to the model output directory
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2301
+
+**Fixes**
+
+* **Fixed a bug that may have caused wrong simulation results for certain**
+  **SBML models that contain `rateOf`-expressions**
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2291
+* More informative error message for `ReturnDataView.by_id`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2295
+* Fixed `ENABLE_AMICI_DEBUGGING=TRUE` not working with MSVC
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2296
+* Fixed MANIFEST.in warning by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2297
+* (performance) Skip unnecessary toposorting in `DEModel._collect_heaviside_roots`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2299
+* (performance) Fix redundant calls to `Model::fdwdx` from `Model_ODE::fJ`
+  (only relevant for dense and banded solvers)
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2298
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.21.2...v0.22.0
+
 ### v0.21.2 (2024-02-06)
 
 * Fixed `Solver` copyctor issues with swig4.2 that resulted in installation
