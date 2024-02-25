@@ -2249,7 +2249,7 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
 
             auto tmp_sparse = SUNMatrixWrapper(tmp_dense, 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(
-                1.0, derived_state_.dJydy_.at(iyt).get(), tmp_sparse.get()
+                1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
             if (ret != SUNMAT_SUCCESS) {
                 throw AmiException(
@@ -2897,7 +2897,7 @@ void Model::fdwdp(realtype const t, realtype const* x) {
     }
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.dwdp_.get(), ModelQuantity::dwdp, t);
+        checkFinite(derived_state_.dwdp_, ModelQuantity::dwdp, t);
     }
 }
 
@@ -2943,7 +2943,7 @@ void Model::fdwdx(realtype const t, realtype const* x) {
     }
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.dwdx_.get(), ModelQuantity::dwdx, t);
+        checkFinite(derived_state_.dwdx_, ModelQuantity::dwdx, t);
     }
 }
 
@@ -2960,7 +2960,7 @@ void Model::fdwdw(realtype const t, realtype const* x) {
     );
 
     if (always_check_finite_) {
-        checkFinite(dwdw_.get(), ModelQuantity::dwdw, t);
+        checkFinite(dwdw_, ModelQuantity::dwdw, t);
     }
 }
 

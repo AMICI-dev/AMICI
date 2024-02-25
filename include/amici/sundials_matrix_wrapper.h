@@ -73,6 +73,11 @@ class SUNMatrixWrapper {
     ~SUNMatrixWrapper();
 
     /**
+     * @brief Conversion function.
+     */
+    operator SUNMatrix() { return get(); };
+
+    /**
      * @brief Copy constructor
      * @param other
      */
