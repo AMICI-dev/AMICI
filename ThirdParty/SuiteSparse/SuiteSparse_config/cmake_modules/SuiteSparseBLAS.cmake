@@ -33,6 +33,9 @@ option ( BLA_STATIC
     "OFF (default): dynamic linking of BLAS.  ON: static linking of BLAS" OFF )
 
 if ( DEFINED BLAS_LIBRARIES OR DEFINED BLAS_INCLUDE_DIRS )
+    # AMICI -- silence cmake "Manually-specified variables were not used by the project"
+    set(amici_ignore "${BLAS_LIBRARIES} ${BLAS_INCLUDE_DIRS}")
+
     # User supplied variables for libraries and/or include directories.
     # Use them as-is.
     if ( SUITESPARSE_USE_64BIT_BLAS )
