@@ -15,8 +15,6 @@ import logging
 import os
 import re
 import shutil
-import subprocess
-import sys
 from dataclasses import dataclass
 from itertools import chain, starmap
 from pathlib import Path
@@ -57,6 +55,7 @@ from .import_utils import (
     unique_preserve_order,
 )
 from .logging import get_logger, log_execution_time, set_log_level
+from .compile import build_model_extension
 
 if TYPE_CHECKING:
     from . import sbml_import
@@ -2984,7 +2983,12 @@ class DEExporter:
         """
         Compiles the generated code it into a simulatable module
         """
-        self._compile_c_code(compiler=self.compiler, verbose=self.verbose)
+        build_model_extension(
+            package_dir=self.model_path,
+            compiler=self.compiler,
+            verbose=self.verbose,
+            extra_msg="\n".join(self._build_hints),
+        )
 
     def _prepare_model_folder(self) -> None:
         """
@@ -3040,69 +3044,6 @@ class DEExporter:
         shutil.copy(
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
         )
-
-    def _compile_c_code(
-        self,
-        verbose: Optional[Union[bool, int]] = False,
-        compiler: Optional[str] = None,
-    ) -> None:
-        """
-        Compile the generated model code
-
-        :param verbose:
-            Make model compilation verbose
-
-        :param compiler:
-            Absolute path to the compiler executable to be used to build the Python
-            extension, e.g. ``/usr/bin/clang``.
-        """
-        # setup.py assumes it is run from within the model directory
-        module_dir = self.model_path
-        script_args = [sys.executable, os.path.join(module_dir, "setup.py")]
-
-        if verbose:
-            script_args.append("--verbose")
-        else:
-            script_args.append("--quiet")
-
-        script_args.extend(
-            [
-                "build_ext",
-                f"--build-lib={module_dir}",
-                # This is generally not required, but helps to reduce the path
-                # length of intermediate build files, that may easily become
-                # problematic on Windows, due to its ridiculous 255-character path
-                # length limit.
-                f'--build-temp={Path(module_dir, "build")}',
-            ]
-        )
-
-        env = os.environ.copy()
-        if compiler is not None:
-            # CMake will use the compiler specified in the CXX environment variable
-            env["CXX"] = compiler
-
-        # distutils.core.run_setup looks nicer, but does not let us check the
-        # result easily
-        try:
-            result = subprocess.run(
-                script_args,
-                cwd=module_dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                check=True,
-                env=env,
-            )
-        except subprocess.CalledProcessError as e:
-            print(e.output.decode("utf-8"))
-            print("Failed building the model extension.")
-            if self._build_hints:
-                print("Note:")
-                print("\n".join(self._build_hints))
-            raise
-
-        if verbose:
-            print(result.stdout.decode("utf-8"))
 
     def _generate_m_code(self) -> None:
         """
