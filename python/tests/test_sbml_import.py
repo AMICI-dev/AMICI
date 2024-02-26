@@ -3,7 +3,6 @@ import os
 import re
 from numbers import Number
 from pathlib import Path
-from urllib.request import urlopen
 
 import amici
 import libsbml
@@ -543,13 +542,13 @@ def test_sympy_exp_monkeypatch():
     monkeypatching sympy.Pow._eval_derivative in order to be able to compute
     non-nan sensitivities
     """
-    url = (
-        "https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?"
-        "filename=BIOMD0000000529_url.xml"
+    import pooch
+
+    model_file = pooch.retrieve(
+        url="https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?filename=BIOMD0000000529_url.xml",
+        known_hash="md5:c6e0b298397485b93d7acfab80b21fd4",
     )
-    importer = amici.SbmlImporter(
-        urlopen(url, timeout=20).read().decode("utf-8"), from_file=False
-    )
+    importer = amici.SbmlImporter(model_file)
     module_name = "BIOMD0000000529"
 
     with TemporaryDirectory() as outdir:
