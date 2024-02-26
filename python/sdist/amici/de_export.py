@@ -30,7 +30,6 @@ from typing import (
     Union,
 )
 from collections.abc import Sequence
-
 import numpy as np
 import sympy as sp
 from sympy.matrices.dense import MutableDenseMatrix
@@ -768,7 +767,7 @@ class DEModel:
         self._expressions: list[Expression] = []
         self._conservation_laws: list[ConservationLaw] = []
         self._events: list[Event] = []
-        self.splines = []
+        self._splines = []
         self._symboldim_funs: dict[str, Callable[[], int]] = {
             "sx": self.num_states_solver,
             "v": self.num_states_solver,
@@ -968,7 +967,7 @@ class DEModel:
                     value=spline_expr,
                 )
             )
-        self.splines = si.splines
+        self._splines = si.splines
 
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
@@ -1117,11 +1116,10 @@ class DEModel:
             for llh in si.symbols[SymbolId.LLHY].values()
         )
 
-        self._process_sbml_rate_of(
-            symbols
-        )  # substitute SBML-rateOf constructs
+        # substitute SBML-rateOf constructs
+        self._process_sbml_rate_of()
 
-    def _process_sbml_rate_of(self, symbols) -> None:
+    def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
         rate_of_func = sp.core.function.UndefinedFunction("rateOf")
         species_sym_to_xdot = dict(zip(self.sym("x"), self.sym("xdot")))
@@ -1129,8 +1127,6 @@ class DEModel:
 
         def get_rate(symbol: sp.Symbol):
             """Get rate of change of the given symbol"""
-            nonlocal symbols
-
             if symbol.find(rate_of_func):
                 raise SBMLException("Nesting rateOf() is not allowed.")
 
@@ -1142,6 +1138,7 @@ class DEModel:
             return 0
 
         # replace rateOf-instances in xdot by xdot symbols
+        made_substitutions = False
         for i_state in range(len(self.eq("xdot"))):
             if rate_ofs := self._eqs["xdot"][i_state].find(rate_of_func):
                 self._eqs["xdot"][i_state] = self._eqs["xdot"][i_state].subs(
@@ -1151,9 +1148,14 @@ class DEModel:
                         for rate_of in rate_ofs
                     }
                 )
-        # substitute in topological order
-        subs = toposort_symbols(dict(zip(self.sym("xdot"), self.eq("xdot"))))
-        self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
+                made_substitutions = True
+
+        if made_substitutions:
+            # substitute in topological order
+            subs = toposort_symbols(
+                dict(zip(self.sym("xdot"), self.eq("xdot")))
+            )
+            self._eqs["xdot"] = smart_subs_dict(self.eq("xdot"), subs)
 
         # replace rateOf-instances in x0 by xdot equation
         for i_state in range(len(self.eq("x0"))):
@@ -1165,9 +1167,55 @@ class DEModel:
                     }
                 )
 
+        # replace rateOf-instances in w by xdot equation
+        #  here we may need toposort, as xdot may depend on w
+        made_substitutions = False
+        for i_expr in range(len(self.eq("w"))):
+            if rate_ofs := self._eqs["w"][i_expr].find(rate_of_func):
+                self._eqs["w"][i_expr] = self._eqs["w"][i_expr].subs(
+                    {
+                        rate_of: get_rate(rate_of.args[0])
+                        for rate_of in rate_ofs
+                    }
+                )
+                made_substitutions = True
+
+        if made_substitutions:
+            # Sort expressions in self._expressions, w symbols, and w equations
+            #  in topological order. Ideally, this would already happen before
+            #  adding the expressions to the model, but at that point, we don't
+            #  have access to xdot yet.
+            # NOTE: elsewhere, conservations law expressions are expected to
+            #  occur before any other w expressions, so we must maintain their
+            #  position
+            # toposort everything but conservation law expressions,
+            #  then prepend conservation laws
+            w_sorted = toposort_symbols(
+                dict(
+                    zip(
+                        self.sym("w")[self.num_cons_law() :, :],
+                        self.eq("w")[self.num_cons_law() :, :],
+                    )
+                )
+            )
+            w_sorted = (
+                dict(
+                    zip(
+                        self.sym("w")[: self.num_cons_law(), :],
+                        self.eq("w")[: self.num_cons_law(), :],
+                    )
+                )
+                | w_sorted
+            )
+            old_syms = tuple(self._syms["w"])
+            topo_expr_syms = tuple(w_sorted.keys())
+            new_order = [old_syms.index(s) for s in topo_expr_syms]
+            self._expressions = [self._expressions[i] for i in new_order]
+            self._syms["w"] = sp.Matrix(topo_expr_syms)
+            self._eqs["w"] = sp.Matrix(list(w_sorted.values()))
+
         for component in chain(
             self.observables(),
-            self.expressions(),
             self.events(),
             self._algebraic_equations,
         ):
@@ -1690,7 +1738,7 @@ class DEModel:
             # placeholders for the numeric spline values.
             # Need to create symbols
             self._syms[name] = sp.Matrix(
-                [[f"spl_{isp}" for isp in range(len(self.splines))]]
+                [[f"spl_{isp}" for isp in range(len(self._splines))]]
             )
             return
         elif name == "sspl":
@@ -1698,7 +1746,7 @@ class DEModel:
             self._syms[name] = sp.Matrix(
                 [
                     [f"sspl_{isp}_{ip}" for ip in range(len(self._syms["p"]))]
-                    for isp in range(len(self.splines))
+                    for isp in range(len(self._splines))
                 ]
             )
             return
@@ -2050,7 +2098,7 @@ class DEModel:
         elif name == "spline_values":
             # force symbols
             self._eqs[name] = sp.Matrix(
-                [y for spline in self.splines for y in spline.values_at_nodes]
+                [y for spline in self._splines for y in spline.values_at_nodes]
             )
 
         elif name == "spline_slopes":
@@ -2058,7 +2106,7 @@ class DEModel:
             self._eqs[name] = sp.Matrix(
                 [
                     d
-                    for spline in self.splines
+                    for spline in self._splines
                     for d in (
                         sp.zeros(len(spline.derivatives_at_nodes), 1)
                         if spline.derivatives_by_fd
@@ -2210,6 +2258,18 @@ class DEModel:
             self._eqs[name] = self.sym(name)
 
         elif name == "dwdx":
+            if (
+                expected := list(
+                    map(
+                        ConservationLaw.get_x_rdata,
+                        reversed(self.conservation_laws()),
+                    )
+                )
+            ) != (actual := self.eq("w")[: self.num_cons_law()]):
+                raise AssertionError(
+                    "Conservation laws are not at the beginning of 'w'. "
+                    f"Got {actual}, expected {expected}."
+                )
             x = self.sym("x")
             self._eqs[name] = sp.Matrix(
                 [
@@ -2724,6 +2784,9 @@ class DEModel:
             elif arg.has(sp.Heaviside):
                 root_funs.extend(self._collect_heaviside_roots(arg.args))
 
+        if not root_funs:
+            return []
+
         # substitute 'w' expressions into root expressions now, to avoid
         # rewriting 'root.cpp' and 'stau.cpp' headers
         # to include 'w.h'
@@ -2892,7 +2955,7 @@ class DEExporter:
         self.model: DEModel = de_model
         self.model._code_printer.known_functions.update(
             splines.spline_user_functions(
-                self.model.splines, self._get_index("p")
+                self.model._splines, self._get_index("p")
             )
         )
 
@@ -2972,6 +3035,7 @@ class DEExporter:
         self._write_c_make_file()
         self._write_swig_files()
         self._write_module_setup()
+        _write_gitignore(Path(self.model_path))
 
         shutil.copy(
             CXX_MAIN_TEMPLATE_FILE, os.path.join(self.model_path, "main.cpp")
@@ -3553,14 +3617,14 @@ class DEExporter:
         return [line for line in lines if line]
 
     def _get_create_splines_body(self):
-        if not self.model.splines:
+        if not self.model._splines:
             return ["    return {};"]
 
         ind4 = " " * 4
         ind8 = " " * 8
 
         body = ["return {"]
-        for ispl, spline in enumerate(self.model.splines):
+        for ispl, spline in enumerate(self.model._splines):
             if isinstance(spline.nodes, splines.UniformGrid):
                 nodes = (
                     f"{ind8}{{{spline.nodes.start}, {spline.nodes.stop}}}, "
@@ -3674,7 +3738,7 @@ class DEExporter:
             "NEVENT": self.model.num_events(),
             "NEVENT_SOLVER": self.model.num_events_solver(),
             "NOBJECTIVE": "1",
-            "NSPL": len(self.model.splines),
+            "NSPL": len(self.model._splines),
             "NW": len(self.model.sym("w")),
             "NDWDP": len(
                 self.model.sparsesym(
@@ -4322,3 +4386,17 @@ def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
                 "to a module-level function or disable parallelization by "
                 "setting `AMICI_IMPORT_NPROCS=1`."
             ) from e
+
+
+def _write_gitignore(dest_dir: Path) -> None:
+    """Write .gitignore file.
+
+    Generate a `.gitignore` file to ignore a model directory.
+
+    :param dest_dir:
+        Path to the directory to write the `.gitignore` file to.
+    """
+    dest_dir.mkdir(exist_ok=True, parents=True)
+
+    with open(dest_dir / ".gitignore", "w") as f:
+        f.write("**")
