@@ -1562,8 +1562,8 @@ class DEModel:
             return res
 
         if name == "w":
-            dwdx = self.eq("dwdx")
-            dwdw = self.eq("dwdw")
+            dwdx = self.sym("dwdx")
+            dwdw = self.sym("dwdw")
             w = self.eq("w")
 
             # Check for direct (via `t`) or indirect (via `x`, `h`, or splines)
@@ -1662,8 +1662,12 @@ class DEModel:
                         # splines: non-static
                         not self._splines or "AmiciSpline" not in str(expr)
                     )
-                    and all(
-                        expr.diff(dyn_sym).is_zero for dyn_sym in dynamic_syms
+                    and (
+                        not expr.has(dynamic_syms)
+                        or all(
+                            expr.diff(dyn_sym).is_zero
+                            for dyn_sym in dynamic_syms
+                        )
                     )
                 )
             ]
