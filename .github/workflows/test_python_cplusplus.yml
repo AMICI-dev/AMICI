@@ -18,6 +18,13 @@ jobs:
         python-version: [ "3.9" ]
 
     steps:
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -265,6 +272,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/Library/Caches/pooch
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
