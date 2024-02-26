@@ -169,9 +169,35 @@ if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
         -lmkl
         CACHE STRING "")
   endif()
-elseif(NOT DEFINED ENV{BLAS_LIBS} AND NOT DEFINED ENV{BLAS_CFLAGS})
+elseif(
+  NOT DEFINED ENV{BLAS_LIBS}
+  AND NOT DEFINED ENV{BLAS_CFLAGS}
+  AND NOT BLAS_FOUND)
   # if nothing is specified via environment variables, let's try FindBLAS
-  find_package(BLAS)
+  if($(CMAKE_VERSION) VERSION_GREATER_EQUAL 3.22)
+    set(BLA_SIZEOF_INTEGER 8)
+  endif()
+
+  if(APPLE AND (NOT DEFINED BLA_VENDOR OR BLA_VENDOR STREQUAL "All"))
+    set(BLA_VENDOR Apple)
+    find_package(BLAS)
+    if(BLAS_FOUND)
+      set_property(
+        TARGET BLAS::BLAS
+        APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS ACCELERATE_NEW_LAPACK)
+      set_property(
+        TARGET BLAS::BLAS
+        APPEND
+        PROPERTY INTERFACE_COMPILE_DEFINITIONS ACCELERATE_LAPACK_ILP64)
+    else()
+      set(BLA_VENDOR "All")
+    endif()
+
+  endif()
+  if(NOT BLAS_FOUND)
+    find_package(BLAS)
+  endif()
   if(NOT BLAS_FOUND)
     # Nothing specified by the user and FindBLAS didn't find anything; let's try
     # if cblas is available on the system paths.
