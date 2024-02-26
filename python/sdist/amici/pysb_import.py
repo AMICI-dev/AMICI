@@ -34,7 +34,6 @@ from .de_export import (
     Observable,
     Parameter,
     SigmaY,
-    _default_simplify,
 )
 from .import_utils import (
     _get_str_symbol_identifiers,
@@ -42,6 +41,7 @@ from .import_utils import (
     generate_measurement_symbol,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
+    _default_simplify,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 
