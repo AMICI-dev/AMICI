@@ -42,7 +42,12 @@ from . import (
     amiciSwigPath,
     splines,
 )
-from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
+from .constants import SymbolId
+from .cxxcodeprinter import (
+    AmiciCxxCodePrinter,
+    get_switch_statement,
+    csc_matrix,
+)
 from .de_model import *
 from .import_utils import (
     ObservableTransformation,
@@ -609,9 +614,6 @@ class DEModel:
         whether all observables have a gaussian noise model, i.e. whether
         res and FIM make sense.
 
-    :ivar _code_printer:
-        Code printer to generate C++ code
-
     :ivar _z2event:
         list of event indices for each event observable
     """
@@ -748,10 +750,6 @@ class DEModel:
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
-
-        self._code_printer = AmiciCxxCodePrinter()
-        for fun in CUSTOM_FUNCTIONS:
-            self._code_printer.known_functions[fun["sympy"]] = fun["c++"]
 
     def differential_states(self) -> list[DifferentialState]:
         """Get all differential states."""
@@ -1593,7 +1591,7 @@ class DEModel:
                     sparse_list,
                     symbol_list,
                     sparse_matrix,
-                ) = self._code_printer.csc_matrix(
+                ) = csc_matrix(
                     matrix[iy, :],
                     rownames=rownames,
                     colnames=colnames,
@@ -1611,7 +1609,7 @@ class DEModel:
                 sparse_list,
                 symbol_list,
                 sparse_matrix,
-            ) = self._code_printer.csc_matrix(
+            ) = csc_matrix(
                 matrix,
                 rownames=rownames,
                 colnames=colnames,
@@ -2595,6 +2593,9 @@ class DEExporter:
         If the given model uses special functions, this set contains hints for
         model building.
 
+    :ivar _code_printer:
+        Code printer to generate C++ code
+
     :ivar generate_sensitivity_code:
         Specifies whether code for sensitivity computation is to be generated
 
@@ -2661,10 +2662,14 @@ class DEExporter:
         self.set_name(model_name)
         self.set_paths(outdir)
 
+        self._code_printer = AmiciCxxCodePrinter()
+        for fun in CUSTOM_FUNCTIONS:
+            self._code_printer.known_functions[fun["sympy"]] = fun["c++"]
+
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
         self.model: DEModel = de_model
-        self.model._code_printer.known_functions.update(
+        self._code_printer.known_functions.update(
             splines.spline_user_functions(
                 self.model._splines, self._get_index("p")
             )
@@ -3230,7 +3235,7 @@ class DEExporter:
                                 f"reinitialization_state_idxs.cend(), {index}) != "
                                 "reinitialization_state_idxs.cend())",
                                 f"    {function}[{index}] = "
-                                f"{self.model._code_printer.doprint(formula)};",
+                                f"{self._code_printer.doprint(formula)};",
                             ]
                         )
                 cases[ipar] = expressions
@@ -3245,12 +3250,12 @@ class DEExporter:
                     f"reinitialization_state_idxs.cend(), {index}) != "
                     "reinitialization_state_idxs.cend())\n        "
                     f"{function}[{index}] = "
-                    f"{self.model._code_printer.doprint(formula)};"
+                    f"{self._code_printer.doprint(formula)};"
                 )
 
         elif function in event_functions:
             cases = {
-                ie: self.model._code_printer._get_sym_lines_array(
+                ie: self._code_printer._get_sym_lines_array(
                     equations[ie], function, 0
                 )
                 for ie in range(self.model.num_events())
@@ -3263,7 +3268,7 @@ class DEExporter:
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []
                 inner_cases = {
-                    ipar: self.model._code_printer._get_sym_lines_array(
+                    ipar: self._code_printer._get_sym_lines_array(
                         inner_equations[:, ipar], function, 0
                     )
                     for ipar in range(self.model.num_par())
@@ -3278,7 +3283,7 @@ class DEExporter:
             and equations.shape[1] == self.model.num_par()
         ):
             cases = {
-                ipar: self.model._code_printer._get_sym_lines_array(
+                ipar: self._code_printer._get_sym_lines_array(
                     equations[:, ipar], function, 0
                 )
                 for ipar in range(self.model.num_par())
@@ -3288,7 +3293,7 @@ class DEExporter:
         elif function in multiobs_functions:
             if function == "dJydy":
                 cases = {
-                    iobs: self.model._code_printer._get_sym_lines_array(
+                    iobs: self._code_printer._get_sym_lines_array(
                         equations[iobs], function, 0
                     )
                     for iobs in range(self.model.num_obs())
@@ -3296,7 +3301,7 @@ class DEExporter:
                 }
             else:
                 cases = {
-                    iobs: self.model._code_printer._get_sym_lines_array(
+                    iobs: self._code_printer._get_sym_lines_array(
                         equations[:, iobs], function, 0
                     )
                     for iobs in range(equations.shape[1])
@@ -3316,12 +3321,12 @@ class DEExporter:
                 symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
             else:
                 symbols = self.model.sym(function)
-            lines += self.model._code_printer._get_sym_lines_symbols(
+            lines += self._code_printer._get_sym_lines_symbols(
                 symbols, equations, function, 4
             )
 
         else:
-            lines += self.model._code_printer._get_sym_lines_array(
+            lines += self._code_printer._get_sym_lines_array(
                 equations, function, 4
             )
 
@@ -3477,10 +3482,10 @@ class DEExporter:
             "NK": self.model.num_const(),
             "O2MODE": "amici::SecondOrderMode::none",
             # using code printer ensures proper handling of nan/inf
-            "PARAMETERS": self.model._code_printer.doprint(
-                self.model.val("p")
-            )[1:-1],
-            "FIXED_PARAMETERS": self.model._code_printer.doprint(
+            "PARAMETERS": self._code_printer.doprint(self.model.val("p"))[
+                1:-1
+            ],
+            "FIXED_PARAMETERS": self._code_printer.doprint(
                 self.model.val("k")
             )[1:-1],
             "PARAMETER_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
@@ -3672,7 +3677,7 @@ class DEExporter:
             Template initializer list of ids
         """
         return "\n".join(
-            f'"{self.model._code_printer.doprint(symbol)}", // {name}[{idx}]'
+            f'"{self._code_printer.doprint(symbol)}", // {name}[{idx}]'
             for idx, symbol in enumerate(self.model.sym(name))
         )
 

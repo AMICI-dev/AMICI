@@ -1141,15 +1141,23 @@ class SbmlImporter:
                     "Parameter does not exist." % parameter
                 )
 
+        # parameter ID => initial assignment sympy expression
+        par_id_to_ia = {
+            par.getId(): ia
+            for par in self.sbml.getListOfParameters()
+            if (ia := self._get_element_initial_assignment(par.getId()))
+            is not None
+        }
+
         fixed_parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() in constant_parameters
         ]
         for parameter in fixed_parameters:
+            ia_math = par_id_to_ia.get(parameter.getId())
             if (
-                self._get_element_initial_assignment(parameter.getId())
-                is not None
+                (ia_math is not None and not ia_math.is_Number)
                 or self.is_assignment_rule_target(parameter)
                 or self.is_rate_rule_target(parameter)
             ):
@@ -1164,7 +1172,10 @@ class SbmlImporter:
             parameter
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() not in constant_parameters
-            and self._get_element_initial_assignment(parameter.getId()) is None
+            and (
+                (ia_math := par_id_to_ia.get(parameter.getId())) is None
+                or ia_math.is_Number
+            )
             and not self.is_assignment_rule_target(parameter)
             and parameter.getId() not in hardcode_symbols
         ]
@@ -1181,16 +1192,16 @@ class SbmlImporter:
             for par in settings["var"]:
                 self.symbols[partype][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": sp.Float(par.getValue()),
+                    "value": par_id_to_ia.get(
+                        par.getId(), sp.Float(par.getValue())
+                    ),
                 }
 
         # Parameters that need to be turned into expressions
         #  so far, this concerns parameters with initial assignments containing rateOf(.)
         #  (those have been skipped above)
         for par in self.sbml.getListOfParameters():
-            if (
-                ia := self._get_element_initial_assignment(par.getId())
-            ) is not None and ia.find(
+            if (ia := par_id_to_ia.get(par.getId())) is not None and ia.find(
                 sp.core.function.UndefinedFunction("rateOf")
             ):
                 self.symbols[SymbolId.EXPRESSION][
@@ -1967,7 +1978,10 @@ class SbmlImporter:
         for ia in self.sbml.getListOfInitialAssignments():
             identifier = _get_identifier_symbol(ia)
             if identifier in itt.chain(
-                self.symbols[SymbolId.SPECIES], self.compartments
+                self.symbols[SymbolId.SPECIES],
+                self.compartments,
+                self.symbols[SymbolId.PARAMETER],
+                self.symbols[SymbolId.FIXED_PARAMETER],
             ):
                 continue
 
