@@ -748,3 +748,10 @@ def unique_preserve_order(seq: Sequence) -> list:
 
 sbml_time_symbol = symbol_with_assumptions("time")
 amici_time_symbol = symbol_with_assumptions("t")
+
+
+def _default_simplify(x):
+    """Default simplification applied in DEModel"""
+    # We need this as a free function instead of a lambda to have it picklable
+    #  for parallel simplification
+    return sp.powsimp(x, deep=True)
