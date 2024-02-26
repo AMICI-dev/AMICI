@@ -31,9 +31,8 @@ from .constants import SymbolId
 from .de_export import (
     DEExporter,
     DEModel,
-    _default_simplify,
-    smart_is_zero_matrix,
 )
+from .sympy_utils import smart_is_zero_matrix
 from .import_utils import (
     RESERVED_SYMBOLS,
     _check_unsupported_functions,
@@ -50,6 +49,7 @@ from .import_utils import (
     smart_subs_dict,
     symbol_with_assumptions,
     toposort_symbols,
+    _default_simplify,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .sbml_utils import SBMLException, _parse_logical_operators
@@ -1051,15 +1051,23 @@ class SbmlImporter:
                     "Parameter does not exist." % parameter
                 )
 
+        # parameter ID => initial assignment sympy expression
+        par_id_to_ia = {
+            par.getId(): ia
+            for par in self.sbml.getListOfParameters()
+            if (ia := self._get_element_initial_assignment(par.getId()))
+            is not None
+        }
+
         fixed_parameters = [
             parameter
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() in constant_parameters
         ]
         for parameter in fixed_parameters:
+            ia_math = par_id_to_ia.get(parameter.getId())
             if (
-                self._get_element_initial_assignment(parameter.getId())
-                is not None
+                (ia_math is not None and not ia_math.is_Number)
                 or self.is_assignment_rule_target(parameter)
                 or self.is_rate_rule_target(parameter)
             ):
@@ -1074,7 +1082,10 @@ class SbmlImporter:
             parameter
             for parameter in self.sbml.getListOfParameters()
             if parameter.getId() not in constant_parameters
-            and self._get_element_initial_assignment(parameter.getId()) is None
+            and (
+                (ia_math := par_id_to_ia.get(parameter.getId())) is None
+                or ia_math.is_Number
+            )
             and not self.is_assignment_rule_target(parameter)
             and parameter.getId() not in hardcode_symbols
         ]
@@ -1091,7 +1102,9 @@ class SbmlImporter:
             for par in settings["var"]:
                 self.symbols[partype][_get_identifier_symbol(par)] = {
                     "name": par.getName() if par.isSetName() else par.getId(),
-                    "value": sp.Float(par.getValue()),
+                    "value": par_id_to_ia.get(
+                        par.getId(), sp.Float(par.getValue())
+                    ),
                 }
 
         # Parameters that need to be turned into expressions
@@ -1099,8 +1112,7 @@ class SbmlImporter:
         #  (those have been skipped above) that are not rate rule targets
         for par in self.sbml.getListOfParameters():
             if (
-                (ia := self._get_element_initial_assignment(par.getId()))
-                is not None
+                (ia := par_id_to_ia.get(par.getId())) is not None
                 and not ia.is_Number
                 and not self.is_rate_rule_target(par)
             ):
@@ -1881,6 +1893,8 @@ class SbmlImporter:
                 self.symbols[SymbolId.SPECIES],
                 self.compartments,
                 self.symbols[SymbolId.EXPRESSION],
+                self.symbols[SymbolId.PARAMETER],
+                self.symbols[SymbolId.FIXED_PARAMETER],
             ):
                 continue
 

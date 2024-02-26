@@ -1,7 +1,7 @@
 """
 C++ Export
 ----------
-This module provides all necessary functionality specify an DE model and
+This module provides all necessary functionality specify a DE model and
 generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by
 :py:func:`amici.pysb_import.pysb2amici`,
@@ -18,12 +18,10 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from itertools import chain, starmap
+from itertools import chain
 from pathlib import Path
-from string import Template
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Literal,
     Optional,
@@ -43,8 +41,13 @@ from . import (
     amiciSwigPath,
     splines,
 )
+from ._codegen.template import apply_template
 from .constants import SymbolId
-from .cxxcodeprinter import AmiciCxxCodePrinter, get_switch_statement
+from .cxxcodeprinter import (
+    AmiciCxxCodePrinter,
+    get_switch_statement,
+    csc_matrix,
+)
 from .de_model import *
 from .import_utils import (
     ObservableTransformation,
@@ -55,8 +58,17 @@ from .import_utils import (
     strip_pysb,
     toposort_symbols,
     unique_preserve_order,
+    _default_simplify,
 )
 from .logging import get_logger, log_execution_time, set_log_level
+from .sympy_utils import (
+    _custom_pow_eval_derivative,
+    _monkeypatched,
+    smart_jacobian,
+    smart_multiply,
+    smart_is_zero_matrix,
+    _parallel_applyfunc,
+)
 
 if TYPE_CHECKING:
     from . import sbml_import
@@ -505,109 +517,6 @@ symbol_to_type = {
 }
 
 
-@log_execution_time("running smart_jacobian", logger)
-def smart_jacobian(
-    eq: sp.MutableDenseMatrix, sym_var: sp.MutableDenseMatrix
-) -> sp.MutableSparseMatrix:
-    """
-    Wrapper around symbolic jacobian with some additional checks that reduce
-    computation time for large matrices
-
-    :param eq:
-        equation
-    :param sym_var:
-        differentiation variable
-    :return:
-        jacobian of eq wrt sym_var
-    """
-    nrow = eq.shape[0]
-    ncol = sym_var.shape[0]
-    if (
-        not min(eq.shape)
-        or not min(sym_var.shape)
-        or smart_is_zero_matrix(eq)
-        or smart_is_zero_matrix(sym_var)
-    ):
-        return sp.MutableSparseMatrix(nrow, ncol, dict())
-
-    # preprocess sparsity pattern
-    elements = (
-        (i, j, a, b)
-        for i, a in enumerate(eq)
-        for j, b in enumerate(sym_var)
-        if a.has(b)
-    )
-
-    if (n_procs := int(os.environ.get("AMICI_IMPORT_NPROCS", 1))) == 1:
-        # serial
-        return sp.MutableSparseMatrix(
-            nrow, ncol, dict(starmap(_jacobian_element, elements))
-        )
-
-    # parallel
-    from multiprocessing import get_context
-
-    # "spawn" should avoid potential deadlocks occurring with fork
-    #  see e.g. https://stackoverflow.com/a/66113051
-    ctx = get_context("spawn")
-    with ctx.Pool(n_procs) as p:
-        mapped = p.starmap(_jacobian_element, elements)
-    return sp.MutableSparseMatrix(nrow, ncol, dict(mapped))
-
-
-@log_execution_time("running smart_multiply", logger)
-def smart_multiply(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
-    y: sp.MutableDenseMatrix,
-) -> Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix]:
-    """
-    Wrapper around symbolic multiplication with some additional checks that
-    reduce computation time for large matrices
-
-    :param x:
-        educt 1
-    :param y:
-        educt 2
-    :return:
-        product
-    """
-    if (
-        not x.shape[0]
-        or not y.shape[1]
-        or smart_is_zero_matrix(x)
-        or smart_is_zero_matrix(y)
-    ):
-        return sp.zeros(x.shape[0], y.shape[1])
-    return x.multiply(y)
-
-
-def smart_is_zero_matrix(
-    x: Union[sp.MutableDenseMatrix, sp.MutableSparseMatrix],
-) -> bool:
-    """A faster implementation of sympy's is_zero_matrix
-
-    Avoids repeated indexer type checks and double iteration to distinguish
-    False/None. Found to be about 100x faster for large matrices.
-
-    :param x: Matrix to check
-    """
-
-    if isinstance(x, sp.MutableDenseMatrix):
-        return all(xx.is_zero is True for xx in x.flat())
-
-    if isinstance(x, list):
-        return all(smart_is_zero_matrix(xx) for xx in x)
-
-    return x.nnz() == 0
-
-
-def _default_simplify(x):
-    """Default simplification applied in DEModel"""
-    # We need this as a free function instead of a lambda to have it picklable
-    #  for parallel simplification
-    return sp.powsimp(x, deep=True)
-
-
 class DEModel:
     """
     Defines a Differential Equation as set of ModelQuantities.
@@ -724,9 +633,6 @@ class DEModel:
     :ivar _has_quadratic_nllh:
         whether all observables have a gaussian noise model, i.e. whether
         res and FIM make sense.
-
-    :ivar _code_printer:
-        Code printer to generate C++ code
 
     :ivar _z2event:
         list of event indices for each event observable
@@ -868,10 +774,6 @@ class DEModel:
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
-
-        self._code_printer = AmiciCxxCodePrinter()
-        for fun in CUSTOM_FUNCTIONS:
-            self._code_printer.known_functions[fun["sympy"]] = fun["c++"]
 
     def differential_states(self) -> list[DifferentialState]:
         """Get all differential states."""
@@ -1882,7 +1784,7 @@ class DEModel:
                     sparse_list,
                     symbol_list,
                     sparse_matrix,
-                ) = self._code_printer.csc_matrix(
+                ) = csc_matrix(
                     matrix[iy, :],
                     rownames=rownames,
                     colnames=colnames,
@@ -1900,7 +1802,7 @@ class DEModel:
                 sparse_list,
                 symbol_list,
                 sparse_matrix,
-            ) = self._code_printer.csc_matrix(
+            ) = csc_matrix(
                 matrix,
                 rownames=rownames,
                 colnames=colnames,
@@ -2884,6 +2786,9 @@ class DEExporter:
         If the given model uses special functions, this set contains hints for
         model building.
 
+    :ivar _code_printer:
+        Code printer to generate C++ code
+
     :ivar generate_sensitivity_code:
         Specifies whether code for sensitivity computation is to be generated
 
@@ -2950,10 +2855,14 @@ class DEExporter:
         self.set_name(model_name)
         self.set_paths(outdir)
 
+        self._code_printer = AmiciCxxCodePrinter()
+        for fun in CUSTOM_FUNCTIONS:
+            self._code_printer.known_functions[fun["sympy"]] = fun["c++"]
+
         # Signatures and properties of generated model functions (see
         # include/amici/model.h for details)
         self.model: DEModel = de_model
-        self.model._code_printer.known_functions.update(
+        self._code_printer.known_functions.update(
             splines.spline_user_functions(
                 self.model._splines, self._get_index("p")
             )
@@ -3519,7 +3428,7 @@ class DEExporter:
                                 f"reinitialization_state_idxs.cend(), {index}) != "
                                 "reinitialization_state_idxs.cend())",
                                 f"    {function}[{index}] = "
-                                f"{self.model._code_printer.doprint(formula)};",
+                                f"{self._code_printer.doprint(formula)};",
                             ]
                         )
                 cases[ipar] = expressions
@@ -3534,12 +3443,12 @@ class DEExporter:
                     f"reinitialization_state_idxs.cend(), {index}) != "
                     "reinitialization_state_idxs.cend())\n        "
                     f"{function}[{index}] = "
-                    f"{self.model._code_printer.doprint(formula)};"
+                    f"{self._code_printer.doprint(formula)};"
                 )
 
         elif function in event_functions:
             cases = {
-                ie: self.model._code_printer._get_sym_lines_array(
+                ie: self._code_printer._get_sym_lines_array(
                     equations[ie], function, 0
                 )
                 for ie in range(self.model.num_events())
@@ -3552,7 +3461,7 @@ class DEExporter:
             for ie, inner_equations in enumerate(equations):
                 inner_lines = []
                 inner_cases = {
-                    ipar: self.model._code_printer._get_sym_lines_array(
+                    ipar: self._code_printer._get_sym_lines_array(
                         inner_equations[:, ipar], function, 0
                     )
                     for ipar in range(self.model.num_par())
@@ -3567,7 +3476,7 @@ class DEExporter:
             and equations.shape[1] == self.model.num_par()
         ):
             cases = {
-                ipar: self.model._code_printer._get_sym_lines_array(
+                ipar: self._code_printer._get_sym_lines_array(
                     equations[:, ipar], function, 0
                 )
                 for ipar in range(self.model.num_par())
@@ -3577,7 +3486,7 @@ class DEExporter:
         elif function in multiobs_functions:
             if function == "dJydy":
                 cases = {
-                    iobs: self.model._code_printer._get_sym_lines_array(
+                    iobs: self._code_printer._get_sym_lines_array(
                         equations[iobs], function, 0
                     )
                     for iobs in range(self.model.num_obs())
@@ -3585,7 +3494,7 @@ class DEExporter:
                 }
             else:
                 cases = {
-                    iobs: self.model._code_printer._get_sym_lines_array(
+                    iobs: self._code_printer._get_sym_lines_array(
                         equations[:, iobs], function, 0
                     )
                     for iobs in range(equations.shape[1])
@@ -3605,12 +3514,12 @@ class DEExporter:
                 symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
             else:
                 symbols = self.model.sym(function)
-            lines += self.model._code_printer._get_sym_lines_symbols(
+            lines += self._code_printer._get_sym_lines_symbols(
                 symbols, equations, function, 4
             )
 
         else:
-            lines += self.model._code_printer._get_sym_lines_array(
+            lines += self._code_printer._get_sym_lines_array(
                 equations, function, 4
             )
 
@@ -3766,10 +3675,10 @@ class DEExporter:
             "NK": self.model.num_const(),
             "O2MODE": "amici::SecondOrderMode::none",
             # using code printer ensures proper handling of nan/inf
-            "PARAMETERS": self.model._code_printer.doprint(
-                self.model.val("p")
-            )[1:-1],
-            "FIXED_PARAMETERS": self.model._code_printer.doprint(
+            "PARAMETERS": self._code_printer.doprint(self.model.val("p"))[
+                1:-1
+            ],
+            "FIXED_PARAMETERS": self._code_printer.doprint(
                 self.model.val("k")
             )[1:-1],
             "PARAMETER_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
@@ -3961,7 +3870,7 @@ class DEExporter:
             Template initializer list of ids
         """
         return "\n".join(
-            f'"{self.model._code_printer.doprint(symbol)}", // {name}[{idx}]'
+            f'"{self._code_printer.doprint(symbol)}", // {name}[{idx}]'
             for idx, symbol in enumerate(self.model.sym(name))
         )
 
@@ -4084,44 +3993,6 @@ class DEExporter:
             )
 
         self.model_name = model_name
-
-
-class TemplateAmici(Template):
-    """
-    Template format used in AMICI (see :class:`string.Template` for more
-    details).
-
-    :cvar delimiter:
-        delimiter that identifies template variables
-    """
-
-    delimiter = "TPL_"
-
-
-def apply_template(
-    source_file: Union[str, Path],
-    target_file: Union[str, Path],
-    template_data: dict[str, str],
-) -> None:
-    """
-    Load source file, apply template substitution as provided in
-    templateData and save as targetFile.
-
-    :param source_file:
-        relative or absolute path to template file
-
-    :param target_file:
-        relative or absolute path to output file
-
-    :param template_data:
-        template keywords to substitute (key is template
-        variable without :attr:`TemplateAmici.delimiter`)
-    """
-    with open(source_file) as filein:
-        src = TemplateAmici(filein.read())
-    result = src.safe_substitute(template_data)
-    with open(target_file, "w") as fileout:
-        fileout.write(result)
 
 
 def get_function_extern_declaration(fun: str, name: str, ode: bool) -> str:
@@ -4298,94 +4169,6 @@ def is_valid_identifier(x: str) -> bool:
     """
 
     return IDENTIFIER_PATTERN.match(x) is not None
-
-
-@contextlib.contextmanager
-def _monkeypatched(obj: object, name: str, patch: Any):
-    """
-    Temporarily monkeypatches an object.
-
-    :param obj:
-        object to be patched
-
-    :param name:
-        name of the attribute to be patched
-
-    :param patch:
-        patched value
-    """
-    pre_patched_value = getattr(obj, name)
-    setattr(obj, name, patch)
-    try:
-        yield object
-    finally:
-        setattr(obj, name, pre_patched_value)
-
-
-def _custom_pow_eval_derivative(self, s):
-    """
-    Custom Pow derivative that removes a removable singularity for
-    ``self.base == 0`` and ``self.base.diff(s) == 0``. This function is
-    intended to be monkeypatched into :py:method:`sympy.Pow._eval_derivative`.
-
-    :param self:
-        sp.Pow class
-
-    :param s:
-        variable with respect to which the derivative will be computed
-    """
-    dbase = self.base.diff(s)
-    dexp = self.exp.diff(s)
-    part1 = sp.Pow(self.base, self.exp - 1) * self.exp * dbase
-    part2 = self * dexp * sp.log(self.base)
-    if self.base.is_nonzero or dbase.is_nonzero or part2.is_zero:
-        # first piece never applies or is zero anyways
-        return part1 + part2
-
-    return part1 + sp.Piecewise(
-        (self.base, sp.And(sp.Eq(self.base, 0), sp.Eq(dbase, 0))),
-        (part2, True),
-    )
-
-
-def _jacobian_element(i, j, eq_i, sym_var_j):
-    """Compute a single element of a jacobian"""
-    return (i, j), eq_i.diff(sym_var_j)
-
-
-def _parallel_applyfunc(obj: sp.Matrix, func: Callable) -> sp.Matrix:
-    """Parallel implementation of sympy's Matrix.applyfunc"""
-    if (n_procs := int(os.environ.get("AMICI_IMPORT_NPROCS", 1))) == 1:
-        # serial
-        return obj.applyfunc(func)
-
-    # parallel
-    from multiprocessing import get_context
-    from pickle import PicklingError
-
-    from sympy.matrices.dense import DenseMatrix
-
-    # "spawn" should avoid potential deadlocks occurring with fork
-    #  see e.g. https://stackoverflow.com/a/66113051
-    ctx = get_context("spawn")
-    with ctx.Pool(n_procs) as p:
-        try:
-            if isinstance(obj, DenseMatrix):
-                return obj._new(obj.rows, obj.cols, p.map(func, obj))
-            elif isinstance(obj, sp.SparseMatrix):
-                dok = obj.todok()
-                mapped = p.map(func, dok.values())
-                dok = {k: v for k, v in zip(dok.keys(), mapped) if v != 0}
-                return obj._new(obj.rows, obj.cols, dok)
-            else:
-                raise ValueError(f"Unsupported matrix type {type(obj)}")
-        except PicklingError as e:
-            raise ValueError(
-                f"Couldn't pickle {func}. This is likely because the argument "
-                "was not a module-level function. Either rewrite the argument "
-                "to a module-level function or disable parallelization by "
-                "setting `AMICI_IMPORT_NPROCS=1`."
-            ) from e
 
 
 def _write_gitignore(dest_dir: Path) -> None:
