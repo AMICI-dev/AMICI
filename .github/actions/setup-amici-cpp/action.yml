@@ -18,6 +18,9 @@ runs:
     - run: echo "ENABLE_GCOV_COVERAGE=TRUE" >> $GITHUB_ENV
       shell: bash
 
+    - run: echo "PYTHONFAULTHANDLER=1" >> $GITHUB_ENV
+      shell: bash
+
     - name: Set up Sonar tools
       uses: ./.github/actions/setup-sonar-tools
 

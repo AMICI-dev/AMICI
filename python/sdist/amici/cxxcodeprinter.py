@@ -3,6 +3,7 @@ import itertools
 import os
 import re
 from typing import Optional
+from collections.abc import Sequence
 from collections.abc import Iterable
 
 import sympy as sp
@@ -123,6 +124,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         equations: sp.Matrix,
         variable: str,
         indent_level: int,
+        indices: Optional[Sequence[int]] = None,
     ) -> list[str]:
         """
         Generate C++ code for where array elements are directly replaced with
@@ -140,9 +142,19 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :param indent_level:
             indentation level (number of leading blanks)
 
+        :param indices:
+            Optional custom indices corresponding to entries in `symbols`.
+            Only used for comments.
+
         :return:
             C++ code as list of lines
         """
+        assert len(symbols) == len(equations)
+        if indices is None:
+            indices = range(len(symbols))
+        else:
+            assert len(indices) == len(symbols)
+
         indent = " " * indent_level
 
         def format_regular_line(symbol, math, index):
@@ -179,7 +191,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                         for (identifier, definition) in expr_dict.items()
                     }
                 )
-                symbol_to_idx = {sym: idx for idx, sym in enumerate(symbols)}
+                symbol_to_idx = {
+                    sym: idx for idx, sym in zip(indices, symbols)
+                }
 
                 def format_line(symbol: sp.Symbol):
                     math = expr_dict[symbol]
@@ -203,7 +217,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         return [
             format_regular_line(sym, math, index)
-            for index, (sym, math) in enumerate(zip(symbols, equations))
+            for index, sym, math in zip(indices, symbols, equations)
             if math not in [0, 0.0]
         ]
 

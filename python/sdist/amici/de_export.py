@@ -181,14 +181,15 @@ functions = {
         "realtype *dwdp, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const realtype *tcl, const realtype *dtcldp, "
-        "const realtype *spl, const realtype *sspl",
+        "const realtype *spl, const realtype *sspl, bool include_static",
         assume_pow_positivity=True,
         sparse=True,
     ),
     "dwdx": _FunctionInfo(
         "realtype *dwdx, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *w, const realtype *tcl, const realtype *spl",
+        "const realtype *w, const realtype *tcl, const realtype *spl, "
+        "bool include_static",
         assume_pow_positivity=True,
         sparse=True,
     ),
@@ -213,7 +214,7 @@ functions = {
     "dwdw": _FunctionInfo(
         "realtype *dwdw, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
-        "const realtype *w, const realtype *tcl",
+        "const realtype *w, const realtype *tcl, bool include_static",
         assume_pow_positivity=True,
         sparse=True,
     ),
@@ -333,7 +334,8 @@ functions = {
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, "
-        "const realtype *h, const realtype *tcl, const realtype *spl",
+        "const realtype *h, const realtype *tcl, const realtype *spl, "
+        "bool include_static",
         assume_pow_positivity=True,
     ),
     "x0": _FunctionInfo(
@@ -633,6 +635,10 @@ class DEModel:
         whether all observables have a gaussian noise model, i.e. whether
         res and FIM make sense.
 
+    :ivar _static_indices:
+        dict of lists list of indices of static variables for different
+        model entities.
+
     :ivar _z2event:
         list of event indices for each event observable
     """
@@ -773,6 +779,8 @@ class DEModel:
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
+
+        self._static_indices: dict[str, list[int]] = {}
 
     def differential_states(self) -> list[DifferentialState]:
         """Get all differential states."""
@@ -1538,6 +1546,143 @@ class DEModel:
                 for state in self.states() + self.algebraic_equations()
             )
         )
+
+    def static_indices(self, name: str) -> list[int]:
+        """
+        Returns the indices of static expressions in the given model entity.
+
+        Static expressions are those that do not depend on time,
+        neither directly nor indirectly.
+
+        :param name: Name of the model entity.
+        :return: List of indices of static expressions.
+        """
+        # already computed?
+        if (res := self._static_indices.get(name)) is not None:
+            return res
+
+        if name == "w":
+            dwdx = self.eq("dwdx")
+            dwdw = self.eq("dwdw")
+            w = self.eq("w")
+
+            # Check for direct (via `t`) or indirect (via `x`, `h`, or splines)
+            # time dependency.
+            # To avoid lengthy symbolic computations, we only check if we have
+            # any non-zeros in hierarchy. We currently neglect the case where
+            # different hierarchy levels may cancel out. Treating a static
+            # expression as dynamic in such rare cases shouldn't be a problem.
+            dynamic_dependency = np.asarray(
+                dwdx.applyfunc(lambda x: int(not x.is_zero))
+            ).astype(np.int64)
+            # to check for other time-dependence, we add a column to the dwdx
+            #  matrix
+            dynamic_syms = [
+                # FIXME: see spline comment below
+                # *self.sym("spl"),
+                *self.sym("h"),
+                amici_time_symbol,
+            ]
+            dynamic_dependency = np.hstack(
+                (
+                    dynamic_dependency,
+                    np.array(
+                        [
+                            expr.has(*dynamic_syms)
+                            # FIXME: the current spline implementation is a giant pita
+                            #  currently, the splines occur in the form of sympy functions, e.g.:
+                            #   AmiciSpline(y0, time, y0_3, y0_1)
+                            #   AmiciSplineSensitivity(y0, time, y0_1, y0_3, y0_1)
+                            #  until it uses the proper self.sym("spl") / self.sym("sspl")
+                            #  symbols, which will require quite some refactoring,
+                            #  we just do dumb string checks :|
+                            or (
+                                bool(self._splines)
+                                and "AmiciSpline" in str(expr)
+                            )
+                            for expr in w
+                        ]
+                    )[:, np.newaxis],
+                )
+            )
+
+            nonzero_dwdw = np.asarray(
+                dwdw.applyfunc(lambda x: int(not x.is_zero))
+            ).astype(np.int64)
+
+            # `w` is made up an expression hierarchy. Any given entry is only
+            # static if all its dependencies are static. Here, we unravel
+            # the hierarchical structure of `w`.
+            # If for an entry in `w`, the row sum of the intermediate products
+            # is 0 across all levels, the expression is static.
+            tmp = dynamic_dependency
+            res = np.sum(tmp, axis=1)
+            while np.any(tmp != 0):
+                tmp = nonzero_dwdw.dot(tmp)
+                res += np.sum(tmp, axis=1)
+            self._static_indices[name] = (
+                np.argwhere(res == 0).flatten().tolist()
+            )
+
+            return self._static_indices[name]
+
+        if name in ("dwdw", "dwdx", "dwdp"):
+            static_indices_w = set(self.static_indices("w"))
+            dynamic_syms = [
+                *(
+                    sym
+                    for i, sym in enumerate(self.sym("w"))
+                    if i not in static_indices_w
+                ),
+                amici_time_symbol,
+                *self.sym("x"),
+                *self.sym("h"),
+                # FIXME see spline comment above
+                # *(self.sym("spl") if name in ("dwdw", "dwdx") else ()),
+                # *(self.sym("sspl") if name == "dwdp" else ()),
+            ]
+            dynamic_syms = sp.Matrix(dynamic_syms)
+            rowvals = self.rowvals(name)
+            sparseeq = self.sparseeq(name)
+
+            # collect the indices of static expressions of dwd* from the list
+            #  of non-zeros entries of the sparse matrix
+            self._static_indices[name] = [
+                i
+                for i, (expr, row_idx) in enumerate(zip(sparseeq, rowvals))
+                # derivative of a static expression is static
+                if row_idx in static_indices_w
+                # constant expressions
+                or expr.is_Number
+                # check for dependencies on non-static entities
+                or (
+                    # FIXME see spline comment above
+                    #  (check str before diff, as diff will fail on spline functions)
+                    (
+                        # splines: non-static
+                        not self._splines or "AmiciSpline" not in str(expr)
+                    )
+                    and expr.diff(dynamic_syms).is_zero_matrix
+                )
+            ]
+            return self._static_indices[name]
+
+        raise NotImplementedError(name)
+
+    def dynamic_indices(self, name: str) -> list[int]:
+        """
+        Return the indices of dynamic expressions in the given model entity.
+
+        :param name: Name of the model entity.
+        :return: List of indices of dynamic expressions.
+        """
+        static_idxs = set(self.static_indices(name))
+        length = len(
+            self.sparsesym(name)
+            if name in sparse_functions
+            else self.sym(name)
+        )
+        return [i for i in range(length) if i not in static_idxs]
 
     def _generate_symbol(self, name: str) -> None:
         """
@@ -3455,9 +3600,57 @@ class DEExporter:
                 symbols = list(map(sp.Symbol, self.model.sparsesym(function)))
             else:
                 symbols = self.model.sym(function)
-            lines += self._code_printer._get_sym_lines_symbols(
-                symbols, equations, function, 4
-            )
+
+            if function in ("w", "dwdw", "dwdx", "dwdp"):
+                # Split into a block of static and dynamic expressions.
+                if len(static_idxs := self.model.static_indices(function)) > 0:
+                    tmp_symbols = sp.Matrix(
+                        [[symbols[i]] for i in static_idxs]
+                    )
+                    tmp_equations = sp.Matrix(
+                        [equations[i] for i in static_idxs]
+                    )
+                    tmp_lines = self._code_printer._get_sym_lines_symbols(
+                        tmp_symbols,
+                        tmp_equations,
+                        function,
+                        8,
+                        static_idxs,
+                    )
+                    if tmp_lines:
+                        lines.extend(
+                            [
+                                "    // static expressions",
+                                "    if (include_static) {",
+                                *tmp_lines,
+                                "    }",
+                            ]
+                        )
+
+                # dynamic expressions
+                if len(dynamic_idxs := self.model.dynamic_indices(function)):
+                    tmp_symbols = sp.Matrix(
+                        [[symbols[i]] for i in dynamic_idxs]
+                    )
+                    tmp_equations = sp.Matrix(
+                        [equations[i] for i in dynamic_idxs]
+                    )
+
+                    tmp_lines = self._code_printer._get_sym_lines_symbols(
+                        tmp_symbols,
+                        tmp_equations,
+                        function,
+                        4,
+                        dynamic_idxs,
+                    )
+                    if tmp_lines:
+                        lines.append("\n    // dynamic expressions")
+                        lines.extend(tmp_lines)
+
+            else:
+                lines += self._code_printer._get_sym_lines_symbols(
+                    symbols, equations, function, 4
+                )
 
         else:
             lines += self._code_printer._get_sym_lines_array(
@@ -4002,7 +4195,7 @@ def get_model_override_implementation(
     body = (
         ""
         if nobody
-        else "\n{ind8}{maybe_return}{fun}_{name}({eval_signature});{ind4}\n".format(
+        else "\n{ind8}{maybe_return}{fun}_{name}({eval_signature});\n{ind4}".format(
             ind4=" " * 4,
             ind8=" " * 8,
             maybe_return="" if func_info.return_type == "void" else "return ",
@@ -4049,7 +4242,9 @@ def get_sunindex_override_implementation(
     if nobody:
         impl += "}}\n"
     else:
-        impl += "{ind8}{fun}_{indextype}_{name}({eval_signature});\n{ind4}}}\n"
+        impl += (
+            "\n{ind8}{fun}_{indextype}_{name}({eval_signature});\n{ind4}}}\n"
+        )
 
     return impl.format(
         ind4=" " * 4,
@@ -4086,6 +4281,7 @@ def remove_argument_types(signature: str) -> str:
         "realtype *",
         "const int ",
         "int ",
+        "bool ",
         "SUNMatrixContent_Sparse ",
         "gsl::span<const int>",
     ]
