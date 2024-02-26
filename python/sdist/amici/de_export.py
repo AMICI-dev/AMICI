@@ -1662,8 +1662,8 @@ class DEModel:
                         # splines: non-static
                         not self._splines or "AmiciSpline" not in str(expr)
                     )
-                    and smart_is_zero_matrix(
-                        smart_jacobian(sp.Matrix([expr]), dynamic_syms)
+                    and all(
+                        expr.diff(dyn_sym).is_zero for dyn_sym in dynamic_syms
                     )
                 )
             ]
