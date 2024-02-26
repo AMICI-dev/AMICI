@@ -1663,11 +1663,15 @@ class DEModel:
                         not self._splines or "AmiciSpline" not in str(expr)
                     )
                     and (
+                        # If the expression contains dynamic symbols, it might
+                        # still be static. However, checking the derivative
+                        # is currently too expensive, and we rather accept
+                        # false negatives.
                         not expr.has(*dynamic_syms)
-                        or all(
-                            expr.diff(dyn_sym).is_zero
-                            for dyn_sym in dynamic_syms
-                        )
+                        # or all(
+                        #     expr.diff(dyn_sym).is_zero
+                        #     for dyn_sym in dynamic_syms
+                        # )
                     )
                 )
             ]
