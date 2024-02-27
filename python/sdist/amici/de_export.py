@@ -45,7 +45,7 @@ from .cxxcodeprinter import (
     get_switch_statement,
     csc_matrix,
 )
-from .de_model import *
+from .de_model_components import *
 from .import_utils import (
     ObservableTransformation,
     SBMLException,
