@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 
 @dataclass
@@ -383,3 +384,25 @@ multiobs_functions = [
     if "const int iy" in func_info.arguments()
     or "const int iz" in func_info.arguments()
 ]
+
+
+def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
+    """
+    Checks if the values for a symbolic variable is passed in the signature
+    of a function
+
+    :param name:
+        name of the function
+    :param varname:
+        name of the symbolic variable
+    :param ode:
+        whether to check the ODE or DAE signature
+
+    :return:
+        boolean indicating whether the variable occurs in the function
+        signature
+    """
+    return name in functions and re.search(
+        rf"const (realtype|double) \*{varname}[0]*(,|$)+",
+        functions[name].arguments(ode=ode),
+    )

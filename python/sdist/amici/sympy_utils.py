@@ -5,8 +5,7 @@ from typing import Union, Any, Callable
 import contextlib
 import sympy as sp
 import logging
-from amici.de_export import get_logger
-from amici.logging import log_execution_time
+from .logging import log_execution_time, get_logger
 
 
 logger = get_logger(__name__, logging.ERROR)

@@ -25,6 +25,7 @@ AMICI Python API
    amici.petab_simulate
    amici.import_utils
    amici.de_export
+   amici.de_model
    amici.de_model_components
    amici.plotting
    amici.pandas

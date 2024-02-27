@@ -114,7 +114,7 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from typing import Protocol, runtime_checkable
 
-    from .de_export import DEExporter, DEModel  # noqa: F401
+    from .de_export import DEExporter  # noqa: F401
     from .sbml_import import (  # noqa: F401
         SbmlImporter,
         assignmentRules2observables,
