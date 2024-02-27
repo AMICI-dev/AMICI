@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .cxx_functions import functions, multiobs_functions
 
-from ..de_model import Event
+from ..de_model_components import Event
 
 
 def get_function_extern_declaration(fun: str, name: str, ode: bool) -> str:
