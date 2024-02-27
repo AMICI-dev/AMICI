@@ -722,7 +722,7 @@ class SbmlImporter:
             "INF": sp.oo,
             "NaN": sp.nan,
             "rem": sp.Mod,
-            "time": symbol_with_assumptions("time"),
+            "time": sbml_time_symbol,
             # SBML L3 explicitly defines this value, which is not equal
             # to the most recent SI definition.
             "avogadro": sp.Float(6.02214179e23),
@@ -1108,11 +1108,13 @@ class SbmlImporter:
                 }
 
         # Parameters that need to be turned into expressions
-        #  so far, this concerns parameters with initial assignments containing rateOf(.)
-        #  (those have been skipped above)
+        #  so far, this concerns parameters with symbolic initial assignments
+        #  (those have been skipped above) that are not rate rule targets
         for par in self.sbml.getListOfParameters():
-            if (ia := par_id_to_ia.get(par.getId())) is not None and ia.find(
-                sp.core.function.UndefinedFunction("rateOf")
+            if (
+                (ia := par_id_to_ia.get(par.getId())) is not None
+                and not ia.is_Number
+                and not self.is_rate_rule_target(par)
             ):
                 self.symbols[SymbolId.EXPRESSION][
                     _get_identifier_symbol(par)
@@ -1890,6 +1892,7 @@ class SbmlImporter:
             if identifier in itt.chain(
                 self.symbols[SymbolId.SPECIES],
                 self.compartments,
+                self.symbols[SymbolId.EXPRESSION],
                 self.symbols[SymbolId.PARAMETER],
                 self.symbols[SymbolId.FIXED_PARAMETER],
             ):
@@ -1965,9 +1968,7 @@ class SbmlImporter:
             if "init" in species:
                 sym_math = smart_subs(sym_math, species_id, species["init"])
 
-        sym_math = smart_subs(
-            sym_math, self._local_symbols["time"], sp.Float(0)
-        )
+        sym_math = smart_subs(sym_math, sbml_time_symbol, sp.Float(0))
 
         sym_math = _dummy_to_rateof(sym_math, rateof_to_dummy)
 
