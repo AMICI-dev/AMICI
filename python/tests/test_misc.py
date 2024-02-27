@@ -7,9 +7,7 @@ from pathlib import Path
 import amici
 import pytest
 import sympy as sp
-from amici.de_export import (
-    smart_subs_dict,
-)
+from amici.import_utils import smart_subs_dict
 from amici.testing import skip_on_valgrind
 
 
