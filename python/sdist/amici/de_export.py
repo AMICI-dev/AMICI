@@ -1,13 +1,15 @@
 """
 C++ Export
 ----------
-This module provides all necessary functionality specify a DE model and
-generate executable C++ simulation code. The user generally won't have to
-directly call any function from this module as this will be done by
+This module provides all necessary functionality to specify a differential
+equation model and generate executable C++ simulation code.
+The user generally won't have to directly call any function from this module
+as this will be done by
 :py:func:`amici.pysb_import.pysb2amici`,
 :py:func:`amici.sbml_import.SbmlImporter.sbml2amici` and
 :py:func:`amici.petab_import.import_model`.
 """
+from __future__ import annotations
 import contextlib
 import copy
 import itertools
@@ -22,8 +24,6 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Literal,
-    Optional,
-    Union,
 )
 from collections.abc import Sequence
 import numpy as np
@@ -40,7 +40,6 @@ from . import (
     splines,
 )
 from ._codegen.template import apply_template
-from .constants import SymbolId
 from .cxxcodeprinter import (
     AmiciCxxCodePrinter,
     get_switch_statement,
@@ -51,7 +50,6 @@ from .import_utils import (
     ObservableTransformation,
     SBMLException,
     amici_time_symbol,
-    generate_flux_symbol,
     smart_subs_dict,
     strip_pysb,
     toposort_symbols,
@@ -70,7 +68,7 @@ from .sympy_utils import (
 )
 
 if TYPE_CHECKING:
-    from . import sbml_import
+    from .splines import AbstractSpline
 
 
 # Template for model simulation main.cpp file
@@ -499,25 +497,6 @@ def var_in_function_signature(name: str, varname: str, ode: bool) -> bool:
     )
 
 
-# defines the type of some attributes in DEModel
-symbol_to_type = {
-    SymbolId.SPECIES: DifferentialState,
-    SymbolId.ALGEBRAIC_STATE: AlgebraicState,
-    SymbolId.ALGEBRAIC_EQUATION: AlgebraicEquation,
-    SymbolId.PARAMETER: Parameter,
-    SymbolId.FIXED_PARAMETER: Constant,
-    SymbolId.OBSERVABLE: Observable,
-    SymbolId.EVENT_OBSERVABLE: EventObservable,
-    SymbolId.SIGMAY: SigmaY,
-    SymbolId.SIGMAZ: SigmaZ,
-    SymbolId.LLHY: LogLikelihoodY,
-    SymbolId.LLHZ: LogLikelihoodZ,
-    SymbolId.LLHRZ: LogLikelihoodRZ,
-    SymbolId.EXPRESSION: Expression,
-    SymbolId.EVENT: Event,
-}
-
-
 class DEModel:
     """
     Defines a Differential Equation as set of ModelQuantities.
@@ -645,8 +624,8 @@ class DEModel:
 
     def __init__(
         self,
-        verbose: Optional[Union[bool, int]] = False,
-        simplify: Optional[Callable] = _default_simplify,
+        verbose: bool | int | None = False,
+        simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
     ):
         """
@@ -678,7 +657,7 @@ class DEModel:
         self._expressions: list[Expression] = []
         self._conservation_laws: list[ConservationLaw] = []
         self._events: list[Event] = []
-        self._splines = []
+        self._splines: list[AbstractSpline] = []
         self._symboldim_funs: dict[str, Callable[[], int]] = {
             "sx": self.num_states_solver,
             "v": self.num_states_solver,
@@ -689,19 +668,15 @@ class DEModel:
         }
         self._eqs: dict[
             str,
-            Union[
-                sp.Matrix,
-                sp.SparseMatrix,
-                list[Union[sp.Matrix, sp.SparseMatrix]],
-            ],
+            (sp.Matrix | sp.SparseMatrix | list[sp.Matrix | sp.SparseMatrix]),
         ] = dict()
-        self._sparseeqs: dict[str, Union[sp.Matrix, list[sp.Matrix]]] = dict()
+        self._sparseeqs: dict[str, sp.Matrix | list[sp.Matrix]] = dict()
         self._vals: dict[str, list[sp.Expr]] = dict()
         self._names: dict[str, list[str]] = dict()
-        self._syms: dict[str, Union[sp.Matrix, list[sp.Matrix]]] = dict()
-        self._sparsesyms: dict[str, Union[list[str], list[list[str]]]] = dict()
-        self._colptrs: dict[str, Union[list[int], list[list[int]]]] = dict()
-        self._rowvals: dict[str, Union[list[int], list[list[int]]]] = dict()
+        self._syms: dict[str, sp.Matrix | list[sp.Matrix]] = dict()
+        self._sparsesyms: dict[str, list[str] | list[list[str]]] = dict()
+        self._colptrs: dict[str, list[int] | list[list[int]]] = dict()
+        self._rowvals: dict[str, list[int] | list[list[int]]] = dict()
 
         self._equation_prototype: dict[str, Callable] = {
             "total_cl": self.conservation_laws,
@@ -732,7 +707,7 @@ class DEModel:
             "k": self.constants,
         }
         self._total_derivative_prototypes: dict[
-            str, dict[str, Union[str, list[str]]]
+            str, dict[str, str | list[str]]
         ] = {
             "sroot": {
                 "eq": "root",
@@ -748,7 +723,7 @@ class DEModel:
 
             def cached_simplify(
                 expr: sp.Expr,
-                _simplified: dict[str, sp.Expr] = {},
+                _simplified: dict[str, sp.Expr] = {},  # noqa B006
                 _simplify: Callable = simplify,
             ) -> sp.Expr:
                 """Speed up expression simplification with caching.
@@ -775,7 +750,7 @@ class DEModel:
                 return _simplified[expr_str]
 
             self._simplify = cached_simplify
-        self._x0_fixedParameters_idx: Union[None, Sequence[int]]
+        self._x0_fixedParameters_idx: None | Sequence[int]
         self._w_recursion_depth: int = 0
         self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
@@ -845,188 +820,6 @@ class DEModel:
     def states(self) -> list[State]:
         """Get all states."""
         return self._differential_states + self._algebraic_states
-
-    @log_execution_time("importing SbmlImporter", logger)
-    def import_from_sbml_importer(
-        self,
-        si: "sbml_import.SbmlImporter",
-        compute_cls: Optional[bool] = True,
-    ) -> None:
-        """
-        Imports a model specification from a
-        :class:`amici.sbml_import.SbmlImporter` instance.
-
-        :param si:
-            imported SBML model
-        :param compute_cls:
-            whether to compute conservation laws
-        """
-
-        # add splines as expressions to the model
-        # saved for later substituting into the fluxes
-        spline_subs = {}
-
-        for ispl, spl in enumerate(si.splines):
-            spline_expr = spl.ode_model_symbol(si)
-            spline_subs[spl.sbml_id] = spline_expr
-            self.add_component(
-                Expression(
-                    identifier=spl.sbml_id,
-                    name=str(spl.sbml_id),
-                    value=spline_expr,
-                )
-            )
-        self._splines = si.splines
-
-        # get symbolic expression from SBML importers
-        symbols = copy.copy(si.symbols)
-
-        # assemble fluxes and add them as expressions to the model
-        assert len(si.flux_ids) == len(si.flux_vector)
-        fluxes = [
-            generate_flux_symbol(ir, name=flux_id)
-            for ir, flux_id in enumerate(si.flux_ids)
-        ]
-
-        # correct time derivatives for compartment changes
-        def transform_dxdt_to_concentration(species_id, dxdt):
-            """
-            Produces the appropriate expression for the first derivative of a
-            species with respect to time, for species that reside in
-            compartments with a constant volume, or a volume that is defined by
-            an assignment or rate rule.
-
-            :param species_id:
-                The identifier of the species (generated in "sbml_import.py").
-
-            :param dxdt:
-                The element-wise product of the row in the stoichiometric
-                matrix that corresponds to the species (row x_index) and the
-                flux (kinetic laws) vector. Ignored in the case of rate rules.
-            """
-            # The derivation of the below return expressions can be found in
-            # the documentation. They are found by rearranging
-            # $\frac{d}{dt} (vx) = Sw$ for $\frac{dx}{dt}$, where $v$ is the
-            # vector of species compartment volumes, $x$ is the vector of
-            # species concentrations, $S$ is the stoichiometric matrix, and $w$
-            # is the flux vector. The conditional below handles the cases of
-            # species in (i) compartments with a rate rule, (ii) compartments
-            # with an assignment rule, and (iii) compartments with a constant
-            # volume, respectively.
-            species = si.symbols[SymbolId.SPECIES][species_id]
-
-            comp = species["compartment"]
-            if comp in si.symbols[SymbolId.SPECIES]:
-                dv_dt = si.symbols[SymbolId.SPECIES][comp]["dt"]
-                xdot = (dxdt - dv_dt * species_id) / comp
-                return xdot
-            elif comp in si.compartment_assignment_rules:
-                v = si.compartment_assignment_rules[comp]
-
-                # we need to flatten out assignments in the compartment in
-                # order to ensure that we catch all species dependencies
-                v = smart_subs_dict(
-                    v, si.symbols[SymbolId.EXPRESSION], "value"
-                )
-                dv_dt = v.diff(amici_time_symbol)
-                # we may end up with a time derivative of the compartment
-                # volume due to parameter rate rules
-                comp_rate_vars = [
-                    p
-                    for p in v.free_symbols
-                    if p in si.symbols[SymbolId.SPECIES]
-                ]
-                for var in comp_rate_vars:
-                    dv_dt += (
-                        v.diff(var) * si.symbols[SymbolId.SPECIES][var]["dt"]
-                    )
-                dv_dx = v.diff(species_id)
-                xdot = (dxdt - dv_dt * species_id) / (dv_dx * species_id + v)
-                return xdot
-            elif comp in si.symbols[SymbolId.ALGEBRAIC_STATE]:
-                raise SBMLException(
-                    f"Species {species_id} is in a compartment {comp} that is"
-                    f" defined by an algebraic equation. This is not"
-                    f" supported."
-                )
-            else:
-                v = si.compartments[comp]
-
-                if v == 1.0:
-                    return dxdt
-
-                return dxdt / v
-
-        # create dynamics without respecting conservation laws first
-        dxdt = smart_multiply(
-            si.stoichiometric_matrix, MutableDenseMatrix(fluxes)
-        )
-        for ix, ((species_id, species), formula) in enumerate(
-            zip(symbols[SymbolId.SPECIES].items(), dxdt)
-        ):
-            # rate rules and amount species don't need to be updated
-            if "dt" in species:
-                continue
-            if species["amount"]:
-                species["dt"] = formula
-            else:
-                species["dt"] = transform_dxdt_to_concentration(
-                    species_id, formula
-                )
-
-        # create all basic components of the DE model and add them.
-        for symbol_name in symbols:
-            # transform dict of lists into a list of dicts
-            args = ["name", "identifier"]
-
-            if symbol_name == SymbolId.SPECIES:
-                args += ["dt", "init"]
-            elif symbol_name == SymbolId.ALGEBRAIC_STATE:
-                args += ["init"]
-            else:
-                args += ["value"]
-
-            if symbol_name == SymbolId.EVENT:
-                args += ["state_update", "initial_value"]
-            elif symbol_name == SymbolId.OBSERVABLE:
-                args += ["transformation"]
-            elif symbol_name == SymbolId.EVENT_OBSERVABLE:
-                args += ["event"]
-
-            comp_kwargs = [
-                {
-                    "identifier": var_id,
-                    **{k: v for k, v in var.items() if k in args},
-                }
-                for var_id, var in symbols[symbol_name].items()
-            ]
-
-            for comp_kwarg in comp_kwargs:
-                self.add_component(symbol_to_type[symbol_name](**comp_kwarg))
-
-        # add fluxes as expressions, this needs to happen after base
-        # expressions from symbols have been parsed
-        for flux_id, flux in zip(fluxes, si.flux_vector):
-            # replace splines inside fluxes
-            flux = flux.subs(spline_subs)
-            self.add_component(
-                Expression(identifier=flux_id, name=str(flux_id), value=flux)
-            )
-
-        # process conservation laws
-        if compute_cls:
-            si.process_conservation_laws(self)
-
-        # fill in 'self._sym' based on prototypes and components in ode_model
-        self.generate_basic_variables()
-        self._has_quadratic_nllh = all(
-            llh["dist"]
-            in ["normal", "lin-normal", "log-normal", "log10-normal"]
-            for llh in si.symbols[SymbolId.LLHY].values()
-        )
-
-        # substitute SBML-rateOf constructs
-        self._process_sbml_rate_of()
 
     def _process_sbml_rate_of(self) -> None:
         """Substitute any SBML-rateOf constructs in the model equations"""
@@ -1168,7 +961,7 @@ class DEModel:
                     # )
 
     def add_component(
-        self, component: ModelQuantity, insert_first: Optional[bool] = False
+        self, component: ModelQuantity, insert_first: bool | None = False
     ) -> None:
         """
         Adds a new ModelQuantity to the model.
@@ -1283,6 +1076,24 @@ class DEModel:
 
         self.add_component(cl)
         self._differential_states[ix].set_conservation_law(cl)
+
+    def add_spline(self, spline: AbstractSpline, spline_expr: sp.Expr) -> None:
+        """Add a spline to the model.
+
+        :param spline:
+            Spline instance to be added
+        :param spline_expr:
+            Sympy function representation of `spline` from
+            ``spline.ode_model_symbol()``.
+        """
+        self._splines.append(spline)
+        self.add_component(
+            Expression(
+                identifier=spline.sbml_id,
+                name=str(spline.sbml_id),
+                value=spline_expr,
+            )
+        )
 
     def get_observable_transformations(self) -> list[ObservableTransformation]:
         """
@@ -1467,9 +1278,7 @@ class DEModel:
             self._generate_sparse_symbol(name)
         return self._sparseeqs[name]
 
-    def colptrs(
-        self, name: str
-    ) -> Union[list[sp.Number], list[list[sp.Number]]]:
+    def colptrs(self, name: str) -> list[sp.Number] | list[list[sp.Number]]:
         """
         Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
@@ -1486,9 +1295,7 @@ class DEModel:
             self._generate_sparse_symbol(name)
         return self._colptrs[name]
 
-    def rowvals(
-        self, name: str
-    ) -> Union[list[sp.Number], list[list[sp.Number]]]:
+    def rowvals(self, name: str) -> list[sp.Number] | list[list[sp.Number]]:
         """
         Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
@@ -1542,8 +1349,7 @@ class DEModel:
         """
         return set(
             chain.from_iterable(
-                state.get_free_symbols()
-                for state in self.states() + self.algebraic_equations()
+                state.get_free_symbols() for state in self.states()
             )
         )
 
@@ -2581,8 +2387,8 @@ class DEModel:
         name: str,
         x: str,
         y: str,
-        transpose_x: Optional[bool] = False,
-        sign: Optional[int] = 1,
+        transpose_x: bool | None = False,
+        sign: int | None = 1,
     ):
         """
         Creates a new symbolic variable according to a multiplication
@@ -2784,7 +2590,7 @@ class DEModel:
         self,
         root_found: sp.Expr,
         roots: list[Event],
-    ) -> Union[sp.Symbol, None]:
+    ) -> sp.Symbol | None:
         """
         Collects roots of Heaviside functions and events and stores them in
         the roots list. It checks for redundancy to not store symbolically
@@ -2958,13 +2764,13 @@ class DEExporter:
     def __init__(
         self,
         de_model: DEModel,
-        outdir: Optional[Union[Path, str]] = None,
-        verbose: Optional[Union[bool, int]] = False,
-        assume_pow_positivity: Optional[bool] = False,
-        compiler: Optional[str] = None,
-        allow_reinit_fixpar_initcond: Optional[bool] = True,
-        generate_sensitivity_code: Optional[bool] = True,
-        model_name: Optional[str] = "model",
+        outdir: Path | str | None = None,
+        verbose: bool | int | None = False,
+        assume_pow_positivity: bool | None = False,
+        compiler: str | None = None,
+        allow_reinit_fixpar_initcond: bool | None = True,
+        generate_sensitivity_code: bool | None = True,
+        model_name: str | None = "model",
     ):
         """
         Generate AMICI C++ files for the DE provided to the constructor.
@@ -4104,7 +3910,7 @@ class DEExporter:
             template_data,
         )
 
-    def set_paths(self, output_dir: Optional[Union[str, Path]] = None) -> None:
+    def set_paths(self, output_dir: str | Path | None = None) -> None:
         """
         Set output paths for the model and create if necessary
 
