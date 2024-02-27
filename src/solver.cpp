@@ -251,13 +251,14 @@ void Solver::setupSteadystate(
 }
 
 void Solver::updateAndReinitStatesAndSensitivities(Model* model) const {
-    model->fx0_fixedParameters(x_);
-    reInit(t_, x_, dx_);
+    model->reinitialize(
+        t_, x_, sx_, getSensitivityOrder() >= SensitivityOrder::first
+    );
 
-    if (getSensitivityOrder() >= SensitivityOrder::first) {
-        model->fsx0_fixedParameters(sx_, x_);
-        if (getSensitivityMethod() == SensitivityMethod::forward)
-            sensReInit(sx_, sdx_);
+    reInit(t_, x_, dx_);
+    if (getSensitivityOrder() >= SensitivityOrder::first
+        && getSensitivityMethod() == SensitivityMethod::forward) {
+        sensReInit(sx_, sdx_);
     }
 }
 

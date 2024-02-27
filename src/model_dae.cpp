@@ -31,7 +31,7 @@ void Model_DAE::fJSparse(
     realtype t, realtype cj, const_N_Vector x, const_N_Vector dx, SUNMatrix J
 ) {
     auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointerConst(x_pos));
+    fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);
         // python generated
@@ -122,7 +122,7 @@ void Model_DAE::fxdot(
     realtype t, const_N_Vector x, const_N_Vector dx, N_Vector xdot
 ) {
     auto x_pos = computeX_pos(x);
-    fw(t, N_VGetArrayPointerConst(x));
+    fw(t, N_VGetArrayPointerConst(x), false);
     N_VConst(0.0, xdot);
     fxdot(
         N_VGetArrayPointer(xdot), t, N_VGetArrayPointerConst(x_pos),
@@ -171,7 +171,7 @@ void Model_DAE::fdxdotdp(
         );
     } else {
         // matlab generated
-        fdwdp(t, N_VGetArrayPointerConst(x_pos));
+        fdwdp(t, N_VGetArrayPointerConst(x_pos), false);
 
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, derived_state_.dxdotdp.getNVector(ip));

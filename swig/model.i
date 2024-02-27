@@ -37,6 +37,7 @@ using namespace amici;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
 %ignore initializeStates;
+%ignore reinitialize;
 %ignore ModelState;
 %ignore getModelState;
 %ignore setModelState;

@@ -240,6 +240,18 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Re-initialize model properties after changing simulation context.
+     * @param t Timepoint
+     * @param x Reference to state variables
+     * @param sx Reference to state variable sensitivities
+     * @param computeSensitivities Flag indicating whether sensitivities are to
+     * be computed
+     */
+    void reinitialize(
+        realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
+    );
+
+    /**
      * @brief Initialize model properties.
      * @param xB Adjoint state variables
      * @param dxB Time derivative of adjoint states (DAE only)
@@ -1828,29 +1840,45 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Compute recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fw(realtype t, realtype const* x);
+    void fw(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute parameter derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdp(realtype t, realtype const* x);
+    void fdwdp(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute state derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdx(realtype t, realtype const* x);
+    void fdwdx(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute self derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdw(realtype t, realtype const* x);
+    void fdwdw(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute fx_rdata.

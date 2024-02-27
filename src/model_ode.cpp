@@ -29,7 +29,7 @@ void Model_ODE::fJSparse(
 
 void Model_ODE::fJSparse(realtype t, const_N_Vector x, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
-    fdwdx(t, N_VGetArrayPointerConst(x_pos));
+    fdwdx(t, N_VGetArrayPointerConst(x_pos), false);
     if (pythonGenerated) {
         auto JSparse = SUNMatrixWrapper(J);
         // python generated
@@ -143,7 +143,7 @@ void Model_ODE::fdxdotdw(realtype const t, const_N_Vector x) {
 
 void Model_ODE::fdxdotdp(realtype const t, const_N_Vector x) {
     auto x_pos = computeX_pos(x);
-    fdwdp(t, N_VGetArrayPointerConst(x_pos));
+    fdwdp(t, N_VGetArrayPointerConst(x_pos), false);
 
     if (pythonGenerated) {
         // python generated

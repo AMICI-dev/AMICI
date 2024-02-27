@@ -323,6 +323,31 @@ void Model::initialize(
 
     if (ne)
         initEvents(x, dx, roots_found);
+
+    // evaluate static expressions once
+    auto x_pos = computeX_pos(x);
+    fw(t0(), x_pos, true);
+    fdwdw(t0(), x_pos, true);
+    fdwdx(t0(), x_pos, true);
+    if (computeSensitivities) {
+        fdwdp(t0(), x_pos, true);
+    }
+}
+
+void Model::reinitialize(
+    realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
+) {
+    fx0_fixedParameters(x);
+
+    // re-evaluate static expressions once
+    auto x_pos = computeX_pos(x);
+    fw(t, x_pos, true);
+    fdwdw(t, x_pos, true);
+    fdwdx(t, x_pos, true);
+    if (computeSensitivities) {
+        fsx0_fixedParameters(sx, x);
+        fdwdp(t, x_pos, true);
+    }
 }
 
 void Model::initializeB(
@@ -1048,7 +1073,7 @@ void Model::requireSensitivitiesForAllParameters() {
 void Model::getExpression(
     gsl::span<realtype> w, realtype const t, AmiVector const& x
 ) {
-    fw(t, computeX_pos(x));
+    fw(t, computeX_pos(x), false);
     writeSlice(derived_state_.w_, w);
 }
 
@@ -1469,7 +1494,7 @@ void Model::addStateSensitivityEventUpdate(
     AmiVector const& xdot, AmiVector const& xdot_old,
     std::vector<realtype> const& stau
 ) {
-    fw(t, x_old.data());
+    fw(t, x_old.data(), false);
 
     for (int ip = 0; ip < nplist(); ip++) {
 
@@ -2040,7 +2065,7 @@ void Model::fy(realtype const t, AmiVector const& x) {
 
     derived_state_.y_.assign(ny, 0.0);
 
-    fw(t, x_pos);
+    fw(t, x_pos, false);
     fy(derived_state_.y_.data(), t, x_pos, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(),
        derived_state_.w_.data());
@@ -2059,8 +2084,8 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
     auto x_pos = computeX_pos(x);
 
     derived_state_.dydp_.assign(ny * nplist(), 0.0);
-    fw(t, x_pos);
-    fdwdp(t, x_pos);
+    fw(t, x_pos, false);
+    fdwdp(t, x_pos, false);
 
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
@@ -2094,8 +2119,8 @@ void Model::fdydx(realtype const t, AmiVector const& x) {
 
     derived_state_.dydx_.assign(ny * nx_solver, 0.0);
 
-    fw(t, x_pos);
-    fdwdx(t, x_pos);
+    fw(t, x_pos, false);
+    fdwdx(t, x_pos, false);
     fdydx(
         derived_state_.dydx_.data(), t, x_pos, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
@@ -2840,38 +2865,42 @@ void Model::fsspl(realtype const t) {
     }
 }
 
-void Model::fw(realtype const t, realtype const* x) {
-    std::fill(derived_state_.w_.begin(), derived_state_.w_.end(), 0.0);
+void Model::fw(realtype const t, realtype const* x, bool include_static) {
+    if (include_static) {
+        std::fill(derived_state_.w_.begin(), derived_state_.w_.end(), 0.0);
+    }
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
-       state_.spl_.data());
+       state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
         checkFinite(derived_state_.w_, ModelQuantity::w);
     }
 }
 
-void Model::fdwdp(realtype const t, realtype const* x) {
+void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
     if (!nw)
         return;
 
-    fw(t, x);
+    fw(t, x, include_static);
     derived_state_.dwdp_.zero();
     if (pythonGenerated) {
-        if (!dwdp_hierarchical_.at(0).capacity())
+        if (!ndwdp)
             return;
         fsspl(t);
-        fdwdw(t, x);
-        dwdp_hierarchical_.at(0).zero();
-        fdwdp_colptrs(dwdp_hierarchical_.at(0));
-        fdwdp_rowvals(dwdp_hierarchical_.at(0));
+        fdwdw(t, x, include_static);
+        if (include_static) {
+            dwdp_hierarchical_.at(0).zero();
+            fdwdp_colptrs(dwdp_hierarchical_.at(0));
+            fdwdp_rowvals(dwdp_hierarchical_.at(0));
+        }
         fdwdp(
             dwdp_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
             state_.stotal_cl.data(), state_.spl_.data(),
-            derived_state_.sspl_.data()
+            derived_state_.sspl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
@@ -2901,25 +2930,29 @@ void Model::fdwdp(realtype const t, realtype const* x) {
     }
 }
 
-void Model::fdwdx(realtype const t, realtype const* x) {
+void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
     if (!nw)
         return;
 
-    fw(t, x);
+    fw(t, x, include_static);
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
         if (!dwdx_hierarchical_.at(0).capacity())
             return;
-        fdwdw(t, x);
-        dwdx_hierarchical_.at(0).zero();
-        fdwdx_colptrs(dwdx_hierarchical_.at(0));
-        fdwdx_rowvals(dwdx_hierarchical_.at(0));
+
+        fdwdw(t, x, include_static);
+
+        if (include_static) {
+            dwdx_hierarchical_.at(0).zero();
+            fdwdx_colptrs(dwdx_hierarchical_.at(0));
+            fdwdx_rowvals(dwdx_hierarchical_.at(0));
+        }
         fdwdx(
             dwdx_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.spl_.data()
+            state_.spl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
@@ -2947,16 +2980,20 @@ void Model::fdwdx(realtype const t, realtype const* x) {
     }
 }
 
-void Model::fdwdw(realtype const t, realtype const* x) {
-    if (!nw || !dwdw_.capacity())
+void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
+    if (!ndwdw)
         return;
-    dwdw_.zero();
-    fdwdw_colptrs(dwdw_);
-    fdwdw_rowvals(dwdw_);
+
+    if (include_static) {
+        dwdw_.zero();
+        fdwdw_colptrs(dwdw_);
+        fdwdw_rowvals(dwdw_);
+    }
+
     fdwdw(
         dwdw_.data(), t, x, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
-        derived_state_.w_.data(), state_.total_cl.data()
+        derived_state_.w_.data(), state_.total_cl.data(), include_static
     );
 
     if (always_check_finite_) {
