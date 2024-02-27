@@ -13,6 +13,7 @@ from .import_utils import (
     generate_measurement_symbol,
     generate_regularization_symbol,
 )
+from .constants import SymbolId
 
 __all__ = [
     "ConservationLaw",
@@ -732,3 +733,22 @@ class Event(ModelQuantity):
                 "This event does not trigger at a fixed timepoint."
             )
         return self._t_root[0]
+
+
+# defines the type of some attributes in DEModel
+symbol_to_type = {
+    SymbolId.SPECIES: DifferentialState,
+    SymbolId.ALGEBRAIC_STATE: AlgebraicState,
+    SymbolId.ALGEBRAIC_EQUATION: AlgebraicEquation,
+    SymbolId.PARAMETER: Parameter,
+    SymbolId.FIXED_PARAMETER: Constant,
+    SymbolId.OBSERVABLE: Observable,
+    SymbolId.EVENT_OBSERVABLE: EventObservable,
+    SymbolId.SIGMAY: SigmaY,
+    SymbolId.SIGMAZ: SigmaZ,
+    SymbolId.LLHY: LogLikelihoodY,
+    SymbolId.LLHZ: LogLikelihoodZ,
+    SymbolId.LLHRZ: LogLikelihoodRZ,
+    SymbolId.EXPRESSION: Expression,
+    SymbolId.EVENT: Event,
+}
