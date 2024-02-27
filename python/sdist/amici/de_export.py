@@ -3848,12 +3848,14 @@ class DEExporter:
     def _write_c_make_file(self):
         """Write CMake ``CMakeLists.txt`` file for this model."""
         sources = "\n".join(
-            f + " "
-            for f in os.listdir(self.model_path)
-            if f.endswith(
-                (".cpp", ".h"),
+            sorted(
+                f + " "
+                for f in os.listdir(self.model_path)
+                if f.endswith(
+                    (".cpp", ".h"),
+                )
+                and f != "main.cpp"
             )
-            and f != "main.cpp"
         )
 
         template_data = {
