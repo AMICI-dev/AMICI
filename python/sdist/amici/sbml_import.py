@@ -32,7 +32,7 @@ from .de_export import (
     DEExporter,
     DEModel,
 )
-from .de_model import symbol_to_type, Expression
+from .de_model_components import symbol_to_type, Expression
 from .sympy_utils import smart_is_zero_matrix, smart_multiply
 from .import_utils import (
     RESERVED_SYMBOLS,
