@@ -62,7 +62,7 @@ from .cxxcodeprinter import (
     get_switch_statement,
     csc_matrix,
 )
-from .de_model import *
+from .de_model_components import *
 from .import_utils import (
     ObservableTransformation,
     SBMLException,
@@ -3476,12 +3476,14 @@ class DEExporter:
     def _write_c_make_file(self):
         """Write CMake ``CMakeLists.txt`` file for this model."""
         sources = "\n".join(
-            f + " "
-            for f in os.listdir(self.model_path)
-            if f.endswith(
-                (".cpp", ".h"),
+            sorted(
+                f + " "
+                for f in os.listdir(self.model_path)
+                if f.endswith(
+                    (".cpp", ".h"),
+                )
+                and f != "main.cpp"
             )
-            and f != "main.cpp"
         )
 
         template_data = {

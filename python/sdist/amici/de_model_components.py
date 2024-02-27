@@ -199,7 +199,7 @@ class AlgebraicEquation(ModelQuantity):
         Create a new AlgebraicEquation instance.
 
         :param value:
-            formula of the algebraic equation, solution is given by
+            Formula of the algebraic equation, the solution is given by
             ``formula == 0``
         """
         super().__init__(sp.Symbol(identifier), identifier, value)

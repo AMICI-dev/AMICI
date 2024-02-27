@@ -1,5 +1,5 @@
 import sympy as sp
-from amici.de_model import Event
+from amici.de_model_components import Event
 from amici.import_utils import amici_time_symbol
 from amici.testing import skip_on_valgrind
 
