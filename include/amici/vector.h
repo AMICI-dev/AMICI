@@ -11,6 +11,18 @@
 #include <gsl/gsl-lite.hpp>
 
 namespace amici {
+class AmiVector;
+}
+
+// for serialization friend
+namespace boost {
+namespace serialization {
+template <class Archive>
+void serialize(Archive& ar, amici::AmiVector& s, unsigned int version);
+}
+} // namespace boost
+
+namespace amici {
 
 /** Since const N_Vector is not what we want */
 using const_N_Vector
@@ -54,7 +66,7 @@ class AmiVector {
      * @brief constructor from gsl::span,
      * @param rvec vector from which the data will be copied
      */
-    explicit AmiVector(gsl::span<realtype> rvec)
+    explicit AmiVector(gsl::span<realtype const> rvec)
         : AmiVector(std::vector<realtype>(rvec.begin(), rvec.end())) {}
 
     /**
@@ -212,6 +224,17 @@ class AmiVector {
      * @brief Take absolute value (in-place)
      */
     void abs() { N_VAbs(getNVector(), getNVector()); };
+
+    /**
+     * @brief Serialize AmiVector (see boost::serialization::serialize)
+     * @param ar Archive to serialize to
+     * @param s Data to serialize
+     * @param version Version number
+     */
+    template <class Archive>
+    friend void boost::serialization::serialize(
+        Archive& ar, AmiVector& s, unsigned int version
+    );
 
   private:
     /** main data storage */
@@ -405,6 +428,16 @@ namespace gsl {
 inline span<realtype> make_span(N_Vector nv) {
     return span<realtype>(N_VGetArrayPointer(nv), N_VGetLength_Serial(nv));
 }
+
+/**
+ * @brief Create span from N_Vector
+ * @param nv
+ *
+ */
+inline span<realtype const> make_span(amici::AmiVector const& av) {
+    return make_span(av.getVector());
+}
+
 } // namespace gsl
 
 #endif /* AMICI_VECTOR_H */

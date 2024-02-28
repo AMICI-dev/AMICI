@@ -222,8 +222,8 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
         rdata->processSimulationObjects(
-            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr, posteq.get(),
-            model, solver, edata
+            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr,
+            posteq.get(), model, solver, edata
         );
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;

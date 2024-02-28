@@ -722,3 +722,49 @@ def test_hardcode_parameters(simple_sbml_model):
             constant_parameters=["p1"],
             hardcode_symbols=["p1"],
         )
+
+
+def test_constraints():
+    """Test non-negativity constraint handling."""
+    from amici.antimony_import import antimony2amici
+
+    ant_model = """
+    model test_non_negative_species
+        species A = 10
+        species B = 0
+        # R1: A => B; k1f * sqrt(A)
+        R1: A => B; k1f * max(0, A)
+        k1f = 1e10
+    end
+    """
+    module_name = "test_non_negative_species"
+    with TemporaryDirectory(prefix=module_name) as outdir:
+        antimony2amici(
+            ant_model,
+            model_name=module_name,
+            output_dir=outdir,
+        )
+        model_module = amici.import_model_module(
+            module_name=module_name, module_path=outdir
+        )
+        amici_model = model_module.getModel()
+        amici_model.setTimepoints(np.linspace(0, 100, 200))
+        amici_solver = amici_model.getSolver()
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        # should be non-negative in theory, but is expected to become negative
+        #  in practice
+        assert np.any(rdata.x < 0)
+
+        amici_solver.setRelativeTolerance(1e-14)
+        amici_solver.setConstraints([1.0, 1.0])
+        rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+        assert rdata.status == amici.AMICI_SUCCESS
+        assert np.all(rdata.x >= 0)
+        assert np.all(
+            np.sum(rdata.x, axis=1) - np.sum(rdata.x[0])
+            < max(
+                np.sum(rdata.x[0]) * amici_solver.getRelativeTolerance(),
+                amici_solver.getAbsoluteTolerance(),
+            )
+        )

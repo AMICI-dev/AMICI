@@ -267,6 +267,20 @@ void IDASolver::apply_max_conv_fails() const {
         throw IDAException(status, "IDASetMaxConvFails");
 }
 
+void IDASolver::apply_constraints() const {
+    Solver::apply_constraints();
+
+    if (!constraints_.getLength()) {
+        return;
+    }
+
+    int status
+        = IDASetConstraints(solver_memory_.get(), constraints_.getNVector());
+    if (status != IDA_SUCCESS) {
+        throw IDAException(status, "IDASetConstraints");
+    }
+}
+
 Solver* IDASolver::clone() const { return new IDASolver(*this); }
 
 void IDASolver::allocateSolver() const {

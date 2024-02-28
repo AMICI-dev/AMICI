@@ -5,6 +5,7 @@
 #include "amici/rdata.h"
 #include "amici/solver.h"
 #include "amici/solver_cvodes.h"
+#include "amici/vector.h"
 
 #include <chrono>
 
@@ -87,6 +88,7 @@ void serialize(Archive& ar, amici::Solver& s, unsigned int const /*version*/) {
     ar & s.maxtime_;
     ar & s.max_conv_fails_;
     ar & s.max_nonlin_iters_;
+    ar & s.constraints_;
 }
 
 /**
@@ -276,6 +278,26 @@ void serialize(
     ar & m.nJ;
     ar & m.ubw;
     ar & m.lbw;
+}
+
+/**
+ * @brief Serialize AmiVector to a boost archive
+ * @param ar archive
+ * @param v AmiVector
+ * @param size Size of p
+ */
+template <class Archive>
+void serialize(
+    Archive& ar, amici::AmiVector& v, unsigned int const /*version*/
+) {
+    if (Archive::is_loading::value) {
+        std::vector<realtype> tmp;
+        ar & tmp;
+        v = amici::AmiVector(tmp);
+    } else {
+        auto tmp = v.getVector();
+        ar & tmp;
+    }
 }
 #endif
 } // namespace serialization

@@ -270,6 +270,20 @@ void CVodeSolver::apply_max_conv_fails() const {
         throw CvodeException(status, "CVodeSetMaxConvFails");
 }
 
+void CVodeSolver::apply_constraints() const {
+    Solver::apply_constraints();
+
+    if (!constraints_.getLength()) {
+        return;
+    }
+
+    int status
+        = CVodeSetConstraints(solver_memory_.get(), constraints_.getNVector());
+    if (status != CV_SUCCESS) {
+        throw CvodeException(status, "CVodeSetConstraints");
+    }
+}
+
 Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {

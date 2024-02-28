@@ -905,6 +905,10 @@ void writeSolverSettingsToHDF5(
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "max_conv_fails", &ibuffer, 1
     );
+
+    createAndWriteDouble1DDataset(
+        file, hdf5Location + "/constraints", solver.getConstraints()
+    );
 }
 
 void readSolverSettingsFromHDF5(
@@ -1126,6 +1130,12 @@ void readSolverSettingsFromHDF5(
     if (attributeExists(file, datasetPath, "max_conv_fails")) {
         solver.setMaxConvFails(
             getIntScalarAttribute(file, datasetPath, "max_conv_fails")
+        );
+    }
+
+    if (locationExists(file, datasetPath + "/constraints")) {
+        solver.setConstraints(
+            getDoubleDataset1D(file, datasetPath + "/constraints")
         );
     }
 }
