@@ -27,7 +27,6 @@ import sympy as sp
 from .de_export import (
     Constant,
     DEExporter,
-    DEModel,
     DifferentialState,
     Expression,
     LogLikelihoodY,
@@ -35,6 +34,7 @@ from .de_export import (
     Parameter,
     SigmaY,
 )
+from .de_model import DEModel
 from .import_utils import (
     _get_str_symbol_identifiers,
     _parse_special_functions,

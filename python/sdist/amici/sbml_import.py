@@ -27,10 +27,10 @@ import sympy as sp
 from sympy.logic.boolalg import BooleanFalse, BooleanTrue
 
 from . import has_clibs
+from .de_model import DEModel
 from .constants import SymbolId
 from .de_export import (
     DEExporter,
-    DEModel,
 )
 from .de_model_components import symbol_to_type, Expression
 from .sympy_utils import smart_is_zero_matrix, smart_multiply
