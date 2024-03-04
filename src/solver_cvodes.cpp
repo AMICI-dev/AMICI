@@ -927,7 +927,7 @@ fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB,
     Expects(model);
 
     model->fJB(t, x, xB, xBdot, JB);
-    return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB);
+    return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB, t);
 }
 
 /**
@@ -978,7 +978,7 @@ static int fJSparseB(
     Expects(model);
 
     model->fJSparseB(t, x, xB, xBdot, JB);
-    return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB);
+    return model->checkFinite(gsl::make_span(JB), ModelQuantity::JB, t);
 }
 
 /**
@@ -1041,7 +1041,7 @@ fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector /*xdot*/,
     Expects(model);
 
     model->fJv(v, Jv, t, x);
-    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv);
+    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv, t);
 }
 
 /**
@@ -1067,7 +1067,7 @@ static int fJvB(
     Expects(model);
 
     model->fJvB(vB, JvB, t, x, xB);
-    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB);
+    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB, t);
 }
 
 /**
@@ -1094,7 +1094,7 @@ static int froot(realtype t, N_Vector x, realtype* root, void* user_data) {
         model->froot(t, x, gsl::make_span<realtype>(root, model->ne_solver));
     }
     return model->checkFinite(
-        gsl::make_span<realtype>(root, model->ne_solver), ModelQuantity::root
+        gsl::make_span<realtype>(root, model->ne_solver), ModelQuantity::root, t
     );
 }
 
@@ -1119,7 +1119,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void* user_data) {
     }
 
     if (t > 1e200
-        && !model->checkFinite(gsl::make_span(x), ModelQuantity::xdot)) {
+        && !model->checkFinite(gsl::make_span(x), ModelQuantity::xdot, t)) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
            to fxdot from which we typically cannot recover. To save time
            on normal execution, we do not always want to check finiteness
@@ -1128,7 +1128,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void* user_data) {
     }
 
     model->fxdot(t, x, xdot);
-    return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot);
+    return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot, t);
 }
 
 /**
@@ -1154,7 +1154,7 @@ fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, void* user_data) {
     }
 
     model->fxBdot(t, x, xB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot);
+    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot, t);
 }
 
 /**
@@ -1174,7 +1174,7 @@ fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot, void* user_data) {
     Expects(model);
 
     model->fqBdot(t, x, xB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot);
+    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot, t);
 }
 
 /**
@@ -1193,7 +1193,9 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void* user_data) {
     Expects(model);
 
     model->fxBdot_ss(t, xB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot_ss);
+    return model->checkFinite(
+        gsl::make_span(xBdot), ModelQuantity::xBdot_ss, t
+    );
 }
 
 /**
@@ -1212,7 +1214,9 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void* user_data) {
     Expects(model);
 
     model->fqBdot_ss(t, xB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot_ss);
+    return model->checkFinite(
+        gsl::make_span(qBdot), ModelQuantity::qBdot_ss, t
+    );
 }
 
 /**
@@ -1228,8 +1232,8 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void* user_data) {
  * @return status flag indicating successful execution
  */
 static int fJSparseB_ss(
-    realtype /*t*/, N_Vector /*x*/, N_Vector xBdot, SUNMatrix JB,
-    void* user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/
+    realtype t, N_Vector /*x*/, N_Vector xBdot, SUNMatrix JB, void* user_data,
+    N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/
 ) {
     auto typed_udata = static_cast<CVodeSolver::user_data_type*>(user_data);
     Expects(typed_udata);
@@ -1238,7 +1242,7 @@ static int fJSparseB_ss(
 
     model->fJSparseB_ss(JB);
     return model->checkFinite(
-        gsl::make_span(xBdot), ModelQuantity::JSparseB_ss
+        gsl::make_span(xBdot), ModelQuantity::JSparseB_ss, t
     );
 }
 
@@ -1267,7 +1271,7 @@ static int fsxdot(
     Expects(model);
 
     model->fsxdot(t, x, ip, sx, sxdot);
-    return model->checkFinite(gsl::make_span(sxdot), ModelQuantity::sxdot);
+    return model->checkFinite(gsl::make_span(sxdot), ModelQuantity::sxdot, t);
 }
 
 bool operator==(CVodeSolver const& a, CVodeSolver const& b) {
