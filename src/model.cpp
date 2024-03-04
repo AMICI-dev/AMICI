@@ -883,11 +883,11 @@ void Model::setStateIsNonNegative(std::vector<bool> const& nonNegative) {
         // in case of conservation laws
         return;
     }
-    if (state_is_non_negative_.size() != gsl::narrow<unsigned long>(nx_rdata)) {
+    if (nonNegative.size() != gsl::narrow<unsigned long>(nx_rdata)) {
         throw AmiException(
             "Dimension of input stateIsNonNegative (%u) does "
             "not agree with number of state variables (%d)",
-            state_is_non_negative_.size(), nx_rdata
+            nonNegative.size(), nx_rdata
         );
     }
     state_is_non_negative_ = nonNegative;
