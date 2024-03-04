@@ -518,14 +518,33 @@ def _get_fixed_parameters_sbml(
         petab_problem, non_estimated_parameters_as_constants
     )
 
-    # exclude targets of rules or initial assignments
+    # exclude targets of rules or initial assignments that are not numbers
     sbml_model = petab_problem.model.sbml_model
+    parser_settings = libsbml.L3ParserSettings(
+        sbml_model,
+        libsbml.L3P_PARSE_LOG_AS_LOG10,
+        libsbml.L3P_EXPAND_UNARY_MINUS,
+        libsbml.L3P_NO_UNITS,
+        libsbml.L3P_AVOGADRO_IS_CSYMBOL,
+        libsbml.L3P_COMPARE_BUILTINS_CASE_INSENSITIVE,
+        None,
+        libsbml.L3P_MODULO_IS_PIECEWISE,
+    )
+
     for fixed_parameter in fixed_parameters.copy():
         # check global parameters
-        if sbml_model.getInitialAssignmentBySymbol(
-            fixed_parameter
-        ) or sbml_model.getRuleByVariable(fixed_parameter):
+        if sbml_model.getRuleByVariable(fixed_parameter):
             fixed_parameters.remove(fixed_parameter)
+            continue
+        if ia := sbml_model.getInitialAssignmentBySymbol(fixed_parameter):
+            sym_math = sp.sympify(
+                libsbml.formulaToL3StringWithSettings(
+                    ia.getMath(), parser_settings
+                )
+            )
+            if not sym_math.is_Number:
+                fixed_parameters.remove(fixed_parameter)
+                continue
 
     return list(sorted(fixed_parameters))
 

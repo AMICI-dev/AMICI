@@ -187,7 +187,7 @@ class SbmlImporter:
 
         self._reset_symbols()
 
-        # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
+        # https://sbml.org/software/libsbml/5.18.0/docs/formatted/python-api/classlibsbml_1_1_l3_parser_settings.html#ab30d7ed52ca24cbb842d0a7fed7f4bfd
         # all defaults except disable unit parsing
         self.sbml_parser_settings = sbml.L3ParserSettings(
             self.sbml,
