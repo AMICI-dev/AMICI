@@ -188,9 +188,7 @@ void NewtonSolverSparse::prepareLinearSystemB(
     Model& model, SimulationState const& state
 ) {
     /* Get sparse Jacobian */
-    model.fJSparseB(
-        state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_
-    );
+    model.fJSparseB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, Jtmp_);
     Jtmp_.refresh();
     auto status = SUNLinSolSetup_KLU(linsol_, Jtmp_);
     if (status != SUNLS_SUCCESS)

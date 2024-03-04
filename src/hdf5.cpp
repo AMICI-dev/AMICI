@@ -895,6 +895,16 @@ void writeSolverSettingsToHDF5(
         file.getId(), hdf5Location.c_str(), "check_sensi_steadystate_conv",
         &ibuffer, 1
     );
+
+    ibuffer = static_cast<int>(solver.getMaxNonlinIters());
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "max_nonlin_iters", &ibuffer, 1
+    );
+
+    ibuffer = static_cast<int>(solver.getMaxConvFails());
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "max_conv_fails", &ibuffer, 1
+    );
 }
 
 void readSolverSettingsFromHDF5(
@@ -1105,6 +1115,18 @@ void readSolverSettingsFromHDF5(
         solver.setSensiSteadyStateCheck(getIntScalarAttribute(
             file, datasetPath, "check_sensi_steadystate_conv"
         ));
+    }
+
+    if (attributeExists(file, datasetPath, "max_nonlin_iters")) {
+        solver.setMaxNonlinIters(
+            getIntScalarAttribute(file, datasetPath, "max_nonlin_iters")
+        );
+    }
+
+    if (attributeExists(file, datasetPath, "max_conv_fails")) {
+        solver.setMaxConvFails(
+            getIntScalarAttribute(file, datasetPath, "max_conv_fails")
+        );
     }
 }
 

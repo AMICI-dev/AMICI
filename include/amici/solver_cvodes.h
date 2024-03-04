@@ -249,6 +249,10 @@ class CVodeSolver : public Solver {
     void setJacTimesVecFnB(int which) const override;
 
     void setSparseJacFn_ss() const override;
+
+    void apply_max_nonlin_iters() const override;
+
+    void apply_max_conv_fails() const override;
 };
 
 } // namespace amici

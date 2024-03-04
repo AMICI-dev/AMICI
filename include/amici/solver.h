@@ -937,6 +937,34 @@ class Solver {
     }
 
     /**
+     * @brief Set the maximum number of nonlinear solver iterations permitted
+     * per step.
+     * @param max_nonlin_iters maximum number of nonlinear solver iterations
+     */
+    void setMaxNonlinIters(int max_nonlin_iters);
+
+    /**
+     * @brief Get the maximum number of nonlinear solver iterations permitted
+     * per step.
+     * @return maximum number of nonlinear solver iterations
+     */
+    int getMaxNonlinIters() const;
+
+    /**
+     * @brief Set the maximum number of nonlinear solver convergence failures
+     * permitted per step.
+     * @param max_conv_fails maximum number of nonlinear solver convergence
+     */
+    void setMaxConvFails(int max_conv_fails);
+
+    /**
+     * @brief Get the maximum number of nonlinear solver convergence failures
+     * permitted per step.
+     * @return maximum number of nonlinear solver convergence
+     */
+    int getMaxConvFails() const;
+
+    /**
      * @brief Serialize Solver (see boost::serialization::serialize)
      * @param ar Archive to serialize to
      * @param s Data to serialize
@@ -1712,6 +1740,18 @@ class Solver {
         SensitivityMethod const sensi_meth, bool preequilibration
     ) const;
 
+    /**
+     * @brief Apply the maximum number of nonlinear solver iterations permitted
+     * per step.
+     */
+    virtual void apply_max_nonlin_iters() const = 0;
+
+    /**
+     * @brief Apply the maximum number of nonlinear solver convergence failures
+     * permitted per step.
+     */
+    virtual void apply_max_conv_fails() const = 0;
+
     /** state (dimension: nx_solver) */
     mutable AmiVector x_{0};
 
@@ -1843,6 +1883,13 @@ class Solver {
     /** whether sensitivities should be checked for convergence to steadystate
      */
     bool check_sensi_steadystate_conv_{true};
+
+    /** Maximum number of nonlinear solver iterations permitted per step */
+    int max_nonlin_iters_{3};
+
+    /** Maximum number of nonlinear solver convergence failures permitted per
+     *  step */
+    int max_conv_fails_{10};
 
     /** CPU time, forward solve */
     mutable realtype cpu_time_{0.0};

@@ -44,6 +44,8 @@ Solver::Solver(Solver const& other)
     , rdata_mode_(other.rdata_mode_)
     , newton_step_steadystate_conv_(other.newton_step_steadystate_conv_)
     , check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_)
+    , max_nonlin_iters_(other.max_nonlin_iters_)
+    , max_conv_fails_(other.max_conv_fails_)
     , maxstepsB_(other.maxstepsB_)
     , sensi_(other.sensi_) {}
 
@@ -190,6 +192,9 @@ void Solver::setup(
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if (model->nt() > 1)
         calcIC(model->getTimepoint(1));
+
+    apply_max_nonlin_iters();
+    apply_max_conv_fails();
 
     cpu_time_ = 0.0;
     cpu_timeB_ = 0.0;
@@ -553,7 +558,9 @@ bool operator==(Solver const& a, Solver const& b) {
                == b.newton_step_steadystate_conv_)
            && (a.check_sensi_steadystate_conv_
                == b.check_sensi_steadystate_conv_)
-           && (a.rdata_mode_ == b.rdata_mode_);
+           && (a.rdata_mode_ == b.rdata_mode_)
+           && (a.max_conv_fails_ == b.max_conv_fails_)
+           && (a.max_nonlin_iters_ == b.max_nonlin_iters_);
 }
 
 void Solver::applyTolerances() const {
@@ -665,6 +672,24 @@ void Solver::checkSensitivityMethod(
     if (!preequilibration && sensi_meth != sensi_meth_)
         resetMutableMemory(nx(), nplist(), nquad());
 }
+
+void Solver::setMaxNonlinIters(int max_nonlin_iters) {
+    if (max_nonlin_iters < 0)
+        throw AmiException("max_nonlin_iters must be a non-negative number");
+
+    max_nonlin_iters_ = max_nonlin_iters;
+}
+
+int Solver::getMaxNonlinIters() const { return max_nonlin_iters_; }
+
+void Solver::setMaxConvFails(int max_conv_fails) {
+    if (max_conv_fails < 0)
+        throw AmiException("max_conv_fails must be a non-negative number");
+
+    max_conv_fails_ = max_conv_fails;
+}
+
+int Solver::getMaxConvFails() const { return max_conv_fails_; }
 
 int Solver::getNewtonMaxSteps() const { return newton_maxsteps_; }
 

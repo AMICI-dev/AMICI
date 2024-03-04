@@ -257,6 +257,19 @@ void CVodeSolver::setSparseJacFn_ss() const {
         throw CvodeException(status, "CVodeSetJacFn");
 }
 
+void CVodeSolver::apply_max_nonlin_iters() const {
+    int status
+        = CVodeSetMaxNonlinIters(solver_memory_.get(), getMaxNonlinIters());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetMaxNonlinIters");
+}
+
+void CVodeSolver::apply_max_conv_fails() const {
+    int status = CVodeSetMaxConvFails(solver_memory_.get(), getMaxConvFails());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetMaxConvFails");
+}
+
 Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {

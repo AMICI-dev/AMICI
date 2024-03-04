@@ -254,6 +254,19 @@ void IDASolver::setSparseJacFn_ss() const {
         throw IDAException(status, "IDASetJacFn");
 }
 
+void IDASolver::apply_max_nonlin_iters() const {
+    int status
+        = IDASetMaxNonlinIters(solver_memory_.get(), getMaxNonlinIters());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetMaxNonlinIters");
+}
+
+void IDASolver::apply_max_conv_fails() const {
+    int status = IDASetMaxConvFails(solver_memory_.get(), getMaxConvFails());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetMaxConvFails");
+}
+
 Solver* IDASolver::clone() const { return new IDASolver(*this); }
 
 void IDASolver::allocateSolver() const {
