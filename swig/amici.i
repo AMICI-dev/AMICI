@@ -235,6 +235,14 @@ def __repr__(self):
 %}
 };
 
+%extend amici::LogItem {
+%pythoncode %{
+def __repr__(self):
+    return (f"{self.__class__.__name__}(severity={self.severity}, "
+        f"identifier={self.identifier!r}, message={self.message!r})")
+%}
+};
+
 
 // Convert integer values to enum class
 // defeats the purpose of enum class, but didn't find a better way to allow for

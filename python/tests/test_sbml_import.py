@@ -368,7 +368,7 @@ def test_solver_reuse(model_steadystate_module):
         assert rdata1.status == amici.AMICI_SUCCESS
 
         for attr in rdata1:
-            if "time" in attr:
+            if "time" in attr or attr == "messages":
                 continue
 
             val1 = getattr(rdata1, attr)
