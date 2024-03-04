@@ -270,12 +270,10 @@ void IDASolver::apply_max_conv_fails() const {
 void IDASolver::apply_constraints() const {
     Solver::apply_constraints();
 
-    if (!constraints_.getLength()) {
-        return;
-    }
-
-    int status
-        = IDASetConstraints(solver_memory_.get(), constraints_.getNVector());
+    int status = IDASetConstraints(
+        solver_memory_.get(),
+        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+    );
     if (status != IDA_SUCCESS) {
         throw IDAException(status, "IDASetConstraints");
     }

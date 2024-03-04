@@ -273,12 +273,10 @@ void CVodeSolver::apply_max_conv_fails() const {
 void CVodeSolver::apply_constraints() const {
     Solver::apply_constraints();
 
-    if (!constraints_.getLength()) {
-        return;
-    }
-
-    int status
-        = CVodeSetConstraints(solver_memory_.get(), constraints_.getNVector());
+    int status = CVodeSetConstraints(
+        solver_memory_.get(),
+        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+    );
     if (status != CV_SUCCESS) {
         throw CvodeException(status, "CVodeSetConstraints");
     }
