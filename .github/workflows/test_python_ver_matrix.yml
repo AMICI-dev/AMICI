@@ -50,10 +50,6 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
-    # until https://github.com/dateutil/dateutil >2.8.2 is released https://github.com/dateutil/dateutil/issues/1314
-    - run: source build/venv/bin/activate && pip3 install git+https://github.com/dateutil/dateutil.git@296d419fe6bf3b22897f8f210735ac9c4e1cb796
-      if: matrix.python-version == '3.12'
-
     # install pysb before sympy to allow for sympy>=1.12 (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
     - run: source build/venv/bin/activate && pip3 install git+https://github.com/pysb/pysb
 
