@@ -1654,6 +1654,9 @@ class Solver {
      */
     void applySensitivityTolerances() const;
 
+    /**
+     * @brief Apply the constraints to the solver.
+     */
     virtual void apply_constraints() const;
 
     /** pointer to solver memory block */

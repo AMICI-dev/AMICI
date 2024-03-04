@@ -284,7 +284,6 @@ void serialize(
  * @brief Serialize AmiVector to a boost archive
  * @param ar archive
  * @param v AmiVector
- * @param size Size of p
  */
 template <class Archive>
 void serialize(
