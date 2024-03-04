@@ -17,7 +17,7 @@ namespace std {
 
      pointer operator-> () const;
      pointer release ();
-     void reset (pointer __p=pointer());
+     void reset (pointer __p=std::unique_ptr<Type>::pointer());
      void swap (unique_ptr &__u);
      pointer get () const;
      operator bool () const;
