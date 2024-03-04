@@ -743,6 +743,7 @@ def test_constraints():
             ant_model,
             model_name=module_name,
             output_dir=outdir,
+            compute_conservation_laws=False,
         )
         model_module = amici.import_model_module(
             module_name=module_name, module_path=outdir
