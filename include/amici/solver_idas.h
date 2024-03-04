@@ -106,6 +106,8 @@ class IDASolver : public Solver {
 
     void setNonLinearSolverB(int which) const override;
 
+    realtype get_current_time() const override;
+
   protected:
     /**
      * @brief Postprocessing of the solver memory after a discontinuity

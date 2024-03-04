@@ -386,6 +386,17 @@ void CVodeSolver::setNonLinearSolverB(int const which) const {
         throw CvodeException(status, "CVodeSetNonlinearSolverB");
 }
 
+realtype CVodeSolver::get_current_time() const {
+    if (!solver_memory_)
+        return std::numeric_limits<realtype>::quiet_NaN();
+
+    realtype time;
+    int status = CVodeGetCurrentTime(solver_memory_.get(), &time);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeGetCurrentTime");
+    return time;
+}
+
 void CVodeSolver::setErrHandlerFn() const {
     int status = CVodeSetErrHandlerFn(
         solver_memory_.get(), wrapErrHandlerFn,

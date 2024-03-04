@@ -876,6 +876,17 @@ void IDASolver::setNonLinearSolverB(int which) const {
         throw CvodeException(status, "CVodeSetNonlinearSolverB");
 }
 
+realtype IDASolver::get_current_time() const {
+    if (!solver_memory_)
+        return std::numeric_limits<realtype>::quiet_NaN();
+
+    realtype time;
+    int status = IDAGetCurrentTime(solver_memory_.get(), &time);
+    if (status != IDA_SUCCESS)
+        throw CvodeException(status, "IDAGetCurrentTime");
+    return time;
+}
+
 /**
  * @brief Jacobian of xdot with respect to states x
  * @param N number of state variables

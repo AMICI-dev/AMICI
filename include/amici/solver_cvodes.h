@@ -91,6 +91,8 @@ class CVodeSolver : public Solver {
 
     void setNonLinearSolverB(int which) const override;
 
+    realtype get_current_time() const override;
+
   protected:
     void calcIC(realtype tout1) const override;
 

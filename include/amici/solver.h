@@ -965,6 +965,12 @@ class Solver {
     int getMaxConvFails() const;
 
     /**
+     * @brief Get the current time of the solver.
+     * @return internal time of the solver
+     */
+    virtual realtype get_current_time() const = 0;
+
+    /**
      * @brief Serialize Solver (see boost::serialization::serialize)
      * @param ar Archive to serialize to
      * @param s Data to serialize
