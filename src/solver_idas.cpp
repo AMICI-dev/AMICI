@@ -17,7 +17,7 @@
 namespace amici {
 
 /*
- * The following static members are callback function to CVODES.
+ * The following static members are callback function to IDAS.
  * Their signatures must not be changes.
  */
 
@@ -419,7 +419,7 @@ void IDASolver::reInitPostProcess(
 
     auto status = IDASetStopTime(ida_mem, tout);
     if (status != IDA_SUCCESS)
-        throw IDAException(status, "CVodeSetStopTime");
+        throw IDAException(status, "IDASetStopTime");
 
     status = IDASolve(
         ami_mem, tout, t, yout->getNVector(), ypout->getNVector(), IDA_ONE_STEP
@@ -835,7 +835,7 @@ void IDASolver::setNonLinearSolver() const {
         solver_memory_.get(), non_linear_solver_->get()
     );
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "CVodeSetNonlinearSolver");
+        throw IDAException(status, "IDASetNonlinearSolver");
 }
 
 void IDASolver::setNonLinearSolverSens() const {
@@ -865,7 +865,7 @@ void IDASolver::setNonLinearSolverSens() const {
     }
 
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "CVodeSolver::setNonLinearSolverSens");
+        throw IDAException(status, "IDASolver::setNonLinearSolverSens");
 }
 
 void IDASolver::setNonLinearSolverB(int which) const {
@@ -873,7 +873,7 @@ void IDASolver::setNonLinearSolverB(int which) const {
         solver_memory_.get(), which, non_linear_solver_B_->get()
     );
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "CVodeSetNonlinearSolverB");
+        throw IDAException(status, "IDASetNonlinearSolverB");
 }
 
 realtype IDASolver::get_current_time() const {
@@ -883,7 +883,7 @@ realtype IDASolver::get_current_time() const {
     realtype time;
     int status = IDAGetCurrentTime(solver_memory_.get(), &time);
     if (status != IDA_SUCCESS)
-        throw CvodeException(status, "IDAGetCurrentTime");
+        throw IDAException(status, "IDAGetCurrentTime");
     return time;
 }
 
