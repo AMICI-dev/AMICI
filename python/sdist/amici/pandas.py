@@ -410,6 +410,20 @@ def _fill_conditions_dict(
             ]
         else:
             datadict[par + "_presim"] = np.nan
+
+    for i_par, par in enumerate(
+        _get_names_or_ids(model, "Parameter", by_id=by_id)
+    ):
+        if len(edata.parameters):
+            datadict[par] = edata.parameters[i_par]
+        else:
+            datadict[par] = model.getParameters()[i_par]
+
+        if len(edata.pscale):
+            datadict[par + "_scale"] = edata.pscale[i_par]
+        else:
+            datadict[par + "_scale"] = model.getParameterScale()[i_par]
+
     return datadict
 
 
@@ -641,7 +655,7 @@ def constructEdataFromDataFrame(
         Model instance.
 
     :param condition:
-        pd.Series with FixedParameter Names/Ids as columns.
+        pd.Series with (Fixed)Parameter Names/Ids as columns.
         Preequilibration conditions may be specified by appending
         '_preeq' as suffix. Presimulation conditions may be specified by
         appending '_presim' as suffix.
@@ -678,6 +692,19 @@ def constructEdataFromDataFrame(
     edata.fixedParameters = (
         condition[_get_names_or_ids(model, "FixedParameter", by_id=by_id)]
         .astype(float)
+        .values
+    )
+
+    # fill in parameters
+    edata.parameters = (
+        condition[_get_names_or_ids(model, "Parameter", by_id=by_id)]
+        .astype(float)
+        .values
+    )
+
+    edata.pscale = (
+        condition[_get_names_or_ids(model, "ParameterScale", by_id=by_id)]
+        .astype(int)
         .values
     )
 
