@@ -122,7 +122,8 @@ void Model_ODE::fJDiag(
     AmiVector const& x, AmiVector const& /*dx*/
 ) {
     fJDiag(t, JDiag.getNVector(), x.getNVector());
-    if (checkFinite(JDiag.getVector(), ModelQuantity::JDiag) != AMICI_SUCCESS)
+    if (checkFinite(JDiag.getVector(), ModelQuantity::JDiag, t)
+        != AMICI_SUCCESS)
         throw AmiException("Evaluation of fJDiag failed!");
 }
 

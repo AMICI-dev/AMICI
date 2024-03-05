@@ -69,6 +69,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
     {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
+    {AMICI_LSETUP_FAIL, "AMICI_LSETUP_FAIL"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
@@ -222,8 +223,8 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
 
     try {
         rdata->processSimulationObjects(
-            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr, posteq.get(),
-            model, solver, edata
+            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr,
+            posteq.get(), model, solver, edata
         );
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
