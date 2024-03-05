@@ -1334,10 +1334,12 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param array
      * @param model_quantity The model quantity `array` corresponds to
+     * @param t Current timepoint
      * @return
      */
     int checkFinite(
-        gsl::span<realtype const> array, ModelQuantity model_quantity
+        gsl::span<realtype const> array, ModelQuantity model_quantity,
+        realtype t
     ) const;
     /**
      * @brief Check if the given array has only finite elements.
@@ -1347,11 +1349,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param array Flattened matrix
      * @param model_quantity The model quantity `array` corresponds to
      * @param num_cols Number of columns of the non-flattened matrix
+     * @param t Current timepoint
      * @return
      */
     int checkFinite(
         gsl::span<realtype const> array, ModelQuantity model_quantity,
-        size_t num_cols
+        size_t num_cols, realtype t
     ) const;
 
     /**
