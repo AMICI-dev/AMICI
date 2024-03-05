@@ -2115,7 +2115,7 @@ class DEModel:
         if isinstance(state, AlgebraicState):
             return False
 
-        return state.get_dt() == 0.0
+        return state.get_dt().is_zero
 
     def conservation_law_has_multispecies(self, tcl: ConservationLaw) -> bool:
         """
@@ -2179,7 +2179,7 @@ class DEModel:
             return None
 
         for root in roots:
-            if sp.simplify(root_found - root.get_val()) == 0:
+            if sp.simplify(root_found - root.get_val()).is_zero:
                 return root.get_id()
 
         # create an event for a new root function

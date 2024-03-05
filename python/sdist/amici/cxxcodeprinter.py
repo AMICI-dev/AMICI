@@ -339,7 +339,7 @@ def csc_matrix(
     for col in range(ncols):
         symbol_col_ptrs.append(idx)
         for row in range(nrows):
-            if matrix[row, col] == 0:
+            if matrix[row, col].is_zero:
                 continue
 
             symbol_row_vals.append(row)
