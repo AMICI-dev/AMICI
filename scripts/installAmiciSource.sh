@@ -13,6 +13,7 @@ venv_dir="${AMICI_PATH}/venv"
 # test install from setup.py
 set +e
 mkdir -p "${venv_dir}"
+pip3 install virtualenv
 python3 -m venv "${venv_dir}" --clear
 # in case this fails (usually due to missing ensurepip, try getting pip
 # manually
@@ -20,7 +21,7 @@ if [[ $? ]]; then
     set -e
     python3 -m venv "${venv_dir}" --clear --without-pip
     source "${venv_dir}/bin/activate"
-    get_pip=${AMICI_PATH}/build/get-pip.py
+    get_pip=${AMICI_PATH}/get-pip.py
     curl "https://bootstrap.pypa.io/get-pip.py" -o "${get_pip}"
     python3 "${get_pip}"
     rm "${get_pip}"
