@@ -452,6 +452,11 @@ def _get_extended_observable_cols(model: AmiciModel, by_id: bool) -> list[str]:
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
         ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
+        ]
         + _get_names_or_ids(model, "Observable", by_id=by_id)
         + [
             name + "_std"
@@ -485,6 +490,11 @@ def _get_observable_cols(model: AmiciModel, by_id: bool) -> list[str]:
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
         ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
+        ]
         + _get_names_or_ids(model, "Observable", by_id=by_id)
     )
 
@@ -514,6 +524,11 @@ def _get_state_cols(model: AmiciModel, by_id: bool) -> list[str]:
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
         ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
+        ]
         + _get_names_or_ids(model, "State", by_id=by_id)
     )
 
@@ -541,6 +556,11 @@ def _get_expression_cols(model: AmiciModel, by_id: bool) -> list[str]:
         + [
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
         ]
         + _get_names_or_ids(model, "Expression", by_id=by_id)
     )
@@ -703,9 +723,11 @@ def constructEdataFromDataFrame(
         .values
     )
 
-    edata.pscale = (
-        condition[par + "_scale"].astype(int)
-        for par in list(_get_names_or_ids(model, "Parameter", by_id=by_id))
+    edata.pscale = amici.parameterScalingFromIntVector(
+        [
+            amici.ParameterScaling(condition[par + "_scale"].astype(int))
+            for par in list(_get_names_or_ids(model, "Parameter", by_id=by_id))
+        ]
     )
 
     # fill in preequilibration parameters
@@ -794,6 +816,10 @@ def getEdataFromDataFrame(
             condition_parameters.append(par + "_preeq")
         if par + "_presim" in df.columns:
             condition_parameters.append(par + "_presim")
+    # parameters & scales
+    for par in _get_names_or_ids(model, "Parameter", by_id=by_id):
+        condition_parameters.append(par)
+        condition_parameters.append(par + "_scale")
     # presimulation time
     if "t_presim" in df.columns:
         condition_parameters.append("t_presim")
