@@ -15,7 +15,7 @@ if [ $# -eq 0 ]
   then
     # No arguments supplied, run all tests
     cd "${amici_path}"/python/tests
-    source "${amici_path}"/build/venv/bin/activate
+    source "${amici_path}"/venv/bin/activate
     command=(python -m pytest -vv --ignore-glob=*petab* -W 'ignore:Signature ')
     #                                                    ^ ignores the following warning that occurs only under valgrind,
     # e.g. `valgrind python -c "import h5py"`:

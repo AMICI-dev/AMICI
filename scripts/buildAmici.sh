@@ -25,7 +25,10 @@ else
 fi
 
 # required for build swig interface
-pip show numpy > /dev/null || python3 -m pip install numpy
+python3 -m venv "${amici_path}/venv"
+source "${amici_path}/venv/bin/activate"
+export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
+pip3 show numpy > /dev/null || python3 -m pip install numpy
 
 ${cmake} \
   -Wdev -DAMICI_CXX_OPTIONS="-Wall;-Wextra${extra_cxx_flags}" \

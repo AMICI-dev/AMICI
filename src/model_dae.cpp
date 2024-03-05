@@ -138,7 +138,8 @@ void Model_DAE::fJDiag(
     fJSparse(t, 0.0, x.getNVector(), dx.getNVector(), derived_state_.J_);
     derived_state_.J_.refresh();
     derived_state_.J_.to_diag(JDiag.getNVector());
-    if (checkFinite(JDiag.getVector(), ModelQuantity::JDiag) != AMICI_SUCCESS)
+    if (checkFinite(JDiag.getVector(), ModelQuantity::JDiag, t)
+        != AMICI_SUCCESS)
         throw AmiException("Evaluation of fJDiag failed!");
 }
 

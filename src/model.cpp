@@ -372,7 +372,7 @@ void Model::initializeStates(AmiVector& x) {
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 
-    checkFinite(x.getVector(), ModelQuantity::x0);
+    checkFinite(x.getVector(), ModelQuantity::x0, t0());
 }
 
 void Model::initializeSplines() {
@@ -1482,7 +1482,7 @@ void Model::addStateEventUpdate(
     );
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.deltax_, ModelQuantity::deltax);
+        checkFinite(derived_state_.deltax_, ModelQuantity::deltax, t);
     }
 
     // update
@@ -1536,7 +1536,7 @@ void Model::addAdjointStateEventUpdate(
     );
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB);
+        checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
     }
 
     // apply update
@@ -1582,7 +1582,7 @@ void Model::updateHeavisideB(int const* rootsfound) {
 }
 
 int Model::checkFinite(
-    gsl::span<realtype const> array, ModelQuantity model_quantity
+    gsl::span<realtype const> array, ModelQuantity model_quantity, realtype t
 ) const {
     auto it = std::find_if(array.begin(), array.end(), [](realtype x) {
         return !std::isfinite(x);
@@ -1654,23 +1654,27 @@ int Model::checkFinite(
         gsl_ExpectsDebug(false);
         model_quantity_str = std::to_string(static_cast<int>(model_quantity));
     }
-    if (logger)
+    if (logger) {
+        auto t_msg = std::isfinite(t)
+                         ? std::string(" at t=" + std::to_string(t) + " ")
+                         : std::string();
+
         logger->log(
             LogSeverity::warning, msg_id,
-            "AMICI encountered a %s value for %s[%i] (%s)",
+            "AMICI encountered a %s value for %s[%i] (%s)%s",
             non_finite_type.c_str(), model_quantity_str.c_str(),
-            gsl::narrow<int>(flat_index), element_id.c_str()
+            gsl::narrow<int>(flat_index), element_id.c_str(), t_msg.c_str()
         );
-
+    }
     // check upstream, without infinite recursion
     if (model_quantity != ModelQuantity::k && model_quantity != ModelQuantity::p
         && model_quantity != ModelQuantity::ts) {
-        checkFinite(state_.fixedParameters, ModelQuantity::k);
-        checkFinite(state_.unscaledParameters, ModelQuantity::p);
-        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
+        checkFinite(state_.fixedParameters, ModelQuantity::k, t);
+        checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
+        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
         if (!always_check_finite_ && model_quantity != ModelQuantity::w) {
             // don't check twice if always_check_finite_ is true
-            checkFinite(derived_state_.w_, ModelQuantity::w);
+            checkFinite(derived_state_.w_, ModelQuantity::w, t);
         }
     }
     return AMICI_RECOVERABLE_ERROR;
@@ -1678,7 +1682,7 @@ int Model::checkFinite(
 
 int Model::checkFinite(
     gsl::span<realtype const> array, ModelQuantity model_quantity,
-    size_t num_cols
+    size_t num_cols, realtype t
 ) const {
     auto it = std::find_if(array.begin(), array.end(), [](realtype x) {
         return !std::isfinite(x);
@@ -1768,19 +1772,25 @@ int Model::checkFinite(
         model_quantity_str = std::to_string(static_cast<int>(model_quantity));
     }
 
-    if (logger)
+    if (logger) {
+        auto t_msg = std::isfinite(t)
+                         ? std::string(" at t=" + std::to_string(t) + " ")
+                         : std::string();
+
         logger->log(
             LogSeverity::warning, msg_id,
-            "AMICI encountered a %s value for %s[%i] (%s, %s)",
+            "AMICI encountered a %s value for %s[%i] (%s, %s)%s",
             non_finite_type.c_str(), model_quantity_str.c_str(),
-            gsl::narrow<int>(flat_index), row_id.c_str(), col_id.c_str()
+            gsl::narrow<int>(flat_index), row_id.c_str(), col_id.c_str(),
+            t_msg.c_str()
         );
+    }
 
     // check upstream
-    checkFinite(state_.fixedParameters, ModelQuantity::k);
-    checkFinite(state_.unscaledParameters, ModelQuantity::p);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
-    checkFinite(derived_state_.w_, ModelQuantity::w);
+    checkFinite(state_.fixedParameters, ModelQuantity::k, t);
+    checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
+    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
+    checkFinite(derived_state_.w_, ModelQuantity::w, t);
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1868,10 +1878,10 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t)
         );
 
     // check upstream
-    checkFinite(state_.fixedParameters, ModelQuantity::k);
-    checkFinite(state_.unscaledParameters, ModelQuantity::p);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
-    checkFinite(derived_state_.w_, ModelQuantity::w);
+    checkFinite(state_.fixedParameters, ModelQuantity::k, t);
+    checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
+    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
+    checkFinite(derived_state_.w_, ModelQuantity::w, t);
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1895,7 +1905,7 @@ void Model::fx0(AmiVector& x) {
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
 
-    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata);
+    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, t0());
 }
 
 void Model::fx0_fixedParameters(AmiVector& x) {
@@ -1982,7 +1992,10 @@ void Model::fx_rdata(AmiVector& x_rdata, AmiVector const& x) {
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
     if (always_check_finite_)
-        checkFinite(x_rdata.getVector(), ModelQuantity::x_rdata);
+        checkFinite(
+            x_rdata.getVector(), ModelQuantity::x_rdata,
+            std::numeric_limits<realtype>::quiet_NaN()
+        );
 }
 
 void Model::fsx_rdata(
@@ -2072,7 +2085,7 @@ void Model::fy(realtype const t, AmiVector const& x) {
 
     if (always_check_finite_) {
         checkFinite(
-            gsl::make_span(derived_state_.y_.data(), ny), ModelQuantity::y
+            gsl::make_span(derived_state_.y_.data(), ny), ModelQuantity::y, t
         );
     }
 }
@@ -2875,7 +2888,7 @@ void Model::fw(realtype const t, realtype const* x, bool include_static) {
        state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.w_, ModelQuantity::w);
+        checkFinite(derived_state_.w_, ModelQuantity::w, t);
     }
 }
 

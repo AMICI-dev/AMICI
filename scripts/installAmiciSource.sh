@@ -5,7 +5,7 @@ set -e
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd "$SCRIPT_PATH/.." && pwd)
 
-venv_dir="${AMICI_PATH}/build/venv"
+venv_dir="${AMICI_PATH}/venv"
 # Disabled until cmake package is made compatible with updated setup.py
 #make python-wheel
 #pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`

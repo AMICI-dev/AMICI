@@ -202,3 +202,4 @@ CS_Signalling_ERBB_RAS_AKT/
 cache_fiddy/*
 debug/*
 tests/benchmark-models/cache_fiddy/*
+venv/*
