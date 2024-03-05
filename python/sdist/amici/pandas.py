@@ -658,7 +658,8 @@ def constructEdataFromDataFrame(
         pd.Series with (Fixed)Parameter Names/Ids as columns.
         Preequilibration conditions may be specified by appending
         '_preeq' as suffix. Presimulation conditions may be specified by
-        appending '_presim' as suffix.
+        appending '_presim' as suffix. Parameter scales may be specified by
+        appending '_scale' as suffix.
 
     :param by_id:
         Indicate whether in the arguments, column headers are based on ids or
@@ -703,9 +704,8 @@ def constructEdataFromDataFrame(
     )
 
     edata.pscale = (
-        condition[_get_names_or_ids(model, "ParameterScale", by_id=by_id)]
-        .astype(int)
-        .values
+        condition[par + "_scale"].astype(int)
+        for par in list(_get_names_or_ids(model, "Parameter", by_id=by_id))
     )
 
     # fill in preequilibration parameters
