@@ -1905,7 +1905,7 @@ void Model::fx0(AmiVector& x) {
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
 
-    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, 0.0);
+    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, t0());
 }
 
 void Model::fx0_fixedParameters(AmiVector& x) {
