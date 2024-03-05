@@ -372,7 +372,7 @@ void Model::initializeStates(AmiVector& x) {
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 
-    checkFinite(x.getVector(), ModelQuantity::x0, 0.0);
+    checkFinite(x.getVector(), ModelQuantity::x0, t0());
 }
 
 void Model::initializeSplines() {
