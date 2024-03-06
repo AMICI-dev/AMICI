@@ -85,6 +85,11 @@ if(NOT TARGET BLAS::BLAS)
   add_library(BLAS::BLAS ALIAS BLAS)
   install(TARGETS BLAS EXPORT BLAS)
   export(EXPORT BLAS NAMESPACE BLAS::)
+  install(
+    EXPORT BLAS
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
+    NAMESPACE BLAS::)
+
 
   # legacy python package environment variables:
   if(DEFINED ENV{BLAS_CFLAGS})
