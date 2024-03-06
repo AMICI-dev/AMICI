@@ -119,6 +119,7 @@ endif()
 # find dependencies
 include(GNUInstallDirs)
 
+include(AmiciFindBLAS)
 find_package(OpenMP)
 find_package(Boost COMPONENTS chrono)
 
@@ -141,75 +142,6 @@ find_package(
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
-
-# AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
-# The latter is not supported via CMake yet.
-set(BLAS
-    "CBLAS"
-    CACHE STRING "BLAS library to use")
-set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
-if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
-  if(DEFINED ENV{MKLROOT})
-    # This is set by Environment Modules
-    message(STATUS "Using MKL_INCDIR and MKL_LIB from environment module")
-    set(BLAS
-        "MKL"
-        CACHE STRING "BLAS library to use" FORCE)
-    set(BLAS_INCLUDE_DIRS
-        "$ENV{MKL_INCDIR}"
-        CACHE STRING "" FORCE)
-    set(BLAS_LIBRARIES
-        "$ENV{MKL_LIB}"
-        CACHE STRING "" FORCE)
-  else()
-    set(BLAS_INCLUDE_DIRS
-        ""
-        CACHE STRING "")
-    set(BLAS_LIBRARIES
-        -lmkl
-        CACHE STRING "")
-  endif()
-elseif(
-  NOT DEFINED ENV{BLAS_LIBS}
-  AND NOT DEFINED ENV{BLAS_CFLAGS}
-  AND NOT BLAS_FOUND)
-  # if nothing is specified via environment variables, let's try FindBLAS
-  if($(CMAKE_VERSION) VERSION_GREATER_EQUAL 3.22)
-    set(BLA_SIZEOF_INTEGER 8)
-  endif()
-
-  if(APPLE AND (NOT DEFINED BLA_VENDOR OR BLA_VENDOR STREQUAL "All"))
-    set(BLA_VENDOR Apple)
-    find_package(BLAS)
-    if(BLAS_FOUND)
-      set_property(
-        TARGET BLAS::BLAS
-        APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ACCELERATE_NEW_LAPACK)
-      set_property(
-        TARGET BLAS::BLAS
-        APPEND
-        PROPERTY INTERFACE_COMPILE_DEFINITIONS ACCELERATE_LAPACK_ILP64)
-    else()
-      set(BLA_VENDOR "All")
-    endif()
-
-  endif()
-  if(NOT BLAS_FOUND)
-    find_package(BLAS)
-  endif()
-  if(NOT BLAS_FOUND)
-    # Nothing specified by the user and FindBLAS didn't find anything; let's try
-    # if cblas is available on the system paths.
-    set(BLAS_INCLUDE_DIRS
-        ""
-        CACHE STRING "")
-    set(BLAS_LIBRARIES
-        -lcblas
-        CACHE STRING "")
-  endif()
-endif()
-add_compile_definitions(AMICI_BLAS_${BLAS})
 
 # Add target to create version file
 add_custom_target(
@@ -285,16 +217,6 @@ set(AMICI_SRC_LIST
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})
 
-# legacy python package environment variables:
-if(DEFINED ENV{BLAS_CFLAGS})
-  target_compile_options(${PROJECT_NAME} PRIVATE "$ENV{BLAS_CFLAGS}")
-endif()
-if(DEFINED ENV{BLAS_LIBS})
-  # Note that, on Windows, at least for ninja, this will only work with dashes
-  # instead of slashes in any linker options
-  target_link_libraries(${PROJECT_NAME} PUBLIC "$ENV{BLAS_LIBS}")
-endif()
-
 set(AMICI_CXX_OPTIONS
     ""
     CACHE STRING "C++ options for libamici (semicolon-separated)")
@@ -314,10 +236,6 @@ target_include_directories(
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_DATADIR}/amici/swig>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/swig>
   PRIVATE ${SUNDIALS_PRIVATE_INCLUDE_DIRS})
-
-if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
-  target_include_directories(${PROJECT_NAME} PUBLIC ${BLAS_INCLUDE_DIRS})
-endif()
 
 if("$ENV{ENABLE_AMICI_DEBUGGING}"
    OR "$ENV{ENABLE_GCOV_COVERAGE}"
@@ -354,11 +272,11 @@ target_link_libraries(
          SUNDIALS::sunnonlinsolfixedpoint_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
-         ${BLAS_LIBRARIES}
          $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
          $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE
+    BLAS::BLAS
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
 )
 
@@ -457,15 +375,20 @@ install(
   EXPORT AmiciTargets
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Amici"
   NAMESPACE Upstream::)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/AmiciConfigVersion.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/AmiciFindBLAS.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Amici)
 
 install(DIRECTORY ThirdParty/gsl/gsl TYPE INCLUDE)
 # When running from setup.py, this is a symlink we need to dereference
 get_filename_component(_swig_realpath "swig" REALPATH)
 install(DIRECTORY "${_swig_realpath}"
         DESTINATION ${CMAKE_INSTALL_DATADIR}/amici)
+
+configure_file(cmake/AmiciFindBLAS.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/AmiciFindBLAS.cmake COPYONLY)
 
 # Register package?
 if(EXPORT_PACKAGE)
