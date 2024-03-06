@@ -25,7 +25,7 @@ else
 fi
 
 # required for build swig interface
-venv_dir="${AMICI_PATH}/venv"
+venv_dir="${amici_path}/venv"
 set +e
 mkdir -p "${venv_dir}"
 python3 -m venv "${venv_dir}" --clear
@@ -35,7 +35,7 @@ if [[ $? ]]; then
     set -e
     python3 -m venv "${venv_dir}" --clear --without-pip
     source "${venv_dir}/bin/activate"
-    get_pip=${AMICI_PATH}/get-pip.py
+    get_pip=${amici_path}/get-pip.py
     curl "https://bootstrap.pypa.io/get-pip.py" -o "${get_pip}"
     python3 "${get_pip}"
     rm "${get_pip}"
