@@ -417,7 +417,7 @@ void ForwardProblem::getAdjointUpdates(Model& model, ExpData const& edata) {
 }
 
 SimulationState ForwardProblem::getSimulationState() {
-    if(std::isfinite(solver->gett())) {
+    if (std::isfinite(solver->gett())) {
         solver->writeSolution(&t_, x_, dx_, sx_, dx_);
     }
     auto state = SimulationState();
