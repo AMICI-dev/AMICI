@@ -25,7 +25,29 @@ else
 fi
 
 # required for build swig interface
-pip show numpy > /dev/null || python3 -m pip install numpy
+venv_dir="${amici_path}/venv"
+set +e
+mkdir -p "${venv_dir}"
+python3 -m venv "${venv_dir}" --clear
+# in case this fails (usually due to missing ensurepip, try getting pip
+# manually
+if [[ $? ]]; then
+    set -e
+    python3 -m venv "${venv_dir}" --clear --without-pip
+    source "${venv_dir}/bin/activate"
+    get_pip=${amici_path}/get-pip.py
+    curl "https://bootstrap.pypa.io/get-pip.py" -o "${get_pip}"
+    python3 "${get_pip}"
+    rm "${get_pip}"
+else
+    set -e
+    source "${venv_dir}/bin/activate"
+fi
+
+# set python executable for cmake
+export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
+# install numpy
+python3 -m pip install numpy
 
 ${cmake} \
   -Wdev -DAMICI_CXX_OPTIONS="-Wall;-Wextra${extra_cxx_flags}" \

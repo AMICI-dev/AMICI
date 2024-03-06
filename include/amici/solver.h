@@ -983,6 +983,18 @@ class Solver {
     }
 
     /**
+     * @brief Set the maximum step size
+     * @param max_step_size maximum step size. `0.0` means no limit.
+     */
+    void setMaxStepSize(realtype max_step_size);
+
+    /**
+     * @brief Get the maximum step size
+     * @return maximum step size
+     */
+    realtype getMaxStepSize() const;
+
+    /**
      * @brief Serialize Solver (see boost::serialization::serialize)
      * @param ar Archive to serialize to
      * @param s Data to serialize
@@ -1775,6 +1787,11 @@ class Solver {
      */
     virtual void apply_max_conv_fails() const = 0;
 
+    /**
+     * @brief Apply the allowed maximum stepsize to the solver.
+     */
+    virtual void apply_max_step_size() const = 0;
+
     /** state (dimension: nx_solver) */
     mutable AmiVector x_{0};
 
@@ -1916,6 +1933,9 @@ class Solver {
     /** Maximum number of nonlinear solver convergence failures permitted per
      *  step */
     int max_conv_fails_{10};
+
+    /** Maximum allowed step size */
+    realtype max_step_size_{0.0};
 
     /** CPU time, forward solve */
     mutable realtype cpu_time_{0.0};

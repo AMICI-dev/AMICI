@@ -282,6 +282,12 @@ void CVodeSolver::apply_constraints() const {
     }
 }
 
+void CVodeSolver::apply_max_step_size() const {
+    int status = CVodeSetMaxStep(solver_memory_.get(), getMaxStepSize());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetMaxStep");
+}
+
 Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {

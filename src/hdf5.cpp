@@ -802,6 +802,11 @@ void writeSolverSettingsToHDF5(
         file.getId(), hdf5Location.c_str(), "maxtime", &dbuffer, 1
     );
 
+    dbuffer = solver.getMaxStepSize();
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "max_step_size", &dbuffer, 1
+    );
+
     ibuffer = gsl::narrow<int>(solver.getMaxSteps());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "maxsteps", &ibuffer, 1
@@ -1001,6 +1006,12 @@ void readSolverSettingsFromHDF5(
 
     if (attributeExists(file, datasetPath, "maxtime")) {
         solver.setMaxTime(getDoubleScalarAttribute(file, datasetPath, "maxtime")
+        );
+    }
+
+    if (attributeExists(file, datasetPath, "max_step_size")) {
+        solver.setMaxStepSize(
+            getDoubleScalarAttribute(file, datasetPath, "max_step_size")
         );
     }
 
