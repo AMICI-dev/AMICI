@@ -13,7 +13,6 @@ venv_dir="${AMICI_PATH}/venv"
 # test install from setup.py
 set +e
 mkdir -p "${venv_dir}"
-pip3 install virtualenv
 python3 -m venv "${venv_dir}" --clear
 # in case this fails (usually due to missing ensurepip, try getting pip
 # manually
