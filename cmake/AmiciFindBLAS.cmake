@@ -44,6 +44,7 @@ elseif(
     set(BLA_VENDOR Apple)
     find_package(BLAS)
     if(BLAS_FOUND)
+      message(STATUS "Found Apple Accelerate BLAS")
       set_property(
         TARGET BLAS::BLAS
         APPEND
@@ -59,6 +60,9 @@ elseif(
   endif()
   if(NOT BLAS_FOUND)
     find_package(BLAS)
+    if(BLAS_FOUND)
+      message(STATUS "Found BLAS via FindBLAS")
+    endif()
   endif()
   if(NOT BLAS_FOUND)
     # Nothing specified by the user and FindBLAS didn't find anything; let's try
@@ -77,7 +81,8 @@ if(NOT TARGET BLAS::BLAS)
   add_library(BLAS::BLAS UNKNOWN IMPORTED)
   set_target_properties(BLAS::BLAS PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
-    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
+    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}"
+    IMPORTED_LOCATION "")
 endif()
 
 target_compile_definitions(BLAS::BLAS INTERFACE "AMICI_BLAS_${BLAS}")
