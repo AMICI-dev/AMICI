@@ -29,6 +29,9 @@ else
     source "${venv_dir}/bin/activate"
 fi
 
+# set python executable for cmake
+export PYTHON_EXECUTABLE="${AMICI_PATH}/venv/bin/python"
+
 python -m pip install --upgrade pip wheel
 python -m pip install --upgrade pip setuptools cmake_build_extension numpy
 python -m pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
