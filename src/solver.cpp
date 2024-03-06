@@ -46,6 +46,7 @@ Solver::Solver(Solver const& other)
     , check_sensi_steadystate_conv_(other.check_sensi_steadystate_conv_)
     , max_nonlin_iters_(other.max_nonlin_iters_)
     , max_conv_fails_(other.max_conv_fails_)
+    , max_step_size_(other.max_step_size_)
     , maxstepsB_(other.maxstepsB_)
     , sensi_(other.sensi_) {}
 
@@ -195,6 +196,7 @@ void Solver::setup(
 
     apply_max_nonlin_iters();
     apply_max_conv_fails();
+    apply_max_step_size();
 
     cpu_time_ = 0.0;
     cpu_timeB_ = 0.0;
@@ -690,6 +692,14 @@ void Solver::setMaxConvFails(int max_conv_fails) {
 }
 
 int Solver::getMaxConvFails() const { return max_conv_fails_; }
+
+void Solver::setMaxStepSize(realtype max_step_size) {
+    if (max_step_size < 0)
+        throw AmiException("max_step_size must be non-negative.");
+    max_step_size_ = max_step_size;
+}
+
+realtype Solver::getMaxStepSize() const { return max_step_size_; }
 
 int Solver::getNewtonMaxSteps() const { return newton_maxsteps_; }
 
