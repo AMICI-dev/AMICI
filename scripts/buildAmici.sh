@@ -25,7 +25,7 @@ else
 fi
 
 # required for build swig interface
-python3 -m venv "${amici_path}/venv"
+python3 -m venv "${amici_path}/venv"  --clear
 source "${amici_path}/venv/bin/activate"
 export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
 pip3 show numpy > /dev/null || python3 -m pip install numpy
