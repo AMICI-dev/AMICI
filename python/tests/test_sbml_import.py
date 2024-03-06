@@ -760,7 +760,7 @@ def test_constraints():
 
         amici_solver.setRelativeTolerance(1e-14)
         amici_solver.setConstraints(
-            [Constraint.NON_NEGATIVE, Constraint.NON_NEGATIVE]
+            [Constraint.non_negative, Constraint.non_negative]
         )
         rdata = amici.runAmiciSimulation(amici_model, amici_solver)
         assert rdata.status == amici.AMICI_SUCCESS
