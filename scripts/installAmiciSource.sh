@@ -5,12 +5,12 @@ set -e
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd "$SCRIPT_PATH/.." && pwd)
 
-venv_dir="${AMICI_PATH}/build/venv"
 # Disabled until cmake package is made compatible with updated setup.py
 #make python-wheel
 #pip3 install --user --prefix= `ls -t ${AMICI_PATH}/build/python/amici-*.whl | head -1`
 
 # test install from setup.py
+venv_dir="${AMICI_PATH}/venv"
 set +e
 mkdir -p "${venv_dir}"
 python3 -m venv "${venv_dir}" --clear
@@ -20,7 +20,7 @@ if [[ $? ]]; then
     set -e
     python3 -m venv "${venv_dir}" --clear --without-pip
     source "${venv_dir}/bin/activate"
-    get_pip=${AMICI_PATH}/build/get-pip.py
+    get_pip=${AMICI_PATH}/get-pip.py
     curl "https://bootstrap.pypa.io/get-pip.py" -o "${get_pip}"
     python3 "${get_pip}"
     rm "${get_pip}"
@@ -28,6 +28,9 @@ else
     set -e
     source "${venv_dir}/bin/activate"
 fi
+
+# set python executable for cmake
+export PYTHON_EXECUTABLE="${AMICI_PATH}/venv/bin/python"
 
 python -m pip install --upgrade pip wheel
 python -m pip install --upgrade pip setuptools cmake_build_extension numpy
