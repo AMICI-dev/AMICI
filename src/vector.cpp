@@ -53,7 +53,6 @@ void AmiVector::copy(AmiVector const& other) {
             getLength(), other.getLength()
         );
     std::copy(other.vec_.begin(), other.vec_.end(), vec_.begin());
-    synchroniseNVector();
 }
 
 void AmiVector::synchroniseNVector() {
