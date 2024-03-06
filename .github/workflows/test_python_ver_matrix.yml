@@ -51,15 +51,15 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     # install pysb before sympy to allow for sympy>=1.12 (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
-    - run: source build/venv/bin/activate && pip3 install git+https://github.com/pysb/pysb
+    - run: source venv/bin/activate && pip3 install git+https://github.com/pysb/pysb
 
     # until sympy>1.12 is released
-    - run: source build/venv/bin/activate && pip3 install git+https://github.com/sympy/sympy.git@master
+    - run: source venv/bin/activate && pip3 install git+https://github.com/sympy/sympy.git@master
       if: matrix.python-version == '3.12'
 
     - name: Python tests
       run: |
-        source build/venv/bin/activate \
+        source venv/bin/activate \
           && python3 -m pytest \
             --durations=10 \
             --ignore-glob=*petab* \
