@@ -354,12 +354,12 @@ target_link_libraries(
          SUNDIALS::sunnonlinsolfixedpoint_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
+         ${BLAS_LIBRARIES}
          $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
          $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
-    BLAS::BLAS
 )
 
 if(HDF5_FOUND)
