@@ -62,8 +62,6 @@ if(@HDF5_FOUND@)
     REQUIRED)
 endif()
 
-find_package(BLAS)
-
 include("${CMAKE_CURRENT_LIST_DIR}/AmiciTargets.cmake")
 
 check_required_components(Amici)
