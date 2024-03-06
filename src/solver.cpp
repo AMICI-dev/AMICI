@@ -1212,6 +1212,8 @@ void Solver::resetMutableMemory(int const nx, int const nplist, int const nquad)
     sx_ = AmiVectorArray(nx, nplist);
     sdx_ = AmiVectorArray(nx, nplist);
 
+    dky_ = AmiVector(nx);
+
     xB_ = AmiVector(nx);
     dxB_ = AmiVector(nx);
     xQB_ = AmiVector(nquad);
