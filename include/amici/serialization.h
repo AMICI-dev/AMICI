@@ -87,6 +87,7 @@ void serialize(Archive& ar, amici::Solver& s, unsigned int const /*version*/) {
     ar & s.maxtime_;
     ar & s.max_conv_fails_;
     ar & s.max_nonlin_iters_;
+    ar & s.max_step_size_;
 }
 
 /**
