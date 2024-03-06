@@ -26,7 +26,7 @@ if [[ $? ]]; then
     python3 -m venv ${AMICI_PATH}/venvArchive --clear --without-pip
     source ${AMICI_PATH}/venvArchive/bin/activate
     curl https://bootstrap.pypa.io/get-pip.py -o ${AMICI_PATH}/build/get-pip.py
-    python ${AMICI_PATH}/get-pip.py
+    python ${AMICI_PATH}/build/get-pip.py
 else
     set -e
     source ${AMICI_PATH}/venvArchive/bin/activate
