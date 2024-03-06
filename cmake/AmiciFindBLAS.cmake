@@ -71,26 +71,27 @@ elseif(
         CACHE STRING "")
   endif()
 endif()
-add_compile_definitions(AMICI_BLAS_${BLAS})
 
 # Create an imported target
 if(NOT TARGET BLAS::BLAS)
   add_library(BLAS::BLAS UNKNOWN IMPORTED)
   set_target_properties(BLAS::BLAS PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
-    LINK_LIBRARIES "${BLAS_LIBRARIES}")
+    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
 endif()
+
+target_compile_definitions(BLAS::BLAS INTERFACE "AMICI_BLAS_${BLAS}")
 
 # legacy python package environment variables:
 if(DEFINED ENV{BLAS_CFLAGS})
-  target_compile_options(BLAS::BLAS PRIVATE "$ENV{BLAS_CFLAGS}")
+  target_compile_options(BLAS::BLAS INTERFACE "$ENV{BLAS_CFLAGS}")
 endif()
 if(DEFINED ENV{BLAS_LIBS})
   # Note that, on Windows, at least for ninja, this will only work with dashes
   # instead of slashes in any linker options
-  target_link_libraries(BLAS::BLAS PUBLIC "$ENV{BLAS_LIBS}")
+  target_link_libraries(BLAS::BLAS INTERFACE "$ENV{BLAS_LIBS}")
 endif()#
 
 if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
-  target_include_directories(BLAS::BLAS PUBLIC ${BLAS_INCLUDE_DIRS})
+  target_include_directories(BLAS::BLAS INTERFACE ${BLAS_INCLUDE_DIRS})
 endif()
