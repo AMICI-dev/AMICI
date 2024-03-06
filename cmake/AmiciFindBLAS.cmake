@@ -78,10 +78,10 @@ endif()
 
 # Create an imported target
 if(NOT TARGET BLAS::BLAS)
-  add_library(BLAS::BLAS UNKNOWN INTERFACE)
+  add_library(BLAS::BLAS INTERFACE)
   set_target_properties(BLAS::BLAS PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
-    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}"
+    INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
 endif()
 
 target_compile_definitions(BLAS::BLAS INTERFACE "AMICI_BLAS_${BLAS}")
