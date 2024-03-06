@@ -187,18 +187,11 @@ class SbmlImporter:
 
         self._reset_symbols()
 
-        # http://sbml.org/Software/libSBML/5.18.0/docs/python-api/classlibsbml_1_1_l3_parser_settings.html#abcfedd34efd3cae2081ba8f42ea43f52
+        # https://sbml.org/software/libsbml/5.18.0/docs/formatted/python-api/classlibsbml_1_1_l3_parser_settings.html#ab30d7ed52ca24cbb842d0a7fed7f4bfd
         # all defaults except disable unit parsing
-        self.sbml_parser_settings = sbml.L3ParserSettings(
-            self.sbml,
-            sbml.L3P_PARSE_LOG_AS_LOG10,
-            sbml.L3P_EXPAND_UNARY_MINUS,
-            sbml.L3P_NO_UNITS,
-            sbml.L3P_AVOGADRO_IS_CSYMBOL,
-            sbml.L3P_COMPARE_BUILTINS_CASE_INSENSITIVE,
-            None,
-            sbml.L3P_MODULO_IS_PIECEWISE,
-        )
+        self.sbml_parser_settings = sbml.L3ParserSettings()
+        self.sbml_parser_settings.setModel(self.sbml)
+        self.sbml_parser_settings.setParseUnits(sbml.L3P_NO_UNITS)
 
         self._discard_annotations: bool = discard_annotations
 
