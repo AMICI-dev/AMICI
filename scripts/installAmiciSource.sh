@@ -30,7 +30,7 @@ else
 fi
 
 python -m pip install --upgrade pip wheel
-python -m pip install --upgrade pip setuptools cmake_build_extension
+python -m pip install --upgrade pip setuptools cmake_build_extension numpy
 python -m pip install git+https://github.com/FFroehlich/pysb@fix_pattern_matching # pin to PR for SPM with compartments
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
   python -m pip install --verbose -e "${AMICI_PATH}/python/sdist[petab,test,vis]" --no-build-isolation
