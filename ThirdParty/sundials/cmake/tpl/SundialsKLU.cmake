@@ -49,7 +49,7 @@ find_package(KLU REQUIRED)
 
 message(STATUS "KLU_LIBRARIES:   ${KLU_LIBRARIES}")
 message(STATUS "KLU_INCLUDE_DIR: ${KLU_INCLUDE_DIR}")
-list(JOIN KLU_LIBRARIES \";\" KLU_LIBRARIES_TMP)
+list(JOIN KLU_LIBRARIES "\";\"" KLU_LIBRARIES_TMP)
 set(KLU_LIBRARIES_TMP \"${KLU_LIBRARIES_TMP}\")
 # -----------------------------------------------------------------------------
 # Section 4: Test the TPL
