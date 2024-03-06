@@ -270,6 +270,12 @@ void CVodeSolver::apply_max_conv_fails() const {
         throw CvodeException(status, "CVodeSetMaxConvFails");
 }
 
+void CVodeSolver::apply_max_step_size() const {
+    int status = CVodeSetMaxStep(solver_memory_.get(), getMaxStepSize());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetMaxStep");
+}
+
 Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {

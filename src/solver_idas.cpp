@@ -267,6 +267,12 @@ void IDASolver::apply_max_conv_fails() const {
         throw IDAException(status, "IDASetMaxConvFails");
 }
 
+void IDASolver::apply_max_step_size() const {
+    int status = IDASetMaxStep(solver_memory_.get(), getMaxStepSize());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetMaxStep");
+}
+
 Solver* IDASolver::clone() const { return new IDASolver(*this); }
 
 void IDASolver::allocateSolver() const {
