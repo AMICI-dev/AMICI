@@ -727,6 +727,7 @@ def test_hardcode_parameters(simple_sbml_model):
 def test_constraints():
     """Test non-negativity constraint handling."""
     from amici.antimony_import import antimony2amici
+    from amici import Constraint
 
     ant_model = """
     model test_non_negative_species
@@ -758,7 +759,9 @@ def test_constraints():
         assert np.any(rdata.x < 0)
 
         amici_solver.setRelativeTolerance(1e-14)
-        amici_solver.setConstraints([1.0, 1.0])
+        amici_solver.setConstraints(
+            [Constraint.NON_NEGATIVE, Constraint.NON_NEGATIVE]
+        )
         rdata = amici.runAmiciSimulation(amici_model, amici_solver)
         assert rdata.status == amici.AMICI_SUCCESS
         assert np.all(rdata.x >= 0)

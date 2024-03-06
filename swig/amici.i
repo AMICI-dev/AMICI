@@ -306,7 +306,7 @@ bool compiledWithOpenMP();
 }
 
 %pythoncode %{
-from enum import IntEnum
+from enum import IntEnum, Enum
 def enum(prefix):
     values = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
     values = {k[len(prefix)+1:]:v for k,v in values.items()}
@@ -327,6 +327,13 @@ SteadyStateStatus = enum('SteadyStateStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
+
+class Constraint(float, Enum):
+    NONE = 0.0
+    NON_NEGATIVE = 1.0
+    NON_POSITIVE = -1.0
+    POSITIVE = 2.0
+    NEGATIVE = -2.0
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
@@ -365,6 +372,6 @@ __all__ = [
     x
     for x in dir(sys.modules[__name__])
     if not x.startswith('_')
-    and x not in {"np", "sys", "os", "numpy", "IntEnum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence"}
+    and x not in {"np", "sys", "os", "numpy", "IntEnum", "Enum", "enum", "pi", "TYPE_CHECKING", "Iterable", "Sequence"}
 ]
 %}
