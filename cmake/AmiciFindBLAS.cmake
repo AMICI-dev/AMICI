@@ -78,24 +78,28 @@ endif()
 
 # Create an imported target
 if(NOT TARGET BLAS::BLAS)
-  add_library(BLAS::BLAS INTERFACE)
-  set_target_properties(BLAS::BLAS PROPERTIES
+  add_library(BLAS INTERFACE)
+  set_target_properties(BLAS PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
     INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
-endif()
+  add_library(BLAS::BLAS ALIAS BLAS)
+  install(TARGETS BLAS EXPORT BLAS)
+  export(EXPORT BLAS NAMESPACE BLAS::)
 
-target_compile_definitions(BLAS::BLAS INTERFACE "AMICI_BLAS_${BLAS}")
+  # legacy python package environment variables:
+  if(DEFINED ENV{BLAS_CFLAGS})
+    target_compile_options(BLAS INTERFACE "$ENV{BLAS_CFLAGS}")
+  endif()
+  if(DEFINED ENV{BLAS_LIBS})
+    # Note that, on Windows, at least for ninja, this will only work with dashes
+    # instead of slashes in any linker options
+    target_link_libraries(BLAS INTERFACE "$ENV{BLAS_LIBS}")
+  endif()
 
-# legacy python package environment variables:
-if(DEFINED ENV{BLAS_CFLAGS})
-  target_compile_options(BLAS::BLAS INTERFACE "$ENV{BLAS_CFLAGS}")
-endif()
-if(DEFINED ENV{BLAS_LIBS})
-  # Note that, on Windows, at least for ninja, this will only work with dashes
-  # instead of slashes in any linker options
-  target_link_libraries(BLAS::BLAS INTERFACE "$ENV{BLAS_LIBS}")
-endif()#
-
-if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
-  target_include_directories(BLAS::BLAS INTERFACE ${BLAS_INCLUDE_DIRS})
+  if(NOT "${BLAS_INCLUDE_DIRS}" STREQUAL "")
+    target_include_directories(BLAS INTERFACE ${BLAS_INCLUDE_DIRS})
+  endif()
+  target_compile_definitions(BLAS INTERFACE "AMICI_BLAS_${BLAS}")
+else()
+  target_compile_definitions(BLAS::BLAS INTERFACE "AMICI_BLAS_${BLAS}")
 endif()

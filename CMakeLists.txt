@@ -276,7 +276,7 @@ target_link_libraries(
          $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE
-    BLAS::BLAS
+    "$<BUILD_INTERFACE:BLAS::BLAS>"
     $<$<BOOL:${SUNDIALS_SUPERLUMT_ENABLE}>:SUNDIALS::sundials_sunlinsolsuperlumt>
 )
 
