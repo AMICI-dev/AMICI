@@ -78,12 +78,10 @@ endif()
 
 # Create an imported target
 if(NOT TARGET BLAS::BLAS)
-  add_library(BLAS::BLAS UNKNOWN IMPORTED)
+  add_library(BLAS::BLAS UNKNOWN INTERFACE)
   set_target_properties(BLAS::BLAS PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${BLAS_INCLUDE_DIRS}"
     INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}"
-    # some dummy location to make cmake happy
-    IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}")
 endif()
 
 target_compile_definitions(BLAS::BLAS INTERFACE "AMICI_BLAS_${BLAS}")
