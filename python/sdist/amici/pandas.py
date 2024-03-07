@@ -410,6 +410,20 @@ def _fill_conditions_dict(
             ]
         else:
             datadict[par + "_presim"] = np.nan
+
+    for i_par, par in enumerate(
+        _get_names_or_ids(model, "Parameter", by_id=by_id)
+    ):
+        if len(edata.parameters):
+            datadict[par] = edata.parameters[i_par]
+        else:
+            datadict[par] = model.getParameters()[i_par]
+
+        if len(edata.pscale):
+            datadict[par + "_scale"] = edata.pscale[i_par]
+        else:
+            datadict[par + "_scale"] = model.getParameterScale()[i_par]
+
     return datadict
 
 
@@ -437,6 +451,11 @@ def _get_extended_observable_cols(model: AmiciModel, by_id: bool) -> list[str]:
         + [
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
         ]
         + _get_names_or_ids(model, "Observable", by_id=by_id)
         + [
@@ -471,6 +490,11 @@ def _get_observable_cols(model: AmiciModel, by_id: bool) -> list[str]:
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
         ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
+        ]
         + _get_names_or_ids(model, "Observable", by_id=by_id)
     )
 
@@ -500,6 +524,11 @@ def _get_state_cols(model: AmiciModel, by_id: bool) -> list[str]:
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
         ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
+        ]
         + _get_names_or_ids(model, "State", by_id=by_id)
     )
 
@@ -527,6 +556,11 @@ def _get_expression_cols(model: AmiciModel, by_id: bool) -> list[str]:
         + [
             name + "_presim"
             for name in _get_names_or_ids(model, "FixedParameter", by_id=by_id)
+        ]
+        + _get_names_or_ids(model, "Parameter", by_id=by_id)
+        + [
+            name + "_scale"
+            for name in _get_names_or_ids(model, "Parameter", by_id=by_id)
         ]
         + _get_names_or_ids(model, "Expression", by_id=by_id)
     )
@@ -641,10 +675,11 @@ def constructEdataFromDataFrame(
         Model instance.
 
     :param condition:
-        pd.Series with FixedParameter Names/Ids as columns.
+        pd.Series with (Fixed)Parameter Names/Ids as columns.
         Preequilibration conditions may be specified by appending
         '_preeq' as suffix. Presimulation conditions may be specified by
-        appending '_presim' as suffix.
+        appending '_presim' as suffix. Parameter scales may be specified by
+        appending '_scale' as suffix.
 
     :param by_id:
         Indicate whether in the arguments, column headers are based on ids or
@@ -679,6 +714,20 @@ def constructEdataFromDataFrame(
         condition[_get_names_or_ids(model, "FixedParameter", by_id=by_id)]
         .astype(float)
         .values
+    )
+
+    # fill in parameters
+    edata.parameters = (
+        condition[_get_names_or_ids(model, "Parameter", by_id=by_id)]
+        .astype(float)
+        .values
+    )
+
+    edata.pscale = amici.parameterScalingFromIntVector(
+        [
+            amici.ParameterScaling(condition[par + "_scale"].astype(int))
+            for par in list(_get_names_or_ids(model, "Parameter", by_id=by_id))
+        ]
     )
 
     # fill in preequilibration parameters
@@ -767,6 +816,10 @@ def getEdataFromDataFrame(
             condition_parameters.append(par + "_preeq")
         if par + "_presim" in df.columns:
             condition_parameters.append(par + "_presim")
+    # parameters & scales
+    for par in _get_names_or_ids(model, "Parameter", by_id=by_id):
+        condition_parameters.append(par)
+        condition_parameters.append(par + "_scale")
     # presimulation time
     if "t_presim" in df.columns:
         condition_parameters.append("t_presim")
