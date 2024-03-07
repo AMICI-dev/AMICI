@@ -532,6 +532,10 @@ void writeReturnDataDiagnosis(
         &rdata.cpu_time_total, 1
     );
 
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "t_last", &rdata.t_last, 1
+    );
+
     if (!rdata.J.empty())
         createAndWriteDouble2DDataset(
             file, hdf5Location + "/J", rdata.J, rdata.nx, rdata.nx
@@ -802,6 +806,11 @@ void writeSolverSettingsToHDF5(
         file.getId(), hdf5Location.c_str(), "maxtime", &dbuffer, 1
     );
 
+    dbuffer = solver.getMaxStepSize();
+    H5LTset_attribute_double(
+        file.getId(), hdf5Location.c_str(), "max_step_size", &dbuffer, 1
+    );
+
     ibuffer = gsl::narrow<int>(solver.getMaxSteps());
     H5LTset_attribute_int(
         file.getId(), hdf5Location.c_str(), "maxsteps", &ibuffer, 1
@@ -895,6 +904,20 @@ void writeSolverSettingsToHDF5(
         file.getId(), hdf5Location.c_str(), "check_sensi_steadystate_conv",
         &ibuffer, 1
     );
+
+    ibuffer = static_cast<int>(solver.getMaxNonlinIters());
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "max_nonlin_iters", &ibuffer, 1
+    );
+
+    ibuffer = static_cast<int>(solver.getMaxConvFails());
+    H5LTset_attribute_int(
+        file.getId(), hdf5Location.c_str(), "max_conv_fails", &ibuffer, 1
+    );
+
+    createAndWriteDouble1DDataset(
+        file, hdf5Location + "/constraints", solver.getConstraints()
+    );
 }
 
 void readSolverSettingsFromHDF5(
@@ -987,6 +1010,12 @@ void readSolverSettingsFromHDF5(
 
     if (attributeExists(file, datasetPath, "maxtime")) {
         solver.setMaxTime(getDoubleScalarAttribute(file, datasetPath, "maxtime")
+        );
+    }
+
+    if (attributeExists(file, datasetPath, "max_step_size")) {
+        solver.setMaxStepSize(
+            getDoubleScalarAttribute(file, datasetPath, "max_step_size")
         );
     }
 
@@ -1105,6 +1134,24 @@ void readSolverSettingsFromHDF5(
         solver.setSensiSteadyStateCheck(getIntScalarAttribute(
             file, datasetPath, "check_sensi_steadystate_conv"
         ));
+    }
+
+    if (attributeExists(file, datasetPath, "max_nonlin_iters")) {
+        solver.setMaxNonlinIters(
+            getIntScalarAttribute(file, datasetPath, "max_nonlin_iters")
+        );
+    }
+
+    if (attributeExists(file, datasetPath, "max_conv_fails")) {
+        solver.setMaxConvFails(
+            getIntScalarAttribute(file, datasetPath, "max_conv_fails")
+        );
+    }
+
+    if (locationExists(file, datasetPath + "/constraints")) {
+        solver.setConstraints(
+            getDoubleDataset1D(file, datasetPath + "/constraints")
+        );
     }
 }
 

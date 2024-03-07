@@ -24,11 +24,13 @@ endif()
 if(NOT DEFINED KLU_ROOT)
   set(KLU_ROOT @CMAKE_SOURCE_DIR@/ThirdParty/SuiteSparse/)
 endif()
-find_package(SuiteSparse_config REQUIRED)
-find_package(AMD REQUIRED)
-find_package(BTF REQUIRED)
-find_package(COLAMD REQUIRED)
-find_package(KLU REQUIRED)
+find_dependency(SuiteSparse_config REQUIRED)
+find_dependency(AMD REQUIRED)
+find_dependency(BTF REQUIRED)
+find_dependency(COLAMD REQUIRED)
+find_dependency(KLU REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/AmiciFindBLAS.cmake")
 
 add_library(SUNDIALS::KLU INTERFACE IMPORTED)
 target_link_libraries(
@@ -41,15 +43,15 @@ target_link_libraries(
 set_target_properties(SUNDIALS::KLU PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
                                                "${KLU_INCLUDE_DIR}")
 
-find_package(SUNDIALS REQUIRED PATHS
+find_dependency(SUNDIALS REQUIRED PATHS
              "@CMAKE_SOURCE_DIR@/ThirdParty/sundials/build/@CMAKE_INSTALL_LIBDIR@/cmake/sundials/")
 
 if(@Boost_CHRONO_FOUND@)
-  find_package(Boost COMPONENTS chrono REQUIRED)
+  find_dependency(Boost COMPONENTS chrono REQUIRED)
 endif()
 
 if(@HDF5_FOUND@)
-  find_package(
+  find_dependency(
     HDF5
     COMPONENTS C HL CXX
     REQUIRED)

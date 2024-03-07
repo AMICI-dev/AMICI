@@ -608,8 +608,6 @@ def test_simulation_errors(preeq_fixture):
         )
         assert rdata._swigptr.messages[1].severity == amici.LogSeverity_error
         assert rdata._swigptr.messages[1].identifier == "OTHER"
-        assert rdata._swigptr.messages[2].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[2].identifier == "BACKTRACE"
 
     # too long simulations
     solver.setMaxSteps(int(1e4))
@@ -632,8 +630,6 @@ def test_simulation_errors(preeq_fixture):
         )
         assert rdata._swigptr.messages[2].severity == amici.LogSeverity_error
         assert rdata._swigptr.messages[2].identifier == "OTHER"
-        assert rdata._swigptr.messages[3].severity == amici.LogSeverity_debug
-        assert rdata._swigptr.messages[3].identifier == "BACKTRACE"
 
 
 def test_get_model_for_preeq(preeq_fixture):

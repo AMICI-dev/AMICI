@@ -254,6 +254,37 @@ void IDASolver::setSparseJacFn_ss() const {
         throw IDAException(status, "IDASetJacFn");
 }
 
+void IDASolver::apply_max_nonlin_iters() const {
+    int status
+        = IDASetMaxNonlinIters(solver_memory_.get(), getMaxNonlinIters());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetMaxNonlinIters");
+}
+
+void IDASolver::apply_max_conv_fails() const {
+    int status = IDASetMaxConvFails(solver_memory_.get(), getMaxConvFails());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetMaxConvFails");
+}
+
+void IDASolver::apply_constraints() const {
+    Solver::apply_constraints();
+
+    int status = IDASetConstraints(
+        solver_memory_.get(),
+        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+    );
+    if (status != IDA_SUCCESS) {
+        throw IDAException(status, "IDASetConstraints");
+    }
+}
+
+void IDASolver::apply_max_step_size() const {
+    int status = IDASetMaxStep(solver_memory_.get(), getMaxStepSize());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetMaxStep");
+}
+
 Solver* IDASolver::clone() const { return new IDASolver(*this); }
 
 void IDASolver::allocateSolver() const {
@@ -1052,7 +1083,7 @@ int fJv(
     Expects(model);
 
     model->fJv(t, x, dx, v, Jv, cj);
-    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv);
+    return model->checkFinite(gsl::make_span(Jv), ModelQuantity::Jv, t);
 }
 
 /**
@@ -1083,7 +1114,7 @@ int fJvB(
     Expects(model);
 
     model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
-    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB);
+    return model->checkFinite(gsl::make_span(JvB), ModelQuantity::JvB, t);
 }
 
 /**
@@ -1105,7 +1136,7 @@ int froot(
 
     model->froot(t, x, dx, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(
-        gsl::make_span<realtype>(root, model->ne), ModelQuantity::root
+        gsl::make_span<realtype>(root, model->ne), ModelQuantity::root, t
     );
 }
 
@@ -1131,7 +1162,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void* user_data) {
     }
 
     if (t > 1e200
-        && !model->checkFinite(gsl::make_span(x), ModelQuantity::xdot)) {
+        && !model->checkFinite(gsl::make_span(x), ModelQuantity::xdot, t)) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
            to fxdot from which we typically cannot recover. To save time
            on normal execution, we do not always want to check finiteness
@@ -1140,7 +1171,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, void* user_data) {
     }
 
     model->fxdot(t, x, dx, xdot);
-    return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot);
+    return model->checkFinite(gsl::make_span(xdot), ModelQuantity::xdot, t);
 }
 
 /**
@@ -1170,7 +1201,7 @@ int fxBdot(
     }
 
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot);
+    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot, t);
 }
 
 /**
@@ -1195,7 +1226,7 @@ int fqBdot(
     Expects(model);
 
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot);
+    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot, t);
 }
 
 /**
@@ -1217,7 +1248,9 @@ static int fxBdot_ss(
     Expects(model);
 
     model->fxBdot_ss(t, xB, dxB, xBdot);
-    return model->checkFinite(gsl::make_span(xBdot), ModelQuantity::xBdot_ss);
+    return model->checkFinite(
+        gsl::make_span(xBdot), ModelQuantity::xBdot_ss, t
+    );
 }
 
 /**
@@ -1239,7 +1272,9 @@ static int fqBdot_ss(
     Expects(model);
 
     model->fqBdot_ss(t, xB, dxB, qBdot);
-    return model->checkFinite(gsl::make_span(qBdot), ModelQuantity::qBdot_ss);
+    return model->checkFinite(
+        gsl::make_span(qBdot), ModelQuantity::qBdot_ss, t
+    );
 }
 
 /**
@@ -1257,7 +1292,7 @@ static int fqBdot_ss(
  * @return status flag indicating successful execution
  */
 static int fJSparseB_ss(
-    realtype /*t*/, realtype /*cj*/, N_Vector /*x*/, N_Vector /*dx*/,
+    realtype t, realtype /*cj*/, N_Vector /*x*/, N_Vector /*dx*/,
     N_Vector xBdot, SUNMatrix JB, void* user_data, N_Vector /*tmp1*/,
     N_Vector /*tmp2*/, N_Vector /*tmp3*/
 ) {
@@ -1268,7 +1303,7 @@ static int fJSparseB_ss(
 
     model->fJSparseB_ss(JB);
     return model->checkFinite(
-        gsl::make_span(xBdot), ModelQuantity::JSparseB_ss
+        gsl::make_span(xBdot), ModelQuantity::JSparseB_ss, t
     );
 }
 
@@ -1301,7 +1336,9 @@ int fsxdot(
 
     for (int ip = 0; ip < model->nplist(); ip++) {
         model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
-        if (model->checkFinite(gsl::make_span(sxdot[ip]), ModelQuantity::sxdot)
+        if (model->checkFinite(
+                gsl::make_span(sxdot[ip]), ModelQuantity::sxdot, t
+            )
             != AMICI_SUCCESS)
             return AMICI_RECOVERABLE_ERROR;
     }

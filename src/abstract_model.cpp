@@ -437,10 +437,11 @@ void AbstractModel::fdJrzdsigma(
     );
 }
 
-void AbstractModel::
-    fw(realtype* /*w*/, realtype const /*t*/, realtype const* /*x*/,
-       realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-       realtype const* /*tcl*/, realtype const* /*spl*/) {
+void AbstractModel::fw(
+    realtype* /*w*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*tcl*/, realtype const* /*spl*/, bool /*include_static*/
+) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
         "not implemented for this model!",
@@ -452,7 +453,7 @@ void AbstractModel::fdwdp(
     realtype* /*dwdp*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, realtype const* /*tcl*/, realtype const* /*stcl*/,
-    realtype const* /*spl*/, realtype const* /*sspl*/
+    realtype const* /*spl*/, realtype const* /*sspl*/, bool /*include_static*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -477,23 +478,11 @@ void AbstractModel::fdwdp_rowvals(SUNMatrixWrapper& /*dwdp*/) {
     );
 }
 
-void AbstractModel::fdwdp(
-    realtype* /*dwdp*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*tcl*/, realtype const* /*stcl*/,
-    realtype const* /*spl*/, realtype const* /*sspl*/, int const /*ip*/
-) {
-    throw AmiException(
-        "Requested functionality is not supported as %s is "
-        "not implemented for this model!",
-        __func__
-    );
-}
-
 void AbstractModel::fdwdx(
     realtype* /*dwdx*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*tcl*/, realtype const* /*spl*/
+    realtype const* /*w*/, realtype const* /*tcl*/, realtype const* /*spl*/,
+    bool /*include_static*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -521,7 +510,7 @@ void AbstractModel::fdwdx_rowvals(SUNMatrixWrapper& /*dwdx*/) {
 void AbstractModel::fdwdw(
     realtype* /*dwdw*/, realtype /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*tcl*/
+    realtype const* /*w*/, realtype const* /*tcl*/, bool /*include_static*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "

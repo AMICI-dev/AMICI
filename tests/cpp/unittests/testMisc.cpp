@@ -681,7 +681,7 @@ TEST(UnravelIndex, UnravelIndexSunMatDense)
     A.set_data(2, 1, 5);
 
     for(int i = 0; i < 6; ++i) {
-        auto idx = unravel_index(i, A.get());
+        auto idx = unravel_index(i, A);
         EXPECT_EQ(A.get_data(idx.first, idx.second), i);
     }
 }
@@ -706,7 +706,7 @@ TEST(UnravelIndex, UnravelIndexSunMatSparse)
     D.set_data(2, 1, 0);
     D.set_data(3, 1, 0);
 
-    auto S = SUNSparseFromDenseMatrix(D.get(), 1e-15, CSC_MAT);
+    auto S = SUNSparseFromDenseMatrix(D, 1e-15, CSC_MAT);
 
     EXPECT_EQ(unravel_index(0, S), std::make_pair((sunindextype) 2, (sunindextype) 0));
     EXPECT_EQ(unravel_index(1, S), std::make_pair((sunindextype) 3, (sunindextype) 0));
@@ -720,8 +720,8 @@ TEST(UnravelIndex, UnravelIndexSunMatSparseMissingIndices)
 {
     // Sparse matrix without any indices set
     SUNMatrixWrapper mat = SUNMatrixWrapper(2, 3, 2, CSC_MAT);
-    EXPECT_EQ(unravel_index(0, mat.get()), std::make_pair((sunindextype) -1, (sunindextype) -1));
-    EXPECT_EQ(unravel_index(1, mat.get()), std::make_pair((sunindextype) -1, (sunindextype) -1));
+    EXPECT_EQ(unravel_index(0, mat), std::make_pair((sunindextype) -1, (sunindextype) -1));
+    EXPECT_EQ(unravel_index(1, mat), std::make_pair((sunindextype) -1, (sunindextype) -1));
 }
 
 

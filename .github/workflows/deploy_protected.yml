@@ -13,9 +13,25 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-secret:
+    runs-on: ubuntu-latest
+    outputs:
+      secrets-defined: ${{ steps.secret-check.outputs.defined }}
+    steps:
+      - name: Check for Secret availability
+        id: secret-check
+        shell: bash
+        run: |
+          if [ "${{ secrets.DOCKER_USERNAME }}" != '' ]; then
+            echo "defined=true" >> $GITHUB_OUTPUT;
+          else
+            echo "defined=false" >> $GITHUB_OUTPUT;
+          fi
+
   dockerhub:
     name: Deploy Dockerhub
-    if: github.event.pull_request.head.repo.fork == false
+    needs: [check-secret]
+    if: needs.check-secret.outputs.secrets-defined == 'true'
     runs-on: ubuntu-22.04
 
     strategy:

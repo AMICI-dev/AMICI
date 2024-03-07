@@ -2,6 +2,76 @@
 
 ## v0.X Series
 
+### v0.23.0 (2024-03-07)
+
+**Features**
+
+* SBML `InitialAssignment` are no longer absorbed into other model expressions,
+  but are available as parameters or expressions (`w`) in the amici model
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2304,
+  https://github.com/AMICI-dev/AMICI/pull/2305,
+  https://github.com/AMICI-dev/AMICI/pull/2345,
+  https://github.com/AMICI-dev/AMICI/pull/2359
+* Upgraded to SuiteSparse 7.6
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2316
+* Model expressions `w` are now split into static and dynamic expressions,
+  and only evaluated as needed
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2303
+* Exposed additional solver settings:
+  * `Solver.setMaxConvFails()`: maximum number of non-linear solver
+    convergence failures
+  * `Solver.setMaxNonlinIters()`: maximum number of non-linear solver
+    iterations
+  * `Solver.setMaxStepSize()`: maximum step size
+  * `Solver.setConstraints()`: for setting (non)negativity/positivity
+    constraints on state variables
+
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2335,
+  https://github.com/AMICI-dev/AMICI/pull/2360,
+  https://github.com/AMICI-dev/AMICI/pull/2340
+* Improved output for debugging simulation failures:
+  `ReturnData.{xdot,J}` now contain the respective
+  values from the timepoint of failure, not the last output timepoint.
+  NaN/Inf warnings now always include the timepoint at which the issue
+  occurred. Note that C++ stacktraces are now only logged for debug builds.
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2349,
+  https://github.com/AMICI-dev/AMICI/pull/2347,
+  https://github.com/AMICI-dev/AMICI/pull/2366
+* Updated dataframes import/export to include parameter values and scales
+  by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2351
+
+**Fixes**
+
+* CMake: Updated BLAS detection and some minor fixes
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2318
+  and https://github.com/AMICI-dev/AMICI/pull/2357
+* Deterministic ordering of source files in generated `CMakeLists.txt`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2322
+* Fixed size check in `Model::setStateIsNonNegative`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2332
+* Fixed uncaught C++ exception in `runAmiciSimulation` that may crash Python
+  in case of invalid values for standard deviations
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2338
+* Fixed missing import in `amici/petab/petab_import.py`
+  by @plakrisenko in https://github.com/AMICI-dev/AMICI/pull/2342
+* Fixed `ReturnDataView` `AttributeError: messages`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2341
+* Added a missing return code constant `LSETUP_FAIL`
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2353
+* Fixed in-place building of model wheels
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2352
+* Made is-zero-checks compatible with the upcoming sympy>1.12
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2350
+* Fixed issues with paths containing blanks for sundials
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2361
+* Added `amici.petab.conditions` to the API documentation
+  by @PaulJonasJost in https://github.com/AMICI-dev/AMICI/pull/2364
+* Improved type annotations in swig-wrappers
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2344,
+  https://github.com/AMICI-dev/AMICI/pull/2365
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.22.0...v0.23.0
+
 ### v0.22.0 (2024-02-23)
 
 **Features**

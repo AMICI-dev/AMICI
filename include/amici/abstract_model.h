@@ -820,11 +820,15 @@ class AbstractModel {
      * @param h Heaviside vector
      * @param tcl total abundances for conservation laws
      * @param spl spline value vector
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
     virtual void
     fw(realtype* w, realtype const t, realtype const* x, realtype const* p,
        realtype const* k, realtype const* h, realtype const* tcl,
-       realtype const* spl);
+       realtype const* spl, bool include_static = true);
 
     /**
      * @brief Model-specific sparse implementation of dwdp
@@ -840,12 +844,16 @@ class AbstractModel {
      * @param spl spline value vector
      * @param sspl sensitivities of spline values vector w.r.t. parameters \f$ p
      * \f$
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
     virtual void fdwdp(
         realtype* dwdp, realtype const t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
         realtype const* tcl, realtype const* stcl, realtype const* spl,
-        realtype const* sspl
+        realtype const* sspl, bool include_static = true
     );
 
     /**
@@ -861,28 +869,6 @@ class AbstractModel {
     virtual void fdwdp_rowvals(SUNMatrixWrapper& dwdp);
 
     /**
-     * @brief Model-specific sensitivity implementation of dwdp
-     * @param dwdp Recurring terms in xdot, parameter derivative
-     * @param t timepoint
-     * @param x vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param w vector with helper variables
-     * @param tcl total abundances for conservation laws
-     * @param stcl sensitivities of total abundances for conservation laws
-     * @param spl spline value vector
-     * @param sspl sensitivities of spline values vector
-     * @param ip sensitivity parameter index
-     */
-    virtual void fdwdp(
-        realtype* dwdp, realtype const t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl, realtype const* stcl, realtype const* spl,
-        realtype const* sspl, int ip
-    );
-
-    /**
      * @brief Model-specific implementation of dwdx, data part
      * @param dwdx Recurring terms in xdot, state derivative
      * @param t timepoint
@@ -893,11 +879,15 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
      * @param spl spline value vector
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
     virtual void fdwdx(
         realtype* dwdx, realtype const t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl, realtype const* spl
+        realtype const* tcl, realtype const* spl, bool include_static = true
     );
 
     /**
@@ -922,11 +912,15 @@ class AbstractModel {
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl Total abundances for conservation laws
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
     virtual void fdwdw(
         realtype* dwdw, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl
+        realtype const* tcl, bool include_static = true
     );
 
     /**

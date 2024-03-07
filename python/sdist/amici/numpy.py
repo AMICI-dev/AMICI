@@ -9,7 +9,7 @@ import copy
 import itertools
 from typing import Literal, Union
 from collections.abc import Iterator
-
+from numbers import Number
 import amici
 import numpy as np
 import sympy as sp
@@ -238,6 +238,8 @@ class ReturnDataView(SwigPtrView):
         "numnonlinsolvconvfailsB",
         "cpu_timeB",
         "cpu_time_total",
+        "messages",
+        "t_last",
     ]
 
     def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
@@ -440,7 +442,11 @@ def _field_as_numpy(
     attr = getattr(data, field)
     if field_dim := field_dimensions.get(field, None):
         return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
-    return float(attr)
+
+    if isinstance(attr, Number):
+        return float(attr)
+
+    return attr
 
 
 def _entity_type_from_id(

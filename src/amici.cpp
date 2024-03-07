@@ -69,6 +69,7 @@ std::map<int, std::string> simulation_status_to_str_map = {
     {AMICI_MAX_TIME_EXCEEDED, "AMICI_MAX_TIME_EXCEEDED"},
     {AMICI_SUCCESS, "AMICI_SUCCESS"},
     {AMICI_NOT_RUN, "AMICI_NOT_RUN"},
+    {AMICI_LSETUP_FAIL, "AMICI_LSETUP_FAIL"},
 };
 
 std::unique_ptr<ReturnData> runAmiciSimulation(
@@ -205,11 +206,12 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
             LogSeverity::error, "OTHER", "AMICI simulation failed: %s",
             ex.what()
         );
+#ifndef NDEBUG
         logger.log(
             LogSeverity::debug, "BACKTRACE",
             "The previous error occurred at:\n%s", ex.getBacktrace()
         );
-
+#endif
     } catch (std::exception const& ex) {
         rdata->status = AMICI_ERROR;
         if (rethrow)
@@ -220,10 +222,22 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         );
     }
 
-    rdata->processSimulationObjects(
-        preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr, posteq.get(),
-        model, solver, edata
-    );
+    try {
+        rdata->processSimulationObjects(
+            preeq.get(), fwd.get(), bwd_success ? bwd.get() : nullptr,
+            posteq.get(), model, solver, edata
+        );
+    } catch (std::exception const& ex) {
+        rdata->status = AMICI_ERROR;
+        if (rethrow)
+            throw;
+        logger.log(
+            LogSeverity::error, "OTHER", "AMICI simulation failed: %s",
+            ex.what()
+        );
+    }
+
+    rdata->t_last = solver.gett();
 
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 

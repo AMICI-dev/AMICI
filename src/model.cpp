@@ -323,6 +323,31 @@ void Model::initialize(
 
     if (ne)
         initEvents(x, dx, roots_found);
+
+    // evaluate static expressions once
+    auto x_pos = computeX_pos(x);
+    fw(t0(), x_pos, true);
+    fdwdw(t0(), x_pos, true);
+    fdwdx(t0(), x_pos, true);
+    if (computeSensitivities) {
+        fdwdp(t0(), x_pos, true);
+    }
+}
+
+void Model::reinitialize(
+    realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
+) {
+    fx0_fixedParameters(x);
+
+    // re-evaluate static expressions once
+    auto x_pos = computeX_pos(x);
+    fw(t, x_pos, true);
+    fdwdw(t, x_pos, true);
+    fdwdx(t, x_pos, true);
+    if (computeSensitivities) {
+        fsx0_fixedParameters(sx, x);
+        fdwdp(t, x_pos, true);
+    }
 }
 
 void Model::initializeB(
@@ -347,7 +372,7 @@ void Model::initializeStates(AmiVector& x) {
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 
-    checkFinite(x.getVector(), ModelQuantity::x0);
+    checkFinite(x.getVector(), ModelQuantity::x0, t0());
 }
 
 void Model::initializeSplines() {
@@ -858,11 +883,11 @@ void Model::setStateIsNonNegative(std::vector<bool> const& nonNegative) {
         // in case of conservation laws
         return;
     }
-    if (state_is_non_negative_.size() != gsl::narrow<unsigned long>(nx_rdata)) {
+    if (nonNegative.size() != gsl::narrow<unsigned long>(nx_rdata)) {
         throw AmiException(
             "Dimension of input stateIsNonNegative (%u) does "
             "not agree with number of state variables (%d)",
-            state_is_non_negative_.size(), nx_rdata
+            nonNegative.size(), nx_rdata
         );
     }
     state_is_non_negative_ = nonNegative;
@@ -1048,7 +1073,7 @@ void Model::requireSensitivitiesForAllParameters() {
 void Model::getExpression(
     gsl::span<realtype> w, realtype const t, AmiVector const& x
 ) {
-    fw(t, computeX_pos(x));
+    fw(t, computeX_pos(x), false);
     writeSlice(derived_state_.w_, w);
 }
 
@@ -1457,7 +1482,7 @@ void Model::addStateEventUpdate(
     );
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.deltax_, ModelQuantity::deltax);
+        checkFinite(derived_state_.deltax_, ModelQuantity::deltax, t);
     }
 
     // update
@@ -1469,7 +1494,7 @@ void Model::addStateSensitivityEventUpdate(
     AmiVector const& xdot, AmiVector const& xdot_old,
     std::vector<realtype> const& stau
 ) {
-    fw(t, x_old.data());
+    fw(t, x_old.data(), false);
 
     for (int ip = 0; ip < nplist(); ip++) {
 
@@ -1511,7 +1536,7 @@ void Model::addAdjointStateEventUpdate(
     );
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB);
+        checkFinite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
     }
 
     // apply update
@@ -1557,7 +1582,7 @@ void Model::updateHeavisideB(int const* rootsfound) {
 }
 
 int Model::checkFinite(
-    gsl::span<realtype const> array, ModelQuantity model_quantity
+    gsl::span<realtype const> array, ModelQuantity model_quantity, realtype t
 ) const {
     auto it = std::find_if(array.begin(), array.end(), [](realtype x) {
         return !std::isfinite(x);
@@ -1629,23 +1654,27 @@ int Model::checkFinite(
         gsl_ExpectsDebug(false);
         model_quantity_str = std::to_string(static_cast<int>(model_quantity));
     }
-    if (logger)
+    if (logger) {
+        auto t_msg = std::isfinite(t)
+                         ? std::string(" at t=" + std::to_string(t) + " ")
+                         : std::string();
+
         logger->log(
             LogSeverity::warning, msg_id,
-            "AMICI encountered a %s value for %s[%i] (%s)",
+            "AMICI encountered a %s value for %s[%i] (%s)%s",
             non_finite_type.c_str(), model_quantity_str.c_str(),
-            gsl::narrow<int>(flat_index), element_id.c_str()
+            gsl::narrow<int>(flat_index), element_id.c_str(), t_msg.c_str()
         );
-
+    }
     // check upstream, without infinite recursion
     if (model_quantity != ModelQuantity::k && model_quantity != ModelQuantity::p
         && model_quantity != ModelQuantity::ts) {
-        checkFinite(state_.fixedParameters, ModelQuantity::k);
-        checkFinite(state_.unscaledParameters, ModelQuantity::p);
-        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
+        checkFinite(state_.fixedParameters, ModelQuantity::k, t);
+        checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
+        checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
         if (!always_check_finite_ && model_quantity != ModelQuantity::w) {
             // don't check twice if always_check_finite_ is true
-            checkFinite(derived_state_.w_, ModelQuantity::w);
+            checkFinite(derived_state_.w_, ModelQuantity::w, t);
         }
     }
     return AMICI_RECOVERABLE_ERROR;
@@ -1653,7 +1682,7 @@ int Model::checkFinite(
 
 int Model::checkFinite(
     gsl::span<realtype const> array, ModelQuantity model_quantity,
-    size_t num_cols
+    size_t num_cols, realtype t
 ) const {
     auto it = std::find_if(array.begin(), array.end(), [](realtype x) {
         return !std::isfinite(x);
@@ -1743,19 +1772,25 @@ int Model::checkFinite(
         model_quantity_str = std::to_string(static_cast<int>(model_quantity));
     }
 
-    if (logger)
+    if (logger) {
+        auto t_msg = std::isfinite(t)
+                         ? std::string(" at t=" + std::to_string(t) + " ")
+                         : std::string();
+
         logger->log(
             LogSeverity::warning, msg_id,
-            "AMICI encountered a %s value for %s[%i] (%s, %s)",
+            "AMICI encountered a %s value for %s[%i] (%s, %s)%s",
             non_finite_type.c_str(), model_quantity_str.c_str(),
-            gsl::narrow<int>(flat_index), row_id.c_str(), col_id.c_str()
+            gsl::narrow<int>(flat_index), row_id.c_str(), col_id.c_str(),
+            t_msg.c_str()
         );
+    }
 
     // check upstream
-    checkFinite(state_.fixedParameters, ModelQuantity::k);
-    checkFinite(state_.unscaledParameters, ModelQuantity::p);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
-    checkFinite(derived_state_.w_, ModelQuantity::w);
+    checkFinite(state_.fixedParameters, ModelQuantity::k, t);
+    checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
+    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
+    checkFinite(derived_state_.w_, ModelQuantity::w, t);
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1843,10 +1878,10 @@ int Model::checkFinite(SUNMatrix m, ModelQuantity model_quantity, realtype t)
         );
 
     // check upstream
-    checkFinite(state_.fixedParameters, ModelQuantity::k);
-    checkFinite(state_.unscaledParameters, ModelQuantity::p);
-    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts);
-    checkFinite(derived_state_.w_, ModelQuantity::w);
+    checkFinite(state_.fixedParameters, ModelQuantity::k, t);
+    checkFinite(state_.unscaledParameters, ModelQuantity::p, t);
+    checkFinite(simulation_parameters_.ts_, ModelQuantity::ts, t);
+    checkFinite(derived_state_.w_, ModelQuantity::w, t);
 
     return AMICI_RECOVERABLE_ERROR;
 }
@@ -1870,7 +1905,7 @@ void Model::fx0(AmiVector& x) {
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
 
-    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata);
+    checkFinite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, t0());
 }
 
 void Model::fx0_fixedParameters(AmiVector& x) {
@@ -1957,7 +1992,10 @@ void Model::fx_rdata(AmiVector& x_rdata, AmiVector const& x) {
         state_.unscaledParameters.data(), state_.fixedParameters.data()
     );
     if (always_check_finite_)
-        checkFinite(x_rdata.getVector(), ModelQuantity::x_rdata);
+        checkFinite(
+            x_rdata.getVector(), ModelQuantity::x_rdata,
+            std::numeric_limits<realtype>::quiet_NaN()
+        );
 }
 
 void Model::fsx_rdata(
@@ -2040,14 +2078,14 @@ void Model::fy(realtype const t, AmiVector const& x) {
 
     derived_state_.y_.assign(ny, 0.0);
 
-    fw(t, x_pos);
+    fw(t, x_pos, false);
     fy(derived_state_.y_.data(), t, x_pos, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(),
        derived_state_.w_.data());
 
     if (always_check_finite_) {
         checkFinite(
-            gsl::make_span(derived_state_.y_.data(), ny), ModelQuantity::y
+            gsl::make_span(derived_state_.y_.data(), ny), ModelQuantity::y, t
         );
     }
 }
@@ -2059,8 +2097,8 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
     auto x_pos = computeX_pos(x);
 
     derived_state_.dydp_.assign(ny * nplist(), 0.0);
-    fw(t, x_pos);
-    fdwdp(t, x_pos);
+    fw(t, x_pos, false);
+    fdwdp(t, x_pos, false);
 
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
@@ -2094,8 +2132,8 @@ void Model::fdydx(realtype const t, AmiVector const& x) {
 
     derived_state_.dydx_.assign(ny * nx_solver, 0.0);
 
-    fw(t, x_pos);
-    fdwdx(t, x_pos);
+    fw(t, x_pos, false);
+    fdwdx(t, x_pos, false);
     fdydx(
         derived_state_.dydx_.data(), t, x_pos, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
@@ -2249,7 +2287,7 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
 
             auto tmp_sparse = SUNMatrixWrapper(tmp_dense, 0.0, CSC_MAT);
             auto ret = SUNMatScaleAdd(
-                1.0, derived_state_.dJydy_.at(iyt).get(), tmp_sparse.get()
+                1.0, derived_state_.dJydy_.at(iyt), tmp_sparse
             );
             if (ret != SUNMAT_SUCCESS) {
                 throw AmiException(
@@ -2840,38 +2878,42 @@ void Model::fsspl(realtype const t) {
     }
 }
 
-void Model::fw(realtype const t, realtype const* x) {
-    std::fill(derived_state_.w_.begin(), derived_state_.w_.end(), 0.0);
+void Model::fw(realtype const t, realtype const* x, bool include_static) {
+    if (include_static) {
+        std::fill(derived_state_.w_.begin(), derived_state_.w_.end(), 0.0);
+    }
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
-       state_.spl_.data());
+       state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.w_, ModelQuantity::w);
+        checkFinite(derived_state_.w_, ModelQuantity::w, t);
     }
 }
 
-void Model::fdwdp(realtype const t, realtype const* x) {
+void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
     if (!nw)
         return;
 
-    fw(t, x);
+    fw(t, x, include_static);
     derived_state_.dwdp_.zero();
     if (pythonGenerated) {
-        if (!dwdp_hierarchical_.at(0).capacity())
+        if (!ndwdp)
             return;
         fsspl(t);
-        fdwdw(t, x);
-        dwdp_hierarchical_.at(0).zero();
-        fdwdp_colptrs(dwdp_hierarchical_.at(0));
-        fdwdp_rowvals(dwdp_hierarchical_.at(0));
+        fdwdw(t, x, include_static);
+        if (include_static) {
+            dwdp_hierarchical_.at(0).zero();
+            fdwdp_colptrs(dwdp_hierarchical_.at(0));
+            fdwdp_rowvals(dwdp_hierarchical_.at(0));
+        }
         fdwdp(
             dwdp_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
             state_.stotal_cl.data(), state_.spl_.data(),
-            derived_state_.sspl_.data()
+            derived_state_.sspl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
@@ -2897,29 +2939,33 @@ void Model::fdwdp(realtype const t, realtype const* x) {
     }
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.dwdp_.get(), ModelQuantity::dwdp, t);
+        checkFinite(derived_state_.dwdp_, ModelQuantity::dwdp, t);
     }
 }
 
-void Model::fdwdx(realtype const t, realtype const* x) {
+void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
     if (!nw)
         return;
 
-    fw(t, x);
+    fw(t, x, include_static);
 
     derived_state_.dwdx_.zero();
     if (pythonGenerated) {
         if (!dwdx_hierarchical_.at(0).capacity())
             return;
-        fdwdw(t, x);
-        dwdx_hierarchical_.at(0).zero();
-        fdwdx_colptrs(dwdx_hierarchical_.at(0));
-        fdwdx_rowvals(dwdx_hierarchical_.at(0));
+
+        fdwdw(t, x, include_static);
+
+        if (include_static) {
+            dwdx_hierarchical_.at(0).zero();
+            fdwdx_colptrs(dwdx_hierarchical_.at(0));
+            fdwdx_rowvals(dwdx_hierarchical_.at(0));
+        }
         fdwdx(
             dwdx_hierarchical_.at(0).data(), t, x,
             state_.unscaledParameters.data(), state_.fixedParameters.data(),
             state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-            state_.spl_.data()
+            state_.spl_.data(), include_static
         );
 
         for (int irecursion = 1; irecursion <= w_recursion_depth_;
@@ -2943,24 +2989,28 @@ void Model::fdwdx(realtype const t, realtype const* x) {
     }
 
     if (always_check_finite_) {
-        checkFinite(derived_state_.dwdx_.get(), ModelQuantity::dwdx, t);
+        checkFinite(derived_state_.dwdx_, ModelQuantity::dwdx, t);
     }
 }
 
-void Model::fdwdw(realtype const t, realtype const* x) {
-    if (!nw || !dwdw_.capacity())
+void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
+    if (!ndwdw)
         return;
-    dwdw_.zero();
-    fdwdw_colptrs(dwdw_);
-    fdwdw_rowvals(dwdw_);
+
+    if (include_static) {
+        dwdw_.zero();
+        fdwdw_colptrs(dwdw_);
+        fdwdw_rowvals(dwdw_);
+    }
+
     fdwdw(
         dwdw_.data(), t, x, state_.unscaledParameters.data(),
         state_.fixedParameters.data(), state_.h.data(),
-        derived_state_.w_.data(), state_.total_cl.data()
+        derived_state_.w_.data(), state_.total_cl.data(), include_static
     );
 
     if (always_check_finite_) {
-        checkFinite(dwdw_.get(), ModelQuantity::dwdw, t);
+        checkFinite(dwdw_, ModelQuantity::dwdw, t);
     }
 }
 

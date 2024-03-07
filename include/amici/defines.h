@@ -68,6 +68,7 @@ constexpr int AMICI_TOO_MUCH_WORK=            -1;
 constexpr int AMICI_TOO_MUCH_ACC=             -2;
 constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
+constexpr int AMICI_LSETUP_FAIL=              -6;
 constexpr int AMICI_RHSFUNC_FAIL=             -8;
 constexpr int AMICI_FIRST_RHSFUNC_ERR=        -9;
 constexpr int AMICI_ILL_INPUT=               -22;
@@ -252,6 +253,15 @@ enum class SplineExtrapolation {
     linear          =  1,
     polynomial      =  2,
     periodic        =  3,
+};
+
+/** Constraints on state variables */
+enum class Constraint {
+    none = 0,
+    non_negative = 1,
+    non_positive = -1,
+    positive = 2,
+    negative = -2,
 };
 
 // clang-format on

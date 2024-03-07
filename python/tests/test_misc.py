@@ -7,11 +7,7 @@ from pathlib import Path
 import amici
 import pytest
 import sympy as sp
-from amici.de_export import (
-    _custom_pow_eval_derivative,
-    _monkeypatched,
-    smart_subs_dict,
-)
+from amici.import_utils import smart_subs_dict
 from amici.testing import skip_on_valgrind
 
 
@@ -106,25 +102,6 @@ def test_smart_subs_dict():
 
     assert sp.simplify(result_default - expected_default).is_zero
     assert sp.simplify(result_reverse - expected_reverse).is_zero
-
-
-@skip_on_valgrind
-def test_monkeypatch():
-    t = sp.Symbol("t")
-    n = sp.Symbol("n")
-    vals = [(t, 0), (n, 1)]
-
-    # check that the removable singularity still exists
-    assert (t**n).diff(t).subs(vals) is sp.nan
-
-    # check that we can monkeypatch it out
-    with _monkeypatched(
-        sp.Pow, "_eval_derivative", _custom_pow_eval_derivative
-    ):
-        assert (t**n).diff(t).subs(vals) is not sp.nan
-
-    # check that the monkeypatch is transient
-    assert (t**n).diff(t).subs(vals) is sp.nan
 
 
 @skip_on_valgrind

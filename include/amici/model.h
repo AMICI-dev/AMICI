@@ -240,6 +240,18 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Re-initialize model properties after changing simulation context.
+     * @param t Timepoint
+     * @param x Reference to state variables
+     * @param sx Reference to state variable sensitivities
+     * @param computeSensitivities Flag indicating whether sensitivities are to
+     * be computed
+     */
+    void reinitialize(
+        realtype t, AmiVector& x, AmiVectorArray& sx, bool computeSensitivities
+    );
+
+    /**
      * @brief Initialize model properties.
      * @param xB Adjoint state variables
      * @param dxB Time derivative of adjoint states (DAE only)
@@ -1322,10 +1334,12 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * @param array
      * @param model_quantity The model quantity `array` corresponds to
+     * @param t Current timepoint
      * @return
      */
     int checkFinite(
-        gsl::span<realtype const> array, ModelQuantity model_quantity
+        gsl::span<realtype const> array, ModelQuantity model_quantity,
+        realtype t
     ) const;
     /**
      * @brief Check if the given array has only finite elements.
@@ -1335,11 +1349,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param array Flattened matrix
      * @param model_quantity The model quantity `array` corresponds to
      * @param num_cols Number of columns of the non-flattened matrix
+     * @param t Current timepoint
      * @return
      */
     int checkFinite(
         gsl::span<realtype const> array, ModelQuantity model_quantity,
-        size_t num_cols
+        size_t num_cols, realtype t
     ) const;
 
     /**
@@ -1828,29 +1843,45 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Compute recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fw(realtype t, realtype const* x);
+    void fw(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute parameter derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdp(realtype t, realtype const* x);
+    void fdwdp(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute state derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdx(realtype t, realtype const* x);
+    void fdwdx(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute self derivative for recurring terms in xdot.
      * @param t Timepoint
      * @param x Array with the states
+     * @param include_static Whether to (re-)evaluate only dynamic expressions
+     * (false) or also static expressions (true).
+     * Dynamic expressions are those that depend directly or indirectly on time,
+     * static expressions are those that don't.
      */
-    void fdwdw(realtype t, realtype const* x);
+    void fdwdw(realtype t, realtype const* x, bool include_static = true);
 
     /**
      * @brief Compute fx_rdata.

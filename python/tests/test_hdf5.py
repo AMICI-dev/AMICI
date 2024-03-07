@@ -24,6 +24,8 @@ def _modify_solver_attrs(solver):
         elif attr == "setMaxTime":
             # default value is the maximum, must not add to that
             cval = random.random()
+        elif attr == "setConstraints":
+            cval = [1.0, 1.0]
         elif isinstance(val, int):
             cval = val + 1
         else:

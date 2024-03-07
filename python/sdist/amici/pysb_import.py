@@ -27,21 +27,21 @@ import sympy as sp
 from .de_export import (
     Constant,
     DEExporter,
-    DEModel,
     DifferentialState,
     Expression,
     LogLikelihoodY,
     Observable,
     Parameter,
     SigmaY,
-    _default_simplify,
 )
+from .de_model import DEModel
 from .import_utils import (
     _get_str_symbol_identifiers,
     _parse_special_functions,
     generate_measurement_symbol,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
+    _default_simplify,
 )
 from .logging import get_logger, log_execution_time, set_log_level
 
@@ -178,6 +178,10 @@ def pysb2amici(
         compiler=compiler,
         generate_sensitivity_code=generate_sensitivity_code,
     )
+    # Sympy code optimizations are incompatible with PySB objects, as
+    #  `pysb.Observable` comes with its own `.match` which overrides
+    #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.
+    exporter._code_printer._fpoptimizer = None
     exporter.generate_model_code()
 
     if compile:
@@ -241,10 +245,6 @@ def ode_model_from_pysb_importer(
         simplify=simplify,
         cache_simplify=cache_simplify,
     )
-    # Sympy code optimizations are incompatible with PySB objects, as
-    #  `pysb.Observable` comes with its own `.match` which overrides
-    #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.
-    ode._code_printer._fpoptimizer = None
 
     if constant_parameters is None:
         constant_parameters = []

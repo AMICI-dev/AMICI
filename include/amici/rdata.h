@@ -104,12 +104,12 @@ class ReturnData : public ModelDimensions {
      */
     std::vector<realtype> ts;
 
-    /** time derivative (shape `nx`) */
+    /** time derivative (shape `nx`) evaluated at `t_last`. */
     std::vector<realtype> xdot;
 
     /**
      * Jacobian of differential equation right hand side (shape `nx` x `nx`,
-     * row-major)
+     * row-major) evaluated at `t_last`.
      */
     std::vector<realtype> J;
 
@@ -456,6 +456,9 @@ class ReturnData : public ModelDimensions {
     /** log messages */
     std::vector<LogItem> messages;
 
+    /** The final internal time of the solver. */
+    realtype t_last{std::numeric_limits<realtype>::quiet_NaN()};
+
   protected:
     /** offset for sigma_residuals */
     realtype sigma_offset;
@@ -576,7 +579,7 @@ class ReturnData : public ModelDimensions {
 
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver);
-            model.fJ(t_, 0.0, x_solver_, dx_solver_, xdot, J.get());
+            model.fJ(t_, 0.0, x_solver_, dx_solver_, xdot, J);
             // CVODES uses colmajor, so we need to transform to rowmajor
             for (int ix = 0; ix < model.nx_solver; ix++)
                 for (int jx = 0; jx < model.nx_solver; jx++)

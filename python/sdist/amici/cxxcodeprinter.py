@@ -3,6 +3,7 @@ import itertools
 import os
 import re
 from typing import Optional
+from collections.abc import Sequence
 from collections.abc import Iterable
 
 import sympy as sp
@@ -123,6 +124,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         equations: sp.Matrix,
         variable: str,
         indent_level: int,
+        indices: Optional[Sequence[int]] = None,
     ) -> list[str]:
         """
         Generate C++ code for where array elements are directly replaced with
@@ -140,9 +142,19 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
         :param indent_level:
             indentation level (number of leading blanks)
 
+        :param indices:
+            Optional custom indices corresponding to entries in `symbols`.
+            Only used for comments.
+
         :return:
             C++ code as list of lines
         """
+        assert len(symbols) == len(equations)
+        if indices is None:
+            indices = range(len(symbols))
+        else:
+            assert len(indices) == len(symbols)
+
         indent = " " * indent_level
 
         def format_regular_line(symbol, math, index):
@@ -179,7 +191,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
                         for (identifier, definition) in expr_dict.items()
                     }
                 )
-                symbol_to_idx = {sym: idx for idx, sym in enumerate(symbols)}
+                symbol_to_idx = {
+                    sym: idx for idx, sym in zip(indices, symbols)
+                }
 
                 def format_line(symbol: sp.Symbol):
                     math = expr_dict[symbol]
@@ -203,93 +217,9 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         return [
             format_regular_line(sym, math, index)
-            for index, (sym, math) in enumerate(zip(symbols, equations))
+            for index, sym, math in zip(indices, symbols, equations)
             if math not in [0, 0.0]
         ]
-
-    def csc_matrix(
-        self,
-        matrix: sp.Matrix,
-        rownames: list[sp.Symbol],
-        colnames: list[sp.Symbol],
-        identifier: Optional[int] = 0,
-        pattern_only: Optional[bool] = False,
-    ) -> tuple[list[int], list[int], sp.Matrix, list[str], sp.Matrix]:
-        """
-        Generates the sparse symbolic identifiers, symbolic identifiers,
-        sparse matrix, column pointers and row values for a symbolic
-        variable
-
-        :param matrix:
-            dense matrix to be sparsified
-
-        :param rownames:
-            ids of the variable of which the derivative is computed (assuming
-            matrix is the jacobian)
-
-        :param colnames:
-            ids of the variable with respect to which the derivative is computed
-            (assuming matrix is the jacobian)
-
-        :param identifier:
-            additional identifier that gets appended to symbol names to
-            ensure their uniqueness in outer loops
-
-        :param pattern_only:
-            flag for computing sparsity pattern without whole matrix
-
-        :return:
-            symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list,
-            sparse_matrix
-        """
-        idx = 0
-
-        nrows, ncols = matrix.shape
-
-        if not pattern_only:
-            sparse_matrix = sp.zeros(nrows, ncols)
-        symbol_list = []
-        sparse_list = []
-        symbol_col_ptrs = []
-        symbol_row_vals = []
-
-        for col in range(ncols):
-            symbol_col_ptrs.append(idx)
-            for row in range(nrows):
-                if matrix[row, col] == 0:
-                    continue
-
-                symbol_row_vals.append(row)
-                idx += 1
-                symbol_name = (
-                    f"d{rownames[row].name}" f"_d{colnames[col].name}"
-                )
-                if identifier:
-                    symbol_name += f"_{identifier}"
-                symbol_list.append(symbol_name)
-                if pattern_only:
-                    continue
-
-                sparse_matrix[row, col] = sp.Symbol(symbol_name, real=True)
-                sparse_list.append(matrix[row, col])
-
-        if idx == 0:
-            symbol_col_ptrs = []  # avoid bad memory access for empty matrices
-        else:
-            symbol_col_ptrs.append(idx)
-
-        if pattern_only:
-            sparse_matrix = None
-        else:
-            sparse_list = sp.Matrix(sparse_list)
-
-        return (
-            symbol_col_ptrs,
-            symbol_row_vals,
-            sparse_list,
-            symbol_list,
-            sparse_matrix,
-        )
 
     @staticmethod
     def print_bool(expr) -> str:
@@ -360,3 +290,84 @@ def get_switch_statement(
         ),
         indent0 + "}",
     ]
+
+
+def csc_matrix(
+    matrix: sp.Matrix,
+    rownames: list[sp.Symbol],
+    colnames: list[sp.Symbol],
+    identifier: Optional[int] = 0,
+    pattern_only: Optional[bool] = False,
+) -> tuple[list[int], list[int], sp.Matrix, list[str], sp.Matrix]:
+    """
+    Generates the sparse symbolic identifiers, symbolic identifiers,
+    sparse matrix, column pointers and row values for a symbolic
+    variable
+
+    :param matrix:
+        dense matrix to be sparsified
+
+    :param rownames:
+        ids of the variable of which the derivative is computed (assuming
+        matrix is the jacobian)
+
+    :param colnames:
+        ids of the variable with respect to which the derivative is computed
+        (assuming matrix is the jacobian)
+
+    :param identifier:
+        additional identifier that gets appended to symbol names to
+        ensure their uniqueness in outer loops
+
+    :param pattern_only:
+        flag for computing sparsity pattern without whole matrix
+
+    :return:
+        symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list,
+        sparse_matrix
+    """
+    idx = 0
+    nrows, ncols = matrix.shape
+
+    if not pattern_only:
+        sparse_matrix = sp.zeros(nrows, ncols)
+    symbol_list = []
+    sparse_list = []
+    symbol_col_ptrs = []
+    symbol_row_vals = []
+
+    for col in range(ncols):
+        symbol_col_ptrs.append(idx)
+        for row in range(nrows):
+            if matrix[row, col].is_zero:
+                continue
+
+            symbol_row_vals.append(row)
+            idx += 1
+            symbol_name = f"d{rownames[row].name}" f"_d{colnames[col].name}"
+            if identifier:
+                symbol_name += f"_{identifier}"
+            symbol_list.append(symbol_name)
+            if pattern_only:
+                continue
+
+            sparse_matrix[row, col] = sp.Symbol(symbol_name, real=True)
+            sparse_list.append(matrix[row, col])
+
+    if idx == 0:
+        symbol_col_ptrs = []  # avoid bad memory access for empty matrices
+    else:
+        symbol_col_ptrs.append(idx)
+
+    if pattern_only:
+        sparse_matrix = None
+    else:
+        sparse_list = sp.Matrix(sparse_list)
+
+    return (
+        symbol_col_ptrs,
+        symbol_row_vals,
+        sparse_list,
+        symbol_list,
+        sparse_matrix,
+    )
