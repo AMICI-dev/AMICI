@@ -12,6 +12,7 @@ AMICI Python API
    amici.pysb_import
    amici.bngl_import
    amici.petab
+   amici.petab.conditions
    amici.petab.import_helpers
    amici.petab.parameter_mapping
    amici.petab.petab_import
