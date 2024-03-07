@@ -255,6 +255,15 @@ enum class SplineExtrapolation {
     periodic        =  3,
 };
 
+/** Constraints on state variables */
+enum class Constraint {
+    none = 0,
+    non_negative = 1,
+    non_positive = -1,
+    positive = 2,
+    negative = -2,
+};
+
 // clang-format on
 
 } // namespace amici

@@ -327,6 +327,7 @@ SteadyStateStatus = enum('SteadyStateStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
+Constraint = enum('Constraint')
 %}
 
 %template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;

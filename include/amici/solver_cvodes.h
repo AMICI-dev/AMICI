@@ -254,6 +254,8 @@ class CVodeSolver : public Solver {
 
     void apply_max_conv_fails() const override;
 
+    void apply_constraints() const override;
+
     void apply_max_step_size() const override;
 };
 

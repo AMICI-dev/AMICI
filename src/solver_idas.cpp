@@ -267,6 +267,18 @@ void IDASolver::apply_max_conv_fails() const {
         throw IDAException(status, "IDASetMaxConvFails");
 }
 
+void IDASolver::apply_constraints() const {
+    Solver::apply_constraints();
+
+    int status = IDASetConstraints(
+        solver_memory_.get(),
+        constraints_.getLength() > 0 ? constraints_.getNVector() : nullptr
+    );
+    if (status != IDA_SUCCESS) {
+        throw IDAException(status, "IDASetConstraints");
+    }
+}
+
 void IDASolver::apply_max_step_size() const {
     int status = IDASetMaxStep(solver_memory_.get(), getMaxStepSize());
     if (status != IDA_SUCCESS)

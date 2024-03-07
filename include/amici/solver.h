@@ -965,6 +965,24 @@ class Solver {
     int getMaxConvFails() const;
 
     /**
+     * @brief Set constraints on the model state.
+     *
+     * See
+     * https://sundials.readthedocs.io/en/latest/cvode/Usage/index.html#c.CVodeSetConstraints.
+     *
+     * @param constraints
+     */
+    void setConstraints(std::vector<realtype> const& constraints);
+
+    /**
+     * @brief Get constraints on the model state.
+     * @return constraints
+     */
+    std::vector<realtype> getConstraints() const {
+        return constraints_.getVector();
+    }
+
+    /**
      * @brief Set the maximum step size
      * @param max_step_size maximum step size. `0.0` means no limit.
      */
@@ -1130,7 +1148,7 @@ class Solver {
     virtual void rootInit(int ne) const = 0;
 
     /**
-     * @brief Initalize non-linear solver for sensitivities
+     * @brief Initialize non-linear solver for sensitivities
      * @param model Model instance
      */
     void initializeNonLinearSolverSens(Model const* model) const;
@@ -1648,6 +1666,11 @@ class Solver {
      */
     void applySensitivityTolerances() const;
 
+    /**
+     * @brief Apply the constraints to the solver.
+     */
+    virtual void apply_constraints() const;
+
     /** pointer to solver memory block */
     mutable std::unique_ptr<void, free_solver_ptr> solver_memory_;
 
@@ -1808,6 +1831,9 @@ class Solver {
 
     /** flag indicating whether sensInit1 was called */
     mutable bool sens_initialized_{false};
+
+    /** Vector of constraints on the solution */
+    mutable AmiVector constraints_;
 
   private:
     /**

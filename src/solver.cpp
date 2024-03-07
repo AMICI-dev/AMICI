@@ -200,6 +200,8 @@ void Solver::setup(
 
     cpu_time_ = 0.0;
     cpu_timeB_ = 0.0;
+
+    apply_constraints();
 }
 
 void Solver::setupB(
@@ -646,6 +648,15 @@ void Solver::applySensitivityTolerances() const {
     }
 }
 
+void Solver::apply_constraints() const {
+    if (constraints_.getLength() != 0
+        && gsl::narrow<int>(constraints_.getLength()) != nx()) {
+        throw std::invalid_argument(
+            "Constraints must have the same size as the state vector."
+        );
+    }
+}
+
 SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth_; }
 
 SensitivityMethod Solver::getSensitivityMethodPreequilibration() const {
@@ -692,6 +703,21 @@ void Solver::setMaxConvFails(int max_conv_fails) {
 }
 
 int Solver::getMaxConvFails() const { return max_conv_fails_; }
+
+void Solver::setConstraints(std::vector<realtype> const& constraints) {
+    auto any_constraint
+        = std::any_of(constraints.begin(), constraints.end(), [](bool x) {
+              return x != 0.0;
+          });
+
+    if (!any_constraint) {
+        // all-0 must be converted to empty, otherwise sundials will fail
+        constraints_ = AmiVector();
+        return;
+    }
+
+    constraints_ = AmiVector(constraints);
+}
 
 void Solver::setMaxStepSize(realtype max_step_size) {
     if (max_step_size < 0)
