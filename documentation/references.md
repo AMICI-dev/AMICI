@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 83.
+List of publications using AMICI. Total number is 84.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new GitHub issue.
 
@@ -14,6 +14,15 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 class="unnumbered" id="section">2024</h1>
 <div id="refs" class="references csl-bib-body hanging-indent"
 role="list">
+<div id="ref-KissVen2024" class="csl-entry" role="listitem">
+Kiss, Anna E, Anuroop V Venkatasubramani, Dilan Pathirana, Silke Krause,
+Aline Campos Sparr, Jan Hasenauer, Axel Imhof, Marisa Müller, and Peter
+B Becker. 2024. <span>“<span class="nocase">Processivity and specificity
+of histone acetylation by the male-specific lethal
+complex</span>.”</span> <em>Nucleic Acids Research</em>, February,
+gkae123. <a
+href="https://doi.org/10.1093/nar/gkae123">https://doi.org/10.1093/nar/gkae123</a>.
+</div>
 <div id="ref-LangPen2024" class="csl-entry" role="listitem">
 Lang, Paul F., David R. Penas, Julio R. Banga, Daniel Weindl, and Bela
 Novak. 2024. <span>“Reusable Rule-Based Cell Cycle Model Explains
