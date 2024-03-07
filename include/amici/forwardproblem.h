@@ -316,7 +316,7 @@ class ForwardProblem {
      * @brief Creates a carbon copy of the current simulation state variables
      * @return state
      */
-    SimulationState getSimulationState() const;
+    SimulationState getSimulationState();
 
     /** array of index vectors (dimension ne) indicating whether the respective
      * root has been detected for all so far encountered discontinuities,

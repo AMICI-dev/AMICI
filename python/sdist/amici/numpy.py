@@ -239,6 +239,7 @@ class ReturnDataView(SwigPtrView):
         "cpu_timeB",
         "cpu_time_total",
         "messages",
+        "t_last",
     ]
 
     def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
