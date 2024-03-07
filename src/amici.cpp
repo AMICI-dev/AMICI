@@ -236,6 +236,8 @@ std::unique_ptr<ReturnData> runAmiciSimulation(
         );
     }
 
+    rdata->t_last = solver.gett();
+
     rdata->cpu_time_total = cpu_timer.elapsed_milliseconds();
 
     // verify that reported CPU times are plausible

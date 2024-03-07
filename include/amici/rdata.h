@@ -104,12 +104,12 @@ class ReturnData : public ModelDimensions {
      */
     std::vector<realtype> ts;
 
-    /** time derivative (shape `nx`) */
+    /** time derivative (shape `nx`) evaluated at `t_last`. */
     std::vector<realtype> xdot;
 
     /**
      * Jacobian of differential equation right hand side (shape `nx` x `nx`,
-     * row-major)
+     * row-major) evaluated at `t_last`.
      */
     std::vector<realtype> J;
 
@@ -455,6 +455,9 @@ class ReturnData : public ModelDimensions {
 
     /** log messages */
     std::vector<LogItem> messages;
+
+    /** The final internal time of the solver. */
+    realtype t_last{std::numeric_limits<realtype>::quiet_NaN()};
 
   protected:
     /** offset for sigma_residuals */
