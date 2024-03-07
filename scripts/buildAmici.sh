@@ -46,7 +46,6 @@ fi
 
 # set python executable for cmake
 export PYTHON_EXECUTABLE="${amici_path}/venv/bin/python"
-# install numpy
 python3 -m pip install numpy
 
 ${cmake} \
