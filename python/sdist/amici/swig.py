@@ -59,7 +59,7 @@ class TypeHintFixer(ast.NodeTransformer):
         self._annotation_from_docstring(node)
 
         # Has a return type annotation?
-        if node.returns and isinstance(node.returns, ast.Constant):
+        if node.returns:
             node.returns = self._new_annot(node.returns.value)
 
         # Has arguments?
@@ -128,7 +128,7 @@ class TypeHintFixer(ast.NodeTransformer):
                 node.returns = ast.Constant(match.group(1))
                 lines_to_remove.add(line_no)
 
-            if match := re.match(r"\W*:type\W*(\w+):\W*(.+)", line):
+            if match := re.match(r"\W*:type:\W*(\w+):\W*(.+)", line):
                 for arg in node.args.args:
                     if arg.arg == match.group(1):
                         arg.annotation = ast.Constant(match.group(2))
