@@ -41,6 +41,7 @@ def get_extensions():
     # Used by all extensions
     global_cmake_configure_options = [
         "-DCMAKE_VERBOSE_MAKEFILE=ON",
+        f"-DCMAKE_MODULE_PATH={prefix_path.as_posix()}",
     ]
 
     # SuiteSparse Config
@@ -51,6 +52,7 @@ def get_extensions():
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+            "-DBUILD_SHARED_LIBS=OFF",
             # Building SuiteSparse_config does not require a BLAS
             #  we just set BLAS_LIBRARIES to skip the search,
             #  the value is not used
@@ -68,6 +70,8 @@ def get_extensions():
         source_dir="amici/ThirdParty/SuiteSparse/AMD",
         cmake_configure_options=[
             *global_cmake_configure_options,
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DSUITESPARSE_USE_FORTRAN=OFF",
         ],
     )
@@ -79,6 +83,8 @@ def get_extensions():
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DSUITESPARSE_USE_FORTRAN=OFF",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
         ],
     )
     # SuiteSparse COLAMD
@@ -89,6 +95,8 @@ def get_extensions():
         cmake_configure_options=[
             *global_cmake_configure_options,
             "-DSUITESPARSE_USE_FORTRAN=OFF",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
         ],
     )
     # SuiteSparse KLU
@@ -101,6 +109,8 @@ def get_extensions():
             "-DKLU_USE_CHOLMOD=OFF",
             "-DSUITESPARSE_USE_CUDA=OFF",
             "-DSUITESPARSE_USE_FORTRAN=OFF",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
         ],
     )
     # SUNDIALS
