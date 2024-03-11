@@ -2,6 +2,11 @@
 
 ## v0.X Series
 
+### v0.23.1 (2024-03-11)
+
+* Fixes installation issues related to building SuiteSparse on some systems
+  by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2375
+
 ### v0.23.0 (2024-03-07)
 
 **Features**
