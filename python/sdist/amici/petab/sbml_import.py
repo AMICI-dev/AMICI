@@ -300,6 +300,8 @@ def import_model_sbml(
             init_par = sbml_model.createParameter()
             init_par.setId(init_par_id)
             init_par.setName(init_par_id)
+            # must be a fixed parameter in any case to allow reinitialization
+            fixed_parameters.append(init_par_id)
         assignment = sbml_model.getInitialAssignment(assignee_id)
         if assignment is None:
             assignment = sbml_model.createInitialAssignment()
@@ -535,7 +537,7 @@ def _get_fixed_parameters_sbml(
                     ia.getMath(), parser_settings
                 )
             )
-            if not sym_math.is_Number:
+            if not sym_math.evalf().is_Number:
                 fixed_parameters.remove(fixed_parameter)
                 continue
 

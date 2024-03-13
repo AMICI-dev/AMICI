@@ -486,12 +486,11 @@ def create_parameter_mapping_for_condition(
                     condition_scale_map_preeq,
                     preeq_value,
                 )
-            else:
-                # need to set dummy value for preeq parameter anyways, as it
-                #  is expected below (set to 0, not nan, because will be
-                #  multiplied with indicator variable in initial assignment)
-                condition_map_sim[init_par_id] = 0.0
-                condition_scale_map_sim[init_par_id] = LIN
+            # need to set dummy value for preeq parameter anyways, as it
+            #  is expected below (set to 0, not nan, because will be
+            #  multiplied with indicator variable in initial assignment)
+            condition_map_sim[init_par_id] = 0.0
+            condition_scale_map_sim[init_par_id] = LIN
 
             # for simulation
             condition_id = condition[SIMULATION_CONDITION_ID]
@@ -505,6 +504,9 @@ def create_parameter_mapping_for_condition(
                 condition_scale_map_sim,
                 value,
             )
+            # set dummy value as above
+            condition_map_preeq[init_par_id] = 0.0
+            condition_scale_map_preeq[init_par_id] = LIN
 
     ##########################################################################
     # separate fixed and variable AMICI parameters, because we may have
