@@ -505,8 +505,9 @@ def create_parameter_mapping_for_condition(
                 value,
             )
             # set dummy value as above
-            condition_map_preeq[init_par_id] = 0.0
-            condition_scale_map_preeq[init_par_id] = LIN
+            if condition_map_preeq:
+                condition_map_preeq[init_par_id] = 0.0
+                condition_scale_map_preeq[init_par_id] = LIN
 
     ##########################################################################
     # separate fixed and variable AMICI parameters, because we may have
