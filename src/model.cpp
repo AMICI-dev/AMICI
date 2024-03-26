@@ -3138,6 +3138,23 @@ std::vector<double> Model::get_trigger_timepoints() const {
     return trigger_timepoints;
 }
 
+void Model::set_steadystate_mask(std::vector<double> const& mask) {
+    if (mask.size() == 0) {
+        if (steadystate_mask_.getLength() != 0) {
+            steadystate_mask_ = AmiVector();
+        }
+        return;
+    }
+
+    if (gsl::narrow<int>(mask.size()) != nx_solver)
+        throw AmiException(
+            "Steadystate mask has wrong size: %d, expected %d",
+            gsl::narrow<int>(mask.size()), nx_solver
+        );
+
+    steadystate_mask_ = AmiVector(mask);
+}
+
 const_N_Vector Model::computeX_pos(const_N_Vector x) {
     if (any_state_non_negative_) {
         for (int ix = 0; ix < derived_state_.x_pos_tmp_.getLength(); ++ix) {
