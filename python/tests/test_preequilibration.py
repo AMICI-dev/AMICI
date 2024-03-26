@@ -8,7 +8,10 @@ import pytest
 from amici.debugging import get_model_for_preeq
 from numpy.testing import assert_allclose, assert_equal
 from test_pysb import get_data
-from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import (
+    TemporaryDirectoryWinSafe as TemporaryDirectory,
+    skip_on_valgrind,
+)
 
 
 @pytest.fixture
@@ -661,6 +664,7 @@ def test_get_model_for_preeq(preeq_fixture):
     )
 
 
+@skip_on_valgrind
 def test_partial_eq():
     """Check that partial equilibration is possible."""
     from amici.antimony_import import antimony2amici

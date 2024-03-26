@@ -287,7 +287,9 @@ bool operator==(Model const& a, Model const& b) {
            && (a.nmaxevent_ == b.nmaxevent_)
            && (a.state_is_non_negative_ == b.state_is_non_negative_)
            && (a.sigma_res_ == b.sigma_res_) && (a.min_sigma_ == b.min_sigma_)
-           && a.state_ == b.state_;
+           && (a.state_ == b.state_)
+           && (a.steadystate_mask_.getVector()
+               == b.steadystate_mask_.getVector());
 }
 
 bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
