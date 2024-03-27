@@ -17,6 +17,7 @@ Solver::Solver(Solver const& other)
     , maxsteps_(other.maxsteps_)
     , maxtime_(other.maxtime_)
     , simulation_timer_(other.simulation_timer_)
+    , constraints_(other.constraints_)
     , sensi_meth_(other.sensi_meth_)
     , sensi_meth_preeq_(other.sensi_meth_preeq_)
     , stldet_(other.stldet_)
@@ -564,7 +565,9 @@ bool operator==(Solver const& a, Solver const& b) {
                == b.check_sensi_steadystate_conv_)
            && (a.rdata_mode_ == b.rdata_mode_)
            && (a.max_conv_fails_ == b.max_conv_fails_)
-           && (a.max_nonlin_iters_ == b.max_nonlin_iters_);
+           && (a.max_nonlin_iters_ == b.max_nonlin_iters_)
+           && (a.max_step_size_ == b.max_step_size_)
+           && (a.constraints_.getVector() == b.constraints_.getVector());
 }
 
 void Solver::applyTolerances() const {
